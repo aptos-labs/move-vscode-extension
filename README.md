@@ -10,3 +10,27 @@ It will build `aptos-analyzer.vsix` extension file and install it into your VSCo
 Then it will run `cargo install` for the language server. 
 
 Open any project with the `Move.toml` in the root. Disable other VSCode extensions for `.move` files if needed.  
+
+## Features
+
+### Syntax / semantic highlighting
+
+Highlights keywords, modules items, builtin types. 
+
+### Flycheck
+
+Checks code in the editor after **Save**.
+
+To enable, specify in your `settings.json`: 
+```json5
+{
+    "aptos-analyzer.aptos.cliPath": "/home/mkurnikov/bin/aptos"  // path to aptos-cli on your machine
+    "aptos-analyzer.aptos.checkOnSave": true,
+}
+```
+
+
+
+### Go-to-definition / completions
+
+
