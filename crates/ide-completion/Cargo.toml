@@ -1,0 +1,17 @@
+[package]
+name = "ide-completion"
+version = "0.1.0"
+rust-version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+tracing = { workspace = true }
+smol_str = { workspace = true }
+
+stdx = { workspace = true }
+
+syntax = { path = "../syntax" }
+ide-db = { path = "../ide-db" }
+lang = { path = "../lang" }
+

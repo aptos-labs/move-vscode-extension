@@ -1,0 +1,56 @@
+[workspace]
+members = [
+    "crates/parser",
+    "crates/syntax",
+    "crates/lang",
+    "crates/aptos-analyzer",
+    "crates/base-db",
+    "crates/ide",
+    "crates/ide-completion",
+    "crates/ide-db",
+    "crates/ide-diagnostics",
+    "crates/project-model",
+    "xtask",
+]
+resolver = "2"
+
+[workspace.package]
+rust-version = "1.82"
+edition = "2021"
+license = "MIT"
+
+[workspace.dependencies]
+text-size = "1.1.1"
+either = "1.13.0"
+rowan = "0.16.1"
+itertools = "0.14.0"
+smol_str = "0.3.2"
+lsp-types = { version = "0.95.1", features = ["proposed"] }
+line-index = "0.1.2"
+crossbeam-channel = "0.5.14"
+rustc-hash = "2.1.1"
+triomphe = "0.1.14"
+serde = "1.0.217"
+serde_derive = { version = "1.0.192" }
+serde_json = "1.0.108"
+anyhow = "1.0.95"
+clap = { version = "4.5.28", features = ["derive"] }
+la-arena = "0.3.1"
+indexmap = "2.7.1"
+
+tracing = "0.1.41"
+tracing-tree = "0.3.0"
+tracing-subscriber = { version = "0.3.18", default-features = false, features = [
+    "registry",
+    "fmt",
+    "local-time",
+    "std",
+    "time",
+    "tracing-log",
+] }
+
+stdx = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "1f23156f51e6a064becb1103eac078c2c9d14a80", package = "stdx" }
+paths = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "1f23156f51e6a064becb1103eac078c2c9d14a80", package = "paths", features = ["serde1"] }
+vfs = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "1f23156f51e6a064becb1103eac078c2c9d14a80", package = "vfs" }
+vfs-notify = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "1f23156f51e6a064becb1103eac078c2c9d14a80", package = "vfs-notify" }
+ra_salsa = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "1f23156f51e6a064becb1103eac078c2c9d14a80", package = "salsa" }

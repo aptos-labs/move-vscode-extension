@@ -1,0 +1,21 @@
+[package]
+name = "lang"
+version = "0.1.0"
+rust-version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+enumset = "1.1.5"
+
+rustc-hash = { workspace = true }
+itertools = { workspace = true }
+stdx = { workspace = true }
+ra_salsa.workspace = true
+la-arena.workspace = true
+
+vfs = { workspace = true }
+
+parser = { path = "../parser" }
+syntax = { path = "../syntax" }
+base-db = { path = "../base-db" }

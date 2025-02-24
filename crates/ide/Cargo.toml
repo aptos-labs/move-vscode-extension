@@ -1,0 +1,30 @@
+[package]
+name = "ide"
+version = "0.1.0"
+rust-version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+oorandom = "11.1.4"
+dissimilar = "1.0.9"
+
+ra_salsa = { workspace = true }
+rustc-hash = { workspace = true }
+vfs = { workspace = true }
+line-index = { workspace = true }
+tracing = { workspace = true }
+triomphe = { workspace = true }
+itertools = { workspace = true }
+
+stdx = { workspace = true }
+
+base-db = { path = "../base-db" }
+syntax = { path = "../syntax" }
+lang = { path = "../lang" }
+ide-db = { path = "../ide-db" }
+ide-completion = { path = "../ide-completion" }
+ide-diagnostics = { path = "../ide-diagnostics" }
+
+[dev-dependencies]
+itertools = { workspace = true }

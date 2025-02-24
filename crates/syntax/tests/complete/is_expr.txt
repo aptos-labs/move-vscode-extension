@@ -1,0 +1,127 @@
+SOURCE_FILE@0..141
+  MODULE@0..140
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    ADDRESS_REF@7..10
+      VALUE_ADDRESS@7..10
+        INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..19
+      IDENT@12..19 "is_expr"
+    WHITESPACE@19..20 " "
+    ITEM_LIST@20..140
+      L_CURLY@20..21 "{"
+      WHITESPACE@21..26 "\n    "
+      FUN@26..138
+        FUN_KW@26..29 "fun"
+        WHITESPACE@29..30 " "
+        NAME@30..34
+          IDENT@30..34 "main"
+        PARAM_LIST@34..36
+          L_PAREN@34..35 "("
+          R_PAREN@35..36 ")"
+        WHITESPACE@36..37 " "
+        BLOCK_EXPR@37..138
+          STMT_LIST@37..138
+            L_CURLY@37..38 "{"
+            WHITESPACE@38..47 "\n        "
+            EXPR_STMT@47..56
+              IS_EXPR@47..55
+                PATH_EXPR@47..48
+                  PATH@47..48
+                    PATH_SEGMENT@47..48
+                      NAME_REF@47..48
+                        IDENT@47..48 "s"
+                WHITESPACE@48..49 " "
+                IS_KW@49..51 "is"
+                WHITESPACE@51..52 " "
+                PATH_TYPE@52..55
+                  PATH@52..55
+                    PATH_SEGMENT@52..55
+                      NAME_REF@52..55
+                        IDENT@52..55 "One"
+              SEMICOLON@55..56 ";"
+            WHITESPACE@56..65 "\n        "
+            EXPR_STMT@65..78
+              IS_EXPR@65..77
+                PATH_EXPR@65..66
+                  PATH@65..66
+                    PATH_SEGMENT@65..66
+                      NAME_REF@65..66
+                        IDENT@65..66 "s"
+                WHITESPACE@66..67 " "
+                IS_KW@67..69 "is"
+                WHITESPACE@69..70 " "
+                PATH_TYPE@70..73
+                  PATH@70..73
+                    PATH_SEGMENT@70..73
+                      NAME_REF@70..73
+                        IDENT@70..73 "One"
+                PIPE@73..74 "|"
+                PATH_TYPE@74..77
+                  PATH@74..77
+                    PATH_SEGMENT@74..77
+                      NAME_REF@74..77
+                        IDENT@74..77 "Two"
+              SEMICOLON@77..78 ";"
+            WHITESPACE@78..87 "\n        "
+            EXPR_STMT@87..102
+              IS_EXPR@87..101
+                PATH_EXPR@87..88
+                  PATH@87..88
+                    PATH_SEGMENT@87..88
+                      NAME_REF@87..88
+                        IDENT@87..88 "s"
+                WHITESPACE@88..89 " "
+                IS_KW@89..91 "is"
+                WHITESPACE@91..92 " "
+                PATH_TYPE@92..95
+                  PATH@92..95
+                    PATH_SEGMENT@92..95
+                      NAME_REF@92..95
+                        IDENT@92..95 "One"
+                WHITESPACE@95..96 " "
+                PIPE@96..97 "|"
+                WHITESPACE@97..98 " "
+                PATH_TYPE@98..101
+                  PATH@98..101
+                    PATH_SEGMENT@98..101
+                      NAME_REF@98..101
+                        IDENT@98..101 "Two"
+              SEMICOLON@101..102 ";"
+            WHITESPACE@102..111 "\n        "
+            IF_EXPR@111..132
+              IF_KW@111..113 "if"
+              WHITESPACE@113..114 " "
+              CONDITION@114..129
+                L_PAREN@114..115 "("
+                IS_EXPR@115..128
+                  PATH_EXPR@115..116
+                    PATH@115..116
+                      PATH_SEGMENT@115..116
+                        NAME_REF@115..116
+                          IDENT@115..116 "s"
+                  WHITESPACE@116..117 " "
+                  IS_KW@117..119 "is"
+                  WHITESPACE@119..120 " "
+                  PATH_TYPE@120..128
+                    PATH@120..128
+                      PATH@120..123
+                        PATH_SEGMENT@120..123
+                          NAME_REF@120..123
+                            IDENT@120..123 "One"
+                      COLON_COLON@123..125 "::"
+                      PATH_SEGMENT@125..128
+                        NAME_REF@125..128
+                          IDENT@125..128 "Two"
+                R_PAREN@128..129 ")"
+              WHITESPACE@129..130 " "
+              BLOCK_EXPR@130..132
+                STMT_LIST@130..132
+                  L_CURLY@130..131 "{"
+                  R_CURLY@131..132 "}"
+            WHITESPACE@132..137 "\n    "
+            R_CURLY@137..138 "}"
+      WHITESPACE@138..139 "\n"
+      R_CURLY@139..140 "}"
+  WHITESPACE@140..141 "\n"

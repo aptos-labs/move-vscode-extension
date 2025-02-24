@@ -1,0 +1,129 @@
+SOURCE_FILE@0..189
+  SCRIPT@0..188
+    SCRIPT_KW@0..6 "script"
+    WHITESPACE@6..7 " "
+    ITEM_LIST@7..188
+      L_CURLY@7..8 "{"
+      WHITESPACE@8..13 "\n    "
+      FUN@13..186
+        FUN_KW@13..16 "fun"
+        WHITESPACE@16..17 " "
+        NAME@17..21
+          IDENT@17..21 "main"
+        PARAM_LIST@21..23
+          L_PAREN@21..22 "("
+          R_PAREN@22..23 ")"
+        WHITESPACE@23..24 " "
+        BLOCK_EXPR@24..186
+          STMT_LIST@24..186
+            L_CURLY@24..25 "{"
+            WHITESPACE@25..34 "\n        "
+            EXPR_STMT@34..46
+              ANNOTATED_EXPR@34..45
+                L_PAREN@34..35 "("
+                LITERAL@35..38
+                  INT_NUMBER@35..38 "0x1"
+                COLON@38..39 ":"
+                WHITESPACE@39..40 " "
+                PATH_TYPE@40..44
+                  PATH@40..44
+                    PATH_SEGMENT@40..44
+                      NAME_REF@40..44
+                        IDENT@40..44 "u128"
+                R_PAREN@44..45 ")"
+              SEMICOLON@45..46 ";"
+            WHITESPACE@46..55 "\n        "
+            EXPR_STMT@55..71
+              ANNOTATED_EXPR@55..70
+                L_PAREN@55..56 "("
+                LITERAL@56..63
+                  INT_NUMBER@56..63 "0x1u128"
+                COLON@63..64 ":"
+                WHITESPACE@64..65 " "
+                PATH_TYPE@65..69
+                  PATH@65..69
+                    PATH_SEGMENT@65..69
+                      NAME_REF@65..69
+                        IDENT@65..69 "u128"
+                R_PAREN@69..70 ")"
+              SEMICOLON@70..71 ";"
+            WHITESPACE@71..80 "\n        "
+            EXPR_STMT@80..95
+              ANNOTATED_EXPR@80..94
+                L_PAREN@80..81 "("
+                LITERAL@81..87
+                  INT_NUMBER@81..87 "000001"
+                COLON@87..88 ":"
+                WHITESPACE@88..89 " "
+                PATH_TYPE@89..93
+                  PATH@89..93
+                    PATH_SEGMENT@89..93
+                      NAME_REF@89..93
+                        IDENT@89..93 "u128"
+                R_PAREN@93..94 ")"
+              SEMICOLON@94..95 ";"
+            WHITESPACE@95..104 "\n        "
+            EXPR_STMT@104..113
+              ANNOTATED_EXPR@104..112
+                L_PAREN@104..105 "("
+                LITERAL@105..106
+                  INT_NUMBER@105..106 "0"
+                COLON@106..107 ":"
+                WHITESPACE@107..108 " "
+                PATH_TYPE@108..111
+                  PATH@108..111
+                    PATH_SEGMENT@108..111
+                      NAME_REF@108..111
+                        IDENT@108..111 "u64"
+                R_PAREN@111..112 ")"
+              SEMICOLON@112..113 ";"
+            WHITESPACE@113..122 "\n        "
+            EXPR_STMT@122..135
+              ANNOTATED_EXPR@122..134
+                L_PAREN@122..123 "("
+                LITERAL@123..128
+                  INT_NUMBER@123..128 "10000"
+                COLON@128..129 ":"
+                WHITESPACE@129..130 " "
+                PATH_TYPE@130..133
+                  PATH@130..133
+                    PATH_SEGMENT@130..133
+                      NAME_REF@130..133
+                        IDENT@130..133 "u64"
+                R_PAREN@133..134 ")"
+              SEMICOLON@134..135 ";"
+            WHITESPACE@135..144 "\n        "
+            EXPR_STMT@144..157
+              ANNOTATED_EXPR@144..156
+                L_PAREN@144..145 "("
+                LITERAL@145..149
+                  TRUE_KW@145..149 "true"
+                COLON@149..150 ":"
+                WHITESPACE@150..151 " "
+                PATH_TYPE@151..155
+                  PATH@151..155
+                    PATH_SEGMENT@151..155
+                      NAME_REF@151..155
+                        IDENT@151..155 "bool"
+                R_PAREN@155..156 ")"
+              SEMICOLON@156..157 ";"
+            WHITESPACE@157..166 "\n        "
+            EXPR_STMT@166..180
+              ANNOTATED_EXPR@166..179
+                L_PAREN@166..167 "("
+                LITERAL@167..172
+                  FALSE_KW@167..172 "false"
+                COLON@172..173 ":"
+                WHITESPACE@173..174 " "
+                PATH_TYPE@174..178
+                  PATH@174..178
+                    PATH_SEGMENT@174..178
+                      NAME_REF@174..178
+                        IDENT@174..178 "bool"
+                R_PAREN@178..179 ")"
+              SEMICOLON@179..180 ";"
+            WHITESPACE@180..185 "\n    "
+            R_CURLY@185..186 "}"
+      WHITESPACE@186..187 "\n"
+      R_CURLY@187..188 "}"
+  WHITESPACE@188..189 "\n"

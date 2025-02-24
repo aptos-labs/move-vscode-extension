@@ -1,0 +1,49 @@
+[package]
+name = "aptos-analyzer"
+version = "0.1.0"
+rust-version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "aptos-analyzer"
+path = "src/bin/main.rs"
+
+[dependencies]
+rustc-hash = { workspace = true }
+lsp-types = { workspace = true }
+line-index = { workspace = true }
+crossbeam-channel = { workspace = true }
+triomphe = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true, features = ["preserve_order", "unbounded_depth"] }
+anyhow = { workspace = true }
+
+dirs = "6.0.0"
+memchr = "2.7.4"
+lsp-server = "0.7.8"
+nohash-hasher = "0.2.0"
+num_cpus = "1.16.0"
+parking_lot = "0.12.1"
+camino = { version =  "1.1.9", features = ["serde1"] }
+process-wrap = { version = "8.2.0", features = ["std"] }
+toml = "0.8.20"
+serde_derive = "1.0.217"
+
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+clap = { workspace = true }
+
+stdx = { workspace = true }
+vfs = { workspace = true }
+vfs-notify = { workspace = true }
+ra_salsa = { workspace = true }
+paths = { workspace = true }
+
+base-db = { path = "../base-db" }
+ide-db = { path = "../ide-db" }
+ide-completion = { path = "../ide-completion" }
+ide-diagnostics = { path = "../ide-diagnostics" }
+lang = { path = "../lang" }
+ide = { path = "../ide" }
+project-model = { path = "../project-model" }

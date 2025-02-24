@@ -1,0 +1,71 @@
+SOURCE_FILE@0..163
+  MODULE@0..162
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    ADDRESS_REF@7..10
+      VALUE_ADDRESS@7..10
+        INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..20
+      IDENT@12..20 "literals"
+    WHITESPACE@20..21 " "
+    ITEM_LIST@21..162
+      L_CURLY@21..22 "{"
+      WHITESPACE@22..27 "\n    "
+      FUN@27..160
+        FUN_KW@27..30 "fun"
+        WHITESPACE@30..31 " "
+        NAME@31..35
+          IDENT@31..35 "main"
+        PARAM_LIST@35..37
+          L_PAREN@35..36 "("
+          R_PAREN@36..37 ")"
+        WHITESPACE@37..38 " "
+        BLOCK_EXPR@38..160
+          STMT_LIST@38..160
+            L_CURLY@38..39 "{"
+            WHITESPACE@39..48 "\n        "
+            EXPR_STMT@48..50
+              LITERAL@48..49
+                INT_NUMBER@48..49 "1"
+              SEMICOLON@49..50 ";"
+            WHITESPACE@50..59 "\n        "
+            EXPR_STMT@59..63
+              LITERAL@59..62
+                INT_NUMBER@59..62 "0x1"
+              SEMICOLON@62..63 ";"
+            WHITESPACE@63..72 "\n        "
+            EXPR_STMT@72..81
+              LITERAL@72..80
+                INT_NUMBER@72..80 "0xc0ffee"
+              SEMICOLON@80..81 ";"
+            WHITESPACE@81..90 "\n        "
+            EXPR_STMT@90..94
+              LITERAL@90..93
+                INT_NUMBER@90..93 "1u8"
+              SEMICOLON@93..94 ";"
+            WHITESPACE@94..103 "\n        "
+            EXPR_STMT@103..108
+              LITERAL@103..107
+                INT_NUMBER@103..107 "1u64"
+              SEMICOLON@107..108 ";"
+            WHITESPACE@108..117 "\n        "
+            EXPR_STMT@117..125
+              LITERAL@117..124
+                BYTE_STRING@117..124 "b\"1234\""
+              SEMICOLON@124..125 ";"
+            WHITESPACE@125..134 "\n        "
+            EXPR_STMT@134..139
+              LITERAL@134..138
+                TRUE_KW@134..138 "true"
+              SEMICOLON@138..139 ";"
+            WHITESPACE@139..148 "\n        "
+            EXPR_STMT@148..154
+              LITERAL@148..153
+                FALSE_KW@148..153 "false"
+              SEMICOLON@153..154 ";"
+            WHITESPACE@154..159 "\n    "
+            R_CURLY@159..160 "}"
+      WHITESPACE@160..161 "\n"
+      R_CURLY@161..162 "}"
+  WHITESPACE@162..163 "\n"

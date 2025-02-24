@@ -1,0 +1,78 @@
+use crate::{ast_to_symbol_kind, RootDatabase, SymbolKind};
+use lang::Semantics;
+use std::collections::HashSet;
+use std::sync::LazyLock;
+use syntax::{ast, AstNode};
+
+static INTEGER_TYPE_IDENTS: LazyLock<HashSet<&str>> =
+    LazyLock::new(|| HashSet::from(["u8", "u16", "u32", "u64", "u128", "u256"]));
+
+static BUILTIN_TYPE_IDENTS: LazyLock<HashSet<&str>> = LazyLock::new(|| {
+    let mut set = HashSet::from(["vector", "address", "signer", "bool"]);
+    set.extend(INTEGER_TYPE_IDENTS.iter());
+    set
+});
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum Definition {
+    NamedItem(SymbolKind),
+    BuiltinType,
+}
+
+pub enum NameClass {
+    Definition(Definition),
+    // /// `field` in `if let Foo { field } = foo`. Here, `ast::Name` both introduces
+    // /// a definition into a local scope, and refers to an existing definition.
+    // PatFieldShorthand {
+    //     local_def: Local,
+    //     field_ref: Field,
+    //     adt_subst: GenericSubstitution,
+    // },
+}
+
+impl NameClass {
+    pub fn classify(name: &ast::Name) -> Option<NameClass> {
+        let parent = name.syntax().parent()?;
+        let symbol_kind = ast_to_symbol_kind(&parent)?;
+        Some(NameClass::Definition(Definition::NamedItem(symbol_kind)))
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum NameRefClass {
+    Definition(Definition),
+    // FieldShorthand {
+    //     local_ref: ast::IdentPat,
+    //     field_ref: ast::StructField,
+    // },
+}
+
+impl NameRefClass {
+    // Note: we don't have unit-tests for this rather important function.
+    // It is primarily exercised via goto definition tests in `ide`.
+    pub fn classify(
+        sema: &Semantics<'_, RootDatabase>,
+        name_ref: &ast::NameRef,
+    ) -> Option<NameRefClass> {
+        let parent = name_ref.syntax().parent()?;
+
+        if let Some(path) = ast::PathSegment::cast(parent.clone()).map(|it| it.parent_path()) {
+            let res = sema.resolve_path(path);
+            return match res {
+                Some(entry) => {
+                    let symbol_kind = ast_to_symbol_kind(&entry.syntax)?;
+                    Some(NameRefClass::Definition(Definition::NamedItem(symbol_kind)))
+                }
+                None => {
+                    let ref_name = name_ref.text().to_string();
+                    if BUILTIN_TYPE_IDENTS.contains(ref_name.as_str()) {
+                        return Some(NameRefClass::Definition(Definition::BuiltinType));
+                    }
+                    None
+                }
+            };
+        }
+
+        None
+    }
+}

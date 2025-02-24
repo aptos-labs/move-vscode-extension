@@ -1,0 +1,91 @@
+SOURCE_FILE@0..137
+  MODULE@0..136
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    ADDRESS_REF@7..10
+      VALUE_ADDRESS@7..10
+        INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..25
+      IDENT@12..25 "postfix_exprs"
+    WHITESPACE@25..26 " "
+    ITEM_LIST@26..136
+      L_CURLY@26..27 "{"
+      WHITESPACE@27..32 "\n    "
+      FUN@32..134
+        FUN_KW@32..35 "fun"
+        WHITESPACE@35..36 " "
+        NAME@36..40
+          IDENT@36..40 "main"
+        PARAM_LIST@40..42
+          L_PAREN@40..41 "("
+          R_PAREN@41..42 ")"
+        WHITESPACE@42..43 " "
+        BLOCK_EXPR@43..134
+          STMT_LIST@43..134
+            L_CURLY@43..44 "{"
+            WHITESPACE@44..53 "\n        "
+            EXPR_STMT@53..60
+              CALL_EXPR@53..59
+                PATH@53..57
+                  PATH_SEGMENT@53..57
+                    NAME_REF@53..57
+                      IDENT@53..57 "call"
+                ARG_LIST@57..59
+                  L_PAREN@57..58 "("
+                  R_PAREN@58..59 ")"
+              SEMICOLON@59..60 ";"
+            WHITESPACE@60..69 "\n        "
+            EXPR_STMT@69..77
+              DOT_EXPR@69..76
+                PATH_EXPR@69..70
+                  PATH@69..70
+                    PATH_SEGMENT@69..70
+                      NAME_REF@69..70
+                        IDENT@69..70 "a"
+                DOT@70..71 "."
+                NAME_REF@71..76
+                  IDENT@71..76 "field"
+              SEMICOLON@76..77 ";"
+            WHITESPACE@77..86 "\n        "
+            EXPR_STMT@86..95
+              METHOD_CALL_EXPR@86..94
+                PATH_EXPR@86..87
+                  PATH@86..87
+                    PATH_SEGMENT@86..87
+                      NAME_REF@86..87
+                        IDENT@86..87 "a"
+                DOT@87..88 "."
+                NAME_REF@88..92
+                  IDENT@88..92 "call"
+                ARG_LIST@92..94
+                  L_PAREN@92..93 "("
+                  R_PAREN@93..94 ")"
+              SEMICOLON@94..95 ";"
+            WHITESPACE@95..104 "\n        "
+            EXPR_STMT@104..109
+              INDEX_EXPR@104..108
+                PATH_EXPR@104..105
+                  PATH@104..105
+                    PATH_SEGMENT@104..105
+                      NAME_REF@104..105
+                        IDENT@104..105 "a"
+                L_BRACK@105..106 "["
+                LITERAL@106..107
+                  INT_NUMBER@106..107 "1"
+                R_BRACK@107..108 "]"
+              SEMICOLON@108..109 ";"
+            WHITESPACE@109..118 "\n        "
+            EXPR_STMT@118..128
+              VECTOR_LIT_EXPR@118..127
+                IDENT@118..124 "vector"
+                L_BRACK@124..125 "["
+                LITERAL@125..126
+                  INT_NUMBER@125..126 "1"
+                R_BRACK@126..127 "]"
+              SEMICOLON@127..128 ";"
+            WHITESPACE@128..133 "\n    "
+            R_CURLY@133..134 "}"
+      WHITESPACE@134..135 "\n"
+      R_CURLY@135..136 "}"
+  WHITESPACE@136..137 "\n"

@@ -1,0 +1,152 @@
+SOURCE_FILE@0..217
+  MODULE@0..216
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    ADDRESS_REF@7..10
+      VALUE_ADDRESS@7..10
+        INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..24
+      IDENT@12..24 "assert_macro"
+    WHITESPACE@24..25 " "
+    ITEM_LIST@25..216
+      L_CURLY@25..26 "{"
+      WHITESPACE@26..31 "\n    "
+      FUN@31..214
+        FUN_KW@31..34 "fun"
+        WHITESPACE@34..35 " "
+        NAME@35..39
+          IDENT@35..39 "main"
+        PARAM_LIST@39..41
+          L_PAREN@39..40 "("
+          R_PAREN@40..41 ")"
+        WHITESPACE@41..42 " "
+        BLOCK_EXPR@42..214
+          STMT_LIST@42..214
+            L_CURLY@42..43 "{"
+            WHITESPACE@43..52 "\n        "
+            EXPR_STMT@52..69
+              ASSERT_MACRO_EXPR@52..68
+                IDENT@52..58 "assert"
+                BANG@58..59 "!"
+                ARG_LIST@59..68
+                  L_PAREN@59..60 "("
+                  LITERAL@60..64
+                    TRUE_KW@60..64 "true"
+                  COMMA@64..65 ","
+                  WHITESPACE@65..66 " "
+                  LITERAL@66..67
+                    INT_NUMBER@66..67 "1"
+                  R_PAREN@67..68 ")"
+              SEMICOLON@68..69 ";"
+            WHITESPACE@69..78 "\n        "
+            EXPR_STMT@78..92
+              ASSERT_MACRO_EXPR@78..91
+                IDENT@78..84 "assert"
+                BANG@84..85 "!"
+                ARG_LIST@85..91
+                  L_PAREN@85..86 "("
+                  LITERAL@86..90
+                    TRUE_KW@86..90 "true"
+                  R_PAREN@90..91 ")"
+              SEMICOLON@91..92 ";"
+            WHITESPACE@92..102 "\n\n        "
+            EXPR_STMT@102..155
+              ASSERT_MACRO_EXPR@102..154
+                IDENT@102..108 "assert"
+                BANG@108..109 "!"
+                ARG_LIST@109..154
+                  L_PAREN@109..110 "("
+                  BIN_EXPR@110..150
+                    DOT_EXPR@110..141
+                      DOT_EXPR@110..135
+                        PAREN_EXPR@110..129
+                          L_PAREN@110..111 "("
+                          REF_EXPR@111..128
+                            AMP@111..112 "&"
+                            INDEX_EXPR@112..128
+                              PATH_EXPR@112..122
+                                PATH@112..122
+                                  PATH_SEGMENT@112..122
+                                    NAME_REF@112..113
+                                      IDENT@112..113 "Y"
+                                    TYPE_ARG_LIST@113..122
+                                      L_ANGLE@113..114 "<"
+                                      TYPE_ARG@114..121
+                                        PATH_TYPE@114..121
+                                          PATH@114..121
+                                            PATH_SEGMENT@114..121
+                                              NAME_REF@114..115
+                                                IDENT@114..115 "X"
+                                              TYPE_ARG_LIST@115..121
+                                                L_ANGLE@115..116 "<"
+                                                TYPE_ARG@116..120
+                                                  PATH_TYPE@116..120
+                                                    PATH@116..120
+                                                      PATH_SEGMENT@116..120
+                                                        NAME_REF@116..120
+                                                          IDENT@116..120 "bool"
+                                                R_ANGLE@120..121 ">"
+                                      R_ANGLE@121..122 ">"
+                              L_BRACK@122..123 "["
+                              PATH_EXPR@123..127
+                                PATH@123..127
+                                  PATH_SEGMENT@123..127
+                                    NAME_REF@123..127
+                                      IDENT@123..127 "addr"
+                              R_BRACK@127..128 "]"
+                          R_PAREN@128..129 ")"
+                        DOT@129..130 "."
+                        NAME_REF@130..135
+                          IDENT@130..135 "field"
+                      DOT@135..136 "."
+                      NAME_REF@136..141
+                        IDENT@136..141 "value"
+                    WHITESPACE@141..142 " "
+                    EQ_EQ@142..144 "=="
+                    WHITESPACE@144..145 " "
+                    LITERAL@145..150
+                      FALSE_KW@145..150 "false"
+                  COMMA@150..151 ","
+                  WHITESPACE@151..152 " "
+                  LITERAL@152..153
+                    INT_NUMBER@152..153 "1"
+                  R_PAREN@153..154 ")"
+              SEMICOLON@154..155 ";"
+            WHITESPACE@155..164 "\n        "
+            EXPR_STMT@164..208
+              ASSERT_MACRO_EXPR@164..207
+                IDENT@164..170 "assert"
+                BANG@170..171 "!"
+                ARG_LIST@171..207
+                  L_PAREN@171..172 "("
+                  BIN_EXPR@172..203
+                    DOT_EXPR@172..194
+                      DOT_EXPR@172..188
+                        PATH_EXPR@172..182
+                          PATH@172..182
+                            PATH_SEGMENT@172..182
+                              NAME_REF@172..182
+                                IDENT@172..182 "y_resource"
+                        DOT@182..183 "."
+                        NAME_REF@183..188
+                          IDENT@183..188 "field"
+                      DOT@188..189 "."
+                      NAME_REF@189..194
+                        IDENT@189..194 "value"
+                    WHITESPACE@194..195 " "
+                    EQ_EQ@195..197 "=="
+                    WHITESPACE@197..198 " "
+                    LITERAL@198..203
+                      FALSE_KW@198..203 "false"
+                  COMMA@203..204 ","
+                  WHITESPACE@204..205 " "
+                  LITERAL@205..206
+                    INT_NUMBER@205..206 "1"
+                  R_PAREN@206..207 ")"
+              SEMICOLON@207..208 ";"
+            WHITESPACE@208..213 "\n    "
+            R_CURLY@213..214 "}"
+      WHITESPACE@214..215 "\n"
+      R_CURLY@215..216 "}"
+  WHITESPACE@216..217 "\n"

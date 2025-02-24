@@ -1,0 +1,24 @@
+[package]
+name = "syntax"
+version = "0.1.0"
+edition = "2021"
+
+[[test]]
+name = "parsing_test"
+harness = false
+
+[dependencies]
+either = { workspace = true }
+tracing = { workspace = true }
+rowan = { workspace = true }
+itertools = { workspace = true }
+smol_str = { workspace = true }
+rustc-hash = { workspace = true }
+
+stdx = { workspace = true }
+
+parser = { path = "../parser" }
+
+[dev-dependencies]
+datatest-stable = "0.3.2"
+pretty_assertions = "1.4.1"

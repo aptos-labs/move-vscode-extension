@@ -1,0 +1,17 @@
+[package]
+name = "base-db"
+version = "0.1.0"
+rust-version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+tracing = { workspace = true }
+ra_salsa = { workspace = true }
+triomphe = { workspace = true }
+la-arena.workspace = true
+rustc-hash.workspace = true
+
+vfs = { workspace = true }
+
+syntax = { path = "../syntax" }

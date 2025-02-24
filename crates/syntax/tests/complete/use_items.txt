@@ -1,0 +1,413 @@
+SOURCE_FILE@0..646
+  MODULE@0..645
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    ADDRESS_REF@7..10
+      VALUE_ADDRESS@7..10
+        INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..21
+      IDENT@12..21 "use_items"
+    WHITESPACE@21..22 " "
+    ITEM_LIST@22..645
+      L_CURLY@22..23 "{"
+      WHITESPACE@23..28 "\n    "
+      USE_ITEM@28..39
+        USE_KW@28..31 "use"
+        WHITESPACE@31..32 " "
+        USE_SPECK@32..38
+          PATH@32..38
+            PATH@32..35
+              PATH_SEGMENT@32..35
+                PATH_ADDRESS@32..35
+                  VALUE_ADDRESS@32..35
+                    INT_NUMBER@32..35 "0x1"
+            COLON_COLON@35..37 "::"
+            PATH_SEGMENT@37..38
+              NAME_REF@37..38
+                IDENT@37..38 "m"
+        SEMICOLON@38..39 ";"
+      WHITESPACE@39..44 "\n    "
+      USE_ITEM@44..61
+        USE_KW@44..47 "use"
+        WHITESPACE@47..48 " "
+        USE_SPECK@48..60
+          PATH@48..60
+            PATH@48..54
+              PATH@48..51
+                PATH_SEGMENT@48..51
+                  PATH_ADDRESS@48..51
+                    VALUE_ADDRESS@48..51
+                      INT_NUMBER@48..51 "0x1"
+              COLON_COLON@51..53 "::"
+              PATH_SEGMENT@53..54
+                NAME_REF@53..54
+                  IDENT@53..54 "m"
+            COLON_COLON@54..56 "::"
+            PATH_SEGMENT@56..60
+              NAME_REF@56..60
+                IDENT@56..60 "call"
+        SEMICOLON@60..61 ";"
+      WHITESPACE@61..66 "\n    "
+      USE_ITEM@66..81
+        USE_KW@66..69 "use"
+        WHITESPACE@69..70 " "
+        USE_SPECK@70..80
+          PATH@70..76
+            PATH@70..73
+              PATH_SEGMENT@70..73
+                PATH_ADDRESS@70..73
+                  VALUE_ADDRESS@70..73
+                    INT_NUMBER@70..73 "0x1"
+            COLON_COLON@73..75 "::"
+            PATH_SEGMENT@75..76
+              NAME_REF@75..76
+                IDENT@75..76 "m"
+          COLON_COLON@76..78 "::"
+          USE_GROUP@78..80
+            L_CURLY@78..79 "{"
+            R_CURLY@79..80 "}"
+        SEMICOLON@80..81 ";"
+      WHITESPACE@81..86 "\n    "
+      USE_ITEM@86..105
+        USE_KW@86..89 "use"
+        WHITESPACE@89..90 " "
+        USE_SPECK@90..104
+          PATH@90..96
+            PATH@90..93
+              PATH_SEGMENT@90..93
+                PATH_ADDRESS@90..93
+                  VALUE_ADDRESS@90..93
+                    INT_NUMBER@90..93 "0x1"
+            COLON_COLON@93..95 "::"
+            PATH_SEGMENT@95..96
+              NAME_REF@95..96
+                IDENT@95..96 "m"
+          COLON_COLON@96..98 "::"
+          USE_GROUP@98..104
+            L_CURLY@98..99 "{"
+            USE_SPECK@99..103
+              PATH@99..103
+                PATH_SEGMENT@99..103
+                  NAME_REF@99..103
+                    IDENT@99..103 "call"
+            R_CURLY@103..104 "}"
+        SEMICOLON@104..105 ";"
+      WHITESPACE@105..110 "\n    "
+      USE_ITEM@110..156
+        USE_KW@110..113 "use"
+        WHITESPACE@113..114 " "
+        USE_SPECK@114..155
+          PATH@114..120
+            PATH@114..117
+              PATH_SEGMENT@114..117
+                PATH_ADDRESS@114..117
+                  VALUE_ADDRESS@114..117
+                    INT_NUMBER@114..117 "0x1"
+            COLON_COLON@117..119 "::"
+            PATH_SEGMENT@119..120
+              NAME_REF@119..120
+                IDENT@119..120 "m"
+          COLON_COLON@120..122 "::"
+          USE_GROUP@122..155
+            L_CURLY@122..123 "{"
+            WHITESPACE@123..132 "\n        "
+            USE_SPECK@132..136
+              PATH@132..136
+                PATH_SEGMENT@132..136
+                  NAME_REF@132..136
+                    IDENT@132..136 "Self"
+            COMMA@136..137 ","
+            WHITESPACE@137..138 " "
+            USE_SPECK@138..149
+              PATH@138..149
+                PATH_SEGMENT@138..149
+                  NAME_REF@138..149
+                    IDENT@138..149 "EventHandle"
+            WHITESPACE@149..154 "\n    "
+            R_CURLY@154..155 "}"
+        SEMICOLON@155..156 ";"
+      WHITESPACE@156..162 "\n\n    "
+      USE_ITEM@162..195
+        USE_KW@162..165 "use"
+        WHITESPACE@165..166 " "
+        USE_SPECK@166..194
+          PATH@166..187
+            PATH@166..182
+              PATH@166..169
+                PATH_SEGMENT@166..169
+                  PATH_ADDRESS@166..169
+                    VALUE_ADDRESS@166..169
+                      INT_NUMBER@166..169 "0x1"
+              COLON_COLON@169..171 "::"
+              PATH_SEGMENT@171..182
+                NAME_REF@171..182
+                  IDENT@171..182 "Transaction"
+            COLON_COLON@182..184 "::"
+            PATH_SEGMENT@184..187
+              NAME_REF@184..187
+                IDENT@184..187 "foo"
+          WHITESPACE@187..188 " "
+          USE_ALIAS@188..194
+            AS_KW@188..190 "as"
+            WHITESPACE@190..191 " "
+            NAME@191..194
+              IDENT@191..194 "bar"
+        SEMICOLON@194..195 ";"
+      WHITESPACE@195..200 "\n    "
+      USE_ITEM@200..240
+        USE_KW@200..203 "use"
+        WHITESPACE@203..204 " "
+        USE_SPECK@204..239
+          PATH@204..220
+            PATH@204..207
+              PATH_SEGMENT@204..207
+                PATH_ADDRESS@204..207
+                  VALUE_ADDRESS@204..207
+                    INT_NUMBER@204..207 "0x1"
+            COLON_COLON@207..209 "::"
+            PATH_SEGMENT@209..220
+              NAME_REF@209..220
+                IDENT@209..220 "Transaction"
+          COLON_COLON@220..222 "::"
+          USE_GROUP@222..239
+            L_CURLY@222..223 "{"
+            USE_SPECK@223..226
+              PATH@223..226
+                PATH_SEGMENT@223..226
+                  NAME_REF@223..226
+                    IDENT@223..226 "foo"
+            COMMA@226..227 ","
+            WHITESPACE@227..228 " "
+            USE_SPECK@228..238
+              PATH@228..231
+                PATH_SEGMENT@228..231
+                  NAME_REF@228..231
+                    IDENT@228..231 "foo"
+              WHITESPACE@231..232 " "
+              USE_ALIAS@232..238
+                AS_KW@232..234 "as"
+                WHITESPACE@234..235 " "
+                NAME@235..238
+                  IDENT@235..238 "bar"
+            R_CURLY@238..239 "}"
+        SEMICOLON@239..240 ";"
+      WHITESPACE@240..246 "\n\n    "
+      USE_ITEM@246..280
+        USE_KW@246..249 "use"
+        WHITESPACE@249..250 " "
+        USE_SPECK@250..279
+          PATH@250..279
+            PATH@250..273
+              PATH@250..260
+                PATH_SEGMENT@250..260
+                  NAME_REF@250..260
+                    IDENT@250..260 "liquidswap"
+              COLON_COLON@260..262 "::"
+              PATH_SEGMENT@262..273
+                NAME_REF@262..273
+                  IDENT@262..273 "Transaction"
+            COLON_COLON@273..275 "::"
+            PATH_SEGMENT@275..279
+              NAME_REF@275..279
+                IDENT@275..279 "call"
+        SEMICOLON@279..280 ";"
+      WHITESPACE@280..285 "\n    "
+      USE_ITEM@285..327
+        USE_KW@285..288 "use"
+        WHITESPACE@288..289 " "
+        USE_SPECK@289..326
+          PATH@289..326
+            PATH@289..318
+              PATH@289..312
+                PATH@289..299
+                  PATH_SEGMENT@289..299
+                    NAME_REF@289..299
+                      IDENT@289..299 "liquidswap"
+                COLON_COLON@299..301 "::"
+                PATH_SEGMENT@301..312
+                  NAME_REF@301..312
+                    IDENT@301..312 "Transaction"
+              COLON_COLON@312..314 "::"
+              PATH_SEGMENT@314..318
+                NAME_REF@314..318
+                  IDENT@314..318 "call"
+            COLON_COLON@318..320 "::"
+            PATH_SEGMENT@320..326
+              NAME_REF@320..326
+                IDENT@320..326 "Handle"
+        SEMICOLON@326..327 ";"
+      WHITESPACE@327..332 "\n    "
+      USE_ITEM@332..386
+        USE_KW@332..335 "use"
+        WHITESPACE@335..336 " "
+        USE_SPECK@336..385
+          PATH@336..365
+            PATH@336..359
+              PATH@336..346
+                PATH_SEGMENT@336..346
+                  NAME_REF@336..346
+                    IDENT@336..346 "liquidswap"
+              COLON_COLON@346..348 "::"
+              PATH_SEGMENT@348..359
+                NAME_REF@348..359
+                  IDENT@348..359 "Transaction"
+            COLON_COLON@359..361 "::"
+            PATH_SEGMENT@361..365
+              NAME_REF@361..365
+                IDENT@361..365 "call"
+          COLON_COLON@365..367 "::"
+          USE_GROUP@367..385
+            L_CURLY@367..368 "{"
+            USE_SPECK@368..375
+              PATH@368..375
+                PATH_SEGMENT@368..375
+                  NAME_REF@368..375
+                    IDENT@368..375 "Handle1"
+            COMMA@375..376 ","
+            WHITESPACE@376..377 " "
+            USE_SPECK@377..384
+              PATH@377..384
+                PATH_SEGMENT@377..384
+                  NAME_REF@377..384
+                    IDENT@377..384 "Handle2"
+            R_CURLY@384..385 "}"
+        SEMICOLON@385..386 ";"
+      WHITESPACE@386..392 "\n\n    "
+      FUN@392..643
+        FUN_KW@392..395 "fun"
+        WHITESPACE@395..396 " "
+        NAME@396..400
+          IDENT@396..400 "main"
+        PARAM_LIST@400..402
+          L_PAREN@400..401 "("
+          R_PAREN@401..402 ")"
+        WHITESPACE@402..403 " "
+        BLOCK_EXPR@403..643
+          STMT_LIST@403..643
+            L_CURLY@403..404 "{"
+            WHITESPACE@404..413 "\n        "
+            USE_ITEM@413..434
+              USE_KW@413..416 "use"
+              WHITESPACE@416..417 " "
+              USE_SPECK@417..433
+                PATH@417..433
+                  PATH@417..420
+                    PATH_SEGMENT@417..420
+                      PATH_ADDRESS@417..420
+                        VALUE_ADDRESS@417..420
+                          INT_NUMBER@417..420 "0x1"
+                  COLON_COLON@420..422 "::"
+                  PATH_SEGMENT@422..433
+                    NAME_REF@422..433
+                      IDENT@422..433 "Transaction"
+              SEMICOLON@433..434 ";"
+            WHITESPACE@434..444 "\n\n        "
+            LET_STMT@444..512
+              LET_KW@444..447 "let"
+              WHITESPACE@447..448 " "
+              IDENT_PAT@448..449
+                NAME@448..449
+                  IDENT@448..449 "x"
+              WHITESPACE@449..450 " "
+              EQ@450..451 "="
+              WHITESPACE@451..452 " "
+              BLOCK_EXPR@452..511
+                STMT_LIST@452..511
+                  L_CURLY@452..453 "{"
+                  WHITESPACE@453..466 "\n            "
+                  USE_ITEM@466..487
+                    USE_KW@466..469 "use"
+                    WHITESPACE@469..470 " "
+                    USE_SPECK@470..486
+                      PATH@470..486
+                        PATH@470..473
+                          PATH_SEGMENT@470..473
+                            PATH_ADDRESS@470..473
+                              VALUE_ADDRESS@470..473
+                                INT_NUMBER@470..473 "0x1"
+                        COLON_COLON@473..475 "::"
+                        PATH_SEGMENT@475..486
+                          NAME_REF@475..486
+                            IDENT@475..486 "Transaction"
+                    SEMICOLON@486..487 ";"
+                  WHITESPACE@487..500 "\n            "
+                  LITERAL@500..501
+                    INT_NUMBER@500..501 "0"
+                  WHITESPACE@501..510 "\n        "
+                  R_CURLY@510..511 "}"
+              SEMICOLON@511..512 ";"
+            WHITESPACE@512..522 "\n\n        "
+            EXPR_STMT@522..568
+              BLOCK_EXPR@522..567
+                STMT_LIST@522..567
+                  L_CURLY@522..523 "{"
+                  BLOCK_EXPR@523..566
+                    STMT_LIST@523..566
+                      L_CURLY@523..524 "{"
+                      BLOCK_EXPR@524..565
+                        STMT_LIST@524..565
+                          L_CURLY@524..525 "{"
+                          BLOCK_EXPR@525..564
+                            STMT_LIST@525..564
+                              L_CURLY@525..526 "{"
+                              WHITESPACE@526..539 "\n            "
+                              USE_ITEM@539..554
+                                USE_KW@539..542 "use"
+                                WHITESPACE@542..543 " "
+                                USE_SPECK@543..553
+                                  PATH@543..553
+                                    PATH@543..546
+                                      PATH_SEGMENT@543..546
+                                        PATH_ADDRESS@543..546
+                                          VALUE_ADDRESS@543..546
+                                            INT_NUMBER@543..546 "0x2"
+                                    COLON_COLON@546..548 "::"
+                                    PATH_SEGMENT@548..553
+                                      NAME_REF@548..553
+                                        IDENT@548..553 "Mango"
+                                SEMICOLON@553..554 ";"
+                              WHITESPACE@554..563 "\n        "
+                              R_CURLY@563..564 "}"
+                          R_CURLY@564..565 "}"
+                      R_CURLY@565..566 "}"
+                  R_CURLY@566..567 "}"
+              SEMICOLON@567..568 ";"
+            WHITESPACE@568..578 "\n\n        "
+            EXPR_STMT@578..637
+              WHILE_EXPR@578..636
+                WHILE_KW@578..583 "while"
+                WHITESPACE@583..584 " "
+                CONDITION@584..590
+                  L_PAREN@584..585 "("
+                  LITERAL@585..589
+                    TRUE_KW@585..589 "true"
+                  R_PAREN@589..590 ")"
+                WHITESPACE@590..591 " "
+                BLOCK_EXPR@591..636
+                  STMT_LIST@591..636
+                    L_CURLY@591..592 "{"
+                    WHITESPACE@592..605 "\n            "
+                    USE_ITEM@605..626
+                      USE_KW@605..608 "use"
+                      WHITESPACE@608..609 " "
+                      USE_SPECK@609..625
+                        PATH@609..625
+                          PATH@609..612
+                            PATH_SEGMENT@609..612
+                              PATH_ADDRESS@609..612
+                                VALUE_ADDRESS@609..612
+                                  INT_NUMBER@609..612 "0x1"
+                          COLON_COLON@612..614 "::"
+                          PATH_SEGMENT@614..625
+                            NAME_REF@614..625
+                              IDENT@614..625 "Transaction"
+                      SEMICOLON@625..626 ";"
+                    WHITESPACE@626..635 "\n        "
+                    R_CURLY@635..636 "}"
+              SEMICOLON@636..637 ";"
+            WHITESPACE@637..642 "\n    "
+            R_CURLY@642..643 "}"
+      WHITESPACE@643..644 "\n"
+      R_CURLY@644..645 "}"
+  WHITESPACE@645..646 "\n"

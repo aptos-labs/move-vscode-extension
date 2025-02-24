@@ -1,0 +1,17 @@
+[package]
+name = "ide-diagnostics"
+version = "0.1.0"
+rust-version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+rustc-hash = "2.1.1"
+tracing = { workspace = true }
+
+vfs = { workspace = true }
+
+syntax = { path = "../syntax" }
+base-db = { path = "../base-db" }
+ide-db = { path = "../ide-db" }
+lang = { path = "../lang" }

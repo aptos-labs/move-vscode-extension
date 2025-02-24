@@ -1,0 +1,135 @@
+SOURCE_FILE@0..225
+  MODULE@0..224
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    ADDRESS_REF@7..10
+      VALUE_ADDRESS@7..10
+        INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..19
+      IDENT@12..19 "vectors"
+    WHITESPACE@19..20 " "
+    ITEM_LIST@20..224
+      L_CURLY@20..21 "{"
+      WHITESPACE@21..26 "\n    "
+      FUN@26..222
+        FUN_KW@26..29 "fun"
+        WHITESPACE@29..30 " "
+        NAME@30..34
+          IDENT@30..34 "main"
+        PARAM_LIST@34..49
+          L_PAREN@34..35 "("
+          PARAM@35..48
+            IDENT_PAT@35..36
+              NAME@35..36
+                IDENT@35..36 "a"
+            COLON@36..37 ":"
+            WHITESPACE@37..38 " "
+            PATH_TYPE@38..48
+              PATH@38..48
+                PATH_SEGMENT@38..48
+                  NAME_REF@38..44
+                    IDENT@38..44 "vector"
+                  TYPE_ARG_LIST@44..48
+                    L_ANGLE@44..45 "<"
+                    TYPE_ARG@45..47
+                      PATH_TYPE@45..47
+                        PATH@45..47
+                          PATH_SEGMENT@45..47
+                            NAME_REF@45..47
+                              IDENT@45..47 "u8"
+                    R_ANGLE@47..48 ">"
+          R_PAREN@48..49 ")"
+        WHITESPACE@49..50 " "
+        BLOCK_EXPR@50..222
+          STMT_LIST@50..222
+            L_CURLY@50..51 "{"
+            WHITESPACE@51..60 "\n        "
+            EXPR_STMT@60..69
+              VECTOR_LIT_EXPR@60..68
+                IDENT@60..66 "vector"
+                L_BRACK@66..67 "["
+                R_BRACK@67..68 "]"
+              SEMICOLON@68..69 ";"
+            WHITESPACE@69..78 "\n        "
+            EXPR_STMT@78..91
+              VECTOR_LIT_EXPR@78..90
+                IDENT@78..84 "vector"
+                L_BRACK@84..85 "["
+                LITERAL@85..86
+                  INT_NUMBER@85..86 "1"
+                COMMA@86..87 ","
+                WHITESPACE@87..88 " "
+                LITERAL@88..89
+                  INT_NUMBER@88..89 "1"
+                R_BRACK@89..90 "]"
+              SEMICOLON@90..91 ";"
+            WHITESPACE@91..100 "\n        "
+            EXPR_STMT@100..164
+              VECTOR_LIT_EXPR@100..163
+                IDENT@100..106 "vector"
+                L_BRACK@106..107 "["
+                WHITESPACE@107..120 "\n            "
+                PATH_EXPR@120..129
+                  PATH@120..129
+                    PATH_SEGMENT@120..129
+                      NAME_REF@120..129
+                        IDENT@120..129 "type_info"
+                COMMA@129..130 ","
+                WHITESPACE@130..143 "\n            "
+                PATH_EXPR@143..152
+                  PATH@143..152
+                    PATH_SEGMENT@143..152
+                      NAME_REF@143..152
+                        IDENT@143..152 "type_info"
+                COMMA@152..153 ","
+                WHITESPACE@153..162 "\n        "
+                R_BRACK@162..163 "]"
+              SEMICOLON@163..164 ";"
+            WHITESPACE@164..173 "\n        "
+            EXPR_STMT@173..193
+              VECTOR_LIT_EXPR@173..192
+                IDENT@173..179 "vector"
+                TYPE_ARG_LIST@179..183
+                  L_ANGLE@179..180 "<"
+                  TYPE_ARG@180..182
+                    PATH_TYPE@180..182
+                      PATH@180..182
+                        PATH_SEGMENT@180..182
+                          NAME_REF@180..182
+                            IDENT@180..182 "u8"
+                  R_ANGLE@182..183 ">"
+                L_BRACK@183..184 "["
+                LITERAL@184..185
+                  INT_NUMBER@184..185 "1"
+                COMMA@185..186 ","
+                WHITESPACE@186..187 " "
+                LITERAL@187..188
+                  INT_NUMBER@187..188 "2"
+                COMMA@188..189 ","
+                WHITESPACE@189..190 " "
+                LITERAL@190..191
+                  INT_NUMBER@190..191 "3"
+                R_BRACK@191..192 "]"
+              SEMICOLON@192..193 ";"
+            WHITESPACE@193..202 "\n        "
+            EXPR_STMT@202..216
+              CALL_EXPR@202..215
+                PATH@202..213
+                  PATH@202..208
+                    PATH_SEGMENT@202..208
+                      NAME_REF@202..208
+                        IDENT@202..208 "vector"
+                  COLON_COLON@208..210 "::"
+                  PATH_SEGMENT@210..213
+                    NAME_REF@210..213
+                      IDENT@210..213 "add"
+                ARG_LIST@213..215
+                  L_PAREN@213..214 "("
+                  R_PAREN@214..215 ")"
+              SEMICOLON@215..216 ";"
+            WHITESPACE@216..221 "\n    "
+            R_CURLY@221..222 "}"
+      WHITESPACE@222..223 "\n"
+      R_CURLY@223..224 "}"
+  WHITESPACE@224..225 "\n"

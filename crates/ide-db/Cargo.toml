@@ -1,0 +1,25 @@
+[package]
+name = "ide-db"
+version = "0.1.0"
+rust-version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+rustc-hash.workspace = true
+indexmap.workspace = true
+
+nohash-hasher = "0.2.0"
+
+itertools = { workspace = true }
+line-index = { workspace = true }
+tracing = { workspace = true }
+triomphe = { workspace = true }
+
+ra_salsa = { workspace = true }
+vfs = { workspace = true }
+stdx.workspace = true
+
+base-db = { path = "../base-db" }
+lang = { path = "../lang" }
+syntax = { path = "../syntax" }

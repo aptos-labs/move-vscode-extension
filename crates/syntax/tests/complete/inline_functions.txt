@@ -1,0 +1,507 @@
+SOURCE_FILE@0..687
+  MODULE@0..686
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    ADDRESS_REF@7..10
+      VALUE_ADDRESS@7..10
+        INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..28
+      IDENT@12..28 "inline_functions"
+    WHITESPACE@28..29 " "
+    ITEM_LIST@29..686
+      L_CURLY@29..30 "{"
+      WHITESPACE@30..35 "\n    "
+      FUN@35..232
+        VISIBILITY@35..41
+          PUBLIC_KW@35..41 "public"
+        WHITESPACE@41..42 " "
+        INLINE_KW@42..48 "inline"
+        WHITESPACE@48..49 " "
+        FUN_KW@49..52 "fun"
+        WHITESPACE@52..53 " "
+        NAME@53..56
+          IDENT@53..56 "map"
+        TYPE_PARAM_LIST@56..77
+          L_ANGLE@56..57 "<"
+          TYPE_PARAM@57..64
+            NAME@57..64
+              IDENT@57..64 "Element"
+          COMMA@64..65 ","
+          WHITESPACE@65..66 " "
+          TYPE_PARAM@66..76
+            NAME@66..76
+              IDENT@66..76 "NewElement"
+          R_ANGLE@76..77 ">"
+        PARAM_LIST@77..144
+          L_PAREN@77..78 "("
+          WHITESPACE@78..87 "\n        "
+          PARAM@87..105
+            IDENT_PAT@87..88
+              NAME@87..88
+                IDENT@87..88 "v"
+            COLON@88..89 ":"
+            WHITESPACE@89..90 " "
+            PATH_TYPE@90..105
+              PATH@90..105
+                PATH_SEGMENT@90..105
+                  NAME_REF@90..96
+                    IDENT@90..96 "vector"
+                  TYPE_ARG_LIST@96..105
+                    L_ANGLE@96..97 "<"
+                    TYPE_ARG@97..104
+                      PATH_TYPE@97..104
+                        PATH@97..104
+                          PATH_SEGMENT@97..104
+                            NAME_REF@97..104
+                              IDENT@97..104 "Element"
+                    R_ANGLE@104..105 ">"
+          COMMA@105..106 ","
+          WHITESPACE@106..115 "\n        "
+          PARAM@115..137
+            IDENT_PAT@115..116
+              NAME@115..116
+                IDENT@115..116 "f"
+            COLON@116..117 ":"
+            WHITESPACE@117..118 " "
+            LAMBDA_TYPE@118..137
+              PIPE@118..119 "|"
+              LAMBDA_TYPE_PARAM@119..126
+                PATH_TYPE@119..126
+                  PATH@119..126
+                    PATH_SEGMENT@119..126
+                      NAME_REF@119..126
+                        IDENT@119..126 "Element"
+              PIPE@126..127 "|"
+              PATH_TYPE@127..137
+                PATH@127..137
+                  PATH_SEGMENT@127..137
+                    NAME_REF@127..137
+                      IDENT@127..137 "NewElement"
+          COMMA@137..138 ","
+          WHITESPACE@138..143 "\n    "
+          R_PAREN@143..144 ")"
+        RET_TYPE@144..164
+          COLON@144..145 ":"
+          WHITESPACE@145..146 " "
+          PATH_TYPE@146..164
+            PATH@146..164
+              PATH_SEGMENT@146..164
+                NAME_REF@146..152
+                  IDENT@146..152 "vector"
+                TYPE_ARG_LIST@152..164
+                  L_ANGLE@152..153 "<"
+                  TYPE_ARG@153..163
+                    PATH_TYPE@153..163
+                      PATH@153..163
+                        PATH_SEGMENT@153..163
+                          NAME_REF@153..163
+                            IDENT@153..163 "NewElement"
+                  R_ANGLE@163..164 ">"
+        WHITESPACE@164..165 " "
+        BLOCK_EXPR@165..232
+          STMT_LIST@165..232
+            L_CURLY@165..166 "{"
+            WHITESPACE@166..175 "\n        "
+            EXPR_STMT@175..226
+              CALL_EXPR@175..225
+                PATH@175..182
+                  PATH_SEGMENT@175..182
+                    NAME_REF@175..182
+                      IDENT@175..182 "foreach"
+                ARG_LIST@182..225
+                  L_PAREN@182..183 "("
+                  PATH_EXPR@183..184
+                    PATH@183..184
+                      PATH_SEGMENT@183..184
+                        NAME_REF@183..184
+                          IDENT@183..184 "v"
+                  COMMA@184..185 ","
+                  WHITESPACE@185..186 " "
+                  LAMBDA_EXPR@186..224
+                    PIPE@186..187 "|"
+                    LAMBDA_PARAM@187..191
+                      IDENT_PAT@187..191
+                        NAME@187..191
+                          IDENT@187..191 "elem"
+                    PIPE@191..192 "|"
+                    WHITESPACE@192..193 " "
+                    CALL_EXPR@193..224
+                      PATH@193..202
+                        PATH_SEGMENT@193..202
+                          NAME_REF@193..202
+                            IDENT@193..202 "push_back"
+                      ARG_LIST@202..224
+                        L_PAREN@202..203 "("
+                        REF_EXPR@203..214
+                          AMP@203..204 "&"
+                          MUT_KW@204..207 "mut"
+                          WHITESPACE@207..208 " "
+                          PATH_EXPR@208..214
+                            PATH@208..214
+                              PATH_SEGMENT@208..214
+                                NAME_REF@208..214
+                                  IDENT@208..214 "result"
+                        COMMA@214..215 ","
+                        WHITESPACE@215..216 " "
+                        CALL_EXPR@216..223
+                          PATH@216..217
+                            PATH_SEGMENT@216..217
+                              NAME_REF@216..217
+                                IDENT@216..217 "f"
+                          ARG_LIST@217..223
+                            L_PAREN@217..218 "("
+                            PATH_EXPR@218..222
+                              PATH@218..222
+                                PATH_SEGMENT@218..222
+                                  NAME_REF@218..222
+                                    IDENT@218..222 "elem"
+                            R_PAREN@222..223 ")"
+                        R_PAREN@223..224 ")"
+                  R_PAREN@224..225 ")"
+              SEMICOLON@225..226 ";"
+            WHITESPACE@226..231 "\n    "
+            R_CURLY@231..232 "}"
+      WHITESPACE@232..238 "\n\n    "
+      FUN@238..403
+        INLINE_KW@238..244 "inline"
+        WHITESPACE@244..245 " "
+        FUN_KW@245..248 "fun"
+        WHITESPACE@248..249 " "
+        NAME@249..255
+          IDENT@249..255 "filter"
+        TYPE_PARAM_LIST@255..270
+          L_ANGLE@255..256 "<"
+          TYPE_PARAM@256..269
+            NAME@256..263
+              IDENT@256..263 "Element"
+            COLON@263..264 ":"
+            WHITESPACE@264..265 " "
+            ABILITY_BOUND_LIST@265..269
+              ABILITY@265..269
+                IDENT@265..269 "drop"
+          R_ANGLE@269..270 ">"
+        PARAM_LIST@270..299
+          L_PAREN@270..271 "("
+          WHITESPACE@271..280 "\n        "
+          PARAM@280..293
+            IDENT_PAT@280..281
+              NAME@280..281
+                IDENT@280..281 "p"
+            COLON@281..282 ":"
+            WHITESPACE@282..283 " "
+            LAMBDA_TYPE@283..293
+              PIPE@283..284 "|"
+              LAMBDA_TYPE_PARAM@284..292
+                REF_TYPE@284..292
+                  AMP@284..285 "&"
+                  PATH_TYPE@285..292
+                    PATH@285..292
+                      PATH_SEGMENT@285..292
+                        NAME_REF@285..292
+                          IDENT@285..292 "Element"
+              PIPE@292..293 "|"
+          WHITESPACE@293..298 "\n    "
+          R_PAREN@298..299 ")"
+        WHITESPACE@299..300 " "
+        BLOCK_EXPR@300..403
+          STMT_LIST@300..403
+            L_CURLY@300..301 "{"
+            WHITESPACE@301..310 "\n        "
+            EXPR_STMT@310..397
+              CALL_EXPR@310..396
+                PATH@310..317
+                  PATH_SEGMENT@310..317
+                    NAME_REF@310..317
+                      IDENT@310..317 "foreach"
+                ARG_LIST@317..396
+                  L_PAREN@317..318 "("
+                  PATH_EXPR@318..319
+                    PATH@318..319
+                      PATH_SEGMENT@318..319
+                        NAME_REF@318..319
+                          IDENT@318..319 "v"
+                  COMMA@319..320 ","
+                  WHITESPACE@320..321 " "
+                  LAMBDA_EXPR@321..395
+                    PIPE@321..322 "|"
+                    LAMBDA_PARAM@322..326
+                      IDENT_PAT@322..326
+                        NAME@322..326
+                          IDENT@322..326 "elem"
+                    PIPE@326..327 "|"
+                    WHITESPACE@327..328 " "
+                    BLOCK_EXPR@328..395
+                      STMT_LIST@328..395
+                        L_CURLY@328..329 "{"
+                        WHITESPACE@329..342 "\n            "
+                        EXPR_STMT@342..385
+                          IF_EXPR@342..384
+                            IF_KW@342..344 "if"
+                            WHITESPACE@344..345 " "
+                            CONDITION@345..355
+                              L_PAREN@345..346 "("
+                              CALL_EXPR@346..354
+                                PATH@346..347
+                                  PATH_SEGMENT@346..347
+                                    NAME_REF@346..347
+                                      IDENT@346..347 "p"
+                                ARG_LIST@347..354
+                                  L_PAREN@347..348 "("
+                                  REF_EXPR@348..353
+                                    AMP@348..349 "&"
+                                    PATH_EXPR@349..353
+                                      PATH@349..353
+                                        PATH_SEGMENT@349..353
+                                          NAME_REF@349..353
+                                            IDENT@349..353 "elem"
+                                  R_PAREN@353..354 ")"
+                              R_PAREN@354..355 ")"
+                            WHITESPACE@355..356 " "
+                            INLINE_EXPR@356..384
+                              CALL_EXPR@356..384
+                                PATH@356..365
+                                  PATH_SEGMENT@356..365
+                                    NAME_REF@356..365
+                                      IDENT@356..365 "push_back"
+                                ARG_LIST@365..384
+                                  L_PAREN@365..366 "("
+                                  REF_EXPR@366..377
+                                    AMP@366..367 "&"
+                                    MUT_KW@367..370 "mut"
+                                    WHITESPACE@370..371 " "
+                                    PATH_EXPR@371..377
+                                      PATH@371..377
+                                        PATH_SEGMENT@371..377
+                                          NAME_REF@371..377
+                                            IDENT@371..377 "result"
+                                  COMMA@377..378 ","
+                                  WHITESPACE@378..379 " "
+                                  PATH_EXPR@379..383
+                                    PATH@379..383
+                                      PATH_SEGMENT@379..383
+                                        NAME_REF@379..383
+                                          IDENT@379..383 "elem"
+                                  R_PAREN@383..384 ")"
+                          SEMICOLON@384..385 ";"
+                        WHITESPACE@385..394 "\n        "
+                        R_CURLY@394..395 "}"
+                  R_PAREN@395..396 ")"
+              SEMICOLON@396..397 ";"
+            WHITESPACE@397..402 "\n    "
+            R_CURLY@402..403 "}"
+      WHITESPACE@403..409 "\n\n    "
+      FUN@409..605
+        INLINE_KW@409..415 "inline"
+        WHITESPACE@415..416 " "
+        FUN_KW@416..419 "fun"
+        WHITESPACE@419..420 " "
+        NAME@420..424
+          IDENT@420..424 "fold"
+        TYPE_PARAM_LIST@424..433
+          L_ANGLE@424..425 "<"
+          TYPE_PARAM@425..432
+            NAME@425..432
+              IDENT@425..432 "Element"
+          R_ANGLE@432..433 ">"
+        PARAM_LIST@433..572
+          L_PAREN@433..434 "("
+          PARAM@434..446
+            IDENT_PAT@434..435
+              NAME@434..435
+                IDENT@434..435 "a"
+            COLON@435..436 ":"
+            WHITESPACE@436..437 " "
+            PAREN_TYPE@437..446
+              L_PAREN@437..438 "("
+              PATH_TYPE@438..445
+                PATH@438..445
+                  PATH_SEGMENT@438..445
+                    NAME_REF@438..445
+                      IDENT@438..445 "Element"
+              R_PAREN@445..446 ")"
+          COMMA@446..447 ","
+          WHITESPACE@447..477 "\n                     ..."
+          PARAM@477..499
+            IDENT_PAT@477..478
+              NAME@477..478
+                IDENT@477..478 "f"
+            COLON@478..479 ":"
+            WHITESPACE@479..480 " "
+            PAREN_TYPE@480..499
+              L_PAREN@480..481 "("
+              LAMBDA_TYPE@481..498
+                PIPE@481..482 "|"
+                LAMBDA_TYPE_PARAM@482..489
+                  PATH_TYPE@482..489
+                    PATH@482..489
+                      PATH_SEGMENT@482..489
+                        NAME_REF@482..489
+                          IDENT@482..489 "Element"
+                PIPE@489..490 "|"
+                WHITESPACE@490..491 " "
+                PATH_TYPE@491..498
+                  PATH@491..498
+                    PATH_SEGMENT@491..498
+                      NAME_REF@491..498
+                        IDENT@491..498 "Element"
+              R_PAREN@498..499 ")"
+          COMMA@499..500 ","
+          WHITESPACE@500..530 "\n                     ..."
+          PARAM@530..571
+            IDENT_PAT@530..531
+              NAME@530..531
+                IDENT@530..531 "g"
+            COLON@531..532 ":"
+            WHITESPACE@532..533 " "
+            LAMBDA_TYPE@533..571
+              PIPE@533..534 "|"
+              LAMBDA_TYPE_PARAM@534..541
+                PATH_TYPE@534..541
+                  PATH@534..541
+                    PATH_SEGMENT@534..541
+                      NAME_REF@534..541
+                        IDENT@534..541 "Element"
+              COMMA@541..542 ","
+              WHITESPACE@542..543 " "
+              LAMBDA_TYPE_PARAM@543..562
+                PAREN_TYPE@543..562
+                  L_PAREN@543..544 "("
+                  LAMBDA_TYPE@544..561
+                    PIPE@544..545 "|"
+                    LAMBDA_TYPE_PARAM@545..552
+                      PATH_TYPE@545..552
+                        PATH@545..552
+                          PATH_SEGMENT@545..552
+                            NAME_REF@545..552
+                              IDENT@545..552 "Element"
+                    PIPE@552..553 "|"
+                    WHITESPACE@553..554 " "
+                    PATH_TYPE@554..561
+                      PATH@554..561
+                        PATH_SEGMENT@554..561
+                          NAME_REF@554..561
+                            IDENT@554..561 "Element"
+                  R_PAREN@561..562 ")"
+              PIPE@562..563 "|"
+              WHITESPACE@563..564 " "
+              PATH_TYPE@564..571
+                PATH@564..571
+                  PATH_SEGMENT@564..571
+                    NAME_REF@564..571
+                      IDENT@564..571 "Element"
+          R_PAREN@571..572 ")"
+        RET_TYPE@572..581
+          COLON@572..573 ":"
+          WHITESPACE@573..574 " "
+          PATH_TYPE@574..581
+            PATH@574..581
+              PATH_SEGMENT@574..581
+                NAME_REF@574..581
+                  IDENT@574..581 "Element"
+        WHITESPACE@581..582 " "
+        BLOCK_EXPR@582..605
+          STMT_LIST@582..605
+            L_CURLY@582..583 "{"
+            WHITESPACE@583..592 "\n        "
+            CALL_EXPR@592..599
+              PATH@592..593
+                PATH_SEGMENT@592..593
+                  NAME_REF@592..593
+                    IDENT@592..593 "f"
+              ARG_LIST@593..599
+                L_PAREN@593..594 "("
+                PATH_EXPR@594..595
+                  PATH@594..595
+                    PATH_SEGMENT@594..595
+                      NAME_REF@594..595
+                        IDENT@594..595 "a"
+                COMMA@595..596 ","
+                WHITESPACE@596..597 " "
+                PATH_EXPR@597..598
+                  PATH@597..598
+                    PATH_SEGMENT@597..598
+                      NAME_REF@597..598
+                        IDENT@597..598 "g"
+                R_PAREN@598..599 ")"
+            WHITESPACE@599..604 "\n    "
+            R_CURLY@604..605 "}"
+      WHITESPACE@605..611 "\n\n    "
+      FUN@611..684
+        FUN_KW@611..614 "fun"
+        WHITESPACE@614..615 " "
+        NAME@615..619
+          IDENT@615..619 "main"
+        PARAM_LIST@619..636
+          L_PAREN@619..620 "("
+          PARAM@620..625
+            IDENT_PAT@620..621
+              NAME@620..621
+                IDENT@620..621 "f"
+            COLON@621..622 ":"
+            WHITESPACE@622..623 " "
+            LAMBDA_TYPE@623..625
+              PIPE@623..624 "|"
+              PIPE@624..625 "|"
+          COMMA@625..626 ","
+          WHITESPACE@626..627 " "
+          PARAM@627..635
+            IDENT_PAT@627..628
+              NAME@627..628
+                IDENT@627..628 "g"
+            COLON@628..629 ":"
+            WHITESPACE@629..630 " "
+            LAMBDA_TYPE@630..635
+              PIPE@630..631 "|"
+              PIPE@631..632 "|"
+              PATH_TYPE@632..635
+                PATH@632..635
+                  PATH_SEGMENT@632..635
+                    NAME_REF@632..635
+                      IDENT@632..635 "u64"
+          R_PAREN@635..636 ")"
+        WHITESPACE@636..637 " "
+        BLOCK_EXPR@637..684
+          STMT_LIST@637..684
+            L_CURLY@637..638 "{"
+            WHITESPACE@638..647 "\n        "
+            EXPR_STMT@647..658
+              CALL_EXPR@647..657
+                PATH@647..650
+                  PATH_SEGMENT@647..650
+                    NAME_REF@647..650
+                      IDENT@647..650 "foo"
+                ARG_LIST@650..657
+                  L_PAREN@650..651 "("
+                  LAMBDA_EXPR@651..656
+                    PIPE@651..652 "|"
+                    PIPE@652..653 "|"
+                    WHITESPACE@653..654 " "
+                    BLOCK_EXPR@654..656
+                      STMT_LIST@654..656
+                        L_CURLY@654..655 "{"
+                        R_CURLY@655..656 "}"
+                  R_PAREN@656..657 ")"
+              SEMICOLON@657..658 ";"
+            WHITESPACE@658..667 "\n        "
+            EXPR_STMT@667..677
+              CALL_EXPR@667..676
+                PATH@667..670
+                  PATH_SEGMENT@667..670
+                    NAME_REF@667..670
+                      IDENT@667..670 "bar"
+                ARG_LIST@670..676
+                  L_PAREN@670..671 "("
+                  LAMBDA_EXPR@671..675
+                    PIPE@671..672 "|"
+                    PIPE@672..673 "|"
+                    WHITESPACE@673..674 " "
+                    LITERAL@674..675
+                      INT_NUMBER@674..675 "1"
+                  R_PAREN@675..676 ")"
+              SEMICOLON@676..677 ";"
+            WHITESPACE@677..683 "\n\n    "
+            R_CURLY@683..684 "}"
+      WHITESPACE@684..685 "\n"
+      R_CURLY@685..686 "}"
+  WHITESPACE@686..687 "\n"

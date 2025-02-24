@@ -1,0 +1,93 @@
+SOURCE_FILE@0..236
+  MODULE@0..235
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    ADDRESS_REF@7..10
+      VALUE_ADDRESS@7..10
+        INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..23
+      IDENT@12..23 "loop_labels"
+    WHITESPACE@23..24 " "
+    ITEM_LIST@24..235
+      L_CURLY@24..25 "{"
+      WHITESPACE@25..30 "\n    "
+      FUN@30..233
+        FUN_KW@30..33 "fun"
+        WHITESPACE@33..34 " "
+        NAME@34..38
+          IDENT@34..38 "main"
+        PARAM_LIST@38..40
+          L_PAREN@38..39 "("
+          R_PAREN@39..40 ")"
+        WHITESPACE@40..41 " "
+        BLOCK_EXPR@41..233
+          STMT_LIST@41..233
+            L_CURLY@41..42 "{"
+            WHITESPACE@42..51 "\n        "
+            EXPR_STMT@51..131
+              LOOP_EXPR@51..130
+                LABEL@51..58
+                  QUOTE_IDENT@51..57 "'label"
+                  COLON@57..58 ":"
+                WHITESPACE@58..59 " "
+                LOOP_KW@59..63 "loop"
+                WHITESPACE@63..64 " "
+                BLOCK_EXPR@64..130
+                  STMT_LIST@64..130
+                    L_CURLY@64..65 "{"
+                    WHITESPACE@65..78 "\n            "
+                    EXPR_STMT@78..91
+                      BREAK_EXPR@78..90
+                        BREAK_KW@78..83 "break"
+                        WHITESPACE@83..84 " "
+                        QUOTE_IDENT@84..90 "'label"
+                      SEMICOLON@90..91 ";"
+                    WHITESPACE@91..104 "\n            "
+                    EXPR_STMT@104..120
+                      CONTINUE_EXPR@104..119
+                        CONTINUE_KW@104..112 "continue"
+                        WHITESPACE@112..113 " "
+                        QUOTE_IDENT@113..119 "'label"
+                      SEMICOLON@119..120 ";"
+                    WHITESPACE@120..129 "\n        "
+                    R_CURLY@129..130 "}"
+              SEMICOLON@130..131 ";"
+            WHITESPACE@131..140 "\n        "
+            WHILE_EXPR@140..227
+              LABEL@140..147
+                QUOTE_IDENT@140..146 "'label"
+                COLON@146..147 ":"
+              WHITESPACE@147..148 " "
+              WHILE_KW@148..153 "while"
+              WHITESPACE@153..154 " "
+              CONDITION@154..160
+                L_PAREN@154..155 "("
+                LITERAL@155..159
+                  TRUE_KW@155..159 "true"
+                R_PAREN@159..160 ")"
+              WHITESPACE@160..161 " "
+              BLOCK_EXPR@161..227
+                STMT_LIST@161..227
+                  L_CURLY@161..162 "{"
+                  WHITESPACE@162..175 "\n            "
+                  EXPR_STMT@175..188
+                    BREAK_EXPR@175..187
+                      BREAK_KW@175..180 "break"
+                      WHITESPACE@180..181 " "
+                      QUOTE_IDENT@181..187 "'label"
+                    SEMICOLON@187..188 ";"
+                  WHITESPACE@188..201 "\n            "
+                  EXPR_STMT@201..217
+                    CONTINUE_EXPR@201..216
+                      CONTINUE_KW@201..209 "continue"
+                      WHITESPACE@209..210 " "
+                      QUOTE_IDENT@210..216 "'label"
+                    SEMICOLON@216..217 ";"
+                  WHITESPACE@217..226 "\n        "
+                  R_CURLY@226..227 "}"
+            WHITESPACE@227..232 "\n    "
+            R_CURLY@232..233 "}"
+      WHITESPACE@233..234 "\n"
+      R_CURLY@234..235 "}"
+  WHITESPACE@235..236 "\n"

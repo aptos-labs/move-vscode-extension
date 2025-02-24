@@ -1,0 +1,215 @@
+SOURCE_FILE@0..371
+  MODULE@0..370
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    ADDRESS_REF@7..10
+      VALUE_ADDRESS@7..10
+        INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..13
+      IDENT@12..13 "M"
+    WHITESPACE@13..14 " "
+    ITEM_LIST@14..370
+      L_CURLY@14..15 "{"
+      WHITESPACE@15..20 "\n    "
+      STRUCT@20..71
+        STRUCT_KW@20..26 "struct"
+        WHITESPACE@26..27 " "
+        NAME@27..31
+          IDENT@27..31 "Coin"
+        TYPE_PARAM_LIST@31..68
+          L_ANGLE@31..32 "<"
+          TYPE_PARAM@32..48
+            PHANTOM_KW@32..39 "phantom"
+            WHITESPACE@39..40 " "
+            NAME@40..48
+              IDENT@40..48 "CoinType"
+          COMMA@48..49 ","
+          WHITESPACE@49..50 " "
+          TYPE_PARAM@50..67
+            PHANTOM_KW@50..57 "phantom"
+            WHITESPACE@57..58 " "
+            NAME@58..67
+              IDENT@58..67 "CoinType2"
+          R_ANGLE@67..68 ">"
+        WHITESPACE@68..69 " "
+        STRUCT_FIELD_LIST@69..71
+          L_CURLY@69..70 "{"
+          R_CURLY@70..71 "}"
+      WHITESPACE@71..77 "\n\n    "
+      STRUCT@77..169
+        STRUCT_KW@77..83 "struct"
+        WHITESPACE@83..84 " "
+        NAME@84..99
+          IDENT@84..99 "ValidatorConfig"
+        TYPE_PARAM_LIST@99..102
+          L_ANGLE@99..100 "<"
+          TYPE_PARAM@100..101
+            NAME@100..101
+              IDENT@100..101 "T"
+          R_ANGLE@101..102 ">"
+        WHITESPACE@102..103 " "
+        ABILITY_LIST@103..118
+          HAS_KW@103..106 "has"
+          WHITESPACE@106..107 " "
+          ABILITY@107..112
+            IDENT@107..112 "store"
+          COMMA@112..113 ","
+          WHITESPACE@113..114 " "
+          ABILITY@114..118
+            IDENT@114..118 "drop"
+        WHITESPACE@118..119 " "
+        STRUCT_FIELD_LIST@119..169
+          L_CURLY@119..120 "{"
+          WHITESPACE@120..129 "\n        "
+          STRUCT_FIELD@129..137
+            NAME@129..133
+              IDENT@129..133 "val1"
+            COLON@133..134 ":"
+            WHITESPACE@134..135 " "
+            PATH_TYPE@135..137
+              PATH@135..137
+                PATH_SEGMENT@135..137
+                  NAME_REF@135..137
+                    IDENT@135..137 "u8"
+          COMMA@137..138 ","
+          WHITESPACE@138..147 "\n        "
+          STRUCT_FIELD@147..162
+            NAME@147..151
+              IDENT@147..151 "val2"
+            COLON@151..152 ":"
+            WHITESPACE@152..153 " "
+            PATH_TYPE@153..162
+              PATH@153..162
+                PATH_SEGMENT@153..162
+                  NAME_REF@153..159
+                    IDENT@153..159 "vector"
+                  TYPE_ARG_LIST@159..162
+                    L_ANGLE@159..160 "<"
+                    TYPE_ARG@160..161
+                      PATH_TYPE@160..161
+                        PATH@160..161
+                          PATH_SEGMENT@160..161
+                            NAME_REF@160..161
+                              IDENT@160..161 "T"
+                    R_ANGLE@161..162 ">"
+          COMMA@162..163 ","
+          WHITESPACE@163..168 "\n    "
+          R_CURLY@168..169 "}"
+      WHITESPACE@169..175 "\n\n    "
+      STRUCT@175..368
+        STRUCT_KW@175..181 "struct"
+        WHITESPACE@181..182 " "
+        NAME@182..205
+          IDENT@182..205 "ResourceValidatorConfig"
+        TYPE_PARAM_LIST@205..230
+          L_ANGLE@205..206 "<"
+          TYPE_PARAM@206..213
+            NAME@206..207
+              IDENT@206..207 "T"
+            COLON@207..208 ":"
+            WHITESPACE@208..209 " "
+            ABILITY_BOUND_LIST@209..213
+              ABILITY@209..213
+                IDENT@209..213 "copy"
+          COMMA@213..214 ","
+          WHITESPACE@214..215 " "
+          TYPE_PARAM@215..229
+            NAME@215..216
+              IDENT@215..216 "U"
+            COLON@216..217 ":"
+            WHITESPACE@217..218 " "
+            ABILITY_BOUND_LIST@218..229
+              ABILITY@218..222
+                IDENT@218..222 "copy"
+              WHITESPACE@222..223 " "
+              PLUS@223..224 "+"
+              WHITESPACE@224..225 " "
+              ABILITY@225..229
+                IDENT@225..229 "drop"
+          R_ANGLE@229..230 ">"
+        WHITESPACE@230..231 " "
+        STRUCT_FIELD_LIST@231..368
+          L_CURLY@231..232 "{"
+          WHITESPACE@232..241 "\n        "
+          STRUCT_FIELD@241..249
+            NAME@241..245
+              IDENT@241..245 "val1"
+            COLON@245..246 ":"
+            WHITESPACE@246..247 " "
+            PATH_TYPE@247..249
+              PATH@247..249
+                PATH_SEGMENT@247..249
+                  NAME_REF@247..249
+                    IDENT@247..249 "u8"
+          COMMA@249..250 ","
+          WHITESPACE@250..259 "\n        "
+          STRUCT_FIELD@259..274
+            NAME@259..263
+              IDENT@259..263 "val2"
+            COLON@263..264 ":"
+            WHITESPACE@264..265 " "
+            PATH_TYPE@265..274
+              PATH@265..274
+                PATH_SEGMENT@265..274
+                  NAME_REF@265..271
+                    IDENT@265..271 "vector"
+                  TYPE_ARG_LIST@271..274
+                    L_ANGLE@271..272 "<"
+                    TYPE_ARG@272..273
+                      PATH_TYPE@272..273
+                        PATH@272..273
+                          PATH_SEGMENT@272..273
+                            NAME_REF@272..273
+                              IDENT@272..273 "T"
+                    R_ANGLE@273..274 ">"
+          COMMA@274..275 ","
+          WHITESPACE@275..284 "\n        "
+          STRUCT_FIELD@284..317
+            NAME@284..300
+              IDENT@284..300 "operator_account"
+            COLON@300..301 ":"
+            WHITESPACE@301..302 " "
+            PATH_TYPE@302..317
+              PATH@302..317
+                PATH_SEGMENT@302..317
+                  NAME_REF@302..308
+                    IDENT@302..308 "Option"
+                  TYPE_ARG_LIST@308..317
+                    L_ANGLE@308..309 "<"
+                    TYPE_ARG@309..316
+                      PATH_TYPE@309..316
+                        PATH@309..316
+                          PATH_SEGMENT@309..316
+                            NAME_REF@309..316
+                              IDENT@309..316 "address"
+                    R_ANGLE@316..317 ">"
+          COMMA@317..318 ","
+          WHITESPACE@318..327 "\n        "
+          STRUCT_FIELD@327..361
+            NAME@327..344
+              IDENT@327..344 "operator_account2"
+            COLON@344..345 ":"
+            WHITESPACE@345..346 " "
+            PATH_TYPE@346..361
+              PATH@346..361
+                PATH_SEGMENT@346..361
+                  NAME_REF@346..352
+                    IDENT@346..352 "Option"
+                  TYPE_ARG_LIST@352..361
+                    L_ANGLE@352..353 "<"
+                    TYPE_ARG@353..360
+                      REF_TYPE@353..360
+                        AMP@353..354 "&"
+                        PATH_TYPE@354..360
+                          PATH@354..360
+                            PATH_SEGMENT@354..360
+                              NAME_REF@354..360
+                                IDENT@354..360 "signer"
+                    R_ANGLE@360..361 ">"
+          COMMA@361..362 ","
+          WHITESPACE@362..367 "\n    "
+          R_CURLY@367..368 "}"
+      WHITESPACE@368..369 "\n"
+      R_CURLY@369..370 "}"
+  WHITESPACE@370..371 "\n"

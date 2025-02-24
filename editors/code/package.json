@@ -1,0 +1,167 @@
+{
+    "name": "aptos-analyzer",
+    "displayName": "aptos-analyzer",
+    "description": "",
+    "publisher": "Aptos",
+    "version": "0.0.1",
+    "homepage": "https://github.com/mkurnikov/aptos-analyzer",
+    "repository": {
+        "url": "https://github.com/mkurnikov/aptos-analyzer.git",
+        "type": "git"
+    },
+    "bugs": {
+        "url": "https://github.com/mkurnikov/aptos-analyzer/issues"
+    },
+    "engines": {
+        "vscode": "^1.96.0"
+    },
+    "activationEvents": [
+        "workspaceContains:Move.toml"
+    ],
+    "categories": [
+        "Programming Languages"
+    ],
+    "keywords": [
+        "move"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "aptos-analyzer.toggleLSPLogs",
+                "title": "Toggle LSP Logs",
+                "category": "aptos-analyzer"
+            }
+        ],
+        "configuration": [
+            {
+                "title": "server",
+                "properties": {
+                    "aptos-analyzer.server.path": {
+                        "type": "string",
+                        "default": "~/.cargo/bin/aptos-analyzer",
+                        "markdownDescription": "Path and filename of the aptos-analyzer executable, e.g. `/usr/bin/aptos-analyzer`."
+                    },
+                    "aptos-analyzer.server.extraEnv": {
+                        "type": [
+                            "null",
+                            "object"
+                        ],
+                        "additionalProperties": {
+                            "type": [
+                                "string",
+                                "number"
+                            ]
+                        },
+                        "default": null,
+                        "markdownDescription": "Extra environment variables that will be passed to the aptos-analyzer executable. Useful for passing e.g. `RA_LOG` for debugging."
+                    },
+                    "aptos-analyzer.trace.server": {
+                        "type": "string",
+                        "scope": "window",
+                        "enum": [
+                            "off",
+                            "messages",
+                            "verbose"
+                        ],
+                        "enumDescriptions": [
+                            "No traces",
+                            "Error only",
+                            "Full log"
+                        ],
+                        "default": "off",
+                        "description": "Trace requests to the aptos-analyzer (this is usually overly verbose and not recommended for regular users)."
+                    }
+                }
+            },
+            {
+                "title": "$generated-start"
+            },
+            {
+                "title": "aptos",
+                "properties": {
+                    "aptos-analyzer.aptos.autoreload": {
+                        "markdownDescription": "Automatically refresh project info via `cargo metadata` on `Move.toml` changes.",
+                        "default": true,
+                        "type": "boolean"
+                    }
+                }
+            },
+            {
+                "title": "aptos",
+                "properties": {
+                    "aptos-analyzer.aptos.checkOnSave": {
+                        "markdownDescription": "Run the check command for diagnostics on save.",
+                        "default": true,
+                        "type": "boolean"
+                    }
+                }
+            },
+            {
+                "title": "aptos",
+                "properties": {
+                    "aptos-analyzer.aptos.cliPath": {
+                        "markdownDescription": "Run the check command for diagnostics on save.",
+                        "default": null,
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
+            {
+                "title": "diagnostics",
+                "properties": {
+                    "aptos-analyzer.diagnostics.enable": {
+                        "markdownDescription": "Whether to show native aptos-analyzer diagnostics.",
+                        "default": false,
+                        "type": "boolean"
+                    }
+                }
+            },
+            {
+                "title": "$generated-end"
+            }
+        ],
+        "languages": [
+            {
+                "id": "move",
+                "aliases": [
+                    "Move",
+                    "move"
+                ],
+                "extensions": [
+                    ".move"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "package": "vsce package -o aptos-analyzer.vsix",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile && npm run lint",
+        "lint": "eslint src",
+        "test": "vscode-test"
+    },
+    "dependencies": {
+        "@vscode/vsce": "^3.2.2",
+        "command-exists": "^1.2.9",
+        "vscode-languageclient": "^9.0.1"
+    },
+    "devDependencies": {
+        "@types/command-exists": "^1.2.3",
+        "@types/mocha": "^10.0.10",
+        "@types/node": "20.x",
+        "@types/vscode": "^1.96.0",
+        "@typescript-eslint/eslint-plugin": "^8.22.0",
+        "@typescript-eslint/parser": "^8.22.0",
+        "@vscode/test-cli": "^0.0.10",
+        "@vscode/test-electron": "^2.4.1",
+        "eslint": "^9.19.0",
+        "typescript": "^5.7.3"
+    }
+}

@@ -1,0 +1,218 @@
+// Aptos Move Un-Grammar.
+//
+// This grammar specifies the structure of Rust's concrete syntax tree.
+// It does not specify parsing rules (ambiguities, precedence, etc are out of scope).
+// Tokens are processed -- contextual keywords are recognised, compound operators glued.
+//
+// Legend:
+//
+//   //          -- comment
+//   Name =      -- non-terminal definition
+//   'ident'     -- token (terminal)
+//   A B         -- sequence
+//   A | B       -- alternation
+//   A*          -- zero or more repetition
+//   A?          -- zero or one repetition
+//   (A)         -- same as A
+//   label:A     -- suggested name for field of AST node
+
+SourceFile =
+    Module*
+
+Module =
+    Attr* 'module' Name ItemList
+
+ItemList =
+    '{' Item* '}'
+
+Item =
+    Fun
+    | Const
+    | Struct
+    | Enum
+    | UseItem
+    | SpecFun
+    | Schema
+
+UseItem =
+    Attr* 'use' UseSpeck ';'
+
+UseSpeck =
+    Path ('::' UseGroup)?
+
+UseGroup =
+    '{' UseSpeck* '}'
+
+Struct =
+    Attr* 'struct' Name (StructFieldList | TupleFieldList)
+
+Enum =
+    Attr* 'enum' Name
+
+StructFieldList =
+    '{' fields:(StructField (',' StructField)* ','?)? '}'
+
+StructField =
+    Attr* Name ':' Type
+
+TupleFieldList =
+  '(' fields:(TupleField (',' TupleField)* ','?)? ')'
+
+TupleField =
+    Attr* Type
+
+// A Data Type.
+//
+// Not used directly in the grammar, but handy to have anyway.
+Adt =
+  Enum
+| Struct
+
+Const =
+    Attr* 'const' Name ':' Type '=' body:Expr ';'
+
+Fun =
+    Attr* Visibility?
+    'fun' Name TypeParamList? ParamList RetType?
+    (body:BlockExpr | ';')
+
+Visibility =
+    ('public' ('(' ('script' | 'package' | 'friend') ')')?)
+        | 'package'
+        | 'friend'
+
+ParamList =
+    '('
+        (Param (',' Param)* ','?)?
+    ')'
+
+Param = IdentPat (':' Type)?
+
+RetType =
+  ':' Type
+
+Pat =
+    IdentPat
+    | TuplePat
+
+TuplePat =
+    '(' fields:(Pat (',' Pat)* ','?)? ')'
+
+IdentPat = Name
+
+Type =
+    PathType
+    | RefType
+
+RefType =
+    '&' 'mut'? Type
+
+PathType =
+    Path
+
+BlockExpr =
+    StmtList
+
+StmtList =
+    '{'
+        statements:Stmt*
+        tail_expr:Expr?
+    '}'
+
+Stmt =
+    ';'
+    | ExprStmt
+    | LetStmt
+
+LetStmt =
+    'let' Pat '=' initializer:Expr ';'
+
+ExprStmt =
+    Expr ';'?
+
+Expr =
+    BinExpr
+    | Literal
+    | ParenExpr
+    | PathExpr
+    | PrefixExpr
+
+PrefixExpr =
+  op:('-' | '!' | '*' | 'copy' | 'move') Expr
+
+BinExpr =
+    Attr*
+    lhs:Expr
+    op:(
+    '||' | '&&'
+    | '==' | '!=' | '<=' | '>=' | '<' | '>'
+    | '+' | '*' | '-' | '/' | '%' | '<<' | '>>' | '^' | '|' | '&'
+    | '=' | '+=' | '/=' | '*=' | '%=' | '>>=' | '<<=' | '-=' | '|=' | '&=' | '^='
+    )
+    rhs:Expr
+
+Literal =
+    Attr* value:(
+        '@int_number'
+        | 'true' | 'false'
+    )
+
+ParenExpr =
+    '(' Expr ')'
+
+PathExpr =
+    Path
+
+Path =
+    (qualifier:Path '::')? segment:PathSegment
+
+PathSegment =
+    PathAddress | (NameRef TypeArgList? )
+
+PathAddress =
+    ValueAddress
+
+TypeParamList =
+    '<' type_parameters:(TypeParam (',' TypeParam)* ','?)? '>'
+
+TypeParam =
+    'phantom'? Name
+
+TypeArgList =
+    '<' type_arguments:(TypeArg (',' TypeArg)* ','?)? '>'
+
+TypeArg =
+    Type
+
+Attr =
+  '#' '!'? '[' AttrItem ']'
+
+AttrItem =
+    NameRef
+
+Name =
+    'ident'
+
+AddressRef =
+    NamedAddress | ValueAddress
+
+NamedAddress =
+    'ident'
+
+ValueAddress =
+    'int_number'
+
+NameRef =
+    'ident'
+
+// -------------------------- Specifications
+
+SpecFun =
+    Attr*
+    'spec' 'native'? 'fun' Name TypeParamList? ParamList RetType?
+    (body:BlockExpr | ';')
+
+Schema =
+    Attr*
+    'spec' 'schema' Name TypeParamList?
+    body:BlockExpr

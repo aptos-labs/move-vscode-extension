@@ -1,0 +1,20 @@
+[package]
+name = "project-model"
+version = "0.1.0"
+rust-version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+toml = "0.8.20"
+serde = { workspace = true }
+serde_derive = { workspace = true }
+
+anyhow = { workspace = true }
+rustc-hash = { workspace = true }
+tracing = { workspace = true }
+
+paths = { workspace = true }
+vfs = { workspace = true }
+
+base-db = { path = "../base-db" }

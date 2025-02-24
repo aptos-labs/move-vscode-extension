@@ -1,0 +1,188 @@
+use crate::diagnostics::convert_diagnostic;
+use crate::global_state::{FetchWorkspaceRequest, GlobalState, GlobalStateSnapshot};
+use crate::lsp::{from_proto, to_proto};
+use lang::files::FileRange;
+use lsp_types::{SemanticTokensParams, SemanticTokensResult};
+
+pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
+    // state.proc_macro_clients = Arc::from_iter([]);
+    // state.build_deps_changed = false;
+
+    let req = FetchWorkspaceRequest {
+        path: None,
+        force_crate_graph_reload: false,
+    };
+    state
+        .fetch_workspaces_queue
+        .request_op("reload workspace request".to_owned(), req);
+    Ok(())
+}
+
+pub(crate) fn handle_semantic_tokens_full(
+    snap: GlobalStateSnapshot,
+    params: SemanticTokensParams,
+) -> anyhow::Result<Option<SemanticTokensResult>> {
+    let _p = tracing::info_span!("handle_semantic_tokens_full").entered();
+
+    let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
+    let text = snap.analysis.file_text(file_id)?;
+    let line_index = snap.file_line_index(file_id)?;
+
+    // let mut highlight_config = snap.config.highlighting_config();
+    // // Avoid flashing a bunch of unresolved references when the proc-macro servers haven't been spawned yet.
+    // highlight_config.syntactic_name_ref_highlighting =
+    //     snap.workspaces.is_empty() || !snap.proc_macros_loaded;
+
+    let highlights = snap.analysis.highlight(/*highlight_config, */ file_id)?;
+    let semantic_tokens = to_proto::semantic_tokens(
+        &text,
+        &line_index,
+        highlights,
+        // snap.config.semantics_tokens_augments_syntax_tokens(),
+        // snap.config.highlighting_non_standard_tokens(),
+    );
+
+    // Unconditionally cache the tokens
+    // snap.semantic_tokens_cache.lock().insert(params.text_document.uri, semantic_tokens.clone());
+
+    Ok(Some(semantic_tokens.into()))
+}
+
+pub(crate) fn handle_goto_definition(
+    snap: GlobalStateSnapshot,
+    params: lsp_types::GotoDefinitionParams,
+) -> anyhow::Result<Option<lsp_types::GotoDefinitionResponse>> {
+    let _p = tracing::info_span!("handle_goto_definition").entered();
+    let position = from_proto::file_position(&snap, params.text_document_position_params)?;
+    let nav_info = match snap.analysis.goto_definition(position)? {
+        None => return Ok(None),
+        Some(it) => it,
+    };
+    let src = FileRange {
+        file_id: position.file_id,
+        range: nav_info.range,
+    };
+    let res = to_proto::goto_definition_response(&snap, Some(src), vec![nav_info.info])?;
+    Ok(Some(res))
+}
+
+pub(crate) fn handle_completion(
+    snap: GlobalStateSnapshot,
+    lsp_types::CompletionParams {
+        text_document_position,
+        context,
+        ..
+    }: lsp_types::CompletionParams,
+) -> anyhow::Result<Option<lsp_types::CompletionResponse>> {
+    let _p = tracing::info_span!("handle_completion").entered();
+    let mut position = from_proto::file_position(&snap, text_document_position.clone())?;
+    let line_index = snap.file_line_index(position.file_id)?;
+    let completion_trigger_character = context
+        .and_then(|ctx| ctx.trigger_character)
+        .and_then(|s| s.chars().next());
+
+    // let source_root = snap.analysis.source_root_id(position.file_id)?;
+    let completion_config = &snap.config.completion(/*Some(source_root)*/);
+    // FIXME: We should fix up the position when retrying the cancelled request instead
+    position.offset = position.offset.min(line_index.index.len());
+    let items = match snap.analysis.completions(
+        completion_config,
+        position,
+        // completion_trigger_character,
+    )? {
+        None => return Ok(None),
+        Some(items) => items,
+    };
+
+    let items = to_proto::completion_items(
+        &snap.config,
+        // &completion_config.fields_to_resolve,
+        &line_index,
+        snap.file_version(position.file_id),
+        text_document_position,
+        completion_trigger_character,
+        items,
+    );
+
+    let completion_list = lsp_types::CompletionList {
+        is_incomplete: true,
+        items,
+    };
+    Ok(Some(completion_list.into()))
+}
+
+pub(crate) fn handle_document_diagnostics(
+    snap: GlobalStateSnapshot,
+    params: lsp_types::DocumentDiagnosticParams,
+) -> anyhow::Result<lsp_types::DocumentDiagnosticReportResult> {
+    let empty = || {
+        lsp_types::DocumentDiagnosticReportResult::Report(lsp_types::DocumentDiagnosticReport::Full(
+            lsp_types::RelatedFullDocumentDiagnosticReport {
+                related_documents: None,
+                full_document_diagnostic_report: lsp_types::FullDocumentDiagnosticReport {
+                    result_id: Some("rust-analyzer".to_owned()),
+                    items: vec![],
+                },
+            },
+        ))
+    };
+
+    let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
+    // let source_root = snap.analysis.source_root_id(file_id)?;
+    // if !snap.analysis.is_local_source_root(source_root)? {
+    //     return Ok(empty());
+    // }
+    let config = snap.config.diagnostics(/*Some(source_root)*/);
+    if !config.enabled {
+        return Ok(empty());
+    }
+    let line_index = snap.file_line_index(file_id)?;
+    // let supports_related = false;
+    // let supports_related = snap.config.text_document_diagnostic_related_document_support();
+
+    // let mut related_documents = FxHashMap::default();
+    let diagnostics = snap
+        .analysis
+        .syntax_diagnostics(&config, file_id)?
+        .into_iter()
+        .filter_map(|d| {
+            let file = d.range.file_id;
+            if file == file_id {
+                let diagnostic = convert_diagnostic(&line_index, d);
+                return Some(diagnostic);
+            }
+            // if supports_related {
+            //     let (diagnostics, line_index) = related_documents
+            //         .entry(file)
+            //         .or_insert_with(|| (Vec::new(), snap.file_line_index(file).ok()));
+            //     let diagnostic = convert_diagnostic(line_index.as_mut()?, d);
+            //     diagnostics.push(diagnostic);
+            // }
+            None
+        });
+    Ok(lsp_types::DocumentDiagnosticReportResult::Report(
+        lsp_types::DocumentDiagnosticReport::Full(lsp_types::RelatedFullDocumentDiagnosticReport {
+            full_document_diagnostic_report: lsp_types::FullDocumentDiagnosticReport {
+                result_id: Some("aptos-analyzer".to_owned()),
+                items: diagnostics.collect(),
+            },
+            related_documents: None,
+            // related_documents: related_documents.is_empty().not().then(|| {
+            //     related_documents
+            //         .into_iter()
+            //         .map(|(id, (items, _))| {
+            //             (
+            //                 to_proto::url(&snap, id),
+            //                 lsp_types::DocumentDiagnosticReportKind::Full(
+            //                     lsp_types::FullDocumentDiagnosticReport {
+            //                         result_id: Some("aptos-analyzer".to_owned()),
+            //                         items,
+            //                     },
+            //                 ),
+            //             )
+            //         })
+            //         .collect()
+            // }),
+        }),
+    ))
+}

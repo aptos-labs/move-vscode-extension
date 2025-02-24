@@ -1,0 +1,841 @@
+SOURCE_FILE@0..1128
+  MODULE@0..1127
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    ADDRESS_REF@7..10
+      VALUE_ADDRESS@7..10
+        INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..13
+      IDENT@12..13 "m"
+    WHITESPACE@13..14 " "
+    ITEM_LIST@14..1127
+      L_CURLY@14..15 "{"
+      WHITESPACE@15..20 "\n    "
+      FUN@20..35
+        FUN_KW@20..23 "fun"
+        WHITESPACE@23..24 " "
+        NAME@24..26
+          IDENT@24..26 "fn"
+        PARAM_LIST@26..28
+          L_PAREN@26..27 "("
+          R_PAREN@27..28 ")"
+        RET_TYPE@28..32
+          COLON@28..29 ":"
+          WHITESPACE@29..30 " "
+          PATH_TYPE@30..32
+            PATH@30..32
+              PATH_SEGMENT@30..32
+                NAME_REF@30..32
+                  IDENT@30..32 "u8"
+        WHITESPACE@32..33 " "
+        BLOCK_EXPR@33..35
+          STMT_LIST@33..35
+            L_CURLY@33..34 "{"
+            R_CURLY@34..35 "}"
+      WHITESPACE@35..40 "\n    "
+      FUN@40..60
+        FUN_KW@40..43 "fun"
+        WHITESPACE@43..44 " "
+        NAME@44..51
+          IDENT@44..51 "void_fn"
+        PARAM_LIST@51..53
+          L_PAREN@51..52 "("
+          R_PAREN@52..53 ")"
+        RET_TYPE@53..57
+          COLON@53..54 ":"
+          WHITESPACE@54..55 " "
+          UNIT_TYPE@55..57
+            L_PAREN@55..56 "("
+            R_PAREN@56..57 ")"
+        WHITESPACE@57..58 " "
+        BLOCK_EXPR@58..60
+          STMT_LIST@58..60
+            L_CURLY@58..59 "{"
+            R_CURLY@59..60 "}"
+      WHITESPACE@60..65 "\n    "
+      FUN@65..91
+        ENTRY_KW@65..70 "entry"
+        WHITESPACE@70..71 " "
+        FUN_KW@71..74 "fun"
+        WHITESPACE@74..75 " "
+        NAME@75..82
+          IDENT@75..82 "void_fn"
+        PARAM_LIST@82..84
+          L_PAREN@82..83 "("
+          R_PAREN@83..84 ")"
+        RET_TYPE@84..88
+          COLON@84..85 ":"
+          WHITESPACE@85..86 " "
+          UNIT_TYPE@86..88
+            L_PAREN@86..87 "("
+            R_PAREN@87..88 ")"
+        WHITESPACE@88..89 " "
+        BLOCK_EXPR@89..91
+          STMT_LIST@89..91
+            L_CURLY@89..90 "{"
+            R_CURLY@90..91 "}"
+      WHITESPACE@91..96 "\n    "
+      FUN@96..137
+        FUN_KW@96..99 "fun"
+        WHITESPACE@99..100 " "
+        NAME@100..108
+          IDENT@100..108 "tuple_fn"
+        PARAM_LIST@108..110
+          L_PAREN@108..109 "("
+          R_PAREN@109..110 ")"
+        RET_TYPE@110..134
+          COLON@110..111 ":"
+          WHITESPACE@111..112 " "
+          TUPLE_TYPE@112..134
+            L_PAREN@112..113 "("
+            REF_TYPE@113..117
+              AMP@113..114 "&"
+              PATH_TYPE@114..117
+                PATH@114..117
+                  PATH_SEGMENT@114..117
+                    NAME_REF@114..117
+                      IDENT@114..117 "u64"
+            COMMA@117..118 ","
+            WHITESPACE@118..119 " "
+            REF_TYPE@119..123
+              AMP@119..120 "&"
+              PATH_TYPE@120..123
+                PATH@120..123
+                  PATH_SEGMENT@120..123
+                    NAME_REF@120..123
+                      IDENT@120..123 "u64"
+            COMMA@123..124 ","
+            WHITESPACE@124..125 " "
+            REF_TYPE@125..133
+              AMP@125..126 "&"
+              MUT_KW@126..129 "mut"
+              WHITESPACE@129..130 " "
+              PATH_TYPE@130..133
+                PATH@130..133
+                  PATH_SEGMENT@130..133
+                    NAME_REF@130..133
+                      IDENT@130..133 "u64"
+            R_PAREN@133..134 ")"
+        WHITESPACE@134..135 " "
+        BLOCK_EXPR@135..137
+          STMT_LIST@135..137
+            L_CURLY@135..136 "{"
+            R_CURLY@136..137 "}"
+      WHITESPACE@137..143 "\n\n    "
+      FUN@143..165
+        VISIBILITY@143..149
+          PUBLIC_KW@143..149 "public"
+        WHITESPACE@149..150 " "
+        FUN_KW@150..153 "fun"
+        WHITESPACE@153..154 " "
+        NAME@154..156
+          IDENT@154..156 "fn"
+        PARAM_LIST@156..158
+          L_PAREN@156..157 "("
+          R_PAREN@157..158 ")"
+        RET_TYPE@158..162
+          COLON@158..159 ":"
+          WHITESPACE@159..160 " "
+          PATH_TYPE@160..162
+            PATH@160..162
+              PATH_SEGMENT@160..162
+                NAME_REF@160..162
+                  IDENT@160..162 "u8"
+        WHITESPACE@162..163 " "
+        BLOCK_EXPR@163..165
+          STMT_LIST@163..165
+            L_CURLY@163..164 "{"
+            R_CURLY@164..165 "}"
+      WHITESPACE@165..170 "\n    "
+      FUN@170..198
+        VISIBILITY@170..176
+          PUBLIC_KW@170..176 "public"
+        WHITESPACE@176..177 " "
+        ENTRY_KW@177..182 "entry"
+        WHITESPACE@182..183 " "
+        FUN_KW@183..186 "fun"
+        WHITESPACE@186..187 " "
+        NAME@187..189
+          IDENT@187..189 "fn"
+        PARAM_LIST@189..191
+          L_PAREN@189..190 "("
+          R_PAREN@190..191 ")"
+        RET_TYPE@191..195
+          COLON@191..192 ":"
+          WHITESPACE@192..193 " "
+          PATH_TYPE@193..195
+            PATH@193..195
+              PATH_SEGMENT@193..195
+                NAME_REF@193..195
+                  IDENT@193..195 "u8"
+        WHITESPACE@195..196 " "
+        BLOCK_EXPR@196..198
+          STMT_LIST@196..198
+            L_CURLY@196..197 "{"
+            R_CURLY@197..198 "}"
+      WHITESPACE@198..204 "\n\n    "
+      FUN@204..234
+        VISIBILITY@204..218
+          PUBLIC_KW@204..210 "public"
+          L_PAREN@210..211 "("
+          SCRIPT_KW@211..217 "script"
+          R_PAREN@217..218 ")"
+        WHITESPACE@218..219 " "
+        FUN_KW@219..222 "fun"
+        WHITESPACE@222..223 " "
+        NAME@223..225
+          IDENT@223..225 "fn"
+        PARAM_LIST@225..227
+          L_PAREN@225..226 "("
+          R_PAREN@226..227 ")"
+        RET_TYPE@227..231
+          COLON@227..228 ":"
+          WHITESPACE@228..229 " "
+          PATH_TYPE@229..231
+            PATH@229..231
+              PATH_SEGMENT@229..231
+                NAME_REF@229..231
+                  IDENT@229..231 "u8"
+        WHITESPACE@231..232 " "
+        BLOCK_EXPR@232..234
+          STMT_LIST@232..234
+            L_CURLY@232..233 "{"
+            R_CURLY@233..234 "}"
+      WHITESPACE@234..240 "\n\n    "
+      FUN@240..270
+        VISIBILITY@240..254
+          PUBLIC_KW@240..246 "public"
+          L_PAREN@246..247 "("
+          FRIEND_KW@247..253 "friend"
+          R_PAREN@253..254 ")"
+        WHITESPACE@254..255 " "
+        FUN_KW@255..258 "fun"
+        WHITESPACE@258..259 " "
+        NAME@259..261
+          IDENT@259..261 "fn"
+        PARAM_LIST@261..263
+          L_PAREN@261..262 "("
+          R_PAREN@262..263 ")"
+        RET_TYPE@263..267
+          COLON@263..264 ":"
+          WHITESPACE@264..265 " "
+          PATH_TYPE@265..267
+            PATH@265..267
+              PATH_SEGMENT@265..267
+                NAME_REF@265..267
+                  IDENT@265..267 "u8"
+        WHITESPACE@267..268 " "
+        BLOCK_EXPR@268..270
+          STMT_LIST@268..270
+            L_CURLY@268..269 "{"
+            R_CURLY@269..270 "}"
+      WHITESPACE@270..275 "\n    "
+      FUN@275..311
+        VISIBILITY@275..289
+          PUBLIC_KW@275..281 "public"
+          L_PAREN@281..282 "("
+          FRIEND_KW@282..288 "friend"
+          R_PAREN@288..289 ")"
+        WHITESPACE@289..290 " "
+        ENTRY_KW@290..295 "entry"
+        WHITESPACE@295..296 " "
+        FUN_KW@296..299 "fun"
+        WHITESPACE@299..300 " "
+        NAME@300..302
+          IDENT@300..302 "fn"
+        PARAM_LIST@302..304
+          L_PAREN@302..303 "("
+          R_PAREN@303..304 ")"
+        RET_TYPE@304..308
+          COLON@304..305 ":"
+          WHITESPACE@305..306 " "
+          PATH_TYPE@306..308
+            PATH@306..308
+              PATH_SEGMENT@306..308
+                NAME_REF@306..308
+                  IDENT@306..308 "u8"
+        WHITESPACE@308..309 " "
+        BLOCK_EXPR@309..311
+          STMT_LIST@309..311
+            L_CURLY@309..310 "{"
+            R_CURLY@310..311 "}"
+      WHITESPACE@311..317 "\n\n    "
+      FUN@317..336
+        FRIEND_KW@317..323 "friend"
+        WHITESPACE@323..324 " "
+        FUN_KW@324..327 "fun"
+        WHITESPACE@327..328 " "
+        NAME@328..331
+          IDENT@328..331 "fn2"
+        PARAM_LIST@331..333
+          L_PAREN@331..332 "("
+          R_PAREN@332..333 ")"
+        WHITESPACE@333..334 " "
+        BLOCK_EXPR@334..336
+          STMT_LIST@334..336
+            L_CURLY@334..335 "{"
+            R_CURLY@335..336 "}"
+      WHITESPACE@336..342 "\n\n    "
+      FUN@342..383
+        FUN_KW@342..345 "fun"
+        WHITESPACE@345..346 " "
+        NAME@346..368
+          IDENT@346..368 "fn_with_returned_tuple"
+        PARAM_LIST@368..370
+          L_PAREN@368..369 "("
+          R_PAREN@369..370 ")"
+        RET_TYPE@370..380
+          COLON@370..371 ":"
+          WHITESPACE@371..372 " "
+          TUPLE_TYPE@372..380
+            L_PAREN@372..373 "("
+            PATH_TYPE@373..375
+              PATH@373..375
+                PATH_SEGMENT@373..375
+                  NAME_REF@373..375
+                    IDENT@373..375 "u8"
+            COMMA@375..376 ","
+            WHITESPACE@376..377 " "
+            PATH_TYPE@377..379
+              PATH@377..379
+                PATH_SEGMENT@377..379
+                  NAME_REF@377..379
+                    IDENT@377..379 "u8"
+            R_PAREN@379..380 ")"
+        WHITESPACE@380..381 " "
+        BLOCK_EXPR@381..383
+          STMT_LIST@381..383
+            L_CURLY@381..382 "{"
+            R_CURLY@382..383 "}"
+      WHITESPACE@383..389 "\n\n    "
+      FUN@389..447
+        FUN_KW@389..392 "fun"
+        WHITESPACE@392..393 " "
+        NAME@393..412
+          IDENT@393..412 "fn_with_type_params"
+        TYPE_PARAM_LIST@412..439
+          L_ANGLE@412..413 "<"
+          TYPE_PARAM@413..421
+            NAME@413..414
+              IDENT@413..414 "T"
+            COLON@414..415 ":"
+            WHITESPACE@415..416 " "
+            ABILITY_BOUND_LIST@416..421
+              ABILITY@416..421
+                IDENT@416..421 "store"
+          COMMA@421..422 ","
+          WHITESPACE@422..423 " "
+          TYPE_PARAM@423..438
+            NAME@423..424
+              IDENT@423..424 "U"
+            COLON@424..425 ":"
+            WHITESPACE@425..426 " "
+            ABILITY_BOUND_LIST@426..438
+              ABILITY@426..431
+                IDENT@426..431 "store"
+              WHITESPACE@431..432 " "
+              PLUS@432..433 "+"
+              WHITESPACE@433..434 " "
+              ABILITY@434..438
+                IDENT@434..438 "drop"
+          R_ANGLE@438..439 ">"
+        PARAM_LIST@439..441
+          L_PAREN@439..440 "("
+          R_PAREN@440..441 ")"
+        RET_TYPE@441..444
+          COLON@441..442 ":"
+          WHITESPACE@442..443 " "
+          PATH_TYPE@443..444
+            PATH@443..444
+              PATH_SEGMENT@443..444
+                NAME_REF@443..444
+                  IDENT@443..444 "T"
+        WHITESPACE@444..445 " "
+        BLOCK_EXPR@445..447
+          STMT_LIST@445..447
+            L_CURLY@445..446 "{"
+            R_CURLY@446..447 "}"
+      WHITESPACE@447..453 "\n\n    "
+      FUN@453..486
+        FUN_KW@453..456 "fun"
+        WHITESPACE@456..457 " "
+        NAME@457..471
+          IDENT@457..471 "fn_with_signer"
+        PARAM_LIST@471..483
+          L_PAREN@471..472 "("
+          PARAM@472..482
+            IDENT_PAT@472..473
+              NAME@472..473
+                IDENT@472..473 "s"
+            COLON@473..474 ":"
+            WHITESPACE@474..475 " "
+            REF_TYPE@475..482
+              AMP@475..476 "&"
+              PATH_TYPE@476..482
+                PATH@476..482
+                  PATH_SEGMENT@476..482
+                    NAME_REF@476..482
+                      IDENT@476..482 "signer"
+          R_PAREN@482..483 ")"
+        WHITESPACE@483..484 " "
+        BLOCK_EXPR@484..486
+          STMT_LIST@484..486
+            L_CURLY@484..485 "{"
+            R_CURLY@485..486 "}"
+      WHITESPACE@486..492 "\n\n    "
+      FUN@492..550
+        FUN_KW@492..495 "fun"
+        WHITESPACE@495..496 " "
+        NAME@496..522
+          IDENT@496..522 "fn_with_borrowed_qual ..."
+        PARAM_LIST@522..547
+          L_PAREN@522..523 "("
+          PARAM@523..546
+            IDENT_PAT@523..524
+              NAME@523..524
+                IDENT@523..524 "s"
+            COLON@524..525 ":"
+            WHITESPACE@525..526 " "
+            REF_TYPE@526..546
+              AMP@526..527 "&"
+              PATH_TYPE@527..546
+                PATH@527..546
+                  PATH@527..538
+                    PATH_SEGMENT@527..538
+                      NAME_REF@527..538
+                        IDENT@527..538 "Transaction"
+                  COLON_COLON@538..540 "::"
+                  PATH_SEGMENT@540..546
+                    NAME_REF@540..546
+                      IDENT@540..546 "Sender"
+          R_PAREN@546..547 ")"
+        WHITESPACE@547..548 " "
+        BLOCK_EXPR@548..550
+          STMT_LIST@548..550
+            L_CURLY@548..549 "{"
+            R_CURLY@549..550 "}"
+      WHITESPACE@550..556 "\n\n    "
+      FUN@556..651
+        FUN_KW@556..559 "fun"
+        WHITESPACE@559..560 " "
+        NAME@560..577
+          IDENT@560..577 "fn_with_arguments"
+        PARAM_LIST@577..622
+          L_PAREN@577..578 "("
+          PARAM@578..590
+            IDENT_PAT@578..579
+              NAME@578..579
+                IDENT@578..579 "a"
+            COLON@579..580 ":"
+            WHITESPACE@580..581 " "
+            PATH_TYPE@581..590
+              PATH@581..590
+                PATH_SEGMENT@581..590
+                  NAME_REF@581..587
+                    IDENT@581..587 "vector"
+                  TYPE_ARG_LIST@587..590
+                    L_ANGLE@587..588 "<"
+                    TYPE_ARG@588..589
+                      PATH_TYPE@588..589
+                        PATH@588..589
+                          PATH_SEGMENT@588..589
+                            NAME_REF@588..589
+                              IDENT@588..589 "T"
+                    R_ANGLE@589..590 ">"
+          COMMA@590..591 ","
+          WHITESPACE@591..592 " "
+          PARAM@592..597
+            IDENT_PAT@592..593
+              NAME@592..593
+                IDENT@592..593 "b"
+            COLON@593..594 ":"
+            WHITESPACE@594..595 " "
+            PATH_TYPE@595..597
+              PATH@595..597
+                PATH_SEGMENT@595..597
+                  NAME_REF@595..597
+                    IDENT@595..597 "u8"
+          COMMA@597..598 ","
+          WHITESPACE@598..599 " "
+          PARAM@599..621
+            IDENT_PAT@599..600
+              NAME@599..600
+                IDENT@599..600 "c"
+            COLON@600..601 ":"
+            WHITESPACE@601..602 " "
+            PATH_TYPE@602..621
+              PATH@602..621
+                PATH@602..613
+                  PATH_SEGMENT@602..613
+                    NAME_REF@602..613
+                      IDENT@602..613 "Transaction"
+                COLON_COLON@613..615 "::"
+                PATH_SEGMENT@615..621
+                  NAME_REF@615..621
+                    IDENT@615..621 "Sender"
+          R_PAREN@621..622 ")"
+        RET_TYPE@622..648
+          COLON@622..623 ":"
+          WHITESPACE@623..624 " "
+          PATH_TYPE@624..648
+            PATH@624..648
+              PATH@624..640
+                PATH@624..627
+                  PATH_SEGMENT@624..627
+                    PATH_ADDRESS@624..627
+                      VALUE_ADDRESS@624..627
+                        INT_NUMBER@624..627 "0x1"
+                COLON_COLON@627..629 "::"
+                PATH_SEGMENT@629..640
+                  NAME_REF@629..640
+                    IDENT@629..640 "Transaction"
+              COLON_COLON@640..642 "::"
+              PATH_SEGMENT@642..648
+                NAME_REF@642..648
+                  IDENT@642..648 "Sender"
+        WHITESPACE@648..649 " "
+        BLOCK_EXPR@649..651
+          STMT_LIST@649..651
+            L_CURLY@649..650 "{"
+            R_CURLY@650..651 "}"
+      WHITESPACE@651..657 "\n\n    "
+      FUN@657..798
+        FUN_KW@657..660 "fun"
+        WHITESPACE@660..661 " "
+        NAME@661..677
+          IDENT@661..677 "fn_with_acquires"
+        PARAM_LIST@677..679
+          L_PAREN@677..678 "("
+          R_PAREN@678..679 ")"
+        WHITESPACE@679..688 "\n        "
+        ACQUIRES@688..795
+          ACQUIRES_KW@688..696 "acquires"
+          WHITESPACE@696..697 " "
+          PATH_TYPE@697..706
+            PATH@697..706
+              PATH_SEGMENT@697..706
+                NAME_REF@697..703
+                  IDENT@697..703 "vector"
+                TYPE_ARG_LIST@703..706
+                  L_ANGLE@703..704 "<"
+                  TYPE_ARG@704..705
+                    PATH_TYPE@704..705
+                      PATH@704..705
+                        PATH_SEGMENT@704..705
+                          NAME_REF@704..705
+                            IDENT@704..705 "T"
+                  R_ANGLE@705..706 ">"
+          COMMA@706..707 ","
+          WHITESPACE@707..708 " "
+          PATH_TYPE@708..709
+            PATH@708..709
+              PATH_SEGMENT@708..709
+                NAME_REF@708..709
+                  IDENT@708..709 "T"
+          COMMA@709..710 ","
+          WHITESPACE@710..711 " "
+          PATH_TYPE@711..730
+            PATH@711..730
+              PATH@711..722
+                PATH_SEGMENT@711..722
+                  NAME_REF@711..722
+                    IDENT@711..722 "Transaction"
+              COLON_COLON@722..724 "::"
+              PATH_SEGMENT@724..730
+                NAME_REF@724..730
+                  IDENT@724..730 "Sender"
+          COMMA@730..731 ","
+          WHITESPACE@731..732 " "
+          PATH_TYPE@732..756
+            PATH@732..756
+              PATH@732..748
+                PATH@732..735
+                  PATH_SEGMENT@732..735
+                    PATH_ADDRESS@732..735
+                      VALUE_ADDRESS@732..735
+                        INT_NUMBER@732..735 "0x1"
+                COLON_COLON@735..737 "::"
+                PATH_SEGMENT@737..748
+                  NAME_REF@737..748
+                    IDENT@737..748 "Transaction"
+              COLON_COLON@748..750 "::"
+              PATH_SEGMENT@750..756
+                NAME_REF@750..756
+                  IDENT@750..756 "Sender"
+          COMMA@756..757 ","
+          WHITESPACE@757..758 " "
+          PATH_TYPE@758..782
+            PATH@758..782
+              PATH@758..774
+                PATH@758..761
+                  PATH_SEGMENT@758..761
+                    NAME_REF@758..761
+                      IDENT@758..761 "Std"
+                COLON_COLON@761..763 "::"
+                PATH_SEGMENT@763..774
+                  NAME_REF@763..774
+                    IDENT@763..774 "Transaction"
+              COLON_COLON@774..776 "::"
+              PATH_SEGMENT@776..782
+                NAME_REF@776..782
+                  IDENT@776..782 "Sender"
+          COMMA@782..783 ","
+          WHITESPACE@783..784 " "
+          PATH_TYPE@784..795
+            PATH@784..795
+              PATH@784..789
+                PATH_SEGMENT@784..789
+                  NAME_REF@784..789
+                    IDENT@784..789 "Loans"
+              COLON_COLON@789..791 "::"
+              PATH_SEGMENT@791..795
+                NAME_REF@791..795
+                  IDENT@791..795 "Loan"
+        WHITESPACE@795..796 " "
+        BLOCK_EXPR@796..798
+          STMT_LIST@796..798
+            L_CURLY@796..797 "{"
+            R_CURLY@797..798 "}"
+      WHITESPACE@798..804 "\n\n    "
+      FUN@804..844
+        NATIVE_KW@804..810 "native"
+        WHITESPACE@810..811 " "
+        FUN_KW@811..814 "fun"
+        WHITESPACE@814..815 " "
+        NAME@815..824
+          IDENT@815..824 "native_fn"
+        PARAM_LIST@824..839
+          L_PAREN@824..825 "("
+          PARAM@825..838
+            IDENT_PAT@825..826
+              NAME@825..826
+                IDENT@825..826 "a"
+            COLON@826..827 ":"
+            WHITESPACE@827..828 " "
+            PATH_TYPE@828..838
+              PATH@828..838
+                PATH_SEGMENT@828..838
+                  NAME_REF@828..834
+                    IDENT@828..834 "vector"
+                  TYPE_ARG_LIST@834..838
+                    L_ANGLE@834..835 "<"
+                    TYPE_ARG@835..837
+                      PATH_TYPE@835..837
+                        PATH@835..837
+                          PATH_SEGMENT@835..837
+                            NAME_REF@835..837
+                              IDENT@835..837 "u8"
+                    R_ANGLE@837..838 ">"
+          R_PAREN@838..839 ")"
+        RET_TYPE@839..843
+          COLON@839..840 ":"
+          WHITESPACE@840..841 " "
+          PATH_TYPE@841..843
+            PATH@841..843
+              PATH_SEGMENT@841..843
+                NAME_REF@841..843
+                  IDENT@841..843 "u8"
+        SEMICOLON@843..844 ";"
+      WHITESPACE@844..850 "\n\n    "
+      FUN@850..897
+        NATIVE_KW@850..856 "native"
+        WHITESPACE@856..857 " "
+        VISIBILITY@857..863
+          PUBLIC_KW@857..863 "public"
+        WHITESPACE@863..864 " "
+        FUN_KW@864..867 "fun"
+        WHITESPACE@867..868 " "
+        NAME@868..877
+          IDENT@868..877 "native_fn"
+        PARAM_LIST@877..892
+          L_PAREN@877..878 "("
+          PARAM@878..891
+            IDENT_PAT@878..879
+              NAME@878..879
+                IDENT@878..879 "a"
+            COLON@879..880 ":"
+            WHITESPACE@880..881 " "
+            PATH_TYPE@881..891
+              PATH@881..891
+                PATH_SEGMENT@881..891
+                  NAME_REF@881..887
+                    IDENT@881..887 "vector"
+                  TYPE_ARG_LIST@887..891
+                    L_ANGLE@887..888 "<"
+                    TYPE_ARG@888..890
+                      PATH_TYPE@888..890
+                        PATH@888..890
+                          PATH_SEGMENT@888..890
+                            NAME_REF@888..890
+                              IDENT@888..890 "u8"
+                    R_ANGLE@890..891 ">"
+          R_PAREN@891..892 ")"
+        RET_TYPE@892..896
+          COLON@892..893 ":"
+          WHITESPACE@893..894 " "
+          PATH_TYPE@894..896
+            PATH@894..896
+              PATH_SEGMENT@894..896
+                NAME_REF@894..896
+                  IDENT@894..896 "u8"
+        SEMICOLON@896..897 ";"
+      WHITESPACE@897..902 "\n    "
+      FUN@902..949
+        VISIBILITY@902..908
+          PUBLIC_KW@902..908 "public"
+        WHITESPACE@908..909 " "
+        NATIVE_KW@909..915 "native"
+        WHITESPACE@915..916 " "
+        FUN_KW@916..919 "fun"
+        WHITESPACE@919..920 " "
+        NAME@920..929
+          IDENT@920..929 "native_fn"
+        PARAM_LIST@929..944
+          L_PAREN@929..930 "("
+          PARAM@930..943
+            IDENT_PAT@930..931
+              NAME@930..931
+                IDENT@930..931 "a"
+            COLON@931..932 ":"
+            WHITESPACE@932..933 " "
+            PATH_TYPE@933..943
+              PATH@933..943
+                PATH_SEGMENT@933..943
+                  NAME_REF@933..939
+                    IDENT@933..939 "vector"
+                  TYPE_ARG_LIST@939..943
+                    L_ANGLE@939..940 "<"
+                    TYPE_ARG@940..942
+                      PATH_TYPE@940..942
+                        PATH@940..942
+                          PATH_SEGMENT@940..942
+                            NAME_REF@940..942
+                              IDENT@940..942 "u8"
+                    R_ANGLE@942..943 ">"
+          R_PAREN@943..944 ")"
+        RET_TYPE@944..948
+          COLON@944..945 ":"
+          WHITESPACE@945..946 " "
+          PATH_TYPE@946..948
+            PATH@946..948
+              PATH_SEGMENT@946..948
+                NAME_REF@946..948
+                  IDENT@946..948 "u8"
+        SEMICOLON@948..949 ";"
+      WHITESPACE@949..955 "\n\n    "
+      FUN@955..1010
+        NATIVE_KW@955..961 "native"
+        WHITESPACE@961..962 " "
+        VISIBILITY@962..976
+          PUBLIC_KW@962..968 "public"
+          L_PAREN@968..969 "("
+          SCRIPT_KW@969..975 "script"
+          R_PAREN@975..976 ")"
+        WHITESPACE@976..977 " "
+        FUN_KW@977..980 "fun"
+        WHITESPACE@980..981 " "
+        NAME@981..990
+          IDENT@981..990 "native_fn"
+        PARAM_LIST@990..1005
+          L_PAREN@990..991 "("
+          PARAM@991..1004
+            IDENT_PAT@991..992
+              NAME@991..992
+                IDENT@991..992 "a"
+            COLON@992..993 ":"
+            WHITESPACE@993..994 " "
+            PATH_TYPE@994..1004
+              PATH@994..1004
+                PATH_SEGMENT@994..1004
+                  NAME_REF@994..1000
+                    IDENT@994..1000 "vector"
+                  TYPE_ARG_LIST@1000..1004
+                    L_ANGLE@1000..1001 "<"
+                    TYPE_ARG@1001..1003
+                      PATH_TYPE@1001..1003
+                        PATH@1001..1003
+                          PATH_SEGMENT@1001..1003
+                            NAME_REF@1001..1003
+                              IDENT@1001..1003 "u8"
+                    R_ANGLE@1003..1004 ">"
+          R_PAREN@1004..1005 ")"
+        RET_TYPE@1005..1009
+          COLON@1005..1006 ":"
+          WHITESPACE@1006..1007 " "
+          PATH_TYPE@1007..1009
+            PATH@1007..1009
+              PATH_SEGMENT@1007..1009
+                NAME_REF@1007..1009
+                  IDENT@1007..1009 "u8"
+        SEMICOLON@1009..1010 ";"
+      WHITESPACE@1010..1016 "\n\n    "
+      FUN@1016..1071
+        NATIVE_KW@1016..1022 "native"
+        WHITESPACE@1022..1023 " "
+        VISIBILITY@1023..1037
+          PUBLIC_KW@1023..1029 "public"
+          L_PAREN@1029..1030 "("
+          FRIEND_KW@1030..1036 "friend"
+          R_PAREN@1036..1037 ")"
+        WHITESPACE@1037..1038 " "
+        FUN_KW@1038..1041 "fun"
+        WHITESPACE@1041..1042 " "
+        NAME@1042..1051
+          IDENT@1042..1051 "native_fn"
+        PARAM_LIST@1051..1066
+          L_PAREN@1051..1052 "("
+          PARAM@1052..1065
+            IDENT_PAT@1052..1053
+              NAME@1052..1053
+                IDENT@1052..1053 "a"
+            COLON@1053..1054 ":"
+            WHITESPACE@1054..1055 " "
+            PATH_TYPE@1055..1065
+              PATH@1055..1065
+                PATH_SEGMENT@1055..1065
+                  NAME_REF@1055..1061
+                    IDENT@1055..1061 "vector"
+                  TYPE_ARG_LIST@1061..1065
+                    L_ANGLE@1061..1062 "<"
+                    TYPE_ARG@1062..1064
+                      PATH_TYPE@1062..1064
+                        PATH@1062..1064
+                          PATH_SEGMENT@1062..1064
+                            NAME_REF@1062..1064
+                              IDENT@1062..1064 "u8"
+                    R_ANGLE@1064..1065 ">"
+          R_PAREN@1065..1066 ")"
+        RET_TYPE@1066..1070
+          COLON@1066..1067 ":"
+          WHITESPACE@1067..1068 " "
+          PATH_TYPE@1068..1070
+            PATH@1068..1070
+              PATH_SEGMENT@1068..1070
+                NAME_REF@1068..1070
+                  IDENT@1068..1070 "u8"
+        SEMICOLON@1070..1071 ";"
+      WHITESPACE@1071..1077 "\n\n    "
+      FUN@1077..1125
+        NATIVE_KW@1077..1083 "native"
+        WHITESPACE@1083..1084 " "
+        FUN_KW@1084..1087 "fun"
+        WHITESPACE@1087..1088 " "
+        NAME@1088..1111
+          IDENT@1088..1111 "native_fn_with_acquires"
+        PARAM_LIST@1111..1113
+          L_PAREN@1111..1112 "("
+          R_PAREN@1112..1113 ")"
+        WHITESPACE@1113..1114 " "
+        ACQUIRES@1114..1124
+          ACQUIRES_KW@1114..1122 "acquires"
+          WHITESPACE@1122..1123 " "
+          PATH_TYPE@1123..1124
+            PATH@1123..1124
+              PATH_SEGMENT@1123..1124
+                NAME_REF@1123..1124
+                  IDENT@1123..1124 "T"
+        SEMICOLON@1124..1125 ";"
+      WHITESPACE@1125..1126 "\n"
+      R_CURLY@1126..1127 "}"
+  WHITESPACE@1127..1128 "\n"
