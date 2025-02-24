@@ -30,6 +30,12 @@ pub enum PathKind {
     },
 }
 
+impl PathKind {
+    pub fn is_unqualified(&self) -> bool {
+        matches!(self, PathKind::Unqualified { .. })
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum QualifiedKind {
     // `0x1:foo`
@@ -45,6 +51,7 @@ pub enum QualifiedKind {
     UseGroupItem,
 }
 
+/// can return None on deeply invalid trees
 pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
     if let Some(use_group) = path.syntax().ancestor_strict::<ast::UseGroup>() {
         // use 0x1::m::{item}

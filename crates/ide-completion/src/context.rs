@@ -1,3 +1,4 @@
+use base_db::SourceDatabase;
 use crate::completions::item_list::ItemListKind;
 use crate::config::CompletionConfig;
 use ide_db::RootDatabase;
@@ -55,14 +56,7 @@ impl<'a> CompletionContext<'a> {
         // completing on
         let original_token = source_file.syntax().token_at_offset(offset).left_biased()?;
 
-        // Insert a fake ident to get a valid parse tree. We will use this file
-        // to determine context, though the original_file will be used for
-        // actual completion.
-        // todo:
-        // let file_with_fake_ident = {
-        //     let parse = db.parse(file_id);
-        //     parse.reparse(TextRange::empty(offset), COMPLETION_MARKER).tree()
-        // };
+        // todo: insert fake ident to fix the tree
 
         let ctx = CompletionContext {
             db,
@@ -72,9 +66,7 @@ impl<'a> CompletionContext<'a> {
         };
 
         if let Some(path) = find_node_at_offset::<ast::Path>(&source_file.syntax(), offset) {
-            // let parent = path.syntax().clone().parent().unwrap();
-            // let name_ref_ctx =
-            //     analysis::classify_name_ref(&sema, &source_file.syntax(), path, offset, parent)?;
+            dbg!(&path);
             let analysis = CompletionAnalysis::Path(path);
             return Some((ctx, analysis));
         }

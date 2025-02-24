@@ -137,3 +137,17 @@ module 0x1::m {
     "#,
     );
 }
+
+#[test]
+fn test_no_keyword_completion_after_colon_colon_in_expr() {
+    check_no_completions(
+        // language=Move
+        r#"
+module 0x1::m {
+    fun main() {
+        Option::/*caret*/
+    }
+}
+    "#,
+    );
+}

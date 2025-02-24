@@ -11,6 +11,7 @@ mod ted;
 mod token_text;
 mod validation;
 
+use std::ops::Range;
 pub use crate::{
     ast::{AstNode, AstToken},
     ptr::{AstPtr, SyntaxNodePtr},
@@ -92,6 +93,18 @@ impl Parse {
             errors if !errors.is_empty() => Err(errors.to_vec()),
             _ => Ok(self.tree()),
         }
+    }
+
+    pub fn reparse(&self, delete: TextRange, insert: &str) -> Parse {
+        // self.incremental_reparse(delete, insert, edition)
+        //     .unwrap_or_else(|| self.full_reparse(delete, insert, edition))
+        self.full_reparse(delete, insert)
+    }
+
+    fn full_reparse(&self, delete: TextRange, insert: &str) -> Parse {
+        let mut text = self.tree().syntax().text().to_string();
+        text.replace_range(Range::<usize>::from(delete), insert);
+        SourceFile::parse(&text)
     }
 }
 

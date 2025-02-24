@@ -3,6 +3,9 @@ use crate::context::CompletionContext;
 use crate::item::{CompletionItem, CompletionItemKind};
 use crate::render::function::render_function_completion_item;
 use ide_db::SymbolKind;
+use lang::nameres::path_kind::path_kind;
+use lang::nameres::paths::{process_path_resolve_variants, PathResolutionContext};
+use lang::nameres::processors::collect_entries;
 use std::cell::RefCell;
 use syntax::{ast, AstNode, SyntaxKind};
 
@@ -11,10 +14,20 @@ pub(crate) fn add_path_completions(
     ctx: &CompletionContext<'_>,
     path: ast::Path,
 ) {
+    let Some(path_kind) = path_kind(path.clone(), true) else {
+        return;
+    };
+
     {
         let acc = &mut completions.borrow_mut();
 
-        let entries = lang::nameres::paths::collect_paths_for_completion(path);
+        let resolution_ctx = PathResolutionContext {
+            path: path.clone(),
+            is_completion: true,
+        };
+        let entries = collect_entries(|collector| {
+            process_path_resolve_variants(resolution_ctx, path_kind.clone(), collector);
+        });
         for entry in entries {
             let entry_name = entry.name;
 
@@ -31,14 +44,18 @@ pub(crate) fn add_path_completions(
         }
     }
 
+    if path_kind.is_unqualified() {
+        add_keywords(completions, ctx);
+    }
+}
+
+fn add_keywords(completions: &RefCell<Completions>, ctx: &CompletionContext<'_>) {
     let add_keyword = |kw| completions.borrow_mut().add_keyword(ctx, kw);
     let add_keyword_with_shift = |kw| {
         completions
             .borrow_mut()
             .add_keyword_snippet(ctx, kw, &format!("{} $0", kw))
     };
-
-    // add keywords
     add_keyword_with_shift("if");
     add_keyword_with_shift("match");
     add_keyword_with_shift("loop");

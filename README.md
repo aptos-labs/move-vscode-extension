@@ -19,7 +19,7 @@ Highlights keywords, modules items, builtin types.
 
 ### Flycheck
 
-Checks code in the editor after **Save**.
+Checks code in the editor after saving the document.
 
 To enable, specify in your `settings.json`: 
 ```json5
@@ -28,8 +28,6 @@ To enable, specify in your `settings.json`:
     "aptos-analyzer.aptos.checkOnSave": true,
 }
 ```
-
-
 
 ### Go-to-definition / completions
 

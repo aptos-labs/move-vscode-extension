@@ -668,6 +668,7 @@ dependencies = [
 name = "ide-completion"
 version = "0.1.0"
 dependencies = [
+ "base-db",
  "ide-db",
  "lang",
  "smol_str",

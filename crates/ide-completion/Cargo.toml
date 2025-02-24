@@ -12,6 +12,7 @@ smol_str = { workspace = true }
 stdx = { workspace = true }
 
 syntax = { path = "../syntax" }
+base-db = { path = "../base-db" }
 ide-db = { path = "../ide-db" }
 lang = { path = "../lang" }
 
