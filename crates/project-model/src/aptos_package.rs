@@ -2,7 +2,7 @@ use crate::aptos_workspace::PackageRoot;
 use crate::manifest_path::ManifestPath;
 use crate::move_toml::MoveToml;
 use anyhow::Context;
-use paths::{AbsPath, AbsPathBuf};
+use paths::AbsPath;
 use std::fs;
 
 #[derive(Debug, Clone, Eq, PartialEq)]

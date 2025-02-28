@@ -13,7 +13,6 @@ use lsp_types::{
 };
 use paths::AbsPathBuf;
 use std::ops::{Deref, Not};
-use std::os::linux::raw::stat;
 use stdx::itertools::Itertools;
 use triomphe::Arc;
 use vfs::VfsPath;
