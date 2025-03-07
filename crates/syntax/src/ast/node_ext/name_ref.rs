@@ -4,11 +4,6 @@ use crate::{ast, AstNode, SyntaxToken};
 use parser::SyntaxKind;
 
 impl ast::NameRef {
-    #[inline]
-    pub fn ident(&self) -> SyntaxToken {
-        self.ident_token().unwrap()
-    }
-
     pub fn text(&self) -> TokenText<'_> {
         text_of_first_token(self.syntax())
     }

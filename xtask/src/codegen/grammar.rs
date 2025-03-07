@@ -8,7 +8,7 @@
 mod ast_src;
 
 use crate::codegen::grammar::ast_src::{
-    AstEnumSrc, AstNodeSrc, AstSrc, Cardinality, Field, KindsSrc, KINDS_SRC,
+    get_required_fields, AstEnumSrc, AstNodeSrc, AstSrc, Cardinality, Field, KindsSrc, KINDS_SRC,
 };
 use crate::codegen::{add_preamble, ensure_file_contents, reformat};
 use check_keyword::CheckKeyword;
@@ -96,33 +96,7 @@ fn generate_nodes(kinds: KindsSrc, grammar: &AstSrc) -> String {
                     quote!(impl ast::#trait_name for #name {})
                 });
 
-            let methods = node.fields.iter().map(|field| {
-                let method_name = format_ident!("{}", field.method_name());
-                let ty = field.ty();
-
-                if field.is_many() {
-                    quote! {
-                        #[inline]
-                        pub fn #method_name(&self) -> AstChildren<#ty> {
-                            support::children(&self.syntax)
-                        }
-                    }
-                } else if let Some(token_kind) = field.token_kind() {
-                    quote! {
-                        #[inline]
-                        pub fn #method_name(&self) -> Option<#ty> {
-                            support::token(&self.syntax, #token_kind)
-                        }
-                    }
-                } else {
-                    quote! {
-                        #[inline]
-                        pub fn #method_name(&self) -> Option<#ty> {
-                            support::child(&self.syntax)
-                        }
-                    }
-                }
-            });
+            let methods = node.fields.iter().map(|field| generate_field_method(field));
             (
                 quote! {
                     #[pretty_doc_comment_placeholder_workaround]
@@ -199,35 +173,31 @@ fn generate_nodes(kinds: KindsSrc, grammar: &AstSrc) -> String {
                 }
             });
 
-            let ast_node = if en.name == "Stmt" {
-                quote! {}
-            } else {
-                quote! {
-                    impl #name {
-                        #(#converters)*
+            let ast_node = quote! {
+                impl #name {
+                    #(#converters)*
+                }
+                impl AstNode for #name {
+                    #[inline]
+                    fn can_cast(kind: SyntaxKind) -> bool {
+                        matches!(kind, #(#kinds)|*)
                     }
-                    impl AstNode for #name {
-                        #[inline]
-                        fn can_cast(kind: SyntaxKind) -> bool {
-                            matches!(kind, #(#kinds)|*)
-                        }
-                        #[inline]
-                        fn cast(syntax: SyntaxNode) -> Option<Self> {
-                            let res = match syntax.kind() {
-                                #(
-                                #kinds => #name::#variants(#variants { syntax }),
-                                )*
-                                _ => return None,
-                            };
-                            Some(res)
-                        }
-                        #[inline]
-                        fn syntax(&self) -> &SyntaxNode {
-                            match self {
-                                #(
-                                #name::#variants(it) => &it.syntax,
-                                )*
-                            }
+                    #[inline]
+                    fn cast(syntax: SyntaxNode) -> Option<Self> {
+                        let res = match syntax.kind() {
+                            #(
+                            #kinds => #name::#variants(#variants { syntax }),
+                            )*
+                            _ => return None,
+                        };
+                        Some(res)
+                    }
+                    #[inline]
+                    fn syntax(&self) -> &SyntaxNode {
+                        match self {
+                            #(
+                            #name::#variants(it) => &it.syntax,
+                            )*
                         }
                     }
                 }
@@ -332,6 +302,62 @@ fn generate_nodes(kinds: KindsSrc, grammar: &AstSrc) -> String {
 
     let res = add_preamble("sourcegen_ast", reformat(res));
     res.replace("#[derive", "\n#[derive")
+}
+
+fn generate_field_method(field: &Field) -> proc_macro2::TokenStream {
+    let method_name = format_ident!("{}", field.method_name());
+    let ty = field.ty();
+    match field {
+        Field::Node { cardinality, .. } => match cardinality {
+            Cardinality::Many => {
+                quote! {
+                    #[inline]
+                    pub fn #method_name(&self) -> AstChildren<#ty> {
+                        support::children(&self.syntax)
+                    }
+                }
+            }
+            Cardinality::Required => {
+                quote! {
+                    #[inline]
+                    pub fn #method_name(&self) -> #ty {
+                        support::child(&self.syntax).expect("required by the parser")
+                    }
+                }
+            }
+            Cardinality::Optional => {
+                quote! {
+                    #[inline]
+                    pub fn #method_name(&self) -> Option<#ty> {
+                        support::child(&self.syntax)
+                    }
+                }
+            }
+        },
+        Field::Token { name, cardinality } => {
+            let token: proc_macro2::TokenStream = name.parse().unwrap();
+            let token_kind = quote! { T![#token] };
+            match cardinality {
+                Cardinality::Required => {
+                    quote! {
+                        #[inline]
+                        pub fn #method_name(&self) -> #ty {
+                            support::token(&self.syntax, #token_kind).expect("required by the parser")
+                        }
+                    }
+                }
+                Cardinality::Optional => {
+                    quote! {
+                        #[inline]
+                        pub fn #method_name(&self) -> Option<#ty> {
+                            support::token(&self.syntax, #token_kind)
+                        }
+                    }
+                }
+                _ => unreachable!()
+            }
+        }
+    }
 }
 
 fn write_doc_comment(contents: &[String], dest: &mut String) {
@@ -558,7 +584,14 @@ fn lower(grammar: &Grammar) -> AstSrc {
             }
             None => {
                 let mut fields = Vec::new();
-                lower_rule(&mut fields, grammar, None, rule);
+                let required_fields = get_required_fields(name.as_str());
+                lower_rule(
+                    &mut fields,
+                    grammar,
+                    None,
+                    rule,
+                    required_fields,
+                );
                 res.nodes.push(AstNodeSrc {
                     doc: Vec::new(),
                     name,
@@ -572,14 +605,14 @@ fn lower(grammar: &Grammar) -> AstSrc {
     deduplicate_fields(&mut res);
     // extract_enums(&mut res);
     extract_struct_traits(&mut res);
-    // extract_enum_traits(&mut res);
+    extract_enum_traits(&mut res);
     res.nodes.sort_by_key(|it| it.name.clone());
     res.enums.sort_by_key(|it| it.name.clone());
     res.tokens.sort();
     res.nodes.iter_mut().for_each(|it| {
         it.traits.sort();
         it.fields.sort_by_key(|it| match it {
-            Field::Token(name) => (true, name.clone()),
+            Field::Token { name, .. } => (true, name.clone()),
             Field::Node { name, .. } => (false, name.clone()),
         });
     });
@@ -606,19 +639,34 @@ fn lower_enum(grammar: &Grammar, rule: &Rule) -> Option<Vec<String>> {
     Some(variants)
 }
 
-fn lower_rule(acc: &mut Vec<Field>, grammar: &Grammar, label: Option<&String>, rule: &Rule) {
+fn lower_rule(
+    acc: &mut Vec<Field>,
+    grammar: &Grammar,
+    label: Option<&String>,
+    rule: &Rule,
+    required_fields: &[&str],
+) {
     if lower_separated_list(acc, grammar, label, rule) {
         return;
     }
+
+    let get_rule_cardinality = |rule_name: &str| {
+        if (required_fields.contains(&rule_name)) {
+            Cardinality::Required
+        } else {
+            Cardinality::Optional
+        }
+    };
 
     match rule {
         Rule::Node(node) => {
             let ty = grammar[*node].name.clone();
             let name = label.cloned().unwrap_or_else(|| to_lower_snake_case(&ty));
+            let cardinality = get_rule_cardinality(&name);
             let field = Field::Node {
                 name,
                 ty,
-                cardinality: Cardinality::Optional,
+                cardinality,
             };
             acc.push(field);
         }
@@ -628,7 +676,11 @@ fn lower_rule(acc: &mut Vec<Field>, grammar: &Grammar, label: Option<&String>, r
             if "[]{}()".contains(&name) {
                 name = format!("'{name}'");
             }
-            let field = Field::Token(name);
+            let cardinality = get_rule_cardinality(&name);
+            let field = Field::Token {
+                name,
+                cardinality,
+            };
             acc.push(field);
         }
         Rule::Rep(inner) => {
@@ -671,14 +723,14 @@ fn lower_rule(acc: &mut Vec<Field>, grammar: &Grammar, label: Option<&String>, r
             if manually_implemented {
                 return;
             }
-            lower_rule(acc, grammar, Some(l), rule);
+            lower_rule(acc, grammar, Some(l), rule, required_fields);
         }
         Rule::Seq(rules) | Rule::Alt(rules) => {
             for rule in rules {
-                lower_rule(acc, grammar, label, rule)
+                lower_rule(acc, grammar, label, rule, required_fields)
             }
         }
-        Rule::Opt(rule) => lower_rule(acc, grammar, label, rule),
+        Rule::Opt(rule) => lower_rule(acc, grammar, label, rule, required_fields),
     }
 }
 
@@ -723,7 +775,10 @@ fn lower_separated_list(
     match nt {
         Either::Right(token) => {
             let name = clean_token_name(&grammar[*token].name);
-            let field = Field::Token(name);
+            let field = Field::Token {
+                name,
+                cardinality: Cardinality::Optional,
+            };
             acc.push(field);
         }
         Either::Left(node) => {
@@ -785,7 +840,7 @@ fn extract_enums(ast: &mut AstSrc) {
 
 fn extract_struct_traits(ast: &mut AstSrc) {
     let traits: &[(&str, &[&str])] = &[
-        // ("HasAttrs", &["attrs"]),
+        ("HasAttrs", &["attrs"]),
         ("HasName", &["name"]),
         // ("HasVisibility", &["visibility"]),
         ("HasTypeParams", &["type_param_list"]),
@@ -850,9 +905,9 @@ fn extract_struct_trait(node: &mut AstNodeSrc, trait_name: &str, methods: &[&str
 
 fn extract_enum_traits(ast: &mut AstSrc) {
     for enum_ in &mut ast.enums {
-        if enum_.name == "Stmt" {
-            continue;
-        }
+        // if enum_.name == "Stmt" {
+        //     continue;
+        // }
         let nodes = &ast.nodes;
         let mut variant_traits = enum_
             .variants
@@ -920,19 +975,10 @@ fn pluralize(s: &str) -> String {
 }
 
 impl Field {
-    fn is_many(&self) -> bool {
-        matches!(
-            self,
-            Field::Node {
-                cardinality: Cardinality::Many,
-                ..
-            }
-        )
-    }
     fn token_kind(&self) -> Option<proc_macro2::TokenStream> {
         match self {
-            Field::Token(token) => {
-                let token: proc_macro2::TokenStream = token.parse().unwrap();
+            Field::Token { name, .. } => {
+                let token: proc_macro2::TokenStream = name.parse().unwrap();
                 Some(quote! { T![#token] })
             }
             _ => None,
@@ -940,7 +986,7 @@ impl Field {
     }
     fn method_name(&self) -> String {
         match self {
-            Field::Token(name) => {
+            Field::Token { name, .. } => {
                 let name = match name.as_str() {
                     ";" => "semicolon",
                     "->" => "thin_arrow",
@@ -976,7 +1022,7 @@ impl Field {
             }
             Field::Node { name, .. } => {
                 if name == "type" {
-                    format!("type_")
+                    "type_".to_string()
                 } else {
                     format!("{}", name)
                 }
@@ -985,7 +1031,7 @@ impl Field {
     }
     fn ty(&self) -> proc_macro2::Ident {
         match self {
-            Field::Token(_) => format_ident!("SyntaxToken"),
+            Field::Token { .. } => format_ident!("SyntaxToken"),
             Field::Node { ty, .. } => format_ident!("{}", ty),
         }
     }

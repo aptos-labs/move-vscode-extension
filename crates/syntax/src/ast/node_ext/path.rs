@@ -3,11 +3,11 @@ use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 
 impl ast::Path {
     pub fn path_address(&self) -> Option<ast::PathAddress> {
-        self.segment().unwrap().path_address()
+        self.segment().path_address()
     }
 
     pub fn name_ref(&self) -> Option<ast::NameRef> {
-        self.segment().unwrap().name_ref()
+        self.segment().name_ref()
     }
 
     /// for `Foo::bar` in `Foo::bar::baz::quux` returns `Foo::bar::baz::quux`

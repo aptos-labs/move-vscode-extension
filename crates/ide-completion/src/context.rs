@@ -66,7 +66,6 @@ impl<'a> CompletionContext<'a> {
         };
 
         if let Some(path) = find_node_at_offset::<ast::Path>(&source_file.syntax(), offset) {
-            dbg!(&path);
             let analysis = CompletionAnalysis::Path(path);
             return Some((ctx, analysis));
         }

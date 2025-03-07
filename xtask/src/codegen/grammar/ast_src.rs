@@ -264,6 +264,25 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
     ],
 };
 
+pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
+    ("Param", &["ident_pat"]),
+    ("Path", &["segment"]),
+    ("PathAddress", &["value_address"]),
+    ("NameRef", &["ident"]),
+    ("Name", &["ident"]),
+    ("NamedAddress", &["ident"]),
+    ("ValueAddress", &["int_number"]),
+];
+
+pub(crate) fn get_required_fields(node_name: &str) -> &[&str] {
+    for (node, req_fields) in REQUIRED_METHOD_FIELDS {
+        if (*node == node_name) {
+            return req_fields;
+        }
+    }
+    &[]
+}
+
 #[derive(Default, Debug)]
 pub(crate) struct AstSrc {
     pub(crate) tokens: Vec<String>,
@@ -281,7 +300,7 @@ pub(crate) struct AstNodeSrc {
 
 #[derive(Debug, Eq, PartialEq)]
 pub(crate) enum Field {
-    Token(String),
+    Token { name: String, cardinality: Cardinality },
     Node {
         name: String,
         ty: String,
@@ -291,6 +310,7 @@ pub(crate) enum Field {
 
 #[derive(Debug, Eq, PartialEq)]
 pub(crate) enum Cardinality {
+    Required,
     Optional,
     Many,
 }

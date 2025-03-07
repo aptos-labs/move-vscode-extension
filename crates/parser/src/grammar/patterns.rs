@@ -314,12 +314,7 @@ fn pat_list(p: &mut Parser, ket: SyntaxKind) {
 // }
 pub(crate) fn ident_pat(p: &mut Parser) -> CompletedMarker {
     let m = p.start();
-    // p.eat(T![ref]);
-    // p.eat(T![mut]);
     name(p);
-    // if with_at && p.eat(T![@]) {
-    //     pattern_single(p);
-    // }
     m.complete(p, IDENT_PAT)
 }
 

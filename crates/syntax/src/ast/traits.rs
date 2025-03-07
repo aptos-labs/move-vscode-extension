@@ -1,6 +1,6 @@
 mod has_item_list;
 
-use crate::ast::{support, StmtList, TypeParam, TypeParamList};
+use crate::ast::{support, AstChildren, StmtList, TypeParam, TypeParamList};
 use crate::{ast, AstNode};
 
 pub use has_item_list::HasItemList;
@@ -36,5 +36,11 @@ pub trait HasTypeParams: AstNode {
         self.type_param_list()
             .map(|l| l.type_parameters().collect())
             .unwrap_or_default()
+    }
+}
+
+pub trait HasAttrs: AstNode {
+    fn attrs(&self) -> AstChildren<ast::Attr> {
+        support::children(self.syntax())
     }
 }

@@ -32,7 +32,7 @@ pub use self::{
     //     CommentKind, CommentPlacement, CommentShape, FormatSpecifier, HasFormatSpecifier, IsString,
     //     QuoteOffsets, Radix,
     // },
-    traits::{HasItemList, HasName, HasStmtList, HasTypeParams},
+    traits::{HasItemList, HasName, HasStmtList, HasTypeParams, HasAttrs},
 };
 
 /// The main trait to go from untyped `SyntaxNode`  to a typed ast. The

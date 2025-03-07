@@ -123,5 +123,3 @@ impl AsName for ast::Name {
         Name::new(&self.text(), ast::NameLike::Name(self.to_owned()))
     }
 }
-
-const MISSING_NAME: &str = "[missing name]";

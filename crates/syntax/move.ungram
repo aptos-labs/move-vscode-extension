@@ -153,8 +153,7 @@ BinExpr =
 
 Literal =
     Attr* value:(
-        '@int_number'
-        | 'true' | 'false'
+        '@int_number' | 'true' | 'false'
     )
 
 ParenExpr =

@@ -97,23 +97,6 @@ fn path_segment(p: &mut Parser, mode: Mode, first: bool) {
         }
     };
 
-    // // test qual_paths
-    // // type X = <A as B>::Output;
-    // // fn foo() { <usize as Default>::default(); }
-    //
-    //
-    // if first && p.eat(T![<]) {
-    //     types::type_(p);
-    //     if p.eat(T![as]) {
-    //         if is_use_path_start(p) {
-    //             types::path_type(p);
-    //         } else {
-    //             p.error("expected a trait");
-    //         }
-    //     }
-    //     p.expect(T![>]);
-    // } else {
-    // }
     m.complete(p, PATH_SEGMENT);
 }
 

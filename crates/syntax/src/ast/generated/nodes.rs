@@ -37,10 +37,8 @@ impl AttrItem {
 pub struct BinExpr {
     pub(crate) syntax: SyntaxNode,
 }
-impl BinExpr {
-    #[inline]
-    pub fn attrs(&self) -> AstChildren<Attr> { support::children(&self.syntax) }
-}
+impl ast::HasAttrs for BinExpr {}
+impl BinExpr {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct BlockExpr {
@@ -53,10 +51,9 @@ impl BlockExpr {}
 pub struct Const {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::HasAttrs for Const {}
 impl ast::HasName for Const {}
 impl Const {
-    #[inline]
-    pub fn attrs(&self) -> AstChildren<Attr> { support::children(&self.syntax) }
     #[inline]
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
     #[inline]
@@ -73,10 +70,9 @@ impl Const {
 pub struct Enum {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::HasAttrs for Enum {}
 impl ast::HasName for Enum {}
 impl Enum {
-    #[inline]
-    pub fn attrs(&self) -> AstChildren<Attr> { support::children(&self.syntax) }
     #[inline]
     pub fn enum_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![enum]) }
 }
@@ -96,11 +92,10 @@ impl ExprStmt {
 pub struct Fun {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::HasAttrs for Fun {}
 impl ast::HasName for Fun {}
 impl ast::HasTypeParams for Fun {}
 impl Fun {
-    #[inline]
-    pub fn attrs(&self) -> AstChildren<Attr> { support::children(&self.syntax) }
     #[inline]
     pub fn param_list(&self) -> Option<ParamList> { support::child(&self.syntax) }
     #[inline]
@@ -154,20 +149,17 @@ impl LetStmt {
 pub struct Literal {
     pub(crate) syntax: SyntaxNode,
 }
-impl Literal {
-    #[inline]
-    pub fn attrs(&self) -> AstChildren<Attr> { support::children(&self.syntax) }
-}
+impl ast::HasAttrs for Literal {}
+impl Literal {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Module {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::HasAttrs for Module {}
 impl ast::HasItemList for Module {}
 impl ast::HasName for Module {}
 impl Module {
-    #[inline]
-    pub fn attrs(&self) -> AstChildren<Attr> { support::children(&self.syntax) }
     #[inline]
     pub fn module_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![module]) }
 }
@@ -178,7 +170,9 @@ pub struct Name {
 }
 impl Name {
     #[inline]
-    pub fn ident_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![ident]) }
+    pub fn ident_token(&self) -> SyntaxToken {
+        support::token(&self.syntax, T![ident]).expect("required by the parser")
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -187,7 +181,9 @@ pub struct NameRef {
 }
 impl NameRef {
     #[inline]
-    pub fn ident_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![ident]) }
+    pub fn ident_token(&self) -> SyntaxToken {
+        support::token(&self.syntax, T![ident]).expect("required by the parser")
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -196,7 +192,9 @@ pub struct NamedAddress {
 }
 impl NamedAddress {
     #[inline]
-    pub fn ident_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![ident]) }
+    pub fn ident_token(&self) -> SyntaxToken {
+        support::token(&self.syntax, T![ident]).expect("required by the parser")
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -205,7 +203,7 @@ pub struct Param {
 }
 impl Param {
     #[inline]
-    pub fn ident_pat(&self) -> Option<IdentPat> { support::child(&self.syntax) }
+    pub fn ident_pat(&self) -> IdentPat { support::child(&self.syntax).expect("required by the parser") }
     #[inline]
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
     #[inline]
@@ -246,7 +244,9 @@ impl Path {
     #[inline]
     pub fn qualifier(&self) -> Option<Path> { support::child(&self.syntax) }
     #[inline]
-    pub fn segment(&self) -> Option<PathSegment> { support::child(&self.syntax) }
+    pub fn segment(&self) -> PathSegment {
+        support::child(&self.syntax).expect("required by the parser")
+    }
     #[inline]
     pub fn coloncolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![::]) }
 }
@@ -257,7 +257,9 @@ pub struct PathAddress {
 }
 impl PathAddress {
     #[inline]
-    pub fn value_address(&self) -> Option<ValueAddress> { support::child(&self.syntax) }
+    pub fn value_address(&self) -> ValueAddress {
+        support::child(&self.syntax).expect("required by the parser")
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -328,11 +330,10 @@ impl RetType {
 pub struct Schema {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::HasAttrs for Schema {}
 impl ast::HasName for Schema {}
 impl ast::HasTypeParams for Schema {}
 impl Schema {
-    #[inline]
-    pub fn attrs(&self) -> AstChildren<Attr> { support::children(&self.syntax) }
     #[inline]
     pub fn schema_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![schema]) }
     #[inline]
@@ -352,11 +353,10 @@ impl SourceFile {
 pub struct SpecFun {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::HasAttrs for SpecFun {}
 impl ast::HasName for SpecFun {}
 impl ast::HasTypeParams for SpecFun {}
 impl SpecFun {
-    #[inline]
-    pub fn attrs(&self) -> AstChildren<Attr> { support::children(&self.syntax) }
     #[inline]
     pub fn param_list(&self) -> Option<ParamList> { support::child(&self.syntax) }
     #[inline]
@@ -390,10 +390,9 @@ impl StmtList {
 pub struct Struct {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::HasAttrs for Struct {}
 impl ast::HasName for Struct {}
 impl Struct {
-    #[inline]
-    pub fn attrs(&self) -> AstChildren<Attr> { support::children(&self.syntax) }
     #[inline]
     pub fn struct_field_list(&self) -> Option<StructFieldList> { support::child(&self.syntax) }
     #[inline]
@@ -406,10 +405,9 @@ impl Struct {
 pub struct StructField {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::HasAttrs for StructField {}
 impl ast::HasName for StructField {}
 impl StructField {
-    #[inline]
-    pub fn attrs(&self) -> AstChildren<Attr> { support::children(&self.syntax) }
     #[inline]
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
     #[inline]
@@ -433,9 +431,8 @@ impl StructFieldList {
 pub struct TupleField {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::HasAttrs for TupleField {}
 impl TupleField {
-    #[inline]
-    pub fn attrs(&self) -> AstChildren<Attr> { support::children(&self.syntax) }
     #[inline]
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
 }
@@ -528,9 +525,8 @@ impl UseGroup {
 pub struct UseItem {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::HasAttrs for UseItem {}
 impl UseItem {
-    #[inline]
-    pub fn attrs(&self) -> AstChildren<Attr> { support::children(&self.syntax) }
     #[inline]
     pub fn use_speck(&self) -> Option<UseSpeck> { support::child(&self.syntax) }
     #[inline]
@@ -558,8 +554,8 @@ pub struct ValueAddress {
 }
 impl ValueAddress {
     #[inline]
-    pub fn int_number_token(&self) -> Option<SyntaxToken> {
-        support::token(&self.syntax, T![int_number])
+    pub fn int_number_token(&self) -> SyntaxToken {
+        support::token(&self.syntax, T![int_number]).expect("required by the parser")
     }
 }
 
@@ -593,6 +589,8 @@ pub enum Adt {
     Enum(Enum),
     Struct(Struct),
 }
+impl ast::HasAttrs for Adt {}
+impl ast::HasName for Adt {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Expr {
@@ -613,6 +611,7 @@ pub enum Item {
     Struct(Struct),
     UseItem(UseItem),
 }
+impl ast::HasAttrs for Item {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Pat {
@@ -631,6 +630,12 @@ pub enum Type {
     PathType(PathType),
     RefType(RefType),
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AnyHasAttrs {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::HasAttrs for AnyHasAttrs {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyHasItemList {
@@ -1939,6 +1944,40 @@ impl From<LetStmt> for Stmt {
     #[inline]
     fn from(node: LetStmt) -> Stmt { Stmt::LetStmt(node) }
 }
+impl Stmt {
+    pub fn expr_stmt(self) -> Option<ExprStmt> {
+        match (self) {
+            Stmt::ExprStmt(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn let_stmt(self) -> Option<LetStmt> {
+        match (self) {
+            Stmt::LetStmt(item) => Some(item),
+            _ => None,
+        }
+    }
+}
+impl AstNode for Stmt {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, EXPR_STMT | LET_STMT) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            EXPR_STMT => Stmt::ExprStmt(ExprStmt { syntax }),
+            LET_STMT => Stmt::LetStmt(LetStmt { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            Stmt::ExprStmt(it) => &it.syntax,
+            Stmt::LetStmt(it) => &it.syntax,
+        }
+    }
+}
 impl From<PathType> for Type {
     #[inline]
     fn from(node: PathType) -> Type { Type::PathType(node) }
@@ -1980,6 +2019,88 @@ impl AstNode for Type {
             Type::RefType(it) => &it.syntax,
         }
     }
+}
+impl AnyHasAttrs {
+    #[inline]
+    pub fn new<T: ast::HasAttrs>(node: T) -> AnyHasAttrs {
+        AnyHasAttrs {
+            syntax: node.syntax().clone(),
+        }
+    }
+}
+impl AstNode for AnyHasAttrs {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(
+            kind,
+            BIN_EXPR
+                | CONST
+                | ENUM
+                | FUN
+                | LITERAL
+                | MODULE
+                | SCHEMA
+                | SPEC_FUN
+                | STRUCT
+                | STRUCT_FIELD
+                | TUPLE_FIELD
+                | USE_ITEM
+        )
+    }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        Self::can_cast(syntax.kind()).then_some(AnyHasAttrs { syntax })
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl From<BinExpr> for AnyHasAttrs {
+    #[inline]
+    fn from(node: BinExpr) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<Const> for AnyHasAttrs {
+    #[inline]
+    fn from(node: Const) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<Enum> for AnyHasAttrs {
+    #[inline]
+    fn from(node: Enum) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<Fun> for AnyHasAttrs {
+    #[inline]
+    fn from(node: Fun) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<Literal> for AnyHasAttrs {
+    #[inline]
+    fn from(node: Literal) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<Module> for AnyHasAttrs {
+    #[inline]
+    fn from(node: Module) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<Schema> for AnyHasAttrs {
+    #[inline]
+    fn from(node: Schema) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<SpecFun> for AnyHasAttrs {
+    #[inline]
+    fn from(node: SpecFun) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<Struct> for AnyHasAttrs {
+    #[inline]
+    fn from(node: Struct) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<StructField> for AnyHasAttrs {
+    #[inline]
+    fn from(node: StructField) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<TupleField> for AnyHasAttrs {
+    #[inline]
+    fn from(node: TupleField) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<UseItem> for AnyHasAttrs {
+    #[inline]
+    fn from(node: UseItem) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
 impl AnyHasItemList {
     #[inline]

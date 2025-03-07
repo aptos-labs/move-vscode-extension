@@ -15,11 +15,6 @@ use rowan::{GreenNodeData, GreenTokenData, NodeOrToken};
 use std::borrow::Cow;
 
 impl ast::Name {
-    #[inline]
-    pub fn ident(&self) -> SyntaxToken {
-        support::token(&self.syntax, T![ident]).unwrap()
-    }
-
     pub fn text(&self) -> TokenText<'_> {
         text_of_first_token(self.syntax())
     }
@@ -112,18 +107,3 @@ const _: () = {
     use ast::{Name, NameRef};
     stdx::impl_from!(NameRef, Name for NameLike);
 };
-
-impl ast::Stmt {
-    pub fn let_stmt(self) -> Option<LetStmt> {
-        match self {
-            Stmt::ExprStmt(_) => None,
-            Stmt::LetStmt(s) => Some(s),
-        }
-    }
-    pub fn expr_stmt(self) -> Option<ExprStmt> {
-        match self {
-            Stmt::ExprStmt(s) => Some(s),
-            Stmt::LetStmt(_) => None,
-        }
-    }
-}

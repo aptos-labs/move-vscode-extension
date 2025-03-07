@@ -10,7 +10,7 @@ impl ast::Fun {
     pub fn params_as_bindings(&self) -> Vec<ast::IdentPat> {
         self.params()
             .into_iter()
-            .map(|param| param.ident_pat().expect("always present"))
+            .map(|param| param.ident_pat())
             .collect()
     }
 
