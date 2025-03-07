@@ -8,3 +8,6 @@ pub mod processors;
 pub mod scope;
 mod visibility;
 pub mod walk_scopes;
+mod node_ext;
+mod resolve_scope;
+mod use_speck_entries;

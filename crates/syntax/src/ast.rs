@@ -8,6 +8,7 @@ pub mod make;
 pub mod node_ext;
 pub mod syntax_factory;
 pub mod token_ext;
+pub mod item_scope;
 // mod expr_ext;
 // mod operators;
 // pub mod edit_in_place;
@@ -22,6 +23,7 @@ use crate::{
 pub use self::{
     // expr_ext::{ArrayExprKind, BlockModifier, CallableExpr, ElseBranch, LiteralKind},
     generated::{nodes::*, tokens::*},
+    item_scope::NamedItemScope,
     node_ext::{
         NameLike,
         //     AttrKind, FieldKind, Macro, NameOrNameRef, PathSegmentKind, SelfParamKind,

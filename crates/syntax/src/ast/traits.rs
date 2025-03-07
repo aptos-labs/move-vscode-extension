@@ -15,7 +15,6 @@ pub trait HasStmtList: AstNode {
     fn stmt_list(&self) -> Option<StmtList> {
         support::child(&self.syntax())
     }
-
     fn stmts(&self) -> impl Iterator<Item = ast::Stmt> {
         self.stmt_list().into_iter().flat_map(|it| it.statements())
     }

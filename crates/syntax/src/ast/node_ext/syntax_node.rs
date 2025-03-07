@@ -1,4 +1,5 @@
-use crate::{ast, AstNode, AstToken, SyntaxElement, SyntaxNode, SyntaxToken, TextSize};
+use std::cmp::Ordering;
+use crate::{ast, AstNode, AstToken, SyntaxElement, SyntaxNode, SyntaxToken, TextRange, TextSize};
 use parser::SyntaxKind;
 use rowan::{Direction, TokenAtOffset};
 
@@ -22,6 +23,8 @@ pub trait SyntaxNodeExt {
     fn descendants_of_type<Ast: AstNode>(&self) -> impl Iterator<Item = Ast>;
 
     fn next_sibling_or_token_no_trivia(&self) -> Option<SyntaxElement>;
+
+    fn strictly_before(&self, other: &SyntaxNode) -> bool;
 }
 
 impl SyntaxNodeExt for SyntaxNode {
@@ -86,6 +89,12 @@ impl SyntaxNodeExt for SyntaxNode {
         self.siblings_with_tokens(Direction::Next)
             .filter(|it| !it.kind().is_trivia())
             .next()
+    }
+
+    fn strictly_before(&self, other: &SyntaxNode) -> bool {
+        let left_range = self.text_range();
+        let right_range = other.text_range();
+        left_range.ordering(right_range) == Ordering::Less
     }
 }
 

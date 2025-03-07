@@ -60,7 +60,7 @@ impl NameRefClass {
             let res = sema.resolve_path(path);
             return match res {
                 Some(entry) => {
-                    let symbol_kind = ast_to_symbol_kind(&entry.syntax)?;
+                    let symbol_kind = ast_to_symbol_kind(&entry.named_node)?;
                     Some(NameRefClass::Definition(Definition::NamedItem(symbol_kind)))
                 }
                 None => {

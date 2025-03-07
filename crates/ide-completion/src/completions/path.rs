@@ -31,14 +31,14 @@ pub(crate) fn add_path_completions(
         for entry in entries {
             let entry_name = entry.name;
 
-            if let Some(function) = ast::Fun::cast(entry.syntax.clone()) {
+            if let Some(function) = ast::Fun::cast(entry.named_node.clone()) {
                 let completion_item =
                     render_function_completion_item(&ctx, entry_name, function).build(&ctx.db);
                 acc.add(completion_item);
                 continue;
             }
 
-            let kind = item_to_kind(entry.syntax.kind());
+            let kind = item_to_kind(entry.named_node.kind());
             let completion_item = CompletionItem::new(kind, ctx.source_range(), entry_name.as_str());
             acc.add(completion_item.build(&ctx.db));
         }

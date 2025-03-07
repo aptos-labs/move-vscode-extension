@@ -1,27 +1,35 @@
 use enumset::{enum_set, EnumSet, EnumSetType};
+use syntax::{ast, AstNode};
 
+#[allow(non_camel_case_types)]
 #[derive(EnumSetType, Debug)]
-pub enum Namespace {
-    TYPE,
+pub enum Ns {
     NAME,
-    MODULE,
+    FUNCTION,
+    TYPE,
+    ENUM,
+    ENUM_VARIANT,
     SCHEMA,
+    MODULE,
 }
 
-pub type NsSet = EnumSet<Namespace>;
+pub type NsSet = EnumSet<Ns>;
 
-pub const NAMES: NsSet = enum_set!(Namespace::NAME);
-pub const TYPES: NsSet = enum_set!(Namespace::TYPE);
-pub const MODULES: NsSet = enum_set!(Namespace::MODULE);
-pub const SCHEMAS: NsSet = enum_set!(Namespace::SCHEMA);
+pub const NAMES: NsSet = enum_set!(Ns::NAME);
+pub const TYPES: NsSet = enum_set!(Ns::TYPE);
+pub const ENUMS: NsSet = enum_set!(Ns::ENUM);
+pub const ENUM_VARIANTS: NsSet = enum_set!(Ns::ENUM_VARIANT);
+pub const SCHEMAS: NsSet = enum_set!(Ns::SCHEMA);
+pub const MODULES: NsSet = enum_set!(Ns::MODULE);
 
-pub const TYPES_N_MODULES: NsSet = enum_set!(Namespace::TYPE | Namespace::MODULE);
-pub const TYPES_N_NAMES: NsSet = enum_set!(Namespace::TYPE | Namespace::NAME);
+pub const TYPES_N_MODULES: NsSet = enum_set!(Ns::TYPE | Ns::MODULE);
+pub const TYPES_N_NAMES: NsSet = enum_set!(Ns::TYPE | Ns::NAME);
 
 pub const NONE: NsSet = enum_set!();
-pub const MODULE_ITEMS: NsSet = enum_set!(Namespace::NAME | Namespace::TYPE | Namespace::SCHEMA);
-pub const ALL: NsSet =
-    enum_set!(Namespace::NAME | Namespace::TYPE | Namespace::SCHEMA | Namespace::MODULE);
+pub const IMPORTABLE_NS: NsSet = enum_set!(Ns::NAME | Ns::FUNCTION | Ns::TYPE | Ns::SCHEMA | Ns::ENUM);
+pub const ALL_NS: NsSet = enum_set!(
+    Ns::NAME | Ns::FUNCTION | Ns::TYPE | Ns::ENUM | Ns::ENUM_VARIANT | Ns::SCHEMA | Ns::MODULE
+);
 
 pub trait NsSetExt {
     fn contains_any_of(&self, other: NsSet) -> bool;
@@ -30,5 +38,19 @@ pub trait NsSetExt {
 impl NsSetExt for NsSet {
     fn contains_any_of(&self, other: NsSet) -> bool {
         !self.is_disjoint(other)
+    }
+}
+
+pub(crate) fn named_item_ns(named_item: ast::AnyHasName) -> Ns {
+    use syntax::SyntaxKind::*;
+    match named_item.syntax().kind() {
+        MODULE => Ns::MODULE,
+        FUN => Ns::FUNCTION,
+        TYPE_PARAM | STRUCT => Ns::TYPE,
+        ENUM => Ns::ENUM,
+        VARIANT => Ns::ENUM_VARIANT,
+        IDENT_PAT | STRUCT_FIELD | CONST | GLOBAL_VARIABLE_DECL => Ns::NAME,
+        SCHEMA => Ns::SCHEMA,
+        _ => unreachable!("named nodes are exhaustive")
     }
 }

@@ -55,6 +55,8 @@ impl ast::HasAttrs for Const {}
 impl ast::HasName for Const {}
 impl Const {
     #[inline]
+    pub fn body(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
     #[inline]
     pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
@@ -72,7 +74,10 @@ pub struct Enum {
 }
 impl ast::HasAttrs for Enum {}
 impl ast::HasName for Enum {}
+impl ast::HasTypeParams for Enum {}
 impl Enum {
+    #[inline]
+    pub fn variant_list(&self) -> Option<VariantList> { support::child(&self.syntax) }
     #[inline]
     pub fn enum_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![enum]) }
 }
@@ -96,6 +101,8 @@ impl ast::HasAttrs for Fun {}
 impl ast::HasName for Fun {}
 impl ast::HasTypeParams for Fun {}
 impl Fun {
+    #[inline]
+    pub fn body(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
     #[inline]
     pub fn param_list(&self) -> Option<ParamList> { support::child(&self.syntax) }
     #[inline]
@@ -126,6 +133,22 @@ impl ItemList {
     pub fn l_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['{']) }
     #[inline]
     pub fn r_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['}']) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ItemSpec {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::HasAttrs for ItemSpec {}
+impl ItemSpec {
+    #[inline]
+    pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
+    #[inline]
+    pub fn spec_block(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn module_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![module]) }
+    #[inline]
+    pub fn spec_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![spec]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -162,6 +185,19 @@ impl ast::HasName for Module {}
 impl Module {
     #[inline]
     pub fn module_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![module]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ModuleSpec {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::HasAttrs for ModuleSpec {}
+impl ast::HasItemList for ModuleSpec {}
+impl ModuleSpec {
+    #[inline]
+    pub fn path(&self) -> Option<Path> { support::child(&self.syntax) }
+    #[inline]
+    pub fn spec_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![spec]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -335,9 +371,39 @@ impl ast::HasName for Schema {}
 impl ast::HasTypeParams for Schema {}
 impl Schema {
     #[inline]
+    pub fn spec_block(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
+    #[inline]
     pub fn schema_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![schema]) }
     #[inline]
     pub fn spec_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![spec]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SchemaField {
+    pub(crate) syntax: SyntaxNode,
+}
+impl SchemaField {
+    #[inline]
+    pub fn ident_pat(&self) -> Option<IdentPat> { support::child(&self.syntax) }
+    #[inline]
+    pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
+    #[inline]
+    pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
+    #[inline]
+    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
+    #[inline]
+    pub fn local_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![local]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Script {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::HasAttrs for Script {}
+impl ast::HasItemList for Script {}
+impl Script {
+    #[inline]
+    pub fn script_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![script]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -346,7 +412,11 @@ pub struct SourceFile {
 }
 impl SourceFile {
     #[inline]
+    pub fn module_specs(&self) -> AstChildren<ModuleSpec> { support::children(&self.syntax) }
+    #[inline]
     pub fn modules(&self) -> AstChildren<Module> { support::children(&self.syntax) }
+    #[inline]
+    pub fn scripts(&self) -> AstChildren<Script> { support::children(&self.syntax) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -362,6 +432,8 @@ impl SpecFun {
     #[inline]
     pub fn ret_type(&self) -> Option<RetType> { support::child(&self.syntax) }
     #[inline]
+    pub fn spec_block(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
+    #[inline]
     pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
     #[inline]
     pub fn fun_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![fun]) }
@@ -369,6 +441,27 @@ impl SpecFun {
     pub fn native_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![native]) }
     #[inline]
     pub fn spec_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![spec]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SpecInlineFun {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::HasName for SpecInlineFun {}
+impl ast::HasTypeParams for SpecInlineFun {}
+impl SpecInlineFun {
+    #[inline]
+    pub fn param_list(&self) -> Option<ParamList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn ret_type(&self) -> Option<RetType> { support::child(&self.syntax) }
+    #[inline]
+    pub fn spec_block(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
+    #[inline]
+    pub fn fun_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![fun]) }
+    #[inline]
+    pub fn native_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![native]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -392,6 +485,7 @@ pub struct Struct {
 }
 impl ast::HasAttrs for Struct {}
 impl ast::HasName for Struct {}
+impl ast::HasTypeParams for Struct {}
 impl Struct {
     #[inline]
     pub fn struct_field_list(&self) -> Option<StructFieldList> { support::child(&self.syntax) }
@@ -509,6 +603,16 @@ impl TypeParamList {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct UseAlias {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::HasName for UseAlias {}
+impl UseAlias {
+    #[inline]
+    pub fn as_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![as]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct UseGroup {
     pub(crate) syntax: SyntaxNode,
 }
@@ -543,6 +647,8 @@ impl UseSpeck {
     #[inline]
     pub fn path(&self) -> Option<Path> { support::child(&self.syntax) }
     #[inline]
+    pub fn use_alias(&self) -> Option<UseAlias> { support::child(&self.syntax) }
+    #[inline]
     pub fn use_group(&self) -> Option<UseGroup> { support::child(&self.syntax) }
     #[inline]
     pub fn coloncolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![::]) }
@@ -557,6 +663,32 @@ impl ValueAddress {
     pub fn int_number_token(&self) -> SyntaxToken {
         support::token(&self.syntax, T![int_number]).expect("required by the parser")
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Variant {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::HasAttrs for Variant {}
+impl ast::HasName for Variant {}
+impl Variant {
+    #[inline]
+    pub fn struct_field_list(&self) -> Option<StructFieldList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn tuple_field_list(&self) -> Option<TupleFieldList> { support::child(&self.syntax) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct VariantList {
+    pub(crate) syntax: SyntaxNode,
+}
+impl VariantList {
+    #[inline]
+    pub fn variants(&self) -> AstChildren<Variant> { support::children(&self.syntax) }
+    #[inline]
+    pub fn l_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['{']) }
+    #[inline]
+    pub fn r_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['}']) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -591,6 +723,7 @@ pub enum Adt {
 }
 impl ast::HasAttrs for Adt {}
 impl ast::HasName for Adt {}
+impl ast::HasTypeParams for Adt {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Expr {
@@ -602,10 +735,17 @@ pub enum Expr {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum FieldList {
+    StructFieldList(StructFieldList),
+    TupleFieldList(TupleFieldList),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Item {
     Const(Const),
     Enum(Enum),
     Fun(Fun),
+    ItemSpec(ItemSpec),
     Schema(Schema),
     SpecFun(SpecFun),
     Struct(Struct),
@@ -623,6 +763,8 @@ pub enum Pat {
 pub enum Stmt {
     ExprStmt(ExprStmt),
     LetStmt(LetStmt),
+    SchemaField(SchemaField),
+    SpecInlineFun(SpecInlineFun),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -870,6 +1012,27 @@ impl AstNode for ItemList {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for ItemSpec {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ITEM_SPEC
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == ITEM_SPEC }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for LetStmt {
     #[inline]
     fn kind() -> SyntaxKind
@@ -922,6 +1085,27 @@ impl AstNode for Module {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == MODULE }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for ModuleSpec {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        MODULE_SPEC
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == MODULE_SPEC }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -1248,6 +1432,48 @@ impl AstNode for Schema {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for SchemaField {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        SCHEMA_FIELD
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == SCHEMA_FIELD }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for Script {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        SCRIPT
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == SCRIPT }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for SourceFile {
     #[inline]
     fn kind() -> SyntaxKind
@@ -1279,6 +1505,27 @@ impl AstNode for SpecFun {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == SPEC_FUN }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for SpecInlineFun {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        SPEC_INLINE_FUN
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == SPEC_INLINE_FUN }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -1521,6 +1768,27 @@ impl AstNode for TypeParamList {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for UseAlias {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        USE_ALIAS
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == USE_ALIAS }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for UseGroup {
     #[inline]
     fn kind() -> SyntaxKind
@@ -1594,6 +1862,48 @@ impl AstNode for ValueAddress {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == VALUE_ADDRESS }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for Variant {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        VARIANT
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == VARIANT }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for VariantList {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        VARIANT_LIST
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == VARIANT_LIST }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -1790,6 +2100,48 @@ impl AstNode for Expr {
         }
     }
 }
+impl From<StructFieldList> for FieldList {
+    #[inline]
+    fn from(node: StructFieldList) -> FieldList { FieldList::StructFieldList(node) }
+}
+impl From<TupleFieldList> for FieldList {
+    #[inline]
+    fn from(node: TupleFieldList) -> FieldList { FieldList::TupleFieldList(node) }
+}
+impl FieldList {
+    pub fn struct_field_list(self) -> Option<StructFieldList> {
+        match (self) {
+            FieldList::StructFieldList(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn tuple_field_list(self) -> Option<TupleFieldList> {
+        match (self) {
+            FieldList::TupleFieldList(item) => Some(item),
+            _ => None,
+        }
+    }
+}
+impl AstNode for FieldList {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, STRUCT_FIELD_LIST | TUPLE_FIELD_LIST) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            STRUCT_FIELD_LIST => FieldList::StructFieldList(StructFieldList { syntax }),
+            TUPLE_FIELD_LIST => FieldList::TupleFieldList(TupleFieldList { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            FieldList::StructFieldList(it) => &it.syntax,
+            FieldList::TupleFieldList(it) => &it.syntax,
+        }
+    }
+}
 impl From<Const> for Item {
     #[inline]
     fn from(node: Const) -> Item { Item::Const(node) }
@@ -1801,6 +2153,10 @@ impl From<Enum> for Item {
 impl From<Fun> for Item {
     #[inline]
     fn from(node: Fun) -> Item { Item::Fun(node) }
+}
+impl From<ItemSpec> for Item {
+    #[inline]
+    fn from(node: ItemSpec) -> Item { Item::ItemSpec(node) }
 }
 impl From<Schema> for Item {
     #[inline]
@@ -1837,6 +2193,12 @@ impl Item {
             _ => None,
         }
     }
+    pub fn item_spec(self) -> Option<ItemSpec> {
+        match (self) {
+            Item::ItemSpec(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn schema(self) -> Option<Schema> {
         match (self) {
             Item::Schema(item) => Some(item),
@@ -1865,7 +2227,10 @@ impl Item {
 impl AstNode for Item {
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(kind, CONST | ENUM | FUN | SCHEMA | SPEC_FUN | STRUCT | USE_ITEM)
+        matches!(
+            kind,
+            CONST | ENUM | FUN | ITEM_SPEC | SCHEMA | SPEC_FUN | STRUCT | USE_ITEM
+        )
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
@@ -1873,6 +2238,7 @@ impl AstNode for Item {
             CONST => Item::Const(Const { syntax }),
             ENUM => Item::Enum(Enum { syntax }),
             FUN => Item::Fun(Fun { syntax }),
+            ITEM_SPEC => Item::ItemSpec(ItemSpec { syntax }),
             SCHEMA => Item::Schema(Schema { syntax }),
             SPEC_FUN => Item::SpecFun(SpecFun { syntax }),
             STRUCT => Item::Struct(Struct { syntax }),
@@ -1887,6 +2253,7 @@ impl AstNode for Item {
             Item::Const(it) => &it.syntax,
             Item::Enum(it) => &it.syntax,
             Item::Fun(it) => &it.syntax,
+            Item::ItemSpec(it) => &it.syntax,
             Item::Schema(it) => &it.syntax,
             Item::SpecFun(it) => &it.syntax,
             Item::Struct(it) => &it.syntax,
@@ -1944,6 +2311,14 @@ impl From<LetStmt> for Stmt {
     #[inline]
     fn from(node: LetStmt) -> Stmt { Stmt::LetStmt(node) }
 }
+impl From<SchemaField> for Stmt {
+    #[inline]
+    fn from(node: SchemaField) -> Stmt { Stmt::SchemaField(node) }
+}
+impl From<SpecInlineFun> for Stmt {
+    #[inline]
+    fn from(node: SpecInlineFun) -> Stmt { Stmt::SpecInlineFun(node) }
+}
 impl Stmt {
     pub fn expr_stmt(self) -> Option<ExprStmt> {
         match (self) {
@@ -1957,15 +2332,31 @@ impl Stmt {
             _ => None,
         }
     }
+    pub fn schema_field(self) -> Option<SchemaField> {
+        match (self) {
+            Stmt::SchemaField(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn spec_inline_fun(self) -> Option<SpecInlineFun> {
+        match (self) {
+            Stmt::SpecInlineFun(item) => Some(item),
+            _ => None,
+        }
+    }
 }
 impl AstNode for Stmt {
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, EXPR_STMT | LET_STMT) }
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(kind, EXPR_STMT | LET_STMT | SCHEMA_FIELD | SPEC_INLINE_FUN)
+    }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
             EXPR_STMT => Stmt::ExprStmt(ExprStmt { syntax }),
             LET_STMT => Stmt::LetStmt(LetStmt { syntax }),
+            SCHEMA_FIELD => Stmt::SchemaField(SchemaField { syntax }),
+            SPEC_INLINE_FUN => Stmt::SpecInlineFun(SpecInlineFun { syntax }),
             _ => return None,
         };
         Some(res)
@@ -1975,6 +2366,8 @@ impl AstNode for Stmt {
         match self {
             Stmt::ExprStmt(it) => &it.syntax,
             Stmt::LetStmt(it) => &it.syntax,
+            Stmt::SchemaField(it) => &it.syntax,
+            Stmt::SpecInlineFun(it) => &it.syntax,
         }
     }
 }
@@ -2037,14 +2430,18 @@ impl AstNode for AnyHasAttrs {
                 | CONST
                 | ENUM
                 | FUN
+                | ITEM_SPEC
                 | LITERAL
                 | MODULE
+                | MODULE_SPEC
                 | SCHEMA
+                | SCRIPT
                 | SPEC_FUN
                 | STRUCT
                 | STRUCT_FIELD
                 | TUPLE_FIELD
                 | USE_ITEM
+                | VARIANT
         )
     }
     #[inline]
@@ -2070,6 +2467,10 @@ impl From<Fun> for AnyHasAttrs {
     #[inline]
     fn from(node: Fun) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
+impl From<ItemSpec> for AnyHasAttrs {
+    #[inline]
+    fn from(node: ItemSpec) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
 impl From<Literal> for AnyHasAttrs {
     #[inline]
     fn from(node: Literal) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
@@ -2078,9 +2479,17 @@ impl From<Module> for AnyHasAttrs {
     #[inline]
     fn from(node: Module) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
+impl From<ModuleSpec> for AnyHasAttrs {
+    #[inline]
+    fn from(node: ModuleSpec) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
 impl From<Schema> for AnyHasAttrs {
     #[inline]
     fn from(node: Schema) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<Script> for AnyHasAttrs {
+    #[inline]
+    fn from(node: Script) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
 impl From<SpecFun> for AnyHasAttrs {
     #[inline]
@@ -2102,6 +2511,10 @@ impl From<UseItem> for AnyHasAttrs {
     #[inline]
     fn from(node: UseItem) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
+impl From<Variant> for AnyHasAttrs {
+    #[inline]
+    fn from(node: Variant) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
 impl AnyHasItemList {
     #[inline]
     pub fn new<T: ast::HasItemList>(node: T) -> AnyHasItemList {
@@ -2112,7 +2525,7 @@ impl AnyHasItemList {
 }
 impl AstNode for AnyHasItemList {
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, MODULE) }
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, MODULE | MODULE_SPEC | SCRIPT) }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         Self::can_cast(syntax.kind()).then_some(AnyHasItemList { syntax })
@@ -2123,6 +2536,14 @@ impl AstNode for AnyHasItemList {
 impl From<Module> for AnyHasItemList {
     #[inline]
     fn from(node: Module) -> AnyHasItemList { AnyHasItemList { syntax: node.syntax } }
+}
+impl From<ModuleSpec> for AnyHasItemList {
+    #[inline]
+    fn from(node: ModuleSpec) -> AnyHasItemList { AnyHasItemList { syntax: node.syntax } }
+}
+impl From<Script> for AnyHasItemList {
+    #[inline]
+    fn from(node: Script) -> AnyHasItemList { AnyHasItemList { syntax: node.syntax } }
 }
 impl AnyHasName {
     #[inline]
@@ -2144,9 +2565,12 @@ impl AstNode for AnyHasName {
                 | MODULE
                 | SCHEMA
                 | SPEC_FUN
+                | SPEC_INLINE_FUN
                 | STRUCT
                 | STRUCT_FIELD
                 | TYPE_PARAM
+                | USE_ALIAS
+                | VARIANT
         )
     }
     #[inline]
@@ -2184,6 +2608,10 @@ impl From<SpecFun> for AnyHasName {
     #[inline]
     fn from(node: SpecFun) -> AnyHasName { AnyHasName { syntax: node.syntax } }
 }
+impl From<SpecInlineFun> for AnyHasName {
+    #[inline]
+    fn from(node: SpecInlineFun) -> AnyHasName { AnyHasName { syntax: node.syntax } }
+}
 impl From<Struct> for AnyHasName {
     #[inline]
     fn from(node: Struct) -> AnyHasName { AnyHasName { syntax: node.syntax } }
@@ -2195,6 +2623,14 @@ impl From<StructField> for AnyHasName {
 impl From<TypeParam> for AnyHasName {
     #[inline]
     fn from(node: TypeParam) -> AnyHasName { AnyHasName { syntax: node.syntax } }
+}
+impl From<UseAlias> for AnyHasName {
+    #[inline]
+    fn from(node: UseAlias) -> AnyHasName { AnyHasName { syntax: node.syntax } }
+}
+impl From<Variant> for AnyHasName {
+    #[inline]
+    fn from(node: Variant) -> AnyHasName { AnyHasName { syntax: node.syntax } }
 }
 impl AnyHasStmtList {
     #[inline]
@@ -2228,13 +2664,19 @@ impl AnyHasTypeParams {
 }
 impl AstNode for AnyHasTypeParams {
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, FUN | SCHEMA | SPEC_FUN) }
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(kind, ENUM | FUN | SCHEMA | SPEC_FUN | SPEC_INLINE_FUN | STRUCT)
+    }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         Self::can_cast(syntax.kind()).then_some(AnyHasTypeParams { syntax })
     }
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl From<Enum> for AnyHasTypeParams {
+    #[inline]
+    fn from(node: Enum) -> AnyHasTypeParams { AnyHasTypeParams { syntax: node.syntax } }
 }
 impl From<Fun> for AnyHasTypeParams {
     #[inline]
@@ -2248,6 +2690,14 @@ impl From<SpecFun> for AnyHasTypeParams {
     #[inline]
     fn from(node: SpecFun) -> AnyHasTypeParams { AnyHasTypeParams { syntax: node.syntax } }
 }
+impl From<SpecInlineFun> for AnyHasTypeParams {
+    #[inline]
+    fn from(node: SpecInlineFun) -> AnyHasTypeParams { AnyHasTypeParams { syntax: node.syntax } }
+}
+impl From<Struct> for AnyHasTypeParams {
+    #[inline]
+    fn from(node: Struct) -> AnyHasTypeParams { AnyHasTypeParams { syntax: node.syntax } }
+}
 impl std::fmt::Display for AddressRef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -2259,6 +2709,11 @@ impl std::fmt::Display for Adt {
     }
 }
 impl std::fmt::Display for Expr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for FieldList {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -2333,6 +2788,11 @@ impl std::fmt::Display for ItemList {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for ItemSpec {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for LetStmt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -2344,6 +2804,11 @@ impl std::fmt::Display for Literal {
     }
 }
 impl std::fmt::Display for Module {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for ModuleSpec {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -2423,12 +2888,27 @@ impl std::fmt::Display for Schema {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for SchemaField {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for Script {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for SourceFile {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
 impl std::fmt::Display for SpecFun {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for SpecInlineFun {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -2488,6 +2968,11 @@ impl std::fmt::Display for TypeParamList {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for UseAlias {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for UseGroup {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -2504,6 +2989,16 @@ impl std::fmt::Display for UseSpeck {
     }
 }
 impl std::fmt::Display for ValueAddress {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for Variant {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for VariantList {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

@@ -1,6 +1,6 @@
 use crate::nameres::address::{Address, NamedAddress, ValueAddress};
 use crate::nameres::namespaces::{
-    NsSet, ALL, MODULES, MODULE_ITEMS, NAMES, NONE, TYPES, TYPES_N_MODULES, TYPES_N_NAMES,
+    NsSet, ALL_NS, IMPORTABLE_NS, MODULES, NAMES, NONE, TYPES, TYPES_N_MODULES, TYPES_N_NAMES,
 };
 use parser::T;
 use syntax::ast::node_ext::syntax_node::{OptionSyntaxNodeExt, SyntaxNodeExt};
@@ -12,16 +12,17 @@ pub enum PathKind {
     NamedAddress(NamedAddress),
     // 0x1::
     ValueAddress(ValueAddress),
-    // aptos_std:: where aptos_std is a existing named address in a project
+    // // aptos_std:: where aptos_std is a existing named address in a project
     NamedAddressOrUnqualifiedPath {
         address: NamedAddress,
         ns: NsSet,
     },
-
+    // foo
     Unqualified {
         ns: NsSet,
     },
 
+    // any multi element path
     Qualified {
         path: ast::Path,
         qualifier: ast::Path,
@@ -43,7 +44,7 @@ pub enum QualifiedKind {
     // `aptos_framework::foo` (where aptos_framework is known named address, but it can still be a module)
     ModuleOrItem { address: Address },
     // bar in foo::bar, where foo is not a named address
-    ModuleItem,
+    ModuleItemOrEnumVariant,
     // bar in `0x1::foo::bar` or `aptos_std::foo::bar` (where aptos_std is known named address)
     FQModuleItem,
     // use 0x1::m::{item1};
@@ -61,7 +62,7 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
         return Some(PathKind::Qualified {
             path,
             qualifier: use_group_qualifier,
-            ns: MODULE_ITEMS,
+            ns: IMPORTABLE_NS,
             kind: QualifiedKind::UseGroupItem,
         });
     }
@@ -91,7 +92,7 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
                 if let Some(existing_named_address) = get_named_address(&ref_name) {
                     return Some(PathKind::NamedAddress(existing_named_address));
                 }
-                return Some(PathKind::NamedAddress(NamedAddress::new(ref_name, None)));
+                return Some(PathKind::NamedAddress(NamedAddress::new(ref_name)));
             }
         }
 
@@ -137,7 +138,7 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
                 let named_address = get_named_address(&qualifier_ref_name);
                 // use std::[main]
                 if path.use_speck().is_some() {
-                    let address = named_address.unwrap_or(NamedAddress::new(qualifier_ref_name, None));
+                    let address = named_address.unwrap_or(NamedAddress::new(qualifier_ref_name));
                     return Some(PathKind::Qualified {
                         path,
                         qualifier,
@@ -163,7 +164,7 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
             path,
             qualifier,
             ns,
-            kind: QualifiedKind::ModuleItem,
+            kind: QualifiedKind::ModuleItemOrEnumVariant,
         });
     }
 
@@ -200,7 +201,7 @@ fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
         },
         // use 0x1::foo::bar; | use 0x1::foo::{bar, baz}
         //               ^                     ^
-        USE_SPECK => MODULE_ITEMS,
+        USE_SPECK => IMPORTABLE_NS,
         // a: foo::bar
         //         ^
         PATH_TYPE if qualifier.is_some() => TYPES,
@@ -216,7 +217,7 @@ fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
         CALL_EXPR => NAMES,
 
         // todo: change into AttrItemInitializer
-        PATH_EXPR if path.syntax().has_ancestor_strict::<ast::AttrItem>() => ALL,
+        PATH_EXPR if path.syntax().has_ancestor_strict::<ast::AttrItem>() => ALL_NS,
         // TYPE | ENUM for resource indexing, NAME for vector indexing
         PATH_EXPR if parent.parent().is_kind(INDEX_EXPR) => {
             TYPES_N_NAMES
@@ -225,7 +226,7 @@ fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
         // can be anything in completion
         PATH_EXPR => {
             if is_completion {
-                ALL
+                ALL_NS
             } else {
                 NAMES
             }

@@ -718,7 +718,7 @@ fn lower_rule(
                     | "iterable"
                     | "condition"
                     | "args"
-                    | "body"
+                    // | "body"
             );
             if manually_implemented {
                 return;

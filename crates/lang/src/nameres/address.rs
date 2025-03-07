@@ -7,12 +7,11 @@ pub enum Address {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct NamedAddress {
     name: String,
-    value: Option<String>,
 }
 
 impl NamedAddress {
-    pub fn new(name: String, value: Option<String>) -> Self {
-        NamedAddress { name, value }
+    pub fn new(name: String) -> Self {
+        NamedAddress { name }
     }
 }
 

@@ -16,11 +16,13 @@
 //   (A)         -- same as A
 //   label:A     -- suggested name for field of AST node
 
-SourceFile =
-    Module*
+SourceFile = Module* | ModuleSpec* | Script*
 
 Module =
     Attr* 'module' Name ItemList
+
+Script =
+    Attr* 'script' ItemList
 
 ItemList =
     '{' Item* '}'
@@ -33,21 +35,38 @@ Item =
     | UseItem
     | SpecFun
     | Schema
+    | ItemSpec
 
 UseItem =
     Attr* 'use' UseSpeck ';'
 
 UseSpeck =
-    Path ('::' UseGroup)?
+    Path (UseAlias | ('::' UseGroup) )?
+
+UseAlias =
+    'as' Name
 
 UseGroup =
     '{' UseSpeck* '}'
 
 Struct =
-    Attr* 'struct' Name (StructFieldList | TupleFieldList)
+    Attr*
+    'struct' Name TypeParamList?
+    (StructFieldList | TupleFieldList)
 
 Enum =
-    Attr* 'enum' Name
+    Attr*
+    'enum' Name TypeParamList?
+    VariantList
+
+VariantList =
+    '{' (Variant (',' Variant)* ','?)? '}'
+
+Variant =
+    Attr* Name (StructFieldList | TupleFieldList)?
+
+FieldList =
+    StructFieldList | TupleFieldList
 
 StructFieldList =
     '{' fields:(StructField (',' StructField)* ','?)? '}'
@@ -123,6 +142,8 @@ Stmt =
     ';'
     | ExprStmt
     | LetStmt
+    | SchemaField
+    | SpecInlineFun
 
 LetStmt =
     'let' Pat '=' initializer:Expr ';'
@@ -206,12 +227,25 @@ NameRef =
 
 // -------------------------- Specifications
 
+ModuleSpec =
+    Attr* 'spec' Path ItemList
+
+ItemSpec =
+    Attr* 'spec' ('module' | NameRef) spec_block:BlockExpr
+
 SpecFun =
     Attr*
     'spec' 'native'? 'fun' Name TypeParamList? ParamList RetType?
-    (body:BlockExpr | ';')
+    (spec_block:BlockExpr | ';')
+
+SpecInlineFun =
+    'native'? 'fun' Name TypeParamList? ParamList RetType?
+    (spec_block:BlockExpr | ';')
 
 Schema =
     Attr*
     'spec' 'schema' Name TypeParamList?
-    body:BlockExpr
+    spec_block:BlockExpr
+
+SchemaField =
+    'local'? IdentPat ':' Type ';'

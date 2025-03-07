@@ -86,13 +86,12 @@ impl NavigationTarget {
         InFile { file_id, value }: InFile<ScopeEntry>,
     ) -> Option<NavigationTarget> {
         let entry_name = value.name.as_str();
-        let kind = ast_to_symbol_kind(&value.syntax)?;
+        let kind = ast_to_symbol_kind(&value.named_node)?;
         Some(NavigationTarget::from_syntax(
             file_id,
             entry_name.into(),
             Some(value.name.syntax().text_range()),
-            // value.name().map(|it| it.syntax().text_range()),
-            value.syntax.text_range(),
+            value.named_node.text_range(),
             kind,
         ))
     }

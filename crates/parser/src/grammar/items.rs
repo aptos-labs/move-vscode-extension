@@ -7,9 +7,7 @@ use crate::grammar::paths::{use_path, PATH_FIRST};
 use crate::grammar::specs::schemas::schema;
 use crate::grammar::types::path_type_;
 use crate::grammar::utils::delimited;
-use crate::grammar::{
-    attributes, error_block, generic_params, item_name_r, opt_ret_type, params, types,
-};
+use crate::grammar::{attributes, error_block, generic_params, item_name_r, name_ref, opt_ret_type, params, types};
 use crate::parser::{Marker, Parser};
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
@@ -343,7 +341,8 @@ fn item_spec(p: &mut Parser, m: Marker) {
     if p.at(T![module]) {
         p.bump(T![module]);
     } else {
-        item_name_r(p);
+        name_ref(p);
+        // item_name_r(p);
         // function signature
         generic_params::opt_generic_param_list(p);
         if p.at(T!['(']) {

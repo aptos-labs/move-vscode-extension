@@ -6,6 +6,10 @@ pub mod path;
 pub mod syntax_node;
 pub mod type_;
 pub mod visibility;
+mod enum_;
+mod schema;
+mod block_expr;
+mod pat;
 
 use crate::ast::{support, ExprStmt, LetStmt, Stmt};
 use crate::token_text::TokenText;
