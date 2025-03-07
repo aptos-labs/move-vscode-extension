@@ -144,7 +144,7 @@ pub enum SyntaxKind {
     FUN,
     SPEC_FUN,
     SPEC_INLINE_FUN,
-    USE_ITEM,
+    USE_STMT,
     USE_SPECK,
     USE_GROUP,
     USE_ALIAS,

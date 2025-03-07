@@ -22,12 +22,12 @@ impl ResolveScope {
                 entries.extend(m.member_entries());
                 entries.extend(m.enum_variants().to_entries());
             }
+            Script(s) => {
+                entries.extend(s.consts().to_entries());
+            }
             Fun(f) => {
                 entries.extend(f.type_params().to_entries());
                 entries.extend(f.params_as_bindings().to_entries());
-            }
-            Script(s) => {
-                entries.extend(s.consts().to_entries());
             }
             Schema(s) => {
                 entries.extend(s.schema_fields_as_bindings().to_entries())
@@ -35,6 +35,7 @@ impl ResolveScope {
             ModuleSpec(module_spec) => {
                 entries.extend(module_spec.spec_functions().to_entries());
                 entries.extend(module_spec.spec_inline_functions().to_entries());
+                entries.extend(module_spec.schemas().to_entries());
             }
         }
         entries

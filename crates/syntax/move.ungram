@@ -28,16 +28,16 @@ ItemList =
     '{' Item* '}'
 
 Item =
-    Fun
+    UseStmt
+    | Fun
     | Const
     | Struct
     | Enum
-    | UseItem
     | SpecFun
     | Schema
     | ItemSpec
 
-UseItem =
+UseStmt =
     Attr* 'use' UseSpeck ';'
 
 UseSpeck =

@@ -10,7 +10,7 @@ pub(crate) fn use_(p: &mut Parser, m: Marker) {
     p.bump(T![use]);
     use_speck(p, true);
     p.expect(T![;]);
-    m.complete(p, USE_ITEM);
+    m.complete(p, USE_STMT);
 }
 
 // test use_tree

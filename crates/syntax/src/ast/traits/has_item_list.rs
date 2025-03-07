@@ -33,12 +33,12 @@ pub trait HasItemList: AstNode {
         self.items().into_iter().filter_map(|it| it.struct_()).collect()
     }
 
-    fn use_items(&self) -> Vec<ast::UseItem> {
-        self.items().into_iter().filter_map(|it| it.use_item()).collect()
+    fn use_stmts(&self) -> Vec<ast::UseStmt> {
+        self.items().into_iter().filter_map(|it| it.use_stmt()).collect()
     }
 
     fn use_specks(&self) -> Vec<ast::UseSpeck> {
-        self.use_items()
+        self.use_stmts()
             .into_iter()
             .filter_map(|i| i.use_speck())
             .flat_map(|use_speck| {

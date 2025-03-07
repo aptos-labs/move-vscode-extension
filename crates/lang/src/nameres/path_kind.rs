@@ -88,7 +88,7 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
 
         // check whether it's a first element in use stmt, i.e. use [std]::module;
         if let Some(use_speck) = path.use_speck() {
-            if use_speck.syntax().parent_of_type::<ast::UseItem>().is_some() {
+            if use_speck.syntax().parent_of_type::<ast::UseStmt>().is_some() {
                 if let Some(existing_named_address) = get_named_address(&ref_name) {
                     return Some(PathKind::NamedAddress(existing_named_address));
                 }

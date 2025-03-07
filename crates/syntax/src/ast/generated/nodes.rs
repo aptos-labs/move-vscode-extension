@@ -626,20 +626,6 @@ impl UseGroup {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct UseItem {
-    pub(crate) syntax: SyntaxNode,
-}
-impl ast::HasAttrs for UseItem {}
-impl UseItem {
-    #[inline]
-    pub fn use_speck(&self) -> Option<UseSpeck> { support::child(&self.syntax) }
-    #[inline]
-    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
-    #[inline]
-    pub fn use_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![use]) }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct UseSpeck {
     pub(crate) syntax: SyntaxNode,
 }
@@ -652,6 +638,20 @@ impl UseSpeck {
     pub fn use_group(&self) -> Option<UseGroup> { support::child(&self.syntax) }
     #[inline]
     pub fn coloncolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![::]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct UseStmt {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::HasAttrs for UseStmt {}
+impl UseStmt {
+    #[inline]
+    pub fn use_speck(&self) -> Option<UseSpeck> { support::child(&self.syntax) }
+    #[inline]
+    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
+    #[inline]
+    pub fn use_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![use]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -749,7 +749,7 @@ pub enum Item {
     Schema(Schema),
     SpecFun(SpecFun),
     Struct(Struct),
-    UseItem(UseItem),
+    UseStmt(UseStmt),
 }
 impl ast::HasAttrs for Item {}
 
@@ -1810,16 +1810,16 @@ impl AstNode for UseGroup {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
-impl AstNode for UseItem {
+impl AstNode for UseSpeck {
     #[inline]
     fn kind() -> SyntaxKind
     where
         Self: Sized,
     {
-        USE_ITEM
+        USE_SPECK
     }
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { kind == USE_ITEM }
+    fn can_cast(kind: SyntaxKind) -> bool { kind == USE_SPECK }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -1831,16 +1831,16 @@ impl AstNode for UseItem {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
-impl AstNode for UseSpeck {
+impl AstNode for UseStmt {
     #[inline]
     fn kind() -> SyntaxKind
     where
         Self: Sized,
     {
-        USE_SPECK
+        USE_STMT
     }
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { kind == USE_SPECK }
+    fn can_cast(kind: SyntaxKind) -> bool { kind == USE_STMT }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -2170,9 +2170,9 @@ impl From<Struct> for Item {
     #[inline]
     fn from(node: Struct) -> Item { Item::Struct(node) }
 }
-impl From<UseItem> for Item {
+impl From<UseStmt> for Item {
     #[inline]
-    fn from(node: UseItem) -> Item { Item::UseItem(node) }
+    fn from(node: UseStmt) -> Item { Item::UseStmt(node) }
 }
 impl Item {
     pub fn const_(self) -> Option<Const> {
@@ -2217,9 +2217,9 @@ impl Item {
             _ => None,
         }
     }
-    pub fn use_item(self) -> Option<UseItem> {
+    pub fn use_stmt(self) -> Option<UseStmt> {
         match (self) {
-            Item::UseItem(item) => Some(item),
+            Item::UseStmt(item) => Some(item),
             _ => None,
         }
     }
@@ -2229,7 +2229,7 @@ impl AstNode for Item {
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            CONST | ENUM | FUN | ITEM_SPEC | SCHEMA | SPEC_FUN | STRUCT | USE_ITEM
+            CONST | ENUM | FUN | ITEM_SPEC | SCHEMA | SPEC_FUN | STRUCT | USE_STMT
         )
     }
     #[inline]
@@ -2242,7 +2242,7 @@ impl AstNode for Item {
             SCHEMA => Item::Schema(Schema { syntax }),
             SPEC_FUN => Item::SpecFun(SpecFun { syntax }),
             STRUCT => Item::Struct(Struct { syntax }),
-            USE_ITEM => Item::UseItem(UseItem { syntax }),
+            USE_STMT => Item::UseStmt(UseStmt { syntax }),
             _ => return None,
         };
         Some(res)
@@ -2257,7 +2257,7 @@ impl AstNode for Item {
             Item::Schema(it) => &it.syntax,
             Item::SpecFun(it) => &it.syntax,
             Item::Struct(it) => &it.syntax,
-            Item::UseItem(it) => &it.syntax,
+            Item::UseStmt(it) => &it.syntax,
         }
     }
 }
@@ -2440,7 +2440,7 @@ impl AstNode for AnyHasAttrs {
                 | STRUCT
                 | STRUCT_FIELD
                 | TUPLE_FIELD
-                | USE_ITEM
+                | USE_STMT
                 | VARIANT
         )
     }
@@ -2507,9 +2507,9 @@ impl From<TupleField> for AnyHasAttrs {
     #[inline]
     fn from(node: TupleField) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
-impl From<UseItem> for AnyHasAttrs {
+impl From<UseStmt> for AnyHasAttrs {
     #[inline]
-    fn from(node: UseItem) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+    fn from(node: UseStmt) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
 impl From<Variant> for AnyHasAttrs {
     #[inline]
@@ -2978,12 +2978,12 @@ impl std::fmt::Display for UseGroup {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
-impl std::fmt::Display for UseItem {
+impl std::fmt::Display for UseSpeck {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
-impl std::fmt::Display for UseSpeck {
+impl std::fmt::Display for UseStmt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
