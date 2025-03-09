@@ -4,13 +4,7 @@ use std::mem;
 
 use parser::{ParseError, TreeSink};
 
-use crate::{
-    parsing::Token,
-    syntax_node::GreenNode,
-    SyntaxError,
-    SyntaxKind::{self, *},
-    SyntaxTreeBuilder, TextRange, TextSize,
-};
+use crate::{ast, parsing::Token, syntax_node::GreenNode, SyntaxError, SyntaxKind::{self, *}, SyntaxTreeBuilder, TextRange, TextSize};
 
 /// Bridges the parser with our specific syntax tree representation.
 ///
@@ -147,8 +141,8 @@ fn n_attached_trivias<'a>(
     trivias: impl Iterator<Item = (SyntaxKind, &'a str)>,
 ) -> usize {
     match kind {
-        CONST | ENUM | FUN/* | IMPL | MACRO_CALL | MACRO_DEF | MACRO_RULES*/ | MODULE/* | RECORD_FIELD
-        | STATIC */| STRUCT/* | TRAIT | TUPLE_FIELD | TYPE_ALIAS | UNION */| USE_STMT/* | VARIANT*/ => {
+        CONST | ENUM | FUN | SPEC_FUN | SPEC_INLINE_FUN | MODULE | STRUCT_FIELD | TUPLE_FIELD
+        | STRUCT | USE_STMT | VARIANT => {
             let mut res = 0;
             let mut trivias = trivias.enumerate().peekable();
 
@@ -158,18 +152,18 @@ fn n_attached_trivias<'a>(
                         // we check whether the next token is a doc-comment
                         // and skip the whitespace in this case
                         if let Some((COMMENT, peek_text)) = trivias.peek().map(|(_, pair)| pair) {
-                            // let comment_kind = ast::CommentKind::from_text(peek_text);
-                            // if comment_kind.doc == Some(ast::CommentPlacement::Outer) {
-                            //     continue;
-                            // }
+                            let comment_kind = ast::CommentKind::from_text(peek_text);
+                            if comment_kind.doc == Some(ast::CommentPlacement::Outer) {
+                                continue;
+                            }
                         }
                         break;
                     }
                     COMMENT => {
-                        // let comment_kind = ast::CommentKind::from_text(text);
-                        // if comment_kind.doc == Some(ast::CommentPlacement::Inner) {
-                        //     break;
-                        // }
+                        let comment_kind = ast::CommentKind::from_text(text);
+                        if comment_kind.doc == Some(ast::CommentPlacement::Inner) {
+                            break;
+                        }
                         res = i + 1;
                     }
                     _ => (),
