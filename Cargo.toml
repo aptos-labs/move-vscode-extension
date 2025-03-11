@@ -10,7 +10,7 @@ members = [
     "crates/ide-db",
     "crates/ide-diagnostics",
     "crates/project-model",
-    "xtask",
+    "xtask", "crates/ide-tests",
 ]
 resolver = "2"
 

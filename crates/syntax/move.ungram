@@ -208,7 +208,7 @@ Attr =
   '#' '!'? '[' AttrItem ']'
 
 AttrItem =
-    NameRef
+    Path '=' Expr
 
 Name =
     'ident'

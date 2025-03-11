@@ -4,11 +4,11 @@ mod generated;
 mod traits;
 
 pub mod edit;
+pub mod item_scope;
 pub mod make;
 pub mod node_ext;
 pub mod syntax_factory;
 pub mod token_ext;
-pub mod item_scope;
 // mod expr_ext;
 // mod operators;
 // pub mod edit_in_place;
@@ -30,11 +30,10 @@ pub use self::{
         //     SlicePatComponents, StructKind, TypeBoundKind, VisibilityKind,
     },
     // operators::{ArithOp, BinaryOp, CmpOp, LogicOp, Ordering, RangeOp, UnaryOp},
-    token_ext::{
-        CommentKind, CommentPlacement, CommentShape, IsString,
-        QuoteOffsets,
+    token_ext::{CommentKind, CommentPlacement, CommentShape, IsString, QuoteOffsets},
+    traits::{
+        HasAttrs, HasItemList, HasName, HasReference, HasScopeEntries, HasStmtList, HasTypeParams,
     },
-    traits::{HasItemList, HasName, HasStmtList, HasTypeParams, HasAttrs},
 };
 
 /// The main trait to go from untyped `SyntaxNode`  to a typed ast. The

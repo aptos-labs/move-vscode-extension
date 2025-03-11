@@ -2,7 +2,7 @@ use crate::nameres::namespaces::{named_item_ns, NsSet, NsSetExt};
 use crate::{AsName, Name};
 use syntax::{ast, AstNode, SyntaxNode};
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub struct ScopeEntry {
     pub name: Name,
     pub named_node: SyntaxNode,
@@ -65,16 +65,16 @@ impl<T: ast::HasName> NamedItemsExt for Vec<T> {
 }
 
 pub trait ScopeEntryListExt {
-    fn filter_by_ns(self, ns: NsSet) -> impl Iterator<Item = ScopeEntry>;
-    fn filter_by_name(self, name: &str) -> impl Iterator<Item = ScopeEntry>;
+    fn filter_by_ns(self, ns: NsSet) -> impl Iterator<Item=ScopeEntry>;
+    fn filter_by_name(self, name: &str) -> impl Iterator<Item=ScopeEntry>;
 }
 
-impl<T: Iterator<Item = ScopeEntry>> ScopeEntryListExt for T {
-    fn filter_by_ns(self, ns: NsSet) -> impl Iterator<Item = ScopeEntry> {
+impl<T: Iterator<Item=ScopeEntry>> ScopeEntryListExt for T {
+    fn filter_by_ns(self, ns: NsSet) -> impl Iterator<Item=ScopeEntry> {
         self.filter(move |entry| entry.ns.contains_any_of(ns))
     }
 
-    fn filter_by_name(self, name: &str) -> impl Iterator<Item = ScopeEntry> {
+    fn filter_by_name(self, name: &str) -> impl Iterator<Item=ScopeEntry> {
         self.filter(move |entry| entry.name.as_str() == name)
     }
 }

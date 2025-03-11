@@ -51,6 +51,6 @@ pub(crate) fn named_item_ns(named_item: ast::AnyHasName) -> Ns {
         VARIANT => Ns::ENUM_VARIANT,
         IDENT_PAT | STRUCT_FIELD | CONST | GLOBAL_VARIABLE_DECL => Ns::NAME,
         SCHEMA => Ns::SCHEMA,
-        _ => unreachable!("named nodes are exhaustive")
+        _ => unreachable!("named nodes are exhaustive"),
     }
 }

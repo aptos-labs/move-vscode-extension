@@ -10,6 +10,16 @@ impl ast::Path {
         self.segment().name_ref()
     }
 
+    /** For `Foo::bar::baz::quux` path returns `Foo` */
+    pub fn base_path(&self) -> ast::Path {
+        let qualifier = self.qualifier();
+        if let Some(qualifier) = qualifier {
+            qualifier.base_path()
+        } else {
+            self.clone()
+        }
+    }
+
     /// for `Foo::bar` in `Foo::bar::baz::quux` returns `Foo::bar::baz::quux`
     pub fn root_path(&self) -> ast::Path {
         let parent_path = self.syntax.parent_of_type::<ast::Path>();

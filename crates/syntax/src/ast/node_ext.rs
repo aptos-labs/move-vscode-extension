@@ -1,15 +1,16 @@
 mod address_ref;
+pub mod attr;
+mod block_expr;
+mod enum_;
 pub mod fun;
-mod move_syntax_node;
+pub mod move_syntax_node;
 pub mod name_ref;
+mod pat;
 pub mod path;
+mod schema;
 pub mod syntax_node;
 pub mod type_;
 pub mod visibility;
-mod enum_;
-mod schema;
-mod block_expr;
-mod pat;
 
 use crate::ast::{support, ExprStmt, LetStmt, Stmt};
 use crate::token_text::TokenText;

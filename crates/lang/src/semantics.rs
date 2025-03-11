@@ -57,7 +57,8 @@ impl<'db> SemanticsImpl<'db> {
     }
 
     pub fn resolve_path(&self, path: ast::Path) -> Option<ScopeEntry> {
-        paths::resolve_path_to_single_item(path)
+        // let path = self.find_file(path.syntax());
+        paths::resolve_path_to_single_item(self.db, path)
     }
 
     // todo: rename to root_file_id()

@@ -76,15 +76,69 @@ pub enum CommentPlacement {
 
 impl CommentKind {
     const BY_PREFIX: [(&'static str, CommentKind); 9] = [
-        ("/**/", CommentKind { shape: CommentShape::Block, doc: None }),
-        ("/***", CommentKind { shape: CommentShape::Block, doc: None }),
-        ("////", CommentKind { shape: CommentShape::Line, doc: None }),
-        ("///", CommentKind { shape: CommentShape::Line, doc: Some(CommentPlacement::Outer) }),
-        ("//!", CommentKind { shape: CommentShape::Line, doc: Some(CommentPlacement::Inner) }),
-        ("/**", CommentKind { shape: CommentShape::Block, doc: Some(CommentPlacement::Outer) }),
-        ("/*!", CommentKind { shape: CommentShape::Block, doc: Some(CommentPlacement::Inner) }),
-        ("//", CommentKind { shape: CommentShape::Line, doc: None }),
-        ("/*", CommentKind { shape: CommentShape::Block, doc: None }),
+        (
+            "/**/",
+            CommentKind {
+                shape: CommentShape::Block,
+                doc: None,
+            },
+        ),
+        (
+            "/***",
+            CommentKind {
+                shape: CommentShape::Block,
+                doc: None,
+            },
+        ),
+        (
+            "////",
+            CommentKind {
+                shape: CommentShape::Line,
+                doc: None,
+            },
+        ),
+        (
+            "///",
+            CommentKind {
+                shape: CommentShape::Line,
+                doc: Some(CommentPlacement::Outer),
+            },
+        ),
+        (
+            "//!",
+            CommentKind {
+                shape: CommentShape::Line,
+                doc: Some(CommentPlacement::Inner),
+            },
+        ),
+        (
+            "/**",
+            CommentKind {
+                shape: CommentShape::Block,
+                doc: Some(CommentPlacement::Outer),
+            },
+        ),
+        (
+            "/*!",
+            CommentKind {
+                shape: CommentShape::Block,
+                doc: Some(CommentPlacement::Inner),
+            },
+        ),
+        (
+            "//",
+            CommentKind {
+                shape: CommentShape::Line,
+                doc: None,
+            },
+        ),
+        (
+            "/*",
+            CommentKind {
+                shape: CommentShape::Block,
+                doc: None,
+            },
+        ),
     ];
 
     pub(crate) fn from_text(text: &str) -> CommentKind {
@@ -96,8 +150,11 @@ impl CommentKind {
     }
 
     pub fn prefix(&self) -> &'static str {
-        let &(prefix, _) =
-            CommentKind::BY_PREFIX.iter().rev().find(|(_, kind)| kind == self).unwrap();
+        let &(prefix, _) = CommentKind::BY_PREFIX
+            .iter()
+            .rev()
+            .find(|(_, kind)| kind == self)
+            .unwrap();
         prefix
     }
 }

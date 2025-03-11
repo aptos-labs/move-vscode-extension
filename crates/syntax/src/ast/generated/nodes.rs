@@ -30,7 +30,11 @@ pub struct AttrItem {
 }
 impl AttrItem {
     #[inline]
-    pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn path(&self) -> Option<Path> { support::child(&self.syntax) }
+    #[inline]
+    pub fn eq_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![=]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -99,6 +103,7 @@ pub struct Fun {
 }
 impl ast::HasAttrs for Fun {}
 impl ast::HasName for Fun {}
+impl ast::HasScopeEntries for Fun {}
 impl ast::HasTypeParams for Fun {}
 impl Fun {
     #[inline]
@@ -182,6 +187,7 @@ pub struct Module {
 impl ast::HasAttrs for Module {}
 impl ast::HasItemList for Module {}
 impl ast::HasName for Module {}
+impl ast::HasScopeEntries for Module {}
 impl Module {
     #[inline]
     pub fn module_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![module]) }
@@ -193,6 +199,7 @@ pub struct ModuleSpec {
 }
 impl ast::HasAttrs for ModuleSpec {}
 impl ast::HasItemList for ModuleSpec {}
+impl ast::HasScopeEntries for ModuleSpec {}
 impl ModuleSpec {
     #[inline]
     pub fn path(&self) -> Option<Path> { support::child(&self.syntax) }
@@ -276,6 +283,7 @@ impl ParenExpr {
 pub struct Path {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::HasReference for Path {}
 impl Path {
     #[inline]
     pub fn qualifier(&self) -> Option<Path> { support::child(&self.syntax) }
@@ -368,6 +376,7 @@ pub struct Schema {
 }
 impl ast::HasAttrs for Schema {}
 impl ast::HasName for Schema {}
+impl ast::HasScopeEntries for Schema {}
 impl ast::HasTypeParams for Schema {}
 impl Schema {
     #[inline]
@@ -401,6 +410,7 @@ pub struct Script {
 }
 impl ast::HasAttrs for Script {}
 impl ast::HasItemList for Script {}
+impl ast::HasScopeEntries for Script {}
 impl Script {
     #[inline]
     pub fn script_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![script]) }
@@ -631,7 +641,7 @@ pub struct UseSpeck {
 }
 impl UseSpeck {
     #[inline]
-    pub fn path(&self) -> Option<Path> { support::child(&self.syntax) }
+    pub fn path(&self) -> Path { support::child(&self.syntax).expect("required by the parser") }
     #[inline]
     pub fn use_alias(&self) -> Option<UseAlias> { support::child(&self.syntax) }
     #[inline]
@@ -790,6 +800,18 @@ pub struct AnyHasName {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HasName for AnyHasName {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AnyHasReference {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::HasReference for AnyHasReference {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AnyHasScopeEntries {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::HasScopeEntries for AnyHasScopeEntries {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyHasStmtList {
@@ -2631,6 +2653,68 @@ impl From<UseAlias> for AnyHasName {
 impl From<Variant> for AnyHasName {
     #[inline]
     fn from(node: Variant) -> AnyHasName { AnyHasName { syntax: node.syntax } }
+}
+impl AnyHasReference {
+    #[inline]
+    pub fn new<T: ast::HasReference>(node: T) -> AnyHasReference {
+        AnyHasReference {
+            syntax: node.syntax().clone(),
+        }
+    }
+}
+impl AstNode for AnyHasReference {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, PATH) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        Self::can_cast(syntax.kind()).then_some(AnyHasReference { syntax })
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl From<Path> for AnyHasReference {
+    #[inline]
+    fn from(node: Path) -> AnyHasReference { AnyHasReference { syntax: node.syntax } }
+}
+impl AnyHasScopeEntries {
+    #[inline]
+    pub fn new<T: ast::HasScopeEntries>(node: T) -> AnyHasScopeEntries {
+        AnyHasScopeEntries {
+            syntax: node.syntax().clone(),
+        }
+    }
+}
+impl AstNode for AnyHasScopeEntries {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(kind, FUN | MODULE | MODULE_SPEC | SCHEMA | SCRIPT)
+    }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        Self::can_cast(syntax.kind()).then_some(AnyHasScopeEntries { syntax })
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl From<Fun> for AnyHasScopeEntries {
+    #[inline]
+    fn from(node: Fun) -> AnyHasScopeEntries { AnyHasScopeEntries { syntax: node.syntax } }
+}
+impl From<Module> for AnyHasScopeEntries {
+    #[inline]
+    fn from(node: Module) -> AnyHasScopeEntries { AnyHasScopeEntries { syntax: node.syntax } }
+}
+impl From<ModuleSpec> for AnyHasScopeEntries {
+    #[inline]
+    fn from(node: ModuleSpec) -> AnyHasScopeEntries { AnyHasScopeEntries { syntax: node.syntax } }
+}
+impl From<Schema> for AnyHasScopeEntries {
+    #[inline]
+    fn from(node: Schema) -> AnyHasScopeEntries { AnyHasScopeEntries { syntax: node.syntax } }
+}
+impl From<Script> for AnyHasScopeEntries {
+    #[inline]
+    fn from(node: Script) -> AnyHasScopeEntries { AnyHasScopeEntries { syntax: node.syntax } }
 }
 impl AnyHasStmtList {
     #[inline]

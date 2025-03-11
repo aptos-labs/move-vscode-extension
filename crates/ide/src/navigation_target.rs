@@ -4,6 +4,7 @@ use lang::nameres::scope::ScopeEntry;
 use std::fmt;
 use syntax::{ast, AstNode, SmolStr, TextRange};
 use vfs::FileId;
+use syntax::ast::HasName;
 
 /// `NavigationTarget` represents an element in the editor's UI which you can
 /// click on to navigate to a particular piece of code.
@@ -86,12 +87,17 @@ impl NavigationTarget {
         InFile { file_id, value }: InFile<ScopeEntry>,
     ) -> Option<NavigationTarget> {
         let entry_name = value.name.as_str();
-        let kind = ast_to_symbol_kind(&value.named_node)?;
+        let entry_has_name = ast::AnyHasName::cast(value.named_node)?;
+
+        let name_range = entry_has_name.name().map(|name| name.ident_token().text_range());
+        let node_range = entry_has_name.syntax().text_range();
+
+        let kind = ast_to_symbol_kind(&entry_has_name.syntax())?;
         Some(NavigationTarget::from_syntax(
             file_id,
             entry_name.into(),
-            Some(value.name.syntax().text_range()),
-            value.named_node.text_range(),
+            name_range,
+            node_range,
             kind,
         ))
     }

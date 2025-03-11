@@ -11,7 +11,6 @@ mod ted;
 mod token_text;
 mod validation;
 
-use std::ops::Range;
 pub use crate::{
     ast::{AstNode, AstToken},
     ptr::{AstPtr, SyntaxNodePtr},
@@ -28,6 +27,7 @@ pub use rowan::{
     Direction, GreenNode, NodeOrToken, SyntaxText, TextRange, TextSize, TokenAtOffset, WalkEvent,
 };
 pub use smol_str::SmolStr;
+use std::ops::Range;
 use std::sync::Arc;
 
 /// `Parse` is the result of the parsing: a syntax tree and a collection of

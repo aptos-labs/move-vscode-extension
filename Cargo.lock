@@ -710,6 +710,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ide-tests"
+version = "0.1.0"
+dependencies = [
+ "ide",
+ "lang",
+ "syntax",
+]
+
+[[package]]
 name = "ident_case"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -841,6 +850,7 @@ dependencies = [
  "salsa",
  "stdx",
  "syntax",
+ "tracing",
  "vfs",
 ]
 

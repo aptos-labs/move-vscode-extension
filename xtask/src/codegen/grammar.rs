@@ -354,7 +354,7 @@ fn generate_field_method(field: &Field) -> proc_macro2::TokenStream {
                         }
                     }
                 }
-                _ => unreachable!()
+                _ => unreachable!(),
             }
         }
     }
@@ -585,13 +585,7 @@ fn lower(grammar: &Grammar) -> AstSrc {
             None => {
                 let mut fields = Vec::new();
                 let required_fields = get_required_fields(name.as_str());
-                lower_rule(
-                    &mut fields,
-                    grammar,
-                    None,
-                    rule,
-                    required_fields,
-                );
+                lower_rule(&mut fields, grammar, None, rule, required_fields);
                 res.nodes.push(AstNodeSrc {
                     doc: Vec::new(),
                     name,
@@ -677,10 +671,7 @@ fn lower_rule(
                 name = format!("'{name}'");
             }
             let cardinality = get_rule_cardinality(&name);
-            let field = Field::Token {
-                name,
-                cardinality,
-            };
+            let field = Field::Token { name, cardinality };
             acc.push(field);
         }
         Rule::Rep(inner) => {
@@ -717,8 +708,7 @@ fn lower_rule(
                     | "self_ty"
                     | "iterable"
                     | "condition"
-                    | "args"
-                    // | "body"
+                    | "args" // | "body"
             );
             if manually_implemented {
                 return;
@@ -858,30 +848,41 @@ fn extract_struct_traits(ast: &mut AstSrc) {
         }
     }
 
-    let nodes_with_doc_comments = [
-        "SourceFile",
-        "Fn",
-        "Struct",
-        "Union",
-        "RecordField",
-        "TupleField",
-        "Enum",
-        "Variant",
-        "Trait",
-        "TraitAlias",
-        "Module",
-        "Static",
-        "Const",
-        "TypeAlias",
-        "Impl",
-        "ExternBlock",
-        "ExternCrate",
-        "MacroCall",
-        "MacroRules",
-        "MacroDef",
-        "Use",
+    let non_method_traits: &[(&str, &[&str])] = &[
+        ("HasScopeEntries", &["Module", "ModuleSpec", "Script", "Fun", "Schema"]),
+        ("HasReference", &["Path"]),
+        // ("HasDocComments", &["Module", "Fun", "Struct"]),
     ];
+    for node in &mut ast.nodes {
+        for (trait_name, nodes) in non_method_traits {
+            if nodes.contains(&&*node.name) {
+                node.traits.push((*trait_name).into());
+            }
+        }
+    }
 
+    // let nodes_with_doc_comments = [
+    //     "SourceFile",
+    //     "Fun",
+    //     "Struct",
+    //     "RecordField",
+    //     "TupleField",
+    //     "Enum",
+    //     "Variant",
+    //     "Trait",
+    //     "TraitAlias",
+    //     "Module",
+    //     "Static",
+    //     "Const",
+    //     "TypeAlias",
+    //     "Impl",
+    //     "ExternBlock",
+    //     "ExternCrate",
+    //     "MacroCall",
+    //     "MacroRules",
+    //     "MacroDef",
+    //     "Use",
+    // ];
     // for node in &mut ast.nodes {
     //     if nodes_with_doc_comments.contains(&&*node.name) {
     //         node.traits.push("HasDocComments".into());

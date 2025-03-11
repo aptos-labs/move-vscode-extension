@@ -301,13 +301,13 @@ impl<'t> Parser<'t> {
     where
         Recovery: Fn(&Parser) -> bool,
     {
-        match self.current() {
-            T!['{'] | T!['}'] => {
-                self.error(message);
-                return;
-            }
-            _ => (),
-        }
+        // match self.current() {
+        //     T!['{'] | T!['}'] => {
+        //         self.error(message);
+        //         return;
+        //     }
+        //     _ => (),
+        // }
 
         if recovery(self) {
             self.error(message);

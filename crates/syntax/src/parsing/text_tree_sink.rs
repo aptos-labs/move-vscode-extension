@@ -4,7 +4,14 @@ use std::mem;
 
 use parser::{ParseError, TreeSink};
 
-use crate::{ast, parsing::Token, syntax_node::GreenNode, SyntaxError, SyntaxKind::{self, *}, SyntaxTreeBuilder, TextRange, TextSize};
+use crate::{
+    ast,
+    parsing::Token,
+    syntax_node::GreenNode,
+    SyntaxError,
+    SyntaxKind::{self, *},
+    SyntaxTreeBuilder, TextRange, TextSize,
+};
 
 /// Bridges the parser with our specific syntax tree representation.
 ///

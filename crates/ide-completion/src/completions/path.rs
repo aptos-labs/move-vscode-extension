@@ -4,7 +4,7 @@ use crate::item::{CompletionItem, CompletionItemKind};
 use crate::render::function::render_function_completion_item;
 use ide_db::SymbolKind;
 use lang::nameres::path_kind::path_kind;
-use lang::nameres::paths::{process_path_resolve_variants, PathResolutionContext};
+use lang::nameres::paths::{process_path_resolve_variants, ResolutionContext};
 use lang::nameres::processors::collect_entries;
 use std::cell::RefCell;
 use syntax::{ast, AstNode, SyntaxKind};
@@ -21,7 +21,7 @@ pub(crate) fn add_path_completions(
     {
         let acc = &mut completions.borrow_mut();
 
-        let resolution_ctx = PathResolutionContext {
+        let resolution_ctx = ResolutionContext {
             path: path.clone(),
             is_completion: true,
         };

@@ -7,7 +7,9 @@ use crate::grammar::paths::{use_path, PATH_FIRST};
 use crate::grammar::specs::schemas::schema;
 use crate::grammar::types::path_type_;
 use crate::grammar::utils::delimited;
-use crate::grammar::{attributes, error_block, generic_params, item_name_r, name_ref, opt_ret_type, params, types};
+use crate::grammar::{
+    attributes, error_block, generic_params, item_name_r, name_ref, opt_ret_type, params, types,
+};
 use crate::parser::{Marker, Parser};
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;

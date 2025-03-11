@@ -80,6 +80,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
     tokens: &["BAD_CHARACTER", "ERROR", "IDENT", "WHITESPACE", "QUOTE_IDENT", "COMMENT", "WILDCARD_IDENT"],
     nodes: &[
         "SOURCE_FILE",
+        "ADDRESS_DEF",
         "MODULE",
         "SCRIPT",
         "MODULE_SPEC",
@@ -265,6 +266,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
 };
 
 pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
+    ("UseSpeck", &["path"]),
     ("Param", &["ident_pat"]),
     ("Path", &["segment"]),
     ("PathAddress", &["value_address"]),
@@ -300,7 +302,10 @@ pub(crate) struct AstNodeSrc {
 
 #[derive(Debug, Eq, PartialEq)]
 pub(crate) enum Field {
-    Token { name: String, cardinality: Cardinality },
+    Token {
+        name: String,
+        cardinality: Cardinality,
+    },
     Node {
         name: String,
         ty: String,

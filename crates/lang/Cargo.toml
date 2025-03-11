@@ -10,10 +10,11 @@ enumset = "1.1.5"
 
 rustc-hash = { workspace = true }
 itertools = { workspace = true }
-stdx = { workspace = true }
 ra_salsa.workspace = true
 la-arena.workspace = true
+tracing.workspace = true
 
+stdx = { workspace = true }
 vfs = { workspace = true }
 
 parser = { path = "../parser" }

@@ -57,6 +57,7 @@ pub mod entry_points {
                 T![module] => module(p, m),
                 T![spec] => module_spec(p, m),
                 T![script] => script(p, m),
+                IDENT if p.at_contextual_kw("address") => address_def(p, m),
                 _ => {
                     m.abandon(p);
                     p.err_and_bump(&format!("unexpected token {:?}", p.current()))
@@ -93,6 +94,24 @@ pub(crate) fn module(p: &mut Parser<'_>, m: Marker) {
         p.err_recover("expected `{`", TOP_LEVEL_RECOVERY_SET);
     }
     m.complete(p, MODULE);
+}
+
+pub(crate) fn address_def(p: &mut Parser<'_>, m: Marker) {
+    p.bump_remap(T![address]);
+    address_ref(p);
+    if p.at(T!['{']) {
+        // test mod_item_curly
+        // mod b { }
+        p.bump(T!['{']);
+        while !p.at(EOF) && !p.at(T!['}']) {
+            let m = p.start();
+            module(p, m);
+        }
+        p.expect(T!['}']);
+    } else {
+        p.err_recover("expected `{`", TOP_LEVEL_RECOVERY_SET);
+    }
+    m.complete(p, ADDRESS_DEF);
 }
 
 pub(crate) fn module_spec(p: &mut Parser, m: Marker) {

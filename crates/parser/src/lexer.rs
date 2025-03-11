@@ -224,18 +224,6 @@ impl<'input> Lexer<'input> {
         &self.text[self.cur_start..self.cur_end]
     }
 
-    // pub fn file_hash(&self) -> FileHash {
-    //     self.file_hash
-    // }
-
-    // pub fn start_loc(&self) -> usize {
-    //     self.cur_start
-    // }
-
-    // pub fn previous_end_loc(&self) -> usize {
-    //     self.prev_end
-    // }
-
     /// Strips line and block comments from input source, and collects documentation comments,
     /// putting them into a map indexed by the span of the comment region. Comments in the original
     /// source will be replaced by spaces, such that positions of source items stay unchanged.

@@ -6,6 +6,7 @@ pub(crate) mod semantics;
 mod crate_;
 pub mod db;
 mod member_items;
+mod node_ext;
 
 pub use crate::files::{FilePosition, FileRange, InFile};
 pub use crate::name::{AsName, Name};

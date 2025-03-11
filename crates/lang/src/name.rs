@@ -1,5 +1,5 @@
 use std::fmt;
-use syntax::{ast, AstNode, SyntaxNode};
+use syntax::ast;
 
 // todo: add symbol interning some time in the future, see rust-analyzer impl
 type Symbol = String;
@@ -10,7 +10,7 @@ type Symbol = String;
 pub struct Name {
     symbol: Symbol,
     // todo: remove this field eventually
-    ast: ast::NameLike,
+    // ast: ast::NameLike,
 }
 
 impl fmt::Debug for Name {
@@ -40,10 +40,10 @@ impl PartialEq<Name> for Symbol {
 }
 
 impl Name {
-    pub fn new(text: &str, ast: ast::NameLike) -> Name {
+    pub fn new(text: &str) -> Name {
         Name {
             symbol: text.to_string(),
-            ast,
+            // ast,
         }
     }
 
@@ -87,12 +87,12 @@ impl Name {
         self.symbol.as_str()
     }
 
-    pub fn syntax(&self) -> &SyntaxNode {
-        match &self.ast {
-            ast::NameLike::NameRef(name_ref) => name_ref.syntax(),
-            ast::NameLike::Name(name) => name.syntax(),
-        }
-    }
+    // pub fn syntax(&self) -> &SyntaxNode {
+    //     match &self.ast {
+    //         ast::NameLike::NameRef(name_ref) => name_ref.syntax(),
+    //         ast::NameLike::Name(name) => name.syntax(),
+    //     }
+    // }
 
     // pub fn symbol(&self) -> &Symbol {
     //     &self.symbol
@@ -110,7 +110,8 @@ pub trait AsName {
 
 impl AsName for ast::NameRef {
     fn as_name(&self) -> Name {
-        Name::new(&self.text(), ast::NameLike::NameRef(self.to_owned()))
+        Name::new(&self.text())
+        // Name::new(&self.text(), ast::NameLike::NameRef(self.to_owned()))
         // match self.as_tuple_field() {
         //     Some(idx) => Name::new_tuple_field(idx),
         //     None => Name::new(&self.text(), self.to_owned()),
@@ -120,6 +121,7 @@ impl AsName for ast::NameRef {
 
 impl AsName for ast::Name {
     fn as_name(&self) -> Name {
-        Name::new(&self.text(), ast::NameLike::Name(self.to_owned()))
+        Name::new(&self.text())
+        // Name::new(&self.text(), ast::NameLike::Name(self.to_owned()))
     }
 }

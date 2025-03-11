@@ -1,3 +1,5 @@
+use crate::ast;
+
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum NamedItemScope {
     Main,
@@ -6,7 +8,9 @@ pub enum NamedItemScope {
 }
 
 impl NamedItemScope {
-    pub fn is_test(self) -> bool { self == NamedItemScope::Test }
+    pub fn is_test(self) -> bool {
+        self == NamedItemScope::Test
+    }
 
     pub fn shrink_scope(self, adjustment_scope: NamedItemScope) -> NamedItemScope {
         if (self == NamedItemScope::Main) {

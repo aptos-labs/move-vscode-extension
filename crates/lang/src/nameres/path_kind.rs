@@ -58,7 +58,7 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
         // use 0x1::m::{item}
         //                ^
         let parent_use_speck = use_group.syntax().parent_of_type::<ast::UseSpeck>()?;
-        let use_group_qualifier = parent_use_speck.path()?;
+        let use_group_qualifier = parent_use_speck.path();
         return Some(PathKind::Qualified {
             path,
             qualifier: use_group_qualifier,

@@ -161,16 +161,16 @@ SOURCE_FILE@0..543
         VARIANT_LIST@462..528
           L_CURLY@462..463 "{"
           WHITESPACE@463..472 "\n        "
-          COMMENT@472..480 "/// docs"
-          WHITESPACE@480..489 "\n        "
-          VARIANT@489..492
+          VARIANT@472..492
+            COMMENT@472..480 "/// docs"
+            WHITESPACE@480..489 "\n        "
             NAME@489..492
               IDENT@489..492 "One"
           COMMA@492..493 ","
           WHITESPACE@493..502 "\n        "
-          COMMENT@502..510 "/// docs"
-          WHITESPACE@510..519 "\n        "
-          VARIANT@519..522
+          VARIANT@502..522
+            COMMENT@502..510 "/// docs"
+            WHITESPACE@510..519 "\n        "
             NAME@519..522
               IDENT@519..522 "Two"
           WHITESPACE@522..527 "\n    "

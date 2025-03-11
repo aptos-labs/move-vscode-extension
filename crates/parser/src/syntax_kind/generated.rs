@@ -134,6 +134,7 @@ pub enum SyntaxKind {
     COMMENT,
     WILDCARD_IDENT,
     SOURCE_FILE,
+    ADDRESS_DEF,
     MODULE,
     SCRIPT,
     MODULE_SPEC,

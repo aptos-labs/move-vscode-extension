@@ -1,9 +1,10 @@
 use crate::navigation_target::NavigationTarget;
 use crate::RangeInfo;
-use base_db::SourceDatabase;
+use base_db::{SourceDatabase, Upcast};
 use ide_db::helpers::pick_best_token;
 use ide_db::RootDatabase;
 use lang::files::{FilePosition, InFile};
+use lang::Semantics;
 use syntax::{algo, ast, AstNode, SyntaxKind::*, T};
 
 // Feature: Go to Definition
@@ -26,7 +27,8 @@ pub(crate) fn goto_definition(
     let file = db.parse(file_id).tree();
 
     let path = algo::find_node_at_offset::<ast::Path>(file.syntax(), offset)?;
-    let item = lang::nameres::paths::resolve_path_to_single_item(path)?;
+    let sema = Semantics::new(db);
+    let scope_entry = sema.resolve_path(path)?;
 
     let original_token = pick_best_token(file.syntax().token_at_offset(offset), |kind| match kind {
         IDENT
@@ -45,7 +47,7 @@ pub(crate) fn goto_definition(
         _ => 1,
     })?;
 
-    let item_in_file = InFile::new(file_id, item);
+    let item_in_file = InFile::new(file_id, scope_entry);
     let nav_info = NavigationTarget::from_scope_entry(item_in_file)?;
     Some(RangeInfo::new(original_token.text_range(), nav_info))
 }

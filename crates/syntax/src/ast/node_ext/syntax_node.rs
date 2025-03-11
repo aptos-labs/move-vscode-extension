@@ -1,7 +1,7 @@
-use std::cmp::Ordering;
 use crate::{ast, AstNode, AstToken, SyntaxElement, SyntaxNode, SyntaxToken, TextRange, TextSize};
 use parser::SyntaxKind;
 use rowan::{Direction, TokenAtOffset};
+use std::cmp::Ordering;
 
 pub trait SyntaxNodeExt {
     fn token_at_offset_exact(&self, offset: TextSize) -> Option<SyntaxToken>;

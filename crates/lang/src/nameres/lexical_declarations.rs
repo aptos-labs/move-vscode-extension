@@ -1,6 +1,6 @@
 use crate::member_items::HasMembersList;
 use crate::nameres::namespaces::{ALL_NS, NAMES, TYPES};
-use crate::nameres::paths::PathResolutionContext;
+use crate::nameres::paths::ResolutionContext;
 use crate::nameres::processors::{ProcessingStatus, Processor};
 use crate::nameres::scope::ScopeEntry;
 use syntax::algo::ComparePos;
@@ -9,7 +9,7 @@ use syntax::ast::{AnyHasTypeParams, HasItemList, HasStmtList, HasTypeParams, Ide
 use syntax::{algo, ast, match_ast, AstNode};
 
 pub fn process_nested_scopes_upwards(
-    ctx: PathResolutionContext,
+    ctx: ResolutionContext,
     processor: &impl Processor,
 ) -> ProcessingStatus {
     let mut next_scope = ctx.path.syntax().parent();
@@ -46,23 +46,23 @@ fn process_module_scope(module: ast::Module, processor: &impl Processor) -> Proc
         }
     }
 
-    for use_speck in module.use_specks() {
-        if let Some(path) = use_speck.path() {
-            if let Some(name_ref) = path.name_ref() {
-                let stop = processor.process(ScopeEntry::from_name_ref(name_ref, ALL_NS));
-                if stop.is_stop() {
-                    return stop;
-                }
-            }
-        }
-    }
+    // for use_speck in module.use_specks() {
+    //     if let Some(path) = use_speck.path() {
+    //         if let Some(name_ref) = path.name_ref() {
+    //             let stop = processor.process(ScopeEntry::from_name_ref(name_ref, ALL_NS));
+    //             if stop.is_stop() {
+    //                 return stop;
+    //             }
+    //         }
+    //     }
+    // }
 
     ProcessingStatus::Continue
 }
 
 fn process_any_block_expr_scope(
     any_block_expr: ast::AnyHasStmtList,
-    ctx: PathResolutionContext,
+    ctx: ResolutionContext,
     processor: &impl Processor,
 ) -> ProcessingStatus {
     let mut visible_let_stmts = any_block_expr
