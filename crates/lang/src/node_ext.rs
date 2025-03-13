@@ -3,6 +3,7 @@ pub mod has_item_list;
 use crate::nameres::address::{Address, NamedAddr, ValueAddr};
 use crate::{AsName, Name};
 use syntax::ast;
+use syntax::ast::HasName;
 
 pub trait PathLangExt {
     fn name_ref_name(&self) -> Option<Name>;
@@ -17,6 +18,7 @@ impl PathLangExt for ast::Path {
 pub trait ModuleLangExt {
     fn address(&self) -> Option<Address>;
     fn address_equals_to(&self, address: Address, is_completion: bool) -> bool;
+    fn is_builtins(&self) -> bool;
 }
 
 impl ModuleLangExt for ast::Module {
@@ -61,5 +63,14 @@ impl ModuleLangExt for ast::Module {
         }
 
         same_values
+    }
+
+    fn is_builtins(&self) -> bool {
+        let name = self.name().map(|n| n.as_name());
+        if name.is_some() && name.unwrap().as_str() == "builtins" {
+            let address = self.address();
+            return address.is_some() && address.unwrap().is_0x0()
+        }
+        false
     }
 }

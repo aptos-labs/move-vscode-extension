@@ -1,15 +1,19 @@
-use std::fmt;
-use std::fmt::{Formatter, Pointer};
+use crate::db::HirDatabase;
 use crate::loc::{SyntaxLoc, SyntaxLocExt};
+use crate::nameres::is_visible::is_visible_in_context;
 use crate::nameres::namespaces::{named_item_ns, NsSet, NsSetExt};
 use crate::{AsName, InFile, Name};
-use syntax::{ast, AstNode};
+use std::fmt;
+use std::fmt::{Formatter, Pointer};
+use syntax::ast::{HasReference, NamedItemScope};
+use syntax::{ast, AstNode, SyntaxNode};
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct ScopeEntry {
     pub name: Name,
     pub named_node_loc: SyntaxLoc,
     pub ns: NsSet,
+    pub scope_adjustment: Option<NamedItemScope>,
 }
 
 impl ScopeEntry {
@@ -20,17 +24,9 @@ impl ScopeEntry {
             name: name.as_name(),
             named_node_loc: loc,
             ns,
+            scope_adjustment: None,
         })
     }
-
-    // pub fn from_name_ref(name_ref: InFile<ast::NameRef>, ns: NsSet) -> Self {
-    //     let loc = loc::SyntaxLoc::from_ast_node(item);
-    //     ScopeEntry {
-    //         name: name_ref.as_name(),
-    //         named_node_loc: name_ref.syntax().to_owned(),
-    //         ns,
-    //     }
-    // }
 
     pub fn copy_with_ns(&self, ns: NsSet) -> Self {
         let mut entry = self.clone();
@@ -62,6 +58,7 @@ impl<T: ast::HasName> ScopeEntryExt for InFile<T> {
             name: name.as_name(),
             named_node_loc: item_loc,
             ns: item_ns,
+            scope_adjustment: None,
         };
         Some(entry)
     }
@@ -80,6 +77,11 @@ impl<T: ast::HasName> NamedItemsExt for Vec<InFile<T>> {
 pub trait ScopeEntryListExt {
     fn filter_by_ns(self, ns: NsSet) -> impl Iterator<Item = ScopeEntry>;
     fn filter_by_name(self, name: &str) -> impl Iterator<Item = ScopeEntry>;
+    fn filter_by_visibility(
+        self,
+        db: &dyn HirDatabase,
+        context: impl HasReference,
+    ) -> impl Iterator<Item = ScopeEntry>;
 }
 
 impl<T: Iterator<Item = ScopeEntry>> ScopeEntryListExt for T {
@@ -89,5 +91,13 @@ impl<T: Iterator<Item = ScopeEntry>> ScopeEntryListExt for T {
 
     fn filter_by_name(self, name: &str) -> impl Iterator<Item = ScopeEntry> {
         self.filter(move |entry| entry.name.as_str() == name)
+    }
+
+    fn filter_by_visibility(
+        self,
+        db: &dyn HirDatabase,
+        context: impl HasReference,
+    ) -> impl Iterator<Item = ScopeEntry> {
+        self.filter(move |entry| is_visible_in_context(db, entry, &context))
     }
 }

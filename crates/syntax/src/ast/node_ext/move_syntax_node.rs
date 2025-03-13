@@ -1,12 +1,14 @@
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::ast::NamedItemScope;
+use crate::SyntaxKind::*;
 use crate::{ast, AstNode, SyntaxNode};
-use parser::SyntaxKind::SCHEMA;
 
 pub trait MoveSyntaxNodeExt {
     fn containing_module(&self) -> Option<ast::Module>;
     fn containing_file(&self) -> Option<ast::SourceFile>;
     fn item_scope(&self) -> NamedItemScope;
+    fn is_msl_only_item(&self) -> bool;
+    fn is_msl_context(&self) -> bool;
 }
 
 impl MoveSyntaxNodeExt for SyntaxNode {
@@ -19,8 +21,6 @@ impl MoveSyntaxNodeExt for SyntaxNode {
     }
 
     fn item_scope(&self) -> NamedItemScope {
-        use crate::SyntaxKind::*;
-
         let ancestors = self.ancestors();
         for ancestor in ancestors {
             let Some(has_attrs) = ast::AnyHasAttrs::cast(ancestor.clone()) else {
@@ -37,6 +37,22 @@ impl MoveSyntaxNodeExt for SyntaxNode {
             }
         }
         NamedItemScope::Main
+    }
+
+    fn is_msl_only_item(&self) -> bool {
+        ast::AnyMslOnly::can_cast(self.kind())
+    }
+
+    fn is_msl_context(&self) -> bool {
+        for ancestor in self.ancestors() {
+            if ancestor.kind() == MODULE || ancestor.kind() == FUN || ancestor.kind() == STRUCT {
+                return false;
+            }
+            if ancestor.is_msl_only_item() {
+                return true;
+            }
+        }
+        false
     }
 }
 

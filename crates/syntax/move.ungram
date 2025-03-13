@@ -98,6 +98,7 @@ Const =
 
 Fun =
     Attr* Visibility?
+    'native'? 'entry'? 'inline'?
     'fun' Name TypeParamList? ParamList RetType?
     (body:BlockExpr | ';')
 

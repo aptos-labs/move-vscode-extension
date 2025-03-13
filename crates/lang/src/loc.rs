@@ -65,7 +65,3 @@ impl<T: AstNode> SyntaxLocExt for InFile<T> {
         SyntaxLoc::from_ast_node(self)
     }
 }
-
-pub fn pick_token<T: AstToken>(mut tokens: TokenAtOffset<SyntaxToken>) -> Option<T> {
-    tokens.find_map(T::cast)
-}

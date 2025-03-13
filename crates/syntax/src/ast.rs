@@ -9,7 +9,7 @@ pub mod make;
 pub mod node_ext;
 pub mod syntax_factory;
 pub mod token_ext;
-// mod expr_ext;
+pub mod visibility;
 // mod operators;
 // pub mod edit_in_place;
 
@@ -33,7 +33,9 @@ pub use self::{
     token_ext::{CommentKind, CommentPlacement, CommentShape, IsString, QuoteOffsets},
     traits::{
         HasAttrs, HasItemList, HasName, HasReference, HasScopeEntries, HasStmtList, HasTypeParams,
+        MslOnly,
     },
+    visibility::HasVisibility,
 };
 
 /// The main trait to go from untyped `SyntaxNode`  to a typed ast. The

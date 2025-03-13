@@ -23,13 +23,19 @@ impl fmt::Display for Ns {
 pub type NsSet = EnumSet<Ns>;
 
 pub const NAMES: NsSet = enum_set!(Ns::NAME);
+pub const NAMES_N_VARIANTS: NsSet = enum_set!(Ns::NAME | Ns::ENUM_VARIANT);
+pub const NAMES_N_FUNCTIONS_N_VARIANTS: NsSet = enum_set!(Ns::NAME | Ns::FUNCTION | Ns::ENUM_VARIANT);
 pub const TYPES: NsSet = enum_set!(Ns::TYPE);
 pub const ENUMS: NsSet = enum_set!(Ns::ENUM);
 pub const ENUM_VARIANTS: NsSet = enum_set!(Ns::ENUM_VARIANT);
 pub const SCHEMAS: NsSet = enum_set!(Ns::SCHEMA);
 pub const MODULES: NsSet = enum_set!(Ns::MODULE);
 
+pub const ENUMS_N_MODULES: NsSet = enum_set!(Ns::ENUM | Ns::MODULE);
 pub const TYPES_N_MODULES: NsSet = enum_set!(Ns::TYPE | Ns::MODULE);
+pub const TYPES_N_ENUMS_N_MODULES: NsSet = enum_set!(Ns::TYPE | Ns::ENUM | Ns::MODULE);
+pub const TYPES_N_ENUMS_N_ENUM_VARIANTS: NsSet = enum_set!(Ns::TYPE | Ns::ENUM | Ns::MODULE);
+pub const TYPES_N_ENUMS: NsSet = enum_set!(Ns::TYPE | Ns::ENUM);
 pub const TYPES_N_NAMES: NsSet = enum_set!(Ns::TYPE | Ns::NAME);
 
 pub const NONE: NsSet = enum_set!();

@@ -14,4 +14,14 @@ impl ast::Fun {
     pub fn return_type(&self) -> Option<ast::Type> {
         self.ret_type()?.type_()
     }
+
+    pub fn is_native(&self) -> bool {
+        self.native_token().is_some()
+    }
+    pub fn is_entry(&self) -> bool {
+        self.entry_token().is_some()
+    }
+    pub fn is_inline(&self) -> bool {
+        self.inline_token().is_some()
+    }
 }

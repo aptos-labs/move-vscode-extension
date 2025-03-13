@@ -9,6 +9,6 @@ pub mod processors;
 mod scope_entries_owner;
 pub mod scope;
 pub mod use_speck_entries;
-mod visibility;
 pub mod walk_scopes;
 mod name_resolution;
+mod is_visible;

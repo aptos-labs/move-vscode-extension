@@ -50,3 +50,5 @@ pub trait HasAttrs: AstNode {
 pub trait HasScopeEntries: AstNode {}
 
 pub trait HasReference: AstNode {}
+
+pub trait MslOnly: AstNode {}

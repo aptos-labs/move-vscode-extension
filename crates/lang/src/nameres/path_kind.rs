@@ -1,12 +1,11 @@
 use std::any::type_name;
 use crate::nameres::address::{Address, NamedAddr, ValueAddr};
-use crate::nameres::namespaces::{
-    NsSet, ALL_NS, IMPORTABLE_NS, MODULES, NAMES, NONE, TYPES, TYPES_N_MODULES, TYPES_N_NAMES,
-};
+use crate::nameres::namespaces::{NsSet, ALL_NS, ENUMS, ENUMS_N_MODULES, IMPORTABLE_NS, MODULES, NAMES, NAMES_N_FUNCTIONS_N_VARIANTS, NAMES_N_VARIANTS, NONE, TYPES, TYPES_N_ENUMS, TYPES_N_ENUMS_N_ENUM_VARIANTS, TYPES_N_ENUMS_N_MODULES, TYPES_N_MODULES, TYPES_N_NAMES};
 use crate::InFile;
 use parser::T;
 use std::fmt;
 use std::fmt::{Formatter, Pointer};
+use parser::SyntaxKind::PATH_TYPE;
 use syntax::ast::node_ext::syntax_node::{OptionSyntaxNodeExt, SyntaxNodeExt};
 use syntax::{ast, AstNode};
 use crate::node_ext::PathLangExt;
@@ -244,47 +243,51 @@ fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
     match parent.kind() {
         // mod::foo::bar
         //      ^
-        PATH if qualifier.is_some() => TYPES,
+        PATH if qualifier.is_some() => ENUMS,
         // foo::bar
         //  ^
         PATH => {
-            // if we're inside PathType, then ENUM::ENUM_VARIANT cannot be used
-            if parent.parent().is_kind(PATH_TYPE) {
-                MODULES
-            } else {
-                TYPES_N_MODULES
-            }
+            ENUMS_N_MODULES
+            // // if we're inside PathType, then ENUM::ENUM_VARIANT cannot be used
+            // if parent.parent().is_kind(PATH_TYPE) {
+            //     MODULES
+            // } else {
+            //     TYPES_N_MODULES
+            // }
         },
         // use 0x1::foo::bar; | use 0x1::foo::{bar, baz}
         //               ^                     ^
         USE_SPECK => IMPORTABLE_NS,
-        // a: foo::bar
-        //         ^
-        PATH_TYPE if qualifier.is_some() => TYPES,
+
+        PATH_TYPE if parent.parent().is_kind(IS_EXPR) => TYPES_N_ENUMS_N_ENUM_VARIANTS,
+
         // a: bar
         //     ^
-        PATH_TYPE => {
+        PATH_TYPE if qualifier.is_none() => {
             if is_completion {
-                TYPES_N_MODULES
+                TYPES_N_ENUMS_N_MODULES
             } else {
-                TYPES
+                TYPES_N_ENUMS
             }
         }
-        CALL_EXPR => NAMES,
+        // a: foo::bar
+        //         ^
+        PATH_TYPE if qualifier.is_some() => TYPES_N_ENUMS,
+
+        CALL_EXPR => NAMES_N_FUNCTIONS_N_VARIANTS,
 
         // todo: change into AttrItemInitializer
         PATH_EXPR if path.syntax().has_ancestor_strict::<ast::AttrItem>() => ALL_NS,
+
         // TYPE | ENUM for resource indexing, NAME for vector indexing
-        PATH_EXPR if parent.parent().is_kind(INDEX_EXPR) => {
-            TYPES_N_NAMES
-        }
+        PATH_EXPR if parent.parent().is_kind(INDEX_EXPR) => TYPES_N_NAMES,
 
         // can be anything in completion
         PATH_EXPR => {
             if is_completion {
                 ALL_NS
             } else {
-                NAMES
+                NAMES_N_VARIANTS
             }
         }
 
@@ -293,7 +296,7 @@ fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
         //     || parent is MvSchemaRef -> SCHEMAS
 
         // todo:
-        STRUCT_LIT | STRUCT_PAT | TUPLE_STRUCT_PAT /*| CONST_PAT*/ => TYPES,
+        STRUCT_LIT | STRUCT_PAT | TUPLE_STRUCT_PAT /*| CONST_PAT*/ => TYPES_N_ENUMS_N_ENUM_VARIANTS,
 
         // todo:
 
@@ -302,8 +305,8 @@ fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
         //     parent is MvAddressSpecifierCallParam -> NAMES
 
         FRIEND => MODULES,
+        MODULE_SPEC => MODULES,
 
-        //     parent is MvModuleSpec -> MODULES
         //
         // // should not be used for attr items
         //     parent is MvAttrItem -> NONE

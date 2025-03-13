@@ -851,6 +851,7 @@ fn extract_struct_traits(ast: &mut AstSrc) {
     let non_method_traits: &[(&str, &[&str])] = &[
         ("HasScopeEntries", &["Module", "ModuleSpec", "Script", "Fun", "Schema"]),
         ("HasReference", &["Path"]),
+        ("MslOnly", &["Schema", "SchemaField", "SpecFun", "SpecInlineFun", "ModuleSpec", "ItemSpec"]),
         // ("HasDocComments", &["Module", "Fun", "Struct"]),
     ];
     for node in &mut ast.nodes {

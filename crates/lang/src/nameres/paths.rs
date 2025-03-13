@@ -20,37 +20,42 @@ pub fn get_path_resolve_variants(
     ctx: ResolutionContext,
     path_kind: PathKind,
 ) -> Vec<ScopeEntry> {
-    let mut entries = vec![];
     match path_kind {
-        PathKind::Unknown => {}
+        PathKind::Unknown => vec![],
         PathKind::NamedAddress(_) | PathKind::ValueAddress(_) => {
             // no path resolution for named / value addresses
+            vec![]
         }
         PathKind::NamedAddressOrUnqualifiedPath { ns, .. } | PathKind::Unqualified { ns } => {
+            let mut entries = vec![];
             if ns.contains(Ns::MODULE) {
                 if let Some(module) = ctx.containing_module().opt_in_file(ctx.path.file_id) {
                     entries.push(ScopeEntry {
                         name: Name::new("Self"),
                         named_node_loc: module.loc(),
                         ns: MODULES,
+                        scope_adjustment: None,
                     })
                 }
             }
-            entries.extend(get_entries_from_walking_scopes(db, ctx, ns))
+            entries.extend(get_entries_from_walking_scopes(db, ctx, ns));
+            entries
         }
 
         PathKind::Qualified {
             kind: QualifiedKind::Module { address },
             ..
         } => {
-            entries.extend(get_modules_as_entries(db, ctx, address))
+            get_modules_as_entries(db, ctx, address)
         }
 
-        PathKind::Qualified { qualifier, .. } => {
-            entries.extend(get_qualified_path_entries(db, ctx, qualifier))
+        PathKind::Qualified { qualifier, ns, .. } => {
+            get_qualified_path_entries(db, ctx, qualifier)
+                .into_iter()
+                .filter_by_ns(ns)
+                .collect()
         }
     }
-    entries
 }
 
 pub fn resolve_single(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Option<ScopeEntry> {
@@ -71,6 +76,7 @@ pub fn resolve(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry>
     let Some(path_name) = path.value.name_ref_name() else {
         return vec![];
     };
+    let context_element = path.value.clone();
     let ctx = ResolutionContext {
         path,
         is_completion: false,
@@ -81,7 +87,10 @@ pub fn resolve(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry>
     let resolve_variants = get_path_resolve_variants(db, ctx, path_kind);
     tracing::debug!(resolve_variants = ?resolve_variants);
 
-    resolve_variants.into_iter().filter_by_name(path_name.as_str()).collect()
+    resolve_variants.into_iter()
+        .filter_by_name(path_name.as_str())
+        .filter_by_visibility(db, context_element)
+        .collect()
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -100,44 +109,3 @@ impl ResolutionContext {
     }
 }
 
-pub fn process_path_resolve_variants(
-    ctx: ResolutionContext,
-    path_kind: PathKind,
-    processor: &impl Processor,
-) -> ProcessingStatus {
-    match path_kind {
-        PathKind::Unknown => ProcessingStatus::Continue,
-        PathKind::NamedAddress(_) | PathKind::ValueAddress(_) => {
-            // no path resolution for named / value addresses
-            ProcessingStatus::Continue
-        }
-        PathKind::NamedAddressOrUnqualifiedPath { ns, .. } | PathKind::Unqualified { ns } => {
-            // todo: resolve Self module
-            // local
-            let with_ns_filter = filter_ns_processor(ns, processor);
-            process_nested_scopes_upwards(ctx, &with_ns_filter)
-        }
-
-        PathKind::Qualified {
-            kind: QualifiedKind::Module { address },
-            ns,
-            ..
-        } => {
-            // process_module_path_resolve_variants(ctx, address, &filter_ns_processor(ns, processor))
-            ProcessingStatus::Continue
-        }
-
-        PathKind::Qualified { qualifier, ns, .. } => {
-            process_qualified_path_resolve_variants(ctx, qualifier, &filter_ns_processor(ns, processor))
-        }
-    }
-}
-
-fn process_qualified_path_resolve_variants(
-    ctx: ResolutionContext,
-    qualifier: ast::Path,
-    processor: &impl Processor,
-) -> ProcessingStatus {
-    // let qualifier_item = resolve_path_to_single_item(qualifier);
-    ProcessingStatus::Continue
-}

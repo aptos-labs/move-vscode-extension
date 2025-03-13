@@ -17,6 +17,13 @@ impl Address {
             Address::Value(value_addr) => Some(value_addr.numeric_address),
         }
     }
+
+    pub fn is_0x0(&self) -> bool {
+        match self {
+            Address::Value(value_addr) => value_addr.numeric_address.short() == "0x0",
+            _ => false
+        }
+    }
 }
 
 impl fmt::Debug for Address {

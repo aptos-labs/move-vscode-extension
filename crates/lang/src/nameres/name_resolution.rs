@@ -1,4 +1,5 @@
 use crate::db::HirDatabase;
+use crate::files::InFileVecExt;
 use crate::nameres::address::Address;
 use crate::nameres::namespaces::{NsSet, NsSetExt, MODULES};
 use crate::nameres::node_ext::ModuleResolutionExt;
@@ -13,7 +14,6 @@ use parser::SyntaxKind;
 use parser::SyntaxKind::{MODULE_SPEC, STMT_LIST};
 use syntax::ast::{HasItemList, HasReference};
 use syntax::{ast, AstNode, SyntaxNode};
-use crate::files::InFileVecExt;
 
 pub struct ResolveScope {
     scope: InFile<SyntaxNode>,
@@ -133,6 +133,7 @@ pub fn get_qualified_path_entries(
                 name: Name::new("Self"),
                 named_node_loc: qualifier_item.named_node_loc,
                 ns: MODULES,
+                scope_adjustment: None,
             });
             let module = qualifier_item
                 .named_node_loc

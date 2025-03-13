@@ -1,14 +1,14 @@
 use crate::db::HirDatabase;
 use crate::nameres::path_kind::{path_kind, PathKind, QualifiedKind};
+use crate::nameres::paths;
 use crate::nameres::scope::ScopeEntry;
-use crate::node_ext::{PathLangExt};
+use crate::node_ext::has_item_list::HasItemListInFileExt;
+use crate::node_ext::PathLangExt;
 use crate::{AsName, InFile, Name};
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::{HasName, NamedItemScope};
 use syntax::{ast, AstNode};
 use vfs::FileId;
-use crate::nameres::paths;
-use crate::node_ext::has_item_list::HasItemListInFileExt;
 
 pub fn use_speck_entries(
     db: &dyn HirDatabase,
@@ -27,6 +27,7 @@ pub fn use_speck_entries(
             name: use_item.name_or_alias,
             named_node_loc: scope_entry.named_node_loc,
             ns: scope_entry.ns,
+            scope_adjustment: Some(use_item.scope),
         });
     }
 

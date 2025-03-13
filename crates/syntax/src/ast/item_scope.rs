@@ -1,6 +1,6 @@
 use crate::ast;
 
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
 pub enum NamedItemScope {
     Main,
     Test,
