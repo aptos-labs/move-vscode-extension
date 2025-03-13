@@ -63,14 +63,24 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
         }
         FUN => {
             let fun = scope.cast::<ast::Fun>().unwrap();
-            // let fun = ast::Fun::cast(scope.value).unwrap();
             entries.extend(fun.value.type_params().wrapped_in_file(fun.file_id).to_entries());
-            entries.extend(fun.value.params_as_bindings().wrapped_in_file(fun.file_id).to_entries());
+            entries.extend(
+                fun.value
+                    .params_as_bindings()
+                    .wrapped_in_file(fun.file_id)
+                    .to_entries(),
+            );
         }
-        // SCHEMA => {
-        //     let schema = ast::Schema::cast(scope.value).unwrap();
-        //     entries.extend(schema.schema_fields_as_bindings().to_entries())
-        // }
+        SCHEMA => {
+            let schema = scope.cast::<ast::Schema>().unwrap();
+            entries.extend(
+                schema
+                    .value
+                    .schema_fields_as_bindings()
+                    .wrapped_in_file(schema.file_id)
+                    .to_entries(),
+            )
+        }
         _ => {
             unreachable!("{:?} scope entries owner is not handled", scope.kind());
         }

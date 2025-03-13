@@ -52,12 +52,12 @@ pub(crate) fn named_item_ns(named_item_kind: syntax::SyntaxKind) -> Ns {
     use syntax::SyntaxKind::*;
     match named_item_kind {
         MODULE => Ns::MODULE,
-        FUN => Ns::FUNCTION,
+        SPEC_FUN | FUN | SPEC_INLINE_FUN => Ns::FUNCTION,
         TYPE_PARAM | STRUCT => Ns::TYPE,
         ENUM => Ns::ENUM,
         VARIANT => Ns::ENUM_VARIANT,
         IDENT_PAT | STRUCT_FIELD | CONST | GLOBAL_VARIABLE_DECL => Ns::NAME,
         SCHEMA => Ns::SCHEMA,
-        _ => unreachable!("named nodes are exhaustive"),
+        _ => unreachable!("named nodes should be exhaustive, unhandled {:?}", named_item_kind),
     }
 }

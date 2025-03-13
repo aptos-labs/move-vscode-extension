@@ -2,6 +2,7 @@ use crate::nameres::scope::{NamedItemsExt, ScopeEntry};
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::HasStmtList;
 use syntax::{ast, AstNode, SyntaxNode};
+use crate::files::{InFileExt, InFileVecExt};
 use crate::InFile;
 
 pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: Option<SyntaxNode>) -> Vec<ScopeEntry> {
@@ -10,11 +11,12 @@ pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: Option<SyntaxNode>
     match scope.value.kind() {
         BLOCK_EXPR => {
             let block_expr = scope.map(|s| ast::BlockExpr::cast(s).unwrap());
+            let prev = prev.unwrap();
             // if prev is not stmt, there's something wrong
-            let prev_stmt = prev
-                .and_then(|p| ast::Stmt::cast(p))
-                .expect("previous scope for block should be a stmt or tail expr");
-            let bindings = visible_let_stmts(block_expr.value, prev_stmt);
+            // let prev_stmt = prev
+            //     .and_then(|p| ast::Stmt::cast(p))
+            //     .expect(&format!("previous scope for block should be a stmt or tail expr, actual {:?}", prev_kind));
+            let bindings = visible_let_stmts(block_expr, prev);
             let binding_entries = bindings
                 .into_iter()
                 .rev()
@@ -33,16 +35,16 @@ pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: Option<SyntaxNode>
 }
 
 fn visible_let_stmts(
-    block: ast::BlockExpr,
-    currently_at: ast::Stmt,
+    block: InFile<ast::BlockExpr>,
+    prev: SyntaxNode,
 ) -> Vec<(ast::LetStmt, Vec<ScopeEntry>)> {
-    vec![]
-    // block
-    //     .let_stmts()
-    //     .filter(|let_stmt| let_stmt.syntax().strictly_before(currently_at.syntax()))
-    //     .map(|let_stmt| {
-    //         let bindings = let_stmt.pat().map(|pat| pat.bindings()).unwrap_or_default();
-    //         (let_stmt, bindings.to_entries())
-    //     })
-    //     .collect()
+    block
+        .value
+        .let_stmts()
+        .filter(|let_stmt| let_stmt.syntax().strictly_before(&prev))
+        .map(|let_stmt| {
+            let bindings = let_stmt.pat().map(|pat| pat.bindings()).unwrap_or_default();
+            (let_stmt, bindings.wrapped_in_file(block.file_id).to_entries())
+        })
+        .collect()
 }

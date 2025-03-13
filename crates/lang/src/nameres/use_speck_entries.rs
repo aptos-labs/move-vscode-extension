@@ -23,7 +23,6 @@ pub fn use_speck_entries(
             tracing::debug!(path = &path.syntax_text(), "use_speck unresolved");
             continue;
         };
-        tracing::info!("scope entry");
         entries.push(ScopeEntry {
             name: use_item.name_or_alias,
             named_node_loc: scope_entry.named_node_loc,
