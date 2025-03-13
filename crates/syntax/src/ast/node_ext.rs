@@ -11,6 +11,8 @@ mod schema;
 pub mod syntax_node;
 pub mod type_;
 pub mod visibility;
+mod module;
+mod source_file;
 
 use crate::ast::{support, ExprStmt, LetStmt, Stmt};
 use crate::token_text::TokenText;

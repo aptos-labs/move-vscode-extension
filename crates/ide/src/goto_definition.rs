@@ -1,9 +1,9 @@
 use crate::navigation_target::NavigationTarget;
 use crate::RangeInfo;
-use base_db::{SourceDatabase, Upcast};
+use base_db::SourceDatabase;
 use ide_db::helpers::pick_best_token;
 use ide_db::RootDatabase;
-use lang::files::{FilePosition, InFile};
+use lang::files::FilePosition;
 use lang::Semantics;
 use syntax::{algo, ast, AstNode, SyntaxKind::*, T};
 
@@ -24,20 +24,16 @@ pub(crate) fn goto_definition(
     db: &RootDatabase,
     FilePosition { file_id, offset }: FilePosition,
 ) -> Option<RangeInfo<NavigationTarget>> {
-    let file = db.parse(file_id).tree();
-
-    let path = algo::find_node_at_offset::<ast::Path>(file.syntax(), offset)?;
     let sema = Semantics::new(db);
+
+    let file = sema.parse(file_id);
+    let path = algo::find_node_at_offset::<ast::Path>(file.syntax(), offset)?;
+
     let scope_entry = sema.resolve_path(path)?;
 
     let original_token = pick_best_token(file.syntax().token_at_offset(offset), |kind| match kind {
         IDENT
         | INT_NUMBER
-        // | LIFETIME_IDENT
-        // | T![self]
-        // | T![super]
-        // | T![crate]
-        // | T![Self]
         | COMMENT => 4,
         // index and prefix ops
         T!['['] | T![']'] /*| T![?] */| T![*] | T![-] | T![!] => 3,
@@ -47,7 +43,6 @@ pub(crate) fn goto_definition(
         _ => 1,
     })?;
 
-    let item_in_file = InFile::new(file_id, scope_entry);
-    let nav_info = NavigationTarget::from_scope_entry(item_in_file)?;
+    let nav_info = NavigationTarget::from_scope_entry(db, scope_entry)?;
     Some(RangeInfo::new(original_token.text_range(), nav_info))
 }

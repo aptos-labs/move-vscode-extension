@@ -16,10 +16,16 @@
 //   (A)         -- same as A
 //   label:A     -- suggested name for field of AST node
 
-SourceFile = Module* | ModuleSpec* | Script*
+SourceFile = AddressDef* | Module* | ModuleSpec* | Script*
+
+AddressDef =
+    'address' AddressRef
+    '{' Module* '}'
 
 Module =
-    Attr* 'module' Name ItemList
+    Attr*
+    'module' (AddressRef '::')? Name
+    ItemList
 
 Script =
     Attr* 'script' ItemList

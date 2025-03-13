@@ -1,10 +1,11 @@
-use ide_db::{ast_to_symbol_kind, SymbolKind};
+use base_db::Upcast;
+use ide_db::{ast_kind_to_symbol_kind, RootDatabase, SymbolKind};
 use lang::files::InFile;
 use lang::nameres::scope::ScopeEntry;
 use std::fmt;
+use syntax::ast::HasName;
 use syntax::{ast, AstNode, SmolStr, TextRange};
 use vfs::FileId;
-use syntax::ast::HasName;
 
 /// `NavigationTarget` represents an element in the editor's UI which you can
 /// click on to navigate to a particular piece of code.
@@ -84,15 +85,20 @@ impl NavigationTarget {
 
     /// Allows `NavigationTarget` to be created from a `NameOwner`
     pub(crate) fn from_scope_entry(
-        InFile { file_id, value }: InFile<ScopeEntry>,
+        db: &RootDatabase,
+        scope_entry: ScopeEntry,
     ) -> Option<NavigationTarget> {
-        let entry_name = value.name.as_str();
-        let entry_has_name = ast::AnyHasName::cast(value.named_node)?;
+        let entry_name = scope_entry.name.as_str();
+        let file_id = scope_entry.named_node_loc.file_id();
+        let entry_item = scope_entry
+            .named_node_loc
+            .cast::<ast::AnyHasName>(db.upcast())?
+            .value;
 
-        let name_range = entry_has_name.name().map(|name| name.ident_token().text_range());
-        let node_range = entry_has_name.syntax().text_range();
+        let name_range = entry_item.name().map(|name| name.ident_token().text_range());
+        let node_range = entry_item.syntax().text_range();
 
-        let kind = ast_to_symbol_kind(&entry_has_name.syntax())?;
+        let kind = ast_kind_to_symbol_kind(entry_item.syntax().kind())?;
         Some(NavigationTarget::from_syntax(
             file_id,
             entry_name.into(),
@@ -110,7 +116,7 @@ impl NavigationTarget {
             .name()
             .map(|it| it.text().into())
             .unwrap_or_else(|| "_".into());
-        let kind = ast_to_symbol_kind(value.syntax())?;
+        let kind = ast_kind_to_symbol_kind(value.syntax().kind())?;
         Some(NavigationTarget::from_syntax(
             file_id,
             name.clone(),

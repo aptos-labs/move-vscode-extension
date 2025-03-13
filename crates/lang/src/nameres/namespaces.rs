@@ -1,5 +1,6 @@
 use enumset::{enum_set, EnumSet, EnumSetType};
-use syntax::{ast, AstNode};
+use std::fmt;
+use std::fmt::Formatter;
 
 #[allow(non_camel_case_types)]
 #[derive(EnumSetType, Debug)]
@@ -11,6 +12,12 @@ pub enum Ns {
     ENUM_VARIANT,
     SCHEMA,
     MODULE,
+}
+
+impl fmt::Display for Ns {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.write_str(&format!("{:?}", self))
+    }
 }
 
 pub type NsSet = EnumSet<Ns>;
@@ -41,9 +48,9 @@ impl NsSetExt for NsSet {
     }
 }
 
-pub(crate) fn named_item_ns(named_item: ast::AnyHasName) -> Ns {
+pub(crate) fn named_item_ns(named_item_kind: syntax::SyntaxKind) -> Ns {
     use syntax::SyntaxKind::*;
-    match named_item.syntax().kind() {
+    match named_item_kind {
         MODULE => Ns::MODULE,
         FUN => Ns::FUNCTION,
         TYPE_PARAM | STRUCT => Ns::TYPE,

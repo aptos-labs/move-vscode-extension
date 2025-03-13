@@ -1,4 +1,4 @@
-mod has_item_list;
+pub mod has_item_list;
 
 use crate::ast::{support, AstChildren, StmtList, TypeParam, TypeParamList};
 use crate::{ast, AstNode};

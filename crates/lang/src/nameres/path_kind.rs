@@ -1,20 +1,26 @@
-use crate::nameres::address::{Address, NamedAddress, ValueAddress};
+use std::any::type_name;
+use crate::nameres::address::{Address, NamedAddr, ValueAddr};
 use crate::nameres::namespaces::{
     NsSet, ALL_NS, IMPORTABLE_NS, MODULES, NAMES, NONE, TYPES, TYPES_N_MODULES, TYPES_N_NAMES,
 };
+use crate::InFile;
 use parser::T;
+use std::fmt;
+use std::fmt::{Formatter, Pointer};
 use syntax::ast::node_ext::syntax_node::{OptionSyntaxNodeExt, SyntaxNodeExt};
 use syntax::{ast, AstNode};
+use crate::node_ext::PathLangExt;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum PathKind {
+    Unknown,
     // aptos_std:: where aptos_std is a existing named address in a project
-    NamedAddress(NamedAddress),
+    NamedAddress(NamedAddr),
     // 0x1::
-    ValueAddress(ValueAddress),
+    ValueAddress(ValueAddr),
     // // aptos_std:: where aptos_std is a existing named address in a project
     NamedAddressOrUnqualifiedPath {
-        address: NamedAddress,
+        address: NamedAddr,
         ns: NsSet,
     },
     // foo
@@ -37,6 +43,40 @@ impl PathKind {
     }
 }
 
+impl fmt::Debug for PathKind {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            PathKind::Unknown => f.debug_struct("Unknown").finish(),
+            PathKind::NamedAddress(_) => f.debug_struct("NamedAddress").finish(),
+            PathKind::ValueAddress(_) => f.debug_struct("ValueAddress").finish(),
+            PathKind::NamedAddressOrUnqualifiedPath { ns, .. } => f
+                .debug_struct("NamedAddressOrUnqualifiedPath")
+                .field("ns", &ns)
+                // .field("ns", &ns.into_iter().join(" | "))
+                .finish(),
+            PathKind::Unqualified { ns } => {
+                f.debug_struct("Unqualified")
+                    .field("ns", &ns)
+                    // .field("ns", &ns.into_iter().join(" | "))
+                    .finish()
+            }
+            PathKind::Qualified {
+                path,
+                qualifier,
+                ns,
+                kind,
+            } => {
+                f.debug_struct("Qualified")
+                    .field("kind", &kind)
+                    .field("path", &path.syntax().text())
+                    .field("qualifier", &qualifier.syntax().text())
+                    .field("ns", &ns)
+                    .finish()
+            }
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum QualifiedKind {
     // `0x1:foo`
@@ -53,18 +93,34 @@ pub enum QualifiedKind {
 }
 
 /// can return None on deeply invalid trees
-pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
+pub fn path_kind(path: InFile<ast::Path>, is_completion: bool) -> PathKind {
+    let path = path.value;
     if let Some(use_group) = path.syntax().ancestor_strict::<ast::UseGroup>() {
         // use 0x1::m::{item}
         //                ^
-        let parent_use_speck = use_group.syntax().parent_of_type::<ast::UseSpeck>()?;
+        let Some(parent_use_speck) = use_group.syntax().parent_of_type::<ast::UseSpeck>() else {
+            return PathKind::Unknown;
+        };
         let use_group_qualifier = parent_use_speck.path();
-        return Some(PathKind::Qualified {
+        // if let Some(name_ref_name) = path.name_ref_name() {
+        //     if name_ref_name.as_str() == "Self" {
+        //         let address = try_value_address(&use_group_qualifier);
+        //         if let Some(address) = address {
+        //             return PathKind::Qualified {
+        //                 path,
+        //                 qualifier: use_group_qualifier,
+        //                 ns: IMPORTABLE_NS,
+        //                 kind: QualifiedKind::Module { address: Address::Value(address) },
+        //             }
+        //         }
+        //     }
+        // }
+        return PathKind::Qualified {
             path,
             qualifier: use_group_qualifier,
             ns: IMPORTABLE_NS,
             kind: QualifiedKind::UseGroupItem,
-        });
+        };
     }
 
     // [0x1::foo]::bar
@@ -74,15 +130,10 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
 
     // one-element path
     if qualifier.is_none() {
-        let path_address = path.path_address();
         // if path_address exists, it means it has to be a value address
         if let Some(path_address) = path.path_address() {
-            return Some(PathKind::ValueAddress(ValueAddress::new(
-                path_address.value_address().address_text(),
-            )));
+            return PathKind::ValueAddress(ValueAddr::new(path_address.value_address().address_text()));
         }
-        if path_address.is_some() {}
-
         let name_ref = path.name_ref().expect("should be Some if path_address is None");
         let ref_name = name_ref.ident_token().text().to_string();
 
@@ -90,9 +141,9 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
         if let Some(use_speck) = path.use_speck() {
             if use_speck.syntax().parent_of_type::<ast::UseStmt>().is_some() {
                 if let Some(existing_named_address) = get_named_address(&ref_name) {
-                    return Some(PathKind::NamedAddress(existing_named_address));
+                    return PathKind::NamedAddress(existing_named_address);
                 }
-                return Some(PathKind::NamedAddress(NamedAddress::new(ref_name)));
+                return PathKind::NamedAddress(NamedAddr::new(ref_name));
             }
         }
 
@@ -101,15 +152,15 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
         if let Some(next_sibling) = path.syntax().next_sibling_or_token_no_trivia() {
             if next_sibling.kind() == T![::] {
                 if let Some(named_address) = get_named_address(&ref_name) {
-                    return Some(PathKind::NamedAddressOrUnqualifiedPath {
+                    return PathKind::NamedAddressOrUnqualifiedPath {
                         address: named_address,
                         ns,
-                    });
+                    };
                 }
             }
         }
 
-        return Some(PathKind::Unqualified { ns });
+        return PathKind::Unqualified { ns };
     }
 
     let qualifier = qualifier.unwrap();
@@ -123,58 +174,63 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
         match (qualifier_path_address, qualifier_ref_name) {
             // 0x1::[bar]
             (Some(qualifier_path_address), _) => {
-                let value_address = Address::Value(ValueAddress::new(
+                let value_address = Address::Value(ValueAddr::new(
                     qualifier_path_address.value_address().address_text(),
                 ));
-                return Some(PathKind::Qualified {
+                return PathKind::Qualified {
                     path,
                     qualifier,
                     ns,
                     kind: QualifiedKind::Module { address: value_address },
-                });
+                };
             }
             // aptos_framework::[bar]
             (_, Some(qualifier_ref_name)) /*if aptos_project.is_some()*/ => {
                 let named_address = get_named_address(&qualifier_ref_name);
                 // use std::[main]
                 if path.use_speck().is_some() {
-                    let address = named_address.unwrap_or(NamedAddress::new(qualifier_ref_name));
-                    return Some(PathKind::Qualified {
+                    let address = named_address.unwrap_or(NamedAddr::new(qualifier_ref_name));
+                    return PathKind::Qualified {
                         path,
                         qualifier,
                         ns,
                         kind: QualifiedKind::Module { address: Address::Named(address) }
-                    });
+                    };
                 }
                 if let Some(named_address) = named_address {
                     // known named address, can be module path, or module item path too
-                    return Some(PathKind::Qualified {
+                    return PathKind::Qualified {
                         path,
                         qualifier,
                         ns,
                         kind: QualifiedKind::ModuleOrItem { address: Address::Named(named_address) }
-                    });
+                    };
                 }
             }
             _ => ()
         }
 
         // module::[name]
-        return Some(PathKind::Qualified {
+        return PathKind::Qualified {
             path,
             qualifier,
             ns,
             kind: QualifiedKind::ModuleItemOrEnumVariant,
-        });
+        };
     }
 
     // three-element path
-    Some(PathKind::Qualified {
+    PathKind::Qualified {
         path,
         qualifier,
         ns,
         kind: QualifiedKind::FQModuleItem,
-    })
+    }
+}
+
+fn try_value_address(path: &ast::Path) -> Option<ValueAddr> {
+    // if path_address exists, it means it has to be a value address
+    path.path_address().map(|addr| ValueAddr::new(addr.value_address().address_text()))
 }
 
 fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
@@ -257,7 +313,7 @@ fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
     }
 }
 
-fn get_named_address(_address_name: &str) -> Option<NamedAddress> {
+fn get_named_address(_address_name: &str) -> Option<NamedAddr> {
     // todo: check whether `address_name` is a declared named address
     // todo: fetch from db
     None

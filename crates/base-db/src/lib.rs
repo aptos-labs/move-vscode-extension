@@ -59,7 +59,7 @@ fn parse_errors(db: &dyn SourceDatabase, file_id: FileId) -> Option<Arc<[SyntaxE
 /// We don't want to give HIR knowledge of source roots, hence we extract these
 /// methods into a separate DB.
 #[ra_salsa::query_group(SourceRootDatabaseStorage)]
-pub trait SourceRootDatabase: SourceDatabase {
+pub trait SourceRootDatabase: SourceDatabase + Upcast<dyn SourceDatabase> {
     /// Path to a file, relative to the root of its source root.
     /// Source root of the file.
     #[ra_salsa::input]

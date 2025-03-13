@@ -8,12 +8,12 @@ mod syntax_helpers;
 pub mod text_edit;
 
 use base_db::input::CrateId;
-use base_db::{FileLoader, FileLoaderDelegate, SourceDatabase, Upcast};
+use base_db::{FileLoader, FileLoaderDelegate, SourceDatabase, SourceRootDatabase, Upcast};
 use lang::db::HirDatabase;
 use line_index::LineIndex;
 use std::fmt;
 use std::mem::ManuallyDrop;
-use syntax::{SyntaxKind::*, SyntaxNode};
+use syntax::{SyntaxKind, SyntaxKind::*, SyntaxNode};
 use triomphe::Arc;
 use vfs::{AnchoredPath, FileId};
 
@@ -57,6 +57,13 @@ impl Upcast<dyn HirDatabase> for RootDatabase {
 impl Upcast<dyn SourceDatabase> for RootDatabase {
     #[inline]
     fn upcast(&self) -> &(dyn SourceDatabase + 'static) {
+        self
+    }
+}
+
+impl Upcast<dyn SourceRootDatabase> for RootDatabase {
+    #[inline]
+    fn upcast(&self) -> &(dyn SourceRootDatabase + 'static) {
         self
     }
 }
@@ -126,8 +133,9 @@ pub enum SymbolKind {
     Local,
 }
 
-pub fn ast_to_symbol_kind(syntax: &SyntaxNode) -> Option<SymbolKind> {
-    match syntax.kind() {
+pub fn ast_kind_to_symbol_kind(kind: SyntaxKind) -> Option<SymbolKind> {
+    match kind {
+        MODULE => Some(SymbolKind::Module),
         FUN => Some(SymbolKind::Function),
         CONST => Some(SymbolKind::Const),
         STRUCT => Some(SymbolKind::Struct),

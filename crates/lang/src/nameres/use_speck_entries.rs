@@ -1,24 +1,32 @@
 use crate::db::HirDatabase;
 use crate::nameres::path_kind::{path_kind, PathKind, QualifiedKind};
-use crate::nameres::paths::resolve_path_to_single_item;
 use crate::nameres::scope::ScopeEntry;
-use crate::node_ext::{HasItemListExt, PathExt};
-use crate::{AsName, Name};
+use crate::node_ext::{PathLangExt};
+use crate::{AsName, InFile, Name};
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::{HasName, NamedItemScope};
 use syntax::{ast, AstNode};
+use vfs::FileId;
+use crate::nameres::paths;
+use crate::node_ext::has_item_list::HasItemListInFileExt;
 
-pub fn use_speck_entries(db: &dyn HirDatabase, items_owner: &impl ast::HasItemList) -> Vec<ScopeEntry> {
+pub fn use_speck_entries(
+    db: &dyn HirDatabase,
+    items_owner: &InFile<impl ast::HasItemList>,
+) -> Vec<ScopeEntry> {
     let use_items = items_owner.use_stmt_items();
 
     let mut entries = vec![];
     for use_item in use_items {
-        let Some(scope_entry) = resolve_path_to_single_item(db, use_item.use_speck.path()) else {
+        let path = InFile::new(items_owner.file_id, use_item.use_speck.path());
+        let Some(scope_entry) = paths::resolve_single(db, path.clone()) else {
+            tracing::debug!(path = &path.syntax_text(), "use_speck unresolved");
             continue;
         };
+        tracing::info!("scope entry");
         entries.push(ScopeEntry {
             name: use_item.name_or_alias,
-            named_node: scope_entry.named_node,
+            named_node_loc: scope_entry.named_node_loc,
             ns: scope_entry.ns,
         });
     }
@@ -42,7 +50,7 @@ pub struct UseItem {
     scope: NamedItemScope,
 }
 
-pub fn use_stmt_items(use_stmt: ast::UseStmt) -> Vec<UseItem> {
+pub fn use_stmt_items(use_stmt: ast::UseStmt, file_id: FileId) -> Vec<UseItem> {
     #[rustfmt::skip]
     let Some(root_use_speck) = use_stmt.use_speck() else { return vec![]; };
 
@@ -52,12 +60,17 @@ pub fn use_stmt_items(use_stmt: ast::UseStmt) -> Vec<UseItem> {
     let use_group = root_use_speck.use_group();
     if let Some(use_group) = use_group {
         for child_use_speck in use_group.use_specks() {
-            let use_item =
-                collect_child_use_speck(root_use_speck.clone(), child_use_speck, use_stmt_scope);
+            let use_item = collect_child_use_speck(
+                root_use_speck.clone(),
+                child_use_speck,
+                file_id,
+                use_stmt_scope,
+            );
             if let Some(use_item) = use_item {
                 use_items.push(use_item);
             }
         }
+        return use_items;
     }
 
     #[rustfmt::skip]
@@ -70,8 +83,10 @@ pub fn use_stmt_items(use_stmt: ast::UseStmt) -> Vec<UseItem> {
         .map(|it| it.as_name());
 
     let root_path = root_use_speck.path();
-    let root_path_kind = path_kind(root_path, false);
-    if let Some(PathKind::Qualified { qualifier, kind, .. }) = root_path_kind {
+    let root_path_kind = path_kind(InFile::new(file_id, root_path), false);
+    tracing::debug!(root_path_kind = ?root_path_kind);
+
+    if let PathKind::Qualified { qualifier, kind, .. } = root_path_kind {
         match kind {
             // use 0x1::m;
             // use aptos_std::m;
@@ -129,6 +144,7 @@ pub fn use_stmt_items(use_stmt: ast::UseStmt) -> Vec<UseItem> {
 fn collect_child_use_speck(
     root_use_speck: ast::UseSpeck,
     child_use_speck: ast::UseSpeck,
+    file_id: FileId,
     use_stmt_scope: NamedItemScope,
 ) -> Option<UseItem> {
     let qualifier_path = root_use_speck.path();
@@ -151,7 +167,9 @@ fn collect_child_use_speck(
         });
     }
 
-    let qualifier_kind = path_kind(qualifier_path, false)?;
+    let qualifier_kind = path_kind(InFile::new(file_id, qualifier_path), false);
+    tracing::debug!(qualifier_kind = ?qualifier_kind);
+
     if let PathKind::Qualified { .. } = qualifier_kind {
         // let address = match kind {
         //     QualifiedKind::Module { address, .. } => address,

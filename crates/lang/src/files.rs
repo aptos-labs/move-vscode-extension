@@ -1,4 +1,5 @@
-use syntax::{TextRange, TextSize};
+use parser::SyntaxKind;
+use syntax::{AstNode, SyntaxNode, SyntaxToken, TextRange, TextSize};
 use vfs::FileId;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -33,5 +34,64 @@ impl<T> InFile<T> {
 
     pub fn map<F: FnOnce(T) -> U, U>(self, f: F) -> InFile<U> {
         InFile::new(self.file_id, f(self.value))
+    }
+}
+
+impl InFile<SyntaxNode> {
+    pub fn kind(&self) -> SyntaxKind {
+        self.value.kind()
+    }
+
+    pub fn cast<T: AstNode>(self) -> Option<InFile<T>> {
+        let InFile { file_id, value } = self;
+        let value = T::cast(value)?;
+        Some(InFile::new(file_id, value))
+    }
+}
+
+impl InFile<SyntaxToken> {
+    pub fn kind(&self) -> SyntaxKind {
+        self.value.kind()
+    }
+}
+
+impl<T: AstNode> InFile<T> {
+    pub fn syntax_text(&self) -> String { self.value.syntax().text().to_string() }
+}
+
+pub trait InFileExt {
+    type Node;
+    fn in_file(self, file_id: FileId) -> InFile<Self::Node>;
+}
+
+impl<T: AstNode> InFileExt for T {
+    type Node = T;
+    fn in_file(self, file_id: FileId) -> InFile<T> {
+        InFile::new(file_id, self)
+    }
+}
+
+pub trait OptionInFileExt {
+    type Node;
+    fn opt_in_file(self, file_id: FileId) -> Option<InFile<Self::Node>>;
+}
+
+impl<T: AstNode> OptionInFileExt for Option<T> {
+    type Node = T;
+    fn opt_in_file(self, file_id: FileId) -> Option<InFile<T>> {
+        let v = self?;
+        Some(InFile::new(file_id, v))
+    }
+}
+
+pub trait InFileVecExt {
+    type Node;
+    fn wrapped_in_file(self, file_id: FileId) -> Vec<InFile<Self::Node>>;
+}
+
+impl<T: AstNode> InFileVecExt for Vec<T> {
+    type Node = T;
+    fn wrapped_in_file(self, file_id: FileId) -> Vec<InFile<T>> {
+        self.into_iter().map(|node| node.in_file(file_id)).collect()
     }
 }

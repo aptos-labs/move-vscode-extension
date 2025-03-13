@@ -1,18 +1,17 @@
 use crate::member_items::HasMembersList;
-use crate::nameres::namespaces::{ALL_NS, NAMES, TYPES};
+use crate::nameres::namespaces::{NAMES, TYPES};
 use crate::nameres::paths::ResolutionContext;
 use crate::nameres::processors::{ProcessingStatus, Processor};
-use crate::nameres::scope::ScopeEntry;
 use syntax::algo::ComparePos;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
-use syntax::ast::{AnyHasTypeParams, HasItemList, HasStmtList, HasTypeParams, IdentPat};
+use syntax::ast::{AnyHasTypeParams, HasStmtList, HasTypeParams, IdentPat};
 use syntax::{algo, ast, match_ast, AstNode};
 
 pub fn process_nested_scopes_upwards(
     ctx: ResolutionContext,
     processor: &impl Processor,
 ) -> ProcessingStatus {
-    let mut next_scope = ctx.path.syntax().parent();
+    let mut next_scope = ctx.path.value.syntax().parent();
     while let Some(scope) = next_scope {
         if AnyHasTypeParams::can_cast(scope.kind()) {
             let type_params_owner = AnyHasTypeParams::cast(scope.clone()).unwrap();
@@ -68,7 +67,7 @@ fn process_any_block_expr_scope(
     let mut visible_let_stmts = any_block_expr
         .let_stmts()
         .filter(|let_stmt| {
-            let prev = ctx.path.syntax();
+            let prev = ctx.path.value.syntax();
             // if `prev` before `let_stmt`, then `let_stmt` is not visible
             if algo::compare_by_position(prev, let_stmt.syntax()) == ComparePos::Before {
                 return false;

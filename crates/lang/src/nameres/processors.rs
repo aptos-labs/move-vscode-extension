@@ -1,6 +1,7 @@
 use crate::nameres::namespaces::{NsSet, NsSetExt};
 use crate::nameres::scope::ScopeEntry;
 use std::cell::RefCell;
+use syntax::ast;
 use syntax::ast::HasName;
 
 pub enum ProcessingStatus {
@@ -20,11 +21,12 @@ impl ProcessingStatus {
 pub trait Processor {
     fn process(&self, entry: ScopeEntry) -> ProcessingStatus;
 
-    fn process_named<NamedItem: HasName>(&self, item: NamedItem, ns: NsSet) -> ProcessingStatus {
-        match ScopeEntry::from_named(item, ns) {
-            None => ProcessingStatus::Continue,
-            Some(entry) => self.process(entry),
-        }
+    fn process_named(&self, item: impl ast::HasName, ns: NsSet) -> ProcessingStatus {
+        ProcessingStatus::Continue
+        // match ScopeEntry::from_named(item, ns) {
+        //     None => ProcessingStatus::Continue,
+        //     Some(entry) => self.process(entry),
+        // }
     }
 
     fn process_all_named<NamedItem: HasName>(

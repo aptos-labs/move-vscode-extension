@@ -1,4 +1,4 @@
-mod address;
+pub mod address;
 mod lexical_declarations;
 mod blocks;
 pub mod namespaces;

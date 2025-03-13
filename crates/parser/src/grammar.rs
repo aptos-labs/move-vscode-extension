@@ -150,9 +150,9 @@ pub(crate) fn module_name(p: &mut Parser) {
 
 pub(crate) fn address_ref(p: &mut Parser) {
     // named address
-    let m = p.start();
+    // let m = p.start();
     address(p);
-    m.complete(p, ADDRESS_REF);
+    // m.complete(p, ADDRESS_REF);
 }
 
 pub(crate) fn address(p: &mut Parser) {

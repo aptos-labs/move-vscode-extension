@@ -1,14 +1,36 @@
-use ide::Analysis;
 use ide::test_utils::{get_marked_position_offset, get_marked_position_offset_with_data};
+use ide::Analysis;
 use lang::FilePosition;
-use syntax::{AstNode, SyntaxKind};
 use syntax::SyntaxKind::IDENT;
+use syntax::{AstNode, SyntaxKind};
+use tracing::metadata::LevelFilter;
+use tracing::{Instrument, Level};
+use tracing_subscriber::fmt::writer::MakeWriterExt;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::{Layer, Registry};
+use tracing_tree::HierarchicalLayer;
 
-mod functions;
-mod type_params;
-mod modules;
+mod test_resolve_functions;
+mod test_resolve_modules;
+mod test_resolve_type_params;
 
 pub fn check_resolve(source: &str) {
+    // let subscriber = Registry::default().with(HierarchicalLayer::new(2));
+    // tracing::subscriber::set_global_default(subscriber).unwrap();
+
+    Registry::default()
+        // .with(fmt::Layer::new().with_max_level(Level::DEBUG))
+        .with(HierarchicalLayer::new(2)
+            .with_filter(LevelFilter::from_level(Level::DEBUG)))
+        .try_init();
+    // let subscriber = Registry::default().with(fmt::Layer::default());
+    // tracing_subscriber::fmt()
+    // subscriber
+    //     .with_max_level(tracing::Level::DEBUG)
+    //     .without_time()
+    //     .init();
+
     let (ref_offset, data) = get_marked_position_offset_with_data(&source, "//^");
 
     let (analysis, file_id) = Analysis::from_single_file(source.to_string());
@@ -48,9 +70,5 @@ pub fn check_resolve(source: &str) {
             ident_parent.kind()
         ),
     };
-    // file.syntax().token_at_offset()
-    // let target_item_name =
-    //     algo::find_node_at_offset::<ast::Name>(&file.syntax(), target_offset).unwrap();
-
     assert_eq!(item.focus_range.unwrap(), ident_text_range);
 }

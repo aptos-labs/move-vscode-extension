@@ -1,4 +1,4 @@
-use crate::{ast_to_symbol_kind, RootDatabase, SymbolKind};
+use crate::{ast_kind_to_symbol_kind, RootDatabase, SymbolKind};
 use lang::Semantics;
 use std::collections::HashSet;
 use std::sync::LazyLock;
@@ -33,7 +33,7 @@ pub enum NameClass {
 impl NameClass {
     pub fn classify(name: &ast::Name) -> Option<NameClass> {
         let parent = name.syntax().parent()?;
-        let symbol_kind = ast_to_symbol_kind(&parent)?;
+        let symbol_kind = ast_kind_to_symbol_kind(parent.kind())?;
         Some(NameClass::Definition(Definition::NamedItem(symbol_kind)))
     }
 }
@@ -60,7 +60,7 @@ impl NameRefClass {
             let res = sema.resolve_path(path);
             return match res {
                 Some(entry) => {
-                    let symbol_kind = ast_to_symbol_kind(&entry.named_node)?;
+                    let symbol_kind = ast_kind_to_symbol_kind(entry.named_node_loc.kind())?;
                     Some(NameRefClass::Definition(Definition::NamedItem(symbol_kind)))
                 }
                 None => {
