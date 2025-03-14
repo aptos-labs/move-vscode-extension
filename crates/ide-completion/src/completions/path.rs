@@ -1,49 +1,47 @@
 use crate::completions::Completions;
 use crate::context::CompletionContext;
-use crate::item::CompletionItemKind;
+use crate::item::{CompletionItem, CompletionItemKind};
+use crate::render::function::render_function_completion_item;
+use base_db::Upcast;
 use ide_db::SymbolKind;
+use lang::nameres::path_kind::path_kind;
+use lang::nameres::paths::{get_path_resolve_variants, ResolutionContext};
+use lang::InFile;
 use std::cell::RefCell;
-use syntax::{ast, SyntaxKind};
+use syntax::{ast, unwrap_or_return, SyntaxKind};
 
 pub(crate) fn add_path_completions(
     completions: &RefCell<Completions>,
     ctx: &CompletionContext<'_>,
-    path: ast::Path,
+    path: InFile<ast::Path>,
 ) {
+    let path_kind = path_kind(path.clone(), true);
+    if path_kind.is_unqualified() {
+        add_keywords(completions, ctx);
+    }
 
-    // let Some(path_kind) = path_kind(path.clone(), true) else {
-    //     return;
-    // };
-    //
-    // {
-    //     let acc = &mut completions.borrow_mut();
-    //
-    //     let resolution_ctx = ResolutionContext {
-    //         path: path.clone(),
-    //         is_completion: true,
-    //     };
-    //     let entries = collect_entries(|collector| {
-    //         process_path_resolve_variants(resolution_ctx, path_kind.clone(), collector);
-    //     });
-    //     for entry in entries {
-    //         let entry_name = entry.name;
-    //
-    //         if let Some(function) = ast::Fun::cast(entry.named_node_loc.clone()) {
-    //             let completion_item =
-    //                 render_function_completion_item(&ctx, entry_name, function).build(&ctx.db);
-    //             acc.add(completion_item);
-    //             continue;
-    //         }
-    //
-    //         let kind = item_to_kind(entry.named_node_loc.kind());
-    //         let completion_item = CompletionItem::new(kind, ctx.source_range(), entry_name.as_str());
-    //         acc.add(completion_item.build(&ctx.db));
-    //     }
-    // }
-    //
-    // if path_kind.is_unqualified() {
-    //     add_keywords(completions, ctx);
-    // }
+    let acc = &mut completions.borrow_mut();
+
+    let resolution_ctx = ResolutionContext {
+        path: path.clone(),
+        is_completion: true,
+    };
+    let entries = get_path_resolve_variants(ctx.db.upcast(), resolution_ctx, path_kind);
+
+    for entry in entries {
+        let entry_name = entry.name;
+
+        if let Some(function) = entry.node_loc.cast::<ast::Fun>(ctx.db.upcast()) {
+            let completion_item =
+                render_function_completion_item(&ctx, entry_name, function.value).build(&ctx.db);
+            acc.add(completion_item);
+            continue;
+        }
+
+        let kind = item_to_kind(entry.node_loc.kind());
+        let completion_item = CompletionItem::new(kind, ctx.source_range(), entry_name.as_str());
+        acc.add(completion_item.build(&ctx.db));
+    }
 }
 
 fn add_keywords(completions: &RefCell<Completions>, ctx: &CompletionContext<'_>) {
