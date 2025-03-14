@@ -68,7 +68,7 @@ fn test_resolve_to_another_module_by_full_path() {
             fun call() {}
 
             fun main() {
-                0x1::Original::call();
+                0x1::original::call();
                              //^
             }
         }
@@ -137,18 +137,18 @@ fn test_resolve_to_another_module_by_member_import() {
 }
 
 #[test]
-fn test_resolve_function_to_alias() {
+fn test_resolve_aliased_function() {
     // language=Move
     check_resolve(
         r#"
         module 0x1::original {
             public fun call() {}
+                      //X
         }
         module 0x1::m {
             use 0x1::original::call as mycall;
-                                       //X
             fun main() {
-                call();
+                mycall();
                //^
             }
         }

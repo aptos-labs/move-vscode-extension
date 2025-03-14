@@ -45,11 +45,16 @@ pub fn is_visible_in_context(
     let context_usage_scope = context.syntax().item_scope();
     let context_opt_path = ast::Path::cast(context.syntax().to_owned());
     if let Some(path) = context_opt_path.clone() {
-        if path.use_speck().is_some() {
-            if item_kind == MODULE {
+        if path.is_use_speck() {
+            // if item_kind == MODULE {
+            //     return true;
+            // }
+            // those are always public in use specks
+            if matches!(item_kind, MODULE | STRUCT | ENUM) {
                 return true;
             }
-            // for use specks, items needs to be public to be visible, no other rules apply
+
+            // items needs to be non-public to be visible, no other rules apply in use specks
             if let Some(visible_item) = opt_visible_item.clone() {
                 if visible_item.vis() != Vis::Private {
                     return true;
@@ -109,16 +114,18 @@ pub fn is_visible_in_context(
 
     // item is type, check whether it's allowed in the context
     if item_ns.contains_any_of(TYPES_N_ENUMS) {
-        let root_path = context_opt_path.map(|path| path.root_path());
-        if let Some(root_path) = root_path {
-            // todo: add more checks when structs/enums will have visibility
-            if root_path.syntax().kind() == PATH_TYPE {
+        let opt_path_parent = context_opt_path
+            .map(|path| path.root_path())
+            .and_then(|it| it.syntax().parent());
+        if let Some(path_parent) = opt_path_parent {
+            if path_parent.kind() == PATH_TYPE {
                 return true;
             }
         }
     }
-
-    let vis = opt_visible_item.map(|f| f.vis()).unwrap_or(Vis::Public);
+    let vis = opt_visible_item
+        .map(|visible_item| visible_item.vis())
+        .unwrap_or(Vis::Public);
     match vis {
         Vis::Private => false,
         Vis::Public => true,

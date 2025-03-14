@@ -23,9 +23,14 @@ pub fn use_speck_entries(
             tracing::debug!(path = &path.syntax_text(), "use_speck unresolved");
             continue;
         };
+        // let alias_or_node_loc = use_item
+        //     .use_alias
+        //     .map(|it| InFile::new(items_owner.file_id, it).loc())
+        //     .unwrap_or(scope_entry.node_loc);
+        let node_loc = scope_entry.node_loc;
         entries.push(ScopeEntry {
-            name: use_item.name_or_alias,
-            node_loc: scope_entry.node_loc,
+            name: use_item.alias_or_name,
+            node_loc,
             ns: scope_entry.ns,
             scope_adjustment: Some(use_item.scope),
         });
@@ -45,7 +50,7 @@ pub enum UseItemType {
 pub struct UseItem {
     use_speck: ast::UseSpeck,
     use_alias: Option<ast::UseAlias>,
-    name_or_alias: Name,
+    alias_or_name: Name,
     type_: UseItemType,
     scope: NamedItemScope,
 }
@@ -93,7 +98,7 @@ pub fn use_stmt_items(use_stmt: ast::UseStmt, file_id: FileId) -> Vec<UseItem> {
             QualifiedKind::Module { .. } => use_items.push(UseItem {
                 use_speck: root_use_speck,
                 use_alias: root_use_speck_alias,
-                name_or_alias: root_alias_name.unwrap_or(root_name),
+                alias_or_name: root_alias_name.unwrap_or(root_name),
                 type_: UseItemType::Module,
                 scope: use_stmt_scope,
             }),
@@ -108,7 +113,7 @@ pub fn use_stmt_items(use_stmt: ast::UseStmt, file_id: FileId) -> Vec<UseItem> {
                     use_items.push(UseItem {
                         use_speck: root_use_speck,
                         use_alias: root_use_speck_alias,
-                        name_or_alias: root_alias_name.unwrap_or(module_name),
+                        alias_or_name: root_alias_name.unwrap_or(module_name),
                         type_: UseItemType::SelfModule,
                         scope: use_stmt_scope,
                     });
@@ -116,7 +121,7 @@ pub fn use_stmt_items(use_stmt: ast::UseStmt, file_id: FileId) -> Vec<UseItem> {
                     use_items.push(UseItem {
                         use_speck: root_use_speck,
                         use_alias: root_use_speck_alias,
-                        name_or_alias: root_alias_name.unwrap_or(root_name),
+                        alias_or_name: root_alias_name.unwrap_or(root_name),
                         type_: UseItemType::Item,
                         scope: use_stmt_scope,
                     });
@@ -161,7 +166,7 @@ fn collect_child_use_speck(
         return Some(UseItem {
             use_speck: child_use_speck,
             use_alias: child_alias,
-            name_or_alias: child_alias_name.unwrap_or(module_name),
+            alias_or_name: child_alias_name.unwrap_or(module_name),
             type_: UseItemType::SelfModule,
             scope: use_stmt_scope,
         });
@@ -182,7 +187,7 @@ fn collect_child_use_speck(
         return Some(UseItem {
             use_speck: child_use_speck,
             use_alias: child_alias,
-            name_or_alias: child_name_or_alias,
+            alias_or_name: child_name_or_alias,
             type_: UseItemType::Item,
             scope: use_stmt_scope,
         });

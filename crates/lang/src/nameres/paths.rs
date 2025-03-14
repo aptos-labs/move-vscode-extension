@@ -54,10 +54,10 @@ pub fn get_path_resolve_variants(
 
 pub fn resolve_single(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Option<ScopeEntry> {
     let loc = loc::SyntaxLoc::from_ast_node(path);
-    let entries = db.resolve_ast_path(loc);
-    tracing::debug!(?entries);
-    match entries.len() {
-        1 => entries.into_iter().next(),
+    let final_entries = db.resolve_ast_path(loc);
+    tracing::debug!(?final_entries);
+    match final_entries.len() {
+        1 => final_entries.into_iter().next(),
         _ => None,
     }
 }
@@ -76,14 +76,19 @@ pub fn resolve(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry>
         is_completion: false,
     };
     let path_kind = path_kind(ctx.path.clone(), false);
-    tracing::debug!(path_kind = ?path_kind);
+    tracing::debug!(?path_kind);
 
-    let resolve_variants = get_path_resolve_variants(db, ctx, path_kind);
-    tracing::debug!(resolve_variants = ?resolve_variants);
+    let entries = get_path_resolve_variants(db, ctx, path_kind);
+    tracing::debug!(?entries);
 
-    resolve_variants
+    let entries_filtered_by_name = entries
         .into_iter()
         .filter_by_name(path_name.as_str())
+        .collect::<Vec<_>>();
+    tracing::debug!(path_name = path_name.as_str(), ?entries_filtered_by_name);
+
+    entries_filtered_by_name
+        .into_iter()
         .filter_by_visibility(db, context_element)
         .collect()
 }

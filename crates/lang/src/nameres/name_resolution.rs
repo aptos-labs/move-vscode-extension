@@ -99,7 +99,7 @@ pub fn get_entries_from_walking_scopes(
     entries
 }
 
-#[tracing::instrument(level = "debug", skip(db, ctx))]
+#[tracing::instrument(level = "debug", skip(db, ctx, address), fields(path = ctx.path.syntax_text()))]
 pub fn get_modules_as_entries(
     db: &dyn HirDatabase,
     ctx: ResolutionContext,
@@ -109,6 +109,7 @@ pub fn get_modules_as_entries(
     let file_id = ctx.path.file_id;
     let source_root_id = db.file_source_root(file_id);
     let source_root = db.source_root(source_root_id);
+
     let mut entries = vec![];
     for source_file_id in source_root.iter() {
         let source_file = db.parse(source_file_id).tree();
@@ -132,6 +133,7 @@ pub fn get_qualified_path_entries(
 ) -> Vec<ScopeEntry> {
     let qualifier = ctx.wrap_in_file(qualifier);
     let qualifier_item = paths::resolve_single(db, qualifier.clone());
+    dbg!(&qualifier_item);
     if qualifier_item.is_none() {
         // qualifier can be an address
         return vec![];

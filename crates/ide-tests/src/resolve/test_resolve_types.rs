@@ -199,10 +199,10 @@ fn test_resolve_type_to_alias() {
         r#"
         module 0x1::Transaction {
             struct Sender { val: u8 }
+                  //X
         }
         module 0x1::m {
             use 0x1::Transaction::Sender as MySender;
-                                          //X
             fun main(n: MySender) {}
                       //^
         }
@@ -231,10 +231,10 @@ fn test_return_type_to_alias() {
         r#"
         module 0x1::Transaction {
             struct Sender { val: u8 }
+                 //X
         }
         module 0x1::m {
             use 0x1::Transaction::Sender as MySender;
-                                          //X
             fun main(): MySender {}
                       //^
         }

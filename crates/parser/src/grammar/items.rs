@@ -245,16 +245,8 @@ fn function(p: &mut Parser, m: Marker) {
     ];
     while !p.at(EOF) {
         match p.current() {
-            T![public] => {
-                let m = p.start();
-                all_modifiers = bump_fun_modifier(p, all_modifiers, T![public]);
-                opt_visibility_modifier(p, m);
-            }
             T![native] => {
                 all_modifiers = bump_fun_modifier(p, all_modifiers, T![native]);
-            }
-            T![friend] => {
-                all_modifiers = bump_fun_modifier(p, all_modifiers, T![friend]);
             }
             T![inline] => {
                 all_modifiers = bump_fun_modifier(p, all_modifiers, T![inline]);
@@ -262,8 +254,21 @@ fn function(p: &mut Parser, m: Marker) {
             IDENT if p.at_contextual_kw("entry") => {
                 all_modifiers = bump_fun_modifier(p, all_modifiers, T![entry]);
             }
+            T![public] => {
+                let m = p.start();
+                all_modifiers = bump_fun_modifier(p, all_modifiers, T![public]);
+                opt_inner_public_modifier(p);
+                m.complete(p, VISIBILITY_MODIFIER);
+            }
+            T![friend] => {
+                let m = p.start();
+                all_modifiers = bump_fun_modifier(p, all_modifiers, T![friend]);
+                m.complete(p, VISIBILITY_MODIFIER);
+            }
             IDENT if p.at_contextual_kw("package") => {
+                let m = p.start();
                 all_modifiers = bump_fun_modifier(p, all_modifiers, T![package]);
+                m.complete(p, VISIBILITY_MODIFIER);
             }
             _ => {
                 break;
@@ -287,7 +292,7 @@ fn bump_fun_modifier(
     possible_modifiers.into_iter().filter(|m| *m != kind).collect()
 }
 
-fn opt_visibility_modifier(p: &mut Parser, m: Marker) {
+fn opt_inner_public_modifier(p: &mut Parser) {
     if p.eat(T!['(']) {
         match p.current() {
             IDENT if p.at_contextual_kw("package") => {
@@ -305,7 +310,6 @@ fn opt_visibility_modifier(p: &mut Parser, m: Marker) {
         }
         p.expect(T![')']);
     }
-    m.complete(p, VISIBILITY_MODIFIER);
 }
 
 fn acquires(p: &mut Parser) {

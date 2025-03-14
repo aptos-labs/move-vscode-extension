@@ -14,14 +14,21 @@ pub fn get_entries_in_scope(
 ) -> Vec<ScopeEntry> {
     use syntax::SyntaxKind::*;
 
-    if let BLOCK_EXPR = scope.kind() {
-        return get_entries_in_blocks(scope, prev);
+    let mut entries = vec![];
+    if let Some(has_items) = ast::AnyHasItemList::cast(scope.value.clone()) {
+        entries.extend(use_speck_entries(db, &InFile::new(scope.file_id, has_items)));
     }
 
-    get_entries_from_owner(db, scope)
+    if scope.kind() == BLOCK_EXPR {
+        entries.extend(get_entries_in_blocks(scope, prev));
+        return entries;
+    }
+
+    entries.extend(get_entries_from_owner(db, scope));
+    entries
 }
 
-pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -> Vec<ScopeEntry> {
+pub fn get_entries_from_owner(_db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -> Vec<ScopeEntry> {
     use syntax::SyntaxKind::*;
 
     let file_id = scope.file_id;
@@ -36,22 +43,16 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
             let module = scope.cast::<ast::Module>().unwrap();
             entries.extend(module.member_entries());
             entries.extend(module.value.enum_variants().to_in_file_entries(file_id));
-            // use
-            entries.extend(use_speck_entries(db, &module));
         }
         MODULE_SPEC => {
             let module_spec = scope.cast::<ast::ModuleSpec>().unwrap();
-            // entries.extend(module_spec.value.spec_functions().to_entries());
+            entries.extend(module_spec.value.spec_functions().to_in_file_entries(file_id));
             // entries.extend(module_spec.value.spec_inline_functions().to_entries());
             // entries.extend(module_spec.value.schemas().to_entries());
-            // use
-            entries.extend(use_speck_entries(db, &module_spec));
         }
         SCRIPT => {
             let script = scope.cast::<ast::Script>().unwrap();
             entries.extend(script.value.consts().to_in_file_entries(file_id));
-            // use
-            entries.extend(use_speck_entries(db, &script));
         }
         FUN => {
             let fun = scope.cast::<ast::Fun>().unwrap();

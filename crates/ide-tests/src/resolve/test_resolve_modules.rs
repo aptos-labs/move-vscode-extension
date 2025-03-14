@@ -95,9 +95,9 @@ fn test_resolve_to_imported_module_with_alias() {
     check_resolve(
         r#"
         module 0x1::Transaction {}
+                     //X
         module 0x1::m {
             use 0x1::Transaction as MyTransaction;
-                                  //X
             fun main() {
                 let a = MyTransaction::create();
                       //^
