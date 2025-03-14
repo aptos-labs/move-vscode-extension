@@ -52,3 +52,74 @@ fn test_type_param_in_call_expr() {
         }
     "#)
 }
+
+#[test]
+fn test_struct_type_param() {
+    // language=Move
+    check_resolve(r#"
+        module 0x1::m {
+            struct MyStruct<T> {
+                          //X
+                val: T
+                   //^
+            }
+        }
+    "#)
+}
+
+#[test]
+fn test_struct_type_param_inside_vector() {
+    // language=Move
+    check_resolve(r#"
+        module 0x1::m {
+            struct MyStruct<T> {
+                          //X
+                val: vector<T>
+                          //^
+            }
+        }
+    "#)
+}
+
+#[test]
+fn test_function_return_type_to_type_param() {
+    // language=Move
+    check_resolve(r#"
+        module 0x1::m {
+            fun main<Token>()
+                   //X
+                : Token {}
+                //^
+        }
+    "#)
+}
+
+#[test]
+fn test_function_return_type_argument_to_type_param() {
+    // language=Move
+    check_resolve(r#"
+        module 0x1::m {
+            struct Coin<Token> {}
+
+            fun main<Token>()
+                   //X
+                    : Coin<Token> {}
+                         //^
+        }
+    "#)
+}
+
+#[test]
+fn test_native_function_return_type_argument_to_type_param() {
+    // language=Move
+    check_resolve(r#"
+        module 0x1::m {
+            struct Coin<Token> {}
+
+            native fun main<Token>()
+                          //X
+                    : Coin<Token>;
+                         //^
+        }
+    "#)
+}

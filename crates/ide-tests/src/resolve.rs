@@ -15,6 +15,7 @@ mod test_resolve_functions;
 mod test_resolve_modules;
 mod test_resolve_type_params;
 mod test_resolve_variables;
+mod test_resolve_types;
 
 pub fn check_resolve(source: &str) {
     // let subscriber = Registry::default().with(HierarchicalLayer::new(2));
