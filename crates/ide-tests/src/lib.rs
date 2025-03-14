@@ -1,5 +1,5 @@
 #![cfg(test)]
 
-mod resolve;
 mod completion;
+mod resolve;
 mod test_utils;

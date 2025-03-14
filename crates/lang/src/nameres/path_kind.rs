@@ -212,7 +212,7 @@ pub fn path_kind(path: InFile<ast::Path>, is_completion: bool) -> PathKind {
             qualifier,
             ns: ns | MODULES,
             kind: QualifiedKind::FQModuleItem,
-        }
+        };
     }
 
     // three-element path

@@ -1,19 +1,19 @@
 mod test_completion;
 
-use tracing::Level;
-use tracing::level_filters::LevelFilter;
-use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::{Layer, Registry};
-use tracing_subscriber::util::SubscriberInitExt;
-use tracing_tree::HierarchicalLayer;
-use ide::Analysis;
+use crate::assert_eq_text;
 use crate::test_utils::get_and_replace_caret;
-use crate::{assert_eq_text};
+use ide::Analysis;
 use ide_completion::config::CompletionConfig;
 use ide_completion::item::CompletionItem;
 use ide_db::SnippetCap;
 use lang::files::FilePosition;
 use syntax::{ast, AstNode, AstToken, TextSize};
+use tracing::level_filters::LevelFilter;
+use tracing::Level;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::{Layer, Registry};
+use tracing_tree::HierarchicalLayer;
 
 pub fn do_single_completion(before: &str, after: &str) {
     let (source, offset) = get_and_replace_caret(before, "/*caret*/");

@@ -1,4 +1,7 @@
-use crate::completion::{check_completion_exact, check_completions_contains, check_completions_with_prefix_exact, check_no_completions, do_single_completion};
+use crate::completion::{
+    check_completion_exact, check_completions_contains, check_completions_with_prefix_exact,
+    check_no_completions, do_single_completion,
+};
 
 #[rustfmt::skip]
 #[test]

@@ -88,6 +88,6 @@ fn item_to_kind(kind: SyntaxKind) -> CompletionItemKind {
         _ => {
             tracing::info!("Unhandled completion item {:?}", kind);
             CompletionItemKind::UnresolvedReference
-        },
+        }
     }
 }

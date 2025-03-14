@@ -55,7 +55,6 @@ pub(crate) fn check_resolve(source: &str) {
     let ident_parent = ident_token.parent().unwrap();
     let ident_text_range = match ident_parent.kind() {
         SyntaxKind::NAME => ident_parent.text_range(),
-        SyntaxKind::NAME_REF => ident_parent.text_range(),
         _ => panic!(
             "//X does not point to named item, actual {:?}",
             ident_parent.kind()

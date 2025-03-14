@@ -106,7 +106,6 @@ impl<T: Iterator<Item = ScopeEntry>> ScopeEntryListExt for T {
             let entry_name = entry.name.as_str();
             if entry_name == "Self" {
                 // custom logic
-
             }
             entry_name == name
         })

@@ -147,8 +147,6 @@ pub fn ast_kind_to_symbol_kind(kind: SyntaxKind) -> Option<SymbolKind> {
         IDENT_PAT => Some(SymbolKind::Local),
         VARIANT => Some(SymbolKind::EnumVariant),
 
-        // todo: this is for use items, remove later when cross-module resolution is there
-        NAME_REF => Some(SymbolKind::Local),
         _ => None,
     }
 }
