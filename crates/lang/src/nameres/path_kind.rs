@@ -227,12 +227,6 @@ pub fn path_kind(path: InFile<ast::Path>, is_completion: bool) -> PathKind {
     }
 }
 
-fn try_value_address(path: &ast::Path) -> Option<ValueAddr> {
-    // if path_address exists, it means it has to be a value address
-    path.path_address()
-        .map(|addr| ValueAddr::new(addr.value_address().address_text()))
-}
-
 fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
     use syntax::SyntaxKind::*;
 

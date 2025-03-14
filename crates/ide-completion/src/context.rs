@@ -1,6 +1,5 @@
 use crate::completions::item_list::ItemListKind;
 use crate::config::CompletionConfig;
-use base_db::SourceDatabase;
 use ide_db::RootDatabase;
 use lang::files::FilePosition;
 use lang::Semantics;

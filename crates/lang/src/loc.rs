@@ -1,5 +1,5 @@
 use crate::InFile;
-use base_db::{SourceRootDatabase};
+use base_db::SourceRootDatabase;
 use parser::SyntaxKind;
 use std::fmt;
 use std::fmt::Formatter;

@@ -6,8 +6,8 @@ use crate::nameres::namespaces::{named_item_ns, NsSet, NsSetExt};
 use crate::{AsName, InFile, Name};
 use std::fmt;
 use std::fmt::Formatter;
+use syntax::ast;
 use syntax::ast::{HasReference, NamedItemScope};
-use syntax::{ast};
 use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]

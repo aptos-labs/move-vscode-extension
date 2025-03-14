@@ -1,6 +1,5 @@
 use crate::navigation_target::NavigationTarget;
 use crate::RangeInfo;
-use base_db::SourceDatabase;
 use ide_db::helpers::pick_best_token;
 use ide_db::RootDatabase;
 use lang::files::FilePosition;

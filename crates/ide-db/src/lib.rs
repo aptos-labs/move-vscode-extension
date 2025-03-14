@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 pub mod apply_change;
 mod assists;
 pub mod defs;

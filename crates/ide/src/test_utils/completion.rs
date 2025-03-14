@@ -3,7 +3,6 @@ use crate::{assert_eq_text, Analysis};
 use ide_completion::config::CompletionConfig;
 use ide_completion::item::CompletionItem;
 use ide_db::SnippetCap;
-use itertools::Itertools;
 use lang::files::FilePosition;
 use syntax::{ast, AstNode, AstToken, TextSize};
 
