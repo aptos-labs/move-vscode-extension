@@ -2,7 +2,7 @@ use crate::db::HirDatabase;
 use crate::files::InFileVecExt;
 use crate::nameres::blocks::get_entries_in_blocks;
 use crate::nameres::node_ext::ModuleResolutionExt;
-use crate::nameres::scope::{NamedItemsExt, ScopeEntry};
+use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use crate::nameres::use_speck_entries::use_speck_entries;
 use crate::InFile;
 use parser::SyntaxKind::{BLOCK_EXPR, MODULE};
@@ -16,22 +16,23 @@ pub fn get_entries_in_scope(
 ) -> Vec<ScopeEntry> {
     use syntax::SyntaxKind::*;
 
-    if let BLOCK_EXPR | SPEC_BLOCK_EXPR = scope.kind() {
+    if let BLOCK_EXPR = scope.kind() {
         return get_entries_in_blocks(scope, prev);
     }
 
-    if ast::AnyHasScopeEntries::can_cast(scope.kind()) {
-        return get_entries_from_owner(db, scope);
-    }
-
-    vec![]
+    get_entries_from_owner(db, scope)
 }
 
 pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -> Vec<ScopeEntry> {
     use syntax::SyntaxKind::*;
 
-    let mut entries = vec![];
     let file_id = scope.file_id;
+    let mut entries = vec![];
+
+    if let Some(has_type_params) = ast::AnyHasTypeParams::cast(scope.value.clone()) {
+        entries.extend(has_type_params.type_params().to_in_file_entries(file_id));
+    }
+
     match scope.kind() {
         MODULE => {
             let module = scope.cast::<ast::Module>().unwrap();
@@ -40,8 +41,7 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
                 module
                     .value
                     .enum_variants()
-                    .wrapped_in_file(module.file_id)
-                    .to_entries(),
+                    .to_in_file_entries(file_id),
             );
             // use
             entries.extend(use_speck_entries(db, &module));
@@ -56,20 +56,13 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
         }
         SCRIPT => {
             let script = scope.cast::<ast::Script>().unwrap();
-            entries.extend(script.value.consts().wrapped_in_file(script.file_id).to_entries());
-            // entries.extend(script.consts().to_entries());
+            entries.extend(script.value.consts().to_in_file_entries(file_id));
             // use
             entries.extend(use_speck_entries(db, &script));
         }
         FUN => {
             let fun = scope.cast::<ast::Fun>().unwrap();
-            entries.extend(fun.value.type_params().wrapped_in_file(fun.file_id).to_entries());
-            entries.extend(
-                fun.value
-                    .params_as_bindings()
-                    .wrapped_in_file(fun.file_id)
-                    .to_entries(),
-            );
+            entries.extend(fun.value.params_as_bindings().to_in_file_entries(file_id));
         }
         SCHEMA => {
             let schema = scope.cast::<ast::Schema>().unwrap();
@@ -77,12 +70,10 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
                 schema
                     .value
                     .schema_fields_as_bindings()
-                    .wrapped_in_file(schema.file_id)
-                    .to_entries(),
+                    .to_in_file_entries(file_id),
             )
         }
         _ => {
-            unreachable!("{:?} scope entries owner is not handled", scope.kind());
         }
     }
 

@@ -12,12 +12,23 @@ use crate::{InFile, Name};
 use base_db::SourceRootDatabase;
 use parser::SyntaxKind;
 use parser::SyntaxKind::{MODULE_SPEC, STMT_LIST};
+use std::fmt;
+use std::fmt::Formatter;
 use syntax::ast::{HasItemList, HasReference};
 use syntax::{ast, AstNode, SyntaxNode};
 
 pub struct ResolveScope {
     scope: InFile<SyntaxNode>,
     prev: Option<SyntaxNode>,
+}
+
+impl fmt::Debug for ResolveScope {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_set()
+            .entry(&self.scope.value.kind())
+            .entry(&self.prev.clone().map(|it| it.kind()))
+            .finish()
+    }
 }
 
 pub fn get_resolve_scopes(
@@ -71,6 +82,7 @@ pub fn get_entries_from_walking_scopes(
 ) -> Vec<ScopeEntry> {
     let start_at = ctx.path.clone();
     let resolve_scopes = get_resolve_scopes(db, start_at);
+
     let mut entries = vec![];
     for ResolveScope { scope, prev } in resolve_scopes {
         let scope_entries = get_entries_in_scope(db, scope, prev);
@@ -135,10 +147,7 @@ pub fn get_qualified_path_entries(
                 ns: MODULES,
                 scope_adjustment: None,
             });
-            let module = qualifier_item
-                .node_loc
-                .cast::<ast::Module>(db.upcast())
-                .unwrap();
+            let module = qualifier_item.node_loc.cast::<ast::Module>(db.upcast()).unwrap();
             entries.extend(module.member_entries())
         }
         SyntaxKind::ENUM => {

@@ -1,9 +1,9 @@
+use crate::files::InFileVecExt;
 use crate::nameres::scope::{NamedItemsExt, ScopeEntry};
+use crate::InFile;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::HasStmtList;
 use syntax::{ast, AstNode, SyntaxNode};
-use crate::files::{InFileExt, InFileVecExt};
-use crate::InFile;
 
 pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: Option<SyntaxNode>) -> Vec<ScopeEntry> {
     use syntax::SyntaxKind::*;

@@ -5,8 +5,10 @@ use crate::nameres::namespaces::{named_item_ns, NsSet, NsSetExt};
 use crate::{AsName, InFile, Name};
 use std::fmt;
 use std::fmt::{Formatter, Pointer};
+use vfs::FileId;
 use syntax::ast::{HasReference, NamedItemScope};
 use syntax::{ast, AstNode};
+use crate::files::InFileVecExt;
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct ScopeEntry {
@@ -71,6 +73,16 @@ pub trait NamedItemsExt {
 impl<T: ast::HasName> NamedItemsExt for Vec<InFile<T>> {
     fn to_entries(self) -> Vec<ScopeEntry> {
         self.into_iter().filter_map(|item| item.to_entry()).collect()
+    }
+}
+
+pub trait NamedItemsInFileExt {
+    fn to_in_file_entries(self, file_id: FileId) -> Vec<ScopeEntry>;
+}
+
+impl<T: ast::HasName> NamedItemsInFileExt for Vec<T> {
+    fn to_in_file_entries(self, file_id: FileId) -> Vec<ScopeEntry> {
+        self.wrapped_in_file(file_id).to_entries()
     }
 }
 
