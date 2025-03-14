@@ -127,16 +127,16 @@ pub fn get_qualified_path_entries(
     }
     let qualifier_item = qualifier_item.unwrap();
     let mut entries = vec![];
-    match qualifier_item.named_node_loc.kind() {
+    match qualifier_item.node_loc.kind() {
         SyntaxKind::MODULE => {
             entries.push(ScopeEntry {
                 name: Name::new("Self"),
-                named_node_loc: qualifier_item.named_node_loc,
+                node_loc: qualifier_item.node_loc,
                 ns: MODULES,
                 scope_adjustment: None,
             });
             let module = qualifier_item
-                .named_node_loc
+                .node_loc
                 .cast::<ast::Module>(db.upcast())
                 .unwrap();
             entries.extend(module.member_entries())

@@ -1,22 +1,28 @@
 use crate::db::HirDatabase;
 use crate::nameres::namespaces::{Ns, NsSetExt, TYPES_N_ENUMS};
+use crate::nameres::paths;
 use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::ModuleLangExt;
 use crate::InFile;
+use base_db::SourceRootDatabase;
 use parser::SyntaxKind::MODULE;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::visibility::{Vis, VisLevel};
 use syntax::ast::{HasAttrs, HasReference, NamedItemScope};
-use syntax::{ast, AstNode};
+use syntax::{ast, unwrap_or_continue, AstNode};
 
 pub fn is_visible_in_context(
     db: &dyn HirDatabase,
     scope_entry: &ScopeEntry,
-    context: &impl HasReference,
+    context: &InFile<impl HasReference>,
 ) -> bool {
     use syntax::SyntaxKind::*;
 
+    let InFile {
+        file_id: context_file_id,
+        value: context,
+    } = context;
     // inside msl everything is visible
     if context.syntax().is_msl_context() {
         return true;
@@ -28,9 +34,9 @@ pub fn is_visible_in_context(
     }
 
     let Some(InFile {
-        file_id: _,
+        file_id: item_file_id,
         value: item,
-    }) = scope_entry.named_node_loc.cast::<ast::AnyHasName>(db.upcast())
+    }) = scope_entry.node_loc.cast::<ast::AnyHasName>(db.upcast())
     else {
         return false;
     };
@@ -42,7 +48,7 @@ pub fn is_visible_in_context(
     let context_opt_path = ast::Path::cast(context.syntax().to_owned());
     if let Some(path) = context_opt_path.clone() {
         if path.use_speck().is_some() {
-        // if let Some(use_speck) = path.use_speck() {
+            // if let Some(use_speck) = path.use_speck() {
             if item_kind == MODULE {
                 return true;
             }
@@ -120,16 +126,31 @@ pub fn is_visible_in_context(
             Vis::Restricted(vis_level) => match vis_level {
                 VisLevel::Friend => {
                     if let (Some(item_module), Some(context_module)) = (item_module, context_module) {
-                        // todo: resolve friend modules
+                        let friend_decls = item_module.friend_decls();
+                        for friend_decl in friend_decls {
+                            let friend_path = unwrap_or_continue!(friend_decl.path());
+                            if let Some(friend_entry) =
+                                paths::resolve_single(db, InFile::new(item_file_id, friend_path))
+                            {
+                                let friend_module =
+                                    unwrap_or_continue!(friend_entry
+                                        .node_loc
+                                        .cast::<ast::Module>(db.upcast()));
+                                if friend_module.value == context_module {
+                                    return true;
+                                }
+                            }
+                        }
                     }
                     false
                 }
                 VisLevel::Package => {
-                    // todo: check packages equality
-                    false
+                    // check for the same source root
+                    // todo: change later to package_id
+                    return db.file_source_root(*context_file_id) == db.file_source_root(item_file_id);
                 }
             },
-        }
+        };
     }
 
     true

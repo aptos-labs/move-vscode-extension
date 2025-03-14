@@ -115,6 +115,19 @@ impl ExprStmt {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Friend {
+    pub(crate) syntax: SyntaxNode,
+}
+impl Friend {
+    #[inline]
+    pub fn path(&self) -> Option<Path> { support::child(&self.syntax) }
+    #[inline]
+    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
+    #[inline]
+    pub fn friend_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![friend]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Fun {
     pub(crate) syntax: SyntaxNode,
 }
@@ -519,6 +532,8 @@ impl StmtList {
     #[inline]
     pub fn tail_expr(&self) -> Option<Expr> { support::child(&self.syntax) }
     #[inline]
+    pub fn use_stmts(&self) -> AstChildren<UseStmt> { support::children(&self.syntax) }
+    #[inline]
     pub fn l_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['{']) }
     #[inline]
     pub fn r_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['}']) }
@@ -789,6 +804,7 @@ pub enum FieldList {
 pub enum Item {
     Const(Const),
     Enum(Enum),
+    Friend(Friend),
     Fun(Fun),
     ItemSpec(ItemSpec),
     Schema(Schema),
@@ -796,7 +812,6 @@ pub enum Item {
     Struct(Struct),
     UseStmt(UseStmt),
 }
-impl ast::HasAttrs for Item {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Pat {
@@ -1022,6 +1037,27 @@ impl AstNode for ExprStmt {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == EXPR_STMT }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for Friend {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        FRIEND
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == FRIEND }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -2234,6 +2270,10 @@ impl From<Enum> for Item {
     #[inline]
     fn from(node: Enum) -> Item { Item::Enum(node) }
 }
+impl From<Friend> for Item {
+    #[inline]
+    fn from(node: Friend) -> Item { Item::Friend(node) }
+}
 impl From<Fun> for Item {
     #[inline]
     fn from(node: Fun) -> Item { Item::Fun(node) }
@@ -2268,6 +2308,12 @@ impl Item {
     pub fn enum_(self) -> Option<Enum> {
         match (self) {
             Item::Enum(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn friend(self) -> Option<Friend> {
+        match (self) {
+            Item::Friend(item) => Some(item),
             _ => None,
         }
     }
@@ -2313,7 +2359,7 @@ impl AstNode for Item {
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            CONST | ENUM | FUN | ITEM_SPEC | SCHEMA | SPEC_FUN | STRUCT | USE_STMT
+            CONST | ENUM | FRIEND | FUN | ITEM_SPEC | SCHEMA | SPEC_FUN | STRUCT | USE_STMT
         )
     }
     #[inline]
@@ -2321,6 +2367,7 @@ impl AstNode for Item {
         let res = match syntax.kind() {
             CONST => Item::Const(Const { syntax }),
             ENUM => Item::Enum(Enum { syntax }),
+            FRIEND => Item::Friend(Friend { syntax }),
             FUN => Item::Fun(Fun { syntax }),
             ITEM_SPEC => Item::ItemSpec(ItemSpec { syntax }),
             SCHEMA => Item::Schema(Schema { syntax }),
@@ -2336,6 +2383,7 @@ impl AstNode for Item {
         match self {
             Item::Const(it) => &it.syntax,
             Item::Enum(it) => &it.syntax,
+            Item::Friend(it) => &it.syntax,
             Item::Fun(it) => &it.syntax,
             Item::ItemSpec(it) => &it.syntax,
             Item::Schema(it) => &it.syntax,
@@ -2967,6 +3015,11 @@ impl std::fmt::Display for Enum {
     }
 }
 impl std::fmt::Display for ExprStmt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for Friend {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

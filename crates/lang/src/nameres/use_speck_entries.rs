@@ -25,7 +25,7 @@ pub fn use_speck_entries(
         };
         entries.push(ScopeEntry {
             name: use_item.name_or_alias,
-            named_node_loc: scope_entry.named_node_loc,
+            node_loc: scope_entry.node_loc,
             ns: scope_entry.ns,
             scope_adjustment: Some(use_item.scope),
         });

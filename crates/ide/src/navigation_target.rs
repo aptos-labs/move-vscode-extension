@@ -89,9 +89,9 @@ impl NavigationTarget {
         scope_entry: ScopeEntry,
     ) -> Option<NavigationTarget> {
         let entry_name = scope_entry.name.as_str();
-        let file_id = scope_entry.named_node_loc.file_id();
+        let file_id = scope_entry.node_loc.file_id();
         let entry_item = scope_entry
-            .named_node_loc
+            .node_loc
             .cast::<ast::AnyHasName>(db.upcast())?
             .value;
 

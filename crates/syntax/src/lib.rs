@@ -10,6 +10,7 @@ mod syntax_node;
 mod ted;
 mod token_text;
 mod validation;
+pub mod utils;
 
 pub use crate::{
     ast::{AstNode, AstToken},

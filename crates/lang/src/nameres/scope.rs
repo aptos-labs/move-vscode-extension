@@ -6,12 +6,12 @@ use crate::{AsName, InFile, Name};
 use std::fmt;
 use std::fmt::{Formatter, Pointer};
 use syntax::ast::{HasReference, NamedItemScope};
-use syntax::{ast, AstNode, SyntaxNode};
+use syntax::{ast, AstNode};
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct ScopeEntry {
     pub name: Name,
-    pub named_node_loc: SyntaxLoc,
+    pub node_loc: SyntaxLoc,
     pub ns: NsSet,
     pub scope_adjustment: Option<NamedItemScope>,
 }
@@ -22,7 +22,7 @@ impl ScopeEntry {
         let loc = item.loc();
         Some(ScopeEntry {
             name: name.as_name(),
-            named_node_loc: loc,
+            node_loc: loc,
             ns,
             scope_adjustment: None,
         })
@@ -40,7 +40,7 @@ impl fmt::Debug for ScopeEntry {
         f.debug_tuple("ScopeEntry")
             .field(&self.name.as_str().to_string())
             .field(&self.ns)
-            .field(&self.named_node_loc)
+            .field(&self.node_loc)
             .finish()
     }
 }
@@ -56,7 +56,7 @@ impl<T: ast::HasName> ScopeEntryExt for InFile<T> {
         let item_ns = NsSet::from(named_item_ns(item_loc.kind()));
         let entry = ScopeEntry {
             name: name.as_name(),
-            named_node_loc: item_loc,
+            node_loc: item_loc,
             ns: item_ns,
             scope_adjustment: None,
         };
@@ -80,7 +80,7 @@ pub trait ScopeEntryListExt {
     fn filter_by_visibility(
         self,
         db: &dyn HirDatabase,
-        context: impl HasReference,
+        context: InFile<impl HasReference>,
     ) -> impl Iterator<Item = ScopeEntry>;
 }
 
@@ -96,7 +96,7 @@ impl<T: Iterator<Item = ScopeEntry>> ScopeEntryListExt for T {
     fn filter_by_visibility(
         self,
         db: &dyn HirDatabase,
-        context: impl HasReference,
+        context: InFile<impl HasReference>,
     ) -> impl Iterator<Item = ScopeEntry> {
         self.filter(move |entry| is_visible_in_context(db, entry, &context))
     }

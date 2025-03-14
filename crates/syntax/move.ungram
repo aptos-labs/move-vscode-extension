@@ -35,6 +35,7 @@ ItemList =
 
 Item =
     UseStmt
+    | Friend
     | Fun
     | Const
     | Struct
@@ -54,6 +55,9 @@ UseAlias =
 
 UseGroup =
     '{' UseSpeck* '}'
+
+Friend =
+    'friend' Path ';'
 
 Struct =
     Attr*
@@ -141,6 +145,7 @@ BlockExpr =
 
 StmtList =
     '{'
+        UseStmt*
         statements:Stmt*
         tail_expr:Expr?
     '}'

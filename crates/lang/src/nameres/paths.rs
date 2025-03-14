@@ -32,7 +32,7 @@ pub fn get_path_resolve_variants(
                 if let Some(module) = ctx.containing_module().opt_in_file(ctx.path.file_id) {
                     entries.push(ScopeEntry {
                         name: Name::new("Self"),
-                        named_node_loc: module.loc(),
+                        node_loc: module.loc(),
                         ns: MODULES,
                         scope_adjustment: None,
                     })
@@ -76,7 +76,7 @@ pub fn resolve(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry>
     let Some(path_name) = path.value.name_ref_name() else {
         return vec![];
     };
-    let context_element = path.value.clone();
+    let context_element = path.clone();
     let ctx = ResolutionContext {
         path,
         is_completion: false,
