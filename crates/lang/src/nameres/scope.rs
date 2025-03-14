@@ -7,7 +7,7 @@ use crate::{AsName, InFile, Name};
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::ast::{HasReference, NamedItemScope};
-use syntax::{ast, AstNode};
+use syntax::{ast};
 use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]

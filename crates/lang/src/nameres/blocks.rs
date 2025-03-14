@@ -20,7 +20,7 @@ pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: Option<SyntaxNode>
             let binding_entries = bindings
                 .into_iter()
                 .rev()
-                .flat_map(|(stmt, bindings)| bindings)
+                .flat_map(|(_, bindings)| bindings)
                 .collect();
 
             // todo: use speck entries

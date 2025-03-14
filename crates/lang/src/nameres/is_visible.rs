@@ -4,7 +4,6 @@ use crate::nameres::paths;
 use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::ModuleLangExt;
 use crate::InFile;
-use base_db::SourceRootDatabase;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::visibility::{Vis, VisLevel};

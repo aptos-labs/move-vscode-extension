@@ -1,10 +1,10 @@
 use crate::InFile;
-use base_db::{SourceDatabase, SourceRootDatabase};
+use base_db::{SourceRootDatabase};
 use parser::SyntaxKind;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::algo::find_node_at_offset;
-use syntax::{AstNode, AstToken, TextSize};
+use syntax::{AstNode, TextSize};
 use vfs::FileId;
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]

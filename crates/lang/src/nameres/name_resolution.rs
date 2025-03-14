@@ -9,7 +9,6 @@ use crate::nameres::scope::{NamedItemsExt, ScopeEntry};
 use crate::nameres::scope_entries_owner::get_entries_in_scope;
 use crate::node_ext::ModuleLangExt;
 use crate::{InFile, Name};
-use base_db::SourceRootDatabase;
 use parser::SyntaxKind;
 use parser::SyntaxKind::{MODULE_SPEC, STMT_LIST};
 use std::fmt;
