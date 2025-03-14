@@ -10,7 +10,7 @@ use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::visibility::{Vis, VisLevel};
 use syntax::ast::{HasAttrs, HasReference, NamedItemScope};
-use syntax::{ast, unwrap_or_continue, AstNode};
+use syntax::{ast, unwrap_or_return, unwrap_or_continue, AstNode};
 
 pub fn is_visible_in_context(
     db: &dyn HirDatabase,
