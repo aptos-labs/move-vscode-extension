@@ -101,23 +101,10 @@ pub fn path_kind(path: InFile<ast::Path>, is_completion: bool) -> PathKind {
             return PathKind::Unknown;
         };
         let use_group_qualifier = parent_use_speck.path();
-        // if let Some(name_ref_name) = path.name_ref_name() {
-        //     if name_ref_name.as_str() == "Self" {
-        //         let address = try_value_address(&use_group_qualifier);
-        //         if let Some(address) = address {
-        //             return PathKind::Qualified {
-        //                 path,
-        //                 qualifier: use_group_qualifier,
-        //                 ns: IMPORTABLE_NS,
-        //                 kind: QualifiedKind::Module { address: Address::Value(address) },
-        //             }
-        //         }
-        //     }
-        // }
         return PathKind::Qualified {
             path,
             qualifier: use_group_qualifier,
-            ns: IMPORTABLE_NS,
+            ns: IMPORTABLE_NS | MODULES,
             kind: QualifiedKind::UseGroupItem,
         };
     }
@@ -216,6 +203,16 @@ pub fn path_kind(path: InFile<ast::Path>, is_completion: bool) -> PathKind {
             ns,
             kind: QualifiedKind::ModuleItemOrEnumVariant,
         };
+    }
+
+    if path.is_use_speck() {
+        // MODULES are for `use 0x1::m::Self;`
+        return PathKind::Qualified {
+            path,
+            qualifier,
+            ns: ns | MODULES,
+            kind: QualifiedKind::FQModuleItem,
+        }
     }
 
     // three-element path

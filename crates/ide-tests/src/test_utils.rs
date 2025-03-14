@@ -1,6 +1,3 @@
-pub mod fold;
-pub mod resolve;
-
 use line_index::LineCol;
 use syntax::TextSize;
 

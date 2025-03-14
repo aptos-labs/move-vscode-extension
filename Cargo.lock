@@ -713,8 +713,12 @@ dependencies = [
 name = "ide-tests"
 version = "0.1.0"
 dependencies = [
+ "dissimilar",
  "ide",
+ "ide-completion",
+ "ide-db",
  "lang",
+ "line-index",
  "syntax",
  "tracing",
  "tracing-subscriber",

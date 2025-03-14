@@ -102,7 +102,14 @@ impl<T: Iterator<Item = ScopeEntry>> ScopeEntryListExt for T {
     }
 
     fn filter_by_name(self, name: &str) -> impl Iterator<Item = ScopeEntry> {
-        self.filter(move |entry| entry.name.as_str() == name)
+        self.filter(move |entry| {
+            let entry_name = entry.name.as_str();
+            if entry_name == "Self" {
+                // custom logic
+
+            }
+            entry_name == name
+        })
     }
 
     fn filter_by_visibility(

@@ -140,6 +140,7 @@ pub fn get_qualified_path_entries(
     let mut entries = vec![];
     match qualifier_item.node_loc.kind() {
         SyntaxKind::MODULE => {
+            // Self::call() as an expression
             entries.push(ScopeEntry {
                 name: Name::new("Self"),
                 node_loc: qualifier_item.node_loc,

@@ -33,4 +33,6 @@ impl ast::Path {
     pub fn use_speck(&self) -> Option<ast::UseSpeck> {
         self.root_path().syntax.parent_of_type::<ast::UseSpeck>()
     }
+
+    pub fn is_use_speck(&self) -> bool { self.use_speck().is_some() }
 }

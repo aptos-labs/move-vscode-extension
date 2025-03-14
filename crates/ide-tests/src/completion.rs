@@ -1,5 +1,14 @@
+mod test_completion;
+
+use tracing::Level;
+use tracing::level_filters::LevelFilter;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::{Layer, Registry};
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_tree::HierarchicalLayer;
+use ide::Analysis;
 use crate::test_utils::get_and_replace_caret;
-use crate::{assert_eq_text, Analysis};
+use crate::{assert_eq_text};
 use ide_completion::config::CompletionConfig;
 use ide_completion::item::CompletionItem;
 use ide_db::SnippetCap;
@@ -25,6 +34,11 @@ pub fn do_single_completion(before: &str, after: &str) {
 }
 
 pub fn check_completions_with_prefix_exact(source: &str, expected_items: Vec<&str>) {
+    let _ = Registry::default()
+        // .with(fmt::Layer::new().with_max_level(Level::DEBUG))
+        .with(HierarchicalLayer::new(2).with_filter(LevelFilter::from_level(Level::DEBUG)))
+        .try_init();
+
     let (source, caret_offset) = get_and_replace_caret(source, "/*caret*/");
     let completion_items = completions_at_offset(source, caret_offset, true);
 

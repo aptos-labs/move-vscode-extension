@@ -27,6 +27,7 @@ pub fn get_path_resolve_variants(
             let mut entries = vec![];
             if ns.contains(Ns::MODULE) {
                 if let Some(module) = ctx.containing_module().opt_in_file(ctx.path.file_id) {
+                    // Self::call() as an expression
                     entries.push(ScopeEntry {
                         name: Name::new("Self"),
                         node_loc: module.loc(),
