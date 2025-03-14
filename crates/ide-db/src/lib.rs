@@ -13,7 +13,7 @@ use lang::db::HirDatabase;
 use line_index::LineIndex;
 use std::fmt;
 use std::mem::ManuallyDrop;
-use syntax::{SyntaxKind, SyntaxKind::*, SyntaxNode};
+use syntax::{SyntaxKind, SyntaxKind::*};
 use triomphe::Arc;
 use vfs::{AnchoredPath, FileId};
 

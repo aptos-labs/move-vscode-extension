@@ -1,6 +1,4 @@
 use crate::command::ParseFromLine;
-use camino::Utf8PathBuf;
-use paths::AbsPathBuf;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]

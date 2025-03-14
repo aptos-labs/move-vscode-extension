@@ -3,7 +3,8 @@ use crate::resolve::check_resolve;
 #[test]
 fn test_function_argument() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         script {
             fun main(account: &signer) {
                    //X
@@ -11,13 +12,15 @@ fn test_function_argument() {
               //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_locals() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         script {
             fun main() {
                 let z = 1;
@@ -26,13 +29,15 @@ fn test_locals() {
               //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_local_variables_has_a_priority_over_fun_variable() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         script {
             fun main(z: u8) {
                 let z = z + 1;
@@ -41,13 +46,15 @@ fn test_local_variables_has_a_priority_over_fun_variable() {
               //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_shadowing_of_variable_with_another_variable() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         script {
             fun main() {
                 let z = 1;
@@ -57,13 +64,15 @@ fn test_shadowing_of_variable_with_another_variable() {
               //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_shadowing_does_not_happen_until_the_end_of_stmt() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         script {
             fun main(z: u8) {
                    //X
@@ -71,13 +80,15 @@ fn test_shadowing_does_not_happen_until_the_end_of_stmt() {
                       //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_redefinition_in_nested_block() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         script {
             fun main() {
                 let a = 1;
@@ -89,13 +100,15 @@ fn test_redefinition_in_nested_block() {
               //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_variable_defined_in_nested_block() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::M {
             fun main() {
                 let a = {
@@ -106,13 +119,15 @@ fn test_variable_defined_in_nested_block() {
                 };
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_destructuring_of_struct() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::M {
             struct MyStruct {
                 val: u8
@@ -125,13 +140,15 @@ fn test_destructuring_of_struct() {
               //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_destructuring_of_struct_with_variable_rename() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::M {
             struct MyStruct {
                 val: u8
@@ -144,13 +161,15 @@ fn test_destructuring_of_struct_with_variable_rename() {
               //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_type_params_used_in_cast_expr() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::M {
             fun convert<T>() {
                       //X
@@ -158,13 +177,15 @@ fn test_type_params_used_in_cast_expr() {
                    //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_consts() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::M {
             const ENOT_GENESIS: u64 = 0;
                 //X
@@ -173,13 +194,15 @@ fn test_consts() {
                       //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_tuple_destructuring() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::M {
             fun main() {
                 let (a, b) = call();
@@ -188,13 +211,15 @@ fn test_tuple_destructuring() {
               //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_test_attribute_to_test_function_parameter() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::M {
             #[test(acc = @0x1)]
                   //^
@@ -203,13 +228,15 @@ fn test_resolve_test_attribute_to_test_function_parameter() {
 
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_no_test_attribute_resolution_if_not_on_function() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::M {
             fun test_add(acc: signer) {
                 #[test(acc = @0x1)]
@@ -217,13 +244,15 @@ fn test_no_test_attribute_resolution_if_not_on_function() {
                 use 0x1::M;
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_no_test_attribute_resolution_if_not_test_attribute() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::M {
             #[test]
             #[expected_failure(abort_code = 1)]
@@ -232,13 +261,15 @@ fn test_no_test_attribute_resolution_if_not_test_attribute() {
 
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_test_only_const_in_test_function() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::M {
             #[test_only]
             const TEST_CONST: u64 = 1;
@@ -249,13 +280,15 @@ fn test_test_only_const_in_test_function() {
                     //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_test_only_function_in_test_function() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::M {
             #[test_only]
             fun call() {}
@@ -267,13 +300,15 @@ fn test_test_only_function_in_test_function() {
                //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_const_expected_failure() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::string {
             const ERR_ADMIN: u64 = 1;
                   //X
@@ -289,13 +324,15 @@ fn test_resolve_const_expected_failure() {
 
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_fq_const_expected_failure() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::string {
             const ERR_ADMIN: u64 = 1;
                   //X
@@ -309,13 +346,15 @@ fn test_resolve_fq_const_expected_failure() {
 
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_const_item_expected_failure() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::string {
             const ERR_ADMIN: u64 = 1;
                   //X
@@ -331,13 +370,15 @@ fn test_resolve_const_item_expected_failure() {
 
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_const_item_same_module_expected_failure() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         #[test_only]
         module 0x1::string_tests1 {
             const ERR_ADMIN: u64 = 1;
@@ -350,13 +391,15 @@ fn test_resolve_const_item_same_module_expected_failure() {
 
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_const_import_expected_failure() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::string {
             const ERR_ADMIN: u64 = 1;
                   //X
@@ -366,13 +409,15 @@ fn test_resolve_const_import_expected_failure() {
             use 0x1::string::ERR_ADMIN;
                              //^
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_for_loop_index() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             fun main() {
                 for (ind in 0..10) {
@@ -382,26 +427,30 @@ fn test_for_loop_index() {
                 }
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_cannot_resolve_path_address() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             fun main() {
                 0x1::;
                 //^ unresolved
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_attribute_location() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
                   //X
             fun main() {
@@ -412,13 +461,15 @@ fn test_resolve_attribute_location() {
 
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_variable_in_match_expr() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             fun main() {
                 let m = 1;
@@ -428,13 +479,15 @@ fn test_resolve_variable_in_match_expr() {
                 }
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_function_with_match_name() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             fun match() {}
               //X
@@ -443,13 +496,15 @@ fn test_resolve_function_with_match_name() {
                   //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_type_in_match_arm_1() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             enum S { One, Two }
                //X
@@ -462,13 +517,15 @@ fn test_resolve_type_in_match_arm_1() {
                 }
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_type_in_match_arm_2() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             enum S { One, Two }
                     //X
@@ -481,13 +538,15 @@ fn test_resolve_type_in_match_arm_2() {
                 }
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_type_in_match_arm_3() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             enum S { One, Two }
                          //X
@@ -500,13 +559,15 @@ fn test_resolve_type_in_match_arm_3() {
                 }
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_type_in_match_arm_body_1() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             enum S { One, Two }
             fun main() {
@@ -518,13 +579,15 @@ fn test_resolve_type_in_match_arm_body_1() {
                 }
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_type_in_match_arm_body_2() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             enum S { One, Two }
             fun main(s: S) {
@@ -536,13 +599,15 @@ fn test_resolve_type_in_match_arm_body_2() {
                 }
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_enum_variant_with_fields() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             enum S { One { field: u8 }, Two }
                     //X
@@ -554,13 +619,15 @@ fn test_enum_variant_with_fields() {
                 }
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_fields_for_enum_variant_in_match_arm() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             enum S { One { field: u8 }, Two }
                            //X
@@ -572,13 +639,15 @@ fn test_resolve_fields_for_enum_variant_in_match_arm() {
                 }
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_shortcut_field_for_enum_variant_in_match_arm() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             enum S { One { field: u8 }, Two }
                            //X
@@ -590,13 +659,15 @@ fn test_resolve_shortcut_field_for_enum_variant_in_match_arm() {
                 }
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_binding_for_field_reassignment_for_enum_variant() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             enum S { One { field: u8 }, Two }
             fun main() {
@@ -609,15 +680,6 @@ fn test_resolve_binding_for_field_reassignment_for_enum_variant() {
                 }
             }
         }
-    "#)
+    "#,
+    )
 }
-
-
-
-
-
-
-
-
-
-

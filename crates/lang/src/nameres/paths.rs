@@ -1,17 +1,14 @@
 use crate::db::HirDatabase;
 use crate::files::OptionInFileExt;
 use crate::loc::SyntaxLocExt;
-use crate::nameres::lexical_declarations::process_nested_scopes_upwards;
 use crate::nameres::name_resolution::{
     get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
 use crate::nameres::namespaces::{Ns, MODULES};
 use crate::nameres::path_kind::{path_kind, PathKind, QualifiedKind};
-use crate::nameres::processors::{filter_ns_processor, ProcessingStatus, Processor};
 use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt};
 use crate::node_ext::PathLangExt;
 use crate::{loc, InFile, Name};
-use std::ops::Deref;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::{ast, AstNode};
 
@@ -45,16 +42,12 @@ pub fn get_path_resolve_variants(
         PathKind::Qualified {
             kind: QualifiedKind::Module { address },
             ..
-        } => {
-            get_modules_as_entries(db, ctx, address)
-        }
+        } => get_modules_as_entries(db, ctx, address),
 
-        PathKind::Qualified { qualifier, ns, .. } => {
-            get_qualified_path_entries(db, ctx, qualifier)
-                .into_iter()
-                .filter_by_ns(ns)
-                .collect()
-        }
+        PathKind::Qualified { qualifier, ns, .. } => get_qualified_path_entries(db, ctx, qualifier)
+            .into_iter()
+            .filter_by_ns(ns)
+            .collect(),
     }
 }
 
@@ -87,7 +80,8 @@ pub fn resolve(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry>
     let resolve_variants = get_path_resolve_variants(db, ctx, path_kind);
     tracing::debug!(resolve_variants = ?resolve_variants);
 
-    resolve_variants.into_iter()
+    resolve_variants
+        .into_iter()
         .filter_by_name(path_name.as_str())
         .filter_by_visibility(db, context_element)
         .collect()
@@ -108,4 +102,3 @@ impl ResolutionContext {
         InFile::new(self.path.file_id, node)
     }
 }
-

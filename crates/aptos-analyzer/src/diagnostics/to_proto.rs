@@ -32,7 +32,7 @@ pub(crate) fn map_aptos_diagnostic_to_lsp(
     let label = label.unwrap();
     let severity = aptos_diagnostic_severity(diag.severity.as_str());
 
-    let mut code = diag.code.clone();
+    let code = diag.code.clone();
     // todo: ignore errors
     // if let Some(code_val) = &code {
     //     if config.check_ignore.contains(code_val) {

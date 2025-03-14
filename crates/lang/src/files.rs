@@ -56,7 +56,9 @@ impl InFile<SyntaxToken> {
 }
 
 impl<T: AstNode> InFile<T> {
-    pub fn syntax_text(&self) -> String { self.value.syntax().text().to_string() }
+    pub fn syntax_text(&self) -> String {
+        self.value.syntax().text().to_string()
+    }
 }
 
 pub trait InFileExt {

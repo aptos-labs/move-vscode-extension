@@ -4,11 +4,9 @@ use crate::global_state::GlobalStateSnapshot;
 use crate::lsp;
 use crate::main_loop::DiagnosticsTaskKind;
 use nohash_hasher::{IntMap, IntSet};
-use rustc_hash::FxHashMap;
 use std::mem;
 use stdx::iter_eq_by;
 use stdx::itertools::Itertools;
-use triomphe::Arc;
 use vfs::FileId;
 
 pub(crate) type DiagnosticsGeneration = usize;

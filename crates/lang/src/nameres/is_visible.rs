@@ -5,7 +5,6 @@ use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::ModuleLangExt;
 use crate::InFile;
 use base_db::SourceRootDatabase;
-use parser::SyntaxKind::MODULE;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::visibility::{Vis, VisLevel};
@@ -72,7 +71,10 @@ pub fn is_visible_in_context(
 
     // #[test] functions cannot be used from non-imports
     if item.syntax().kind() == FUN {
-        if ast::Fun::cast(item.syntax().clone()).unwrap().has_atom_attr("test") {
+        if ast::Fun::cast(item.syntax().clone())
+            .unwrap()
+            .has_atom_attr("test")
+        {
             return false;
         }
     }

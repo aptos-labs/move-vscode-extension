@@ -1,6 +1,6 @@
-use crate::{ast, AstNode};
-use crate::ast::HasItemList;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
+use crate::ast::HasItemList;
+use crate::{ast, AstNode};
 
 impl ast::Module {
     pub fn parent_address_def(&self) -> Option<ast::AddressDef> {
@@ -13,6 +13,9 @@ impl ast::Module {
     }
 
     pub fn friend_decls(&self) -> Vec<ast::Friend> {
-        self.items().into_iter().filter_map(|item| item.friend()).collect()
+        self.items()
+            .into_iter()
+            .filter_map(|item| item.friend())
+            .collect()
     }
 }

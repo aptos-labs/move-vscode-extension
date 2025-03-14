@@ -1,11 +1,9 @@
 use crate::db::HirDatabase;
-use crate::files::InFileVecExt;
 use crate::nameres::blocks::get_entries_in_blocks;
 use crate::nameres::node_ext::ModuleResolutionExt;
-use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
+use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry};
 use crate::nameres::use_speck_entries::use_speck_entries;
 use crate::InFile;
-use parser::SyntaxKind::{BLOCK_EXPR, MODULE};
 use syntax::ast::{HasItemList, HasTypeParams};
 use syntax::{ast, AstNode, SyntaxNode};
 
@@ -37,12 +35,7 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
         MODULE => {
             let module = scope.cast::<ast::Module>().unwrap();
             entries.extend(module.member_entries());
-            entries.extend(
-                module
-                    .value
-                    .enum_variants()
-                    .to_in_file_entries(file_id),
-            );
+            entries.extend(module.value.enum_variants().to_in_file_entries(file_id));
             // use
             entries.extend(use_speck_entries(db, &module));
         }
@@ -73,8 +66,7 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
                     .to_in_file_entries(file_id),
             )
         }
-        _ => {
-        }
+        _ => {}
     }
 
     entries

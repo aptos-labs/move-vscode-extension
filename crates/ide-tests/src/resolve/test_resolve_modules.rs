@@ -3,7 +3,8 @@ use crate::resolve::check_resolve;
 #[test]
 fn test_module_with_self_from_use_speck() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::transaction {
                       //X
         }
@@ -11,13 +12,15 @@ fn test_module_with_self_from_use_speck() {
             use 0x1::transaction::Self;
                                  //^
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_module_with_self_from_use_group() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::transaction {
                       //X
         }
@@ -25,13 +28,15 @@ fn test_module_with_self_from_use_group() {
             use 0x1::transaction::{Self};
                                   //^
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_module_with_self_from_qual_item() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
                   //X
             fun create() {}
@@ -43,13 +48,15 @@ fn test_module_with_self_from_qual_item() {
                       //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_module_with_use_group_self_from_qual_item() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
                   //X
             fun create() {}
@@ -61,13 +68,15 @@ fn test_module_with_use_group_self_from_qual_item() {
                       //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_self_to_current_module() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::transaction {
                     //X
             fun create() {}
@@ -76,13 +85,15 @@ fn test_resolve_self_to_current_module() {
                       //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_to_imported_module_with_alias() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::Transaction {}
         module 0x1::m {
             use 0x1::Transaction as MyTransaction;
@@ -92,13 +103,15 @@ fn test_resolve_to_imported_module_with_alias() {
                       //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_cannot_resolve_module_if_different_address() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::transaction {}
         module 0x1::m {
             fun main() {
@@ -106,13 +119,15 @@ fn test_cannot_resolve_module_if_different_address() {
                              //^ unresolved
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_module_from_use_with_address_block() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         address 0x1 {
             module A {
                  //X
@@ -123,13 +138,15 @@ fn test_resolve_module_from_use_with_address_block() {
                        //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_module_from_qual_item_with_address_block() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         address 0x1 {
             module A {
                  //X
@@ -144,13 +161,15 @@ fn test_resolve_module_from_qual_item_with_address_block() {
                 }
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_cannot_be_resolved_without_import() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::A {
             public fun create() {}
         }
@@ -160,7 +179,6 @@ fn test_cannot_be_resolved_without_import() {
                       //^ unresolved
             }
         }
-    "#)
+    "#,
+    )
 }
-
-

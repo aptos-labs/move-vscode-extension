@@ -21,7 +21,7 @@ impl Address {
     pub fn is_0x0(&self) -> bool {
         match self {
             Address::Value(value_addr) => value_addr.numeric_address.short() == "0x0",
-            _ => false
+            _ => false,
         }
     }
 }
@@ -29,10 +29,7 @@ impl Address {
 impl fmt::Debug for Address {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
-            Address::Named(named) => f
-                .debug_tuple("Address.Named")
-                .field(&named.name)
-                .finish(),
+            Address::Named(named) => f.debug_tuple("Address.Named").field(&named.name).finish(),
             Address::Value(value) => f
                 .debug_tuple("Address.Value")
                 .field(&value.numeric_address.original())

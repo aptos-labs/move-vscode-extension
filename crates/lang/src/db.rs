@@ -1,13 +1,8 @@
 use crate::loc::SyntaxLoc;
 use crate::nameres::paths;
 use crate::nameres::scope::ScopeEntry;
-use crate::InFile;
-use base_db::{SourceDatabase, SourceRootDatabase, Upcast};
-use parser::SyntaxKind;
-use std::ops::Deref;
-use syntax::{ast, AstNode, SyntaxNode, TextRange, TextSize};
-use triomphe::Arc;
-use vfs::FileId;
+use base_db::{SourceRootDatabase, Upcast};
+use syntax::{ast, AstNode};
 
 #[ra_salsa::query_group(HirDatabaseStorage)]
 pub trait HirDatabase: SourceRootDatabase + Upcast<dyn SourceRootDatabase> {

@@ -2,7 +2,7 @@
 
 use base_db::change::FileChange;
 use base_db::input::{CrateId, SourceRoot, SourceRootId};
-use base_db::{FileLoader, SourceDatabase, SourceRootDatabase};
+use base_db::{SourceDatabase, SourceRootDatabase};
 use ide_completion::item::CompletionItem;
 use ide_db::{LineIndexDatabase, RootDatabase};
 use lang::files::{FilePosition, FileRange};
@@ -23,7 +23,6 @@ pub use crate::syntax_highlighting::HlRange;
 use ide_completion::config::CompletionConfig;
 use ide_diagnostics::{Diagnostic, DiagnosticsConfig};
 pub use ra_salsa::Cancelled;
-use stdx::itertools::Itertools;
 
 pub type Cancellable<T> = Result<T, Cancelled>;
 

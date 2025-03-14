@@ -1,14 +1,15 @@
-use std::any::type_name;
 use crate::nameres::address::{Address, NamedAddr, ValueAddr};
-use crate::nameres::namespaces::{NsSet, ALL_NS, ENUMS, ENUMS_N_MODULES, IMPORTABLE_NS, MODULES, NAMES, NAMES_N_FUNCTIONS_N_VARIANTS, NAMES_N_VARIANTS, NONE, TYPES, TYPES_N_ENUMS, TYPES_N_ENUMS_N_ENUM_VARIANTS, TYPES_N_ENUMS_N_MODULES, TYPES_N_MODULES, TYPES_N_NAMES};
+use crate::nameres::namespaces::{
+    NsSet, ALL_NS, ENUMS, ENUMS_N_MODULES, IMPORTABLE_NS, MODULES, NAMES, NAMES_N_FUNCTIONS_N_VARIANTS,
+    NAMES_N_VARIANTS, NONE, TYPES_N_ENUMS, TYPES_N_ENUMS_N_ENUM_VARIANTS, TYPES_N_ENUMS_N_MODULES,
+    TYPES_N_NAMES,
+};
 use crate::InFile;
 use parser::T;
 use std::fmt;
-use std::fmt::{Formatter, Pointer};
-use parser::SyntaxKind::PATH_TYPE;
+use std::fmt::Formatter;
 use syntax::ast::node_ext::syntax_node::{OptionSyntaxNodeExt, SyntaxNodeExt};
 use syntax::{ast, AstNode};
-use crate::node_ext::PathLangExt;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum PathKind {
@@ -64,14 +65,13 @@ impl fmt::Debug for PathKind {
                 qualifier,
                 ns,
                 kind,
-            } => {
-                f.debug_struct("Qualified")
-                    .field("kind", &kind)
-                    .field("path", &path.syntax().text())
-                    .field("qualifier", &qualifier.syntax().text())
-                    .field("ns", &ns)
-                    .finish()
-            }
+            } => f
+                .debug_struct("Qualified")
+                .field("kind", &kind)
+                .field("path", &path.syntax().text())
+                .field("qualifier", &qualifier.syntax().text())
+                .field("ns", &ns)
+                .finish(),
         }
     }
 }
@@ -229,7 +229,8 @@ pub fn path_kind(path: InFile<ast::Path>, is_completion: bool) -> PathKind {
 
 fn try_value_address(path: &ast::Path) -> Option<ValueAddr> {
     // if path_address exists, it means it has to be a value address
-    path.path_address().map(|addr| ValueAddr::new(addr.value_address().address_text()))
+    path.path_address()
+        .map(|addr| ValueAddr::new(addr.value_address().address_text()))
 }
 
 fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {

@@ -1,11 +1,10 @@
 use crate::member_items::HasMembersList;
-use crate::nameres::namespaces::{ALL_NS, NAMES};
+use crate::nameres::namespaces::NAMES;
 use crate::nameres::processors::{ProcessingStatus, Processor};
-use crate::nameres::scope::ScopeEntry;
 use parser::SyntaxKind::STMT_LIST;
 use syntax::algo::ComparePos;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
-use syntax::ast::{HasItemList, HasStmtList, IdentPat};
+use syntax::ast::{HasStmtList, IdentPat};
 use syntax::{algo, ast, match_ast, AstNode, SyntaxNode, SyntaxToken};
 
 pub fn walk_scopes(start_at: SyntaxToken, processor: &impl Processor) -> Option<()> {

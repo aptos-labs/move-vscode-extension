@@ -12,7 +12,7 @@ use lsp_types::{
     DidOpenTextDocumentParams, DidSaveTextDocumentParams, WorkDoneProgressCancelParams,
 };
 use paths::AbsPathBuf;
-use std::ops::{Deref, Not};
+use std::ops::Not;
 use stdx::itertools::Itertools;
 use triomphe::Arc;
 use vfs::VfsPath;

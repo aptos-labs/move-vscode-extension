@@ -9,8 +9,8 @@ mod syntax_error;
 mod syntax_node;
 mod ted;
 mod token_text;
-mod validation;
 pub mod utils;
+mod validation;
 
 pub use crate::{
     ast::{AstNode, AstToken},

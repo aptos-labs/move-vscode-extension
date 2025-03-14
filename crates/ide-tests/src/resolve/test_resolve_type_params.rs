@@ -3,46 +3,53 @@ use crate::resolve::check_resolve;
 #[test]
 fn test_type_param_in_param_pos() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             fun call<T>
                    //X
                     (val: T) {}
                         //^
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_type_param_in_return_pos() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             fun call<T>
                    //X
                     (): T {}
                       //^
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_type_param_in_acquires() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             fun call<T>
                    //X
                     () acquires T {}
                               //^
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_type_param_in_call_expr() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             fun convert<T>() {
                       //X
@@ -50,13 +57,15 @@ fn test_type_param_in_call_expr() {
                    //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_struct_type_param() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             struct MyStruct<T> {
                           //X
@@ -64,13 +73,15 @@ fn test_struct_type_param() {
                    //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_struct_type_param_inside_vector() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             struct MyStruct<T> {
                           //X
@@ -78,26 +89,30 @@ fn test_struct_type_param_inside_vector() {
                           //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_function_return_type_to_type_param() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             fun main<Token>()
                    //X
                 : Token {}
                 //^
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_function_return_type_argument_to_type_param() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             struct Coin<Token> {}
 
@@ -106,13 +121,15 @@ fn test_function_return_type_argument_to_type_param() {
                     : Coin<Token> {}
                          //^
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_native_function_return_type_argument_to_type_param() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             struct Coin<Token> {}
 
@@ -121,5 +138,6 @@ fn test_native_function_return_type_argument_to_type_param() {
                     : Coin<Token>;
                          //^
         }
-    "#)
+    "#,
+    )
 }

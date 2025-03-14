@@ -3,7 +3,8 @@ use crate::resolve::check_resolve;
 #[test]
 fn test_reference_to_function() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             fun call(): u8 {
               //X
@@ -15,13 +16,15 @@ fn test_reference_to_function() {
               //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_reference_to_native_function() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             native fun call(): u8;
                      //X
@@ -31,13 +34,15 @@ fn test_reference_to_native_function() {
               //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_to_the_same_module_full_path() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             public fun call() {}
                      //X
@@ -46,13 +51,15 @@ fn test_resolve_to_the_same_module_full_path() {
                       //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_to_another_module_by_full_path() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::original {
             public fun call() {}
                      //X
@@ -65,13 +72,15 @@ fn test_resolve_to_another_module_by_full_path() {
                              //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_to_another_module_by_module_import() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::original {
             public fun call() {}
                      //X
@@ -86,13 +95,15 @@ fn test_resolve_to_another_module_by_module_import() {
                         //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_to_another_module_from_import() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::original {
             public fun call() {}
                        //X
@@ -101,13 +112,15 @@ fn test_resolve_to_another_module_from_import() {
             use 0x1::original::call;
                               //^
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_to_another_module_by_member_import() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::original {
             public fun call() {}
                        //X
@@ -119,13 +132,15 @@ fn test_resolve_to_another_module_by_member_import() {
                //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_function_to_alias() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::original {
             public fun call() {}
         }
@@ -137,13 +152,15 @@ fn test_resolve_function_to_alias() {
                //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_to_another_module_by_member_import_on_another_address() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::original {
             public fun call() {}
                        //X
@@ -155,13 +172,15 @@ fn test_resolve_to_another_module_by_member_import_on_another_address() {
                //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_cannot_resolve_private_function_from_import() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::original {
             fun call() {}
         }
@@ -169,13 +188,15 @@ fn test_cannot_resolve_private_function_from_import() {
             use 0x1::original::call;
                              //^ unresolved
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_function_by_module_import_in_address_blocks() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         address 0x1 {
             module Original {
                 public fun call() {}
@@ -192,13 +213,15 @@ fn test_resolve_function_by_module_import_in_address_blocks() {
                 }
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_via_self() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m {
             fun call(): u8 {
               //X
@@ -210,13 +233,15 @@ fn test_resolve_via_self() {
                     //^
             }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_friend_function_with_public_friend_modifier() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         address 0x1 {
         module Original {
             friend 0x1::M;
@@ -232,13 +257,15 @@ fn test_resolve_friend_function_with_public_friend_modifier() {
             }
         }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_resolve_friend_function_with_friend_modifier() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         address 0x1 {
         module Original {
             friend 0x1::M;
@@ -254,13 +281,15 @@ fn test_resolve_friend_function_with_friend_modifier() {
             }
         }
         }
-    "#)
+    "#,
+    )
 }
 
 #[test]
 fn test_unresolved_friend_function_if_friend_of_another_module() {
     // language=Move
-    check_resolve(r#"
+    check_resolve(
+        r#"
         module 0x1::m1 {
             friend 0x1::main;
         }
@@ -274,10 +303,6 @@ fn test_unresolved_friend_function_if_friend_of_another_module() {
                    //^ unresolved
             }
         }
-    "#)
+    "#,
+    )
 }
-
-
-
-
-

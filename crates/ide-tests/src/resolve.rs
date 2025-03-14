@@ -14,8 +14,8 @@ use tracing_tree::HierarchicalLayer;
 mod test_resolve_functions;
 mod test_resolve_modules;
 mod test_resolve_type_params;
-mod test_resolve_variables;
 mod test_resolve_types;
+mod test_resolve_variables;
 
 pub fn check_resolve(source: &str) {
     // let subscriber = Registry::default().with(HierarchicalLayer::new(2));
@@ -23,8 +23,7 @@ pub fn check_resolve(source: &str) {
 
     Registry::default()
         // .with(fmt::Layer::new().with_max_level(Level::DEBUG))
-        .with(HierarchicalLayer::new(2)
-            .with_filter(LevelFilter::from_level(Level::DEBUG)))
+        .with(HierarchicalLayer::new(2).with_filter(LevelFilter::from_level(Level::DEBUG)))
         .try_init();
     // let subscriber = Registry::default().with(fmt::Layer::default());
     // tracing_subscriber::fmt()

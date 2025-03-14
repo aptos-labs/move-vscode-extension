@@ -90,10 +90,7 @@ impl NavigationTarget {
     ) -> Option<NavigationTarget> {
         let entry_name = scope_entry.name.as_str();
         let file_id = scope_entry.node_loc.file_id();
-        let entry_item = scope_entry
-            .node_loc
-            .cast::<ast::AnyHasName>(db.upcast())?
-            .value;
+        let entry_item = scope_entry.node_loc.cast::<ast::AnyHasName>(db.upcast())?.value;
 
         let name_range = entry_item.name().map(|name| name.ident_token().text_range());
         let node_range = entry_item.syntax().text_range();

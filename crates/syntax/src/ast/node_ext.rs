@@ -3,16 +3,16 @@ pub mod attr;
 mod block_expr;
 mod enum_;
 pub mod fun;
+mod module;
 pub mod move_syntax_node;
 pub mod name_ref;
 mod pat;
 pub mod path;
 mod schema;
+mod source_file;
 pub mod syntax_node;
 pub mod type_;
 pub mod visibility;
-mod module;
-mod source_file;
 
 use crate::ast::{support, ExprStmt, LetStmt, Stmt};
 use crate::token_text::TokenText;

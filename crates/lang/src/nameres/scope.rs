@@ -1,14 +1,14 @@
 use crate::db::HirDatabase;
+use crate::files::InFileVecExt;
 use crate::loc::{SyntaxLoc, SyntaxLocExt};
 use crate::nameres::is_visible::is_visible_in_context;
 use crate::nameres::namespaces::{named_item_ns, NsSet, NsSetExt};
 use crate::{AsName, InFile, Name};
 use std::fmt;
-use std::fmt::{Formatter, Pointer};
-use vfs::FileId;
+use std::fmt::Formatter;
 use syntax::ast::{HasReference, NamedItemScope};
 use syntax::{ast, AstNode};
-use crate::files::InFileVecExt;
+use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct ScopeEntry {

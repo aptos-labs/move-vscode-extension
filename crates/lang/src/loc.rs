@@ -4,7 +4,7 @@ use parser::SyntaxKind;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::algo::find_node_at_offset;
-use syntax::{AstNode, AstToken, SyntaxToken, TextSize, TokenAtOffset};
+use syntax::{AstNode, AstToken, TextSize};
 use vfs::FileId;
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
@@ -48,10 +48,7 @@ impl fmt::Debug for SyntaxLoc {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("SyntaxLoc")
             .field("kind", &self.kind)
-            .field(
-                "loc",
-                &format!("{}::{:?}", self.file_id.index(), self.offset),
-            )
+            .field("loc", &format!("{}::{:?}", self.file_id.index(), self.offset))
             .finish()
     }
 }

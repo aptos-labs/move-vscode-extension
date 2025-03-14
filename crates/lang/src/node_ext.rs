@@ -69,7 +69,7 @@ impl ModuleLangExt for ast::Module {
         let name = self.name().map(|n| n.as_name());
         if name.is_some() && name.unwrap().as_str() == "builtins" {
             let address = self.address();
-            return address.is_some() && address.unwrap().is_0x0()
+            return address.is_some() && address.unwrap().is_0x0();
         }
         false
     }

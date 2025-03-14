@@ -12,8 +12,12 @@ impl ast::VisibilityModifier {
             && self.l_paren_token().is_some()
     }
 
-    pub fn is_friend(&self) -> bool { !self.is_public() && self.friend_token().is_some() }
-    pub fn is_package(&self) -> bool { !self.is_public() && self.package_token().is_some() }
+    pub fn is_friend(&self) -> bool {
+        !self.is_public() && self.friend_token().is_some()
+    }
+    pub fn is_package(&self) -> bool {
+        !self.is_public() && self.package_token().is_some()
+    }
 
     pub fn is_public_friend(&self) -> bool {
         self.public_token().is_some()

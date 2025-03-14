@@ -3,7 +3,7 @@ use crate::toolchain;
 use camino::Utf8PathBuf;
 use crossbeam_channel::{select_biased, unbounded, Receiver, Sender};
 use paths::AbsPathBuf;
-use rustc_hash::{FxHashMap, FxHashSet};
+use rustc_hash::FxHashMap;
 use std::process::Command;
 use std::time::Duration;
 use std::{fmt, io};

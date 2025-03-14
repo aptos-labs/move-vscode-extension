@@ -31,10 +31,7 @@ pub use self::{
     },
     // operators::{ArithOp, BinaryOp, CmpOp, LogicOp, Ordering, RangeOp, UnaryOp},
     token_ext::{CommentKind, CommentPlacement, CommentShape, IsString, QuoteOffsets},
-    traits::{
-        HasAttrs, HasItemList, HasName, HasReference, HasStmtList, HasTypeParams,
-        MslOnly,
-    },
+    traits::{HasAttrs, HasItemList, HasName, HasReference, HasStmtList, HasTypeParams, MslOnly},
     visibility::HasVisibility,
 };
 

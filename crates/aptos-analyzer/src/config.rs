@@ -13,7 +13,6 @@ use vfs::AbsPathBuf;
 
 use crate::config::options::{DefaultConfigData, FullConfigInput};
 use crate::flycheck::FlycheckConfig;
-use base_db::input::SourceRootId;
 use project_model::manifest_path::ManifestPath;
 use serde_derive::{Deserialize, Serialize};
 use stdx::itertools::Itertools;

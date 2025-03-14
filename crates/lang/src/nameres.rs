@@ -1,14 +1,14 @@
 pub mod address;
-mod lexical_declarations;
 mod blocks;
+mod is_visible;
+mod lexical_declarations;
+mod name_resolution;
 pub mod namespaces;
 mod node_ext;
 pub mod path_kind;
 pub mod paths;
 pub mod processors;
-mod scope_entries_owner;
 pub mod scope;
+mod scope_entries_owner;
 pub mod use_speck_entries;
 pub mod walk_scopes;
-mod name_resolution;
-mod is_visible;

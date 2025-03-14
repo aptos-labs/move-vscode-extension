@@ -16,7 +16,7 @@ pub trait HasItemList: AstNode {
     fn consts(&self) -> Vec<ast::Const> {
         self.items().into_iter().filter_map(|it| it.const_()).collect()
     }
-    
+
     fn enums(&self) -> Vec<ast::Enum> {
         self.items().into_iter().filter_map(|it| it.enum_()).collect()
     }
