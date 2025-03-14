@@ -1,6 +1,6 @@
 use crate::ast;
 
-impl ast::Visibility {
+impl ast::VisibilityModifier {
     pub fn is_public(&self) -> bool {
         self.public_token().is_some() && self.l_paren_token().is_none()
     }

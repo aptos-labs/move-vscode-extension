@@ -9,8 +9,8 @@ use parser::SyntaxKind::MODULE;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::visibility::{Vis, VisLevel};
-use syntax::ast::{HasAttrs, HasReference, NamedItemScope};
-use syntax::{ast, unwrap_or_return, unwrap_or_continue, AstNode};
+use syntax::ast::{HasAttrs, HasReference, HasVisibility, NamedItemScope};
+use syntax::{ast, unwrap_or_continue, AstNode};
 
 pub fn is_visible_in_context(
     db: &dyn HirDatabase,
@@ -42,20 +42,18 @@ pub fn is_visible_in_context(
     };
     let item_kind = item.syntax().kind();
     let item_ns = scope_entry.ns;
-    let opt_fun = ast::Fun::cast(item.syntax().clone());
+    let opt_visible_item = ast::AnyHasVisibility::cast(item.syntax().clone());
 
     let context_usage_scope = context.syntax().item_scope();
     let context_opt_path = ast::Path::cast(context.syntax().to_owned());
     if let Some(path) = context_opt_path.clone() {
         if path.use_speck().is_some() {
-            // if let Some(use_speck) = path.use_speck() {
             if item_kind == MODULE {
                 return true;
             }
             // for use specks, items needs to be public to be visible, no other rules apply
-            // todo: add other types of funs
-            if let Some(fun) = opt_fun.clone() {
-                if fun.vis() != Vis::Private {
+            if let Some(visible_item) = opt_visible_item.clone() {
+                if visible_item.vis() != Vis::Private {
                     return true;
                 }
             }
@@ -73,8 +71,8 @@ pub fn is_visible_in_context(
     }
 
     // #[test] functions cannot be used from non-imports
-    if let Some(fun) = opt_fun.clone() {
-        if fun.has_atom_attr("test") {
+    if item.syntax().kind() == FUN {
+        if ast::Fun::cast(item.syntax().clone()).unwrap().has_atom_attr("test") {
             return false;
         }
     }
@@ -119,39 +117,35 @@ pub fn is_visible_in_context(
         }
     }
 
-    if let Some(vis) = opt_fun.map(|f| f.vis()) {
-        return match vis {
-            Vis::Private => false,
-            Vis::Public => true,
-            Vis::Restricted(vis_level) => match vis_level {
-                VisLevel::Friend => {
-                    if let (Some(item_module), Some(context_module)) = (item_module, context_module) {
-                        let friend_decls = item_module.friend_decls();
-                        for friend_decl in friend_decls {
-                            let friend_path = unwrap_or_continue!(friend_decl.path());
-                            if let Some(friend_entry) =
-                                paths::resolve_single(db, InFile::new(item_file_id, friend_path))
-                            {
-                                let friend_module =
-                                    unwrap_or_continue!(friend_entry
-                                        .node_loc
-                                        .cast::<ast::Module>(db.upcast()));
-                                if friend_module.value == context_module {
-                                    return true;
-                                }
+    let vis = opt_visible_item.map(|f| f.vis()).unwrap_or(Vis::Public);
+    match vis {
+        Vis::Private => false,
+        Vis::Public => true,
+        Vis::Restricted(vis_level) => match vis_level {
+            VisLevel::Friend => {
+                if let (Some(item_module), Some(context_module)) = (item_module, context_module) {
+                    let friend_decls = item_module.friend_decls();
+                    for friend_decl in friend_decls {
+                        let friend_path = unwrap_or_continue!(friend_decl.path());
+                        if let Some(friend_entry) =
+                            paths::resolve_single(db, InFile::new(item_file_id, friend_path))
+                        {
+                            let friend_module = unwrap_or_continue!(friend_entry
+                                .node_loc
+                                .cast::<ast::Module>(db.upcast()));
+                            if friend_module.value == context_module {
+                                return true;
                             }
                         }
                     }
-                    false
                 }
-                VisLevel::Package => {
-                    // check for the same source root
-                    // todo: change later to package_id
-                    return db.file_source_root(*context_file_id) == db.file_source_root(item_file_id);
-                }
-            },
-        };
+                false
+            }
+            VisLevel::Package => {
+                // check for the same source root
+                // todo: change later to package_id
+                db.file_source_root(*context_file_id) == db.file_source_root(item_file_id)
+            }
+        },
     }
-
-    true
 }

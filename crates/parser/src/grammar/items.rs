@@ -305,7 +305,7 @@ fn opt_visibility_modifier(p: &mut Parser, m: Marker) {
         }
         p.expect(T![')']);
     }
-    m.complete(p, VISIBILITY);
+    m.complete(p, VISIBILITY_MODIFIER);
 }
 
 fn acquires(p: &mut Parser) {

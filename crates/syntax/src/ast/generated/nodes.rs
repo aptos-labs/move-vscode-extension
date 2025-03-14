@@ -74,6 +74,7 @@ pub struct Const {
 }
 impl ast::HasAttrs for Const {}
 impl ast::HasName for Const {}
+impl ast::HasVisibility for Const {}
 impl Const {
     #[inline]
     pub fn body(&self) -> Option<Expr> { support::child(&self.syntax) }
@@ -96,6 +97,7 @@ pub struct Enum {
 impl ast::HasAttrs for Enum {}
 impl ast::HasName for Enum {}
 impl ast::HasTypeParams for Enum {}
+impl ast::HasVisibility for Enum {}
 impl Enum {
     #[inline]
     pub fn variant_list(&self) -> Option<VariantList> { support::child(&self.syntax) }
@@ -135,6 +137,7 @@ impl ast::HasAttrs for Fun {}
 impl ast::HasName for Fun {}
 impl ast::HasScopeEntries for Fun {}
 impl ast::HasTypeParams for Fun {}
+impl ast::HasVisibility for Fun {}
 impl Fun {
     #[inline]
     pub fn body(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
@@ -143,7 +146,7 @@ impl Fun {
     #[inline]
     pub fn ret_type(&self) -> Option<RetType> { support::child(&self.syntax) }
     #[inline]
-    pub fn visibility(&self) -> Option<Visibility> { support::child(&self.syntax) }
+    pub fn visibility_modifier(&self) -> Option<VisibilityModifier> { support::child(&self.syntax) }
     #[inline]
     pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
     #[inline]
@@ -482,6 +485,7 @@ pub struct SpecFun {
 impl ast::HasAttrs for SpecFun {}
 impl ast::HasName for SpecFun {}
 impl ast::HasTypeParams for SpecFun {}
+impl ast::HasVisibility for SpecFun {}
 impl ast::MslOnly for SpecFun {}
 impl SpecFun {
     #[inline]
@@ -506,6 +510,7 @@ pub struct SpecInlineFun {
 }
 impl ast::HasName for SpecInlineFun {}
 impl ast::HasTypeParams for SpecInlineFun {}
+impl ast::HasVisibility for SpecInlineFun {}
 impl ast::MslOnly for SpecInlineFun {}
 impl SpecInlineFun {
     #[inline]
@@ -546,6 +551,7 @@ pub struct Struct {
 impl ast::HasAttrs for Struct {}
 impl ast::HasName for Struct {}
 impl ast::HasTypeParams for Struct {}
+impl ast::HasVisibility for Struct {}
 impl Struct {
     #[inline]
     pub fn struct_field_list(&self) -> Option<StructFieldList> { support::child(&self.syntax) }
@@ -752,10 +758,10 @@ impl VariantList {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Visibility {
+pub struct VisibilityModifier {
     pub(crate) syntax: SyntaxNode,
 }
-impl Visibility {
+impl VisibilityModifier {
     #[inline]
     pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
     #[inline]
@@ -784,6 +790,7 @@ pub enum Adt {
 impl ast::HasAttrs for Adt {}
 impl ast::HasName for Adt {}
 impl ast::HasTypeParams for Adt {}
+impl ast::HasVisibility for Adt {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Expr {
@@ -874,6 +881,12 @@ pub struct AnyHasTypeParams {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HasTypeParams for AnyHasTypeParams {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AnyHasVisibility {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::HasVisibility for AnyHasVisibility {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyMslOnly {
@@ -2035,16 +2048,16 @@ impl AstNode for VariantList {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
-impl AstNode for Visibility {
+impl AstNode for VisibilityModifier {
     #[inline]
     fn kind() -> SyntaxKind
     where
         Self: Sized,
     {
-        VISIBILITY
+        VISIBILITY_MODIFIER
     }
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { kind == VISIBILITY }
+    fn can_cast(kind: SyntaxKind) -> bool { kind == VISIBILITY_MODIFIER }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -2892,6 +2905,50 @@ impl From<Struct> for AnyHasTypeParams {
     #[inline]
     fn from(node: Struct) -> AnyHasTypeParams { AnyHasTypeParams { syntax: node.syntax } }
 }
+impl AnyHasVisibility {
+    #[inline]
+    pub fn new<T: ast::HasVisibility>(node: T) -> AnyHasVisibility {
+        AnyHasVisibility {
+            syntax: node.syntax().clone(),
+        }
+    }
+}
+impl AstNode for AnyHasVisibility {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(kind, CONST | ENUM | FUN | SPEC_FUN | SPEC_INLINE_FUN | STRUCT)
+    }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        Self::can_cast(syntax.kind()).then_some(AnyHasVisibility { syntax })
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl From<Const> for AnyHasVisibility {
+    #[inline]
+    fn from(node: Const) -> AnyHasVisibility { AnyHasVisibility { syntax: node.syntax } }
+}
+impl From<Enum> for AnyHasVisibility {
+    #[inline]
+    fn from(node: Enum) -> AnyHasVisibility { AnyHasVisibility { syntax: node.syntax } }
+}
+impl From<Fun> for AnyHasVisibility {
+    #[inline]
+    fn from(node: Fun) -> AnyHasVisibility { AnyHasVisibility { syntax: node.syntax } }
+}
+impl From<SpecFun> for AnyHasVisibility {
+    #[inline]
+    fn from(node: SpecFun) -> AnyHasVisibility { AnyHasVisibility { syntax: node.syntax } }
+}
+impl From<SpecInlineFun> for AnyHasVisibility {
+    #[inline]
+    fn from(node: SpecInlineFun) -> AnyHasVisibility { AnyHasVisibility { syntax: node.syntax } }
+}
+impl From<Struct> for AnyHasVisibility {
+    #[inline]
+    fn from(node: Struct) -> AnyHasVisibility { AnyHasVisibility { syntax: node.syntax } }
+}
 impl AnyMslOnly {
     #[inline]
     pub fn new<T: ast::MslOnly>(node: T) -> AnyMslOnly {
@@ -3254,7 +3311,7 @@ impl std::fmt::Display for VariantList {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
-impl std::fmt::Display for Visibility {
+impl std::fmt::Display for VisibilityModifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

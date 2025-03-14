@@ -101,12 +101,12 @@ Const =
     Attr* 'const' Name ':' Type '=' body:Expr ';'
 
 Fun =
-    Attr* Visibility?
+    Attr* VisibilityModifier?
     'native'? 'entry'? 'inline'?
     'fun' Name TypeParamList? ParamList RetType?
     (body:BlockExpr | ';')
 
-Visibility =
+VisibilityModifier =
     ('public' ('(' ('script' | 'package' | 'friend') ')')?)
         | 'package'
         | 'friend'

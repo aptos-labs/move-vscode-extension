@@ -259,7 +259,7 @@ pub enum SyntaxKind {
     PATH_SEGMENT,
     PATH_ADDRESS,
     LITERAL,
-    VISIBILITY,
+    VISIBILITY_MODIFIER,
     NAME,
     NAME_REF,
     VALUE_ADDRESS,
