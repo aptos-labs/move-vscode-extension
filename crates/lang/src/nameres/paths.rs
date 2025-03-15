@@ -1,11 +1,10 @@
-use stdx::itertools::Itertools;
 use crate::db::HirDatabase;
 use crate::files::OptionInFileExt;
 use crate::loc::SyntaxLocExt;
 use crate::nameres::name_resolution::{
     get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
-use crate::nameres::namespaces::{Ns, MODULES};
+use crate::nameres::namespaces::{Ns};
 use crate::nameres::path_kind::{path_kind, PathKind, QualifiedKind};
 use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt};
 use crate::node_ext::PathLangExt;
@@ -74,9 +73,9 @@ pub fn resolve(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry>
 
     let entries_filtered_by_name = entries
         .into_iter()
-        .filter_by_name(path_name.as_str())
+        .filter_by_name(path_name.clone())
         .collect::<Vec<_>>();
-    tracing::debug!(path_name = path_name.as_str(), ?entries_filtered_by_name);
+    tracing::debug!(?path_name, ?entries_filtered_by_name);
 
     entries_filtered_by_name
         .into_iter()

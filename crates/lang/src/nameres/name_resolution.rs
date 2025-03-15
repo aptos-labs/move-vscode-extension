@@ -105,7 +105,7 @@ pub fn get_entries_from_walking_scopes(
                 }
             }
 
-            let mut old_ns = visited_names_in_scope.entry(entry_name).or_insert(NsSet::empty());
+            let old_ns = visited_names_in_scope.entry(entry_name).or_insert(NsSet::empty());
             *old_ns = *old_ns | NsSet::from(entry_ns);
 
             entries.push(scope_entry);

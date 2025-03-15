@@ -183,8 +183,8 @@ pub(crate) fn item_list(p: &mut Parser<'_>) {
     // m.complete(p, ITEM_LIST);
 }
 
-fn name(p: &mut Parser) {
-    name_r(p, |p| p.at_ts(TokenSet::EMPTY));
+fn name(p: &mut Parser) -> bool {
+    name_r(p, |p| p.at_ts(TokenSet::EMPTY))
 }
 
 fn name_ref(p: &mut Parser) {
@@ -245,7 +245,7 @@ fn item_name_r(p: &mut Parser) {
     name_r(p, item_recovery_set);
 }
 
-fn name_r<Recovery>(p: &mut Parser, recovery: Recovery)
+fn name_r<Recovery>(p: &mut Parser, recovery: Recovery) -> bool
 where
     Recovery: Fn(&Parser) -> bool,
 {
@@ -253,8 +253,10 @@ where
         let m = p.start();
         p.bump(IDENT);
         m.complete(p, NAME);
+        true
     } else {
         p.err_recover_fn("expected a name", recovery);
+        false
     }
 }
 

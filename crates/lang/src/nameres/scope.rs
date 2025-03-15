@@ -2,7 +2,7 @@ use crate::db::HirDatabase;
 use crate::files::InFileVecExt;
 use crate::loc::{SyntaxLoc, SyntaxLocExt};
 use crate::nameres::is_visible::is_visible_in_context;
-use crate::nameres::namespaces::{named_item_ns, Ns, NsSet, NsSetExt};
+use crate::nameres::namespaces::{named_item_ns, Ns, NsSet};
 use crate::{AsName, InFile, Name};
 use std::fmt;
 use std::fmt::Formatter;
@@ -77,7 +77,7 @@ impl<T: ast::HasName> NamedItemsInFileExt for Vec<T> {
 
 pub trait ScopeEntryListExt {
     fn filter_by_ns(self, ns: NsSet) -> impl Iterator<Item = ScopeEntry>;
-    fn filter_by_name(self, name: &str) -> impl Iterator<Item = ScopeEntry>;
+    fn filter_by_name(self, name: Name) -> impl Iterator<Item = ScopeEntry>;
     fn filter_by_visibility(
         self,
         db: &dyn HirDatabase,
@@ -90,14 +90,8 @@ impl<T: Iterator<Item = ScopeEntry>> ScopeEntryListExt for T {
         self.filter(move |entry| ns.contains(entry.ns))
     }
 
-    fn filter_by_name(self, name: &str) -> impl Iterator<Item = ScopeEntry> {
-        self.filter(move |entry| {
-            let entry_name = entry.name.as_str();
-            if entry_name == "Self" {
-                // custom logic
-            }
-            entry_name == name
-        })
+    fn filter_by_name(self, name: Name) -> impl Iterator<Item = ScopeEntry> {
+        self.filter(move |entry| entry.name == name)
     }
 
     fn filter_by_visibility(

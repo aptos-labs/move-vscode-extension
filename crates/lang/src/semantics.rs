@@ -6,8 +6,6 @@ use crate::semantics::source_to_def::SourceToDefCache;
 use crate::InFile;
 use std::cell::RefCell;
 use std::{fmt, ops};
-use stdx::itertools::Itertools;
-use syntax::ast::HasReference;
 use syntax::{ast, AstNode, SyntaxNode, SyntaxToken};
 use vfs::FileId;
 

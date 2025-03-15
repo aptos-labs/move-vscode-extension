@@ -667,7 +667,7 @@ fn lower_rule(
         Rule::Token(token) => {
             assert!(label.is_none());
             let mut name = clean_token_name(&grammar[*token].name);
-            if "[]{}()".contains(&name) {
+            if "[]{}()_".contains(&name) {
                 name = format!("'{name}'");
             }
             let cardinality = get_rule_cardinality(&name);
@@ -1012,13 +1012,13 @@ impl Field {
                     "')'" => "r_paren",
                     "'['" => "l_brack",
                     "']'" => "r_brack",
+                    "'_'" => "underscore",
                     "<" => "l_angle",
                     ">" => "r_angle",
                     "=" => "eq",
                     "!" => "excl",
                     "*" => "star",
                     "&" => "amp",
-                    "_" => "underscore",
                     "." => "dot",
                     ".." => "dotdot",
                     "..." => "dotdotdot",

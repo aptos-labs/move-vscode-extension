@@ -865,6 +865,15 @@ impl VisibilityModifier {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct WildcardPat {
+    pub(crate) syntax: SyntaxNode,
+}
+impl WildcardPat {
+    #[inline]
+    pub fn underscore_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['_']) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AddressRef {
     NamedAddress(NamedAddress),
     ValueAddress(ValueAddress),
@@ -917,9 +926,11 @@ pub enum Item {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Pat {
     IdentPat(IdentPat),
+    RestPat(RestPat),
     StructPat(StructPat),
     TuplePat(TuplePat),
     TupleStructPat(TupleStructPat),
+    WildcardPat(WildcardPat),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -2297,6 +2308,27 @@ impl AstNode for VisibilityModifier {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for WildcardPat {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        WILDCARD_PAT
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == WILDCARD_PAT }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl From<NamedAddress> for AddressRef {
     #[inline]
     fn from(node: NamedAddress) -> AddressRef { AddressRef::NamedAddress(node) }
@@ -2668,6 +2700,10 @@ impl From<IdentPat> for Pat {
     #[inline]
     fn from(node: IdentPat) -> Pat { Pat::IdentPat(node) }
 }
+impl From<RestPat> for Pat {
+    #[inline]
+    fn from(node: RestPat) -> Pat { Pat::RestPat(node) }
+}
 impl From<StructPat> for Pat {
     #[inline]
     fn from(node: StructPat) -> Pat { Pat::StructPat(node) }
@@ -2680,10 +2716,20 @@ impl From<TupleStructPat> for Pat {
     #[inline]
     fn from(node: TupleStructPat) -> Pat { Pat::TupleStructPat(node) }
 }
+impl From<WildcardPat> for Pat {
+    #[inline]
+    fn from(node: WildcardPat) -> Pat { Pat::WildcardPat(node) }
+}
 impl Pat {
     pub fn ident_pat(self) -> Option<IdentPat> {
         match (self) {
             Pat::IdentPat(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn rest_pat(self) -> Option<RestPat> {
+        match (self) {
+            Pat::RestPat(item) => Some(item),
             _ => None,
         }
     }
@@ -2705,19 +2751,30 @@ impl Pat {
             _ => None,
         }
     }
+    pub fn wildcard_pat(self) -> Option<WildcardPat> {
+        match (self) {
+            Pat::WildcardPat(item) => Some(item),
+            _ => None,
+        }
+    }
 }
 impl AstNode for Pat {
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(kind, IDENT_PAT | STRUCT_PAT | TUPLE_PAT | TUPLE_STRUCT_PAT)
+        matches!(
+            kind,
+            IDENT_PAT | REST_PAT | STRUCT_PAT | TUPLE_PAT | TUPLE_STRUCT_PAT | WILDCARD_PAT
+        )
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
             IDENT_PAT => Pat::IdentPat(IdentPat { syntax }),
+            REST_PAT => Pat::RestPat(RestPat { syntax }),
             STRUCT_PAT => Pat::StructPat(StructPat { syntax }),
             TUPLE_PAT => Pat::TuplePat(TuplePat { syntax }),
             TUPLE_STRUCT_PAT => Pat::TupleStructPat(TupleStructPat { syntax }),
+            WILDCARD_PAT => Pat::WildcardPat(WildcardPat { syntax }),
             _ => return None,
         };
         Some(res)
@@ -2726,9 +2783,11 @@ impl AstNode for Pat {
     fn syntax(&self) -> &SyntaxNode {
         match self {
             Pat::IdentPat(it) => &it.syntax,
+            Pat::RestPat(it) => &it.syntax,
             Pat::StructPat(it) => &it.syntax,
             Pat::TuplePat(it) => &it.syntax,
             Pat::TupleStructPat(it) => &it.syntax,
+            Pat::WildcardPat(it) => &it.syntax,
         }
     }
 }
@@ -3655,6 +3714,11 @@ impl std::fmt::Display for VariantList {
     }
 }
 impl std::fmt::Display for VisibilityModifier {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for WildcardPat {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

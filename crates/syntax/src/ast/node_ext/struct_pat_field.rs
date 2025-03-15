@@ -4,7 +4,7 @@ use crate::{ast, AstNode};
 impl ast::StructPatField {
     pub fn struct_pat(&self) -> ast::StructPat {
         self.syntax()
-            .parent_of_type::<ast::StructPat>()
+            .ancestor_of_type::<ast::StructPat>(true)
             .expect("required by parser")
     }
 }

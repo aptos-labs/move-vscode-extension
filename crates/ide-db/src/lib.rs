@@ -147,7 +147,9 @@ pub fn ast_kind_to_symbol_kind(kind: SyntaxKind) -> Option<SymbolKind> {
         IDENT_PAT => Some(SymbolKind::Local),
         VARIANT => Some(SymbolKind::EnumVariant),
 
-        _ => None,
+        NAMED_FIELD => Some(SymbolKind::Field),
+
+        _ => unreachable!("unhandled ast kind {:?}", kind),
     }
 }
 
