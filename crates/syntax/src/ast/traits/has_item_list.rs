@@ -2,7 +2,9 @@ use crate::ast::{support, AstChildren, HasFields, Stmt};
 use crate::{ast, AstNode};
 
 pub trait HasItems: AstNode {
-    fn items(&self) -> AstChildren<ast::Item> { support::children(&self.syntax()) }
+    fn items(&self) -> AstChildren<ast::Item> {
+        support::children(&self.syntax())
+    }
 
     fn consts(&self) -> Vec<ast::Const> {
         self.items().into_iter().filter_map(|it| it.const_()).collect()

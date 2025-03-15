@@ -1,9 +1,9 @@
 pub mod has_item_list;
 pub mod has_use_stmts;
 
-use std::io::Read;
 use crate::ast::{support, AstChildren, Stmt};
 use crate::{ast, AstNode};
+use std::io::Read;
 
 pub use has_item_list::HasItems;
 pub use has_use_stmts::HasUseStmts;
@@ -15,7 +15,9 @@ pub trait HasName: AstNode {
 }
 
 pub trait HasStmts: AstNode {
-    fn stmts(&self) -> AstChildren<Stmt> { support::children(&self.syntax()) }
+    fn stmts(&self) -> AstChildren<Stmt> {
+        support::children(&self.syntax())
+    }
 
     fn let_stmts(&self) -> impl Iterator<Item = ast::LetStmt> {
         self.stmts().filter_map(|it| it.let_stmt())
@@ -54,7 +56,9 @@ pub trait HasFields: AstNode {
     }
 
     fn fields(&self) -> Vec<ast::AnyField> {
-        self.named_fields().into_iter().map(|f| f.into())
+        self.named_fields()
+            .into_iter()
+            .map(|f| f.into())
             .chain(self.tuple_fields().into_iter().map(|f| f.into()))
             .collect()
     }

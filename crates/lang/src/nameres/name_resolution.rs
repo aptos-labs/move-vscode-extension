@@ -9,7 +9,7 @@ use crate::nameres::scope_entries_owner::get_entries_in_scope;
 use crate::node_ext::ModuleLangExt;
 use crate::{InFile, Name};
 use parser::SyntaxKind;
-use parser::SyntaxKind::{MODULE_SPEC};
+use parser::SyntaxKind::MODULE_SPEC;
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Formatter;

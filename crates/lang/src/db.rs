@@ -6,7 +6,7 @@ use crate::{AsName, InFile};
 use base_db::{SourceRootDatabase, Upcast};
 use parser::SyntaxKind::{PATH, STRUCT_PAT_FIELD};
 use stdx::itertools::Itertools;
-use syntax::ast::{HasName};
+use syntax::ast::HasName;
 use syntax::{ast, unwrap_or_return};
 
 #[ra_salsa::query_group(HirDatabaseStorage)]

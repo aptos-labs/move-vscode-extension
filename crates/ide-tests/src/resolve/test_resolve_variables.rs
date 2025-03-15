@@ -433,7 +433,7 @@ fn test_resolve_const_import_expected_failure() {
 }
 
 #[test]
-fn  test_for_loop_index() {
+fn test_for_loop_index() {
     // language=Move
     check_resolve(
         r#"
@@ -1053,7 +1053,3 @@ fn test_const_accessible_from_spec_function() {
                 "#,
     )
 }
-
-
-
-

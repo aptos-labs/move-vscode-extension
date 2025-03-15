@@ -16,7 +16,10 @@ pub fn get_entries_in_scope(
 
     let mut entries = vec![];
     if let Some(use_stmts_owner) = ast::AnyHasUseStmts::cast(scope.value.clone()) {
-        entries.extend(use_speck_entries(db, &InFile::new(scope.file_id, use_stmts_owner)));
+        entries.extend(use_speck_entries(
+            db,
+            &InFile::new(scope.file_id, use_stmts_owner),
+        ));
     }
 
     if scope.kind() == BLOCK_EXPR {

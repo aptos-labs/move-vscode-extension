@@ -4,7 +4,7 @@ use crate::loc::SyntaxLocExt;
 use crate::nameres::name_resolution::{
     get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
-use crate::nameres::namespaces::{Ns};
+use crate::nameres::namespaces::Ns;
 use crate::nameres::path_kind::{path_kind, PathKind, QualifiedKind};
 use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt};
 use crate::node_ext::PathLangExt;
