@@ -1,12 +1,12 @@
 use crate::db::HirDatabase;
 use crate::files::{InFileInto, InFileVecExt};
-use crate::nameres::address::Address;
+use crate::nameres::address::{Address, NamedAddr};
 use crate::nameres::namespaces::{Ns, NsSet};
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::paths::ResolutionContext;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use crate::nameres::scope_entries_owner::get_entries_in_scope;
-use crate::node_ext::ModuleLangExt;
+use crate::node_ext::{ModuleLangExt, PathLangExt};
 use crate::{InFile, Name};
 use parser::SyntaxKind;
 use parser::SyntaxKind::MODULE_SPEC;
@@ -151,6 +151,13 @@ pub fn get_qualified_path_entries(
     let qualifier_item = db.resolve_ref_single(qualifier.clone().map(|it| it.into()));
     if qualifier_item.is_none() {
         // qualifier can be an address
+        if let Some(qualifier_name) = qualifier.value.name_ref_name() {
+            return get_modules_as_entries(
+                db,
+                ctx,
+                Address::Named(NamedAddr::new(qualifier_name.to_string())),
+            );
+        }
         return vec![];
     }
     let qualifier_item = qualifier_item.unwrap();

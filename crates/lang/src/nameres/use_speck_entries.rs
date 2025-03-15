@@ -85,7 +85,7 @@ pub fn use_stmt_items(use_stmt: ast::UseStmt, file_id: FileId) -> Vec<UseItem> {
 
     let root_path = root_use_speck.path();
     let root_path_kind = path_kind(InFile::new(file_id, root_path), false);
-    tracing::debug!(root_path_kind = ?root_path_kind);
+    // tracing::debug!(root_path_kind = ?root_path_kind);
 
     if let PathKind::Qualified { qualifier, kind, .. } = root_path_kind {
         match kind {

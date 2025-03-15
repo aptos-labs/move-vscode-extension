@@ -1,4 +1,4 @@
-use crate::nameres::address::{Address, NamedAddr, ValueAddr};
+use crate::nameres::address::{resolve_named_address, Address, NamedAddr, ValueAddr};
 use crate::nameres::namespaces::{
     NsSet, ALL_NS, ENUMS, ENUMS_N_MODULES, IMPORTABLE_NS, MODULES, NAMES, NAMES_N_FUNCTIONS_N_VARIANTS,
     NAMES_N_VARIANTS, NONE, TYPES_N_ENUMS, TYPES_N_ENUMS_N_ENUM_VARIANTS, TYPES_N_ENUMS_N_MODULES,
@@ -126,9 +126,6 @@ pub fn path_kind(path: InFile<ast::Path>, is_completion: bool) -> PathKind {
         // check whether it's a first element in use stmt, i.e. use [std]::module;
         if let Some(use_speck) = path.use_speck() {
             if use_speck.syntax().parent_of_type::<ast::UseStmt>().is_some() {
-                if let Some(existing_named_address) = get_named_address(&ref_name) {
-                    return PathKind::NamedAddress(existing_named_address);
-                }
                 return PathKind::NamedAddress(NamedAddr::new(ref_name));
             }
         }
@@ -137,9 +134,9 @@ pub fn path_kind(path: InFile<ast::Path>, is_completion: bool) -> PathKind {
         // check whether there's a '::' after it, then try for a named address
         if let Some(next_sibling) = path.syntax().next_sibling_or_token_no_trivia() {
             if next_sibling.kind() == T![::] {
-                if let Some(named_address) = get_named_address(&ref_name) {
+                if let Some(_) = resolve_named_address(&ref_name) {
                     return PathKind::NamedAddressOrUnqualifiedPath {
-                        address: named_address,
+                        address: NamedAddr::new(ref_name),
                         ns,
                     };
                 }
@@ -172,24 +169,23 @@ pub fn path_kind(path: InFile<ast::Path>, is_completion: bool) -> PathKind {
             }
             // aptos_framework::[bar]
             (_, Some(qualifier_ref_name)) /*if aptos_project.is_some()*/ => {
-                let named_address = get_named_address(&qualifier_ref_name);
+                let named_address = resolve_named_address(&qualifier_ref_name);
                 // use std::[main]
                 if path.use_speck().is_some() {
-                    let address = named_address.unwrap_or(NamedAddr::new(qualifier_ref_name));
                     return PathKind::Qualified {
                         path,
                         qualifier,
                         ns,
-                        kind: QualifiedKind::Module { address: Address::Named(address) }
+                        kind: QualifiedKind::Module { address: Address::Named(NamedAddr::new(qualifier_ref_name)) }
                     };
                 }
-                if let Some(named_address) = named_address {
+                if let Some(_) = named_address {
                     // known named address, can be module path, or module item path too
                     return PathKind::Qualified {
                         path,
                         qualifier,
                         ns,
-                        kind: QualifiedKind::ModuleOrItem { address: Address::Named(named_address) }
+                        kind: QualifiedKind::ModuleOrItem { address: Address::Named(NamedAddr::new(qualifier_ref_name)) }
                     };
                 }
             }
@@ -308,8 +304,8 @@ fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
     }
 }
 
-fn get_named_address(_address_name: &str) -> Option<NamedAddr> {
-    // todo: check whether `address_name` is a declared named address
-    // todo: fetch from db
-    None
-}
+// fn get_named_address(_address_name: &str) -> Option<NamedAddr> {
+//     // todo: check whether `address_name` is a declared named address
+//     // todo: fetch from db
+//     None
+// }

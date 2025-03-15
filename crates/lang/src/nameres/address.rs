@@ -10,10 +10,7 @@ pub enum Address {
 impl Address {
     pub fn resolve_to_numeric_address(self) -> Option<NumericAddress> {
         match self {
-            Address::Named(_named_addr) => {
-                // todo: get it from AptosWorkspace
-                None
-            }
+            Address::Named(named_addr) => resolve_named_address(named_addr.name.as_str()),
             Address::Value(value_addr) => Some(value_addr.numeric_address),
         }
     }
@@ -36,6 +33,16 @@ impl fmt::Debug for Address {
                 .finish(),
         }
     }
+}
+
+pub fn resolve_named_address(name: &str) -> Option<NumericAddress> {
+    if matches!(name, "std" | "aptos_std" | "aptos_framework" | "aptos_token") {
+        return Some(NumericAddress {
+            value: "0x1".to_string(),
+        });
+    }
+    // todo: get it from AptosWorkspace
+    None
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

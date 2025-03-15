@@ -53,9 +53,8 @@ impl SyntaxLoc {
 
 impl fmt::Debug for SyntaxLoc {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_struct("SyntaxLoc")
-            .field("kind", &self.kind)
-            .field("loc", &format!("{}::{:?}", self.file_id.index(), self.node_end))
+        f.debug_tuple("Loc")
+            .field(&format!("{}::{:?}", self.file_id.index(), self.node_end))
             .finish()
     }
 }

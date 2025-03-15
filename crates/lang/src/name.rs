@@ -104,6 +104,12 @@ impl Name {
     // }
 }
 
+impl fmt::Display for Name {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_str().to_string())
+    }
+}
+
 pub trait AsName {
     fn as_name(&self) -> Name;
 }
