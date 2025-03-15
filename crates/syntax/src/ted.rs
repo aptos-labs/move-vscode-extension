@@ -159,15 +159,15 @@ fn ws_before(position: &Position, new: &SyntaxElement) -> Option<SyntaxToken> {
     };
 
     if prev.kind() == T!['{'] && new.kind() == SyntaxKind::USE_STMT {
-        if let Some(item_list) = prev.parent().and_then(ast::ItemList::cast) {
-            let mut indent = IndentLevel::from_element(&item_list.syntax().clone().into());
+        if let Some(any_has_items) = prev.parent().and_then(ast::AnyHasItems::cast) {
+            let mut indent = IndentLevel::from_element(&any_has_items.syntax().clone().into());
             indent.0 += 1;
             return Some(make::tokens::whitespace(&format!("\n{indent}")));
         }
     }
 
     if prev.kind() == T!['{'] && ast::Stmt::can_cast(new.kind()) {
-        if let Some(stmt_list) = prev.parent().and_then(ast::StmtList::cast) {
+        if let Some(stmt_list) = prev.parent().and_then(ast::BlockExpr::cast) {
             let mut indent = IndentLevel::from_element(&stmt_list.syntax().clone().into());
             indent.0 += 1;
             return Some(make::tokens::whitespace(&format!("\n{indent}")));

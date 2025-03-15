@@ -1,17 +1,8 @@
-use crate::ast::{support, HasFields, ItemList};
+use crate::ast::{support, AstChildren, HasFields, Stmt};
 use crate::{ast, AstNode};
 
-pub trait HasItemList: AstNode {
-    #[inline]
-    fn item_list(&self) -> Option<ItemList> {
-        support::child(&self.syntax())
-    }
-
-    fn items(&self) -> Vec<ast::Item> {
-        self.item_list()
-            .map(|list| list.items().collect())
-            .unwrap_or_default()
-    }
+pub trait HasItems: AstNode {
+    fn items(&self) -> AstChildren<ast::Item> { support::children(&self.syntax()) }
 
     fn consts(&self) -> Vec<ast::Const> {
         self.items().into_iter().filter_map(|it| it.const_()).collect()
@@ -31,26 +22,6 @@ pub trait HasItemList: AstNode {
 
     fn structs(&self) -> Vec<ast::Struct> {
         self.items().into_iter().filter_map(|it| it.struct_()).collect()
-    }
-
-    fn use_stmts(&self) -> Vec<ast::UseStmt> {
-        self.items().into_iter().filter_map(|it| it.use_stmt()).collect()
-    }
-
-    fn use_specks(&self) -> Vec<ast::UseSpeck> {
-        self.use_stmts()
-            .into_iter()
-            .filter_map(|i| i.use_speck())
-            .flat_map(|use_speck| {
-                if let Some(use_group) = use_speck.use_group() {
-                    let mut v = vec![use_speck];
-                    v.extend(use_group.use_specks());
-                    v
-                } else {
-                    vec![use_speck]
-                }
-            })
-            .collect()
     }
 
     fn all_item_specs(&self) -> Vec<ast::ItemSpec> {

@@ -4,7 +4,7 @@ use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::nameres::use_speck_entries::use_speck_entries;
 use crate::InFile;
-use syntax::ast::{HasItemList, HasTypeParams};
+use syntax::ast::{HasItems, HasTypeParams};
 use syntax::{ast, AstNode, SyntaxNode};
 
 pub fn get_entries_in_scope(
@@ -15,8 +15,8 @@ pub fn get_entries_in_scope(
     use syntax::SyntaxKind::*;
 
     let mut entries = vec![];
-    if let Some(has_items) = ast::AnyHasItemList::cast(scope.value.clone()) {
-        entries.extend(use_speck_entries(db, &InFile::new(scope.file_id, has_items)));
+    if let Some(use_stmts_owner) = ast::AnyHasUseStmts::cast(scope.value.clone()) {
+        entries.extend(use_speck_entries(db, &InFile::new(scope.file_id, use_stmts_owner)));
     }
 
     if scope.kind() == BLOCK_EXPR {

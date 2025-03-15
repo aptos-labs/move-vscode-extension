@@ -3,7 +3,7 @@ use crate::nameres::scope::{NamedItemsExt, ScopeEntry};
 use crate::InFile;
 use stdx::itertools::Itertools;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
-use syntax::ast::HasStmtList;
+use syntax::ast::HasStmts;
 use syntax::{ast, AstNode, SyntaxNode};
 
 pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: Option<SyntaxNode>) -> Vec<ScopeEntry> {

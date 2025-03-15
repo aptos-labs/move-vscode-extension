@@ -3,7 +3,7 @@ use crate::nameres::namespaces::{Ns, NAMES};
 use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryExt};
 use crate::InFile;
 use syntax::ast;
-use syntax::ast::HasItemList;
+use syntax::ast::HasItems;
 
 pub trait ModuleResolutionExt {
     fn member_entries(&self) -> Vec<ScopeEntry>;

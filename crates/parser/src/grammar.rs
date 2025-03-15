@@ -176,11 +176,11 @@ pub(crate) const TOP_LEVEL_RECOVERY_SET: TokenSet =
 
 pub(crate) fn item_list(p: &mut Parser<'_>) {
     assert!(p.at(T!['{']));
-    let m = p.start();
+    // let m = p.start();
     p.bump(T!['{']);
     items::mod_contents(p, true);
     p.expect(T!['}']);
-    m.complete(p, ITEM_LIST);
+    // m.complete(p, ITEM_LIST);
 }
 
 fn name(p: &mut Parser) {

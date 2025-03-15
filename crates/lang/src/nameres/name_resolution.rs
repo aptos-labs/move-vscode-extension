@@ -9,11 +9,11 @@ use crate::nameres::scope_entries_owner::get_entries_in_scope;
 use crate::node_ext::ModuleLangExt;
 use crate::{InFile, Name};
 use parser::SyntaxKind;
-use parser::SyntaxKind::{MODULE_SPEC, STMT_LIST};
+use parser::SyntaxKind::{MODULE_SPEC};
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Formatter;
-use syntax::ast::{HasFields, HasItemList, HasReference};
+use syntax::ast::{HasFields, HasItems, HasReference};
 use syntax::{ast, AstNode, SyntaxNode};
 
 pub struct ResolveScope {
@@ -64,10 +64,10 @@ pub fn get_resolve_scopes(
         }
 
         let parent_scope = scope.parent();
+        prev = Some(scope);
         // skip StmtList to be able to use came_from in let stmts shadowing
-        if scope.kind() != STMT_LIST {
-            prev = Some(scope);
-        }
+        // if scope.kind() != STMT_LIST {
+        // }
         opt_scope = parent_scope;
     }
 

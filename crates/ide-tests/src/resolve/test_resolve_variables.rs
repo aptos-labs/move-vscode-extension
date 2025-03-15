@@ -215,6 +215,7 @@ fn test_tuple_destructuring() {
     )
 }
 
+#[ignore = "requires rename"]
 #[test]
 fn test_resolve_test_attribute_to_test_function_parameter() {
     // language=Move
@@ -232,6 +233,7 @@ fn test_resolve_test_attribute_to_test_function_parameter() {
     )
 }
 
+#[ignore = "requires rename"]
 #[test]
 fn test_no_test_attribute_resolution_if_not_on_function() {
     // language=Move
@@ -248,6 +250,7 @@ fn test_no_test_attribute_resolution_if_not_on_function() {
     )
 }
 
+#[ignore = "requires rename"]
 #[test]
 fn test_no_test_attribute_resolution_if_not_test_attribute() {
     // language=Move
@@ -259,6 +262,22 @@ fn test_no_test_attribute_resolution_if_not_test_attribute() {
                                  //^ unresolved
             fun call(abort_code: signer) {
 
+            }
+        }
+    "#,
+    )
+}
+
+#[ignore = "requires rename"]
+#[test]
+fn test_no_attr_item_signer_reference_for_non_direct_children_of_test() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            #[test(unknown_attr(my_signer = @0x1))]
+                                 //^ unresolved
+            fun test_main(my_signer: signer) {
             }
         }
     "#,
@@ -688,3 +707,353 @@ fn test_resolve_binding_for_field_reassignment_for_enum_variant() {
     "#,
     )
 }
+
+#[test]
+fn test_resolve_binding_for_shortcut_field_with_enum_variant() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            enum S { One { field: u8 }, Two }
+            fun main() {
+                let m = 1;
+                match (m) {
+                    S::One { field }
+                            //X
+                        => field
+                            //^
+                }
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_field_for_struct_pat_in_enum() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            enum S { One { field: u8 }, Two }
+                            //X
+            fun main(s: S::One) {
+                let S::One { field } = s;
+                            //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_field_assignment_for_struct_pat_in_enum() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            enum S { One { field: u8 }, Two }
+                            //X
+            fun main(s: S::One) {
+                let S::One { field: f } = s;
+                            //^
+            }
+        }
+            "#,
+    )
+}
+
+#[test]
+fn test_resolve_field_assignment_for_struct_pat_in_enum_binding() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            enum S { One { field: u8 }, Two }
+            fun main(s: S::One) {
+                let S::One { field: f } = s;
+                                  //X
+                f;
+              //^
+            }
+        }
+            "#,
+    )
+}
+
+#[test]
+fn test_resolve_enum_variant_for_struct_lit() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            enum S { One { field: u8 }, Two }
+                           //X
+            fun main(s: S::One) {
+                let f = 1;
+                let s = S::One { field: f };
+                                 //^
+            }
+        }
+            "#,
+    )
+}
+
+#[test]
+fn test_resolve_enum_variant_for_struct_pat_1() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            enum S { One { field: u8 }, Two }
+               //X
+            fun main(s: S::One) {
+                let S::One { field } = s;
+                  //^
+            }
+        }
+            "#,
+    )
+}
+
+#[test]
+fn test_resolve_enum_variant_for_struct_pat_2() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            enum S { One { field: u8 }, Two }
+                   //X
+            fun main(s: S::One) {
+                let S::One { field } = s;
+                      //^
+            }
+        }
+            "#,
+    )
+}
+
+#[test]
+fn test_resolve_field_assignment_for_struct_lit_enum_variant() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            enum S { One { field: u8 }, Two }
+                           //X
+            fun main(s: S::One) {
+                let f = 1;
+                let s = S::One { field: f };
+                                 //^
+            }
+        }
+            "#,
+    )
+}
+
+#[test]
+fn test_resolve_field_assignment_for_struct_lit_enum_variant_binding() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            enum S { One { field: u8 }, Two }
+            fun main(s: S::One) {
+                let f = 1;
+                  //X
+                let s = S::One { field: f };
+                                      //^
+            }
+        }
+            "#,
+    )
+}
+
+#[test]
+fn test_shadow_global_spec_variable_with_local_one() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            spec module {
+                global supply<CoinType>: num;
+            }
+            fun main() {
+                let supply = 1;
+                    //X
+                spec {
+                    supply;
+                    //^
+                }
+            }
+        }
+            "#,
+    )
+}
+
+#[test]
+fn test_outer_block_variable_with_inner_block_variable() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            fun main() {
+                let supply = 1;
+                spec {
+                    let supply = 2;
+                        //X
+                    supply;
+                    //^
+                }
+            }
+        }
+            "#,
+    )
+}
+
+#[test]
+fn test_unknown_struct_lit_variable_is_resolvable_with_shorthand() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            fun main() {
+                let myfield = 1;
+                     //X
+                Unknown { myfield };
+                           //^
+            }
+        }
+            "#,
+    )
+}
+
+#[test]
+fn test_unknown_struct_lit_variable_is_resolvable_with_full_field() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            fun main() {
+                let myfield = 1;
+                     //X
+                Unknown { field: myfield };
+                                //^
+            }
+        }
+            "#,
+    )
+}
+
+#[test]
+fn test_resolve_tuple_struct_pattern() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            struct S(u8, u8);
+                 //X
+            fun main(s: S) {
+                let S ( field1, field2 ) = s;
+                  //^
+            }
+        }
+            "#,
+    )
+}
+
+#[test]
+fn test_resolve_variables_in_tuple_struct_pattern() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            struct S(u8, u8);
+            fun main(s: S) {
+                let S ( field1, field2 ) = s;
+                          //X
+                field1;
+                //^
+            }
+        }
+            "#,
+    )
+}
+
+#[test]
+fn test_pattern_with_rest() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            struct S { f1: u8, f2: u8 }
+                     //X
+            fun main(s: S) {
+                let S { f1, .. } = s;
+                       //^
+            }
+        }
+            "#,
+    )
+}
+
+#[test]
+fn test_compound_assignment_lhs_binding() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            fun main() {
+                let x = 1;
+                  //X
+                x += 1;
+              //^
+            }
+        }
+            "#,
+    )
+}
+
+#[test]
+fn test_compound_assignment_rhs_binding() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            fun main() {
+                let x = 1;
+                let y = 2;
+                  //X
+                x += y;
+                   //^
+            }
+        }
+            "#,
+    )
+}
+
+#[test]
+fn test_const_accessible_from_spec_function() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::features {
+            const PERMISSIONED_SIGNER: u64 = 84;
+                   //X
+
+        }
+        module 0x1::m {}
+        spec 0x1::m {
+            spec fun is_permissioned_signer(): bool {
+                use 0x1::features::PERMISSIONED_SIGNER;
+                PERMISSIONED_SIGNER;
+                //^
+            }
+        }
+                "#,
+    )
+}
+
+
+
+

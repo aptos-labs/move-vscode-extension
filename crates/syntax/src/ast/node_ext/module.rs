@@ -1,5 +1,5 @@
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
-use crate::ast::HasItemList;
+use crate::ast::HasItems;
 use crate::{ast, AstNode};
 
 impl ast::Module {

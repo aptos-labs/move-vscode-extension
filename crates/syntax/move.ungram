@@ -25,17 +25,13 @@ AddressDef =
 Module =
     Attr*
     'module' (AddressRef '::')? Name
-    ItemList
+    '{' UseStmt* Item* '}'
 
 Script =
-    Attr* 'script' ItemList
-
-ItemList =
-    '{' Item* '}'
+    Attr* 'script' '{' UseStmt* Item* '}'
 
 Item =
-    UseStmt
-    | Friend
+    Friend
     | Fun
     | Const
     | Struct
@@ -128,9 +124,13 @@ Pat =
     IdentPat
     | TuplePat
     | StructPat
+    | TupleStructPat
 
 TuplePat =
     '(' fields:(Pat (',' Pat)* ','?)? ')'
+
+TupleStructPat =
+    Path '(' fields:(Pat (',' Pat)* ','?)? ')'
 
 StructPat =
     Path StructPatFieldList
@@ -139,7 +139,7 @@ StructPatFieldList =
     '{' fields:(StructPatField (',' StructPatField)* ','?)? '}'
 
 StructPatField =
-    (NameRef ':' Pat) | IdentPat
+    (NameRef ':' Pat) | IdentPat | RestPat
 
 RestPat = '..'
 IdentPat = Name
@@ -155,16 +155,13 @@ PathType =
     Path
 
 BlockExpr =
-    StmtList
-
-InlineExpr = Expr
-
-StmtList =
     '{'
         UseStmt*
-        statements:Stmt*
+        stmts:Stmt*
         tail_expr:Expr?
     '}'
+
+InlineExpr = Expr
 
 Stmt =
     ';'
@@ -263,7 +260,7 @@ NameRef =
 // -------------------------- Specifications
 
 ModuleSpec =
-    Attr* 'spec' Path ItemList
+    Attr* 'spec' Path '{' UseStmt* Item* '}'
 
 ItemSpec =
     Attr* 'spec' ('module' | NameRef) spec_block:BlockExpr

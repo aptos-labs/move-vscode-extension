@@ -836,8 +836,9 @@ fn extract_struct_traits(ast: &mut AstSrc) {
         ("HasTypeParams", &["type_param_list"]),
         // ("HasGenericArgs", &["generic_arg_list"]),
         // ("HasTypeBounds", &["type_bound_list", "colon_token"]),
-        ("HasItemList", &["item_list"]),
-        ("HasStmtList", &["stmt_list"]),
+        ("HasUseStmts", &["use_stmts"]),
+        ("HasItems", &["items"]),
+        ("HasStmts", &["stmts"]),
         // ("HasLoopBody", &["label", "loop_body"]),
         // ("HasArgList", &["arg_list"]),
     ];

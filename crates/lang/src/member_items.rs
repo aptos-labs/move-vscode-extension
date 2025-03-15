@@ -1,9 +1,9 @@
 use crate::nameres::namespaces::{NsSet, NAMES, SCHEMAS, TYPES};
 use stdx::itertools::Itertools;
 use syntax::ast;
-use syntax::ast::{AnyHasName, HasItemList};
+use syntax::ast::{AnyHasName, HasItems};
 
-pub trait HasMembersList: HasItemList {
+pub trait HasMembersList: HasItems {
     fn member_items_with_ns(&self) -> Vec<(Vec<AnyHasName>, NsSet)> {
         fn into_has_names(items: Vec<impl Into<AnyHasName>>) -> Vec<AnyHasName> {
             items.into_iter().map_into::<AnyHasName>().collect()

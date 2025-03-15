@@ -1,5 +1,5 @@
 use crate::ast;
-use crate::ast::HasStmtList;
+use crate::ast::HasStmts;
 
 impl ast::BlockExpr {
     pub fn schema_fields(&self) -> Vec<ast::SchemaField> {

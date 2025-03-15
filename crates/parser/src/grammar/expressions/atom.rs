@@ -550,13 +550,13 @@ pub(crate) fn inline_expr(p: &mut Parser) -> bool {
     found
 }
 
-fn stmt_list(p: &mut Parser<'_>, is_spec: bool) -> CompletedMarker {
+fn stmt_list(p: &mut Parser<'_>, is_spec: bool) {
     assert!(p.at(T!['{']));
-    let m = p.start();
+    // let m = p.start();
     p.bump(T!['{']);
     expr_block_contents(p, is_spec);
     p.expect(T!['}']);
-    m.complete(p, STMT_LIST)
+    // m.complete(p, STMT_LIST)
 }
 
 // test return_expr

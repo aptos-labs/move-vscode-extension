@@ -1,10 +1,12 @@
 pub mod has_item_list;
+pub mod has_use_stmts;
 
 use std::io::Read;
-use crate::ast::{support, AstChildren};
+use crate::ast::{support, AstChildren, Stmt};
 use crate::{ast, AstNode};
 
-pub use has_item_list::HasItemList;
+pub use has_item_list::HasItems;
+pub use has_use_stmts::HasUseStmts;
 
 pub trait HasName: AstNode {
     fn name(&self) -> Option<ast::Name> {
@@ -12,18 +14,11 @@ pub trait HasName: AstNode {
     }
 }
 
-pub trait HasStmtList: AstNode {
-    fn stmt_list(&self) -> Option<ast::StmtList> {
-        support::child(&self.syntax())
-    }
-    fn stmts(&self) -> impl Iterator<Item = ast::Stmt> {
-        self.stmt_list().into_iter().flat_map(|it| it.statements())
-    }
+pub trait HasStmts: AstNode {
+    fn stmts(&self) -> AstChildren<Stmt> { support::children(&self.syntax()) }
+
     fn let_stmts(&self) -> impl Iterator<Item = ast::LetStmt> {
         self.stmts().filter_map(|it| it.let_stmt())
-    }
-    fn tail_expr(&self) -> Option<ast::Expr> {
-        self.stmt_list()?.tail_expr()
     }
 }
 

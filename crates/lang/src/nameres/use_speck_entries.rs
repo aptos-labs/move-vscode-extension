@@ -2,7 +2,7 @@ use crate::db::HirDatabase;
 use crate::nameres::path_kind::{path_kind, PathKind, QualifiedKind};
 use crate::nameres::paths;
 use crate::nameres::scope::ScopeEntry;
-use crate::node_ext::has_item_list::HasItemListInFileExt;
+use crate::node_ext::has_item_list::HasUseStmtsInFileExt;
 use crate::node_ext::PathLangExt;
 use crate::{AsName, InFile, Name};
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
@@ -13,7 +13,7 @@ use crate::files::InFileInto;
 
 pub fn use_speck_entries(
     db: &dyn HirDatabase,
-    items_owner: &InFile<impl ast::HasItemList>,
+    items_owner: &InFile<impl ast::HasUseStmts>,
 ) -> Vec<ScopeEntry> {
     let use_items = items_owner.use_stmt_items();
 
