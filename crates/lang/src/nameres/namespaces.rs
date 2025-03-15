@@ -3,7 +3,7 @@ use std::fmt;
 use std::fmt::Formatter;
 
 #[allow(non_camel_case_types)]
-#[derive(EnumSetType, Debug)]
+#[derive(EnumSetType, Debug, Hash)]
 pub enum Ns {
     NAME,
     FUNCTION,
@@ -62,7 +62,7 @@ pub(crate) fn named_item_ns(named_item_kind: syntax::SyntaxKind) -> Ns {
         TYPE_PARAM | STRUCT => Ns::TYPE,
         ENUM => Ns::ENUM,
         VARIANT => Ns::ENUM_VARIANT,
-        IDENT_PAT | STRUCT_FIELD | CONST | GLOBAL_VARIABLE_DECL => Ns::NAME,
+        IDENT_PAT | NAMED_FIELD | CONST | GLOBAL_VARIABLE_DECL => Ns::NAME,
         SCHEMA => Ns::SCHEMA,
         _ => unreachable!(
             "named nodes should be exhaustive, unhandled {:?}",

@@ -18,7 +18,7 @@ pub(super) fn struct_(p: &mut Parser<'_>, m: Marker) {
     opt_abilities_list(p);
     match p.current() {
         T!['{'] => {
-            struct_field_list(p);
+            named_field_list(p);
             opt_abilities_list_with_semicolon(p);
         }
         // test unit_struct
@@ -129,7 +129,7 @@ pub(crate) fn variant_list(p: &mut Parser<'_>) {
             match p.current() {
                 T!['{'] => {
                     curly_braces = true;
-                    struct_field_list(p)
+                    named_field_list(p)
                 }
                 T!['('] => tuple_field_list(p),
                 _ => (),
@@ -151,7 +151,7 @@ pub(crate) fn variant_list(p: &mut Parser<'_>) {
 
 // test record_field_list
 // struct S { a: i32, b: f32 }
-pub(crate) fn struct_field_list(p: &mut Parser<'_>) {
+pub(crate) fn named_field_list(p: &mut Parser<'_>) {
     assert!(p.at(T!['{']));
     let m = p.start();
     p.bump(T!['{']);
@@ -160,28 +160,25 @@ pub(crate) fn struct_field_list(p: &mut Parser<'_>) {
             error_block(p, "expected field");
             continue;
         }
-        struct_field(p);
+        named_field(p);
         if !p.at(T!['}']) {
             p.expect(T![,]);
         }
     }
     p.expect(T!['}']);
-    m.complete(p, STRUCT_FIELD_LIST);
+    m.complete(p, NAMED_FIELD_LIST);
 
-    fn struct_field(p: &mut Parser<'_>) {
+    fn named_field(p: &mut Parser<'_>) {
         let m = p.start();
-        // test record_field_attrs
-        // struct S { #[attr] f: f32 }
         // attributes::outer_attrs(p);
-        // opt_visibility(p, false);
         if p.at(IDENT) {
             name(p);
             p.expect(T![:]);
             types::type_(p);
-            m.complete(p, STRUCT_FIELD);
+            m.complete(p, NAMED_FIELD);
         } else {
             m.abandon(p);
-            p.err_and_bump("expected field declaration");
+            p.err_and_bump("expected named field declaration");
         }
     }
 }

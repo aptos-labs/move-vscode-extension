@@ -1,4 +1,4 @@
-use crate::ast::{support, ItemList};
+use crate::ast::{support, HasFields, ItemList};
 use crate::{ast, AstNode};
 
 pub trait HasItemList: AstNode {

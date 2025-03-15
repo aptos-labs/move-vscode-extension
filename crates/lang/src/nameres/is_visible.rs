@@ -1,6 +1,5 @@
 use crate::db::HirDatabase;
-use crate::nameres::namespaces::{Ns, NsSetExt, TYPES_N_ENUMS};
-use crate::nameres::paths;
+use crate::nameres::namespaces::{Ns, TYPES_N_ENUMS};
 use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::ModuleLangExt;
 use crate::InFile;
@@ -46,9 +45,6 @@ pub fn is_visible_in_context(
     let context_opt_path = ast::Path::cast(context.syntax().to_owned());
     if let Some(path) = context_opt_path.clone() {
         if path.is_use_speck() {
-            // if item_kind == MODULE {
-            //     return true;
-            // }
             // those are always public in use specks
             if matches!(item_kind, MODULE | STRUCT | ENUM) {
                 return true;
@@ -67,7 +63,7 @@ pub fn is_visible_in_context(
             }
 
             // consts are importable in tests
-            if context_usage_scope.is_test() && item_ns.contains(Ns::NAME) {
+            if context_usage_scope.is_test() && item_ns == Ns::NAME {
                 return true;
             }
         }
@@ -113,7 +109,7 @@ pub fn is_visible_in_context(
     }
 
     // item is type, check whether it's allowed in the context
-    if item_ns.contains_any_of(TYPES_N_ENUMS) {
+    if TYPES_N_ENUMS.contains(item_ns) {
         let opt_path_parent = context_opt_path
             .map(|path| path.root_path())
             .and_then(|it| it.syntax().parent());
@@ -136,7 +132,7 @@ pub fn is_visible_in_context(
                     for friend_decl in friend_decls {
                         let friend_path = unwrap_or_continue!(friend_decl.path());
                         if let Some(friend_entry) =
-                            paths::resolve_single(db, InFile::new(item_file_id, friend_path))
+                            db.resolve_ref_single(InFile::new(item_file_id, friend_path.into()))
                         {
                             let friend_module = unwrap_or_continue!(friend_entry
                                 .node_loc

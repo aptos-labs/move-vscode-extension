@@ -13,6 +13,7 @@ mod source_file;
 pub mod syntax_node;
 pub mod type_;
 pub mod visibility;
+mod struct_pat_field;
 
 use crate::ast::{support, ExprStmt, LetStmt, Stmt};
 use crate::token_text::TokenText;

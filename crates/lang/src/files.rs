@@ -35,6 +35,10 @@ impl<T> InFile<T> {
     pub fn map<F: FnOnce(T) -> U, U>(self, f: F) -> InFile<U> {
         InFile::new(self.file_id, f(self.value))
     }
+
+    pub fn and_then<F: FnOnce(T) -> Option<U>, U>(self, f: F) -> Option<InFile<U>> {
+        f(self.value).map(|value| InFile::new(self.file_id, value))
+    }
 }
 
 impl InFile<SyntaxNode> {
@@ -58,6 +62,19 @@ impl InFile<SyntaxToken> {
 impl<T: AstNode> InFile<T> {
     pub fn syntax_text(&self) -> String {
         self.value.syntax().text().to_string()
+    }
+}
+
+pub trait InFileInto<U> {
+    fn in_file_into(self) -> InFile<U>;
+}
+
+impl<T, U> InFileInto<U> for InFile<T>
+where
+    T: Into<U>,
+{
+    fn in_file_into(self) -> InFile<U> {
+        self.map(|it| it.into())
     }
 }
 

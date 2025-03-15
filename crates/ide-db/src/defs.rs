@@ -48,16 +48,14 @@ pub enum NameRefClass {
 }
 
 impl NameRefClass {
-    // Note: we don't have unit-tests for this rather important function.
-    // It is primarily exercised via goto definition tests in `ide`.
     pub fn classify(
         sema: &Semantics<'_, RootDatabase>,
         name_ref: &ast::NameRef,
     ) -> Option<NameRefClass> {
-        let parent = name_ref.syntax().parent()?;
+        let ref_parent = name_ref.syntax().parent()?;
 
-        if let Some(path) = ast::PathSegment::cast(parent.clone()).map(|it| it.parent_path()) {
-            let res = sema.resolve_path(path);
+        if let Some(path) = ast::PathSegment::cast(ref_parent.clone()).map(|it| it.parent_path()) {
+            let res = sema.resolve_reference(path.into());
             return match res {
                 Some(entry) => {
                     let symbol_kind = ast_kind_to_symbol_kind(entry.node_loc.kind())?;

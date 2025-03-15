@@ -832,7 +832,7 @@ fn extract_struct_traits(ast: &mut AstSrc) {
     let traits: &[(&str, &[&str])] = &[
         ("HasAttrs", &["attrs"]),
         ("HasName", &["name"]),
-        // ("HasVisibility", &["visibility"]),
+        ("HasFields", &["named_field_list", "tuple_field_list"]),
         ("HasTypeParams", &["type_param_list"]),
         // ("HasGenericArgs", &["generic_arg_list"]),
         // ("HasTypeBounds", &["type_bound_list", "colon_token"]),
@@ -849,8 +849,7 @@ fn extract_struct_traits(ast: &mut AstSrc) {
     }
 
     let non_method_traits: &[(&str, &[&str])] = &[
-        // ("HasScopeEntries", &["Module", "ModuleSpec", "Script", "Fun", "Schema"]),
-        ("HasReference", &["Path"]),
+        ("HasReference", &["Path", "StructPatField"]),
         (
             "HasVisibility",
             &["Fun", "SpecFun", "SpecInlineFun", "Struct", "Enum", "Const"],

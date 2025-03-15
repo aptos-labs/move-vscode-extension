@@ -213,8 +213,8 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "QUANT_BINDING_LIST",
         "QUANT_BINDING",
 
-        "STRUCT_FIELD_LIST",
-        "STRUCT_FIELD",
+        "NAMED_FIELD_LIST",
+        "NAMED_FIELD",
         "TUPLE_FIELD_LIST",
         "TUPLE_FIELD",
         "VARIANT_LIST",
@@ -261,6 +261,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
 };
 
 pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
+    ("StructPat", &["path"]),
     ("UseSpeck", &["path"]),
     ("Param", &["ident_pat"]),
     ("Path", &["segment"]),

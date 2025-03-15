@@ -62,7 +62,7 @@ Friend =
 Struct =
     Attr*
     'struct' Name TypeParamList?
-    (StructFieldList | TupleFieldList)
+    (NamedFieldList | TupleFieldList)
 
 Enum =
     Attr*
@@ -73,15 +73,18 @@ VariantList =
     '{' (Variant (',' Variant)* ','?)? '}'
 
 Variant =
-    Attr* Name (StructFieldList | TupleFieldList)?
+    Attr* Name (NamedFieldList | TupleFieldList)?
 
 FieldList =
-    StructFieldList | TupleFieldList
+    NamedFieldList | TupleFieldList
 
-StructFieldList =
-    '{' fields:(StructField (',' StructField)* ','?)? '}'
+NamedFieldList =
+    '{' fields:(NamedField (',' NamedField)* ','?)? '}'
 
-StructField =
+AnyField =
+    NamedField | TupleField
+
+NamedField =
     Attr* Name ':' Type
 
 TupleFieldList =
@@ -124,10 +127,21 @@ RetType =
 Pat =
     IdentPat
     | TuplePat
+    | StructPat
 
 TuplePat =
     '(' fields:(Pat (',' Pat)* ','?)? ')'
 
+StructPat =
+    Path StructPatFieldList
+
+StructPatFieldList =
+    '{' fields:(StructPatField (',' StructPatField)* ','?)? '}'
+
+StructPatField =
+    (NameRef ':' Pat) | IdentPat
+
+RestPat = '..'
 IdentPat = Name
 
 Type =
@@ -142,6 +156,8 @@ PathType =
 
 BlockExpr =
     StmtList
+
+InlineExpr = Expr
 
 StmtList =
     '{'
@@ -169,6 +185,13 @@ Expr =
     | ParenExpr
     | PathExpr
     | PrefixExpr
+
+ForExpr =
+    'for' ForCondition (BlockExpr | InlineExpr)
+
+ForCondition =
+    '(' IdentPat 'in' Expr ')'
+
 
 PrefixExpr =
   op:('-' | '!' | '*' | 'copy' | 'move') Expr

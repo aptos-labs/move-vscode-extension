@@ -1,19 +1,19 @@
 use crate::db::HirDatabase;
-use crate::files::InFileVecExt;
+use crate::files::{InFileInto, InFileVecExt};
 use crate::nameres::address::Address;
-use crate::nameres::namespaces::{NsSet, NsSetExt, MODULES};
+use crate::nameres::namespaces::{Ns, NsSet};
 use crate::nameres::node_ext::ModuleResolutionExt;
-use crate::nameres::paths;
 use crate::nameres::paths::ResolutionContext;
-use crate::nameres::scope::{NamedItemsExt, ScopeEntry};
+use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use crate::nameres::scope_entries_owner::get_entries_in_scope;
 use crate::node_ext::ModuleLangExt;
 use crate::{InFile, Name};
 use parser::SyntaxKind;
 use parser::SyntaxKind::{MODULE_SPEC, STMT_LIST};
+use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Formatter;
-use syntax::ast::{HasItemList, HasReference};
+use syntax::ast::{HasFields, HasItemList, HasReference};
 use syntax::{ast, AstNode, SyntaxNode};
 
 pub struct ResolveScope {
@@ -82,19 +82,35 @@ pub fn get_entries_from_walking_scopes(
     let start_at = ctx.path.clone();
     let resolve_scopes = get_resolve_scopes(db, start_at);
 
+    let mut visited_name_ns = HashMap::<Name, NsSet>::new();
     let mut entries = vec![];
     for ResolveScope { scope, prev } in resolve_scopes {
         let scope_entries = get_entries_in_scope(db, scope, prev);
         if scope_entries.is_empty() {
             continue;
         }
-        // todo: shadowing between scopes
+        let mut visited_names_in_scope = HashMap::<Name, NsSet>::new();
         for scope_entry in scope_entries {
-            if !ns.contains_any_of(scope_entry.ns) {
+            let entry_name = scope_entry.name.clone();
+            let entry_ns = scope_entry.ns;
+
+            if !ns.contains(entry_ns) {
                 continue;
             }
+
+            if let Some(visited_ns) = visited_name_ns.get(&entry_name) {
+                if visited_ns.contains(entry_ns) {
+                    // this (name, ns) is already visited in the previous scope
+                    continue;
+                }
+            }
+
+            let mut old_ns = visited_names_in_scope.entry(entry_name).or_insert(NsSet::empty());
+            *old_ns = *old_ns | NsSet::from(entry_ns);
+
             entries.push(scope_entry);
         }
+        visited_name_ns.extend(visited_names_in_scope);
     }
     entries
 }
@@ -132,8 +148,7 @@ pub fn get_qualified_path_entries(
     qualifier: ast::Path,
 ) -> Vec<ScopeEntry> {
     let qualifier = ctx.wrap_in_file(qualifier);
-    let qualifier_item = paths::resolve_single(db, qualifier.clone());
-    dbg!(&qualifier_item);
+    let qualifier_item = db.resolve_ref_single(qualifier.clone().map(|it| it.into()));
     if qualifier_item.is_none() {
         // qualifier can be an address
         return vec![];
@@ -146,7 +161,7 @@ pub fn get_qualified_path_entries(
             entries.push(ScopeEntry {
                 name: Name::new("Self"),
                 node_loc: qualifier_item.node_loc,
-                ns: MODULES,
+                ns: Ns::MODULE,
                 scope_adjustment: None,
             });
             let module = qualifier_item.node_loc.cast::<ast::Module>(db.upcast()).unwrap();
@@ -158,4 +173,24 @@ pub fn get_qualified_path_entries(
         _ => {}
     }
     entries
+}
+
+pub fn get_struct_pat_field_resolve_variants(
+    db: &dyn HirDatabase,
+    struct_pat_field: InFile<ast::StructPatField>,
+) -> Vec<ScopeEntry> {
+    let struct_pat_path = struct_pat_field.map(|field| field.struct_pat().path());
+    db.resolve_ref_single(struct_pat_path.in_file_into())
+        .and_then(|struct_entry| {
+            let fields_owner = struct_entry.node_loc.cast::<ast::AnyHasFields>(db.upcast())?;
+            Some(get_named_field_entries(fields_owner))
+        })
+        .unwrap_or_default()
+}
+
+pub fn get_named_field_entries(fields_owner: InFile<ast::AnyHasFields>) -> Vec<ScopeEntry> {
+    fields_owner
+        .value
+        .named_fields()
+        .to_in_file_entries(fields_owner.file_id)
 }

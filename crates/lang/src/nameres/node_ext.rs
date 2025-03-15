@@ -1,5 +1,5 @@
 use crate::files::{InFileExt, InFileVecExt};
-use crate::nameres::namespaces::NAMES;
+use crate::nameres::namespaces::{Ns, NAMES};
 use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryExt};
 use crate::InFile;
 use syntax::ast;
@@ -28,7 +28,7 @@ impl ModuleResolutionExt for InFile<ast::Module> {
         entries.extend(module.tuple_structs().into_iter().filter_map(|s| {
             s.in_file(self.file_id)
                 .to_entry()
-                .map(|entry| entry.copy_with_ns(NAMES))
+                .map(|entry| entry.copy_with_ns(Ns::NAME))
         }));
 
         // spec callables

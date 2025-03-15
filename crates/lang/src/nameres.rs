@@ -1,7 +1,7 @@
 pub mod address;
 mod blocks;
 mod is_visible;
-mod name_resolution;
+pub mod name_resolution;
 pub mod namespaces;
 mod node_ext;
 pub mod path_kind;

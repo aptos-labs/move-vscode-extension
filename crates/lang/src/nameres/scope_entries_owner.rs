@@ -1,7 +1,7 @@
 use crate::db::HirDatabase;
 use crate::nameres::blocks::get_entries_in_blocks;
 use crate::nameres::node_ext::ModuleResolutionExt;
-use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry};
+use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::nameres::use_speck_entries::use_speck_entries;
 use crate::InFile;
 use syntax::ast::{HasItemList, HasTypeParams};
@@ -66,6 +66,13 @@ pub fn get_entries_from_owner(_db: &dyn HirDatabase, scope: InFile<SyntaxNode>) 
                     .schema_fields_as_bindings()
                     .to_in_file_entries(file_id),
             )
+        }
+        FOR_EXPR => {
+            let for_expr = scope.cast::<ast::ForExpr>().unwrap();
+            let idx_binding = for_expr.value.for_condition().and_then(|it| it.ident_pat());
+            if let Some(idx_binding) = idx_binding {
+                entries.extend(InFile::new(file_id, idx_binding).to_entry())
+            }
         }
         _ => {}
     }

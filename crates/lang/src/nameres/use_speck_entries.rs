@@ -9,6 +9,7 @@ use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::{HasName, NamedItemScope};
 use syntax::{ast, AstNode};
 use vfs::FileId;
+use crate::files::InFileInto;
 
 pub fn use_speck_entries(
     db: &dyn HirDatabase,
@@ -19,14 +20,10 @@ pub fn use_speck_entries(
     let mut entries = vec![];
     for use_item in use_items {
         let path = InFile::new(items_owner.file_id, use_item.use_speck.path());
-        let Some(scope_entry) = paths::resolve_single(db, path.clone()) else {
+        let Some(scope_entry) = db.resolve_ref_single(path.clone().in_file_into()) else {
             tracing::debug!(path = &path.syntax_text(), "use_speck unresolved");
             continue;
         };
-        // let alias_or_node_loc = use_item
-        //     .use_alias
-        //     .map(|it| InFile::new(items_owner.file_id, it).loc())
-        //     .unwrap_or(scope_entry.node_loc);
         let node_loc = scope_entry.node_loc;
         entries.push(ScopeEntry {
             name: use_item.alias_or_name,

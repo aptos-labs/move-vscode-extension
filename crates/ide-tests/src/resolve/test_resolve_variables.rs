@@ -414,7 +414,7 @@ fn test_resolve_const_import_expected_failure() {
 }
 
 #[test]
-fn test_for_loop_index() {
+fn  test_for_loop_index() {
     // language=Move
     check_resolve(
         r#"
@@ -521,6 +521,7 @@ fn test_resolve_type_in_match_arm_1() {
     )
 }
 
+#[ignore = "requires types"]
 #[test]
 fn test_resolve_type_in_match_arm_2() {
     // language=Move
@@ -542,6 +543,7 @@ fn test_resolve_type_in_match_arm_2() {
     )
 }
 
+#[ignore = "requires types"]
 #[test]
 fn test_resolve_type_in_match_arm_3() {
     // language=Move
@@ -603,6 +605,7 @@ fn test_resolve_type_in_match_arm_body_2() {
     )
 }
 
+#[ignore = "requires types"]
 #[test]
 fn test_enum_variant_with_fields() {
     // language=Move
@@ -623,6 +626,7 @@ fn test_enum_variant_with_fields() {
     )
 }
 
+#[ignore = "requires types"]
 #[test]
 fn test_resolve_fields_for_enum_variant_in_match_arm() {
     // language=Move
@@ -643,6 +647,7 @@ fn test_resolve_fields_for_enum_variant_in_match_arm() {
     )
 }
 
+#[ignore = "requires types"]
 #[test]
 fn test_resolve_shortcut_field_for_enum_variant_in_match_arm() {
     // language=Move

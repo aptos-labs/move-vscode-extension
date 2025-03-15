@@ -1,12 +1,13 @@
 mod source_to_def;
 
 use crate::db::HirDatabase;
-use crate::nameres::paths;
 use crate::nameres::scope::ScopeEntry;
 use crate::semantics::source_to_def::SourceToDefCache;
 use crate::InFile;
 use std::cell::RefCell;
 use std::{fmt, ops};
+use stdx::itertools::Itertools;
+use syntax::ast::HasReference;
 use syntax::{ast, AstNode, SyntaxNode, SyntaxToken};
 use vfs::FileId;
 
@@ -56,9 +57,9 @@ impl<'db> SemanticsImpl<'db> {
         tree
     }
 
-    pub fn resolve_path(&self, path: ast::Path) -> Option<ScopeEntry> {
-        let path = self.wrap_node_infile(path);
-        paths::resolve_single(self.db, path)
+    pub fn resolve_reference(&self, reference: ast::AnyHasReference) -> Option<ScopeEntry> {
+        let reference = self.wrap_node_infile(reference);
+        self.db.resolve_ref_single(reference)
     }
 
     // todo: rename to root_file_id()

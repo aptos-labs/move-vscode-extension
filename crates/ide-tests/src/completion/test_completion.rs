@@ -106,6 +106,22 @@ module 0x1::m {
 }
 
 #[test]
+fn test_complete_variable_with_same_name_parameter() {
+    check_completions_with_prefix_exact(
+        // language=Move
+        r#"
+module 0x1::m {
+    fun main(my_param: u8) {
+        let my_param = 1;
+        my/*caret*/
+    }
+}
+    "#,
+        vec!["my_param"],
+    );
+}
+
+#[test]
 fn test_complete_function_item_inserts_parens_zero_params() {
     do_single_completion(
         // language=Move

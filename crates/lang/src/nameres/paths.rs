@@ -1,3 +1,4 @@
+use stdx::itertools::Itertools;
 use crate::db::HirDatabase;
 use crate::files::OptionInFileExt;
 use crate::loc::SyntaxLocExt;
@@ -31,7 +32,7 @@ pub fn get_path_resolve_variants(
                     entries.push(ScopeEntry {
                         name: Name::new("Self"),
                         node_loc: module.loc(),
-                        ns: MODULES,
+                        ns: Ns::MODULE,
                         scope_adjustment: None,
                     })
                 }
@@ -49,16 +50,6 @@ pub fn get_path_resolve_variants(
             .into_iter()
             .filter_by_ns(ns)
             .collect(),
-    }
-}
-
-pub fn resolve_single(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Option<ScopeEntry> {
-    let loc = loc::SyntaxLoc::from_ast_node(path);
-    let final_entries = db.resolve_ast_path(loc);
-    tracing::debug!(?final_entries);
-    match final_entries.len() {
-        1 => final_entries.into_iter().next(),
-        _ => None,
     }
 }
 

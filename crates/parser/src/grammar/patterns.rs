@@ -156,17 +156,13 @@ fn struct_pat_field(p: &mut Parser) {
             p.bump(T![:]);
             pattern(p);
         }
-        T![..] => p.bump(T![..]),
+        // T![..] => p.bump(T![..]),
         // T![.] => {
         //     if p.at(T![..]) {
         //         p.bump(T![..]);
         //     } else {
         //         ident_pat(p, false);
         //     }
-        // }
-        // T![box] => {
-        //     // FIXME: not all box patterns should be allowed
-        //     box_pat(p);
         // }
         _ => {
             ident_pat(p);

@@ -2,7 +2,7 @@ use crate::db::HirDatabase;
 use crate::files::InFileVecExt;
 use crate::loc::{SyntaxLoc, SyntaxLocExt};
 use crate::nameres::is_visible::is_visible_in_context;
-use crate::nameres::namespaces::{named_item_ns, NsSet, NsSetExt};
+use crate::nameres::namespaces::{named_item_ns, Ns, NsSet, NsSetExt};
 use crate::{AsName, InFile, Name};
 use std::fmt;
 use std::fmt::Formatter;
@@ -14,23 +14,12 @@ use vfs::FileId;
 pub struct ScopeEntry {
     pub name: Name,
     pub node_loc: SyntaxLoc,
-    pub ns: NsSet,
+    pub ns: Ns,
     pub scope_adjustment: Option<NamedItemScope>,
 }
 
 impl ScopeEntry {
-    pub fn from_named(item: InFile<impl ast::HasName>, ns: NsSet) -> Option<Self> {
-        let name = item.value.name()?;
-        let loc = item.loc();
-        Some(ScopeEntry {
-            name: name.as_name(),
-            node_loc: loc,
-            ns,
-            scope_adjustment: None,
-        })
-    }
-
-    pub fn copy_with_ns(&self, ns: NsSet) -> Self {
+    pub fn copy_with_ns(&self, ns: Ns) -> Self {
         let mut entry = self.clone();
         entry.ns = ns;
         entry
@@ -55,7 +44,7 @@ impl<T: ast::HasName> ScopeEntryExt for InFile<T> {
     fn to_entry(self) -> Option<ScopeEntry> {
         let name = self.value.name()?;
         let item_loc = self.loc();
-        let item_ns = NsSet::from(named_item_ns(item_loc.kind()));
+        let item_ns = named_item_ns(item_loc.kind());
         let entry = ScopeEntry {
             name: name.as_name(),
             node_loc: item_loc,
@@ -98,7 +87,7 @@ pub trait ScopeEntryListExt {
 
 impl<T: Iterator<Item = ScopeEntry>> ScopeEntryListExt for T {
     fn filter_by_ns(self, ns: NsSet) -> impl Iterator<Item = ScopeEntry> {
-        self.filter(move |entry| entry.ns.contains_any_of(ns))
+        self.filter(move |entry| ns.contains(entry.ns))
     }
 
     fn filter_by_name(self, name: &str) -> impl Iterator<Item = ScopeEntry> {

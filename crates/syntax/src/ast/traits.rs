@@ -1,6 +1,7 @@
 pub mod has_item_list;
 
-use crate::ast::{support, AstChildren, StmtList, TypeParam, TypeParamList};
+use std::io::Read;
+use crate::ast::{support, AstChildren};
 use crate::{ast, AstNode};
 
 pub use has_item_list::HasItemList;
@@ -12,7 +13,7 @@ pub trait HasName: AstNode {
 }
 
 pub trait HasStmtList: AstNode {
-    fn stmt_list(&self) -> Option<StmtList> {
+    fn stmt_list(&self) -> Option<ast::StmtList> {
         support::child(&self.syntax())
     }
     fn stmts(&self) -> impl Iterator<Item = ast::Stmt> {
@@ -27,11 +28,11 @@ pub trait HasStmtList: AstNode {
 }
 
 pub trait HasTypeParams: AstNode {
-    fn type_param_list(&self) -> Option<TypeParamList> {
+    fn type_param_list(&self) -> Option<ast::TypeParamList> {
         support::child(&self.syntax())
     }
 
-    fn type_params(&self) -> Vec<TypeParam> {
+    fn type_params(&self) -> Vec<ast::TypeParam> {
         self.type_param_list()
             .map(|l| l.type_parameters().collect())
             .unwrap_or_default()
@@ -44,6 +45,34 @@ pub trait HasAttrs: AstNode {
     }
     fn has_atom_attr(&self, atom: &str) -> bool {
         self.attrs().filter_map(|x| x.as_simple_atom()).any(|x| x == atom)
+    }
+}
+
+pub trait HasFields: AstNode {
+    #[inline]
+    fn named_field_list(&self) -> Option<ast::NamedFieldList> {
+        support::child(&self.syntax())
+    }
+    #[inline]
+    fn tuple_field_list(&self) -> Option<ast::TupleFieldList> {
+        support::child(&self.syntax())
+    }
+
+    fn fields(&self) -> Vec<ast::AnyField> {
+        self.named_fields().into_iter().map(|f| f.into())
+            .chain(self.tuple_fields().into_iter().map(|f| f.into()))
+            .collect()
+    }
+
+    fn named_fields(&self) -> Vec<ast::NamedField> {
+        self.named_field_list()
+            .map(|list| list.fields().collect::<Vec<_>>())
+            .unwrap_or_default()
+    }
+    fn tuple_fields(&self) -> Vec<ast::TupleField> {
+        self.tuple_field_list()
+            .map(|list| list.fields().collect::<Vec<_>>())
+            .unwrap_or_default()
     }
 }
 
