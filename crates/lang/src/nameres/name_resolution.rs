@@ -168,7 +168,8 @@ pub fn get_qualified_path_entries(
             entries.extend(module.member_entries())
         }
         SyntaxKind::ENUM => {
-            // todo
+            let enum_ = qualifier_item.node_loc.cast::<ast::Enum>(db.upcast()).unwrap();
+            entries.extend(enum_.value.variants().to_in_file_entries(enum_.file_id));
         }
         _ => {}
     }

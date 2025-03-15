@@ -182,3 +182,127 @@ fn test_cannot_be_resolved_without_import() {
     "#,
     )
 }
+
+#[test]
+fn test_resolve_module_with_different_address() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x2::A {}
+                  //X
+        module 0x1::B {
+            use 0x2::A;
+
+            fun main() {
+                let a = A::create();
+                      //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_module_to_address_block_from_script() {
+    // language=Move
+    check_resolve(
+        r#"
+        address 0x2 {
+            module A {
+                 //X
+            }
+        }
+
+        script {
+            use 0x2::A;
+
+            fun main() {
+                let a = A::create();
+                      //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_to_address_block_fully_qualified() {
+    // language=Move
+    check_resolve(
+        r#"
+        address 0x2 {
+            module A {
+                 //X
+            }
+        }
+
+        address 0x1 {
+            module B {
+                fun main() {
+                    let a = 0x2::A::create();
+                               //^
+                }
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_to_address_block_with_address_normalization() {
+    // language=Move
+    check_resolve(
+        r#"
+        address 0x0002 {
+            module A {
+                 //X
+            }
+        }
+
+        address 0x1 {
+            module B {
+                use 0x02::A;
+
+                fun main() {
+                    let a = A::create();
+                          //^
+                }
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_module_from_self() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::M {
+                  //X
+            struct MyStruct {}
+        }
+        module 0x1::Main {
+            use 0x1::M::{Self, MyStruct};
+                        //^
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_module_from_self_with_alias() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::M {
+                  //X
+            struct MyStruct {}
+        }
+        module 0x1::Main {
+            use 0x1::M::{Self as MyM, MyStruct};
+                        //^
+        }
+    "#,
+    )
+}

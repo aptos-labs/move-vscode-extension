@@ -754,7 +754,7 @@ fn test_resolve_field_assignment_for_struct_pat_in_enum() {
         module 0x1::m {
             enum S { One { field: u8 }, Two }
                             //X
-            fun main(s: S::One) {
+            fun main(s: S) {
                 let S::One { field: f } = s;
                             //^
             }

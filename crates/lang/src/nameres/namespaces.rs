@@ -34,7 +34,7 @@ pub const MODULES: NsSet = enum_set!(Ns::MODULE);
 pub const ENUMS_N_MODULES: NsSet = enum_set!(Ns::ENUM | Ns::MODULE);
 pub const TYPES_N_MODULES: NsSet = enum_set!(Ns::TYPE | Ns::MODULE);
 pub const TYPES_N_ENUMS_N_MODULES: NsSet = enum_set!(Ns::TYPE | Ns::ENUM | Ns::MODULE);
-pub const TYPES_N_ENUMS_N_ENUM_VARIANTS: NsSet = enum_set!(Ns::TYPE | Ns::ENUM | Ns::MODULE);
+pub const TYPES_N_ENUMS_N_ENUM_VARIANTS: NsSet = enum_set!(Ns::TYPE | Ns::ENUM_VARIANT | Ns::MODULE);
 pub const TYPES_N_ENUMS: NsSet = enum_set!(Ns::TYPE | Ns::ENUM);
 pub const TYPES_N_NAMES: NsSet = enum_set!(Ns::TYPE | Ns::NAME);
 
