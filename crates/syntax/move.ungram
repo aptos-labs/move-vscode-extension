@@ -207,6 +207,15 @@ BinExpr =
     )
     rhs:Expr
 
+StructLit =
+    Path StructLitFieldList
+
+StructLitFieldList =
+    '{' fields:(StructLitField (',' StructLitField)* ','?)? '}'
+
+StructLitField =
+    (NameRef ':')? Expr
+
 Literal =
     Attr* value:(
         '@int_number' | 'true' | 'false'

@@ -177,7 +177,7 @@ pub(crate) fn struct_lit_field_list(p: &mut Parser) {
         let m = p.start();
         // attributes::outer_attrs(p);
         match p.current() {
-            IDENT | INT_NUMBER => {
+            IDENT /*| INT_NUMBER*/ => {
                 // test_err record_literal_before_ellipsis_recovery
                 // fn main() {
                 //     S { field ..S::default() }
@@ -185,7 +185,7 @@ pub(crate) fn struct_lit_field_list(p: &mut Parser) {
                 if p.nth_at(1, T![:])
                 /* || p.nth_at(1, T![..])*/
                 {
-                    name_ref_or_index(p);
+                    name_ref(p);
                     p.expect(T![:]);
                 }
                 expr(p);

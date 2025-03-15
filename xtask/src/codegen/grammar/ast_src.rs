@@ -262,6 +262,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
 
 pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     ("StructPat", &["path"]),
+    ("StructLit", &["path"]),
     ("UseSpeck", &["path"]),
     ("Param", &["ident_pat"]),
     ("Path", &["segment"]),

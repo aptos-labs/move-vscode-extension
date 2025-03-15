@@ -15,6 +15,7 @@ mod test_resolve_modules;
 mod test_resolve_type_params;
 mod test_resolve_types;
 mod test_resolve_variables;
+mod test_resolve_struct_fields;
 
 pub(crate) fn check_resolve(source: &str) {
     let _ = Registry::default()

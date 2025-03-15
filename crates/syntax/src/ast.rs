@@ -10,7 +10,6 @@ pub mod node_ext;
 pub mod syntax_factory;
 pub mod token_ext;
 pub mod visibility;
-// mod operators;
 // pub mod edit_in_place;
 
 use std::marker::PhantomData;

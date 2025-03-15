@@ -479,4 +479,170 @@ fn test_public_script_is_the_same_as_public_entry() {
     )
 }
 
+#[test]
+fn test_cannot_resolve_const_from_other_module() {
+    // language=Move
+    check_resolve(
+        r#"
+        address 0x1 {
+        module Original {
+            const MY_CONST: u8 = 1;
+        }
+
+        module M {
+            use 0x1::Original::MY_CONST;
+            fun main() {
+                MY_CONST;
+                //^ unresolved
+            }
+        }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_friend_function_unresolved_in_script() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::original {
+            friend 0x1::m;
+            public(friend) fun call() {}
+        }
+        module 0x1::m {}
+        script {
+            use 0x1::original;
+            fun main() {
+                original::call();
+                        //^ unresolved
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_fully_qualified_path_from_the_same_module() {
+    // language=Move
+    check_resolve(
+        r#"
+    module 0x1::M {
+        public fun call() {}
+                 //X
+        fun main() {
+            0x1::M::call();
+                    //^
+        }
+    }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_fun_in_test_only_module_from_another_test_only() {
+    // language=Move
+    check_resolve(
+        r#"
+    #[test_only]
+    module 0x1::M1 {
+        public fun call() {}
+                  //X
+    }
+    #[test_only]
+    module 0x1::M2 {
+        use 0x1::M1::call;
+
+        fun main() {
+            call();
+            //^
+        }
+    }
+    "#,
+    )
+}
+
+#[test]
+fn test_test_only_function_is_not_accessible_from_non_test_only_module() {
+    // language=Move
+    check_resolve(
+        r#"
+    module 0x1::M1 {
+        #[test_only]
+        public fun call() {}
+    }
+    module 0x1::M2 {
+        use 0x1::M1;
+        fun call() {
+            M1::call();
+               //^ unresolved
+        }
+    }
+    "#,
+    )
+}
+
+#[test]
+fn test_test_only_module_is_not_accessible_from_non_test_only_module() {
+    // language=Move
+    check_resolve(
+        r#"
+    #[test_only]
+    module 0x1::M1 {
+        public fun call() {}
+    }
+    module 0x1::M2 {
+        use 0x1::M1;
+        fun call() {
+            M1::call();
+           //^ unresolved
+        }
+    }
+    "#,
+    )
+}
+
+#[test]
+fn test_unit_test_functions_not_accessible_as_local_items() {
+    // language=Move
+    check_resolve(
+        r#"
+    #[test_only]
+    module 0x1::M {
+        #[test]
+        fun test_a() {}
+        fun main() {
+            test_a();
+           //^ unresolved
+        }
+    }
+    "#,
+    )
+}
+
+#[test]
+fn test_unit_test_functions_not_accessible_as_module_items() {
+    // language=Move
+    check_resolve(
+        r#"
+    #[test_only]
+    module 0x1::M1 {
+        #[test]
+        entry fun test_a() {}
+    }
+    #[test_only]
+    module 0x1::M2 {
+        use 0x1::M1;
+
+        entry fun main() {
+            M1::test_a();
+               //^ unresolved
+        }
+    }
+    "#,
+    )
+}
+
+
+
 

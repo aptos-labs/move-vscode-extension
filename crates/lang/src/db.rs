@@ -1,10 +1,11 @@
 use crate::loc::{SyntaxLoc, SyntaxLocExt};
-use crate::nameres::name_resolution::get_struct_pat_field_resolve_variants;
+use crate::nameres::name_resolution::{get_struct_lit_field_resolve_variants, get_struct_pat_field_resolve_variants};
 use crate::nameres::paths;
 use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt};
+use crate::node_ext::struct_field_name::StructFieldNameExt;
 use crate::{AsName, InFile};
 use base_db::{SourceRootDatabase, Upcast};
-use parser::SyntaxKind::{PATH, STRUCT_PAT_FIELD};
+use parser::SyntaxKind::{PATH, STRUCT_PAT_FIELD, STRUCT_LIT_FIELD};
 use stdx::itertools::Itertools;
 use syntax::ast::HasName;
 use syntax::{ast, unwrap_or_return};
@@ -23,29 +24,29 @@ pub trait HirDatabase: SourceRootDatabase + Upcast<dyn SourceRootDatabase> {
 fn resolve_ref_loc(db: &dyn HirDatabase, ref_loc: SyntaxLoc) -> Vec<ScopeEntry> {
     match ref_loc.kind() {
         STRUCT_PAT_FIELD => {
-            let Some(struct_pat_field) = ref_loc.cast::<ast::StructPatField>(db.upcast()) else {
+            let struct_pat_field = ref_loc.cast::<ast::StructPatField>(db.upcast()).unwrap();
+            let Some(struct_pat_field_name) = struct_pat_field.value.field_name() else {
                 return vec![];
             };
-            let struct_pat_field_name = {
-                let struct_pat_field = struct_pat_field.value.clone();
-                let mut field_name = None;
-                if let Some(name_ref) = struct_pat_field.name_ref() {
-                    field_name = Some(name_ref.as_name());
-                } else if let Some(ident_name) = struct_pat_field.ident_pat().and_then(|it| it.name()) {
-                    field_name = Some(ident_name.as_name());
-                };
-                field_name
-            };
-            let Some(struct_pat_field_name) = struct_pat_field_name else {
-                return vec![];
-            };
-
             let field_entries = get_struct_pat_field_resolve_variants(db, struct_pat_field);
             tracing::debug!(?struct_pat_field_name, ?field_entries);
 
             field_entries
                 .into_iter()
                 .filter_by_name(struct_pat_field_name)
+                .collect()
+        }
+        STRUCT_LIT_FIELD => {
+            let struct_lit_field = ref_loc.cast::<ast::StructLitField>(db.upcast()).unwrap();
+            let Some(struct_lit_field_name) = struct_lit_field.value.field_name() else {
+                return vec![];
+            };
+            let field_entries = get_struct_lit_field_resolve_variants(db, struct_lit_field);
+            tracing::debug!(?struct_lit_field_name, ?field_entries);
+
+            field_entries
+                .into_iter()
+                .filter_by_name(struct_lit_field_name)
                 .collect()
         }
         PATH => {

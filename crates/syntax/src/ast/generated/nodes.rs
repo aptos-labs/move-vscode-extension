@@ -623,6 +623,44 @@ impl Struct {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct StructLit {
+    pub(crate) syntax: SyntaxNode,
+}
+impl StructLit {
+    #[inline]
+    pub fn path(&self) -> Path { support::child(&self.syntax).expect("required by the parser") }
+    #[inline]
+    pub fn struct_lit_field_list(&self) -> Option<StructLitFieldList> { support::child(&self.syntax) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct StructLitField {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::HasReference for StructLitField {}
+impl StructLitField {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
+    #[inline]
+    pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct StructLitFieldList {
+    pub(crate) syntax: SyntaxNode,
+}
+impl StructLitFieldList {
+    #[inline]
+    pub fn fields(&self) -> AstChildren<StructLitField> { support::children(&self.syntax) }
+    #[inline]
+    pub fn l_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['{']) }
+    #[inline]
+    pub fn r_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['}']) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct StructPat {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1909,6 +1947,69 @@ impl AstNode for Struct {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for StructLit {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        STRUCT_LIT
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == STRUCT_LIT }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for StructLitField {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        STRUCT_LIT_FIELD
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == STRUCT_LIT_FIELD }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for StructLitFieldList {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        STRUCT_LIT_FIELD_LIST
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == STRUCT_LIT_FIELD_LIST }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for StructPat {
     #[inline]
     fn kind() -> SyntaxKind
@@ -3156,7 +3257,7 @@ impl AnyHasReference {
 }
 impl AstNode for AnyHasReference {
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, PATH | STRUCT_PAT_FIELD) }
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, PATH | STRUCT_LIT_FIELD | STRUCT_PAT_FIELD) }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         Self::can_cast(syntax.kind()).then_some(AnyHasReference { syntax })
@@ -3167,6 +3268,10 @@ impl AstNode for AnyHasReference {
 impl From<Path> for AnyHasReference {
     #[inline]
     fn from(node: Path) -> AnyHasReference { AnyHasReference { syntax: node.syntax } }
+}
+impl From<StructLitField> for AnyHasReference {
+    #[inline]
+    fn from(node: StructLitField) -> AnyHasReference { AnyHasReference { syntax: node.syntax } }
 }
 impl From<StructPatField> for AnyHasReference {
     #[inline]
@@ -3619,6 +3724,21 @@ impl std::fmt::Display for SpecInlineFun {
     }
 }
 impl std::fmt::Display for Struct {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for StructLit {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for StructLitField {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for StructLitFieldList {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

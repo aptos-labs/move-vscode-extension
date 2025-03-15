@@ -850,7 +850,7 @@ fn extract_struct_traits(ast: &mut AstSrc) {
     }
 
     let non_method_traits: &[(&str, &[&str])] = &[
-        ("HasReference", &["Path", "StructPatField"]),
+        ("HasReference", &["Path", "StructPatField", "StructLitField"]),
         (
             "HasVisibility",
             &["Fun", "SpecFun", "SpecInlineFun", "Struct", "Enum", "Const"],

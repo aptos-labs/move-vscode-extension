@@ -196,6 +196,19 @@ pub fn get_struct_pat_field_resolve_variants(
         .unwrap_or_default()
 }
 
+pub fn get_struct_lit_field_resolve_variants(
+    db: &dyn HirDatabase,
+    struct_lit_field: InFile<ast::StructLitField>,
+) -> Vec<ScopeEntry> {
+    let struct_lit_path = struct_lit_field.map(|field| field.struct_lit().path());
+    db.resolve_ref_single(struct_lit_path.in_file_into())
+        .and_then(|struct_entry| {
+            let fields_owner = struct_entry.node_loc.cast::<ast::AnyHasFields>(db.upcast())?;
+            Some(get_named_field_entries(fields_owner))
+        })
+        .unwrap_or_default()
+}
+
 pub fn get_named_field_entries(fields_owner: InFile<ast::AnyHasFields>) -> Vec<ScopeEntry> {
     fields_owner
         .value

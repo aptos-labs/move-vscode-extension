@@ -141,3 +141,39 @@ fn test_native_function_return_type_argument_to_type_param() {
     "#,
     )
 }
+
+#[test]
+fn test_resolve_type_param_in_native_function_in_spec() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::M {
+            spec module {
+                native fun serialize<MoveValue>(
+                                        //X
+                    v: &MoveValue
+                        //^
+                ): vector<u8>;
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_type_param_in_return() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            public fun remove<K: copy + drop, V>(
+                                            //X
+                val: V
+            ): V {
+             //^
+                val
+            }
+        }
+"#,
+    )
+}

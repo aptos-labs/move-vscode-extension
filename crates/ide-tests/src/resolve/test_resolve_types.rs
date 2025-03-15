@@ -241,3 +241,174 @@ fn test_return_type_to_alias() {
     "#,
     )
 }
+
+#[test]
+fn test_struct_unresolved_in_name_expr() {
+    // language=Move
+    check_resolve(
+        r#"
+        address 0x1 {
+            module A {
+                struct S {}
+            }
+            module B {
+                use 0x1::A;
+                fun call() {
+                    A::S
+                     //^ unresolved
+                }
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_type_from_use_item() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::M {
+            struct MyStruct {}
+                   //X
+        }
+        module 0x1::Main {
+            use 0x1::M::{Self, MyStruct};
+                              //^
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_type_for_local_import() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::table {
+            struct Table {}
+                   //X
+        }
+        module 0x1::main {
+            struct S<phantom T> has key {}
+            fun main() {
+                use 0x1::table::Table;
+
+                assert!(exists<S<Table>>(@0x1), 1);
+                                 //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_type_for_local_import_in_spec() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::table {
+            struct Table {}
+                   //X
+        }
+        module 0x1::main {
+            struct S<phantom T> has key {}
+            fun main() {}
+        }
+        spec 0x1::main {
+            spec main {
+                use 0x1::table::Table;
+
+                assert!(exists<S<Table>>(@0x1), 1);
+                                 //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resource_index_expr() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            struct S has key {}
+                 //X
+            fun main() {
+                S[@0x1];
+              //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_no_module_at_type_position() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::Transaction {
+            struct Type {
+                val: u8
+            }
+        }
+        module 0x1::M {
+            fun main(a: 0x1::Transaction::Transaction) {
+                                           //^ unresolved
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_enum_as_qualifier_of_variant_at_type_position() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            enum S { One, Two }
+               //X
+            fun main(one: S::One) {
+                        //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_cannot_resolve_enum_variant_at_type_position() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            enum S { One, Two }
+            fun main(one: S::One) {
+                            //^ unresolved
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_enum_type_from_module_import() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::m {
+            enum S { One, Two }
+               //X
+        }
+        module 0x1::main {
+            use 0x1::m;
+            fun main(one: m::S) {
+                           //^
+            }
+        }
+    "#,
+    )
+}

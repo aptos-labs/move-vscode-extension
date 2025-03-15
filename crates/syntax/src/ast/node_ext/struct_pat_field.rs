@@ -8,3 +8,11 @@ impl ast::StructPatField {
             .expect("required by parser")
     }
 }
+
+impl ast::StructLitField {
+    pub fn struct_lit(&self) -> ast::StructLit {
+        self.syntax()
+            .ancestor_of_type::<ast::StructLit>(true)
+            .expect("required by parser")
+    }
+}
