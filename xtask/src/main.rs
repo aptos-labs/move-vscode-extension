@@ -2,6 +2,7 @@
 
 mod codegen;
 mod install;
+mod testgen;
 
 use anyhow::Context;
 use clap::{Parser, Subcommand};
@@ -18,6 +19,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Command {
     Codegen,
+    Testgen,
     Install {
         #[clap(long)]
         server: bool,
@@ -32,6 +34,7 @@ fn main() -> anyhow::Result<()> {
     let sh = Shell::new()?;
     match cli.command {
         Command::Codegen => codegen::generate(),
+        Command::Testgen => testgen::generate(),
         Command::Install { client, server } => {
             if client {
                 install::install_client(&sh).context("install client")?;

@@ -12,10 +12,11 @@ use tracing_tree::HierarchicalLayer;
 
 mod test_resolve_functions;
 mod test_resolve_modules;
-mod test_resolve_type_params;
 mod test_resolve_types;
 mod test_resolve_variables;
 mod test_resolve_struct_fields;
+mod test_resolve_specs;
+mod test_resolve_loop_labels;
 
 pub(crate) fn check_resolve(source: &str) {
     let _ = Registry::default()

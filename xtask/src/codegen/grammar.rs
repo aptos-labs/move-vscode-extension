@@ -64,7 +64,7 @@ fn generate_tokens(grammar: &AstSrc) -> String {
     });
 
     add_preamble(
-        "sourcegen_ast",
+        "codegen",
         reformat(
             quote! {
                 use crate::{SyntaxKind::{self, *}, SyntaxToken, ast::AstToken};
@@ -300,7 +300,7 @@ fn generate_nodes(kinds: KindsSrc, grammar: &AstSrc) -> String {
         }
     }
 
-    let res = add_preamble("sourcegen_ast", reformat(res));
+    let res = add_preamble("codegen", reformat(res));
     res.replace("#[derive", "\n#[derive")
 }
 
@@ -554,7 +554,7 @@ fn generate_syntax_kinds(grammar: KindsSrc<'_>) -> String {
         pub use T;
     };
 
-    add_preamble("sourcegen_ast", reformat(ast.to_string()))
+    add_preamble("codegen", reformat(ast.to_string()))
 }
 
 fn lower(grammar: &Grammar) -> AstSrc {
