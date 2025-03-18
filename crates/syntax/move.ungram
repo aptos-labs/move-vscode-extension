@@ -55,6 +55,9 @@ UseGroup =
 Friend =
     'friend' Path ';'
 
+StructOrEnum =
+    Struct | Enum
+
 Struct =
     Attr*
     'struct' Name TypeParamList?
@@ -88,13 +91,6 @@ TupleFieldList =
 
 TupleField =
     Attr* Type
-
-// A Data Type.
-//
-// Not used directly in the grammar, but handy to have anyway.
-Adt =
-  Enum
-| Struct
 
 Const =
     Attr* 'const' Name ':' Type '=' body:Expr ';'

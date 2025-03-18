@@ -8,6 +8,7 @@ pub mod db;
 mod loc;
 mod member_items;
 mod node_ext;
+mod types;
 
 pub use crate::files::{FilePosition, FileRange, InFile};
 pub use crate::name::{AsName, Name};

@@ -558,9 +558,9 @@ module 0x1::m {
 fn test_cannot_resolve_module_with_unknown_named_address() {
     check_resolve(
         r#"
-module aptos_framework::m1 {}
+module unknown_address::m1 {}
 module 0x1::m {
-    use aptos_framework::m1;
+    use unknown_address::m1;
                        //^ unresolved
 }        
 "#,
