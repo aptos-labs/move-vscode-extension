@@ -5,21 +5,27 @@ use syntax::ast;
 use syntax::ast::HasName;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct TyVar(TyVarKind);
+pub struct TyVar {
+    pub kind: TyVarKind,
+}
 
 impl TyVar {
     pub fn new_anonymous(index: u32) -> Self {
-        TyVar(TyVarKind::Anonymous(index))
+        TyVar {
+            kind: TyVarKind::Anonymous(index),
+        }
     }
 
     pub fn new_with_origin(origin: ast::TypeParam) -> Self {
-        TyVar(TyVarKind::WithOrigin(origin))
+        TyVar {
+            kind: TyVarKind::WithOrigin(origin),
+        }
     }
 }
 
 impl fmt::Display for TyVar {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match &self.0 {
+        match &self.kind {
             TyVarKind::Anonymous(index) => write!(f, "?_{}", *index),
             TyVarKind::WithOrigin(origin) => {
                 let origin_name = origin.name().map(|it| it.as_name());

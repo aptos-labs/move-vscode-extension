@@ -1,6 +1,8 @@
-use crate::types::ty::ty_var::TyVar;
+use crate::types::ty::ty_var::{TyVar, TyVarKind};
+use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::{Ty, TypeFolder};
 use std::collections::HashMap;
+use crate::types::fold::TypeFoldable;
 
 #[derive(Debug)]
 pub enum TableValue {
@@ -52,7 +54,53 @@ impl TypeFolder for TyVarResolver<'_> {
     fn fold_ty(&self, t: Ty) -> Ty {
         match t {
             Ty::Var(ref ty_var) => self.uni_table.resolve_ty_var(ty_var).unwrap_or(t),
-            _ => t,
+            _ => {
+                t.deep_fold_with(self)
+            },
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum Fallback {
+    TyUnknown,
+    Origin,
+}
+
+#[derive(Debug, Clone)]
+pub struct FullTyVarResolver<'a> {
+    uni_table: &'a UnificationTable,
+    fallback: Fallback,
+}
+
+impl<'a> FullTyVarResolver<'a> {
+    pub fn new(unification_table: &'a UnificationTable, fallback: Fallback) -> Self {
+        FullTyVarResolver {
+            uni_table: unification_table,
+            fallback,
+        }
+    }
+}
+
+impl<F: Fn(TyVar) -> Ty> TypeFolder for FullTyVarResolver<'_> {
+    fn fold_ty(&self, t: Ty) -> Ty {
+        match t {
+            Ty::Var(ref ty_var) => {
+                let resolved_ty_var = self.uni_table.resolve_ty_var(ty_var);
+                match resolved_ty_var {
+                    Some(ty) => ty,
+                    None => match (self.fallback, &ty_var.kind) {
+                        (Fallback::Origin, TyVarKind::WithOrigin(origin)) => {
+                            Ty::TypeParam(TyTypeParameter::new(origin.to_owned()))
+                        }
+                        _ => Ty::Unknown,
+                    },
+                }
+                self.uni_table.resolve_ty_var(ty_var).unwrap_or(t)
+            }
+            _ => {
+                t.deep_fold_with(self)
+            },
         }
     }
 }

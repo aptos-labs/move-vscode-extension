@@ -1,10 +1,9 @@
 use crate::db::HirDatabase;
-use crate::types::fold::TypeFoldable;
 use crate::types::has_type_params_ext::HasTypeParamsExt;
 use crate::types::lowering::TyLowering;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
-use crate::types::unification::{TyVarResolver, UnificationTable};
+use crate::types::unification::{Fallback, FullTyVarResolver, TyVarResolver, UnificationTable};
 use crate::InFile;
 use syntax::{ast, AstNode};
 
@@ -33,6 +32,20 @@ impl<'a> InferenceCtx<'a> {
     }
 
     pub fn resolve_vars_if_possible(&self, ty: Ty) -> Ty {
-        ty.deep_fold_with(TyVarResolver::new(&self.var_unification_table))
+        ty.fold_with(TyVarResolver::new(&self.var_unification_table))
+    }
+
+    pub fn fully_resolve_vars_fallback_to_unknown(&self, ty: Ty) -> Ty {
+        ty.fold_with(FullTyVarResolver::new(
+            &self.var_unification_table,
+            Fallback::TyUnknown,
+        ))
+    }
+
+    pub fn fully_resolve_vars_fallback_to_origin(&self, ty: Ty) -> Ty {
+        ty.fold_with(FullTyVarResolver::new(
+            &self.var_unification_table,
+            Fallback::Origin,
+        ))
     }
 }
