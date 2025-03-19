@@ -146,9 +146,17 @@ IdentPat = Name
 Type =
     PathType
     | RefType
+    | TupleType
+    | UnitType
+    | ParenType
 
 RefType =
     '&' 'mut'? Type
+
+TupleType =
+    '(' types:(Type (',' Type)* ','?)? ')'
+UnitType = '(' ')'
+ParenType = '(' Type ')'
 
 PathType =
     Path

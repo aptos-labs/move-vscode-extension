@@ -1,15 +1,20 @@
 pub(crate) mod adt;
+pub(crate) mod reference;
 pub(crate) mod type_param;
+pub(crate) mod tuple;
+pub(crate) mod ty_var;
 
 use crate::types::fold::TypeFoldable;
 use crate::types::ty::adt::TyAdt;
+use crate::types::ty::reference::TyReference;
 use crate::types::ty::type_param::TyTypeParameter;
-use crate::types::unification::TyVar;
 use std::fmt;
 use std::fmt::Formatter;
+use crate::types::ty::tuple::TyTuple;
+use crate::types::ty::ty_var::TyVar;
 
 pub trait TypeFolder: Clone {
-    fn fold_ty(&self, t: Ty) -> Ty;
+    fn fold_ty(&self, ty: Ty) -> Ty;
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -27,8 +32,10 @@ pub enum Ty {
     Var(TyVar),
     TypeParam(TyTypeParameter),
 
+    Reference(TyReference),
     Vector(Box<Ty>),
     Adt(TyAdt),
+    Tuple(TyTuple),
 }
 
 impl TypeFoldable<Ty> for Ty {

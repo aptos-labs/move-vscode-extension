@@ -1,29 +1,6 @@
+use crate::types::ty::ty_var::TyVar;
 use crate::types::ty::{Ty, TypeFolder};
 use std::collections::HashMap;
-use std::fmt;
-use std::fmt::Formatter;
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub struct TyVar(TyVarKind);
-
-impl TyVar {
-    pub fn new_anonymous(index: u32) -> Self {
-        TyVar(TyVarKind::Anonymous(index))
-    }
-}
-
-impl fmt::Display for TyVar {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match self.0 {
-            TyVarKind::Anonymous(index) => write!(f, "?_{}", index),
-        }
-    }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub enum TyVarKind {
-    Anonymous(u32),
-}
 
 #[derive(Debug)]
 pub enum TableValue {
@@ -74,7 +51,7 @@ impl<'a> TyVarResolver<'a> {
 impl TypeFolder for TyVarResolver<'_> {
     fn fold_ty(&self, t: Ty) -> Ty {
         match t {
-            Ty::Var(ty_var) => self.uni_table.resolve_ty_var(&ty_var).unwrap_or(t),
+            Ty::Var(ref ty_var) => self.uni_table.resolve_ty_var(ty_var).unwrap_or(t),
             _ => t,
         }
     }
@@ -91,7 +68,7 @@ mod tests {
         let mut unification_table = UnificationTable::new();
 
         let v_arg = TyVar::new_anonymous(0);
-        unification_table.unify_var_value(v_arg, Ty::Bool);
+        unification_table.unify_var_value(v_arg.clone(), Ty::Bool);
 
         let v = Ty::Vector(Box::new(Ty::Var(v_arg)));
         let resolved_v = v.deep_fold_with(TyVarResolver::new(&unification_table));

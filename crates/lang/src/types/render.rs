@@ -1,8 +1,9 @@
+use stdx::itertools::Itertools;
+use crate::types::ty::adt::TyAdt;
+use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::Ty;
 use crate::AsName;
 use syntax::ast::HasName;
-use crate::types::ty::adt::TyAdt;
-use crate::types::ty::type_param::TyTypeParameter;
 
 pub fn render(ty: &Ty) -> String {
     match ty {
@@ -10,6 +11,15 @@ pub fn render(ty: &Ty) -> String {
             format!("vector<{}>", render(ty))
         }
         Ty::Adt(ty_adt) => render_ty_adt(ty_adt),
+        Ty::Reference(ty_ref) => {
+            let prefix = if ty_ref.is_mut { "&mut " } else { "&" };
+            let inner = render(ty_ref.referenced());
+            format!("{}{}", prefix, inner)
+        }
+        Ty::Tuple(ty_tuple) => {
+            let rendered_tys = ty_tuple.types.iter().map(|it| render(it)).join(", ");
+            format!("({})", rendered_tys)
+        }
 
         Ty::TypeParam(ty_tp) => render_ty_tp(ty_tp),
         Ty::Var(ty_var) => ty_var.to_string(),
@@ -26,7 +36,7 @@ pub fn render(ty: &Ty) -> String {
     }
 }
 
-fn render_ty_adt(ty_adt: &TyAdt) -> String {
+fn render_ty_adt(_ty_adt: &TyAdt) -> String {
     "_".to_string()
 }
 
@@ -51,7 +61,7 @@ fn anonymous() -> String {
 mod tests {
     use super::*;
     use crate::types::ty::IntegerKind;
-    use crate::types::unification::TyVar;
+    use crate::types::ty::ty_var::TyVar;
 
     #[test]
     fn render_vector() {

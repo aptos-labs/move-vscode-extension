@@ -394,6 +394,19 @@ impl ParenExpr {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ParenType {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ParenType {
+    #[inline]
+    pub fn type_(&self) -> Type { support::child(&self.syntax).expect("required by the parser") }
+    #[inline]
+    pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
+    #[inline]
+    pub fn r_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![')']) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Path {
     pub(crate) syntax: SyntaxNode,
 }
@@ -448,7 +461,7 @@ pub struct PathType {
 }
 impl PathType {
     #[inline]
-    pub fn path(&self) -> Option<Path> { support::child(&self.syntax) }
+    pub fn path(&self) -> Path { support::child(&self.syntax).expect("required by the parser") }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -754,12 +767,25 @@ impl TupleStructPat {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct TupleType {
+    pub(crate) syntax: SyntaxNode,
+}
+impl TupleType {
+    #[inline]
+    pub fn types(&self) -> AstChildren<Type> { support::children(&self.syntax) }
+    #[inline]
+    pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
+    #[inline]
+    pub fn r_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![')']) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TypeArg {
     pub(crate) syntax: SyntaxNode,
 }
 impl TypeArg {
     #[inline]
-    pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
+    pub fn type_(&self) -> Type { support::child(&self.syntax).expect("required by the parser") }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -796,6 +822,17 @@ impl TypeParamList {
     pub fn l_angle_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![<]) }
     #[inline]
     pub fn r_angle_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![>]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct UnitType {
+    pub(crate) syntax: SyntaxNode,
+}
+impl UnitType {
+    #[inline]
+    pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
+    #[inline]
+    pub fn r_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![')']) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -981,8 +1018,11 @@ impl ast::HasVisibility for StructOrEnum {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Type {
+    ParenType(ParenType),
     PathType(PathType),
     RefType(RefType),
+    TupleType(TupleType),
+    UnitType(UnitType),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1611,6 +1651,27 @@ impl AstNode for ParenExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for ParenType {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        PAREN_TYPE
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == PAREN_TYPE }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for Path {
     #[inline]
     fn kind() -> SyntaxKind
@@ -2157,6 +2218,27 @@ impl AstNode for TupleStructPat {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for TupleType {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        TUPLE_TYPE
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == TUPLE_TYPE }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for TypeArg {
     #[inline]
     fn kind() -> SyntaxKind
@@ -2230,6 +2312,27 @@ impl AstNode for TypeParamList {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == TYPE_PARAM_LIST }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for UnitType {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        UNIT_TYPE
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == UNIT_TYPE }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -2960,6 +3063,10 @@ impl AstNode for StructOrEnum {
         }
     }
 }
+impl From<ParenType> for Type {
+    #[inline]
+    fn from(node: ParenType) -> Type { Type::ParenType(node) }
+}
 impl From<PathType> for Type {
     #[inline]
     fn from(node: PathType) -> Type { Type::PathType(node) }
@@ -2968,7 +3075,21 @@ impl From<RefType> for Type {
     #[inline]
     fn from(node: RefType) -> Type { Type::RefType(node) }
 }
+impl From<TupleType> for Type {
+    #[inline]
+    fn from(node: TupleType) -> Type { Type::TupleType(node) }
+}
+impl From<UnitType> for Type {
+    #[inline]
+    fn from(node: UnitType) -> Type { Type::UnitType(node) }
+}
 impl Type {
+    pub fn paren_type(self) -> Option<ParenType> {
+        match (self) {
+            Type::ParenType(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn path_type(self) -> Option<PathType> {
         match (self) {
             Type::PathType(item) => Some(item),
@@ -2981,15 +3102,32 @@ impl Type {
             _ => None,
         }
     }
+    pub fn tuple_type(self) -> Option<TupleType> {
+        match (self) {
+            Type::TupleType(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn unit_type(self) -> Option<UnitType> {
+        match (self) {
+            Type::UnitType(item) => Some(item),
+            _ => None,
+        }
+    }
 }
 impl AstNode for Type {
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, PATH_TYPE | REF_TYPE) }
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(kind, PAREN_TYPE | PATH_TYPE | REF_TYPE | TUPLE_TYPE | UNIT_TYPE)
+    }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
+            PAREN_TYPE => Type::ParenType(ParenType { syntax }),
             PATH_TYPE => Type::PathType(PathType { syntax }),
             REF_TYPE => Type::RefType(RefType { syntax }),
+            TUPLE_TYPE => Type::TupleType(TupleType { syntax }),
+            UNIT_TYPE => Type::UnitType(UnitType { syntax }),
             _ => return None,
         };
         Some(res)
@@ -2997,8 +3135,11 @@ impl AstNode for Type {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
+            Type::ParenType(it) => &it.syntax,
             Type::PathType(it) => &it.syntax,
             Type::RefType(it) => &it.syntax,
+            Type::TupleType(it) => &it.syntax,
+            Type::UnitType(it) => &it.syntax,
         }
     }
 }
@@ -3648,6 +3789,11 @@ impl std::fmt::Display for ParenExpr {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for ParenType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for Path {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -3778,6 +3924,11 @@ impl std::fmt::Display for TupleStructPat {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for TupleType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for TypeArg {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -3794,6 +3945,11 @@ impl std::fmt::Display for TypeParam {
     }
 }
 impl std::fmt::Display for TypeParamList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for UnitType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

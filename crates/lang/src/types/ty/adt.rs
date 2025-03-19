@@ -1,5 +1,5 @@
 use crate::types::fold::TypeFoldable;
-use crate::types::substitution::Substitution;
+use crate::types::substitution::{empty_substitution, Substitution};
 use crate::types::ty::TypeFolder;
 use syntax::ast;
 
@@ -7,6 +7,15 @@ use syntax::ast;
 pub struct TyAdt {
     item: ast::StructOrEnum,
     subst: Substitution,
+}
+
+impl TyAdt {
+    pub fn new(item: ast::StructOrEnum) -> Self {
+        TyAdt {
+            item,
+            subst: empty_substitution(),
+        }
+    }
 }
 
 impl TypeFoldable<TyAdt> for TyAdt {

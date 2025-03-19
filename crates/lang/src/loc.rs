@@ -4,7 +4,7 @@ use parser::SyntaxKind;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::algo::ancestors_at_offset;
-use syntax::{AstNode, TextSize};
+use syntax::{AstNode, SyntaxNode, TextSize};
 use vfs::FileId;
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]

@@ -10,6 +10,13 @@ impl ast::Path {
         self.segment().name_ref()
     }
 
+    pub fn type_args(&self) -> Vec<ast::TypeArg> {
+        self.segment()
+            .type_arg_list()
+            .map(|it| it.type_arguments().collect())
+            .unwrap_or_default()
+    }
+
     /** For `Foo::bar::baz::quux` path returns `Foo` */
     pub fn base_path(&self) -> ast::Path {
         let qualifier = self.qualifier();

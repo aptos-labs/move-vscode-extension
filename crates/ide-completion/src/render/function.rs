@@ -3,7 +3,7 @@ use crate::item::{CompletionItem, CompletionItemBuilder, CompletionItemKind};
 use ide_db::SymbolKind;
 use lang::Name;
 use stdx::format_to;
-use syntax::ast;
+use syntax::{ast, AstNode};
 
 pub(crate) fn render_function_completion_item(
     ctx: &CompletionContext<'_>,
@@ -20,7 +20,7 @@ pub(crate) fn render_function_completion_item(
 
     let mut detail = String::new();
     if let Some(ret_type) = function.return_type() {
-        format_to!(detail, "{}", ret_type.text());
+        format_to!(detail, "{}", ret_type.syntax().text());
     }
     item.set_detail(Some(detail));
 
