@@ -8,7 +8,7 @@ use ide_db::{LineIndexDatabase, RootDatabase};
 use lang::files::{FilePosition, FileRange};
 use line_index::{LineCol, LineIndex};
 use ra_salsa::ParallelDatabase;
-use syntax::{SourceFile, TextRange, TextSize};
+use syntax::{SourceFile, SyntaxKind, TextRange, TextSize};
 use triomphe::Arc;
 use vfs::file_set::FileSet;
 use vfs::{FileId, VfsPath};
@@ -17,11 +17,13 @@ mod goto_definition;
 mod navigation_target;
 pub mod syntax_highlighting;
 pub mod test_utils;
+mod type_info;
 
 pub use crate::navigation_target::NavigationTarget;
 pub use crate::syntax_highlighting::HlRange;
 use ide_completion::config::CompletionConfig;
 use ide_diagnostics::{Diagnostic, DiagnosticsConfig};
+use lang::{loc, types};
 pub use ra_salsa::Cancelled;
 
 pub type Cancellable<T> = Result<T, Cancelled>;
@@ -421,6 +423,10 @@ impl Analysis {
     // pub fn signature_help(&self, position: FilePosition) -> Cancellable<Option<SignatureHelp>> {
     //     self.with_db(|db| signature_help::signature_help(db, position))
     // }
+
+    pub fn expr_type_info(&self, position: FilePosition) -> Cancellable<Option<String>> {
+        self.with_db(|db| type_info::expr_type_info(db, position))
+    }
 
     // /// Computes call hierarchy candidates for the given file position.
     // pub fn call_hierarchy(

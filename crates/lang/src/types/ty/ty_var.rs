@@ -1,7 +1,7 @@
+use crate::loc::{SyntaxLoc, SyntaxLocExt};
 use crate::{AsName, Name};
 use std::fmt;
 use std::fmt::Formatter;
-use syntax::ast;
 use syntax::ast::HasName;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -16,21 +16,9 @@ impl TyVar {
         }
     }
 
-    pub fn new_with_origin(origin: ast::TypeParam) -> Self {
+    pub fn new_with_origin(origin_loc: SyntaxLoc) -> Self {
         TyVar {
-            kind: TyVarKind::WithOrigin(origin),
-        }
-    }
-}
-
-impl fmt::Display for TyVar {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match &self.kind {
-            TyVarKind::Anonymous(index) => write!(f, "?_{}", *index),
-            TyVarKind::WithOrigin(origin) => {
-                let origin_name = origin.name().map(|it| it.as_name());
-                write!(f, "?_{}", origin_name.unwrap_or(Name::new("<anonymous>")))
-            }
+            kind: TyVarKind::WithOrigin { origin_loc },
         }
     }
 }
@@ -38,5 +26,5 @@ impl fmt::Display for TyVar {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TyVarKind {
     Anonymous(u32),
-    WithOrigin(ast::TypeParam),
+    WithOrigin { origin_loc: SyntaxLoc },
 }

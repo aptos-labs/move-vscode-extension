@@ -2,6 +2,7 @@ use crate::types::lowering::TyLowering;
 use crate::types::substitution::Substitution;
 use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::Ty;
+use crate::InFile;
 use std::collections::HashMap;
 use syntax::ast::HasTypeParams;
 use syntax::{ast, AstNode};
@@ -10,12 +11,13 @@ impl TyLowering<'_> {
     pub fn type_args_substitution(
         &self,
         path: ast::Path,
-        generic_item: ast::AnyHasTypeParams,
+        generic_item: InFile<ast::AnyHasTypeParams>,
     ) -> Substitution {
-        let psi_subst = psi_type_args_subst(path, generic_item.type_params());
-
         let mut subst_mapping = HashMap::new();
+
+        let psi_subst = psi_type_args_subst(path, generic_item.value.type_params());
         for (type_param, psi_type_arg) in psi_subst {
+            let type_param = InFile::new(generic_item.file_id, type_param);
             let type_param_ty = TyTypeParameter::new(type_param);
             let ty = match psi_type_arg {
                 PsiTypeArg::Present(type_) => self.lower_type(type_),

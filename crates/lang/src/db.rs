@@ -1,11 +1,15 @@
 use crate::loc::{SyntaxLoc, SyntaxLocExt};
-use crate::nameres::name_resolution::{get_struct_lit_field_resolve_variants, get_struct_pat_field_resolve_variants};
+use crate::nameres::name_resolution::{
+    get_struct_lit_field_resolve_variants, get_struct_pat_field_resolve_variants,
+};
 use crate::nameres::paths;
 use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt};
 use crate::node_ext::struct_field_name::StructFieldNameExt;
+use crate::types::inference::inference_result::InferenceResult;
+use crate::types::inference::InferenceCtx;
 use crate::{AsName, InFile};
 use base_db::{SourceRootDatabase, Upcast};
-use parser::SyntaxKind::{PATH, STRUCT_PAT_FIELD, STRUCT_LIT_FIELD};
+use parser::SyntaxKind::{PATH, STRUCT_LIT_FIELD, STRUCT_PAT_FIELD};
 use stdx::itertools::Itertools;
 use syntax::ast::HasName;
 use syntax::{ast, unwrap_or_return};
@@ -19,6 +23,11 @@ pub trait HirDatabase: SourceRootDatabase + Upcast<dyn SourceRootDatabase> {
 
     #[ra_salsa::transparent]
     fn resolve_ref_single(&self, any_ref: InFile<ast::AnyHasReference>) -> Option<ScopeEntry>;
+
+    fn inference(&self, ctx_owner_loc: SyntaxLoc) -> Option<InferenceResult>;
+
+    #[ra_salsa::transparent]
+    fn inference_for_ctx_owner(&self, ctx_owner: InFile<ast::InferenceCtxOwner>) -> Option<InferenceResult>;
 }
 
 fn resolve_ref_loc(db: &dyn HirDatabase, ref_loc: SyntaxLoc) -> Vec<ScopeEntry> {
@@ -67,4 +76,19 @@ fn resolve_ref_single(
 ) -> Option<ScopeEntry> {
     let entries = db.resolve_ref_multi(any_ref);
     entries.into_iter().exactly_one().ok()
+}
+
+fn inference(db: &dyn HirDatabase, ctx_owner_loc: SyntaxLoc) -> Option<InferenceResult> {
+    let Some(ctx_owner) = ctx_owner_loc.cast::<ast::InferenceCtxOwner>(db.upcast()) else {
+        return None;
+    };
+    let ctx = InferenceCtx::new(db);
+
+    let inference_result = ctx.infer(ctx_owner);
+    Some(inference_result)
+}
+
+fn inference_for_ctx_owner(db: &dyn HirDatabase, ctx_owner: InFile<ast::InferenceCtxOwner>) -> Option<InferenceResult> {
+    let ctx_owner_loc = ctx_owner.loc();
+    db.inference(ctx_owner_loc)
 }

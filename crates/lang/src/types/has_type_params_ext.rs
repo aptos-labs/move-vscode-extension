@@ -2,7 +2,7 @@ use crate::types::substitution::Substitution;
 use crate::types::ty::ty_var::TyVar;
 use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::Ty;
-use std::collections::HashMap;
+use crate::InFile;
 use syntax::ast;
 use syntax::ast::HasTypeParams;
 
@@ -12,11 +12,12 @@ pub trait HasTypeParamsExt {
     fn ty_vars_subst(&self) -> Substitution;
 }
 
-impl HasTypeParamsExt for ast::AnyHasTypeParams {
+impl HasTypeParamsExt for InFile<ast::AnyHasTypeParams> {
     fn ty_type_params(&self) -> Vec<TyTypeParameter> {
-        self.type_params()
+        self.value
+            .type_params()
             .into_iter()
-            .map(|it| TyTypeParameter::new(it))
+            .map(|it| TyTypeParameter::new(InFile::new(self.file_id, it)))
             .collect()
     }
 
@@ -33,7 +34,7 @@ impl HasTypeParamsExt for ast::AnyHasTypeParams {
         let subst = self
             .ty_type_params()
             .into_iter()
-            .map(|ty_tp| (ty_tp.clone(), Ty::Var(TyVar::new_with_origin(ty_tp.origin))))
+            .map(|ty_tp| (ty_tp.clone(), Ty::Var(TyVar::new_with_origin(ty_tp.origin_loc))))
             .collect();
         Substitution::new(subst)
     }

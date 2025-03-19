@@ -261,6 +261,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
 };
 
 pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
+    ("ExprStmt", &["expr"]),
     ("TypeArg", &["type"]),
     ("StructPat", &["path"]),
     ("PathType", &["path"]),

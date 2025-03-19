@@ -119,7 +119,7 @@ pub struct ExprStmt {
 }
 impl ExprStmt {
     #[inline]
-    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    pub fn expr(&self) -> Expr { support::child(&self.syntax).expect("required by the parser") }
     #[inline]
     pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
 }
@@ -252,8 +252,16 @@ impl LetStmt {
 pub struct Literal {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::HasAttrs for Literal {}
-impl Literal {}
+impl Literal {
+    #[inline]
+    pub fn false_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![false]) }
+    #[inline]
+    pub fn int_number_token(&self) -> Option<SyntaxToken> {
+        support::token(&self.syntax, T![int_number])
+    }
+    #[inline]
+    pub fn true_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![true]) }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Module {
@@ -962,6 +970,13 @@ pub enum AnyField {
 impl ast::HasAttrs for AnyField {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum BindingTypeOwner {
+    LetStmt(LetStmt),
+    Param(Param),
+    SchemaField(SchemaField),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Expr {
     BinExpr(BinExpr),
     Literal(Literal),
@@ -975,6 +990,16 @@ pub enum FieldList {
     NamedFieldList(NamedFieldList),
     TupleFieldList(TupleFieldList),
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum InferenceCtxOwner {
+    Fun(Fun),
+    SpecFun(SpecFun),
+}
+impl ast::HasAttrs for InferenceCtxOwner {}
+impl ast::HasName for InferenceCtxOwner {}
+impl ast::HasTypeParams for InferenceCtxOwner {}
+impl ast::HasVisibility for InferenceCtxOwner {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Item {
@@ -2617,6 +2642,60 @@ impl AstNode for AnyField {
         }
     }
 }
+impl From<LetStmt> for BindingTypeOwner {
+    #[inline]
+    fn from(node: LetStmt) -> BindingTypeOwner { BindingTypeOwner::LetStmt(node) }
+}
+impl From<Param> for BindingTypeOwner {
+    #[inline]
+    fn from(node: Param) -> BindingTypeOwner { BindingTypeOwner::Param(node) }
+}
+impl From<SchemaField> for BindingTypeOwner {
+    #[inline]
+    fn from(node: SchemaField) -> BindingTypeOwner { BindingTypeOwner::SchemaField(node) }
+}
+impl BindingTypeOwner {
+    pub fn let_stmt(self) -> Option<LetStmt> {
+        match (self) {
+            BindingTypeOwner::LetStmt(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn param(self) -> Option<Param> {
+        match (self) {
+            BindingTypeOwner::Param(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn schema_field(self) -> Option<SchemaField> {
+        match (self) {
+            BindingTypeOwner::SchemaField(item) => Some(item),
+            _ => None,
+        }
+    }
+}
+impl AstNode for BindingTypeOwner {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, LET_STMT | PARAM | SCHEMA_FIELD) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            LET_STMT => BindingTypeOwner::LetStmt(LetStmt { syntax }),
+            PARAM => BindingTypeOwner::Param(Param { syntax }),
+            SCHEMA_FIELD => BindingTypeOwner::SchemaField(SchemaField { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            BindingTypeOwner::LetStmt(it) => &it.syntax,
+            BindingTypeOwner::Param(it) => &it.syntax,
+            BindingTypeOwner::SchemaField(it) => &it.syntax,
+        }
+    }
+}
 impl From<BinExpr> for Expr {
     #[inline]
     fn from(node: BinExpr) -> Expr { Expr::BinExpr(node) }
@@ -2736,6 +2815,48 @@ impl AstNode for FieldList {
         match self {
             FieldList::NamedFieldList(it) => &it.syntax,
             FieldList::TupleFieldList(it) => &it.syntax,
+        }
+    }
+}
+impl From<Fun> for InferenceCtxOwner {
+    #[inline]
+    fn from(node: Fun) -> InferenceCtxOwner { InferenceCtxOwner::Fun(node) }
+}
+impl From<SpecFun> for InferenceCtxOwner {
+    #[inline]
+    fn from(node: SpecFun) -> InferenceCtxOwner { InferenceCtxOwner::SpecFun(node) }
+}
+impl InferenceCtxOwner {
+    pub fn fun(self) -> Option<Fun> {
+        match (self) {
+            InferenceCtxOwner::Fun(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn spec_fun(self) -> Option<SpecFun> {
+        match (self) {
+            InferenceCtxOwner::SpecFun(item) => Some(item),
+            _ => None,
+        }
+    }
+}
+impl AstNode for InferenceCtxOwner {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, FUN | SPEC_FUN) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            FUN => InferenceCtxOwner::Fun(Fun { syntax }),
+            SPEC_FUN => InferenceCtxOwner::SpecFun(SpecFun { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            InferenceCtxOwner::Fun(it) => &it.syntax,
+            InferenceCtxOwner::SpecFun(it) => &it.syntax,
         }
     }
 }
@@ -3161,7 +3282,6 @@ impl AstNode for AnyHasAttrs {
                 | ENUM
                 | FUN
                 | ITEM_SPEC
-                | LITERAL
                 | MODULE
                 | MODULE_SPEC
                 | NAMED_FIELD
@@ -3200,10 +3320,6 @@ impl From<Fun> for AnyHasAttrs {
 impl From<ItemSpec> for AnyHasAttrs {
     #[inline]
     fn from(node: ItemSpec) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
-}
-impl From<Literal> for AnyHasAttrs {
-    #[inline]
-    fn from(node: Literal) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
 impl From<Module> for AnyHasAttrs {
     #[inline]
@@ -3619,12 +3735,22 @@ impl std::fmt::Display for AnyField {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for BindingTypeOwner {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for Expr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
 impl std::fmt::Display for FieldList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for InferenceCtxOwner {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

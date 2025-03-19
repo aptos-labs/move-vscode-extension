@@ -15,6 +15,9 @@ pub mod syntax_node;
 pub mod type_;
 pub mod visibility;
 mod ref_type;
+mod ident_pat;
+mod expr;
+mod literal;
 
 use crate::ast::{support, ExprStmt, LetStmt, Stmt};
 use crate::token_text::TokenText;

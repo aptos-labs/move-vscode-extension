@@ -40,6 +40,12 @@ Item =
     | Schema
     | ItemSpec
 
+InferenceCtxOwner =
+    Fun | SpecFun
+
+BindingTypeOwner =
+    LetStmt | Param | SchemaField
+
 UseStmt =
     Attr* 'use' UseSpeck ';'
 
@@ -221,9 +227,7 @@ StructLitField =
     (NameRef ':')? Expr
 
 Literal =
-    Attr* value:(
-        '@int_number' | 'true' | 'false'
-    )
+    'int_number' | 'true' | 'false'
 
 ParenExpr =
     '(' Expr ')'

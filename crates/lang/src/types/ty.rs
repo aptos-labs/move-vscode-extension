@@ -4,12 +4,15 @@ pub(crate) mod tuple;
 pub(crate) mod ty_var;
 pub(crate) mod type_param;
 
+use crate::db::HirDatabase;
 use crate::types::fold::TypeFoldable;
+use crate::types::render::TypeRenderer;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::reference::TyReference;
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_var::TyVar;
 use crate::types::ty::type_param::TyTypeParameter;
+use base_db::SourceRootDatabase;
 use std::fmt;
 use std::fmt::Formatter;
 
@@ -48,6 +51,10 @@ impl Ty {
             Ty::Reference(ty_ref) => ty_ref.referenced().unwrap_refs(),
             _ => self.to_owned(),
         }
+    }
+
+    pub fn render(&self, db: &dyn SourceRootDatabase) -> String {
+        TypeRenderer::new(db).render(self)
     }
 }
 

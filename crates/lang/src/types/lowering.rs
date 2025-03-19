@@ -66,25 +66,21 @@ impl<'a> TyLowering<'a> {
     pub fn lower_path(&self, path: ast::Path, named_item: InFile<SyntaxNode>) -> Ty {
         use syntax::SyntaxKind::*;
 
-        let InFile {
-            file_id: item_file_id,
-            value: named_item_node,
-        } = named_item;
-
-        let path_ty = match named_item_node.kind() {
+        let path_ty = match named_item.kind() {
             TYPE_PARAM => {
-                let type_param = ast::TypeParam::cast(named_item_node.clone()).unwrap();
+                let type_param = named_item.clone().cast::<ast::TypeParam>().unwrap();
                 Ty::TypeParam(TyTypeParameter::new(type_param))
             }
-            STRUCT | ENUM => Ty::Adt(TyAdt::new(
-                ast::StructOrEnum::cast(named_item_node.clone()).unwrap(),
-            )),
+            STRUCT | ENUM => {
+                let item = named_item.clone().cast::<ast::StructOrEnum>().unwrap();
+                Ty::Adt(TyAdt::new(item))
+            }
             VARIANT => {
-                let enum_variant = ast::Variant::cast(named_item_node.clone()).unwrap();
-                let enum_ = enum_variant.enum_();
+                let variant = named_item.clone().cast::<ast::Variant>().unwrap();
+                let enum_ = variant.map(|it| it.enum_());
                 #[rustfmt::skip]
                 let Some(enum_path) = path.qualifier() else { return Ty::Unknown; };
-                self.lower_path(enum_path, InFile::new(item_file_id, enum_.syntax().to_owned()))
+                self.lower_path(enum_path, enum_.map(|it| it.syntax().to_owned()))
             }
             _ => Ty::Unknown,
         };
@@ -92,7 +88,7 @@ impl<'a> TyLowering<'a> {
         // adds associations of ?Element -> (type of ?Element from explicitly set types)
         // Option<u8>: ?Element -> u8
         // Option: ?Element -> ?Element
-        if let Some(generic_item) = ast::AnyHasTypeParams::cast(named_item_node) {
+        if let Some(generic_item) = named_item.cast::<ast::AnyHasTypeParams>() {
             let type_args_subst = self.type_args_substitution(path, generic_item);
             return path_ty.substitute(type_args_subst);
         }

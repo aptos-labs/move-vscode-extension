@@ -1,9 +1,16 @@
-mod unification;
-mod ty;
-mod inference;
-mod render;
-mod substitution;
+use crate::db::HirDatabase;
+use crate::loc::SyntaxLocExt;
+use crate::types::ty::Ty;
+use crate::InFile;
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
+use syntax::{ast, AstNode};
+
 mod fold;
-mod lowering;
 mod has_type_params_ext;
+pub(crate) mod inference;
+mod lowering;
 mod patterns;
+pub(crate) mod render;
+mod substitution;
+pub mod ty;
+mod unification;

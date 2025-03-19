@@ -1,18 +1,20 @@
+use crate::loc::{SyntaxLoc, SyntaxLocExt};
 use crate::types::fold::TypeFoldable;
 use crate::types::substitution::{empty_substitution, Substitution};
 use crate::types::ty::TypeFolder;
+use crate::InFile;
 use syntax::ast;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TyAdt {
-    item: ast::StructOrEnum,
+    item: SyntaxLoc,
     subst: Substitution,
 }
 
 impl TyAdt {
-    pub fn new(item: ast::StructOrEnum) -> Self {
+    pub fn new(item: InFile<ast::StructOrEnum>) -> Self {
         TyAdt {
-            item,
+            item: item.loc(),
             subst: empty_substitution(),
         }
     }

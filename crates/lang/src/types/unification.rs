@@ -90,8 +90,8 @@ impl TypeFolder for FullTyVarResolver<'_> {
                 match resolved_ty_var {
                     Some(ty) => ty,
                     None => match (self.fallback, &ty_var.kind) {
-                        (Fallback::Origin, TyVarKind::WithOrigin(origin)) => {
-                            Ty::TypeParam(TyTypeParameter::new(origin.to_owned()))
+                        (Fallback::Origin, TyVarKind::WithOrigin { origin_loc}) => {
+                            Ty::TypeParam(TyTypeParameter::from_loc(origin_loc.to_owned()))
                         }
                         _ => Ty::Unknown,
                     },

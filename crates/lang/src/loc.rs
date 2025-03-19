@@ -4,13 +4,13 @@ use parser::SyntaxKind;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::algo::ancestors_at_offset;
-use syntax::{AstNode, SyntaxNode, TextSize};
+use syntax::{AstNode, TextSize};
 use vfs::FileId;
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub struct SyntaxLoc {
     file_id: FileId,
-    node_end: TextSize,
+    node_offset: TextSize,
     kind: SyntaxKind,
 }
 
@@ -24,16 +24,16 @@ impl SyntaxLoc {
         let kind = syntax_node.syntax().kind();
         SyntaxLoc {
             file_id,
-            node_end: range_start,
+            node_offset: range_start,
             kind,
         }
     }
 
     pub fn cast<T: AstNode>(self, db: &dyn SourceRootDatabase) -> Option<InFile<T>> {
         let file = db.parse(self.file_id).tree();
-        let ancestors_at_offset = ancestors_at_offset(file.syntax(), self.node_end);
+        let ancestors_at_offset = ancestors_at_offset(file.syntax(), self.node_offset);
         for ancestor in ancestors_at_offset {
-            if ancestor.text_range().end() == self.node_end {
+            if ancestor.text_range().end() == self.node_offset {
                 if let Some(node) = T::cast(ancestor) {
                     return Some(InFile::new(self.file_id, node));
                 }
@@ -54,7 +54,7 @@ impl SyntaxLoc {
 impl fmt::Debug for SyntaxLoc {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_tuple("Loc")
-            .field(&format!("{}::{:?}", self.file_id.index(), self.node_end))
+            .field(&format!("{}::{:?}", self.file_id.index(), self.node_offset))
             .finish()
     }
 }
