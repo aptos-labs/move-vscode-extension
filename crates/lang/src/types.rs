@@ -6,3 +6,4 @@ mod substitution;
 mod fold;
 mod lowering;
 mod has_type_params_ext;
+mod patterns;

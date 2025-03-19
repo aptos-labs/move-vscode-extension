@@ -5,7 +5,7 @@ use crate::files::InFileInto;
 use crate::node_ext::PathLangExt;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::adt::TyAdt;
-use crate::types::ty::reference::TyReference;
+use crate::types::ty::reference::{Mutability, TyReference};
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::Ty;
@@ -49,7 +49,7 @@ impl<'a> TyLowering<'a> {
                     .type_()
                     .map(|inner_type| self.lower_type(inner_type))
                     .unwrap_or(Ty::Unknown);
-                Ty::Reference(TyReference::new(inner_ty, is_mut))
+                Ty::Reference(TyReference::new(inner_ty, Mutability::new(is_mut)))
             }
             ast::Type::TupleType(tuple_type) => {
                 let inner_tys = tuple_type
@@ -84,10 +84,7 @@ impl<'a> TyLowering<'a> {
                 let enum_ = enum_variant.enum_();
                 #[rustfmt::skip]
                 let Some(enum_path) = path.qualifier() else { return Ty::Unknown; };
-                self.lower_path(
-                    enum_path,
-                    InFile::new(item_file_id, enum_.syntax().to_owned()),
-                )
+                self.lower_path(enum_path, InFile::new(item_file_id, enum_.syntax().to_owned()))
             }
             _ => Ty::Unknown,
         };

@@ -42,6 +42,13 @@ impl Ty {
     pub fn fold_with(self, folder: impl TypeFolder) -> Ty {
         folder.fold_ty(self)
     }
+
+    pub fn unwrap_refs(&self) -> Ty {
+        match self {
+            Ty::Reference(ty_ref) => ty_ref.referenced().unwrap_refs(),
+            _ => self.to_owned(),
+        }
+    }
 }
 
 impl TypeFoldable<Ty> for Ty {

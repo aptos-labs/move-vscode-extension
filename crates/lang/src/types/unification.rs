@@ -55,7 +55,7 @@ impl TypeFolder for TyVarResolver<'_> {
         match t {
             Ty::Var(ref ty_var) => self.uni_table.resolve_ty_var(ty_var).unwrap_or(t),
             _ => {
-                t.deep_fold_with(self)
+                t.deep_fold_with(self.to_owned())
             },
         }
     }
@@ -82,7 +82,7 @@ impl<'a> FullTyVarResolver<'a> {
     }
 }
 
-impl<F: Fn(TyVar) -> Ty> TypeFolder for FullTyVarResolver<'_> {
+impl TypeFolder for FullTyVarResolver<'_> {
     fn fold_ty(&self, t: Ty) -> Ty {
         match t {
             Ty::Var(ref ty_var) => {
@@ -96,10 +96,9 @@ impl<F: Fn(TyVar) -> Ty> TypeFolder for FullTyVarResolver<'_> {
                         _ => Ty::Unknown,
                     },
                 }
-                self.uni_table.resolve_ty_var(ty_var).unwrap_or(t)
             }
             _ => {
-                t.deep_fold_with(self)
+                t.deep_fold_with(self.to_owned())
             },
         }
     }

@@ -12,7 +12,7 @@ pub fn render(ty: &Ty) -> String {
         }
         Ty::Adt(ty_adt) => render_ty_adt(ty_adt),
         Ty::Reference(ty_ref) => {
-            let prefix = if ty_ref.is_mut { "&mut " } else { "&" };
+            let prefix = if ty_ref.is_mut() { "&mut " } else { "&" };
             let inner = render(ty_ref.referenced());
             format!("{}{}", prefix, inner)
         }
