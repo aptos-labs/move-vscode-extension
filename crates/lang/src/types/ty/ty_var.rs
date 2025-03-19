@@ -1,8 +1,4 @@
 use crate::loc::{SyntaxLoc, SyntaxLocExt};
-use crate::{AsName, Name};
-use std::fmt;
-use std::fmt::Formatter;
-use syntax::ast::HasName;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TyVar {
@@ -10,7 +6,7 @@ pub struct TyVar {
 }
 
 impl TyVar {
-    pub fn new_anonymous(index: u32) -> Self {
+    pub fn new_anonymous(index: usize) -> Self {
         TyVar {
             kind: TyVarKind::Anonymous(index),
         }
@@ -25,6 +21,6 @@ impl TyVar {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TyVarKind {
-    Anonymous(u32),
+    Anonymous(usize),
     WithOrigin { origin_loc: SyntaxLoc },
 }

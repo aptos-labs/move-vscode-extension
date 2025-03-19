@@ -131,7 +131,7 @@ Pat =
     | WildcardPat
 
 TuplePat =
-    '(' fields:(Pat (',' Pat)* ','?)? ')'
+    '(' pats:(Pat (',' Pat)* ','?)? ')'
 
 TupleStructPat =
     Path '(' fields:(Pat (',' Pat)* ','?)? ')'
@@ -184,7 +184,7 @@ Stmt =
     | SpecInlineFun
 
 LetStmt =
-    'let' Pat '=' initializer:Expr ';'
+    'let' Pat (':' Type) '=' initializer:Expr ';'
 
 ExprStmt =
     Expr ';'?

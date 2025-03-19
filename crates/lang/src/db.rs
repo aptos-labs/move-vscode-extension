@@ -85,7 +85,7 @@ fn inference(db: &dyn HirDatabase, ctx_owner_loc: SyntaxLoc) -> Option<Inference
     let Some(ctx_owner) = ctx_owner_loc.cast::<ast::InferenceCtxOwner>(db.upcast()) else {
         return None;
     };
-    let ctx = InferenceCtx::new(db);
+    let ctx = InferenceCtx::new(db, ctx_owner.file_id);
 
     let inference_result = ctx.infer(ctx_owner);
     Some(inference_result)

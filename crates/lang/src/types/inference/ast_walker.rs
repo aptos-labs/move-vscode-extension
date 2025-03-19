@@ -1,18 +1,16 @@
 use crate::types::inference::InferenceCtx;
-use crate::types::lowering::TyLowering;
+use crate::types::patterns::{anonymous_pat_ty_var, collect_bindings, BindingMode};
 use crate::types::ty::Ty;
 use syntax::ast;
 use syntax::ast::{BindingTypeOwner, HasStmts, Pat};
-use vfs::FileId;
 
 pub struct TypeAstWalker<'a, 'db> {
-    ctx: &'a mut InferenceCtx<'db>,
-    file_id: FileId,
+    pub ctx: &'a mut InferenceCtx<'db>,
 }
 
 impl<'a, 'db> TypeAstWalker<'a, 'db> {
-    pub fn new(ctx: &'a mut InferenceCtx<'db>, file_id: FileId) -> Self {
-        TypeAstWalker { ctx, file_id }
+    pub fn new(ctx: &'a mut InferenceCtx<'db>) -> Self {
+        TypeAstWalker { ctx }
     }
 
     pub fn collect_parameter_bindings(&mut self, ctx_owner: &ast::InferenceCtxOwner) {
@@ -22,15 +20,17 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 return;
             }
         };
-        let ty_lowering = TyLowering::new(self.ctx.db, self.file_id);
         for binding in bindings {
-            let binding_type_owner = binding.type_owner();
-            let binding_ty = match binding_type_owner {
-                Some(BindingTypeOwner::Param(fun_param)) => fun_param
-                    .type_()
-                    .map(|it| ty_lowering.lower_type(it))
-                    .unwrap_or(Ty::Unknown),
-                _ => continue,
+            let binding_ty = {
+                let binding_type_owner = binding.type_owner();
+                let ty_lowering = self.ctx.ty_lowering();
+                match binding_type_owner {
+                    Some(BindingTypeOwner::Param(fun_param)) => fun_param
+                        .type_()
+                        .map(|it| ty_lowering.lower_type(it))
+                        .unwrap_or(Ty::Unknown),
+                    _ => continue,
+                }
             };
             self.ctx.pat_types.insert(Pat::IdentPat(binding), binding_ty);
         }
@@ -46,6 +46,28 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
     fn process_stmt(&mut self, stmt: ast::Stmt) {
         match stmt {
+            ast::Stmt::LetStmt(let_stmt) => {
+                let explicit_ty = let_stmt.type_().map(|it| self.ctx.ty_lowering().lower_type(it));
+                let pat = let_stmt.pat();
+                let initializer_ty = match let_stmt.initializer() {
+                    None => pat
+                        .clone()
+                        .map(|it| anonymous_pat_ty_var(&mut self.ctx.ty_var_counter, &it))
+                        .unwrap_or(Ty::Unknown),
+                    Some(initializer_expr) => {
+                        let initializer_ty = self.infer_expr(initializer_expr);
+                        explicit_ty.unwrap_or(initializer_ty)
+                    }
+                };
+                if let Some(pat) = pat {
+                    collect_bindings(
+                        self,
+                        pat,
+                        self.ctx.resolve_vars_if_possible(initializer_ty),
+                        BindingMode::BindByValue,
+                    );
+                }
+            }
             ast::Stmt::ExprStmt(expr_stmt) => {
                 self.infer_expr(expr_stmt.expr());
             }

@@ -241,6 +241,10 @@ impl LetStmt {
     #[inline]
     pub fn pat(&self) -> Option<Pat> { support::child(&self.syntax) }
     #[inline]
+    pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
+    #[inline]
+    pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
+    #[inline]
     pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
     #[inline]
     pub fn eq_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![=]) }
@@ -752,7 +756,7 @@ pub struct TuplePat {
 }
 impl TuplePat {
     #[inline]
-    pub fn fields(&self) -> AstChildren<Pat> { support::children(&self.syntax) }
+    pub fn pats(&self) -> AstChildren<Pat> { support::children(&self.syntax) }
     #[inline]
     pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
     #[inline]

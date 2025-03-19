@@ -17,6 +17,8 @@ use vfs::FileId;
 
 pub struct InferenceCtx<'db> {
     pub db: &'db dyn HirDatabase,
+    pub file_id: FileId,
+    pub ty_var_counter: usize,
     pub var_unification_table: UnificationTable,
 
     pub expr_types: HashMap<ast::Expr, Ty>,
@@ -24,13 +26,38 @@ pub struct InferenceCtx<'db> {
 }
 
 impl<'a> InferenceCtx<'a> {
-    pub fn new(db: &'a dyn HirDatabase) -> Self {
+    pub fn new(db: &'a dyn HirDatabase, file_id: FileId) -> Self {
         InferenceCtx {
             db,
+            file_id,
+            ty_var_counter: 0,
             var_unification_table: UnificationTable::new(),
             expr_types: HashMap::new(),
             pat_types: HashMap::new(),
         }
+    }
+
+    pub fn infer(mut self, ctx_owner: InFile<ast::InferenceCtxOwner>) -> InferenceResult {
+        let InFile {
+            file_id,
+            value: ctx_owner,
+        } = ctx_owner;
+
+        {
+            let mut ast_walker = TypeAstWalker::new(&mut self);
+
+            ast_walker.collect_parameter_bindings(&ctx_owner);
+            match ctx_owner {
+                ast::InferenceCtxOwner::Fun(fun) => {
+                    if let Some(fun_block_expr) = fun.body() {
+                        ast_walker.infer_block_expr(fun_block_expr);
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        self.into_result(file_id)
     }
 
     fn into_result(self, file_id: FileId) -> InferenceResult {
@@ -47,29 +74,6 @@ impl<'a> InferenceCtx<'a> {
         InferenceResult { file_id, expr_types }
     }
 
-    pub fn infer(mut self, ctx_owner: InFile<ast::InferenceCtxOwner>) -> InferenceResult {
-        let InFile {
-            file_id,
-            value: ctx_owner,
-        } = ctx_owner;
-
-        {
-            let mut ast_walker = TypeAstWalker::new(&mut self, file_id);
-
-            ast_walker.collect_parameter_bindings(&ctx_owner);
-            match ctx_owner {
-                ast::InferenceCtxOwner::Fun(fun) => {
-                    if let Some(fun_block_expr) = fun.body() {
-                        ast_walker.infer_block_expr(fun_block_expr);
-                    }
-                }
-                _ => {}
-            }
-        }
-
-        self.into_result(file_id)
-    }
-
     pub fn instantiate_path(&self, path: ast::Path, generic_item: InFile<ast::AnyHasTypeParams>) -> Ty {
         let ty_lowering = TyLowering::new(self.db, generic_item.file_id);
         let mut path_ty =
@@ -79,6 +83,10 @@ impl<'a> InferenceCtx<'a> {
         path_ty = path_ty.substitute(ty_vars_subst);
 
         path_ty
+    }
+
+    pub fn ty_lowering(&self) -> TyLowering {
+        TyLowering::new(self.db, self.file_id)
     }
 
     pub fn resolve_vars_if_possible(&self, ty: Ty) -> Ty {
