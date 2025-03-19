@@ -1,8 +1,8 @@
+use crate::types::fold::TypeFoldable;
 use crate::types::ty::ty_var::{TyVar, TyVarKind};
 use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::{Ty, TypeFolder};
 use std::collections::HashMap;
-use crate::types::fold::TypeFoldable;
 
 #[derive(Debug)]
 pub enum TableValue {
@@ -54,9 +54,7 @@ impl TypeFolder for TyVarResolver<'_> {
     fn fold_ty(&self, t: Ty) -> Ty {
         match t {
             Ty::Var(ref ty_var) => self.uni_table.resolve_ty_var(ty_var).unwrap_or(t),
-            _ => {
-                t.deep_fold_with(self.to_owned())
-            },
+            _ => t.deep_fold_with(self.to_owned()),
         }
     }
 }
@@ -90,16 +88,14 @@ impl TypeFolder for FullTyVarResolver<'_> {
                 match resolved_ty_var {
                     Some(ty) => ty,
                     None => match (self.fallback, &ty_var.kind) {
-                        (Fallback::Origin, TyVarKind::WithOrigin { origin_loc}) => {
+                        (Fallback::Origin, TyVarKind::WithOrigin { origin_loc }) => {
                             Ty::TypeParam(TyTypeParameter::from_loc(origin_loc.to_owned()))
                         }
                         _ => Ty::Unknown,
                     },
                 }
             }
-            _ => {
-                t.deep_fold_with(self.to_owned())
-            },
+            _ => t.deep_fold_with(self.to_owned()),
         }
     }
 }

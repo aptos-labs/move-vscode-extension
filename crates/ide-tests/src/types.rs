@@ -24,13 +24,15 @@ mod tests {
     #[test]
     fn test_expr_type() {
         // language=Move
-        check_expr_type(r#"
+        check_expr_type(
+            r#"
 module 0x1::m {
     fun main() {
         true;
       //^ bool
     }
 }
-"#);
+"#,
+        );
     }
 }

@@ -27,7 +27,10 @@ pub trait HirDatabase: SourceRootDatabase + Upcast<dyn SourceRootDatabase> {
     fn inference(&self, ctx_owner_loc: SyntaxLoc) -> Option<InferenceResult>;
 
     #[ra_salsa::transparent]
-    fn inference_for_ctx_owner(&self, ctx_owner: InFile<ast::InferenceCtxOwner>) -> Option<InferenceResult>;
+    fn inference_for_ctx_owner(
+        &self,
+        ctx_owner: InFile<ast::InferenceCtxOwner>,
+    ) -> Option<InferenceResult>;
 }
 
 fn resolve_ref_loc(db: &dyn HirDatabase, ref_loc: SyntaxLoc) -> Vec<ScopeEntry> {
@@ -88,7 +91,10 @@ fn inference(db: &dyn HirDatabase, ctx_owner_loc: SyntaxLoc) -> Option<Inference
     Some(inference_result)
 }
 
-fn inference_for_ctx_owner(db: &dyn HirDatabase, ctx_owner: InFile<ast::InferenceCtxOwner>) -> Option<InferenceResult> {
+fn inference_for_ctx_owner(
+    db: &dyn HirDatabase,
+    ctx_owner: InFile<ast::InferenceCtxOwner>,
+) -> Option<InferenceResult> {
     let ctx_owner_loc = ctx_owner.loc();
     db.inference(ctx_owner_loc)
 }

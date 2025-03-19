@@ -26,13 +26,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         for binding in bindings {
             let binding_type_owner = binding.type_owner();
             let binding_ty = match binding_type_owner {
-                None => Ty::Unknown,
                 Some(BindingTypeOwner::Param(fun_param)) => fun_param
                     .type_()
                     .map(|it| ty_lowering.lower_type(it))
                     .unwrap_or(Ty::Unknown),
-                // todo:
-                _ => Ty::Unknown,
+                _ => continue,
             };
             self.ctx.pat_types.insert(Pat::IdentPat(binding), binding_ty);
         }
