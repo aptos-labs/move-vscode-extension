@@ -13,7 +13,7 @@ use parser::SyntaxKind::MODULE_SPEC;
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Formatter;
-use syntax::ast::{HasFields, HasItems, HasReference};
+use syntax::ast::{HasFields, HasItems, Reference};
 use syntax::{ast, AstNode, SyntaxNode};
 
 pub struct ResolveScope {
@@ -32,7 +32,7 @@ impl fmt::Debug for ResolveScope {
 
 pub fn get_resolve_scopes(
     _db: &dyn HirDatabase,
-    start_at: InFile<impl HasReference>,
+    start_at: InFile<impl Reference>,
 ) -> Vec<ResolveScope> {
     let mut scopes = vec![];
 

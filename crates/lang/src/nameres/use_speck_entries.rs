@@ -6,7 +6,7 @@ use crate::node_ext::has_item_list::HasUseStmtsInFileExt;
 use crate::node_ext::PathLangExt;
 use crate::{AsName, InFile, Name};
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
-use syntax::ast::{HasName, NamedItemScope};
+use syntax::ast::{NamedItem, NamedItemScope};
 use syntax::{ast, AstNode};
 use vfs::FileId;
 

@@ -4,7 +4,7 @@ use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::Ty;
 use crate::InFile;
 use syntax::ast;
-use syntax::ast::HasTypeParams;
+use syntax::ast::GenericItem;
 
 pub trait HasTypeParamsExt {
     fn ty_type_params(&self) -> Vec<TyTypeParameter>;
@@ -12,7 +12,7 @@ pub trait HasTypeParamsExt {
     fn ty_vars_subst(&self) -> Substitution;
 }
 
-impl HasTypeParamsExt for InFile<ast::AnyHasTypeParams> {
+impl HasTypeParamsExt for InFile<ast::AnyGenericItem> {
     fn ty_type_params(&self) -> Vec<TyTypeParameter> {
         self.value
             .type_params()

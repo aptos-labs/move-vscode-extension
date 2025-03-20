@@ -15,8 +15,8 @@ impl ast::Fun {
         self.ret_type()?.type_()
     }
 
-    pub fn as_type_params_owner(&self) -> ast::AnyHasTypeParams {
-        ast::AnyHasTypeParams::cast(self.syntax.to_owned()).unwrap()
+    pub fn as_type_params_owner(&self) -> ast::AnyGenericItem {
+        ast::AnyGenericItem::cast(self.syntax.to_owned()).unwrap()
     }
 
     pub fn is_native(&self) -> bool {

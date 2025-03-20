@@ -27,7 +27,7 @@ pub(crate) fn goto_definition(
 
     let file = sema.parse(file_id);
 
-    let reference = algo::find_node_at_offset::<ast::AnyHasReference>(file.syntax(), offset)?;
+    let reference = algo::find_node_at_offset::<ast::AnyReference>(file.syntax(), offset)?;
     let scope_entry = sema.resolve_reference(reference)?;
 
     let original_token = pick_best_token(file.syntax().token_at_offset(offset), |kind| match kind {

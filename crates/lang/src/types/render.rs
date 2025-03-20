@@ -7,7 +7,7 @@ use crate::AsName;
 use base_db::SourceRootDatabase;
 use stdx::itertools::Itertools;
 use syntax::ast;
-use syntax::ast::HasName;
+use syntax::ast::NamedItem;
 
 pub struct TypeRenderer<'db> {
     db: &'db dyn SourceRootDatabase,

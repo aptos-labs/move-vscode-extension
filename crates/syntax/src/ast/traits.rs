@@ -8,7 +8,7 @@ use std::io::Read;
 pub use has_item_list::HasItems;
 pub use has_use_stmts::HasUseStmts;
 
-pub trait HasName: AstNode {
+pub trait NamedItem: AstNode {
     fn name(&self) -> Option<ast::Name> {
         support::child(self.syntax())
     }
@@ -24,7 +24,7 @@ pub trait HasStmts: AstNode {
     }
 }
 
-pub trait HasTypeParams: AstNode {
+pub trait GenericItem: AstNode {
     fn type_param_list(&self) -> Option<ast::TypeParamList> {
         support::child(&self.syntax())
     }
@@ -75,6 +75,6 @@ pub trait HasFields: AstNode {
     }
 }
 
-pub trait HasReference: AstNode {}
+pub trait Reference: AstNode {}
 
 pub trait MslOnly: AstNode {}

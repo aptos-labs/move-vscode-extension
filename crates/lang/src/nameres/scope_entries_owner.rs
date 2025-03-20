@@ -4,7 +4,7 @@ use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::nameres::use_speck_entries::use_speck_entries;
 use crate::InFile;
-use syntax::ast::{HasItems, HasTypeParams};
+use syntax::ast::{HasItems, GenericItem};
 use syntax::{ast, AstNode, SyntaxNode};
 
 pub fn get_entries_in_scope(
@@ -37,7 +37,7 @@ pub fn get_entries_from_owner(_db: &dyn HirDatabase, scope: InFile<SyntaxNode>) 
     let file_id = scope.file_id;
     let mut entries = vec![];
 
-    if let Some(has_type_params) = ast::AnyHasTypeParams::cast(scope.value.clone()) {
+    if let Some(has_type_params) = ast::AnyGenericItem::cast(scope.value.clone()) {
         entries.extend(has_type_params.type_params().to_in_file_entries(file_id));
     }
 

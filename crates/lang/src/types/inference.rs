@@ -84,7 +84,7 @@ impl<'a> InferenceCtx<'a> {
         InferenceResult { file_id, expr_types }
     }
 
-    pub fn instantiate_path(&self, path: ast::Path, generic_item: InFile<ast::AnyHasTypeParams>) -> Ty {
+    pub fn instantiate_path(&self, path: ast::Path, generic_item: InFile<ast::AnyGenericItem>) -> Ty {
         let ty_lowering = TyLowering::new(self.db, generic_item.file_id);
         let mut path_ty =
             ty_lowering.lower_path(path, generic_item.clone().map(|it| it.syntax().to_owned()));

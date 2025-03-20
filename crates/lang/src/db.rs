@@ -11,7 +11,7 @@ use crate::{AsName, InFile};
 use base_db::{SourceRootDatabase, Upcast};
 use parser::SyntaxKind::{PATH, STRUCT_LIT_FIELD, STRUCT_PAT_FIELD};
 use stdx::itertools::Itertools;
-use syntax::ast::HasName;
+use syntax::ast::NamedItem;
 use syntax::{ast, unwrap_or_return};
 
 #[ra_salsa::query_group(HirDatabaseStorage)]
@@ -19,13 +19,13 @@ pub trait HirDatabase: SourceRootDatabase + Upcast<dyn SourceRootDatabase> {
     fn resolve_ref_loc(&self, ref_loc: SyntaxLoc) -> Vec<ScopeEntry>;
 
     #[ra_salsa::transparent]
-    fn multi_resolve(&self, any_ref: InFile<ast::AnyHasReference>) -> Vec<ScopeEntry>;
+    fn multi_resolve(&self, any_ref: InFile<ast::AnyReference>) -> Vec<ScopeEntry>;
 
     #[ra_salsa::transparent]
-    fn resolve(&self, any_ref: InFile<ast::AnyHasReference>) -> Option<ScopeEntry>;
+    fn resolve(&self, any_ref: InFile<ast::AnyReference>) -> Option<ScopeEntry>;
 
     #[ra_salsa::transparent]
-    fn resolve_named_item(&self, reference: InFile<ast::AnyHasReference>) -> Option<InFile<ast::AnyHasName>>;
+    fn resolve_named_item(&self, reference: InFile<ast::AnyReference>) -> Option<InFile<ast::AnyNamedItem>>;
 
     fn inference(&self, ctx_owner_loc: SyntaxLoc) -> Option<InferenceResult>;
 
@@ -72,20 +72,20 @@ fn resolve_ref_loc(db: &dyn HirDatabase, ref_loc: SyntaxLoc) -> Vec<ScopeEntry> 
     }
 }
 
-fn multi_resolve(db: &dyn HirDatabase, any_ref: InFile<ast::AnyHasReference>) -> Vec<ScopeEntry> {
+fn multi_resolve(db: &dyn HirDatabase, any_ref: InFile<ast::AnyReference>) -> Vec<ScopeEntry> {
     db.resolve_ref_loc(any_ref.loc())
 }
 
-fn resolve(db: &dyn HirDatabase, any_ref: InFile<ast::AnyHasReference>) -> Option<ScopeEntry> {
+fn resolve(db: &dyn HirDatabase, any_ref: InFile<ast::AnyReference>) -> Option<ScopeEntry> {
     let entries = db.multi_resolve(any_ref);
     entries.into_iter().exactly_one().ok()
 }
 
 fn resolve_named_item(
     db: &dyn HirDatabase,
-    reference: InFile<ast::AnyHasReference>,
-) -> Option<InFile<ast::AnyHasName>> {
-    db.resolve(reference).and_then(|it| it.node_loc.cast::<ast::AnyHasName>(db.upcast()))
+    reference: InFile<ast::AnyReference>,
+) -> Option<InFile<ast::AnyNamedItem>> {
+    db.resolve(reference).and_then(|it| it.node_loc.cast::<ast::AnyNamedItem>(db.upcast()))
 }
 
 fn inference(db: &dyn HirDatabase, ctx_owner_loc: SyntaxLoc) -> Option<InferenceResult> {

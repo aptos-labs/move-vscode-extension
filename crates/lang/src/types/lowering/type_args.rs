@@ -4,14 +4,14 @@ use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::Ty;
 use crate::InFile;
 use std::collections::HashMap;
-use syntax::ast::HasTypeParams;
+use syntax::ast::GenericItem;
 use syntax::{ast, AstNode};
 
 impl TyLowering<'_> {
     pub fn type_args_substitution(
         &self,
         path: ast::Path,
-        generic_item: InFile<ast::AnyHasTypeParams>,
+        generic_item: InFile<ast::AnyGenericItem>,
     ) -> Substitution {
         let mut subst_mapping = HashMap::new();
 

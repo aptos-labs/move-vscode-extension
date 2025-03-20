@@ -831,9 +831,9 @@ fn extract_enums(ast: &mut AstSrc) {
 fn extract_struct_traits(ast: &mut AstSrc) {
     let traits: &[(&str, &[&str])] = &[
         ("HasAttrs", &["attrs"]),
-        ("HasName", &["name"]),
+        ("NamedItem", &["name"]),
         ("HasFields", &["named_field_list", "tuple_field_list"]),
-        ("HasTypeParams", &["type_param_list"]),
+        ("GenericItem", &["type_param_list"]),
         // ("HasGenericArgs", &["generic_arg_list"]),
         // ("HasTypeBounds", &["type_bound_list", "colon_token"]),
         ("HasUseStmts", &["use_stmts"]),
@@ -850,7 +850,7 @@ fn extract_struct_traits(ast: &mut AstSrc) {
     }
 
     let non_method_traits: &[(&str, &[&str])] = &[
-        ("HasReference", &["Path", "StructPatField", "StructLitField"]),
+        ("Reference", &["Path", "StructPatField", "StructLitField"]),
         (
             "HasVisibility",
             &["Fun", "SpecFun", "SpecInlineFun", "Struct", "Enum", "Const"],

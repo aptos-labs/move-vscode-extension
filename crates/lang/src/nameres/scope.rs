@@ -7,7 +7,7 @@ use crate::{AsName, InFile, Name};
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::ast;
-use syntax::ast::{HasReference, NamedItemScope};
+use syntax::ast::{Reference, NamedItemScope};
 use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]
@@ -40,7 +40,7 @@ pub trait ScopeEntryExt {
     fn to_entry(self) -> Option<ScopeEntry>;
 }
 
-impl<T: ast::HasName> ScopeEntryExt for InFile<T> {
+impl<T: ast::NamedItem> ScopeEntryExt for InFile<T> {
     fn to_entry(self) -> Option<ScopeEntry> {
         let name = self.value.name()?;
         let item_loc = self.loc();
@@ -59,7 +59,7 @@ pub trait NamedItemsExt {
     fn to_entries(self) -> Vec<ScopeEntry>;
 }
 
-impl<T: ast::HasName> NamedItemsExt for Vec<InFile<T>> {
+impl<T: ast::NamedItem> NamedItemsExt for Vec<InFile<T>> {
     fn to_entries(self) -> Vec<ScopeEntry> {
         self.into_iter().filter_map(|item| item.to_entry()).collect()
     }
@@ -69,7 +69,7 @@ pub trait NamedItemsInFileExt {
     fn to_in_file_entries(self, file_id: FileId) -> Vec<ScopeEntry>;
 }
 
-impl<T: ast::HasName> NamedItemsInFileExt for Vec<T> {
+impl<T: ast::NamedItem> NamedItemsInFileExt for Vec<T> {
     fn to_in_file_entries(self, file_id: FileId) -> Vec<ScopeEntry> {
         self.wrapped_in_file(file_id).to_entries()
     }
@@ -81,7 +81,7 @@ pub trait ScopeEntryListExt {
     fn filter_by_visibility(
         self,
         db: &dyn HirDatabase,
-        context: InFile<impl HasReference>,
+        context: InFile<impl Reference>,
     ) -> impl Iterator<Item = ScopeEntry>;
 }
 
@@ -97,7 +97,7 @@ impl<T: Iterator<Item = ScopeEntry>> ScopeEntryListExt for T {
     fn filter_by_visibility(
         self,
         db: &dyn HirDatabase,
-        context: InFile<impl HasReference>,
+        context: InFile<impl Reference>,
     ) -> impl Iterator<Item = ScopeEntry> {
         self.filter(move |entry| is_visible_in_context(db, entry, &context))
     }

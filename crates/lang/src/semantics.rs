@@ -55,7 +55,7 @@ impl<'db> SemanticsImpl<'db> {
         tree
     }
 
-    pub fn resolve_reference(&self, reference: ast::AnyHasReference) -> Option<ScopeEntry> {
+    pub fn resolve_reference(&self, reference: ast::AnyReference) -> Option<ScopeEntry> {
         let reference = self.wrap_node_infile(reference);
         self.db.resolve(reference)
     }

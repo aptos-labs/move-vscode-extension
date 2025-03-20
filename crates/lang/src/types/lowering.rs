@@ -37,7 +37,7 @@ impl<'a> TyLowering<'a> {
                     Some(named_item_entry) => {
                         let named_item = named_item_entry
                             .node_loc
-                            .cast::<ast::AnyHasName>(self.db.upcast())
+                            .cast::<ast::AnyNamedItem>(self.db.upcast())
                             .unwrap();
                         self.lower_path(path.value, named_item.map(|it| it.syntax().to_owned()))
                     }
@@ -88,7 +88,7 @@ impl<'a> TyLowering<'a> {
         // adds associations of ?Element -> (type of ?Element from explicitly set types)
         // Option<u8>: ?Element -> u8
         // Option: ?Element -> ?Element
-        if let Some(generic_item) = named_item.cast::<ast::AnyHasTypeParams>() {
+        if let Some(generic_item) = named_item.cast::<ast::AnyGenericItem>() {
             let type_args_subst = self.type_args_substitution(path, generic_item);
             return path_ty.substitute(type_args_subst);
         }

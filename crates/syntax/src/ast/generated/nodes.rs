@@ -105,8 +105,8 @@ pub struct Const {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HasAttrs for Const {}
-impl ast::HasName for Const {}
 impl ast::HasVisibility for Const {}
+impl ast::NamedItem for Const {}
 impl Const {
     #[inline]
     pub fn body(&self) -> Option<Expr> { support::child(&self.syntax) }
@@ -126,10 +126,10 @@ impl Const {
 pub struct Enum {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::GenericItem for Enum {}
 impl ast::HasAttrs for Enum {}
-impl ast::HasName for Enum {}
-impl ast::HasTypeParams for Enum {}
 impl ast::HasVisibility for Enum {}
+impl ast::NamedItem for Enum {}
 impl Enum {
     #[inline]
     pub fn variant_list(&self) -> Option<VariantList> { support::child(&self.syntax) }
@@ -197,10 +197,10 @@ impl Friend {
 pub struct Fun {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::GenericItem for Fun {}
 impl ast::HasAttrs for Fun {}
-impl ast::HasName for Fun {}
-impl ast::HasTypeParams for Fun {}
 impl ast::HasVisibility for Fun {}
+impl ast::NamedItem for Fun {}
 impl Fun {
     #[inline]
     pub fn body(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
@@ -226,7 +226,7 @@ impl Fun {
 pub struct IdentPat {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::HasName for IdentPat {}
+impl ast::NamedItem for IdentPat {}
 impl IdentPat {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -297,8 +297,8 @@ pub struct Module {
 }
 impl ast::HasAttrs for Module {}
 impl ast::HasItems for Module {}
-impl ast::HasName for Module {}
 impl ast::HasUseStmts for Module {}
+impl ast::NamedItem for Module {}
 impl Module {
     #[inline]
     pub fn address_ref(&self) -> Option<AddressRef> { support::child(&self.syntax) }
@@ -369,7 +369,7 @@ pub struct NamedField {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HasAttrs for NamedField {}
-impl ast::HasName for NamedField {}
+impl ast::NamedItem for NamedField {}
 impl NamedField {
     #[inline]
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
@@ -446,7 +446,7 @@ impl ParenType {
 pub struct Path {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::HasReference for Path {}
+impl ast::Reference for Path {}
 impl Path {
     #[inline]
     pub fn qualifier(&self) -> Option<Path> { support::child(&self.syntax) }
@@ -546,10 +546,10 @@ impl RetType {
 pub struct Schema {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::GenericItem for Schema {}
 impl ast::HasAttrs for Schema {}
-impl ast::HasName for Schema {}
-impl ast::HasTypeParams for Schema {}
 impl ast::MslOnly for Schema {}
+impl ast::NamedItem for Schema {}
 impl Schema {
     #[inline]
     pub fn spec_block(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
@@ -612,11 +612,11 @@ impl SourceFile {
 pub struct SpecFun {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::GenericItem for SpecFun {}
 impl ast::HasAttrs for SpecFun {}
-impl ast::HasName for SpecFun {}
-impl ast::HasTypeParams for SpecFun {}
 impl ast::HasVisibility for SpecFun {}
 impl ast::MslOnly for SpecFun {}
+impl ast::NamedItem for SpecFun {}
 impl SpecFun {
     #[inline]
     pub fn param_list(&self) -> Option<ParamList> { support::child(&self.syntax) }
@@ -638,10 +638,10 @@ impl SpecFun {
 pub struct SpecInlineFun {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::HasName for SpecInlineFun {}
-impl ast::HasTypeParams for SpecInlineFun {}
+impl ast::GenericItem for SpecInlineFun {}
 impl ast::HasVisibility for SpecInlineFun {}
 impl ast::MslOnly for SpecInlineFun {}
+impl ast::NamedItem for SpecInlineFun {}
 impl SpecInlineFun {
     #[inline]
     pub fn param_list(&self) -> Option<ParamList> { support::child(&self.syntax) }
@@ -661,11 +661,11 @@ impl SpecInlineFun {
 pub struct Struct {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::GenericItem for Struct {}
 impl ast::HasAttrs for Struct {}
 impl ast::HasFields for Struct {}
-impl ast::HasName for Struct {}
-impl ast::HasTypeParams for Struct {}
 impl ast::HasVisibility for Struct {}
+impl ast::NamedItem for Struct {}
 impl Struct {
     #[inline]
     pub fn struct_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![struct]) }
@@ -686,7 +686,7 @@ impl StructLit {
 pub struct StructLitField {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::HasReference for StructLitField {}
+impl ast::Reference for StructLitField {}
 impl StructLitField {
     #[inline]
     pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
@@ -724,7 +724,7 @@ impl StructPat {
 pub struct StructPatField {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::HasReference for StructPatField {}
+impl ast::Reference for StructPatField {}
 impl StructPatField {
     #[inline]
     pub fn ident_pat(&self) -> Option<IdentPat> { support::child(&self.syntax) }
@@ -841,7 +841,7 @@ impl TypeArgList {
 pub struct TypeParam {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::HasName for TypeParam {}
+impl ast::NamedItem for TypeParam {}
 impl TypeParam {
     #[inline]
     pub fn phantom_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![phantom]) }
@@ -875,7 +875,7 @@ impl UnitType {
 pub struct UseAlias {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::HasName for UseAlias {}
+impl ast::NamedItem for UseAlias {}
 impl UseAlias {
     #[inline]
     pub fn as_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![as]) }
@@ -940,7 +940,7 @@ pub struct Variant {
 }
 impl ast::HasAttrs for Variant {}
 impl ast::HasFields for Variant {}
-impl ast::HasName for Variant {}
+impl ast::NamedItem for Variant {}
 impl Variant {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1025,10 +1025,10 @@ pub enum InferenceCtxOwner {
     Fun(Fun),
     SpecFun(SpecFun),
 }
+impl ast::GenericItem for InferenceCtxOwner {}
 impl ast::HasAttrs for InferenceCtxOwner {}
-impl ast::HasName for InferenceCtxOwner {}
-impl ast::HasTypeParams for InferenceCtxOwner {}
 impl ast::HasVisibility for InferenceCtxOwner {}
+impl ast::NamedItem for InferenceCtxOwner {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Item {
@@ -1065,10 +1065,10 @@ pub enum StructOrEnum {
     Enum(Enum),
     Struct(Struct),
 }
+impl ast::GenericItem for StructOrEnum {}
 impl ast::HasAttrs for StructOrEnum {}
-impl ast::HasName for StructOrEnum {}
-impl ast::HasTypeParams for StructOrEnum {}
 impl ast::HasVisibility for StructOrEnum {}
+impl ast::NamedItem for StructOrEnum {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Type {
@@ -1078,6 +1078,12 @@ pub enum Type {
     TupleType(TupleType),
     UnitType(UnitType),
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AnyGenericItem {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::GenericItem for AnyGenericItem {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyHasAttrs {
@@ -1098,28 +1104,10 @@ pub struct AnyHasItems {
 impl ast::HasItems for AnyHasItems {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct AnyHasName {
-    pub(crate) syntax: SyntaxNode,
-}
-impl ast::HasName for AnyHasName {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct AnyHasReference {
-    pub(crate) syntax: SyntaxNode,
-}
-impl ast::HasReference for AnyHasReference {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyHasStmts {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HasStmts for AnyHasStmts {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct AnyHasTypeParams {
-    pub(crate) syntax: SyntaxNode,
-}
-impl ast::HasTypeParams for AnyHasTypeParams {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyHasUseStmts {
@@ -1138,6 +1126,18 @@ pub struct AnyMslOnly {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::MslOnly for AnyMslOnly {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AnyNamedItem {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::NamedItem for AnyNamedItem {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AnyReference {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::Reference for AnyReference {}
 impl AstNode for AddressDef {
     #[inline]
     fn kind() -> SyntaxKind
@@ -3350,6 +3350,50 @@ impl AstNode for Type {
         }
     }
 }
+impl AnyGenericItem {
+    #[inline]
+    pub fn new<T: ast::GenericItem>(node: T) -> AnyGenericItem {
+        AnyGenericItem {
+            syntax: node.syntax().clone(),
+        }
+    }
+}
+impl AstNode for AnyGenericItem {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(kind, ENUM | FUN | SCHEMA | SPEC_FUN | SPEC_INLINE_FUN | STRUCT)
+    }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        Self::can_cast(syntax.kind()).then_some(AnyGenericItem { syntax })
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl From<Enum> for AnyGenericItem {
+    #[inline]
+    fn from(node: Enum) -> AnyGenericItem { AnyGenericItem { syntax: node.syntax } }
+}
+impl From<Fun> for AnyGenericItem {
+    #[inline]
+    fn from(node: Fun) -> AnyGenericItem { AnyGenericItem { syntax: node.syntax } }
+}
+impl From<Schema> for AnyGenericItem {
+    #[inline]
+    fn from(node: Schema) -> AnyGenericItem { AnyGenericItem { syntax: node.syntax } }
+}
+impl From<SpecFun> for AnyGenericItem {
+    #[inline]
+    fn from(node: SpecFun) -> AnyGenericItem { AnyGenericItem { syntax: node.syntax } }
+}
+impl From<SpecInlineFun> for AnyGenericItem {
+    #[inline]
+    fn from(node: SpecInlineFun) -> AnyGenericItem { AnyGenericItem { syntax: node.syntax } }
+}
+impl From<Struct> for AnyGenericItem {
+    #[inline]
+    fn from(node: Struct) -> AnyGenericItem { AnyGenericItem { syntax: node.syntax } }
+}
 impl AnyHasAttrs {
     #[inline]
     pub fn new<T: ast::HasAttrs>(node: T) -> AnyHasAttrs {
@@ -3503,123 +3547,6 @@ impl From<Script> for AnyHasItems {
     #[inline]
     fn from(node: Script) -> AnyHasItems { AnyHasItems { syntax: node.syntax } }
 }
-impl AnyHasName {
-    #[inline]
-    pub fn new<T: ast::HasName>(node: T) -> AnyHasName {
-        AnyHasName {
-            syntax: node.syntax().clone(),
-        }
-    }
-}
-impl AstNode for AnyHasName {
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(
-            kind,
-            CONST
-                | ENUM
-                | FUN
-                | IDENT_PAT
-                | MODULE
-                | NAMED_FIELD
-                | SCHEMA
-                | SPEC_FUN
-                | SPEC_INLINE_FUN
-                | STRUCT
-                | TYPE_PARAM
-                | USE_ALIAS
-                | VARIANT
-        )
-    }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        Self::can_cast(syntax.kind()).then_some(AnyHasName { syntax })
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode { &self.syntax }
-}
-impl From<Const> for AnyHasName {
-    #[inline]
-    fn from(node: Const) -> AnyHasName { AnyHasName { syntax: node.syntax } }
-}
-impl From<Enum> for AnyHasName {
-    #[inline]
-    fn from(node: Enum) -> AnyHasName { AnyHasName { syntax: node.syntax } }
-}
-impl From<Fun> for AnyHasName {
-    #[inline]
-    fn from(node: Fun) -> AnyHasName { AnyHasName { syntax: node.syntax } }
-}
-impl From<IdentPat> for AnyHasName {
-    #[inline]
-    fn from(node: IdentPat) -> AnyHasName { AnyHasName { syntax: node.syntax } }
-}
-impl From<Module> for AnyHasName {
-    #[inline]
-    fn from(node: Module) -> AnyHasName { AnyHasName { syntax: node.syntax } }
-}
-impl From<NamedField> for AnyHasName {
-    #[inline]
-    fn from(node: NamedField) -> AnyHasName { AnyHasName { syntax: node.syntax } }
-}
-impl From<Schema> for AnyHasName {
-    #[inline]
-    fn from(node: Schema) -> AnyHasName { AnyHasName { syntax: node.syntax } }
-}
-impl From<SpecFun> for AnyHasName {
-    #[inline]
-    fn from(node: SpecFun) -> AnyHasName { AnyHasName { syntax: node.syntax } }
-}
-impl From<SpecInlineFun> for AnyHasName {
-    #[inline]
-    fn from(node: SpecInlineFun) -> AnyHasName { AnyHasName { syntax: node.syntax } }
-}
-impl From<Struct> for AnyHasName {
-    #[inline]
-    fn from(node: Struct) -> AnyHasName { AnyHasName { syntax: node.syntax } }
-}
-impl From<TypeParam> for AnyHasName {
-    #[inline]
-    fn from(node: TypeParam) -> AnyHasName { AnyHasName { syntax: node.syntax } }
-}
-impl From<UseAlias> for AnyHasName {
-    #[inline]
-    fn from(node: UseAlias) -> AnyHasName { AnyHasName { syntax: node.syntax } }
-}
-impl From<Variant> for AnyHasName {
-    #[inline]
-    fn from(node: Variant) -> AnyHasName { AnyHasName { syntax: node.syntax } }
-}
-impl AnyHasReference {
-    #[inline]
-    pub fn new<T: ast::HasReference>(node: T) -> AnyHasReference {
-        AnyHasReference {
-            syntax: node.syntax().clone(),
-        }
-    }
-}
-impl AstNode for AnyHasReference {
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, PATH | STRUCT_LIT_FIELD | STRUCT_PAT_FIELD) }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        Self::can_cast(syntax.kind()).then_some(AnyHasReference { syntax })
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode { &self.syntax }
-}
-impl From<Path> for AnyHasReference {
-    #[inline]
-    fn from(node: Path) -> AnyHasReference { AnyHasReference { syntax: node.syntax } }
-}
-impl From<StructLitField> for AnyHasReference {
-    #[inline]
-    fn from(node: StructLitField) -> AnyHasReference { AnyHasReference { syntax: node.syntax } }
-}
-impl From<StructPatField> for AnyHasReference {
-    #[inline]
-    fn from(node: StructPatField) -> AnyHasReference { AnyHasReference { syntax: node.syntax } }
-}
 impl AnyHasStmts {
     #[inline]
     pub fn new<T: ast::HasStmts>(node: T) -> AnyHasStmts {
@@ -3641,50 +3568,6 @@ impl AstNode for AnyHasStmts {
 impl From<BlockExpr> for AnyHasStmts {
     #[inline]
     fn from(node: BlockExpr) -> AnyHasStmts { AnyHasStmts { syntax: node.syntax } }
-}
-impl AnyHasTypeParams {
-    #[inline]
-    pub fn new<T: ast::HasTypeParams>(node: T) -> AnyHasTypeParams {
-        AnyHasTypeParams {
-            syntax: node.syntax().clone(),
-        }
-    }
-}
-impl AstNode for AnyHasTypeParams {
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(kind, ENUM | FUN | SCHEMA | SPEC_FUN | SPEC_INLINE_FUN | STRUCT)
-    }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        Self::can_cast(syntax.kind()).then_some(AnyHasTypeParams { syntax })
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode { &self.syntax }
-}
-impl From<Enum> for AnyHasTypeParams {
-    #[inline]
-    fn from(node: Enum) -> AnyHasTypeParams { AnyHasTypeParams { syntax: node.syntax } }
-}
-impl From<Fun> for AnyHasTypeParams {
-    #[inline]
-    fn from(node: Fun) -> AnyHasTypeParams { AnyHasTypeParams { syntax: node.syntax } }
-}
-impl From<Schema> for AnyHasTypeParams {
-    #[inline]
-    fn from(node: Schema) -> AnyHasTypeParams { AnyHasTypeParams { syntax: node.syntax } }
-}
-impl From<SpecFun> for AnyHasTypeParams {
-    #[inline]
-    fn from(node: SpecFun) -> AnyHasTypeParams { AnyHasTypeParams { syntax: node.syntax } }
-}
-impl From<SpecInlineFun> for AnyHasTypeParams {
-    #[inline]
-    fn from(node: SpecInlineFun) -> AnyHasTypeParams { AnyHasTypeParams { syntax: node.syntax } }
-}
-impl From<Struct> for AnyHasTypeParams {
-    #[inline]
-    fn from(node: Struct) -> AnyHasTypeParams { AnyHasTypeParams { syntax: node.syntax } }
 }
 impl AnyHasUseStmts {
     #[inline]
@@ -3810,6 +3693,123 @@ impl From<SpecFun> for AnyMslOnly {
 impl From<SpecInlineFun> for AnyMslOnly {
     #[inline]
     fn from(node: SpecInlineFun) -> AnyMslOnly { AnyMslOnly { syntax: node.syntax } }
+}
+impl AnyNamedItem {
+    #[inline]
+    pub fn new<T: ast::NamedItem>(node: T) -> AnyNamedItem {
+        AnyNamedItem {
+            syntax: node.syntax().clone(),
+        }
+    }
+}
+impl AstNode for AnyNamedItem {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(
+            kind,
+            CONST
+                | ENUM
+                | FUN
+                | IDENT_PAT
+                | MODULE
+                | NAMED_FIELD
+                | SCHEMA
+                | SPEC_FUN
+                | SPEC_INLINE_FUN
+                | STRUCT
+                | TYPE_PARAM
+                | USE_ALIAS
+                | VARIANT
+        )
+    }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        Self::can_cast(syntax.kind()).then_some(AnyNamedItem { syntax })
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl From<Const> for AnyNamedItem {
+    #[inline]
+    fn from(node: Const) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+}
+impl From<Enum> for AnyNamedItem {
+    #[inline]
+    fn from(node: Enum) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+}
+impl From<Fun> for AnyNamedItem {
+    #[inline]
+    fn from(node: Fun) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+}
+impl From<IdentPat> for AnyNamedItem {
+    #[inline]
+    fn from(node: IdentPat) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+}
+impl From<Module> for AnyNamedItem {
+    #[inline]
+    fn from(node: Module) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+}
+impl From<NamedField> for AnyNamedItem {
+    #[inline]
+    fn from(node: NamedField) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+}
+impl From<Schema> for AnyNamedItem {
+    #[inline]
+    fn from(node: Schema) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+}
+impl From<SpecFun> for AnyNamedItem {
+    #[inline]
+    fn from(node: SpecFun) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+}
+impl From<SpecInlineFun> for AnyNamedItem {
+    #[inline]
+    fn from(node: SpecInlineFun) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+}
+impl From<Struct> for AnyNamedItem {
+    #[inline]
+    fn from(node: Struct) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+}
+impl From<TypeParam> for AnyNamedItem {
+    #[inline]
+    fn from(node: TypeParam) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+}
+impl From<UseAlias> for AnyNamedItem {
+    #[inline]
+    fn from(node: UseAlias) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+}
+impl From<Variant> for AnyNamedItem {
+    #[inline]
+    fn from(node: Variant) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+}
+impl AnyReference {
+    #[inline]
+    pub fn new<T: ast::Reference>(node: T) -> AnyReference {
+        AnyReference {
+            syntax: node.syntax().clone(),
+        }
+    }
+}
+impl AstNode for AnyReference {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, PATH | STRUCT_LIT_FIELD | STRUCT_PAT_FIELD) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        Self::can_cast(syntax.kind()).then_some(AnyReference { syntax })
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl From<Path> for AnyReference {
+    #[inline]
+    fn from(node: Path) -> AnyReference { AnyReference { syntax: node.syntax } }
+}
+impl From<StructLitField> for AnyReference {
+    #[inline]
+    fn from(node: StructLitField) -> AnyReference { AnyReference { syntax: node.syntax } }
+}
+impl From<StructPatField> for AnyReference {
+    #[inline]
+    fn from(node: StructPatField) -> AnyReference { AnyReference { syntax: node.syntax } }
 }
 impl std::fmt::Display for AddressRef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

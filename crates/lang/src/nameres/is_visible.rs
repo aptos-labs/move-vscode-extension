@@ -6,13 +6,13 @@ use crate::InFile;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::visibility::{Vis, VisLevel};
-use syntax::ast::{HasAttrs, HasReference, HasVisibility, NamedItemScope};
+use syntax::ast::{HasAttrs, Reference, HasVisibility, NamedItemScope};
 use syntax::{ast, unwrap_or_continue, AstNode};
 
 pub fn is_visible_in_context(
     db: &dyn HirDatabase,
     scope_entry: &ScopeEntry,
-    context: &InFile<impl HasReference>,
+    context: &InFile<impl Reference>,
 ) -> bool {
     use syntax::SyntaxKind::*;
 
@@ -33,7 +33,7 @@ pub fn is_visible_in_context(
     let Some(InFile {
         file_id: item_file_id,
         value: item,
-    }) = scope_entry.node_loc.cast::<ast::AnyHasName>(db.upcast())
+    }) = scope_entry.node_loc.cast::<ast::AnyNamedItem>(db.upcast())
     else {
         return false;
     };
