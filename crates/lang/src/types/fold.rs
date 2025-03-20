@@ -80,34 +80,34 @@ impl TypeFolder for FullTyVarResolver<'_> {
 }
 
 #[derive(Clone)]
-pub struct TyInferVisitor<V: Fn(&TyInfer) -> bool + Clone> {
+pub struct TyVarVisitor<V: Fn(&TyVar) -> bool + Clone> {
     visitor: V,
 }
 
-impl<V: Fn(&TyInfer) -> bool + Clone> TyInferVisitor<V> {
+impl<V: Fn(&TyVar) -> bool + Clone> TyVarVisitor<V> {
     pub fn new(visitor: V) -> Self {
-        TyInferVisitor { visitor }
+        TyVarVisitor { visitor }
     }
 }
 
-impl<V: Fn(&TyInfer) -> bool + Clone> TypeVisitor for TyInferVisitor<V> {
+impl<V: Fn(&TyVar) -> bool + Clone> TypeVisitor for TyVarVisitor<V> {
     fn visit_ty(&self, ty: &Ty) -> bool {
         match ty {
-            Ty::Infer(ty_infer) => (self.visitor)(ty_infer),
+            Ty::Infer(TyInfer::Var(ty_var)) => (self.visitor)(ty_var),
             _ => ty.deep_visit_with(self.clone()),
         }
     }
 }
 
 impl Ty {
-    pub fn collect_ty_infers(&self) -> Vec<TyInfer> {
-        let mut ty_infers = RefCell::new(vec![]);
-        let collector = TyInferVisitor::new(|ty_infer| {
-            ty_infers.borrow_mut().push(ty_infer.to_owned());
+    pub fn collect_ty_vars(&self) -> Vec<TyVar> {
+        let mut ty_vars = RefCell::new(vec![]);
+        let collector = TyVarVisitor::new(|ty_var| {
+            ty_vars.borrow_mut().push(ty_var.to_owned());
             false
         });
         self.visit_with(collector);
-        ty_infers.into_inner()
+        ty_vars.into_inner()
     }
 }
 
@@ -122,7 +122,7 @@ mod tests {
             Ty::Infer(TyInfer::Var(TyVar::new_anonymous(0))),
             Mutability::Immutable,
         ));
-        let res = ty_ref.collect_ty_infers();
+        let res = ty_ref.collect_ty_vars();
         dbg!(res);
     }
 }

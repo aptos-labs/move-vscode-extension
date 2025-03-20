@@ -3,17 +3,21 @@ pub(crate) mod inference_result;
 
 use crate::db::HirDatabase;
 use crate::loc::SyntaxLocExt;
-use crate::types::fold::{Fallback, FullTyVarResolver, TyVarResolver};
+use crate::types::fold::{Fallback, FullTyVarResolver, TyVarResolver, TyVarVisitor};
 use crate::types::has_type_params_ext::HasTypeParamsExt;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::lowering::TyLowering;
 use crate::types::substitution::ApplySubstitution;
+use crate::types::ty::adt::TyAdt;
+use crate::types::ty::reference::TyReference;
+use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
 use crate::types::ty::Ty;
 use crate::types::unification::UnificationTable;
 use crate::InFile;
 use std::collections::HashMap;
+use std::iter::zip;
 use std::ops::Deref;
 use syntax::{ast, AstNode};
 use vfs::FileId;
@@ -155,11 +159,22 @@ impl<'a> InferenceCtx<'a> {
             Ty::Infer(TyInfer::Var(ty_var)) => self.var_table.unify_var_var(var, &ty_var),
             _ => {
                 let root_ty_var = self.var_table.resolve_to_root_var(var);
-                // todo: cyclic type error
+                if self.ty_contains_ty_var(&ty, &root_ty_var) {
+                    // "E0308 cyclic type of infinite size"
+                    self.var_table.unify_var_value(&root_ty_var, Ty::Unknown);
+                    return Ok(());
+                }
                 self.var_table.unify_var_value(&root_ty_var, ty);
             }
         };
         Ok(())
+    }
+
+    fn ty_contains_ty_var(&self, ty: &Ty, ty_var: &TyVar) -> bool {
+        let visitor = TyVarVisitor::new(|inner_ty_var| {
+            &self.var_table.resolve_to_root_var(inner_ty_var) == ty_var
+        });
+        ty.visit_with(visitor)
     }
 
     fn combine_int_var(&mut self, int_var: TyIntVar, ty: Ty) -> CombineResult {
@@ -171,9 +186,7 @@ impl<'a> InferenceCtx<'a> {
             Ty::Unknown => {
                 // do nothing, unknown should not influence IntVar
             }
-            _ => {
-                // todo: error
-            }
+            _ => return Err(TypeError::new(Ty::Infer(TyInfer::IntVar(int_var)), ty)),
         }
         Ok(())
     }
@@ -182,11 +195,9 @@ impl<'a> InferenceCtx<'a> {
         // assign Ty::Unknown to all inner `TyVar`s if other type is unknown
         if matches!(left_ty, Ty::Unknown) || matches!(right_ty, Ty::Unknown) {
             for ty in [left_ty, right_ty] {
-                let ty_infers = ty.collect_ty_infers();
-                for ty_infer in ty_infers {
-                    if let TyInfer::Var(ty_var) = ty_infer {
-                        let _ = self.unify_ty_var(&ty_var, Ty::Unknown);
-                    }
+                let ty_vars = ty.collect_ty_vars();
+                for ty_var in ty_vars {
+                    let _ = self.unify_ty_var(&ty_var, Ty::Unknown);
                 }
             }
             return Ok(());
@@ -205,7 +216,7 @@ impl<'a> InferenceCtx<'a> {
                 if kind1.is_default() || kind2.is_default() {
                     return Ok(());
                 }
-                Err(TypeMismatchError::new(left_ty, right_ty))
+                Err(TypeError::new(left_ty, right_ty))
             }
             (Ty::Vector(ty1), Ty::Vector(ty2)) => {
                 self.combine_types(ty1.deref().to_owned(), ty2.deref().to_owned())
@@ -214,16 +225,43 @@ impl<'a> InferenceCtx<'a> {
             _ => Ok(()),
         }
     }
+
+    fn combine_ty_refs(&mut self, from_ref: TyReference, to_ref: TyReference) -> CombineResult {
+        let is_mut_compat = from_ref.is_mut() || !to_ref.is_mut();
+        if !is_mut_compat {
+            return Err(TypeError::new(Ty::Reference(from_ref), Ty::Reference(to_ref)));
+        }
+        self.combine_types(from_ref.referenced().to_owned(), to_ref.referenced().to_owned())
+    }
+
+    fn combine_ty_adts(&mut self, ty1: TyAdt, ty2: TyAdt) -> CombineResult {
+        Ok(())
+    }
+
+    fn combine_ty_tuples(&mut self, ty1: TyTuple, ty2: TyTuple) -> CombineResult {
+        if ty1.types.len() != ty2.types.len() {
+            return Err(TypeError::new(Ty::Tuple(ty1), Ty::Tuple(ty2)));
+        }
+        let ty_pairs = zip(ty1.types.into_iter(), ty2.types.into_iter()).collect();
+        self.combine_ty_pairs(ty_pairs)
+    }
+
+    fn combine_ty_pairs(&mut self, ty_pairs: Vec<(Ty, Ty)>) -> CombineResult {
+        let mut can_unify = Ok(());
+        for (ty1, ty2) in ty_pairs {
+            can_unify = can_unify.and(self.combine_types(ty1, ty2));
+        }
+        can_unify
+    }
 }
 
-type CombineResult = Result<(), TypeMismatchError>;
-struct TypeMismatchError {
+type CombineResult = Result<(), TypeError>;
+struct TypeError {
     ty1: Ty,
     ty2: Ty,
 }
-
-impl TypeMismatchError {
+impl TypeError {
     pub fn new(ty1: Ty, ty2: Ty) -> Self {
-        TypeMismatchError { ty1, ty2 }
+        TypeError { ty1, ty2 }
     }
 }
