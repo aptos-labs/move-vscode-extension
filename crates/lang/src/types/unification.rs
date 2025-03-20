@@ -1,120 +1,100 @@
-use crate::types::fold::TypeFoldable;
-use crate::types::ty::ty_var::{TyVar, TyVarKind};
-use crate::types::ty::type_param::TyTypeParameter;
-use crate::types::ty::{Ty, TypeFolder};
+use crate::types::ty::Ty;
 use std::collections::HashMap;
+use std::hash::Hash;
 
 #[derive(Debug)]
-pub enum TableValue {
-    Var(TyVar),
-    Value(Ty),
+pub enum TableValue<Var> {
+    Var(Var),
+    Value(Option<Ty>),
 }
 
 #[derive(Debug)]
-pub struct UnificationTable {
-    mapping: HashMap<TyVar, TableValue>,
+pub struct UnificationTable<Var: Clone + Eq + Hash> {
+    mapping: HashMap<Var, TableValue<Var>>,
 }
 
-impl UnificationTable {
+impl<Var: Clone + Eq + Hash> UnificationTable<Var> {
     pub fn new() -> Self {
         UnificationTable {
             mapping: HashMap::new(),
         }
     }
 
-    pub fn unify_var_value(&mut self, ty_var: TyVar, ty: Ty) {
-        // resolve `ty_var` with mapping, and if it's in the `mapping`, then it's an error
-        self.mapping.insert(ty_var, TableValue::Value(ty));
-    }
-
-    pub fn resolve_ty_var(&self, ty_var: &TyVar) -> Option<Ty> {
-        self.mapping
-            .get(ty_var)
-            .and_then(|table_value| match table_value {
-                TableValue::Value(ty) => Some(ty.clone()),
-                TableValue::Var(_) => None,
-            })
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct TyVarResolver<'a> {
-    uni_table: &'a UnificationTable,
-}
-
-impl<'a> TyVarResolver<'a> {
-    pub fn new(unification_table: &'a UnificationTable) -> Self {
-        TyVarResolver {
-            uni_table: unification_table,
+    pub fn unify_var_var(&mut self, left_var: &Var, right_var: &Var) {
+        let left_root_var = self.resolve_to_root_var(left_var);
+        let right_root_var = self.resolve_to_root_var(right_var);
+        if left_root_var == right_root_var {
+            // already unified
+            return;
         }
-    }
-}
 
-impl TypeFolder for TyVarResolver<'_> {
-    fn fold_ty(&self, t: Ty) -> Ty {
-        match t {
-            Ty::Var(ref ty_var) => self.uni_table.resolve_ty_var(ty_var).unwrap_or(t),
-            _ => t.deep_fold_with(self.to_owned()),
-        }
-    }
-}
+        let left_value_ty = self.resolve_to_ty_value(&left_root_var);
+        let right_value_ty = self.resolve_to_ty_value(&right_root_var);
 
-#[derive(Debug, Copy, Clone)]
-pub enum Fallback {
-    TyUnknown,
-    Origin,
-}
-
-#[derive(Debug, Clone)]
-pub struct FullTyVarResolver<'a> {
-    uni_table: &'a UnificationTable,
-    fallback: Fallback,
-}
-
-impl<'a> FullTyVarResolver<'a> {
-    pub fn new(unification_table: &'a UnificationTable, fallback: Fallback) -> Self {
-        FullTyVarResolver {
-            uni_table: unification_table,
-            fallback,
-        }
-    }
-}
-
-impl TypeFolder for FullTyVarResolver<'_> {
-    fn fold_ty(&self, t: Ty) -> Ty {
-        match t {
-            Ty::Var(ref ty_var) => {
-                let resolved_ty_var = self.uni_table.resolve_ty_var(ty_var);
-                match resolved_ty_var {
-                    Some(ty) => ty,
-                    None => match (self.fallback, &ty_var.kind) {
-                        (Fallback::Origin, TyVarKind::WithOrigin { origin_loc }) => {
-                            Ty::TypeParam(TyTypeParameter::from_loc(origin_loc.to_owned()))
-                        }
-                        _ => Ty::Unknown,
-                    },
+        let new_value_ty = match (&left_value_ty, &right_value_ty) {
+            (Some(left_ty), Some(right_ty)) => {
+                if *left_ty != *right_ty {
+                    panic!("unification error: if both vars are unified, their ty's must be the same")
                 }
+                Some(left_ty.to_owned())
             }
-            _ => t.deep_fold_with(self.to_owned()),
+            _ => left_value_ty.or(right_value_ty),
+        };
+
+        self.mapping
+            .insert(left_root_var, TableValue::Var(right_root_var.clone()));
+        self.mapping
+            .insert(right_root_var, TableValue::Value(new_value_ty));
+    }
+
+    pub fn unify_var_value(&mut self, ty_var: &Var, ty: Ty) {
+        let old_value_ty = self.resolve_to_ty_value(ty_var);
+        if let Some(old_value_ty) = old_value_ty {
+            // if already unified, value must be the same
+            if old_value_ty != ty {
+                panic!("unification error")
+            }
+            return;
         }
+        let root_var = self.resolve_to_root_var(ty_var);
+        self.mapping.insert(root_var, TableValue::Value(Some(ty)));
+    }
+
+    pub fn resolve_to_root_var(&self, var: &Var) -> Var {
+        let mut var = var;
+        while let Some(TableValue::Var(root_var)) = self.mapping.get(var) {
+            var = root_var;
+        }
+        var.to_owned()
+    }
+
+    pub fn resolve_to_ty_value(&self, var: &Var) -> Option<Ty> {
+        let root_var = self.resolve_to_root_var(var);
+        self.mapping.get(&root_var).and_then(|t_value| match t_value {
+            TableValue::Value(ty) => ty.to_owned(),
+            TableValue::Var(_) => None,
+        })
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::types::fold::TypeFoldable;
-    use crate::types::ty::Ty;
-    use crate::types::unification::{TyVar, TyVarResolver, UnificationTable};
+    use super::*;
+    use crate::types::ty::ty_var::TyVar;
+    use crate::types::ty::IntegerKind;
 
     #[test]
-    fn test_resolve_ty_var_after_unification() {
-        let mut unification_table = UnificationTable::new();
+    fn test_unify_vars() {
+        let mut uni_table: UnificationTable<TyVar> = UnificationTable::new();
 
-        let v_arg = TyVar::new_anonymous(0);
-        unification_table.unify_var_value(v_arg.clone(), Ty::Bool);
+        let ty_var1 = TyVar::new_anonymous(0);
+        let ty_var2 = TyVar::new_anonymous(1);
+        let ty_integer = Ty::Integer(IntegerKind::Integer);
 
-        let v = Ty::Vector(Box::new(Ty::Var(v_arg)));
-        let resolved_v = v.deep_fold_with(TyVarResolver::new(&unification_table));
-        dbg!(resolved_v);
+        uni_table.unify_var_var(&ty_var1, &ty_var2);
+        uni_table.unify_var_value(&ty_var1, ty_integer.clone());
+
+        let ty_value = uni_table.resolve_to_ty_value(&ty_var1);
+        assert_eq!(ty_value.unwrap(), ty_integer);
     }
 }

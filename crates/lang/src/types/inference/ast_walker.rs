@@ -56,16 +56,13 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                         .unwrap_or(Ty::Unknown),
                     Some(initializer_expr) => {
                         let initializer_ty = self.infer_expr(initializer_expr);
-                        explicit_ty.unwrap_or(initializer_ty)
+                        explicit_ty.clone().unwrap_or(initializer_ty)
                     }
                 };
                 if let Some(pat) = pat {
-                    collect_bindings(
-                        self,
-                        pat,
-                        self.ctx.resolve_vars_if_possible(initializer_ty),
-                        BindingMode::BindByValue,
-                    );
+                    let pat_ty =
+                        explicit_ty.unwrap_or(self.ctx.resolve_vars_if_possible(initializer_ty));
+                    collect_bindings(self, pat, pat_ty, BindingMode::BindByValue);
                 }
             }
             ast::Stmt::ExprStmt(expr_stmt) => {

@@ -2,7 +2,7 @@ use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::patterns::BindingMode::{BindByReference, BindByValue};
 use crate::types::ty::reference::{Mutability, TyReference};
 use crate::types::ty::tuple::TyTuple;
-use crate::types::ty::ty_var::TyVar;
+use crate::types::ty::ty_var::{TyInfer, TyVar};
 use crate::types::ty::Ty;
 use syntax::ast;
 
@@ -28,14 +28,14 @@ pub fn anonymous_pat_ty_var(counter: &mut usize, pat: &ast::Pat) -> Ty {
     match pat {
         ast::Pat::IdentPat(_) => {
             *counter = *counter + 1;
-            Ty::Var(TyVar::new_anonymous(*counter))
+            Ty::Infer(TyInfer::Var(TyVar::new_anonymous(*counter)))
         }
         ast::Pat::TuplePat(tuple_pat) => {
             let pat_types = tuple_pat
                 .pats()
                 .map(|pat| {
                     *counter = *counter + 1;
-                    Ty::Var(TyVar::new_anonymous(*counter))
+                    Ty::Infer(TyInfer::Var(TyVar::new_anonymous(*counter)))
                 })
                 .collect();
             Ty::Tuple(TyTuple::new(pat_types))

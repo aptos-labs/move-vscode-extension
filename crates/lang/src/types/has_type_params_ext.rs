@@ -1,5 +1,5 @@
 use crate::types::substitution::Substitution;
-use crate::types::ty::ty_var::TyVar;
+use crate::types::ty::ty_var::{TyInfer, TyVar};
 use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::Ty;
 use crate::InFile;
@@ -34,7 +34,12 @@ impl HasTypeParamsExt for InFile<ast::AnyHasTypeParams> {
         let subst = self
             .ty_type_params()
             .into_iter()
-            .map(|ty_tp| (ty_tp.clone(), Ty::Var(TyVar::new_with_origin(ty_tp.origin_loc))))
+            .map(|ty_tp| {
+                (
+                    ty_tp.clone(),
+                    Ty::Infer(TyInfer::Var(TyVar::new_with_origin(ty_tp.origin_loc))),
+                )
+            })
             .collect();
         Substitution::new(subst)
     }

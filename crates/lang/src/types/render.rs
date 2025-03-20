@@ -1,6 +1,6 @@
 use crate::loc::SyntaxLoc;
 use crate::types::ty::adt::TyAdt;
-use crate::types::ty::ty_var::{TyVar, TyVarKind};
+use crate::types::ty::ty_var::{TyInfer, TyVar, TyVarKind};
 use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::Ty;
 use crate::AsName;
@@ -35,7 +35,10 @@ impl<'db> TypeRenderer<'db> {
             }
 
             Ty::TypeParam(ty_tp) => self.render_ty_tp(ty_tp),
-            Ty::Var(ty_var) => self.render_ty_var(ty_var),
+            Ty::Infer(ty_infer) => match ty_infer {
+                TyInfer::Var(ty_var) => self.render_ty_var(ty_var),
+                TyInfer::IntVar(_) => "?integer".to_string(),
+            },
 
             Ty::Bool => "bool".to_string(),
             Ty::Signer => "signer".to_string(),

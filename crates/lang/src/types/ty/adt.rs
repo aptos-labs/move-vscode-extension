@@ -1,7 +1,6 @@
 use crate::loc::{SyntaxLoc, SyntaxLocExt};
-use crate::types::fold::TypeFoldable;
+use crate::types::fold::{TypeFoldable, TypeFolder};
 use crate::types::substitution::{empty_substitution, Substitution};
-use crate::types::ty::TypeFolder;
 use crate::InFile;
 use syntax::ast;
 
