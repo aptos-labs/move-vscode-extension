@@ -1,4 +1,4 @@
-use crate::ast;
+use crate::{ast, AstNode};
 
 impl ast::Fun {
     pub fn params(&self) -> Vec<ast::Param> {
@@ -13,6 +13,10 @@ impl ast::Fun {
 
     pub fn return_type(&self) -> Option<ast::Type> {
         self.ret_type()?.type_()
+    }
+
+    pub fn as_type_params_owner(&self) -> ast::AnyHasTypeParams {
+        ast::AnyHasTypeParams::cast(self.syntax.to_owned()).unwrap()
     }
 
     pub fn is_native(&self) -> bool {

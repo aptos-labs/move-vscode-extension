@@ -1,8 +1,11 @@
+use crate::types::expectation::Expectation;
 use crate::types::inference::InferenceCtx;
 use crate::types::patterns::{anonymous_pat_ty_var, collect_bindings, BindingMode};
-use crate::types::ty::Ty;
-use syntax::ast;
+use crate::types::ty::{IntegerKind, Ty};
+use crate::InFile;
+use parser::SyntaxKind;
 use syntax::ast::{BindingTypeOwner, HasStmts, Pat};
+use syntax::{ast, AstNode};
 
 pub struct TypeAstWalker<'a, 'db> {
     pub ctx: &'a mut InferenceCtx<'db>,
@@ -55,7 +58,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                         .map(|it| anonymous_pat_ty_var(&mut self.ctx.ty_var_counter, &it))
                         .unwrap_or(Ty::Unknown),
                     Some(initializer_expr) => {
-                        let initializer_ty = self.infer_expr(initializer_expr);
+                        let initializer_ty = self.infer_expr(&initializer_expr);
                         explicit_ty.clone().unwrap_or(initializer_ty)
                     }
                 };
@@ -66,25 +69,70 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 }
             }
             ast::Stmt::ExprStmt(expr_stmt) => {
-                self.infer_expr(expr_stmt.expr());
+                self.infer_expr(&expr_stmt.expr());
             }
             _ => {}
         }
     }
 
-    fn infer_expr(&mut self, expr: ast::Expr) -> Ty {
-        let expr_ty = match &expr {
+    fn infer_expr(&mut self, expr: &ast::Expr) -> Ty {
+        let expr_ty = match expr {
+            ast::Expr::CallExpr(call_expr) => self.infer_call_expr(call_expr, Expectation::empty()),
+            ast::Expr::ParenExpr(paren_expr) => paren_expr
+                .expr()
+                .map(|it| self.infer_expr(&it))
+                .unwrap_or(Ty::Unknown),
             ast::Expr::Literal(lit) => self.infer_literal(lit),
             _ => Ty::Unknown,
         };
-        self.ctx.expr_types.insert(expr, expr_ty.clone());
+        self.ctx.expr_types.insert(expr.to_owned(), expr_ty.clone());
         expr_ty
+    }
+
+    fn infer_call_expr(&self, call_expr: &ast::CallExpr, expectation: Expectation) -> Ty {
+        let path = call_expr.path();
+        let named_item = self
+            .ctx
+            .db
+            .resolve_named_item(InFile::new(self.ctx.file_id, path.as_reference()));
+
+        if let Some(InFile {
+            file_id,
+            value: named_item,
+        }) = named_item
+        {
+            let item_kind = named_item.syntax().kind();
+            match item_kind {
+                SyntaxKind::FUN => {
+                    let generic_item = ast::Fun::cast(named_item.syntax().to_owned())
+                        .unwrap()
+                        .as_type_params_owner();
+                    let path_ty = self
+                        .ctx
+                        .instantiate_path(path, InFile::new(file_id, generic_item));
+                    dbg!(&path_ty);
+                    return Ty::Unknown;
+                }
+                _ => {
+                    return Ty::Unknown;
+                }
+            }
+        } else {
+            // todo: unknown ty function
+            return Ty::Unknown;
+        }
+
+        Ty::Unknown
     }
 
     fn infer_literal(&self, lit: &ast::Literal) -> Ty {
         if lit.bool_literal_token().is_some() {
             return Ty::Bool;
         }
+        if let Some(int_token) = lit.int_number_token() {
+            return Ty::Integer(IntegerKind::from_literal(int_token.text()));
+        }
+        if lit.int_number_token().is_some() {}
         Ty::Unknown
     }
 }

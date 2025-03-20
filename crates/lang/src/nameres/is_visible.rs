@@ -132,7 +132,7 @@ pub fn is_visible_in_context(
                     for friend_decl in friend_decls {
                         let friend_path = unwrap_or_continue!(friend_decl.path());
                         if let Some(friend_entry) =
-                            db.resolve_ref_single(InFile::new(item_file_id, friend_path.into()))
+                            db.resolve(InFile::new(item_file_id, friend_path.into()))
                         {
                             let friend_module = unwrap_or_continue!(friend_entry
                                 .node_loc

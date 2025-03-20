@@ -148,7 +148,7 @@ pub fn get_qualified_path_entries(
     qualifier: ast::Path,
 ) -> Vec<ScopeEntry> {
     let qualifier = ctx.wrap_in_file(qualifier);
-    let qualifier_item = db.resolve_ref_single(qualifier.clone().map(|it| it.into()));
+    let qualifier_item = db.resolve(qualifier.clone().map(|it| it.into()));
     if qualifier_item.is_none() {
         // qualifier can be an address
         if let Some(qualifier_name) = qualifier.value.name_ref_name() {
@@ -188,7 +188,7 @@ pub fn get_struct_pat_field_resolve_variants(
     struct_pat_field: InFile<ast::StructPatField>,
 ) -> Vec<ScopeEntry> {
     let struct_pat_path = struct_pat_field.map(|field| field.struct_pat().path());
-    db.resolve_ref_single(struct_pat_path.in_file_into())
+    db.resolve(struct_pat_path.in_file_into())
         .and_then(|struct_entry| {
             let fields_owner = struct_entry.node_loc.cast::<ast::AnyHasFields>(db.upcast())?;
             Some(get_named_field_entries(fields_owner))
@@ -201,7 +201,7 @@ pub fn get_struct_lit_field_resolve_variants(
     struct_lit_field: InFile<ast::StructLitField>,
 ) -> Vec<ScopeEntry> {
     let struct_lit_path = struct_lit_field.map(|field| field.struct_lit().path());
-    db.resolve_ref_single(struct_lit_path.in_file_into())
+    db.resolve(struct_lit_path.in_file_into())
         .and_then(|struct_entry| {
             let fields_owner = struct_entry.node_loc.cast::<ast::AnyHasFields>(db.upcast())?;
             Some(get_named_field_entries(fields_owner))

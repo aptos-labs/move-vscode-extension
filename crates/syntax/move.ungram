@@ -195,6 +195,7 @@ Expr =
     | ParenExpr
     | PathExpr
     | PrefixExpr
+    | CallExpr
 
 ForExpr =
     'for' ForCondition (BlockExpr | InlineExpr)
@@ -231,6 +232,12 @@ Literal =
 
 ParenExpr =
     '(' Expr ')'
+
+CallExpr =
+    Path ArgList
+
+ArgList =
+    '(' arg_exprs:(Expr (',' Expr)* ','?)? ')'
 
 PathExpr =
     Path

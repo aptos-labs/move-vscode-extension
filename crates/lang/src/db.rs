@@ -19,10 +19,13 @@ pub trait HirDatabase: SourceRootDatabase + Upcast<dyn SourceRootDatabase> {
     fn resolve_ref_loc(&self, ref_loc: SyntaxLoc) -> Vec<ScopeEntry>;
 
     #[ra_salsa::transparent]
-    fn resolve_ref_multi(&self, any_ref: InFile<ast::AnyHasReference>) -> Vec<ScopeEntry>;
+    fn multi_resolve(&self, any_ref: InFile<ast::AnyHasReference>) -> Vec<ScopeEntry>;
 
     #[ra_salsa::transparent]
-    fn resolve_ref_single(&self, any_ref: InFile<ast::AnyHasReference>) -> Option<ScopeEntry>;
+    fn resolve(&self, any_ref: InFile<ast::AnyHasReference>) -> Option<ScopeEntry>;
+
+    #[ra_salsa::transparent]
+    fn resolve_named_item(&self, reference: InFile<ast::AnyHasReference>) -> Option<InFile<ast::AnyHasName>>;
 
     fn inference(&self, ctx_owner_loc: SyntaxLoc) -> Option<InferenceResult>;
 
@@ -69,16 +72,20 @@ fn resolve_ref_loc(db: &dyn HirDatabase, ref_loc: SyntaxLoc) -> Vec<ScopeEntry> 
     }
 }
 
-fn resolve_ref_multi(db: &dyn HirDatabase, any_ref: InFile<ast::AnyHasReference>) -> Vec<ScopeEntry> {
+fn multi_resolve(db: &dyn HirDatabase, any_ref: InFile<ast::AnyHasReference>) -> Vec<ScopeEntry> {
     db.resolve_ref_loc(any_ref.loc())
 }
 
-fn resolve_ref_single(
-    db: &dyn HirDatabase,
-    any_ref: InFile<ast::AnyHasReference>,
-) -> Option<ScopeEntry> {
-    let entries = db.resolve_ref_multi(any_ref);
+fn resolve(db: &dyn HirDatabase, any_ref: InFile<ast::AnyHasReference>) -> Option<ScopeEntry> {
+    let entries = db.multi_resolve(any_ref);
     entries.into_iter().exactly_one().ok()
+}
+
+fn resolve_named_item(
+    db: &dyn HirDatabase,
+    reference: InFile<ast::AnyHasReference>,
+) -> Option<InFile<ast::AnyHasName>> {
+    db.resolve(reference).and_then(|it| it.node_loc.cast::<ast::AnyHasName>(db.upcast()))
 }
 
 fn inference(db: &dyn HirDatabase, ctx_owner_loc: SyntaxLoc) -> Option<InferenceResult> {

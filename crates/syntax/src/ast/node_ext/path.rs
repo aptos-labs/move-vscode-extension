@@ -1,5 +1,5 @@
-use crate::ast;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
+use crate::{ast, AstNode};
 
 impl ast::Path {
     pub fn path_address(&self) -> Option<ast::PathAddress> {
@@ -8,6 +8,10 @@ impl ast::Path {
 
     pub fn name_ref(&self) -> Option<ast::NameRef> {
         self.segment().name_ref()
+    }
+
+    pub fn as_reference(&self) -> ast::AnyHasReference {
+        ast::AnyHasReference::cast(self.syntax.to_owned()).unwrap()
     }
 
     pub fn type_args(&self) -> Vec<ast::TypeArg> {

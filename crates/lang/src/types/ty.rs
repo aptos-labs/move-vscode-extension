@@ -87,6 +87,7 @@ impl TypeFoldable<Ty> for Ty {
 pub enum IntegerKind {
     Integer,
     U8,
+    U16,
     U32,
     U64,
     U128,
@@ -94,6 +95,19 @@ pub enum IntegerKind {
 }
 
 impl IntegerKind {
+    pub fn from_literal(lit: &str) -> Self {
+        let lit = lit.to_lowercase();
+        match lit {
+            _ if lit.ends_with("u8") => IntegerKind::U8,
+            _ if lit.ends_with("u16") => IntegerKind::U16,
+            _ if lit.ends_with("u32") => IntegerKind::U32,
+            _ if lit.ends_with("u64") => IntegerKind::U64,
+            _ if lit.ends_with("u128") => IntegerKind::U128,
+            _ if lit.ends_with("u256") => IntegerKind::U256,
+            _ => IntegerKind::Integer
+        }
+    }
+
     pub fn is_default(&self) -> bool {
         *self == IntegerKind::Integer
     }

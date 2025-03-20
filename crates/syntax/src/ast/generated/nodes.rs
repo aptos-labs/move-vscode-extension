@@ -25,6 +25,19 @@ impl AddressDef {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ArgList {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ArgList {
+    #[inline]
+    pub fn arg_exprs(&self) -> AstChildren<Expr> { support::children(&self.syntax) }
+    #[inline]
+    pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
+    #[inline]
+    pub fn r_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![')']) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Attr {
     pub(crate) syntax: SyntaxNode,
 }
@@ -74,6 +87,17 @@ impl BlockExpr {
     pub fn l_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['{']) }
     #[inline]
     pub fn r_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['}']) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct CallExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl CallExpr {
+    #[inline]
+    pub fn arg_list(&self) -> Option<ArgList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn path(&self) -> Path { support::child(&self.syntax).expect("required by the parser") }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -983,6 +1007,7 @@ pub enum BindingTypeOwner {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Expr {
     BinExpr(BinExpr),
+    CallExpr(CallExpr),
     Literal(Literal),
     ParenExpr(ParenExpr),
     PathExpr(PathExpr),
@@ -1134,6 +1159,27 @@ impl AstNode for AddressDef {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for ArgList {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ARG_LIST
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == ARG_LIST }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for Attr {
     #[inline]
     fn kind() -> SyntaxKind
@@ -1207,6 +1253,27 @@ impl AstNode for BlockExpr {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == BLOCK_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for CallExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        CALL_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == CALL_EXPR }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -2704,6 +2771,10 @@ impl From<BinExpr> for Expr {
     #[inline]
     fn from(node: BinExpr) -> Expr { Expr::BinExpr(node) }
 }
+impl From<CallExpr> for Expr {
+    #[inline]
+    fn from(node: CallExpr) -> Expr { Expr::CallExpr(node) }
+}
 impl From<Literal> for Expr {
     #[inline]
     fn from(node: Literal) -> Expr { Expr::Literal(node) }
@@ -2724,6 +2795,12 @@ impl Expr {
     pub fn bin_expr(self) -> Option<BinExpr> {
         match (self) {
             Expr::BinExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn call_expr(self) -> Option<CallExpr> {
+        match (self) {
+            Expr::CallExpr(item) => Some(item),
             _ => None,
         }
     }
@@ -2755,12 +2832,16 @@ impl Expr {
 impl AstNode for Expr {
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(kind, BIN_EXPR | LITERAL | PAREN_EXPR | PATH_EXPR | PREFIX_EXPR)
+        matches!(
+            kind,
+            BIN_EXPR | CALL_EXPR | LITERAL | PAREN_EXPR | PATH_EXPR | PREFIX_EXPR
+        )
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
             BIN_EXPR => Expr::BinExpr(BinExpr { syntax }),
+            CALL_EXPR => Expr::CallExpr(CallExpr { syntax }),
             LITERAL => Expr::Literal(Literal { syntax }),
             PAREN_EXPR => Expr::ParenExpr(ParenExpr { syntax }),
             PATH_EXPR => Expr::PathExpr(PathExpr { syntax }),
@@ -2773,6 +2854,7 @@ impl AstNode for Expr {
     fn syntax(&self) -> &SyntaxNode {
         match self {
             Expr::BinExpr(it) => &it.syntax,
+            Expr::CallExpr(it) => &it.syntax,
             Expr::Literal(it) => &it.syntax,
             Expr::ParenExpr(it) => &it.syntax,
             Expr::PathExpr(it) => &it.syntax,
@@ -3789,6 +3871,11 @@ impl std::fmt::Display for AddressDef {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for ArgList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for Attr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -3805,6 +3892,11 @@ impl std::fmt::Display for BinExpr {
     }
 }
 impl std::fmt::Display for BlockExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for CallExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

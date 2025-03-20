@@ -27,9 +27,10 @@ mod tests {
         check_expr_type(
             r#"
 module 0x1::m {
+    fun call(): u8 { 1 }
     fun main() {
-        true;
-      //^ bool
+        call();
+        //^ u8
     }
 }
 "#,
