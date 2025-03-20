@@ -75,7 +75,7 @@ impl<'a> CompletionContext<'a> {
         }
 
         let item_list_kind = match ident_parent.kind() {
-            ITEM_LIST => ItemListKind::Module,
+            MODULE => ItemListKind::Module,
             SOURCE_FILE => ItemListKind::SourceFile,
             _ => {
                 // not an item list

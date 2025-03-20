@@ -1,6 +1,7 @@
 pub(crate) mod adt;
 pub(crate) mod reference;
 pub(crate) mod tuple;
+pub(crate) mod ty_callable;
 pub(crate) mod ty_var;
 pub(crate) mod type_param;
 
@@ -10,6 +11,7 @@ use crate::types::render::TypeRenderer;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::reference::TyReference;
 use crate::types::ty::tuple::TyTuple;
+use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::TyInfer;
 use crate::types::ty::type_param::TyTypeParameter;
 use base_db::SourceRootDatabase;
@@ -34,22 +36,22 @@ pub enum Ty {
     Reference(TyReference),
     Vector(Box<Ty>),
     Adt(TyAdt),
+    Callable(TyCallable),
     Tuple(TyTuple),
 }
 
 impl Ty {
-    pub fn fold_with(self, folder: impl TypeFolder) -> Ty {
-        folder.fold_ty(self)
-    }
-
-    pub fn visit_with(&self, visitor: impl TypeVisitor) -> bool {
-        visitor.visit_ty(self)
-    }
-
-    pub fn unwrap_refs(&self) -> Ty {
+    pub fn deref(&self) -> Ty {
         match self {
-            Ty::Reference(ty_ref) => ty_ref.referenced().unwrap_refs(),
+            Ty::Reference(ty_ref) => ty_ref.referenced().deref(),
             _ => self.to_owned(),
+        }
+    }
+
+    pub fn ty_callable(self) -> Option<TyCallable> {
+        match self {
+            Ty::Callable(ty_callable) => Some(ty_callable),
+            _ => None,
         }
     }
 
@@ -59,6 +61,14 @@ impl Ty {
 }
 
 impl TypeFoldable<Ty> for Ty {
+    fn fold_with(self, folder: impl TypeFolder) -> Ty {
+        folder.fold_ty(self)
+    }
+
+    fn visit_with(&self, visitor: impl TypeVisitor) -> bool {
+        visitor.visit_ty(self)
+    }
+
     fn deep_fold_with(self, folder: impl TypeFolder) -> Ty {
         match self {
             Ty::Adt(ty_adt) => Ty::Adt(ty_adt.deep_fold_with(folder)),
@@ -67,6 +77,7 @@ impl TypeFoldable<Ty> for Ty {
                 folder.fold_ty(ty_ref.referenced().to_owned()),
                 ty_ref.mutability,
             )),
+            Ty::Callable(ty_callable) => Ty::Callable(ty_callable.deep_fold_with(folder)),
             _ => self,
         }
     }
@@ -74,10 +85,9 @@ impl TypeFoldable<Ty> for Ty {
     fn deep_visit_with(&self, visitor: impl TypeVisitor) -> bool {
         match self {
             Ty::Adt(ty_adt) => ty_adt.deep_visit_with(visitor),
-
             Ty::Vector(ty) => visitor.visit_ty(ty.as_ref()),
             Ty::Reference(ty_ref) => visitor.visit_ty(ty_ref.referenced()),
-
+            Ty::Callable(ty_callable) => ty_callable.deep_visit_with(visitor),
             _ => false,
         }
     }
@@ -104,7 +114,7 @@ impl IntegerKind {
             _ if lit.ends_with("u64") => IntegerKind::U64,
             _ if lit.ends_with("u128") => IntegerKind::U128,
             _ if lit.ends_with("u256") => IntegerKind::U256,
-            _ => IntegerKind::Integer
+            _ => IntegerKind::Integer,
         }
     }
 

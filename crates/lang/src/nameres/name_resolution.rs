@@ -30,10 +30,7 @@ impl fmt::Debug for ResolveScope {
     }
 }
 
-pub fn get_resolve_scopes(
-    _db: &dyn HirDatabase,
-    start_at: InFile<impl Reference>,
-) -> Vec<ResolveScope> {
+pub fn get_resolve_scopes(_db: &dyn HirDatabase, start_at: InFile<impl Reference>) -> Vec<ResolveScope> {
     let mut scopes = vec![];
 
     let file_id = start_at.file_id;

@@ -5,6 +5,7 @@ use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::Ty;
 use crate::AsName;
 use base_db::SourceRootDatabase;
+use std::ops::Deref;
 use stdx::itertools::Itertools;
 use syntax::ast;
 use syntax::ast::NamedItem;
@@ -24,13 +25,22 @@ impl<'db> TypeRenderer<'db> {
                 format!("vector<{}>", self.render(ty))
             }
             Ty::Adt(ty_adt) => self.render_ty_adt(ty_adt),
+            Ty::Callable(ty_callable) => {
+                let params = format!("fn({})", self.render_list(&ty_callable.param_types, ", "));
+                let ret_type = ty_callable.ret_type.deref();
+                if matches!(ret_type, &Ty::Unit) {
+                    params
+                } else {
+                    format!("{} -> {}", params, self.render(ret_type))
+                }
+            }
             Ty::Reference(ty_ref) => {
                 let prefix = if ty_ref.is_mut() { "&mut " } else { "&" };
                 let inner = self.render(ty_ref.referenced());
                 format!("{}{}", prefix, inner)
             }
             Ty::Tuple(ty_tuple) => {
-                let rendered_tys = ty_tuple.types.iter().map(|it| self.render(it)).join(", ");
+                let rendered_tys = self.render_list(&ty_tuple.types, ", ");
                 format!("({})", rendered_tys)
             }
 
@@ -50,6 +60,10 @@ impl<'db> TypeRenderer<'db> {
             Ty::Unknown => unknown(),
             Ty::Never => never(),
         }
+    }
+
+    fn render_list(&self, tys: &Vec<Ty>, sep: &str) -> String {
+        tys.iter().map(|it| self.render(it)).join(sep)
     }
 
     fn render_ty_tp(&self, type_param: &TyTypeParameter) -> String {

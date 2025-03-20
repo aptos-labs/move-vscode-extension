@@ -2,21 +2,23 @@ use crate::types::ty::Ty;
 use std::collections::HashMap;
 use std::hash::Hash;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum TableValue<Var> {
     Var(Var),
     Value(Option<Ty>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct UnificationTable<Var: Clone + Eq + Hash> {
     mapping: HashMap<Var, TableValue<Var>>,
+    snapshots: Vec<HashMap<Var, TableValue<Var>>>,
 }
 
 impl<Var: Clone + Eq + Hash> UnificationTable<Var> {
     pub fn new() -> Self {
         UnificationTable {
             mapping: HashMap::new(),
+            snapshots: vec![],
         }
     }
 
@@ -74,6 +76,15 @@ impl<Var: Clone + Eq + Hash> UnificationTable<Var> {
             TableValue::Value(ty) => ty.to_owned(),
             TableValue::Var(_) => None,
         })
+    }
+
+    pub fn snapshot(&mut self) {
+        self.snapshots.push(self.mapping.clone());
+    }
+
+    pub fn rollback(&mut self) {
+        let last_snapshot = self.snapshots.pop().expect("inconsistent snapshot rollback");
+        self.mapping = last_snapshot;
     }
 }
 

@@ -23,7 +23,7 @@ impl TyReference {
     }
 }
 
-pub fn autoborrow(ty: Ty, into_ty: Ty) -> Option<Ty> {
+pub fn autoborrow(ty: Ty, into_ty: &Ty) -> Option<Ty> {
     match into_ty {
         Ty::Reference(into_ty_ref) => {
             match ty {

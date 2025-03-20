@@ -3,7 +3,7 @@ pub(crate) mod inference_result;
 
 use crate::db::HirDatabase;
 use crate::loc::SyntaxLocExt;
-use crate::types::fold::{Fallback, FullTyVarResolver, TyVarResolver, TyVarVisitor};
+use crate::types::fold::{Fallback, FullTyVarResolver, TyVarResolver, TyVarVisitor, TypeFoldable};
 use crate::types::has_type_params_ext::HasTypeParamsExt;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::lowering::TyLowering;
@@ -18,7 +18,7 @@ use crate::InFile;
 use std::collections::HashMap;
 use std::iter::zip;
 use std::ops::Deref;
-use syntax::{ast, AstNode};
+use syntax::{ast, AstNode, SyntaxNode};
 use vfs::FileId;
 
 pub struct InferenceCtx<'db> {
@@ -46,25 +46,12 @@ impl<'a> InferenceCtx<'a> {
         }
     }
 
-    pub fn infer(&mut self, ctx_owner: InFile<ast::InferenceCtxOwner>) {
-        let InFile {
-            file_id,
-            value: ctx_owner,
-        } = ctx_owner;
-
-        {
-            let mut ast_walker = TypeAstWalker::new(self);
-
-            ast_walker.collect_parameter_bindings(&ctx_owner);
-            match ctx_owner {
-                ast::InferenceCtxOwner::Fun(fun) => {
-                    if let Some(fun_block_expr) = fun.body() {
-                        ast_walker.infer_block_expr(fun_block_expr);
-                    }
-                }
-                _ => {}
-            }
-        }
+    pub fn resolve_path(&self, path: ast::Path) -> Option<InFile<ast::AnyNamedItem>> {
+        // todo: cache and pass to InferenceResult
+        let named_item = self
+            .db
+            .resolve_named_item(InFile::new(self.file_id, path.as_reference()));
+        named_item
     }
 
     pub fn instantiate_path(&self, path: ast::Path, generic_item: InFile<ast::AnyGenericItem>) -> Ty {
@@ -82,16 +69,16 @@ impl<'a> InferenceCtx<'a> {
         TyLowering::new(self.db, self.file_id)
     }
 
-    pub fn resolve_ty_infer(&self, ty_infer: TyInfer) -> Ty {
-        match &ty_infer {
+    pub fn resolve_ty_infer(&self, ty_infer: &TyInfer) -> Ty {
+        match ty_infer {
             TyInfer::IntVar(ty_int_var) => self
                 .int_table
                 .resolve_to_ty_value(&ty_int_var)
-                .unwrap_or(Ty::Infer(ty_infer)),
+                .unwrap_or(Ty::Infer(ty_infer.to_owned())),
             TyInfer::Var(ty_var) => {
                 let var_value_ty = self.var_table.resolve_to_ty_value(ty_var);
                 match &var_value_ty {
-                    None => Ty::Infer(ty_infer),
+                    None => Ty::Infer(ty_infer.to_owned()),
                     Some(Ty::Infer(TyInfer::IntVar(int_var))) => self
                         .int_table
                         .resolve_to_ty_value(int_var)
@@ -116,7 +103,7 @@ impl<'a> InferenceCtx<'a> {
 
     fn resolve_ty_infer_shallow(&self, ty: Ty) -> Ty {
         if let Ty::Infer(ty_infer) = ty {
-            self.resolve_ty_infer(ty_infer)
+            self.resolve_ty_infer(&ty_infer)
         } else {
             ty
         }
@@ -217,7 +204,7 @@ impl<'a> InferenceCtx<'a> {
         self.combine_types(from_ref.referenced().to_owned(), to_ref.referenced().to_owned())
     }
 
-    fn combine_ty_adts(&mut self, ty1: TyAdt, ty2: TyAdt) -> CombineResult {
+    fn combine_ty_adts(&mut self, _ty1: TyAdt, _ty2: TyAdt) -> CombineResult {
         Ok(())
     }
 
@@ -235,6 +222,42 @@ impl<'a> InferenceCtx<'a> {
             can_unify = can_unify.and(self.combine_types(ty1, ty2));
         }
         can_unify
+    }
+
+    pub fn freeze<T>(&mut self, f: impl FnOnce() -> T) -> T {
+        self.var_table.snapshot();
+        self.int_table.snapshot();
+        let res = f();
+        self.var_table.rollback();
+        self.int_table.rollback();
+        res
+    }
+
+    pub fn coerce_types(&mut self, node: &SyntaxNode, actual: Ty, expected: Ty) -> bool {
+        let actual = self.resolve_vars_if_possible(actual);
+        let expected = self.resolve_vars_if_possible(expected);
+        if actual == expected {
+            return true;
+        }
+        let combined = self.combine_types(actual.clone(), expected.clone());
+        match combined {
+            Ok(()) => true,
+            Err(type_error) => {
+                // todo: report type error at `node`
+                self.report_type_error(type_error, node, actual, expected);
+                false
+            }
+        }
+    }
+
+    fn report_type_error(
+        &mut self,
+        _type_error: TypeError,
+        _node: &SyntaxNode,
+        _actual: Ty,
+        _expected: Ty,
+    ) {
+        // todo: report type error at `node`
     }
 }
 

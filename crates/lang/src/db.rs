@@ -5,6 +5,7 @@ use crate::nameres::name_resolution::{
 use crate::nameres::paths;
 use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt};
 use crate::node_ext::struct_field_name::StructFieldNameExt;
+use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::inference::InferenceCtx;
 use crate::{AsName, InFile};
@@ -25,7 +26,10 @@ pub trait HirDatabase: SourceRootDatabase + Upcast<dyn SourceRootDatabase> {
     fn resolve(&self, any_ref: InFile<ast::AnyReference>) -> Option<ScopeEntry>;
 
     #[ra_salsa::transparent]
-    fn resolve_named_item(&self, reference: InFile<ast::AnyReference>) -> Option<InFile<ast::AnyNamedItem>>;
+    fn resolve_named_item(
+        &self,
+        reference: InFile<ast::AnyReference>,
+    ) -> Option<InFile<ast::AnyNamedItem>>;
 
     fn inference(&self, ctx_owner_loc: SyntaxLoc) -> Option<InferenceResult>;
 
@@ -85,15 +89,21 @@ fn resolve_named_item(
     db: &dyn HirDatabase,
     reference: InFile<ast::AnyReference>,
 ) -> Option<InFile<ast::AnyNamedItem>> {
-    db.resolve(reference).and_then(|it| it.node_loc.cast::<ast::AnyNamedItem>(db.upcast()))
+    db.resolve(reference)
+        .and_then(|it| it.node_loc.cast::<ast::AnyNamedItem>(db.upcast()))
 }
 
 fn inference(db: &dyn HirDatabase, ctx_owner_loc: SyntaxLoc) -> Option<InferenceResult> {
-    let Some(ctx_owner) = ctx_owner_loc.cast::<ast::InferenceCtxOwner>(db.upcast()) else {
+    let Some(InFile {
+        file_id,
+        value: ctx_owner,
+    }) = ctx_owner_loc.cast::<ast::InferenceCtxOwner>(db.upcast())
+    else {
         return None;
     };
-    let mut ctx = InferenceCtx::new(db, ctx_owner.file_id);
-    ctx.infer(ctx_owner);
+    let mut ctx = InferenceCtx::new(db, file_id);
+
+    TypeAstWalker::new(&mut ctx).walk(ctx_owner);
 
     let res = InferenceResult::from_ctx(ctx);
     Some(res)

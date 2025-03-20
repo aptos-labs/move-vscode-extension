@@ -24,7 +24,10 @@ impl InferenceResult {
                 (expr_loc, res_ty)
             })
             .collect();
-        InferenceResult { file_id: ctx.file_id, expr_types }
+        InferenceResult {
+            file_id: ctx.file_id,
+            expr_types,
+        }
     }
 
     pub fn get_expr_type(&self, expr: ast::Expr) -> Option<Ty> {

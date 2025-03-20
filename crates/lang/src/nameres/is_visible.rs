@@ -6,7 +6,7 @@ use crate::InFile;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::visibility::{Vis, VisLevel};
-use syntax::ast::{HasAttrs, Reference, HasVisibility, NamedItemScope};
+use syntax::ast::{HasAttrs, HasVisibility, NamedItemScope, Reference};
 use syntax::{ast, unwrap_or_continue, AstNode};
 
 pub fn is_visible_in_context(

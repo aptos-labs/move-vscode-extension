@@ -7,8 +7,9 @@ use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::reference::{Mutability, TyReference};
 use crate::types::ty::tuple::TyTuple;
+use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::type_param::TyTypeParameter;
-use crate::types::ty::Ty;
+use crate::types::ty::{IntegerKind, Ty};
 use crate::InFile;
 use parser::SyntaxKind::{ENUM, STRUCT, TYPE_PARAM};
 use syntax::{ast, AstNode, SyntaxNode};
@@ -75,6 +76,11 @@ impl<'a> TyLowering<'a> {
                 let item = named_item.clone().cast::<ast::StructOrEnum>().unwrap();
                 Ty::Adt(TyAdt::new(item))
             }
+            FUN => {
+                let fun = named_item.clone().cast::<ast::Fun>().unwrap();
+                let ty_callable = self.lower_function(fun.value);
+                Ty::Callable(ty_callable)
+            }
             VARIANT => {
                 let variant = named_item.clone().cast::<ast::Variant>().unwrap();
                 let enum_ = variant.map(|it| it.enum_());
@@ -95,6 +101,26 @@ impl<'a> TyLowering<'a> {
 
         path_ty
     }
+
+    fn lower_function(&self, fun: ast::Fun) -> TyCallable {
+        let param_types = fun
+            .params()
+            .into_iter()
+            .map(|it| it.type_().map(|t| self.lower_type(t)).unwrap_or(Ty::Unknown))
+            .collect();
+        let ret_type = self.lower_ret_type(fun.ret_type());
+        TyCallable::new(param_types, ret_type)
+    }
+
+    fn lower_ret_type(&self, ret_type: Option<ast::RetType>) -> Ty {
+        let Some(ret_type) = ret_type else {
+            return Ty::Unit;
+        };
+        ret_type
+            .type_()
+            .map(|t| self.lower_type(t))
+            .unwrap_or(Ty::Unknown)
+    }
 }
 
 fn lower_primitive_type(path: ast::Path) -> Ty {
@@ -103,6 +129,12 @@ fn lower_primitive_type(path: ast::Path) -> Ty {
     };
     match path_name.as_str() {
         "bool" => Ty::Bool,
+        "u8" => Ty::Integer(IntegerKind::U8),
+        "u16" => Ty::Integer(IntegerKind::U16),
+        "u32" => Ty::Integer(IntegerKind::U32),
+        "u64" => Ty::Integer(IntegerKind::U64),
+        "u128" => Ty::Integer(IntegerKind::U128),
+        "u256" => Ty::Integer(IntegerKind::U256),
         _ => Ty::Unknown,
     }
 }

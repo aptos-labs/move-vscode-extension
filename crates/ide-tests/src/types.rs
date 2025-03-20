@@ -27,10 +27,12 @@ mod tests {
         check_expr_type(
             r#"
 module 0x1::m {
-    fun call(): u8 { 1 }
+    fun call<T>(val: T): T {
+        val
+    }
     fun main() {
-        call();
-        //^ u8
+        call(1u8);
+       //^ u8
     }
 }
 "#,

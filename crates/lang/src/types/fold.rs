@@ -5,16 +5,39 @@ use crate::types::ty::Ty;
 use std::cell::RefCell;
 
 pub trait TypeFoldable<T> {
+    fn fold_with(self, folder: impl TypeFolder) -> T
+    where
+        Self: Sized,
+    {
+        self.deep_fold_with(folder)
+    }
+
+    fn visit_with(&self, visitor: impl TypeVisitor) -> bool {
+        self.deep_visit_with(visitor)
+    }
+
     fn deep_fold_with(self, folder: impl TypeFolder) -> T;
     fn deep_visit_with(&self, visitor: impl TypeVisitor) -> bool;
 }
 
 pub trait TypeFolder: Clone {
     fn fold_ty(&self, ty: Ty) -> Ty;
+
+    fn fold_tys(&self, tys: Vec<Ty>) -> Vec<Ty> {
+        tys.into_iter().map(|it| self.fold_ty(it)).collect()
+    }
+
+    fn fold_opt_ty(&self, ty: Option<Ty>) -> Option<Ty> {
+        ty.map(|it| self.fold_ty(it))
+    }
 }
 
 pub trait TypeVisitor: Clone {
     fn visit_ty(&self, ty: &Ty) -> bool;
+
+    fn visit_tys(&self, tys: &Vec<Ty>) -> bool {
+        tys.iter().fold(false, |acc, t| acc || self.visit_ty(t))
+    }
 }
 
 #[derive(Clone)]
@@ -31,7 +54,7 @@ impl<'a> TyVarResolver<'a> {
 impl TypeFolder for TyVarResolver<'_> {
     fn fold_ty(&self, t: Ty) -> Ty {
         match t {
-            Ty::Infer(ty_infer) => self.ctx.resolve_ty_infer(ty_infer),
+            Ty::Infer(ty_infer) => self.ctx.resolve_ty_infer(&ty_infer),
             _ => t.deep_fold_with(self.to_owned()),
         }
     }
@@ -59,7 +82,7 @@ impl TypeFolder for FullTyVarResolver<'_> {
     fn fold_ty(&self, t: Ty) -> Ty {
         match t {
             Ty::Infer(ty_infer) => {
-                let resolved_ty = self.ctx.resolve_ty_infer(ty_infer);
+                let resolved_ty = self.ctx.resolve_ty_infer(&ty_infer);
                 match resolved_ty {
                     Ty::Unknown => Ty::Unknown,
                     Ty::Infer(ty_var) => match (self.fallback, &ty_var) {

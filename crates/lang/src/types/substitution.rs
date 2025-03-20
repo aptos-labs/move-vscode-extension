@@ -63,6 +63,6 @@ impl<T: TypeFoldable<T>> ApplySubstitution for T {
     type Item = T;
 
     fn substitute(self, subst: Substitution) -> T {
-        self.deep_fold_with(SubstitutionApplier { subst })
+        self.fold_with(SubstitutionApplier { subst })
     }
 }
