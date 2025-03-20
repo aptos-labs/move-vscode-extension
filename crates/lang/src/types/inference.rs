@@ -6,7 +6,6 @@ use crate::loc::SyntaxLocExt;
 use crate::types::fold::{Fallback, FullTyVarResolver, TyVarResolver, TyVarVisitor};
 use crate::types::has_type_params_ext::HasTypeParamsExt;
 use crate::types::inference::ast_walker::TypeAstWalker;
-use crate::types::inference::inference_result::InferenceResult;
 use crate::types::lowering::TyLowering;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::adt::TyAdt;
@@ -47,14 +46,14 @@ impl<'a> InferenceCtx<'a> {
         }
     }
 
-    pub fn infer(mut self, ctx_owner: InFile<ast::InferenceCtxOwner>) -> InferenceResult {
+    pub fn infer(&mut self, ctx_owner: InFile<ast::InferenceCtxOwner>) {
         let InFile {
             file_id,
             value: ctx_owner,
         } = ctx_owner;
 
         {
-            let mut ast_walker = TypeAstWalker::new(&mut self);
+            let mut ast_walker = TypeAstWalker::new(self);
 
             ast_walker.collect_parameter_bindings(&ctx_owner);
             match ctx_owner {
@@ -66,22 +65,6 @@ impl<'a> InferenceCtx<'a> {
                 _ => {}
             }
         }
-
-        self.into_result(file_id)
-    }
-
-    fn into_result(self, file_id: FileId) -> InferenceResult {
-        let expr_types = self
-            .expr_types
-            .clone()
-            .into_iter()
-            .map(|(expr, ty)| {
-                let res_ty = self.fully_resolve_vars(ty);
-                let expr_loc = InFile::new(file_id, expr).loc();
-                (expr_loc, res_ty)
-            })
-            .collect();
-        InferenceResult { file_id, expr_types }
     }
 
     pub fn instantiate_path(&self, path: ast::Path, generic_item: InFile<ast::AnyGenericItem>) -> Ty {

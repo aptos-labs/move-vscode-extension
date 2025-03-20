@@ -89,7 +89,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         expr_ty
     }
 
-    fn infer_call_expr(&self, call_expr: &ast::CallExpr, expectation: Expectation) -> Ty {
+    fn infer_call_expr(&self, call_expr: &ast::CallExpr, expected: Expectation) -> Ty {
         let path = call_expr.path();
         let named_item = self
             .ctx
@@ -104,9 +104,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             let item_kind = named_item.syntax().kind();
             match item_kind {
                 SyntaxKind::FUN => {
-                    let generic_item = ast::Fun::cast(named_item.syntax().to_owned())
-                        .unwrap()
-                        .as_type_params_owner();
+                    let generic_item = ast::Fun::cast(named_item.syntax().to_owned()).unwrap().into();
                     let path_ty = self
                         .ctx
                         .instantiate_path(path, InFile::new(file_id, generic_item));
@@ -132,7 +130,6 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         if let Some(int_token) = lit.int_number_token() {
             return Ty::Integer(IntegerKind::from_literal(int_token.text()));
         }
-        if lit.int_number_token().is_some() {}
         Ty::Unknown
     }
 }

@@ -15,10 +15,6 @@ impl ast::Fun {
         self.ret_type()?.type_()
     }
 
-    pub fn as_type_params_owner(&self) -> ast::AnyGenericItem {
-        ast::AnyGenericItem::cast(self.syntax.to_owned()).unwrap()
-    }
-
     pub fn is_native(&self) -> bool {
         self.native_token().is_some()
     }
