@@ -1,10 +1,10 @@
 use crate::loc::{SyntaxLoc, SyntaxLocExt};
-use crate::{loc, InFile};
+use crate::InFile;
 use syntax::ast;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct TyTypeParameter {
-    pub origin_loc: loc::SyntaxLoc,
+    pub origin_loc: SyntaxLoc,
 }
 
 impl TyTypeParameter {

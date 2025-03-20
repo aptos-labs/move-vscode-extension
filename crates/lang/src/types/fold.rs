@@ -2,13 +2,19 @@ use crate::types::inference::InferenceCtx;
 use crate::types::ty::ty_var::{TyInfer, TyVar, TyVarKind};
 use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::Ty;
+use std::cell::RefCell;
 
 pub trait TypeFoldable<T> {
     fn deep_fold_with(self, folder: impl TypeFolder) -> T;
+    fn deep_visit_with(&self, visitor: impl TypeVisitor) -> bool;
 }
 
 pub trait TypeFolder: Clone {
     fn fold_ty(&self, ty: Ty) -> Ty;
+}
+
+pub trait TypeVisitor: Clone {
+    fn visit_ty(&self, ty: &Ty) -> bool;
 }
 
 #[derive(Clone)]
@@ -70,5 +76,53 @@ impl TypeFolder for FullTyVarResolver<'_> {
             }
             _ => t.deep_fold_with(self.to_owned()),
         }
+    }
+}
+
+#[derive(Clone)]
+pub struct TyInferVisitor<V: Fn(&TyInfer) -> bool + Clone> {
+    visitor: V,
+}
+
+impl<V: Fn(&TyInfer) -> bool + Clone> TyInferVisitor<V> {
+    pub fn new(visitor: V) -> Self {
+        TyInferVisitor { visitor }
+    }
+}
+
+impl<V: Fn(&TyInfer) -> bool + Clone> TypeVisitor for TyInferVisitor<V> {
+    fn visit_ty(&self, ty: &Ty) -> bool {
+        match ty {
+            Ty::Infer(ty_infer) => (self.visitor)(ty_infer),
+            _ => ty.deep_visit_with(self.clone()),
+        }
+    }
+}
+
+impl Ty {
+    pub fn collect_ty_infers(&self) -> Vec<TyInfer> {
+        let mut ty_infers = RefCell::new(vec![]);
+        let collector = TyInferVisitor::new(|ty_infer| {
+            ty_infers.borrow_mut().push(ty_infer.to_owned());
+            false
+        });
+        self.visit_with(collector);
+        ty_infers.into_inner()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::ty::reference::{Mutability, TyReference};
+
+    #[test]
+    fn test_ty_infer_visitor() {
+        let ty_ref = Ty::Reference(TyReference::new(
+            Ty::Infer(TyInfer::Var(TyVar::new_anonymous(0))),
+            Mutability::Immutable,
+        ));
+        let res = ty_ref.collect_ty_infers();
+        dbg!(res);
     }
 }

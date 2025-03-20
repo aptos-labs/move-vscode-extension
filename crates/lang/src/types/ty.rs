@@ -5,7 +5,7 @@ pub(crate) mod ty_var;
 pub(crate) mod type_param;
 
 use crate::db::HirDatabase;
-use crate::types::fold::{TypeFoldable, TypeFolder};
+use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::render::TypeRenderer;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::reference::TyReference;
@@ -42,6 +42,10 @@ impl Ty {
         folder.fold_ty(self)
     }
 
+    pub fn visit_with(&self, visitor: impl TypeVisitor) -> bool {
+        visitor.visit_ty(self)
+    }
+
     pub fn unwrap_refs(&self) -> Ty {
         match self {
             Ty::Reference(ty_ref) => ty_ref.referenced().unwrap_refs(),
@@ -59,12 +63,27 @@ impl TypeFoldable<Ty> for Ty {
         match self {
             Ty::Adt(ty_adt) => Ty::Adt(ty_adt.deep_fold_with(folder)),
             Ty::Vector(ty) => Ty::Vector(Box::new(folder.fold_ty(*ty))),
+            Ty::Reference(ty_ref) => Ty::Reference(TyReference::new(
+                folder.fold_ty(ty_ref.referenced().to_owned()),
+                ty_ref.mutability,
+            )),
             _ => self,
+        }
+    }
+
+    fn deep_visit_with(&self, visitor: impl TypeVisitor) -> bool {
+        match self {
+            Ty::Adt(ty_adt) => ty_adt.deep_visit_with(visitor),
+
+            Ty::Vector(ty) => visitor.visit_ty(ty.as_ref()),
+            Ty::Reference(ty_ref) => visitor.visit_ty(ty_ref.referenced()),
+
+            _ => false,
         }
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum IntegerKind {
     Integer,
     U8,
@@ -72,6 +91,12 @@ pub enum IntegerKind {
     U64,
     U128,
     U256,
+}
+
+impl IntegerKind {
+    pub fn is_default(&self) -> bool {
+        *self == IntegerKind::Integer
+    }
 }
 
 impl fmt::Display for IntegerKind {

@@ -1,4 +1,4 @@
-use crate::types::fold::{TypeFoldable, TypeFolder};
+use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::Ty;
 use std::collections::HashMap;
@@ -32,6 +32,10 @@ impl TypeFoldable<Substitution> for Substitution {
         Substitution {
             mapping: folded_mapping,
         }
+    }
+
+    fn deep_visit_with(&self, _visitor: impl TypeVisitor) -> bool {
+        false
     }
 }
 

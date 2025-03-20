@@ -14,6 +14,7 @@ use crate::types::ty::Ty;
 use crate::types::unification::UnificationTable;
 use crate::InFile;
 use std::collections::HashMap;
+use std::ops::Deref;
 use syntax::{ast, AstNode};
 use vfs::FileId;
 
@@ -139,8 +140,8 @@ impl<'a> InferenceCtx<'a> {
         let right_ty = self.resolve_ty_infer_shallow(right_ty);
 
         match (left_ty, right_ty) {
-            (Ty::Infer(TyInfer::Var(ty_var)), right_ty) => self.unify_ty_var(ty_var, right_ty),
-            (left_ty, Ty::Infer(TyInfer::Var(ty_var))) => self.unify_ty_var(ty_var, left_ty),
+            (Ty::Infer(TyInfer::Var(ty_var)), right_ty) => self.unify_ty_var(&ty_var, right_ty),
+            (left_ty, Ty::Infer(TyInfer::Var(ty_var))) => self.unify_ty_var(&ty_var, left_ty),
 
             (Ty::Infer(TyInfer::IntVar(int_var)), right_ty) => self.combine_int_var(int_var, right_ty),
             (left_ty, Ty::Infer(TyInfer::IntVar(int_var))) => self.combine_int_var(int_var, left_ty),
@@ -149,11 +150,11 @@ impl<'a> InferenceCtx<'a> {
         }
     }
 
-    fn unify_ty_var(&mut self, var: TyVar, ty: Ty) -> CombineResult {
+    fn unify_ty_var(&mut self, var: &TyVar, ty: Ty) -> CombineResult {
         match ty {
-            Ty::Infer(TyInfer::Var(ty_var)) => self.var_table.unify_var_var(&var, &ty_var),
+            Ty::Infer(TyInfer::Var(ty_var)) => self.var_table.unify_var_var(var, &ty_var),
             _ => {
-                let root_ty_var = self.var_table.resolve_to_root_var(&var);
+                let root_ty_var = self.var_table.resolve_to_root_var(var);
                 // todo: cyclic type error
                 self.var_table.unify_var_value(&root_ty_var, ty);
             }
@@ -177,8 +178,41 @@ impl<'a> InferenceCtx<'a> {
         Ok(())
     }
 
-    fn combine_no_vars(&self, left_ty: Ty, right_ty: Ty) -> CombineResult {
-        Ok(())
+    fn combine_no_vars(&mut self, left_ty: Ty, right_ty: Ty) -> CombineResult {
+        // assign Ty::Unknown to all inner `TyVar`s if other type is unknown
+        if matches!(left_ty, Ty::Unknown) || matches!(right_ty, Ty::Unknown) {
+            for ty in [left_ty, right_ty] {
+                let ty_infers = ty.collect_ty_infers();
+                for ty_infer in ty_infers {
+                    if let TyInfer::Var(ty_var) = ty_infer {
+                        let _ = self.unify_ty_var(&ty_var, Ty::Unknown);
+                    }
+                }
+            }
+            return Ok(());
+        }
+        // if never type is involved, do not perform comparison
+        if matches!(left_ty, Ty::Never) || matches!(right_ty, Ty::Never) {
+            return Ok(());
+        }
+        // if type are exactly equal, then they're compatible
+        if left_ty == right_ty {
+            return Ok(());
+        }
+
+        match (&left_ty, &right_ty) {
+            (Ty::Integer(kind1), Ty::Integer(kind2)) => {
+                if kind1.is_default() || kind2.is_default() {
+                    return Ok(());
+                }
+                Err(TypeMismatchError::new(left_ty, right_ty))
+            }
+            (Ty::Vector(ty1), Ty::Vector(ty2)) => {
+                self.combine_types(ty1.deref().to_owned(), ty2.deref().to_owned())
+            }
+            // todo:
+            _ => Ok(()),
+        }
     }
 }
 
@@ -186,4 +220,10 @@ type CombineResult = Result<(), TypeMismatchError>;
 struct TypeMismatchError {
     ty1: Ty,
     ty2: Ty,
+}
+
+impl TypeMismatchError {
+    pub fn new(ty1: Ty, ty2: Ty) -> Self {
+        TypeMismatchError { ty1, ty2 }
+    }
 }

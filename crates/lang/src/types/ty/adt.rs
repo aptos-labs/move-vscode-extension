@@ -1,5 +1,5 @@
 use crate::loc::{SyntaxLoc, SyntaxLocExt};
-use crate::types::fold::{TypeFoldable, TypeFolder};
+use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::substitution::{empty_substitution, Substitution};
 use crate::InFile;
 use syntax::ast;
@@ -25,5 +25,9 @@ impl TypeFoldable<TyAdt> for TyAdt {
             item: self.item,
             subst: self.subst.deep_fold_with(folder),
         }
+    }
+
+    fn deep_visit_with(&self, visitor: impl TypeVisitor) -> bool {
+        self.subst.deep_visit_with(visitor)
     }
 }
