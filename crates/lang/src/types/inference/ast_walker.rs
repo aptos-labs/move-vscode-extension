@@ -110,11 +110,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         method_call_expr: &ast::MethodCallExpr,
         expected: Expectation,
     ) -> Ty {
-        let self_ty = self.ctx.resolve_vars_if_possible(
-            self.infer_expr(&method_call_expr.receiver_expr(), Expectation::NoValue),
-        );
+        let self_ty = self.infer_expr(&method_call_expr.receiver_expr(), Expectation::NoValue);
+        let self_ty = self.ctx.resolve_vars_if_possible(self_ty);
         let method_entries = get_method_resolve_variants(self.ctx.db, self_ty);
-        method_entries.filter_by_name(method_call_expr)
+        // method_entries.filter_by_name(method_call_expr)
+        Ty::Unknown
     }
 
     fn infer_call_expr(&mut self, call_expr: &ast::CallExpr, expected: Expectation) -> Ty {
