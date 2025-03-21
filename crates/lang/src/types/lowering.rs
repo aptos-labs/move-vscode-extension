@@ -1,7 +1,7 @@
 mod type_args;
 
 use crate::db::HirDatabase;
-use crate::files::InFileInto;
+use crate::files::{InFileExt, InFileInto};
 use crate::node_ext::PathLangExt;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::adt::TyAdt;
@@ -28,19 +28,19 @@ impl<'a> TyLowering<'a> {
     pub fn lower_type(&self, type_: ast::Type) -> Ty {
         match type_ {
             ast::Type::PathType(path_type) => {
-                let path = InFile::new(self.file_id, path_type.path());
-                let named_item = self.db.resolve(path.clone().in_file_into());
+                let path = path_type.path();
+                let named_item = self.db.resolve_path(path.clone().in_file(self.file_id));
                 match named_item {
                     None => {
                         // can be primitive type
-                        lower_primitive_type(path.value)
+                        lower_primitive_type(path)
                     }
                     Some(named_item_entry) => {
                         let named_item = named_item_entry
                             .node_loc
                             .cast_into::<ast::AnyNamedElement>(self.db.upcast())
                             .unwrap();
-                        self.lower_path(path.value, named_item.map(|it| it.syntax().to_owned()))
+                        self.lower_path(path, named_item.map(|it| it.syntax().to_owned()))
                     }
                 }
             }
