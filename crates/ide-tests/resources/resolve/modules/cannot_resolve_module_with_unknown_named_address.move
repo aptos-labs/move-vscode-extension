@@ -1,5 +1,5 @@
-module aptos_framework::m1 {}
+module unknown_address::m1 {}
 module 0x1::m {
-    use aptos_framework::m1;
+    use unknown_address::m1;
                        //^ unresolved
 }        

@@ -21,6 +21,26 @@ module 0x1::m {
 
 // language=Move
 #[test]
+fn test_import_module_itself_with_self_import() {
+    check_resolve(
+        r#"
+module 0x1::m {
+          //X
+    fun create() {}
+}
+module 0x1::main {
+    use 0x1::m::Self;
+    fun main() {
+        let a = m::create();
+              //^
+    }
+}
+"#,
+    )
+}
+
+// language=Move
+#[test]
 fn test_resolve_test_failure_location_to_module() {
     check_resolve(
         r#"
@@ -36,24 +56,6 @@ module 0x1::string_tests {
         
     }
 }        
-"#,
-    )
-}
-
-// language=Move
-#[test]
-fn test_module_in_the_same_address_block_cannot_be_resolved_without_use() {
-    check_resolve(
-        r#"
-module 0x1::A {
-    public fun create() {}
-}
-module 0x1::B {
-    fun main() {
-        let a = A::create();
-              //^ unresolved
-    }
-}
 "#,
     )
 }
@@ -109,15 +111,49 @@ module 0x1::MTest {}
 
 // language=Move
 #[test]
-fn test_import_module_itself_with_Self_import() {
+fn test_use_module_self_in_use_group() {
+    check_resolve(
+        r#"
+module 0x1::transaction {
+              //X
+}
+module 0x1::main {
+    use 0x1::transaction::{Self};
+                          //^
+}
+"#,
+    )
+}
+
+// language=Move
+#[test]
+fn test_module_cannot_be_resolved_without_use() {
+    check_resolve(
+        r#"
+module 0x1::A {
+    public fun create() {}
+}
+module 0x1::B {
+    fun main() {
+        let a = A::create();
+              //^ unresolved
+    }
+}
+"#,
+    )
+}
+
+// language=Move
+#[test]
+fn test_import_module_itself_with_self_group_import() {
     check_resolve(
         r#"
 module 0x1::m {
           //X
     fun create() {}
-}
+}         
 module 0x1::main {
-    use 0x1::m::Self;
+    use 0x1::m::{Self};
     fun main() {
         let a = m::create();
               //^
@@ -129,16 +165,19 @@ module 0x1::main {
 
 // language=Move
 #[test]
-fn test_resolve_module_from_Self() {
+fn test_resolve_with_address_normalization() {
     check_resolve(
         r#"
-module 0x1::M {
-          //X
-    struct MyStruct {}
-}    
-module 0x1::Main {
-    use 0x1::M::{Self, MyStruct};
-                //^
+module 0x0002::A {
+             //X
+}
+module 0x1::B {
+    use 0x02::A;
+    
+    fun main() {
+        let a = A::create();
+              //^
+    }
 }
 "#,
     )
@@ -161,69 +200,6 @@ module 0x1::m {
 
 // language=Move
 #[test]
-fn test_resolve_module_from_Self_with_alias() {
-    check_resolve(
-        r#"
-module 0x1::M {
-          //X
-    struct MyStruct {}
-}    
-module 0x1::Main {
-    use 0x1::M::{Self as MyM, MyStruct};
-                //^
-}
-"#,
-    )
-}
-
-// language=Move
-#[test]
-fn test_import_module_itself_with_Self_group_import() {
-    check_resolve(
-        r#"
-address 0x1 {
-    module Transaction {
-         //X
-        fun create() {}
-    }
-    
-    module M {
-        use 0x1::Transaction::{Self};
-        fun main() {
-            let a = Transaction::create();
-                  //^
-        }
-    }
-}        
-"#,
-    )
-}
-
-// language=Move
-#[test]
-fn test_resolve_module_to_address_block_from_script() {
-    check_resolve(
-        r#"
-address 0x2 {
-    module A {
-         //X
-    }
-}
-
-script {
-    use 0x2::A;
-    
-    fun main() {
-        let a = A::create();
-              //^
-    }
-}
-"#,
-    )
-}
-
-// language=Move
-#[test]
 fn test_resolve_module_to_different_one_in_same_address_block() {
     check_resolve(
         r#"
@@ -240,6 +216,23 @@ address 0x1 {
                   //^
         }
     }
+}
+"#,
+    )
+}
+
+// language=Move
+#[test]
+fn test_resolve_module_from_self() {
+    check_resolve(
+        r#"
+module 0x1::M {
+          //X
+    struct MyStruct {}
+}    
+module 0x1::Main {
+    use 0x1::M::{Self, MyStruct};
+                //^
 }
 "#,
     )
@@ -298,32 +291,16 @@ module 0x1::m {
 
 // language=Move
 #[test]
-fn test_use_module_Self_in_use_group() {
+fn test_resolve_module_from_import() {
     check_resolve(
         r#"
-module 0x1::transaction {
-              //X
-}
-module 0x1::main {
-    use 0x1::transaction::{Self};
-                          //^
-}
-"#,
-    )
+module 0x1::A {
+          //X
 }
 
-// language=Move
-#[test]
-fn test_resolve_Self_to_current_module() {
-    check_resolve(
-        r#"
-module 0x1::transaction {
-            //X
-    fun create() {}
-    fun main() {
-        let a = Self::create();
-              //^
-    }
+module 0x1::B {
+    use 0x1::A;
+           //^
 }
 "#,
     )
@@ -381,15 +358,16 @@ module 0x1::main {
 
 // language=Move
 #[test]
-fn test_use_module_Self() {
+fn test_resolve_module_from_self_with_alias() {
     check_resolve(
         r#"
-module 0x1::transaction {
-              //X
-}
-module 0x1::main {
-    use 0x1::transaction::Self;
-                         //^
+module 0x1::M {
+          //X
+    struct MyStruct {}
+}    
+module 0x1::Main {
+    use 0x1::M::{Self as MyM, MyStruct};
+                //^
 }
 "#,
     )
@@ -412,21 +390,68 @@ module 0x1::main {
 
 // language=Move
 #[test]
-fn test_resolve_to_address_block_fully_qualified() {
+fn test_resolve_fully_qualified() {
     check_resolve(
         r#"
-address 0x2 {
-    module A {
-         //X
+module 0x2::A {
+          //X
+}
+module 0x1::B {
+    fun main() {
+        let a = 0x2::A::create();
+                   //^
     }
 }
+"#,
+    )
+}
 
-address 0x1 {
-    module B {
-        fun main() {
-            let a = 0x2::A::create();
-                       //^
-        }
+// language=Move
+#[test]
+fn test_use_module_self() {
+    check_resolve(
+        r#"
+module 0x1::transaction {
+              //X
+}
+module 0x1::main {
+    use 0x1::transaction::Self;
+                         //^
+}
+"#,
+    )
+}
+
+// language=Move
+#[test]
+fn test_resolve_module_from_script() {
+    check_resolve(
+        r#"
+module 0x2::A {}
+          //X
+script {
+    use 0x2::A;
+    
+    fun main() {
+        let a = A::create();
+              //^
+    }
+}
+"#,
+    )
+}
+
+// language=Move
+#[test]
+fn test_resolve_self_to_current_module() {
+    check_resolve(
+        r#"
+module 0x1::transaction {
+            //X
+    fun create() {}
+    fun main() {
+        let a = Self::create();
+              //^
     }
 }
 "#,
@@ -500,31 +525,6 @@ module 0x1::m {
 
 // language=Move
 #[test]
-fn test_resolve_to_address_block_import_with_address_normalization() {
-    check_resolve(
-        r#"
-address 0x0002 {
-    module A {
-         //X
-    }
-}
-
-address 0x1 {
-    module B {
-        use 0x02::A;
-        
-        fun main() {
-            let a = A::create();
-                  //^
-        }
-    }
-}
-"#,
-    )
-}
-
-// language=Move
-#[test]
 fn test_resolve_module_to_the_current_one_with_fq_path() {
     check_resolve(
         r#"
@@ -563,25 +563,6 @@ module 0x1::m {
     use unknown_address::m1;
                        //^ unresolved
 }        
-"#,
-    )
-}
-
-// language=Move
-#[test]
-fn test_resolve_module_to_different_one_from_import() {
-    check_resolve(
-        r#"
-address 0x1 {
-    module A {
-         //X
-    }
-
-    module B {
-        use 0x1::A;
-               //^
-    }
-}
 "#,
     )
 }

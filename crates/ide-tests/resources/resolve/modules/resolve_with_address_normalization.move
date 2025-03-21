@@ -1,11 +1,8 @@
-address 0x2 {
-    module A {
-         //X
-    }
+module 0x0002::A {
+             //X
 }
-
-script {
-    use 0x2::A;
+module 0x1::B {
+    use 0x02::A;
     
     fun main() {
         let a = A::create();

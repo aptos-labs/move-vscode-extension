@@ -185,6 +185,26 @@ script {
 
 // language=Move
 #[test]
+fn test_resolve_reference_to_function_via_self() {
+    check_resolve(
+        r#"
+module 0x1::m {
+    fun call(): u8 {
+      //X
+        1
+    }
+    
+    fun main() {
+        Self::call();
+            //^
+    }
+}
+"#,
+    )
+}
+
+// language=Move
+#[test]
 fn test_resolve_use_item() {
     check_resolve(
         r#"
@@ -471,20 +491,19 @@ module 0x1::m {
 
 // language=Move
 #[test]
-fn test_resolve_reference_to_function_via_Self() {
+fn test_resolve_local_function_when_module_with_same_name_is_imported_as_self() {
     check_resolve(
         r#"
+module 0x1::royalty {}
 module 0x1::m {
-    fun call(): u8 {
-      //X
-        1
+    use 0x1::royalty::Self;
+    public fun royalty() {}
+                //X
+    public fun main() {
+        royalty();
+        //^
     }
-    
-    fun main() {
-        Self::call();
-            //^
-    }
-}
+}        
 "#,
     )
 }
@@ -705,25 +724,6 @@ module 0x1::main {
                 //^
     }
 }
-"#,
-    )
-}
-
-// language=Move
-#[test]
-fn test_resolve_local_function_when_module_with_same_name_is_imported_as_Self() {
-    check_resolve(
-        r#"
-module 0x1::royalty {}
-module 0x1::m {
-    use 0x1::royalty::Self;
-    public fun royalty() {}
-                //X
-    public fun main() {
-        royalty();
-        //^
-    }
-}        
 "#,
     )
 }
