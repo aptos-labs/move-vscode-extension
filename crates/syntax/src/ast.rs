@@ -32,7 +32,7 @@ pub use self::{
     token_ext::{CommentKind, CommentPlacement, CommentShape, IsString, QuoteOffsets},
     traits::{
         GenericItem, HasAttrs, HasFields, HasItems, HasStmts, HasUseStmts, MslOnly, NamedElement,
-        Reference,
+        ReferenceElement,
     },
     visibility::HasVisibility,
 };

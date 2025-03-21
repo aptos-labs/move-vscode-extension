@@ -10,8 +10,8 @@ impl ast::Path {
         self.segment().name_ref()
     }
 
-    pub fn as_reference(&self) -> ast::AnyReference {
-        ast::AnyReference::cast(self.syntax.to_owned()).unwrap()
+    pub fn as_reference(&self) -> ast::AnyReferenceElement {
+        ast::AnyReferenceElement::cast(self.syntax.to_owned()).unwrap()
     }
 
     pub fn type_args(&self) -> Vec<ast::TypeArg> {

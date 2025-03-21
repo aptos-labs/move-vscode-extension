@@ -295,7 +295,7 @@ impl Literal {
 pub struct MethodCallExpr {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::Reference for MethodCallExpr {}
+impl ast::ReferenceElement for MethodCallExpr {}
 impl MethodCallExpr {
     #[inline]
     pub fn arg_list(&self) -> Option<ArgList> { support::child(&self.syntax) }
@@ -466,7 +466,7 @@ impl ParenType {
 pub struct Path {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::Reference for Path {}
+impl ast::ReferenceElement for Path {}
 impl Path {
     #[inline]
     pub fn qualifier(&self) -> Option<Path> { support::child(&self.syntax) }
@@ -706,7 +706,7 @@ impl StructLit {
 pub struct StructLitField {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::Reference for StructLitField {}
+impl ast::ReferenceElement for StructLitField {}
 impl StructLitField {
     #[inline]
     pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
@@ -744,7 +744,7 @@ impl StructPat {
 pub struct StructPatField {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::Reference for StructPatField {}
+impl ast::ReferenceElement for StructPatField {}
 impl StructPatField {
     #[inline]
     pub fn ident_pat(&self) -> Option<IdentPat> { support::child(&self.syntax) }
@@ -1068,7 +1068,7 @@ pub enum MethodOrPath {
     MethodCallExpr(MethodCallExpr),
     Path(Path),
 }
-impl ast::Reference for MethodOrPath {}
+impl ast::ReferenceElement for MethodOrPath {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Pat {
@@ -1162,10 +1162,10 @@ pub struct AnyNamedElement {
 impl ast::NamedElement for AnyNamedElement {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct AnyReference {
+pub struct AnyReferenceElement {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::Reference for AnyReference {}
+impl ast::ReferenceElement for AnyReferenceElement {}
 impl AstNode for AddressDef {
     #[inline]
     fn kind() -> SyntaxKind
@@ -3884,15 +3884,15 @@ impl From<Variant> for AnyNamedElement {
     #[inline]
     fn from(node: Variant) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
-impl AnyReference {
+impl AnyReferenceElement {
     #[inline]
-    pub fn new<T: ast::Reference>(node: T) -> AnyReference {
-        AnyReference {
+    pub fn new<T: ast::ReferenceElement>(node: T) -> AnyReferenceElement {
+        AnyReferenceElement {
             syntax: node.syntax().clone(),
         }
     }
 }
-impl AstNode for AnyReference {
+impl AstNode for AnyReferenceElement {
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
@@ -3902,26 +3902,26 @@ impl AstNode for AnyReference {
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
-        Self::can_cast(syntax.kind()).then_some(AnyReference { syntax })
+        Self::can_cast(syntax.kind()).then_some(AnyReferenceElement { syntax })
     }
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
-impl From<MethodCallExpr> for AnyReference {
+impl From<MethodCallExpr> for AnyReferenceElement {
     #[inline]
-    fn from(node: MethodCallExpr) -> AnyReference { AnyReference { syntax: node.syntax } }
+    fn from(node: MethodCallExpr) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
 }
-impl From<Path> for AnyReference {
+impl From<Path> for AnyReferenceElement {
     #[inline]
-    fn from(node: Path) -> AnyReference { AnyReference { syntax: node.syntax } }
+    fn from(node: Path) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
 }
-impl From<StructLitField> for AnyReference {
+impl From<StructLitField> for AnyReferenceElement {
     #[inline]
-    fn from(node: StructLitField) -> AnyReference { AnyReference { syntax: node.syntax } }
+    fn from(node: StructLitField) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
 }
-impl From<StructPatField> for AnyReference {
+impl From<StructPatField> for AnyReferenceElement {
     #[inline]
-    fn from(node: StructPatField) -> AnyReference { AnyReference { syntax: node.syntax } }
+    fn from(node: StructPatField) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
 }
 impl std::fmt::Display for AddressRef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
