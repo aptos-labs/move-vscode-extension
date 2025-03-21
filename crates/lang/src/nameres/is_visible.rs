@@ -6,13 +6,13 @@ use crate::InFile;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::visibility::{Vis, VisLevel};
-use syntax::ast::{HasAttrs, HasVisibility, NamedItemScope, Reference};
+use syntax::ast::{HasAttrs, HasVisibility, NamedItemScope, ReferenceElement};
 use syntax::{ast, unwrap_or_continue, AstNode};
 
 pub fn is_visible_in_context(
     db: &dyn HirDatabase,
     scope_entry: &ScopeEntry,
-    context: &InFile<impl Reference>,
+    context: &InFile<impl ReferenceElement>,
 ) -> bool {
     use syntax::SyntaxKind::*;
 

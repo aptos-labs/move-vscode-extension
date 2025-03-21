@@ -7,7 +7,7 @@ use crate::InFile;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::ast;
-use syntax::ast::{NamedItemScope, Reference};
+use syntax::ast::{NamedItemScope, ReferenceElement};
 use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]
@@ -81,7 +81,7 @@ pub trait ScopeEntryListExt {
     fn filter_by_visibility(
         self,
         db: &dyn HirDatabase,
-        context: InFile<impl Reference>,
+        context: InFile<impl ReferenceElement>,
     ) -> Vec<ScopeEntry>;
 }
 
@@ -99,7 +99,7 @@ impl ScopeEntryListExt for Vec<ScopeEntry> {
     fn filter_by_visibility(
         self,
         db: &dyn HirDatabase,
-        context: InFile<impl Reference>,
+        context: InFile<impl ReferenceElement>,
     ) -> Vec<ScopeEntry> {
         self.into_iter()
             .filter(move |entry| is_visible_in_context(db, entry, &context))

@@ -851,7 +851,7 @@ fn extract_struct_traits(ast: &mut AstSrc) {
 
     let non_method_traits: &[(&str, &[&str])] = &[
         (
-            "Reference",
+            "ReferenceElement",
             &["Path", "MethodCallExpr", "StructPatField", "StructLitField"],
         ),
         (

@@ -81,6 +81,6 @@ pub trait HasFields: AstNode {
     }
 }
 
-pub trait Reference: AstNode {}
+pub trait ReferenceElement: AstNode {}
 
 pub trait MslOnly: AstNode {}

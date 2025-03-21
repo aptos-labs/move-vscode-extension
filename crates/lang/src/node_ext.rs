@@ -6,7 +6,6 @@ use syntax::ast;
 use syntax::ast::NamedElement;
 
 pub trait PathLangExt {
-    // fn name_ref_name(&self) -> Option<Name>;
     fn reference_name(&self) -> Option<String>;
 }
 
