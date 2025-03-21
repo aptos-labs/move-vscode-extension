@@ -81,7 +81,7 @@ pub(crate) fn atom_expr(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> 
         // vector[1, 2]
         let m = p.start();
         p.bump(IDENT);
-        paths::opt_path_args(p, Mode::Type);
+        paths::opt_path_type_arg_list(p, Mode::Type);
         list(
             p,
             T!['['],

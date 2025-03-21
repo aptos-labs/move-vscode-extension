@@ -196,6 +196,7 @@ Expr =
     | PathExpr
     | PrefixExpr
     | CallExpr
+    | MethodCallExpr
 
 ForExpr =
     'for' ForCondition (BlockExpr | InlineExpr)
@@ -235,6 +236,12 @@ ParenExpr =
 
 CallExpr =
     Path ArgList
+
+MethodCallExpr =
+    receiver_expr:Expr '.' NameRef ('::' TypeArgList)? ArgList
+
+MethodOrPath =
+    MethodCallExpr | Path
 
 ArgList =
     '(' arg_exprs:(Expr (',' Expr)* ','?)? ')'

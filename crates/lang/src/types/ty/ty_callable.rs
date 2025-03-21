@@ -1,9 +1,6 @@
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
-use crate::types::inference::InferenceCtx;
-use crate::types::ty::reference::autoborrow;
 use crate::types::ty::Ty;
 use std::iter;
-use syntax::ast;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TyCallable {

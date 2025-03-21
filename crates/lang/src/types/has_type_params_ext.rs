@@ -1,18 +1,16 @@
 use crate::types::substitution::Substitution;
-use crate::types::ty::ty_var::{TyInfer, TyVar};
 use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::Ty;
 use crate::InFile;
 use syntax::ast;
-use syntax::ast::GenericItem;
 
-pub trait HasTypeParamsExt {
+pub trait GenericItemExt {
     fn ty_type_params(&self) -> Vec<TyTypeParameter>;
     fn ty_type_params_subst(&self) -> Substitution;
     fn ty_vars_subst(&self) -> Substitution;
 }
 
-impl HasTypeParamsExt for InFile<ast::AnyGenericItem> {
+impl<T: ast::GenericItem> GenericItemExt for InFile<T> {
     fn ty_type_params(&self) -> Vec<TyTypeParameter> {
         self.value
             .type_params()
@@ -34,12 +32,7 @@ impl HasTypeParamsExt for InFile<ast::AnyGenericItem> {
         let subst = self
             .ty_type_params()
             .into_iter()
-            .map(|ty_tp| {
-                (
-                    ty_tp.clone(),
-                    Ty::Infer(TyInfer::Var(TyVar::new_with_origin(ty_tp.origin_loc))),
-                )
-            })
+            .map(|ty_tp| (ty_tp.clone(), Ty::ty_var_with_origin(ty_tp.origin_loc)))
             .collect();
         Substitution::new(subst)
     }

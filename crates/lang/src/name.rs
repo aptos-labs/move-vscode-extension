@@ -70,6 +70,5 @@ impl AsName for ast::NameRef {
 impl AsName for ast::Name {
     fn as_name(&self) -> Name {
         Name::new(&self.text())
-        // Name::new(&self.text(), ast::NameLike::Name(self.to_owned()))
     }
 }

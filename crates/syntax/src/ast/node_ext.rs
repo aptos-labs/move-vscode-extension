@@ -16,6 +16,7 @@ pub mod path;
 mod ref_type;
 mod schema;
 mod source_file;
+mod struct_or_enum;
 mod struct_pat_field;
 pub mod syntax_node;
 pub mod type_;

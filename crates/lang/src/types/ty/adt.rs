@@ -1,20 +1,28 @@
 use crate::loc::{SyntaxLoc, SyntaxLocExt};
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
-use crate::types::substitution::{empty_substitution, Substitution};
+use crate::types::has_type_params_ext::GenericItemExt;
+use crate::types::substitution::Substitution;
+use crate::types::ty::Ty;
 use crate::InFile;
 use syntax::ast;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TyAdt {
-    item: SyntaxLoc,
-    subst: Substitution,
+    pub adt_item: SyntaxLoc,
+    pub substitution: Substitution,
+    pub type_args: Vec<Ty>,
 }
 
 impl TyAdt {
     pub fn new(item: InFile<ast::StructOrEnum>) -> Self {
         TyAdt {
-            item: item.loc(),
-            subst: empty_substitution(),
+            adt_item: item.loc(),
+            substitution: item.ty_type_params_subst(),
+            type_args: item
+                .ty_type_params()
+                .into_iter()
+                .map(|it| Ty::TypeParam(it))
+                .collect(),
         }
     }
 }
@@ -22,12 +30,13 @@ impl TyAdt {
 impl TypeFoldable<TyAdt> for TyAdt {
     fn deep_fold_with(self, folder: impl TypeFolder) -> TyAdt {
         TyAdt {
-            item: self.item,
-            subst: self.subst.deep_fold_with(folder),
+            adt_item: self.adt_item,
+            substitution: self.substitution.deep_fold_with(folder.clone()),
+            type_args: folder.fold_tys(self.type_args),
         }
     }
 
     fn deep_visit_with(&self, visitor: impl TypeVisitor) -> bool {
-        self.subst.deep_visit_with(visitor)
+        self.substitution.deep_visit_with(visitor.clone()) || visitor.visit_tys(&self.type_args)
     }
 }

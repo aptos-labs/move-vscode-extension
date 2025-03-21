@@ -6,7 +6,7 @@ use crate::grammar::specs::quants::{choose_expr, exists_expr, forall_expr, is_at
 use crate::grammar::specs::schemas::{apply_schema, global_variable, include_schema, schema_field};
 use crate::grammar::utils::{delimited, list};
 use crate::grammar::{
-    error_block, generic_args, name_ref, name_ref_or_index, opt_ret_type, paths, patterns, types,
+    error_block, name_ref, name_ref_or_index, opt_ret_type, paths, patterns, type_args, types,
     PATH_NAME_REF_OR_INDEX_KINDS,
 };
 use crate::parser::{CompletedMarker, Marker, Parser};
@@ -423,17 +423,11 @@ fn method_call_expr(p: &mut Parser<'_>, lhs: CompletedMarker) -> CompletedMarker
     let m = lhs.precede(p);
     p.bump(T![.]);
     name_ref(p);
-    generic_args::opt_generic_arg_list_expr(p, true);
+    type_args::opt_type_arg_list_for_expr(p, true);
     if p.at(T!['(']) {
         arg_list(p);
     } else {
         // emit an error when argument list is missing
-
-        // test_err method_call_missing_argument_list
-        // fn func() {
-        //     foo.bar::<>
-        //     foo.bar::<i32>;
-        // }
         p.error("expected argument list");
     }
     m.complete(p, METHOD_CALL_EXPR)

@@ -103,6 +103,36 @@ impl TypeFolder for FullTyVarResolver<'_> {
 }
 
 #[derive(Clone)]
+pub struct TyTypeParameterFolder<F: Fn(TyTypeParameter) -> Ty + Clone> {
+    folder: F,
+}
+
+impl<F: Fn(TyTypeParameter) -> Ty + Clone> TyTypeParameterFolder<F> {
+    pub fn new(folder: F) -> Self {
+        TyTypeParameterFolder { folder }
+    }
+}
+
+impl<F: Fn(TyTypeParameter) -> Ty + Clone> TypeFolder for TyTypeParameterFolder<F> {
+    fn fold_ty(&self, ty: Ty) -> Ty {
+        match ty {
+            Ty::TypeParam(ty_type_param) => (self.folder)(ty_type_param),
+            _ => ty.deep_fold_with(self.clone()),
+        }
+    }
+}
+
+impl Ty {
+    pub fn fold_ty_type_params<F: Fn(TyTypeParameter) -> Ty + Clone>(self, folder: F) -> Ty
+    where
+        F: Sized,
+    {
+        let ty_type_param_folder = TyTypeParameterFolder::new(folder);
+        ty_type_param_folder.fold_ty(self)
+    }
+}
+
+#[derive(Clone)]
 pub struct TyVarVisitor<V: Fn(&TyVar) -> bool + Clone> {
     visitor: V,
 }
@@ -124,7 +154,7 @@ impl<V: Fn(&TyVar) -> bool + Clone> TypeVisitor for TyVarVisitor<V> {
 
 impl Ty {
     pub fn collect_ty_vars(&self) -> Vec<TyVar> {
-        let mut ty_vars = RefCell::new(vec![]);
+        let ty_vars = RefCell::new(vec![]);
         let collector = TyVarVisitor::new(|ty_var| {
             ty_vars.borrow_mut().push(ty_var.to_owned());
             false

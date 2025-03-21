@@ -220,7 +220,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "VARIANT_LIST",
         "VARIANT",
         // "ITEM_LIST",
-        "ITEM",
+        // "ITEM",
         "ABILITY_LIST",
         "ABILITY_BOUND_LIST",
         "ABILITY",
@@ -263,6 +263,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
 pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     ("ExprStmt", &["expr"]),
     ("CallExpr", &["path"]),
+    ("MethodCallExpr", &["receiver_expr"]),
     ("TypeArg", &["type"]),
     ("StructPat", &["path"]),
     ("PathType", &["path"]),

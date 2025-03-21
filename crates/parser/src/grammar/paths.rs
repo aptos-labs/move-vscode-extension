@@ -1,5 +1,6 @@
+use crate::grammar::type_args::opt_path_type_arg_list;
 use crate::grammar::utils::list;
-use crate::grammar::{address, address_ref, generic_args, items, name_ref, types};
+use crate::grammar::{address, address_ref, items, name_ref, type_args, types};
 use crate::parser::{CompletedMarker, Parser};
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
@@ -71,20 +72,15 @@ fn path_segment(p: &mut Parser, mode: Mode, first: bool) {
     let m = p.start();
 
     let mut empty = if first { !p.eat(T![::]) } else { true };
-    // if p.at(IDENT) {
-    //     name_ref(p);
-    //     opt_path_args(p, mode);
-    // }
     match p.current() {
+        IDENT => {
+            name_ref(p);
+            opt_path_type_arg_list(p, mode);
+        }
         INT_NUMBER if first => {
             let m = p.start();
             address(p);
             m.complete(p, PATH_ADDRESS);
-        }
-        IDENT => {
-            name_ref(p);
-            opt_path_args(p, mode);
-            // opt_path_type_args(p, mode);
         }
         _ => {
             p.err_recover("expected identifier", items::ITEM_KW_RECOVERY_SET);
@@ -98,46 +94,4 @@ fn path_segment(p: &mut Parser, mode: Mode, first: bool) {
     };
 
     m.complete(p, PATH_SEGMENT);
-}
-
-pub(crate) fn opt_path_type_args(p: &mut Parser<'_>) {
-    // test typepathfn_with_coloncolon
-    // type F = Start::(Middle) -> (Middle)::End;
-    // type GenericArg = S<Start(Middle)::End>;
-    // let m;
-    // if p.at(T![::]) && matches!(p.nth(2), T![<] | T!['(']) {
-    //     m = p.start();
-    //     p.bump(T![::]);
-    // } else if (p.current() == T![<] && p.nth(1) != T![=]) || p.current() == T!['('] {
-    //     m = p.start();
-    // } else {
-    //     return;
-    // }
-    let m = p.start();
-    let current = p.current();
-    if current != T![<] {
-        m.abandon(p);
-        return;
-    }
-    // test_err generic_arg_list_recover
-    // type T = T<0, ,T>;
-    // type T = T::<0, ,T>;
-    list(
-        p,
-        T![<],
-        T![>],
-        T![,],
-        || "expected generic argument".into(),
-        generic_args::GENERIC_ARG_FIRST,
-        generic_args::generic_arg,
-    );
-    m.complete(p, TYPE_ARG_LIST);
-}
-
-pub(crate) fn opt_path_args(p: &mut Parser<'_>, mode: Mode) {
-    match mode {
-        Mode::Use /*| Mode::Attr | Mode::Vis*/ => {}
-        Mode::Type => opt_path_type_args(p),
-        Mode::Expr => generic_args::opt_generic_arg_list_expr(p, false),
-    }
 }

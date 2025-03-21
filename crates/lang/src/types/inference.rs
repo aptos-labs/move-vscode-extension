@@ -4,17 +4,18 @@ pub(crate) mod inference_result;
 use crate::db::HirDatabase;
 use crate::loc::SyntaxLocExt;
 use crate::types::fold::{Fallback, FullTyVarResolver, TyVarResolver, TyVarVisitor, TypeFoldable};
-use crate::types::has_type_params_ext::HasTypeParamsExt;
-use crate::types::inference::ast_walker::TypeAstWalker;
+use crate::types::has_type_params_ext::GenericItemExt;
 use crate::types::lowering::TyLowering;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::reference::TyReference;
 use crate::types::ty::tuple::TyTuple;
+use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
 use crate::types::ty::Ty;
 use crate::types::unification::UnificationTable;
 use crate::InFile;
+use parser::SyntaxKind;
 use std::collections::HashMap;
 use std::iter::zip;
 use std::ops::Deref;
@@ -52,6 +53,27 @@ impl<'a> InferenceCtx<'a> {
             .db
             .resolve_named_item(InFile::new(self.file_id, path.as_reference()));
         named_item
+    }
+
+    fn instantiate_call(&self, call_expr: &ast::CallExpr) -> Option<TyCallable> {
+        let path = call_expr.path();
+        let named_item = self.resolve_path(path.clone());
+        let callable_ty = if let Some(named_item) = named_item {
+            let item_kind = named_item.value.syntax().kind();
+            match item_kind {
+                SyntaxKind::FUN => {
+                    let generic_item = named_item.map(|it| it.cast::<ast::Fun>().unwrap().into());
+                    let Some(call_ty) = self.instantiate_path(path, generic_item).ty_callable() else {
+                        return None;
+                    };
+                    call_ty
+                }
+                _ => TyCallable::fake(call_expr.args().len()),
+            }
+        } else {
+            TyCallable::fake(call_expr.args().len())
+        };
+        Some(callable_ty)
     }
 
     pub fn instantiate_path(&self, path: ast::Path, generic_item: InFile<ast::AnyGenericItem>) -> Ty {
@@ -107,6 +129,11 @@ impl<'a> InferenceCtx<'a> {
         } else {
             ty
         }
+    }
+
+    #[allow(clippy::wrong_self_convention)]
+    pub fn is_tys_compatible(&mut self, ty: Ty, into_ty: Ty) -> bool {
+        self.freeze(|ctx| ctx.combine_types(ty, into_ty).is_ok())
     }
 
     pub fn combine_types(&mut self, left_ty: Ty, right_ty: Ty) -> CombineResult {
@@ -204,7 +231,10 @@ impl<'a> InferenceCtx<'a> {
         self.combine_types(from_ref.referenced().to_owned(), to_ref.referenced().to_owned())
     }
 
-    fn combine_ty_adts(&mut self, _ty1: TyAdt, _ty2: TyAdt) -> CombineResult {
+    fn combine_ty_adts(&mut self, ty1: TyAdt, ty2: TyAdt) -> CombineResult {
+        if ty1.adt_item != ty2.adt_item {
+            return Err(TypeError::new(Ty::Adt(ty1), Ty::Adt(ty2)));
+        }
         Ok(())
     }
 
@@ -224,10 +254,10 @@ impl<'a> InferenceCtx<'a> {
         can_unify
     }
 
-    pub fn freeze<T>(&mut self, f: impl FnOnce() -> T) -> T {
+    pub fn freeze<T>(&mut self, f: impl FnOnce(&mut InferenceCtx) -> T) -> T {
         self.var_table.snapshot();
         self.int_table.snapshot();
-        let res = f();
+        let res = f(self);
         self.var_table.rollback();
         self.int_table.rollback();
         res
@@ -261,8 +291,8 @@ impl<'a> InferenceCtx<'a> {
     }
 }
 
-type CombineResult = Result<(), TypeError>;
-struct TypeError {
+pub(crate) type CombineResult = Result<(), TypeError>;
+pub(crate) struct TypeError {
     ty1: Ty,
     ty2: Ty,
 }

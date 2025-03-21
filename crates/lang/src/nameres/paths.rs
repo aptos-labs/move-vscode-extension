@@ -6,12 +6,17 @@ use crate::nameres::name_resolution::{
 };
 use crate::nameres::namespaces::{Ns, NsSet, FUNCTIONS};
 use crate::nameres::path_kind::{path_kind, PathKind, QualifiedKind};
-use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt};
+use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt};
 use crate::node_ext::PathLangExt;
+use crate::types::inference::InferenceCtx;
+use crate::types::lowering::TyLowering;
+use crate::types::ty::ty_var::{TyInfer, TyVar};
+use crate::types::ty::Ty;
 use crate::{loc, InFile, Name};
 use parser::SyntaxKind::CALL_EXPR;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::OptionSyntaxNodeExt;
+use syntax::ast::HasItems;
 use syntax::{ast, AstNode};
 
 pub fn get_path_resolve_variants(
@@ -51,6 +56,42 @@ pub fn get_path_resolve_variants(
             get_qualified_path_entries(db, ctx, qualifier).filter_by_ns(ns)
         }
     }
+}
+
+pub fn get_method_resolve_variants(db: &dyn HirDatabase, self_ty: Ty) -> Vec<ScopeEntry> {
+    let Some(InFile {
+        file_id,
+        value: receiver_item_module,
+    }) = self_ty.item_module(db)
+    else {
+        return vec![];
+    };
+    let function_entries = receiver_item_module
+        .non_test_functions()
+        .to_in_file_entries(file_id);
+    let ty_lowering = TyLowering::new(db, file_id);
+    let mut method_entries = vec![];
+    for function_entry in function_entries {
+        let Some(InFile { file_id: _, value: f }) =
+            function_entry.node_loc.cast::<ast::Fun>(db.upcast())
+        else {
+            continue;
+        };
+        let Some(self_param_ty) = f
+            .self_param()
+            .and_then(|self_param| self_param.type_())
+            .map(|self_param_type| ty_lowering.lower_type(self_param_type))
+        else {
+            continue;
+        };
+        let self_param_with_ty_vars =
+            self_param_ty.fold_ty_type_params(|ty_tp| Ty::ty_var_with_origin(ty_tp.origin_loc));
+        let mut inference_ctx = InferenceCtx::new(db, file_id);
+        if inference_ctx.is_tys_compatible_with_autoborrow(self_ty.clone(), self_param_with_ty_vars) {
+            method_entries.push(function_entry);
+        }
+    }
+    method_entries
 }
 
 #[tracing::instrument(

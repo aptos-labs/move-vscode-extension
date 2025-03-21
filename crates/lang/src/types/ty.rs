@@ -6,17 +6,20 @@ pub(crate) mod ty_var;
 pub(crate) mod type_param;
 
 use crate::db::HirDatabase;
+use crate::loc::SyntaxLoc;
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::render::TypeRenderer;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::reference::TyReference;
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::TyCallable;
-use crate::types::ty::ty_var::TyInfer;
+use crate::types::ty::ty_var::{TyInfer, TyVar};
 use crate::types::ty::type_param::TyTypeParameter;
+use crate::InFile;
 use base_db::SourceRootDatabase;
 use std::fmt;
 use std::fmt::Formatter;
+use syntax::ast;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Ty {
@@ -41,10 +44,26 @@ pub enum Ty {
 }
 
 impl Ty {
+    pub fn ty_var_with_origin(tp_origin_loc: SyntaxLoc) -> Ty {
+        Ty::Infer(TyInfer::Var(TyVar::new_with_origin(tp_origin_loc)))
+    }
+
     pub fn deref(&self) -> Ty {
         match self {
             Ty::Reference(ty_ref) => ty_ref.referenced().deref(),
             _ => self.to_owned(),
+        }
+    }
+
+    pub fn item_module(&self, db: &dyn HirDatabase) -> Option<InFile<ast::Module>> {
+        let ty = self.deref();
+        match ty {
+            Ty::Adt(ty_adt) => {
+                let item = ty_adt.adt_item.cast::<ast::StructOrEnum>(db.upcast()).unwrap();
+                Some(item.map(|it| it.module()))
+            }
+            // todo: vector
+            _ => None,
         }
     }
 

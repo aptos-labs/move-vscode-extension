@@ -9,7 +9,7 @@ mod expectation;
 mod fold;
 mod has_type_params_ext;
 pub(crate) mod inference;
-mod lowering;
+pub(crate) mod lowering;
 mod patterns;
 pub(crate) mod render;
 mod substitution;

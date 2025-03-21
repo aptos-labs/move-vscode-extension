@@ -1,11 +1,12 @@
 #[macro_export]
 macro_rules! unwrap_or_return {
-    ($e: expr, $ret: expr) => {{
-        let Some(it) = $e else {
+    ($e: expr, $ret: expr) => {
+        if let Some(it) = $e {
+            it
+        } else {
             return $ret;
-        };
-        it
-    }};
+        }
+    };
 }
 
 pub use unwrap_or_return;

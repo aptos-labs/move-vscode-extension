@@ -1,3 +1,4 @@
+use crate::ast::NamedItem;
 use crate::{ast, AstNode};
 
 impl ast::Fun {
@@ -23,5 +24,12 @@ impl ast::Fun {
     }
     pub fn is_inline(&self) -> bool {
         self.inline_token().is_some()
+    }
+
+    pub fn self_param(&self) -> Option<ast::Param> {
+        self.params()
+            .first()
+            .map(|it| it.to_owned())
+            .take_if(|param| param.ident_pat().name().is_some_and(|name| name.text() == "self"))
     }
 }

@@ -247,7 +247,6 @@ pub enum SyntaxKind {
     TUPLE_FIELD,
     VARIANT_LIST,
     VARIANT,
-    ITEM,
     ABILITY_LIST,
     ABILITY_BOUND_LIST,
     ABILITY,

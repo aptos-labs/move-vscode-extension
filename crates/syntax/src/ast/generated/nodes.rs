@@ -292,6 +292,26 @@ impl Literal {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct MethodCallExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::Reference for MethodCallExpr {}
+impl MethodCallExpr {
+    #[inline]
+    pub fn arg_list(&self) -> Option<ArgList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
+    #[inline]
+    pub fn receiver_expr(&self) -> Expr { support::child(&self.syntax).expect("required by the parser") }
+    #[inline]
+    pub fn type_arg_list(&self) -> Option<TypeArgList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn dot_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![.]) }
+    #[inline]
+    pub fn coloncolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![::]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Module {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1009,6 +1029,7 @@ pub enum Expr {
     BinExpr(BinExpr),
     CallExpr(CallExpr),
     Literal(Literal),
+    MethodCallExpr(MethodCallExpr),
     ParenExpr(ParenExpr),
     PathExpr(PathExpr),
     PrefixExpr(PrefixExpr),
@@ -1041,6 +1062,13 @@ pub enum Item {
     SpecFun(SpecFun),
     Struct(Struct),
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum MethodOrPath {
+    MethodCallExpr(MethodCallExpr),
+    Path(Path),
+}
+impl ast::Reference for MethodOrPath {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Pat {
@@ -1526,6 +1554,27 @@ impl AstNode for Literal {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == LITERAL }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for MethodCallExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        METHOD_CALL_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == METHOD_CALL_EXPR }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -2779,6 +2828,10 @@ impl From<Literal> for Expr {
     #[inline]
     fn from(node: Literal) -> Expr { Expr::Literal(node) }
 }
+impl From<MethodCallExpr> for Expr {
+    #[inline]
+    fn from(node: MethodCallExpr) -> Expr { Expr::MethodCallExpr(node) }
+}
 impl From<ParenExpr> for Expr {
     #[inline]
     fn from(node: ParenExpr) -> Expr { Expr::ParenExpr(node) }
@@ -2810,6 +2863,12 @@ impl Expr {
             _ => None,
         }
     }
+    pub fn method_call_expr(self) -> Option<MethodCallExpr> {
+        match (self) {
+            Expr::MethodCallExpr(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn paren_expr(self) -> Option<ParenExpr> {
         match (self) {
             Expr::ParenExpr(item) => Some(item),
@@ -2834,7 +2893,7 @@ impl AstNode for Expr {
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            BIN_EXPR | CALL_EXPR | LITERAL | PAREN_EXPR | PATH_EXPR | PREFIX_EXPR
+            BIN_EXPR | CALL_EXPR | LITERAL | METHOD_CALL_EXPR | PAREN_EXPR | PATH_EXPR | PREFIX_EXPR
         )
     }
     #[inline]
@@ -2843,6 +2902,7 @@ impl AstNode for Expr {
             BIN_EXPR => Expr::BinExpr(BinExpr { syntax }),
             CALL_EXPR => Expr::CallExpr(CallExpr { syntax }),
             LITERAL => Expr::Literal(Literal { syntax }),
+            METHOD_CALL_EXPR => Expr::MethodCallExpr(MethodCallExpr { syntax }),
             PAREN_EXPR => Expr::ParenExpr(ParenExpr { syntax }),
             PATH_EXPR => Expr::PathExpr(PathExpr { syntax }),
             PREFIX_EXPR => Expr::PrefixExpr(PrefixExpr { syntax }),
@@ -2856,6 +2916,7 @@ impl AstNode for Expr {
             Expr::BinExpr(it) => &it.syntax,
             Expr::CallExpr(it) => &it.syntax,
             Expr::Literal(it) => &it.syntax,
+            Expr::MethodCallExpr(it) => &it.syntax,
             Expr::ParenExpr(it) => &it.syntax,
             Expr::PathExpr(it) => &it.syntax,
             Expr::PrefixExpr(it) => &it.syntax,
@@ -3062,6 +3123,48 @@ impl AstNode for Item {
             Item::Schema(it) => &it.syntax,
             Item::SpecFun(it) => &it.syntax,
             Item::Struct(it) => &it.syntax,
+        }
+    }
+}
+impl From<MethodCallExpr> for MethodOrPath {
+    #[inline]
+    fn from(node: MethodCallExpr) -> MethodOrPath { MethodOrPath::MethodCallExpr(node) }
+}
+impl From<Path> for MethodOrPath {
+    #[inline]
+    fn from(node: Path) -> MethodOrPath { MethodOrPath::Path(node) }
+}
+impl MethodOrPath {
+    pub fn method_call_expr(self) -> Option<MethodCallExpr> {
+        match (self) {
+            MethodOrPath::MethodCallExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn path(self) -> Option<Path> {
+        match (self) {
+            MethodOrPath::Path(item) => Some(item),
+            _ => None,
+        }
+    }
+}
+impl AstNode for MethodOrPath {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, METHOD_CALL_EXPR | PATH) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            METHOD_CALL_EXPR => MethodOrPath::MethodCallExpr(MethodCallExpr { syntax }),
+            PATH => MethodOrPath::Path(Path { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            MethodOrPath::MethodCallExpr(it) => &it.syntax,
+            MethodOrPath::Path(it) => &it.syntax,
         }
     }
 }
@@ -3791,13 +3894,22 @@ impl AnyReference {
 }
 impl AstNode for AnyReference {
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, PATH | STRUCT_LIT_FIELD | STRUCT_PAT_FIELD) }
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(
+            kind,
+            METHOD_CALL_EXPR | PATH | STRUCT_LIT_FIELD | STRUCT_PAT_FIELD
+        )
+    }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         Self::can_cast(syntax.kind()).then_some(AnyReference { syntax })
     }
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl From<MethodCallExpr> for AnyReference {
+    #[inline]
+    fn from(node: MethodCallExpr) -> AnyReference { AnyReference { syntax: node.syntax } }
 }
 impl From<Path> for AnyReference {
     #[inline]
@@ -3842,6 +3954,11 @@ impl std::fmt::Display for InferenceCtxOwner {
     }
 }
 impl std::fmt::Display for Item {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for MethodOrPath {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -3957,6 +4074,11 @@ impl std::fmt::Display for LetStmt {
     }
 }
 impl std::fmt::Display for Literal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for MethodCallExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

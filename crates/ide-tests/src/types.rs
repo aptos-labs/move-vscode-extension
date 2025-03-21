@@ -2,6 +2,8 @@ use ide::test_utils::get_marked_position_offset_with_data;
 use ide::Analysis;
 use lang::FilePosition;
 
+mod test_types_expression_types;
+
 pub fn check_expr_type(source: &str) {
     let (analysis, file_id) = Analysis::from_single_file(source.to_string());
 
@@ -15,6 +17,7 @@ pub fn check_expr_type(source: &str) {
     let expr_ty = opt_ty.expect("should be an expr at the file position");
 
     assert_eq!(expr_ty, data);
+    // assert_eq!(expr_ty, data, "expected `{}`, actual `{}`", expr_ty, data);
 }
 
 #[cfg(test)]

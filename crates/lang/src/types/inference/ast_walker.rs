@@ -1,13 +1,14 @@
+use crate::nameres::paths::get_method_resolve_variants;
+use crate::nameres::scope::ScopeEntryListExt;
 use crate::types::expectation::Expectation;
 use crate::types::inference::InferenceCtx;
 use crate::types::patterns::{anonymous_pat_ty_var, collect_bindings, BindingMode};
 use crate::types::ty::reference::autoborrow;
 use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::{IntegerKind, Ty};
-use parser::SyntaxKind;
 use std::ops::Deref;
 use syntax::ast::{BindingTypeOwner, HasStmts, Pat};
-use syntax::{ast, AstNode};
+use syntax::{ast, unwrap_or_return, AstNode};
 
 pub struct TypeAstWalker<'a, 'db> {
     pub ctx: &'a mut InferenceCtx<'db>,
@@ -104,10 +105,20 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         expr_ty
     }
 
+    fn infer_method_call_expr(
+        &mut self,
+        method_call_expr: &ast::MethodCallExpr,
+        expected: Expectation,
+    ) -> Ty {
+        let self_ty = self.ctx.resolve_vars_if_possible(
+            self.infer_expr(&method_call_expr.receiver_expr(), Expectation::NoValue),
+        );
+        let method_entries = get_method_resolve_variants(self.ctx.db, self_ty);
+        method_entries.filter_by_name(method_call_expr)
+    }
+
     fn infer_call_expr(&mut self, call_expr: &ast::CallExpr, expected: Expectation) -> Ty {
-        let Some(callable_ty) = self.instantiate_callable_ty(call_expr) else {
-            return Ty::Unknown;
-        };
+        let callable_ty = unwrap_or_return!(self.ctx.instantiate_call(call_expr), Ty::Unknown);
 
         let expected_arg_tys = self.infer_expected_arg_tys(&callable_ty, expected);
         let args = call_expr
@@ -118,28 +129,6 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         self.coerce_argument_types(args, callable_ty.param_types, expected_arg_tys);
 
         callable_ty.ret_type.deref().to_owned()
-    }
-
-    fn instantiate_callable_ty(&self, call_expr: &ast::CallExpr) -> Option<TyCallable> {
-        let path = call_expr.path();
-        let named_item = self.ctx.resolve_path(path.clone());
-        let callable_ty = if let Some(named_item) = named_item {
-            let item_kind = named_item.value.syntax().kind();
-            match item_kind {
-                SyntaxKind::FUN => {
-                    let generic_item = named_item.map(|it| it.cast::<ast::Fun>().unwrap().into());
-                    let Some(call_ty) = self.ctx.instantiate_path(path, generic_item).ty_callable()
-                    else {
-                        return None;
-                    };
-                    call_ty
-                }
-                _ => TyCallable::fake(call_expr.args().len()),
-            }
-        } else {
-            TyCallable::fake(call_expr.args().len())
-        };
-        Some(callable_ty)
     }
 
     fn infer_expected_arg_tys(&mut self, ty_callable: &TyCallable, expected: Expectation) -> Vec<Ty> {
@@ -160,9 +149,6 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 .collect(),
             Err(_) => vec![],
         }
-
-        // self.ctx.freeze(|| {
-        // })
     }
 
     pub fn coerce_argument_types(

@@ -1,4 +1,4 @@
-use crate::ast::{support, AstChildren, HasFields, Stmt};
+use crate::ast::{support, AstChildren, HasAttrs, HasFields, Stmt};
 use crate::{ast, AstNode};
 
 pub trait HasItems: AstNode {
@@ -16,6 +16,13 @@ pub trait HasItems: AstNode {
 
     fn enum_variants(&self) -> Vec<ast::Variant> {
         self.enums().into_iter().flat_map(|e| e.variants()).collect()
+    }
+
+    fn non_test_functions(&self) -> Vec<ast::Fun> {
+        self.functions()
+            .into_iter()
+            .filter(|fun| !fun.has_atom_attr("test"))
+            .collect()
     }
 
     fn functions(&self) -> Vec<ast::Fun> {

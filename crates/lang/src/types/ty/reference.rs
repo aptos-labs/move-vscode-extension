@@ -1,3 +1,5 @@
+use crate::db::HirDatabase;
+use crate::types::inference::InferenceCtx;
 use crate::types::ty::Ty;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -20,6 +22,16 @@ impl TyReference {
 
     pub fn is_mut(&self) -> bool {
         self.mutability.is_mut()
+    }
+}
+
+impl InferenceCtx<'_> {
+    #[allow(clippy::wrong_self_convention)]
+    pub fn is_tys_compatible_with_autoborrow(&mut self, ty: Ty, into_ty: Ty) -> bool {
+        let Some(ty) = autoborrow(ty, &into_ty) else {
+            return false;
+        };
+        self.is_tys_compatible(ty, into_ty)
     }
 }
 
