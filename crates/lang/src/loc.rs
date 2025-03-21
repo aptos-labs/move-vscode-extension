@@ -29,7 +29,7 @@ impl SyntaxLoc {
         }
     }
 
-    pub fn cast<T: AstNode>(self, db: &dyn SourceRootDatabase) -> Option<InFile<T>> {
+    pub fn cast_into<T: AstNode>(self, db: &dyn SourceRootDatabase) -> Option<InFile<T>> {
         let file = db.parse(self.file_id).tree();
         let ancestors_at_offset = ancestors_at_offset(file.syntax(), self.node_offset);
         for ancestor in ancestors_at_offset {

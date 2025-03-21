@@ -38,7 +38,7 @@ pub(crate) fn add_path_completions(
     for entry in filtered_entries {
         let entry_name = entry.name;
 
-        if let Some(function) = entry.node_loc.cast::<ast::Fun>(ctx.db.upcast()) {
+        if let Some(function) = entry.node_loc.cast_into::<ast::Fun>(ctx.db.upcast()) {
             let completion_item =
                 render_function_completion_item(&ctx, entry_name, function.value).build(&ctx.db);
             acc.add(completion_item);

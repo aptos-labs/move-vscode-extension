@@ -1,4 +1,4 @@
-use crate::ast::NamedItem;
+use crate::ast::NamedElement;
 use crate::{ast, AstNode};
 
 impl ast::Fun {

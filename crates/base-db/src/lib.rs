@@ -17,7 +17,7 @@ pub const DEFAULT_PARSE_LRU_CAP: u16 = 128;
 pub const DEFAULT_BORROWCK_LRU_CAP: u16 = 2024;
 
 pub trait FileLoader {
-    fn resolve_path(&self, path: AnchoredPath<'_>) -> Option<FileId>;
+    fn resolve_anchored_path(&self, path: AnchoredPath<'_>) -> Option<FileId>;
     /// Crates whose root's source root is the same as the source root of `file_id`
     fn relevant_crates(&self, file_id: FileId) -> Arc<[CrateId]>;
 }
@@ -93,7 +93,7 @@ fn source_root_crates(db: &dyn SourceRootDatabase, id: SourceRootId) -> Arc<[Cra
 pub struct FileLoaderDelegate<T>(pub T);
 
 impl<T: SourceRootDatabase> FileLoader for FileLoaderDelegate<&'_ T> {
-    fn resolve_path(&self, path: AnchoredPath<'_>) -> Option<FileId> {
+    fn resolve_anchored_path(&self, path: AnchoredPath<'_>) -> Option<FileId> {
         // FIXME: this *somehow* should be platform agnostic...
         let source_root = self.0.file_source_root(path.anchor);
         let source_root = self.0.source_root(source_root);

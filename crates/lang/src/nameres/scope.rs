@@ -40,7 +40,7 @@ pub trait ScopeEntryExt {
     fn to_entry(self) -> Option<ScopeEntry>;
 }
 
-impl<T: ast::NamedItem> ScopeEntryExt for InFile<T> {
+impl<T: ast::NamedElement> ScopeEntryExt for InFile<T> {
     fn to_entry(self) -> Option<ScopeEntry> {
         let name = self.value.name()?;
         let item_loc = self.loc();
@@ -59,7 +59,7 @@ pub trait NamedItemsExt {
     fn to_entries(self) -> Vec<ScopeEntry>;
 }
 
-impl<T: ast::NamedItem> NamedItemsExt for Vec<InFile<T>> {
+impl<T: ast::NamedElement> NamedItemsExt for Vec<InFile<T>> {
     fn to_entries(self) -> Vec<ScopeEntry> {
         self.into_iter().filter_map(|item| item.to_entry()).collect()
     }
@@ -69,7 +69,7 @@ pub trait NamedItemsInFileExt {
     fn to_in_file_entries(self, file_id: FileId) -> Vec<ScopeEntry>;
 }
 
-impl<T: ast::NamedItem> NamedItemsInFileExt for Vec<T> {
+impl<T: ast::NamedElement> NamedItemsInFileExt for Vec<T> {
     fn to_in_file_entries(self, file_id: FileId) -> Vec<ScopeEntry> {
         self.wrapped_in_file(file_id).to_entries()
     }

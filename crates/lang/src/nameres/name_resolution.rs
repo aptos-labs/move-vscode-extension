@@ -168,11 +168,11 @@ pub fn get_qualified_path_entries(
                 ns: Ns::MODULE,
                 scope_adjustment: None,
             });
-            let module = qualifier_item.node_loc.cast::<ast::Module>(db.upcast()).unwrap();
+            let module = qualifier_item.node_loc.cast_into::<ast::Module>(db.upcast()).unwrap();
             entries.extend(module.member_entries())
         }
         SyntaxKind::ENUM => {
-            let enum_ = qualifier_item.node_loc.cast::<ast::Enum>(db.upcast()).unwrap();
+            let enum_ = qualifier_item.node_loc.cast_into::<ast::Enum>(db.upcast()).unwrap();
             entries.extend(enum_.value.variants().to_in_file_entries(enum_.file_id));
         }
         _ => {}
@@ -187,7 +187,7 @@ pub fn get_struct_pat_field_resolve_variants(
     let struct_pat_path = struct_pat_field.map(|field| field.struct_pat().path());
     db.resolve(struct_pat_path.in_file_into())
         .and_then(|struct_entry| {
-            let fields_owner = struct_entry.node_loc.cast::<ast::AnyHasFields>(db.upcast())?;
+            let fields_owner = struct_entry.node_loc.cast_into::<ast::AnyHasFields>(db.upcast())?;
             Some(get_named_field_entries(fields_owner))
         })
         .unwrap_or_default()
@@ -200,7 +200,7 @@ pub fn get_struct_lit_field_resolve_variants(
     let struct_lit_path = struct_lit_field.map(|field| field.struct_lit().path());
     db.resolve(struct_lit_path.in_file_into())
         .and_then(|struct_entry| {
-            let fields_owner = struct_entry.node_loc.cast::<ast::AnyHasFields>(db.upcast())?;
+            let fields_owner = struct_entry.node_loc.cast_into::<ast::AnyHasFields>(db.upcast())?;
             Some(get_named_field_entries(fields_owner))
         })
         .unwrap_or_default()

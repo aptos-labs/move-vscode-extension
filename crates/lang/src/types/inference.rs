@@ -47,7 +47,7 @@ impl<'a> InferenceCtx<'a> {
         }
     }
 
-    pub fn resolve_path(&self, path: ast::Path) -> Option<InFile<ast::AnyNamedItem>> {
+    pub fn resolve_path(&self, path: ast::Path) -> Option<InFile<ast::AnyNamedElement>> {
         // todo: cache and pass to InferenceResult
         let named_item = self
             .db
@@ -62,7 +62,7 @@ impl<'a> InferenceCtx<'a> {
             let item_kind = named_item.value.syntax().kind();
             match item_kind {
                 SyntaxKind::FUN => {
-                    let generic_item = named_item.map(|it| it.cast::<ast::Fun>().unwrap().into());
+                    let generic_item = named_item.map(|it| it.cast_into::<ast::Fun>().unwrap().into());
                     let Some(call_ty) = self.instantiate_path(path, generic_item).ty_callable() else {
                         return None;
                     };
