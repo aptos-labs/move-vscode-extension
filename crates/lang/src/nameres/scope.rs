@@ -76,29 +76,33 @@ impl<T: ast::NamedItem> NamedItemsInFileExt for Vec<T> {
 }
 
 pub trait ScopeEntryListExt {
-    fn filter_by_ns(self, ns: NsSet) -> impl Iterator<Item = ScopeEntry>;
-    fn filter_by_name(self, name: Name) -> impl Iterator<Item = ScopeEntry>;
+    fn filter_by_ns(self, ns: NsSet) -> Vec<ScopeEntry>;
+    fn filter_by_name(self, name: Name) -> Vec<ScopeEntry>;
     fn filter_by_visibility(
         self,
         db: &dyn HirDatabase,
         context: InFile<impl Reference>,
-    ) -> impl Iterator<Item = ScopeEntry>;
+    ) -> Vec<ScopeEntry>;
 }
 
-impl<T: Iterator<Item = ScopeEntry>> ScopeEntryListExt for T {
-    fn filter_by_ns(self, ns: NsSet) -> impl Iterator<Item = ScopeEntry> {
-        self.filter(move |entry| ns.contains(entry.ns))
+impl ScopeEntryListExt for Vec<ScopeEntry> {
+    fn filter_by_ns(self, ns: NsSet) -> Vec<ScopeEntry> {
+        self.into_iter()
+            .filter(move |entry| ns.contains(entry.ns))
+            .collect()
     }
 
-    fn filter_by_name(self, name: Name) -> impl Iterator<Item = ScopeEntry> {
-        self.filter(move |entry| entry.name == name)
+    fn filter_by_name(self, name: Name) -> Vec<ScopeEntry> {
+        self.into_iter().filter(move |entry| entry.name == name).collect()
     }
 
     fn filter_by_visibility(
         self,
         db: &dyn HirDatabase,
         context: InFile<impl Reference>,
-    ) -> impl Iterator<Item = ScopeEntry> {
-        self.filter(move |entry| is_visible_in_context(db, entry, &context))
+    ) -> Vec<ScopeEntry> {
+        self.into_iter()
+            .filter(move |entry| is_visible_in_context(db, entry, &context))
+            .collect()
     }
 }

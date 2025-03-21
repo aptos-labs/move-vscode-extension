@@ -73,7 +73,7 @@ pub fn get_resolve_scopes(_db: &dyn HirDatabase, start_at: InFile<impl Reference
 
 pub fn get_entries_from_walking_scopes(
     db: &dyn HirDatabase,
-    ctx: ResolutionContext,
+    ctx: &ResolutionContext,
     ns: NsSet,
 ) -> Vec<ScopeEntry> {
     let start_at = ctx.path.clone();
@@ -115,7 +115,7 @@ pub fn get_entries_from_walking_scopes(
 #[tracing::instrument(level = "debug", skip(db, ctx, address), fields(path = ctx.path.syntax_text()))]
 pub fn get_modules_as_entries(
     db: &dyn HirDatabase,
-    ctx: ResolutionContext,
+    ctx: &ResolutionContext,
     address: Address,
 ) -> Vec<ScopeEntry> {
     // get all files in the current package
@@ -141,7 +141,7 @@ pub fn get_modules_as_entries(
     fields(qualifier = ?qualifier.syntax().text(), path = ?ctx.path.syntax_text()))]
 pub fn get_qualified_path_entries(
     db: &dyn HirDatabase,
-    ctx: ResolutionContext,
+    ctx: &ResolutionContext,
     qualifier: ast::Path,
 ) -> Vec<ScopeEntry> {
     let qualifier = ctx.wrap_in_file(qualifier);

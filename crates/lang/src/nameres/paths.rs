@@ -4,17 +4,19 @@ use crate::loc::SyntaxLocExt;
 use crate::nameres::name_resolution::{
     get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
-use crate::nameres::namespaces::Ns;
+use crate::nameres::namespaces::{Ns, NsSet, FUNCTIONS};
 use crate::nameres::path_kind::{path_kind, PathKind, QualifiedKind};
 use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt};
 use crate::node_ext::PathLangExt;
 use crate::{loc, InFile, Name};
+use parser::SyntaxKind::CALL_EXPR;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
+use syntax::ast::node_ext::syntax_node::OptionSyntaxNodeExt;
 use syntax::{ast, AstNode};
 
 pub fn get_path_resolve_variants(
     db: &dyn HirDatabase,
-    ctx: ResolutionContext,
+    ctx: &ResolutionContext,
     path_kind: PathKind,
 ) -> Vec<ScopeEntry> {
     match path_kind {
@@ -45,10 +47,9 @@ pub fn get_path_resolve_variants(
             ..
         } => get_modules_as_entries(db, ctx, address),
 
-        PathKind::Qualified { qualifier, ns, .. } => get_qualified_path_entries(db, ctx, qualifier)
-            .into_iter()
-            .filter_by_ns(ns)
-            .collect(),
+        PathKind::Qualified { qualifier, ns, .. } => {
+            get_qualified_path_entries(db, ctx, qualifier).filter_by_ns(ns)
+        }
     }
 }
 
@@ -68,19 +69,25 @@ pub fn resolve(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry>
     let path_kind = path_kind(ctx.path.clone(), false);
     tracing::debug!(?path_kind);
 
-    let entries = get_path_resolve_variants(db, ctx, path_kind);
+    let entries = get_path_resolve_variants(db, &ctx, path_kind);
     tracing::debug!(?entries);
 
-    let entries_filtered_by_name = entries
-        .into_iter()
-        .filter_by_name(path_name.clone())
-        .collect::<Vec<_>>();
+    let entries_filtered_by_name = entries.filter_by_name(path_name.clone());
     tracing::debug!(?path_name, ?entries_filtered_by_name);
 
-    entries_filtered_by_name
-        .into_iter()
-        .filter_by_visibility(db, context_element)
-        .collect()
+    let final_entries = entries_filtered_by_name.filter_by_visibility(db, context_element);
+
+    if ctx.is_call_expr() {
+        let function_entries = final_entries.clone().filter_by_ns(FUNCTIONS);
+
+        return if !function_entries.is_empty() {
+            function_entries
+        } else {
+            final_entries
+        };
+    }
+
+    final_entries
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -96,5 +103,9 @@ impl ResolutionContext {
 
     pub fn wrap_in_file<T: AstNode>(&self, node: T) -> InFile<T> {
         InFile::new(self.path.file_id, node)
+    }
+
+    pub fn is_call_expr(&self) -> bool {
+        self.path.value.root_path().syntax().parent().is_kind(CALL_EXPR)
     }
 }

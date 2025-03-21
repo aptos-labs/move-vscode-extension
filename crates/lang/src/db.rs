@@ -50,10 +50,7 @@ fn resolve_ref_loc(db: &dyn HirDatabase, ref_loc: SyntaxLoc) -> Vec<ScopeEntry> 
             let field_entries = get_struct_pat_field_resolve_variants(db, struct_pat_field);
             tracing::debug!(?struct_pat_field_name, ?field_entries);
 
-            field_entries
-                .into_iter()
-                .filter_by_name(struct_pat_field_name)
-                .collect()
+            field_entries.filter_by_name(struct_pat_field_name)
         }
         STRUCT_LIT_FIELD => {
             let struct_lit_field = ref_loc.cast::<ast::StructLitField>(db.upcast()).unwrap();
@@ -63,10 +60,7 @@ fn resolve_ref_loc(db: &dyn HirDatabase, ref_loc: SyntaxLoc) -> Vec<ScopeEntry> 
             let field_entries = get_struct_lit_field_resolve_variants(db, struct_lit_field);
             tracing::debug!(?struct_lit_field_name, ?field_entries);
 
-            field_entries
-                .into_iter()
-                .filter_by_name(struct_lit_field_name)
-                .collect()
+            field_entries.filter_by_name(struct_lit_field_name)
         }
         PATH => {
             let path = unwrap_or_return!(ref_loc.cast::<ast::Path>(db.upcast()), vec![]);

@@ -23,6 +23,7 @@ impl fmt::Display for Ns {
 pub type NsSet = EnumSet<Ns>;
 
 pub const NAMES: NsSet = enum_set!(Ns::NAME);
+pub const FUNCTIONS: NsSet = enum_set!(Ns::FUNCTION);
 pub const NAMES_N_VARIANTS: NsSet = enum_set!(Ns::NAME | Ns::ENUM_VARIANT);
 pub const NAMES_N_FUNCTIONS_N_VARIANTS: NsSet = enum_set!(Ns::NAME | Ns::FUNCTION | Ns::ENUM_VARIANT);
 pub const TYPES: NsSet = enum_set!(Ns::TYPE);
