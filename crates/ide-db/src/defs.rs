@@ -55,7 +55,7 @@ impl NameRefClass {
         let ref_parent = name_ref.syntax().parent()?;
 
         if let Some(path) = ast::PathSegment::cast(ref_parent.clone()).map(|it| it.parent_path()) {
-            let res = sema.resolve_reference(path.into());
+            let res = sema.resolve_reference(path.reference().into());
             return match res {
                 Some(entry) => {
                     let symbol_kind = ast_kind_to_symbol_kind(entry.node_loc.kind())?;

@@ -102,7 +102,7 @@ pub fn resolve(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry>
     let Some(path_name) = path.value.name_ref_name() else {
         return vec![];
     };
-    let context_element = path.clone();
+    let context_element = path.clone().map(|it| it.reference());
     let ctx = ResolutionContext {
         path,
         is_completion: false,

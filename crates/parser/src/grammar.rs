@@ -36,7 +36,7 @@ mod params;
 pub(crate) mod paths;
 mod patterns;
 pub(crate) mod specs;
-mod type_args;
+pub(crate) mod type_args;
 mod types;
 pub(crate) mod utils;
 

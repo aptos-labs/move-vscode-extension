@@ -10,15 +10,3 @@ macro_rules! unwrap_or_return {
 }
 
 pub use unwrap_or_return;
-
-#[macro_export]
-macro_rules! unwrap_or_continue {
-    ($e: expr) => {{
-        let Some(it) = $e else {
-            continue;
-        };
-        it
-    }};
-}
-
-pub use unwrap_or_continue;

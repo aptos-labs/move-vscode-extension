@@ -13,7 +13,7 @@ use parser::SyntaxKind::MODULE_SPEC;
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Formatter;
-use syntax::ast::{HasFields, HasItems, Reference};
+use syntax::ast::{HasFields, HasItems, HasReference};
 use syntax::{ast, AstNode, SyntaxNode};
 
 pub struct ResolveScope {
@@ -30,11 +30,14 @@ impl fmt::Debug for ResolveScope {
     }
 }
 
-pub fn get_resolve_scopes(_db: &dyn HirDatabase, start_at: InFile<impl Reference>) -> Vec<ResolveScope> {
+pub fn get_resolve_scopes(
+    _db: &dyn HirDatabase,
+    reference: &InFile<impl HasReference>,
+) -> Vec<ResolveScope> {
     let mut scopes = vec![];
 
-    let file_id = start_at.file_id;
-    let mut opt_scope = start_at.value.syntax().parent();
+    let file_id = reference.file_id;
+    let mut opt_scope = reference.value.syntax().parent();
     let mut prev = None;
     while let Some(scope) = opt_scope {
         scopes.push(ResolveScope {
@@ -76,8 +79,8 @@ pub fn get_entries_from_walking_scopes(
     ctx: &ResolutionContext,
     ns: NsSet,
 ) -> Vec<ScopeEntry> {
-    let start_at = ctx.path.clone();
-    let resolve_scopes = get_resolve_scopes(db, start_at);
+    let reference = ctx.path.clone().map(|it| it.reference());
+    let resolve_scopes = get_resolve_scopes(db, &reference);
 
     let mut visited_name_ns = HashMap::<Name, NsSet>::new();
     let mut entries = vec![];
@@ -145,7 +148,7 @@ pub fn get_qualified_path_entries(
     qualifier: ast::Path,
 ) -> Vec<ScopeEntry> {
     let qualifier = ctx.wrap_in_file(qualifier);
-    let qualifier_item = db.resolve(qualifier.clone().map(|it| it.into()));
+    let qualifier_item = db.resolve_path(qualifier.clone());
     if qualifier_item.is_none() {
         // qualifier can be an address
         if let Some(qualifier_name) = qualifier.value.name_ref_name() {
@@ -185,7 +188,7 @@ pub fn get_struct_pat_field_resolve_variants(
     struct_pat_field: InFile<ast::StructPatField>,
 ) -> Vec<ScopeEntry> {
     let struct_pat_path = struct_pat_field.map(|field| field.struct_pat().path());
-    db.resolve(struct_pat_path.in_file_into())
+    db.resolve_path(struct_pat_path.in_file_into())
         .and_then(|struct_entry| {
             let fields_owner = struct_entry.node_loc.cast::<ast::AnyHasFields>(db.upcast())?;
             Some(get_named_field_entries(fields_owner))
@@ -198,7 +201,7 @@ pub fn get_struct_lit_field_resolve_variants(
     struct_lit_field: InFile<ast::StructLitField>,
 ) -> Vec<ScopeEntry> {
     let struct_lit_path = struct_lit_field.map(|field| field.struct_lit().path());
-    db.resolve(struct_lit_path.in_file_into())
+    db.resolve_path(struct_lit_path.in_file_into())
         .and_then(|struct_entry| {
             let fields_owner = struct_entry.node_loc.cast::<ast::AnyHasFields>(db.upcast())?;
             Some(get_named_field_entries(fields_owner))

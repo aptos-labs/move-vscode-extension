@@ -32,7 +32,7 @@ pub(crate) fn add_path_completions(
     let entries = get_path_resolve_variants(ctx.db.upcast(), &resolution_ctx, path_kind);
     tracing::debug!(entries = ?entries);
 
-    let filtered_entries = entries.filter_by_visibility(ctx.db.upcast(), path);
+    let filtered_entries = entries.filter_by_visibility(ctx.db.upcast(), path.map(|it| it.reference()));
     tracing::debug!(filtered_entries = ?filtered_entries);
 
     for entry in filtered_entries {

@@ -51,7 +51,7 @@ impl<'a> InferenceCtx<'a> {
         // todo: cache and pass to InferenceResult
         let named_item = self
             .db
-            .resolve_named_item(InFile::new(self.file_id, path.as_reference()));
+            .resolve_named_item(InFile::new(self.file_id, path.reference()));
         named_item
     }
 
