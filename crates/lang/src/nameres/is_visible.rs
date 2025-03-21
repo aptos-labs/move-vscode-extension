@@ -33,7 +33,7 @@ pub fn is_visible_in_context(
     let Some(InFile {
         file_id: item_file_id,
         value: item,
-    }) = scope_entry.node_loc.cast::<ast::AnyNamedItem>(db.upcast())
+    }) = scope_entry.node_loc.cast_into::<ast::AnyNamedElement>(db.upcast())
     else {
         return false;
     };
@@ -136,7 +136,7 @@ pub fn is_visible_in_context(
                         {
                             let friend_module = unwrap_or_continue!(friend_entry
                                 .node_loc
-                                .cast::<ast::Module>(db.upcast()));
+                                .cast_into::<ast::Module>(db.upcast()));
                             if friend_module.value == context_module {
                                 return true;
                             }

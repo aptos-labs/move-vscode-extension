@@ -2,7 +2,7 @@ use crate::nameres::path_kind::path_kind;
 use crate::node_ext::PathLangExt;
 use crate::{AsName, Name};
 use syntax::ast;
-use syntax::ast::NamedItem;
+use syntax::ast::NamedElement;
 
 pub trait StructFieldNameExt {
     fn field_name(&self) -> Option<Name>;

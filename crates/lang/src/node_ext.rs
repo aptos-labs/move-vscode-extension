@@ -4,7 +4,7 @@ pub mod struct_field_name;
 use crate::nameres::address::{Address, NamedAddr, ValueAddr};
 use crate::{AsName, Name};
 use syntax::ast;
-use syntax::ast::NamedItem;
+use syntax::ast::NamedElement;
 
 pub trait PathLangExt {
     fn name_ref_name(&self) -> Option<Name>;

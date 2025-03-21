@@ -3,7 +3,7 @@ use ide_db::{ast_kind_to_symbol_kind, RootDatabase, SymbolKind};
 use lang::files::InFile;
 use lang::nameres::scope::ScopeEntry;
 use std::fmt;
-use syntax::ast::NamedItem;
+use syntax::ast::NamedElement;
 use syntax::{ast, AstNode, SmolStr, TextRange};
 use vfs::FileId;
 
@@ -90,7 +90,7 @@ impl NavigationTarget {
     ) -> Option<NavigationTarget> {
         let entry_name = scope_entry.name.as_str();
         let file_id = scope_entry.node_loc.file_id();
-        let entry_item = scope_entry.node_loc.cast::<ast::AnyNamedItem>(db.upcast())?.value;
+        let entry_item = scope_entry.node_loc.cast_into::<ast::AnyNamedElement>(db.upcast())?.value;
 
         let name_range = entry_item.name().map(|name| name.ident_token().text_range());
         let node_range = entry_item.syntax().text_range();
@@ -107,7 +107,7 @@ impl NavigationTarget {
 
     /// Allows `NavigationTarget` to be created from a `NameOwner`
     pub(crate) fn from_named(
-        InFile { file_id, value }: InFile<&dyn ast::NamedItem>,
+        InFile { file_id, value }: InFile<&dyn ast::NamedElement>,
     ) -> Option<NavigationTarget> {
         let name: SmolStr = value
             .name()

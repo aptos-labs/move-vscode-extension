@@ -31,7 +31,7 @@ pub use self::{
     // operators::{ArithOp, BinaryOp, CmpOp, LogicOp, Ordering, RangeOp, UnaryOp},
     token_ext::{CommentKind, CommentPlacement, CommentShape, IsString, QuoteOffsets},
     traits::{
-        GenericItem, HasAttrs, HasFields, HasItems, HasStmts, HasUseStmts, MslOnly, NamedItem, Reference,
+        GenericItem, HasAttrs, HasFields, HasItems, HasStmts, HasUseStmts, MslOnly, NamedElement, Reference,
     },
     visibility::HasVisibility,
 };

@@ -12,7 +12,7 @@ use crate::{AsName, InFile};
 use base_db::{SourceRootDatabase, Upcast};
 use parser::SyntaxKind::{PATH, STRUCT_LIT_FIELD, STRUCT_PAT_FIELD};
 use stdx::itertools::Itertools;
-use syntax::ast::NamedItem;
+use syntax::ast::NamedElement;
 use syntax::{ast, unwrap_or_return};
 
 #[ra_salsa::query_group(HirDatabaseStorage)]
@@ -29,7 +29,7 @@ pub trait HirDatabase: SourceRootDatabase + Upcast<dyn SourceRootDatabase> {
     fn resolve_named_item(
         &self,
         reference: InFile<ast::AnyReference>,
-    ) -> Option<InFile<ast::AnyNamedItem>>;
+    ) -> Option<InFile<ast::AnyNamedElement>>;
 
     fn inference(&self, ctx_owner_loc: SyntaxLoc) -> Option<InferenceResult>;
 
@@ -43,7 +43,7 @@ pub trait HirDatabase: SourceRootDatabase + Upcast<dyn SourceRootDatabase> {
 fn resolve_ref_loc(db: &dyn HirDatabase, ref_loc: SyntaxLoc) -> Vec<ScopeEntry> {
     match ref_loc.kind() {
         STRUCT_PAT_FIELD => {
-            let struct_pat_field = ref_loc.cast::<ast::StructPatField>(db.upcast()).unwrap();
+            let struct_pat_field = ref_loc.cast_into::<ast::StructPatField>(db.upcast()).unwrap();
             let Some(struct_pat_field_name) = struct_pat_field.value.field_name() else {
                 return vec![];
             };
@@ -53,7 +53,7 @@ fn resolve_ref_loc(db: &dyn HirDatabase, ref_loc: SyntaxLoc) -> Vec<ScopeEntry> 
             field_entries.filter_by_name(struct_pat_field_name)
         }
         STRUCT_LIT_FIELD => {
-            let struct_lit_field = ref_loc.cast::<ast::StructLitField>(db.upcast()).unwrap();
+            let struct_lit_field = ref_loc.cast_into::<ast::StructLitField>(db.upcast()).unwrap();
             let Some(struct_lit_field_name) = struct_lit_field.value.field_name() else {
                 return vec![];
             };
@@ -63,7 +63,7 @@ fn resolve_ref_loc(db: &dyn HirDatabase, ref_loc: SyntaxLoc) -> Vec<ScopeEntry> 
             field_entries.filter_by_name(struct_lit_field_name)
         }
         PATH => {
-            let path = unwrap_or_return!(ref_loc.cast::<ast::Path>(db.upcast()), vec![]);
+            let path = unwrap_or_return!(ref_loc.cast_into::<ast::Path>(db.upcast()), vec![]);
             paths::resolve(db, path)
         }
         _ => vec![],
@@ -82,16 +82,16 @@ fn resolve(db: &dyn HirDatabase, any_ref: InFile<ast::AnyReference>) -> Option<S
 fn resolve_named_item(
     db: &dyn HirDatabase,
     reference: InFile<ast::AnyReference>,
-) -> Option<InFile<ast::AnyNamedItem>> {
+) -> Option<InFile<ast::AnyNamedElement>> {
     db.resolve(reference)
-        .and_then(|it| it.node_loc.cast::<ast::AnyNamedItem>(db.upcast()))
+        .and_then(|it| it.node_loc.cast_into::<ast::AnyNamedElement>(db.upcast()))
 }
 
 fn inference(db: &dyn HirDatabase, ctx_owner_loc: SyntaxLoc) -> Option<InferenceResult> {
     let Some(InFile {
         file_id,
         value: ctx_owner,
-    }) = ctx_owner_loc.cast::<ast::InferenceCtxOwner>(db.upcast())
+    }) = ctx_owner_loc.cast_into::<ast::InferenceCtxOwner>(db.upcast())
     else {
         return None;
     };

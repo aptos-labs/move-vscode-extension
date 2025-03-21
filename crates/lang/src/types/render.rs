@@ -8,7 +8,7 @@ use base_db::SourceRootDatabase;
 use std::ops::Deref;
 use stdx::itertools::Itertools;
 use syntax::ast;
-use syntax::ast::NamedItem;
+use syntax::ast::NamedElement;
 
 pub struct TypeRenderer<'db> {
     db: &'db dyn SourceRootDatabase,
@@ -84,7 +84,7 @@ impl<'db> TypeRenderer<'db> {
 
     fn origin_loc_name(&self, origin_loc: SyntaxLoc) -> String {
         origin_loc
-            .cast::<ast::TypeParam>(self.db)
+            .cast_into::<ast::TypeParam>(self.db)
             .and_then(|tp| tp.value.name())
             .map(|tp_name| tp_name.as_name().to_string())
             .unwrap_or(anonymous())

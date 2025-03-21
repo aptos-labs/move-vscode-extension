@@ -8,7 +8,7 @@ use std::io::Read;
 pub use has_item_list::HasItems;
 pub use has_use_stmts::HasUseStmts;
 
-pub trait NamedItem: AstNode {
+pub trait NamedElement: AstNode {
     fn name(&self) -> Option<ast::Name> {
         support::child(self.syntax())
     }

@@ -73,7 +73,7 @@ pub fn get_method_resolve_variants(db: &dyn HirDatabase, self_ty: Ty) -> Vec<Sco
     let mut method_entries = vec![];
     for function_entry in function_entries {
         let Some(InFile { file_id: _, value: f }) =
-            function_entry.node_loc.cast::<ast::Fun>(db.upcast())
+            function_entry.node_loc.cast_into::<ast::Fun>(db.upcast())
         else {
             continue;
         };

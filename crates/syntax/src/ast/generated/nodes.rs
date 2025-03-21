@@ -106,7 +106,7 @@ pub struct Const {
 }
 impl ast::HasAttrs for Const {}
 impl ast::HasVisibility for Const {}
-impl ast::NamedItem for Const {}
+impl ast::NamedElement for Const {}
 impl Const {
     #[inline]
     pub fn body(&self) -> Option<Expr> { support::child(&self.syntax) }
@@ -129,7 +129,7 @@ pub struct Enum {
 impl ast::GenericItem for Enum {}
 impl ast::HasAttrs for Enum {}
 impl ast::HasVisibility for Enum {}
-impl ast::NamedItem for Enum {}
+impl ast::NamedElement for Enum {}
 impl Enum {
     #[inline]
     pub fn variant_list(&self) -> Option<VariantList> { support::child(&self.syntax) }
@@ -200,7 +200,7 @@ pub struct Fun {
 impl ast::GenericItem for Fun {}
 impl ast::HasAttrs for Fun {}
 impl ast::HasVisibility for Fun {}
-impl ast::NamedItem for Fun {}
+impl ast::NamedElement for Fun {}
 impl Fun {
     #[inline]
     pub fn body(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
@@ -226,7 +226,7 @@ impl Fun {
 pub struct IdentPat {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::NamedItem for IdentPat {}
+impl ast::NamedElement for IdentPat {}
 impl IdentPat {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -318,7 +318,7 @@ pub struct Module {
 impl ast::HasAttrs for Module {}
 impl ast::HasItems for Module {}
 impl ast::HasUseStmts for Module {}
-impl ast::NamedItem for Module {}
+impl ast::NamedElement for Module {}
 impl Module {
     #[inline]
     pub fn address_ref(&self) -> Option<AddressRef> { support::child(&self.syntax) }
@@ -389,7 +389,7 @@ pub struct NamedField {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HasAttrs for NamedField {}
-impl ast::NamedItem for NamedField {}
+impl ast::NamedElement for NamedField {}
 impl NamedField {
     #[inline]
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
@@ -569,7 +569,7 @@ pub struct Schema {
 impl ast::GenericItem for Schema {}
 impl ast::HasAttrs for Schema {}
 impl ast::MslOnly for Schema {}
-impl ast::NamedItem for Schema {}
+impl ast::NamedElement for Schema {}
 impl Schema {
     #[inline]
     pub fn spec_block(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
@@ -636,7 +636,7 @@ impl ast::GenericItem for SpecFun {}
 impl ast::HasAttrs for SpecFun {}
 impl ast::HasVisibility for SpecFun {}
 impl ast::MslOnly for SpecFun {}
-impl ast::NamedItem for SpecFun {}
+impl ast::NamedElement for SpecFun {}
 impl SpecFun {
     #[inline]
     pub fn param_list(&self) -> Option<ParamList> { support::child(&self.syntax) }
@@ -661,7 +661,7 @@ pub struct SpecInlineFun {
 impl ast::GenericItem for SpecInlineFun {}
 impl ast::HasVisibility for SpecInlineFun {}
 impl ast::MslOnly for SpecInlineFun {}
-impl ast::NamedItem for SpecInlineFun {}
+impl ast::NamedElement for SpecInlineFun {}
 impl SpecInlineFun {
     #[inline]
     pub fn param_list(&self) -> Option<ParamList> { support::child(&self.syntax) }
@@ -685,7 +685,7 @@ impl ast::GenericItem for Struct {}
 impl ast::HasAttrs for Struct {}
 impl ast::HasFields for Struct {}
 impl ast::HasVisibility for Struct {}
-impl ast::NamedItem for Struct {}
+impl ast::NamedElement for Struct {}
 impl Struct {
     #[inline]
     pub fn struct_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![struct]) }
@@ -861,7 +861,7 @@ impl TypeArgList {
 pub struct TypeParam {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::NamedItem for TypeParam {}
+impl ast::NamedElement for TypeParam {}
 impl TypeParam {
     #[inline]
     pub fn phantom_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![phantom]) }
@@ -895,7 +895,7 @@ impl UnitType {
 pub struct UseAlias {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::NamedItem for UseAlias {}
+impl ast::NamedElement for UseAlias {}
 impl UseAlias {
     #[inline]
     pub fn as_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![as]) }
@@ -960,7 +960,7 @@ pub struct Variant {
 }
 impl ast::HasAttrs for Variant {}
 impl ast::HasFields for Variant {}
-impl ast::NamedItem for Variant {}
+impl ast::NamedElement for Variant {}
 impl Variant {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1049,7 +1049,7 @@ pub enum InferenceCtxOwner {
 impl ast::GenericItem for InferenceCtxOwner {}
 impl ast::HasAttrs for InferenceCtxOwner {}
 impl ast::HasVisibility for InferenceCtxOwner {}
-impl ast::NamedItem for InferenceCtxOwner {}
+impl ast::NamedElement for InferenceCtxOwner {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Item {
@@ -1096,7 +1096,7 @@ pub enum StructOrEnum {
 impl ast::GenericItem for StructOrEnum {}
 impl ast::HasAttrs for StructOrEnum {}
 impl ast::HasVisibility for StructOrEnum {}
-impl ast::NamedItem for StructOrEnum {}
+impl ast::NamedElement for StructOrEnum {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Type {
@@ -1156,10 +1156,10 @@ pub struct AnyMslOnly {
 impl ast::MslOnly for AnyMslOnly {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct AnyNamedItem {
+pub struct AnyNamedElement {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::NamedItem for AnyNamedItem {}
+impl ast::NamedElement for AnyNamedElement {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyReference {
@@ -3797,15 +3797,15 @@ impl From<SpecInlineFun> for AnyMslOnly {
     #[inline]
     fn from(node: SpecInlineFun) -> AnyMslOnly { AnyMslOnly { syntax: node.syntax } }
 }
-impl AnyNamedItem {
+impl AnyNamedElement {
     #[inline]
-    pub fn new<T: ast::NamedItem>(node: T) -> AnyNamedItem {
-        AnyNamedItem {
+    pub fn new<T: ast::NamedElement>(node: T) -> AnyNamedElement {
+        AnyNamedElement {
             syntax: node.syntax().clone(),
         }
     }
 }
-impl AstNode for AnyNamedItem {
+impl AstNode for AnyNamedElement {
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
@@ -3827,62 +3827,62 @@ impl AstNode for AnyNamedItem {
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
-        Self::can_cast(syntax.kind()).then_some(AnyNamedItem { syntax })
+        Self::can_cast(syntax.kind()).then_some(AnyNamedElement { syntax })
     }
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
-impl From<Const> for AnyNamedItem {
+impl From<Const> for AnyNamedElement {
     #[inline]
-    fn from(node: Const) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+    fn from(node: Const) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
-impl From<Enum> for AnyNamedItem {
+impl From<Enum> for AnyNamedElement {
     #[inline]
-    fn from(node: Enum) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+    fn from(node: Enum) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
-impl From<Fun> for AnyNamedItem {
+impl From<Fun> for AnyNamedElement {
     #[inline]
-    fn from(node: Fun) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+    fn from(node: Fun) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
-impl From<IdentPat> for AnyNamedItem {
+impl From<IdentPat> for AnyNamedElement {
     #[inline]
-    fn from(node: IdentPat) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+    fn from(node: IdentPat) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
-impl From<Module> for AnyNamedItem {
+impl From<Module> for AnyNamedElement {
     #[inline]
-    fn from(node: Module) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+    fn from(node: Module) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
-impl From<NamedField> for AnyNamedItem {
+impl From<NamedField> for AnyNamedElement {
     #[inline]
-    fn from(node: NamedField) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+    fn from(node: NamedField) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
-impl From<Schema> for AnyNamedItem {
+impl From<Schema> for AnyNamedElement {
     #[inline]
-    fn from(node: Schema) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+    fn from(node: Schema) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
-impl From<SpecFun> for AnyNamedItem {
+impl From<SpecFun> for AnyNamedElement {
     #[inline]
-    fn from(node: SpecFun) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+    fn from(node: SpecFun) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
-impl From<SpecInlineFun> for AnyNamedItem {
+impl From<SpecInlineFun> for AnyNamedElement {
     #[inline]
-    fn from(node: SpecInlineFun) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+    fn from(node: SpecInlineFun) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
-impl From<Struct> for AnyNamedItem {
+impl From<Struct> for AnyNamedElement {
     #[inline]
-    fn from(node: Struct) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+    fn from(node: Struct) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
-impl From<TypeParam> for AnyNamedItem {
+impl From<TypeParam> for AnyNamedElement {
     #[inline]
-    fn from(node: TypeParam) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+    fn from(node: TypeParam) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
-impl From<UseAlias> for AnyNamedItem {
+impl From<UseAlias> for AnyNamedElement {
     #[inline]
-    fn from(node: UseAlias) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+    fn from(node: UseAlias) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
-impl From<Variant> for AnyNamedItem {
+impl From<Variant> for AnyNamedElement {
     #[inline]
-    fn from(node: Variant) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+    fn from(node: Variant) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
 impl AnyReference {
     #[inline]
