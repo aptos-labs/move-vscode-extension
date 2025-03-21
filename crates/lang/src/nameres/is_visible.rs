@@ -33,7 +33,9 @@ pub fn is_visible_in_context(
     let Some(InFile {
         file_id: item_file_id,
         value: item,
-    }) = scope_entry.node_loc.cast_into::<ast::AnyNamedElement>(db.upcast())
+    }) = scope_entry
+        .node_loc
+        .cast_into::<ast::AnyNamedElement>(db.upcast())
     else {
         return false;
     };

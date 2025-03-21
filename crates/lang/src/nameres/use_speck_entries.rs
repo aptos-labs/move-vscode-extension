@@ -4,7 +4,7 @@ use crate::nameres::path_kind::{path_kind, PathKind, QualifiedKind};
 use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::has_item_list::HasUseStmtsInFileExt;
 use crate::node_ext::PathLangExt;
-use crate::{AsName, InFile, Name};
+use crate::InFile;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::{NamedElement, NamedItemScope};
 use syntax::{ast, AstNode};
@@ -46,7 +46,7 @@ pub enum UseItemType {
 pub struct UseItem {
     use_speck: ast::UseSpeck,
     use_alias: Option<ast::UseAlias>,
-    alias_or_name: Name,
+    alias_or_name: String,
     type_: UseItemType,
     scope: NamedItemScope,
 }
@@ -75,13 +75,13 @@ pub fn use_stmt_items(use_stmt: ast::UseStmt, file_id: FileId) -> Vec<UseItem> {
     }
 
     #[rustfmt::skip]
-    let Some(root_name) = root_use_speck.path().name_ref_name() else { return use_items; };
+    let Some(root_name) = root_use_speck.path().reference_name() else { return use_items; };
 
     let root_use_speck_alias = root_use_speck.use_alias();
     let root_alias_name = root_use_speck_alias
         .clone()
         .and_then(|alias| alias.name())
-        .map(|it| it.as_name());
+        .map(|it| it.as_string());
 
     let root_path = root_use_speck.path();
     let root_path_kind = path_kind(InFile::new(file_id, root_path), false);
@@ -102,7 +102,7 @@ pub fn use_stmt_items(use_stmt: ast::UseStmt, file_id: FileId) -> Vec<UseItem> {
             // use aptos_std::m::call as mycall;
             // use aptos_std::m::Self;
             QualifiedKind::FQModuleItem { .. } => {
-                let Some(module_name) = qualifier.name_ref_name() else {
+                let Some(module_name) = qualifier.reference_name() else {
                     return use_items;
                 };
                 if root_name.as_str() == "Self" {
@@ -149,14 +149,14 @@ fn collect_child_use_speck(
     use_stmt_scope: NamedItemScope,
 ) -> Option<UseItem> {
     let qualifier_path = root_use_speck.path();
-    let module_name = qualifier_path.name_ref_name()?;
+    let module_name = qualifier_path.reference_name()?;
 
-    let child_name = child_use_speck.path().name_ref_name()?;
+    let child_name = child_use_speck.path().reference_name()?;
     let child_alias = child_use_speck.use_alias();
     let child_alias_name = child_alias
         .clone()
         .and_then(|alias| alias.name())
-        .map(|name| name.as_name());
+        .map(|name| name.as_string());
 
     if child_name.as_str() == "Self" {
         return Some(UseItem {

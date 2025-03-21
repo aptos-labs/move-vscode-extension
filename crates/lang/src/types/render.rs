@@ -3,7 +3,6 @@ use crate::types::ty::adt::TyAdt;
 use crate::types::ty::ty_var::{TyInfer, TyVar, TyVarKind};
 use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::Ty;
-use crate::AsName;
 use base_db::SourceRootDatabase;
 use std::ops::Deref;
 use stdx::itertools::Itertools;
@@ -86,7 +85,7 @@ impl<'db> TypeRenderer<'db> {
         origin_loc
             .cast_into::<ast::TypeParam>(self.db)
             .and_then(|tp| tp.value.name())
-            .map(|tp_name| tp_name.as_name().to_string())
+            .map(|tp_name| tp_name.as_string())
             .unwrap_or(anonymous())
     }
 }

@@ -2,17 +2,21 @@ pub mod has_item_list;
 pub mod struct_field_name;
 
 use crate::nameres::address::{Address, NamedAddr, ValueAddr};
-use crate::{AsName, Name};
 use syntax::ast;
 use syntax::ast::NamedElement;
 
 pub trait PathLangExt {
-    fn name_ref_name(&self) -> Option<Name>;
+    // fn name_ref_name(&self) -> Option<Name>;
+    fn reference_name(&self) -> Option<String>;
 }
 
 impl PathLangExt for ast::Path {
-    fn name_ref_name(&self) -> Option<Name> {
-        self.name_ref().map(|name_ref| name_ref.as_name())
+    // fn name_ref_name(&self) -> Option<Name> {
+    //     self.name_ref().map(|name_ref| name_ref.as_name())
+    // }
+
+    fn reference_name(&self) -> Option<String> {
+        self.name_ref().map(|it| it.ident_token().to_string())
     }
 }
 
@@ -67,8 +71,8 @@ impl ModuleLangExt for ast::Module {
     }
 
     fn is_builtins(&self) -> bool {
-        let name = self.name().map(|n| n.as_name());
-        if name.is_some() && name.unwrap().as_str() == "builtins" {
+        let name = self.name().map(|n| n.to_string());
+        if name.is_some_and(|it| it == "builtins") {
             let address = self.address();
             return address.is_some() && address.unwrap().is_0x0();
         }

@@ -124,7 +124,7 @@ impl<'a> TyLowering<'a> {
 }
 
 fn lower_primitive_type(path: ast::Path) -> Ty {
-    let Some(path_name) = path.name_ref_name() else {
+    let Some(path_name) = path.reference_name() else {
         return Ty::Unknown;
     };
     match path_name.as_str() {

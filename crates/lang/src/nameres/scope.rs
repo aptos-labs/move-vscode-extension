@@ -3,7 +3,7 @@ use crate::files::InFileVecExt;
 use crate::loc::{SyntaxLoc, SyntaxLocExt};
 use crate::nameres::is_visible::is_visible_in_context;
 use crate::nameres::namespaces::{named_item_ns, Ns, NsSet};
-use crate::{AsName, InFile, Name};
+use crate::InFile;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::ast;
@@ -12,7 +12,7 @@ use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct ScopeEntry {
-    pub name: Name,
+    pub name: String,
     pub node_loc: SyntaxLoc,
     pub ns: Ns,
     pub scope_adjustment: Option<NamedItemScope>,
@@ -46,7 +46,7 @@ impl<T: ast::NamedElement> ScopeEntryExt for InFile<T> {
         let item_loc = self.loc();
         let item_ns = named_item_ns(item_loc.kind());
         let entry = ScopeEntry {
-            name: name.as_name(),
+            name: name.as_string(),
             node_loc: item_loc,
             ns: item_ns,
             scope_adjustment: None,
@@ -77,7 +77,7 @@ impl<T: ast::NamedElement> NamedItemsInFileExt for Vec<T> {
 
 pub trait ScopeEntryListExt {
     fn filter_by_ns(self, ns: NsSet) -> Vec<ScopeEntry>;
-    fn filter_by_name(self, name: Name) -> Vec<ScopeEntry>;
+    fn filter_by_name(self, name: String) -> Vec<ScopeEntry>;
     fn filter_by_visibility(
         self,
         db: &dyn HirDatabase,
@@ -92,8 +92,8 @@ impl ScopeEntryListExt for Vec<ScopeEntry> {
             .collect()
     }
 
-    fn filter_by_name(self, name: Name) -> Vec<ScopeEntry> {
-        self.into_iter().filter(move |entry| entry.name == name).collect()
+    fn filter_by_name(self, name: String) -> Vec<ScopeEntry> {
+        self.into_iter().filter(|entry| entry.name == name).collect()
     }
 
     fn filter_by_visibility(

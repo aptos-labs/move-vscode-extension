@@ -7,7 +7,7 @@ use crate::nameres::paths::ResolutionContext;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use crate::nameres::scope_entries_owner::get_entries_in_scope;
 use crate::node_ext::{ModuleLangExt, PathLangExt};
-use crate::{InFile, Name};
+use crate::InFile;
 use parser::SyntaxKind;
 use parser::SyntaxKind::MODULE_SPEC;
 use std::collections::HashMap;
@@ -79,14 +79,14 @@ pub fn get_entries_from_walking_scopes(
     let start_at = ctx.path.clone();
     let resolve_scopes = get_resolve_scopes(db, start_at);
 
-    let mut visited_name_ns = HashMap::<Name, NsSet>::new();
+    let mut visited_name_ns = HashMap::<String, NsSet>::new();
     let mut entries = vec![];
     for ResolveScope { scope, prev } in resolve_scopes {
         let scope_entries = get_entries_in_scope(db, scope, prev);
         if scope_entries.is_empty() {
             continue;
         }
-        let mut visited_names_in_scope = HashMap::<Name, NsSet>::new();
+        let mut visited_names_in_scope = HashMap::<String, NsSet>::new();
         for scope_entry in scope_entries {
             let entry_name = scope_entry.name.clone();
             let entry_ns = scope_entry.ns;
@@ -148,12 +148,8 @@ pub fn get_qualified_path_entries(
     let qualifier_item = db.resolve(qualifier.clone().map(|it| it.into()));
     if qualifier_item.is_none() {
         // qualifier can be an address
-        if let Some(qualifier_name) = qualifier.value.name_ref_name() {
-            return get_modules_as_entries(
-                db,
-                ctx,
-                Address::Named(NamedAddr::new(qualifier_name.to_string())),
-            );
+        if let Some(qualifier_name) = qualifier.value.reference_name() {
+            return get_modules_as_entries(db, ctx, Address::Named(NamedAddr::new(qualifier_name)));
         }
         return vec![];
     }
@@ -163,16 +159,22 @@ pub fn get_qualified_path_entries(
         SyntaxKind::MODULE => {
             // Self::call() as an expression
             entries.push(ScopeEntry {
-                name: Name::new("Self"),
+                name: "Self".to_string(),
                 node_loc: qualifier_item.node_loc,
                 ns: Ns::MODULE,
                 scope_adjustment: None,
             });
-            let module = qualifier_item.node_loc.cast_into::<ast::Module>(db.upcast()).unwrap();
+            let module = qualifier_item
+                .node_loc
+                .cast_into::<ast::Module>(db.upcast())
+                .unwrap();
             entries.extend(module.member_entries())
         }
         SyntaxKind::ENUM => {
-            let enum_ = qualifier_item.node_loc.cast_into::<ast::Enum>(db.upcast()).unwrap();
+            let enum_ = qualifier_item
+                .node_loc
+                .cast_into::<ast::Enum>(db.upcast())
+                .unwrap();
             entries.extend(enum_.value.variants().to_in_file_entries(enum_.file_id));
         }
         _ => {}
@@ -187,7 +189,9 @@ pub fn get_struct_pat_field_resolve_variants(
     let struct_pat_path = struct_pat_field.map(|field| field.struct_pat().path());
     db.resolve(struct_pat_path.in_file_into())
         .and_then(|struct_entry| {
-            let fields_owner = struct_entry.node_loc.cast_into::<ast::AnyHasFields>(db.upcast())?;
+            let fields_owner = struct_entry
+                .node_loc
+                .cast_into::<ast::AnyHasFields>(db.upcast())?;
             Some(get_named_field_entries(fields_owner))
         })
         .unwrap_or_default()
@@ -200,7 +204,9 @@ pub fn get_struct_lit_field_resolve_variants(
     let struct_lit_path = struct_lit_field.map(|field| field.struct_lit().path());
     db.resolve(struct_lit_path.in_file_into())
         .and_then(|struct_entry| {
-            let fields_owner = struct_entry.node_loc.cast_into::<ast::AnyHasFields>(db.upcast())?;
+            let fields_owner = struct_entry
+                .node_loc
+                .cast_into::<ast::AnyHasFields>(db.upcast())?;
             Some(get_named_field_entries(fields_owner))
         })
         .unwrap_or_default()
