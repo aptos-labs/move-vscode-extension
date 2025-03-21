@@ -7,9 +7,7 @@
 
 mod ast_src;
 
-use crate::codegen::grammar::ast_src::{
-    get_required_fields, AstEnumSrc, AstNodeSrc, AstSrc, Cardinality, Field, KindsSrc, KINDS_SRC,
-};
+use crate::codegen::grammar::ast_src::{get_required_fields, AstEnumSrc, AstNodeSrc, AstSrc, Cardinality, Field, KindsSrc, KINDS_SRC, NON_METHOD_TRAITS, TRAITS};
 use crate::codegen::{add_preamble, ensure_file_contents, reformat};
 use check_keyword::CheckKeyword;
 use itertools::{Either, Itertools};
@@ -829,50 +827,14 @@ fn extract_enums(ast: &mut AstSrc) {
 }
 
 fn extract_struct_traits(ast: &mut AstSrc) {
-    let traits: &[(&str, &[&str])] = &[
-        ("HasAttrs", &["attrs"]),
-        ("NamedElement", &["name"]),
-        ("HasFields", &["named_field_list", "tuple_field_list"]),
-        ("GenericItem", &["type_param_list"]),
-        // ("HasGenericArgs", &["generic_arg_list"]),
-        // ("HasTypeBounds", &["type_bound_list", "colon_token"]),
-        ("HasUseStmts", &["use_stmts"]),
-        ("HasItems", &["items"]),
-        ("HasStmts", &["stmts"]),
-        // ("HasLoopBody", &["label", "loop_body"]),
-        // ("HasArgList", &["arg_list"]),
-    ];
-
     for node in &mut ast.nodes {
-        for (name, methods) in traits {
+        for (name, methods) in TRAITS {
             extract_struct_trait(node, name, methods);
         }
     }
 
-    let non_method_traits: &[(&str, &[&str])] = &[
-        (
-            "ReferenceElement",
-            &["Path", "MethodCallExpr", "StructPatField", "StructLitField"],
-        ),
-        (
-            "HasVisibility",
-            &["Fun", "SpecFun", "SpecInlineFun", "Struct", "Enum", "Const"],
-        ),
-        (
-            "MslOnly",
-            &[
-                "Schema",
-                "SchemaField",
-                "SpecFun",
-                "SpecInlineFun",
-                "ModuleSpec",
-                "ItemSpec",
-            ],
-        ),
-        // ("HasDocComments", &["Module", "Fun", "Struct"]),
-    ];
     for node in &mut ast.nodes {
-        for (trait_name, nodes) in non_method_traits {
+        for (trait_name, nodes) in NON_METHOD_TRAITS {
             if nodes.contains(&&*node.name) {
                 node.traits.push((*trait_name).into());
             }

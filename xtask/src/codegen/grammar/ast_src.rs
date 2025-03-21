@@ -279,6 +279,43 @@ pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     ("ValueAddress", &["int_number"]),
 ];
 
+pub(crate) const TRAITS: &[(&str, &[&str])] = &[
+    ("HasAttrs", &["attrs"]),
+    ("NamedElement", &["name"]),
+    ("HasFields", &["named_field_list", "tuple_field_list"]),
+    ("GenericItem", &["type_param_list"]),
+    // ("HasGenericArgs", &["generic_arg_list"]),
+    // ("HasTypeBounds", &["type_bound_list", "colon_token"]),
+    ("HasUseStmts", &["use_stmts"]),
+    ("HasItems", &["items"]),
+    ("HasStmts", &["stmts"]),
+    // ("HasLoopBody", &["label", "loop_body"]),
+    // ("HasArgList", &["arg_list"]),
+];
+
+pub(crate) const NON_METHOD_TRAITS: &[(&str, &[&str])] = &[
+    (
+        "ReferenceElement",
+        &["Path", "MethodCallExpr", "StructPatField", "StructLitField"],
+    ),
+    (
+        "HasVisibility",
+        &["Fun", "SpecFun", "SpecInlineFun", "Struct", "Enum", "Const"],
+    ),
+    (
+        "MslOnly",
+        &[
+            "Schema",
+            "SchemaField",
+            "SpecFun",
+            "SpecInlineFun",
+            "ModuleSpec",
+            "ItemSpec",
+        ],
+    ),
+    // ("HasDocComments", &["Module", "Fun", "Struct"]),
+];
+
 pub(crate) fn get_required_fields(node_name: &str) -> &[&str] {
     for (node, req_fields) in REQUIRED_METHOD_FIELDS {
         if (*node == node_name) {
