@@ -1,4 +1,4 @@
-use crate::ast::{support, AstChildren, HasAttrs, HasFields, HasReference, Stmt};
+use crate::ast::{support, AstChildren, HasAttrs, HasFields, Stmt};
 use crate::{ast, AstNode};
 
 pub trait HasItems: AstNode {

@@ -1,4 +1,4 @@
-use crate::grammar::type_args::type_arg;
+use crate::grammar::type_args::opt_path_type_arg_list;
 use crate::grammar::utils::list;
 use crate::grammar::{address, address_ref, items, name_ref, type_args, types};
 use crate::parser::{CompletedMarker, Parser};
@@ -75,7 +75,7 @@ fn path_segment(p: &mut Parser, mode: Mode, first: bool) {
     match p.current() {
         IDENT => {
             name_ref(p);
-            type_args::opt_path_type_arg_list(p, mode);
+            opt_path_type_arg_list(p, mode);
         }
         INT_NUMBER if first => {
             let m = p.start();

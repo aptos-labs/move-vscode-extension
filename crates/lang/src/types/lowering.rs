@@ -29,7 +29,7 @@ impl<'a> TyLowering<'a> {
         match type_ {
             ast::Type::PathType(path_type) => {
                 let path = InFile::new(self.file_id, path_type.path());
-                let named_item = self.db.resolve_path(path.clone().in_file_into());
+                let named_item = self.db.resolve(path.clone().in_file_into());
                 match named_item {
                     None => {
                         // can be primitive type

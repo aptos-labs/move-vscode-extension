@@ -1,4 +1,5 @@
 use crate::grammar::generic_params::opt_generic_param_list;
+use crate::grammar::paths::opt_path_type_args;
 use crate::grammar::{attributes, error_block, expressions, name, name_ref_or_index, paths};
 use crate::parser::{CompletedMarker, Parser};
 use crate::token_set::TokenSet;

@@ -20,18 +20,15 @@ pub trait HirDatabase: SourceRootDatabase + Upcast<dyn SourceRootDatabase> {
     fn resolve_ref_loc(&self, ref_loc: SyntaxLoc) -> Vec<ScopeEntry>;
 
     #[ra_salsa::transparent]
-    fn multi_resolve(&self, any_ref: InFile<ast::AnyHasReference>) -> Vec<ScopeEntry>;
+    fn multi_resolve(&self, any_ref: InFile<ast::AnyReference>) -> Vec<ScopeEntry>;
 
     #[ra_salsa::transparent]
-    fn resolve(&self, any_ref: InFile<ast::AnyHasReference>) -> Option<ScopeEntry>;
-
-    #[ra_salsa::transparent]
-    fn resolve_path(&self, path: InFile<ast::Path>) -> Option<ScopeEntry>;
+    fn resolve(&self, any_ref: InFile<ast::AnyReference>) -> Option<ScopeEntry>;
 
     #[ra_salsa::transparent]
     fn resolve_named_item(
         &self,
-        reference: InFile<ast::AnyHasReference>,
+        reference: InFile<ast::AnyReference>,
     ) -> Option<InFile<ast::AnyNamedItem>>;
 
     fn inference(&self, ctx_owner_loc: SyntaxLoc) -> Option<InferenceResult>;
@@ -73,23 +70,18 @@ fn resolve_ref_loc(db: &dyn HirDatabase, ref_loc: SyntaxLoc) -> Vec<ScopeEntry> 
     }
 }
 
-fn multi_resolve(db: &dyn HirDatabase, any_ref: InFile<ast::AnyHasReference>) -> Vec<ScopeEntry> {
+fn multi_resolve(db: &dyn HirDatabase, any_ref: InFile<ast::AnyReference>) -> Vec<ScopeEntry> {
     db.resolve_ref_loc(any_ref.loc())
 }
 
-fn resolve(db: &dyn HirDatabase, any_ref: InFile<ast::AnyHasReference>) -> Option<ScopeEntry> {
+fn resolve(db: &dyn HirDatabase, any_ref: InFile<ast::AnyReference>) -> Option<ScopeEntry> {
     let entries = db.multi_resolve(any_ref);
-    entries.into_iter().exactly_one().ok()
-}
-
-fn resolve_path(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Option<ScopeEntry> {
-    let entries = db.multi_resolve(path.map(|it| it.reference()));
     entries.into_iter().exactly_one().ok()
 }
 
 fn resolve_named_item(
     db: &dyn HirDatabase,
-    reference: InFile<ast::AnyHasReference>,
+    reference: InFile<ast::AnyReference>,
 ) -> Option<InFile<ast::AnyNamedItem>> {
     db.resolve(reference)
         .and_then(|it| it.node_loc.cast::<ast::AnyNamedItem>(db.upcast()))

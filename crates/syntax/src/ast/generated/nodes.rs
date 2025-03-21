@@ -243,9 +243,10 @@ pub struct ItemSpec {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HasAttrs for ItemSpec {}
-impl ast::HasReference for ItemSpec {}
 impl ast::MslOnly for ItemSpec {}
 impl ItemSpec {
+    #[inline]
+    pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
     #[inline]
     pub fn spec_block(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
     #[inline]
@@ -294,10 +295,12 @@ impl Literal {
 pub struct MethodCallExpr {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::HasReference for MethodCallExpr {}
+impl ast::Reference for MethodCallExpr {}
 impl MethodCallExpr {
     #[inline]
     pub fn arg_list(&self) -> Option<ArgList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
     #[inline]
     pub fn receiver_expr(&self) -> Expr { support::child(&self.syntax).expect("required by the parser") }
     #[inline]
@@ -463,6 +466,7 @@ impl ParenType {
 pub struct Path {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::Reference for Path {}
 impl Path {
     #[inline]
     pub fn qualifier(&self) -> Option<Path> { support::child(&self.syntax) }
@@ -498,8 +502,9 @@ impl PathExpr {
 pub struct PathSegment {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::HasReference for PathSegment {}
 impl PathSegment {
+    #[inline]
+    pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
     #[inline]
     pub fn path_address(&self) -> Option<PathAddress> { support::child(&self.syntax) }
     #[inline]
@@ -701,10 +706,12 @@ impl StructLit {
 pub struct StructLitField {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::HasReference for StructLitField {}
+impl ast::Reference for StructLitField {}
 impl StructLitField {
     #[inline]
     pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
     #[inline]
     pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
 }
@@ -737,10 +744,12 @@ impl StructPat {
 pub struct StructPatField {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::HasReference for StructPatField {}
+impl ast::Reference for StructPatField {}
 impl StructPatField {
     #[inline]
     pub fn ident_pat(&self) -> Option<IdentPat> { support::child(&self.syntax) }
+    #[inline]
+    pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
     #[inline]
     pub fn pat(&self) -> Option<Pat> { support::child(&self.syntax) }
     #[inline]
@@ -1059,6 +1068,7 @@ pub enum MethodOrPath {
     MethodCallExpr(MethodCallExpr),
     Path(Path),
 }
+impl ast::Reference for MethodOrPath {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Pat {
@@ -1122,12 +1132,6 @@ pub struct AnyHasItems {
 impl ast::HasItems for AnyHasItems {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct AnyHasReference {
-    pub(crate) syntax: SyntaxNode,
-}
-impl ast::HasReference for AnyHasReference {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyHasStmts {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1156,6 +1160,12 @@ pub struct AnyNamedItem {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::NamedItem for AnyNamedItem {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AnyReference {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::Reference for AnyReference {}
 impl AstNode for AddressDef {
     #[inline]
     fn kind() -> SyntaxKind
@@ -3640,49 +3650,6 @@ impl From<Script> for AnyHasItems {
     #[inline]
     fn from(node: Script) -> AnyHasItems { AnyHasItems { syntax: node.syntax } }
 }
-impl AnyHasReference {
-    #[inline]
-    pub fn new<T: ast::HasReference>(node: T) -> AnyHasReference {
-        AnyHasReference {
-            syntax: node.syntax().clone(),
-        }
-    }
-}
-impl AstNode for AnyHasReference {
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(
-            kind,
-            ITEM_SPEC | METHOD_CALL_EXPR | PATH_SEGMENT | STRUCT_LIT_FIELD | STRUCT_PAT_FIELD
-        )
-    }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        Self::can_cast(syntax.kind()).then_some(AnyHasReference { syntax })
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode { &self.syntax }
-}
-impl From<ItemSpec> for AnyHasReference {
-    #[inline]
-    fn from(node: ItemSpec) -> AnyHasReference { AnyHasReference { syntax: node.syntax } }
-}
-impl From<MethodCallExpr> for AnyHasReference {
-    #[inline]
-    fn from(node: MethodCallExpr) -> AnyHasReference { AnyHasReference { syntax: node.syntax } }
-}
-impl From<PathSegment> for AnyHasReference {
-    #[inline]
-    fn from(node: PathSegment) -> AnyHasReference { AnyHasReference { syntax: node.syntax } }
-}
-impl From<StructLitField> for AnyHasReference {
-    #[inline]
-    fn from(node: StructLitField) -> AnyHasReference { AnyHasReference { syntax: node.syntax } }
-}
-impl From<StructPatField> for AnyHasReference {
-    #[inline]
-    fn from(node: StructPatField) -> AnyHasReference { AnyHasReference { syntax: node.syntax } }
-}
 impl AnyHasStmts {
     #[inline]
     pub fn new<T: ast::HasStmts>(node: T) -> AnyHasStmts {
@@ -3916,6 +3883,45 @@ impl From<UseAlias> for AnyNamedItem {
 impl From<Variant> for AnyNamedItem {
     #[inline]
     fn from(node: Variant) -> AnyNamedItem { AnyNamedItem { syntax: node.syntax } }
+}
+impl AnyReference {
+    #[inline]
+    pub fn new<T: ast::Reference>(node: T) -> AnyReference {
+        AnyReference {
+            syntax: node.syntax().clone(),
+        }
+    }
+}
+impl AstNode for AnyReference {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(
+            kind,
+            METHOD_CALL_EXPR | PATH | STRUCT_LIT_FIELD | STRUCT_PAT_FIELD
+        )
+    }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        Self::can_cast(syntax.kind()).then_some(AnyReference { syntax })
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl From<MethodCallExpr> for AnyReference {
+    #[inline]
+    fn from(node: MethodCallExpr) -> AnyReference { AnyReference { syntax: node.syntax } }
+}
+impl From<Path> for AnyReference {
+    #[inline]
+    fn from(node: Path) -> AnyReference { AnyReference { syntax: node.syntax } }
+}
+impl From<StructLitField> for AnyReference {
+    #[inline]
+    fn from(node: StructLitField) -> AnyReference { AnyReference { syntax: node.syntax } }
+}
+impl From<StructPatField> for AnyReference {
+    #[inline]
+    fn from(node: StructPatField) -> AnyReference { AnyReference { syntax: node.syntax } }
 }
 impl std::fmt::Display for AddressRef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

@@ -89,7 +89,7 @@ pub(crate) fn type_arg(p: &mut Parser<'_>) -> bool {
         IDENT => {
             let m = p.start();
             name_ref(p);
-            opt_path_type_arg_list(p, Mode::Type);
+            paths::opt_path_type_args(p);
 
             let m = m.complete(p, PATH_SEGMENT).precede(p).complete(p, PATH);
             let m = paths::type_path_for_qualifier(p, m);

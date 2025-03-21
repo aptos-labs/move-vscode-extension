@@ -839,7 +839,6 @@ fn extract_struct_traits(ast: &mut AstSrc) {
         ("HasUseStmts", &["use_stmts"]),
         ("HasItems", &["items"]),
         ("HasStmts", &["stmts"]),
-        ("HasReference", &["name_ref"]),
         // ("HasLoopBody", &["label", "loop_body"]),
         // ("HasArgList", &["arg_list"]),
     ];
@@ -851,15 +850,10 @@ fn extract_struct_traits(ast: &mut AstSrc) {
     }
 
     let non_method_traits: &[(&str, &[&str])] = &[
-        // (
-        //     "HasReference",
-        //     &[
-        //         "PathSegment",
-        //         "MethodCallExpr",
-        //         "StructPatField",
-        //         "StructLitField",
-        //     ],
-        // ),
+        (
+            "Reference",
+            &["Path", "MethodCallExpr", "StructPatField", "StructLitField"],
+        ),
         (
             "HasVisibility",
             &["Fun", "SpecFun", "SpecInlineFun", "Struct", "Enum", "Const"],

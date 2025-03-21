@@ -1,7 +1,7 @@
 pub mod has_item_list;
 pub mod has_use_stmts;
 
-use crate::ast::{support, AstChildren, NameRef, Stmt};
+use crate::ast::{support, AstChildren, Stmt};
 use crate::{ast, AstNode};
 use std::io::Read;
 
@@ -75,9 +75,6 @@ pub trait HasFields: AstNode {
     }
 }
 
-pub trait HasReference: AstNode {
-    #[inline]
-    fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax()) }
-}
+pub trait Reference: AstNode {}
 
 pub trait MslOnly: AstNode {}
