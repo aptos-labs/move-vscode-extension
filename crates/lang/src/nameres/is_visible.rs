@@ -1,4 +1,5 @@
 use crate::db::HirDatabase;
+use crate::files::InFileExt;
 use crate::nameres::namespaces::{Ns, TYPES_N_ENUMS};
 use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::ModuleLangExt;
@@ -7,7 +8,7 @@ use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::visibility::{Vis, VisLevel};
 use syntax::ast::{HasAttrs, HasVisibility, NamedItemScope, ReferenceElement};
-use syntax::{ast, unwrap_or_continue, AstNode};
+use syntax::{ast, AstNode};
 
 pub fn is_visible_in_context(
     db: &dyn HirDatabase,
@@ -132,16 +133,17 @@ pub fn is_visible_in_context(
                 if let (Some(item_module), Some(context_module)) = (item_module, context_module) {
                     let friend_decls = item_module.friend_decls();
                     for friend_decl in friend_decls {
-                        let friend_path = unwrap_or_continue!(friend_decl.path());
-                        if let Some(friend_entry) =
-                            db.resolve(InFile::new(item_file_id, friend_path.into()))
-                        {
-                            let friend_module = unwrap_or_continue!(friend_entry
-                                .node_loc
-                                .cast_into::<ast::Module>(db.upcast()));
-                            if friend_module.value == context_module {
-                                return true;
-                            }
+                        let Some(friend_module) = friend_decl
+                            .path()
+                            .and_then(|path| db.resolve_path(path.in_file(item_file_id)))
+                            .and_then(|friend_entry| {
+                                friend_entry.node_loc.cast_into::<ast::Module>(db.upcast())
+                            })
+                        else {
+                            continue;
+                        };
+                        if friend_module.value == context_module {
+                            return true;
                         }
                     }
                 }

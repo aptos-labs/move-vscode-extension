@@ -1,3 +1,4 @@
+use crate::files::InFileInto;
 use crate::loc::{SyntaxLoc, SyntaxLocExt};
 use crate::nameres::name_resolution::{
     get_struct_lit_field_resolve_variants, get_struct_pat_field_resolve_variants,
@@ -13,7 +14,7 @@ use base_db::{SourceRootDatabase, Upcast};
 use parser::SyntaxKind::{PATH, STRUCT_LIT_FIELD, STRUCT_PAT_FIELD};
 use stdx::itertools::Itertools;
 use syntax::ast::NamedElement;
-use syntax::{ast, unwrap_or_return};
+use syntax::{ast, unwrap_or_return, AstNode};
 
 #[ra_salsa::query_group(HirDatabaseStorage)]
 pub trait HirDatabase: SourceRootDatabase + Upcast<dyn SourceRootDatabase> {
@@ -24,6 +25,9 @@ pub trait HirDatabase: SourceRootDatabase + Upcast<dyn SourceRootDatabase> {
 
     #[ra_salsa::transparent]
     fn resolve(&self, any_ref: InFile<ast::AnyReferenceElement>) -> Option<ScopeEntry>;
+
+    #[ra_salsa::transparent]
+    fn resolve_path(&self, path: InFile<ast::Path>) -> Option<ScopeEntry>;
 
     #[ra_salsa::transparent]
     fn resolve_named_item(
@@ -77,6 +81,10 @@ fn multi_resolve(db: &dyn HirDatabase, any_ref: InFile<ast::AnyReferenceElement>
 fn resolve(db: &dyn HirDatabase, any_ref: InFile<ast::AnyReferenceElement>) -> Option<ScopeEntry> {
     let entries = db.multi_resolve(any_ref);
     entries.into_iter().exactly_one().ok()
+}
+
+fn resolve_path(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Option<ScopeEntry> {
+    resolve(db, path.map(|it| it.into()))
 }
 
 fn resolve_named_item(
