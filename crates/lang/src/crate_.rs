@@ -1,5 +1,4 @@
 use crate::db::HirDatabase;
-use crate::Name;
 use base_db::input::CrateId;
 use syntax::ast;
 
@@ -13,7 +12,7 @@ pub struct Crate {
 
 #[derive(Debug)]
 pub struct CrateDependency {
-    pub name: Name,
+    pub name: String,
     pub krate: Crate,
 }
 

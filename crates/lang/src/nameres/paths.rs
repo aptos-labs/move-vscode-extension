@@ -12,7 +12,7 @@ use crate::types::inference::InferenceCtx;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::ty_var::{TyInfer, TyVar};
 use crate::types::ty::Ty;
-use crate::{loc, InFile, Name};
+use crate::{loc, InFile};
 use parser::SyntaxKind::CALL_EXPR;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::OptionSyntaxNodeExt;
@@ -36,7 +36,7 @@ pub fn get_path_resolve_variants(
                 if let Some(module) = ctx.containing_module().opt_in_file(ctx.path.file_id) {
                     // Self::call() as an expression
                     entries.push(ScopeEntry {
-                        name: Name::new("Self"),
+                        name: "Self".to_string(),
                         node_loc: module.loc(),
                         ns: Ns::MODULE,
                         scope_adjustment: None,
@@ -99,7 +99,7 @@ pub fn get_method_resolve_variants(db: &dyn HirDatabase, self_ty: Ty) -> Vec<Sco
     skip(db, path),
     fields(path = ?path.syntax_text()))]
 pub fn resolve(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry> {
-    let Some(path_name) = path.value.name_ref_name() else {
+    let Some(path_name) = path.value.reference_name() else {
         return vec![];
     };
     let context_element = path.clone();

@@ -1,13 +1,12 @@
 use crate::context::CompletionContext;
 use crate::item::{CompletionItem, CompletionItemBuilder, CompletionItemKind};
 use ide_db::SymbolKind;
-use lang::Name;
 use stdx::format_to;
 use syntax::{ast, AstNode};
 
 pub(crate) fn render_function_completion_item(
     ctx: &CompletionContext<'_>,
-    function_name: Name,
+    function_name: String,
     function: ast::Fun,
 ) -> CompletionItemBuilder {
     let function_name = function_name.as_str();

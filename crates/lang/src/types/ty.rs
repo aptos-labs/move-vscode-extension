@@ -59,7 +59,10 @@ impl Ty {
         let ty = self.deref();
         match ty {
             Ty::Adt(ty_adt) => {
-                let item = ty_adt.adt_item.cast_into::<ast::StructOrEnum>(db.upcast()).unwrap();
+                let item = ty_adt
+                    .adt_item
+                    .cast_into::<ast::StructOrEnum>(db.upcast())
+                    .unwrap();
                 Some(item.map(|it| it.module()))
             }
             // todo: vector

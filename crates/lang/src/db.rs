@@ -8,7 +8,7 @@ use crate::node_ext::struct_field_name::StructFieldNameExt;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::inference::InferenceCtx;
-use crate::{AsName, InFile};
+use crate::InFile;
 use base_db::{SourceRootDatabase, Upcast};
 use parser::SyntaxKind::{PATH, STRUCT_LIT_FIELD, STRUCT_PAT_FIELD};
 use stdx::itertools::Itertools;

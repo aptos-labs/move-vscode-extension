@@ -14,6 +14,12 @@ pub trait NamedElement: AstNode {
     }
 }
 
+impl ast::Name {
+    pub fn as_string(&self) -> String {
+        self.ident_token().to_string()
+    }
+}
+
 pub trait HasStmts: AstNode {
     fn stmts(&self) -> AstChildren<Stmt> {
         support::children(&self.syntax())
