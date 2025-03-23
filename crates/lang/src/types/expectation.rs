@@ -1,27 +1,28 @@
 use crate::types::inference::InferenceCtx;
 use crate::types::ty::Ty;
 
-pub enum Expectation {
+#[derive(Debug, Clone)]
+pub enum Expected {
     NoValue,
     ExpectType(Ty),
 }
 
-impl Expectation {
+impl Expected {
     pub fn empty() -> Self {
-        Expectation::NoValue
+        Expected::NoValue
     }
 
     pub fn from_ty(ty: Option<Ty>) -> Self {
         match ty {
-            Some(ty) => Expectation::ExpectType(ty),
-            None => Expectation::empty(),
+            Some(ty) => Expected::ExpectType(ty),
+            None => Expected::empty(),
         }
     }
 
     pub fn ty(&self, ctx: &InferenceCtx) -> Option<Ty> {
         match self {
-            Expectation::NoValue => None,
-            Expectation::ExpectType(ty) => Some(ctx.resolve_vars_if_possible(ty.to_owned())),
+            Expected::NoValue => None,
+            Expected::ExpectType(ty) => Some(ctx.resolve_vars_if_possible(ty.to_owned())),
         }
     }
 }

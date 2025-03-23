@@ -1,6 +1,6 @@
 use crate::db::HirDatabase;
 use crate::files::OptionInFileExt;
-use crate::loc::SyntaxLocExt;
+use crate::loc::SyntaxLocFileExt;
 use crate::nameres::name_resolution::{
     get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
@@ -58,7 +58,7 @@ pub fn get_path_resolve_variants(
     }
 }
 
-pub fn get_method_resolve_variants(db: &dyn HirDatabase, self_ty: Ty) -> Vec<ScopeEntry> {
+pub fn get_method_resolve_variants(db: &dyn HirDatabase, self_ty: &Ty) -> Vec<ScopeEntry> {
     let Some(InFile {
         file_id,
         value: receiver_item_module,
@@ -98,7 +98,7 @@ pub fn get_method_resolve_variants(db: &dyn HirDatabase, self_ty: Ty) -> Vec<Sco
     level = "debug",
     skip(db, path),
     fields(path = ?path.syntax_text()))]
-pub fn resolve(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry> {
+pub fn resolve_path(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry> {
     let Some(path_name) = path.value.reference_name() else {
         return vec![];
     };
@@ -116,7 +116,7 @@ pub fn resolve(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry>
     let entries_filtered_by_name = entries.filter_by_name(path_name.clone());
     tracing::debug!(?path_name, ?entries_filtered_by_name);
 
-    let final_entries = entries_filtered_by_name.filter_by_visibility(db, context_element);
+    let final_entries = entries_filtered_by_name.filter_by_visibility(db, &context_element);
 
     if ctx.is_call_expr() {
         let function_entries = final_entries.clone().filter_by_ns(FUNCTIONS);

@@ -51,7 +51,7 @@ pub trait HasAttrs: AstNode {
     }
 }
 
-pub trait HasFields: AstNode {
+pub trait FieldsOwner: AstNode {
     #[inline]
     fn named_field_list(&self) -> Option<ast::NamedFieldList> {
         support::child(&self.syntax())
@@ -81,6 +81,11 @@ pub trait HasFields: AstNode {
     }
 }
 
-pub trait ReferenceElement: AstNode {}
+pub trait ReferenceElement: AstNode {
+    #[inline]
+    fn cast_into<T: ReferenceElement>(&self) -> Option<T> {
+        T::cast(self.syntax().to_owned())
+    }
+}
 
 pub trait MslOnly: AstNode {}

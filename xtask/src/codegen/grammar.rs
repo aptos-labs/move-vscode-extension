@@ -7,7 +7,10 @@
 
 mod ast_src;
 
-use crate::codegen::grammar::ast_src::{get_required_fields, AstEnumSrc, AstNodeSrc, AstSrc, Cardinality, Field, KindsSrc, KINDS_SRC, NON_METHOD_TRAITS, TRAITS};
+use crate::codegen::grammar::ast_src::{
+    get_required_fields, AstEnumSrc, AstNodeSrc, AstSrc, Cardinality, Field, KindsSrc, KINDS_SRC,
+    NON_METHOD_TRAITS, TRAITS,
+};
 use crate::codegen::{add_preamble, ensure_file_contents, reformat};
 use check_keyword::CheckKeyword;
 use itertools::{Either, Itertools};
@@ -275,6 +278,7 @@ fn generate_nodes(kinds: KindsSrc, grammar: &AstSrc) -> String {
         #(#node_defs)*
         #(#enum_defs)*
         #(#any_node_defs)*
+
         #(#node_boilerplate_impls)*
         #(#enum_boilerplate_impls)*
         #(#any_node_boilerplate_impls)*
@@ -369,7 +373,7 @@ fn generate_any_node_defs(
     trait_name: &str,
     nodes: Vec<&AstNodeSrc>,
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
-    let name = format_ident!("Any{}", trait_name);
+    let any_trait_name = format_ident!("Any{}", trait_name);
     let trait_name = format_ident!("{}", trait_name);
     let kinds: Vec<_> = nodes
         .iter()
@@ -380,28 +384,32 @@ fn generate_any_node_defs(
         quote! {
             #[pretty_doc_comment_placeholder_workaround]
             #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-            pub struct #name {
+            pub struct #any_trait_name {
                 pub(crate) syntax: SyntaxNode,
             }
-            impl ast::#trait_name for #name {}
+            impl ast::#trait_name for #any_trait_name {}
         },
         quote! {
-            impl #name {
+            impl #any_trait_name {
                 #[inline]
-                pub fn new<T: ast::#trait_name>(node: T) -> #name {
-                    #name {
+                pub fn new<T: ast::#trait_name>(node: T) -> #any_trait_name {
+                    #any_trait_name {
                         syntax: node.syntax().clone()
                     }
                 }
+                #[inline]
+                pub fn cast_into<T: ast::#trait_name>(&self) -> Option<T> {
+                    T::cast(self.syntax().to_owned())
+                }
             }
-            impl AstNode for #name {
+            impl AstNode for #any_trait_name {
                 #[inline]
                 fn can_cast(kind: SyntaxKind) -> bool {
                     matches!(kind, #(#kinds)|*)
                 }
                 #[inline]
                 fn cast(syntax: SyntaxNode) -> Option<Self> {
-                    Self::can_cast(syntax.kind()).then_some(#name { syntax })
+                    Self::can_cast(syntax.kind()).then_some(#any_trait_name { syntax })
                 }
                 #[inline]
                 fn syntax(&self) -> &SyntaxNode {
@@ -410,10 +418,10 @@ fn generate_any_node_defs(
             }
 
             #(
-                impl From<#nodes> for #name {
+                impl From<#nodes> for #any_trait_name {
                     #[inline]
-                    fn from(node: #nodes) -> #name {
-                        #name { syntax: node.syntax }
+                    fn from(node: #nodes) -> #any_trait_name {
+                        #any_trait_name { syntax: node.syntax }
                     }
                 }
             )*
@@ -693,20 +701,20 @@ fn lower_rule(
             let manually_implemented = matches!(
                 l.as_str(),
                 "lhs"
-                    | "rhs"
-                    | "then_branch"
-                    | "else_branch"
-                    | "start"
-                    | "end"
                     | "op"
-                    | "index"
+                    | "rhs"
+                    // | "then_branch"
+                    // | "else_branch"
+                    // | "start"
+                    // | "end"
                     | "base"
-                    | "value"
-                    | "trait"
-                    | "self_ty"
-                    | "iterable"
-                    | "condition"
-                    | "args" // | "body"
+                    | "index" // | "value"
+                              // | "trait"
+                              // | "self_ty"
+                              // | "iterable"
+                              // | "condition"
+                              // | "args"
+                              // | "body"
             );
             if manually_implemented {
                 return;

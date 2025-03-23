@@ -8,7 +8,7 @@
 
 use rowan::{GreenNodeBuilder, Language};
 
-use crate::{Parse, SyntaxError, SyntaxKind, TextSize};
+use crate::{AstNode, Parse, SyntaxError, SyntaxKind, TextSize};
 
 pub(crate) use rowan::GreenNode;
 
@@ -32,6 +32,17 @@ pub type SyntaxElement = rowan::SyntaxElement<Aptos>;
 pub type SyntaxNodeChildren = rowan::SyntaxNodeChildren<Aptos>;
 pub type SyntaxElementChildren = rowan::SyntaxElementChildren<Aptos>;
 pub type PreorderWithTokens = rowan::api::PreorderWithTokens<Aptos>;
+pub type SyntaxNodeOrToken = rowan::NodeOrToken<SyntaxNode, SyntaxToken>;
+
+pub trait IntoNodeOrToken {
+    fn node_or_token(&self) -> SyntaxNodeOrToken;
+}
+
+impl<T: AstNode> IntoNodeOrToken for T {
+    fn node_or_token(&self) -> SyntaxNodeOrToken {
+        self.syntax().clone().into()
+    }
+}
 
 #[derive(Default)]
 pub struct SyntaxTreeBuilder {

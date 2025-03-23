@@ -1,6 +1,7 @@
 use base_db::Upcast;
 use ide_db::RootDatabase;
 use lang::db::HirDatabase;
+use lang::files::InFileExt;
 use lang::types::ty::Ty;
 use lang::{FilePosition, InFile, Semantics};
 use syntax::{algo, ast, AstNode};
@@ -19,8 +20,8 @@ pub(crate) fn expr_type_info(
     let expr_ty = match ctx_owner {
         None => Ty::Unknown,
         Some(ctx_owner) => db
-            .inference_for_ctx_owner(InFile::new(file_id, ctx_owner))
-            .and_then(|inference| inference.get_expr_type(expr))
+            .inference(ctx_owner.in_file(file_id))
+            .get_expr_type(&expr)
             .unwrap_or(Ty::Unknown),
     };
     Some(expr_ty.render(db.upcast()))

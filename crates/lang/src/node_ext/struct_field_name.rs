@@ -23,7 +23,7 @@ impl StructFieldNameExt for ast::StructLitField {
         if let Some(name_ref) = self.name_ref() {
             return Some(name_ref.as_string());
         }
-        let path = self.expr()?.path_expr()?.path()?;
+        let path = self.expr()?.path_expr()?.path();
         if path.coloncolon_token().is_none() {
             return path.reference_name();
         }

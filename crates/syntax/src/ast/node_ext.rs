@@ -1,18 +1,22 @@
 mod address_ref;
-mod any_named_item;
 pub mod attr;
+pub mod bin_expr;
 mod block_expr;
 mod call_expr;
 mod enum_;
 mod expr;
 pub mod fun;
 mod ident_pat;
-mod literal;
+pub mod index_expr;
+pub mod literal;
+mod method_call_expr;
+mod method_or_path;
 mod module;
 pub mod move_syntax_node;
 pub mod name_ref;
 mod pat;
 pub mod path;
+pub mod prefix_expr;
 mod ref_type;
 mod schema;
 mod source_file;
@@ -22,10 +26,9 @@ pub mod syntax_node;
 pub mod type_;
 pub mod visibility;
 
-use crate::ast::{support, ExprStmt, LetStmt, Stmt};
 use crate::token_text::TokenText;
-use crate::{ast, AstNode, AstToken, SyntaxNode, SyntaxToken};
-use parser::{SyntaxKind, T};
+use crate::{ast, AstNode, AstToken, SyntaxNode};
+use parser::SyntaxKind;
 use rowan::{GreenNodeData, GreenTokenData, NodeOrToken};
 use std::borrow::Cow;
 

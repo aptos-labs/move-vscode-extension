@@ -1,5 +1,5 @@
 use crate::db::HirDatabase;
-use crate::loc::SyntaxLocExt;
+use crate::loc::SyntaxLocFileExt;
 use crate::types::ty::Ty;
 use crate::InFile;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;

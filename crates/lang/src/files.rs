@@ -1,5 +1,5 @@
 use parser::SyntaxKind;
-use syntax::{AstNode, SyntaxNode, SyntaxToken, TextRange, TextSize};
+use syntax::{AstNode, SyntaxNode, TextRange, TextSize};
 use vfs::FileId;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -41,23 +41,35 @@ impl<T> InFile<T> {
     }
 }
 
-impl InFile<SyntaxNode> {
+impl<T: AstNode> InFile<T> {
     pub fn kind(&self) -> SyntaxKind {
+        self.value.syntax().kind()
+    }
+
+    pub fn cast<IntoT: AstNode>(self) -> Option<InFile<IntoT>> {
+        let InFile { file_id, value } = self;
+        let value = IntoT::cast(value.syntax().clone())?;
+        Some(InFile::new(file_id, value))
+    }
+}
+
+impl InFile<SyntaxNode> {
+    pub fn syntax_kind(&self) -> SyntaxKind {
         self.value.kind()
     }
 
-    pub fn cast<T: AstNode>(self) -> Option<InFile<T>> {
+    pub fn syntax_cast<T: AstNode>(self) -> Option<InFile<T>> {
         let InFile { file_id, value } = self;
         let value = T::cast(value)?;
         Some(InFile::new(file_id, value))
     }
 }
 
-impl InFile<SyntaxToken> {
-    pub fn kind(&self) -> SyntaxKind {
-        self.value.kind()
-    }
-}
+// impl InFile<SyntaxToken> {
+//     pub fn kind(&self) -> SyntaxKind {
+//         self.value.kind()
+//     }
+// }
 
 impl<T: AstNode> InFile<T> {
     pub fn syntax_text(&self) -> String {
@@ -86,6 +98,7 @@ pub trait InFileExt {
 impl<T: AstNode> InFileExt for T {
     type Node = T;
     fn in_file(self, file_id: FileId) -> InFile<T> {
+        // AstNode clone is Rc::clone()
         InFile::new(file_id, self)
     }
 }

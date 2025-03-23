@@ -19,7 +19,7 @@ pub fn use_speck_entries(
     let mut entries = vec![];
     for use_item in use_items {
         let path = InFile::new(items_owner.file_id, use_item.use_speck.path());
-        let Some(scope_entry) = db.resolve_path(path.clone()) else {
+        let Some(scope_entry) = path.clone().resolve_no_inf(db) else {
             tracing::debug!(path = &path.syntax_text(), "use_speck unresolved");
             continue;
         };

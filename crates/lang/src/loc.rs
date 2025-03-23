@@ -15,13 +15,9 @@ pub struct SyntaxLoc {
 }
 
 impl SyntaxLoc {
-    pub fn from_ast_node<T: AstNode>(node: &InFile<T>) -> Self {
-        let InFile {
-            file_id,
-            value: syntax_node,
-        } = node;
-        let range_start = syntax_node.syntax().text_range().end();
-        let kind = syntax_node.syntax().kind();
+    pub fn from_ast_node<T: AstNode>(file_id: FileId, node: &T) -> Self {
+        let range_start = node.syntax().text_range().end();
+        let kind = node.syntax().kind();
         SyntaxLoc {
             file_id: file_id.to_owned(),
             node_offset: range_start,
@@ -59,12 +55,22 @@ impl fmt::Debug for SyntaxLoc {
     }
 }
 
-pub trait SyntaxLocExt {
+pub trait SyntaxLocFileExt {
     fn loc(&self) -> SyntaxLoc;
 }
 
-impl<T: AstNode> SyntaxLocExt for InFile<T> {
+impl<T: AstNode> SyntaxLocFileExt for InFile<T> {
     fn loc(&self) -> SyntaxLoc {
-        SyntaxLoc::from_ast_node(self)
+        SyntaxLoc::from_ast_node(self.file_id, &self.value)
+    }
+}
+
+pub trait SyntaxLocNodeExt {
+    fn loc(&self, file_id: FileId) -> SyntaxLoc;
+}
+
+impl<T: AstNode> SyntaxLocNodeExt for T {
+    fn loc(&self, file_id: FileId) -> SyntaxLoc {
+        SyntaxLoc::from_ast_node(file_id, self)
     }
 }

@@ -10,7 +10,7 @@ impl ast::Path {
         self.segment().name_ref()
     }
 
-    pub fn as_reference(&self) -> ast::AnyReferenceElement {
+    pub fn reference(&self) -> ast::AnyReferenceElement {
         ast::AnyReferenceElement::cast(self.syntax.to_owned()).unwrap()
     }
 

@@ -7,7 +7,7 @@ use crate::types::ty::Ty;
 use syntax::ast;
 
 pub fn collect_bindings(
-    ast_walker: &mut TypeAstWalker,
+    type_walker: &mut TypeAstWalker,
     pat: ast::Pat,
     explicit_ty: Ty,
     def_bm: BindingMode,
@@ -15,10 +15,29 @@ pub fn collect_bindings(
     match pat {
         ast::Pat::IdentPat(ident_pat) => {
             let ident_pat_ty = apply_bm(explicit_ty, def_bm);
-            ast_walker
+            type_walker
                 .ctx
                 .pat_types
-                .insert(ast::Pat::IdentPat(ident_pat), ident_pat_ty);
+                .insert(ident_pat.clone().into(), ident_pat_ty);
+        }
+        ast::Pat::StructPat(struct_pat) => {
+            let (expected, pat_bm) = strip_references(explicit_ty, def_bm);
+            type_walker
+                .ctx
+                .pat_types
+                .insert(struct_pat.clone().into(), expected.clone());
+
+            // let mut named_element = type_walker
+            //     .ctx
+            //     .resolve_path_cached(struct_pat.path(), Some(expected.clone()))
+            //     .and_then(|item| item.cast::<ast::AnyFieldsOwner>());
+            // if named_element.is_none() {
+            //     named_element = expected.into_ty_adt().and_then(|it| {
+            //         it.adt_item
+            //             .cast_into::<ast::Struct>(type_walker.ctx.db.upcast())
+            //             .into()
+            //     });
+            // }
         }
         _ => {}
     }

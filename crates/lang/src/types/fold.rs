@@ -62,7 +62,7 @@ impl TypeFolder for TyVarResolver<'_> {
 
 #[derive(Debug, Copy, Clone)]
 pub enum Fallback {
-    TyUnknown,
+    Unknown,
     Origin,
 }
 
