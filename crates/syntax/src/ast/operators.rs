@@ -18,8 +18,8 @@ pub enum UnaryOp {
     Deref,
     /// `!`
     Not,
-    /// `-`
-    Neg,
+    Copy,
+    Move,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]

@@ -5,7 +5,7 @@ use crate::db::HirDatabase;
 use crate::files::{InFileExt, InFileInto};
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres::path_resolution;
-use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt};
+use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::types::fold::{Fallback, FullTyVarResolver, TyVarResolver, TyVarVisitor, TypeFoldable};
 use crate::types::has_type_params_ext::GenericItemExt;
 use crate::types::lowering::TyLowering;
@@ -67,11 +67,6 @@ impl<'a> InferenceCtx<'a> {
             .single_or_none()
             .and_then(|it| it.cast_into::<ast::AnyNamedElement>(self.db))
     }
-
-    // pub fn resolve_path(&self, path: ast::Path) -> Option<InFile<ast::AnyNamedElement>> {
-    //     let named_item = self.db.resolve_named_item(path.reference().in_file(self.file_id));
-    //     named_item
-    // }
 
     fn instantiate_call_expr_path(&mut self, call_expr: &ast::CallExpr) -> TyCallable {
         let path = call_expr.path();
@@ -255,37 +250,57 @@ impl<'a> InferenceCtx<'a> {
             (Ty::Vector(ty1), Ty::Vector(ty2)) => {
                 self.combine_types(ty1.deref().to_owned(), ty2.deref().to_owned())
             }
-            // todo:
-            _ => Ok(()),
+            (Ty::Reference(from_ref), Ty::Reference(to_ref)) => self.combine_ty_refs(from_ref, to_ref),
+            (Ty::Callable(ty_call1), Ty::Callable(ty_call2)) => {
+                self.combine_ty_callables(ty_call1, ty_call2)
+            }
+
+            (Ty::Adt(ty_adt1), Ty::Adt(ty_adt2)) => self.combine_ty_adts(ty_adt1, ty_adt2),
+            (Ty::Tuple(ty_tuple1), Ty::Tuple(ty_tuple2)) => self.combine_ty_tuples(ty_tuple1, ty_tuple2),
+
+            _ => Err(TypeError::new(left_ty, right_ty)),
         }
     }
 
-    fn combine_ty_refs(&mut self, from_ref: TyReference, to_ref: TyReference) -> CombineResult {
+    fn combine_ty_refs(&mut self, from_ref: &TyReference, to_ref: &TyReference) -> CombineResult {
         let is_mut_compat = from_ref.is_mut() || !to_ref.is_mut();
         if !is_mut_compat {
-            return Err(TypeError::new(Ty::Reference(from_ref), Ty::Reference(to_ref)));
+            return Err(TypeError::new(
+                Ty::Reference(from_ref.to_owned()),
+                Ty::Reference(to_ref.to_owned()),
+            ));
         }
         self.combine_types(from_ref.referenced().to_owned(), to_ref.referenced().to_owned())
     }
 
-    fn combine_ty_adts(&mut self, ty1: TyAdt, ty2: TyAdt) -> CombineResult {
+    fn combine_ty_callables(&mut self, ty1: &TyCallable, ty2: &TyCallable) -> CombineResult {
+        // todo: check param types size
+        self.combine_ty_pairs(ty1.clone().param_types, ty2.clone().param_types)?;
+        // todo: resolve variables?
+        self.combine_types(ty1.ret_type.deref().to_owned(), ty2.ret_type.deref().to_owned())
+    }
+
+    fn combine_ty_adts(&mut self, ty1: &TyAdt, ty2: &TyAdt) -> CombineResult {
         if ty1.adt_item != ty2.adt_item {
-            return Err(TypeError::new(Ty::Adt(ty1), Ty::Adt(ty2)));
+            return Err(TypeError::new(Ty::Adt(ty1.to_owned()), Ty::Adt(ty2.to_owned())));
         }
         Ok(())
     }
 
-    fn combine_ty_tuples(&mut self, ty1: TyTuple, ty2: TyTuple) -> CombineResult {
+    fn combine_ty_tuples(&mut self, ty1: &TyTuple, ty2: &TyTuple) -> CombineResult {
         if ty1.types.len() != ty2.types.len() {
-            return Err(TypeError::new(Ty::Tuple(ty1), Ty::Tuple(ty2)));
+            return Err(TypeError::new(
+                Ty::Tuple(ty1.to_owned()),
+                Ty::Tuple(ty2.to_owned()),
+            ));
         }
-        let ty_pairs = zip(ty1.types.into_iter(), ty2.types.into_iter()).collect();
-        self.combine_ty_pairs(ty_pairs)
+        self.combine_ty_pairs(ty1.clone().types, ty2.clone().types)
     }
 
-    fn combine_ty_pairs(&mut self, ty_pairs: Vec<(Ty, Ty)>) -> CombineResult {
+    fn combine_ty_pairs(&mut self, left_tys: Vec<Ty>, right_tys: Vec<Ty>) -> CombineResult {
         let mut can_unify = Ok(());
-        for (ty1, ty2) in ty_pairs {
+        let pairs = zip(left_tys.into_iter(), right_tys.into_iter());
+        for (ty1, ty2) in pairs {
             can_unify = can_unify.and(self.combine_types(ty1, ty2));
         }
         can_unify
@@ -315,6 +330,13 @@ impl<'a> InferenceCtx<'a> {
                 false
             }
         }
+    }
+
+    pub fn get_binding_type(&self, ident_pat: ast::IdentPat) -> Ty {
+        self.pat_types
+            .get(&ident_pat.into())
+            .map(|it| it.to_owned())
+            .unwrap_or(Ty::Unknown)
     }
 
     fn report_type_error(

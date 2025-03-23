@@ -120,8 +120,8 @@ pub fn path_kind(path: InFile<ast::Path>, is_completion: bool) -> PathKind {
         if let Some(path_address) = path.path_address() {
             return PathKind::ValueAddress(ValueAddr::new(path_address.value_address().address_text()));
         }
-        let name_ref = path.name_ref().expect("should be Some if path_address is None");
-        let ref_name = name_ref.ident_token().text().to_string();
+
+        let ref_name = path.reference_name().expect("as `path_address` is None");
 
         // check whether it's a first element in use stmt, i.e. use [std]::module;
         if let Some(use_speck) = path.use_speck() {
@@ -152,7 +152,7 @@ pub fn path_kind(path: InFile<ast::Path>, is_completion: bool) -> PathKind {
     // two-element paths
     if qualifier_of_qualifier.is_none() {
         let qualifier_path_address = qualifier.path_address();
-        let qualifier_ref_name = qualifier.name_ref().map(|it| it.ident_token().text().to_string());
+        let qualifier_ref_name = qualifier.reference_name();
 
         match (qualifier_path_address, qualifier_ref_name) {
             // 0x1::[bar]

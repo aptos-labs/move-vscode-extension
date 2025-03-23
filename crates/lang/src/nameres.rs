@@ -1,11 +1,12 @@
 use crate::db::HirDatabase;
 use crate::files::InFileExt;
-use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt};
+use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::node_ext::struct_field_name::StructFieldNameExt;
 use crate::InFile;
 use parser::SyntaxKind::{STRUCT_LIT_FIELD, STRUCT_PAT_FIELD};
 use syntax::ast;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
+use syntax::ast::ReferenceElement;
 
 pub mod address;
 mod blocks;

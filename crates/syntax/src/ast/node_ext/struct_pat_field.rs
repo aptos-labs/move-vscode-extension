@@ -9,15 +9,15 @@ impl ast::StructPatField {
             .expect("required by parser")
     }
 
-    pub fn field_name(&self) -> Option<String> {
-        if let Some(name_ref) = self.name_ref() {
-            return Some(name_ref.as_string());
-        }
-        if let Some(ident_pat) = self.ident_pat() {
-            return ident_pat.name().map(|it| it.as_string());
-        }
-        None
-    }
+    // pub fn field_name(&self) -> Option<String> {
+    //     if let Some(name_ref) = self.name_ref() {
+    //         return Some(name_ref.ident_string());
+    //     }
+    //     if let Some(ident_pat) = self.ident_pat() {
+    //         return ident_pat.name().map(|it| it.as_string());
+    //     }
+    //     None
+    // }
 }
 
 impl ast::StructLitField {

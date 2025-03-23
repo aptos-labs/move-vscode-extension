@@ -7,9 +7,9 @@ use crate::nameres::name_resolution::{
 use crate::nameres::namespaces::{Ns, NsSet, FUNCTIONS};
 use crate::nameres::path_kind::{path_kind, PathKind, QualifiedKind};
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt};
-use crate::node_ext::PathLangExt;
 use crate::types::inference::InferenceCtx;
 use crate::types::lowering::TyLowering;
+use crate::types::ty::adt::TyAdt;
 use crate::types::ty::ty_var::{TyInfer, TyVar};
 use crate::types::ty::Ty;
 use crate::{loc, InFile};

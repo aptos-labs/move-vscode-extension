@@ -79,6 +79,17 @@ impl AttrItem {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct BangExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl BangExpr {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn excl_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![!]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct BinExpr {
     pub(crate) syntax: SyntaxNode,
 }
@@ -97,6 +108,17 @@ impl BlockExpr {
     pub fn l_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['{']) }
     #[inline]
     pub fn r_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['}']) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct BorrowExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl BorrowExpr {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn amp_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![&]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -130,6 +152,30 @@ impl Const {
     pub fn eq_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![=]) }
     #[inline]
     pub fn const_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![const]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct DerefExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl DerefExpr {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn star_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![*]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct DotExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl DotExpr {
+    #[inline]
+    pub fn field_ref(&self) -> Option<FieldRef> { support::child(&self.syntax) }
+    #[inline]
+    pub fn receiver_expr(&self) -> Expr { support::child(&self.syntax).expect("required by the parser") }
+    #[inline]
+    pub fn dot_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![.]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -248,6 +294,17 @@ impl IndexExpr {
     pub fn l_brack_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['[']) }
     #[inline]
     pub fn r_brack_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![']']) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct IndexRef {
+    pub(crate) syntax: SyntaxNode,
+}
+impl IndexRef {
+    #[inline]
+    pub fn int_number_token(&self) -> Option<SyntaxToken> {
+        support::token(&self.syntax, T![int_number])
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -542,15 +599,6 @@ impl PathType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct PrefixExpr {
-    pub(crate) syntax: SyntaxNode,
-}
-impl PrefixExpr {
-    #[inline]
-    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RefType {
     pub(crate) syntax: SyntaxNode,
 }
@@ -561,6 +609,19 @@ impl RefType {
     pub fn amp_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![&]) }
     #[inline]
     pub fn mut_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![mut]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ResourceExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ResourceExpr {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn copy_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![copy]) }
+    #[inline]
+    pub fn move_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![move]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1048,20 +1109,31 @@ pub enum BindingTypeOwner {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Expr {
     AbortExpr(AbortExpr),
+    BangExpr(BangExpr),
     BinExpr(BinExpr),
+    BlockExpr(BlockExpr),
+    BorrowExpr(BorrowExpr),
     CallExpr(CallExpr),
+    DerefExpr(DerefExpr),
+    DotExpr(DotExpr),
     IndexExpr(IndexExpr),
     Literal(Literal),
     MethodCallExpr(MethodCallExpr),
     ParenExpr(ParenExpr),
     PathExpr(PathExpr),
-    PrefixExpr(PrefixExpr),
+    ResourceExpr(ResourceExpr),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum FieldList {
     NamedFieldList(NamedFieldList),
     TupleFieldList(TupleFieldList),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum FieldRef {
+    IndexRef(IndexRef),
+    NameRef(NameRef),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1294,6 +1366,27 @@ impl AstNode for AttrItem {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for BangExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        BANG_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == BANG_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for BinExpr {
     #[inline]
     fn kind() -> SyntaxKind
@@ -1336,6 +1429,27 @@ impl AstNode for BlockExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for BorrowExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        BORROW_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == BORROW_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for CallExpr {
     #[inline]
     fn kind() -> SyntaxKind
@@ -1367,6 +1481,48 @@ impl AstNode for Const {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == CONST }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for DerefExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        DEREF_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == DEREF_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for DotExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        DOT_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == DOT_EXPR }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -1535,6 +1691,27 @@ impl AstNode for IndexExpr {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == INDEX_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for IndexRef {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        INDEX_REF
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == INDEX_REF }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -1987,16 +2164,16 @@ impl AstNode for PathType {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
-impl AstNode for PrefixExpr {
+impl AstNode for RefType {
     #[inline]
     fn kind() -> SyntaxKind
     where
         Self: Sized,
     {
-        PREFIX_EXPR
+        REF_TYPE
     }
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { kind == PREFIX_EXPR }
+    fn can_cast(kind: SyntaxKind) -> bool { kind == REF_TYPE }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -2008,16 +2185,16 @@ impl AstNode for PrefixExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
-impl AstNode for RefType {
+impl AstNode for ResourceExpr {
     #[inline]
     fn kind() -> SyntaxKind
     where
         Self: Sized,
     {
-        REF_TYPE
+        RESOURCE_EXPR
     }
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { kind == REF_TYPE }
+    fn can_cast(kind: SyntaxKind) -> bool { kind == RESOURCE_EXPR }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -2885,13 +3062,33 @@ impl From<AbortExpr> for Expr {
     #[inline]
     fn from(node: AbortExpr) -> Expr { Expr::AbortExpr(node) }
 }
+impl From<BangExpr> for Expr {
+    #[inline]
+    fn from(node: BangExpr) -> Expr { Expr::BangExpr(node) }
+}
 impl From<BinExpr> for Expr {
     #[inline]
     fn from(node: BinExpr) -> Expr { Expr::BinExpr(node) }
 }
+impl From<BlockExpr> for Expr {
+    #[inline]
+    fn from(node: BlockExpr) -> Expr { Expr::BlockExpr(node) }
+}
+impl From<BorrowExpr> for Expr {
+    #[inline]
+    fn from(node: BorrowExpr) -> Expr { Expr::BorrowExpr(node) }
+}
 impl From<CallExpr> for Expr {
     #[inline]
     fn from(node: CallExpr) -> Expr { Expr::CallExpr(node) }
+}
+impl From<DerefExpr> for Expr {
+    #[inline]
+    fn from(node: DerefExpr) -> Expr { Expr::DerefExpr(node) }
+}
+impl From<DotExpr> for Expr {
+    #[inline]
+    fn from(node: DotExpr) -> Expr { Expr::DotExpr(node) }
 }
 impl From<IndexExpr> for Expr {
     #[inline]
@@ -2913,14 +3110,20 @@ impl From<PathExpr> for Expr {
     #[inline]
     fn from(node: PathExpr) -> Expr { Expr::PathExpr(node) }
 }
-impl From<PrefixExpr> for Expr {
+impl From<ResourceExpr> for Expr {
     #[inline]
-    fn from(node: PrefixExpr) -> Expr { Expr::PrefixExpr(node) }
+    fn from(node: ResourceExpr) -> Expr { Expr::ResourceExpr(node) }
 }
 impl Expr {
     pub fn abort_expr(self) -> Option<AbortExpr> {
         match (self) {
             Expr::AbortExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn bang_expr(self) -> Option<BangExpr> {
+        match (self) {
+            Expr::BangExpr(item) => Some(item),
             _ => None,
         }
     }
@@ -2930,9 +3133,33 @@ impl Expr {
             _ => None,
         }
     }
+    pub fn block_expr(self) -> Option<BlockExpr> {
+        match (self) {
+            Expr::BlockExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn borrow_expr(self) -> Option<BorrowExpr> {
+        match (self) {
+            Expr::BorrowExpr(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn call_expr(self) -> Option<CallExpr> {
         match (self) {
             Expr::CallExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn deref_expr(self) -> Option<DerefExpr> {
+        match (self) {
+            Expr::DerefExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn dot_expr(self) -> Option<DotExpr> {
+        match (self) {
+            Expr::DotExpr(item) => Some(item),
             _ => None,
         }
     }
@@ -2966,9 +3193,9 @@ impl Expr {
             _ => None,
         }
     }
-    pub fn prefix_expr(self) -> Option<PrefixExpr> {
+    pub fn resource_expr(self) -> Option<ResourceExpr> {
         match (self) {
-            Expr::PrefixExpr(item) => Some(item),
+            Expr::ResourceExpr(item) => Some(item),
             _ => None,
         }
     }
@@ -2979,28 +3206,38 @@ impl AstNode for Expr {
         matches!(
             kind,
             ABORT_EXPR
+                | BANG_EXPR
                 | BIN_EXPR
+                | BLOCK_EXPR
+                | BORROW_EXPR
                 | CALL_EXPR
+                | DEREF_EXPR
+                | DOT_EXPR
                 | INDEX_EXPR
                 | LITERAL
                 | METHOD_CALL_EXPR
                 | PAREN_EXPR
                 | PATH_EXPR
-                | PREFIX_EXPR
+                | RESOURCE_EXPR
         )
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
             ABORT_EXPR => Expr::AbortExpr(AbortExpr { syntax }),
+            BANG_EXPR => Expr::BangExpr(BangExpr { syntax }),
             BIN_EXPR => Expr::BinExpr(BinExpr { syntax }),
+            BLOCK_EXPR => Expr::BlockExpr(BlockExpr { syntax }),
+            BORROW_EXPR => Expr::BorrowExpr(BorrowExpr { syntax }),
             CALL_EXPR => Expr::CallExpr(CallExpr { syntax }),
+            DEREF_EXPR => Expr::DerefExpr(DerefExpr { syntax }),
+            DOT_EXPR => Expr::DotExpr(DotExpr { syntax }),
             INDEX_EXPR => Expr::IndexExpr(IndexExpr { syntax }),
             LITERAL => Expr::Literal(Literal { syntax }),
             METHOD_CALL_EXPR => Expr::MethodCallExpr(MethodCallExpr { syntax }),
             PAREN_EXPR => Expr::ParenExpr(ParenExpr { syntax }),
             PATH_EXPR => Expr::PathExpr(PathExpr { syntax }),
-            PREFIX_EXPR => Expr::PrefixExpr(PrefixExpr { syntax }),
+            RESOURCE_EXPR => Expr::ResourceExpr(ResourceExpr { syntax }),
             _ => return None,
         };
         Some(res)
@@ -3009,14 +3246,19 @@ impl AstNode for Expr {
     fn syntax(&self) -> &SyntaxNode {
         match self {
             Expr::AbortExpr(it) => &it.syntax,
+            Expr::BangExpr(it) => &it.syntax,
             Expr::BinExpr(it) => &it.syntax,
+            Expr::BlockExpr(it) => &it.syntax,
+            Expr::BorrowExpr(it) => &it.syntax,
             Expr::CallExpr(it) => &it.syntax,
+            Expr::DerefExpr(it) => &it.syntax,
+            Expr::DotExpr(it) => &it.syntax,
             Expr::IndexExpr(it) => &it.syntax,
             Expr::Literal(it) => &it.syntax,
             Expr::MethodCallExpr(it) => &it.syntax,
             Expr::ParenExpr(it) => &it.syntax,
             Expr::PathExpr(it) => &it.syntax,
-            Expr::PrefixExpr(it) => &it.syntax,
+            Expr::ResourceExpr(it) => &it.syntax,
         }
     }
 }
@@ -3059,6 +3301,48 @@ impl AstNode for FieldList {
         match self {
             FieldList::NamedFieldList(it) => &it.syntax,
             FieldList::TupleFieldList(it) => &it.syntax,
+        }
+    }
+}
+impl From<IndexRef> for FieldRef {
+    #[inline]
+    fn from(node: IndexRef) -> FieldRef { FieldRef::IndexRef(node) }
+}
+impl From<NameRef> for FieldRef {
+    #[inline]
+    fn from(node: NameRef) -> FieldRef { FieldRef::NameRef(node) }
+}
+impl FieldRef {
+    pub fn index_ref(self) -> Option<IndexRef> {
+        match (self) {
+            FieldRef::IndexRef(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn name_ref(self) -> Option<NameRef> {
+        match (self) {
+            FieldRef::NameRef(item) => Some(item),
+            _ => None,
+        }
+    }
+}
+impl AstNode for FieldRef {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, INDEX_REF | NAME_REF) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            INDEX_REF => FieldRef::IndexRef(IndexRef { syntax }),
+            NAME_REF => FieldRef::NameRef(NameRef { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            FieldRef::IndexRef(it) => &it.syntax,
+            FieldRef::NameRef(it) => &it.syntax,
         }
     }
 }
@@ -4060,6 +4344,11 @@ impl std::fmt::Display for FieldList {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for FieldRef {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for InferenceCtxOwner {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -4120,6 +4409,11 @@ impl std::fmt::Display for AttrItem {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for BangExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for BinExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -4130,12 +4424,27 @@ impl std::fmt::Display for BlockExpr {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for BorrowExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for CallExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
 impl std::fmt::Display for Const {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for DerefExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for DotExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -4176,6 +4485,11 @@ impl std::fmt::Display for IdentPat {
     }
 }
 impl std::fmt::Display for IndexExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for IndexRef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -4285,12 +4599,12 @@ impl std::fmt::Display for PathType {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
-impl std::fmt::Display for PrefixExpr {
+impl std::fmt::Display for RefType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
-impl std::fmt::Display for RefType {
+impl std::fmt::Display for ResourceExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

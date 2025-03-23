@@ -11,5 +11,6 @@ module 0x1::dot_expressions {
     }
     spec dot {
         bin.field[1];
+        self.x + y
     }
 }
