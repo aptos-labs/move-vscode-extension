@@ -263,6 +263,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
 pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     ("ExprStmt", &["expr"]),
     ("CallExpr", &["path"]),
+    ("PathExpr", &["path"]),
     ("MethodCallExpr", &["receiver_expr"]),
     ("TypeArg", &["type"]),
     ("StructPat", &["path"]),
@@ -282,7 +283,7 @@ pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
 pub(crate) const TRAITS: &[(&str, &[&str])] = &[
     ("HasAttrs", &["attrs"]),
     ("NamedElement", &["name"]),
-    ("HasFields", &["named_field_list", "tuple_field_list"]),
+    ("FieldsOwner", &["named_field_list", "tuple_field_list"]),
     ("GenericItem", &["type_param_list"]),
     // ("HasGenericArgs", &["generic_arg_list"]),
     // ("HasTypeBounds", &["type_bound_list", "colon_token"]),

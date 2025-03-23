@@ -133,10 +133,6 @@ pub(crate) fn atom_expr(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> 
                 arg_list(p);
                 m.complete(p, CALL_EXPR)
             }
-            // T![!] if !p.at(T![!=]) => {
-            //     let block_like = items::macro_call_after_excl(p);
-            //     complete(p, MACRO_CALL)
-            // }
             _ => { m.complete(p, PATH_EXPR) },
         };
         return Some((cm, BlockLike::NotBlock));

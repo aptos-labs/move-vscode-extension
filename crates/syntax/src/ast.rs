@@ -7,10 +7,10 @@ pub mod edit;
 pub mod item_scope;
 pub mod make;
 pub mod node_ext;
+pub mod operators;
 pub mod syntax_factory;
 pub mod token_ext;
 pub mod visibility;
-// pub mod edit_in_place;
 
 use std::marker::PhantomData;
 
@@ -20,18 +20,19 @@ use crate::{
 };
 
 pub use self::{
-    // expr_ext::{ArrayExprKind, BlockModifier, CallableExpr, ElseBranch, LiteralKind},
     generated::{nodes::*, tokens::*},
     item_scope::NamedItemScope,
+    // expr_ext::{ArrayExprKind, BlockModifier, CallableExpr, ElseBranch, LiteralKind},
+    node_ext::literal::LiteralKind,
     node_ext::{
         NameLike,
         //     AttrKind, FieldKind, Macro, NameOrNameRef, PathSegmentKind, SelfParamKind,
         //     SlicePatComponents, StructKind, TypeBoundKind, VisibilityKind,
     },
-    // operators::{ArithOp, BinaryOp, CmpOp, LogicOp, Ordering, RangeOp, UnaryOp},
+    operators::{ArithOp, BinaryOp, CmpOp, LogicOp, Ordering, RangeOp, UnaryOp},
     token_ext::{CommentKind, CommentPlacement, CommentShape, IsString, QuoteOffsets},
     traits::{
-        GenericItem, HasAttrs, HasFields, HasItems, HasStmts, HasUseStmts, MslOnly, NamedElement,
+        FieldsOwner, GenericItem, HasAttrs, HasItems, HasStmts, HasUseStmts, MslOnly, NamedElement,
         ReferenceElement,
     },
     visibility::HasVisibility,

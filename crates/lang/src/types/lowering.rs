@@ -5,11 +5,12 @@ use crate::files::{InFileExt, InFileInto};
 use crate::node_ext::PathLangExt;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::adt::TyAdt;
+use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::reference::{Mutability, TyReference};
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::type_param::TyTypeParameter;
-use crate::types::ty::{IntegerKind, Ty};
+use crate::types::ty::Ty;
 use crate::InFile;
 use parser::SyntaxKind::{ENUM, STRUCT, TYPE_PARAM};
 use syntax::{ast, AstNode, SyntaxNode};
@@ -29,7 +30,8 @@ impl<'a> TyLowering<'a> {
         match type_ {
             ast::Type::PathType(path_type) => {
                 let path = path_type.path();
-                let named_item = self.db.resolve_path(path.clone().in_file(self.file_id));
+                path.reference().in_file(self.file_id).resolve(self.db);
+                let named_item = path.clone().in_file(self.file_id).resolve_no_inf(self.db);
                 match named_item {
                     None => {
                         // can be primitive type
@@ -40,7 +42,7 @@ impl<'a> TyLowering<'a> {
                             .node_loc
                             .cast_into::<ast::AnyNamedElement>(self.db.upcast())
                             .unwrap();
-                        self.lower_path(path, named_item.map(|it| it.syntax().to_owned()))
+                        self.lower_path(path.into(), named_item.map(|it| it.syntax().to_owned()))
                     }
                 }
             }
@@ -64,29 +66,38 @@ impl<'a> TyLowering<'a> {
         }
     }
 
-    pub fn lower_path(&self, path: ast::Path, named_item: InFile<SyntaxNode>) -> Ty {
+    pub fn lower_path(&self, method_or_path: ast::MethodOrPath, named_item: InFile<SyntaxNode>) -> Ty {
         use syntax::SyntaxKind::*;
 
-        let path_ty = match named_item.kind() {
+        let path_ty = match named_item.syntax_kind() {
             TYPE_PARAM => {
-                let type_param = named_item.clone().cast::<ast::TypeParam>().unwrap();
+                let type_param = named_item.clone().syntax_cast::<ast::TypeParam>().unwrap();
                 Ty::TypeParam(TyTypeParameter::new(type_param))
             }
             STRUCT | ENUM => {
-                let item = named_item.clone().cast::<ast::StructOrEnum>().unwrap();
+                let item = named_item.clone().syntax_cast::<ast::StructOrEnum>().unwrap();
                 Ty::Adt(TyAdt::new(item))
             }
             FUN => {
-                let fun = named_item.clone().cast::<ast::Fun>().unwrap();
+                let fun = named_item.clone().syntax_cast::<ast::Fun>().unwrap();
                 let ty_callable = self.lower_function(fun.value);
                 Ty::Callable(ty_callable)
             }
             VARIANT => {
-                let variant = named_item.clone().cast::<ast::Variant>().unwrap();
+                let variant = named_item.clone().syntax_cast::<ast::Variant>().unwrap();
                 let enum_ = variant.map(|it| it.enum_());
-                #[rustfmt::skip]
-                let Some(enum_path) = path.qualifier() else { return Ty::Unknown; };
-                self.lower_path(enum_path, enum_.map(|it| it.syntax().to_owned()))
+                let Some(enum_path) = method_or_path
+                    .clone()
+                    .path()
+                    .expect("MethodCallExpr cannot be resolved to Variant")
+                    .qualifier()
+                else {
+                    return Ty::Unknown;
+                };
+                self.lower_path(
+                    ast::MethodOrPath::Path(enum_path),
+                    enum_.map(|it| it.syntax().to_owned()),
+                )
             }
             _ => Ty::Unknown,
         };
@@ -94,8 +105,8 @@ impl<'a> TyLowering<'a> {
         // adds associations of ?Element -> (type of ?Element from explicitly set types)
         // Option<u8>: ?Element -> u8
         // Option: ?Element -> ?Element
-        if let Some(generic_item) = named_item.cast::<ast::AnyGenericItem>() {
-            let type_args_subst = self.type_args_substitution(path, generic_item);
+        if let Some(generic_item) = named_item.syntax_cast::<ast::AnyGenericItem>() {
+            let type_args_subst = self.type_args_substitution(method_or_path, generic_item);
             return path_ty.substitute(type_args_subst);
         }
 

@@ -9,7 +9,6 @@ mod syntax_error;
 mod syntax_node;
 mod ted;
 mod token_text;
-pub mod utils;
 mod validation;
 
 pub use crate::{
@@ -17,8 +16,8 @@ pub use crate::{
     ptr::{AstPtr, SyntaxNodePtr},
     syntax_error::SyntaxError,
     syntax_node::{
-        PreorderWithTokens, SyntaxElement, SyntaxElementChildren, SyntaxNode, SyntaxNodeChildren,
-        SyntaxToken, SyntaxTreeBuilder,
+        IntoNodeOrToken, PreorderWithTokens, SyntaxElement, SyntaxElementChildren, SyntaxNode,
+        SyntaxNodeChildren, SyntaxNodeOrToken, SyntaxToken, SyntaxTreeBuilder,
     },
     token_text::TokenText,
 };

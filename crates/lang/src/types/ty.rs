@@ -1,4 +1,5 @@
 pub(crate) mod adt;
+pub(crate) mod integer;
 pub(crate) mod reference;
 pub(crate) mod tuple;
 pub(crate) mod ty_callable;
@@ -10,6 +11,7 @@ use crate::loc::SyntaxLoc;
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::render::TypeRenderer;
 use crate::types::ty::adt::TyAdt;
+use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::reference::TyReference;
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::TyCallable;
@@ -19,7 +21,7 @@ use crate::InFile;
 use base_db::SourceRootDatabase;
 use std::fmt;
 use std::fmt::Formatter;
-use syntax::ast;
+use syntax::{ast, AstToken};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Ty {
@@ -70,9 +72,16 @@ impl Ty {
         }
     }
 
-    pub fn ty_callable(self) -> Option<TyCallable> {
+    pub fn into_ty_callable(self) -> Option<TyCallable> {
         match self {
             Ty::Callable(ty_callable) => Some(ty_callable),
+            _ => None,
+        }
+    }
+
+    pub fn into_ty_adt(self) -> Option<TyAdt> {
+        match self {
+            Ty::Adt(ty_adt) => Some(ty_adt),
             _ => None,
         }
     }
@@ -112,45 +121,5 @@ impl TypeFoldable<Ty> for Ty {
             Ty::Callable(ty_callable) => ty_callable.deep_visit_with(visitor),
             _ => false,
         }
-    }
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum IntegerKind {
-    Integer,
-    U8,
-    U16,
-    U32,
-    U64,
-    U128,
-    U256,
-}
-
-impl IntegerKind {
-    pub fn from_literal(lit: &str) -> Self {
-        let lit = lit.to_lowercase();
-        match lit {
-            _ if lit.ends_with("u8") => IntegerKind::U8,
-            _ if lit.ends_with("u16") => IntegerKind::U16,
-            _ if lit.ends_with("u32") => IntegerKind::U32,
-            _ if lit.ends_with("u64") => IntegerKind::U64,
-            _ if lit.ends_with("u128") => IntegerKind::U128,
-            _ if lit.ends_with("u256") => IntegerKind::U256,
-            _ => IntegerKind::Integer,
-        }
-    }
-
-    pub fn is_default(&self) -> bool {
-        *self == IntegerKind::Integer
-    }
-}
-
-impl fmt::Display for IntegerKind {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        let s = match self {
-            IntegerKind::Integer => "integer",
-            _ => &format!("{:?}", self),
-        };
-        f.write_str(&s.to_lowercase())
     }
 }

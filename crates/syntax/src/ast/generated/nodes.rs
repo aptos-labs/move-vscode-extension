@@ -8,6 +8,17 @@ use crate::{
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AbortExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl AbortExpr {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn abort_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![abort]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AddressDef {
     pub(crate) syntax: SyntaxNode,
 }
@@ -71,7 +82,6 @@ impl AttrItem {
 pub struct BinExpr {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::HasAttrs for BinExpr {}
 impl BinExpr {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -228,6 +238,17 @@ pub struct IdentPat {
 }
 impl ast::NamedElement for IdentPat {}
 impl IdentPat {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct IndexExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl IndexExpr {
+    #[inline]
+    pub fn l_brack_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['[']) }
+    #[inline]
+    pub fn r_brack_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![']']) }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct InlineExpr {
@@ -495,7 +516,7 @@ pub struct PathExpr {
 }
 impl PathExpr {
     #[inline]
-    pub fn path(&self) -> Option<Path> { support::child(&self.syntax) }
+    pub fn path(&self) -> Path { support::child(&self.syntax).expect("required by the parser") }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -681,9 +702,9 @@ impl SpecInlineFun {
 pub struct Struct {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::FieldsOwner for Struct {}
 impl ast::GenericItem for Struct {}
 impl ast::HasAttrs for Struct {}
-impl ast::HasFields for Struct {}
 impl ast::HasVisibility for Struct {}
 impl ast::NamedElement for Struct {}
 impl Struct {
@@ -958,8 +979,8 @@ impl ValueAddress {
 pub struct Variant {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::FieldsOwner for Variant {}
 impl ast::HasAttrs for Variant {}
-impl ast::HasFields for Variant {}
 impl ast::NamedElement for Variant {}
 impl Variant {}
 
@@ -1026,8 +1047,10 @@ pub enum BindingTypeOwner {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Expr {
+    AbortExpr(AbortExpr),
     BinExpr(BinExpr),
     CallExpr(CallExpr),
+    IndexExpr(IndexExpr),
     Literal(Literal),
     MethodCallExpr(MethodCallExpr),
     ParenExpr(ParenExpr),
@@ -1108,6 +1131,12 @@ pub enum Type {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AnyFieldsOwner {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::FieldsOwner for AnyFieldsOwner {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyGenericItem {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1118,12 +1147,6 @@ pub struct AnyHasAttrs {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HasAttrs for AnyHasAttrs {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct AnyHasFields {
-    pub(crate) syntax: SyntaxNode,
-}
-impl ast::HasFields for AnyHasFields {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyHasItems {
@@ -1166,6 +1189,27 @@ pub struct AnyReferenceElement {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::ReferenceElement for AnyReferenceElement {}
+impl AstNode for AbortExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ABORT_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == ABORT_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for AddressDef {
     #[inline]
     fn kind() -> SyntaxKind
@@ -1470,6 +1514,27 @@ impl AstNode for IdentPat {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == IDENT_PAT }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for IndexExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        INDEX_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == INDEX_EXPR }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -2816,6 +2881,10 @@ impl AstNode for BindingTypeOwner {
         }
     }
 }
+impl From<AbortExpr> for Expr {
+    #[inline]
+    fn from(node: AbortExpr) -> Expr { Expr::AbortExpr(node) }
+}
 impl From<BinExpr> for Expr {
     #[inline]
     fn from(node: BinExpr) -> Expr { Expr::BinExpr(node) }
@@ -2823,6 +2892,10 @@ impl From<BinExpr> for Expr {
 impl From<CallExpr> for Expr {
     #[inline]
     fn from(node: CallExpr) -> Expr { Expr::CallExpr(node) }
+}
+impl From<IndexExpr> for Expr {
+    #[inline]
+    fn from(node: IndexExpr) -> Expr { Expr::IndexExpr(node) }
 }
 impl From<Literal> for Expr {
     #[inline]
@@ -2845,6 +2918,12 @@ impl From<PrefixExpr> for Expr {
     fn from(node: PrefixExpr) -> Expr { Expr::PrefixExpr(node) }
 }
 impl Expr {
+    pub fn abort_expr(self) -> Option<AbortExpr> {
+        match (self) {
+            Expr::AbortExpr(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn bin_expr(self) -> Option<BinExpr> {
         match (self) {
             Expr::BinExpr(item) => Some(item),
@@ -2854,6 +2933,12 @@ impl Expr {
     pub fn call_expr(self) -> Option<CallExpr> {
         match (self) {
             Expr::CallExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn index_expr(self) -> Option<IndexExpr> {
+        match (self) {
+            Expr::IndexExpr(item) => Some(item),
             _ => None,
         }
     }
@@ -2893,14 +2978,24 @@ impl AstNode for Expr {
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            BIN_EXPR | CALL_EXPR | LITERAL | METHOD_CALL_EXPR | PAREN_EXPR | PATH_EXPR | PREFIX_EXPR
+            ABORT_EXPR
+                | BIN_EXPR
+                | CALL_EXPR
+                | INDEX_EXPR
+                | LITERAL
+                | METHOD_CALL_EXPR
+                | PAREN_EXPR
+                | PATH_EXPR
+                | PREFIX_EXPR
         )
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
+            ABORT_EXPR => Expr::AbortExpr(AbortExpr { syntax }),
             BIN_EXPR => Expr::BinExpr(BinExpr { syntax }),
             CALL_EXPR => Expr::CallExpr(CallExpr { syntax }),
+            INDEX_EXPR => Expr::IndexExpr(IndexExpr { syntax }),
             LITERAL => Expr::Literal(Literal { syntax }),
             METHOD_CALL_EXPR => Expr::MethodCallExpr(MethodCallExpr { syntax }),
             PAREN_EXPR => Expr::ParenExpr(ParenExpr { syntax }),
@@ -2913,8 +3008,10 @@ impl AstNode for Expr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
+            Expr::AbortExpr(it) => &it.syntax,
             Expr::BinExpr(it) => &it.syntax,
             Expr::CallExpr(it) => &it.syntax,
+            Expr::IndexExpr(it) => &it.syntax,
             Expr::Literal(it) => &it.syntax,
             Expr::MethodCallExpr(it) => &it.syntax,
             Expr::ParenExpr(it) => &it.syntax,
@@ -3453,6 +3550,34 @@ impl AstNode for Type {
         }
     }
 }
+impl AnyFieldsOwner {
+    #[inline]
+    pub fn new<T: ast::FieldsOwner>(node: T) -> AnyFieldsOwner {
+        AnyFieldsOwner {
+            syntax: node.syntax().clone(),
+        }
+    }
+    #[inline]
+    pub fn cast_into<T: ast::FieldsOwner>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
+}
+impl AstNode for AnyFieldsOwner {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, STRUCT | VARIANT) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        Self::can_cast(syntax.kind()).then_some(AnyFieldsOwner { syntax })
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl From<Struct> for AnyFieldsOwner {
+    #[inline]
+    fn from(node: Struct) -> AnyFieldsOwner { AnyFieldsOwner { syntax: node.syntax } }
+}
+impl From<Variant> for AnyFieldsOwner {
+    #[inline]
+    fn from(node: Variant) -> AnyFieldsOwner { AnyFieldsOwner { syntax: node.syntax } }
+}
 impl AnyGenericItem {
     #[inline]
     pub fn new<T: ast::GenericItem>(node: T) -> AnyGenericItem {
@@ -3460,6 +3585,8 @@ impl AnyGenericItem {
             syntax: node.syntax().clone(),
         }
     }
+    #[inline]
+    pub fn cast_into<T: ast::GenericItem>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
 }
 impl AstNode for AnyGenericItem {
     #[inline]
@@ -3504,14 +3631,15 @@ impl AnyHasAttrs {
             syntax: node.syntax().clone(),
         }
     }
+    #[inline]
+    pub fn cast_into<T: ast::HasAttrs>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
 }
 impl AstNode for AnyHasAttrs {
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            BIN_EXPR
-                | CONST
+            CONST
                 | ENUM
                 | FUN
                 | ITEM_SPEC
@@ -3533,10 +3661,6 @@ impl AstNode for AnyHasAttrs {
     }
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
-}
-impl From<BinExpr> for AnyHasAttrs {
-    #[inline]
-    fn from(node: BinExpr) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
 impl From<Const> for AnyHasAttrs {
     #[inline]
@@ -3594,32 +3718,6 @@ impl From<Variant> for AnyHasAttrs {
     #[inline]
     fn from(node: Variant) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
-impl AnyHasFields {
-    #[inline]
-    pub fn new<T: ast::HasFields>(node: T) -> AnyHasFields {
-        AnyHasFields {
-            syntax: node.syntax().clone(),
-        }
-    }
-}
-impl AstNode for AnyHasFields {
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, STRUCT | VARIANT) }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        Self::can_cast(syntax.kind()).then_some(AnyHasFields { syntax })
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode { &self.syntax }
-}
-impl From<Struct> for AnyHasFields {
-    #[inline]
-    fn from(node: Struct) -> AnyHasFields { AnyHasFields { syntax: node.syntax } }
-}
-impl From<Variant> for AnyHasFields {
-    #[inline]
-    fn from(node: Variant) -> AnyHasFields { AnyHasFields { syntax: node.syntax } }
-}
 impl AnyHasItems {
     #[inline]
     pub fn new<T: ast::HasItems>(node: T) -> AnyHasItems {
@@ -3627,6 +3725,8 @@ impl AnyHasItems {
             syntax: node.syntax().clone(),
         }
     }
+    #[inline]
+    pub fn cast_into<T: ast::HasItems>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
 }
 impl AstNode for AnyHasItems {
     #[inline]
@@ -3657,6 +3757,8 @@ impl AnyHasStmts {
             syntax: node.syntax().clone(),
         }
     }
+    #[inline]
+    pub fn cast_into<T: ast::HasStmts>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
 }
 impl AstNode for AnyHasStmts {
     #[inline]
@@ -3679,6 +3781,8 @@ impl AnyHasUseStmts {
             syntax: node.syntax().clone(),
         }
     }
+    #[inline]
+    pub fn cast_into<T: ast::HasUseStmts>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
 }
 impl AstNode for AnyHasUseStmts {
     #[inline]
@@ -3713,6 +3817,8 @@ impl AnyHasVisibility {
             syntax: node.syntax().clone(),
         }
     }
+    #[inline]
+    pub fn cast_into<T: ast::HasVisibility>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
 }
 impl AstNode for AnyHasVisibility {
     #[inline]
@@ -3757,6 +3863,8 @@ impl AnyMslOnly {
             syntax: node.syntax().clone(),
         }
     }
+    #[inline]
+    pub fn cast_into<T: ast::MslOnly>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
 }
 impl AstNode for AnyMslOnly {
     #[inline]
@@ -3804,6 +3912,8 @@ impl AnyNamedElement {
             syntax: node.syntax().clone(),
         }
     }
+    #[inline]
+    pub fn cast_into<T: ast::NamedElement>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
 }
 impl AstNode for AnyNamedElement {
     #[inline]
@@ -3891,6 +4001,8 @@ impl AnyReferenceElement {
             syntax: node.syntax().clone(),
         }
     }
+    #[inline]
+    pub fn cast_into<T: ast::ReferenceElement>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
 }
 impl AstNode for AnyReferenceElement {
     #[inline]
@@ -3983,6 +4095,11 @@ impl std::fmt::Display for Type {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for AbortExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for AddressDef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -4054,6 +4171,11 @@ impl std::fmt::Display for Fun {
     }
 }
 impl std::fmt::Display for IdentPat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for IndexExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

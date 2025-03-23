@@ -135,7 +135,7 @@ pub fn is_visible_in_context(
                     for friend_decl in friend_decls {
                         let Some(friend_module) = friend_decl
                             .path()
-                            .and_then(|path| db.resolve_path(path.in_file(item_file_id)))
+                            .and_then(|path| path.in_file(item_file_id).resolve_no_inf(db))
                             .and_then(|friend_entry| {
                                 friend_entry.node_loc.cast_into::<ast::Module>(db.upcast())
                             })

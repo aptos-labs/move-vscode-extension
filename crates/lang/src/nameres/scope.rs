@@ -1,11 +1,12 @@
 use crate::db::HirDatabase;
 use crate::files::InFileVecExt;
-use crate::loc::{SyntaxLoc, SyntaxLocExt};
+use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::nameres::is_visible::is_visible_in_context;
 use crate::nameres::namespaces::{named_item_ns, Ns, NsSet};
 use crate::InFile;
 use std::fmt;
 use std::fmt::Formatter;
+use stdx::itertools::Itertools;
 use syntax::ast;
 use syntax::ast::{NamedItemScope, ReferenceElement};
 use vfs::FileId;
@@ -23,6 +24,10 @@ impl ScopeEntry {
         let mut entry = self.clone();
         entry.ns = ns;
         entry
+    }
+
+    pub fn cast_into<T: ast::AstNode>(self, db: &dyn HirDatabase) -> Option<InFile<T>> {
+        self.node_loc.cast_into(db.upcast())
     }
 }
 
@@ -81,8 +86,9 @@ pub trait ScopeEntryListExt {
     fn filter_by_visibility(
         self,
         db: &dyn HirDatabase,
-        context: InFile<impl ReferenceElement>,
+        context: &InFile<impl ReferenceElement>,
     ) -> Vec<ScopeEntry>;
+    fn single_or_none(self) -> Option<ScopeEntry>;
 }
 
 impl ScopeEntryListExt for Vec<ScopeEntry> {
@@ -99,10 +105,14 @@ impl ScopeEntryListExt for Vec<ScopeEntry> {
     fn filter_by_visibility(
         self,
         db: &dyn HirDatabase,
-        context: InFile<impl ReferenceElement>,
+        context: &InFile<impl ReferenceElement>,
     ) -> Vec<ScopeEntry> {
         self.into_iter()
-            .filter(move |entry| is_visible_in_context(db, entry, &context))
+            .filter(|entry| is_visible_in_context(db, entry, context))
             .collect()
+    }
+
+    fn single_or_none(self) -> Option<ScopeEntry> {
+        self.into_iter().exactly_one().ok()
     }
 }

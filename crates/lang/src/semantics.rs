@@ -57,7 +57,7 @@ impl<'db> SemanticsImpl<'db> {
 
     pub fn resolve_reference(&self, reference: ast::AnyReferenceElement) -> Option<ScopeEntry> {
         let reference = self.wrap_node_infile(reference);
-        self.db.resolve(reference)
+        reference.resolve(self.db)
     }
 
     // todo: rename to root_file_id()

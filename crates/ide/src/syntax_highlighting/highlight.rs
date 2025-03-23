@@ -3,9 +3,7 @@ pub(crate) mod name_like;
 use crate::syntax_highlighting::tags::{Highlight, HlTag};
 use ide_db::RootDatabase;
 use lang::Semantics;
-use syntax::{
-    ast, AstNode, AstToken, NodeOrToken, SyntaxKind, SyntaxKind::*, SyntaxNode, SyntaxToken, T,
-};
+use syntax::{ast, AstNode, AstToken, SyntaxKind, SyntaxKind::*, SyntaxNodeOrToken, SyntaxToken, T};
 
 pub(super) fn token(sema: &Semantics<'_, RootDatabase>, token: SyntaxToken) -> Option<Highlight> {
     if let Some(_comment) = ast::Comment::cast(token.clone()) {
@@ -84,7 +82,7 @@ fn keyword(
 }
 
 /// Returns true if the parent nodes of `node` all match the `SyntaxKind`s in `kinds` exactly.
-fn parents_match(mut node: NodeOrToken<SyntaxNode, SyntaxToken>, mut kinds: &[SyntaxKind]) -> bool {
+fn parents_match(mut node: SyntaxNodeOrToken, mut kinds: &[SyntaxKind]) -> bool {
     while let (Some(parent), [kind, rest @ ..]) = (node.parent(), kinds) {
         if parent.kind() != *kind {
             return false;

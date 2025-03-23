@@ -1,4 +1,4 @@
-use crate::loc::{SyntaxLoc, SyntaxLocExt};
+use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::InFile;
 use syntax::ast;
 

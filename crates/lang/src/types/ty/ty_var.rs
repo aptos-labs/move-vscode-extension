@@ -1,4 +1,4 @@
-use crate::loc::{SyntaxLoc, SyntaxLocExt};
+use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use std::fmt;
 use std::fmt::Formatter;
 

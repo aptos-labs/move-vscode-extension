@@ -3,7 +3,7 @@ use crate::files::{InFileInto, InFileVecExt};
 use crate::nameres::address::{Address, NamedAddr};
 use crate::nameres::namespaces::{Ns, NsSet};
 use crate::nameres::node_ext::ModuleResolutionExt;
-use crate::nameres::paths::ResolutionContext;
+use crate::nameres::path_resolution::ResolutionContext;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use crate::nameres::scope_entries_owner::get_entries_in_scope;
 use crate::node_ext::{ModuleLangExt, PathLangExt};
@@ -13,7 +13,7 @@ use parser::SyntaxKind::MODULE_SPEC;
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Formatter;
-use syntax::ast::{HasFields, HasItems, ReferenceElement};
+use syntax::ast::{FieldsOwner, HasItems, ReferenceElement};
 use syntax::{ast, AstNode, SyntaxNode};
 
 pub struct ResolveScope {
@@ -30,7 +30,10 @@ impl fmt::Debug for ResolveScope {
     }
 }
 
-pub fn get_resolve_scopes(_db: &dyn HirDatabase, start_at: InFile<impl ReferenceElement>) -> Vec<ResolveScope> {
+pub fn get_resolve_scopes(
+    _db: &dyn HirDatabase,
+    start_at: InFile<impl ReferenceElement>,
+) -> Vec<ResolveScope> {
     let mut scopes = vec![];
 
     let file_id = start_at.file_id;
@@ -145,7 +148,7 @@ pub fn get_qualified_path_entries(
     qualifier: ast::Path,
 ) -> Vec<ScopeEntry> {
     let qualifier = ctx.wrap_in_file(qualifier);
-    let qualifier_item = db.resolve_path(qualifier.clone());
+    let qualifier_item = qualifier.clone().resolve_no_inf(db);
     if qualifier_item.is_none() {
         // qualifier can be an address
         if let Some(qualifier_name) = qualifier.value.reference_name() {
@@ -182,39 +185,8 @@ pub fn get_qualified_path_entries(
     entries
 }
 
-pub fn get_struct_pat_field_resolve_variants(
-    db: &dyn HirDatabase,
-    struct_pat_field: InFile<ast::StructPatField>,
-) -> Vec<ScopeEntry> {
-    let struct_pat_path = struct_pat_field.map(|field| field.struct_pat().path());
-    db.resolve_path(struct_pat_path)
-        .and_then(|struct_entry| {
-            let fields_owner = struct_entry
-                .node_loc
-                .cast_into::<ast::AnyHasFields>(db.upcast())?;
-            Some(get_named_field_entries(fields_owner))
-        })
-        .unwrap_or_default()
-}
-
-pub fn get_struct_lit_field_resolve_variants(
-    db: &dyn HirDatabase,
-    struct_lit_field: InFile<ast::StructLitField>,
-) -> Vec<ScopeEntry> {
-    let struct_lit_path = struct_lit_field.map(|field| field.struct_lit().path());
-    db.resolve_path(struct_lit_path)
-        .and_then(|struct_entry| {
-            let fields_owner = struct_entry
-                .node_loc
-                .cast_into::<ast::AnyHasFields>(db.upcast())?;
-            Some(get_named_field_entries(fields_owner))
-        })
-        .unwrap_or_default()
-}
-
-pub fn get_named_field_entries(fields_owner: InFile<ast::AnyHasFields>) -> Vec<ScopeEntry> {
-    fields_owner
-        .value
-        .named_fields()
-        .to_in_file_entries(fields_owner.file_id)
+impl InFile<ast::AnyFieldsOwner> {
+    pub fn get_named_field_entries(&self) -> Vec<ScopeEntry> {
+        self.value.named_fields().to_in_file_entries(self.file_id)
+    }
 }

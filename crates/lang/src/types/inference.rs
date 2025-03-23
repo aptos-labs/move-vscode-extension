@@ -2,7 +2,10 @@ pub(crate) mod ast_walker;
 pub(crate) mod inference_result;
 
 use crate::db::HirDatabase;
-use crate::loc::SyntaxLocExt;
+use crate::files::{InFileExt, InFileInto};
+use crate::loc::SyntaxLocFileExt;
+use crate::nameres::path_resolution;
+use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt};
 use crate::types::fold::{Fallback, FullTyVarResolver, TyVarResolver, TyVarVisitor, TypeFoldable};
 use crate::types::has_type_params_ext::GenericItemExt;
 use crate::types::lowering::TyLowering;
@@ -19,7 +22,7 @@ use parser::SyntaxKind;
 use std::collections::HashMap;
 use std::iter::zip;
 use std::ops::Deref;
-use syntax::{ast, AstNode, SyntaxNode};
+use syntax::{ast, AstNode, SyntaxNodeOrToken};
 use vfs::FileId;
 
 pub struct InferenceCtx<'db> {
@@ -30,8 +33,11 @@ pub struct InferenceCtx<'db> {
     pub var_table: UnificationTable<TyVar>,
     pub int_table: UnificationTable<TyIntVar>,
 
-    pub expr_types: HashMap<ast::Expr, Ty>,
     pub pat_types: HashMap<ast::Pat, Ty>,
+    pub expr_types: HashMap<ast::Expr, Ty>,
+
+    pub resolved_paths: HashMap<ast::Path, Vec<ScopeEntry>>,
+    pub resolved_method_calls: HashMap<ast::MethodCallExpr, Option<ScopeEntry>>,
 }
 
 impl<'a> InferenceCtx<'a> {
@@ -44,42 +50,69 @@ impl<'a> InferenceCtx<'a> {
             int_table: UnificationTable::new(),
             expr_types: HashMap::new(),
             pat_types: HashMap::new(),
+            resolved_paths: HashMap::new(),
+            resolved_method_calls: HashMap::new(),
         }
     }
 
-    pub fn resolve_path(&self, path: ast::Path) -> Option<InFile<ast::AnyNamedElement>> {
-        // todo: cache and pass to InferenceResult
-        let named_item = self
-            .db
-            .resolve_named_item(InFile::new(self.file_id, path.as_reference()));
-        named_item
+    pub fn resolve_path_cached(
+        &mut self,
+        path: ast::Path,
+        _expected_ty: Option<Ty>,
+    ) -> Option<InFile<ast::AnyNamedElement>> {
+        let entries = path_resolution::resolve_path(self.db, path.clone().in_file(self.file_id));
+        self.resolved_paths.insert(path, entries.clone());
+
+        entries
+            .single_or_none()
+            .and_then(|it| it.cast_into::<ast::AnyNamedElement>(self.db))
     }
 
-    fn instantiate_call(&self, call_expr: &ast::CallExpr) -> Option<TyCallable> {
+    // pub fn resolve_path(&self, path: ast::Path) -> Option<InFile<ast::AnyNamedElement>> {
+    //     let named_item = self.db.resolve_named_item(path.reference().in_file(self.file_id));
+    //     named_item
+    // }
+
+    fn instantiate_call_expr_path(&mut self, call_expr: &ast::CallExpr) -> TyCallable {
         let path = call_expr.path();
-        let named_item = self.resolve_path(path.clone());
+        let named_item = self.resolve_path_cached(path.clone(), None);
         let callable_ty = if let Some(named_item) = named_item {
             let item_kind = named_item.value.syntax().kind();
             match item_kind {
                 SyntaxKind::FUN => {
-                    let generic_item = named_item.map(|it| it.cast_into::<ast::Fun>().unwrap().into());
-                    let Some(call_ty) = self.instantiate_path(path, generic_item).ty_callable() else {
-                        return None;
-                    };
-                    call_ty
+                    let fun_item = named_item.map(|it| it.cast_into::<ast::Fun>().unwrap());
+                    self.instantiate_path_for_fun(path.into(), fun_item)
                 }
                 _ => TyCallable::fake(call_expr.args().len()),
             }
         } else {
             TyCallable::fake(call_expr.args().len())
         };
-        Some(callable_ty)
+        callable_ty
     }
 
-    pub fn instantiate_path(&self, path: ast::Path, generic_item: InFile<ast::AnyGenericItem>) -> Ty {
+    pub fn instantiate_path_for_fun(
+        &self,
+        method_or_path: ast::MethodOrPath,
+        fun: InFile<ast::Fun>,
+    ) -> TyCallable {
+        let ty = self.instantiate_path(method_or_path, fun.in_file_into());
+        match ty {
+            Ty::Callable(ty_callable) => ty_callable,
+            _ => unreachable!("instantiate_path() returns TyCallable for FUN items"),
+        }
+    }
+
+    pub fn instantiate_path(
+        &self,
+        method_or_path: ast::MethodOrPath,
+        generic_item: InFile<ast::AnyGenericItem>,
+    ) -> Ty {
         let ty_lowering = TyLowering::new(self.db, generic_item.file_id);
-        let mut path_ty =
-            ty_lowering.lower_path(path, generic_item.clone().map(|it| it.syntax().to_owned()));
+        let mut path_ty = ty_lowering.lower_path(
+            method_or_path,
+            generic_item.clone().map(|it| it.syntax().to_owned()),
+        );
 
         let ty_vars_subst = generic_item.ty_vars_subst();
         path_ty = path_ty.substitute(ty_vars_subst);
@@ -111,12 +144,16 @@ impl<'a> InferenceCtx<'a> {
         }
     }
 
+    pub fn var_resolver(&self) -> TyVarResolver {
+        TyVarResolver::new(self)
+    }
+
     pub fn resolve_vars_if_possible(&self, ty: Ty) -> Ty {
-        ty.fold_with(TyVarResolver::new(&self))
+        ty.fold_with(self.var_resolver())
     }
 
     pub fn fully_resolve_vars(&self, ty: Ty) -> Ty {
-        ty.fold_with(FullTyVarResolver::new(&self, Fallback::TyUnknown))
+        ty.fold_with(FullTyVarResolver::new(&self, Fallback::Unknown))
     }
 
     pub fn fully_resolve_vars_fallback_to_origin(&self, ty: Ty) -> Ty {
@@ -263,7 +300,7 @@ impl<'a> InferenceCtx<'a> {
         res
     }
 
-    pub fn coerce_types(&mut self, node: &SyntaxNode, actual: Ty, expected: Ty) -> bool {
+    pub fn coerce_types(&mut self, node_or_token: SyntaxNodeOrToken, actual: Ty, expected: Ty) -> bool {
         let actual = self.resolve_vars_if_possible(actual);
         let expected = self.resolve_vars_if_possible(expected);
         if actual == expected {
@@ -274,7 +311,7 @@ impl<'a> InferenceCtx<'a> {
             Ok(()) => true,
             Err(type_error) => {
                 // todo: report type error at `node`
-                self.report_type_error(type_error, node, actual, expected);
+                self.report_type_error(type_error, node_or_token, actual, expected);
                 false
             }
         }
@@ -283,7 +320,7 @@ impl<'a> InferenceCtx<'a> {
     fn report_type_error(
         &mut self,
         _type_error: TypeError,
-        _node: &SyntaxNode,
+        _node_or_token: SyntaxNodeOrToken,
         _actual: Ty,
         _expected: Ty,
     ) {

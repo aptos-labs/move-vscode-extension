@@ -5,7 +5,7 @@ use crate::render::function::render_function_completion_item;
 use base_db::Upcast;
 use ide_db::SymbolKind;
 use lang::nameres::path_kind::path_kind;
-use lang::nameres::paths::{get_path_resolve_variants, ResolutionContext};
+use lang::nameres::path_resolution::{get_path_resolve_variants, ResolutionContext};
 use lang::nameres::scope::ScopeEntryListExt;
 use lang::InFile;
 use std::cell::RefCell;
@@ -32,7 +32,7 @@ pub(crate) fn add_path_completions(
     let entries = get_path_resolve_variants(ctx.db.upcast(), &resolution_ctx, path_kind);
     tracing::debug!(entries = ?entries);
 
-    let filtered_entries = entries.filter_by_visibility(ctx.db.upcast(), path);
+    let filtered_entries = entries.filter_by_visibility(ctx.db.upcast(), &path);
     tracing::debug!(filtered_entries = ?filtered_entries);
 
     for entry in filtered_entries {

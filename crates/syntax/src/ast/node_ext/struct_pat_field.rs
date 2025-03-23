@@ -1,4 +1,5 @@
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
+use crate::ast::NamedElement;
 use crate::{ast, AstNode};
 
 impl ast::StructPatField {
@@ -6,6 +7,16 @@ impl ast::StructPatField {
         self.syntax()
             .ancestor_of_type::<ast::StructPat>(true)
             .expect("required by parser")
+    }
+
+    pub fn field_name(&self) -> Option<String> {
+        if let Some(name_ref) = self.name_ref() {
+            return Some(name_ref.as_string());
+        }
+        if let Some(ident_pat) = self.ident_pat() {
+            return ident_pat.name().map(|it| it.as_string());
+        }
+        None
     }
 }
 
