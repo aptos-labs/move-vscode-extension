@@ -194,11 +194,14 @@ Expr =
     | Literal
     | ParenExpr
     | PathExpr
-    | PrefixExpr
+    | BorrowExpr | DerefExpr | BangExpr
+    | ResourceExpr
     | CallExpr
     | MethodCallExpr
     | IndexExpr
+    | DotExpr
     | AbortExpr
+    | BlockExpr
 
 ForExpr =
     'for' ForCondition (BlockExpr | InlineExpr)
@@ -206,9 +209,17 @@ ForExpr =
 ForCondition =
     '(' IdentPat 'in' Expr ')'
 
+BorrowExpr =
+    '&' Expr
 
-PrefixExpr =
-  op:('-' | '!' | '*' | 'copy' | 'move') Expr
+DerefExpr =
+    '*' Expr
+
+BangExpr =
+    '!' Expr
+
+ResourceExpr =
+    ('move' | 'copy') Expr
 
 BinExpr =
     lhs:Expr
@@ -219,6 +230,12 @@ BinExpr =
     | '=' | '+=' | '/=' | '*=' | '%=' | '>>=' | '<<=' | '-=' | '|=' | '&=' | '^='
     )
     rhs:Expr
+
+DotExpr =
+    receiver_expr:Expr '.' FieldRef
+
+FieldRef =
+    NameRef | IndexRef
 
 IndexExpr =
     base:Expr '[' index:Expr ']'
@@ -297,6 +314,9 @@ ValueAddress =
 
 NameRef =
     'ident'
+
+IndexRef =
+    'int_number'
 
 // -------------------------- Specifications
 

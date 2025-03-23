@@ -62,7 +62,7 @@ impl NameRefClass {
                     Some(NameRefClass::Definition(Definition::NamedItem(symbol_kind)))
                 }
                 None => {
-                    let ref_name = name_ref.text().to_string();
+                    let ref_name = name_ref.as_string();
                     if BUILTIN_TYPE_IDENTS.contains(ref_name.as_str()) {
                         return Some(NameRefClass::Definition(Definition::BuiltinType));
                     }

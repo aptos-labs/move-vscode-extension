@@ -2,7 +2,6 @@ mod type_args;
 
 use crate::db::HirDatabase;
 use crate::files::{InFileExt, InFileInto};
-use crate::node_ext::PathLangExt;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::integer::IntegerKind;

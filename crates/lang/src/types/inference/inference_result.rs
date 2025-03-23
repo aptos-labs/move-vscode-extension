@@ -1,7 +1,7 @@
 use crate::db::HirDatabase;
 use crate::loc;
 use crate::loc::{SyntaxLocFileExt, SyntaxLocNodeExt};
-use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt};
+use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::types::inference::InferenceCtx;
 use crate::types::ty::Ty;
 use std::collections::HashMap;

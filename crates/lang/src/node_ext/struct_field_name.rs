@@ -1,4 +1,3 @@
-use crate::node_ext::PathLangExt;
 use syntax::ast;
 use syntax::ast::NamedElement;
 

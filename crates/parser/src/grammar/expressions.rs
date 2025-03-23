@@ -233,7 +233,7 @@ pub(crate) fn lhs(p: &mut Parser, r: Restrictions) -> Option<(CompletedMarker, B
             m = p.start();
             p.bump(T![&]);
             p.eat(T![mut]);
-            REF_EXPR
+            BORROW_EXPR
         }
         T![|] => {
             m = p.start();
@@ -285,13 +285,28 @@ pub(crate) fn lhs(p: &mut Parser, r: Restrictions) -> Option<(CompletedMarker, B
         IDENT if p.at_contextual_kw("copy") => {
             m = p.start();
             p.bump_remap(T![copy]);
-            PREFIX_EXPR
+            RESOURCE_EXPR
         }
-        T![*] | T![!] | T![move] => {
+        T![move] => {
             m = p.start();
-            p.bump_any();
-            PREFIX_EXPR
+            p.bump(T![move]);
+            RESOURCE_EXPR
         }
+        T![*] => {
+            m = p.start();
+            p.bump(T![*]);
+            DEREF_EXPR
+        }
+        T![!] => {
+            m = p.start();
+            p.bump(T![!]);
+            BANG_EXPR
+        }
+        // T![*] | T![!] | T![move] => {
+        //     m = p.start();
+        //     p.bump_any();
+        //     PREFIX_EXPR
+        // }
         _ => {
             // test full_range_expr
             // fn foo() { xs[..]; }

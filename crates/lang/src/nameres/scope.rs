@@ -80,6 +80,18 @@ impl<T: ast::NamedElement> NamedItemsInFileExt for Vec<T> {
     }
 }
 
+pub trait VecExt {
+    type Item;
+    fn single_or_none(self) -> Option<Self::Item>;
+}
+
+impl<T> VecExt for Vec<T> {
+    type Item = T;
+    fn single_or_none(self) -> Option<T> {
+        self.into_iter().exactly_one().ok()
+    }
+}
+
 pub trait ScopeEntryListExt {
     fn filter_by_ns(self, ns: NsSet) -> Vec<ScopeEntry>;
     fn filter_by_name(self, name: String) -> Vec<ScopeEntry>;
@@ -88,7 +100,6 @@ pub trait ScopeEntryListExt {
         db: &dyn HirDatabase,
         context: &InFile<impl ReferenceElement>,
     ) -> Vec<ScopeEntry>;
-    fn single_or_none(self) -> Option<ScopeEntry>;
 }
 
 impl ScopeEntryListExt for Vec<ScopeEntry> {
@@ -112,7 +123,7 @@ impl ScopeEntryListExt for Vec<ScopeEntry> {
             .collect()
     }
 
-    fn single_or_none(self) -> Option<ScopeEntry> {
-        self.into_iter().exactly_one().ok()
-    }
+    // fn single_or_none(self) -> Option<ScopeEntry> {
+    //     self.into_iter().exactly_one().ok()
+    // }
 }

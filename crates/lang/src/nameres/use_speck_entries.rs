@@ -3,7 +3,6 @@ use crate::files::InFileInto;
 use crate::nameres::path_kind::{path_kind, PathKind, QualifiedKind};
 use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::has_item_list::HasUseStmtsInFileExt;
-use crate::node_ext::PathLangExt;
 use crate::InFile;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::{NamedElement, NamedItemScope};

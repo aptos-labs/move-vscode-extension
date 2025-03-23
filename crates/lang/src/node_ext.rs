@@ -5,19 +5,15 @@ use crate::nameres::address::{Address, NamedAddr, ValueAddr};
 use syntax::ast;
 use syntax::ast::NamedElement;
 
-pub trait PathLangExt {
-    fn reference_name(&self) -> Option<String>;
-}
+// pub trait PathLangExt {
+//     fn reference_name(&self) -> Option<String>;
+// }
 
-impl PathLangExt for ast::Path {
-    // fn name_ref_name(&self) -> Option<Name> {
-    //     self.name_ref().map(|name_ref| name_ref.as_name())
-    // }
-
-    fn reference_name(&self) -> Option<String> {
-        self.name_ref().map(|it| it.ident_token().to_string())
-    }
-}
+// impl PathLangExt for ast::Path {
+//     fn reference_name(&self) -> Option<String> {
+//         self.segment().name_ref().map(|it| it.as_string())
+//     }
+// }
 
 pub trait ModuleLangExt {
     fn address(&self) -> Option<Address>;

@@ -1,17 +1,19 @@
 use crate::files::InFileExt;
+use crate::nameres::name_resolution::get_field_lookup_resolve_variants;
 use crate::nameres::path_resolution::get_method_resolve_variants;
-use crate::nameres::scope::ScopeEntryListExt;
+use crate::nameres::scope::{ScopeEntryListExt, VecExt};
 use crate::types::expectation::Expected;
 use crate::types::fold::TypeFoldable;
 use crate::types::inference::InferenceCtx;
 use crate::types::patterns::{anonymous_pat_ty_var, collect_bindings, BindingMode};
+use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::reference::autoborrow;
 use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::Ty;
 use std::iter;
 use std::ops::Deref;
-use syntax::ast::{BindingTypeOwner, HasStmts, Pat};
+use syntax::ast::{BindingTypeOwner, HasStmts, NamedElement, Pat};
 use syntax::{ast, AstNode, IntoNodeOrToken};
 
 pub struct TypeAstWalker<'a, 'db> {
@@ -29,7 +31,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         match ctx_owner {
             ast::InferenceCtxOwner::Fun(fun) => {
                 if let Some(fun_block_expr) = fun.body() {
-                    self.infer_block_expr(fun_block_expr, Expected::NoValue);
+                    self.infer_block_expr(&fun_block_expr, Expected::NoValue);
                 }
             }
             _ => {}
@@ -59,7 +61,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         }
     }
 
-    pub fn infer_block_expr(&mut self, block_expr: ast::BlockExpr, expected: Expected) -> Ty {
+    pub fn infer_block_expr(&mut self, block_expr: &ast::BlockExpr, expected: Expected) -> Ty {
         for stmt in block_expr.stmts() {
             self.process_stmt(stmt);
         }
@@ -126,23 +128,40 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         }
     }
 
-    fn infer_expr(&mut self, expr: &ast::Expr, _expected: Expected) -> Ty {
+    fn infer_expr(&mut self, expr: &ast::Expr, expected: Expected) -> Ty {
         let expr_ty = match expr {
-            ast::Expr::PathExpr(path_expr) => self.infer_path_expr(path_expr, Expected::empty()),
-            ast::Expr::CallExpr(call_expr) => self.infer_call_expr(call_expr, Expected::empty()),
+            ast::Expr::PathExpr(path_expr) => self.infer_path_expr(path_expr, Expected::NoValue),
+            ast::Expr::CallExpr(call_expr) => self.infer_call_expr(call_expr, Expected::NoValue),
+            ast::Expr::MethodCallExpr(method_call_expr) => {
+                self.infer_method_call_expr(method_call_expr, Expected::NoValue)
+            }
+            ast::Expr::DotExpr(dot_expr) => self.infer_dot_expr(dot_expr, Expected::NoValue),
             ast::Expr::ParenExpr(paren_expr) => paren_expr
                 .expr()
                 .map(|it| self.infer_expr(&it, Expected::NoValue))
                 .unwrap_or(Ty::Unknown),
+
+            ast::Expr::BorrowExpr(borrow_expr) => self.infer_borrow_expr(borrow_expr),
+            ast::Expr::DerefExpr(deref_expr) => self.infer_deref_expr(deref_expr),
+            ast::Expr::IndexExpr(index_expr) => self.infer_index_expr(index_expr),
+            ast::Expr::ResourceExpr(res_expr) => self.infer_resource_expr(res_expr),
+
             ast::Expr::AbortExpr(abort_expr) => {
                 if let Some(inner_expr) = abort_expr.expr() {
                     self.infer_expr(&inner_expr, Expected::NoValue);
                 }
                 Ty::Never
             }
+            ast::Expr::BlockExpr(block_expr) => self.infer_block_expr(block_expr, Expected::NoValue),
             ast::Expr::BinExpr(bin_expr) => self.infer_bin_expr(bin_expr),
+            ast::Expr::BangExpr(bang_expr) => bang_expr
+                .expr()
+                .map(|it| {
+                    self.infer_expr(&it, Expected::ExpectType(Ty::Bool));
+                    Ty::Bool
+                })
+                .unwrap_or(Ty::Unknown),
             ast::Expr::Literal(lit) => self.infer_literal(lit),
-            _ => Ty::Unknown,
         };
         self.ctx.expr_types.insert(expr.to_owned(), expr_ty.clone());
         expr_ty
@@ -158,6 +177,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
         let ty_lowering = self.ctx.ty_lowering();
         match named_element.kind() {
+            IDENT_PAT => {
+                let ident_pat = named_element.cast::<ast::IdentPat>().unwrap().value;
+                self.ctx.get_binding_type(ident_pat)
+            }
             CONST => {
                 let const_type = named_element.cast::<ast::Const>().unwrap().value.type_();
                 const_type
@@ -171,6 +194,43 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
             _ => Ty::Unknown,
         }
+    }
+
+    fn infer_dot_expr(&mut self, dot_expr: &ast::DotExpr, expected: Expected) -> Ty {
+        let self_ty = self.infer_expr(&dot_expr.receiver_expr(), Expected::NoValue);
+        let self_ty = self.ctx.resolve_vars_if_possible(self_ty);
+
+        let Some(ty_adt) = self_ty.deref().into_ty_adt() else {
+            return Ty::Unknown;
+        };
+        let adt_item = ty_adt
+            .adt_item
+            .cast_into::<ast::StructOrEnum>(self.ctx.db.upcast())
+            .unwrap();
+        let Some(reference_name) = dot_expr
+            .field_ref()
+            .and_then(|it| it.name_ref().map(|it| it.as_string()))
+        else {
+            return Ty::Unknown;
+        };
+
+        // todo: cannot resolve in outside of declared module
+        // todo: tuple index fields
+
+        let named_field = get_field_lookup_resolve_variants(adt_item.value)
+            .into_iter()
+            .filter(|it| it.name().unwrap().as_string() == reference_name)
+            .collect::<Vec<_>>()
+            .single_or_none();
+
+        let ty_lowering = self.ctx.ty_lowering();
+        let Some(named_field_type) = named_field.and_then(|it| it.type_()) else {
+            return Ty::Unknown;
+        };
+
+        ty_lowering
+            .lower_type(named_field_type)
+            .substitute(ty_adt.substitution)
     }
 
     fn infer_method_call_expr(
@@ -230,6 +290,22 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         call_ty.ret_type.deref().to_owned()
     }
 
+    fn infer_index_expr(&mut self, index_expr: &ast::IndexExpr) -> Ty {
+        Ty::Unknown
+    }
+
+    fn infer_borrow_expr(&mut self, borrow_expr: &ast::BorrowExpr) -> Ty {
+        Ty::Unknown
+    }
+
+    fn infer_deref_expr(&mut self, deref_expr: &ast::DerefExpr) -> Ty {
+        Ty::Unknown
+    }
+
+    fn infer_resource_expr(&mut self, resource_expr: &ast::ResourceExpr) -> Ty {
+        Ty::Unknown
+    }
+
     fn infer_bin_expr(&mut self, bin_expr: &ast::BinExpr) -> Ty {
         let Some((lhs, (_, op_kind), rhs)) = bin_expr.unpack() else {
             return Ty::Unknown;
@@ -243,7 +319,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     fn infer_arith_binary_expr(
         &mut self,
         lhs: ast::Expr,
-        op: ast::ArithOp,
+        _op: ast::ArithOp,
         rhs: ast::Expr,
         is_compound: bool,
     ) -> Ty {

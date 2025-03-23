@@ -1,19 +1,19 @@
 use crate::db::HirDatabase;
-use crate::files::{InFileInto, InFileVecExt};
+use crate::files::InFileVecExt;
 use crate::nameres::address::{Address, NamedAddr};
 use crate::nameres::namespaces::{Ns, NsSet};
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::path_resolution::ResolutionContext;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use crate::nameres::scope_entries_owner::get_entries_in_scope;
-use crate::node_ext::{ModuleLangExt, PathLangExt};
+use crate::node_ext::ModuleLangExt;
 use crate::InFile;
 use parser::SyntaxKind;
 use parser::SyntaxKind::MODULE_SPEC;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::fmt::Formatter;
-use syntax::ast::{FieldsOwner, HasItems, ReferenceElement};
+use syntax::ast::{FieldsOwner, HasItems, NamedElement, ReferenceElement};
 use syntax::{ast, AstNode, SyntaxNode};
 
 pub struct ResolveScope {
@@ -115,7 +115,11 @@ pub fn get_entries_from_walking_scopes(
     entries
 }
 
-#[tracing::instrument(level = "debug", skip(db, ctx, address), fields(path = ctx.path.syntax_text()))]
+#[tracing::instrument(
+    level = "debug",
+    skip(db, ctx, address),
+    fields(path = ctx.path.syntax_text())
+)]
 pub fn get_modules_as_entries(
     db: &dyn HirDatabase,
     ctx: &ResolutionContext,
@@ -183,6 +187,38 @@ pub fn get_qualified_path_entries(
         _ => {}
     }
     entries
+}
+
+pub fn get_field_lookup_resolve_variants(self_item: ast::StructOrEnum) -> Vec<ast::NamedField> {
+    use syntax::SyntaxKind::*;
+
+    match self_item.syntax().kind() {
+        STRUCT => {
+            let struct_item = self_item.struct_().unwrap();
+            struct_item.named_fields()
+        }
+        ENUM => {
+            let enum_item = self_item.enum_().unwrap();
+
+            let mut visited_names = HashSet::new();
+            let mut fields = vec![];
+            for variant in enum_item.variants() {
+                for field in variant.named_fields() {
+                    let field_name = field.name().expect("always present").as_string();
+
+                    if visited_names.contains(&field_name) {
+                        continue;
+                    }
+                    visited_names.insert(field_name);
+
+                    fields.push(field);
+                }
+            }
+
+            fields
+        }
+        _ => vec![],
+    }
 }
 
 impl InFile<ast::AnyFieldsOwner> {

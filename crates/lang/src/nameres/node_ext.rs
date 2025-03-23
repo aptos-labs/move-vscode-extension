@@ -23,8 +23,7 @@ impl ModuleResolutionExt for InFile<ast::Module> {
         entries.extend(module.schemas().wrapped_in_file(self.file_id).to_entries());
 
         // callables
-        // todo: filter by #[test]
-        entries.extend(module.functions().wrapped_in_file(self.file_id).to_entries());
+        entries.extend(module.non_test_functions().wrapped_in_file(self.file_id).to_entries());
         entries.extend(module.tuple_structs().into_iter().filter_map(|s| {
             s.in_file(self.file_id)
                 .to_entry()

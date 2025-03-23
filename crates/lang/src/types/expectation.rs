@@ -8,14 +8,10 @@ pub enum Expected {
 }
 
 impl Expected {
-    pub fn empty() -> Self {
-        Expected::NoValue
-    }
-
     pub fn from_ty(ty: Option<Ty>) -> Self {
         match ty {
             Some(ty) => Expected::ExpectType(ty),
-            None => Expected::empty(),
+            None => Expected::NoValue,
         }
     }
 

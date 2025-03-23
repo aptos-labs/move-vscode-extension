@@ -166,9 +166,14 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "METHOD_CALL_EXPR",
         "CAST_EXPR",
         "IS_EXPR",
+
         // unary
-        "REF_EXPR",
-        "PREFIX_EXPR",
+        "BORROW_EXPR",
+        "DEREF_EXPR",
+        "BANG_EXPR",
+
+        "RESOURCE_EXPR",
+
         "RANGE_EXPR",
         "UNIT_EXPR",
         "BIN_EXPR",
@@ -233,6 +238,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "VISIBILITY_MODIFIER",
         "NAME",
         "NAME_REF",
+        "INDEX_REF",
         "VALUE_ADDRESS",
         "NAMED_ADDRESS",
         "ADDRESS_REF",
@@ -265,6 +271,7 @@ pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     ("CallExpr", &["path"]),
     ("PathExpr", &["path"]),
     ("MethodCallExpr", &["receiver_expr"]),
+    ("DotExpr", &["receiver_expr"]),
     ("TypeArg", &["type"]),
     ("StructPat", &["path"]),
     ("PathType", &["path"]),
@@ -274,8 +281,8 @@ pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     ("Param", &["ident_pat"]),
     ("Path", &["segment"]),
     ("PathAddress", &["value_address"]),
-    ("NameRef", &["ident"]),
     ("Name", &["ident"]),
+    ("NameRef", &["ident"]),
     ("NamedAddress", &["ident"]),
     ("ValueAddress", &["int_number"]),
 ];
