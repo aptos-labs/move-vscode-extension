@@ -161,6 +161,19 @@ impl CallExpr {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Condition {
+    pub(crate) syntax: SyntaxNode,
+}
+impl Condition {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
+    #[inline]
+    pub fn r_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![')']) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Const {
     pub(crate) syntax: SyntaxNode,
 }
@@ -269,13 +282,10 @@ impl ForCondition {
 pub struct ForExpr {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::LoopLike for ForExpr {}
 impl ForExpr {
     #[inline]
-    pub fn block_expr(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
-    #[inline]
     pub fn for_condition(&self) -> Option<ForCondition> { support::child(&self.syntax) }
-    #[inline]
-    pub fn inline_expr(&self) -> Option<InlineExpr> { support::child(&self.syntax) }
     #[inline]
     pub fn for_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![for]) }
 }
@@ -328,6 +338,19 @@ pub struct IdentPat {
 }
 impl ast::NamedElement for IdentPat {}
 impl IdentPat {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct IfExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl IfExpr {
+    #[inline]
+    pub fn condition(&self) -> Option<Condition> { support::child(&self.syntax) }
+    #[inline]
+    pub fn else_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![else]) }
+    #[inline]
+    pub fn if_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![if]) }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct IndexExpr {
@@ -406,13 +429,31 @@ impl Literal {
     #[inline]
     pub fn address_lit(&self) -> Option<AddressLit> { support::child(&self.syntax) }
     #[inline]
+    pub fn byte_string_token(&self) -> Option<SyntaxToken> {
+        support::token(&self.syntax, T![byte_string])
+    }
+    #[inline]
     pub fn false_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![false]) }
+    #[inline]
+    pub fn hex_string_token(&self) -> Option<SyntaxToken> {
+        support::token(&self.syntax, T![hex_string])
+    }
     #[inline]
     pub fn int_number_token(&self) -> Option<SyntaxToken> {
         support::token(&self.syntax, T![int_number])
     }
     #[inline]
     pub fn true_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![true]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct LoopExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::LoopLike for LoopExpr {}
+impl LoopExpr {
+    #[inline]
+    pub fn loop_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![loop]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -814,6 +855,59 @@ impl SpecInlineFun {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SpecPredicateProperty {
+    pub(crate) syntax: SyntaxNode,
+}
+impl SpecPredicateProperty {
+    #[inline]
+    pub fn literal(&self) -> Option<Literal> { support::child(&self.syntax) }
+    #[inline]
+    pub fn eq_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![=]) }
+    #[inline]
+    pub fn ident_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![ident]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SpecPredicatePropertyList {
+    pub(crate) syntax: SyntaxNode,
+}
+impl SpecPredicatePropertyList {
+    #[inline]
+    pub fn properties(&self) -> AstChildren<SpecPredicateProperty> { support::children(&self.syntax) }
+    #[inline]
+    pub fn l_brack_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['[']) }
+    #[inline]
+    pub fn r_brack_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![']']) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SpecPredicateStmt {
+    pub(crate) syntax: SyntaxNode,
+}
+impl SpecPredicateStmt {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn spec_predicate_property_list(&self) -> Option<SpecPredicatePropertyList> {
+        support::child(&self.syntax)
+    }
+    #[inline]
+    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
+    #[inline]
+    pub fn assert_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![assert]) }
+    #[inline]
+    pub fn assume_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![assume]) }
+    #[inline]
+    pub fn decreases_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![decreases]) }
+    #[inline]
+    pub fn ensures_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![ensures]) }
+    #[inline]
+    pub fn modifies_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![modifies]) }
+    #[inline]
+    pub fn requires_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![requires]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Struct {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1158,6 +1252,18 @@ impl VisibilityModifier {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct WhileExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::LoopLike for WhileExpr {}
+impl WhileExpr {
+    #[inline]
+    pub fn condition(&self) -> Option<Condition> { support::child(&self.syntax) }
+    #[inline]
+    pub fn while_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![while]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct WildcardPat {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1187,6 +1293,12 @@ pub enum BindingTypeOwner {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum BlockOrInlineExpr {
+    BlockExpr(BlockExpr),
+    InlineExpr(InlineExpr),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Expr {
     AbortExpr(AbortExpr),
     AssertMacroExpr(AssertMacroExpr),
@@ -1197,13 +1309,17 @@ pub enum Expr {
     CallExpr(CallExpr),
     DerefExpr(DerefExpr),
     DotExpr(DotExpr),
+    ForExpr(ForExpr),
+    IfExpr(IfExpr),
     IndexExpr(IndexExpr),
     Literal(Literal),
+    LoopExpr(LoopExpr),
     MethodCallExpr(MethodCallExpr),
     ParenExpr(ParenExpr),
     PathExpr(PathExpr),
     ResourceExpr(ResourceExpr),
     VectorLitExpr(VectorLitExpr),
+    WhileExpr(WhileExpr),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1319,6 +1435,12 @@ pub struct AnyHasVisibility {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HasVisibility for AnyHasVisibility {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AnyLoopLike {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::LoopLike for AnyLoopLike {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyMslOnly {
@@ -1589,6 +1711,27 @@ impl AstNode for CallExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for Condition {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        CONDITION
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == CONDITION }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for Const {
     #[inline]
     fn kind() -> SyntaxKind
@@ -1820,6 +1963,27 @@ impl AstNode for IdentPat {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for IfExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        IF_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == IF_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for IndexExpr {
     #[inline]
     fn kind() -> SyntaxKind
@@ -1935,6 +2099,27 @@ impl AstNode for Literal {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == LITERAL }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for LoopExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        LOOP_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == LOOP_EXPR }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -2513,6 +2698,69 @@ impl AstNode for SpecInlineFun {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for SpecPredicateProperty {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        SPEC_PREDICATE_PROPERTY
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == SPEC_PREDICATE_PROPERTY }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for SpecPredicatePropertyList {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        SPEC_PREDICATE_PROPERTY_LIST
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == SPEC_PREDICATE_PROPERTY_LIST }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for SpecPredicateStmt {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        SPEC_PREDICATE_STMT
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == SPEC_PREDICATE_STMT }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for Struct {
     #[inline]
     fn kind() -> SyntaxKind
@@ -3059,6 +3307,27 @@ impl AstNode for VisibilityModifier {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for WhileExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        WHILE_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == WHILE_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for WildcardPat {
     #[inline]
     fn kind() -> SyntaxKind
@@ -3218,6 +3487,48 @@ impl AstNode for BindingTypeOwner {
         }
     }
 }
+impl From<BlockExpr> for BlockOrInlineExpr {
+    #[inline]
+    fn from(node: BlockExpr) -> BlockOrInlineExpr { BlockOrInlineExpr::BlockExpr(node) }
+}
+impl From<InlineExpr> for BlockOrInlineExpr {
+    #[inline]
+    fn from(node: InlineExpr) -> BlockOrInlineExpr { BlockOrInlineExpr::InlineExpr(node) }
+}
+impl BlockOrInlineExpr {
+    pub fn block_expr(self) -> Option<BlockExpr> {
+        match (self) {
+            BlockOrInlineExpr::BlockExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn inline_expr(self) -> Option<InlineExpr> {
+        match (self) {
+            BlockOrInlineExpr::InlineExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+}
+impl AstNode for BlockOrInlineExpr {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, BLOCK_EXPR | INLINE_EXPR) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            BLOCK_EXPR => BlockOrInlineExpr::BlockExpr(BlockExpr { syntax }),
+            INLINE_EXPR => BlockOrInlineExpr::InlineExpr(InlineExpr { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            BlockOrInlineExpr::BlockExpr(it) => &it.syntax,
+            BlockOrInlineExpr::InlineExpr(it) => &it.syntax,
+        }
+    }
+}
 impl From<AbortExpr> for Expr {
     #[inline]
     fn from(node: AbortExpr) -> Expr { Expr::AbortExpr(node) }
@@ -3254,6 +3565,14 @@ impl From<DotExpr> for Expr {
     #[inline]
     fn from(node: DotExpr) -> Expr { Expr::DotExpr(node) }
 }
+impl From<ForExpr> for Expr {
+    #[inline]
+    fn from(node: ForExpr) -> Expr { Expr::ForExpr(node) }
+}
+impl From<IfExpr> for Expr {
+    #[inline]
+    fn from(node: IfExpr) -> Expr { Expr::IfExpr(node) }
+}
 impl From<IndexExpr> for Expr {
     #[inline]
     fn from(node: IndexExpr) -> Expr { Expr::IndexExpr(node) }
@@ -3261,6 +3580,10 @@ impl From<IndexExpr> for Expr {
 impl From<Literal> for Expr {
     #[inline]
     fn from(node: Literal) -> Expr { Expr::Literal(node) }
+}
+impl From<LoopExpr> for Expr {
+    #[inline]
+    fn from(node: LoopExpr) -> Expr { Expr::LoopExpr(node) }
 }
 impl From<MethodCallExpr> for Expr {
     #[inline]
@@ -3281,6 +3604,10 @@ impl From<ResourceExpr> for Expr {
 impl From<VectorLitExpr> for Expr {
     #[inline]
     fn from(node: VectorLitExpr) -> Expr { Expr::VectorLitExpr(node) }
+}
+impl From<WhileExpr> for Expr {
+    #[inline]
+    fn from(node: WhileExpr) -> Expr { Expr::WhileExpr(node) }
 }
 impl Expr {
     pub fn abort_expr(self) -> Option<AbortExpr> {
@@ -3337,6 +3664,18 @@ impl Expr {
             _ => None,
         }
     }
+    pub fn for_expr(self) -> Option<ForExpr> {
+        match (self) {
+            Expr::ForExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn if_expr(self) -> Option<IfExpr> {
+        match (self) {
+            Expr::IfExpr(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn index_expr(self) -> Option<IndexExpr> {
         match (self) {
             Expr::IndexExpr(item) => Some(item),
@@ -3346,6 +3685,12 @@ impl Expr {
     pub fn literal(self) -> Option<Literal> {
         match (self) {
             Expr::Literal(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn loop_expr(self) -> Option<LoopExpr> {
+        match (self) {
+            Expr::LoopExpr(item) => Some(item),
             _ => None,
         }
     }
@@ -3379,6 +3724,12 @@ impl Expr {
             _ => None,
         }
     }
+    pub fn while_expr(self) -> Option<WhileExpr> {
+        match (self) {
+            Expr::WhileExpr(item) => Some(item),
+            _ => None,
+        }
+    }
 }
 impl AstNode for Expr {
     #[inline]
@@ -3394,13 +3745,17 @@ impl AstNode for Expr {
                 | CALL_EXPR
                 | DEREF_EXPR
                 | DOT_EXPR
+                | FOR_EXPR
+                | IF_EXPR
                 | INDEX_EXPR
                 | LITERAL
+                | LOOP_EXPR
                 | METHOD_CALL_EXPR
                 | PAREN_EXPR
                 | PATH_EXPR
                 | RESOURCE_EXPR
                 | VECTOR_LIT_EXPR
+                | WHILE_EXPR
         )
     }
     #[inline]
@@ -3415,13 +3770,17 @@ impl AstNode for Expr {
             CALL_EXPR => Expr::CallExpr(CallExpr { syntax }),
             DEREF_EXPR => Expr::DerefExpr(DerefExpr { syntax }),
             DOT_EXPR => Expr::DotExpr(DotExpr { syntax }),
+            FOR_EXPR => Expr::ForExpr(ForExpr { syntax }),
+            IF_EXPR => Expr::IfExpr(IfExpr { syntax }),
             INDEX_EXPR => Expr::IndexExpr(IndexExpr { syntax }),
             LITERAL => Expr::Literal(Literal { syntax }),
+            LOOP_EXPR => Expr::LoopExpr(LoopExpr { syntax }),
             METHOD_CALL_EXPR => Expr::MethodCallExpr(MethodCallExpr { syntax }),
             PAREN_EXPR => Expr::ParenExpr(ParenExpr { syntax }),
             PATH_EXPR => Expr::PathExpr(PathExpr { syntax }),
             RESOURCE_EXPR => Expr::ResourceExpr(ResourceExpr { syntax }),
             VECTOR_LIT_EXPR => Expr::VectorLitExpr(VectorLitExpr { syntax }),
+            WHILE_EXPR => Expr::WhileExpr(WhileExpr { syntax }),
             _ => return None,
         };
         Some(res)
@@ -3438,13 +3797,17 @@ impl AstNode for Expr {
             Expr::CallExpr(it) => &it.syntax,
             Expr::DerefExpr(it) => &it.syntax,
             Expr::DotExpr(it) => &it.syntax,
+            Expr::ForExpr(it) => &it.syntax,
+            Expr::IfExpr(it) => &it.syntax,
             Expr::IndexExpr(it) => &it.syntax,
             Expr::Literal(it) => &it.syntax,
+            Expr::LoopExpr(it) => &it.syntax,
             Expr::MethodCallExpr(it) => &it.syntax,
             Expr::ParenExpr(it) => &it.syntax,
             Expr::PathExpr(it) => &it.syntax,
             Expr::ResourceExpr(it) => &it.syntax,
             Expr::VectorLitExpr(it) => &it.syntax,
+            Expr::WhileExpr(it) => &it.syntax,
         }
     }
 }
@@ -4284,6 +4647,38 @@ impl From<Struct> for AnyHasVisibility {
     #[inline]
     fn from(node: Struct) -> AnyHasVisibility { AnyHasVisibility { syntax: node.syntax } }
 }
+impl AnyLoopLike {
+    #[inline]
+    pub fn new<T: ast::LoopLike>(node: T) -> AnyLoopLike {
+        AnyLoopLike {
+            syntax: node.syntax().clone(),
+        }
+    }
+    #[inline]
+    pub fn cast_into<T: ast::LoopLike>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
+}
+impl AstNode for AnyLoopLike {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, FOR_EXPR | LOOP_EXPR | WHILE_EXPR) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        Self::can_cast(syntax.kind()).then_some(AnyLoopLike { syntax })
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl From<ForExpr> for AnyLoopLike {
+    #[inline]
+    fn from(node: ForExpr) -> AnyLoopLike { AnyLoopLike { syntax: node.syntax } }
+}
+impl From<LoopExpr> for AnyLoopLike {
+    #[inline]
+    fn from(node: LoopExpr) -> AnyLoopLike { AnyLoopLike { syntax: node.syntax } }
+}
+impl From<WhileExpr> for AnyLoopLike {
+    #[inline]
+    fn from(node: WhileExpr) -> AnyLoopLike { AnyLoopLike { syntax: node.syntax } }
+}
 impl AnyMslOnly {
     #[inline]
     pub fn new<T: ast::MslOnly>(node: T) -> AnyMslOnly {
@@ -4482,6 +4877,11 @@ impl std::fmt::Display for BindingTypeOwner {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for BlockOrInlineExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for Expr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -4587,6 +4987,11 @@ impl std::fmt::Display for CallExpr {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for Condition {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for Const {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -4642,6 +5047,11 @@ impl std::fmt::Display for IdentPat {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for IfExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for IndexExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -4668,6 +5078,11 @@ impl std::fmt::Display for LetStmt {
     }
 }
 impl std::fmt::Display for Literal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for LoopExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -4807,6 +5222,21 @@ impl std::fmt::Display for SpecInlineFun {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for SpecPredicateProperty {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for SpecPredicatePropertyList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for SpecPredicateStmt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for Struct {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -4933,6 +5363,11 @@ impl std::fmt::Display for VectorLitExpr {
     }
 }
 impl std::fmt::Display for VisibilityModifier {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for WhileExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

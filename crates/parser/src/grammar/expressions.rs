@@ -601,20 +601,6 @@ pub(super) fn stmt(p: &mut Parser, with_semi: StmtWithSemi, prefer_expr: bool, i
 
     if let Some((cm, blocklike)) = expr_stmt(p, Some(m)) {
         if !(p.at(T!['}']) || (prefer_expr && p.at(EOF))) {
-            // test no_semi_after_block
-            // fn foo() {
-            //     if true {}
-            //     loop {}
-            //     match () {}
-            //     while true {}
-            //     for _ in () {}
-            //     {}
-            //     {}
-            //     macro_rules! test {
-            //          () => {}
-            //     }
-            //     test!{}
-            // }
             let m = cm.precede(p);
             match with_semi {
                 StmtWithSemi::No => (),

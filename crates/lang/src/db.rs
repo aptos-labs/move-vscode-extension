@@ -1,5 +1,8 @@
 use crate::InFile;
+use crate::files::InFileExt;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
+use crate::nameres::path_resolution;
+use crate::nameres::scope::{ScopeEntry, VecExt};
 use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
@@ -9,10 +12,13 @@ use triomphe::Arc;
 
 #[ra_salsa::query_group(HirDatabaseStorage)]
 pub trait HirDatabase: SourceRootDatabase + Upcast<dyn SourceRootDatabase> {
+    fn resolve_path(&self, path_loc: SyntaxLoc) -> Option<ScopeEntry>;
     fn inference_for_ctx_owner(&self, ctx_owner_loc: SyntaxLoc) -> Arc<InferenceResult>;
+}
 
-    // #[ra_salsa::transparent]
-    // fn inference(&self, ctx_owner: InFile<ast::InferenceCtxOwner>) -> Arc<InferenceResult>;
+fn resolve_path(db: &dyn HirDatabase, ref_loc: SyntaxLoc) -> Option<ScopeEntry> {
+    let path = ref_loc.cast_into::<ast::Path>(db.upcast())?;
+    path_resolution::resolve_path(db, path).single_or_none()
 }
 
 fn inference_for_ctx_owner(db: &dyn HirDatabase, ctx_owner_loc: SyntaxLoc) -> Arc<InferenceResult> {

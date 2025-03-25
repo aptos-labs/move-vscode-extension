@@ -288,7 +288,9 @@ module 0x1::m {
         s.va/*caret*/;
     }
 }
-    "#, vec!["val -> u8"]);
+    "#,
+        vec!["val -> u8"],
+    );
 }
 
 #[test]
@@ -305,9 +307,10 @@ module 0x1::m {
         s.rec/*caret*/;
     }
 }
-    "#, vec!["receiver(my_val: u8) -> u8"]);
+    "#,
+        vec!["receiver(my_val: u8) -> u8"],
+    );
 }
-
 
 // language=Move
 

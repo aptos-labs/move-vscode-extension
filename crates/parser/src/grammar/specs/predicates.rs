@@ -31,6 +31,7 @@ pub(crate) fn condition_predicates(p: &mut Parser) -> bool {
     p.bump_remap(kw);
     opt_predicate_property_list(p);
     expect_expr(p);
+    p.eat(T![;]);
     m.complete(p, SPEC_PREDICATE_STMT);
     true
 }
@@ -49,6 +50,7 @@ pub(crate) fn aborts_if_predicate(p: &mut Parser) -> bool {
         expect_expr(p);
         m.complete(p, ABORTS_IF_WITH);
     }
+    p.eat(T![;]);
     m.complete(p, ABORTS_IF_STMT);
     true
 }

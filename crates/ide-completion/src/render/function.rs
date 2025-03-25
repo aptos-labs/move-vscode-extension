@@ -28,12 +28,14 @@ pub(crate) fn render_function(
     let (_, fun) = function.unpack();
 
     let function_name = fun.name().unwrap().as_string();
-    let params = render_params(ctx.db.upcast(), fun.clone(), call_ty.clone()).unwrap_or_default();
+    completion_item.lookup_by(function_name.clone());
 
+    let params = render_params(ctx.db.upcast(), fun.clone(), call_ty.clone()).unwrap_or_default();
     let params = match kind {
         FunctionKind::Fun => params,
         FunctionKind::Method => params.into_iter().skip(1).collect(),
     };
+
     if let Some(cap) = ctx.config.snippet_cap {
         let (snippet, label_suffix) = if params.is_empty() {
             (format!("{}()$0", &function_name), "()".to_string())

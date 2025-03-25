@@ -6,6 +6,7 @@ use crate::node_ext::struct_field_name::StructFieldNameExt;
 use syntax::ast;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::{FieldsOwner, ReferenceElement};
+use crate::loc::SyntaxLocFileExt;
 
 pub mod address;
 mod blocks;
@@ -92,15 +93,9 @@ impl<T: ast::ReferenceElement> InFile<T> {
     }
 
     pub fn resolve_no_inf(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
-        let InFile {
-            file_id: _,
-            value: ref_element,
-        } = self;
-
         // outside inference context
-        ref_element.cast_into::<ast::Path>().and_then(|path| {
-            path_resolution::resolve_path(db, path.in_file(self.file_id)).single_or_none()
-        })
+        let path = self.cast_ref::<ast::Path>()?;
+        db.resolve_path(path.loc())
     }
 }
 

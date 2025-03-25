@@ -9,15 +9,14 @@ impl ast::Expr {
 
 impl ast::Expr {
     pub fn is_block_like(&self) -> bool {
-        false
-        // matches!(
-        //     self,
-        //     ast::Expr::IfExpr(_)
-        //         | ast::Expr::LoopExpr(_)
-        //         | ast::Expr::ForExpr(_)
-        //         | ast::Expr::WhileExpr(_)
-        //         | ast::Expr::BlockExpr(_)
-        //         | ast::Expr::MatchExpr(_)
-        // )
+        matches!(
+            self,
+            ast::Expr::IfExpr(_)
+                | ast::Expr::LoopExpr(_)
+                | ast::Expr::ForExpr(_)
+                | ast::Expr::WhileExpr(_)
+                | ast::Expr::BlockExpr(_)
+                // | ast::Expr::MatchExpr(_)
+        )
     }
 }

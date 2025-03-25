@@ -161,6 +161,17 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 self.infer_assert_macro_expr(assert_macro_expr)
             }
 
+            ast::Expr::IfExpr(if_expr) => self.infer_if_expr(if_expr, expected).unwrap_or(Ty::Unknown),
+            ast::Expr::LoopExpr(loop_expr) => {
+                self.infer_loop_expr(loop_expr, expected).unwrap_or(Ty::Unknown)
+            }
+            ast::Expr::WhileExpr(while_expr) => {
+                self.infer_while_expr(while_expr, expected).unwrap_or(Ty::Unknown)
+            }
+            ast::Expr::ForExpr(for_expr) => {
+                self.infer_for_expr(for_expr, expected).unwrap_or(Ty::Unknown)
+            }
+
             ast::Expr::ParenExpr(paren_expr) => paren_expr
                 .expr()
                 .map(|it| self.infer_expr(&it, Expected::NoValue))
@@ -410,6 +421,68 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         self.ctx.resolve_vars_if_possible(vec_ty)
     }
 
+    fn infer_if_expr(&mut self, if_expr: &ast::IfExpr, expected: Expected) -> Option<Ty> {
+        let condition_expr = if_expr.condition()?.expr()?;
+        self.infer_expr_coerceable_to(&condition_expr, Ty::Bool);
+
+        let actual_if_ty = if_expr
+            .then_branch()
+            .map(|it| self.infer_block_or_inline_expr(&it, expected.clone()));
+        let Some(else_branch) = if_expr.else_branch() else {
+            return Some(Ty::Unit);
+        };
+
+        let expected_else_ty = expected
+            .ty(self.ctx)
+            .or(actual_if_ty.clone())
+            .unwrap_or(Ty::Unknown);
+        let actual_else_ty = self.infer_block_or_inline_expr(&else_branch, expected);
+
+        if let Some(tail_expr) = else_branch.tail_expr() {
+            // `if (true) &s else &mut s` shouldn't show type error
+            self.ctx.coerce_types(
+                tail_expr.node_or_token(),
+                actual_else_ty.clone(),
+                expected_else_ty,
+            );
+        }
+
+        let tys = vec![actual_if_ty, Some(actual_else_ty)]
+            .into_iter()
+            .filter_map(|it| it)
+            .collect();
+        Some(self.ctx.intersect_all_types(tys))
+    }
+
+    fn infer_while_expr(&mut self, while_expr: &ast::WhileExpr, expected: Expected) -> Option<Ty> {
+        let condition_expr = while_expr.condition()?.expr()?;
+        self.infer_expr_coerceable_to(&condition_expr, Ty::Bool);
+
+        Some(Ty::Unknown)
+    }
+
+    fn infer_for_expr(&mut self, for_expr: &ast::ForExpr, expected: Expected) -> Option<Ty> {
+        Some(Ty::Unknown)
+    }
+
+    fn infer_loop_expr(&mut self, loop_expr: &ast::LoopExpr, expected: Expected) -> Option<Ty> {
+        Some(Ty::Unknown)
+    }
+
+    fn infer_block_or_inline_expr(
+        &mut self,
+        block_or_inline_expr: &ast::BlockOrInlineExpr,
+        expected: Expected,
+    ) -> Ty {
+        match block_or_inline_expr {
+            ast::BlockOrInlineExpr::BlockExpr(block_expr) => self.infer_block_expr(block_expr, expected),
+            ast::BlockOrInlineExpr::InlineExpr(inline_expr) => inline_expr
+                .expr()
+                .map(|expr| self.infer_expr(&expr, expected))
+                .unwrap_or(Ty::Unknown),
+        }
+    }
+
     fn infer_borrow_expr(&mut self, borrow_expr: &ast::BorrowExpr, expected: Expected) -> Option<Ty> {
         let inner_expr = borrow_expr.expr()?;
         let inner_expected_ty = expected
@@ -497,7 +570,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 }
             }
             ast::LiteralKind::Address(_) => Ty::Address,
-            ast::LiteralKind::ByteString(_) => Ty::Vector(Box::new(Ty::Integer(IntegerKind::U8))),
+            ast::LiteralKind::ByteString(_) | ast::LiteralKind::HexString(_) => {
+                Ty::Vector(Box::new(Ty::Integer(IntegerKind::U8)))
+            }
             ast::LiteralKind::Invalid => Ty::Unknown,
         }
     }

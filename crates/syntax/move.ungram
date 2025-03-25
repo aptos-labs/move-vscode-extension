@@ -176,6 +176,8 @@ BlockExpr =
 
 InlineExpr = Expr
 
+BlockOrInlineExpr = BlockExpr | InlineExpr
+
 Stmt =
     ';'
     | ExprStmt
@@ -204,9 +206,10 @@ Expr =
     | DotExpr
     | AbortExpr
     | BlockExpr
+    | IfExpr | WhileExpr | ForExpr | LoopExpr
 
 ForExpr =
-    'for' ForCondition (BlockExpr | InlineExpr)
+    'for' ForCondition loop_body:(BlockExpr | InlineExpr)
 
 ForCondition =
     '(' IdentPat 'in' Expr ')'
@@ -254,13 +257,21 @@ StructLitFieldList =
 StructLitField =
     (NameRef ':')? Expr
 
-Literal =
-    'int_number' | 'true' | 'false' | AddressLit
-
-AddressLit = '@' ValueAddress
-
 ParenExpr =
     '(' Expr ')'
+
+IfExpr =
+    'if' Condition then_branch:(BlockExpr | InlineExpr)
+    ('else' else_branch:(BlockExpr | InlineExpr))?
+
+WhileExpr =
+    'while' Condition loop_body:(BlockExpr | InlineExpr)
+
+Condition =
+    '(' Expr ')'
+
+LoopExpr =
+    'loop' loop_body:(BlockExpr | InlineExpr)
 
 CallExpr =
     Path ArgList
@@ -328,6 +339,11 @@ NameRef =
 IndexRef =
     'int_number'
 
+Literal =
+    'int_number' | 'byte_string' | 'hex_string' | 'true' | 'false' | AddressLit
+
+AddressLit = '@' ValueAddress
+
 // -------------------------- Specifications
 
 ModuleSpec =
@@ -352,3 +368,14 @@ Schema =
 
 SchemaField =
     'local'? IdentPat ':' Type ';'
+
+SpecPredicateStmt =
+    ('assert' | 'assume' | 'requires' | 'ensures' | 'decreases' | 'modifies')
+    SpecPredicatePropertyList?
+    Expr ';'
+
+SpecPredicatePropertyList =
+    '[' properties:(SpecPredicateProperty (',' SpecPredicateProperty)* ','?)? ']'
+
+SpecPredicateProperty =
+    'ident' '=' Literal
