@@ -82,7 +82,7 @@ pub fn use_stmt_items(use_stmt: ast::UseStmt, file_id: FileId) -> Vec<UseItem> {
         .map(|it| it.as_string());
 
     let root_path = root_use_speck.path();
-    let root_path_kind = path_kind(InFile::new(file_id, root_path), false);
+    let root_path_kind = path_kind(root_path, false);
     // tracing::debug!(root_path_kind = ?root_path_kind);
 
     if let PathKind::Qualified { qualifier, kind, .. } = root_path_kind {
@@ -166,7 +166,7 @@ fn collect_child_use_speck(
         });
     }
 
-    let qualifier_kind = path_kind(InFile::new(file_id, qualifier_path), false);
+    let qualifier_kind = path_kind(qualifier_path, false);
     tracing::debug!(qualifier_kind = ?qualifier_kind);
 
     if let PathKind::Qualified { .. } = qualifier_kind {

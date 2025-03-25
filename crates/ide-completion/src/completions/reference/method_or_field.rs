@@ -6,6 +6,11 @@ use base_db::Upcast;
 use lang::InFile;
 use lang::files::{InFileExt, InFileInto};
 use lang::nameres::path_resolution::get_method_resolve_variants;
+use lang::types::has_type_params_ext::GenericItemExt;
+use lang::types::inference::InferenceCtx;
+use lang::types::lowering::TyLowering;
+use lang::types::substitution::ApplySubstitution;
+use lang::types::ty;
 use lang::types::ty::Ty;
 use lang::types::ty::adt::TyAdt;
 use std::cell::{RefCell, RefMut};
@@ -14,11 +19,10 @@ use syntax::ast;
 pub(crate) fn add_method_or_field_completions(
     completions: &RefCell<Completions>,
     ctx: &CompletionContext<'_>,
-    field_ref: InFile<ast::FieldRef>,
+    receiver_expr: InFile<ast::Expr>,
 ) -> Option<()> {
-    let (file_id, field_ref) = field_ref.unpack();
+    let (file_id, receiver_expr) = receiver_expr.unpack();
 
-    let receiver_expr = field_ref.dot_expr().receiver_expr();
     let inference = receiver_expr
         .inference_ctx_owner()?
         .in_file(file_id)
@@ -41,25 +45,22 @@ pub(crate) fn add_method_or_field_completions(
     for method_entry in method_entries {
         let method = method_entry.cast_into::<ast::Fun>(hir_db).unwrap();
 
-        // let subst = method.ty_vars_subst();
-        // let InFile {
-        //     file_id: method_file_id,
-        //     value: method,
-        // } = method;
-        // let callable_ty = TyLowering::new(hir_db, method_file_id)
-        //     .lower_function(method)
-        //     .substitute(subst);
-        // let self_ty = callable_ty
-        //     .param_types
-        //     .first()
-        //     .expect("all methods have self param");
-        // let coerced_receiver_ty =
-        //     ty::reference::autoborrow(receiver_ty.clone(), self_ty).expect("should be compatible");
-        //
-        // let mut inference_ctx = InferenceCtx::new(hir_db, method_file_id);
-        // let _ = inference_ctx.combine_types(self_ty.clone(), coerced_receiver_ty);
+        let subst = method.ty_vars_subst();
+        let callable_ty = TyLowering::new(hir_db)
+            .lower_function(method.clone())
+            .substitute(&subst);
+        let self_ty = callable_ty
+            .param_types
+            .first()
+            .expect("all methods have self param");
+        let coerced_receiver_ty =
+            ty::reference::autoborrow(receiver_ty.clone(), self_ty).expect("should be compatible");
 
-        acc.add(render_function(ctx, method, FunctionKind::Method, None).build(ctx.db));
+        let mut inference_ctx = InferenceCtx::new(hir_db, method.file_id);
+        let _ = inference_ctx.combine_types(self_ty.clone(), coerced_receiver_ty);
+
+        let apply_subst = inference_ctx.fully_resolve_vars_fallback_to_origin(subst);
+        acc.add(render_function(ctx, method, FunctionKind::Method, Some(apply_subst)).build(ctx.db));
     }
 
     Some(())
@@ -75,8 +76,16 @@ fn add_field_ref_completion_items(
         .cast_into::<ast::StructOrEnum>(ctx.db.upcast())?
         .unpack();
     let named_fields = adt_item.field_ref_lookup_fields();
+    let ty_lowering = TyLowering::new(ctx.db);
     for named_field in named_fields {
-        acc.add(render_named_item(ctx, named_field.in_file(file_id).in_file_into()).build(ctx.db));
+        let named_field = named_field.in_file(file_id);
+        let mut completion_item = render_named_item(ctx, named_field.clone().in_file_into());
+        if let Some(field_type) = named_field.and_then(|it| it.type_()) {
+            let field_ty = ty_lowering.lower_type(field_type);
+            let field_detail = field_ty.substitute(&ty_adt.substitution).render(ctx.db.upcast());
+            completion_item.set_detail(Some(field_detail));
+        }
+        acc.add(completion_item.build(ctx.db));
     }
 
     Some(())

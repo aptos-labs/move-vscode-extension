@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use syntax::{AstNode, ast};
 use vfs::FileId;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct InferenceResult {
     file_id: FileId,
 

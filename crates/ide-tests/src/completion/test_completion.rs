@@ -200,40 +200,22 @@ module 0x1::m {
 }
 
 #[test]
-fn test_imported_type_completion() {
-    check_completions_contains(
-        // language=Move
-        r#"
-module 0x1::v {
-    struct VestingContract { val: u8 }
-}
-module 0x1::m {
-    use 0x1::v::VestingContract;
-    fun main() {
-        Ves/*caret*/
-    }
-}
-    "#,
-        vec!["VestingContract"],
-    );
-}
-
-#[test]
 fn test_external_module_item_completion() {
     check_completions_contains(
         // language=Move
         r#"
 module 0x1::v {
-    struct Struct { val: u8 }
+    public fun call1() {}
+    public fun call2() {}
 }
 module 0x1::m {
     use 0x1::v;
     fun main() {
-        v::Str/*caret*/
+        v::ca/*caret*/
     }
 }
     "#,
-        vec!["Struct"],
+        vec!["call1()", "call2()"],
     );
 }
 
@@ -289,6 +271,62 @@ module 0x1::m {
     }
     fun main() {
         T[@0x1].s.receiver()$0;
+    }
+}
+    "#,
+    );
+}
+
+#[test]
+fn test_field_completion_with_substituted_type() {
+    check_completions_contains(
+        // language=Move
+        r#"
+module 0x1::m {
+    struct S<T> { val: T }
+    fun main(s: S<u8>) {
+        s.va/*caret*/;
+    }
+}
+    "#, vec!["val -> u8"]);
+}
+
+#[test]
+fn test_method_completion_with_substituted_parameters() {
+    check_completions_contains(
+        // language=Move
+        r#"
+module 0x1::m {
+    struct S<T> { val: T }
+    fun receiver<T>(self: &mut S<T>, my_val: T): T {
+        self.val
+    }
+    fun main(s: S<u8>) {
+        s.rec/*caret*/;
+    }
+}
+    "#, vec!["receiver(my_val: u8) -> u8"]);
+}
+
+
+// language=Move
+
+#[test]
+fn test_field_completion_from_dot() {
+    do_single_completion(
+        r#"
+module 0x1::m {
+    struct S { field: u8 }
+    fun main() {
+        S[@0x1]./*caret*/;
+    }
+}
+    "#,
+        r#"
+module 0x1::m {
+    struct S { field: u8 }
+    fun main() {
+        S[@0x1].field;
     }
 }
     "#,

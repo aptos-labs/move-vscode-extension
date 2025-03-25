@@ -17,10 +17,7 @@ pub fn is_visible_in_context(
 ) -> bool {
     use syntax::SyntaxKind::*;
 
-    let InFile {
-        file_id: context_file_id,
-        value: context,
-    } = context;
+    let (context_file_id, context) = context.unpack_ref();
     // inside msl everything is visible
     if context.syntax().is_msl_context() {
         return true;
@@ -152,7 +149,7 @@ pub fn is_visible_in_context(
             VisLevel::Package => {
                 // check for the same source root
                 // todo: change later to package_id
-                db.file_source_root(*context_file_id) == db.file_source_root(item_file_id)
+                db.file_source_root(context_file_id) == db.file_source_root(item_file_id)
             }
         },
     }

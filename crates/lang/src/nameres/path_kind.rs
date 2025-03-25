@@ -92,8 +92,7 @@ pub enum QualifiedKind {
 }
 
 /// can return None on deeply invalid trees
-pub fn path_kind(path: InFile<ast::Path>, is_completion: bool) -> PathKind {
-    let path = path.value;
+pub fn path_kind(path: ast::Path, is_completion: bool) -> PathKind {
     if let Some(use_group) = path.syntax().ancestor_strict::<ast::UseGroup>() {
         // use 0x1::m::{item}
         //                ^
