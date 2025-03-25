@@ -60,6 +60,19 @@ impl ArgList {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AssertMacroExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl AssertMacroExpr {
+    #[inline]
+    pub fn arg_list(&self) -> Option<ArgList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn excl_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![!]) }
+    #[inline]
+    pub fn ident_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![ident]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Attr {
     pub(crate) syntax: SyntaxNode,
 }
@@ -142,7 +155,9 @@ impl CallExpr {
     #[inline]
     pub fn arg_list(&self) -> Option<ArgList> { support::child(&self.syntax) }
     #[inline]
-    pub fn path(&self) -> Path { support::child(&self.syntax).expect("required by the parser") }
+    pub fn path(&self) -> Path {
+        support::child(&self.syntax).expect("CallExpr.path required by the parser")
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -184,9 +199,13 @@ pub struct DotExpr {
 }
 impl DotExpr {
     #[inline]
-    pub fn field_ref(&self) -> FieldRef { support::child(&self.syntax).expect("required by the parser") }
+    pub fn field_ref(&self) -> FieldRef {
+        support::child(&self.syntax).expect("DotExpr.field_ref required by the parser")
+    }
     #[inline]
-    pub fn receiver_expr(&self) -> Expr { support::child(&self.syntax).expect("required by the parser") }
+    pub fn receiver_expr(&self) -> Expr {
+        support::child(&self.syntax).expect("DotExpr.receiver_expr required by the parser")
+    }
     #[inline]
     pub fn dot_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![.]) }
 }
@@ -407,7 +426,9 @@ impl MethodCallExpr {
     #[inline]
     pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
     #[inline]
-    pub fn receiver_expr(&self) -> Expr { support::child(&self.syntax).expect("required by the parser") }
+    pub fn receiver_expr(&self) -> Expr {
+        support::child(&self.syntax).expect("MethodCallExpr.receiver_expr required by the parser")
+    }
     #[inline]
     pub fn type_arg_list(&self) -> Option<TypeArgList> { support::child(&self.syntax) }
     #[inline]
@@ -463,7 +484,7 @@ pub struct Name {
 impl Name {
     #[inline]
     pub fn ident_token(&self) -> SyntaxToken {
-        support::token(&self.syntax, T![ident]).expect("required by the parser")
+        support::token(&self.syntax, T![ident]).expect("Name.ident_token required by the parser")
     }
 }
 
@@ -474,7 +495,7 @@ pub struct NameRef {
 impl NameRef {
     #[inline]
     pub fn ident_token(&self) -> SyntaxToken {
-        support::token(&self.syntax, T![ident]).expect("required by the parser")
+        support::token(&self.syntax, T![ident]).expect("NameRef.ident_token required by the parser")
     }
 }
 
@@ -485,7 +506,7 @@ pub struct NamedAddress {
 impl NamedAddress {
     #[inline]
     pub fn ident_token(&self) -> SyntaxToken {
-        support::token(&self.syntax, T![ident]).expect("required by the parser")
+        support::token(&self.syntax, T![ident]).expect("NamedAddress.ident_token required by the parser")
     }
 }
 
@@ -521,7 +542,9 @@ pub struct Param {
 }
 impl Param {
     #[inline]
-    pub fn ident_pat(&self) -> IdentPat { support::child(&self.syntax).expect("required by the parser") }
+    pub fn ident_pat(&self) -> IdentPat {
+        support::child(&self.syntax).expect("Param.ident_pat required by the parser")
+    }
     #[inline]
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
     #[inline]
@@ -560,7 +583,9 @@ pub struct ParenType {
 }
 impl ParenType {
     #[inline]
-    pub fn type_(&self) -> Type { support::child(&self.syntax).expect("required by the parser") }
+    pub fn type_(&self) -> Type {
+        support::child(&self.syntax).expect("ParenType.type_ required by the parser")
+    }
     #[inline]
     pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
     #[inline]
@@ -576,9 +601,7 @@ impl Path {
     #[inline]
     pub fn qualifier(&self) -> Option<Path> { support::child(&self.syntax) }
     #[inline]
-    pub fn segment(&self) -> PathSegment {
-        support::child(&self.syntax).expect("required by the parser")
-    }
+    pub fn segment(&self) -> Option<PathSegment> { support::child(&self.syntax) }
     #[inline]
     pub fn coloncolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![::]) }
 }
@@ -590,7 +613,7 @@ pub struct PathAddress {
 impl PathAddress {
     #[inline]
     pub fn value_address(&self) -> ValueAddress {
-        support::child(&self.syntax).expect("required by the parser")
+        support::child(&self.syntax).expect("PathAddress.value_address required by the parser")
     }
 }
 
@@ -600,7 +623,9 @@ pub struct PathExpr {
 }
 impl PathExpr {
     #[inline]
-    pub fn path(&self) -> Path { support::child(&self.syntax).expect("required by the parser") }
+    pub fn path(&self) -> Path {
+        support::child(&self.syntax).expect("PathExpr.path required by the parser")
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -622,7 +647,9 @@ pub struct PathType {
 }
 impl PathType {
     #[inline]
-    pub fn path(&self) -> Path { support::child(&self.syntax).expect("required by the parser") }
+    pub fn path(&self) -> Path {
+        support::child(&self.syntax).expect("PathType.path required by the parser")
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -806,7 +833,9 @@ pub struct StructLit {
 }
 impl StructLit {
     #[inline]
-    pub fn path(&self) -> Path { support::child(&self.syntax).expect("required by the parser") }
+    pub fn path(&self) -> Path {
+        support::child(&self.syntax).expect("StructLit.path required by the parser")
+    }
     #[inline]
     pub fn struct_lit_field_list(&self) -> Option<StructLitFieldList> { support::child(&self.syntax) }
 }
@@ -844,7 +873,9 @@ pub struct StructPat {
 }
 impl StructPat {
     #[inline]
-    pub fn path(&self) -> Path { support::child(&self.syntax).expect("required by the parser") }
+    pub fn path(&self) -> Path {
+        support::child(&self.syntax).expect("StructPat.path required by the parser")
+    }
     #[inline]
     pub fn struct_pat_field_list(&self) -> Option<StructPatFieldList> { support::child(&self.syntax) }
 }
@@ -950,7 +981,9 @@ pub struct TypeArg {
 }
 impl TypeArg {
     #[inline]
-    pub fn type_(&self) -> Type { support::child(&self.syntax).expect("required by the parser") }
+    pub fn type_(&self) -> Type {
+        support::child(&self.syntax).expect("TypeArg.type_ required by the parser")
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1029,7 +1062,9 @@ pub struct UseSpeck {
 }
 impl UseSpeck {
     #[inline]
-    pub fn path(&self) -> Path { support::child(&self.syntax).expect("required by the parser") }
+    pub fn path(&self) -> Path {
+        support::child(&self.syntax).expect("UseSpeck.path required by the parser")
+    }
     #[inline]
     pub fn use_alias(&self) -> Option<UseAlias> { support::child(&self.syntax) }
     #[inline]
@@ -1059,7 +1094,8 @@ pub struct ValueAddress {
 impl ValueAddress {
     #[inline]
     pub fn int_number_token(&self) -> SyntaxToken {
-        support::token(&self.syntax, T![int_number]).expect("required by the parser")
+        support::token(&self.syntax, T![int_number])
+            .expect("ValueAddress.int_number_token required by the parser")
     }
 }
 
@@ -1083,6 +1119,23 @@ impl VariantList {
     pub fn l_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['{']) }
     #[inline]
     pub fn r_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['}']) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct VectorLitExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl VectorLitExpr {
+    #[inline]
+    pub fn arg_exprs(&self) -> AstChildren<Expr> { support::children(&self.syntax) }
+    #[inline]
+    pub fn type_arg_list(&self) -> Option<TypeArgList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn l_brack_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['[']) }
+    #[inline]
+    pub fn r_brack_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![']']) }
+    #[inline]
+    pub fn ident_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![ident]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1136,6 +1189,7 @@ pub enum BindingTypeOwner {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Expr {
     AbortExpr(AbortExpr),
+    AssertMacroExpr(AssertMacroExpr),
     BangExpr(BangExpr),
     BinExpr(BinExpr),
     BlockExpr(BlockExpr),
@@ -1149,6 +1203,7 @@ pub enum Expr {
     ParenExpr(ParenExpr),
     PathExpr(PathExpr),
     ResourceExpr(ResourceExpr),
+    VectorLitExpr(VectorLitExpr),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1355,6 +1410,27 @@ impl AstNode for ArgList {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == ARG_LIST }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for AssertMacroExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ASSERT_MACRO_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == ASSERT_MACRO_EXPR }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -2941,6 +3017,27 @@ impl AstNode for VariantList {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for VectorLitExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        VECTOR_LIT_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == VECTOR_LIT_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for VisibilityModifier {
     #[inline]
     fn kind() -> SyntaxKind
@@ -3125,6 +3222,10 @@ impl From<AbortExpr> for Expr {
     #[inline]
     fn from(node: AbortExpr) -> Expr { Expr::AbortExpr(node) }
 }
+impl From<AssertMacroExpr> for Expr {
+    #[inline]
+    fn from(node: AssertMacroExpr) -> Expr { Expr::AssertMacroExpr(node) }
+}
 impl From<BangExpr> for Expr {
     #[inline]
     fn from(node: BangExpr) -> Expr { Expr::BangExpr(node) }
@@ -3177,10 +3278,20 @@ impl From<ResourceExpr> for Expr {
     #[inline]
     fn from(node: ResourceExpr) -> Expr { Expr::ResourceExpr(node) }
 }
+impl From<VectorLitExpr> for Expr {
+    #[inline]
+    fn from(node: VectorLitExpr) -> Expr { Expr::VectorLitExpr(node) }
+}
 impl Expr {
     pub fn abort_expr(self) -> Option<AbortExpr> {
         match (self) {
             Expr::AbortExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn assert_macro_expr(self) -> Option<AssertMacroExpr> {
+        match (self) {
+            Expr::AssertMacroExpr(item) => Some(item),
             _ => None,
         }
     }
@@ -3262,6 +3373,12 @@ impl Expr {
             _ => None,
         }
     }
+    pub fn vector_lit_expr(self) -> Option<VectorLitExpr> {
+        match (self) {
+            Expr::VectorLitExpr(item) => Some(item),
+            _ => None,
+        }
+    }
 }
 impl AstNode for Expr {
     #[inline]
@@ -3269,6 +3386,7 @@ impl AstNode for Expr {
         matches!(
             kind,
             ABORT_EXPR
+                | ASSERT_MACRO_EXPR
                 | BANG_EXPR
                 | BIN_EXPR
                 | BLOCK_EXPR
@@ -3282,12 +3400,14 @@ impl AstNode for Expr {
                 | PAREN_EXPR
                 | PATH_EXPR
                 | RESOURCE_EXPR
+                | VECTOR_LIT_EXPR
         )
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
             ABORT_EXPR => Expr::AbortExpr(AbortExpr { syntax }),
+            ASSERT_MACRO_EXPR => Expr::AssertMacroExpr(AssertMacroExpr { syntax }),
             BANG_EXPR => Expr::BangExpr(BangExpr { syntax }),
             BIN_EXPR => Expr::BinExpr(BinExpr { syntax }),
             BLOCK_EXPR => Expr::BlockExpr(BlockExpr { syntax }),
@@ -3301,6 +3421,7 @@ impl AstNode for Expr {
             PAREN_EXPR => Expr::ParenExpr(ParenExpr { syntax }),
             PATH_EXPR => Expr::PathExpr(PathExpr { syntax }),
             RESOURCE_EXPR => Expr::ResourceExpr(ResourceExpr { syntax }),
+            VECTOR_LIT_EXPR => Expr::VectorLitExpr(VectorLitExpr { syntax }),
             _ => return None,
         };
         Some(res)
@@ -3309,6 +3430,7 @@ impl AstNode for Expr {
     fn syntax(&self) -> &SyntaxNode {
         match self {
             Expr::AbortExpr(it) => &it.syntax,
+            Expr::AssertMacroExpr(it) => &it.syntax,
             Expr::BangExpr(it) => &it.syntax,
             Expr::BinExpr(it) => &it.syntax,
             Expr::BlockExpr(it) => &it.syntax,
@@ -3322,6 +3444,7 @@ impl AstNode for Expr {
             Expr::ParenExpr(it) => &it.syntax,
             Expr::PathExpr(it) => &it.syntax,
             Expr::ResourceExpr(it) => &it.syntax,
+            Expr::VectorLitExpr(it) => &it.syntax,
         }
     }
 }
@@ -4424,6 +4547,11 @@ impl std::fmt::Display for ArgList {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for AssertMacroExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for Attr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -4795,6 +4923,11 @@ impl std::fmt::Display for Variant {
     }
 }
 impl std::fmt::Display for VariantList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for VectorLitExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

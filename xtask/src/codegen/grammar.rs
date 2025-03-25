@@ -97,7 +97,10 @@ fn generate_nodes(kinds: KindsSrc, grammar: &AstSrc) -> String {
                     quote!(impl ast::#trait_name for #name {})
                 });
 
-            let methods = node.fields.iter().map(|field| generate_field_method(field));
+            let methods = node
+                .fields
+                .iter()
+                .map(|field| generate_field_method(name.to_string(), field));
             (
                 quote! {
                     #[pretty_doc_comment_placeholder_workaround]
@@ -306,8 +309,10 @@ fn generate_nodes(kinds: KindsSrc, grammar: &AstSrc) -> String {
     res.replace("#[derive", "\n#[derive")
 }
 
-fn generate_field_method(field: &Field) -> proc_macro2::TokenStream {
+fn generate_field_method(node_name: String, field: &Field) -> proc_macro2::TokenStream {
     let method_name = format_ident!("{}", field.method_name());
+    let expect_line =
+        proc_macro2::Literal::string(&format!("{}.{} required by the parser", node_name, method_name));
     let ty = field.ty();
     match field {
         Field::Node { cardinality, .. } => match cardinality {
@@ -323,7 +328,7 @@ fn generate_field_method(field: &Field) -> proc_macro2::TokenStream {
                 quote! {
                     #[inline]
                     pub fn #method_name(&self) -> #ty {
-                        support::child(&self.syntax).expect("required by the parser")
+                        support::child(&self.syntax).expect(#expect_line)
                     }
                 }
             }
@@ -344,7 +349,7 @@ fn generate_field_method(field: &Field) -> proc_macro2::TokenStream {
                     quote! {
                         #[inline]
                         pub fn #method_name(&self) -> #ty {
-                            support::token(&self.syntax, #token_kind).expect("required by the parser")
+                            support::token(&self.syntax, #token_kind).expect(#expect_line)
                         }
                     }
                 }

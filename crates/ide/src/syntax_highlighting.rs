@@ -89,9 +89,9 @@ fn traverse(
         };
 
         let element = match element {
-            // NodeOrToken::Node(name_like) => highlight::name_like::name_like(sema, name_like),
+            NodeOrToken::Node(name_like) => highlight::name_like::name_like(sema, name_like),
             NodeOrToken::Token(token) => highlight::token(sema, token),
-            _ => None
+            // _ => None
         };
         if let Some(highlight) = element {
             // if is_unlinked && highlight.tag == HlTag::UnresolvedReference {

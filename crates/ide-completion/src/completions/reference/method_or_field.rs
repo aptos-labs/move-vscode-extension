@@ -40,7 +40,7 @@ pub(crate) fn add_method_or_field_completions(
 
     let hir_db = ctx.db.upcast();
 
-    let method_entries = get_method_resolve_variants(hir_db, &receiver_ty);
+    let method_entries = get_method_resolve_variants(hir_db, &receiver_ty, file_id);
     for method_entry in method_entries {
         let method = method_entry.cast_into::<ast::Fun>(hir_db).unwrap();
 
