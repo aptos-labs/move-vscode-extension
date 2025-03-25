@@ -61,6 +61,12 @@ impl<T: AstNode> InFile<T> {
         let value = IntoT::cast(value.syntax().clone())?;
         Some(InFile::new(file_id, value))
     }
+
+    pub fn cast_ref<IntoT: AstNode>(&self) -> Option<InFile<IntoT>> {
+        let InFile { file_id, value } = self;
+        let value = IntoT::cast(value.syntax().clone())?;
+        Some(InFile::new(*file_id, value))
+    }
 }
 
 impl InFile<SyntaxNode> {

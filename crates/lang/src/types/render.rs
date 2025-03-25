@@ -80,8 +80,14 @@ impl<'db> TypeRenderer<'db> {
         format!("?_{}", kind)
     }
 
-    fn render_ty_adt(&self, _ty_adt: &TyAdt) -> String {
-        "_".to_string()
+    fn render_ty_adt(&self, ty_adt: &TyAdt) -> String {
+        let item = ty_adt
+            .adt_item
+            .cast_into::<ast::StructOrEnum>(self.db)
+            .unwrap();
+        // todo: proper fq name
+        let item_name = item.value.name().map(|it| it.as_string()).unwrap_or(anonymous());
+        item_name
     }
 
     fn origin_loc_name(&self, origin_loc: SyntaxLoc) -> String {

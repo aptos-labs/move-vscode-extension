@@ -299,7 +299,7 @@ pub(crate) const TRAITS: &[(&str, &[&str])] = &[
     ("HasUseStmts", &["use_stmts"]),
     ("HasItems", &["items"]),
     ("HasStmts", &["stmts"]),
-    // ("HasLoopBody", &["label", "loop_body"]),
+    // ("LoopLike", &[/*"label", */"loop_body"]),
     // ("HasArgList", &["arg_list"]),
 ];
 
@@ -312,6 +312,14 @@ pub(crate) const NON_METHOD_TRAITS: &[(&str, &[&str])] = &[
             "FieldRef",
             "StructPatField",
             "StructLitField",
+        ],
+    ),
+    (
+        "LoopLike",
+        &[
+            "LoopExpr",
+            "WhileExpr",
+            "ForExpr",
         ],
     ),
     (

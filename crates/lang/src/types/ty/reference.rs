@@ -83,4 +83,8 @@ impl Mutability {
     pub fn is_mut(&self) -> bool {
         matches!(self, Mutability::Mutable)
     }
+
+    pub fn intersect(&self, other: Mutability) -> Mutability {
+        Self::new(self.is_mut() && other.is_mut())
+    }
 }

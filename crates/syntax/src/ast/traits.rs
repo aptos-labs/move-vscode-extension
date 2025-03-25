@@ -89,3 +89,9 @@ pub trait ReferenceElement: AstNode {
 }
 
 pub trait MslOnly: AstNode {}
+
+pub trait LoopLike: AstNode {
+    fn loop_body(&self) -> Option<ast::BlockOrInlineExpr> {
+        support::child(&self.syntax())
+    }
+}

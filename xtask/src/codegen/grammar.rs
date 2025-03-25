@@ -561,6 +561,8 @@ fn generate_syntax_kinds(grammar: KindsSrc<'_>) -> String {
             [lifetime_ident] => { $crate::SyntaxKind::LIFETIME_IDENT };
             [ident] => { $crate::SyntaxKind::IDENT };
             [int_number] => { $crate::SyntaxKind::INT_NUMBER };
+            [hex_string] => { $crate::SyntaxKind::HEX_STRING };
+            [byte_string] => { $crate::SyntaxKind::BYTE_STRING };
         }
         pub use T;
     };
@@ -712,8 +714,9 @@ fn lower_rule(
                 "lhs"
                     | "op"
                     | "rhs"
-                    // | "then_branch"
-                    // | "else_branch"
+                    | "then_branch"
+                    | "else_branch"
+                    | "loop_body"
                     // | "start"
                     // | "end"
                     | "base_expr"

@@ -371,20 +371,8 @@ fn while_expr(p: &mut Parser<'_>, m: Option<Marker>) -> CompletedMarker {
     m.complete(p, WHILE_EXPR)
 }
 
-// test cond
-// fn foo() { if let Some(_) = None {} }
-// fn bar() {
-//     if let Some(_) | Some(_) = None {}
-//     if let | Some(_) = None {}
-//     while let Some(_) | Some(_) = None {}
-//     while let | Some(_) = None {}
-// }
 fn condition(p: &mut Parser) {
     let m = p.start();
-    // if p.eat(T![let]) {
-    //     patterns::pattern_top(p);
-    //     p.expect(T![=]);
-    // }
     p.expect(T!['(']);
     let r = Restrictions {
         forbid_structs: true,

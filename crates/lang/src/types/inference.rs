@@ -160,8 +160,8 @@ impl<'a> InferenceCtx<'a> {
     }
 
     fn resolve_ty_infer_shallow(&self, ty: Ty) -> Ty {
-        if let Ty::Infer(ty_infer) = ty {
-            self.resolve_ty_infer(&ty_infer)
+        if let Ty::Infer(ty_infer) = &ty {
+            self.resolve_ty_infer(ty_infer)
         } else {
             ty
         }
@@ -184,6 +184,39 @@ impl<'a> InferenceCtx<'a> {
             (left_ty, Ty::Infer(TyInfer::IntVar(int_var))) => self.combine_int_var(int_var, left_ty),
 
             (left_ty, right_ty) => self.combine_no_vars(left_ty, right_ty),
+        }
+    }
+
+    pub fn intersect_all_types(&mut self, types: Vec<Ty>) -> Ty {
+        types
+            .into_iter()
+            .reduce(|acc, ty| self.intersect_types(acc, ty))
+            .unwrap_or(Ty::Unknown)
+    }
+
+    fn intersect_types(&mut self, left_ty: Ty, right_ty: Ty) -> Ty {
+        match (&left_ty, &right_ty) {
+            (Ty::Never, _) => right_ty,
+            (_, Ty::Never) => left_ty,
+            (Ty::Unknown, _) => right_ty, // even if Ty::Unknown too
+            _ => {
+                let is_ok = self.combine_types(left_ty.clone(), right_ty.clone()).is_ok()
+                    || self.combine_types(right_ty.clone(), left_ty.clone()).is_ok();
+                if is_ok {
+                    match (left_ty.clone(), right_ty) {
+                        (Ty::Reference(left_ty_ref), Ty::Reference(right_ty_ref)) => {
+                            let min_mut = left_ty_ref.mutability.intersect(right_ty_ref.mutability);
+                            Ty::Reference(TyReference::new(
+                                left_ty_ref.referenced.deref().to_owned(),
+                                min_mut,
+                            ))
+                        }
+                        _ => left_ty,
+                    }
+                } else {
+                    Ty::Unknown
+                }
+            }
         }
     }
 

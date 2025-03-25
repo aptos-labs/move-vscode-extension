@@ -6,6 +6,7 @@ use parser::T;
 pub enum LiteralKind {
     // String(ast::String),
     ByteString(ast::ByteString),
+    HexString(ast::HexString),
     // CString(ast::CString),
     IntNumber(ast::IntNumber),
     Address(ast::AddressLit),
@@ -44,6 +45,9 @@ impl ast::Literal {
         // }
         if let Some(t) = ast::ByteString::cast(token.clone()) {
             return LiteralKind::ByteString(t);
+        }
+        if let Some(t) = ast::HexString::cast(token.clone()) {
+            return LiteralKind::HexString(t);
         }
         // if let Some(t) = ast::CString::cast(token.clone()) {
         //     return LiteralKind::CString(t);
