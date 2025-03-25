@@ -708,7 +708,7 @@ impl GlobalState {
             // are run on the main thread to reduce latency:
             // .on_sync::<lsp_ext::JoinLines>(handlers::handle_join_lines)
             // .on_sync::<lsp_ext::OnEnter>(handlers::handle_on_enter)
-            // .on_sync::<lsp_request::SelectionRangeRequest>(handlers::handle_selection_range)
+            .on_sync::<lsp_request::SelectionRangeRequest>(handlers::handle_selection_range)
             // .on_sync::<lsp_ext::MatchingBrace>(handlers::handle_matching_brace)
             // .on_sync::<lsp_ext::OnTypeFormatting>(handlers::handle_on_type_formatting)
             // Formatting should be done immediately as the editor might wait on it, but we can't

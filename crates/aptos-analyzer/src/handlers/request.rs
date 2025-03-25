@@ -1,3 +1,4 @@
+use line_index::TextRange;
 use crate::diagnostics::convert_diagnostic;
 use crate::global_state::{FetchWorkspaceRequest, GlobalState, GlobalStateSnapshot};
 use crate::lsp::{from_proto, to_proto};
@@ -185,4 +186,47 @@ pub(crate) fn handle_document_diagnostics(
             // }),
         }),
     ))
+}
+
+pub(crate) fn handle_selection_range(
+    snap: GlobalStateSnapshot,
+    params: lsp_types::SelectionRangeParams,
+) -> anyhow::Result<Option<Vec<lsp_types::SelectionRange>>> {
+    let _p = tracing::info_span!("handle_selection_range").entered();
+    let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
+    let line_index = snap.file_line_index(file_id)?;
+    let res: anyhow::Result<Vec<lsp_types::SelectionRange>> = params
+        .positions
+        .into_iter()
+        .map(|position| {
+            let offset = from_proto::offset(&line_index, position)?;
+            let mut ranges = Vec::new();
+            {
+                let mut range = TextRange::new(offset, offset);
+                loop {
+                    ranges.push(range);
+                    let frange = FileRange { file_id, range };
+                    let next = snap.analysis.extend_selection(frange)?;
+                    if next == range {
+                        break;
+                    } else {
+                        range = next
+                    }
+                }
+            }
+            let mut range = lsp_types::SelectionRange {
+                range: to_proto::range(&line_index, *ranges.last().unwrap()),
+                parent: None,
+            };
+            for &r in ranges.iter().rev().skip(1) {
+                range = lsp_types::SelectionRange {
+                    range: to_proto::range(&line_index, r),
+                    parent: Some(Box::new(range)),
+                }
+            }
+            Ok(range)
+        })
+        .collect();
+
+    Ok(Some(res?))
 }
