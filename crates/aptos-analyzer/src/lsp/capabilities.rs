@@ -2,11 +2,7 @@ use crate::config::Config;
 use crate::line_index::PositionEncoding;
 use crate::lsp::semantic_tokens;
 use line_index::WideEncoding;
-use lsp_types::{
-    CompletionOptions, CompletionOptionsCompletionItem, OneOf, PositionEncodingKind,
-    SemanticTokensFullOptions, SemanticTokensLegend, SemanticTokensOptions, ServerCapabilities,
-    TextDocumentSyncCapability, TextDocumentSyncKind, WorkDoneProgressOptions,
-};
+use lsp_types::{CompletionOptions, CompletionOptionsCompletionItem, OneOf, PositionEncodingKind, SelectionRangeProviderCapability, SemanticTokensFullOptions, SemanticTokensLegend, SemanticTokensOptions, ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind, WorkDoneProgressOptions};
 
 pub fn server_capabilities(config: &Config) -> ServerCapabilities {
     ServerCapabilities {
@@ -70,7 +66,7 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
         //         more_trigger_character: Some(chars.map(|c| c.to_string()).collect()),
         //     }
         // }),
-        // selection_range_provider: Some(SelectionRangeProviderCapability::Simple(true)),
+        selection_range_provider: Some(SelectionRangeProviderCapability::Simple(true)),
         // folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
         // rename_provider: Some(OneOf::Right(RenameOptions {
         //     prepare_provider: Some(true),

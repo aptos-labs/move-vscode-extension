@@ -16,6 +16,7 @@ use vfs::{FileId, VfsPath};
 mod goto_definition;
 mod navigation_target;
 pub mod syntax_highlighting;
+pub mod extend_selection;
 pub mod test_utils;
 mod type_info;
 
@@ -197,10 +198,10 @@ impl Analysis {
         self.with_db(|db| db.line_index(file_id))
     }
 
-    // /// Selects the next syntactic nodes encompassing the range.
-    // pub fn extend_selection(&self, frange: FileRange) -> Cancellable<TextRange> {
-    //     self.with_db(|db| extend_selection::extend_selection(db, frange))
-    // }
+    /// Selects the next syntactic nodes encompassing the range.
+    pub fn extend_selection(&self, frange: FileRange) -> Cancellable<TextRange> {
+        self.with_db(|db| extend_selection::extend_selection(db, frange))
+    }
 
     // /// Returns position of the matching brace (all types of braces are
     // /// supported).
