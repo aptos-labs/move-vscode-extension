@@ -1,4 +1,3 @@
-use crate::db::HirDatabase;
 use crate::types::inference::InferenceCtx;
 use crate::types::ty::Ty;
 

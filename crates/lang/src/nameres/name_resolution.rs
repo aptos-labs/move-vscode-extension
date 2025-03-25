@@ -14,7 +14,7 @@ use parser::SyntaxKind::MODULE_SPEC;
 use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Formatter;
-use syntax::ast::{FieldsOwner, HasItems, ReferenceElement};
+use syntax::ast::{HasItems, ReferenceElement};
 use syntax::{ast, AstNode, SyntaxNode};
 
 pub struct ResolveScope {

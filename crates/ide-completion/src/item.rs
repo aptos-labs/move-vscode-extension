@@ -197,10 +197,9 @@ impl CompletionItemBuilder {
     }
     pub(crate) fn insert_snippet(
         &mut self,
-        cap: SnippetCap,
+        _cap: SnippetCap,
         snippet: impl Into<String>,
     ) -> &mut CompletionItemBuilder {
-        // let _ = cap;
         self.is_snippet = true;
         self.insert_text(snippet)
     }

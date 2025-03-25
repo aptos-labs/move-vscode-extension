@@ -1,5 +1,4 @@
 use crate::db::HirDatabase;
-use crate::files::InFileInto;
 use crate::nameres::path_kind::{path_kind, PathKind, QualifiedKind};
 use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::has_item_list::HasUseStmtsInFileExt;

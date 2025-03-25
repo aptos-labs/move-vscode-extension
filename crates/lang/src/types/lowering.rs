@@ -1,7 +1,7 @@
 mod type_args;
 
 use crate::db::HirDatabase;
-use crate::files::{InFileExt, InFileInto};
+use crate::files::InFileExt;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::integer::IntegerKind;
@@ -11,7 +11,6 @@ use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::Ty;
 use crate::InFile;
-use parser::SyntaxKind::{ENUM, STRUCT, TYPE_PARAM};
 use syntax::{ast, AstNode, SyntaxNode};
 use vfs::FileId;
 

@@ -4,15 +4,13 @@ use crate::loc::SyntaxLocFileExt;
 use crate::nameres::name_resolution::{
     get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
-use crate::nameres::namespaces::{Ns, NsSet, FUNCTIONS};
+use crate::nameres::namespaces::{Ns, FUNCTIONS};
 use crate::nameres::path_kind::{path_kind, PathKind, QualifiedKind};
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt};
 use crate::types::inference::InferenceCtx;
 use crate::types::lowering::TyLowering;
-use crate::types::ty::adt::TyAdt;
-use crate::types::ty::ty_var::{TyInfer, TyVar};
 use crate::types::ty::Ty;
-use crate::{loc, InFile};
+use crate::InFile;
 use base_db::input::SourceRootId;
 use parser::SyntaxKind::CALL_EXPR;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
@@ -65,7 +63,6 @@ pub fn get_method_resolve_variants(
     self_ty: &Ty,
     file_id: FileId,
 ) -> Vec<ScopeEntry> {
-
     let Some(InFile {
         file_id,
         value: receiver_item_module,

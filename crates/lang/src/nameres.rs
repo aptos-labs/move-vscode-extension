@@ -92,8 +92,6 @@ impl<T: ast::ReferenceElement> InFile<T> {
     }
 
     pub fn resolve_no_inf(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
-        use syntax::SyntaxKind::*;
-
         let InFile {
             file_id: _,
             value: ref_element,

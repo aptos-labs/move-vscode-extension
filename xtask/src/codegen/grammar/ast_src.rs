@@ -306,7 +306,13 @@ pub(crate) const TRAITS: &[(&str, &[&str])] = &[
 pub(crate) const NON_METHOD_TRAITS: &[(&str, &[&str])] = &[
     (
         "ReferenceElement",
-        &["Path", "MethodCallExpr", "FieldRef", "StructPatField", "StructLitField"],
+        &[
+            "Path",
+            "MethodCallExpr",
+            "FieldRef",
+            "StructPatField",
+            "StructLitField",
+        ],
     ),
     (
         "HasVisibility",

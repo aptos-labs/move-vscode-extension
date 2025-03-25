@@ -1,8 +1,8 @@
-use line_index::TextRange;
 use crate::diagnostics::convert_diagnostic;
 use crate::global_state::{FetchWorkspaceRequest, GlobalState, GlobalStateSnapshot};
 use crate::lsp::{from_proto, to_proto};
 use lang::files::FileRange;
+use line_index::TextRange;
 use lsp_types::{SemanticTokensParams, SemanticTokensResult};
 
 pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {

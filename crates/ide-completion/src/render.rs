@@ -2,9 +2,6 @@ use crate::context::CompletionContext;
 use crate::item::{CompletionItem, CompletionItemBuilder, CompletionItemKind};
 use ide_db::SymbolKind;
 use syntax::ast::NamedElement;
-use syntax::SyntaxKind::{
-    ATTR, CONST, ENUM, FUN, IDENT_PAT, LABEL, MODULE, NAMED_FIELD, STRUCT, TYPE_PARAM,
-};
 use syntax::{ast, AstNode, SyntaxKind};
 
 pub(crate) mod function;
@@ -15,24 +12,7 @@ pub(crate) fn render_named_item(
 ) -> CompletionItemBuilder {
     let item_name = named_item.name().expect("handled on upper level").as_string();
     let completion_kind = item_to_kind(named_item.syntax().kind());
-    let mut completion_item = CompletionItem::new(completion_kind, ctx.source_range(), &item_name);
-
-    // if let Some(function) = named_item.cast_into::<ast::Fun>() {
-    //     let ret_type = function.return_type().map(|it| it.syntax().text());
-    //     completion_item.set_detail(ret_type);
-    //
-    //     if let Some(cap) = ctx.config.snippet_cap {
-    //         let (snippet, label_suffix) = if function.params().is_empty() {
-    //             (format!("{}()$0", &item_name), "()")
-    //         } else {
-    //             (format!("{}($0)", &item_name), "(..)")
-    //         };
-    //         completion_item.set_label(format!("{}{}", &item_name, label_suffix));
-    //         completion_item.insert_snippet(cap, snippet);
-    //     }
-    // }
-
-    completion_item
+    CompletionItem::new(completion_kind, ctx.source_range(), &item_name)
 }
 
 fn item_to_kind(kind: SyntaxKind) -> CompletionItemKind {

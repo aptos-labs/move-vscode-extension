@@ -27,7 +27,7 @@ impl IntegerKind {
             _ if lit.ends_with("u256") => IntegerKind::U256,
             _ => {
                 return None;
-            },
+            }
         };
         Some(kind)
     }

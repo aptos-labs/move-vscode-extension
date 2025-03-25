@@ -8,15 +8,15 @@ use ide_db::{LineIndexDatabase, RootDatabase};
 use lang::files::{FilePosition, FileRange};
 use line_index::{LineCol, LineIndex};
 use ra_salsa::ParallelDatabase;
-use syntax::{SourceFile, SyntaxKind, TextRange, TextSize};
+use syntax::{SourceFile, TextRange, TextSize};
 use triomphe::Arc;
 use vfs::file_set::FileSet;
 use vfs::{FileId, VfsPath};
 
+pub mod extend_selection;
 mod goto_definition;
 mod navigation_target;
 pub mod syntax_highlighting;
-pub mod extend_selection;
 pub mod test_utils;
 mod type_info;
 
@@ -24,7 +24,6 @@ pub use crate::navigation_target::NavigationTarget;
 pub use crate::syntax_highlighting::HlRange;
 use ide_completion::config::CompletionConfig;
 use ide_diagnostics::{Diagnostic, DiagnosticsConfig};
-use lang::{loc, types};
 pub use ra_salsa::Cancelled;
 
 pub type Cancellable<T> = Result<T, Cancelled>;

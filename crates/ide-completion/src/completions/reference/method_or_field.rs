@@ -3,7 +3,7 @@ use crate::context::CompletionContext;
 use crate::render::function::{render_function, FunctionKind};
 use crate::render::render_named_item;
 use base_db::Upcast;
-use lang::files::{InFileExt};
+use lang::files::InFileExt;
 use lang::nameres::path_resolution::get_method_resolve_variants;
 use lang::types::ty::adt::TyAdt;
 use lang::types::ty::Ty;

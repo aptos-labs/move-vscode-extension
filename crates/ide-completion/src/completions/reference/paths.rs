@@ -1,6 +1,5 @@
 use crate::completions::Completions;
 use crate::context::CompletionContext;
-use crate::item::CompletionItem;
 use crate::render::function::{render_function, FunctionKind};
 use crate::render::render_named_item;
 use base_db::Upcast;
@@ -9,7 +8,7 @@ use lang::nameres::path_resolution::{get_path_resolve_variants, ResolutionContex
 use lang::nameres::scope::ScopeEntryListExt;
 use lang::InFile;
 use std::cell::RefCell;
-use syntax::{ast, AstNode};
+use syntax::ast;
 
 pub(crate) fn add_path_completions(
     completions: &RefCell<Completions>,
