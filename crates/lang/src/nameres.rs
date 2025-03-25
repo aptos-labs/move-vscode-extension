@@ -19,6 +19,7 @@ pub mod path_resolution;
 pub mod scope;
 mod scope_entries_owner;
 pub mod use_speck_entries;
+pub mod fq_named_element;
 
 impl<T: ast::ReferenceElement> InFile<T> {
     pub fn resolve(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
