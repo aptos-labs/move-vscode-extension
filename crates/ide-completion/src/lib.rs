@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::completions::{item_list, reference, Completions};
+use crate::completions::{Completions, item_list, reference};
 use crate::config::CompletionConfig;
 use crate::context::{CompletionAnalysis, CompletionContext};
 use crate::item::CompletionItem;

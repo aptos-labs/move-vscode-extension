@@ -1,10 +1,10 @@
+use crate::InFile;
 use crate::files::InFileVecExt;
 use crate::nameres::scope::{NamedItemsExt, ScopeEntry};
-use crate::InFile;
 use stdx::itertools::Itertools;
-use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::HasStmts;
-use syntax::{ast, AstNode, SyntaxNode};
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
+use syntax::{AstNode, SyntaxNode, ast};
 
 pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: Option<SyntaxNode>) -> Vec<ScopeEntry> {
     use syntax::SyntaxKind::*;

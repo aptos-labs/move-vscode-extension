@@ -1,9 +1,9 @@
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::patterns::BindingMode::{BindByReference, BindByValue};
+use crate::types::ty::Ty;
 use crate::types::ty::reference::{Mutability, TyReference};
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_var::{TyInfer, TyVar};
-use crate::types::ty::Ty;
 use syntax::ast;
 
 pub fn collect_bindings(

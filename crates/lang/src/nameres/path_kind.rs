@@ -1,15 +1,15 @@
-use crate::nameres::address::{resolve_named_address, Address, NamedAddr, ValueAddr};
-use crate::nameres::namespaces::{
-    NsSet, ALL_NS, ENUMS, ENUMS_N_MODULES, IMPORTABLE_NS, MODULES, NAMES, NAMES_N_FUNCTIONS_N_VARIANTS,
-    NAMES_N_VARIANTS, NONE, TYPES_N_ENUMS, TYPES_N_ENUMS_N_ENUM_VARIANTS, TYPES_N_ENUMS_N_MODULES,
-    TYPES_N_NAMES,
-};
 use crate::InFile;
+use crate::nameres::address::{Address, NamedAddr, ValueAddr, resolve_named_address};
+use crate::nameres::namespaces::{
+    ALL_NS, ENUMS, ENUMS_N_MODULES, IMPORTABLE_NS, MODULES, NAMES, NAMES_N_FUNCTIONS_N_VARIANTS,
+    NAMES_N_VARIANTS, NONE, NsSet, TYPES_N_ENUMS, TYPES_N_ENUMS_N_ENUM_VARIANTS,
+    TYPES_N_ENUMS_N_MODULES, TYPES_N_NAMES,
+};
 use parser::T;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::ast::node_ext::syntax_node::{OptionSyntaxNodeExt, SyntaxNodeExt};
-use syntax::{ast, AstNode};
+use syntax::{AstNode, ast};
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum PathKind {

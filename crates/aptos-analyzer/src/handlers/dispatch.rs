@@ -7,7 +7,7 @@ use std::{
 use ide::Cancelled;
 use lsp_server::{ExtractError, ResponseError};
 use ra_salsa::Cycle;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use stdx::thread::ThreadIntent;
 
 use crate::{

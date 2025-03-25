@@ -1,11 +1,11 @@
+use crate::InFile;
 use crate::db::HirDatabase;
 use crate::nameres::blocks::get_entries_in_blocks;
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::nameres::use_speck_entries::use_speck_entries;
-use crate::InFile;
 use syntax::ast::{GenericItem, HasItems};
-use syntax::{ast, AstNode, SyntaxNode};
+use syntax::{AstNode, SyntaxNode, ast};
 
 pub fn get_entries_in_scope(
     db: &dyn HirDatabase,

@@ -1,5 +1,5 @@
-use crate::input::{CrateGraph, SourceRoot, SourceRootId};
 use crate::SourceRootDatabase;
+use crate::input::{CrateGraph, SourceRoot, SourceRootId};
 use ra_salsa::Durability;
 use std::fmt;
 use triomphe::Arc;

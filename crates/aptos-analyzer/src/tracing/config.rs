@@ -3,10 +3,10 @@
 
 use anyhow::Context;
 use tracing_subscriber::{
-    filter::{filter_fn, Targets},
-    fmt::{time, MakeWriter},
-    layer::SubscriberExt,
     Layer, Registry,
+    filter::{Targets, filter_fn},
+    fmt::{MakeWriter, time},
+    layer::SubscriberExt,
 };
 
 use crate::tracing::json;

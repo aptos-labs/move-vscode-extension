@@ -1,6 +1,6 @@
+use lsp_types::TextDocumentIdentifier;
 use lsp_types::notification::Notification;
 use lsp_types::request::Request;
-use lsp_types::TextDocumentIdentifier;
 use serde::{Deserialize, Serialize};
 use std::ops;
 

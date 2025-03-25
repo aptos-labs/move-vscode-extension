@@ -1,8 +1,8 @@
 use crate::loc::SyntaxLoc;
+use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::ty_var::{TyInfer, TyVar, TyVarKind};
 use crate::types::ty::type_param::TyTypeParameter;
-use crate::types::ty::Ty;
 use base_db::SourceRootDatabase;
 use std::ops::Deref;
 use stdx::itertools::Itertools;

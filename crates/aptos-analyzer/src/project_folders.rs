@@ -1,13 +1,13 @@
 use base_db::input::SourceRoot;
 use paths::AbsPathBuf;
-use project_model::aptos_workspace::PackageRoot;
 use project_model::AptosWorkspace;
+use project_model::aptos_workspace::PackageRoot;
 use rustc_hash::FxHashMap;
 use std::collections::hash_map::Entry;
 use std::mem;
 use stdx::itertools::Itertools;
-use vfs::file_set::FileSetConfig;
 use vfs::VfsPath;
+use vfs::file_set::FileSetConfig;
 
 #[derive(Default, Debug)]
 pub struct SourceRootConfig {

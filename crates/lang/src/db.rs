@@ -1,8 +1,8 @@
+use crate::InFile;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
+use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
-use crate::types::inference::InferenceCtx;
-use crate::InFile;
 use base_db::{SourceRootDatabase, Upcast};
 use syntax::ast;
 use triomphe::Arc;

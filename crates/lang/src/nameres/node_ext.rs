@@ -1,7 +1,7 @@
+use crate::InFile;
 use crate::files::{InFileExt, InFileVecExt};
 use crate::nameres::namespaces::Ns;
 use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryExt};
-use crate::InFile;
 use syntax::ast;
 use syntax::ast::HasItems;
 

@@ -1,5 +1,5 @@
-use crate::test_utils::{get_marked_position_offset, get_marked_position_offset_with_data};
 use crate::Analysis;
+use crate::test_utils::{get_marked_position_offset, get_marked_position_offset_with_data};
 use lang::files::FilePosition;
 use syntax::SyntaxKind::IDENT;
 use syntax::{AstNode, SyntaxKind};

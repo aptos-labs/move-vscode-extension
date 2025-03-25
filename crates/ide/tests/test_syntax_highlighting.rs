@@ -1,4 +1,4 @@
-use ide::{assert_eq_text, Analysis};
+use ide::{Analysis, assert_eq_text};
 
 fn check_highlighting_for_text(source: &str, target: &str) {
     let (analysis, file_id) = Analysis::from_single_file(source.to_owned());

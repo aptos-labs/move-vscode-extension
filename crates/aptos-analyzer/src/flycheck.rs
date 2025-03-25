@@ -1,7 +1,7 @@
 use crate::command::CommandHandle;
 use crate::toolchain;
 use camino::Utf8PathBuf;
-use crossbeam_channel::{select_biased, unbounded, Receiver, Sender};
+use crossbeam_channel::{Receiver, Sender, select_biased, unbounded};
 use paths::AbsPathBuf;
 use rustc_hash::FxHashMap;
 use std::process::Command;

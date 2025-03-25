@@ -1,8 +1,8 @@
 use crate::manifest_path::ManifestPath;
-use anyhow::{bail, Context};
+use anyhow::{Context, bail};
 use paths::{AbsPath, AbsPathBuf, Utf8PathBuf};
 use rustc_hash::FxHashSet;
-use std::fs::{read_dir, ReadDir};
+use std::fs::{ReadDir, read_dir};
 use std::process::Command;
 use std::{fs, io};
 

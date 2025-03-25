@@ -1,6 +1,7 @@
 pub(crate) mod ast_walker;
 pub(crate) mod inference_result;
 
+use crate::InFile;
 use crate::db::HirDatabase;
 use crate::files::{InFileExt, InFileInto};
 use crate::nameres::path_resolution;
@@ -9,20 +10,19 @@ use crate::types::fold::{Fallback, FullTyVarResolver, TyVarResolver, TypeFoldabl
 use crate::types::has_type_params_ext::GenericItemExt;
 use crate::types::lowering::TyLowering;
 use crate::types::substitution::ApplySubstitution;
+use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::reference::TyReference;
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
-use crate::types::ty::Ty;
 use crate::types::unification::UnificationTable;
-use crate::InFile;
 use parser::SyntaxKind;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::iter::zip;
 use std::ops::Deref;
-use syntax::{ast, AstNode, SyntaxNodeOrToken};
+use syntax::{AstNode, SyntaxNodeOrToken, ast};
 use vfs::FileId;
 
 pub struct InferenceCtx<'db> {

@@ -1,7 +1,7 @@
-use crate::types::substitution::Substitution;
-use crate::types::ty::type_param::TyTypeParameter;
-use crate::types::ty::Ty;
 use crate::InFile;
+use crate::types::substitution::Substitution;
+use crate::types::ty::Ty;
+use crate::types::ty::type_param::TyTypeParameter;
 use syntax::ast;
 
 pub trait GenericItemExt {

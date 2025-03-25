@@ -3,7 +3,7 @@ use ide_db::RootDatabase;
 use lang::files::InFileExt;
 use lang::types::ty::Ty;
 use lang::{FilePosition, Semantics};
-use syntax::{algo, ast, AstNode};
+use syntax::{AstNode, algo, ast};
 
 pub(crate) fn expr_type_info(
     db: &RootDatabase,

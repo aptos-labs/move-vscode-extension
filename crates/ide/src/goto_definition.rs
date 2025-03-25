@@ -1,10 +1,10 @@
-use crate::navigation_target::NavigationTarget;
 use crate::RangeInfo;
-use ide_db::helpers::pick_best_token;
+use crate::navigation_target::NavigationTarget;
 use ide_db::RootDatabase;
-use lang::files::FilePosition;
+use ide_db::helpers::pick_best_token;
 use lang::Semantics;
-use syntax::{algo, ast, AstNode, SyntaxKind::*, T};
+use lang::files::FilePosition;
+use syntax::{AstNode, SyntaxKind::*, T, algo, ast};
 
 // Feature: Go to Definition
 //

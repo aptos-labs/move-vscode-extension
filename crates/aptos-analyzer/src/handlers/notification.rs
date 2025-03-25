@@ -4,7 +4,7 @@ use crate::lsp::from_proto;
 use crate::lsp::utils::apply_document_changes;
 use crate::lsp_ext::RunFlycheckParams;
 use crate::mem_docs::DocumentData;
-use crate::{reload, Config};
+use crate::{Config, reload};
 use camino::Utf8PathBuf;
 use lsp_types::{
     CancelParams, DidChangeConfigurationParams, DidChangeTextDocumentParams,

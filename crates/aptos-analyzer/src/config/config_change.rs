@@ -1,6 +1,6 @@
+use crate::Config;
 use crate::config::options::FullConfigInput;
 use crate::config::{ConfigErrorInner, ConfigErrors};
-use crate::Config;
 use serde::de::DeserializeOwned;
 use std::iter;
 use triomphe::Arc;
@@ -60,7 +60,7 @@ impl Config {
             config
                 .client_config
                 .1
-                 .0
+                .0
                 .iter()
                 // todo: flycheck
                 // .chain(config.validation_errors.0.iter())

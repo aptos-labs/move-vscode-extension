@@ -1,12 +1,12 @@
+use crate::InFile;
 use crate::files::InFileExt;
 use crate::types::lowering::TyLowering;
 use crate::types::substitution::Substitution;
-use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::Ty;
-use crate::InFile;
+use crate::types::ty::type_param::TyTypeParameter;
 use std::collections::HashMap;
 use syntax::ast::GenericItem;
-use syntax::{ast, AstNode};
+use syntax::{AstNode, ast};
 
 impl TyLowering<'_> {
     pub fn type_args_substitution(
