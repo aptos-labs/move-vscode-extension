@@ -8,6 +8,7 @@ use std::ops::Deref;
 use stdx::itertools::Itertools;
 use syntax::ast;
 use syntax::ast::NamedElement;
+use crate::nameres::fq_named_element::FqNamedElement;
 
 pub struct TypeRenderer<'db> {
     db: &'db dyn SourceRootDatabase,
@@ -86,8 +87,8 @@ impl<'db> TypeRenderer<'db> {
             .cast_into::<ast::StructOrEnum>(self.db)
             .unwrap();
         // todo: proper fq name
-        let item_name = item.value.name().map(|it| it.as_string()).unwrap_or(anonymous());
-        item_name
+        let item_fq_name = item.value.fq_name().map(|it| it.identifier_text()).unwrap_or(anonymous());
+        item_fq_name
     }
 
     fn origin_loc_name(&self, origin_loc: SyntaxLoc) -> String {

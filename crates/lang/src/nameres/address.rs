@@ -25,6 +25,13 @@ impl Address {
             _ => false,
         }
     }
+
+    pub fn identifier_text(&self) -> String {
+        match self {
+            Address::Named(named_addr) => named_addr.name.clone(),
+            Address::Value(value_addr) => value_addr.numeric_address.value.clone(),
+        }
+    }
 }
 
 impl fmt::Debug for Address {
