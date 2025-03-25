@@ -8,6 +8,7 @@ use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use crate::nameres::scope_entries_owner::get_entries_in_scope;
 use crate::node_ext::ModuleLangExt;
 use crate::InFile;
+use base_db::input::SourceRootId;
 use parser::SyntaxKind;
 use parser::SyntaxKind::MODULE_SPEC;
 use std::collections::HashMap;
@@ -115,19 +116,13 @@ pub fn get_entries_from_walking_scopes(
     entries
 }
 
-#[tracing::instrument(
-    level = "debug",
-    skip(db, ctx, address),
-    fields(path = ctx.path.syntax_text())
-)]
+#[tracing::instrument(level = "debug", skip(db))]
 pub fn get_modules_as_entries(
     db: &dyn HirDatabase,
-    ctx: &ResolutionContext,
+    source_root_id: SourceRootId,
     address: Address,
 ) -> Vec<ScopeEntry> {
     // get all files in the current package
-    let file_id = ctx.path.file_id;
-    let source_root_id = db.file_source_root(file_id);
     let source_root = db.source_root(source_root_id);
 
     let mut entries = vec![];
@@ -156,7 +151,11 @@ pub fn get_qualified_path_entries(
     if qualifier_item.is_none() {
         // qualifier can be an address
         if let Some(qualifier_name) = qualifier.value.reference_name() {
-            return get_modules_as_entries(db, ctx, Address::Named(NamedAddr::new(qualifier_name)));
+            return get_modules_as_entries(
+                db,
+                ctx.source_root_id(db),
+                Address::Named(NamedAddr::new(qualifier_name)),
+            );
         }
         return vec![];
     }

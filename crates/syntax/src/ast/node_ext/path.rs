@@ -3,7 +3,7 @@ use crate::{ast, AstNode};
 
 impl ast::Path {
     pub fn path_address(&self) -> Option<ast::PathAddress> {
-        self.segment().path_address()
+        self.segment()?.path_address()
     }
 
     pub fn reference(&self) -> ast::AnyReferenceElement {
@@ -11,12 +11,12 @@ impl ast::Path {
     }
 
     pub fn reference_name(&self) -> Option<String> {
-        self.segment().name_ref().map(|it| it.as_string())
+        self.segment()?.name_ref().map(|it| it.as_string())
     }
 
     pub fn type_args(&self) -> Vec<ast::TypeArg> {
         self.segment()
-            .type_arg_list()
+            .and_then(|it| it.type_arg_list())
             .map(|it| it.type_arguments().collect())
             .unwrap_or_default()
     }

@@ -51,8 +51,6 @@ impl<Var: Clone + Eq + Hash + Debug> UnificationTable<Var> {
     }
 
     pub fn unify_var_value(&mut self, ty_var: &Var, ty: Ty) {
-        dbg!(&ty_var);
-        dbg!(&ty);
         let old_value_ty = self.resolve_to_ty_value(ty_var);
         if let Some(old_value_ty) = old_value_ty {
             // if already unified, value must be the same

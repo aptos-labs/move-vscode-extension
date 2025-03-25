@@ -8,6 +8,9 @@ pub(crate) mod type_param;
 
 use crate::db::HirDatabase;
 use crate::loc::SyntaxLoc;
+use crate::nameres::address::{Address, NamedAddr};
+use crate::nameres::name_resolution::get_modules_as_entries;
+use crate::nameres::scope::{ScopeEntryListExt, VecExt};
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::render::TypeRenderer;
 use crate::types::ty::adt::TyAdt;
@@ -22,6 +25,7 @@ use base_db::SourceRootDatabase;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::{ast, AstToken};
+use vfs::FileId;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Ty {
@@ -59,7 +63,7 @@ impl Ty {
         }
     }
 
-    pub fn item_module(&self, db: &dyn HirDatabase) -> Option<InFile<ast::Module>> {
+    pub fn item_module(&self, db: &dyn HirDatabase, file_id: FileId) -> Option<InFile<ast::Module>> {
         let ty = self.deref();
         match ty {
             Ty::Adt(ty_adt) => {
@@ -68,6 +72,13 @@ impl Ty {
                     .cast_into::<ast::StructOrEnum>(db.upcast())
                     .unwrap();
                 Some(item.map(|it| it.module()))
+            }
+            Ty::Vector(_) => {
+                let module =
+                    get_modules_as_entries(db, db.file_source_root(file_id), Address::named("std"))
+                        .filter_by_name("vector".to_string())
+                        .single_or_none()?;
+                module.cast_into::<ast::Module>(db)
             }
             // todo: vector
             _ => None,

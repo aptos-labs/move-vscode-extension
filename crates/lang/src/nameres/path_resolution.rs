@@ -13,11 +13,13 @@ use crate::types::ty::adt::TyAdt;
 use crate::types::ty::ty_var::{TyInfer, TyVar};
 use crate::types::ty::Ty;
 use crate::{loc, InFile};
+use base_db::input::SourceRootId;
 use parser::SyntaxKind::CALL_EXPR;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::OptionSyntaxNodeExt;
 use syntax::ast::HasItems;
 use syntax::{ast, AstNode};
+use vfs::FileId;
 
 pub fn get_path_resolve_variants(
     db: &dyn HirDatabase,
@@ -50,7 +52,7 @@ pub fn get_path_resolve_variants(
         PathKind::Qualified {
             kind: QualifiedKind::Module { address },
             ..
-        } => get_modules_as_entries(db, ctx, address),
+        } => get_modules_as_entries(db, ctx.source_root_id(db), address),
 
         PathKind::Qualified { qualifier, ns, .. } => {
             get_qualified_path_entries(db, ctx, qualifier).filter_by_ns(ns)
@@ -58,11 +60,16 @@ pub fn get_path_resolve_variants(
     }
 }
 
-pub fn get_method_resolve_variants(db: &dyn HirDatabase, self_ty: &Ty) -> Vec<ScopeEntry> {
+pub fn get_method_resolve_variants(
+    db: &dyn HirDatabase,
+    self_ty: &Ty,
+    file_id: FileId,
+) -> Vec<ScopeEntry> {
+
     let Some(InFile {
         file_id,
         value: receiver_item_module,
-    }) = self_ty.item_module(db)
+    }) = self_ty.item_module(db, file_id)
     else {
         return vec![];
     };
@@ -149,5 +156,9 @@ impl ResolutionContext {
 
     pub fn is_call_expr(&self) -> bool {
         self.path.value.root_path().syntax().parent().is_kind(CALL_EXPR)
+    }
+
+    pub fn source_root_id(&self, db: &dyn HirDatabase) -> SourceRootId {
+        db.file_source_root(self.path.file_id)
     }
 }

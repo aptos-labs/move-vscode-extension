@@ -11,7 +11,7 @@ impl ast::Attr {
 
     pub fn simple_name(&self) -> Option<String> {
         let path = self.attr_item()?.path()?;
-        let segment = path.segment();
+        let segment = path.segment()?;
         if path.qualifier().is_some() {
             return None;
         }

@@ -198,6 +198,8 @@ Expr =
     | ResourceExpr
     | CallExpr
     | MethodCallExpr
+    | AssertMacroExpr
+    | VectorLitExpr
     | IndexExpr
     | DotExpr
     | AbortExpr
@@ -265,6 +267,12 @@ CallExpr =
 
 MethodCallExpr =
     receiver_expr:Expr '.' NameRef ('::' TypeArgList)? ArgList
+
+AssertMacroExpr =
+    'ident' '!' ArgList
+
+VectorLitExpr =
+    'ident' TypeArgList? '[' arg_exprs:(Expr (',' Expr)* ','?)? ']'
 
 MethodOrPath =
     MethodCallExpr | Path

@@ -27,6 +27,8 @@ pub mod type_;
 pub mod visibility;
 mod field_ref;
 mod borrow_expr;
+mod assert_macro_expr;
+mod vector_lit_expr;
 
 use crate::token_text::TokenText;
 use crate::{ast, AstNode, AstToken, SyntaxNode};

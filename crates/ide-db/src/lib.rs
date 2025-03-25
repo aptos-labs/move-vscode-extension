@@ -138,7 +138,9 @@ pub enum SymbolKind {
 pub fn ast_kind_to_symbol_kind(kind: SyntaxKind) -> Option<SymbolKind> {
     match kind {
         MODULE => Some(SymbolKind::Module),
-        FUN => Some(SymbolKind::Function),
+
+        FUN | SPEC_FUN | SPEC_INLINE_FUN => Some(SymbolKind::Function),
+
         CONST => Some(SymbolKind::Const),
         STRUCT => Some(SymbolKind::Struct),
         ENUM => Some(SymbolKind::Enum),
@@ -148,6 +150,9 @@ pub fn ast_kind_to_symbol_kind(kind: SyntaxKind) -> Option<SymbolKind> {
         VARIANT => Some(SymbolKind::EnumVariant),
 
         NAMED_FIELD => Some(SymbolKind::Field),
+
+        // todo
+        SCHEMA => Some(SymbolKind::Struct),
 
         _ => unreachable!("unhandled ast kind {:?}", kind),
     }

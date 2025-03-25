@@ -9,7 +9,7 @@ use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::reference::{autoborrow, Mutability, TyReference};
 use crate::types::ty::ty_callable::TyCallable;
-use crate::types::ty::ty_var::{TyInfer, TyIntVar};
+use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
 use crate::types::ty::Ty;
 use crate::InFile;
 use std::iter;
@@ -119,6 +119,15 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         }
     }
 
+    // returns inferred
+    fn infer_expr_coerceable_to(&mut self, expr: &ast::Expr, expected_ty: Ty) -> Ty {
+        let actual_ty = self.infer_expr(expr, Expected::ExpectType(expected_ty.clone()));
+        self.ctx
+            .coerce_types(expr.node_or_token(), actual_ty.clone(), expected_ty);
+        actual_ty
+    }
+
+    // returns expected
     fn infer_expr_coerce_to(&mut self, expr: &ast::Expr, expected_ty: Ty) -> Ty {
         let actual_ty = self.infer_expr(expr, Expected::ExpectType(expected_ty.clone()));
         let no_type_error =
@@ -142,10 +151,15 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::Expr::MethodCallExpr(method_call_expr) => {
                 self.infer_method_call_expr(method_call_expr, Expected::NoValue)
             }
+            ast::Expr::VectorLitExpr(vector_lit_expr) => self.infer_vector_lit_expr(vector_lit_expr, expected),
 
             ast::Expr::DotExpr(dot_expr) => self
                 .infer_dot_expr(dot_expr, Expected::NoValue)
                 .unwrap_or(Ty::Unknown),
+
+            ast::Expr::AssertMacroExpr(assert_macro_expr) => {
+                self.infer_assert_macro_expr(assert_macro_expr)
+            }
 
             ast::Expr::ParenExpr(paren_expr) => paren_expr
                 .expr()
@@ -272,7 +286,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let self_ty = self.infer_expr(&method_call_expr.receiver_expr(), Expected::NoValue);
         let self_ty = self.ctx.resolve_vars_if_possible(self_ty);
 
-        let method_entry = get_method_resolve_variants(self.ctx.db, &self_ty)
+        let method_entry = get_method_resolve_variants(self.ctx.db, &self_ty, self.ctx.file_id)
             .filter_by_name(method_call_expr.reference_name())
             .filter_by_visibility(self.ctx.db, &method_call_expr.clone().in_file(self.ctx.file_id))
             .single_or_none();
@@ -321,6 +335,18 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         call_ty.ret_type.deref().to_owned()
     }
 
+    fn infer_assert_macro_expr(&mut self, assert_macro_expr: &ast::AssertMacroExpr) -> Ty {
+        let declared_input_tys = vec![Ty::Bool, Ty::Integer(IntegerKind::Integer)];
+        let args = assert_macro_expr
+            .args()
+            .into_iter()
+            .map(|expr| CallArg::Arg { expr })
+            .collect();
+        self.coerce_call_arg_types(args, declared_input_tys, vec![]);
+
+        Ty::Unit
+    }
+
     fn infer_index_expr(&mut self, index_expr: &ast::IndexExpr) -> Ty {
         let Some(arg_expr) = index_expr.arg_expr() else {
             return Ty::Unknown;
@@ -358,6 +384,30 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         Ty::Unknown
     }
 
+    fn infer_vector_lit_expr(&mut self, vector_lit_expr: &ast::VectorLitExpr, expected: Expected) -> Ty {
+        let arg_ty_var = Ty::Infer(TyInfer::Var(TyVar::new_anonymous(self.ctx.inc_ty_counter())));
+
+        let explicit_ty = vector_lit_expr
+            .type_arg()
+            .map(|it| self.ctx.ty_lowering().lower_type(it.type_()));
+        if let Some(explicit_ty) = explicit_ty {
+            let _ = self.ctx.combine_types(arg_ty_var.clone(), explicit_ty);
+        }
+
+        let arg_ty = self.ctx.resolve_vars_if_possible(arg_ty_var.clone());
+        let arg_exprs = vector_lit_expr.arg_exprs().collect::<Vec<_>>();
+        let declared_arg_tys = iter::repeat_n(arg_ty, arg_exprs.len()).collect::<Vec<_>>();
+
+        let vec_ty = Ty::Vector(Box::new(arg_ty_var));
+
+        let lit_call_ty = TyCallable::new(declared_arg_tys.clone(), vec_ty.clone());
+        let expected_arg_tys = self.infer_expected_call_arg_tys(&lit_call_ty, expected);
+        let args = arg_exprs.into_iter().map(|expr| CallArg::Arg { expr }).collect();
+        self.coerce_call_arg_types(args, declared_arg_tys, expected_arg_tys);
+
+        self.ctx.resolve_vars_if_possible(vec_ty)
+    }
+
     fn infer_borrow_expr(&mut self, borrow_expr: &ast::BorrowExpr, expected: Expected) -> Option<Ty> {
         let inner_expr = borrow_expr.expr()?;
         let inner_expected_ty = expected
@@ -391,6 +441,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let (lhs, (_, op_kind), rhs) = bin_expr.unpack()?;
         match op_kind {
             ast::BinaryOp::ArithOp(op) => Some(self.infer_arith_binary_expr(lhs, op, rhs, false)),
+            ast::BinaryOp::LogicOp(op) => Some(self.infer_logic_binary_expr(lhs, op, rhs)),
             _ => None,
         }
     }
@@ -431,6 +482,12 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         }
     }
 
+    fn infer_logic_binary_expr(&mut self, lhs: ast::Expr, _op: ast::LogicOp, rhs: ast::Expr) -> Ty {
+        self.infer_expr_coerceable_to(&lhs, Ty::Bool);
+        self.infer_expr_coerceable_to(&rhs, Ty::Bool);
+        Ty::Bool
+    }
+
     fn infer_literal(&mut self, literal: &ast::Literal) -> Ty {
         match literal.kind() {
             ast::LiteralKind::Bool(_) => Ty::Bool,
@@ -440,7 +497,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     Some(kind) => Ty::Integer(kind),
                     None => Ty::Infer(TyInfer::IntVar(TyIntVar::new(self.ctx.inc_ty_counter()))),
                 }
-            },
+            }
             ast::LiteralKind::Address(_) => Ty::Address,
             ast::LiteralKind::ByteString(_) => Ty::Vector(Box::new(Ty::Integer(IntegerKind::U8))),
             ast::LiteralKind::Invalid => Ty::Unknown,
