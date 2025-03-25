@@ -1,6 +1,7 @@
 mod test_completion;
 
-use crate::assert_eq_text;
+use std::fmt;
+use crate::{assert_eq_text, init_tracing_for_test};
 use crate::test_utils::get_and_replace_caret;
 use ide::Analysis;
 use ide_completion::config::CompletionConfig;
@@ -53,14 +54,17 @@ pub fn check_completions_with_prefix_exact(source: &str, expected_items: Vec<&st
 }
 
 pub fn check_completions_contains(source: &str, contains_items: Vec<&str>) {
+    init_tracing_for_test();
+
     let (source, offset) = get_and_replace_caret(source, "/*caret*/");
 
     let completion_items = completions_at_offset(source, offset, false);
 
     let mut lookup_labels = lookup_labels(completion_items);
-    for item in contains_items {
+    let mut lookup_labels_txt = format!("{:?}", lookup_labels);
+    for item in contains_items.clone() {
         let item = item.to_string();
-        assert!(lookup_labels.contains(&item), "missing item '{}'", item);
+        assert!(lookup_labels.contains(&item), "missing item '{}', actual: {}", item, lookup_labels_txt);
         lookup_labels.retain(|lookup| *lookup != item);
     }
 
@@ -129,5 +133,11 @@ fn completions_at_offset(
 }
 
 fn lookup_labels(items: Vec<CompletionItem>) -> Vec<String> {
-    items.iter().map(|item| item.label.primary.clone()).collect()
+    items.iter().map(|item| {
+        let mut label = item.label.primary.clone();
+        if let Some(detail) = &item.detail {
+            label += &format!(" -> {}", detail);
+        }
+        label
+    }).collect()
 }

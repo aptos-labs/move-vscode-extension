@@ -15,9 +15,9 @@ use syntax::ast;
 pub(crate) fn add_path_completions(
     completions: &RefCell<Completions>,
     ctx: &CompletionContext<'_>,
-    path: InFile<ast::Path>,
+    context_path: InFile<ast::Path>,
 ) -> Option<()> {
-    let path_kind = path_kind(path.clone(), true);
+    let path_kind = path_kind(context_path.clone().value, true);
     tracing::debug!(path_kind = ?path_kind);
 
     if path_kind.is_unqualified() {
@@ -27,16 +27,14 @@ pub(crate) fn add_path_completions(
     let acc = &mut completions.borrow_mut();
 
     let resolution_ctx = ResolutionContext {
-        path: path.clone(),
+        path: context_path.clone(),
         is_completion: true,
     };
-    let entries = get_path_resolve_variants(ctx.db.upcast(), &resolution_ctx, path_kind);
-    tracing::debug!(entries = ?entries);
+    let entries = get_path_resolve_variants(ctx.db.upcast(), &resolution_ctx, path_kind)
+        .filter_by_visibility(ctx.db.upcast(), &context_path);
+    tracing::debug!(?entries);
 
-    let filtered_entries = entries.filter_by_visibility(ctx.db.upcast(), &path);
-    tracing::debug!(filtered_entries = ?filtered_entries);
-
-    for entry in filtered_entries {
+    for entry in entries {
         let named_item = entry.cast_into::<ast::AnyNamedElement>(ctx.db.upcast()).unwrap();
         if named_item.kind() == FUN {
             acc.add(
@@ -48,7 +46,7 @@ pub(crate) fn add_path_completions(
                 )
                 .build(ctx.db),
             );
-            return Some(());
+            continue;
         }
         acc.add(render_named_item(ctx, named_item).build(ctx.db));
     }

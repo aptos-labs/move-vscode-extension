@@ -27,7 +27,7 @@ impl TypeFoldable<Substitution> for Substitution {
         let folded_mapping = self
             .mapping
             .into_iter()
-            .map(|(k, v)| (k, v.deep_fold_with(folder.clone())))
+            .map(|(k, v)| (k, v.fold_with(folder.clone())))
             .collect();
         Substitution {
             mapping: folded_mapping,
@@ -42,15 +42,15 @@ impl TypeFoldable<Substitution> for Substitution {
 pub trait ApplySubstitution {
     type Item: TypeFoldable<Self::Item>;
 
-    fn substitute(self, subst: Substitution) -> Self::Item;
+    fn substitute(self, subst: &Substitution) -> Self::Item;
 }
 
 #[derive(Debug, Clone)]
-pub struct SubstitutionApplier {
-    subst: Substitution,
+pub struct SubstitutionApplier<'a> {
+    subst: &'a Substitution,
 }
 
-impl TypeFolder for SubstitutionApplier {
+impl TypeFolder for SubstitutionApplier<'_> {
     fn fold_ty(&self, ty: Ty) -> Ty {
         match ty {
             Ty::TypeParam(ty_tp) => self.subst.get_ty(&ty_tp).unwrap_or(Ty::TypeParam(ty_tp)),
@@ -62,7 +62,7 @@ impl TypeFolder for SubstitutionApplier {
 impl<T: TypeFoldable<T>> ApplySubstitution for T {
     type Item = T;
 
-    fn substitute(self, subst: Substitution) -> T {
+    fn substitute(self, subst: &Substitution) -> T {
         self.fold_with(SubstitutionApplier { subst })
     }
 }

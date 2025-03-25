@@ -27,8 +27,8 @@ pub fn completions(
             CompletionAnalysis::Item(item_list_kind) => {
                 item_list::complete_item_list(&completions, &ctx, &item_list_kind);
             }
-            CompletionAnalysis::Reference(path) => {
-                reference::add_reference_completions(&completions, &ctx, path);
+            CompletionAnalysis::Reference(reference_kind) => {
+                reference::add_reference_completions(&completions, &ctx, reference_kind);
             }
         }
     }

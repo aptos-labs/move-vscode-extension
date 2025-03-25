@@ -274,7 +274,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let named_field_type = named_field?.and_then(|it| it.type_())?;
         let field_ty = ty_lowering
             .lower_type(named_field_type)
-            .substitute(ty_adt.substitution);
+            .substitute(&ty_adt.substitution);
         Some(field_ty)
     }
 

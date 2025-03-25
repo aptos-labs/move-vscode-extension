@@ -114,7 +114,7 @@ impl<'a> InferenceCtx<'a> {
         );
 
         let ty_vars_subst = generic_item.ty_vars_subst();
-        path_ty = path_ty.substitute(ty_vars_subst);
+        path_ty = path_ty.substitute(&ty_vars_subst);
 
         path_ty
     }
@@ -147,7 +147,7 @@ impl<'a> InferenceCtx<'a> {
         TyVarResolver::new(self)
     }
 
-    pub fn resolve_vars_if_possible(&self, ty: Ty) -> Ty {
+    pub fn resolve_vars_if_possible<T: TypeFoldable<T>>(&self, ty: T) -> T {
         ty.fold_with(self.var_resolver())
     }
 
@@ -155,7 +155,7 @@ impl<'a> InferenceCtx<'a> {
         ty.fold_with(FullTyVarResolver::new(&self, Fallback::Unknown))
     }
 
-    pub fn fully_resolve_vars_fallback_to_origin(&self, ty: Ty) -> Ty {
+    pub fn fully_resolve_vars_fallback_to_origin<T: TypeFoldable<T>>(&self, ty: T) -> T {
         ty.fold_with(FullTyVarResolver::new(&self, Fallback::Origin))
     }
 
@@ -301,7 +301,7 @@ impl<'a> InferenceCtx<'a> {
         if ty1.adt_item != ty2.adt_item {
             return Err(TypeError::new(Ty::Adt(ty1.to_owned()), Ty::Adt(ty2.to_owned())));
         }
-        Ok(())
+        self.combine_ty_pairs(ty1.clone().type_args, ty2.clone().type_args)
     }
 
     fn combine_ty_tuples(&mut self, ty1: &TyTuple, ty2: &TyTuple) -> CombineResult {

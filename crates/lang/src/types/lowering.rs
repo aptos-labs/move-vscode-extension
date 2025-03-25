@@ -106,7 +106,7 @@ impl<'a> TyLowering<'a> {
         // Option: ?Element -> ?Element
         if let Some(generic_item) = named_item.syntax_cast::<ast::AnyGenericItem>() {
             let type_args_subst = self.type_args_substitution(method_or_path, generic_item);
-            return path_ty.substitute(type_args_subst);
+            return path_ty.substitute(&type_args_subst);
         }
 
         path_ty

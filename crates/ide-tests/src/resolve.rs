@@ -9,6 +9,7 @@ use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::{Layer, Registry};
 use tracing_tree::HierarchicalLayer;
+use crate::init_tracing_for_test;
 
 mod test_resolve_1;
 mod test_resolve_functions;
@@ -21,10 +22,7 @@ mod test_resolve_types;
 mod test_resolve_variables;
 
 pub(crate) fn check_resolve(source: &str) {
-    let _ = Registry::default()
-        // .with(fmt::Layer::new().with_max_level(Level::DEBUG))
-        .with(HierarchicalLayer::new(2).with_filter(LevelFilter::from_level(Level::DEBUG)))
-        .try_init();
+    init_tracing_for_test();
 
     let (ref_offset, data) = get_marked_position_offset_with_data(&source, "//^");
 
