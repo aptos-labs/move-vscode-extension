@@ -1,13 +1,12 @@
-use std::cell::RefCell;
 use crate::loc;
-use crate::loc::{SyntaxLocFileExt, SyntaxLocNodeExt};
+use crate::loc::SyntaxLocNodeExt;
 use crate::nameres::scope::{ScopeEntry, VecExt};
 use crate::types::inference::InferenceCtx;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::ty_var::TyInfer;
 use crate::types::ty::Ty;
+use std::cell::RefCell;
 use std::collections::HashMap;
-use syntax::ast::ReferenceElement;
 use syntax::{ast, AstNode};
 use vfs::FileId;
 
@@ -52,7 +51,7 @@ impl InferenceResult {
     }
 
     fn unify_remaining_int_vars_into_integer(ctx: &mut InferenceCtx) {
-        let mut int_vars = RefCell::new(vec![]);
+        let int_vars = RefCell::new(vec![]);
         {
             for ty in ctx.pat_types.values().chain(ctx.expr_types.values()) {
                 ty.deep_visit_ty_infers(|ty_infer| {
@@ -80,8 +79,6 @@ impl InferenceResult {
     }
 
     pub fn resolve_method_or_path(&self, method_or_path: ast::MethodOrPath) -> Option<ScopeEntry> {
-        use syntax::SyntaxKind::*;
-
         match method_or_path {
             ast::MethodOrPath::MethodCallExpr(method_call_expr) => {
                 self.get_resolved_method_call(&method_call_expr)

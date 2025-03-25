@@ -1,7 +1,6 @@
 use crate::context::CompletionContext;
 use crate::item::CompletionItemBuilder;
 use crate::render::render_named_item;
-use stdx::itertools::Itertools;
 use syntax::ast::NamedElement;
 use syntax::{ast, AstNode};
 

@@ -3,9 +3,8 @@ pub(crate) mod inference_result;
 
 use crate::db::HirDatabase;
 use crate::files::{InFileExt, InFileInto};
-use crate::loc::SyntaxLocFileExt;
 use crate::nameres::path_resolution;
-use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt, VecExt};
+use crate::nameres::scope::{ScopeEntry, VecExt};
 use crate::types::fold::{Fallback, FullTyVarResolver, TyVarResolver, TypeFoldable};
 use crate::types::has_type_params_ext::GenericItemExt;
 use crate::types::lowering::TyLowering;
@@ -266,7 +265,7 @@ impl<'a> InferenceCtx<'a> {
     }
 
     fn unify_ty_vars_with_unknown(&mut self, tys: Vec<Ty>) {
-        let mut ty_vars = RefCell::new(vec![]);
+        let ty_vars = RefCell::new(vec![]);
         for ty in tys {
             ty.deep_visit_ty_infers(|ty_infer| {
                 if let TyInfer::Var(ty_var) = ty_infer {
@@ -370,8 +369,8 @@ impl<'a> InferenceCtx<'a> {
     }
 }
 
-pub(crate) type CombineResult = Result<(), TypeError>;
-pub(crate) struct TypeError {
+pub type CombineResult = Result<(), TypeError>;
+pub struct TypeError {
     ty1: Ty,
     ty2: Ty,
 }

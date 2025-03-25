@@ -8,7 +8,7 @@ pub(crate) mod type_param;
 
 use crate::db::HirDatabase;
 use crate::loc::SyntaxLoc;
-use crate::nameres::address::{Address, NamedAddr};
+use crate::nameres::address::Address;
 use crate::nameres::name_resolution::get_modules_as_entries;
 use crate::nameres::scope::{ScopeEntryListExt, VecExt};
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
@@ -22,9 +22,7 @@ use crate::types::ty::ty_var::{TyInfer, TyVar};
 use crate::types::ty::type_param::TyTypeParameter;
 use crate::InFile;
 use base_db::SourceRootDatabase;
-use std::fmt;
-use std::fmt::Formatter;
-use syntax::{ast, AstToken};
+use syntax::ast;
 use vfs::FileId;
 
 #[derive(Debug, Clone, Eq, PartialEq)]

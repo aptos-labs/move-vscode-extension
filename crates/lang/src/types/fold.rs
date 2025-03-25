@@ -2,7 +2,6 @@ use crate::types::inference::InferenceCtx;
 use crate::types::ty::ty_var::{TyInfer, TyVar, TyVarKind};
 use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::Ty;
-use std::cell::RefCell;
 
 pub trait TypeFoldable<T> {
     fn fold_with(self, folder: impl TypeFolder) -> T

@@ -151,7 +151,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::Expr::MethodCallExpr(method_call_expr) => {
                 self.infer_method_call_expr(method_call_expr, Expected::NoValue)
             }
-            ast::Expr::VectorLitExpr(vector_lit_expr) => self.infer_vector_lit_expr(vector_lit_expr, expected),
+            ast::Expr::VectorLitExpr(vector_lit_expr) => {
+                self.infer_vector_lit_expr(vector_lit_expr, expected)
+            }
 
             ast::Expr::DotExpr(dot_expr) => self
                 .infer_dot_expr(dot_expr, Expected::NoValue)

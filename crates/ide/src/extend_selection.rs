@@ -22,14 +22,10 @@ use crate::FileRange;
 pub(crate) fn extend_selection(db: &RootDatabase, frange: FileRange) -> TextRange {
     let sema = Semantics::new(db);
     let file = sema.parse(frange.file_id);
-    try_extend_selection(&sema, file.syntax(), frange).unwrap_or(frange.range)
+    try_extend_selection(file.syntax(), frange).unwrap_or(frange.range)
 }
 
-fn try_extend_selection(
-    sema: &Semantics<'_, RootDatabase>,
-    root: &SyntaxNode,
-    frange: FileRange,
-) -> Option<TextRange> {
+fn try_extend_selection(root: &SyntaxNode, frange: FileRange) -> Option<TextRange> {
     let range = frange.range;
 
     let string_kinds = [COMMENT, BYTE_STRING];

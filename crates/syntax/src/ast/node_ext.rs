@@ -1,10 +1,13 @@
 mod address_ref;
+mod assert_macro_expr;
 pub mod attr;
 pub mod bin_expr;
 mod block_expr;
+mod borrow_expr;
 mod call_expr;
 mod enum_;
 mod expr;
+mod field_ref;
 pub mod fun;
 mod ident_pat;
 pub mod index_expr;
@@ -24,11 +27,8 @@ mod struct_or_enum;
 mod struct_pat_field;
 pub mod syntax_node;
 pub mod type_;
-pub mod visibility;
-mod field_ref;
-mod borrow_expr;
-mod assert_macro_expr;
 mod vector_lit_expr;
+pub mod visibility;
 
 use crate::token_text::TokenText;
 use crate::{ast, AstNode, AstToken, SyntaxNode};

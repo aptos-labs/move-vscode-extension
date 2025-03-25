@@ -21,7 +21,7 @@ pub fn collect_bindings(
                 .insert(ident_pat.clone().into(), ident_pat_ty);
         }
         ast::Pat::StructPat(struct_pat) => {
-            let (expected, pat_bm) = strip_references(explicit_ty, def_bm);
+            let (expected, _pat_bm) = strip_references(explicit_ty, def_bm);
             type_walker
                 .ctx
                 .pat_types
@@ -45,17 +45,11 @@ pub fn collect_bindings(
 
 pub fn anonymous_pat_ty_var(ty_counter: usize, pat: &ast::Pat) -> Ty {
     match pat {
-        ast::Pat::IdentPat(_) => {
-            // *counter = *counter + 1;
-            Ty::Infer(TyInfer::Var(TyVar::new_anonymous(ty_counter)))
-        }
+        ast::Pat::IdentPat(_) => Ty::Infer(TyInfer::Var(TyVar::new_anonymous(ty_counter))),
         ast::Pat::TuplePat(tuple_pat) => {
             let pat_types = tuple_pat
                 .pats()
-                .map(|pat| {
-                    // *counter = *counter + 1;
-                    Ty::Infer(TyInfer::Var(TyVar::new_anonymous(ty_counter)))
-                })
+                .map(|_| Ty::Infer(TyInfer::Var(TyVar::new_anonymous(ty_counter))))
                 .collect();
             Ty::Tuple(TyTuple::new(pat_types))
         }
