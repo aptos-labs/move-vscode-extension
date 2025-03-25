@@ -11,7 +11,7 @@ use crate::project_folders::SourceRootConfig;
 use crate::task_pool::{TaskPool, TaskQueue};
 use crate::{lsp_ext, reload};
 use base_db::change::FileChange;
-use crossbeam_channel::{unbounded, Receiver, Sender};
+use crossbeam_channel::{Receiver, Sender, unbounded};
 use ide::{Analysis, AnalysisHost, Cancellable};
 use lsp_types::Url;
 use nohash_hasher::IntMap;

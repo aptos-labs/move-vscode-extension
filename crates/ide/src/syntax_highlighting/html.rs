@@ -4,7 +4,7 @@ use lang::Semantics;
 use stdx::format_to;
 use syntax::AstNode;
 
-use crate::{syntax_highlighting::highlight, FileId, RootDatabase};
+use crate::{FileId, RootDatabase, syntax_highlighting::highlight};
 
 pub(crate) fn highlight_as_html_no_style(db: &RootDatabase, file_id: FileId) -> String {
     let sema = Semantics::new(db);

@@ -1,5 +1,5 @@
-use crate::nameres::use_speck_entries::{use_stmt_items, UseItem};
 use crate::InFile;
+use crate::nameres::use_speck_entries::{UseItem, use_stmt_items};
 use syntax::ast;
 //
 // pub trait HasItemListExt {

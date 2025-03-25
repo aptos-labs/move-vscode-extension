@@ -1,7 +1,7 @@
+use crate::Config;
 use crate::global_state::GlobalStateSnapshot;
 use crate::line_index::{LineEndings, LineIndex, PositionEncoding};
 use crate::lsp::semantic_tokens;
-use crate::Config;
 use camino::{Utf8Component, Utf8Prefix};
 use ide::syntax_highlighting::tags::{Highlight, HlTag};
 use ide::{Cancellable, HlRange, NavigationTarget};

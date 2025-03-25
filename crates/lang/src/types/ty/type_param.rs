@@ -1,5 +1,5 @@
-use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::InFile;
+use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use syntax::ast;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]

@@ -1,13 +1,13 @@
 mod method_or_field;
 mod paths;
 
+use crate::completions::Completions;
 use crate::completions::reference::method_or_field::add_method_or_field_completions;
 use crate::completions::reference::paths::add_path_completions;
-use crate::completions::Completions;
 use crate::context::CompletionContext;
 use lang::InFile;
 use std::cell::RefCell;
-use syntax::{ast, AstNode};
+use syntax::{AstNode, ast};
 
 pub(crate) fn add_reference_completions(
     completions: &RefCell<Completions>,

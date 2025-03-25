@@ -1,7 +1,7 @@
-use crate::syntax_highlighting::tags::HlTag;
 use crate::syntax_highlighting::Highlight;
-use ide_db::defs::{Definition, NameClass, NameRefClass};
+use crate::syntax_highlighting::tags::HlTag;
 use ide_db::RootDatabase;
+use ide_db::defs::{Definition, NameClass, NameRefClass};
 use lang::Semantics;
 use syntax::ast;
 

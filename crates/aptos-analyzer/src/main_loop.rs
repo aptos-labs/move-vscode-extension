@@ -1,12 +1,12 @@
 use crate::config::Config;
-use crate::diagnostics::{fetch_native_diagnostics, DiagnosticsGeneration, NativeDiagnosticsFetchKind};
+use crate::diagnostics::{DiagnosticsGeneration, NativeDiagnosticsFetchKind, fetch_native_diagnostics};
 use crate::flycheck::FlycheckMessage;
 use crate::global_state::{
-    file_id_to_url, url_to_file_id, FetchWorkspaceRequest, FetchWorkspaceResponse, GlobalState,
+    FetchWorkspaceRequest, FetchWorkspaceResponse, GlobalState, file_id_to_url, url_to_file_id,
 };
 use crate::handlers::dispatch::{NotificationDispatcher, RequestDispatcher};
 use crate::lsp::from_proto;
-use crate::lsp::utils::{notification_is, Progress};
+use crate::lsp::utils::{Progress, notification_is};
 use crate::reload::ProjectWorkspaceProgress;
 use crate::{flycheck, lsp_ext};
 use base_db::SourceRootDatabase;
@@ -19,7 +19,7 @@ use std::panic::AssertUnwindSafe;
 use std::time::{Duration, Instant};
 use stdx::always;
 use stdx::thread::ThreadIntent;
-use tracing::{span, Level};
+use tracing::{Level, span};
 use vfs::loader::LoadingProgress;
 use vfs::{FileId, VfsPath};
 
@@ -364,7 +364,9 @@ impl GlobalState {
 
         let loop_duration = loop_start.elapsed();
         if loop_duration > Duration::from_millis(100) && was_quiescent {
-            tracing::warn!("overly long loop turn took {loop_duration:?} (event handling took {event_handling_duration:?}): {event_dbg_msg}");
+            tracing::warn!(
+                "overly long loop turn took {loop_duration:?} (event handling took {event_handling_duration:?}): {event_dbg_msg}"
+            );
         }
     }
 

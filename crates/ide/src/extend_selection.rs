@@ -1,10 +1,10 @@
 use ide_db::RootDatabase;
 use lang::Semantics;
 use syntax::{
-    ast::{self, AstNode, AstToken},
     Direction, NodeOrToken,
     SyntaxKind::{self, *},
-    SyntaxNode, SyntaxToken, TextRange, TextSize, TokenAtOffset, T,
+    SyntaxNode, SyntaxToken, T, TextRange, TextSize, TokenAtOffset,
+    ast::{self, AstNode, AstToken},
 };
 
 use crate::FileRange;

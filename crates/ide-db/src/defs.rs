@@ -1,8 +1,8 @@
-use crate::{ast_kind_to_symbol_kind, RootDatabase, SymbolKind};
+use crate::{RootDatabase, SymbolKind, ast_kind_to_symbol_kind};
 use lang::Semantics;
 use std::collections::HashSet;
 use std::sync::LazyLock;
-use syntax::{ast, AstNode};
+use syntax::{AstNode, ast};
 
 static INTEGER_TYPE_IDENTS: LazyLock<HashSet<&str>> =
     LazyLock::new(|| HashSet::from(["u8", "u16", "u32", "u64", "u128", "u256"]));

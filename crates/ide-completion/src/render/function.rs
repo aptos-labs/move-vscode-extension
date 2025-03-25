@@ -2,13 +2,13 @@ use crate::context::CompletionContext;
 use crate::item::CompletionItemBuilder;
 use crate::render::render_named_item;
 use base_db::{SourceRootDatabase, Upcast};
+use lang::InFile;
 use lang::files::InFileInto;
 use lang::types::lowering::TyLowering;
 use lang::types::substitution::Substitution;
 use lang::types::ty::ty_callable::TyCallable;
-use lang::InFile;
 use syntax::ast::NamedElement;
-use syntax::{ast, AstNode};
+use syntax::{AstNode, ast};
 
 pub(crate) fn render_function(
     ctx: &CompletionContext<'_>,

@@ -3,10 +3,10 @@
 //!
 //! It can be viewed as a dual for `Change`.
 
+use crate::SnippetCap;
 use crate::assists::Command;
 use crate::syntax_helpers::tree_diff::diff;
 use crate::text_edit::{TextEdit, TextEditBuilder};
-use crate::SnippetCap;
 use itertools::Itertools;
 use nohash_hasher::IntMap;
 use rustc_hash::FxHashMap;
@@ -480,13 +480,14 @@ impl SourceChangeBuilder {
         self.commit();
 
         // Only one file can have snippet edits
-        never!(self
-            .source_change
-            .source_file_edits
-            .iter()
-            .filter(|(_, (_, snippet_edit))| snippet_edit.is_some())
-            .at_most_one()
-            .is_err());
+        never!(
+            self.source_change
+                .source_file_edits
+                .iter()
+                .filter(|(_, (_, snippet_edit))| snippet_edit.is_some())
+                .at_most_one()
+                .is_err()
+        );
 
         mem::take(&mut self.source_change)
     }

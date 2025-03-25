@@ -1,22 +1,22 @@
+use crate::InFile;
 use crate::db::HirDatabase;
 use crate::files::{InFileExt, OptionInFileExt};
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres::name_resolution::{
     get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
-use crate::nameres::namespaces::{Ns, FUNCTIONS};
-use crate::nameres::path_kind::{path_kind, PathKind, QualifiedKind};
+use crate::nameres::namespaces::{FUNCTIONS, Ns};
+use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt};
 use crate::types::inference::InferenceCtx;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
-use crate::InFile;
 use base_db::input::SourceRootId;
 use parser::SyntaxKind::CALL_EXPR;
+use syntax::ast::HasItems;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::OptionSyntaxNodeExt;
-use syntax::ast::HasItems;
-use syntax::{ast, AstNode};
+use syntax::{AstNode, ast};
 use vfs::FileId;
 
 pub fn get_path_resolve_variants(

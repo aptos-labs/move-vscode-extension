@@ -2,12 +2,12 @@ use crate::loc;
 use crate::loc::SyntaxLocNodeExt;
 use crate::nameres::scope::{ScopeEntry, VecExt};
 use crate::types::inference::InferenceCtx;
+use crate::types::ty::Ty;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::ty_var::TyInfer;
-use crate::types::ty::Ty;
 use std::cell::RefCell;
 use std::collections::HashMap;
-use syntax::{ast, AstNode};
+use syntax::{AstNode, ast};
 use vfs::FileId;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

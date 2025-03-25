@@ -1,9 +1,9 @@
+use crate::InFile;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::has_type_params_ext::GenericItemExt;
 use crate::types::substitution::Substitution;
 use crate::types::ty::Ty;
-use crate::InFile;
 use syntax::ast;
 
 #[derive(Debug, Clone, Eq, PartialEq)]

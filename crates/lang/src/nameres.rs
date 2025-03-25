@@ -1,8 +1,8 @@
+use crate::InFile;
 use crate::db::HirDatabase;
 use crate::files::InFileExt;
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::node_ext::struct_field_name::StructFieldNameExt;
-use crate::InFile;
 use syntax::ast;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::{FieldsOwner, ReferenceElement};

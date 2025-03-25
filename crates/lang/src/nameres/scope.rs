@@ -1,9 +1,9 @@
+use crate::InFile;
 use crate::db::HirDatabase;
 use crate::files::InFileVecExt;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::nameres::is_visible::is_visible_in_context;
-use crate::nameres::namespaces::{named_item_ns, Ns, NsSet};
-use crate::InFile;
+use crate::nameres::namespaces::{Ns, NsSet, named_item_ns};
 use std::fmt;
 use std::fmt::Formatter;
 use stdx::itertools::Itertools;

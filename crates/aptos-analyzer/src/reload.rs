@@ -4,7 +4,7 @@ use crate::global_state::{FetchWorkspaceRequest, FetchWorkspaceResponse, GlobalS
 use crate::main_loop::Task;
 use crate::op_queue::Cause;
 use crate::project_folders::ProjectFolders;
-use crate::{lsp_ext, Config};
+use crate::{Config, lsp_ext};
 use base_db::change::FileChange;
 use base_db::input::CrateGraph;
 use lsp_types::FileSystemWatcher;

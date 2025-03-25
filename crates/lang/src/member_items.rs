@@ -1,4 +1,4 @@
-use crate::nameres::namespaces::{NsSet, NAMES, SCHEMAS, TYPES};
+use crate::nameres::namespaces::{NAMES, NsSet, SCHEMAS, TYPES};
 use stdx::itertools::Itertools;
 use syntax::ast;
 use syntax::ast::{AnyNamedElement, HasItems};

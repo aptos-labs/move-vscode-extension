@@ -1,8 +1,8 @@
-use crate::types::ty::ty_var::TyInfer;
 use crate::types::ty::Ty;
+use crate::types::ty::ty_var::TyInfer;
 use std::fmt;
 use std::fmt::Formatter;
-use syntax::{ast, AstToken};
+use syntax::{AstToken, ast};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum IntegerKind {

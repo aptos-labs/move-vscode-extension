@@ -1,12 +1,12 @@
 mod source_to_def;
 
+use crate::InFile;
 use crate::db::HirDatabase;
 use crate::nameres::scope::ScopeEntry;
 use crate::semantics::source_to_def::SourceToDefCache;
-use crate::InFile;
 use std::cell::RefCell;
 use std::{fmt, ops};
-use syntax::{ast, AstNode, SyntaxNode, SyntaxToken};
+use syntax::{AstNode, SyntaxNode, SyntaxToken, ast};
 use vfs::FileId;
 
 /// Primary API to get semantic information, like types, from syntax trees.

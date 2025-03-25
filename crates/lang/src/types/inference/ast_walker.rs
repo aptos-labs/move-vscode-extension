@@ -1,21 +1,21 @@
+use crate::InFile;
 use crate::files::InFileExt;
 use crate::nameres::path_resolution::get_method_resolve_variants;
 use crate::nameres::scope::{ScopeEntryExt, ScopeEntryListExt, VecExt};
 use crate::types::expectation::Expected;
 use crate::types::fold::TypeFoldable;
 use crate::types::inference::InferenceCtx;
-use crate::types::patterns::{anonymous_pat_ty_var, collect_bindings, BindingMode};
+use crate::types::patterns::{BindingMode, anonymous_pat_ty_var, collect_bindings};
 use crate::types::substitution::ApplySubstitution;
+use crate::types::ty::Ty;
 use crate::types::ty::integer::IntegerKind;
-use crate::types::ty::reference::{autoborrow, Mutability, TyReference};
+use crate::types::ty::reference::{Mutability, TyReference, autoborrow};
 use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
-use crate::types::ty::Ty;
-use crate::InFile;
 use std::iter;
 use std::ops::Deref;
 use syntax::ast::{BindingTypeOwner, HasStmts, NamedElement, Pat};
-use syntax::{ast, AstNode, IntoNodeOrToken};
+use syntax::{AstNode, IntoNodeOrToken, ast};
 
 pub struct TypeAstWalker<'a, 'db> {
     pub ctx: &'a mut InferenceCtx<'db>,
@@ -135,11 +135,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let no_type_error =
             self.ctx
                 .coerce_types(expr.node_or_token(), actual_ty.clone(), expected_ty.clone());
-        if no_type_error {
-            expected_ty
-        } else {
-            actual_ty
-        }
+        if no_type_error { expected_ty } else { actual_ty }
     }
 
     fn infer_expr(&mut self, expr: &ast::Expr, expected: Expected) -> Ty {
@@ -480,11 +476,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         if is_error {
             Ty::Unknown
         } else {
-            if is_compound {
-                Ty::Unit
-            } else {
-                left_ty
-            }
+            if is_compound { Ty::Unit } else { left_ty }
         }
     }
 

@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 use std::{fmt, fs, mem};
-use xshell::{cmd, Shell};
+use xshell::{Shell, cmd};
 
 mod grammar;
 

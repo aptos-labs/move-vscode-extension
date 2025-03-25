@@ -3,9 +3,9 @@ use crate::config::CompletionConfig;
 use ide_db::RootDatabase;
 use lang::files::{FilePosition, InFileExt};
 use lang::{InFile, Semantics};
-use syntax::algo::find_node_at_offset;
 use syntax::SyntaxKind::*;
-use syntax::{ast, AstNode, SyntaxToken, TextRange};
+use syntax::algo::find_node_at_offset;
+use syntax::{AstNode, SyntaxToken, TextRange, ast};
 
 const COMPLETION_MARKER: &str = "raCompletionMarker";
 

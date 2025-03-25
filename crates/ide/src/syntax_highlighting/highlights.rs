@@ -1,5 +1,5 @@
-use crate::syntax_highlighting::tags::HlTag;
 use crate::syntax_highlighting::HlRange;
+use crate::syntax_highlighting::tags::HlTag;
 use std::iter;
 use stdx::equal_range_by;
 use syntax::TextRange;

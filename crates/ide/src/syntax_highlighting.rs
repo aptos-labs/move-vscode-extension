@@ -7,7 +7,7 @@ use crate::syntax_highlighting::highlights::Highlights;
 use ide_db::RootDatabase;
 use lang::Semantics;
 use syntax::SyntaxKind::WHITESPACE;
-use syntax::{ast, AstNode, NodeOrToken, SyntaxNode, TextRange, WalkEvent};
+use syntax::{AstNode, NodeOrToken, SyntaxNode, TextRange, WalkEvent, ast};
 use vfs::FileId;
 
 pub(crate) use html::{highlight_as_html, highlight_as_html_no_style};

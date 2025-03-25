@@ -1,5 +1,5 @@
-use anyhow::{bail, Context};
-use xshell::{cmd, Shell};
+use anyhow::{Context, bail};
+use xshell::{Shell, cmd};
 
 pub(crate) fn install_client(sh: &Shell) -> anyhow::Result<()> {
     let _dir = sh.push_dir("./editors/code");

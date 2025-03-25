@@ -92,8 +92,8 @@ impl<Var: Clone + Eq + Hash + Debug> UnificationTable<Var> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::ty::ty_var::TyVar;
     use crate::types::ty::IntegerKind;
+    use crate::types::ty::ty_var::TyVar;
 
     #[test]
     fn test_unify_vars() {

@@ -1,17 +1,17 @@
 mod type_args;
 
+use crate::InFile;
 use crate::db::HirDatabase;
 use crate::files::{InFileExt, InFileInto};
 use crate::types::substitution::ApplySubstitution;
+use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::reference::{Mutability, TyReference};
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::type_param::TyTypeParameter;
-use crate::types::ty::Ty;
-use crate::InFile;
-use syntax::{ast, AstNode, SyntaxNode};
+use syntax::{AstNode, SyntaxNode, ast};
 
 pub struct TyLowering<'a> {
     db: &'a dyn HirDatabase,

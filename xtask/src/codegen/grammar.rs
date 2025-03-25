@@ -8,8 +8,8 @@
 mod ast_src;
 
 use crate::codegen::grammar::ast_src::{
-    get_required_fields, AstEnumSrc, AstNodeSrc, AstSrc, Cardinality, Field, KindsSrc, KINDS_SRC,
-    NON_METHOD_TRAITS, TRAITS,
+    AstEnumSrc, AstNodeSrc, AstSrc, Cardinality, Field, KINDS_SRC, KindsSrc, NON_METHOD_TRAITS, TRAITS,
+    get_required_fields,
 };
 use crate::codegen::{add_preamble, ensure_file_contents, reformat};
 use check_keyword::CheckKeyword;

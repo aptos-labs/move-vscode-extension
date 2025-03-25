@@ -1,13 +1,13 @@
 use crate::completions::Completions;
 use crate::context::CompletionContext;
-use crate::render::function::{render_function, FunctionKind};
+use crate::render::function::{FunctionKind, render_function};
 use crate::render::render_named_item;
 use base_db::Upcast;
+use lang::InFile;
 use lang::files::{InFileExt, InFileInto};
 use lang::nameres::path_resolution::get_method_resolve_variants;
-use lang::types::ty::adt::TyAdt;
 use lang::types::ty::Ty;
-use lang::InFile;
+use lang::types::ty::adt::TyAdt;
 use std::cell::{RefCell, RefMut};
 use syntax::ast;
 
