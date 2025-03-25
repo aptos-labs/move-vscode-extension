@@ -260,6 +260,7 @@ pub enum SyntaxKind {
     LITERAL,
     VISIBILITY_MODIFIER,
     NAME,
+    FIELD_REF,
     NAME_REF,
     INDEX_REF,
     VALUE_ADDRESS,

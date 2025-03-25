@@ -1,12 +1,11 @@
 use crate::db::HirDatabase;
 use crate::files::InFileExt;
-use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt, VecExt};
+use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::node_ext::struct_field_name::StructFieldNameExt;
 use crate::InFile;
-use parser::SyntaxKind::{STRUCT_LIT_FIELD, STRUCT_PAT_FIELD};
 use syntax::ast;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
-use syntax::ast::ReferenceElement;
+use syntax::ast::{FieldsOwner, ReferenceElement};
 
 pub mod address;
 mod blocks;
@@ -29,21 +28,22 @@ impl<T: ast::ReferenceElement> InFile<T> {
             value: ref_element,
         } = self;
 
-        let opt_inference = ref_element
+        let opt_inference_ctx_owner = ref_element
             .syntax()
             .ancestor_or_self::<ast::Expr>()
-            .and_then(|expr| expr.inference_ctx_owner())
-            .map(|ctx_owner| db.inference(ctx_owner.in_file(*file_id)));
+            .and_then(|expr| expr.inference_ctx_owner().map(|it| it.in_file(*file_id)));
 
-        if let Some(inference) = opt_inference {
+        if let Some(inference_ctx_owner) = opt_inference_ctx_owner {
+            let inference = inference_ctx_owner.inference(db);
+
             if let Some(method_or_path) = ref_element.cast_into::<ast::MethodOrPath>() {
                 let entry = inference.resolve_method_or_path(method_or_path.clone());
-                // if entry.is_none() {
-                //     // temporary fallback till full infer implementation is ready
-                //     return method_or_path.cast_into::<ast::Path>().and_then(|path| {
-                //         path_resolution::resolve_path(db, path.in_file(self.file_id)).single_or_none()
-                //     })
-                // }
+                if entry.is_none() {
+                    // temporary fallback till full infer implementation is ready
+                    return method_or_path.cast_into::<ast::Path>().and_then(|path| {
+                        path_resolution::resolve_path(db, path.in_file(self.file_id)).single_or_none()
+                    });
+                }
                 return entry;
             }
 
@@ -58,8 +58,7 @@ impl<T: ast::ReferenceElement> InFile<T> {
                         .cast_into::<ast::AnyFieldsOwner>(db)?;
 
                     let field_name = struct_pat_field.field_name()?;
-                    fields_owner
-                        .get_named_field_entries()
+                    get_named_field_entries(fields_owner)
                         .filter_by_name(field_name)
                         .single_or_none()
                 }
@@ -72,10 +71,13 @@ impl<T: ast::ReferenceElement> InFile<T> {
                         .cast_into::<ast::AnyFieldsOwner>(db)?;
 
                     let field_name = struct_lit_fields.field_name()?;
-                    fields_owner
-                        .get_named_field_entries()
+                    get_named_field_entries(fields_owner)
                         .filter_by_name(field_name)
                         .single_or_none()
+                }
+                FIELD_REF => {
+                    let field_ref = ref_element.cast_into::<ast::FieldRef>().unwrap();
+                    inference.get_resolved_field(&field_ref)
                 }
                 _ => None,
             };
@@ -102,4 +104,12 @@ impl<T: ast::ReferenceElement> InFile<T> {
             path_resolution::resolve_path(db, path.in_file(self.file_id)).single_or_none()
         })
     }
+}
+
+fn get_named_field_entries(fields_owner: InFile<ast::AnyFieldsOwner>) -> Vec<ScopeEntry> {
+    let InFile {
+        file_id,
+        value: fields_owner,
+    } = fields_owner;
+    fields_owner.named_fields().to_in_file_entries(file_id)
 }

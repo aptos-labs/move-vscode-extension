@@ -133,49 +133,28 @@ impl Ty {
 }
 
 #[derive(Clone)]
-pub struct TyVarVisitor<V: Fn(&TyVar) -> bool + Clone> {
+pub struct TyInferVisitor<V: Fn(&TyInfer) -> bool + Clone> {
     visitor: V,
 }
 
-impl<V: Fn(&TyVar) -> bool + Clone> TyVarVisitor<V> {
+impl<V: Fn(&TyInfer) -> bool + Clone> TyInferVisitor<V> {
     pub fn new(visitor: V) -> Self {
-        TyVarVisitor { visitor }
+        TyInferVisitor { visitor }
     }
 }
 
-impl<V: Fn(&TyVar) -> bool + Clone> TypeVisitor for TyVarVisitor<V> {
+impl<V: Fn(&TyInfer) -> bool + Clone> TypeVisitor for TyInferVisitor<V> {
     fn visit_ty(&self, ty: &Ty) -> bool {
         match ty {
-            Ty::Infer(TyInfer::Var(ty_var)) => (self.visitor)(ty_var),
+            Ty::Infer(ty_infer) => (self.visitor)(ty_infer),
             _ => ty.deep_visit_with(self.clone()),
         }
     }
 }
 
 impl Ty {
-    pub fn collect_ty_vars(&self) -> Vec<TyVar> {
-        let ty_vars = RefCell::new(vec![]);
-        let collector = TyVarVisitor::new(|ty_var| {
-            ty_vars.borrow_mut().push(ty_var.to_owned());
-            false
-        });
-        self.visit_with(collector);
-        ty_vars.into_inner()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::types::ty::reference::{Mutability, TyReference};
-
-    #[test]
-    fn test_ty_infer_visitor() {
-        let ty_ref = Ty::Reference(TyReference::new(
-            Ty::Infer(TyInfer::Var(TyVar::new_anonymous(0))),
-            Mutability::Immutable,
-        ));
-        let res = ty_ref.collect_ty_vars();
-        dbg!(res);
+    pub fn deep_visit_ty_infers(&self, visitor: impl Fn(&TyInfer) -> bool + Clone) -> bool {
+        let visitor = TyInferVisitor::new(visitor);
+        self.visit_with(visitor)
     }
 }

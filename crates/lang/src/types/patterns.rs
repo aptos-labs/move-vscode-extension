@@ -43,18 +43,18 @@ pub fn collect_bindings(
     }
 }
 
-pub fn anonymous_pat_ty_var(counter: &mut usize, pat: &ast::Pat) -> Ty {
+pub fn anonymous_pat_ty_var(ty_counter: usize, pat: &ast::Pat) -> Ty {
     match pat {
         ast::Pat::IdentPat(_) => {
-            *counter = *counter + 1;
-            Ty::Infer(TyInfer::Var(TyVar::new_anonymous(*counter)))
+            // *counter = *counter + 1;
+            Ty::Infer(TyInfer::Var(TyVar::new_anonymous(ty_counter)))
         }
         ast::Pat::TuplePat(tuple_pat) => {
             let pat_types = tuple_pat
                 .pats()
                 .map(|pat| {
-                    *counter = *counter + 1;
-                    Ty::Infer(TyInfer::Var(TyVar::new_anonymous(*counter)))
+                    // *counter = *counter + 1;
+                    Ty::Infer(TyInfer::Var(TyVar::new_anonymous(ty_counter)))
                 })
                 .collect();
             Ty::Tuple(TyTuple::new(pat_types))

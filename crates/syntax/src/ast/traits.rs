@@ -61,7 +61,7 @@ pub trait FieldsOwner: AstNode {
         support::child(&self.syntax())
     }
 
-    fn all_fields(&self) -> Vec<ast::AnyField> {
+    fn named_and_tuple_fields(&self) -> Vec<ast::AnyField> {
         self.named_fields()
             .into_iter()
             .map(|f| f.into())

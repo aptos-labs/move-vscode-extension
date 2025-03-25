@@ -7,7 +7,7 @@ use crate::grammar::specs::schemas::{apply_schema, global_variable, include_sche
 use crate::grammar::utils::{delimited, list};
 use crate::grammar::{
     error_block, name_ref, name_ref_or_index, opt_ret_type, paths, patterns, type_args, types,
-    PATH_NAME_REF_OR_INDEX_KINDS,
+    IDENT_OR_INT_NUMBER,
 };
 use crate::parser::{CompletedMarker, Marker, Parser};
 use crate::token_set::TokenSet;
@@ -462,20 +462,20 @@ fn dot_expr(p: &mut Parser<'_>, lhs: CompletedMarker) -> Result<CompletedMarker,
     assert!(p.at(T![.]));
     let m = lhs.precede(p);
     p.bump(T![.]);
-    if p.at_ts(PATH_NAME_REF_OR_INDEX_KINDS) {
-        name_ref_or_index(p);
-    }
-    /*else if p.at(FLOAT_NUMBER) {
-        return match p.split_float(m) {
-            (true, m) => {
-                let lhs = m.complete(p, FIELD_EXPR);
-                postfix_dot_expr::<true>(p, lhs)
-            }
-            (false, m) => Ok(m.complete(p, FIELD_EXPR)),
-        };
-    }*/
-    else {
-        p.error("expected field name or number");
+    {
+        let m = p.start();
+        if p.at(IDENT) {
+            let m = p.start();
+            p.bump(IDENT);
+            m.complete(p, NAME_REF);
+        } else if p.at(INT_NUMBER) {
+            let m = p.start();
+            p.bump(INT_NUMBER);
+            m.complete(p, INDEX_REF);
+        } else {
+            p.error("expected field name or number");
+        }
+        m.complete(p, FIELD_REF);
     }
     Ok(m.complete(p, DOT_EXPR))
 }

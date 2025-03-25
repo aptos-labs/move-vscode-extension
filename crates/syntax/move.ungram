@@ -210,7 +210,7 @@ ForCondition =
     '(' IdentPat 'in' Expr ')'
 
 BorrowExpr =
-    '&' Expr
+    '&' 'mut'? Expr
 
 DerefExpr =
     '*' Expr
@@ -238,7 +238,7 @@ FieldRef =
     NameRef | IndexRef
 
 IndexExpr =
-    base:Expr '[' index:Expr ']'
+    base_expr:Expr '[' arg_expr:Expr ']'
 
 AbortExpr =
     'abort' Expr?
@@ -253,7 +253,9 @@ StructLitField =
     (NameRef ':')? Expr
 
 Literal =
-    'int_number' | 'true' | 'false'
+    'int_number' | 'true' | 'false' | AddressLit
+
+AddressLit = '@' ValueAddress
 
 ParenExpr =
     '(' Expr ')'

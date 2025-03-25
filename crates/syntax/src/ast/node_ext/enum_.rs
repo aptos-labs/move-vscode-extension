@@ -1,4 +1,6 @@
+use crate::ast::{FieldsOwner, NamedElement};
 use crate::{ast, AstNode};
+use std::collections::HashSet;
 
 impl ast::Enum {
     pub fn variants(&self) -> Vec<ast::Variant> {

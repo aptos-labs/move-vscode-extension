@@ -103,13 +103,14 @@ pub fn resolve_path(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Vec<ScopeE
         return vec![];
     };
     let context_element = path.clone();
+
+    let path_kind = path_kind(path.clone(), false);
+    tracing::debug!(?path_kind);
+
     let ctx = ResolutionContext {
         path,
         is_completion: false,
     };
-    let path_kind = path_kind(ctx.path.clone(), false);
-    tracing::debug!(?path_kind);
-
     let entries = get_path_resolve_variants(db, &ctx, path_kind);
     tracing::debug!(?entries);
 

@@ -29,12 +29,11 @@ impl<'a> TyLowering<'a> {
         match type_ {
             ast::Type::PathType(path_type) => {
                 let path = path_type.path();
-                path.reference().in_file(self.file_id).resolve(self.db);
                 let named_item = path.clone().in_file(self.file_id).resolve_no_inf(self.db);
                 match named_item {
                     None => {
                         // can be primitive type
-                        lower_primitive_type(path)
+                        self.lower_primitive_type(path).unwrap_or(Ty::Unknown)
                     }
                     Some(named_item_entry) => {
                         let named_item = named_item_entry
@@ -112,7 +111,7 @@ impl<'a> TyLowering<'a> {
         path_ty
     }
 
-    fn lower_function(&self, fun: ast::Fun) -> TyCallable {
+    pub fn lower_function(&self, fun: ast::Fun) -> TyCallable {
         let param_types = fun
             .params()
             .into_iter()
@@ -131,20 +130,31 @@ impl<'a> TyLowering<'a> {
             .map(|t| self.lower_type(t))
             .unwrap_or(Ty::Unknown)
     }
-}
 
-fn lower_primitive_type(path: ast::Path) -> Ty {
-    let Some(path_name) = path.reference_name() else {
-        return Ty::Unknown;
-    };
-    match path_name.as_str() {
-        "bool" => Ty::Bool,
-        "u8" => Ty::Integer(IntegerKind::U8),
-        "u16" => Ty::Integer(IntegerKind::U16),
-        "u32" => Ty::Integer(IntegerKind::U32),
-        "u64" => Ty::Integer(IntegerKind::U64),
-        "u128" => Ty::Integer(IntegerKind::U128),
-        "u256" => Ty::Integer(IntegerKind::U256),
-        _ => Ty::Unknown,
+    fn lower_primitive_type(&self, path: ast::Path) -> Option<Ty> {
+        let path_name = path.reference_name()?;
+        let ty = match path_name.as_str() {
+            "u8" => Ty::Integer(IntegerKind::U8),
+            "u16" => Ty::Integer(IntegerKind::U16),
+            "u32" => Ty::Integer(IntegerKind::U32),
+            "u64" => Ty::Integer(IntegerKind::U64),
+            "u128" => Ty::Integer(IntegerKind::U128),
+            "u256" => Ty::Integer(IntegerKind::U256),
+            "bool" => Ty::Bool,
+            "signer" => Ty::Signer,
+            "address" => Ty::Address,
+            "vector" => {
+                let arg_ty = path
+                    .type_args()
+                    .first()
+                    .map(|it| self.lower_type(it.type_()))
+                    .unwrap_or(Ty::Unknown);
+                Ty::Vector(Box::new(arg_ty))
+            }
+            _ => {
+                return None;
+            }
+        };
+        Some(ty)
     }
 }

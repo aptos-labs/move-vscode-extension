@@ -578,7 +578,7 @@ fn lower(grammar: &Grammar) -> AstSrc {
         let name = grammar[node].name.clone();
         let rule = &grammar[node].rule;
         let _g = panic_context::enter(name.clone());
-        match lower_enum(grammar, rule) {
+        match lower_enum(grammar, name.as_str(), rule) {
             Some(variants) => {
                 let enum_src = AstEnumSrc {
                     doc: Vec::new(),
@@ -623,7 +623,11 @@ fn lower(grammar: &Grammar) -> AstSrc {
     res
 }
 
-fn lower_enum(grammar: &Grammar, rule: &Rule) -> Option<Vec<String>> {
+fn lower_enum(grammar: &Grammar, node_name: &str, rule: &Rule) -> Option<Vec<String>> {
+    // exclude FieldRef as it should be a struct
+    if node_name == "FieldRef" {
+        return None;
+    }
     let alternatives = match rule {
         Rule::Alt(it) => it,
         _ => return None,
@@ -707,14 +711,14 @@ fn lower_rule(
                     // | "else_branch"
                     // | "start"
                     // | "end"
-                    | "base"
-                    | "index" // | "value"
-                              // | "trait"
-                              // | "self_ty"
-                              // | "iterable"
-                              // | "condition"
-                              // | "args"
-                              // | "body"
+                    | "base_expr"
+                    | "arg_expr" // | "value"
+                                 // | "trait"
+                                 // | "self_ty"
+                                 // | "iterable"
+                                 // | "condition"
+                                 // | "args"
+                                 // | "body"
             );
             if manually_implemented {
                 return;
@@ -842,8 +846,8 @@ fn extract_struct_traits(ast: &mut AstSrc) {
     }
 
     for node in &mut ast.nodes {
-        for (trait_name, nodes) in NON_METHOD_TRAITS {
-            if nodes.contains(&&*node.name) {
+        for (trait_name, node_names) in NON_METHOD_TRAITS {
+            if node_names.contains(&&*node.name) {
                 node.traits.push((*trait_name).into());
             }
         }
@@ -894,16 +898,14 @@ fn extract_struct_trait(node: &mut AstNodeSrc, trait_name: &str, methods: &[&str
 
 fn extract_enum_traits(ast: &mut AstSrc) {
     for enum_ in &mut ast.enums {
-        // if enum_.name == "Stmt" {
-        //     continue;
-        // }
         let nodes = &ast.nodes;
         let mut variant_traits = enum_
             .variants
             .iter()
-            .map(|var| nodes.iter().find(|it| &it.name == var).unwrap())
+            .map(|variant| nodes.iter().find(|it| &it.name == variant).unwrap())
             .map(|node| node.traits.iter().cloned().collect::<BTreeSet<_>>());
 
+        // collect traits present on all the variants
         let mut enum_traits = match variant_traits.next() {
             Some(it) => it,
             None => continue,
@@ -911,6 +913,13 @@ fn extract_enum_traits(ast: &mut AstSrc) {
         for traits in variant_traits {
             enum_traits = enum_traits.intersection(&traits).cloned().collect();
         }
+
+        // for (trait_name, enum_names) in NON_METHOD_TRAITS {
+        //     if enum_names.contains(&&*enum_.name) {
+        //         enum_traits.insert((*trait_name).into());
+        //     }
+        // }
+
         enum_.traits = enum_traits.into_iter().collect();
     }
 }

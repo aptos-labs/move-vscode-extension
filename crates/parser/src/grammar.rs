@@ -197,10 +197,10 @@ fn name_ref(p: &mut Parser) {
     }
 }
 
-const PATH_NAME_REF_OR_INDEX_KINDS: TokenSet = TokenSet::new(&[INT_NUMBER, IDENT]);
+const IDENT_OR_INT_NUMBER: TokenSet = TokenSet::new(&[INT_NUMBER, IDENT]);
 
 fn name_ref_or_index(p: &mut Parser<'_>) {
-    if p.at_ts(PATH_NAME_REF_OR_INDEX_KINDS) {
+    if p.at_ts(IDENT_OR_INT_NUMBER) {
         let m = p.start();
         p.bump_any();
         m.complete(p, NAME_REF);

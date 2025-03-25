@@ -1,5 +1,6 @@
 use crate::types::ty::Ty;
 use std::collections::HashMap;
+use std::fmt::Debug;
 use std::hash::Hash;
 
 #[derive(Debug, Clone)]
@@ -9,12 +10,12 @@ pub enum TableValue<Var> {
 }
 
 #[derive(Debug, Clone)]
-pub struct UnificationTable<Var: Clone + Eq + Hash> {
+pub struct UnificationTable<Var: Clone + Eq + Hash + Debug> {
     mapping: HashMap<Var, TableValue<Var>>,
     snapshots: Vec<HashMap<Var, TableValue<Var>>>,
 }
 
-impl<Var: Clone + Eq + Hash> UnificationTable<Var> {
+impl<Var: Clone + Eq + Hash + Debug> UnificationTable<Var> {
     pub fn new() -> Self {
         UnificationTable {
             mapping: HashMap::new(),
@@ -50,6 +51,8 @@ impl<Var: Clone + Eq + Hash> UnificationTable<Var> {
     }
 
     pub fn unify_var_value(&mut self, ty_var: &Var, ty: Ty) {
+        dbg!(&ty_var);
+        dbg!(&ty);
         let old_value_ty = self.resolve_to_ty_value(ty_var);
         if let Some(old_value_ty) = old_value_ty {
             // if already unified, value must be the same

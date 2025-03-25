@@ -10,10 +10,10 @@ use crate::node_ext::ModuleLangExt;
 use crate::InFile;
 use parser::SyntaxKind;
 use parser::SyntaxKind::MODULE_SPEC;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Formatter;
-use syntax::ast::{FieldsOwner, HasItems, NamedElement, ReferenceElement};
+use syntax::ast::{FieldsOwner, HasItems, ReferenceElement};
 use syntax::{ast, AstNode, SyntaxNode};
 
 pub struct ResolveScope {
@@ -187,42 +187,4 @@ pub fn get_qualified_path_entries(
         _ => {}
     }
     entries
-}
-
-pub fn get_field_lookup_resolve_variants(self_item: ast::StructOrEnum) -> Vec<ast::NamedField> {
-    use syntax::SyntaxKind::*;
-
-    match self_item.syntax().kind() {
-        STRUCT => {
-            let struct_item = self_item.struct_().unwrap();
-            struct_item.named_fields()
-        }
-        ENUM => {
-            let enum_item = self_item.enum_().unwrap();
-
-            let mut visited_names = HashSet::new();
-            let mut fields = vec![];
-            for variant in enum_item.variants() {
-                for field in variant.named_fields() {
-                    let field_name = field.name().expect("always present").as_string();
-
-                    if visited_names.contains(&field_name) {
-                        continue;
-                    }
-                    visited_names.insert(field_name);
-
-                    fields.push(field);
-                }
-            }
-
-            fields
-        }
-        _ => vec![],
-    }
-}
-
-impl InFile<ast::AnyFieldsOwner> {
-    pub fn get_named_field_entries(&self) -> Vec<ScopeEntry> {
-        self.value.named_fields().to_in_file_entries(self.file_id)
-    }
 }

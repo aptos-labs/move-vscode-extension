@@ -36,6 +36,17 @@ impl AddressDef {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AddressLit {
+    pub(crate) syntax: SyntaxNode,
+}
+impl AddressLit {
+    #[inline]
+    pub fn value_address(&self) -> Option<ValueAddress> { support::child(&self.syntax) }
+    #[inline]
+    pub fn at_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![@]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ArgList {
     pub(crate) syntax: SyntaxNode,
 }
@@ -119,6 +130,8 @@ impl BorrowExpr {
     pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
     #[inline]
     pub fn amp_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![&]) }
+    #[inline]
+    pub fn mut_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![mut]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -171,7 +184,7 @@ pub struct DotExpr {
 }
 impl DotExpr {
     #[inline]
-    pub fn field_ref(&self) -> Option<FieldRef> { support::child(&self.syntax) }
+    pub fn field_ref(&self) -> FieldRef { support::child(&self.syntax).expect("required by the parser") }
     #[inline]
     pub fn receiver_expr(&self) -> Expr { support::child(&self.syntax).expect("required by the parser") }
     #[inline]
@@ -199,9 +212,21 @@ pub struct ExprStmt {
 }
 impl ExprStmt {
     #[inline]
-    pub fn expr(&self) -> Expr { support::child(&self.syntax).expect("required by the parser") }
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
     #[inline]
     pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct FieldRef {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::ReferenceElement for FieldRef {}
+impl FieldRef {
+    #[inline]
+    pub fn index_ref(&self) -> Option<IndexRef> { support::child(&self.syntax) }
+    #[inline]
+    pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -359,6 +384,8 @@ pub struct Literal {
     pub(crate) syntax: SyntaxNode,
 }
 impl Literal {
+    #[inline]
+    pub fn address_lit(&self) -> Option<AddressLit> { support::child(&self.syntax) }
     #[inline]
     pub fn false_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![false]) }
     #[inline]
@@ -1131,12 +1158,6 @@ pub enum FieldList {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum FieldRef {
-    IndexRef(IndexRef),
-    NameRef(NameRef),
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum InferenceCtxOwner {
     Fun(Fun),
     SpecFun(SpecFun),
@@ -1292,6 +1313,27 @@ impl AstNode for AddressDef {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == ADDRESS_DEF }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for AddressLit {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ADDRESS_LIT
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == ADDRESS_LIT }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -1565,6 +1607,27 @@ impl AstNode for ExprStmt {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == EXPR_STMT }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for FieldRef {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        FIELD_REF
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == FIELD_REF }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -3304,48 +3367,6 @@ impl AstNode for FieldList {
         }
     }
 }
-impl From<IndexRef> for FieldRef {
-    #[inline]
-    fn from(node: IndexRef) -> FieldRef { FieldRef::IndexRef(node) }
-}
-impl From<NameRef> for FieldRef {
-    #[inline]
-    fn from(node: NameRef) -> FieldRef { FieldRef::NameRef(node) }
-}
-impl FieldRef {
-    pub fn index_ref(self) -> Option<IndexRef> {
-        match (self) {
-            FieldRef::IndexRef(item) => Some(item),
-            _ => None,
-        }
-    }
-    pub fn name_ref(self) -> Option<NameRef> {
-        match (self) {
-            FieldRef::NameRef(item) => Some(item),
-            _ => None,
-        }
-    }
-}
-impl AstNode for FieldRef {
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, INDEX_REF | NAME_REF) }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        let res = match syntax.kind() {
-            INDEX_REF => FieldRef::IndexRef(IndexRef { syntax }),
-            NAME_REF => FieldRef::NameRef(NameRef { syntax }),
-            _ => return None,
-        };
-        Some(res)
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode {
-        match self {
-            FieldRef::IndexRef(it) => &it.syntax,
-            FieldRef::NameRef(it) => &it.syntax,
-        }
-    }
-}
 impl From<Fun> for InferenceCtxOwner {
     #[inline]
     fn from(node: Fun) -> InferenceCtxOwner { InferenceCtxOwner::Fun(node) }
@@ -4293,7 +4314,7 @@ impl AstNode for AnyReferenceElement {
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            METHOD_CALL_EXPR | PATH | STRUCT_LIT_FIELD | STRUCT_PAT_FIELD
+            FIELD_REF | METHOD_CALL_EXPR | PATH | STRUCT_LIT_FIELD | STRUCT_PAT_FIELD
         )
     }
     #[inline]
@@ -4302,6 +4323,10 @@ impl AstNode for AnyReferenceElement {
     }
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl From<FieldRef> for AnyReferenceElement {
+    #[inline]
+    fn from(node: FieldRef) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
 }
 impl From<MethodCallExpr> for AnyReferenceElement {
     #[inline]
@@ -4340,11 +4365,6 @@ impl std::fmt::Display for Expr {
     }
 }
 impl std::fmt::Display for FieldList {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self.syntax(), f)
-    }
-}
-impl std::fmt::Display for FieldRef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -4390,6 +4410,11 @@ impl std::fmt::Display for AbortExpr {
     }
 }
 impl std::fmt::Display for AddressDef {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for AddressLit {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -4455,6 +4480,11 @@ impl std::fmt::Display for Enum {
     }
 }
 impl std::fmt::Display for ExprStmt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for FieldRef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
