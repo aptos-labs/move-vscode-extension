@@ -25,6 +25,8 @@ mod struct_pat_field;
 pub mod syntax_node;
 pub mod type_;
 pub mod visibility;
+mod field_ref;
+mod borrow_expr;
 
 use crate::token_text::TokenText;
 use crate::{ast, AstNode, AstToken, SyntaxNode};

@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use crate::completions::{item_list, path, Completions};
+use crate::completions::{item_list, reference, Completions};
 use crate::config::CompletionConfig;
 use crate::context::{CompletionAnalysis, CompletionContext};
 use crate::item::CompletionItem;
@@ -27,7 +27,9 @@ pub fn completions(
             CompletionAnalysis::Item(item_list_kind) => {
                 item_list::complete_item_list(&completions, &ctx, &item_list_kind);
             }
-            CompletionAnalysis::Path(path) => path::add_path_completions(&completions, &ctx, path),
+            CompletionAnalysis::Reference(path) => {
+                reference::add_reference_completions(&completions, &ctx, path);
+            }
         }
     }
 

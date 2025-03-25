@@ -182,3 +182,115 @@ module 0x1::m {
     "#,
     );
 }
+
+#[test]
+fn test_local_type_completion() {
+    check_completions_contains(
+        // language=Move
+        r#"
+module 0x1::m {
+    struct VestingContract { val: u8 }
+    fun main() {
+        Ves/*caret*/
+    }
+}
+    "#,
+        vec!["VestingContract"],
+    );
+}
+
+#[test]
+fn test_imported_type_completion() {
+    check_completions_contains(
+        // language=Move
+        r#"
+module 0x1::v {
+    struct VestingContract { val: u8 }
+}
+module 0x1::m {
+    use 0x1::v::VestingContract;
+    fun main() {
+        Ves/*caret*/
+    }
+}
+    "#,
+        vec!["VestingContract"],
+    );
+}
+
+#[test]
+fn test_external_module_item_completion() {
+    check_completions_contains(
+        // language=Move
+        r#"
+module 0x1::v {
+    struct Struct { val: u8 }
+}
+module 0x1::m {
+    use 0x1::v;
+    fun main() {
+        v::Str/*caret*/
+    }
+}
+    "#,
+        vec!["Struct"],
+    );
+}
+
+// language=Move
+
+#[test]
+fn test_field_completion() {
+    do_single_completion(
+        r#"
+module 0x1::m {
+    struct S { field: u8 }
+    struct T { s: S }
+    fun main() {
+        T[@0x1].s.fi/*caret*/;
+    }
+}
+    "#,
+        r#"
+module 0x1::m {
+    struct S { field: u8 }
+    struct T { s: S }
+    fun main() {
+        T[@0x1].s.field;
+    }
+}
+    "#,
+    );
+}
+
+// language=Move
+
+#[test]
+fn test_method_call_completions() {
+    do_single_completion(
+        r#"
+module 0x1::m {
+    struct S { val: u8 }
+    struct T { s: S }
+    fun receiver(self: &mut S): u8 {
+        self.val
+    }
+    fun main() {
+        T[@0x1].s.rec/*caret*/;
+    }
+}
+    "#,
+        r#"
+module 0x1::m {
+    struct S { val: u8 }
+    struct T { s: S }
+    fun receiver(self: &mut S): u8 {
+        self.val
+    }
+    fun main() {
+        T[@0x1].s.receiver()$0;
+    }
+}
+    "#,
+    );
+}

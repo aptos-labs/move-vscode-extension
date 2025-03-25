@@ -23,6 +23,9 @@ impl<'db> TypeRenderer<'db> {
             Ty::Vector(ty) => {
                 format!("vector<{}>", self.render(ty))
             }
+            Ty::Range(ty) => {
+                format!("range<{}>", self.render(ty))
+            }
             Ty::Adt(ty_adt) => self.render_ty_adt(ty_adt),
             Ty::Callable(ty_callable) => {
                 let params = format!("fn({})", self.render_list(&ty_callable.param_types, ", "));

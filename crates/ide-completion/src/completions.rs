@@ -4,7 +4,7 @@ use ide_db::RootDatabase;
 use smol_str::SmolStr;
 
 pub mod item_list;
-pub mod path;
+pub mod reference;
 
 /// Represents an in-progress set of completions being built.
 #[derive(Debug, Default)]

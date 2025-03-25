@@ -4,7 +4,7 @@ use crate::types::ty::Ty;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TyReference {
-    referenced: Box<Ty>,
+    pub referenced: Box<Ty>,
     pub mutability: Mutability,
 }
 

@@ -237,6 +237,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "LITERAL",
         "VISIBILITY_MODIFIER",
         "NAME",
+        "FIELD_REF",
         "NAME_REF",
         "INDEX_REF",
         "VALUE_ADDRESS",
@@ -267,11 +268,12 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
 };
 
 pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
-    ("ExprStmt", &["expr"]),
+    // ("ExprStmt", &["expr"]), - invalid
     ("CallExpr", &["path"]),
     ("PathExpr", &["path"]),
+    ("IndexExpr", &["base_expr"]),
     ("MethodCallExpr", &["receiver_expr"]),
-    ("DotExpr", &["receiver_expr"]),
+    ("DotExpr", &["receiver_expr", "field_ref"]),
     ("TypeArg", &["type"]),
     ("StructPat", &["path"]),
     ("PathType", &["path"]),
@@ -304,7 +306,7 @@ pub(crate) const TRAITS: &[(&str, &[&str])] = &[
 pub(crate) const NON_METHOD_TRAITS: &[(&str, &[&str])] = &[
     (
         "ReferenceElement",
-        &["Path", "MethodCallExpr", "StructPatField", "StructLitField"],
+        &["Path", "MethodCallExpr", "FieldRef", "StructPatField", "StructLitField"],
     ),
     (
         "HasVisibility",

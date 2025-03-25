@@ -1,21 +1,21 @@
 use crate::completions::Completions;
 use crate::context::CompletionContext;
-use crate::item::{CompletionItem, CompletionItemKind};
-use crate::render::function::render_function_completion_item;
+use crate::item::CompletionItem;
+use crate::render::function::{render_function, FunctionKind};
+use crate::render::render_named_item;
 use base_db::Upcast;
-use ide_db::SymbolKind;
 use lang::nameres::path_kind::path_kind;
 use lang::nameres::path_resolution::{get_path_resolve_variants, ResolutionContext};
 use lang::nameres::scope::ScopeEntryListExt;
 use lang::InFile;
 use std::cell::RefCell;
-use syntax::{ast, SyntaxKind};
+use syntax::{ast, AstNode};
 
 pub(crate) fn add_path_completions(
     completions: &RefCell<Completions>,
     ctx: &CompletionContext<'_>,
     path: InFile<ast::Path>,
-) {
+) -> Option<()> {
     let path_kind = path_kind(path.clone(), true);
     tracing::debug!(path_kind = ?path_kind);
 
@@ -36,19 +36,18 @@ pub(crate) fn add_path_completions(
     tracing::debug!(filtered_entries = ?filtered_entries);
 
     for entry in filtered_entries {
-        let entry_name = entry.name;
-
-        if let Some(function) = entry.node_loc.cast_into::<ast::Fun>(ctx.db.upcast()) {
-            let completion_item =
-                render_function_completion_item(&ctx, entry_name, function.value).build(&ctx.db);
-            acc.add(completion_item);
-            continue;
+        let named_item = entry
+            .cast_into::<ast::AnyNamedElement>(ctx.db.upcast())
+            .unwrap()
+            .value;
+        if let Some(function) = named_item.cast_into::<ast::Fun>() {
+            acc.add(render_function(ctx, function, FunctionKind::Fun).build(ctx.db));
+            return Some(());
         }
-
-        let kind = item_to_kind(entry.node_loc.kind());
-        let completion_item = CompletionItem::new(kind, ctx.source_range(), entry_name.as_str());
-        acc.add(completion_item.build(&ctx.db));
+        acc.add(render_named_item(ctx, named_item).build(ctx.db));
     }
+
+    Some(())
 }
 
 fn add_keywords(completions: &RefCell<Completions>, ctx: &CompletionContext<'_>) {
@@ -68,23 +67,4 @@ fn add_keywords(completions: &RefCell<Completions>, ctx: &CompletionContext<'_>)
 
     add_keyword("true");
     add_keyword("false");
-}
-
-fn item_to_kind(kind: SyntaxKind) -> CompletionItemKind {
-    use syntax::SyntaxKind::*;
-    match kind {
-        MODULE => CompletionItemKind::SymbolKind(SymbolKind::Module),
-        ATTR => CompletionItemKind::SymbolKind(SymbolKind::Attribute),
-        FUN => CompletionItemKind::SymbolKind(SymbolKind::Function),
-        CONST => CompletionItemKind::SymbolKind(SymbolKind::Const),
-        STRUCT => CompletionItemKind::SymbolKind(SymbolKind::Struct),
-        ENUM => CompletionItemKind::SymbolKind(SymbolKind::Enum),
-        IDENT_PAT => CompletionItemKind::SymbolKind(SymbolKind::Local),
-        LABEL => CompletionItemKind::SymbolKind(SymbolKind::Label),
-        TYPE_PARAM => CompletionItemKind::SymbolKind(SymbolKind::TypeParam),
-        _ => {
-            tracing::info!("Unhandled completion item {:?}", kind);
-            CompletionItemKind::UnresolvedReference
-        }
-    }
 }

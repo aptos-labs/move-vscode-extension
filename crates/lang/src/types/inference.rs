@@ -6,7 +6,7 @@ use crate::files::{InFileExt, InFileInto};
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres::path_resolution;
 use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt, VecExt};
-use crate::types::fold::{Fallback, FullTyVarResolver, TyVarResolver, TyVarVisitor, TypeFoldable};
+use crate::types::fold::{Fallback, FullTyVarResolver, TyVarResolver, TypeFoldable};
 use crate::types::has_type_params_ext::GenericItemExt;
 use crate::types::lowering::TyLowering;
 use crate::types::substitution::ApplySubstitution;
@@ -19,6 +19,7 @@ use crate::types::ty::Ty;
 use crate::types::unification::UnificationTable;
 use crate::InFile;
 use parser::SyntaxKind;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::iter::zip;
 use std::ops::Deref;
@@ -29,6 +30,7 @@ pub struct InferenceCtx<'db> {
     pub db: &'db dyn HirDatabase,
     pub file_id: FileId,
     pub ty_var_counter: usize,
+    pub msl: bool,
 
     pub var_table: UnificationTable<TyVar>,
     pub int_table: UnificationTable<TyIntVar>,
@@ -38,6 +40,7 @@ pub struct InferenceCtx<'db> {
 
     pub resolved_paths: HashMap<ast::Path, Vec<ScopeEntry>>,
     pub resolved_method_calls: HashMap<ast::MethodCallExpr, Option<ScopeEntry>>,
+    pub resolved_fields: HashMap<ast::FieldRef, Option<ScopeEntry>>,
 }
 
 impl<'a> InferenceCtx<'a> {
@@ -46,12 +49,14 @@ impl<'a> InferenceCtx<'a> {
             db,
             file_id,
             ty_var_counter: 0,
+            msl: false,
             var_table: UnificationTable::new(),
             int_table: UnificationTable::new(),
             expr_types: HashMap::new(),
             pat_types: HashMap::new(),
             resolved_paths: HashMap::new(),
             resolved_method_calls: HashMap::new(),
+            resolved_fields: HashMap::new(),
         }
     }
 
@@ -200,10 +205,13 @@ impl<'a> InferenceCtx<'a> {
     }
 
     fn ty_contains_ty_var(&self, ty: &Ty, ty_var: &TyVar) -> bool {
-        let visitor = TyVarVisitor::new(|inner_ty_var| {
-            &self.var_table.resolve_to_root_var(inner_ty_var) == ty_var
-        });
-        ty.visit_with(visitor)
+        // let visitor = TyInferVisitor::new(|inner_ty_var| {
+        //     &self.var_table.resolve_to_root_var(inner_ty_var) == ty_var
+        // });
+        ty.deep_visit_ty_infers(|ty_infer| match ty_infer {
+            TyInfer::Var(inner_ty_var) => &self.var_table.resolve_to_root_var(&inner_ty_var) == ty_var,
+            _ => false,
+        })
     }
 
     fn combine_int_var(&mut self, int_var: TyIntVar, ty: Ty) -> CombineResult {
@@ -223,12 +231,7 @@ impl<'a> InferenceCtx<'a> {
     fn combine_no_vars(&mut self, left_ty: Ty, right_ty: Ty) -> CombineResult {
         // assign Ty::Unknown to all inner `TyVar`s if other type is unknown
         if matches!(left_ty, Ty::Unknown) || matches!(right_ty, Ty::Unknown) {
-            for ty in [left_ty, right_ty] {
-                let ty_vars = ty.collect_ty_vars();
-                for ty_var in ty_vars {
-                    let _ = self.unify_ty_var(&ty_var, Ty::Unknown);
-                }
-            }
+            self.unify_ty_vars_with_unknown(vec![left_ty, right_ty]);
             return Ok(());
         }
         // if never type is involved, do not perform comparison
@@ -259,6 +262,21 @@ impl<'a> InferenceCtx<'a> {
             (Ty::Tuple(ty_tuple1), Ty::Tuple(ty_tuple2)) => self.combine_ty_tuples(ty_tuple1, ty_tuple2),
 
             _ => Err(TypeError::new(left_ty, right_ty)),
+        }
+    }
+
+    fn unify_ty_vars_with_unknown(&mut self, tys: Vec<Ty>) {
+        let mut ty_vars = RefCell::new(vec![]);
+        for ty in tys {
+            ty.deep_visit_ty_infers(|ty_infer| {
+                if let TyInfer::Var(ty_var) = ty_infer {
+                    ty_vars.borrow_mut().push(ty_var.clone());
+                };
+                false
+            });
+        }
+        for ty_var in ty_vars.into_inner() {
+            let _ = self.unify_ty_var(&ty_var, Ty::Unknown);
         }
     }
 
@@ -315,6 +333,11 @@ impl<'a> InferenceCtx<'a> {
         res
     }
 
+    pub fn inc_ty_counter(&mut self) -> usize {
+        self.ty_var_counter = self.ty_var_counter + 1;
+        self.ty_var_counter
+    }
+
     pub fn coerce_types(&mut self, node_or_token: SyntaxNodeOrToken, actual: Ty, expected: Ty) -> bool {
         let actual = self.resolve_vars_if_possible(actual);
         let expected = self.resolve_vars_if_possible(expected);
@@ -332,11 +355,8 @@ impl<'a> InferenceCtx<'a> {
         }
     }
 
-    pub fn get_binding_type(&self, ident_pat: ast::IdentPat) -> Ty {
-        self.pat_types
-            .get(&ident_pat.into())
-            .map(|it| it.to_owned())
-            .unwrap_or(Ty::Unknown)
+    pub fn get_binding_type(&self, ident_pat: ast::IdentPat) -> Option<Ty> {
+        self.pat_types.get(&ident_pat.into()).map(|it| it.to_owned())
     }
 
     fn report_type_error(

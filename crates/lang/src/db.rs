@@ -9,19 +9,20 @@ use crate::types::inference::InferenceCtx;
 use crate::InFile;
 use base_db::{SourceRootDatabase, Upcast};
 use stdx::itertools::Itertools;
+use triomphe::Arc;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::{NamedElement, ReferenceElement};
 use syntax::{ast, AstNode};
 
 #[ra_salsa::query_group(HirDatabaseStorage)]
 pub trait HirDatabase: SourceRootDatabase + Upcast<dyn SourceRootDatabase> {
-    fn inference_for_ctx_owner(&self, ctx_owner_loc: SyntaxLoc) -> InferenceResult;
+    fn inference_for_ctx_owner(&self, ctx_owner_loc: SyntaxLoc) -> Arc<InferenceResult>;
 
-    #[ra_salsa::transparent]
-    fn inference(&self, ctx_owner: InFile<ast::InferenceCtxOwner>) -> InferenceResult;
+    // #[ra_salsa::transparent]
+    // fn inference(&self, ctx_owner: InFile<ast::InferenceCtxOwner>) -> Arc<InferenceResult>;
 }
 
-fn inference_for_ctx_owner(db: &dyn HirDatabase, ctx_owner_loc: SyntaxLoc) -> InferenceResult {
+fn inference_for_ctx_owner(db: &dyn HirDatabase, ctx_owner_loc: SyntaxLoc) -> Arc<InferenceResult> {
     let InFile {
         file_id,
         value: ctx_owner,
@@ -32,10 +33,17 @@ fn inference_for_ctx_owner(db: &dyn HirDatabase, ctx_owner_loc: SyntaxLoc) -> In
 
     TypeAstWalker::new(&mut ctx).walk(ctx_owner);
 
-    InferenceResult::from_ctx(ctx)
+    Arc::new(InferenceResult::from_ctx(ctx))
 }
 
-fn inference(db: &dyn HirDatabase, ctx_owner: InFile<ast::InferenceCtxOwner>) -> InferenceResult {
-    let ctx_owner_loc = ctx_owner.loc();
-    db.inference_for_ctx_owner(ctx_owner_loc)
+impl InFile<ast::InferenceCtxOwner> {
+    pub fn inference(&self, db: &dyn HirDatabase) -> Arc<InferenceResult> {
+        let ctx_owner_loc = self.loc();
+        db.inference_for_ctx_owner(ctx_owner_loc)
+    }
 }
+
+// fn inference(db: &dyn HirDatabase, ctx_owner: InFile<ast::InferenceCtxOwner>) -> InferenceResult {
+//     let ctx_owner_loc = ctx_owner.loc();
+//     db.inference_for_ctx_owner(ctx_owner_loc)
+// }

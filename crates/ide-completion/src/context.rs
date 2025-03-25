@@ -1,7 +1,7 @@
 use crate::completions::item_list::ItemListKind;
 use crate::config::CompletionConfig;
 use ide_db::RootDatabase;
-use lang::files::FilePosition;
+use lang::files::{FilePosition, InFileExt};
 use lang::{InFile, Semantics};
 use syntax::algo::find_node_at_offset;
 use syntax::SyntaxKind::*;
@@ -13,7 +13,7 @@ const COMPLETION_MARKER: &str = "raCompletionMarker";
 #[derive(Debug)]
 pub(crate) enum CompletionAnalysis {
     Item(ItemListKind),
-    Path(InFile<ast::Path>),
+    Reference(InFile<ast::AnyReferenceElement>),
 }
 
 /// `CompletionContext` is created early during completion to figure out, where
@@ -64,8 +64,10 @@ impl<'a> CompletionContext<'a> {
             original_token,
         };
 
-        if let Some(path) = find_node_at_offset::<ast::Path>(&source_file.syntax(), offset) {
-            let analysis = CompletionAnalysis::Path(InFile::new(file_id, path));
+        if let Some(reference) =
+            find_node_at_offset::<ast::AnyReferenceElement>(&source_file.syntax(), offset)
+        {
+            let analysis = CompletionAnalysis::Reference(reference.in_file(file_id));
             return Some((ctx, analysis));
         }
 

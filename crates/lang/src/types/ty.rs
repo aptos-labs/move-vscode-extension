@@ -1,6 +1,6 @@
-pub(crate) mod adt;
+pub mod adt;
 pub(crate) mod integer;
-pub(crate) mod reference;
+pub mod reference;
 pub(crate) mod tuple;
 pub(crate) mod ty_callable;
 pub(crate) mod ty_var;
@@ -35,11 +35,13 @@ pub enum Ty {
     Integer(IntegerKind),
     Num,
 
+    Range(Box<Ty>),
+    Vector(Box<Ty>),
+
     Infer(TyInfer),
     TypeParam(TyTypeParameter),
 
     Reference(TyReference),
-    Vector(Box<Ty>),
     Adt(TyAdt),
     Callable(TyCallable),
     Tuple(TyTuple),
@@ -75,6 +77,13 @@ impl Ty {
     pub fn into_ty_callable(self) -> Option<TyCallable> {
         match self {
             Ty::Callable(ty_callable) => Some(ty_callable),
+            _ => None,
+        }
+    }
+
+    pub fn into_ty_ref(self) -> Option<TyReference> {
+        match self {
+            Ty::Reference(ty_ref) => Some(ty_ref),
             _ => None,
         }
     }

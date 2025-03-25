@@ -1,5 +1,5 @@
 use crate::grammar::generic_params::opt_generic_param_list;
-use crate::grammar::{attributes, error_block, expressions, name, name_ref_or_index, paths};
+use crate::grammar::{attributes, error_block, expressions, name, name_ref, name_ref_or_index, paths};
 use crate::parser::{CompletedMarker, Parser};
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
@@ -150,11 +150,16 @@ fn tuple_pat_fields(p: &mut Parser) {
 // }
 fn struct_pat_field(p: &mut Parser) {
     match p.current() {
-        IDENT | INT_NUMBER if p.nth(1) == T![:] => {
-            name_ref_or_index(p);
+        IDENT if p.nth(1) == T![:] => {
+            name_ref(p);
             p.bump(T![:]);
             pattern(p);
         }
+        // IDENT | INT_NUMBER if p.nth(1) == T![:] => {
+        //     name_ref_or_index(p);
+        //     p.bump(T![:]);
+        //     pattern(p);
+        // }
         // T![..] => p.bump(T![..]),
         // T![.] => {
         //     if p.at(T![..]) {
