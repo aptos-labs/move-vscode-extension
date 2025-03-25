@@ -32,6 +32,11 @@ impl<T> InFile<T> {
         Self { file_id, value }
     }
 
+    pub fn unpack(self) -> (FileId, T) {
+        let InFile { file_id, value } = self;
+        (file_id, value)
+    }
+
     pub fn map<F: FnOnce(T) -> U, U>(self, f: F) -> InFile<U> {
         InFile::new(self.file_id, f(self.value))
     }

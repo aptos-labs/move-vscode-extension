@@ -1,7 +1,7 @@
 mod type_args;
 
 use crate::db::HirDatabase;
-use crate::files::InFileExt;
+use crate::files::{InFileExt, InFileInto};
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::integer::IntegerKind;
@@ -12,23 +12,22 @@ use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::Ty;
 use crate::InFile;
 use syntax::{ast, AstNode, SyntaxNode};
-use vfs::FileId;
 
 pub struct TyLowering<'a> {
     db: &'a dyn HirDatabase,
-    file_id: FileId,
 }
 
 impl<'a> TyLowering<'a> {
-    pub fn new(db: &'a dyn HirDatabase, file_id: FileId) -> Self {
-        TyLowering { db, file_id }
+    pub fn new(db: &'a dyn HirDatabase) -> Self {
+        TyLowering { db }
     }
 
-    pub fn lower_type(&self, type_: ast::Type) -> Ty {
+    pub fn lower_type(&self, type_: InFile<ast::Type>) -> Ty {
+        let (file_id, type_) = type_.unpack();
         match type_ {
             ast::Type::PathType(path_type) => {
-                let path = path_type.path();
-                let named_item = path.clone().in_file(self.file_id).resolve_no_inf(self.db);
+                let path = path_type.path().in_file(file_id);
+                let named_item = path.resolve_no_inf(self.db);
                 match named_item {
                     None => {
                         // can be primitive type
@@ -39,7 +38,10 @@ impl<'a> TyLowering<'a> {
                             .node_loc
                             .cast_into::<ast::AnyNamedElement>(self.db.upcast())
                             .unwrap();
-                        self.lower_path(path.into(), named_item.map(|it| it.syntax().to_owned()))
+                        self.lower_path(
+                            path.in_file_into().value,
+                            named_item.map(|it| it.syntax().to_owned()),
+                        )
                     }
                 }
             }
@@ -47,19 +49,19 @@ impl<'a> TyLowering<'a> {
                 let is_mut = ref_type.is_mut();
                 let inner_ty = ref_type
                     .type_()
-                    .map(|inner_type| self.lower_type(inner_type))
+                    .map(|inner_type| self.lower_type(inner_type.in_file(file_id)))
                     .unwrap_or(Ty::Unknown);
                 Ty::Reference(TyReference::new(inner_ty, Mutability::new(is_mut)))
             }
             ast::Type::TupleType(tuple_type) => {
                 let inner_tys = tuple_type
                     .types()
-                    .map(|it| self.lower_type(it))
+                    .map(|it| self.lower_type(it.in_file(file_id)))
                     .collect::<Vec<_>>();
                 Ty::Tuple(TyTuple::new(inner_tys))
             }
             ast::Type::UnitType(_) => Ty::Unit,
-            ast::Type::ParenType(paren_type) => self.lower_type(paren_type.type_()),
+            ast::Type::ParenType(paren_type) => self.lower_type(paren_type.type_().in_file(file_id)),
         }
     }
 
@@ -77,7 +79,7 @@ impl<'a> TyLowering<'a> {
             }
             FUN => {
                 let fun = named_item.clone().syntax_cast::<ast::Fun>().unwrap();
-                let ty_callable = self.lower_function(fun.value);
+                let ty_callable = self.lower_function(fun);
                 Ty::Callable(ty_callable)
             }
             VARIANT => {
@@ -110,27 +112,33 @@ impl<'a> TyLowering<'a> {
         path_ty
     }
 
-    pub fn lower_function(&self, fun: ast::Fun) -> TyCallable {
+    pub fn lower_function(&self, fun: InFile<ast::Fun>) -> TyCallable {
+        let (file_id, fun) = fun.unpack();
         let param_types = fun
             .params()
             .into_iter()
-            .map(|it| it.type_().map(|t| self.lower_type(t)).unwrap_or(Ty::Unknown))
+            .map(|it| {
+                it.type_()
+                    .map(|t| self.lower_type(t.in_file(file_id)))
+                    .unwrap_or(Ty::Unknown)
+            })
             .collect();
-        let ret_type = self.lower_ret_type(fun.ret_type());
+        let ret_type = self.lower_ret_type(fun.ret_type().map(|t| t.in_file(file_id)));
         TyCallable::new(param_types, ret_type)
     }
 
-    fn lower_ret_type(&self, ret_type: Option<ast::RetType>) -> Ty {
+    fn lower_ret_type(&self, ret_type: Option<InFile<ast::RetType>>) -> Ty {
         let Some(ret_type) = ret_type else {
             return Ty::Unit;
         };
         ret_type
-            .type_()
+            .and_then(|it| it.type_())
             .map(|t| self.lower_type(t))
             .unwrap_or(Ty::Unknown)
     }
 
-    fn lower_primitive_type(&self, path: ast::Path) -> Option<Ty> {
+    fn lower_primitive_type(&self, path: InFile<ast::Path>) -> Option<Ty> {
+        let (file_id, path) = path.unpack();
         let path_name = path.reference_name()?;
         let ty = match path_name.as_str() {
             "u8" => Ty::Integer(IntegerKind::U8),
@@ -146,7 +154,7 @@ impl<'a> TyLowering<'a> {
                 let arg_ty = path
                     .type_args()
                     .first()
-                    .map(|it| self.lower_type(it.type_()))
+                    .map(|it| self.lower_type(it.type_().in_file(file_id)))
                     .unwrap_or(Ty::Unknown);
                 Ty::Vector(Box::new(arg_ty))
             }
