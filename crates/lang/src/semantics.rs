@@ -67,12 +67,12 @@ impl<'db> SemanticsImpl<'db> {
     }
 
     fn wrap_node_infile<N: AstNode>(&self, node: N) -> InFile<N> {
-        let InFile { file_id, .. } = self.find_file(node.syntax());
+        let (file_id, _) = self.find_file(node.syntax()).unpack();
         InFile::new(file_id, node)
     }
 
     fn wrap_token_infile(&self, token: SyntaxToken) -> InFile<SyntaxToken> {
-        let InFile { file_id, .. } = self.find_file(&token.parent().unwrap());
+        let (file_id, _) = self.find_file(&token.parent().unwrap()).unpack();
         InFile::new(file_id, token)
     }
 

@@ -1,3 +1,4 @@
+use crate::files::InFileExt;
 use crate::types::lowering::TyLowering;
 use crate::types::substitution::Substitution;
 use crate::types::ty::type_param::TyTypeParameter;
@@ -20,7 +21,7 @@ impl TyLowering<'_> {
             let type_param = InFile::new(generic_item.file_id, type_param);
             let type_param_ty = TyTypeParameter::new(type_param);
             let ty = match psi_type_arg {
-                PsiTypeArg::Present(type_) => self.lower_type(type_),
+                PsiTypeArg::Present(type_) => self.lower_type(type_.in_file(generic_item.file_id)),
                 PsiTypeArg::OptionalAbsent => Ty::TypeParam(type_param_ty.clone()),
                 PsiTypeArg::RequiredAbsent => Ty::Unknown,
             };

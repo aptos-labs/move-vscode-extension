@@ -1,5 +1,5 @@
 use crate::db::HirDatabase;
-use crate::files::OptionInFileExt;
+use crate::files::{InFileExt, OptionInFileExt};
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres::name_resolution::{
     get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
@@ -73,10 +73,10 @@ pub fn get_method_resolve_variants(
     let function_entries = receiver_item_module
         .non_test_functions()
         .to_in_file_entries(file_id);
-    let ty_lowering = TyLowering::new(db, file_id);
+    let ty_lowering = TyLowering::new(db);
     let mut method_entries = vec![];
     for function_entry in function_entries {
-        let Some(InFile { file_id: _, value: f }) =
+        let Some(InFile { file_id, value: f }) =
             function_entry.node_loc.cast_into::<ast::Fun>(db.upcast())
         else {
             continue;
@@ -84,7 +84,7 @@ pub fn get_method_resolve_variants(
         let Some(self_param_ty) = f
             .self_param()
             .and_then(|self_param| self_param.type_())
-            .map(|self_param_type| ty_lowering.lower_type(self_param_type))
+            .map(|self_param_type| ty_lowering.lower_type(self_param_type.in_file(file_id)))
         else {
             continue;
         };

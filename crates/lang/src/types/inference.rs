@@ -107,7 +107,7 @@ impl<'a> InferenceCtx<'a> {
         method_or_path: ast::MethodOrPath,
         generic_item: InFile<ast::AnyGenericItem>,
     ) -> Ty {
-        let ty_lowering = TyLowering::new(self.db, generic_item.file_id);
+        let ty_lowering = TyLowering::new(self.db);
         let mut path_ty = ty_lowering.lower_path(
             method_or_path,
             generic_item.clone().map(|it| it.syntax().to_owned()),
@@ -120,7 +120,7 @@ impl<'a> InferenceCtx<'a> {
     }
 
     pub fn ty_lowering(&self) -> TyLowering {
-        TyLowering::new(self.db, self.file_id)
+        TyLowering::new(self.db)
     }
 
     pub fn resolve_ty_infer(&self, ty_infer: &TyInfer) -> Ty {

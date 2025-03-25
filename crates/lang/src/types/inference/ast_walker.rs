@@ -53,7 +53,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 match binding_type_owner {
                     Some(BindingTypeOwner::Param(fun_param)) => fun_param
                         .type_()
-                        .map(|it| ty_lowering.lower_type(it))
+                        .map(|it| ty_lowering.lower_type(it.in_file(self.ctx.file_id)))
                         .unwrap_or(Ty::Unknown),
                     _ => continue,
                 }
@@ -92,7 +92,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     fn process_stmt(&mut self, stmt: ast::Stmt) {
         match stmt {
             ast::Stmt::LetStmt(let_stmt) => {
-                let explicit_ty = let_stmt.type_().map(|it| self.ctx.ty_lowering().lower_type(it));
+                let explicit_ty = let_stmt
+                    .type_()
+                    .map(|it| self.ctx.ty_lowering().lower_type(it.in_file(self.ctx.file_id)));
                 let pat = let_stmt.pat();
                 let initializer_ty = match let_stmt.initializer() {
                     None => pat
@@ -215,11 +217,13 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 self.ctx.get_binding_type(ident_pat)
             }
             CONST => {
-                let const_type = named_element.cast::<ast::Const>()?.value.type_()?;
+                let const_type = named_element.cast::<ast::Const>()?.and_then(|it| it.type_())?;
                 Some(ty_lowering.lower_type(const_type))
             }
             NAMED_FIELD => {
-                let field_type = named_element.cast::<ast::NamedField>()?.value.type_()?;
+                let field_type = named_element
+                    .cast::<ast::NamedField>()?
+                    .and_then(|it| it.type_())?;
                 Some(ty_lowering.lower_type(field_type))
             }
             STRUCT | ENUM => {
@@ -262,18 +266,16 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             .into_iter()
             .filter(|it| it.name().unwrap().as_string() == field_reference_name)
             .collect::<Vec<_>>()
-            .single_or_none();
+            .single_or_none()
+            .map(|it| it.in_file(adt_item_file_id));
 
         self.ctx.resolved_fields.insert(
             dot_expr.field_ref(),
-            named_field
-                .clone()
-                .and_then(|field| field.in_file(adt_item_file_id).to_entry()),
+            named_field.clone().and_then(|it| it.to_entry()),
         );
 
         let ty_lowering = self.ctx.ty_lowering();
-        let named_field_type = named_field.and_then(|it| it.type_())?;
-
+        let named_field_type = named_field?.and_then(|it| it.type_())?;
         let field_ty = ty_lowering
             .lower_type(named_field_type)
             .substitute(ty_adt.substitution);
@@ -389,9 +391,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     fn infer_vector_lit_expr(&mut self, vector_lit_expr: &ast::VectorLitExpr, expected: Expected) -> Ty {
         let arg_ty_var = Ty::Infer(TyInfer::Var(TyVar::new_anonymous(self.ctx.inc_ty_counter())));
 
-        let explicit_ty = vector_lit_expr
-            .type_arg()
-            .map(|it| self.ctx.ty_lowering().lower_type(it.type_()));
+        let explicit_ty = vector_lit_expr.type_arg().map(|it| {
+            self.ctx
+                .ty_lowering()
+                .lower_type(it.type_().in_file(self.ctx.file_id))
+        });
         if let Some(explicit_ty) = explicit_ty {
             let _ = self.ctx.combine_types(arg_ty_var.clone(), explicit_ty);
         }

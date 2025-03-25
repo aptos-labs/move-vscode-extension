@@ -2,7 +2,7 @@ pub mod adt;
 pub(crate) mod integer;
 pub mod reference;
 pub(crate) mod tuple;
-pub(crate) mod ty_callable;
+pub mod ty_callable;
 pub(crate) mod ty_var;
 pub(crate) mod type_param;
 

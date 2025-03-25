@@ -3,7 +3,7 @@ use crate::context::CompletionContext;
 use crate::render::function::{render_function, FunctionKind};
 use crate::render::render_named_item;
 use base_db::Upcast;
-use lang::files::InFileExt;
+use lang::files::{InFileExt, InFileInto};
 use lang::nameres::path_resolution::get_method_resolve_variants;
 use lang::types::ty::adt::TyAdt;
 use lang::types::ty::Ty;
@@ -16,10 +16,7 @@ pub(crate) fn add_method_or_field_completions(
     ctx: &CompletionContext<'_>,
     field_ref: InFile<ast::FieldRef>,
 ) -> Option<()> {
-    let InFile {
-        file_id,
-        value: field_ref,
-    } = field_ref;
+    let (file_id, field_ref) = field_ref.unpack();
 
     let receiver_expr = field_ref.dot_expr().receiver_expr();
     let inference = receiver_expr
@@ -62,7 +59,7 @@ pub(crate) fn add_method_or_field_completions(
         // let mut inference_ctx = InferenceCtx::new(hir_db, method_file_id);
         // let _ = inference_ctx.combine_types(self_ty.clone(), coerced_receiver_ty);
 
-        acc.add(render_function(ctx, method.value, FunctionKind::Method).build(ctx.db));
+        acc.add(render_function(ctx, method, FunctionKind::Method, None).build(ctx.db));
     }
 
     Some(())
@@ -73,13 +70,13 @@ fn add_field_ref_completion_items(
     ctx: &CompletionContext<'_>,
     ty_adt: TyAdt,
 ) -> Option<()> {
-    let adt_item = ty_adt
+    let (file_id, adt_item) = ty_adt
         .adt_item
         .cast_into::<ast::StructOrEnum>(ctx.db.upcast())?
-        .value;
+        .unpack();
     let named_fields = adt_item.field_ref_lookup_fields();
     for named_field in named_fields {
-        acc.add(render_named_item(ctx, named_field.into()).build(ctx.db));
+        acc.add(render_named_item(ctx, named_field.in_file(file_id).in_file_into()).build(ctx.db));
     }
 
     Some(())
