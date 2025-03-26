@@ -1,7 +1,12 @@
+use crate::ast;
+use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::ast::NamedElement;
-use crate::{ast, AstNode};
 
 impl ast::Fun {
+    pub fn module(&self) -> Option<ast::Module> {
+        self.syntax.parent_of_type::<ast::Module>()
+    }
+
     pub fn params(&self) -> Vec<ast::Param> {
         self.param_list()
             .map(|list| list.params().collect())

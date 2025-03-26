@@ -1417,18 +1417,24 @@ pub struct AnyDocCommentsOwner {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::DocCommentsOwner for AnyDocCommentsOwner {}
+impl ast::NamedElement for AnyDocCommentsOwner {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyFieldsOwner {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::FieldsOwner for AnyFieldsOwner {}
+impl ast::DocCommentsOwner for AnyFieldsOwner {}
+impl ast::HasAttrs for AnyFieldsOwner {}
+impl ast::NamedElement for AnyFieldsOwner {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyGenericItem {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::GenericItem for AnyGenericItem {}
+impl ast::DocCommentsOwner for AnyGenericItem {}
+impl ast::NamedElement for AnyGenericItem {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyHasAttrs {
@@ -1441,12 +1447,15 @@ pub struct AnyHasItems {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HasItems for AnyHasItems {}
+impl ast::HasAttrs for AnyHasItems {}
+impl ast::HasUseStmts for AnyHasItems {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyHasStmts {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HasStmts for AnyHasStmts {}
+impl ast::HasUseStmts for AnyHasStmts {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyHasUseStmts {
@@ -1459,6 +1468,8 @@ pub struct AnyHasVisibility {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HasVisibility for AnyHasVisibility {}
+impl ast::DocCommentsOwner for AnyHasVisibility {}
+impl ast::NamedElement for AnyHasVisibility {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyLoopLike {
@@ -4415,6 +4426,10 @@ impl AnyDocCommentsOwner {
         }
     }
     #[inline]
+    pub fn cast_from<T: ast::DocCommentsOwner>(t: T) -> AnyDocCommentsOwner {
+        AnyDocCommentsOwner::cast(t.syntax().to_owned()).expect("required by code generator")
+    }
+    #[inline]
     pub fn cast_into<T: ast::DocCommentsOwner>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
 }
 impl AstNode for AnyDocCommentsOwner {
@@ -4489,6 +4504,10 @@ impl AnyFieldsOwner {
         }
     }
     #[inline]
+    pub fn cast_from<T: ast::FieldsOwner>(t: T) -> AnyFieldsOwner {
+        AnyFieldsOwner::cast(t.syntax().to_owned()).expect("required by code generator")
+    }
+    #[inline]
     pub fn cast_into<T: ast::FieldsOwner>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
 }
 impl AstNode for AnyFieldsOwner {
@@ -4515,6 +4534,10 @@ impl AnyGenericItem {
         AnyGenericItem {
             syntax: node.syntax().clone(),
         }
+    }
+    #[inline]
+    pub fn cast_from<T: ast::GenericItem>(t: T) -> AnyGenericItem {
+        AnyGenericItem::cast(t.syntax().to_owned()).expect("required by code generator")
     }
     #[inline]
     pub fn cast_into<T: ast::GenericItem>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
@@ -4561,6 +4584,10 @@ impl AnyHasAttrs {
         AnyHasAttrs {
             syntax: node.syntax().clone(),
         }
+    }
+    #[inline]
+    pub fn cast_from<T: ast::HasAttrs>(t: T) -> AnyHasAttrs {
+        AnyHasAttrs::cast(t.syntax().to_owned()).expect("required by code generator")
     }
     #[inline]
     pub fn cast_into<T: ast::HasAttrs>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
@@ -4657,6 +4684,10 @@ impl AnyHasItems {
         }
     }
     #[inline]
+    pub fn cast_from<T: ast::HasItems>(t: T) -> AnyHasItems {
+        AnyHasItems::cast(t.syntax().to_owned()).expect("required by code generator")
+    }
+    #[inline]
     pub fn cast_into<T: ast::HasItems>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
 }
 impl AstNode for AnyHasItems {
@@ -4689,6 +4720,10 @@ impl AnyHasStmts {
         }
     }
     #[inline]
+    pub fn cast_from<T: ast::HasStmts>(t: T) -> AnyHasStmts {
+        AnyHasStmts::cast(t.syntax().to_owned()).expect("required by code generator")
+    }
+    #[inline]
     pub fn cast_into<T: ast::HasStmts>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
 }
 impl AstNode for AnyHasStmts {
@@ -4711,6 +4746,10 @@ impl AnyHasUseStmts {
         AnyHasUseStmts {
             syntax: node.syntax().clone(),
         }
+    }
+    #[inline]
+    pub fn cast_from<T: ast::HasUseStmts>(t: T) -> AnyHasUseStmts {
+        AnyHasUseStmts::cast(t.syntax().to_owned()).expect("required by code generator")
     }
     #[inline]
     pub fn cast_into<T: ast::HasUseStmts>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
@@ -4747,6 +4786,10 @@ impl AnyHasVisibility {
         AnyHasVisibility {
             syntax: node.syntax().clone(),
         }
+    }
+    #[inline]
+    pub fn cast_from<T: ast::HasVisibility>(t: T) -> AnyHasVisibility {
+        AnyHasVisibility::cast(t.syntax().to_owned()).expect("required by code generator")
     }
     #[inline]
     pub fn cast_into<T: ast::HasVisibility>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
@@ -4795,6 +4838,10 @@ impl AnyLoopLike {
         }
     }
     #[inline]
+    pub fn cast_from<T: ast::LoopLike>(t: T) -> AnyLoopLike {
+        AnyLoopLike::cast(t.syntax().to_owned()).expect("required by code generator")
+    }
+    #[inline]
     pub fn cast_into<T: ast::LoopLike>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
 }
 impl AstNode for AnyLoopLike {
@@ -4825,6 +4872,10 @@ impl AnyMslOnly {
         AnyMslOnly {
             syntax: node.syntax().clone(),
         }
+    }
+    #[inline]
+    pub fn cast_from<T: ast::MslOnly>(t: T) -> AnyMslOnly {
+        AnyMslOnly::cast(t.syntax().to_owned()).expect("required by code generator")
     }
     #[inline]
     pub fn cast_into<T: ast::MslOnly>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
@@ -4874,6 +4925,10 @@ impl AnyNamedElement {
         AnyNamedElement {
             syntax: node.syntax().clone(),
         }
+    }
+    #[inline]
+    pub fn cast_from<T: ast::NamedElement>(t: T) -> AnyNamedElement {
+        AnyNamedElement::cast(t.syntax().to_owned()).expect("required by code generator")
     }
     #[inline]
     pub fn cast_into<T: ast::NamedElement>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
@@ -4963,6 +5018,10 @@ impl AnyReferenceElement {
         AnyReferenceElement {
             syntax: node.syntax().clone(),
         }
+    }
+    #[inline]
+    pub fn cast_from<T: ast::ReferenceElement>(t: T) -> AnyReferenceElement {
+        AnyReferenceElement::cast(t.syntax().to_owned()).expect("required by code generator")
     }
     #[inline]
     pub fn cast_into<T: ast::ReferenceElement>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }

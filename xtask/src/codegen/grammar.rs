@@ -375,11 +375,35 @@ fn write_doc_comment(contents: &[String], dest: &mut String) {
 }
 
 fn generate_any_node_defs(
-    trait_name: &str,
+    trait_name_s: &str,
     nodes: Vec<&AstNodeSrc>,
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
+    let trait_name = format_ident!("{}", trait_name_s);
     let any_trait_name = format_ident!("Any{}", trait_name);
-    let trait_name = format_ident!("{}", trait_name);
+
+    let common_traits = find_common_traits(nodes.clone())
+        .into_iter()
+        .filter(|common_trait| common_trait != trait_name_s)
+        .collect::<Vec<_>>();
+    let impl_common_traits = common_traits
+        .iter()
+        .map(|common_trait| {
+            let common_trait = format_ident!("{}", common_trait);
+            quote! { impl ast::#common_trait for #any_trait_name {} }
+        })
+        .collect::<Vec<_>>();
+    // let cast_into_common_traits = common_traits
+    //     .iter()
+    //     .map(|common_trait| {
+    //         let common_trait = format_ident!("{}", common_trait);
+    //         quote! {
+    //             #[inline]
+    //             pub fn cast_into<T: ast::#common_trait>(&self) -> Option<T> {
+    //                 T::cast(self.syntax().to_owned())
+    //             }
+    //         }
+    //     }).collect::<Vec<_>>();
+
     let kinds: Vec<_> = nodes
         .iter()
         .map(|name| format_ident!("{}", to_upper_snake_case(&name.name.to_string())))
@@ -393,6 +417,7 @@ fn generate_any_node_defs(
                 pub(crate) syntax: SyntaxNode,
             }
             impl ast::#trait_name for #any_trait_name {}
+            #(#impl_common_traits)*
         },
         quote! {
             impl #any_trait_name {
@@ -401,6 +426,10 @@ fn generate_any_node_defs(
                     #any_trait_name {
                         syntax: node.syntax().clone()
                     }
+                }
+                #[inline]
+                pub fn cast_from<T: ast::#trait_name>(t: T) -> #any_trait_name {
+                    #any_trait_name::cast(t.syntax().to_owned()).expect("required by code generator")
                 }
                 #[inline]
                 pub fn cast_into<T: ast::#trait_name>(&self) -> Option<T> {
@@ -879,29 +908,33 @@ fn extract_struct_trait(node: &mut AstNodeSrc, trait_name: &str, methods: &[&str
 fn extract_enum_traits(ast: &mut AstSrc) {
     for enum_ in &mut ast.enums {
         let nodes = &ast.nodes;
-        let mut variant_traits = enum_
+
+        let nodes = enum_
             .variants
             .iter()
             .map(|variant| nodes.iter().find(|it| &it.name == variant).unwrap())
-            .map(|node| node.traits.iter().cloned().collect::<BTreeSet<_>>());
+            .collect::<Vec<_>>();
 
-        // collect traits present on all the variants
-        let mut enum_traits = match variant_traits.next() {
-            Some(it) => it,
-            None => continue,
-        };
-        for traits in variant_traits {
-            enum_traits = enum_traits.intersection(&traits).cloned().collect();
+        let enum_traits = find_common_traits(nodes);
+        if !enum_traits.is_empty() {
+            enum_.traits = enum_traits;
         }
-
-        // for (trait_name, enum_names) in NON_METHOD_TRAITS {
-        //     if enum_names.contains(&&*enum_.name) {
-        //         enum_traits.insert((*trait_name).into());
-        //     }
-        // }
-
-        enum_.traits = enum_traits.into_iter().collect();
     }
+}
+
+fn find_common_traits(nodes: Vec<&AstNodeSrc>) -> Vec<String> {
+    let mut variant_traits = nodes
+        .into_iter()
+        .map(|node| node.traits.iter().cloned().collect::<BTreeSet<_>>());
+    // collect traits present on all the variants
+    let mut enum_traits = match variant_traits.next() {
+        Some(it) => it,
+        None => return vec![],
+    };
+    for traits in variant_traits {
+        enum_traits = enum_traits.intersection(&traits).cloned().collect();
+    }
+    enum_traits.into_iter().collect()
 }
 
 fn to_upper_snake_case(s: &str) -> String {

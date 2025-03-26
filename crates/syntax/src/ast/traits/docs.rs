@@ -1,4 +1,5 @@
 use crate::{ast, AstNode, AstToken};
+use std::cmp::Ordering;
 
 pub trait DocCommentsOwner: AstNode {
     fn doc_comments(&self) -> Vec<ast::Comment> {
@@ -10,6 +11,13 @@ pub trait DocCommentsOwner: AstNode {
                     .and_then(ast::Comment::cast)
                     .filter(|it| it.is_doc() && it.is_outer())
             })
+            .collect()
+    }
+
+    fn outer_doc_comments(&self, anchor_token: ast::SyntaxToken) -> Vec<ast::Comment> {
+        self.doc_comments()
+            .into_iter()
+            .filter(|it| it.syntax.text_range().ordering(anchor_token.text_range()) == Ordering::Less)
             .collect()
     }
 }
