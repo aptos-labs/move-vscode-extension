@@ -10,6 +10,7 @@ mod expr;
 mod field_ref;
 pub mod fun;
 mod ident_pat;
+mod if_expr;
 pub mod index_expr;
 pub mod literal;
 mod method_call_expr;
@@ -29,7 +30,6 @@ pub mod syntax_node;
 pub mod type_;
 mod vector_lit_expr;
 pub mod visibility;
-mod if_expr;
 
 use crate::token_text::TokenText;
 use crate::{ast, AstNode, AstToken, SyntaxNode};
@@ -66,67 +66,3 @@ impl ast::PathSegment {
             .expect("segments are always nested in paths")
     }
 }
-
-#[derive(Clone, PartialEq, Eq, Hash)]
-pub enum NameLike {
-    NameRef(ast::NameRef),
-    Name(ast::Name),
-}
-
-impl NameLike {
-    pub fn as_name_ref(&self) -> Option<&ast::NameRef> {
-        match self {
-            NameLike::NameRef(name_ref) => Some(name_ref),
-            _ => None,
-        }
-    }
-    pub fn to_name_ref(self) -> Option<ast::NameRef> {
-        match self {
-            NameLike::NameRef(name_ref) => Some(name_ref),
-            _ => None,
-        }
-    }
-    pub fn as_name(&self) -> Option<&ast::Name> {
-        match self {
-            NameLike::Name(name) => Some(name),
-            _ => None,
-        }
-    }
-    pub fn to_name(self) -> Option<ast::Name> {
-        match self {
-            NameLike::Name(name) => Some(name),
-            _ => None,
-        }
-    }
-    // pub fn text(&self) -> TokenText<'_> {
-    //     match self {
-    //         NameLike::NameRef(name_ref) => name_ref.text(),
-    //         NameLike::Name(name) => name.text(),
-    //     }
-    // }
-}
-
-impl ast::AstNode for NameLike {
-    fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(kind, SyntaxKind::NAME | SyntaxKind::NAME_REF)
-    }
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        let res = match syntax.kind() {
-            SyntaxKind::NAME => NameLike::Name(ast::Name { syntax }),
-            SyntaxKind::NAME_REF => NameLike::NameRef(ast::NameRef { syntax }),
-            _ => return None,
-        };
-        Some(res)
-    }
-    fn syntax(&self) -> &SyntaxNode {
-        match self {
-            NameLike::NameRef(it) => it.syntax(),
-            NameLike::Name(it) => it.syntax(),
-        }
-    }
-}
-
-const _: () = {
-    use ast::{Name, NameRef};
-    stdx::impl_from!(NameRef, Name for NameLike);
-};

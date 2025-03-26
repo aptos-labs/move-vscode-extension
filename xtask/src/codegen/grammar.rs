@@ -860,34 +860,6 @@ fn extract_struct_traits(ast: &mut AstSrc) {
             }
         }
     }
-
-    // let nodes_with_doc_comments = [
-    //     "SourceFile",
-    //     "Fun",
-    //     "Struct",
-    //     "RecordField",
-    //     "TupleField",
-    //     "Enum",
-    //     "Variant",
-    //     "Trait",
-    //     "TraitAlias",
-    //     "Module",
-    //     "Static",
-    //     "Const",
-    //     "TypeAlias",
-    //     "Impl",
-    //     "ExternBlock",
-    //     "ExternCrate",
-    //     "MacroCall",
-    //     "MacroRules",
-    //     "MacroDef",
-    //     "Use",
-    // ];
-    // for node in &mut ast.nodes {
-    //     if nodes_with_doc_comments.contains(&&*node.name) {
-    //         node.traits.push("HasDocComments".into());
-    //     }
-    // }
 }
 
 fn extract_struct_trait(node: &mut AstNodeSrc, trait_name: &str, methods: &[&str]) {

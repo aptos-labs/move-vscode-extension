@@ -6,7 +6,7 @@ use crate::ast::{support, AstChildren, Stmt};
 use crate::{ast, AstNode};
 use std::io::Read;
 
-pub use docs::{DocCommentIter, HasDocComments};
+pub use docs::DocCommentsOwner;
 pub use has_item_list::HasItems;
 pub use has_use_stmts::HasUseStmts;
 

@@ -15,8 +15,7 @@ impl ast::Expr {
                 | ast::Expr::LoopExpr(_)
                 | ast::Expr::ForExpr(_)
                 | ast::Expr::WhileExpr(_)
-                | ast::Expr::BlockExpr(_)
-                // | ast::Expr::MatchExpr(_)
+                | ast::Expr::BlockExpr(_) // | ast::Expr::MatchExpr(_)
         )
     }
 }

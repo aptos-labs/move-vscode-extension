@@ -1,13 +1,13 @@
 mod test_completion;
 
-use std::fmt;
-use crate::{assert_eq_text, init_tracing_for_test};
 use crate::test_utils::get_and_replace_caret;
+use crate::{assert_eq_text, init_tracing_for_test};
 use ide::Analysis;
 use ide_completion::config::CompletionConfig;
 use ide_completion::item::CompletionItem;
 use ide_db::SnippetCap;
 use lang::files::FilePosition;
+use std::fmt;
 use syntax::{AstNode, AstToken, TextSize, ast};
 use tracing::Level;
 use tracing::level_filters::LevelFilter;
@@ -64,7 +64,12 @@ pub fn check_completions_contains(source: &str, contains_items: Vec<&str>) {
     let mut lookup_labels_txt = format!("{:?}", lookup_labels);
     for item in contains_items.clone() {
         let item = item.to_string();
-        assert!(lookup_labels.contains(&item), "missing item '{}', actual: {}", item, lookup_labels_txt);
+        assert!(
+            lookup_labels.contains(&item),
+            "missing item '{}', actual: {}",
+            item,
+            lookup_labels_txt
+        );
         lookup_labels.retain(|lookup| *lookup != item);
     }
 
@@ -133,11 +138,14 @@ fn completions_at_offset(
 }
 
 fn lookup_labels(items: Vec<CompletionItem>) -> Vec<String> {
-    items.iter().map(|item| {
-        let mut label = item.label.primary.clone();
-        if let Some(detail) = &item.detail {
-            label += &format!(" -> {}", detail);
-        }
-        label
-    }).collect()
+    items
+        .iter()
+        .map(|item| {
+            let mut label = item.label.primary.clone();
+            if let Some(detail) = &item.detail {
+                label += &format!(" -> {}", detail);
+            }
+            label
+        })
+        .collect()
 }

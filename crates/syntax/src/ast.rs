@@ -24,16 +24,11 @@ pub use self::{
     item_scope::NamedItemScope,
     // expr_ext::{ArrayExprKind, BlockModifier, CallableExpr, ElseBranch, LiteralKind},
     node_ext::literal::LiteralKind,
-    node_ext::{
-        NameLike,
-        //     AttrKind, FieldKind, Macro, NameOrNameRef, PathSegmentKind, SelfParamKind,
-        //     SlicePatComponents, StructKind, TypeBoundKind, VisibilityKind,
-    },
     operators::{ArithOp, BinaryOp, CmpOp, LogicOp, Ordering, RangeOp, UnaryOp},
     token_ext::{CommentKind, CommentPlacement, CommentShape, IsString, QuoteOffsets},
     traits::{
-        DocCommentIter, FieldsOwner, GenericItem, HasAttrs, HasDocComments, HasItems, HasStmts,
-        HasUseStmts, LoopLike, MslOnly, NamedElement, ReferenceElement,
+        DocCommentsOwner, FieldsOwner, GenericItem, HasAttrs, HasItems, HasStmts, HasUseStmts, LoopLike,
+        MslOnly, NamedElement, ReferenceElement,
     },
     visibility::HasVisibility,
 };

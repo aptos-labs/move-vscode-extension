@@ -3,15 +3,15 @@
 use tracing::Level;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::{Layer, Registry};
 use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::{Layer, Registry};
 use tracing_tree::HierarchicalLayer;
 
 mod completion;
+mod hover;
 mod resolve;
 mod test_utils;
 mod types;
-mod hover;
 
 pub(crate) fn init_tracing_for_test() {
     let _ = Registry::default()
