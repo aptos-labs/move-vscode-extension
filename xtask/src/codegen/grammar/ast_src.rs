@@ -331,14 +331,16 @@ pub(crate) const NON_METHOD_TRAITS: &[(&str, &[&str])] = &[
         ],
     ),
     (
-        "HasDocComments",
+        "DocCommentsOwner",
         &[
             "Module",
             "Fun",
             "SpecFun",
             "SpecInlineFun",
             "Struct",
+            "NamedField",
             "Enum",
+            "Variant",
             "Const",
             "Schema",
         ],

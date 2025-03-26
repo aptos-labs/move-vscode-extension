@@ -1,6 +1,6 @@
 use crate::init_tracing_for_test;
-use ide::test_utils::get_marked_position_offset_with_data;
 use ide::Analysis;
+use ide::test_utils::get_marked_position_offset_with_data;
 use lang::FilePosition;
 
 pub(crate) fn check_hover(source: &str, expected_docs: &str) {
@@ -35,5 +35,39 @@ module 0x1::m {
         //^
     }
 }
-    "#, "my documentation string")
+    "#,
+        "my documentation string",
+    )
+}
+
+#[test]
+fn test_hover_for_function_ref() {
+    check_hover(
+        // language=Move
+        r#"
+module 0x1::m {
+    /// my documentation string
+    fun main() {
+        main();
+        //^
+    }
+}
+    "#,
+        "my documentation string",
+    )
+}
+
+#[test]
+fn test_hover_for_module_with_inner_comment() {
+    check_hover(
+        // language=Move
+        r#"
+/// my documentation string
+module 0x1::m {
+          //^
+    /// inner string
+}
+    "#,
+        "my documentation string",
+    )
 }

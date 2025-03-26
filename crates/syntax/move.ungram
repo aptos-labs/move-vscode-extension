@@ -321,6 +321,9 @@ Attr =
 AttrItem =
     Path '=' Expr
 
+NameLike =
+    Name | NameRef
+
 Name =
     'ident'
 

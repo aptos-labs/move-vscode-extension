@@ -3,10 +3,10 @@ use crate::line_index::PositionEncoding;
 use crate::lsp::semantic_tokens;
 use line_index::WideEncoding;
 use lsp_types::{
-    CompletionOptions, CompletionOptionsCompletionItem, OneOf, PositionEncodingKind,
-    SelectionRangeProviderCapability, SemanticTokensFullOptions, SemanticTokensLegend,
-    SemanticTokensOptions, ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind,
-    WorkDoneProgressOptions,
+    CompletionOptions, CompletionOptionsCompletionItem, HoverProviderCapability, OneOf,
+    PositionEncodingKind, SelectionRangeProviderCapability, SemanticTokensFullOptions,
+    SemanticTokensLegend, SemanticTokensOptions, ServerCapabilities, TextDocumentSyncCapability,
+    TextDocumentSyncKind, WorkDoneProgressOptions,
 };
 
 pub fn server_capabilities(config: &Config) -> ServerCapabilities {
@@ -27,7 +27,7 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
         //     will_save_wait_until: None,
         //     save: Some(SaveOptions::default().into()),
         // })),
-        // hover_provider: Some(HoverProviderCapability::Simple(true)),
+        hover_provider: Some(HoverProviderCapability::Simple(true)),
         completion_provider: Some(CompletionOptions {
             resolve_provider: None,
             // resolve_provider: Some(config.caps().completions_resolve_provider()),

@@ -1,4 +1,5 @@
 use crate::loc::SyntaxLoc;
+use crate::nameres::fq_named_element::FqNamedElement;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::ty_var::{TyInfer, TyVar, TyVarKind};
@@ -8,7 +9,6 @@ use std::ops::Deref;
 use stdx::itertools::Itertools;
 use syntax::ast;
 use syntax::ast::NamedElement;
-use crate::nameres::fq_named_element::FqNamedElement;
 
 pub struct TypeRenderer<'db> {
     db: &'db dyn SourceRootDatabase,
@@ -82,12 +82,13 @@ impl<'db> TypeRenderer<'db> {
     }
 
     fn render_ty_adt(&self, ty_adt: &TyAdt) -> String {
-        let item = ty_adt
-            .adt_item
-            .cast_into::<ast::StructOrEnum>(self.db)
-            .unwrap();
+        let item = ty_adt.adt_item.cast_into::<ast::StructOrEnum>(self.db).unwrap();
         // todo: proper fq name
-        let item_fq_name = item.value.fq_name().map(|it| it.identifier_text()).unwrap_or(anonymous());
+        let item_fq_name = item
+            .value
+            .fq_name()
+            .map(|it| it.identifier_text())
+            .unwrap_or(anonymous());
         item_fq_name
     }
 

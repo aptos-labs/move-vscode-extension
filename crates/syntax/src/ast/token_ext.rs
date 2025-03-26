@@ -28,7 +28,7 @@ impl ast::Comment {
 
     /// Returns the textual content of a doc comment node as a single string with prefix and suffix
     /// removed.
-    pub fn doc_comment(&self) -> Option<&str> {
+    pub fn comment_line(&self) -> Option<&str> {
         let kind = self.kind();
         match kind {
             CommentKind { shape, doc: Some(_) } => {

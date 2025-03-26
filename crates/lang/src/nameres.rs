@@ -1,15 +1,16 @@
 use crate::InFile;
 use crate::db::HirDatabase;
 use crate::files::InFileExt;
+use crate::loc::SyntaxLocFileExt;
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::node_ext::struct_field_name::StructFieldNameExt;
 use syntax::ast;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::{FieldsOwner, ReferenceElement};
-use crate::loc::SyntaxLocFileExt;
 
 pub mod address;
 mod blocks;
+pub mod fq_named_element;
 mod is_visible;
 pub mod name_resolution;
 pub mod namespaces;
@@ -19,7 +20,6 @@ pub mod path_resolution;
 pub mod scope;
 mod scope_entries_owner;
 pub mod use_speck_entries;
-pub mod fq_named_element;
 
 impl<T: ast::ReferenceElement> InFile<T> {
     pub fn resolve(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
@@ -88,9 +88,7 @@ impl<T: ast::ReferenceElement> InFile<T> {
         }
 
         // outside inference context
-        ref_element.cast_into::<ast::Path>().and_then(|path| {
-            path_resolution::resolve_path(db, path.in_file(self.file_id)).single_or_none()
-        })
+        self.resolve_no_inf(db)
     }
 
     pub fn resolve_no_inf(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
