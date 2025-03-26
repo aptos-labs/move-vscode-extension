@@ -314,14 +314,7 @@ pub(crate) const NON_METHOD_TRAITS: &[(&str, &[&str])] = &[
             "StructLitField",
         ],
     ),
-    (
-        "LoopLike",
-        &[
-            "LoopExpr",
-            "WhileExpr",
-            "ForExpr",
-        ],
-    ),
+    ("LoopLike", &["LoopExpr", "WhileExpr", "ForExpr"]),
     (
         "HasVisibility",
         &["Fun", "SpecFun", "SpecInlineFun", "Struct", "Enum", "Const"],
@@ -337,7 +330,19 @@ pub(crate) const NON_METHOD_TRAITS: &[(&str, &[&str])] = &[
             "ItemSpec",
         ],
     ),
-    // ("HasDocComments", &["Module", "Fun", "Struct"]),
+    (
+        "HasDocComments",
+        &[
+            "Module",
+            "Fun",
+            "SpecFun",
+            "SpecInlineFun",
+            "Struct",
+            "Enum",
+            "Const",
+            "Schema",
+        ],
+    ),
 ];
 
 pub(crate) fn get_required_fields(node_name: &str) -> &[&str] {

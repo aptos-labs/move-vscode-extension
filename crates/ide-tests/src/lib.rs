@@ -11,6 +11,7 @@ mod completion;
 mod resolve;
 mod test_utils;
 mod types;
+mod hover;
 
 pub(crate) fn init_tracing_for_test() {
     let _ = Registry::default()

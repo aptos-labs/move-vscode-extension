@@ -5,6 +5,7 @@ use camino::Utf8PathBuf;
 use lang::files::FilePosition;
 use line_index::{LineCol, TextRange, TextSize, WideLineCol};
 use vfs::{AbsPathBuf, FileId};
+use lang::FileRange;
 
 pub(crate) fn abs_path(url: &lsp_types::Url) -> anyhow::Result<AbsPathBuf> {
     let path = url
@@ -72,4 +73,25 @@ pub(crate) fn file_position(
     let line_index = snap.file_line_index(file_id)?;
     let offset = offset(&line_index, tdpp.position)?;
     Ok(FilePosition { file_id, offset })
+}
+
+/// Returns `None` if the file was excluded.
+pub(crate) fn file_range(
+    snap: &GlobalStateSnapshot,
+    text_document_identifier: &lsp_types::TextDocumentIdentifier,
+    range: lsp_types::Range,
+) -> anyhow::Result<Option<FileRange>> {
+    file_range_uri(snap, &text_document_identifier.uri, range)
+}
+
+/// Returns `None` if the file was excluded.
+pub(crate) fn file_range_uri(
+    snap: &GlobalStateSnapshot,
+    document: &lsp_types::Url,
+    range: lsp_types::Range,
+) -> anyhow::Result<Option<FileRange>> {
+    let file_id = file_id(snap, document)?;
+    let line_index = snap.file_line_index(file_id)?;
+    let range = text_range(&line_index, range)?;
+    Ok(Some(FileRange { file_id, range }))
 }
