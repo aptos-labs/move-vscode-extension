@@ -15,11 +15,13 @@ use vfs::{FileId, VfsPath};
 
 pub mod extend_selection;
 mod goto_definition;
+mod hover;
 mod navigation_target;
 pub mod syntax_highlighting;
 pub mod test_utils;
 mod type_info;
 
+use crate::hover::HoverResult;
 pub use crate::navigation_target::NavigationTarget;
 pub use crate::syntax_highlighting::HlRange;
 use ide_completion::config::CompletionConfig;
@@ -387,14 +389,10 @@ impl Analysis {
     //     self.with_db(|db| references::find_all_refs(&Semantics::new(db), position, search_scope))
     // }
 
-    // /// Returns a short text describing element at position.
-    // pub fn hover(
-    //     &self,
-    //     config: &HoverConfig,
-    //     range: FileRange,
-    // ) -> Cancellable<Option<RangeInfo<HoverResult>>> {
-    //     self.with_db(|db| hover::hover(db, range, config))
-    // }
+    /// Returns a short text describing element at position.
+    pub fn hover(&self, pos: FilePosition) -> Cancellable<Option<RangeInfo<HoverResult>>> {
+        self.with_db(|db| hover::hover(db, pos))
+    }
 
     // /// Returns moniker of symbol at position.
     // pub fn moniker(

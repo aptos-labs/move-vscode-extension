@@ -178,6 +178,7 @@ pub struct Const {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HasAttrs for Const {}
+impl ast::HasDocComments for Const {}
 impl ast::HasVisibility for Const {}
 impl ast::NamedElement for Const {}
 impl Const {
@@ -229,6 +230,7 @@ pub struct Enum {
 }
 impl ast::GenericItem for Enum {}
 impl ast::HasAttrs for Enum {}
+impl ast::HasDocComments for Enum {}
 impl ast::HasVisibility for Enum {}
 impl ast::NamedElement for Enum {}
 impl Enum {
@@ -309,6 +311,7 @@ pub struct Fun {
 }
 impl ast::GenericItem for Fun {}
 impl ast::HasAttrs for Fun {}
+impl ast::HasDocComments for Fun {}
 impl ast::HasVisibility for Fun {}
 impl ast::NamedElement for Fun {}
 impl Fun {
@@ -483,6 +486,7 @@ pub struct Module {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HasAttrs for Module {}
+impl ast::HasDocComments for Module {}
 impl ast::HasItems for Module {}
 impl ast::HasUseStmts for Module {}
 impl ast::NamedElement for Module {}
@@ -745,6 +749,7 @@ pub struct Schema {
 }
 impl ast::GenericItem for Schema {}
 impl ast::HasAttrs for Schema {}
+impl ast::HasDocComments for Schema {}
 impl ast::MslOnly for Schema {}
 impl ast::NamedElement for Schema {}
 impl Schema {
@@ -811,6 +816,7 @@ pub struct SpecFun {
 }
 impl ast::GenericItem for SpecFun {}
 impl ast::HasAttrs for SpecFun {}
+impl ast::HasDocComments for SpecFun {}
 impl ast::HasVisibility for SpecFun {}
 impl ast::MslOnly for SpecFun {}
 impl ast::NamedElement for SpecFun {}
@@ -836,6 +842,7 @@ pub struct SpecInlineFun {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::GenericItem for SpecInlineFun {}
+impl ast::HasDocComments for SpecInlineFun {}
 impl ast::HasVisibility for SpecInlineFun {}
 impl ast::MslOnly for SpecInlineFun {}
 impl ast::NamedElement for SpecInlineFun {}
@@ -914,6 +921,7 @@ pub struct Struct {
 impl ast::FieldsOwner for Struct {}
 impl ast::GenericItem for Struct {}
 impl ast::HasAttrs for Struct {}
+impl ast::HasDocComments for Struct {}
 impl ast::HasVisibility for Struct {}
 impl ast::NamedElement for Struct {}
 impl Struct {
@@ -1335,6 +1343,7 @@ pub enum InferenceCtxOwner {
 }
 impl ast::GenericItem for InferenceCtxOwner {}
 impl ast::HasAttrs for InferenceCtxOwner {}
+impl ast::HasDocComments for InferenceCtxOwner {}
 impl ast::HasVisibility for InferenceCtxOwner {}
 impl ast::NamedElement for InferenceCtxOwner {}
 
@@ -1382,6 +1391,7 @@ pub enum StructOrEnum {
 }
 impl ast::GenericItem for StructOrEnum {}
 impl ast::HasAttrs for StructOrEnum {}
+impl ast::HasDocComments for StructOrEnum {}
 impl ast::HasVisibility for StructOrEnum {}
 impl ast::NamedElement for StructOrEnum {}
 
@@ -1411,6 +1421,12 @@ pub struct AnyHasAttrs {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HasAttrs for AnyHasAttrs {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AnyHasDocComments {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::HasDocComments for AnyHasDocComments {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyHasItems {
@@ -4508,6 +4524,63 @@ impl From<UseStmt> for AnyHasAttrs {
 impl From<Variant> for AnyHasAttrs {
     #[inline]
     fn from(node: Variant) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl AnyHasDocComments {
+    #[inline]
+    pub fn new<T: ast::HasDocComments>(node: T) -> AnyHasDocComments {
+        AnyHasDocComments {
+            syntax: node.syntax().clone(),
+        }
+    }
+    #[inline]
+    pub fn cast_into<T: ast::HasDocComments>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
+}
+impl AstNode for AnyHasDocComments {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(
+            kind,
+            CONST | ENUM | FUN | MODULE | SCHEMA | SPEC_FUN | SPEC_INLINE_FUN | STRUCT
+        )
+    }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        Self::can_cast(syntax.kind()).then_some(AnyHasDocComments { syntax })
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl From<Const> for AnyHasDocComments {
+    #[inline]
+    fn from(node: Const) -> AnyHasDocComments { AnyHasDocComments { syntax: node.syntax } }
+}
+impl From<Enum> for AnyHasDocComments {
+    #[inline]
+    fn from(node: Enum) -> AnyHasDocComments { AnyHasDocComments { syntax: node.syntax } }
+}
+impl From<Fun> for AnyHasDocComments {
+    #[inline]
+    fn from(node: Fun) -> AnyHasDocComments { AnyHasDocComments { syntax: node.syntax } }
+}
+impl From<Module> for AnyHasDocComments {
+    #[inline]
+    fn from(node: Module) -> AnyHasDocComments { AnyHasDocComments { syntax: node.syntax } }
+}
+impl From<Schema> for AnyHasDocComments {
+    #[inline]
+    fn from(node: Schema) -> AnyHasDocComments { AnyHasDocComments { syntax: node.syntax } }
+}
+impl From<SpecFun> for AnyHasDocComments {
+    #[inline]
+    fn from(node: SpecFun) -> AnyHasDocComments { AnyHasDocComments { syntax: node.syntax } }
+}
+impl From<SpecInlineFun> for AnyHasDocComments {
+    #[inline]
+    fn from(node: SpecInlineFun) -> AnyHasDocComments { AnyHasDocComments { syntax: node.syntax } }
+}
+impl From<Struct> for AnyHasDocComments {
+    #[inline]
+    fn from(node: Struct) -> AnyHasDocComments { AnyHasDocComments { syntax: node.syntax } }
 }
 impl AnyHasItems {
     #[inline]

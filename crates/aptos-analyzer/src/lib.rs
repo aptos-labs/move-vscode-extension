@@ -34,3 +34,14 @@ pub fn from_json<T: DeserializeOwned>(
 }
 
 fn main() {}
+
+#[doc(hidden)]
+macro_rules! try_default_ {
+    ($it:expr $(,)?) => {
+        match $it {
+            Some(it) => it,
+            None => return Ok(Default::default()),
+        }
+    };
+}
+pub(crate) use try_default_ as try_default;

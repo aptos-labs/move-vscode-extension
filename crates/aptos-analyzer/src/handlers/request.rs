@@ -1,9 +1,10 @@
 use crate::diagnostics::convert_diagnostic;
 use crate::global_state::{FetchWorkspaceRequest, GlobalState, GlobalStateSnapshot};
 use crate::lsp::{from_proto, to_proto};
+use crate::try_default;
 use lang::files::FileRange;
 use line_index::TextRange;
-use lsp_types::{SemanticTokensParams, SemanticTokensResult};
+use lsp_types::{HoverContents, Range, SemanticTokensParams, SemanticTokensResult};
 
 pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
     // state.proc_macro_clients = Arc::from_iter([]);
@@ -229,4 +230,26 @@ pub(crate) fn handle_selection_range(
         .collect();
 
     Ok(Some(res?))
+}
+
+pub(crate) fn handle_hover(
+    snap: GlobalStateSnapshot,
+    params: lsp_types::HoverParams,
+) -> anyhow::Result<Option<lsp_types::Hover>> {
+    let _p = tracing::info_span!("handle_hover").entered();
+
+    let file_position = from_proto::file_position(&snap, params.text_document_position_params)?;
+    let info = match snap.analysis.hover(file_position)? {
+        None => return Ok(None),
+        Some(info) => info,
+    };
+
+    let line_index = snap.file_line_index(file_position.file_id)?;
+    let range = to_proto::range(&line_index, info.range);
+    let hover = lsp_types::Hover {
+        contents: HoverContents::Markup(to_proto::markup_content(info.info.doc_string)),
+        range: Some(range),
+    };
+
+    Ok(Some(hover))
 }

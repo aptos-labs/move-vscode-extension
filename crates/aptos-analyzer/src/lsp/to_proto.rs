@@ -1,8 +1,9 @@
-use crate::Config;
 use crate::global_state::GlobalStateSnapshot;
 use crate::line_index::{LineEndings, LineIndex, PositionEncoding};
 use crate::lsp::semantic_tokens;
+use crate::Config;
 use camino::{Utf8Component, Utf8Prefix};
+use ide::markup::Markup;
 use ide::syntax_highlighting::tags::{Highlight, HlTag};
 use ide::{Cancellable, HlRange, NavigationTarget};
 use ide_completion::item::{CompletionItem, CompletionItemKind};
@@ -639,4 +640,12 @@ fn completion_item(
     //     // tends to be since it is the opposite of the score.
     //     res.sort_text = Some(format!("{sort_score:08x}"));
     // }
+}
+
+pub(crate) fn markup_content(markup: String) -> lsp_types::MarkupContent {
+    // todo: format docs later
+    lsp_types::MarkupContent {
+        kind: lsp_types::MarkupKind::PlainText,
+        value: markup,
+    }
 }
