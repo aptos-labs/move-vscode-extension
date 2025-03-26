@@ -644,7 +644,7 @@ fn completion_item(
 pub(crate) fn markup_content(markup: String) -> lsp_types::MarkupContent {
     // todo: format docs later
     lsp_types::MarkupContent {
-        kind: lsp_types::MarkupKind::PlainText,
+        kind: lsp_types::MarkupKind::Markdown,
         value: markup,
     }
 }
