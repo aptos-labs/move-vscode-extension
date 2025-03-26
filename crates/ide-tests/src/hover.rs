@@ -1,12 +1,12 @@
 use crate::init_tracing_for_test;
 use ide::Analysis;
-use ide::test_utils::get_marked_position_offset_with_data;
+use ide::test_utils::get_marked_position_offset;
 use lang::FilePosition;
 
 pub(crate) fn check_hover(source: &str, expected_docs: &str) {
     init_tracing_for_test();
 
-    let (ref_offset, data) = get_marked_position_offset_with_data(&source, "//^");
+    let ref_offset = get_marked_position_offset(&source, "//^");
 
     let (analysis, file_id) = Analysis::from_single_file(source.to_string());
     let position = FilePosition {

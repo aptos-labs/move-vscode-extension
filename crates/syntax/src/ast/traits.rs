@@ -53,7 +53,7 @@ pub trait HasAttrs: AstNode {
     }
 }
 
-pub trait FieldsOwner: AstNode {
+pub trait FieldsOwner: NamedElement {
     #[inline]
     fn named_field_list(&self) -> Option<ast::NamedFieldList> {
         support::child(&self.syntax())

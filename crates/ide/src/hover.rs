@@ -1,12 +1,16 @@
+mod item_signature;
+
 use crate::RangeInfo;
+use crate::hover::item_signature::DocSignatureOwner;
 use base_db::Upcast;
 use ide_db::RootDatabase;
 use lang::files::InFileExt;
 use lang::{FilePosition, Semantics};
+use std::fmt::Write;
 use stdx::itertools::Itertools;
 use syntax::algo::find_node_at_offset;
-use syntax::ast::DocCommentsOwner;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
+use syntax::ast::{DocCommentsOwner, NamedElement};
 use syntax::{AstNode, AstToken, ast};
 
 /// Contains the results when hovering over an item
@@ -30,7 +34,7 @@ pub(crate) fn hover(db: &RootDatabase, file_position: FilePosition) -> Option<Ra
     let name_like = find_node_at_offset::<ast::NameLike>(&file, offset)?;
     let name_range = name_like.syntax().text_range();
 
-    let doc_comments_owner = match name_like {
+    let doc_comment_owner = match name_like {
         ast::NameLike::NameRef(name_ref) => {
             let ref_element = name_ref.syntax().ancestor_strict::<ast::AnyReferenceElement>()?;
             let entry = ref_element.in_file(file_id).resolve(db.upcast())?;
@@ -43,15 +47,25 @@ pub(crate) fn hover(db: &RootDatabase, file_position: FilePosition) -> Option<Ra
         }
     };
 
-    Some(RangeInfo::new(
-        name_range,
-        HoverResult {
-            doc_string: format_docs(doc_comments_owner.doc_comments()),
-        },
-    ))
+    let ident_token = doc_comment_owner.name()?.ident_token();
+    let doc_comments = doc_comment_owner.outer_doc_comments(ident_token);
+
+    let named_element = ast::AnyNamedElement::cast_from(doc_comment_owner);
+
+    let mut doc_string = String::new();
+
+    named_element.owner(&mut doc_string);
+    writeln!(doc_string).ok()?;
+
+    named_element.signature(&mut doc_string);
+    writeln!(doc_string).ok()?;
+
+    write!(doc_string, "{}", format_doc_comments(doc_comments)).ok()?;
+
+    Some(RangeInfo::new(name_range, HoverResult { doc_string }))
 }
 
-fn format_docs(doc_comments: Vec<ast::Comment>) -> String {
+fn format_doc_comments(doc_comments: Vec<ast::Comment>) -> String {
     doc_comments
         .iter()
         .filter_map(|it| it.comment_line())
