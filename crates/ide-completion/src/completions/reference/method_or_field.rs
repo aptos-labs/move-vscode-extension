@@ -29,13 +29,13 @@ pub(crate) fn add_method_or_field_completions(
         .inference(ctx.db.upcast());
 
     let receiver_ty = inference.get_expr_type(&receiver_expr)?;
-    if receiver_ty.deref() == Ty::Unknown {
+    if receiver_ty.deref_all() == Ty::Unknown {
         return None;
     }
 
     let acc = &mut completions.borrow_mut();
 
-    if let Some(ty_adt) = receiver_ty.deref().into_ty_adt() {
+    if let Some(ty_adt) = receiver_ty.deref_all().into_ty_adt() {
         add_field_ref_completion_items(acc, ctx, ty_adt);
     }
 
@@ -43,7 +43,7 @@ pub(crate) fn add_method_or_field_completions(
 
     let method_entries = get_method_resolve_variants(hir_db, &receiver_ty, file_id);
     for method_entry in method_entries {
-        let method = method_entry.cast_into::<ast::Fun>(hir_db).unwrap();
+        let method = method_entry.cast_into::<ast::Fun>(hir_db)?;
 
         let subst = method.ty_vars_subst();
         let callable_ty = TyLowering::new(hir_db)
@@ -73,7 +73,7 @@ fn add_field_ref_completion_items(
 ) -> Option<()> {
     let (file_id, adt_item) = ty_adt
         .adt_item
-        .into_ast::<ast::StructOrEnum>(ctx.db.upcast())?
+        .to_ast::<ast::StructOrEnum>(ctx.db.upcast())?
         .unpack();
     let named_fields = adt_item.field_ref_lookup_fields();
     let ty_lowering = TyLowering::new(ctx.db);

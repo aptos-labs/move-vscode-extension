@@ -25,14 +25,16 @@ impl SyntaxLoc {
         }
     }
 
-    pub fn into_ast<T: AstNode>(self, db: &dyn SourceRootDatabase) -> Option<InFile<T>> {
+    pub fn to_ast<T: AstNode>(&self, db: &dyn SourceRootDatabase) -> Option<InFile<T>> {
         let file = db.parse(self.file_id).tree();
-        assert!(
-            file.syntax().text_range().contains_inclusive(self.node_offset),
-            "{:?} offset is outside of the file range {:?}",
-            self.node_offset,
-            file.syntax().text_range()
-        );
+        if !file.syntax().text_range().contains_inclusive(self.node_offset) {
+            tracing::error!(
+                "stale cache error: {:?} offset is outside of the file range {:?}",
+                self.node_offset,
+                file.syntax().text_range()
+            );
+            return None;
+        }
         let ancestors_at_offset = ancestors_at_offset(file.syntax(), self.node_offset);
         for ancestor in ancestors_at_offset {
             if ancestor.text_range().end() == self.node_offset {

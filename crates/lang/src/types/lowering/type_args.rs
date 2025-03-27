@@ -36,18 +36,17 @@ fn psi_type_args_subst(
     method_or_path: ast::MethodOrPath,
     type_params: Vec<ast::TypeParam>,
 ) -> HashMap<ast::TypeParam, PsiTypeArg> {
-    let root_parent = match &method_or_path {
-        ast::MethodOrPath::MethodCallExpr(method_call_expr) => {
-            method_call_expr.syntax().parent().unwrap()
+    let is_args_optional = match &method_or_path {
+        ast::MethodOrPath::Path(path) => {
+            let path_context = path.root_path().syntax().parent().unwrap();
+            ast::Expr::can_cast(path_context.kind()) || ast::Pat::can_cast(path_context.kind())
         }
-        ast::MethodOrPath::Path(path) => path.root_path().syntax().parent().unwrap(),
+        ast::MethodOrPath::MethodCallExpr(_) => true,
     };
 
     // Generic arguments are optional in expression context, e.g.
     // `let a = Foo::<u8>::bar::<u16>();` can be written as `let a = Foo::bar();`
     // if it is possible to infer `u8` and `u16` during type inference
-    let is_args_optional =
-        ast::Expr::can_cast(root_parent.kind()) || ast::Pat::can_cast(root_parent.kind());
 
     let type_args_list = method_or_path.type_arg_list();
     if type_args_list.is_none() {

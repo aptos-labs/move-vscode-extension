@@ -34,14 +34,21 @@ impl<'a> TyLowering<'a> {
                         self.lower_primitive_type(path).unwrap_or(Ty::Unknown)
                     }
                     Some(named_item_entry) => {
-                        let named_item = named_item_entry
+                        named_item_entry
                             .node_loc
-                            .into_ast::<ast::AnyNamedElement>(self.db.upcast())
-                            .unwrap();
-                        self.lower_path(
-                            path.in_file_into().value,
-                            named_item.map(|it| it.syntax().to_owned()),
-                        )
+                            .to_ast::<ast::AnyNamedElement>(self.db.upcast())
+                            .map(|named_item| {
+                                self.lower_path(
+                                    path.in_file_into().value,
+                                    named_item.map(|it| it.syntax().to_owned()),
+                                )
+                            })
+                            .unwrap_or(Ty::Unknown)
+                        //
+                        // let named_item = named_item_entry
+                        //     .node_loc
+                        //     .to_ast::<ast::AnyNamedElement>(self.db.upcast())
+                        //     .unwrap();
                     }
                 }
             }

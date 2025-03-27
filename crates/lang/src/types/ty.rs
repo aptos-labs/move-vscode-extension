@@ -6,7 +6,6 @@ pub mod ty_callable;
 pub(crate) mod ty_var;
 pub(crate) mod type_param;
 
-use crate::InFile;
 use crate::db::HirDatabase;
 use crate::loc::SyntaxLoc;
 use crate::nameres::address::Address;
@@ -22,6 +21,7 @@ use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::{TyInfer, TyVar};
 use crate::types::ty::type_param::TyTypeParameter;
+use crate::InFile;
 use base_db::SourceRootDatabase;
 use syntax::ast;
 use vfs::FileId;
@@ -59,21 +59,25 @@ impl Ty {
         Ty::Infer(TyInfer::Var(TyVar::new_with_origin(tp_origin_loc)))
     }
 
-    pub fn deref(&self) -> Ty {
+    pub fn deref_all(&self) -> Ty {
         match self {
-            Ty::Reference(ty_ref) => ty_ref.referenced().deref(),
+            Ty::Reference(ty_ref) => ty_ref.referenced().deref_all(),
+            _ => self.to_owned(),
+        }
+    }
+
+    pub fn deref_once(&self) -> Ty {
+        match self {
+            Ty::Reference(ty_ref) => ty_ref.referenced().to_owned(),
             _ => self.to_owned(),
         }
     }
 
     pub fn item_module(&self, db: &dyn HirDatabase, file_id: FileId) -> Option<InFile<ast::Module>> {
-        let ty = self.deref();
+        let ty = self.deref_all();
         match ty {
             Ty::Adt(ty_adt) => {
-                let item = ty_adt
-                    .adt_item
-                    .into_ast::<ast::StructOrEnum>(db.upcast())
-                    .unwrap();
+                let item = ty_adt.adt_item.to_ast::<ast::StructOrEnum>(db.upcast())?;
                 Some(item.map(|it| it.module()))
             }
             Ty::Vector(_) => {
@@ -83,7 +87,6 @@ impl Ty {
                         .single_or_none()?;
                 module.cast_into::<ast::Module>(db)
             }
-            // todo: vector
             _ => None,
         }
     }

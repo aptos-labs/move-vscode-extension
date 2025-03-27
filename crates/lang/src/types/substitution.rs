@@ -1,6 +1,6 @@
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
-use crate::types::ty::Ty;
 use crate::types::ty::type_param::TyTypeParameter;
+use crate::types::ty::Ty;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Eq, PartialEq, Default)]
@@ -15,6 +15,10 @@ impl Substitution {
 
     pub fn get_ty(&self, ty_tp: &TyTypeParameter) -> Option<Ty> {
         self.mapping.get(ty_tp).map(|it| it.to_owned())
+    }
+
+    pub fn entries(&self) -> impl Iterator<Item = (&TyTypeParameter, &Ty)> {
+        self.mapping.iter()
     }
 }
 

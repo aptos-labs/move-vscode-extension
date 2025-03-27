@@ -84,6 +84,14 @@ impl<'a> InferenceCtx<'a> {
                     let fun_item = named_item.map(|it| it.cast_into::<ast::Fun>().unwrap());
                     self.instantiate_path_for_fun(path.into(), fun_item)
                 }
+                // lambdas
+                SyntaxKind::IDENT_PAT => {
+                    let ident_pat = named_item.map(|it| it.cast_into::<ast::IdentPat>().unwrap());
+                    let binding_ty = self.get_binding_type(ident_pat.value);
+                    binding_ty
+                        .and_then(|it| it.into_ty_callable())
+                        .unwrap_or(TyCallable::fake(call_expr.args().len(), CallKind::Lambda))
+                }
                 _ => TyCallable::fake(call_expr.args().len(), CallKind::Fun),
             }
         } else {
@@ -109,8 +117,7 @@ impl<'a> InferenceCtx<'a> {
         method_or_path: ast::MethodOrPath,
         generic_item: InFile<ast::AnyGenericItem>,
     ) -> Ty {
-        let ty_lowering = TyLowering::new(self.db);
-        let mut path_ty = ty_lowering.lower_path(
+        let mut path_ty = self.ty_lowering().lower_path(
             method_or_path,
             generic_item.clone().map(|it| it.syntax().to_owned()),
         );
@@ -161,11 +168,11 @@ impl<'a> InferenceCtx<'a> {
     ) -> HashMap<Ast, T> {
         ty_map
             .into_iter()
-            .map(|(expr, ty)| (expr, self.resolve_vars_if_possible(ty)))
+            .map(|(expr, ty)| (expr, self.resolve_ty_vars_if_possible(ty)))
             .collect()
     }
 
-    pub fn resolve_vars_if_possible<T: TypeFoldable<T>>(&self, ty: T) -> T {
+    pub fn resolve_ty_vars_if_possible<T: TypeFoldable<T>>(&self, ty: T) -> T {
         ty.fold_with(self.var_resolver())
     }
 

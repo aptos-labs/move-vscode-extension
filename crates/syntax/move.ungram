@@ -207,7 +207,7 @@ Expr =
     | ResourceExpr
     | CallExpr | MethodCallExpr | AssertMacroExpr
     | LambdaExpr
-    | VectorLitExpr
+    | VectorLitExpr | StructLit
     | IndexExpr
     | DotExpr
     | AbortExpr
@@ -280,7 +280,7 @@ LoopExpr =
     'loop' loop_body:(BlockExpr | InlineExpr)
 
 LambdaExpr =
-    LambdaParamList BlockOrInlineExpr?
+    LambdaParamList (body_expr:Expr)?
 
 LambdaParamList =
     '|' lambda_params:(LambdaParam (',' LambdaParam)* ','?)? '|'

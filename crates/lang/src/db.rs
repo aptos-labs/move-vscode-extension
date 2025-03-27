@@ -17,7 +17,7 @@ pub trait HirDatabase: SourceRootDatabase + Upcast<dyn SourceRootDatabase> {
 }
 
 fn resolve_path(db: &dyn HirDatabase, ref_loc: SyntaxLoc) -> Option<ScopeEntry> {
-    let path = ref_loc.into_ast::<ast::Path>(db.upcast())?;
+    let path = ref_loc.to_ast::<ast::Path>(db.upcast())?;
     path_resolution::resolve_path(db, path).single_or_none()
 }
 
@@ -26,11 +26,12 @@ fn inference_for_ctx_owner(db: &dyn HirDatabase, ctx_owner_loc: SyntaxLoc) -> Ar
         file_id,
         value: ctx_owner,
     } = ctx_owner_loc
-        .into_ast::<ast::InferenceCtxOwner>(db.upcast())
+        .to_ast::<ast::InferenceCtxOwner>(db.upcast())
         .unwrap();
     let mut ctx = InferenceCtx::new(db, file_id);
 
-    TypeAstWalker::new(&mut ctx).walk(ctx_owner);
+    let mut type_walker = TypeAstWalker::new(&mut ctx);
+    type_walker.walk(ctx_owner);
 
     Arc::new(InferenceResult::from_ctx(ctx))
 }
@@ -41,8 +42,3 @@ impl InFile<ast::InferenceCtxOwner> {
         db.inference_for_ctx_owner(ctx_owner_loc)
     }
 }
-
-// fn inference(db: &dyn HirDatabase, ctx_owner: InFile<ast::InferenceCtxOwner>) -> InferenceResult {
-//     let ctx_owner_loc = ctx_owner.loc();
-//     db.inference_for_ctx_owner(ctx_owner_loc)
-// }
