@@ -64,7 +64,7 @@ impl InferenceResult {
             }
         }
         for int_var in int_vars.into_inner() {
-            let _ = ctx.combine_int_var(int_var, Ty::Integer(IntegerKind::Integer));
+            let _ = ctx.unify_int_var(int_var, Ty::Integer(IntegerKind::Integer));
         }
     }
 

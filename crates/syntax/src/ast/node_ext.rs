@@ -13,6 +13,7 @@ pub mod fun;
 mod ident_pat;
 mod if_expr;
 pub mod index_expr;
+mod lambda_expr;
 pub mod literal;
 mod method_call_expr;
 mod method_or_path;
@@ -32,6 +33,7 @@ pub mod syntax_node;
 pub mod type_;
 mod vector_lit_expr;
 pub mod visibility;
+mod lambda_type;
 
 use crate::token_text::TokenText;
 use crate::{ast, AstNode, AstToken, SyntaxNode};

@@ -269,6 +269,8 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
 
 pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     // ("ExprStmt", &["expr"]), - invalid
+    ("LambdaParam", &["ident_pat"]),
+    ("LambdaTypeParam", &["type"]),
     ("CallExpr", &["path"]),
     ("PathExpr", &["path"]),
     ("IndexExpr", &["base_expr"]),

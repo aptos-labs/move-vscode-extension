@@ -6,20 +6,29 @@ use std::iter;
 pub struct TyCallable {
     pub param_types: Vec<Ty>,
     pub ret_type: Box<Ty>,
+    pub kind: CallKind,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum CallKind {
+    Lambda,
+    Fun,
 }
 
 impl TyCallable {
-    pub fn new(param_types: Vec<Ty>, ret_type: Ty) -> Self {
+    pub fn new(param_types: Vec<Ty>, ret_type: Ty, kind: CallKind) -> Self {
         TyCallable {
             param_types,
             ret_type: Box::new(ret_type),
+            kind,
         }
     }
 
-    pub fn fake(n_params: usize) -> Self {
+    pub fn fake(n_params: usize, kind: CallKind) -> Self {
         TyCallable {
             param_types: iter::repeat_n(Ty::Unknown, n_params).collect(),
             ret_type: Box::new(Ty::Unknown),
+            kind,
         }
     }
 }
@@ -29,8 +38,9 @@ impl TypeFoldable<TyCallable> for TyCallable {
         let TyCallable {
             param_types,
             ret_type,
+            kind,
         } = self;
-        TyCallable::new(folder.fold_tys(param_types), folder.fold_ty(*ret_type))
+        TyCallable::new(folder.fold_tys(param_types), folder.fold_ty(*ret_type), kind)
     }
 
     fn deep_visit_with(&self, visitor: impl TypeVisitor) -> bool {

@@ -1,9 +1,10 @@
 use crate::loc::SyntaxLoc;
 use crate::nameres::fq_named_element::ItemFQNameOwner;
-use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
+use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyVar, TyVarKind};
 use crate::types::ty::type_param::TyTypeParameter;
+use crate::types::ty::Ty;
 use base_db::SourceRootDatabase;
 use std::ops::Deref;
 use stdx::itertools::Itertools;
@@ -28,15 +29,7 @@ impl<'db> TypeRenderer<'db> {
                 format!("range<{}>", self.render(ty))
             }
             Ty::Adt(ty_adt) => self.render_ty_adt(ty_adt),
-            Ty::Callable(ty_callable) => {
-                let params = format!("fn({})", self.render_list(&ty_callable.param_types, ", "));
-                let ret_type = ty_callable.ret_type.deref();
-                if matches!(ret_type, &Ty::Unit) {
-                    params
-                } else {
-                    format!("{} -> {}", params, self.render(ret_type))
-                }
-            }
+            Ty::Callable(ty_callable) => self.render_ty_callable(ty_callable),
             Ty::Reference(ty_ref) => {
                 let prefix = if ty_ref.is_mut() { "&mut " } else { "&" };
                 let inner = self.render(ty_ref.referenced());
@@ -79,6 +72,29 @@ impl<'db> TypeRenderer<'db> {
             TyVarKind::WithOrigin { origin_loc } => self.origin_loc_name(origin_loc),
         };
         format!("?_{}", kind)
+    }
+
+    fn render_ty_callable(&self, ty_callable: &TyCallable) -> String {
+        match ty_callable.kind {
+            CallKind::Fun => {
+                let params = format!("fn({})", self.render_list(&ty_callable.param_types, ", "));
+                let ret_type = ty_callable.ret_type.deref();
+                if matches!(ret_type, &Ty::Unit) {
+                    params
+                } else {
+                    format!("{} -> {}", params, self.render(ret_type))
+                }
+            }
+            CallKind::Lambda => {
+                let params = format!("|{}|", self.render_list(&ty_callable.param_types, ", "));
+                let ret_type = ty_callable.ret_type.deref();
+                if matches!(ret_type, &Ty::Unit) {
+                    format!("{} -> ()", params)
+                } else {
+                    format!("{} -> {}", params, self.render(ret_type))
+                }
+            }
+        }
     }
 
     fn render_ty_adt(&self, ty_adt: &TyAdt) -> String {

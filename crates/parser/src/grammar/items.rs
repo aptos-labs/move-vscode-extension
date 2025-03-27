@@ -352,7 +352,7 @@ fn item_spec(p: &mut Parser, m: Marker) {
         // function signature
         generic_params::opt_generic_param_list(p);
         if p.at(T!['(']) {
-            params::function_parameter_list(p);
+            params::fun_param_list(p);
             opt_ret_type(p);
         }
     }
@@ -370,7 +370,7 @@ fn fun_signature(p: &mut Parser, is_spec: bool, allow_acquires: bool) {
     generic_params::opt_generic_param_list(p);
 
     if p.at(T!['(']) {
-        params::function_parameter_list(p);
+        params::fun_param_list(p);
     } else {
         p.error("expected function arguments");
     }

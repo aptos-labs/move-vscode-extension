@@ -1,21 +1,21 @@
-use crate::InFile;
 use crate::files::InFileExt;
 use crate::nameres::path_resolution::get_method_resolve_variants;
 use crate::nameres::scope::{ScopeEntryExt, ScopeEntryListExt, VecExt};
 use crate::types::expectation::Expected;
 use crate::types::fold::TypeFoldable;
 use crate::types::inference::InferenceCtx;
-use crate::types::patterns::{BindingMode, anonymous_pat_ty_var, collect_bindings};
+use crate::types::patterns::{anonymous_pat_ty_var, collect_bindings, BindingMode};
 use crate::types::substitution::ApplySubstitution;
-use crate::types::ty::Ty;
 use crate::types::ty::integer::IntegerKind;
-use crate::types::ty::reference::{Mutability, TyReference, autoborrow};
-use crate::types::ty::ty_callable::TyCallable;
+use crate::types::ty::reference::{autoborrow, Mutability, TyReference};
+use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
+use crate::types::ty::Ty;
+use crate::InFile;
 use std::iter;
 use std::ops::Deref;
-use syntax::ast::{BindingTypeOwner, HasStmts, NamedElement, Pat};
-use syntax::{AstNode, IntoNodeOrToken, ast};
+use syntax::ast::{BindingTypeOwner, HasStmts, LambdaExpr, NamedElement};
+use syntax::{ast, AstNode, IntoNodeOrToken};
 
 pub struct TypeAstWalker<'a, 'db> {
     pub ctx: &'a mut InferenceCtx<'db>,
@@ -39,6 +39,27 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         }
     }
 
+    pub fn walk_lambda_expr_bodies(&mut self) {
+        //  1. collect lambda expr bodies while inferring the context
+        //  2. for every lambda expr body:
+        //     1. infer lambda expr body, adding items to outer inference result
+        //     2. resolve all vars again in the InferenceContext
+        //  3. resolve vars replacing unresolved vars with Ty::Unknown
+        while !self.ctx.lambda_exprs.is_empty() {
+            self.ctx.resolve_all_ty_vars_if_possible();
+            let lambda_expr = self.ctx.lambda_exprs.remove(0);
+            let lambda_ret_ty = self
+                .ctx
+                .lambda_expr_types
+                .get(&lambda_expr)
+                .map(|it| it.ret_type.deref().to_owned());
+            if let Some(block_or_inline_expr) = lambda_expr.block_or_inline_expr() {
+                // todo: add coerce here
+                self.infer_block_or_inline_expr(&block_or_inline_expr, Expected::from_ty(lambda_ret_ty));
+            }
+        }
+    }
+
     pub fn collect_parameter_bindings(&mut self, ctx_owner: &ast::InferenceCtxOwner) {
         let bindings = match ctx_owner {
             ast::InferenceCtxOwner::Fun(fun) => fun.params_as_bindings(),
@@ -58,7 +79,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     _ => continue,
                 }
             };
-            self.ctx.pat_types.insert(Pat::IdentPat(binding), binding_ty);
+            self.ctx.pat_types.insert(binding.into(), binding_ty);
         }
     }
 
@@ -99,7 +120,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 let initializer_ty = match let_stmt.initializer() {
                     None => pat
                         .clone()
-                        .map(|it| anonymous_pat_ty_var(self.ctx.inc_ty_counter(), &it))
+                        .map(|it| anonymous_pat_ty_var(self.ctx, &it))
                         .unwrap_or(Ty::Unknown),
                     Some(initializer_expr) => {
                         let initializer_ty = self.infer_expr(&initializer_expr, Expected::NoValue);
@@ -171,6 +192,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::Expr::ForExpr(for_expr) => {
                 self.infer_for_expr(for_expr, expected).unwrap_or(Ty::Unknown)
             }
+            ast::Expr::LambdaExpr(lambda_expr) => self.infer_lambda_expr(lambda_expr, expected),
 
             ast::Expr::ParenExpr(paren_expr) => paren_expr
                 .expr()
@@ -313,7 +335,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 .instantiate_path_for_fun(method_call_expr.to_owned().into(), method),
             None => {
                 // add 1 for `self` parameter
-                TyCallable::fake(1 + method_call_expr.args().len())
+                TyCallable::fake(1 + method_call_expr.args().len(), CallKind::Fun)
             }
         };
         let method_ty = method_ty.deep_fold_with(self.ctx.var_resolver());
@@ -395,6 +417,36 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         Ty::Unknown
     }
 
+    fn infer_lambda_expr(&mut self, lambda_expr: &LambdaExpr, expected: Expected) -> Ty {
+        let mut param_tys = vec![];
+
+        for lambda_param in lambda_expr.lambda_params() {
+            let param_ty = match lambda_param.type_() {
+                Some(type_) => self.ctx.ty_lowering().lower_type(type_.in_file(self.ctx.file_id)),
+                None => Ty::new_ty_var(self.ctx),
+            };
+            self.ctx
+                .pat_types
+                .insert(lambda_param.ident_pat().into(), param_ty.clone());
+            param_tys.push(param_ty);
+        }
+
+        let lambda_call_ty = TyCallable::new(param_tys, Ty::new_ty_var(self.ctx), CallKind::Lambda);
+        self.ctx.lambda_exprs.push(lambda_expr.clone());
+        self.ctx
+            .lambda_expr_types
+            .insert(lambda_expr.clone(), lambda_call_ty.clone());
+
+        let lambda_ty = Ty::Callable(lambda_call_ty);
+        if let Some(expected_ty) = expected.ty(self.ctx) {
+            // error if not TyCallable
+            self.ctx
+                .coerce_types(lambda_expr.node_or_token(), lambda_ty.clone(), expected_ty);
+        }
+
+        lambda_ty
+    }
+
     fn infer_vector_lit_expr(&mut self, vector_lit_expr: &ast::VectorLitExpr, expected: Expected) -> Ty {
         let arg_ty_var = Ty::Infer(TyInfer::Var(TyVar::new_anonymous(self.ctx.inc_ty_counter())));
 
@@ -413,7 +465,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
         let vec_ty = Ty::Vector(Box::new(arg_ty_var));
 
-        let lit_call_ty = TyCallable::new(declared_arg_tys.clone(), vec_ty.clone());
+        let lit_call_ty = TyCallable::new(declared_arg_tys.clone(), vec_ty.clone(), CallKind::Fun);
         let expected_arg_tys = self.infer_expected_call_arg_tys(&lit_call_ty, expected);
         let args = arg_exprs.into_iter().map(|expr| CallArg::Arg { expr }).collect();
         self.coerce_call_arg_types(args, declared_arg_tys, expected_arg_tys);
