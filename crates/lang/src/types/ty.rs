@@ -6,6 +6,7 @@ pub mod ty_callable;
 pub(crate) mod ty_var;
 pub(crate) mod type_param;
 
+use crate::InFile;
 use crate::db::HirDatabase;
 use crate::loc::SyntaxLoc;
 use crate::nameres::address::Address;
@@ -21,8 +22,8 @@ use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::{TyInfer, TyVar};
 use crate::types::ty::type_param::TyTypeParameter;
-use crate::InFile;
 use base_db::SourceRootDatabase;
+use std::ops::Deref;
 use syntax::ast;
 use vfs::FileId;
 
@@ -108,6 +109,13 @@ impl Ty {
     pub fn into_ty_adt(self) -> Option<TyAdt> {
         match self {
             Ty::Adt(ty_adt) => Some(ty_adt),
+            _ => None,
+        }
+    }
+
+    pub fn into_ty_range_item(self) -> Option<Ty> {
+        match self {
+            Ty::Range(item_ty) => Some(item_ty.deref().to_owned()),
             _ => None,
         }
     }
