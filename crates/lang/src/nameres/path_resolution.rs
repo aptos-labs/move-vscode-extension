@@ -52,9 +52,9 @@ pub fn get_path_resolve_variants(
             ..
         } => get_modules_as_entries(db, ctx.source_root_id(db), address),
 
-        PathKind::Qualified { qualifier, ns, .. } => {
-            get_qualified_path_entries(db, ctx, qualifier).unwrap_or_default().filter_by_ns(ns)
-        }
+        PathKind::Qualified { qualifier, ns, .. } => get_qualified_path_entries(db, ctx, qualifier)
+            .unwrap_or_default()
+            .filter_by_ns(ns),
     }
 }
 
@@ -77,8 +77,7 @@ pub fn get_method_resolve_variants(
     let ty_lowering = TyLowering::new(db);
     let mut method_entries = vec![];
     for function_entry in function_entries {
-        let Some(InFile { file_id, value: f }) =
-            function_entry.node_loc.to_ast::<ast::Fun>(db.upcast())
+        let Some(InFile { file_id, value: f }) = function_entry.node_loc.to_ast::<ast::Fun>(db.upcast())
         else {
             continue;
         };

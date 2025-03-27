@@ -151,7 +151,10 @@ impl InferenceCtx<'_> {
         // todo: check param types size
         self.combine_ty_pairs(ty1.clone().param_types, ty2.clone().param_types)?;
         // todo: resolve variables?
-        self.combine_types(ty1.ret_type.deref_all().to_owned(), ty2.ret_type.deref_all().to_owned())
+        self.combine_types(
+            ty1.ret_type.deref_all().to_owned(),
+            ty2.ret_type.deref_all().to_owned(),
+        )
     }
 
     fn combine_ty_adts(&mut self, ty1: &TyAdt, ty2: &TyAdt) -> CombineResult {

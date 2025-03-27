@@ -1,6 +1,6 @@
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
-use crate::types::ty::type_param::TyTypeParameter;
 use crate::types::ty::Ty;
+use crate::types::ty::type_param::TyTypeParameter;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Eq, PartialEq, Default)]

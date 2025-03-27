@@ -736,7 +736,7 @@ fn lower_rule(
                     | "rhs"
                     | "then_branch"
                     | "else_branch"
-                    | "loop_body"
+                    | "loop_body_expr"
                     // | "start"
                     // | "end"
                     | "base_expr"

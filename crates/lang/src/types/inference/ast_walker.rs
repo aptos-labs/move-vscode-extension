@@ -1,3 +1,4 @@
+use crate::InFile;
 use crate::files::{InFileExt, InFileInto};
 use crate::nameres::name_resolution::get_entries_from_walking_scopes;
 use crate::nameres::namespaces::NAMES;
@@ -6,19 +7,18 @@ use crate::nameres::scope::{ScopeEntryExt, ScopeEntryListExt, VecExt};
 use crate::node_ext::struct_field_name::StructFieldNameExt;
 use crate::types::expectation::Expected;
 use crate::types::inference::InferenceCtx;
-use crate::types::patterns::{anonymous_pat_ty_var, collect_bindings, BindingMode};
+use crate::types::patterns::{BindingMode, anonymous_pat_ty_var, collect_bindings};
 use crate::types::substitution::ApplySubstitution;
+use crate::types::ty::Ty;
 use crate::types::ty::integer::IntegerKind;
-use crate::types::ty::reference::{autoborrow, Mutability, TyReference};
+use crate::types::ty::reference::{Mutability, TyReference, autoborrow};
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar};
-use crate::types::ty::Ty;
-use crate::InFile;
 use std::iter;
 use std::ops::Deref;
 use syntax::ast::node_ext::named_field::FilterNamedFieldsByName;
-use syntax::ast::{BindingTypeOwner, FieldsOwner, HasStmts, LambdaExpr};
-use syntax::{ast, AstNode, IntoNodeOrToken};
+use syntax::ast::{BindingTypeOwner, FieldsOwner, HasStmts, LambdaExpr, LoopLike};
+use syntax::{AstNode, IntoNodeOrToken, ast};
 
 pub struct TypeAstWalker<'a, 'db> {
     pub ctx: &'a mut InferenceCtx<'db>,
@@ -191,15 +191,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
 
             ast::Expr::IfExpr(if_expr) => self.infer_if_expr(if_expr, expected).unwrap_or(Ty::Unknown),
-            ast::Expr::LoopExpr(loop_expr) => {
-                self.infer_loop_expr(loop_expr, expected).unwrap_or(Ty::Unknown)
-            }
-            ast::Expr::WhileExpr(while_expr) => {
-                self.infer_while_expr(while_expr, expected).unwrap_or(Ty::Unknown)
-            }
-            ast::Expr::ForExpr(for_expr) => {
-                self.infer_for_expr(for_expr, expected).unwrap_or(Ty::Unknown)
-            }
+            ast::Expr::LoopExpr(loop_expr) => self.infer_loop_expr(loop_expr),
+            ast::Expr::WhileExpr(while_expr) => self.infer_while_expr(while_expr),
+            ast::Expr::ForExpr(for_expr) => self.infer_for_expr(for_expr),
             ast::Expr::LambdaExpr(lambda_expr) => self.infer_lambda_expr(lambda_expr, expected),
 
             ast::Expr::ParenExpr(paren_expr) => paren_expr
@@ -595,19 +589,39 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         Some(self.ctx.intersect_all_types(tys))
     }
 
-    fn infer_while_expr(&mut self, while_expr: &ast::WhileExpr, expected: Expected) -> Option<Ty> {
-        let condition_expr = while_expr.condition()?.expr()?;
-        self.infer_expr_coerceable_to(&condition_expr, Ty::Bool);
-
-        Some(Ty::Unknown)
+    fn infer_while_expr(&mut self, while_expr: &ast::WhileExpr) -> Ty {
+        let condition_expr = while_expr.condition().and_then(|it| it.expr());
+        if let Some(condition_expr) = condition_expr {
+            self.infer_expr_coerceable_to(&condition_expr, Ty::Bool);
+        }
+        self.infer_loop_like_body(while_expr)
     }
 
-    fn infer_for_expr(&mut self, for_expr: &ast::ForExpr, expected: Expected) -> Option<Ty> {
-        Some(Ty::Unknown)
+    fn infer_for_expr(&mut self, for_expr: &ast::ForExpr) -> Ty {
+        if let Some(for_condition) = for_expr.for_condition() {
+            let range_item_ty = for_condition
+                .expr()
+                .and_then(|range_expr| {
+                    self.infer_expr(&range_expr, Expected::NoValue)
+                        .into_ty_range_item()
+                })
+                .unwrap_or(Ty::Unknown);
+            if let Some(ident_pat) = for_condition.ident_pat() {
+                self.ctx.pat_types.insert(ident_pat.into(), range_item_ty);
+            }
+        }
+        self.infer_loop_like_body(for_expr)
     }
 
-    fn infer_loop_expr(&mut self, loop_expr: &ast::LoopExpr, expected: Expected) -> Option<Ty> {
-        Some(Ty::Unknown)
+    fn infer_loop_expr(&mut self, loop_expr: &ast::LoopExpr) -> Ty {
+        self.infer_loop_like_body(loop_expr)
+    }
+
+    fn infer_loop_like_body(&mut self, loop_like: &impl ast::LoopLike) -> Ty {
+        if let Some(loop_body_expr) = loop_like.loop_body_expr() {
+            self.infer_block_or_inline_expr(&loop_body_expr, Expected::ExpectType(Ty::Unit));
+        }
+        Ty::Never
     }
 
     fn infer_block_or_inline_expr(

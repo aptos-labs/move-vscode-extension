@@ -215,7 +215,7 @@ Expr =
     | IfExpr | WhileExpr | ForExpr | LoopExpr
 
 ForExpr =
-    'for' ForCondition loop_body:(BlockExpr | InlineExpr)
+    'for' ForCondition loop_body_expr:(BlockExpr | InlineExpr)
 
 ForCondition =
     '(' IdentPat 'in' Expr ')'
@@ -271,13 +271,13 @@ IfExpr =
     ('else' else_branch:(BlockExpr | InlineExpr))?
 
 WhileExpr =
-    'while' Condition loop_body:(BlockExpr | InlineExpr)
+    'while' Condition loop_body_expr:(BlockExpr | InlineExpr)
 
 Condition =
     '(' Expr ')'
 
 LoopExpr =
-    'loop' loop_body:(BlockExpr | InlineExpr)
+    'loop' loop_body_expr:(BlockExpr | InlineExpr)
 
 LambdaExpr =
     LambdaParamList (body_expr:Expr)?

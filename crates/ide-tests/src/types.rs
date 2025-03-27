@@ -1,7 +1,7 @@
+use crate::init_tracing_for_test;
 use ide::Analysis;
 use ide::test_utils::get_marked_position_offset_with_data;
 use lang::FilePosition;
-use crate::init_tracing_for_test;
 
 mod test_types_expression_types;
 

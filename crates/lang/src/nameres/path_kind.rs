@@ -3,7 +3,7 @@ use crate::nameres::address::{Address, NamedAddr, ValueAddr, resolve_named_addre
 use crate::nameres::namespaces::{
     ALL_NS, ENUMS, ENUMS_N_MODULES, IMPORTABLE_NS, MODULES, NAMES, NAMES_N_FUNCTIONS_N_VARIANTS,
     NAMES_N_VARIANTS, NONE, NsSet, TYPES_N_ENUMS, TYPES_N_ENUMS_N_ENUM_VARIANTS,
-    TYPES_N_ENUMS_N_MODULES, TYPES_N_NAMES,
+    TYPES_N_ENUMS_N_MODULES, TYPES_N_ENUMS_N_NAMES, TYPES_N_NAMES,
 };
 use parser::T;
 use std::fmt;
@@ -267,7 +267,7 @@ fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
         PATH_EXPR if path.syntax().has_ancestor_strict::<ast::AttrItem>() => ALL_NS,
 
         // TYPE | ENUM for resource indexing, NAME for vector indexing
-        PATH_EXPR if parent.parent().is_kind(INDEX_EXPR) => TYPES_N_NAMES,
+        PATH_EXPR if parent.parent().is_kind(INDEX_EXPR) => TYPES_N_ENUMS_N_NAMES,
 
         // can be anything in completion
         PATH_EXPR => {

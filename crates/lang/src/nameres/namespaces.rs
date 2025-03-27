@@ -38,6 +38,7 @@ pub const TYPES_N_ENUMS_N_MODULES: NsSet = enum_set!(Ns::TYPE | Ns::ENUM | Ns::M
 pub const TYPES_N_ENUMS_N_ENUM_VARIANTS: NsSet = enum_set!(Ns::TYPE | Ns::ENUM_VARIANT | Ns::MODULE);
 pub const TYPES_N_ENUMS: NsSet = enum_set!(Ns::TYPE | Ns::ENUM);
 pub const TYPES_N_NAMES: NsSet = enum_set!(Ns::TYPE | Ns::NAME);
+pub const TYPES_N_ENUMS_N_NAMES: NsSet = enum_set!(Ns::TYPE | Ns::ENUM | Ns::NAME);
 
 pub const NONE: NsSet = enum_set!();
 pub const IMPORTABLE_NS: NsSet = enum_set!(Ns::NAME | Ns::FUNCTION | Ns::TYPE | Ns::SCHEMA | Ns::ENUM);
