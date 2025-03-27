@@ -63,11 +63,11 @@ impl<'db> TypeRenderer<'db> {
     }
 
     fn render_ty_tp(&self, type_param: &TyTypeParameter) -> String {
-        self.origin_loc_name(type_param.origin_loc)
+        self.origin_loc_name(&type_param.origin_loc)
     }
 
     fn render_ty_var(&self, ty_var: &TyVar) -> String {
-        let kind = match ty_var.kind {
+        let kind = match &ty_var.kind {
             TyVarKind::Anonymous(index) => index.to_string(),
             TyVarKind::WithOrigin { origin_loc } => self.origin_loc_name(origin_loc),
         };
@@ -114,7 +114,7 @@ impl<'db> TypeRenderer<'db> {
         format!("<{}>", self.render_list(type_args, ", "))
     }
 
-    fn origin_loc_name(&self, origin_loc: SyntaxLoc) -> String {
+    fn origin_loc_name(&self, origin_loc: &SyntaxLoc) -> String {
         origin_loc
             .to_ast::<ast::TypeParam>(self.db)
             .and_then(|tp| tp.value.name())

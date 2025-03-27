@@ -165,7 +165,7 @@ pub fn get_qualified_path_entries(
             // Self::call() as an expression
             entries.push(ScopeEntry {
                 name: "Self".to_string(),
-                node_loc: qualifier_item.node_loc,
+                node_loc: qualifier_item.node_loc.clone(),
                 ns: Ns::MODULE,
                 scope_adjustment: None,
             });
