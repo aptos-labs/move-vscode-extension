@@ -256,7 +256,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let ty_adt = self_ty.deref().into_ty_adt()?;
         let adt_item = ty_adt
             .adt_item
-            .cast_into::<ast::StructOrEnum>(self.ctx.db.upcast())
+            .into_ast::<ast::StructOrEnum>(self.ctx.db.upcast())
             .unwrap();
 
         let field_reference_name = dot_expr.field_ref().name_ref()?.as_string();
@@ -306,7 +306,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             .insert(method_call_expr.to_owned(), method_entry.clone());
 
         let resolved_method =
-            method_entry.and_then(|it| it.node_loc.cast_into::<ast::Fun>(self.ctx.db.upcast()));
+            method_entry.and_then(|it| it.node_loc.into_ast::<ast::Fun>(self.ctx.db.upcast()));
         let method_ty = match resolved_method {
             Some(method) => self
                 .ctx

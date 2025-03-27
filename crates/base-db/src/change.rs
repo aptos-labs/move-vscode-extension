@@ -1,5 +1,5 @@
 use crate::SourceRootDatabase;
-use crate::input::{CrateGraph, SourceRoot, SourceRootId};
+use crate::input::{SourceRoot, SourceRootId};
 use ra_salsa::Durability;
 use std::fmt;
 use triomphe::Arc;
@@ -10,8 +10,6 @@ use vfs::FileId;
 pub struct FileChange {
     pub roots: Option<Vec<SourceRoot>>,
     pub files_changed: Vec<(FileId, Option<String>)>,
-    pub crate_graph: Option<CrateGraph>,
-    // pub ws_data: Option<FxHashMap<CrateId, Arc<CrateWorkspaceData>>>,
 }
 
 impl fmt::Debug for FileChange {
@@ -22,9 +20,6 @@ impl fmt::Debug for FileChange {
         }
         if !self.files_changed.is_empty() {
             d.field("files_changed", &self.files_changed.len());
-        }
-        if self.crate_graph.is_some() {
-            d.field("crate_graph", &self.crate_graph);
         }
         d.finish()
     }
@@ -42,14 +37,6 @@ impl FileChange {
     pub fn change_file(&mut self, file_id: FileId, new_text: Option<String>) {
         self.files_changed.push((file_id, new_text))
     }
-
-    pub fn set_crate_graph(&mut self, graph: CrateGraph) {
-        self.crate_graph = Some(graph);
-    }
-
-    // pub fn set_ws_data(&mut self, data: FxHashMap<CrateId, Arc<CrateWorkspaceData>>) {
-    //     self.ws_data = Some(data);
-    // }
 
     pub fn apply(self, db: &mut dyn SourceRootDatabase) {
         let _p = tracing::info_span!("FileChange::apply").entered();
@@ -73,14 +60,6 @@ impl FileChange {
             let text = text.unwrap_or_default();
             db.set_file_text_with_durability(file_id, Arc::from(text), durability)
         }
-
-        if let Some(crate_graph) = self.crate_graph {
-            db.set_crate_graph_with_durability(Arc::new(crate_graph), Durability::HIGH);
-        }
-
-        // if let Some(data) = self.ws_data {
-        //     db.set_crate_workspace_data_with_durability(Arc::new(data), Durability::HIGH);
-        // }
     }
 }
 

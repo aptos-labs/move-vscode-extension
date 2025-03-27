@@ -158,15 +158,6 @@ pub fn syntax_diagnostics(
 ) -> Vec<Diagnostic> {
     let _p = tracing::info_span!("syntax_diagnostics").entered();
 
-    // if config.disabled.contains("syntax-error") {
-    //     return Vec::new();
-    // }
-    //
-    // let sema = Semantics::new(db);
-    // let file_id = sema
-    //     .attach_first_edition(file_id)
-    //     .unwrap_or_else(|| EditionedFileId::current_edition(file_id));
-
     // [#3434] Only take first 128 errors to prevent slowing down editor/ide, the number 128 is chosen arbitrarily.
     db.parse_errors(file_id)
         .as_deref()

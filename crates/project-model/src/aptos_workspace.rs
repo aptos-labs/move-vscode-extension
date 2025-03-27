@@ -1,7 +1,6 @@
 use crate::aptos_package::AptosPackage;
 use crate::manifest_path::ManifestPath;
 use anyhow::Context;
-use base_db::input::CrateGraph;
 use paths::{AbsPath, AbsPathBuf};
 use vfs::FileId;
 
@@ -68,18 +67,5 @@ impl AptosWorkspace {
 
     pub fn contains_file(&self, file_path: &AbsPath) -> bool {
         self.packages().iter().any(|pkg| pkg.contains_file(file_path))
-    }
-
-    pub fn to_crate_graph(&self, load: FileLoader<'_>) -> CrateGraph {
-        let _p = tracing::info_span!("AptosWorkspace::to_crate_graph").entered();
-
-        let mut crate_graph = CrateGraph::default();
-
-        // returns None if deleted
-        if let Some(root_file_id) = load(self.main_package.content_root()) {
-            crate_graph.add_crate_root(root_file_id);
-        }
-
-        crate_graph
     }
 }

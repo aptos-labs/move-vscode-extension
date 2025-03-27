@@ -73,7 +73,7 @@ fn add_field_ref_completion_items(
 ) -> Option<()> {
     let (file_id, adt_item) = ty_adt
         .adt_item
-        .cast_into::<ast::StructOrEnum>(ctx.db.upcast())?
+        .into_ast::<ast::StructOrEnum>(ctx.db.upcast())?
         .unpack();
     let named_fields = adt_item.field_ref_lookup_fields();
     let ty_lowering = TyLowering::new(ctx.db);

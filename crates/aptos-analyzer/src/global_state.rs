@@ -87,7 +87,7 @@ pub(crate) struct GlobalState {
     pub(crate) wants_to_switch: Option<Cause>,
 
     pub(crate) workspaces: Arc<Vec<AptosWorkspace>>,
-    pub(crate) crate_graph_file_dependencies: FxHashSet<VfsPath>,
+    // pub(crate) crate_graph_file_dependencies: FxHashSet<VfsPath>,
 
     // op queues
     pub(crate) fetch_workspaces_queue: OpQueue<FetchWorkspaceRequest, FetchWorkspaceResponse>,
@@ -173,8 +173,7 @@ impl GlobalState {
             wants_to_switch: None,
 
             workspaces: Arc::from(Vec::new()),
-            crate_graph_file_dependencies: FxHashSet::default(),
-
+            // crate_graph_file_dependencies: FxHashSet::default(),
             fetch_workspaces_queue: OpQueue::default(),
 
             deferred_task_queue: task_queue,
@@ -222,9 +221,8 @@ impl GlobalState {
 
                     let changed_file_path = changed_file_path.to_path_buf();
                     if changed_file.is_created_or_deleted() {
-                        workspace_structure_change
-                            .get_or_insert((changed_file_path, false))
-                            .1 |= self.crate_graph_file_dependencies.contains(changed_file_vfs_path);
+                        workspace_structure_change.get_or_insert((changed_file_path, false));
+                        // .1 |= self.crate_graph_file_dependencies.contains(changed_file_vfs_path);
                     } else if reload::should_refresh_for_file_change(&changed_file_path) {
                         tracing::trace!(?changed_file_path, kind = ?changed_file.kind(), "refreshing for a change");
                         workspace_structure_change.get_or_insert((changed_file_path.clone(), false));

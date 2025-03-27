@@ -77,7 +77,7 @@ pub fn get_method_resolve_variants(
     let mut method_entries = vec![];
     for function_entry in function_entries {
         let Some(InFile { file_id, value: f }) =
-            function_entry.node_loc.cast_into::<ast::Fun>(db.upcast())
+            function_entry.node_loc.into_ast::<ast::Fun>(db.upcast())
         else {
             continue;
         };

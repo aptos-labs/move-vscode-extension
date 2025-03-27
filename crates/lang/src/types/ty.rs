@@ -67,7 +67,7 @@ impl Ty {
             Ty::Adt(ty_adt) => {
                 let item = ty_adt
                     .adt_item
-                    .cast_into::<ast::StructOrEnum>(db.upcast())
+                    .into_ast::<ast::StructOrEnum>(db.upcast())
                     .unwrap();
                 Some(item.map(|it| it.module()))
             }

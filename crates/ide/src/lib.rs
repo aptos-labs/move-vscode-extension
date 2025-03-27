@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use base_db::change::FileChange;
-use base_db::input::{CrateId, SourceRoot, SourceRootId};
+use base_db::input::{SourceRoot, SourceRootId};
 use base_db::{SourceDatabase, SourceRootDatabase};
 use ide_completion::item::CompletionItem;
 use ide_db::{LineIndexDatabase, RootDatabase};
@@ -473,10 +473,10 @@ impl Analysis {
     //     self.with_db(|db| db.crate_graph()[crate_id].edition)
     // }
 
-    /// Returns the root file of the given crate.
-    pub fn crate_root(&self, crate_id: CrateId) -> Cancellable<FileId> {
-        self.with_db(|db| db.crate_graph()[crate_id].root_file_id)
-    }
+    // /// Returns the root file of the given crate.
+    // pub fn crate_root(&self, crate_id: CrateId) -> Cancellable<FileId> {
+    //     self.with_db(|db| db.crate_graph()[crate_id].root_file_id)
+    // }
 
     // /// Returns the set of possible targets to run for the current file.
     // pub fn runnables(&self, file_id: FileId) -> Cancellable<Vec<Runnable>> {

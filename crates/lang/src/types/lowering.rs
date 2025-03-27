@@ -36,7 +36,7 @@ impl<'a> TyLowering<'a> {
                     Some(named_item_entry) => {
                         let named_item = named_item_entry
                             .node_loc
-                            .cast_into::<ast::AnyNamedElement>(self.db.upcast())
+                            .into_ast::<ast::AnyNamedElement>(self.db.upcast())
                             .unwrap();
                         self.lower_path(
                             path.in_file_into().value,

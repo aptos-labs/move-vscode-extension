@@ -92,7 +92,7 @@ impl NavigationTarget {
         let file_id = scope_entry.node_loc.file_id();
         let entry_item = scope_entry
             .node_loc
-            .cast_into::<ast::AnyNamedElement>(db.upcast())?
+            .into_ast::<ast::AnyNamedElement>(db.upcast())?
             .value;
 
         let name_range = entry_item.name().map(|name| name.ident_token().text_range());
