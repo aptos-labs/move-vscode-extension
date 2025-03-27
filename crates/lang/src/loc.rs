@@ -4,24 +4,34 @@ use parser::SyntaxKind;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::algo::ancestors_at_offset;
-use syntax::{AstNode, TextSize};
+use syntax::ast::NamedElement;
+use syntax::{ast, AstNode, TextSize};
 use vfs::FileId;
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Clone, Eq, PartialEq, Hash)]
 pub struct SyntaxLoc {
     file_id: FileId,
     node_offset: TextSize,
     kind: SyntaxKind,
+    // only for debugging here, might be removed in the future
+    node_name: Option<String>,
 }
 
 impl SyntaxLoc {
     pub fn from_ast_node<T: AstNode>(file_id: FileId, node: &T) -> Self {
         let range_start = node.syntax().text_range().end();
         let kind = node.syntax().kind();
+
+        let node_name = node
+            .syntax()
+            .first_child_by_kind(&|kind| kind == SyntaxKind::NAME || kind == SyntaxKind::NAME_REF)
+            .map(|it| it.text().to_string());
+
         SyntaxLoc {
             file_id: file_id.to_owned(),
             node_offset: range_start,
             kind,
+            node_name,
         }
     }
 
@@ -29,8 +39,8 @@ impl SyntaxLoc {
         let file = db.parse(self.file_id).tree();
         if !file.syntax().text_range().contains_inclusive(self.node_offset) {
             tracing::error!(
-                "stale cache error: {:?} offset is outside of the file range {:?}",
-                self.node_offset,
+                "stale cache error: {:?} is outside of the file range {:?}",
+                self,
                 file.syntax().text_range()
             );
             return None;
@@ -53,13 +63,35 @@ impl SyntaxLoc {
     pub fn kind(&self) -> SyntaxKind {
         self.kind
     }
+
+    pub fn node_name(&self) -> Option<String> {
+        self.node_name.to_owned()
+    }
 }
 
 impl fmt::Debug for SyntaxLoc {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("Loc")
-            .field(&format!("{}::{:?}", self.file_id.index(), self.node_offset))
-            .finish()
+        match &self.node_name {
+            Some(name) => f
+                .debug_tuple("Loc")
+                .field(&format!(
+                    "{:?} named '{}' at {}::{:?}",
+                    self.kind,
+                    name,
+                    self.file_id.index(),
+                    self.node_offset
+                ))
+                .finish(),
+            None => f
+                .debug_tuple("Loc")
+                .field(&format!(
+                    "{:?} at {}::{:?}",
+                    self.kind,
+                    self.file_id.index(),
+                    self.node_offset
+                ))
+                .finish(),
+        }
     }
 }
 

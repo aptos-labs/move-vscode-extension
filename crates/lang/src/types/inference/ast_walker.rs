@@ -123,14 +123,24 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     .map(|it| self.ctx.ty_lowering().lower_type(it.in_file(self.ctx.file_id)));
                 let pat = let_stmt.pat();
                 let initializer_ty = match let_stmt.initializer() {
+                    Some(initializer_expr) => {
+                        let initializer_ty = self.infer_expr(&initializer_expr, Expected::NoValue);
+                        if let Some(explicit_ty) = explicit_ty.clone() {
+                            self.ctx.coerce_types(
+                                initializer_expr.node_or_token(),
+                                initializer_ty.clone(),
+                                explicit_ty.clone(),
+                            );
+                            // return explicit because it can be more specific
+                            explicit_ty
+                        } else {
+                            initializer_ty
+                        }
+                    }
                     None => pat
                         .clone()
                         .map(|it| anonymous_pat_ty_var(self.ctx, &it))
                         .unwrap_or(Ty::Unknown),
-                    Some(initializer_expr) => {
-                        let initializer_ty = self.infer_expr(&initializer_expr, Expected::NoValue);
-                        explicit_ty.clone().unwrap_or(initializer_ty)
-                    }
                 };
                 if let Some(pat) = pat {
                     let pat_ty =
@@ -166,9 +176,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
     fn infer_expr(&mut self, expr: &ast::Expr, expected: Expected) -> Ty {
         let expr_ty = match expr {
-            ast::Expr::PathExpr(path_expr) => self
-                .infer_path_expr(path_expr, Expected::NoValue)
-                .unwrap_or(Ty::Unknown),
+            ast::Expr::PathExpr(path_expr) => {
+                self.infer_path_expr(path_expr, expected).unwrap_or(Ty::Unknown)
+            }
 
             ast::Expr::CallExpr(call_expr) => self.infer_call_expr(call_expr, Expected::NoValue),
 
@@ -653,6 +663,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
     fn infer_deref_expr(&mut self, deref_expr: &ast::DerefExpr, expected: Expected) -> Option<Ty> {
         let inner_expr = deref_expr.expr()?;
+
+        // make mutable reference to make sure it's compatible
+        // let expected_ref = expected.map(|it| Ty::Reference(TyReference::new(it, Mutability::Mutable)));
+
         // let expected_with_deref = match expected {
         //     Expected::NoValue => expected,
         //     Expected::ExpectType(ty) => match ty {

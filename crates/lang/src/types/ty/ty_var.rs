@@ -29,9 +29,11 @@ impl TyVar {
 
 impl fmt::Debug for TyVar {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match self.kind {
+        match &self.kind {
             TyVarKind::Anonymous(indx) => f.write_str(&format!("?_{}", indx)),
-            TyVarKind::WithOrigin { origin_loc } => f.write_str(&format!("?_({:?})", origin_loc)),
+            TyVarKind::WithOrigin { origin_loc } => {
+                f.write_str(&format!("?_{}", origin_loc.node_name().unwrap_or("".to_string())))
+            }
         }
     }
 }
