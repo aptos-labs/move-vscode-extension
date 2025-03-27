@@ -1,5 +1,6 @@
 use crate::ast;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
+use crate::ast::NamedElement;
 
 impl ast::NamedField {
     pub fn fields_owner(&self) -> ast::AnyFieldsOwner {
@@ -12,5 +13,23 @@ impl ast::NamedField {
             .parent_of_type::<ast::AnyFieldsOwner>()
             .expect("NamedFieldList.fields_owner is required");
         fields_owner
+    }
+
+    pub fn field_name(&self) -> ast::Name {
+        self.name()
+            .expect("`name` is required to be present for ast::NamedField")
+    }
+}
+
+pub trait FilterNamedFieldsByName {
+    fn filter_fields_by_name(&self, name: &str) -> Vec<ast::NamedField>;
+}
+
+impl FilterNamedFieldsByName for Vec<ast::NamedField> {
+    fn filter_fields_by_name(&self, name: &str) -> Vec<ast::NamedField> {
+        self.iter()
+            .filter(|it| it.field_name().as_string() == name)
+            .map(|it| it.to_owned())
+            .collect()
     }
 }

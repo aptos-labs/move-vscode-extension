@@ -43,7 +43,7 @@ pub fn get_path_resolve_variants(
                     })
                 }
             }
-            entries.extend(get_entries_from_walking_scopes(db, ctx, ns));
+            entries.extend(get_entries_from_walking_scopes(db, ctx.path.clone(), ns));
             entries
         }
 

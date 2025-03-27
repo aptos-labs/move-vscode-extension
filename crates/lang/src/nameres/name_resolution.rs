@@ -77,10 +77,9 @@ pub fn get_resolve_scopes(
 
 pub fn get_entries_from_walking_scopes(
     db: &dyn HirDatabase,
-    ctx: &ResolutionContext,
+    start_at: InFile<impl ReferenceElement>,
     ns: NsSet,
 ) -> Vec<ScopeEntry> {
-    let start_at = ctx.path.clone();
     let resolve_scopes = get_resolve_scopes(db, start_at);
 
     let mut visited_name_ns = HashMap::<String, NsSet>::new();

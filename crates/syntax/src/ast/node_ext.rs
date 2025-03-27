@@ -20,7 +20,7 @@ mod method_or_path;
 mod module;
 pub mod move_syntax_node;
 pub mod name_ref;
-mod named_field;
+pub mod named_field;
 mod pat;
 pub mod path;
 pub mod prefix_expr;

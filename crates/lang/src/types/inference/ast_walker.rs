@@ -1,6 +1,9 @@
 use crate::files::{InFileExt, InFileInto};
+use crate::nameres::name_resolution::get_entries_from_walking_scopes;
+use crate::nameres::namespaces::NAMES;
 use crate::nameres::path_resolution::get_method_resolve_variants;
 use crate::nameres::scope::{ScopeEntryExt, ScopeEntryListExt, VecExt};
+use crate::node_ext::struct_field_name::StructFieldNameExt;
 use crate::types::expectation::Expected;
 use crate::types::inference::InferenceCtx;
 use crate::types::patterns::{anonymous_pat_ty_var, collect_bindings, BindingMode};
@@ -13,7 +16,8 @@ use crate::types::ty::Ty;
 use crate::InFile;
 use std::iter;
 use std::ops::Deref;
-use syntax::ast::{BindingTypeOwner, HasStmts, LambdaExpr, NamedElement};
+use syntax::ast::node_ext::named_field::FilterNamedFieldsByName;
+use syntax::ast::{BindingTypeOwner, FieldsOwner, HasStmts, LambdaExpr};
 use syntax::{ast, AstNode, IntoNodeOrToken};
 
 pub struct TypeAstWalker<'a, 'db> {
@@ -297,9 +301,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         } = adt_item;
         let named_field = adt_item
             .field_ref_lookup_fields()
-            .into_iter()
-            .filter(|it| it.name().unwrap().as_string() == field_reference_name)
-            .collect::<Vec<_>>()
+            .filter_fields_by_name(&field_reference_name)
             .single_or_none()
             .map(|it| it.in_file(adt_item_file_id));
 
@@ -421,6 +423,46 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
             // resolved tyAdt inner TyVars after combining with expectedTy
             ty_adt = self.ctx.resolve_ty_vars_if_possible(ty_adt)
+        }
+
+        let named_fields = fields_owner.named_fields();
+        for lit_field in struct_lit.fields() {
+            let lit_field_name = lit_field.field_name();
+            if lit_field_name.is_none() {
+                continue;
+            }
+            let lit_field_name = lit_field_name.unwrap();
+
+            let named_field = named_fields
+                .filter_fields_by_name(&lit_field_name)
+                .single_or_none();
+            let declared_field_ty = named_field
+                .and_then(|it| it.type_())
+                .map(|type_| {
+                    self.ctx
+                        .ty_lowering()
+                        .lower_type(type_.in_file(item_file_id))
+                        .substitute(&ty_adt.substitution)
+                })
+                .unwrap_or(Ty::Unknown);
+
+            if let Some(lit_field_expr) = lit_field.expr() {
+                self.infer_expr_coerceable_to(&lit_field_expr, declared_field_ty);
+            } else {
+                let binding = get_entries_from_walking_scopes(
+                    self.ctx.db,
+                    lit_field.clone().in_file(self.ctx.file_id),
+                    NAMES,
+                )
+                .filter_by_name(lit_field_name)
+                .single_or_none()
+                .and_then(|it| it.cast_into::<ast::IdentPat>(self.ctx.db));
+                let binding_ty = binding
+                    .and_then(|it| self.ctx.get_binding_type(it.value))
+                    .unwrap_or(Ty::Unknown);
+                self.ctx
+                    .coerce_types(lit_field.node_or_token(), binding_ty, declared_field_ty);
+            }
         }
 
         Some(Ty::Adt(ty_adt))
@@ -623,6 +665,13 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         match op_kind {
             ast::BinaryOp::ArithOp(op) => Some(self.infer_arith_binary_expr(lhs, op, rhs, false)),
             ast::BinaryOp::LogicOp(op) => Some(self.infer_logic_binary_expr(lhs, op, rhs)),
+            ast::BinaryOp::CmpOp(op) => {
+                let ty = match op {
+                    ast::CmpOp::Eq { .. } => self.infer_eq_binary_expr(&lhs, &rhs),
+                    ast::CmpOp::Ord { .. } => self.infer_ordering_binary_expr(&lhs, &rhs),
+                };
+                Some(ty)
+            }
             _ => None,
         }
     }
@@ -662,6 +711,38 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     fn infer_logic_binary_expr(&mut self, lhs: ast::Expr, _op: ast::LogicOp, rhs: ast::Expr) -> Ty {
         self.infer_expr_coerceable_to(&lhs, Ty::Bool);
         self.infer_expr_coerceable_to(&rhs, Ty::Bool);
+        Ty::Bool
+    }
+
+    fn infer_eq_binary_expr(&mut self, lhs: &ast::Expr, rhs: &ast::Expr) -> Ty {
+        let left_ty = self.infer_expr(lhs, Expected::NoValue);
+        let left_ty = self.ctx.resolve_ty_vars_if_possible(left_ty);
+
+        let right_ty = self.infer_expr(rhs, Expected::NoValue);
+        let right_ty = self.ctx.resolve_ty_vars_if_possible(right_ty);
+
+        let combined = self.ctx.combine_types(left_ty, right_ty);
+        if combined.is_err() {
+            // todo: report error
+        }
+        Ty::Bool
+    }
+
+    fn infer_ordering_binary_expr(&mut self, lhs: &ast::Expr, rhs: &ast::Expr) -> Ty {
+        let mut is_error = false;
+        let left_ty = self.infer_expr(lhs, Expected::NoValue);
+        if !left_ty.supports_ordering() {
+            // todo: report error
+            is_error = true;
+        }
+        let right_ty = self.infer_expr(rhs, Expected::NoValue);
+        if !right_ty.supports_ordering() {
+            // todo: report error
+            is_error = true;
+        }
+        if !is_error {
+            self.ctx.coerce_types(rhs.node_or_token(), right_ty, left_ty);
+        }
         Ty::Bool
     }
 
