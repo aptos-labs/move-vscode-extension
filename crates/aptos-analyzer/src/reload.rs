@@ -6,7 +6,6 @@ use crate::op_queue::Cause;
 use crate::project_folders::ProjectFolders;
 use crate::{Config, lsp_ext};
 use base_db::change::FileChange;
-use base_db::input::CrateGraph;
 use lsp_types::FileSystemWatcher;
 use project_model::AptosWorkspace;
 use std::mem;
@@ -46,15 +45,6 @@ impl GlobalState {
     pub(crate) fn update_configuration(&mut self, config: Config) {
         let _p = tracing::info_span!("GlobalState::update_configuration").entered();
         let old_config = mem::replace(&mut self.config, Arc::new(config));
-
-        // if self.config.lru_parse_query_capacity() != old_config.lru_parse_query_capacity() {
-        //     self.analysis_host.update_lru_capacity(self.config.lru_parse_query_capacity());
-        // }
-        // if self.config.lru_query_capacities_config() != old_config.lru_query_capacities_config() {
-        //     self.analysis_host.update_lru_capacities(
-        //         &self.config.lru_query_capacities_config().cloned().unwrap_or_default(),
-        //     );
-        // }
 
         if self.config.linked_or_discovered_projects() != old_config.linked_or_discovered_projects() {
             let req = FetchWorkspaceRequest {
@@ -304,25 +294,24 @@ impl GlobalState {
 
         // crate graph construction relies on these paths, record them so when one of them gets
         // deleted or created we trigger a reconstruction of the crate graph
-        self.crate_graph_file_dependencies.clear();
+        // self.crate_graph_file_dependencies.clear();
 
-        let crate_graph = {
-            // Create crate graph from all the workspaces
-            let vfs = &mut self.vfs.write().0;
+        // let crate_graph = {
+        //     // Create crate graph from all the workspaces
+        //     let vfs = &mut self.vfs.write().0;
+        //
+        //     let load = |path: &AbsPath| {
+        //         let vfs_path = vfs::VfsPath::from(path.to_path_buf());
+        //         self.crate_graph_file_dependencies.insert(vfs_path.clone());
+        //         vfs.file_id(&vfs_path)
+        //     };
+        //
+        //     ws_to_crate_graph(&self.workspaces, load)
+        // };
 
-            let load = |path: &AbsPath| {
-                let vfs_path = vfs::VfsPath::from(path.to_path_buf());
-                self.crate_graph_file_dependencies.insert(vfs_path.clone());
-                vfs.file_id(&vfs_path)
-            };
-
-            ws_to_crate_graph(&self.workspaces, load)
-        };
-
-        let mut change = FileChange::new();
-        change.set_crate_graph(crate_graph /*, ws_data*/);
-
+        let change = FileChange::new();
         self.analysis_host.apply_change(change);
+
         self.report_progress(
             "Building CrateGraph",
             crate::lsp::utils::Progress::End,
@@ -384,29 +373,29 @@ impl GlobalState {
     }
 }
 
-pub fn ws_to_crate_graph(
-    workspaces: &[AptosWorkspace],
-    mut load: impl FnMut(&AbsPath) -> Option<vfs::FileId>,
-) -> CrateGraph {
-    // ) -> (CrateGraph, FxHashMap<CrateId, Arc<CrateWorkspaceData>>) {
-    let mut crate_graph = CrateGraph::default();
-
-    // let mut ws_data = FxHashMap::default();
-    for ws in workspaces {
-        let other = ws.to_crate_graph(&mut load);
-
-        let _mapping = crate_graph.extend(other);
-        // Populate the side tables for the newly merged crates
-        // ws_data.extend(mapping.values().copied().zip(iter::repeat(Arc::new(CrateWorkspaceData {
-        //     toolchain: toolchain.clone(),
-        //     data_layout: target_layout.clone(),
-        //     proc_macro_cwd: Some(ws.workspace_root().to_owned()),
-        // }))));
-    }
-
-    crate_graph.shrink_to_fit();
-    crate_graph
-}
+// pub fn ws_to_crate_graph(
+//     workspaces: &[AptosWorkspace],
+//     mut load: impl FnMut(&AbsPath) -> Option<vfs::FileId>,
+// ) -> CrateGraph {
+//     // ) -> (CrateGraph, FxHashMap<CrateId, Arc<CrateWorkspaceData>>) {
+//     let mut crate_graph = CrateGraph::default();
+//
+//     // let mut ws_data = FxHashMap::default();
+//     for ws in workspaces {
+//         let other = ws.to_crate_graph(&mut load);
+//
+//         let _mapping = crate_graph.extend(other);
+//         // Populate the side tables for the newly merged crates
+//         // ws_data.extend(mapping.values().copied().zip(iter::repeat(Arc::new(CrateWorkspaceData {
+//         //     toolchain: toolchain.clone(),
+//         //     data_layout: target_layout.clone(),
+//         //     proc_macro_cwd: Some(ws.workspace_root().to_owned()),
+//         // }))));
+//     }
+//
+//     crate_graph.shrink_to_fit();
+//     crate_graph
+// }
 
 pub(crate) fn should_refresh_for_file_change(
     changed_file_path: &AbsPath,

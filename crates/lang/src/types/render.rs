@@ -82,7 +82,7 @@ impl<'db> TypeRenderer<'db> {
     }
 
     fn render_ty_adt(&self, ty_adt: &TyAdt) -> String {
-        let item = ty_adt.adt_item.cast_into::<ast::StructOrEnum>(self.db).unwrap();
+        let item = ty_adt.adt_item.into_ast::<ast::StructOrEnum>(self.db).unwrap();
         // todo: proper fq name
         let item_fq_name = item
             .value
@@ -94,7 +94,7 @@ impl<'db> TypeRenderer<'db> {
 
     fn origin_loc_name(&self, origin_loc: SyntaxLoc) -> String {
         origin_loc
-            .cast_into::<ast::TypeParam>(self.db)
+            .into_ast::<ast::TypeParam>(self.db)
             .and_then(|tp| tp.value.name())
             .map(|tp_name| tp_name.as_string())
             .unwrap_or(anonymous())

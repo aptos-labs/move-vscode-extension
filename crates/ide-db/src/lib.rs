@@ -9,8 +9,7 @@ mod source_change;
 mod syntax_helpers;
 pub mod text_edit;
 
-use base_db::input::CrateId;
-use base_db::{FileLoader, FileLoaderDelegate, SourceDatabase, SourceRootDatabase, Upcast};
+use base_db::{SourceDatabase, SourceRootDatabase, Upcast};
 use lang::db::HirDatabase;
 use line_index::LineIndex;
 use std::fmt;
@@ -70,15 +69,6 @@ impl Upcast<dyn SourceRootDatabase> for RootDatabase {
     }
 }
 
-impl FileLoader for RootDatabase {
-    fn resolve_anchored_path(&self, path: AnchoredPath<'_>) -> Option<FileId> {
-        FileLoaderDelegate(self).resolve_anchored_path(path)
-    }
-    fn relevant_crates(&self, file_id: FileId) -> Arc<[CrateId]> {
-        FileLoaderDelegate(self).relevant_crates(file_id)
-    }
-}
-
 impl ra_salsa::Database for RootDatabase {}
 
 impl Default for RootDatabase {
@@ -92,7 +82,6 @@ impl RootDatabase {
         let db = RootDatabase {
             storage: ManuallyDrop::new(ra_salsa::Storage::default()),
         };
-        // db.set_crate_graph_with_durability(Default::default(), Durability::HIGH);
         // db.set_local_roots_with_durability(Default::default(), Durability::HIGH);
         // db.set_library_roots_with_durability(Default::default(), Durability::HIGH);
         // db.setup_syntax_context_root();

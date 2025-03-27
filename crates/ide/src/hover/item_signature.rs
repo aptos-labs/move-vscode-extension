@@ -1,8 +1,8 @@
 use lang::nameres::fq_named_element::ItemFQNameOwner;
 use std::fmt::Write;
-use syntax::ast::NamedElement;
 use syntax::SyntaxKind::*;
-use syntax::{ast, AstNode};
+use syntax::ast::NamedElement;
+use syntax::{AstNode, ast};
 
 pub trait DocSignatureOwner {
     fn owner(&self, buffer: &mut String) -> Option<()>;

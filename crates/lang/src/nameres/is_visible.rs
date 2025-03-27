@@ -31,9 +31,7 @@ pub fn is_visible_in_context(
     let Some(InFile {
         file_id: item_file_id,
         value: item,
-    }) = scope_entry
-        .node_loc
-        .cast_into::<ast::AnyNamedElement>(db.upcast())
+    }) = scope_entry.node_loc.into_ast::<ast::AnyNamedElement>(db.upcast())
     else {
         return false;
     };
@@ -134,7 +132,7 @@ pub fn is_visible_in_context(
                             .path()
                             .and_then(|path| path.in_file(item_file_id).resolve_no_inf(db))
                             .and_then(|friend_entry| {
-                                friend_entry.node_loc.cast_into::<ast::Module>(db.upcast())
+                                friend_entry.node_loc.into_ast::<ast::Module>(db.upcast())
                             })
                         else {
                             continue;

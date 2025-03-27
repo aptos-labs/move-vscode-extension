@@ -89,26 +89,11 @@ fn traverse(
         };
 
         let element = match element {
-            NodeOrToken::Node(name_like) => highlight::name_like::name_like(sema, name_like),
+            // NodeOrToken::Node(name_like) => highlight::name_like::name_like(sema, name_like),
             NodeOrToken::Token(token) => highlight::token(sema, token),
-            // _ => None
+            _ => None,
         };
         if let Some(highlight) = element {
-            // if is_unlinked && highlight.tag == HlTag::UnresolvedReference {
-            //     // do not emit unresolved references if the file is unlinked
-            //     // let the editor do its highlighting for these tokens instead
-            //     continue;
-            // }
-
-            // apply config filtering
-            // if !filter_by_config(&mut highlight, config) {
-            //     continue;
-            // }
-
-            // if inside_attribute {
-            //     highlight |= HlMod::Attribute
-            // }
-
             highlights.add(HlRange {
                 range: element_range,
                 highlight,

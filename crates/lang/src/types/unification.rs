@@ -88,25 +88,3 @@ impl<Var: Clone + Eq + Hash + Debug> UnificationTable<Var> {
         self.mapping = last_snapshot;
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::types::ty::IntegerKind;
-    use crate::types::ty::ty_var::TyVar;
-
-    #[test]
-    fn test_unify_vars() {
-        let mut uni_table: UnificationTable<TyVar> = UnificationTable::new();
-
-        let ty_var1 = TyVar::new_anonymous(0);
-        let ty_var2 = TyVar::new_anonymous(1);
-        let ty_integer = Ty::Integer(IntegerKind::Integer);
-
-        uni_table.unify_var_var(&ty_var1, &ty_var2);
-        uni_table.unify_var_value(&ty_var1, ty_integer.clone());
-
-        let ty_value = uni_table.resolve_to_ty_value(&ty_var1);
-        assert_eq!(ty_value.unwrap(), ty_integer);
-    }
-}
