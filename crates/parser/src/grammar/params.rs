@@ -1,8 +1,8 @@
 use super::*;
-use crate::parser::Marker;
+use crate::grammar::utils::delimited;
 use crate::T;
 
-pub(crate) fn function_parameter_list(p: &mut Parser) {
+pub(crate) fn fun_param_list(p: &mut Parser) {
     let list_marker = p.start();
     p.bump(T!['(']);
     while !p.at(EOF) && !p.at(T![')']) {
@@ -31,3 +31,35 @@ fn param(p: &mut Parser) {
 }
 
 const PARAM_FIRST: TokenSet = patterns::PATTERN_FIRST/*.union(types::TYPE_FIRST)*/;
+
+pub(crate) fn lambda_param_list(p: &mut Parser) -> bool {
+    let list_marker = p.start();
+    p.bump(T![|]);
+    if p.at(T![,]) {
+        list_marker.abandon(p);
+        return false;
+    }
+    delimited(
+        p,
+        T![,],
+        || "expected parameter".into(),
+        |p| p.at(T![|]),
+        TokenSet::new(&[IDENT]),
+        |p| {
+            let m = p.start();
+            patterns::ident_pat(p);
+            if p.at(T![:]) {
+                types::ascription(p);
+            }
+            m.complete(p, LAMBDA_PARAM);
+            true
+        },
+    );
+    if !p.eat(T![|]) {
+        list_marker.abandon_with_rollback(p);
+        return false;
+    }
+
+    list_marker.complete(p, LAMBDA_PARAM_LIST);
+    true
+}

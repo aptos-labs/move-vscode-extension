@@ -1,5 +1,6 @@
-use crate::grammar::expressions::atom::EXPR_FIRST;
+use crate::grammar::expressions::atom::{block_or_inline_expr, EXPR_FIRST};
 use crate::grammar::items::{spec_inline_function, use_item};
+use crate::grammar::params::lambda_param_list;
 use crate::grammar::patterns::pattern;
 use crate::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt};
 use crate::grammar::specs::quants::{choose_expr, exists_expr, forall_expr, is_at_quant_kw};
@@ -237,31 +238,35 @@ pub(crate) fn lhs(p: &mut Parser, r: Restrictions) -> Option<(CompletedMarker, B
         }
         T![|] => {
             m = p.start();
-            p.bump(T![|]);
-            if p.at(T![,]) {
+            if !lambda_param_list(p) {
                 m.abandon(p);
                 return None;
             }
-            delimited(
-                p,
-                T![,],
-                || "expected parameter".into(),
-                |p| p.at(T![|]),
-                TokenSet::new(&[IDENT]),
-                |p| {
-                    let m = p.start();
-                    patterns::ident_pat(p);
-                    if p.at(T![:]) {
-                        types::ascription(p);
-                    }
-                    m.complete(p, LAMBDA_PARAM);
-                    true
-                },
-            );
-            if !p.eat(T![|]) {
-                m.abandon_with_rollback(p);
-                return None;
-            }
+            // p.bump(T![|]);
+            // if p.at(T![,]) {
+            //     m.abandon(p);
+            //     return None;
+            // }
+            // delimited(
+            //     p,
+            //     T![,],
+            //     || "expected parameter".into(),
+            //     |p| p.at(T![|]),
+            //     TokenSet::new(&[IDENT]),
+            //     |p| {
+            //         let m = p.start();
+            //         patterns::ident_pat(p);
+            //         if p.at(T![:]) {
+            //             types::ascription(p);
+            //         }
+            //         m.complete(p, LAMBDA_PARAM);
+            //         true
+            //     },
+            // );
+            // if !p.eat(T![|]) {
+            //     m.abandon_with_rollback(p);
+            //     return None;
+            // }
             LAMBDA_EXPR
         }
         IDENT if is_at_quant_kw(p) => {

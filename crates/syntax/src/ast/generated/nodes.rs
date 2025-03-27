@@ -404,6 +404,67 @@ impl ItemSpec {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct LambdaExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl LambdaExpr {
+    #[inline]
+    pub fn block_or_inline_expr(&self) -> Option<BlockOrInlineExpr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn lambda_param_list(&self) -> Option<LambdaParamList> { support::child(&self.syntax) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct LambdaParam {
+    pub(crate) syntax: SyntaxNode,
+}
+impl LambdaParam {
+    #[inline]
+    pub fn ident_pat(&self) -> IdentPat {
+        support::child(&self.syntax).expect("LambdaParam.ident_pat required by the parser")
+    }
+    #[inline]
+    pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
+    #[inline]
+    pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct LambdaParamList {
+    pub(crate) syntax: SyntaxNode,
+}
+impl LambdaParamList {
+    #[inline]
+    pub fn lambda_params(&self) -> AstChildren<LambdaParam> { support::children(&self.syntax) }
+    #[inline]
+    pub fn pipe_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![|]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct LambdaType {
+    pub(crate) syntax: SyntaxNode,
+}
+impl LambdaType {
+    #[inline]
+    pub fn lambda_type_params(&self) -> AstChildren<LambdaTypeParam> { support::children(&self.syntax) }
+    #[inline]
+    pub fn return_type(&self) -> Option<Type> { support::child(&self.syntax) }
+    #[inline]
+    pub fn pipe_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![|]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct LambdaTypeParam {
+    pub(crate) syntax: SyntaxNode,
+}
+impl LambdaTypeParam {
+    #[inline]
+    pub fn type_(&self) -> Type {
+        support::child(&self.syntax).expect("LambdaTypeParam.type_ required by the parser")
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct LetStmt {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1322,6 +1383,7 @@ pub enum Expr {
     ForExpr(ForExpr),
     IfExpr(IfExpr),
     IndexExpr(IndexExpr),
+    LambdaExpr(LambdaExpr),
     Literal(Literal),
     LoopExpr(LoopExpr),
     MethodCallExpr(MethodCallExpr),
@@ -1405,6 +1467,7 @@ impl ast::NamedElement for StructOrEnum {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Type {
+    LambdaType(LambdaType),
     ParenType(ParenType),
     PathType(PathType),
     RefType(RefType),
@@ -2092,6 +2155,111 @@ impl AstNode for ItemSpec {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == ITEM_SPEC }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for LambdaExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        LAMBDA_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == LAMBDA_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for LambdaParam {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        LAMBDA_PARAM
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == LAMBDA_PARAM }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for LambdaParamList {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        LAMBDA_PARAM_LIST
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == LAMBDA_PARAM_LIST }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for LambdaType {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        LAMBDA_TYPE
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == LAMBDA_TYPE }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for LambdaTypeParam {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        LAMBDA_TYPE_PARAM
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == LAMBDA_TYPE_PARAM }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -3612,6 +3780,10 @@ impl From<IndexExpr> for Expr {
     #[inline]
     fn from(node: IndexExpr) -> Expr { Expr::IndexExpr(node) }
 }
+impl From<LambdaExpr> for Expr {
+    #[inline]
+    fn from(node: LambdaExpr) -> Expr { Expr::LambdaExpr(node) }
+}
 impl From<Literal> for Expr {
     #[inline]
     fn from(node: Literal) -> Expr { Expr::Literal(node) }
@@ -3717,6 +3889,12 @@ impl Expr {
             _ => None,
         }
     }
+    pub fn lambda_expr(self) -> Option<LambdaExpr> {
+        match (self) {
+            Expr::LambdaExpr(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn literal(self) -> Option<Literal> {
         match (self) {
             Expr::Literal(item) => Some(item),
@@ -3783,6 +3961,7 @@ impl AstNode for Expr {
                 | FOR_EXPR
                 | IF_EXPR
                 | INDEX_EXPR
+                | LAMBDA_EXPR
                 | LITERAL
                 | LOOP_EXPR
                 | METHOD_CALL_EXPR
@@ -3808,6 +3987,7 @@ impl AstNode for Expr {
             FOR_EXPR => Expr::ForExpr(ForExpr { syntax }),
             IF_EXPR => Expr::IfExpr(IfExpr { syntax }),
             INDEX_EXPR => Expr::IndexExpr(IndexExpr { syntax }),
+            LAMBDA_EXPR => Expr::LambdaExpr(LambdaExpr { syntax }),
             LITERAL => Expr::Literal(Literal { syntax }),
             LOOP_EXPR => Expr::LoopExpr(LoopExpr { syntax }),
             METHOD_CALL_EXPR => Expr::MethodCallExpr(MethodCallExpr { syntax }),
@@ -3835,6 +4015,7 @@ impl AstNode for Expr {
             Expr::ForExpr(it) => &it.syntax,
             Expr::IfExpr(it) => &it.syntax,
             Expr::IndexExpr(it) => &it.syntax,
+            Expr::LambdaExpr(it) => &it.syntax,
             Expr::Literal(it) => &it.syntax,
             Expr::LoopExpr(it) => &it.syntax,
             Expr::MethodCallExpr(it) => &it.syntax,
@@ -4338,6 +4519,10 @@ impl AstNode for StructOrEnum {
         }
     }
 }
+impl From<LambdaType> for Type {
+    #[inline]
+    fn from(node: LambdaType) -> Type { Type::LambdaType(node) }
+}
 impl From<ParenType> for Type {
     #[inline]
     fn from(node: ParenType) -> Type { Type::ParenType(node) }
@@ -4359,6 +4544,12 @@ impl From<UnitType> for Type {
     fn from(node: UnitType) -> Type { Type::UnitType(node) }
 }
 impl Type {
+    pub fn lambda_type(self) -> Option<LambdaType> {
+        match (self) {
+            Type::LambdaType(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn paren_type(self) -> Option<ParenType> {
         match (self) {
             Type::ParenType(item) => Some(item),
@@ -4393,11 +4584,15 @@ impl Type {
 impl AstNode for Type {
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(kind, PAREN_TYPE | PATH_TYPE | REF_TYPE | TUPLE_TYPE | UNIT_TYPE)
+        matches!(
+            kind,
+            LAMBDA_TYPE | PAREN_TYPE | PATH_TYPE | REF_TYPE | TUPLE_TYPE | UNIT_TYPE
+        )
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
+            LAMBDA_TYPE => Type::LambdaType(LambdaType { syntax }),
             PAREN_TYPE => Type::ParenType(ParenType { syntax }),
             PATH_TYPE => Type::PathType(PathType { syntax }),
             REF_TYPE => Type::RefType(RefType { syntax }),
@@ -4410,6 +4605,7 @@ impl AstNode for Type {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
+            Type::LambdaType(it) => &it.syntax,
             Type::ParenType(it) => &it.syntax,
             Type::PathType(it) => &it.syntax,
             Type::RefType(it) => &it.syntax,
@@ -5272,6 +5468,31 @@ impl std::fmt::Display for InlineExpr {
     }
 }
 impl std::fmt::Display for ItemSpec {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for LambdaExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for LambdaParam {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for LambdaParamList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for LambdaType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for LambdaTypeParam {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

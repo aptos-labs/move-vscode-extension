@@ -61,6 +61,15 @@ pub fn get_entries_from_owner(_db: &dyn HirDatabase, scope: InFile<SyntaxNode>) 
             let fun = scope.syntax_cast::<ast::Fun>().unwrap();
             entries.extend(fun.value.params_as_bindings().to_in_file_entries(file_id));
         }
+        LAMBDA_EXPR => {
+            let lambda_expr = scope.syntax_cast::<ast::LambdaExpr>().unwrap();
+            entries.extend(
+                lambda_expr
+                    .value
+                    .lambda_params_as_bindings()
+                    .to_in_file_entries(file_id),
+            );
+        }
         SCHEMA => {
             let schema = scope.syntax_cast::<ast::Schema>().unwrap();
             entries.extend(

@@ -9,7 +9,7 @@ use crate::types::ty::adt::TyAdt;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::reference::{Mutability, TyReference};
 use crate::types::ty::tuple::TyTuple;
-use crate::types::ty::ty_callable::TyCallable;
+use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::type_param::TyTypeParameter;
 use syntax::{AstNode, SyntaxNode, ast};
 
@@ -62,6 +62,18 @@ impl<'a> TyLowering<'a> {
             }
             ast::Type::UnitType(_) => Ty::Unit,
             ast::Type::ParenType(paren_type) => self.lower_type(paren_type.type_().in_file(file_id)),
+            ast::Type::LambdaType(lambda_type) => {
+                let param_tys = lambda_type
+                    .param_types()
+                    .into_iter()
+                    .map(|it| self.lower_type(it.in_file(file_id)))
+                    .collect();
+                let ret_ty = lambda_type
+                    .return_type()
+                    .map(|it| self.lower_type(it.in_file(file_id)))
+                    .unwrap_or(Ty::Unit);
+                Ty::Callable(TyCallable::new(param_tys, ret_ty, CallKind::Lambda))
+            }
         }
     }
 
@@ -124,7 +136,7 @@ impl<'a> TyLowering<'a> {
             })
             .collect();
         let ret_type = self.lower_ret_type(fun.ret_type().map(|t| t.in_file(file_id)));
-        TyCallable::new(param_types, ret_type)
+        TyCallable::new(param_types, ret_type, CallKind::Fun)
     }
 
     fn lower_ret_type(&self, ret_type: Option<InFile<ast::RetType>>) -> Ty {

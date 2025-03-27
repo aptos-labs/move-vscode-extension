@@ -155,6 +155,7 @@ Type =
     | TupleType
     | UnitType
     | ParenType
+    | LambdaType
 
 RefType =
     '&' 'mut'? Type
@@ -166,6 +167,12 @@ ParenType = '(' Type ')'
 
 PathType =
     Path
+
+LambdaType =
+    '|' lambda_type_params:(LambdaTypeParam (',' LambdaTypeParam)* ','?)? '|' (return_type:Type)?
+
+LambdaTypeParam =
+    Type
 
 BlockExpr =
     '{'
@@ -198,9 +205,8 @@ Expr =
     | PathExpr
     | BorrowExpr | DerefExpr | BangExpr
     | ResourceExpr
-    | CallExpr
-    | MethodCallExpr
-    | AssertMacroExpr
+    | CallExpr | MethodCallExpr | AssertMacroExpr
+    | LambdaExpr
     | VectorLitExpr
     | IndexExpr
     | DotExpr
@@ -272,6 +278,15 @@ Condition =
 
 LoopExpr =
     'loop' loop_body:(BlockExpr | InlineExpr)
+
+LambdaExpr =
+    LambdaParamList BlockOrInlineExpr?
+
+LambdaParamList =
+    '|' lambda_params:(LambdaParam (',' LambdaParam)* ','?)? '|'
+
+LambdaParam =
+    IdentPat (':' Type)?
 
 CallExpr =
     Path ArgList

@@ -89,7 +89,7 @@ pub fn get_method_resolve_variants(
             continue;
         };
         let self_param_with_ty_vars =
-            self_param_ty.fold_ty_type_params(|ty_tp| Ty::ty_var_with_origin(ty_tp.origin_loc));
+            self_param_ty.fold_ty_type_params(|ty_tp| Ty::new_ty_var_with_origin(ty_tp.origin_loc));
         let mut inference_ctx = InferenceCtx::new(db, file_id);
         if inference_ctx.is_tys_compatible_with_autoborrow(self_ty.clone(), self_param_with_ty_vars) {
             method_entries.push(function_entry);

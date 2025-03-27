@@ -32,7 +32,7 @@ impl<T: ast::GenericItem> GenericItemExt for InFile<T> {
         let subst = self
             .ty_type_params()
             .into_iter()
-            .map(|ty_tp| (ty_tp.clone(), Ty::ty_var_with_origin(ty_tp.origin_loc)))
+            .map(|ty_tp| (ty_tp.clone(), Ty::new_ty_var_with_origin(ty_tp.origin_loc)))
             .collect();
         Substitution::new(subst)
     }
