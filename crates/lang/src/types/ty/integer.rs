@@ -2,6 +2,7 @@ use crate::types::ty::Ty;
 use crate::types::ty::ty_var::TyInfer;
 use std::fmt;
 use std::fmt::Formatter;
+use syntax::ast::Ordering;
 use syntax::{AstToken, ast};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -65,5 +66,12 @@ impl Ty {
 
     pub fn supports_arithm_op(&self) -> bool {
         self.supports_op(ast::BinaryOp::ArithOp(ast::ArithOp::Add))
+    }
+
+    pub fn supports_ordering(&self) -> bool {
+        self.supports_op(ast::BinaryOp::CmpOp(ast::CmpOp::Ord {
+            ordering: Ordering::Less,
+            strict: true,
+        }))
     }
 }
