@@ -18,7 +18,7 @@ impl Expected {
     pub fn ty(&self, ctx: &InferenceCtx) -> Option<Ty> {
         match self {
             Expected::NoValue => None,
-            Expected::ExpectType(ty) => Some(ctx.resolve_vars_if_possible(ty.to_owned())),
+            Expected::ExpectType(ty) => Some(ctx.resolve_ty_vars_if_possible(ty.to_owned())),
         }
     }
 }

@@ -53,11 +53,12 @@ pub fn get_path_resolve_variants(
         } => get_modules_as_entries(db, ctx.source_root_id(db), address),
 
         PathKind::Qualified { qualifier, ns, .. } => {
-            get_qualified_path_entries(db, ctx, qualifier).filter_by_ns(ns)
+            get_qualified_path_entries(db, ctx, qualifier).unwrap_or_default().filter_by_ns(ns)
         }
     }
 }
 
+#[tracing::instrument(level = "debug", skip(db, file_id))]
 pub fn get_method_resolve_variants(
     db: &dyn HirDatabase,
     self_ty: &Ty,
@@ -77,7 +78,7 @@ pub fn get_method_resolve_variants(
     let mut method_entries = vec![];
     for function_entry in function_entries {
         let Some(InFile { file_id, value: f }) =
-            function_entry.node_loc.into_ast::<ast::Fun>(db.upcast())
+            function_entry.node_loc.to_ast::<ast::Fun>(db.upcast())
         else {
             continue;
         };
@@ -95,6 +96,7 @@ pub fn get_method_resolve_variants(
             method_entries.push(function_entry);
         }
     }
+    tracing::debug!(?method_entries);
     method_entries
 }
 

@@ -47,7 +47,7 @@ pub(crate) fn render_function(
         completion_item.insert_snippet(cap, snippet);
     }
 
-    match call_ty.ret_type.deref() {
+    match call_ty.ret_type.deref_all() {
         Ty::Unit => (),
         ret_ty => {
             let ret_ty_txt = ret_ty.render(ctx.db.upcast());

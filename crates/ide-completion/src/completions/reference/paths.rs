@@ -35,7 +35,7 @@ pub(crate) fn add_path_completions(
     tracing::debug!(?entries);
 
     for entry in entries {
-        let named_item = entry.cast_into::<ast::AnyNamedElement>(ctx.db.upcast()).unwrap();
+        let named_item = entry.cast_into::<ast::AnyNamedElement>(ctx.db.upcast())?;
         if named_item.kind() == FUN {
             acc.add(
                 render_function(

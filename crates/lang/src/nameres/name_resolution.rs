@@ -1,4 +1,3 @@
-use crate::InFile;
 use crate::db::HirDatabase;
 use crate::files::InFileVecExt;
 use crate::nameres::address::{Address, NamedAddr};
@@ -8,6 +7,7 @@ use crate::nameres::path_resolution::ResolutionContext;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use crate::nameres::scope_entries_owner::get_entries_in_scope;
 use crate::node_ext::ModuleLangExt;
+use crate::InFile;
 use base_db::input::SourceRootId;
 use parser::SyntaxKind;
 use parser::SyntaxKind::MODULE_SPEC;
@@ -15,7 +15,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::ast::{HasItems, ReferenceElement};
-use syntax::{AstNode, SyntaxNode, ast};
+use syntax::{ast, AstNode, SyntaxNode};
 
 pub struct ResolveScope {
     scope: InFile<SyntaxNode>,
@@ -145,19 +145,19 @@ pub fn get_qualified_path_entries(
     db: &dyn HirDatabase,
     ctx: &ResolutionContext,
     qualifier: ast::Path,
-) -> Vec<ScopeEntry> {
+) -> Option<Vec<ScopeEntry>> {
     let qualifier = ctx.wrap_in_file(qualifier);
     let qualifier_item = qualifier.clone().resolve_no_inf(db);
     if qualifier_item.is_none() {
         // qualifier can be an address
         if let Some(qualifier_name) = qualifier.value.reference_name() {
-            return get_modules_as_entries(
+            return Some(get_modules_as_entries(
                 db,
                 ctx.source_root_id(db),
                 Address::Named(NamedAddr::new(qualifier_name)),
-            );
+            ));
         }
-        return vec![];
+        return None;
     }
     let qualifier_item = qualifier_item.unwrap();
     let mut entries = vec![];
@@ -170,20 +170,14 @@ pub fn get_qualified_path_entries(
                 ns: Ns::MODULE,
                 scope_adjustment: None,
             });
-            let module = qualifier_item
-                .node_loc
-                .into_ast::<ast::Module>(db.upcast())
-                .unwrap();
+            let module = qualifier_item.node_loc.to_ast::<ast::Module>(db.upcast())?;
             entries.extend(module.member_entries())
         }
         SyntaxKind::ENUM => {
-            let enum_ = qualifier_item
-                .node_loc
-                .into_ast::<ast::Enum>(db.upcast())
-                .unwrap();
+            let enum_ = qualifier_item.node_loc.to_ast::<ast::Enum>(db.upcast())?;
             entries.extend(enum_.value.variants().to_in_file_entries(enum_.file_id));
         }
         _ => {}
     }
-    entries
+    Some(entries)
 }

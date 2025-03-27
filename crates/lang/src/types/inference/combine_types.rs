@@ -16,8 +16,8 @@ impl InferenceCtx<'_> {
     }
 
     pub fn coerce_types(&mut self, node_or_token: SyntaxNodeOrToken, actual: Ty, expected: Ty) -> bool {
-        let actual = self.resolve_vars_if_possible(actual);
-        let expected = self.resolve_vars_if_possible(expected);
+        let actual = self.resolve_ty_vars_if_possible(actual);
+        let expected = self.resolve_ty_vars_if_possible(expected);
         if actual == expected {
             return true;
         }
@@ -70,7 +70,7 @@ impl InferenceCtx<'_> {
                 Err(TypeError::new(left_ty, right_ty))
             }
             (Ty::Vector(ty1), Ty::Vector(ty2)) => {
-                self.combine_types(ty1.deref().to_owned(), ty2.deref().to_owned())
+                self.combine_types(ty1.deref_all().to_owned(), ty2.deref_all().to_owned())
             }
             (Ty::Reference(from_ref), Ty::Reference(to_ref)) => self.combine_ty_refs(from_ref, to_ref),
             (Ty::Callable(ty_call1), Ty::Callable(ty_call2)) => {
@@ -151,7 +151,7 @@ impl InferenceCtx<'_> {
         // todo: check param types size
         self.combine_ty_pairs(ty1.clone().param_types, ty2.clone().param_types)?;
         // todo: resolve variables?
-        self.combine_types(ty1.ret_type.deref().to_owned(), ty2.ret_type.deref().to_owned())
+        self.combine_types(ty1.ret_type.deref_all().to_owned(), ty2.ret_type.deref_all().to_owned())
     }
 
     fn combine_ty_adts(&mut self, ty1: &TyAdt, ty2: &TyAdt) -> CombineResult {
@@ -200,7 +200,7 @@ impl InferenceCtx<'_> {
                         (Ty::Reference(left_ty_ref), Ty::Reference(right_ty_ref)) => {
                             let min_mut = left_ty_ref.mutability.intersect(right_ty_ref.mutability);
                             Ty::Reference(TyReference::new(
-                                left_ty_ref.referenced.deref().to_owned(),
+                                left_ty_ref.referenced.deref_all().to_owned(),
                                 min_mut,
                             ))
                         }

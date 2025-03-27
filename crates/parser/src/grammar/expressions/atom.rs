@@ -29,8 +29,10 @@ pub(crate) fn literal(p: &mut Parser) -> Option<CompletedMarker> {
             return None;
         }
         T![@] => {
+            let m = p.start();
             p.bump(T![@]);
             address_ref(p);
+            m.complete(p, ADDRESS_LIT);
         }
         INT_NUMBER | BYTE_STRING | HEX_STRING | T![true] | T![false] => {
             p.bump_any();

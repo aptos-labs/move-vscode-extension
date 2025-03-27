@@ -34,6 +34,9 @@ pub mod type_;
 mod vector_lit_expr;
 pub mod visibility;
 mod lambda_type;
+mod struct_lit;
+mod any_fields_owner;
+mod any_generic_item;
 
 use crate::token_text::TokenText;
 use crate::{ast, AstNode, AstToken, SyntaxNode};

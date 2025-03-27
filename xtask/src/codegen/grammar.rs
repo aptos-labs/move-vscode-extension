@@ -231,6 +231,7 @@ fn generate_nodes(kinds: KindsSrc, grammar: &AstSrc) -> String {
             )
         })
         .unzip();
+
     let (any_node_defs, any_node_boilerplate_impls): (Vec<_>, Vec<_>) = grammar
         .nodes
         .iter()
@@ -385,6 +386,7 @@ fn generate_any_node_defs(
         .into_iter()
         .filter(|common_trait| common_trait != trait_name_s)
         .collect::<Vec<_>>();
+
     let impl_common_traits = common_traits
         .iter()
         .map(|common_trait| {
@@ -392,17 +394,6 @@ fn generate_any_node_defs(
             quote! { impl ast::#common_trait for #any_trait_name {} }
         })
         .collect::<Vec<_>>();
-    // let cast_into_common_traits = common_traits
-    //     .iter()
-    //     .map(|common_trait| {
-    //         let common_trait = format_ident!("{}", common_trait);
-    //         quote! {
-    //             #[inline]
-    //             pub fn cast_into<T: ast::#common_trait>(&self) -> Option<T> {
-    //                 T::cast(self.syntax().to_owned())
-    //             }
-    //         }
-    //     }).collect::<Vec<_>>();
 
     let kinds: Vec<_> = nodes
         .iter()

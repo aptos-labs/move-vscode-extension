@@ -1,10 +1,13 @@
 use ide::Analysis;
 use ide::test_utils::get_marked_position_offset_with_data;
 use lang::FilePosition;
+use crate::init_tracing_for_test;
 
 mod test_types_expression_types;
 
 pub fn check_expr_type(source: &str) {
+    init_tracing_for_test();
+
     let (analysis, file_id) = Analysis::from_single_file(source.to_string());
 
     let (ref_offset, data) = get_marked_position_offset_with_data(&source, "//^");

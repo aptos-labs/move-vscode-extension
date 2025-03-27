@@ -409,7 +409,7 @@ pub struct LambdaExpr {
 }
 impl LambdaExpr {
     #[inline]
-    pub fn block_or_inline_expr(&self) -> Option<BlockOrInlineExpr> { support::child(&self.syntax) }
+    pub fn body_expr(&self) -> Option<Expr> { support::child(&self.syntax) }
     #[inline]
     pub fn lambda_param_list(&self) -> Option<LambdaParamList> { support::child(&self.syntax) }
 }
@@ -1390,6 +1390,7 @@ pub enum Expr {
     ParenExpr(ParenExpr),
     PathExpr(PathExpr),
     ResourceExpr(ResourceExpr),
+    StructLit(StructLit),
     VectorLitExpr(VectorLitExpr),
     WhileExpr(WhileExpr),
 }
@@ -3808,6 +3809,10 @@ impl From<ResourceExpr> for Expr {
     #[inline]
     fn from(node: ResourceExpr) -> Expr { Expr::ResourceExpr(node) }
 }
+impl From<StructLit> for Expr {
+    #[inline]
+    fn from(node: StructLit) -> Expr { Expr::StructLit(node) }
+}
 impl From<VectorLitExpr> for Expr {
     #[inline]
     fn from(node: VectorLitExpr) -> Expr { Expr::VectorLitExpr(node) }
@@ -3931,6 +3936,12 @@ impl Expr {
             _ => None,
         }
     }
+    pub fn struct_lit(self) -> Option<StructLit> {
+        match (self) {
+            Expr::StructLit(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn vector_lit_expr(self) -> Option<VectorLitExpr> {
         match (self) {
             Expr::VectorLitExpr(item) => Some(item),
@@ -3968,6 +3979,7 @@ impl AstNode for Expr {
                 | PAREN_EXPR
                 | PATH_EXPR
                 | RESOURCE_EXPR
+                | STRUCT_LIT
                 | VECTOR_LIT_EXPR
                 | WHILE_EXPR
         )
@@ -3994,6 +4006,7 @@ impl AstNode for Expr {
             PAREN_EXPR => Expr::ParenExpr(ParenExpr { syntax }),
             PATH_EXPR => Expr::PathExpr(PathExpr { syntax }),
             RESOURCE_EXPR => Expr::ResourceExpr(ResourceExpr { syntax }),
+            STRUCT_LIT => Expr::StructLit(StructLit { syntax }),
             VECTOR_LIT_EXPR => Expr::VectorLitExpr(VectorLitExpr { syntax }),
             WHILE_EXPR => Expr::WhileExpr(WhileExpr { syntax }),
             _ => return None,
@@ -4022,6 +4035,7 @@ impl AstNode for Expr {
             Expr::ParenExpr(it) => &it.syntax,
             Expr::PathExpr(it) => &it.syntax,
             Expr::ResourceExpr(it) => &it.syntax,
+            Expr::StructLit(it) => &it.syntax,
             Expr::VectorLitExpr(it) => &it.syntax,
             Expr::WhileExpr(it) => &it.syntax,
         }
