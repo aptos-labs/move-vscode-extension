@@ -7,10 +7,11 @@ use crate::nameres::scope::{ScopeEntryExt, ScopeEntryListExt, VecExt};
 use crate::node_ext::struct_field_name::StructFieldNameExt;
 use crate::types::expectation::Expected;
 use crate::types::inference::InferenceCtx;
-use crate::types::patterns::{BindingMode, anonymous_pat_ty_var, collect_bindings};
+use crate::types::patterns::{BindingMode, anonymous_pat_ty_var};
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::integer::IntegerKind;
+use crate::types::ty::range_like::TySequence;
 use crate::types::ty::reference::{Mutability, TyReference, autoborrow};
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar};
@@ -145,7 +146,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 if let Some(pat) = pat {
                     let pat_ty =
                         explicit_ty.unwrap_or(self.ctx.resolve_ty_vars_if_possible(initializer_ty));
-                    collect_bindings(self, pat, pat_ty, BindingMode::BindByValue);
+                    self.collect_pat_bindings(pat, pat_ty, BindingMode::BindByValue);
                 }
             }
             ast::Stmt::ExprStmt(expr_stmt) => {
@@ -175,6 +176,22 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     }
 
     fn infer_expr(&mut self, expr: &ast::Expr, expected: Expected) -> Ty {
+        if self.ctx.expr_types.contains_key(expr) {
+            unreachable!("trying to infer expr twice");
+        }
+
+        let expected_ty = expected.ty(self.ctx);
+        if let Some(expected_ty) = expected_ty {
+            use syntax::SyntaxKind::*;
+
+            if matches!(
+                expr.syntax().kind(),
+                STRUCT_LIT | PATH_EXPR | DOT_EXPR | METHOD_CALL_EXPR | CALL_EXPR
+            ) {
+                self.ctx.expected_expr_types.insert(expr.to_owned(), expected_ty);
+            }
+        }
+
         let expr_ty = match expr {
             ast::Expr::PathExpr(path_expr) => {
                 self.infer_path_expr(path_expr, expected).unwrap_or(Ty::Unknown)
@@ -188,6 +205,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::Expr::VectorLitExpr(vector_lit_expr) => {
                 self.infer_vector_lit_expr(vector_lit_expr, expected)
             }
+            ast::Expr::RangeExpr(range_expr) => self.infer_range_expr(range_expr, expected),
             ast::Expr::StructLit(struct_lit) => {
                 self.infer_struct_lit(struct_lit, expected).unwrap_or(Ty::Unknown)
             }
@@ -205,6 +223,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::Expr::WhileExpr(while_expr) => self.infer_while_expr(while_expr),
             ast::Expr::ForExpr(for_expr) => self.infer_for_expr(for_expr),
             ast::Expr::LambdaExpr(lambda_expr) => self.infer_lambda_expr(lambda_expr, expected),
+            ast::Expr::MatchExpr(match_expr) => self.infer_match_expr(match_expr, expected),
 
             ast::Expr::ParenExpr(paren_expr) => paren_expr
                 .expr()
@@ -243,7 +262,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
             ast::Expr::Literal(lit) => self.infer_literal(lit),
         };
+
         self.ctx.expr_types.insert(expr.to_owned(), expr_ty.clone());
+
         expr_ty
     }
 
@@ -480,22 +501,23 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let deref_ty = self.ctx.resolve_ty_vars_if_possible(base_ty.clone()).deref_all();
         let arg_ty = self.infer_expr(&arg_expr, Expected::NoValue);
 
-        if let Ty::Vector(item_ty) = deref_ty.clone() {
+        if let Ty::Seq(TySequence::Vector(item_ty)) = deref_ty.clone() {
+            let item_ty = item_ty.deref().to_owned();
             // arg_ty can be either TyInteger or TyRange
             return match arg_ty {
-                Ty::Range(_) => deref_ty,
-                Ty::Integer(_) | Ty::Infer(TyInfer::IntVar(_)) | Ty::Num => item_ty.deref().to_owned(),
+                Ty::Seq(TySequence::Range(_)) => deref_ty,
+                Ty::Integer(_) | Ty::Infer(TyInfer::IntVar(_)) | Ty::Num => item_ty,
                 _ => {
                     self.ctx.coerce_types(
                         arg_expr.node_or_token(),
-                        arg_ty,
+                        item_ty.clone(),
                         if self.ctx.msl {
                             Ty::Num
                         } else {
                             Ty::Integer(IntegerKind::Integer)
                         },
                     );
-                    item_ty.deref().to_owned()
+                    item_ty
                 }
             };
         }
@@ -540,6 +562,41 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         lambda_ty
     }
 
+    fn infer_match_expr(&mut self, match_expr: &ast::MatchExpr, expected: Expected) -> Ty {
+        let match_arg_ty = match_expr
+            .expr()
+            .map(|expr| {
+                let expr_ty = self.infer_expr(&expr, Expected::NoValue);
+                self.ctx.resolve_ty_vars_if_possible(expr_ty)
+            })
+            .unwrap_or(Ty::Unknown);
+
+        let arms = match_expr.arms();
+        let mut arm_tys = vec![];
+        for arm in arms {
+            if let Some(pat) = arm.pat() {
+                self.collect_pat_bindings(pat, match_arg_ty.clone(), BindingMode::BindByValue);
+            }
+            if let Some(match_guard_expr) = arm.match_guard().and_then(|it| it.expr()) {
+                self.infer_expr(&match_guard_expr, Expected::ExpectType(Ty::Bool));
+            }
+            if let Some(arm_expr) = arm.expr() {
+                let arm_ty = self.infer_expr(&arm_expr, Expected::NoValue);
+                arm_tys.push(arm_ty);
+            }
+        }
+
+        self.ctx.intersect_all_types(arm_tys)
+    }
+
+    fn infer_range_expr(&mut self, range_expr: &ast::RangeExpr, _expected: Expected) -> Ty {
+        let start_ty = self.infer_expr(&range_expr.start_expr(), Expected::NoValue);
+        if let Some(end_expr) = range_expr.end_expr() {
+            self.infer_expr_coerceable_to(&end_expr, start_ty.clone());
+        }
+        Ty::Seq(TySequence::Range(Box::new(start_ty)))
+    }
+
     fn infer_vector_lit_expr(&mut self, vector_lit_expr: &ast::VectorLitExpr, expected: Expected) -> Ty {
         let arg_ty_var = Ty::new_ty_var(self.ctx);
 
@@ -556,7 +613,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let arg_exprs = vector_lit_expr.arg_exprs().collect::<Vec<_>>();
         let declared_arg_tys = iter::repeat_n(arg_ty, arg_exprs.len()).collect::<Vec<_>>();
 
-        let vec_ty = Ty::Vector(Box::new(arg_ty_var));
+        let vec_ty = Ty::new_vector(arg_ty_var);
 
         let lit_call_ty = TyCallable::new(declared_arg_tys.clone(), vec_ty.clone(), CallKind::Fun);
         let expected_arg_tys = self.infer_expected_call_arg_tys(&lit_call_ty, expected);
@@ -609,15 +666,15 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
     fn infer_for_expr(&mut self, for_expr: &ast::ForExpr) -> Ty {
         if let Some(for_condition) = for_expr.for_condition() {
-            let range_item_ty = for_condition
-                .expr()
-                .and_then(|range_expr| {
-                    self.infer_expr(&range_expr, Expected::NoValue)
-                        .into_ty_range_item()
-                })
-                .unwrap_or(Ty::Unknown);
+            let seq_ty = for_condition.expr().and_then(|range_expr| {
+                let range_ty = self.infer_expr(&range_expr, Expected::NoValue);
+                self.ctx.resolve_ty_vars_if_possible(range_ty).into_ty_seq()
+            });
             if let Some(ident_pat) = for_condition.ident_pat() {
-                self.ctx.pat_types.insert(ident_pat.into(), range_item_ty);
+                self.ctx.pat_types.insert(
+                    ident_pat.into(),
+                    seq_ty.map(|it| it.item()).unwrap_or(Ty::Unknown),
+                );
             }
         }
         self.infer_loop_like_body(for_expr)
@@ -786,7 +843,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
             ast::LiteralKind::Address(_) => Ty::Address,
             ast::LiteralKind::ByteString(_) | ast::LiteralKind::HexString(_) => {
-                Ty::Vector(Box::new(Ty::Integer(IntegerKind::U8)))
+                Ty::new_vector(Ty::Integer(IntegerKind::U8))
             }
             ast::LiteralKind::Invalid => Ty::Unknown,
         }

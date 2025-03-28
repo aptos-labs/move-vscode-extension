@@ -604,7 +604,7 @@ pub(super) fn stmt(p: &mut Parser, with_semi: StmtWithSemi, prefer_expr: bool, i
         }
     }
 
-    if let Some((cm, blocklike)) = expr_stmt(p, Some(m)) {
+    if let Some((cm, blocklike)) = stmt_expr(p, Some(m)) {
         if !(p.at(T!['}']) || (prefer_expr && p.at(EOF))) {
             let m = cm.precede(p);
             match with_semi {
@@ -659,7 +659,7 @@ pub(crate) fn opt_initializer_expr(p: &mut Parser) {
     }
 }
 
-pub(super) fn expr_stmt(p: &mut Parser, m: Option<Marker>) -> Option<(CompletedMarker, BlockLike)> {
+pub(super) fn stmt_expr(p: &mut Parser, m: Option<Marker>) -> Option<(CompletedMarker, BlockLike)> {
     let r = Restrictions {
         forbid_structs: false,
         prefer_stmt: true,

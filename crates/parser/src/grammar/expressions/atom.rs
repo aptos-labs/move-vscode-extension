@@ -101,15 +101,18 @@ pub(crate) fn atom_expr(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> 
         if p.at_contextual_kw("match") && p.nth_at(1, T!['(']) {
             let m = p.start();
             p.bump_remap(T![match]);
-            list(
-                p,
-                T!['('],
-                T![')'],
-                T![,],
-                || "expected expression".into(),
-                EXPR_FIRST,
-                |p| expr(p),
-            );
+            p.bump(T!['(']);
+            expr(p);
+            p.expect(T![')']);
+            // list(
+            //     p,
+            //     T!['('],
+            //     T![')'],
+            //     T![,],
+            //     || "expected expression".into(),
+            //     EXPR_FIRST,
+            //     |p| expr(p),
+            // );
             if p.at(T!['{']) {
                 match_arm_list(p);
                 return Some((m.complete(p, MATCH_EXPR), BlockLike::Block));
@@ -412,17 +415,6 @@ pub(crate) fn match_arm_list(p: &mut Parser) {
     let m = p.start();
     p.eat(T!['{']);
 
-    // test match_arms_inner_attribute
-    // fn foo() {
-    //     match () {
-    //         #![doc("Inner attribute")]
-    //         #![doc("Can be")]
-    //         #![doc("Stacked")]
-    //         _ => (),
-    //     }
-    // }
-    // attributes::inner_attrs(p);
-
     while !p.at(EOF) && !p.at(T!['}']) {
         if p.at(T!['{']) {
             error_block(p, "expected match arm");
@@ -451,7 +443,7 @@ fn match_arm(p: &mut Parser) {
         match_guard(p);
     }
     p.expect(T![=>]);
-    let blocklike = match expr_stmt(p, None) {
+    let blocklike = match stmt_expr(p, None) {
         Some((_, blocklike)) => blocklike,
         None => BlockLike::NotBlock,
     };

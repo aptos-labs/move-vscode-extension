@@ -207,12 +207,13 @@ Expr =
     | ResourceExpr
     | CallExpr | MethodCallExpr | AssertMacroExpr
     | LambdaExpr
-    | VectorLitExpr | StructLit
+    | RangeExpr | VectorLitExpr | StructLit
     | IndexExpr
     | DotExpr
     | AbortExpr
     | BlockExpr
     | IfExpr | WhileExpr | ForExpr | LoopExpr
+    | MatchExpr
 
 ForExpr =
     'for' ForCondition loop_body_expr:(BlockExpr | InlineExpr)
@@ -288,6 +289,18 @@ LambdaParamList =
 LambdaParam =
     IdentPat (':' Type)?
 
+MatchExpr =
+    'match' '(' Expr ')' MatchArmList
+
+MatchArmList =
+    '{' MatchArm* '}'
+
+MatchArm =
+    Pat MatchGuard? '=>' Expr ','?
+
+MatchGuard =
+    'if' Expr
+
 CallExpr =
     Path ArgList
 
@@ -296,6 +309,9 @@ MethodCallExpr =
 
 AssertMacroExpr =
     'ident' '!' ArgList
+
+RangeExpr =
+    start_expr:Expr '..' end_expr:Expr
 
 VectorLitExpr =
     'ident' TypeArgList? '[' arg_exprs:(Expr (',' Expr)* ','?)? ']'
