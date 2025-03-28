@@ -1,12 +1,12 @@
 pub mod adt;
 pub(crate) mod integer;
+pub(crate) mod range_like;
 pub mod reference;
 pub(crate) mod tuple;
 pub mod ty_callable;
 pub(crate) mod ty_var;
 pub(crate) mod type_param;
 
-use crate::InFile;
 use crate::db::HirDatabase;
 use crate::loc::SyntaxLoc;
 use crate::nameres::address::Address;
@@ -17,11 +17,13 @@ use crate::types::inference::InferenceCtx;
 use crate::types::render::TypeRenderer;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::integer::IntegerKind;
+use crate::types::ty::range_like::TySequence;
 use crate::types::ty::reference::TyReference;
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::{TyInfer, TyVar};
 use crate::types::ty::type_param::TyTypeParameter;
+use crate::InFile;
 use base_db::SourceRootDatabase;
 use std::ops::Deref;
 use syntax::ast;
@@ -39,8 +41,7 @@ pub enum Ty {
     Integer(IntegerKind),
     Num,
 
-    Range(Box<Ty>),
-    Vector(Box<Ty>),
+    Seq(TySequence),
 
     Infer(TyInfer),
     TypeParam(TyTypeParameter),
@@ -58,6 +59,10 @@ impl Ty {
 
     pub fn new_ty_var_with_origin(tp_origin_loc: SyntaxLoc) -> Ty {
         Ty::Infer(TyInfer::Var(TyVar::new_with_origin(tp_origin_loc)))
+    }
+
+    pub fn new_vector(item_ty: Ty) -> Ty {
+        Ty::Seq(TySequence::Vector(Box::new(item_ty)))
     }
 
     pub fn deref_all(&self) -> Ty {
@@ -81,7 +86,7 @@ impl Ty {
                 let item = ty_adt.adt_item.to_ast::<ast::StructOrEnum>(db.upcast())?;
                 Some(item.map(|it| it.module()))
             }
-            Ty::Vector(_) => {
+            Ty::Seq(TySequence::Vector(_)) => {
                 let module =
                     get_modules_as_entries(db, db.file_source_root(file_id), Address::named("std"))
                         .filter_by_name("vector".to_string())
@@ -113,9 +118,9 @@ impl Ty {
         }
     }
 
-    pub fn into_ty_range_item(self) -> Option<Ty> {
+    pub fn into_ty_seq(self) -> Option<TySequence> {
         match self {
-            Ty::Range(item_ty) => Some(item_ty.deref().to_owned()),
+            Ty::Seq(ty_seq) => Some(ty_seq),
             _ => None,
         }
     }
@@ -137,7 +142,7 @@ impl TypeFoldable<Ty> for Ty {
     fn deep_fold_with(self, folder: impl TypeFolder) -> Ty {
         match self {
             Ty::Adt(ty_adt) => Ty::Adt(ty_adt.deep_fold_with(folder)),
-            Ty::Vector(ty) => Ty::Vector(Box::new(folder.fold_ty(*ty))),
+            Ty::Seq(ty_seq) => Ty::Seq(ty_seq.deep_fold_with(folder)),
             Ty::Reference(ty_ref) => Ty::Reference(TyReference::new(
                 folder.fold_ty(ty_ref.referenced().to_owned()),
                 ty_ref.mutability,
@@ -150,7 +155,7 @@ impl TypeFoldable<Ty> for Ty {
     fn deep_visit_with(&self, visitor: impl TypeVisitor) -> bool {
         match self {
             Ty::Adt(ty_adt) => ty_adt.deep_visit_with(visitor),
-            Ty::Vector(ty) => visitor.visit_ty(ty.as_ref()),
+            Ty::Seq(ty_seq) => ty_seq.deep_visit_with(visitor),
             Ty::Reference(ty_ref) => visitor.visit_ty(ty_ref.referenced()),
             Ty::Callable(ty_callable) => ty_callable.deep_visit_with(visitor),
             _ => false,

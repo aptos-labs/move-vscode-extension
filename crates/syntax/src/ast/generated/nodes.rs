@@ -521,6 +521,64 @@ impl LoopExpr {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct MatchArm {
+    pub(crate) syntax: SyntaxNode,
+}
+impl MatchArm {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn match_guard(&self) -> Option<MatchGuard> { support::child(&self.syntax) }
+    #[inline]
+    pub fn pat(&self) -> Option<Pat> { support::child(&self.syntax) }
+    #[inline]
+    pub fn comma_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![,]) }
+    #[inline]
+    pub fn fat_arrow_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![=>]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct MatchArmList {
+    pub(crate) syntax: SyntaxNode,
+}
+impl MatchArmList {
+    #[inline]
+    pub fn match_arms(&self) -> AstChildren<MatchArm> { support::children(&self.syntax) }
+    #[inline]
+    pub fn l_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['{']) }
+    #[inline]
+    pub fn r_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['}']) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct MatchExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl MatchExpr {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn match_arm_list(&self) -> Option<MatchArmList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
+    #[inline]
+    pub fn r_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![')']) }
+    #[inline]
+    pub fn match_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![match]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct MatchGuard {
+    pub(crate) syntax: SyntaxNode,
+}
+impl MatchGuard {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn if_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![if]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct MethodCallExpr {
     pub(crate) syntax: SyntaxNode,
 }
@@ -757,6 +815,15 @@ impl PathType {
     pub fn path(&self) -> Path {
         support::child(&self.syntax).expect("PathType.path required by the parser")
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct RangeExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl RangeExpr {
+    #[inline]
+    pub fn dotdot_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![..]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1386,9 +1453,11 @@ pub enum Expr {
     LambdaExpr(LambdaExpr),
     Literal(Literal),
     LoopExpr(LoopExpr),
+    MatchExpr(MatchExpr),
     MethodCallExpr(MethodCallExpr),
     ParenExpr(ParenExpr),
     PathExpr(PathExpr),
+    RangeExpr(RangeExpr),
     ResourceExpr(ResourceExpr),
     StructLit(StructLit),
     VectorLitExpr(VectorLitExpr),
@@ -2335,6 +2404,90 @@ impl AstNode for LoopExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for MatchArm {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        MATCH_ARM
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == MATCH_ARM }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for MatchArmList {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        MATCH_ARM_LIST
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == MATCH_ARM_LIST }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for MatchExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        MATCH_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == MATCH_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for MatchGuard {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        MATCH_GUARD
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == MATCH_GUARD }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for MethodCallExpr {
     #[inline]
     fn kind() -> SyntaxKind
@@ -2681,6 +2834,27 @@ impl AstNode for PathType {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == PATH_TYPE }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for RangeExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        RANGE_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == RANGE_EXPR }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -3793,6 +3967,10 @@ impl From<LoopExpr> for Expr {
     #[inline]
     fn from(node: LoopExpr) -> Expr { Expr::LoopExpr(node) }
 }
+impl From<MatchExpr> for Expr {
+    #[inline]
+    fn from(node: MatchExpr) -> Expr { Expr::MatchExpr(node) }
+}
 impl From<MethodCallExpr> for Expr {
     #[inline]
     fn from(node: MethodCallExpr) -> Expr { Expr::MethodCallExpr(node) }
@@ -3804,6 +3982,10 @@ impl From<ParenExpr> for Expr {
 impl From<PathExpr> for Expr {
     #[inline]
     fn from(node: PathExpr) -> Expr { Expr::PathExpr(node) }
+}
+impl From<RangeExpr> for Expr {
+    #[inline]
+    fn from(node: RangeExpr) -> Expr { Expr::RangeExpr(node) }
 }
 impl From<ResourceExpr> for Expr {
     #[inline]
@@ -3912,6 +4094,12 @@ impl Expr {
             _ => None,
         }
     }
+    pub fn match_expr(self) -> Option<MatchExpr> {
+        match (self) {
+            Expr::MatchExpr(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn method_call_expr(self) -> Option<MethodCallExpr> {
         match (self) {
             Expr::MethodCallExpr(item) => Some(item),
@@ -3927,6 +4115,12 @@ impl Expr {
     pub fn path_expr(self) -> Option<PathExpr> {
         match (self) {
             Expr::PathExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn range_expr(self) -> Option<RangeExpr> {
+        match (self) {
+            Expr::RangeExpr(item) => Some(item),
             _ => None,
         }
     }
@@ -3975,9 +4169,11 @@ impl AstNode for Expr {
                 | LAMBDA_EXPR
                 | LITERAL
                 | LOOP_EXPR
+                | MATCH_EXPR
                 | METHOD_CALL_EXPR
                 | PAREN_EXPR
                 | PATH_EXPR
+                | RANGE_EXPR
                 | RESOURCE_EXPR
                 | STRUCT_LIT
                 | VECTOR_LIT_EXPR
@@ -4002,9 +4198,11 @@ impl AstNode for Expr {
             LAMBDA_EXPR => Expr::LambdaExpr(LambdaExpr { syntax }),
             LITERAL => Expr::Literal(Literal { syntax }),
             LOOP_EXPR => Expr::LoopExpr(LoopExpr { syntax }),
+            MATCH_EXPR => Expr::MatchExpr(MatchExpr { syntax }),
             METHOD_CALL_EXPR => Expr::MethodCallExpr(MethodCallExpr { syntax }),
             PAREN_EXPR => Expr::ParenExpr(ParenExpr { syntax }),
             PATH_EXPR => Expr::PathExpr(PathExpr { syntax }),
+            RANGE_EXPR => Expr::RangeExpr(RangeExpr { syntax }),
             RESOURCE_EXPR => Expr::ResourceExpr(ResourceExpr { syntax }),
             STRUCT_LIT => Expr::StructLit(StructLit { syntax }),
             VECTOR_LIT_EXPR => Expr::VectorLitExpr(VectorLitExpr { syntax }),
@@ -4031,9 +4229,11 @@ impl AstNode for Expr {
             Expr::LambdaExpr(it) => &it.syntax,
             Expr::Literal(it) => &it.syntax,
             Expr::LoopExpr(it) => &it.syntax,
+            Expr::MatchExpr(it) => &it.syntax,
             Expr::MethodCallExpr(it) => &it.syntax,
             Expr::ParenExpr(it) => &it.syntax,
             Expr::PathExpr(it) => &it.syntax,
+            Expr::RangeExpr(it) => &it.syntax,
             Expr::ResourceExpr(it) => &it.syntax,
             Expr::StructLit(it) => &it.syntax,
             Expr::VectorLitExpr(it) => &it.syntax,
@@ -5526,6 +5726,26 @@ impl std::fmt::Display for LoopExpr {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for MatchArm {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for MatchArmList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for MatchExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for MatchGuard {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for MethodCallExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -5607,6 +5827,11 @@ impl std::fmt::Display for PathSegment {
     }
 }
 impl std::fmt::Display for PathType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for RangeExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

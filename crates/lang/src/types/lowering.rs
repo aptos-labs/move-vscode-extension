@@ -175,7 +175,7 @@ impl<'a> TyLowering<'a> {
                     .first()
                     .map(|it| self.lower_type(it.type_().in_file(file_id)))
                     .unwrap_or(Ty::Unknown);
-                Ty::Vector(Box::new(arg_ty))
+                Ty::new_vector(arg_ty)
             }
             _ => {
                 return None;

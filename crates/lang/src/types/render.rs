@@ -2,6 +2,7 @@ use crate::loc::SyntaxLoc;
 use crate::nameres::fq_named_element::ItemFQNameOwner;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
+use crate::types::ty::range_like::TySequence;
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyVar, TyVarKind};
 use crate::types::ty::type_param::TyTypeParameter;
@@ -22,11 +23,12 @@ impl<'db> TypeRenderer<'db> {
 
     pub fn render(&self, ty: &Ty) -> String {
         match ty {
-            Ty::Vector(ty) => {
-                format!("vector<{}>", self.render(ty))
-            }
-            Ty::Range(ty) => {
-                format!("range<{}>", self.render(ty))
+            Ty::Seq(ty_seq) => {
+                let type_name = match ty_seq {
+                    TySequence::Vector(_) => "vector",
+                    TySequence::Range(_) => "range",
+                };
+                format!("{}<{}>", type_name, self.render(&ty_seq.item()))
             }
             Ty::Adt(ty_adt) => self.render_ty_adt(ty_adt),
             Ty::Callable(ty_callable) => self.render_ty_callable(ty_callable),

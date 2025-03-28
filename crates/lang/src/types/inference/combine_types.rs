@@ -69,9 +69,7 @@ impl InferenceCtx<'_> {
                 }
                 Err(TypeError::new(left_ty, right_ty))
             }
-            (Ty::Vector(ty1), Ty::Vector(ty2)) => {
-                self.combine_types(ty1.deref_all().to_owned(), ty2.deref_all().to_owned())
-            }
+            (Ty::Seq(ty_seq1), Ty::Seq(ty_seq2)) => self.combine_types(ty_seq1.item(), ty_seq2.item()),
             (Ty::Reference(from_ref), Ty::Reference(to_ref)) => self.combine_ty_refs(from_ref, to_ref),
             (Ty::Callable(ty_call1), Ty::Callable(ty_call2)) => {
                 self.combine_ty_callables(ty_call1, ty_call2)
