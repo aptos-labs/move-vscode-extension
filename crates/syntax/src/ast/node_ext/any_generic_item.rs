@@ -1,6 +1,6 @@
 use crate::ast;
 
-impl From<ast::StructOrEnum> for ast::AnyGenericItem {
+impl From<ast::StructOrEnum> for ast::AnyGenericElement {
     fn from(value: ast::StructOrEnum) -> Self {
         match value {
             ast::StructOrEnum::Struct(struct_) => struct_.into(),

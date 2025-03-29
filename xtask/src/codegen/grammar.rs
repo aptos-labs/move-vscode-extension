@@ -5,8 +5,12 @@
 
 #![allow(unused)]
 
+pub(crate) mod any_node_def;
 mod ast_src;
 
+use crate::codegen::grammar::any_node_def::{
+    extract_any_node_def, find_node_defs_with_trait, generate_any_node_def,
+};
 use crate::codegen::grammar::ast_src::{
     AstEnumSrc, AstNodeSrc, AstSrc, Cardinality, Field, KINDS_SRC, KindsSrc, NON_METHOD_TRAITS, TRAITS,
     get_required_fields,
@@ -18,6 +22,7 @@ use proc_macro2::{Punct, Spacing};
 use quote::{format_ident, quote};
 use std::collections::{BTreeSet, HashSet};
 use std::fmt::Write;
+use std::ops::Index;
 use stdx::panic_context;
 use ungrammar::{Grammar, Rule};
 
@@ -232,14 +237,33 @@ fn generate_nodes(kinds: KindsSrc, grammar: &AstSrc) -> String {
         })
         .unzip();
 
-    let (any_node_defs, any_node_boilerplate_impls): (Vec<_>, Vec<_>) = grammar
+    let mut any_node_def_srcs = grammar
         .nodes
         .iter()
         .flat_map(|node| node.traits.iter().map(move |t| (t, node)))
         .into_group_map()
         .into_iter()
         .sorted_by_key(|(name, _)| *name)
-        .map(|(trait_name, nodes)| generate_any_node_defs(trait_name, nodes))
+        .map(|(trait_name, nodes)| extract_any_node_def(trait_name, nodes))
+        .collect::<Vec<_>>();
+
+    for any_node_def_src in any_node_def_srcs.clone() {
+        let current_trait_name = any_node_def_src.trait_name;
+        let other_defs_with_trait =
+            find_node_defs_with_trait(&current_trait_name, any_node_def_srcs.clone());
+        if let Some(any_def) = any_node_def_srcs
+            .iter_mut()
+            .find(|it| it.trait_name == current_trait_name)
+        {
+            for other_def in other_defs_with_trait {
+                any_def.from_impls.push(format!("Any{}", other_def.trait_name));
+            }
+        }
+    }
+
+    let (any_node_defs, any_node_boilerplate_impls): (Vec<_>, Vec<_>) = any_node_def_srcs
+        .into_iter()
+        .map(|it| generate_any_node_def(it))
         .unzip();
 
     let enum_names = grammar.enums.iter().map(|it| &it.name);
@@ -373,85 +397,6 @@ fn write_doc_comment(contents: &[String], dest: &mut String) {
         dest.write_fmt(format_args!("///{}", line)).unwrap();
         // writeln!(dest, "///{}", line).unwrap();
     }
-}
-
-fn generate_any_node_defs(
-    trait_name_s: &str,
-    nodes: Vec<&AstNodeSrc>,
-) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
-    let trait_name = format_ident!("{}", trait_name_s);
-    let any_trait_name = format_ident!("Any{}", trait_name);
-
-    let common_traits = find_common_traits(nodes.clone())
-        .into_iter()
-        .filter(|common_trait| common_trait != trait_name_s)
-        .collect::<Vec<_>>();
-
-    let impl_common_traits = common_traits
-        .iter()
-        .map(|common_trait| {
-            let common_trait = format_ident!("{}", common_trait);
-            quote! { impl ast::#common_trait for #any_trait_name {} }
-        })
-        .collect::<Vec<_>>();
-
-    let kinds: Vec<_> = nodes
-        .iter()
-        .map(|name| format_ident!("{}", to_upper_snake_case(&name.name.to_string())))
-        .collect();
-    let nodes = nodes.iter().map(|node| format_ident!("{}", node.name));
-    (
-        quote! {
-            #[pretty_doc_comment_placeholder_workaround]
-            #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-            pub struct #any_trait_name {
-                pub(crate) syntax: SyntaxNode,
-            }
-            impl ast::#trait_name for #any_trait_name {}
-            #(#impl_common_traits)*
-        },
-        quote! {
-            impl #any_trait_name {
-                #[inline]
-                pub fn new<T: ast::#trait_name>(node: T) -> #any_trait_name {
-                    #any_trait_name {
-                        syntax: node.syntax().clone()
-                    }
-                }
-                #[inline]
-                pub fn cast_from<T: ast::#trait_name>(t: T) -> #any_trait_name {
-                    #any_trait_name::cast(t.syntax().to_owned()).expect("required by code generator")
-                }
-                #[inline]
-                pub fn cast_into<T: ast::#trait_name>(&self) -> Option<T> {
-                    T::cast(self.syntax().to_owned())
-                }
-            }
-            impl AstNode for #any_trait_name {
-                #[inline]
-                fn can_cast(kind: SyntaxKind) -> bool {
-                    matches!(kind, #(#kinds)|*)
-                }
-                #[inline]
-                fn cast(syntax: SyntaxNode) -> Option<Self> {
-                    Self::can_cast(syntax.kind()).then_some(#any_trait_name { syntax })
-                }
-                #[inline]
-                fn syntax(&self) -> &SyntaxNode {
-                    &self.syntax
-                }
-            }
-
-            #(
-                impl From<#nodes> for #any_trait_name {
-                    #[inline]
-                    fn from(node: #nodes) -> #any_trait_name {
-                        #any_trait_name { syntax: node.syntax }
-                    }
-                }
-            )*
-        },
-    )
 }
 
 fn generate_syntax_kinds(grammar: KindsSrc<'_>) -> String {

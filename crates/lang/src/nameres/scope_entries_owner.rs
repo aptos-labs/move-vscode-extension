@@ -3,7 +3,7 @@ use crate::nameres::blocks::get_entries_in_blocks;
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::nameres::use_speck_entries::use_speck_entries;
-use syntax::ast::{GenericItem, HasItems};
+use syntax::ast::{GenericElement, HasItems};
 use syntax::files::InFile;
 use syntax::{AstNode, SyntaxNode, ast};
 
@@ -37,11 +37,11 @@ pub fn get_entries_from_owner(_db: &dyn HirDatabase, scope: InFile<SyntaxNode>) 
     let file_id = scope.file_id;
     let mut entries = vec![];
 
-    if let Some(has_type_params) = ast::AnyGenericItem::cast(scope.value.clone()) {
+    if let Some(has_type_params) = ast::AnyGenericElement::cast(scope.value.clone()) {
         entries.extend(has_type_params.type_params().to_in_file_entries(file_id));
     }
 
-    match scope.syntax_kind() {
+    match scope.value.kind() {
         MODULE => {
             let module = scope.syntax_cast::<ast::Module>().unwrap();
             entries.extend(module.member_entries());

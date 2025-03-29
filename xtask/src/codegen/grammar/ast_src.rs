@@ -298,7 +298,7 @@ pub(crate) const TRAITS: &[(&str, &[&str])] = &[
     ("HasAttrs", &["attrs"]),
     ("NamedElement", &["name"]),
     ("FieldsOwner", &["named_field_list", "tuple_field_list"]),
-    ("GenericItem", &["type_param_list"]),
+    ("GenericElement", &["type_param_list"]),
     // ("HasGenericArgs", &["generic_arg_list"]),
     // ("HasTypeBounds", &["type_bound_list", "colon_token"]),
     ("HasUseStmts", &["use_stmts"]),

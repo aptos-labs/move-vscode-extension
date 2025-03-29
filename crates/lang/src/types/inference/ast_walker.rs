@@ -308,10 +308,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
             STRUCT | ENUM => {
                 // base for index expr
-                let index_base_ty = ty_lowering.lower_path(
-                    path_expr.path().into(),
-                    named_element.map(|it| it.syntax().to_owned()),
-                );
+                let index_base_ty =
+                    ty_lowering.lower_path(path_expr.path().into(), named_element.in_file_into());
                 Some(index_base_ty)
             }
             VARIANT => {

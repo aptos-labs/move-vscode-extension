@@ -266,7 +266,7 @@ pub struct Enum {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::DocCommentsOwner for Enum {}
-impl ast::GenericItem for Enum {}
+impl ast::GenericElement for Enum {}
 impl ast::HasAttrs for Enum {}
 impl ast::HasVisibility for Enum {}
 impl ast::NamedElement for Enum {}
@@ -347,7 +347,7 @@ pub struct Fun {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::DocCommentsOwner for Fun {}
-impl ast::GenericItem for Fun {}
+impl ast::GenericElement for Fun {}
 impl ast::HasAttrs for Fun {}
 impl ast::HasVisibility for Fun {}
 impl ast::NamedElement for Fun {}
@@ -963,7 +963,7 @@ pub struct Schema {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::DocCommentsOwner for Schema {}
-impl ast::GenericItem for Schema {}
+impl ast::GenericElement for Schema {}
 impl ast::HasAttrs for Schema {}
 impl ast::MslOnly for Schema {}
 impl ast::NamedElement for Schema {}
@@ -1030,7 +1030,7 @@ pub struct SpecFun {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::DocCommentsOwner for SpecFun {}
-impl ast::GenericItem for SpecFun {}
+impl ast::GenericElement for SpecFun {}
 impl ast::HasAttrs for SpecFun {}
 impl ast::HasVisibility for SpecFun {}
 impl ast::MslOnly for SpecFun {}
@@ -1057,7 +1057,7 @@ pub struct SpecInlineFun {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::DocCommentsOwner for SpecInlineFun {}
-impl ast::GenericItem for SpecInlineFun {}
+impl ast::GenericElement for SpecInlineFun {}
 impl ast::HasVisibility for SpecInlineFun {}
 impl ast::MslOnly for SpecInlineFun {}
 impl ast::NamedElement for SpecInlineFun {}
@@ -1135,7 +1135,7 @@ pub struct Struct {
 }
 impl ast::DocCommentsOwner for Struct {}
 impl ast::FieldsOwner for Struct {}
-impl ast::GenericItem for Struct {}
+impl ast::GenericElement for Struct {}
 impl ast::HasAttrs for Struct {}
 impl ast::HasVisibility for Struct {}
 impl ast::NamedElement for Struct {}
@@ -1569,7 +1569,7 @@ pub enum InferenceCtxOwner {
     SpecFun(SpecFun),
 }
 impl ast::DocCommentsOwner for InferenceCtxOwner {}
-impl ast::GenericItem for InferenceCtxOwner {}
+impl ast::GenericElement for InferenceCtxOwner {}
 impl ast::HasAttrs for InferenceCtxOwner {}
 impl ast::HasVisibility for InferenceCtxOwner {}
 impl ast::NamedElement for InferenceCtxOwner {}
@@ -1624,7 +1624,7 @@ pub enum StructOrEnum {
     Struct(Struct),
 }
 impl ast::DocCommentsOwner for StructOrEnum {}
-impl ast::GenericItem for StructOrEnum {}
+impl ast::GenericElement for StructOrEnum {}
 impl ast::HasAttrs for StructOrEnum {}
 impl ast::HasVisibility for StructOrEnum {}
 impl ast::NamedElement for StructOrEnum {}
@@ -1656,12 +1656,12 @@ impl ast::HasAttrs for AnyFieldsOwner {}
 impl ast::NamedElement for AnyFieldsOwner {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct AnyGenericItem {
+pub struct AnyGenericElement {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::GenericItem for AnyGenericItem {}
-impl ast::DocCommentsOwner for AnyGenericItem {}
-impl ast::NamedElement for AnyGenericItem {}
+impl ast::GenericElement for AnyGenericElement {}
+impl ast::DocCommentsOwner for AnyGenericElement {}
+impl ast::NamedElement for AnyGenericElement {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyHasAttrs {
@@ -5224,6 +5224,22 @@ impl From<Variant> for AnyDocCommentsOwner {
     #[inline]
     fn from(node: Variant) -> AnyDocCommentsOwner { AnyDocCommentsOwner { syntax: node.syntax } }
 }
+impl From<AnyFieldsOwner> for AnyDocCommentsOwner {
+    #[inline]
+    fn from(node: AnyFieldsOwner) -> AnyDocCommentsOwner { AnyDocCommentsOwner { syntax: node.syntax } }
+}
+impl From<AnyGenericElement> for AnyDocCommentsOwner {
+    #[inline]
+    fn from(node: AnyGenericElement) -> AnyDocCommentsOwner {
+        AnyDocCommentsOwner { syntax: node.syntax }
+    }
+}
+impl From<AnyHasVisibility> for AnyDocCommentsOwner {
+    #[inline]
+    fn from(node: AnyHasVisibility) -> AnyDocCommentsOwner {
+        AnyDocCommentsOwner { syntax: node.syntax }
+    }
+}
 impl AnyFieldsOwner {
     #[inline]
     pub fn new<T: ast::FieldsOwner>(node: T) -> AnyFieldsOwner {
@@ -5256,55 +5272,55 @@ impl From<Variant> for AnyFieldsOwner {
     #[inline]
     fn from(node: Variant) -> AnyFieldsOwner { AnyFieldsOwner { syntax: node.syntax } }
 }
-impl AnyGenericItem {
+impl AnyGenericElement {
     #[inline]
-    pub fn new<T: ast::GenericItem>(node: T) -> AnyGenericItem {
-        AnyGenericItem {
+    pub fn new<T: ast::GenericElement>(node: T) -> AnyGenericElement {
+        AnyGenericElement {
             syntax: node.syntax().clone(),
         }
     }
     #[inline]
-    pub fn cast_from<T: ast::GenericItem>(t: T) -> AnyGenericItem {
-        AnyGenericItem::cast(t.syntax().to_owned()).expect("required by code generator")
+    pub fn cast_from<T: ast::GenericElement>(t: T) -> AnyGenericElement {
+        AnyGenericElement::cast(t.syntax().to_owned()).expect("required by code generator")
     }
     #[inline]
-    pub fn cast_into<T: ast::GenericItem>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
+    pub fn cast_into<T: ast::GenericElement>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
 }
-impl AstNode for AnyGenericItem {
+impl AstNode for AnyGenericElement {
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(kind, ENUM | FUN | SCHEMA | SPEC_FUN | SPEC_INLINE_FUN | STRUCT)
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
-        Self::can_cast(syntax.kind()).then_some(AnyGenericItem { syntax })
+        Self::can_cast(syntax.kind()).then_some(AnyGenericElement { syntax })
     }
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
-impl From<Enum> for AnyGenericItem {
+impl From<Enum> for AnyGenericElement {
     #[inline]
-    fn from(node: Enum) -> AnyGenericItem { AnyGenericItem { syntax: node.syntax } }
+    fn from(node: Enum) -> AnyGenericElement { AnyGenericElement { syntax: node.syntax } }
 }
-impl From<Fun> for AnyGenericItem {
+impl From<Fun> for AnyGenericElement {
     #[inline]
-    fn from(node: Fun) -> AnyGenericItem { AnyGenericItem { syntax: node.syntax } }
+    fn from(node: Fun) -> AnyGenericElement { AnyGenericElement { syntax: node.syntax } }
 }
-impl From<Schema> for AnyGenericItem {
+impl From<Schema> for AnyGenericElement {
     #[inline]
-    fn from(node: Schema) -> AnyGenericItem { AnyGenericItem { syntax: node.syntax } }
+    fn from(node: Schema) -> AnyGenericElement { AnyGenericElement { syntax: node.syntax } }
 }
-impl From<SpecFun> for AnyGenericItem {
+impl From<SpecFun> for AnyGenericElement {
     #[inline]
-    fn from(node: SpecFun) -> AnyGenericItem { AnyGenericItem { syntax: node.syntax } }
+    fn from(node: SpecFun) -> AnyGenericElement { AnyGenericElement { syntax: node.syntax } }
 }
-impl From<SpecInlineFun> for AnyGenericItem {
+impl From<SpecInlineFun> for AnyGenericElement {
     #[inline]
-    fn from(node: SpecInlineFun) -> AnyGenericItem { AnyGenericItem { syntax: node.syntax } }
+    fn from(node: SpecInlineFun) -> AnyGenericElement { AnyGenericElement { syntax: node.syntax } }
 }
-impl From<Struct> for AnyGenericItem {
+impl From<Struct> for AnyGenericElement {
     #[inline]
-    fn from(node: Struct) -> AnyGenericItem { AnyGenericItem { syntax: node.syntax } }
+    fn from(node: Struct) -> AnyGenericElement { AnyGenericElement { syntax: node.syntax } }
 }
 impl AnyHasAttrs {
     #[inline]
@@ -5403,6 +5419,14 @@ impl From<UseStmt> for AnyHasAttrs {
 impl From<Variant> for AnyHasAttrs {
     #[inline]
     fn from(node: Variant) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<AnyFieldsOwner> for AnyHasAttrs {
+    #[inline]
+    fn from(node: AnyFieldsOwner) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<AnyHasItems> for AnyHasAttrs {
+    #[inline]
+    fn from(node: AnyHasItems) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
 impl AnyHasItems {
     #[inline]
@@ -5507,6 +5531,14 @@ impl From<ModuleSpec> for AnyHasUseStmts {
 impl From<Script> for AnyHasUseStmts {
     #[inline]
     fn from(node: Script) -> AnyHasUseStmts { AnyHasUseStmts { syntax: node.syntax } }
+}
+impl From<AnyHasItems> for AnyHasUseStmts {
+    #[inline]
+    fn from(node: AnyHasItems) -> AnyHasUseStmts { AnyHasUseStmts { syntax: node.syntax } }
+}
+impl From<AnyHasStmts> for AnyHasUseStmts {
+    #[inline]
+    fn from(node: AnyHasStmts) -> AnyHasUseStmts { AnyHasUseStmts { syntax: node.syntax } }
 }
 impl AnyHasVisibility {
     #[inline]
@@ -5739,6 +5771,22 @@ impl From<UseAlias> for AnyNamedElement {
 impl From<Variant> for AnyNamedElement {
     #[inline]
     fn from(node: Variant) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
+}
+impl From<AnyDocCommentsOwner> for AnyNamedElement {
+    #[inline]
+    fn from(node: AnyDocCommentsOwner) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
+}
+impl From<AnyFieldsOwner> for AnyNamedElement {
+    #[inline]
+    fn from(node: AnyFieldsOwner) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
+}
+impl From<AnyGenericElement> for AnyNamedElement {
+    #[inline]
+    fn from(node: AnyGenericElement) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
+}
+impl From<AnyHasVisibility> for AnyNamedElement {
+    #[inline]
+    fn from(node: AnyHasVisibility) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
 impl AnyReferenceElement {
     #[inline]
