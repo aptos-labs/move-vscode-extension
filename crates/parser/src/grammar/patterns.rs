@@ -74,14 +74,6 @@ fn path_pat(p: &mut Parser) -> CompletedMarker {
                     struct_pat_field_list(p);
                     STRUCT_PAT
                 }
-                // test marco_pat
-                // fn main() {
-                //     let m!(x) = 0;
-                // }
-                // T![!] => {
-                //     items::macro_call_after_excl(p);
-                //     return m.complete(p, MACRO_CALL).precede(p).complete(p, MACRO_PAT);
-                // }
                 _ => PATH_PAT,
             };
             m.complete(p, kind)
@@ -154,6 +146,9 @@ fn struct_pat_field(p: &mut Parser) {
             name_ref(p);
             p.bump(T![:]);
             pattern(p);
+        }
+        T!['_'] => {
+            wildcard_pat(p);
         }
         // IDENT | INT_NUMBER if p.nth(1) == T![:] => {
         //     name_ref_or_index(p);

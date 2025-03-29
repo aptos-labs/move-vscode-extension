@@ -4,6 +4,8 @@ pub mod has_use_stmts;
 
 use crate::ast::{support, AstChildren, Stmt};
 use crate::{ast, AstNode};
+use std::collections::HashMap;
+use std::fmt;
 use std::io::Read;
 
 pub use docs::DocCommentsOwner;
@@ -76,14 +78,26 @@ pub trait FieldsOwner: NamedElement {
             .map(|list| list.fields().collect::<Vec<_>>())
             .unwrap_or_default()
     }
+
+    fn named_fields_map(&self) -> HashMap<String, ast::NamedField> {
+        self.named_fields()
+            .into_iter()
+            .map(|field| (field.field_name().as_string(), field))
+            .collect()
+    }
+
     fn tuple_fields(&self) -> Vec<ast::TupleField> {
         self.tuple_field_list()
             .map(|list| list.fields().collect::<Vec<_>>())
             .unwrap_or_default()
     }
+
+    fn is_fieldless(&self) -> bool {
+        self.named_field_list().is_none() && self.tuple_field_list().is_none()
+    }
 }
 
-pub trait ReferenceElement: AstNode {
+pub trait ReferenceElement: AstNode + fmt::Debug {
     #[inline]
     fn cast_into<T: ReferenceElement>(&self) -> Option<T> {
         T::cast(self.syntax().to_owned())

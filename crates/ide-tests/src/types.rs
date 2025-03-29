@@ -1,8 +1,9 @@
 use crate::init_tracing_for_test;
 use ide::Analysis;
 use ide::test_utils::get_marked_position_offset_with_data;
-use lang::FilePosition;
+use syntax::files::FilePosition;
 
+mod test_my_types;
 mod test_types_expression_types;
 
 pub fn check_expr_type(source: &str) {

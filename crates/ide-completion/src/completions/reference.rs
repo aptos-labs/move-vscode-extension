@@ -5,9 +5,8 @@ use crate::completions::Completions;
 use crate::completions::reference::method_or_field::add_method_or_field_completions;
 use crate::completions::reference::paths::add_path_completions;
 use crate::context::{CompletionContext, ReferenceKind};
-use lang::InFile;
 use std::cell::RefCell;
-use syntax::{AstNode, ast};
+use syntax::AstNode;
 
 pub(crate) fn add_reference_completions(
     completions: &RefCell<Completions>,

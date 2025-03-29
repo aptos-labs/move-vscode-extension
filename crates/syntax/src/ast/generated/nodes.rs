@@ -148,6 +148,17 @@ impl BorrowExpr {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct BreakExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl BreakExpr {
+    #[inline]
+    pub fn label(&self) -> Option<Label> { support::child(&self.syntax) }
+    #[inline]
+    pub fn break_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![break]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CallExpr {
     pub(crate) syntax: SyntaxNode,
 }
@@ -158,6 +169,21 @@ impl CallExpr {
     pub fn path(&self) -> Path {
         support::child(&self.syntax).expect("CallExpr.path required by the parser")
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct CastExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl CastExpr {
+    #[inline]
+    pub fn expr(&self) -> Expr {
+        support::child(&self.syntax).expect("CastExpr.expr required by the parser")
+    }
+    #[inline]
+    pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
+    #[inline]
+    pub fn as_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![as]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -194,6 +220,17 @@ impl Const {
     pub fn eq_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![=]) }
     #[inline]
     pub fn const_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![const]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ContinueExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ContinueExpr {
+    #[inline]
+    pub fn label(&self) -> Option<Label> { support::child(&self.syntax) }
+    #[inline]
+    pub fn continue_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![continue]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -340,6 +377,7 @@ pub struct IdentPat {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::NamedElement for IdentPat {}
+impl ast::ReferenceElement for IdentPat {}
 impl IdentPat {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -387,6 +425,21 @@ impl InlineExpr {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct IsExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl IsExpr {
+    #[inline]
+    pub fn expr(&self) -> Expr {
+        support::child(&self.syntax).expect("IsExpr.expr required by the parser")
+    }
+    #[inline]
+    pub fn types(&self) -> AstChildren<Type> { support::children(&self.syntax) }
+    #[inline]
+    pub fn is_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![is]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ItemSpec {
     pub(crate) syntax: SyntaxNode,
 }
@@ -401,6 +454,17 @@ impl ItemSpec {
     pub fn module_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![module]) }
     #[inline]
     pub fn spec_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![spec]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Label {
+    pub(crate) syntax: SyntaxNode,
+}
+impl Label {
+    #[inline]
+    pub fn quote_ident_token(&self) -> Option<SyntaxToken> {
+        support::token(&self.syntax, T![quote_ident])
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -794,6 +858,17 @@ impl PathExpr {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct PathPat {
+    pub(crate) syntax: SyntaxNode,
+}
+impl PathPat {
+    #[inline]
+    pub fn path(&self) -> Path {
+        support::child(&self.syntax).expect("PathPat.path required by the parser")
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PathSegment {
     pub(crate) syntax: SyntaxNode,
 }
@@ -870,6 +945,17 @@ impl RetType {
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
     #[inline]
     pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ReturnExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ReturnExpr {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn return_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![return]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1125,6 +1211,8 @@ impl StructPatField {
     pub fn pat(&self) -> Option<Pat> { support::child(&self.syntax) }
     #[inline]
     pub fn rest_pat(&self) -> Option<RestPat> { support::child(&self.syntax) }
+    #[inline]
+    pub fn wildcard_pat(&self) -> Option<WildcardPat> { support::child(&self.syntax) }
     #[inline]
     pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
 }
@@ -1444,12 +1532,16 @@ pub enum Expr {
     BinExpr(BinExpr),
     BlockExpr(BlockExpr),
     BorrowExpr(BorrowExpr),
+    BreakExpr(BreakExpr),
     CallExpr(CallExpr),
+    CastExpr(CastExpr),
+    ContinueExpr(ContinueExpr),
     DerefExpr(DerefExpr),
     DotExpr(DotExpr),
     ForExpr(ForExpr),
     IfExpr(IfExpr),
     IndexExpr(IndexExpr),
+    IsExpr(IsExpr),
     LambdaExpr(LambdaExpr),
     Literal(Literal),
     LoopExpr(LoopExpr),
@@ -1459,6 +1551,7 @@ pub enum Expr {
     PathExpr(PathExpr),
     RangeExpr(RangeExpr),
     ResourceExpr(ResourceExpr),
+    ReturnExpr(ReturnExpr),
     StructLit(StructLit),
     VectorLitExpr(VectorLitExpr),
     WhileExpr(WhileExpr),
@@ -1509,6 +1602,7 @@ pub enum NameLike {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Pat {
     IdentPat(IdentPat),
+    PathPat(PathPat),
     RestPat(RestPat),
     StructPat(StructPat),
     TuplePat(TuplePat),
@@ -1858,6 +1952,27 @@ impl AstNode for BorrowExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for BreakExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        BREAK_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == BREAK_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for CallExpr {
     #[inline]
     fn kind() -> SyntaxKind
@@ -1868,6 +1983,27 @@ impl AstNode for CallExpr {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == CALL_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for CastExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        CAST_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == CAST_EXPR }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -1910,6 +2046,27 @@ impl AstNode for Const {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == CONST }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for ContinueExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        CONTINUE_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == CONTINUE_EXPR }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -2215,6 +2372,27 @@ impl AstNode for InlineExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for IsExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        IS_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == IS_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for ItemSpec {
     #[inline]
     fn kind() -> SyntaxKind
@@ -2225,6 +2403,27 @@ impl AstNode for ItemSpec {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == ITEM_SPEC }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for Label {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        LABEL
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == LABEL }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -2803,6 +3002,27 @@ impl AstNode for PathExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for PathPat {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        PATH_PAT
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == PATH_PAT }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for PathSegment {
     #[inline]
     fn kind() -> SyntaxKind
@@ -2939,6 +3159,27 @@ impl AstNode for RetType {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == RET_TYPE }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for ReturnExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        RETURN_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == RETURN_EXPR }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -3931,9 +4172,21 @@ impl From<BorrowExpr> for Expr {
     #[inline]
     fn from(node: BorrowExpr) -> Expr { Expr::BorrowExpr(node) }
 }
+impl From<BreakExpr> for Expr {
+    #[inline]
+    fn from(node: BreakExpr) -> Expr { Expr::BreakExpr(node) }
+}
 impl From<CallExpr> for Expr {
     #[inline]
     fn from(node: CallExpr) -> Expr { Expr::CallExpr(node) }
+}
+impl From<CastExpr> for Expr {
+    #[inline]
+    fn from(node: CastExpr) -> Expr { Expr::CastExpr(node) }
+}
+impl From<ContinueExpr> for Expr {
+    #[inline]
+    fn from(node: ContinueExpr) -> Expr { Expr::ContinueExpr(node) }
 }
 impl From<DerefExpr> for Expr {
     #[inline]
@@ -3954,6 +4207,10 @@ impl From<IfExpr> for Expr {
 impl From<IndexExpr> for Expr {
     #[inline]
     fn from(node: IndexExpr) -> Expr { Expr::IndexExpr(node) }
+}
+impl From<IsExpr> for Expr {
+    #[inline]
+    fn from(node: IsExpr) -> Expr { Expr::IsExpr(node) }
 }
 impl From<LambdaExpr> for Expr {
     #[inline]
@@ -3990,6 +4247,10 @@ impl From<RangeExpr> for Expr {
 impl From<ResourceExpr> for Expr {
     #[inline]
     fn from(node: ResourceExpr) -> Expr { Expr::ResourceExpr(node) }
+}
+impl From<ReturnExpr> for Expr {
+    #[inline]
+    fn from(node: ReturnExpr) -> Expr { Expr::ReturnExpr(node) }
 }
 impl From<StructLit> for Expr {
     #[inline]
@@ -4040,9 +4301,27 @@ impl Expr {
             _ => None,
         }
     }
+    pub fn break_expr(self) -> Option<BreakExpr> {
+        match (self) {
+            Expr::BreakExpr(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn call_expr(self) -> Option<CallExpr> {
         match (self) {
             Expr::CallExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn cast_expr(self) -> Option<CastExpr> {
+        match (self) {
+            Expr::CastExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn continue_expr(self) -> Option<ContinueExpr> {
+        match (self) {
+            Expr::ContinueExpr(item) => Some(item),
             _ => None,
         }
     }
@@ -4073,6 +4352,12 @@ impl Expr {
     pub fn index_expr(self) -> Option<IndexExpr> {
         match (self) {
             Expr::IndexExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn is_expr(self) -> Option<IsExpr> {
+        match (self) {
+            Expr::IsExpr(item) => Some(item),
             _ => None,
         }
     }
@@ -4130,6 +4415,12 @@ impl Expr {
             _ => None,
         }
     }
+    pub fn return_expr(self) -> Option<ReturnExpr> {
+        match (self) {
+            Expr::ReturnExpr(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn struct_lit(self) -> Option<StructLit> {
         match (self) {
             Expr::StructLit(item) => Some(item),
@@ -4160,12 +4451,16 @@ impl AstNode for Expr {
                 | BIN_EXPR
                 | BLOCK_EXPR
                 | BORROW_EXPR
+                | BREAK_EXPR
                 | CALL_EXPR
+                | CAST_EXPR
+                | CONTINUE_EXPR
                 | DEREF_EXPR
                 | DOT_EXPR
                 | FOR_EXPR
                 | IF_EXPR
                 | INDEX_EXPR
+                | IS_EXPR
                 | LAMBDA_EXPR
                 | LITERAL
                 | LOOP_EXPR
@@ -4175,6 +4470,7 @@ impl AstNode for Expr {
                 | PATH_EXPR
                 | RANGE_EXPR
                 | RESOURCE_EXPR
+                | RETURN_EXPR
                 | STRUCT_LIT
                 | VECTOR_LIT_EXPR
                 | WHILE_EXPR
@@ -4189,12 +4485,16 @@ impl AstNode for Expr {
             BIN_EXPR => Expr::BinExpr(BinExpr { syntax }),
             BLOCK_EXPR => Expr::BlockExpr(BlockExpr { syntax }),
             BORROW_EXPR => Expr::BorrowExpr(BorrowExpr { syntax }),
+            BREAK_EXPR => Expr::BreakExpr(BreakExpr { syntax }),
             CALL_EXPR => Expr::CallExpr(CallExpr { syntax }),
+            CAST_EXPR => Expr::CastExpr(CastExpr { syntax }),
+            CONTINUE_EXPR => Expr::ContinueExpr(ContinueExpr { syntax }),
             DEREF_EXPR => Expr::DerefExpr(DerefExpr { syntax }),
             DOT_EXPR => Expr::DotExpr(DotExpr { syntax }),
             FOR_EXPR => Expr::ForExpr(ForExpr { syntax }),
             IF_EXPR => Expr::IfExpr(IfExpr { syntax }),
             INDEX_EXPR => Expr::IndexExpr(IndexExpr { syntax }),
+            IS_EXPR => Expr::IsExpr(IsExpr { syntax }),
             LAMBDA_EXPR => Expr::LambdaExpr(LambdaExpr { syntax }),
             LITERAL => Expr::Literal(Literal { syntax }),
             LOOP_EXPR => Expr::LoopExpr(LoopExpr { syntax }),
@@ -4204,6 +4504,7 @@ impl AstNode for Expr {
             PATH_EXPR => Expr::PathExpr(PathExpr { syntax }),
             RANGE_EXPR => Expr::RangeExpr(RangeExpr { syntax }),
             RESOURCE_EXPR => Expr::ResourceExpr(ResourceExpr { syntax }),
+            RETURN_EXPR => Expr::ReturnExpr(ReturnExpr { syntax }),
             STRUCT_LIT => Expr::StructLit(StructLit { syntax }),
             VECTOR_LIT_EXPR => Expr::VectorLitExpr(VectorLitExpr { syntax }),
             WHILE_EXPR => Expr::WhileExpr(WhileExpr { syntax }),
@@ -4220,12 +4521,16 @@ impl AstNode for Expr {
             Expr::BinExpr(it) => &it.syntax,
             Expr::BlockExpr(it) => &it.syntax,
             Expr::BorrowExpr(it) => &it.syntax,
+            Expr::BreakExpr(it) => &it.syntax,
             Expr::CallExpr(it) => &it.syntax,
+            Expr::CastExpr(it) => &it.syntax,
+            Expr::ContinueExpr(it) => &it.syntax,
             Expr::DerefExpr(it) => &it.syntax,
             Expr::DotExpr(it) => &it.syntax,
             Expr::ForExpr(it) => &it.syntax,
             Expr::IfExpr(it) => &it.syntax,
             Expr::IndexExpr(it) => &it.syntax,
+            Expr::IsExpr(it) => &it.syntax,
             Expr::LambdaExpr(it) => &it.syntax,
             Expr::Literal(it) => &it.syntax,
             Expr::LoopExpr(it) => &it.syntax,
@@ -4235,6 +4540,7 @@ impl AstNode for Expr {
             Expr::PathExpr(it) => &it.syntax,
             Expr::RangeExpr(it) => &it.syntax,
             Expr::ResourceExpr(it) => &it.syntax,
+            Expr::ReturnExpr(it) => &it.syntax,
             Expr::StructLit(it) => &it.syntax,
             Expr::VectorLitExpr(it) => &it.syntax,
             Expr::WhileExpr(it) => &it.syntax,
@@ -4532,6 +4838,10 @@ impl From<IdentPat> for Pat {
     #[inline]
     fn from(node: IdentPat) -> Pat { Pat::IdentPat(node) }
 }
+impl From<PathPat> for Pat {
+    #[inline]
+    fn from(node: PathPat) -> Pat { Pat::PathPat(node) }
+}
 impl From<RestPat> for Pat {
     #[inline]
     fn from(node: RestPat) -> Pat { Pat::RestPat(node) }
@@ -4556,6 +4866,12 @@ impl Pat {
     pub fn ident_pat(self) -> Option<IdentPat> {
         match (self) {
             Pat::IdentPat(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn path_pat(self) -> Option<PathPat> {
+        match (self) {
+            Pat::PathPat(item) => Some(item),
             _ => None,
         }
     }
@@ -4595,13 +4911,14 @@ impl AstNode for Pat {
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            IDENT_PAT | REST_PAT | STRUCT_PAT | TUPLE_PAT | TUPLE_STRUCT_PAT | WILDCARD_PAT
+            IDENT_PAT | PATH_PAT | REST_PAT | STRUCT_PAT | TUPLE_PAT | TUPLE_STRUCT_PAT | WILDCARD_PAT
         )
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
             IDENT_PAT => Pat::IdentPat(IdentPat { syntax }),
+            PATH_PAT => Pat::PathPat(PathPat { syntax }),
             REST_PAT => Pat::RestPat(RestPat { syntax }),
             STRUCT_PAT => Pat::StructPat(StructPat { syntax }),
             TUPLE_PAT => Pat::TuplePat(TuplePat { syntax }),
@@ -4615,6 +4932,7 @@ impl AstNode for Pat {
     fn syntax(&self) -> &SyntaxNode {
         match self {
             Pat::IdentPat(it) => &it.syntax,
+            Pat::PathPat(it) => &it.syntax,
             Pat::RestPat(it) => &it.syntax,
             Pat::StructPat(it) => &it.syntax,
             Pat::TuplePat(it) => &it.syntax,
@@ -5441,7 +5759,7 @@ impl AstNode for AnyReferenceElement {
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            FIELD_REF | METHOD_CALL_EXPR | PATH | STRUCT_LIT_FIELD | STRUCT_PAT_FIELD
+            FIELD_REF | IDENT_PAT | METHOD_CALL_EXPR | PATH | STRUCT_LIT_FIELD | STRUCT_PAT_FIELD
         )
     }
     #[inline]
@@ -5454,6 +5772,10 @@ impl AstNode for AnyReferenceElement {
 impl From<FieldRef> for AnyReferenceElement {
     #[inline]
     fn from(node: FieldRef) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
+}
+impl From<IdentPat> for AnyReferenceElement {
+    #[inline]
+    fn from(node: IdentPat) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
 }
 impl From<MethodCallExpr> for AnyReferenceElement {
     #[inline]
@@ -5596,7 +5918,17 @@ impl std::fmt::Display for BorrowExpr {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for BreakExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for CallExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for CastExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -5607,6 +5939,11 @@ impl std::fmt::Display for Condition {
     }
 }
 impl std::fmt::Display for Const {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for ContinueExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -5681,7 +6018,17 @@ impl std::fmt::Display for InlineExpr {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for IsExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for ItemSpec {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for Label {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -5821,6 +6168,11 @@ impl std::fmt::Display for PathExpr {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for PathPat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for PathSegment {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -5852,6 +6204,11 @@ impl std::fmt::Display for RestPat {
     }
 }
 impl std::fmt::Display for RetType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for ReturnExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

@@ -4,13 +4,14 @@ use crate::RangeInfo;
 use crate::hover::item_signature::DocSignatureOwner;
 use base_db::Upcast;
 use ide_db::RootDatabase;
-use lang::files::InFileExt;
-use lang::{FilePosition, Semantics};
+use lang::Semantics;
+use lang::nameres::ResolveReference;
 use std::fmt::Write;
 use stdx::itertools::Itertools;
 use syntax::algo::find_node_at_offset;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::{DocCommentsOwner, NamedElement};
+use syntax::files::{FilePosition, InFileExt};
 use syntax::{AstNode, AstToken, ast};
 
 /// Contains the results when hovering over an item

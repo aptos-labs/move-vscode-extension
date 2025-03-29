@@ -1,10 +1,10 @@
-use crate::InFile;
 use crate::db::HirDatabase;
 use crate::nameres::blocks::get_entries_in_blocks;
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::nameres::use_speck_entries::use_speck_entries;
 use syntax::ast::{GenericItem, HasItems};
+use syntax::files::InFile;
 use syntax::{AstNode, SyntaxNode, ast};
 
 pub fn get_entries_in_scope(
@@ -22,10 +22,10 @@ pub fn get_entries_in_scope(
         ));
     }
 
-    if scope.syntax_kind() == BLOCK_EXPR {
-        entries.extend(get_entries_in_blocks(scope, prev));
-        return entries;
-    }
+    entries.extend(get_entries_in_blocks(scope.clone(), prev));
+    // if scope.syntax_kind() == BLOCK_EXPR {
+    //     return entries;
+    // }
 
     entries.extend(get_entries_from_owner(db, scope));
     entries

@@ -1,9 +1,9 @@
-use crate::InFile;
-use crate::files::InFileVecExt;
 use crate::nameres::scope::{NamedItemsExt, ScopeEntry};
 use stdx::itertools::Itertools;
 use syntax::ast::HasStmts;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
+use syntax::files::{InFile, InFileVecExt};
 use syntax::{AstNode, SyntaxNode, ast};
 
 pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: Option<SyntaxNode>) -> Vec<ScopeEntry> {
@@ -21,6 +21,19 @@ pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: Option<SyntaxNode>
                 binding_entries.unique_by(|e| e.name.clone()).collect::<Vec<_>>();
 
             return binding_entries_with_shadowing;
+        }
+        MATCH_ARM => {
+            // coming from rhs, use pat bindings from lhs
+            dbg!(&prev);
+            if prev.is_some_and(|node| !node.is::<ast::Pat>()) {
+                let (file_id, match_arm) = scope.map(|it| it.cast::<ast::MatchArm>().unwrap()).unpack();
+                let ident_pats = match_arm
+                    .pat()
+                    .map(|it| it.bindings())
+                    .unwrap_or_default()
+                    .wrapped_in_file(file_id);
+                return ident_pats.to_entries();
+            }
         }
         // todo: spec block expr
         _ => {}

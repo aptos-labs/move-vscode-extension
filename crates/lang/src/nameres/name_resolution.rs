@@ -1,6 +1,5 @@
-use crate::InFile;
 use crate::db::HirDatabase;
-use crate::files::InFileVecExt;
+use crate::nameres::ResolveReference;
 use crate::nameres::address::{Address, NamedAddr};
 use crate::nameres::namespaces::{Ns, NsSet};
 use crate::nameres::node_ext::ModuleResolutionExt;
@@ -15,6 +14,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::ast::{HasItems, ReferenceElement};
+use syntax::files::{InFile, InFileVecExt};
 use syntax::{AstNode, SyntaxNode, ast};
 
 pub struct ResolveScope {

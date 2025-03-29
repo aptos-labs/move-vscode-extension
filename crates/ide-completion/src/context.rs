@@ -2,10 +2,11 @@ use crate::completions::item_list::ItemListKind;
 use crate::config::CompletionConfig;
 use base_db::SourceDatabase;
 use ide_db::RootDatabase;
-use lang::files::{FilePosition, InFileExt};
-use lang::{InFile, Semantics};
+use lang::Semantics;
 use syntax::SyntaxKind::*;
 use syntax::algo::find_node_at_offset;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
+use syntax::files::{FilePosition, InFile, InFileExt};
 use syntax::{AstNode, SyntaxToken, TextRange, TextSize, ast};
 
 const COMPLETION_MARKER: &str = "raCompletionMarker";
@@ -30,6 +31,7 @@ pub(crate) struct CompletionContext<'a> {
     pub(crate) db: &'a RootDatabase,
     pub(crate) config: &'a CompletionConfig,
     pub(crate) position: FilePosition,
+    pub(crate) msl: bool,
 
     /// The token before the cursor, in the original file.
     pub(crate) original_token: SyntaxToken,
@@ -45,6 +47,10 @@ impl CompletionContext<'_> {
             _ if kind.is_any_identifier() => self.original_token.text_range(),
             _ => TextRange::empty(self.position.offset),
         }
+    }
+
+    pub(crate) fn containing_module(&self) -> Option<ast::Module> {
+        self.original_token.parent()?.containing_module()
     }
 }
 
@@ -76,6 +82,7 @@ impl<'a> CompletionContext<'a> {
             db,
             config,
             position,
+            msl: false,
             original_token,
         };
 

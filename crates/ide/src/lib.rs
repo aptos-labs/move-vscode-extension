@@ -5,7 +5,6 @@ use base_db::input::{SourceRoot, SourceRootId};
 use base_db::{SourceDatabase, SourceRootDatabase};
 use ide_completion::item::CompletionItem;
 use ide_db::{LineIndexDatabase, RootDatabase};
-use lang::files::{FilePosition, FileRange};
 use line_index::{LineCol, LineIndex};
 use ra_salsa::ParallelDatabase;
 use syntax::{SourceFile, TextRange, TextSize};
@@ -27,6 +26,7 @@ pub use crate::syntax_highlighting::HlRange;
 use ide_completion::config::CompletionConfig;
 use ide_diagnostics::{Diagnostic, DiagnosticsConfig};
 pub use ra_salsa::Cancelled;
+use syntax::files::{FilePosition, FileRange};
 
 pub type Cancellable<T> = Result<T, Cancelled>;
 

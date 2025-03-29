@@ -1,6 +1,6 @@
-use crate::InFile;
 use crate::nameres::use_speck_entries::{UseItem, use_stmt_items};
 use syntax::ast;
+use syntax::files::InFile;
 //
 // pub trait HasItemListExt {
 //     fn use_stmt_items(&self, file_id: FileId) -> Vec<UseItem>;

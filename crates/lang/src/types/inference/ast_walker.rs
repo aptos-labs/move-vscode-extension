@@ -1,10 +1,7 @@
-use crate::InFile;
-use crate::files::{InFileExt, InFileInto};
 use crate::nameres::name_resolution::get_entries_from_walking_scopes;
 use crate::nameres::namespaces::NAMES;
 use crate::nameres::path_resolution::get_method_resolve_variants;
 use crate::nameres::scope::{ScopeEntryExt, ScopeEntryListExt, VecExt};
-use crate::node_ext::struct_field_name::StructFieldNameExt;
 use crate::types::expectation::Expected;
 use crate::types::inference::InferenceCtx;
 use crate::types::patterns::{BindingMode, anonymous_pat_ty_var};
@@ -19,15 +16,20 @@ use std::iter;
 use std::ops::Deref;
 use syntax::ast::node_ext::named_field::FilterNamedFieldsByName;
 use syntax::ast::{BindingTypeOwner, FieldsOwner, HasStmts, LambdaExpr, LoopLike};
+use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, IntoNodeOrToken, ast};
 
 pub struct TypeAstWalker<'a, 'db> {
     pub ctx: &'a mut InferenceCtx<'db>,
+    pub expected_return_ty: Ty,
 }
 
 impl<'a, 'db> TypeAstWalker<'a, 'db> {
-    pub fn new(ctx: &'a mut InferenceCtx<'db>) -> Self {
-        TypeAstWalker { ctx }
+    pub fn new(ctx: &'a mut InferenceCtx<'db>, expected_return_ty: Ty) -> Self {
+        TypeAstWalker {
+            ctx,
+            expected_return_ty,
+        }
     }
 
     pub fn walk(&mut self, ctx_owner: ast::InferenceCtxOwner) {
@@ -73,6 +75,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 return;
             }
         };
+        let file_id = self.ctx.file_id;
         for binding in bindings {
             let binding_ty = {
                 let binding_type_owner = binding.type_owner();
@@ -80,7 +83,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 match binding_type_owner {
                     Some(BindingTypeOwner::Param(fun_param)) => fun_param
                         .type_()
-                        .map(|it| ty_lowering.lower_type(it.in_file(self.ctx.file_id)))
+                        .map(|it| ty_lowering.lower_type(it.in_file(file_id)))
                         .unwrap_or(Ty::Unknown),
                     _ => continue,
                 }
@@ -117,15 +120,17 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     }
 
     fn process_stmt(&mut self, stmt: ast::Stmt) {
+        let file_id = self.ctx.file_id;
         match stmt {
             ast::Stmt::LetStmt(let_stmt) => {
                 let explicit_ty = let_stmt
                     .type_()
-                    .map(|it| self.ctx.ty_lowering().lower_type(it.in_file(self.ctx.file_id)));
+                    .map(|it| self.ctx.ty_lowering().lower_type(it.in_file(file_id)));
                 let pat = let_stmt.pat();
                 let initializer_ty = match let_stmt.initializer() {
                     Some(initializer_expr) => {
-                        let initializer_ty = self.infer_expr(&initializer_expr, Expected::NoValue);
+                        let initializer_ty =
+                            self.infer_expr(&initializer_expr, Expected::from_ty(explicit_ty.clone()));
                         if let Some(explicit_ty) = explicit_ty.clone() {
                             self.ctx.coerce_types(
                                 initializer_expr.node_or_token(),
@@ -222,6 +227,18 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::Expr::LoopExpr(loop_expr) => self.infer_loop_expr(loop_expr),
             ast::Expr::WhileExpr(while_expr) => self.infer_while_expr(while_expr),
             ast::Expr::ForExpr(for_expr) => self.infer_for_expr(for_expr),
+
+            ast::Expr::BreakExpr(_) => Ty::Never,
+            ast::Expr::ContinueExpr(_) => Ty::Never,
+            ast::Expr::ReturnExpr(return_expr) => {
+                if let Some(expr) = return_expr.expr() {
+                    let expected = Expected::ExpectType(self.expected_return_ty.clone());
+                    self.infer_expr(&expr, expected);
+                }
+                Ty::Never
+            }
+            ast::Expr::CastExpr(cast_expr) => self.infer_cast_expr(cast_expr, expected),
+
             ast::Expr::LambdaExpr(lambda_expr) => self.infer_lambda_expr(lambda_expr, expected),
             ast::Expr::MatchExpr(match_expr) => self.infer_match_expr(match_expr, expected),
 
@@ -242,6 +259,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::Expr::ResourceExpr(res_expr) => {
                 self.infer_resource_expr(res_expr).unwrap_or(Ty::Unknown)
             }
+            ast::Expr::IsExpr(is_expr) => self.infer_is_expr(is_expr),
             ast::Expr::AbortExpr(abort_expr) => {
                 if let Some(inner_expr) = abort_expr.expr() {
                     self.infer_expr(&inner_expr, Expected::NoValue);
@@ -285,10 +303,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 Some(ty_lowering.lower_type(const_type))
             }
             NAMED_FIELD => {
-                let field_type = named_element
-                    .cast::<ast::NamedField>()?
-                    .and_then(|it| it.type_())?;
-                Some(ty_lowering.lower_type(field_type))
+                let named_field = named_element.cast::<ast::NamedField>()?;
+                ty_lowering.lower_field(named_field)
             }
             STRUCT | ENUM => {
                 // base for index expr
@@ -297,6 +313,16 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     named_element.map(|it| it.syntax().to_owned()),
                 );
                 Some(index_base_ty)
+            }
+            VARIANT => {
+                // MyEnum::MyVariant
+                let variant = named_element.cast::<ast::Variant>().unwrap();
+                let enum_path = path_expr.path().qualifier().unwrap_or(path_expr.path());
+                let variant_ty = self
+                    .ctx
+                    .instantiate_path(enum_path.into(), variant.map(|it| it.enum_()).in_file_into())
+                    .into_ty_adt()?;
+                Some(Ty::Adt(variant_ty))
             }
             MODULE => None,
             // todo: return TyCallable when "function values" feature is implemented
@@ -311,13 +337,17 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let self_ty = self.ctx.resolve_ty_vars_if_possible(self_ty);
 
         let ty_adt = self_ty.deref_all().into_ty_adt()?;
-        let adt_item = ty_adt
-            .adt_item
-            .to_ast::<ast::StructOrEnum>(self.ctx.db.upcast())?;
 
+        let field_ref = dot_expr.field_ref();
+        if !self.ctx.msl && field_ref.containing_module() != ty_adt.adt_item_module(self.ctx.db) {
+            return None;
+        }
+
+        let adt_item = ty_adt
+            .adt_item_loc
+            .to_ast::<ast::StructOrEnum>(self.ctx.db.upcast())?;
         let field_reference_name = dot_expr.field_ref().name_ref()?.as_string();
 
-        // todo: cannot resolve in outside of declared module
         // todo: tuple index fields
 
         let InFile {
@@ -450,7 +480,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ty_adt = self.ctx.resolve_ty_vars_if_possible(ty_adt)
         }
 
-        let named_fields = fields_owner.named_fields();
+        let named_fields = fields_owner.named_fields_map();
         for lit_field in struct_lit.fields() {
             let lit_field_name = lit_field.field_name();
             if lit_field_name.is_none() {
@@ -458,16 +488,12 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
             let lit_field_name = lit_field_name.unwrap();
 
-            let named_field = named_fields
-                .filter_fields_by_name(&lit_field_name)
-                .single_or_none();
+            let named_field = named_fields.get(&lit_field_name);
             let declared_field_ty = named_field
-                .and_then(|it| it.type_())
-                .map(|type_| {
+                .and_then(|it| {
                     self.ctx
                         .ty_lowering()
-                        .lower_type(type_.in_file(item_file_id))
-                        .substitute(&ty_adt.substitution)
+                        .lower_field(it.to_owned().in_file(item_file_id))
                 })
                 .unwrap_or(Ty::Unknown);
 
@@ -535,8 +561,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let mut param_tys = vec![];
 
         for lambda_param in lambda_expr.lambda_params() {
+            let file_id = self.ctx.file_id;
             let param_ty = match lambda_param.type_() {
-                Some(type_) => self.ctx.ty_lowering().lower_type(type_.in_file(self.ctx.file_id)),
+                Some(type_) => self.ctx.ty_lowering().lower_type(type_.in_file(file_id)),
                 None => Ty::new_ty_var(self.ctx),
             };
             self.ctx
@@ -554,7 +581,6 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let lambda_ty = Ty::Callable(lambda_call_ty);
         if let Some(expected_ty) = expected.ty(self.ctx) {
             // error if not TyCallable
-            dbg!(&expected_ty);
             self.ctx
                 .coerce_types(lambda_expr.node_or_token(), lambda_ty.clone(), expected_ty);
         }
@@ -601,9 +627,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let arg_ty_var = Ty::new_ty_var(self.ctx);
 
         let explicit_ty = vector_lit_expr.type_arg().map(|it| {
-            self.ctx
-                .ty_lowering()
-                .lower_type(it.type_().in_file(self.ctx.file_id))
+            let file_id = self.ctx.file_id;
+            self.ctx.ty_lowering().lower_type(it.type_().in_file(file_id))
         });
         if let Some(explicit_ty) = explicit_ty {
             let _ = self.ctx.combine_types(arg_ty_var.clone(), explicit_ty);
@@ -691,6 +716,19 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         Ty::Never
     }
 
+    fn infer_cast_expr(&mut self, cast_expr: &ast::CastExpr, expected: Expected) -> Ty {
+        self.infer_expr(&cast_expr.expr(), Expected::NoValue);
+        if let Some(type_) = cast_expr.type_() {
+            let file_id = self.ctx.file_id;
+            let ty = self.ctx.ty_lowering().lower_type(type_.in_file(file_id));
+            if let Some(expected_ty) = expected.ty(self.ctx) {
+                let _ = self.ctx.combine_types(expected_ty, ty.clone());
+            }
+            return ty;
+        }
+        Ty::Unknown
+    }
+
     fn infer_block_or_inline_expr(
         &mut self,
         block_or_inline_expr: &ast::BlockOrInlineExpr,
@@ -745,11 +783,21 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         Some(inner_ty)
     }
 
+    fn infer_is_expr(&mut self, is_expr: &ast::IsExpr) -> Ty {
+        let expr_ty = self.infer_expr(&is_expr.expr(), Expected::NoValue);
+        for path_type in is_expr.path_types() {
+            self.ctx
+                .resolve_path_cached(path_type.path(), Some(expr_ty.clone()));
+        }
+        Ty::Bool
+    }
+
     fn infer_bin_expr(&mut self, bin_expr: &ast::BinExpr) -> Option<Ty> {
         let (lhs, (_, op_kind), rhs) = bin_expr.unpack()?;
         match op_kind {
-            ast::BinaryOp::ArithOp(op) => Some(self.infer_arith_binary_expr(lhs, op, rhs, false)),
-            ast::BinaryOp::LogicOp(op) => Some(self.infer_logic_binary_expr(lhs, op, rhs)),
+            ast::BinaryOp::ArithOp(_) => Some(self.infer_arith_binary_expr(lhs, rhs, false)),
+            ast::BinaryOp::Assignment { .. } => Some(self.infer_arith_binary_expr(lhs, rhs, true)),
+            ast::BinaryOp::LogicOp(_) => Some(self.infer_logic_binary_expr(lhs, rhs)),
             ast::BinaryOp::CmpOp(op) => {
                 let ty = match op {
                     ast::CmpOp::Eq { .. } => self.infer_eq_binary_expr(&lhs, &rhs),
@@ -764,8 +812,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     fn infer_arith_binary_expr(
         &mut self,
         lhs: ast::Expr,
-        _op: ast::ArithOp,
-        rhs: ast::Expr,
+        rhs: Option<ast::Expr>,
         is_compound: bool,
     ) -> Ty {
         let mut is_error = false;
@@ -774,16 +821,18 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             // todo: report error
             is_error = true;
         }
-        let right_ty = self.infer_expr(&rhs, Expected::ExpectType(left_ty.clone()));
-        if !right_ty.supports_arithm_op() {
-            // todo: report error
-            is_error = true;
-        }
-        if !is_error {
-            let combined = self.ctx.combine_types(left_ty.clone(), right_ty);
-            if combined.is_err() {
+        if let Some(rhs) = rhs {
+            let right_ty = self.infer_expr(&rhs, Expected::ExpectType(left_ty.clone()));
+            if !right_ty.supports_arithm_op() {
                 // todo: report error
                 is_error = true;
+            }
+            if !is_error {
+                let combined = self.ctx.combine_types(left_ty.clone(), right_ty);
+                if combined.is_err() {
+                    // todo: report error
+                    is_error = true;
+                }
             }
         }
         if is_error {
@@ -793,40 +842,46 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         }
     }
 
-    fn infer_logic_binary_expr(&mut self, lhs: ast::Expr, _op: ast::LogicOp, rhs: ast::Expr) -> Ty {
+    fn infer_logic_binary_expr(&mut self, lhs: ast::Expr, rhs: Option<ast::Expr>) -> Ty {
         self.infer_expr_coerceable_to(&lhs, Ty::Bool);
-        self.infer_expr_coerceable_to(&rhs, Ty::Bool);
-        Ty::Bool
-    }
-
-    fn infer_eq_binary_expr(&mut self, lhs: &ast::Expr, rhs: &ast::Expr) -> Ty {
-        let left_ty = self.infer_expr(lhs, Expected::NoValue);
-        let left_ty = self.ctx.resolve_ty_vars_if_possible(left_ty);
-
-        let right_ty = self.infer_expr(rhs, Expected::NoValue);
-        let right_ty = self.ctx.resolve_ty_vars_if_possible(right_ty);
-
-        let combined = self.ctx.combine_types(left_ty, right_ty);
-        if combined.is_err() {
-            // todo: report error
+        if let Some(rhs) = rhs {
+            self.infer_expr_coerceable_to(&rhs, Ty::Bool);
         }
         Ty::Bool
     }
 
-    fn infer_ordering_binary_expr(&mut self, lhs: &ast::Expr, rhs: &ast::Expr) -> Ty {
+    fn infer_eq_binary_expr(&mut self, lhs: &ast::Expr, rhs: &Option<ast::Expr>) -> Ty {
+        let left_ty = self.infer_expr(lhs, Expected::NoValue);
+        let left_ty = self.ctx.resolve_ty_vars_if_possible(left_ty);
+
+        if let Some(rhs) = rhs {
+            let right_ty = self.infer_expr(rhs, Expected::NoValue);
+            let right_ty = self.ctx.resolve_ty_vars_if_possible(right_ty);
+
+            let combined = self.ctx.combine_types(left_ty, right_ty);
+            if combined.is_err() {
+                // todo: report error
+            }
+        }
+        Ty::Bool
+    }
+
+    fn infer_ordering_binary_expr(&mut self, lhs: &ast::Expr, rhs: &Option<ast::Expr>) -> Ty {
         let mut is_error = false;
         let left_ty = self.infer_expr(lhs, Expected::NoValue);
         if !left_ty.supports_ordering() {
             // todo: report error
             is_error = true;
         }
-        let right_ty = self.infer_expr(rhs, Expected::NoValue);
-        if !right_ty.supports_ordering() {
-            // todo: report error
-            is_error = true;
-        }
-        if !is_error {
-            self.ctx.coerce_types(rhs.node_or_token(), right_ty, left_ty);
+        if let Some(rhs) = rhs {
+            let right_ty = self.infer_expr(rhs, Expected::NoValue);
+            if !right_ty.supports_ordering() {
+                // todo: report error
+                is_error = true;
+            }
+            if !is_error {
+                self.ctx.coerce_types(rhs.node_or_token(), right_ty, left_ty);
+            }
         }
         Ty::Bool
     }

@@ -100,7 +100,7 @@ impl<'db> TypeRenderer<'db> {
     }
 
     fn render_ty_adt(&self, ty_adt: &TyAdt) -> String {
-        let item = ty_adt.adt_item.to_ast::<ast::StructOrEnum>(self.db).unwrap();
+        let item = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(self.db).unwrap();
         let item_fq_name = item
             .value
             .fq_name()

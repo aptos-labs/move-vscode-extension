@@ -23,10 +23,10 @@ use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::{TyInfer, TyVar};
 use crate::types::ty::type_param::TyTypeParameter;
-use crate::InFile;
 use base_db::SourceRootDatabase;
 use std::ops::Deref;
 use syntax::ast;
+use syntax::files::InFile;
 use vfs::FileId;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -65,6 +65,10 @@ impl Ty {
         Ty::Seq(TySequence::Vector(Box::new(item_ty)))
     }
 
+    pub fn new_ty_adt(item: InFile<ast::StructOrEnum>) -> Ty {
+        Ty::Adt(TyAdt::new(item))
+    }
+
     pub fn deref_all(&self) -> Ty {
         match self {
             Ty::Reference(ty_ref) => ty_ref.referenced().deref_all(),
@@ -83,7 +87,7 @@ impl Ty {
         let ty = self.deref_all();
         match ty {
             Ty::Adt(ty_adt) => {
-                let item = ty_adt.adt_item.to_ast::<ast::StructOrEnum>(db.upcast())?;
+                let item = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(db.upcast())?;
                 Some(item.map(|it| it.module()))
             }
             Ty::Seq(TySequence::Vector(_)) => {

@@ -1,15 +1,12 @@
 use crate::init_tracing_for_test;
 use ide::Analysis;
 use ide::test_utils::{get_marked_position_offset, get_marked_position_offset_with_data};
-use lang::FilePosition;
 use syntax::SyntaxKind::IDENT;
+use syntax::files::FilePosition;
 use syntax::{AstNode, SyntaxKind};
-use tracing::Level;
-use tracing::metadata::LevelFilter;
+use tracing_subscriber::Layer;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
-use tracing_subscriber::{Layer, Registry};
-use tracing_tree::HierarchicalLayer;
 
 mod test_resolve_1;
 mod test_resolve_functions;

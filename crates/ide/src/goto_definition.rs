@@ -3,7 +3,7 @@ use crate::navigation_target::NavigationTarget;
 use ide_db::RootDatabase;
 use ide_db::helpers::pick_best_token;
 use lang::Semantics;
-use lang::files::FilePosition;
+use syntax::files::FilePosition;
 use syntax::{AstNode, SyntaxKind::*, T, algo, ast};
 
 // Feature: Go to Definition

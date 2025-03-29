@@ -3,14 +3,13 @@ use crate::context::CompletionContext;
 use crate::render::function::{FunctionKind, render_function};
 use crate::render::render_named_item;
 use base_db::Upcast;
-use lang::InFile;
-use lang::files::InFileInto;
 use lang::nameres::path_kind::path_kind;
 use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variants};
 use lang::nameres::scope::ScopeEntryListExt;
 use std::cell::RefCell;
 use syntax::SyntaxKind::FUN;
 use syntax::ast;
+use syntax::files::InFile;
 
 pub(crate) fn add_path_completions(
     completions: &RefCell<Completions>,

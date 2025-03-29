@@ -1,7 +1,7 @@
 use crate::init_tracing_for_test;
 use ide::Analysis;
 use ide::test_utils::get_marked_position_offset;
-use lang::FilePosition;
+use syntax::files::FilePosition;
 
 pub(crate) fn check_hover(source: &str, expected_docs: &str) {
     init_tracing_for_test();

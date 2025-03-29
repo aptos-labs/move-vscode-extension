@@ -67,9 +67,9 @@ impl ast::BinExpr {
         support::children(self.syntax()).nth(1)
     }
 
-    pub fn unpack(&self) -> Option<(ast::Expr, (SyntaxToken, BinaryOp), ast::Expr)> {
+    pub fn unpack(&self) -> Option<(ast::Expr, (SyntaxToken, BinaryOp), Option<ast::Expr>)> {
         #[rustfmt::skip]
-        let (Some(lhs), Some(op), Some(rhs)) =
+        let (Some(lhs), Some(op), rhs) =
             (self.lhs(), self.op_details(), self.rhs())
         else {
             return None;

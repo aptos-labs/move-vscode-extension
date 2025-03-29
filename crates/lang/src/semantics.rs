@@ -1,11 +1,12 @@
 mod source_to_def;
 
-use crate::InFile;
 use crate::db::HirDatabase;
+use crate::nameres::ResolveReference;
 use crate::nameres::scope::ScopeEntry;
 use crate::semantics::source_to_def::SourceToDefCache;
 use std::cell::RefCell;
 use std::{fmt, ops};
+use syntax::files::InFile;
 use syntax::{AstNode, SyntaxNode, SyntaxToken, ast};
 use vfs::FileId;
 

@@ -156,7 +156,7 @@ impl InferenceCtx<'_> {
     }
 
     fn combine_ty_adts(&mut self, ty1: &TyAdt, ty2: &TyAdt) -> CombineResult {
-        if ty1.adt_item != ty2.adt_item {
+        if ty1.adt_item_loc != ty2.adt_item_loc {
             return Err(TypeError::new(Ty::Adt(ty1.to_owned()), Ty::Adt(ty2.to_owned())));
         }
         self.combine_ty_pairs(ty1.clone().type_args, ty2.clone().type_args)

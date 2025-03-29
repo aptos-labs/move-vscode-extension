@@ -1,7 +1,7 @@
 use crate::Analysis;
 use crate::test_utils::{get_marked_position_offset, get_marked_position_offset_with_data};
-use lang::files::FilePosition;
 use syntax::SyntaxKind::IDENT;
+use syntax::files::FilePosition;
 use syntax::{AstNode, SyntaxKind};
 
 pub fn check_resolve(source: &str) {
