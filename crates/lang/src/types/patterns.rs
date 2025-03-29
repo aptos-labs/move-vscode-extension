@@ -139,7 +139,7 @@ pub enum BindingMode {
 
 fn apply_bm(ty: Ty, def_bm: BindingMode, _msl: bool) -> Ty {
     match def_bm {
-        BindByReference { mutability } => Ty::Reference(TyReference::new(ty, mutability)),
+        BindByReference { mutability } => Ty::new_reference(ty, mutability),
         BindByValue => ty,
     }
 }
@@ -163,7 +163,7 @@ fn strip_references(ty: Ty, def_bm: BindingMode) -> (Ty, BindingMode) {
                 mutability: ty_ref.mutability.to_owned(),
             },
         };
-        ty = ty_ref.referenced().to_owned();
+        ty = ty_ref.referenced();
     }
     (ty, bm)
 }

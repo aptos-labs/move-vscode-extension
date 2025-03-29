@@ -9,6 +9,12 @@ pub struct TyCallable {
     pub kind: CallKind,
 }
 
+impl From<TyCallable> for Ty {
+    fn from(value: TyCallable) -> Self {
+        Ty::Callable(value)
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum CallKind {
     Lambda,

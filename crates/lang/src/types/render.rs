@@ -34,7 +34,7 @@ impl<'db> TypeRenderer<'db> {
             Ty::Callable(ty_callable) => self.render_ty_callable(ty_callable),
             Ty::Reference(ty_ref) => {
                 let prefix = if ty_ref.is_mut() { "&mut " } else { "&" };
-                let inner = self.render(ty_ref.referenced());
+                let inner = self.render(&ty_ref.referenced());
                 format!("{}{}", prefix, inner)
             }
             Ty::Tuple(ty_tuple) => {
