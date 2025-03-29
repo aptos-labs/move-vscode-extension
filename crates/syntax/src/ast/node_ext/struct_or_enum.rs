@@ -1,5 +1,6 @@
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::ast::{FieldsOwner, NamedElement};
+use crate::files::InFile;
 use crate::{ast, AstNode};
 use std::collections::HashSet;
 
@@ -33,3 +34,9 @@ impl ast::StructOrEnum {
         }
     }
 }
+
+// impl InFile<ast::StructOrEnum> {
+//     pub fn module(&self) -> ast::Module {
+//         self.value.module()
+//     }
+// }

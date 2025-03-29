@@ -1,5 +1,5 @@
+use crate::{AstNode, SyntaxNode, TextRange, TextSize};
 use parser::SyntaxKind;
-use syntax::{AstNode, SyntaxNode, TextRange, TextSize};
 use vfs::FileId;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -49,6 +49,10 @@ impl<T> InFile<T> {
     pub fn and_then<F: FnOnce(T) -> Option<U>, U>(self, f: F) -> Option<InFile<U>> {
         f(self.value).map(|value| InFile::new(self.file_id, value))
     }
+
+    pub fn in_file_into<U: From<T>>(self) -> InFile<U> {
+        self.map(|it| it.into())
+    }
 }
 
 impl<T: AstNode> InFile<T> {
@@ -81,30 +85,29 @@ impl InFile<SyntaxNode> {
     }
 }
 
-// impl InFile<SyntaxToken> {
-//     pub fn kind(&self) -> SyntaxKind {
-//         self.value.kind()
-//     }
-// }
-
 impl<T: AstNode> InFile<T> {
     pub fn syntax_text(&self) -> String {
         self.value.syntax().text().to_string()
     }
 }
 
-pub trait InFileInto<U> {
-    fn in_file_into(self) -> InFile<U>;
-}
+// pub trait InFileInto<U> {
+//     fn in_file_into(self) -> InFile<U>;
+// }
 
-impl<T, U> InFileInto<U> for InFile<T>
-where
-    T: Into<U>,
-{
-    fn in_file_into(self) -> InFile<U> {
-        self.map(|it| it.into())
-    }
-}
+// impl<T> InFile<T> {
+//     pub fn in_file_into<U: From<T>>(self) -> InFile<U> {
+//         self.map(|it| it.into())
+//     }
+// }
+// impl<T, U> InFileInto<U> for InFile<T>
+// where
+//     U: From<T>,
+// {
+//     fn in_file_into(self) -> InFile<U> {
+//         self.map(|it| it.into())
+//     }
+// }
 
 pub trait InFileExt {
     type Node;

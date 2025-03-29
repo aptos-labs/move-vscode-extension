@@ -1,8 +1,8 @@
 use crate::context::CompletionContext;
 use crate::item::{CompletionItem, CompletionItemBuilder, CompletionItemKind};
 use ide_db::SymbolKind;
-use lang::InFile;
 use syntax::ast::NamedElement;
+use syntax::files::InFile;
 use syntax::{AstNode, SyntaxKind, ast};
 
 pub(crate) mod function;

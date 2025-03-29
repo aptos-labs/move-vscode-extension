@@ -5,8 +5,8 @@ use crate::config::CompletionConfig;
 use crate::context::{CompletionAnalysis, CompletionContext};
 use crate::item::CompletionItem;
 use ide_db::RootDatabase;
-use lang::files::FilePosition;
 use std::cell::RefCell;
+use syntax::files::FilePosition;
 
 pub mod completions;
 pub mod config;

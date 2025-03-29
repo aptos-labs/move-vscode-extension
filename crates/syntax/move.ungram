@@ -129,6 +129,7 @@ Pat =
     | TupleStructPat
     | RestPat
     | WildcardPat
+    | PathPat
 
 TuplePat =
     '(' pats:(Pat (',' Pat)* ','?)? ')'
@@ -143,11 +144,12 @@ StructPatFieldList =
     '{' fields:(StructPatField (',' StructPatField)* ','?)? '}'
 
 StructPatField =
-    (NameRef ':' Pat) | IdentPat | RestPat
+    (NameRef ':' Pat) | IdentPat | RestPat | WildcardPat
 
 WildcardPat = '_'
 RestPat = '..'
 IdentPat = Name
+PathPat = Path
 
 Type =
     PathType
@@ -200,6 +202,7 @@ ExprStmt =
 
 Expr =
     BinExpr
+    | IsExpr
     | Literal
     | ParenExpr
     | PathExpr
@@ -213,6 +216,8 @@ Expr =
     | AbortExpr
     | BlockExpr
     | IfExpr | WhileExpr | ForExpr | LoopExpr
+    | BreakExpr | ContinueExpr | ReturnExpr
+    | CastExpr
     | MatchExpr
 
 ForExpr =
@@ -280,6 +285,21 @@ Condition =
 LoopExpr =
     'loop' loop_body_expr:(BlockExpr | InlineExpr)
 
+BreakExpr =
+    'break' Label?
+
+ContinueExpr =
+    'continue' Label?
+
+ReturnExpr =
+    'return' Expr?
+
+CastExpr =
+    Expr 'as' Type
+
+Label =
+    'quote_ident'
+
 LambdaExpr =
     LambdaParamList (body_expr:Expr)?
 
@@ -288,6 +308,9 @@ LambdaParamList =
 
 LambdaParam =
     IdentPat (':' Type)?
+
+IsExpr =
+    Expr 'is' types:(Type ('|' Type)*)
 
 MatchExpr =
     'match' '(' Expr ')' MatchArmList

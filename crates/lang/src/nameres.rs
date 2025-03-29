@@ -1,14 +1,14 @@
-use crate::InFile;
 use crate::db::HirDatabase;
-use crate::files::InFileExt;
-use crate::loc::SyntaxLocFileExt;
+use crate::loc::{SyntaxLocFileExt, SyntaxLocNodeExt};
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt, VecExt};
-use crate::node_ext::struct_field_name::StructFieldNameExt;
+use parser::SyntaxKind::{FIELD_REF, STRUCT_LIT_FIELD, STRUCT_PAT_FIELD};
 use syntax::ast;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::{FieldsOwner, ReferenceElement};
+use syntax::files::{InFile, InFileExt};
 
 pub mod address;
+pub mod binding;
 mod blocks;
 pub mod fq_named_element;
 mod is_visible;
@@ -21,8 +21,13 @@ pub mod scope;
 mod scope_entries_owner;
 pub mod use_speck_entries;
 
-impl<T: ast::ReferenceElement> InFile<T> {
-    pub fn resolve(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
+pub trait ResolveReference {
+    fn resolve(&self, db: &dyn HirDatabase) -> Option<ScopeEntry>;
+    fn resolve_no_inf(&self, db: &dyn HirDatabase) -> Option<ScopeEntry>;
+}
+
+impl<T: ast::ReferenceElement> ResolveReference for InFile<T> {
+    fn resolve(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
         use syntax::SyntaxKind::*;
 
         let InFile {
@@ -36,14 +41,15 @@ impl<T: ast::ReferenceElement> InFile<T> {
             .and_then(|expr| expr.inference_ctx_owner().map(|it| it.in_file(*file_id)));
 
         if let Some(inference_ctx_owner) = opt_inference_ctx_owner {
-            let inference = inference_ctx_owner.inference(db);
+            let inference = db.inference_for_ctx_owner(inference_ctx_owner.loc());
 
             if let Some(method_or_path) = ref_element.cast_into::<ast::MethodOrPath>() {
-                let entry = inference.resolve_method_or_path(method_or_path.clone());
+                let entry = inference.get_resolve_method_or_path(method_or_path.clone());
                 if entry.is_none() {
-                    // temporary fallback till full infer implementation is ready
+                    // to support qualifier paths, as they're not cached
                     return method_or_path.cast_into::<ast::Path>().and_then(|path| {
-                        path_resolution::resolve_path(db, path.in_file(self.file_id)).single_or_none()
+                        path_resolution::resolve_path(db, path.in_file(self.file_id), None)
+                            .single_or_none()
                     });
                 }
                 return entry;
@@ -56,7 +62,7 @@ impl<T: ast::ReferenceElement> InFile<T> {
 
                     let struct_path = struct_pat_field.struct_pat().path();
                     let fields_owner = inference
-                        .resolve_method_or_path(struct_path.into())?
+                        .get_resolve_method_or_path(struct_path.into())?
                         .cast_into::<ast::AnyFieldsOwner>(db)?;
 
                     let field_name = struct_pat_field.field_name()?;
@@ -65,14 +71,14 @@ impl<T: ast::ReferenceElement> InFile<T> {
                         .single_or_none()
                 }
                 STRUCT_LIT_FIELD => {
-                    let struct_lit_fields = ref_element.cast_into::<ast::StructLitField>().unwrap();
+                    let struct_lit_field = ref_element.cast_into::<ast::StructLitField>().unwrap();
 
-                    let struct_path = struct_lit_fields.struct_lit().path();
+                    let struct_path = struct_lit_field.struct_lit().path();
                     let fields_owner = inference
-                        .resolve_method_or_path(struct_path.into())?
+                        .get_resolve_method_or_path(struct_path.into())?
                         .cast_into::<ast::AnyFieldsOwner>(db)?;
 
-                    let field_name = struct_lit_fields.field_name()?;
+                    let field_name = struct_lit_field.field_name()?;
                     get_named_field_entries(fields_owner)
                         .filter_by_name(field_name)
                         .single_or_none()
@@ -80,6 +86,10 @@ impl<T: ast::ReferenceElement> InFile<T> {
                 FIELD_REF => {
                     let field_ref = ref_element.cast_into::<ast::FieldRef>().unwrap();
                     inference.get_resolved_field(&field_ref)
+                }
+                IDENT_PAT => {
+                    let ident_pat = ref_element.cast_into::<ast::IdentPat>().unwrap();
+                    inference.get_resolved_ident_pat(&ident_pat)
                 }
                 _ => None,
             };
@@ -91,7 +101,7 @@ impl<T: ast::ReferenceElement> InFile<T> {
         self.resolve_no_inf(db)
     }
 
-    pub fn resolve_no_inf(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
+    fn resolve_no_inf(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
         // outside inference context
         let path = self.cast_ref::<ast::Path>()?;
         db.resolve_path(path.loc())

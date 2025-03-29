@@ -1,4 +1,3 @@
-use crate::InFile;
 use crate::nameres::address::{Address, NamedAddr, ValueAddr, resolve_named_address};
 use crate::nameres::namespaces::{
     ALL_NS, ENUMS, ENUMS_N_MODULES, IMPORTABLE_NS, MODULES, NAMES, NAMES_N_FUNCTIONS_N_VARIANTS,
@@ -241,7 +240,7 @@ fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
             // } else {
             //     TYPES_N_MODULES
             // }
-        },
+        }
         // use 0x1::foo::bar; | use 0x1::foo::{bar, baz}
         //               ^                     ^
         USE_SPECK => IMPORTABLE_NS,
@@ -283,14 +282,13 @@ fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
         //     || parent is MvSchemaRef -> SCHEMAS
 
         // todo:
-        STRUCT_LIT | STRUCT_PAT | TUPLE_STRUCT_PAT /*| CONST_PAT*/ => TYPES_N_ENUMS_N_ENUM_VARIANTS,
+        STRUCT_LIT | STRUCT_PAT | TUPLE_STRUCT_PAT | PATH_PAT => TYPES_N_ENUMS_N_ENUM_VARIANTS,
 
         // todo:
 
         //     parent is MvAccessSpecifier -> TYPES_N_ENUMS
         //     parent is MvAddressSpecifierArg -> NAMES
         //     parent is MvAddressSpecifierCallParam -> NAMES
-
         FRIEND => MODULES,
         MODULE_SPEC => MODULES,
 

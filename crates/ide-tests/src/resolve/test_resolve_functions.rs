@@ -595,6 +595,7 @@ fn test_type_params_used_in_call_expr() {
     check_resolve(
         r#"
 module 0x1::m {
+    fun call<T>() {}
     fun convert<T>() {
               //X
         call<T>()

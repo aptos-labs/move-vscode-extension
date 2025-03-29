@@ -1,6 +1,6 @@
-use crate::InFile;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use syntax::ast;
+use syntax::files::InFile;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct TyTypeParameter {

@@ -1,6 +1,5 @@
-use crate::InFile;
 use crate::db::HirDatabase;
-use crate::files::InFileExt;
+use crate::nameres::ResolveReference;
 use crate::nameres::namespaces::{Ns, TYPES_N_ENUMS};
 use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::ModuleLangExt;
@@ -8,6 +7,7 @@ use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::visibility::{Vis, VisLevel};
 use syntax::ast::{HasAttrs, HasVisibility, NamedItemScope, ReferenceElement};
+use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 
 pub fn is_visible_in_context(

@@ -1,8 +1,8 @@
-use crate::InFile;
 use crate::types::substitution::Substitution;
 use crate::types::ty::Ty;
 use crate::types::ty::type_param::TyTypeParameter;
 use syntax::ast;
+use syntax::files::InFile;
 
 pub trait GenericItemExt {
     fn ty_type_params(&self) -> Vec<TyTypeParameter>;

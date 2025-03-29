@@ -1,9 +1,8 @@
-use crate::InFile;
-use crate::files::{InFileExt, InFileVecExt};
 use crate::nameres::namespaces::Ns;
 use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryExt};
 use syntax::ast;
 use syntax::ast::HasItems;
+use syntax::files::{InFile, InFileExt, InFileVecExt};
 
 pub trait ModuleResolutionExt {
     fn member_entries(&self) -> Vec<ScopeEntry>;

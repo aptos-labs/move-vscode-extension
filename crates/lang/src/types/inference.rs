@@ -2,9 +2,8 @@ pub(crate) mod ast_walker;
 pub(crate) mod combine_types;
 pub(crate) mod inference_result;
 
-use crate::InFile;
 use crate::db::HirDatabase;
-use crate::files::{InFileExt, InFileInto};
+use crate::nameres::binding::resolve_ident_pat_with_expected_type;
 use crate::nameres::path_resolution;
 use crate::nameres::scope::{ScopeEntry, VecExt};
 use crate::types::fold::{Fallback, FullTyVarResolver, TyVarResolver, TypeFoldable};
@@ -16,9 +15,12 @@ use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
 use crate::types::unification::UnificationTable;
 use parser::SyntaxKind;
+use parser::SyntaxKind::VARIANT;
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::ops::Deref;
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
+use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 use vfs::FileId;
 
@@ -32,19 +34,21 @@ pub struct InferenceCtx<'db> {
     pub int_table: UnificationTable<TyIntVar>,
 
     pub pat_types: HashMap<ast::Pat, Ty>,
+    pub pat_field_types: HashMap<ast::StructPatField, Ty>,
     pub expr_types: HashMap<ast::Expr, Ty>,
     pub expected_expr_types: HashMap<ast::Expr, Ty>,
 
     pub resolved_paths: HashMap<ast::Path, Vec<ScopeEntry>>,
     pub resolved_method_calls: HashMap<ast::MethodCallExpr, Option<ScopeEntry>>,
     pub resolved_fields: HashMap<ast::FieldRef, Option<ScopeEntry>>,
+    pub resolved_ident_pats: HashMap<ast::IdentPat, Option<ScopeEntry>>,
 
     pub lambda_exprs: Vec<ast::LambdaExpr>,
     pub lambda_expr_types: HashMap<ast::LambdaExpr, TyCallable>,
 }
 
-impl<'a> InferenceCtx<'a> {
-    pub fn new(db: &'a dyn HirDatabase, file_id: FileId) -> Self {
+impl<'db> InferenceCtx<'db> {
+    pub fn new(db: &'db dyn HirDatabase, file_id: FileId) -> Self {
         InferenceCtx {
             db,
             file_id,
@@ -55,9 +59,11 @@ impl<'a> InferenceCtx<'a> {
             expr_types: HashMap::new(),
             expected_expr_types: HashMap::new(),
             pat_types: HashMap::new(),
+            pat_field_types: HashMap::new(),
             resolved_paths: HashMap::new(),
             resolved_method_calls: HashMap::new(),
             resolved_fields: HashMap::new(),
+            resolved_ident_pats: HashMap::new(),
             lambda_exprs: vec![],
             lambda_expr_types: HashMap::new(),
         }
@@ -66,14 +72,46 @@ impl<'a> InferenceCtx<'a> {
     pub fn resolve_path_cached(
         &mut self,
         path: ast::Path,
-        _expected_ty: Option<Ty>,
+        expected_ty: Option<Ty>,
     ) -> Option<InFile<ast::AnyNamedElement>> {
-        let entries = path_resolution::resolve_path(self.db, path.clone().in_file(self.file_id));
+        let entries =
+            path_resolution::resolve_path(self.db, path.clone().in_file(self.file_id), expected_ty)
+                .into_iter()
+                .filter(|entry| {
+                    // filter out bindings which are resolvable to enum variants
+                    if let Some(ident_pat) = entry.clone().cast_into::<ast::IdentPat>(self.db) {
+                        let res = self
+                            .resolved_ident_pats
+                            .get(&ident_pat.value)
+                            .and_then(|it| it.clone());
+                        if res.map(|it| it.node_loc.kind()) == Some(VARIANT) {
+                            return false;
+                        }
+                    };
+                    true
+                })
+                .collect::<Vec<_>>();
+
         self.resolved_paths.insert(path, entries.clone());
 
         entries
             .single_or_none()
             .and_then(|it| it.cast_into::<ast::AnyNamedElement>(self.db))
+    }
+
+    pub fn resolve_ident_pat_cached(
+        &mut self,
+        ident_pat: ast::IdentPat,
+        expected_type: Option<Ty>,
+    ) -> Option<InFile<ast::AnyNamedElement>> {
+        let entry = resolve_ident_pat_with_expected_type(
+            self.db,
+            ident_pat.clone().in_file(self.file_id),
+            expected_type,
+        );
+        self.resolved_ident_pats.insert(ident_pat, entry.clone());
+
+        entry.and_then(|it| it.cast_into::<ast::AnyNamedElement>(self.db))
     }
 
     fn instantiate_call_expr_path(&mut self, call_expr: &ast::CallExpr) -> TyCallable {
@@ -103,7 +141,7 @@ impl<'a> InferenceCtx<'a> {
     }
 
     pub fn instantiate_path_for_fun(
-        &self,
+        &mut self,
         method_or_path: ast::MethodOrPath,
         fun: InFile<ast::Fun>,
     ) -> TyCallable {
@@ -115,7 +153,7 @@ impl<'a> InferenceCtx<'a> {
     }
 
     pub fn instantiate_path(
-        &self,
+        &mut self,
         method_or_path: ast::MethodOrPath,
         generic_item: InFile<ast::AnyGenericItem>,
     ) -> Ty {
@@ -130,8 +168,8 @@ impl<'a> InferenceCtx<'a> {
         path_ty
     }
 
-    pub fn ty_lowering(&self) -> TyLowering {
-        TyLowering::new(self.db)
+    pub fn ty_lowering<'ctx>(&'ctx mut self) -> TyLowering<'ctx, 'db> {
+        TyLowering::new(self.db, self)
     }
 
     pub fn resolve_ty_infer(&self, ty_infer: &TyInfer) -> Ty {
@@ -209,6 +247,9 @@ impl<'a> InferenceCtx<'a> {
     }
 
     pub fn get_binding_type(&self, ident_pat: ast::IdentPat) -> Option<Ty> {
+        if let Some(pat_field) = ident_pat.syntax().parent_of_type::<ast::StructPatField>() {
+            return self.pat_field_types.get(&pat_field).map(|it| it.to_owned());
+        }
         self.pat_types.get(&ident_pat.into()).map(|it| it.to_owned())
     }
 }

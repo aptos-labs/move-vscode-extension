@@ -2,14 +2,13 @@ use crate::context::CompletionContext;
 use crate::item::CompletionItemBuilder;
 use crate::render::render_named_item;
 use base_db::{SourceRootDatabase, Upcast};
-use lang::InFile;
-use lang::files::InFileInto;
 use lang::types::lowering::TyLowering;
 use lang::types::substitution::{ApplySubstitution, Substitution};
 use lang::types::ty::Ty;
 use lang::types::ty::ty_callable::TyCallable;
+use syntax::ast;
 use syntax::ast::NamedElement;
-use syntax::{AstNode, ast};
+use syntax::files::InFile;
 
 pub(crate) fn render_function(
     ctx: &CompletionContext<'_>,
@@ -19,7 +18,7 @@ pub(crate) fn render_function(
 ) -> CompletionItemBuilder {
     let mut completion_item = render_named_item(ctx, function.clone().in_file_into());
 
-    let ty_lowering = TyLowering::new(ctx.db);
+    let ty_lowering = TyLowering::new_no_inf(ctx.db);
     let mut call_ty = ty_lowering.lower_function(function.clone());
     if let Some(apply_subst) = apply_subst {
         call_ty = call_ty.substitute(&apply_subst);

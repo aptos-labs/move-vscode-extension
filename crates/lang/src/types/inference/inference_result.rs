@@ -19,6 +19,7 @@ pub struct InferenceResult {
     resolved_paths: HashMap<loc::SyntaxLoc, Vec<ScopeEntry>>,
     resolved_method_calls: HashMap<loc::SyntaxLoc, Option<ScopeEntry>>,
     resolved_fields: HashMap<loc::SyntaxLoc, Option<ScopeEntry>>,
+    resolved_ident_pats: HashMap<loc::SyntaxLoc, Option<ScopeEntry>>,
 }
 
 impl InferenceResult {
@@ -40,6 +41,7 @@ impl InferenceResult {
         let resolved_paths = keys_into_syntax_loc(ctx.resolved_paths, file_id);
         let resolved_method_calls = keys_into_syntax_loc(ctx.resolved_method_calls, file_id);
         let resolved_fields = keys_into_syntax_loc(ctx.resolved_fields, file_id);
+        let resolved_ident_pats = keys_into_syntax_loc(ctx.resolved_ident_pats, file_id);
 
         InferenceResult {
             file_id: ctx.file_id,
@@ -47,6 +49,7 @@ impl InferenceResult {
             resolved_paths,
             resolved_method_calls,
             resolved_fields,
+            resolved_ident_pats,
         }
     }
 
@@ -73,18 +76,25 @@ impl InferenceResult {
         self.expr_types.get(&expr_loc).map(|it| it.to_owned())
     }
 
-    pub fn get_resolved_field(&self, field_ref: &ast::FieldRef) -> Option<ScopeEntry> {
-        let loc = field_ref.loc(self.file_id);
-        self.resolved_fields.get(&loc).and_then(|field| field.to_owned())
-    }
-
-    pub fn resolve_method_or_path(&self, method_or_path: ast::MethodOrPath) -> Option<ScopeEntry> {
+    pub fn get_resolve_method_or_path(&self, method_or_path: ast::MethodOrPath) -> Option<ScopeEntry> {
         match method_or_path {
             ast::MethodOrPath::MethodCallExpr(method_call_expr) => {
                 self.get_resolved_method_call(&method_call_expr)
             }
             ast::MethodOrPath::Path(path) => self.get_resolved_path(&path),
         }
+    }
+
+    pub fn get_resolved_field(&self, field_ref: &ast::FieldRef) -> Option<ScopeEntry> {
+        let loc = field_ref.loc(self.file_id);
+        self.resolved_fields.get(&loc).and_then(|field| field.to_owned())
+    }
+
+    pub fn get_resolved_ident_pat(&self, ident_pat: &ast::IdentPat) -> Option<ScopeEntry> {
+        let loc = ident_pat.loc(self.file_id);
+        self.resolved_ident_pats
+            .get(&loc)
+            .and_then(|ident_pat| ident_pat.to_owned())
     }
 
     fn get_resolved_path(&self, path: &ast::Path) -> Option<ScopeEntry> {

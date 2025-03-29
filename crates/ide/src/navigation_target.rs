@@ -1,9 +1,9 @@
 use base_db::Upcast;
 use ide_db::{RootDatabase, SymbolKind, ast_kind_to_symbol_kind};
-use lang::files::InFile;
 use lang::nameres::scope::ScopeEntry;
 use std::fmt;
 use syntax::ast::NamedElement;
+use syntax::files::InFile;
 use syntax::{AstNode, SmolStr, TextRange, ast};
 use vfs::FileId;
 

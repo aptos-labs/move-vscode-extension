@@ -16,6 +16,7 @@ smol_str = { workspace = true }
 rustc-hash = { workspace = true }
 
 stdx = { workspace = true }
+vfs = { workspace = true }
 
 parser = { path = "../parser" }
 

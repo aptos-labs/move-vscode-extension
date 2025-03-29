@@ -1,14 +1,14 @@
-use crate::InFile;
 use crate::db::HirDatabase;
-use crate::files::InFileVecExt;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::nameres::is_visible::is_visible_in_context;
 use crate::nameres::namespaces::{Ns, NsSet, named_item_ns};
+use crate::types::ty::Ty;
 use std::fmt;
 use std::fmt::Formatter;
 use stdx::itertools::Itertools;
 use syntax::ast;
 use syntax::ast::{NamedItemScope, ReferenceElement};
+use syntax::files::{InFile, InFileVecExt};
 use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]
@@ -100,6 +100,8 @@ pub trait ScopeEntryListExt {
         db: &dyn HirDatabase,
         context: &InFile<impl ReferenceElement>,
     ) -> Vec<ScopeEntry>;
+    fn filter_by_expected_type(self, db: &dyn HirDatabase, expected_type: Option<Ty>)
+    -> Vec<ScopeEntry>;
 }
 
 impl ScopeEntryListExt for Vec<ScopeEntry> {
@@ -123,7 +125,24 @@ impl ScopeEntryListExt for Vec<ScopeEntry> {
             .collect()
     }
 
-    // fn single_or_none(self) -> Option<ScopeEntry> {
-    //     self.into_iter().exactly_one().ok()
-    // }
+    fn filter_by_expected_type(
+        self,
+        db: &dyn HirDatabase,
+        expected_type: Option<Ty>,
+    ) -> Vec<ScopeEntry> {
+        self.into_iter()
+            .filter_map(|entry| {
+                let item = entry.clone().cast_into::<ast::AnyNamedElement>(db)?;
+                let Some(variant_item) = item.cast::<ast::Variant>() else {
+                    return Some(entry);
+                };
+                // if expected type is unknown, or not a enum, then we cannot infer enum variants
+                let ty_adt = expected_type.clone()?.deref_all().into_ty_adt()?;
+                let expected_enum = ty_adt.adt_item(db)?.value.enum_()?;
+
+                let is_valid_item = expected_enum.variants().contains(&variant_item.value);
+                is_valid_item.then_some(entry)
+            })
+            .collect()
+    }
 }

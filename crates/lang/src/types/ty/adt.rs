@@ -1,14 +1,15 @@
-use crate::InFile;
+use crate::db::HirDatabase;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::has_type_params_ext::GenericItemExt;
 use crate::types::substitution::Substitution;
 use crate::types::ty::Ty;
 use syntax::ast;
+use syntax::files::InFile;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TyAdt {
-    pub adt_item: SyntaxLoc,
+    pub adt_item_loc: SyntaxLoc,
     pub substitution: Substitution,
     pub type_args: Vec<Ty>,
 }
@@ -16,7 +17,7 @@ pub struct TyAdt {
 impl TyAdt {
     pub fn new(item: InFile<ast::StructOrEnum>) -> Self {
         TyAdt {
-            adt_item: item.loc(),
+            adt_item_loc: item.loc(),
             substitution: item.ty_type_params_subst(),
             type_args: item
                 .ty_type_params()
@@ -25,12 +26,22 @@ impl TyAdt {
                 .collect(),
         }
     }
+
+    pub fn adt_item(&self, db: &dyn HirDatabase) -> Option<InFile<ast::StructOrEnum>> {
+        self.adt_item_loc.to_ast::<ast::StructOrEnum>(db.upcast())
+    }
+
+    pub fn adt_item_module(&self, db: &dyn HirDatabase) -> Option<ast::Module> {
+        let adt_item = self.adt_item(db)?;
+        let m = adt_item.value.module();
+        Some(m)
+    }
 }
 
 impl TypeFoldable<TyAdt> for TyAdt {
     fn deep_fold_with(self, folder: impl TypeFolder) -> TyAdt {
         TyAdt {
-            adt_item: self.adt_item,
+            adt_item_loc: self.adt_item_loc,
             substitution: self.substitution.deep_fold_with(folder.clone()),
             type_args: folder.fold_tys(self.type_args),
         }

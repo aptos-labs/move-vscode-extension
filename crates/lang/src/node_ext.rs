@@ -1,5 +1,4 @@
 pub mod has_item_list;
-pub mod struct_field_name;
 
 use crate::nameres::address::{Address, NamedAddr, ValueAddr};
 use syntax::ast;

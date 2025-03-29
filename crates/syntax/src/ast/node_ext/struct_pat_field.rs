@@ -1,5 +1,4 @@
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
-use crate::ast::NamedElement;
 use crate::{ast, AstNode};
 
 impl ast::StructPatField {
@@ -9,21 +8,32 @@ impl ast::StructPatField {
             .expect("required by parser")
     }
 
-    // pub fn field_name(&self) -> Option<String> {
-    //     if let Some(name_ref) = self.name_ref() {
-    //         return Some(name_ref.ident_string());
-    //     }
-    //     if let Some(ident_pat) = self.ident_pat() {
-    //         return ident_pat.name().map(|it| it.as_string());
-    //     }
-    //     None
-    // }
+    pub fn kind(&self) -> PatFieldKind {
+        let ident_pat = self.ident_pat();
+        if let (Some(pat), Some(name_ref)) = (self.pat(), self.name_ref()) {
+            return PatFieldKind::Full { name_ref, pat };
+        }
+        if let Some(ident_pat) = self.ident_pat() {
+            return PatFieldKind::Shorthand { ident_pat };
+        }
+        if let Some(rest_pat) = self.rest_pat() {
+            return PatFieldKind::Rest;
+        }
+        PatFieldKind::Invalid
+    }
+
+    pub fn field_name(&self) -> Option<String> {
+        match self.kind() {
+            PatFieldKind::Full { name_ref, .. } => Some(name_ref.as_string()),
+            PatFieldKind::Shorthand { ident_pat } => Some(ident_pat.as_string()),
+            _ => None,
+        }
+    }
 }
 
-impl ast::StructLitField {
-    pub fn struct_lit(&self) -> ast::StructLit {
-        self.syntax()
-            .ancestor_of_type::<ast::StructLit>(true)
-            .expect("required by parser")
-    }
+pub enum PatFieldKind {
+    Full { name_ref: ast::NameRef, pat: ast::Pat },
+    Shorthand { ident_pat: ast::IdentPat },
+    Rest,
+    Invalid,
 }

@@ -1,7 +1,6 @@
-use crate::InFile;
 use crate::db::HirDatabase;
-use crate::files::{InFileExt, OptionInFileExt};
 use crate::loc::SyntaxLocFileExt;
+use crate::nameres::ResolveReference;
 use crate::nameres::name_resolution::{
     get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
@@ -11,13 +10,44 @@ use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt};
 use crate::types::inference::InferenceCtx;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
+use crate::types::ty::adt::TyAdt;
 use base_db::input::SourceRootId;
 use parser::SyntaxKind::CALL_EXPR;
 use syntax::ast::HasItems;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::OptionSyntaxNodeExt;
+use syntax::files::{InFile, InFileExt, OptionInFileExt};
 use syntax::{AstNode, ast};
 use vfs::FileId;
+
+pub fn get_path_resolve_variants_with_expected_type(
+    db: &dyn HirDatabase,
+    ctx: &ResolutionContext,
+    path_kind: PathKind,
+    expected_type: Option<Ty>,
+) -> Vec<ScopeEntry> {
+    let mut expected_type = expected_type;
+
+    // if path qualifier is enum, then the expected type is that enum
+    if let PathKind::Qualified { qualifier, kind, .. } = path_kind.clone() {
+        match kind {
+            QualifiedKind::ModuleItemOrEnumVariant | QualifiedKind::FQModuleItem => {
+                let enum_item = qualifier
+                    .reference()
+                    .in_file(ctx.path.file_id)
+                    .resolve_no_inf(db)
+                    .and_then(|it| it.cast_into::<ast::Enum>(db));
+                if let Some(enum_item) = enum_item {
+                    expected_type = Some(Ty::new_ty_adt(enum_item.in_file_into()));
+                }
+            }
+            _ => (),
+        }
+    }
+
+    let path_entries = get_path_resolve_variants(db, ctx, path_kind);
+    path_entries.filter_by_expected_type(db, expected_type)
+}
 
 pub fn get_path_resolve_variants(
     db: &dyn HirDatabase,
@@ -74,7 +104,7 @@ pub fn get_method_resolve_variants(
     let function_entries = receiver_item_module
         .non_test_functions()
         .to_in_file_entries(file_id);
-    let ty_lowering = TyLowering::new(db);
+    let ty_lowering = TyLowering::new_no_inf(db);
     let mut method_entries = vec![];
     for function_entry in function_entries {
         let Some(InFile { file_id, value: f }) = function_entry.node_loc.to_ast::<ast::Fun>(db.upcast())
@@ -103,7 +133,11 @@ pub fn get_method_resolve_variants(
     level = "debug",
     skip(db, path),
     fields(path = ?path.syntax_text()))]
-pub fn resolve_path(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry> {
+pub fn resolve_path(
+    db: &dyn HirDatabase,
+    path: InFile<ast::Path>,
+    expected_type: Option<Ty>,
+) -> Vec<ScopeEntry> {
     let Some(path_name) = path.value.reference_name() else {
         return vec![];
     };
@@ -116,7 +150,7 @@ pub fn resolve_path(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Vec<ScopeE
         path,
         is_completion: false,
     };
-    let entries = get_path_resolve_variants(db, &ctx, path_kind);
+    let entries = get_path_resolve_variants_with_expected_type(db, &ctx, path_kind, expected_type);
     tracing::debug!(?entries);
 
     let entries_filtered_by_name = entries.filter_by_name(path_name.clone());

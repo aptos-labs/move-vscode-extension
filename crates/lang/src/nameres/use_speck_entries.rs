@@ -1,10 +1,11 @@
-use crate::InFile;
 use crate::db::HirDatabase;
+use crate::nameres::ResolveReference;
 use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::has_item_list::HasUseStmtsInFileExt;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::{NamedElement, NamedItemScope};
+use syntax::files::InFile;
 use syntax::{AstNode, ast};
 use vfs::FileId;
 

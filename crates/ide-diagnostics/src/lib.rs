@@ -2,7 +2,7 @@
 
 use base_db::SourceDatabase;
 use ide_db::{RootDatabase, Severity};
-use lang::FileRange;
+use syntax::files::FileRange;
 use vfs::FileId;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
