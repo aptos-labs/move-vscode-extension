@@ -138,11 +138,11 @@ impl InferenceCtx<'_> {
         let is_mut_compat = from_ref.is_mut() || !to_ref.is_mut();
         if !is_mut_compat {
             return Err(TypeError::new(
-                Ty::Reference(from_ref.to_owned()),
-                Ty::Reference(to_ref.to_owned()),
+                from_ref.to_owned().into(),
+                to_ref.to_owned().into(),
             ));
         }
-        self.combine_types(from_ref.referenced().to_owned(), to_ref.referenced().to_owned())
+        self.combine_types(from_ref.referenced(), to_ref.referenced())
     }
 
     fn combine_ty_callables(&mut self, ty1: &TyCallable, ty2: &TyCallable) -> CombineResult {
@@ -200,10 +200,7 @@ impl InferenceCtx<'_> {
                     match (left_ty.clone(), right_ty) {
                         (Ty::Reference(left_ty_ref), Ty::Reference(right_ty_ref)) => {
                             let min_mut = left_ty_ref.mutability.intersect(right_ty_ref.mutability);
-                            Ty::Reference(TyReference::new(
-                                left_ty_ref.referenced.deref_all().to_owned(),
-                                min_mut,
-                            ))
+                            Ty::new_reference(left_ty_ref.referenced().deref_all(), min_mut)
                         }
                         _ => left_ty,
                     }

@@ -68,7 +68,7 @@ impl<'ctx, 'db> TyLowering<'ctx, 'db> {
                     .type_()
                     .map(|inner_type| self.lower_type(inner_type.in_file(file_id)))
                     .unwrap_or(Ty::Unknown);
-                Ty::Reference(TyReference::new(inner_ty, Mutability::new(is_mut)))
+                Ty::new_reference(inner_ty, Mutability::new(is_mut))
             }
             ast::Type::TupleType(tuple_type) => {
                 let inner_tys = tuple_type

@@ -746,33 +746,22 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let inner_expected_ty = expected
             .ty(self.ctx)
             .and_then(|ty| ty.into_ty_ref())
-            .map(|ty_ref| ty_ref.referenced.deref().to_owned());
+            .map(|ty_ref| ty_ref.referenced());
 
         let inner_ty = self.infer_expr(&inner_expr, Expected::from_ty(inner_expected_ty));
         let mutability = Mutability::new(borrow_expr.is_mut());
 
-        Some(Ty::Reference(TyReference::new(inner_ty, mutability)))
+        Some(Ty::new_reference(inner_ty, mutability))
     }
 
     fn infer_deref_expr(&mut self, deref_expr: &ast::DerefExpr, expected: Expected) -> Option<Ty> {
         let inner_expr = deref_expr.expr()?;
-
-        // make mutable reference to make sure it's compatible
-        // let expected_ref = expected.map(|it| Ty::Reference(TyReference::new(it, Mutability::Mutable)));
-
-        // let expected_with_deref = match expected {
-        //     Expected::NoValue => expected,
-        //     Expected::ExpectType(ty) => match ty {
-        //         Ty::Reference(ty_ref) => Expected::ExpectType(ty_ref.referenced.deref().to_owned()),
-        //         _ => Expected::ExpectType(Ty::Unknown),
-        //     },
-        // };
         let inner_ty = self.infer_expr(&inner_expr, Expected::NoValue);
 
         // todo: error
         let inner_ty_ref = inner_ty.into_ty_ref()?;
 
-        Some(inner_ty_ref.referenced.deref().to_owned())
+        Some(inner_ty_ref.referenced())
     }
 
     fn infer_resource_expr(&mut self, resource_expr: &ast::ResourceExpr) -> Option<Ty> {

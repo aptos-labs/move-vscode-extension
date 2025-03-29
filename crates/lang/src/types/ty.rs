@@ -18,7 +18,7 @@ use crate::types::render::TypeRenderer;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::range_like::TySequence;
-use crate::types::ty::reference::TyReference;
+use crate::types::ty::reference::{Mutability, TyReference};
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::{TyInfer, TyVar};
@@ -69,6 +69,10 @@ impl Ty {
         Ty::Adt(TyAdt::new(item))
     }
 
+    pub fn new_reference(inner_ty: Ty, mutability: Mutability) -> Ty {
+        Ty::Reference(TyReference::new(inner_ty, mutability))
+    }
+
     pub fn deref_all(&self) -> Ty {
         match self {
             Ty::Reference(ty_ref) => ty_ref.referenced().deref_all(),
@@ -76,12 +80,12 @@ impl Ty {
         }
     }
 
-    pub fn deref_once(&self) -> Ty {
-        match self {
-            Ty::Reference(ty_ref) => ty_ref.referenced().to_owned(),
-            _ => self.to_owned(),
-        }
-    }
+    // pub fn deref_once(&self) -> Ty {
+    //     match self {
+    //         Ty::Reference(ty_ref) => ty_ref.referenced(),
+    //         _ => self.to_owned(),
+    //     }
+    // }
 
     pub fn item_module(&self, db: &dyn HirDatabase, file_id: FileId) -> Option<InFile<ast::Module>> {
         let ty = self.deref_all();
@@ -148,7 +152,7 @@ impl TypeFoldable<Ty> for Ty {
             Ty::Adt(ty_adt) => Ty::Adt(ty_adt.deep_fold_with(folder)),
             Ty::Seq(ty_seq) => Ty::Seq(ty_seq.deep_fold_with(folder)),
             Ty::Reference(ty_ref) => Ty::Reference(TyReference::new(
-                folder.fold_ty(ty_ref.referenced().to_owned()),
+                folder.fold_ty(ty_ref.referenced()),
                 ty_ref.mutability,
             )),
             Ty::Callable(ty_callable) => Ty::Callable(ty_callable.deep_fold_with(folder)),
@@ -160,7 +164,7 @@ impl TypeFoldable<Ty> for Ty {
         match self {
             Ty::Adt(ty_adt) => ty_adt.deep_visit_with(visitor),
             Ty::Seq(ty_seq) => ty_seq.deep_visit_with(visitor),
-            Ty::Reference(ty_ref) => visitor.visit_ty(ty_ref.referenced()),
+            Ty::Reference(ty_ref) => visitor.visit_ty(&ty_ref.referenced()),
             Ty::Callable(ty_callable) => ty_callable.deep_visit_with(visitor),
             _ => false,
         }

@@ -1,10 +1,17 @@
 use crate::types::inference::InferenceCtx;
 use crate::types::ty::Ty;
+use std::ops::Deref;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TyReference {
-    pub referenced: Box<Ty>,
+    referenced: Box<Ty>,
     pub mutability: Mutability,
+}
+
+impl From<TyReference> for Ty {
+    fn from(value: TyReference) -> Self {
+        Ty::Reference(value)
+    }
 }
 
 impl TyReference {
@@ -15,8 +22,8 @@ impl TyReference {
         }
     }
 
-    pub fn referenced(&self) -> &Ty {
-        self.referenced.as_ref()
+    pub fn referenced(&self) -> Ty {
+        self.referenced.deref().to_owned()
     }
 
     pub fn is_mut(&self) -> bool {
@@ -47,22 +54,18 @@ pub fn autoborrow(ty: Ty, into_ty: &Ty) -> Option<Ty> {
                         (Mutability::Immutable, Mutability::Mutable) => None,
                         // &mut -> &
                         (Mutability::Mutable, Mutability::Immutable) => {
-                            Some(reference(ty_ref.referenced().to_owned(), Mutability::Immutable))
+                            Some(Ty::new_reference(ty_ref.referenced(), Mutability::Immutable))
                         }
                         (Mutability::Immutable, Mutability::Immutable) => {
                             Some(Ty::Reference(ty_ref.to_owned()))
                         }
                     }
                 }
-                _ => Some(reference(ty, into_ty_ref.mutability)),
+                _ => Some(Ty::new_reference(ty, into_ty_ref.mutability)),
             }
         }
         _ => Some(ty),
     }
-}
-
-fn reference(ty: Ty, mutability: Mutability) -> Ty {
-    Ty::Reference(TyReference::new(ty, mutability))
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
