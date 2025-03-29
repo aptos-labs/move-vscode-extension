@@ -10,7 +10,7 @@ pub trait GenericItemExt {
     fn ty_vars_subst(&self) -> Substitution;
 }
 
-impl<T: ast::GenericItem> GenericItemExt for InFile<T> {
+impl<T: ast::GenericElement> GenericItemExt for InFile<T> {
     fn ty_type_params(&self) -> Vec<TyTypeParameter> {
         self.value
             .type_params()

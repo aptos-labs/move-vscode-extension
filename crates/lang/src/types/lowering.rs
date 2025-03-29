@@ -3,7 +3,6 @@ mod type_args;
 use crate::db::HirDatabase;
 use crate::nameres::ResolveReference;
 use crate::nameres::scope::{ScopeEntry, ScopeEntryExt};
-use crate::types::expectation::Expected;
 use crate::types::inference::InferenceCtx;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
@@ -15,7 +14,7 @@ use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::type_param::TyTypeParameter;
 use std::cell::RefCell;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, SyntaxNode, ast};
+use syntax::{AstNode, ast};
 
 pub enum PathResolver<'ctx, 'db> {
     Inference {
@@ -51,29 +50,16 @@ impl<'ctx, 'db> TyLowering<'ctx, 'db> {
             ast::Type::PathType(path_type) => {
                 let path = path_type.path().in_file(file_id);
                 let named_item = self.resolve_path(path.clone());
-                // let named_item = path.resolve_no_inf(self.db);
                 match named_item {
                     None => {
                         // can be primitive type
                         self.lower_primitive_type(path).unwrap_or(Ty::Unknown)
                     }
-                    Some(named_item_entry) => {
-                        named_item_entry
-                            .node_loc
-                            .to_ast::<ast::AnyNamedElement>(self.db.upcast())
-                            .map(|named_item| {
-                                self.lower_path(
-                                    path.in_file_into().value,
-                                    named_item.map(|it| it.syntax().to_owned()),
-                                )
-                            })
-                            .unwrap_or(Ty::Unknown)
-                        //
-                        // let named_item = named_item_entry
-                        //     .node_loc
-                        //     .to_ast::<ast::AnyNamedElement>(self.db.upcast())
-                        //     .unwrap();
-                    }
+                    Some(named_item_entry) => named_item_entry
+                        .node_loc
+                        .to_ast::<ast::AnyNamedElement>(self.db.upcast())
+                        .map(|named_item| self.lower_path(path.value.into(), named_item.in_file_into()))
+                        .unwrap_or(Ty::Unknown),
                 }
             }
             ast::Type::RefType(ref_type) => {
@@ -108,25 +94,29 @@ impl<'ctx, 'db> TyLowering<'ctx, 'db> {
         }
     }
 
-    pub fn lower_path(&self, method_or_path: ast::MethodOrPath, named_item: InFile<SyntaxNode>) -> Ty {
+    pub fn lower_path(
+        &self,
+        method_or_path: ast::MethodOrPath,
+        named_item: InFile<ast::AnyNamedElement>,
+    ) -> Ty {
         use syntax::SyntaxKind::*;
 
-        let path_ty = match named_item.syntax_kind() {
+        let path_ty = match named_item.kind() {
             TYPE_PARAM => {
-                let type_param = named_item.clone().syntax_cast::<ast::TypeParam>().unwrap();
+                let type_param = named_item.clone().cast::<ast::TypeParam>().unwrap();
                 Ty::TypeParam(TyTypeParameter::new(type_param))
             }
             STRUCT | ENUM => {
-                let item = named_item.clone().syntax_cast::<ast::StructOrEnum>().unwrap();
+                let item = named_item.clone().cast::<ast::StructOrEnum>().unwrap();
                 Ty::Adt(TyAdt::new(item))
             }
             FUN => {
-                let fun = named_item.clone().syntax_cast::<ast::Fun>().unwrap();
+                let fun = named_item.clone().cast::<ast::Fun>().unwrap();
                 let ty_callable = self.lower_function(fun);
                 Ty::Callable(ty_callable)
             }
             VARIANT => {
-                let variant = named_item.clone().syntax_cast::<ast::Variant>().unwrap();
+                let variant = named_item.clone().cast::<ast::Variant>().unwrap();
                 let enum_ = variant.map(|it| it.enum_());
                 let Some(enum_path) = method_or_path
                     .clone()
@@ -136,10 +126,7 @@ impl<'ctx, 'db> TyLowering<'ctx, 'db> {
                 else {
                     return Ty::Unknown;
                 };
-                self.lower_path(
-                    ast::MethodOrPath::Path(enum_path),
-                    enum_.map(|it| it.syntax().to_owned()),
-                )
+                self.lower_path(enum_path.into(), enum_.in_file_into())
             }
             _ => Ty::Unknown,
         };
@@ -147,7 +134,7 @@ impl<'ctx, 'db> TyLowering<'ctx, 'db> {
         // adds associations of ?Element -> (type of ?Element from explicitly set types)
         // Option<u8>: ?Element -> u8
         // Option: ?Element -> ?Element
-        if let Some(generic_item) = named_item.syntax_cast::<ast::AnyGenericItem>() {
+        if let Some(generic_item) = named_item.cast::<ast::AnyGenericElement>() {
             let type_args_subst = self.type_args_substitution(method_or_path, generic_item);
             return path_ty.substitute(&type_args_subst);
         }

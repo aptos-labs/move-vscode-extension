@@ -34,7 +34,7 @@ pub trait HasStmts: AstNode {
     }
 }
 
-pub trait GenericItem: AstNode {
+pub trait GenericElement: NamedElement {
     fn type_param_list(&self) -> Option<ast::TypeParamList> {
         support::child(&self.syntax())
     }

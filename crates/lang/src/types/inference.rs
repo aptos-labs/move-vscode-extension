@@ -155,12 +155,11 @@ impl<'db> InferenceCtx<'db> {
     pub fn instantiate_path(
         &mut self,
         method_or_path: ast::MethodOrPath,
-        generic_item: InFile<ast::AnyGenericItem>,
+        generic_item: InFile<ast::AnyGenericElement>,
     ) -> Ty {
-        let mut path_ty = self.ty_lowering().lower_path(
-            method_or_path,
-            generic_item.clone().map(|it| it.syntax().to_owned()),
-        );
+        let mut path_ty = self
+            .ty_lowering()
+            .lower_path(method_or_path, generic_item.clone().in_file_into());
 
         let ty_vars_subst = generic_item.ty_vars_subst();
         path_ty = path_ty.substitute(&ty_vars_subst);

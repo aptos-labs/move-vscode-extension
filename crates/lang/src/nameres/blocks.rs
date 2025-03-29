@@ -24,7 +24,6 @@ pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: Option<SyntaxNode>
         }
         MATCH_ARM => {
             // coming from rhs, use pat bindings from lhs
-            dbg!(&prev);
             if prev.is_some_and(|node| !node.is::<ast::Pat>()) {
                 let (file_id, match_arm) = scope.map(|it| it.cast::<ast::MatchArm>().unwrap()).unpack();
                 let ident_pats = match_arm

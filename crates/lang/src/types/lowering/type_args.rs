@@ -3,7 +3,7 @@ use crate::types::substitution::Substitution;
 use crate::types::ty::Ty;
 use crate::types::ty::type_param::TyTypeParameter;
 use std::collections::HashMap;
-use syntax::ast::GenericItem;
+use syntax::ast::GenericElement;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 
@@ -11,7 +11,7 @@ impl TyLowering<'_, '_> {
     pub fn type_args_substitution(
         &self,
         method_or_path: ast::MethodOrPath,
-        generic_item: InFile<ast::AnyGenericItem>,
+        generic_item: InFile<ast::AnyGenericElement>,
     ) -> Substitution {
         let mut subst_mapping = HashMap::new();
 

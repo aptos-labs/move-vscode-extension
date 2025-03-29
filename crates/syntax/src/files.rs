@@ -74,10 +74,6 @@ impl<T: AstNode> InFile<T> {
 }
 
 impl InFile<SyntaxNode> {
-    pub fn syntax_kind(&self) -> SyntaxKind {
-        self.value.kind()
-    }
-
     pub fn syntax_cast<T: AstNode>(self) -> Option<InFile<T>> {
         let InFile { file_id, value } = self;
         let value = T::cast(value)?;
