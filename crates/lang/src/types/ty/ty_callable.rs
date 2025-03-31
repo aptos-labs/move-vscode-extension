@@ -1,17 +1,24 @@
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::ty::Ty;
 use std::iter;
+use std::ops::Deref;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TyCallable {
     pub param_types: Vec<Ty>,
-    pub ret_type: Box<Ty>,
+    ret_type: Box<Ty>,
     pub kind: CallKind,
 }
 
 impl From<TyCallable> for Ty {
     fn from(value: TyCallable) -> Self {
         Ty::Callable(value)
+    }
+}
+
+impl TyCallable {
+    pub fn ret_type(&self) -> Ty {
+        self.ret_type.deref().to_owned()
     }
 }
 

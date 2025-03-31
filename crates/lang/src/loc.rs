@@ -3,7 +3,6 @@ use parser::SyntaxKind;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::algo::ancestors_at_offset;
-use syntax::ast::NamedElement;
 use syntax::files::InFile;
 use syntax::{AstNode, TextSize, ast};
 use vfs::FileId;

@@ -12,8 +12,6 @@ pub fn get_entries_in_scope(
     scope: InFile<SyntaxNode>,
     prev: Option<SyntaxNode>,
 ) -> Vec<ScopeEntry> {
-    use syntax::SyntaxKind::*;
-
     let mut entries = vec![];
     if let Some(use_stmts_owner) = ast::AnyHasUseStmts::cast(scope.value.clone()) {
         entries.extend(use_speck_entries(

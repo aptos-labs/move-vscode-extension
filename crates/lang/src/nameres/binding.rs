@@ -83,7 +83,7 @@ fn is_constant_like(named_item: &InFile<ast::AnyNamedElement>) -> bool {
     if named_item.kind() == CONST {
         return true;
     }
-    if let Some(fields_owner) = named_item.cast_ref::<ast::AnyFieldsOwner>() {
+    if let Some(fields_owner) = named_item.cast_into_ref::<ast::AnyFieldsOwner>() {
         if fields_owner.value.is_fieldless() {
             return true;
         }

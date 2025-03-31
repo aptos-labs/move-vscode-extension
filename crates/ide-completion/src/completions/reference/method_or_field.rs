@@ -25,11 +25,11 @@ pub(crate) fn add_method_or_field_completions(
     let (_, receiver_expr) = receiver_expr.unpack();
 
     let receiver_ty = inference.get_expr_type(&receiver_expr)?;
-    if receiver_ty.deref_all() == Ty::Unknown {
+    if receiver_ty.unwrap_all_refs() == Ty::Unknown {
         return None;
     }
 
-    if let Some(ty_adt) = receiver_ty.deref_all().into_ty_adt() {
+    if let Some(ty_adt) = receiver_ty.unwrap_all_refs().into_ty_adt() {
         add_field_completion_items(completions, ctx, ty_adt);
     }
 
@@ -60,7 +60,7 @@ fn add_field_completion_items(
         let named_field = named_field.in_file(file_id);
         let mut completion_item = render_named_item(ctx, named_field.clone().in_file_into());
 
-        if let Some(field_ty) = ty_lowering.lower_field(named_field) {
+        if let Some(field_ty) = ty_lowering.lower_named_field(named_field) {
             let field_detail = field_ty.substitute(&ty_adt.substitution).render(ctx.db.upcast());
             completion_item.set_detail(Some(field_detail));
         }

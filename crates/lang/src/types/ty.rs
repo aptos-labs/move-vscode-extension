@@ -24,7 +24,6 @@ use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::{TyInfer, TyVar};
 use crate::types::ty::type_param::TyTypeParameter;
 use base_db::SourceRootDatabase;
-use std::ops::Deref;
 use syntax::ast;
 use syntax::files::InFile;
 use vfs::FileId;
@@ -65,6 +64,10 @@ impl Ty {
         Ty::Seq(TySequence::Vector(Box::new(item_ty)))
     }
 
+    pub fn new_tuple(tys: Vec<Ty>) -> Ty {
+        Ty::Tuple(TyTuple::new(tys))
+    }
+
     pub fn new_ty_adt(item: InFile<ast::StructOrEnum>) -> Ty {
         Ty::Adt(TyAdt::new(item))
     }
@@ -73,9 +76,9 @@ impl Ty {
         Ty::Reference(TyReference::new(inner_ty, mutability))
     }
 
-    pub fn deref_all(&self) -> Ty {
+    pub fn unwrap_all_refs(&self) -> Ty {
         match self {
-            Ty::Reference(ty_ref) => ty_ref.referenced().deref_all(),
+            Ty::Reference(ty_ref) => ty_ref.referenced().unwrap_all_refs(),
             _ => self.to_owned(),
         }
     }
@@ -88,7 +91,7 @@ impl Ty {
     // }
 
     pub fn item_module(&self, db: &dyn HirDatabase, file_id: FileId) -> Option<InFile<ast::Module>> {
-        let ty = self.deref_all();
+        let ty = self.unwrap_all_refs();
         match ty {
             Ty::Adt(ty_adt) => {
                 let item = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(db.upcast())?;
@@ -122,6 +125,13 @@ impl Ty {
     pub fn into_ty_adt(self) -> Option<TyAdt> {
         match self {
             Ty::Adt(ty_adt) => Some(ty_adt),
+            _ => None,
+        }
+    }
+
+    pub fn into_ty_tuple(self) -> Option<TyTuple> {
+        match self {
+            Ty::Tuple(ty_tuple) => Some(ty_tuple),
             _ => None,
         }
     }

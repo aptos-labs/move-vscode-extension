@@ -133,11 +133,11 @@ impl ScopeEntryListExt for Vec<ScopeEntry> {
         self.into_iter()
             .filter_map(|entry| {
                 let item = entry.clone().cast_into::<ast::AnyNamedElement>(db)?;
-                let Some(variant_item) = item.cast::<ast::Variant>() else {
+                let Some(variant_item) = item.cast_into::<ast::Variant>() else {
                     return Some(entry);
                 };
                 // if expected type is unknown, or not a enum, then we cannot infer enum variants
-                let ty_adt = expected_type.clone()?.deref_all().into_ty_adt()?;
+                let ty_adt = expected_type.clone()?.unwrap_all_refs().into_ty_adt()?;
                 let expected_enum = ty_adt.adt_item(db)?.value.enum_()?;
 
                 let is_valid_item = expected_enum.variants().contains(&variant_item.value);

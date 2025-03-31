@@ -1,7 +1,6 @@
 use crate::db::HirDatabase;
 use crate::loc::{SyntaxLocFileExt, SyntaxLocNodeExt};
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt, VecExt};
-use parser::SyntaxKind::{FIELD_REF, STRUCT_LIT_FIELD, STRUCT_PAT_FIELD};
 use syntax::ast;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::{FieldsOwner, ReferenceElement};
@@ -103,7 +102,7 @@ impl<T: ast::ReferenceElement> ResolveReference for InFile<T> {
 
     fn resolve_no_inf(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
         // outside inference context
-        let path = self.cast_ref::<ast::Path>()?;
+        let path = self.cast_into_ref::<ast::Path>()?;
         db.resolve_path(path.loc())
     }
 }

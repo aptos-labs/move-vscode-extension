@@ -1,13 +1,13 @@
-use crate::nameres::scope::{ScopeEntry, ScopeEntryExt};
+use crate::nameres::scope::{ScopeEntry, ScopeEntryExt, VecExt};
 use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::patterns::BindingMode::{BindByReference, BindByValue};
 use crate::types::substitution::{ApplySubstitution, empty_substitution};
 use crate::types::ty::Ty;
-use crate::types::ty::reference::{Mutability, TyReference};
+use crate::types::ty::reference::Mutability;
 use crate::types::ty::tuple::TyTuple;
 use parser::SyntaxKind;
-use std::iter;
+use std::{cmp, iter};
 use syntax::ast::FieldsOwner;
 use syntax::ast::node_ext::struct_pat_field::PatFieldKind;
 use syntax::files::{InFile, InFileExt};
@@ -18,7 +18,7 @@ impl TypeAstWalker<'_, '_> {
         match pat {
             ast::Pat::PathPat(path_pat) => {
                 let named_item = self.ctx.resolve_path_cached(path_pat.path(), None);
-                let named_item_kind = named_item.map(|it| it.value.syntax().kind());
+                let named_item_kind = named_item.map(|it| it.kind());
                 // copied from intellij-rust, don't know what it's about
                 let pat_ty = match named_item_kind {
                     Some(SyntaxKind::CONST) => ty,
@@ -45,17 +45,8 @@ impl TypeAstWalker<'_, '_> {
                     .pat_types
                     .insert(struct_pat.clone().into(), expected.clone());
 
-                let mut fields_owner = self
-                    .ctx
-                    .resolve_path_cached(struct_pat.path(), Some(expected.clone()))
-                    .and_then(|item| item.cast::<ast::AnyFieldsOwner>());
-                if fields_owner.is_none() {
-                    fields_owner = expected.into_ty_adt().and_then(|it| {
-                        it.adt_item(self.ctx.db)
-                            .and_then(|it| it.cast::<ast::Struct>())
-                            .map(|it| it.in_file_into())
-                    });
-                }
+                let fields_owner = self.get_pat_fields_owner(struct_pat.path(), expected.clone());
+
                 // todo: invalid unpacking
 
                 let pat_fields = struct_pat.fields();
@@ -82,11 +73,93 @@ impl TypeAstWalker<'_, '_> {
                     }
                 }
             }
+            ast::Pat::TupleStructPat(tuple_struct_pat) => {
+                let (expected, pat_bm) = strip_references(ty.clone(), def_bm);
+                self.ctx
+                    .pat_types
+                    .insert(tuple_struct_pat.clone().into(), expected.clone());
+
+                let fields_owner = self.get_pat_fields_owner(tuple_struct_pat.path(), expected.clone());
+                if fields_owner.is_none() {
+                    for pat in tuple_struct_pat.fields() {
+                        self.collect_pat_bindings(pat, Ty::Unknown, BindByValue);
+                    }
+                    return;
+                }
+                let fields_owner = fields_owner.unwrap();
+
+                // todo: invalid unpacking
+
+                let pats = tuple_struct_pat.fields().collect();
+
+                let tuple_fields = fields_owner.map(|it| it.tuple_fields()).flatten();
+                let tuple_field_types = tuple_fields
+                    .into_iter()
+                    .map(|f| self.ctx.ty_lowering().lower_tuple_field(f).unwrap_or(Ty::Unknown))
+                    .collect::<Vec<_>>();
+                let ty_adt_subst = expected
+                    .into_ty_adt()
+                    .map(|it| it.substitution)
+                    .unwrap_or(empty_substitution());
+
+                #[rustfmt::skip]
+                self.infer_tuple_pat_fields(
+                    pats,
+                    tuple_field_types.len(),
+                    BindByValue,
+                    |indx| {
+                        let field_type = tuple_field_types.get(indx).cloned().unwrap_or(Ty::Unknown);
+                        field_type.substitute(&ty_adt_subst)
+                    }
+                );
+            }
+            ast::Pat::TuplePat(tuple_pat) => {
+                let pats = tuple_pat.pats().collect::<Vec<_>>();
+                if pats.len() == 1 && !matches!(ty, Ty::Tuple(_)) {
+                    // let (a) = 1;
+                    // let (a,) = 1;
+                    let pat = pats.single_or_none().unwrap();
+                    self.collect_pat_bindings(pat, ty, BindByValue);
+                    return;
+                }
+
+                // todo: invalid unpacking
+
+                let inner_types = ty.into_ty_tuple().map(|it| it.types).unwrap_or_default();
+                #[rustfmt::skip]
+                self.infer_tuple_pat_fields(
+                    pats,
+                    inner_types.len(),
+                    BindByValue,
+                    |idx| {
+                        inner_types.get(idx).cloned().unwrap_or(Ty::Unknown)
+                    }
+                );
+            }
             ast::Pat::WildcardPat(wildcard_pat) => {
                 self.ctx.pat_types.insert(wildcard_pat.into(), ty);
             }
-            _ => (),
+            ast::Pat::RestPat(_) => (),
         }
+    }
+
+    fn get_pat_fields_owner(
+        &mut self,
+        struct_pat_path: ast::Path,
+        expected_ty: Ty,
+    ) -> Option<InFile<ast::AnyFieldsOwner>> {
+        let mut fields_owner = self
+            .ctx
+            .resolve_path_cached(struct_pat_path, Some(expected_ty.clone()))
+            .and_then(|item| item.cast_into::<ast::AnyFieldsOwner>());
+        if fields_owner.is_none() {
+            fields_owner = expected_ty
+                .into_ty_adt()?
+                .adt_item(self.ctx.db)?
+                .cast_into::<ast::Struct>()
+                .map(|it| it.in_file_into());
+        }
+        fields_owner
     }
 
     fn get_pat_field_tys(
@@ -112,11 +185,45 @@ impl TypeAstWalker<'_, '_> {
             let field_ty = self
                 .ctx
                 .ty_lowering()
-                .lower_field(named_field.to_owned().in_file(item_file_id))
+                .lower_named_field(named_field.to_owned().in_file(item_file_id))
                 .unwrap_or(Ty::Unknown);
             tys.push((named_field.to_owned().in_file(item_file_id).to_entry(), field_ty));
         }
         tys
+    }
+
+    fn infer_tuple_pat_fields(
+        &mut self,
+        pats: Vec<ast::Pat>,
+        tuple_size: usize,
+        bm: BindingMode,
+        get_type: impl Fn(usize) -> Ty,
+    ) {
+        // In correct code, tuple or tuple struct patterns contain only one `..` pattern.
+        // But it's pretty simple to support type inference for cases with multiple `..`
+        // in patterns like `let (x, .., y, .., z) = tuple` by just ignoring all binding
+        // between first and last `..` patterns
+        let mut first_rest_indx = isize::MAX;
+        let mut last_rest_indx = -1;
+        for (indx, pat) in pats.iter().enumerate() {
+            let indx = indx as isize;
+            if matches!(pat, ast::Pat::RestPat(_)) {
+                first_rest_indx = cmp::min(first_rest_indx, indx);
+                last_rest_indx = cmp::max(last_rest_indx, indx);
+            }
+        }
+        let pats_len = pats.len();
+        for (indx, pat) in pats.into_iter().enumerate() {
+            let indx = indx as isize;
+            let pat_ty = if indx < first_rest_indx {
+                get_type(indx as usize)
+            } else if indx > last_rest_indx {
+                get_type(tuple_size - (pats_len - (indx as usize)))
+            } else {
+                Ty::Unknown
+            };
+            self.collect_pat_bindings(pat, pat_ty, bm.clone());
+        }
     }
 }
 

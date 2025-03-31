@@ -7,10 +7,8 @@ use crate::types::inference::inference_result::InferenceResult;
 use crate::types::ty::Ty;
 use base_db::{SourceRootDatabase, Upcast};
 use parser::SyntaxKind;
-use std::ops::Deref;
-use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, ast, match_ast};
+use syntax::{AstNode, ast};
 use triomphe::Arc;
 
 #[ra_salsa::query_group(HirDatabaseStorage)]
@@ -36,12 +34,7 @@ fn inference_for_ctx_owner(db: &dyn HirDatabase, ctx_owner_loc: SyntaxLoc) -> Ar
     let return_ty = match ctx_owner.syntax().kind() {
         SyntaxKind::FUN => {
             let fun = ctx_owner.clone().fun().unwrap();
-            let ret_ty = ctx
-                .ty_lowering()
-                .lower_function(fun.in_file(file_id))
-                .ret_type
-                .deref()
-                .to_owned();
+            let ret_ty = ctx.ty_lowering().lower_function(fun.in_file(file_id)).ret_type();
             ret_ty
         }
         _ => Ty::Unknown,

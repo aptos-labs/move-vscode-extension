@@ -1,4 +1,4 @@
-use crate::ast::{FieldsOwner, NamedElement};
+use crate::ast::NamedElement;
 use crate::{ast, AstNode};
 use std::collections::HashSet;
 

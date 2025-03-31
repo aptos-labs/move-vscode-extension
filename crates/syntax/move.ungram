@@ -210,7 +210,7 @@ Expr =
     | ResourceExpr
     | CallExpr | MethodCallExpr | AssertMacroExpr
     | LambdaExpr
-    | RangeExpr | VectorLitExpr | StructLit
+    | RangeExpr | VectorLitExpr | StructLit | TupleExpr
     | IndexExpr
     | DotExpr
     | AbortExpr
@@ -338,6 +338,9 @@ RangeExpr =
 
 VectorLitExpr =
     'ident' TypeArgList? '[' arg_exprs:(Expr (',' Expr)* ','?)? ']'
+
+TupleExpr =
+    '(' exprs:(Expr*) ')'
 
 MethodOrPath =
     MethodCallExpr | Path

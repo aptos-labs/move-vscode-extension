@@ -60,13 +60,13 @@ impl<T: AstNode> InFile<T> {
         self.value.syntax().kind()
     }
 
-    pub fn cast<IntoT: AstNode>(self) -> Option<InFile<IntoT>> {
+    pub fn cast_into<IntoT: AstNode>(self) -> Option<InFile<IntoT>> {
         let InFile { file_id, value } = self;
         let value = IntoT::cast(value.syntax().clone())?;
         Some(InFile::new(file_id, value))
     }
 
-    pub fn cast_ref<IntoT: AstNode>(&self) -> Option<InFile<IntoT>> {
+    pub fn cast_into_ref<IntoT: AstNode>(&self) -> Option<InFile<IntoT>> {
         let InFile { file_id, value } = self;
         let value = IntoT::cast(value.syntax().clone())?;
         Some(InFile::new(*file_id, value))
@@ -78,6 +78,13 @@ impl InFile<SyntaxNode> {
         let InFile { file_id, value } = self;
         let value = T::cast(value)?;
         Some(InFile::new(file_id, value))
+    }
+}
+
+impl<T: AstNode> InFile<Vec<T>> {
+    pub fn flatten(self) -> Vec<InFile<T>> {
+        let (file_id, vec) = self.unpack();
+        vec.into_iter().map(|it| it.in_file(file_id)).collect()
     }
 }
 
