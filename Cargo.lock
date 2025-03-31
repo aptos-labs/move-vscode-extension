@@ -107,12 +107,14 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "stdx",
+ "syntax",
  "toml",
  "tracing",
  "tracing-subscriber",
  "triomphe",
  "vfs",
  "vfs-notify",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]

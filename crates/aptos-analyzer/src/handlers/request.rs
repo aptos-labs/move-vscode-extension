@@ -2,9 +2,9 @@ use crate::diagnostics::convert_diagnostic;
 use crate::global_state::{FetchWorkspaceRequest, GlobalState, GlobalStateSnapshot};
 use crate::lsp::{from_proto, to_proto};
 use crate::try_default;
-use lang::files::FileRange;
 use line_index::TextRange;
 use lsp_types::{HoverContents, Range, SemanticTokensParams, SemanticTokensResult};
+use syntax::files::FileRange;
 
 pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
     // state.proc_macro_clients = Arc::from_iter([]);
