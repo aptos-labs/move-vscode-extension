@@ -39,7 +39,7 @@ pub(crate) fn add_path_completions(
             acc.add(
                 render_function(
                     ctx,
-                    named_item.cast::<ast::Fun>().unwrap(),
+                    named_item.cast_into::<ast::Fun>().unwrap(),
                     FunctionKind::Fun,
                     None,
                 )

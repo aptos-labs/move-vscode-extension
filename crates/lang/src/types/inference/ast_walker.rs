@@ -9,7 +9,7 @@ use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::range_like::TySequence;
-use crate::types::ty::reference::{Mutability, TyReference, autoborrow};
+use crate::types::ty::reference::{Mutability, autoborrow};
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar};
 use std::iter;
@@ -60,7 +60,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 .ctx
                 .lambda_expr_types
                 .get(&lambda_expr)
-                .map(|it| it.ret_type.deref().to_owned());
+                .map(|it| it.ret_type());
             if let Some(body_expr) = lambda_expr.body_expr() {
                 // todo: add coerce here
                 self.infer_expr(&body_expr, Expected::from_ty(lambda_ret_ty));
@@ -202,7 +202,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 self.infer_path_expr(path_expr, expected).unwrap_or(Ty::Unknown)
             }
 
-            ast::Expr::CallExpr(call_expr) => self.infer_call_expr(call_expr, Expected::NoValue),
+            ast::Expr::CallExpr(call_expr) => self
+                .infer_call_expr(call_expr, Expected::NoValue)
+                .unwrap_or(Ty::Unknown),
 
             ast::Expr::MethodCallExpr(method_call_expr) => {
                 self.infer_method_call_expr(method_call_expr, Expected::NoValue)
@@ -210,6 +212,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::Expr::VectorLitExpr(vector_lit_expr) => {
                 self.infer_vector_lit_expr(vector_lit_expr, expected)
             }
+            ast::Expr::TupleExpr(tuple_expr) => self.infer_tuple_expr(tuple_expr, expected),
             ast::Expr::RangeExpr(range_expr) => self.infer_range_expr(range_expr, expected),
             ast::Expr::StructLit(struct_lit) => {
                 self.infer_struct_lit(struct_lit, expected).unwrap_or(Ty::Unknown)
@@ -295,16 +298,18 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let ty_lowering = self.ctx.ty_lowering();
         match named_element.kind() {
             IDENT_PAT => {
-                let ident_pat = named_element.cast::<ast::IdentPat>()?.value;
+                let ident_pat = named_element.cast_into::<ast::IdentPat>()?.value;
                 self.ctx.get_binding_type(ident_pat)
             }
             CONST => {
-                let const_type = named_element.cast::<ast::Const>()?.and_then(|it| it.type_())?;
+                let const_type = named_element
+                    .cast_into::<ast::Const>()?
+                    .and_then(|it| it.type_())?;
                 Some(ty_lowering.lower_type(const_type))
             }
             NAMED_FIELD => {
-                let named_field = named_element.cast::<ast::NamedField>()?;
-                ty_lowering.lower_field(named_field)
+                let named_field = named_element.cast_into::<ast::NamedField>()?;
+                ty_lowering.lower_named_field(named_field)
             }
             STRUCT | ENUM => {
                 // base for index expr
@@ -314,7 +319,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
             VARIANT => {
                 // MyEnum::MyVariant
-                let variant = named_element.cast::<ast::Variant>().unwrap();
+                let variant = named_element.cast_into::<ast::Variant>().unwrap();
                 let enum_path = path_expr.path().qualifier().unwrap_or(path_expr.path());
                 let variant_ty = self
                     .ctx
@@ -334,7 +339,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let self_ty = self.infer_expr(&dot_expr.receiver_expr(), Expected::NoValue);
         let self_ty = self.ctx.resolve_ty_vars_if_possible(self_ty);
 
-        let ty_adt = self_ty.deref_all().into_ty_adt()?;
+        let ty_adt = self_ty.unwrap_all_refs().into_ty_adt()?;
 
         let field_ref = dot_expr.field_ref();
         if !self.ctx.msl && field_ref.containing_module() != ty_adt.adt_item_module(self.ctx.db) {
@@ -409,13 +414,13 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     .map(|arg_expr| CallArg::Arg { expr: arg_expr }),
             )
             .collect();
-        self.coerce_call_arg_types(args, method_ty.param_types, expected_arg_tys);
+        self.coerce_call_arg_types(args, method_ty.param_types.clone(), expected_arg_tys);
 
-        method_ty.ret_type.deref().to_owned()
+        method_ty.ret_type()
     }
 
-    fn infer_call_expr(&mut self, call_expr: &ast::CallExpr, expected: Expected) -> Ty {
-        let call_ty = self.ctx.instantiate_call_expr_path(call_expr);
+    fn infer_call_expr(&mut self, call_expr: &ast::CallExpr, expected: Expected) -> Option<Ty> {
+        let call_ty = self.ctx.instantiate_call_expr_path(call_expr)?;
 
         let expected_arg_tys = self.infer_expected_call_arg_tys(&call_ty, expected);
         let args = call_expr
@@ -423,9 +428,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             .into_iter()
             .map(|expr| CallArg::Arg { expr })
             .collect();
-        self.coerce_call_arg_types(args, call_ty.param_types, expected_arg_tys);
+        self.coerce_call_arg_types(args, call_ty.param_types.clone(), expected_arg_tys);
 
-        call_ty.ret_type.deref().to_owned()
+        Some(call_ty.ret_type())
     }
 
     fn infer_assert_macro_expr(&mut self, assert_macro_expr: &ast::AssertMacroExpr) -> Ty {
@@ -491,7 +496,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 .and_then(|it| {
                     self.ctx
                         .ty_lowering()
-                        .lower_field(it.to_owned().in_file(item_file_id))
+                        .lower_named_field(it.to_owned().in_file(item_file_id))
                 })
                 .unwrap_or(Ty::Unknown);
 
@@ -522,7 +527,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             return Ty::Unknown;
         };
         let base_ty = self.infer_expr(&index_expr.base_expr(), Expected::NoValue);
-        let deref_ty = self.ctx.resolve_ty_vars_if_possible(base_ty.clone()).deref_all();
+        let deref_ty = self
+            .ctx
+            .resolve_ty_vars_if_possible(base_ty.clone())
+            .unwrap_all_refs();
         let arg_ty = self.infer_expr(&arg_expr, Expected::NoValue);
 
         if let Ty::Seq(TySequence::Vector(item_ty)) = deref_ty.clone() {
@@ -644,6 +652,28 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         self.coerce_call_arg_types(args, declared_arg_tys, expected_arg_tys);
 
         self.ctx.resolve_ty_vars_if_possible(vec_ty)
+    }
+
+    fn infer_tuple_expr(&mut self, tuple_expr: &ast::TupleExpr, expected: Expected) -> Ty {
+        let expected_tys = expected
+            .ty(self.ctx)
+            .and_then(|it| it.into_ty_tuple())
+            .map(|it| it.types)
+            .unwrap_or_default();
+
+        let mut tys = vec![];
+        for (i, expr) in tuple_expr.exprs().enumerate() {
+            let expr_ty = expected_tys.get(i).cloned();
+            tys.push(
+                match expr_ty {
+                    Some(ty) => self.infer_expr_coerceable_to(&expr, ty),
+                    None => self.infer_expr(&expr, Expected::NoValue),
+                }
+                .into(),
+            );
+        }
+
+        Ty::new_tuple(tys)
     }
 
     fn infer_if_expr(&mut self, if_expr: &ast::IfExpr, expected: Expected) -> Option<Ty> {
@@ -781,19 +811,28 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
     fn infer_bin_expr(&mut self, bin_expr: &ast::BinExpr) -> Option<Ty> {
         let (lhs, (_, op_kind), rhs) = bin_expr.unpack()?;
-        match op_kind {
-            ast::BinaryOp::ArithOp(_) => Some(self.infer_arith_binary_expr(lhs, rhs, false)),
-            ast::BinaryOp::Assignment { .. } => Some(self.infer_arith_binary_expr(lhs, rhs, true)),
-            ast::BinaryOp::LogicOp(_) => Some(self.infer_logic_binary_expr(lhs, rhs)),
-            ast::BinaryOp::CmpOp(op) => {
-                let ty = match op {
-                    ast::CmpOp::Eq { .. } => self.infer_eq_binary_expr(&lhs, &rhs),
-                    ast::CmpOp::Ord { .. } => self.infer_ordering_binary_expr(&lhs, &rhs),
-                };
-                Some(ty)
-            }
-            _ => None,
+        let ty = match op_kind {
+            ast::BinaryOp::ArithOp(_) => self.infer_arith_binary_expr(lhs, rhs, false),
+
+            ast::BinaryOp::Assignment { op: None } => self.infer_assignment(lhs, rhs),
+            ast::BinaryOp::Assignment { op: Some(_) } => self.infer_arith_binary_expr(lhs, rhs, true),
+
+            ast::BinaryOp::LogicOp(_) => self.infer_logic_binary_expr(lhs, rhs),
+
+            ast::BinaryOp::CmpOp(op) => match op {
+                ast::CmpOp::Eq { .. } => self.infer_eq_binary_expr(&lhs, &rhs),
+                ast::CmpOp::Ord { .. } => self.infer_ordering_binary_expr(&lhs, &rhs),
+            },
+        };
+        Some(ty)
+    }
+
+    fn infer_assignment(&mut self, lhs: ast::Expr, rhs: Option<ast::Expr>) -> Ty {
+        let lhs_ty = self.infer_expr(&lhs, Expected::NoValue);
+        if let Some(rhs) = rhs {
+            self.infer_expr_coerceable_to(&rhs, lhs_ty);
         }
+        Ty::Unit
     }
 
     fn infer_arith_binary_expr(
@@ -895,9 +934,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let Some(expected_ret_ty) = expected.ty(self.ctx) else {
             return vec![];
         };
-        let declared_ret_ty = self
-            .ctx
-            .resolve_ty_vars_if_possible(ty_callable.ret_type.deref().to_owned());
+        let declared_ret_ty = self.ctx.resolve_ty_vars_if_possible(ty_callable.ret_type());
 
         // unify return types and check if they are compatible
         let combined = self.ctx.combine_types(expected_ret_ty, declared_ret_ty);

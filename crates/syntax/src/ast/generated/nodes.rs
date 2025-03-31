@@ -1231,6 +1231,19 @@ impl StructPatFieldList {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct TupleExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl TupleExpr {
+    #[inline]
+    pub fn exprs(&self) -> AstChildren<Expr> { support::children(&self.syntax) }
+    #[inline]
+    pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
+    #[inline]
+    pub fn r_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![')']) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TupleField {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1274,7 +1287,9 @@ impl TupleStructPat {
     #[inline]
     pub fn fields(&self) -> AstChildren<Pat> { support::children(&self.syntax) }
     #[inline]
-    pub fn path(&self) -> Option<Path> { support::child(&self.syntax) }
+    pub fn path(&self) -> Path {
+        support::child(&self.syntax).expect("TupleStructPat.path required by the parser")
+    }
     #[inline]
     pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
     #[inline]
@@ -1553,6 +1568,7 @@ pub enum Expr {
     ResourceExpr(ResourceExpr),
     ReturnExpr(ReturnExpr),
     StructLit(StructLit),
+    TupleExpr(TupleExpr),
     VectorLitExpr(VectorLitExpr),
     WhileExpr(WhileExpr),
 }
@@ -3527,6 +3543,27 @@ impl AstNode for StructPatFieldList {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for TupleExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        TUPLE_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == TUPLE_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for TupleField {
     #[inline]
     fn kind() -> SyntaxKind
@@ -4256,6 +4293,10 @@ impl From<StructLit> for Expr {
     #[inline]
     fn from(node: StructLit) -> Expr { Expr::StructLit(node) }
 }
+impl From<TupleExpr> for Expr {
+    #[inline]
+    fn from(node: TupleExpr) -> Expr { Expr::TupleExpr(node) }
+}
 impl From<VectorLitExpr> for Expr {
     #[inline]
     fn from(node: VectorLitExpr) -> Expr { Expr::VectorLitExpr(node) }
@@ -4427,6 +4468,12 @@ impl Expr {
             _ => None,
         }
     }
+    pub fn tuple_expr(self) -> Option<TupleExpr> {
+        match (self) {
+            Expr::TupleExpr(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn vector_lit_expr(self) -> Option<VectorLitExpr> {
         match (self) {
             Expr::VectorLitExpr(item) => Some(item),
@@ -4472,6 +4519,7 @@ impl AstNode for Expr {
                 | RESOURCE_EXPR
                 | RETURN_EXPR
                 | STRUCT_LIT
+                | TUPLE_EXPR
                 | VECTOR_LIT_EXPR
                 | WHILE_EXPR
         )
@@ -4506,6 +4554,7 @@ impl AstNode for Expr {
             RESOURCE_EXPR => Expr::ResourceExpr(ResourceExpr { syntax }),
             RETURN_EXPR => Expr::ReturnExpr(ReturnExpr { syntax }),
             STRUCT_LIT => Expr::StructLit(StructLit { syntax }),
+            TUPLE_EXPR => Expr::TupleExpr(TupleExpr { syntax }),
             VECTOR_LIT_EXPR => Expr::VectorLitExpr(VectorLitExpr { syntax }),
             WHILE_EXPR => Expr::WhileExpr(WhileExpr { syntax }),
             _ => return None,
@@ -4542,6 +4591,7 @@ impl AstNode for Expr {
             Expr::ResourceExpr(it) => &it.syntax,
             Expr::ReturnExpr(it) => &it.syntax,
             Expr::StructLit(it) => &it.syntax,
+            Expr::TupleExpr(it) => &it.syntax,
             Expr::VectorLitExpr(it) => &it.syntax,
             Expr::WhileExpr(it) => &it.syntax,
         }
@@ -6337,6 +6387,11 @@ impl std::fmt::Display for StructPatField {
     }
 }
 impl std::fmt::Display for StructPatFieldList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for TupleExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

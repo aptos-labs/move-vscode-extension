@@ -7,7 +7,6 @@ use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyVar, TyVarKind};
 use crate::types::ty::type_param::TyTypeParameter;
 use base_db::SourceRootDatabase;
-use std::ops::Deref;
 use stdx::itertools::Itertools;
 use syntax::ast;
 use syntax::ast::NamedElement;
@@ -80,20 +79,20 @@ impl<'db> TypeRenderer<'db> {
         match ty_callable.kind {
             CallKind::Fun => {
                 let params = format!("fn({})", self.render_list(&ty_callable.param_types, ", "));
-                let ret_type = ty_callable.ret_type.deref();
-                if matches!(ret_type, &Ty::Unit) {
+                let ret_type = ty_callable.ret_type();
+                if matches!(ret_type, Ty::Unit) {
                     params
                 } else {
-                    format!("{} -> {}", params, self.render(ret_type))
+                    format!("{} -> {}", params, self.render(&ret_type))
                 }
             }
             CallKind::Lambda => {
                 let params = format!("|{}|", self.render_list(&ty_callable.param_types, ", "));
-                let ret_type = ty_callable.ret_type.deref();
-                if matches!(ret_type, &Ty::Unit) {
+                let ret_type = ty_callable.ret_type();
+                if matches!(ret_type, Ty::Unit) {
                     format!("{} -> ()", params)
                 } else {
-                    format!("{} -> {}", params, self.render(ret_type))
+                    format!("{} -> {}", params, self.render(&ret_type))
                 }
             }
         }

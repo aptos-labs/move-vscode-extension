@@ -150,8 +150,8 @@ impl InferenceCtx<'_> {
         self.combine_ty_pairs(ty1.clone().param_types, ty2.clone().param_types)?;
         // todo: resolve variables?
         self.combine_types(
-            ty1.ret_type.deref_all().to_owned(),
-            ty2.ret_type.deref_all().to_owned(),
+            ty1.ret_type().unwrap_all_refs(),
+            ty2.ret_type().unwrap_all_refs(),
         )
     }
 
@@ -200,7 +200,7 @@ impl InferenceCtx<'_> {
                     match (left_ty.clone(), right_ty) {
                         (Ty::Reference(left_ty_ref), Ty::Reference(right_ty_ref)) => {
                             let min_mut = left_ty_ref.mutability.intersect(right_ty_ref.mutability);
-                            Ty::new_reference(left_ty_ref.referenced().deref_all(), min_mut)
+                            Ty::new_reference(left_ty_ref.referenced().unwrap_all_refs(), min_mut)
                         }
                         _ => left_ty,
                     }

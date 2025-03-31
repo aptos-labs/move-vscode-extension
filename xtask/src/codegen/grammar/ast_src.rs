@@ -281,6 +281,7 @@ pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     ("DotExpr", &["receiver_expr", "field_ref"]),
     ("TypeArg", &["type"]),
     ("StructPat", &["path"]),
+    ("TupleStructPat", &["path"]),
     ("PathType", &["path"]),
     ("ParenType", &["type"]),
     ("StructLit", &["path"]),

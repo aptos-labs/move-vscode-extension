@@ -14,11 +14,10 @@ use crate::types::ty::Ty;
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
 use crate::types::unification::UnificationTable;
-use parser::SyntaxKind;
-use parser::SyntaxKind::VARIANT;
 use std::collections::HashMap;
 use std::hash::Hash;
-use std::ops::Deref;
+use syntax::SyntaxKind::*;
+use syntax::ast::FieldsOwner;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
@@ -114,19 +113,24 @@ impl<'db> InferenceCtx<'db> {
         entry.and_then(|it| it.cast_into::<ast::AnyNamedElement>(self.db))
     }
 
-    fn instantiate_call_expr_path(&mut self, call_expr: &ast::CallExpr) -> TyCallable {
+    fn instantiate_call_expr_path(&mut self, call_expr: &ast::CallExpr) -> Option<TyCallable> {
         let path = call_expr.path();
         let named_item = self.resolve_path_cached(path.clone(), None);
         let callable_ty = if let Some(named_item) = named_item {
             let item_kind = named_item.value.syntax().kind();
             match item_kind {
-                SyntaxKind::FUN => {
-                    let fun_item = named_item.map(|it| it.cast_into::<ast::Fun>().unwrap());
-                    self.instantiate_path_for_fun(path.into(), fun_item)
+                FUN => {
+                    let fun = named_item.cast_into::<ast::Fun>().unwrap();
+                    self.instantiate_path_for_fun(path.into(), fun)
+                }
+                STRUCT | VARIANT => {
+                    let fields_owner = named_item.cast_into::<ast::AnyFieldsOwner>().unwrap();
+                    let call_ty = self.instantiate_call_expr_for_tuple_fields(path, fields_owner)?;
+                    call_ty
                 }
                 // lambdas
-                SyntaxKind::IDENT_PAT => {
-                    let ident_pat = named_item.map(|it| it.cast_into::<ast::IdentPat>().unwrap());
+                IDENT_PAT => {
+                    let ident_pat = named_item.cast_into::<ast::IdentPat>().unwrap();
                     let binding_ty = self.get_binding_type(ident_pat.value);
                     binding_ty
                         .and_then(|it| it.into_ty_callable())
@@ -137,7 +141,48 @@ impl<'db> InferenceCtx<'db> {
         } else {
             TyCallable::fake(call_expr.args().len(), CallKind::Fun)
         };
-        callable_ty
+        Some(callable_ty)
+    }
+
+    fn instantiate_call_expr_for_tuple_fields(
+        &mut self,
+        path: ast::Path,
+        fields_owner: InFile<ast::AnyFieldsOwner>,
+    ) -> Option<TyCallable> {
+        let (file_id, fields_owner) = fields_owner.unpack();
+
+        let owner_kind = fields_owner.syntax().kind();
+        let (path, struct_or_enum): (ast::Path, ast::StructOrEnum) = match owner_kind {
+            STRUCT => (path, fields_owner.struct_or_enum()),
+            VARIANT => {
+                let qualifier_path = path.qualifier()?;
+                let variant = fields_owner.cast_into::<ast::Variant>()?;
+                (qualifier_path, variant.enum_().into())
+            }
+            _ => unreachable!(),
+        };
+        let struct_or_enum = struct_or_enum.in_file(file_id);
+
+        let tuple_fields = fields_owner.tuple_field_list()?.fields().collect::<Vec<_>>();
+        let param_types = tuple_fields
+            .into_iter()
+            .map(|it| {
+                self.ty_lowering()
+                    .lower_tuple_field(it.in_file(file_id))
+                    .unwrap_or(Ty::Unknown)
+            })
+            .collect::<Vec<_>>();
+        let ret_type = Ty::new_ty_adt(struct_or_enum.clone());
+
+        let ty_vars_subst = struct_or_enum.ty_vars_subst();
+        let type_args_subst = self
+            .ty_lowering()
+            .type_args_substitution(path.into(), struct_or_enum.in_file_into());
+
+        let tuple_ty = TyCallable::new(param_types, ret_type, CallKind::Fun)
+            .substitute(&type_args_subst);
+
+        Some(tuple_ty.substitute(&ty_vars_subst))
     }
 
     pub fn instantiate_path_for_fun(
@@ -249,6 +294,6 @@ impl<'db> InferenceCtx<'db> {
         if let Some(pat_field) = ident_pat.syntax().parent_of_type::<ast::StructPatField>() {
             return self.pat_field_types.get(&pat_field).map(|it| it.to_owned());
         }
-        self.pat_types.get(&ident_pat.into()).map(|it| it.to_owned())
+        self.pat_types.get(&ident_pat.into()).cloned()
     }
 }

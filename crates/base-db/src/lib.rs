@@ -6,7 +6,7 @@ pub mod input;
 use crate::input::{SourceRoot, SourceRootId};
 use syntax::{Parse, SourceFile, SyntaxError};
 use triomphe::Arc;
-use vfs::{AnchoredPath, FileId};
+use vfs::FileId;
 
 pub trait Upcast<T: ?Sized> {
     fn upcast(&self) -> &T;

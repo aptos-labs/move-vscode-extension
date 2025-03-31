@@ -103,20 +103,20 @@ impl<'ctx, 'db> TyLowering<'ctx, 'db> {
 
         let path_ty = match named_item.kind() {
             TYPE_PARAM => {
-                let type_param = named_item.clone().cast::<ast::TypeParam>().unwrap();
+                let type_param = named_item.clone().cast_into::<ast::TypeParam>().unwrap();
                 Ty::TypeParam(TyTypeParameter::new(type_param))
             }
             STRUCT | ENUM => {
-                let item = named_item.clone().cast::<ast::StructOrEnum>().unwrap();
+                let item = named_item.clone().cast_into::<ast::StructOrEnum>().unwrap();
                 Ty::Adt(TyAdt::new(item))
             }
             FUN => {
-                let fun = named_item.clone().cast::<ast::Fun>().unwrap();
+                let fun = named_item.clone().cast_into::<ast::Fun>().unwrap();
                 let ty_callable = self.lower_function(fun);
                 Ty::Callable(ty_callable)
             }
             VARIANT => {
-                let variant = named_item.clone().cast::<ast::Variant>().unwrap();
+                let variant = named_item.clone().cast_into::<ast::Variant>().unwrap();
                 let enum_ = variant.map(|it| it.enum_());
                 let Some(enum_path) = method_or_path
                     .clone()
@@ -134,7 +134,7 @@ impl<'ctx, 'db> TyLowering<'ctx, 'db> {
         // adds associations of ?Element -> (type of ?Element from explicitly set types)
         // Option<u8>: ?Element -> u8
         // Option: ?Element -> ?Element
-        if let Some(generic_item) = named_item.cast::<ast::AnyGenericElement>() {
+        if let Some(generic_item) = named_item.cast_into::<ast::AnyGenericElement>() {
             let type_args_subst = self.type_args_substitution(method_or_path, generic_item);
             return path_ty.substitute(&type_args_subst);
         }
@@ -142,9 +142,16 @@ impl<'ctx, 'db> TyLowering<'ctx, 'db> {
         path_ty
     }
 
-    pub fn lower_field(&self, named_field: InFile<ast::NamedField>) -> Option<Ty> {
+    pub fn lower_named_field(&self, named_field: InFile<ast::NamedField>) -> Option<Ty> {
         let (file_id, named_field) = named_field.unpack();
         named_field
+            .type_()
+            .map(|type_| self.lower_type(type_.in_file(file_id)))
+    }
+
+    pub fn lower_tuple_field(&self, tuple_field: InFile<ast::TupleField>) -> Option<Ty> {
+        let (file_id, tuple_field) = tuple_field.unpack();
+        tuple_field
             .type_()
             .map(|type_| self.lower_type(type_.in_file(file_id)))
     }
