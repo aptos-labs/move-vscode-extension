@@ -41,6 +41,7 @@ ra_salsa = { workspace = true }
 paths = { workspace = true }
 
 base-db = { path = "../base-db" }
+syntax = { path = "../syntax" }
 ide-db = { path = "../ide-db" }
 ide-completion = { path = "../ide-completion" }
 ide-diagnostics = { path = "../ide-diagnostics" }

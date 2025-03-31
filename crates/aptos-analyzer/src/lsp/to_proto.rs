@@ -8,12 +8,12 @@ use ide::{Cancellable, HlRange, NavigationTarget};
 use ide_completion::item::{CompletionItem, CompletionItemKind};
 use ide_db::text_edit::{Indel, TextEdit};
 use ide_db::{Severity, SymbolKind};
-use lang::files::FileRange;
 use line_index::{TextRange, TextSize};
 use std::ops::Not;
 use std::sync::atomic::{AtomicU32, Ordering};
 use stdx::itertools::Itertools;
 use vfs::{AbsPath, FileId};
+use syntax::files::FileRange;
 
 pub(crate) fn position(line_index: &LineIndex, offset: TextSize) -> lsp_types::Position {
     let line_col = line_index.index.line_col(offset);

@@ -107,6 +107,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "stdx",
+ "syntax",
  "toml",
  "tracing",
  "tracing-subscriber",
