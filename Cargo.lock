@@ -114,6 +114,7 @@ dependencies = [
  "triomphe",
  "vfs",
  "vfs-notify",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
