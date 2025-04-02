@@ -6,9 +6,9 @@ use lang::Semantics;
 use syntax::SyntaxKind::*;
 use syntax::algo::find_node_at_offset;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
+use syntax::ast::node_ext::syntax_node::SyntaxElementExt;
 use syntax::files::{FilePosition, InFile, InFileExt};
 use syntax::{AstNode, SyntaxToken, TextRange, TextSize, ast};
-use syntax::ast::node_ext::syntax_node::SyntaxElementExt;
 
 const COMPLETION_MARKER: &str = "raCompletionMarker";
 
@@ -119,7 +119,9 @@ impl<'a> CompletionContext<'a> {
         }
 
         let ident_in_parent = ident_parent.child_or_token_at_range(ident.text_range()).unwrap();
-        let ident_prev_sibling = ident_in_parent.prev_sibling_or_token_no_trivia().map(|it| it.kind());
+        let ident_prev_sibling = ident_in_parent
+            .prev_sibling_or_token_no_trivia()
+            .map(|it| it.kind());
 
         let item_list_kind = match ident_parent.kind() {
             SOURCE_FILE => ItemListKind::SourceFile,

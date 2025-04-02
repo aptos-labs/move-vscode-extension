@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 mod event;
 mod grammar;
 pub mod lexer;

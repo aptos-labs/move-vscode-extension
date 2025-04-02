@@ -40,7 +40,7 @@ mod type_args;
 mod types;
 pub(crate) mod utils;
 
-use crate::grammar::items::item_first;
+use crate::grammar::items::{block_start, item_start};
 use crate::parser::Marker;
 use crate::token_set::TokenSet;
 use crate::{parser::Parser, SyntaxKind, SyntaxKind::*, T};
@@ -52,7 +52,9 @@ pub mod entry_points {
         let m = p.start();
         while !p.at(EOF) {
             let m = p.start();
+
             attributes::outer_attrs(p);
+
             match p.current() {
                 T![module] => module(p, m),
                 T![spec] => module_spec(p, m),
@@ -87,19 +89,17 @@ pub(crate) fn module(p: &mut Parser<'_>, m: Marker) {
     p.bump(T![module]);
     module_name(p);
     if p.at(T!['{']) {
-        item_list(p);
+        items::item_list(p);
     } else {
-        p.error_and_recover_until_ts("expected `{`", TOP_LEVEL_RECOVERY_SET);
+        p.error_and_bump_until_at_ts("expected `{`", TOP_LEVEL_FIRST);
     }
     m.complete(p, MODULE);
 }
 
 pub(crate) fn address_def(p: &mut Parser<'_>, m: Marker) {
     p.bump_remap(T![address]);
-    address_ref(p);
+    any_address(p);
     if p.at(T!['{']) {
-        // test mod_item_curly
-        // mod b { }
         p.bump(T!['{']);
         while !p.at(EOF) && !p.at(T!['}']) {
             let m = p.start();
@@ -107,7 +107,7 @@ pub(crate) fn address_def(p: &mut Parser<'_>, m: Marker) {
         }
         p.expect(T!['}']);
     } else {
-        p.error_and_recover_until_ts("expected `{`", TOP_LEVEL_RECOVERY_SET);
+        p.error_and_bump_until_at_ts("expected `{`", TOP_LEVEL_FIRST);
     }
     m.complete(p, ADDRESS_DEF);
 }
@@ -118,9 +118,9 @@ pub(crate) fn module_spec(p: &mut Parser, m: Marker) {
     if p.at(T!['{']) {
         // test mod_item_curly
         // mod b { }
-        item_list(p);
+        items::item_list(p);
     } else {
-        p.error_and_recover_until_ts("expected `{`", TOP_LEVEL_RECOVERY_SET);
+        p.error_and_bump_until_at_ts("expected `{`", TOP_LEVEL_FIRST);
     }
     m.complete(p, MODULE_SPEC);
 }
@@ -130,9 +130,9 @@ pub(crate) fn script(p: &mut Parser, m: Marker) {
     if p.at(T!['{']) {
         // test mod_item_curly
         // mod b { }
-        item_list(p);
+        items::item_list(p);
     } else {
-        p.error_and_recover_until_ts("expected `{`", TOP_LEVEL_RECOVERY_SET);
+        p.error_and_bump_until_at_ts("expected `{`", TOP_LEVEL_FIRST);
     }
     m.complete(p, SCRIPT);
 }
@@ -140,20 +140,13 @@ pub(crate) fn script(p: &mut Parser, m: Marker) {
 pub(crate) fn module_name(p: &mut Parser) {
     if p.nth_at(1, T![::]) {
         // named address
-        address_ref(p);
+        any_address(p);
         p.bump(T![::]);
     }
-    name_r(p, |p| p.at_ts(TOP_LEVEL_RECOVERY_SET));
+    name_or_bump_until(p, |p| p.at_ts(TOP_LEVEL_FIRST));
 }
 
-pub(crate) fn address_ref(p: &mut Parser) {
-    // named address
-    // let m = p.start();
-    address(p);
-    // m.complete(p, ADDRESS_REF);
-}
-
-pub(crate) fn address(p: &mut Parser) {
+pub(crate) fn any_address(p: &mut Parser) {
     if p.at(INT_NUMBER) {
         // value address
         let m = p.start();
@@ -169,18 +162,23 @@ pub(crate) fn address(p: &mut Parser) {
     }
 }
 
-pub(crate) const TOP_LEVEL_RECOVERY_SET: TokenSet =
-    TokenSet::new(&[T![module], T![script], T![spec], EOF]);
-
-pub(crate) fn item_list(p: &mut Parser<'_>) {
-    assert!(p.at(T!['{']));
-    p.bump(T!['{']);
-    items::mod_contents(p);
-    p.expect(T!['}']);
-}
+pub(crate) const TOP_LEVEL_FIRST: TokenSet =
+    TokenSet::new(&[T![module], T![script], T![spec], T![address]]);
 
 fn name(p: &mut Parser) -> bool {
-    name_r(p, |p| p.at_ts(TokenSet::EMPTY))
+    name_or_bump_until(p, |p| p.at_ts(TokenSet::EMPTY))
+}
+
+fn name_ref_or_bump_until(p: &mut Parser, stop: impl Fn(&Parser) -> bool) -> bool {
+    if p.at(IDENT) {
+        let m = p.start();
+        p.bump(IDENT);
+        m.complete(p, NAME_REF);
+        true
+    } else {
+        p.error_and_bump_until("expected identifier", stop);
+        false
+    }
 }
 
 fn name_ref(p: &mut Parser) {
@@ -218,45 +216,43 @@ fn named_address(p: &mut Parser) {
     named_addr.complete(p, NAMED_ADDRESS);
 }
 
-fn opt_ret_type(p: &mut Parser<'_>) {
-    if p.at(T![:]) {
-        let m = p.start();
-        p.bump(T![:]);
-        types::type_no_bounds(p);
-        m.complete(p, RET_TYPE);
-    }
-    // if p.at(T![:]) {
-    //     let m = p.start();
-    //     p.bump(T![:]);
-    //     types::type_no_bounds(p);
-    //     m.complete(p, RET_TYPE);
-    //     true
-    // } else {
-    //     false
+// fn item_name_or_bump_until_next_item(p: &mut Parser) {
+//     // if p.at(IDENT) {
+//     //     let m = p.start();
+//     //     p.bump(IDENT);
+//     //     m.complete(p, NAME);
+//     // } else {
+//     //     p.err_recover("expected a name", recovery);
+//     // }
+//     name_or_bump_until(p, item_first);
+// }
+
+fn item_name(p: &mut Parser) -> bool {
+    name_or_bump_until(p, |p| item_start(p) || block_start(p))
+    // if !name_or_bump_until(p, item_first) {
+    //     // m.abandon(p);
+    //     return;
     // }
 }
 
-fn item_name_r(p: &mut Parser) {
+fn name_or_bump_until(p: &mut Parser, stop: impl Fn(&Parser) -> bool) -> bool {
+    if !p.at(IDENT) {
+        p.error_and_bump_until("expected an identifier", stop);
+        return false;
+    }
+    let m = p.start();
+    p.bump(IDENT);
+    m.complete(p, NAME);
+    true
+    //
     // if p.at(IDENT) {
     //     let m = p.start();
     //     p.bump(IDENT);
     //     m.complete(p, NAME);
+    //     true
     // } else {
-    //     p.err_recover("expected a name", recovery);
+    //     false
     // }
-    name_r(p, item_first);
-}
-
-fn name_r(p: &mut Parser, stop_recovery: impl Fn(&Parser) -> bool) -> bool {
-    if p.at(IDENT) {
-        let m = p.start();
-        p.bump(IDENT);
-        m.complete(p, NAME);
-        true
-    } else {
-        p.error_and_recover_until("expected a name", stop_recovery);
-        false
-    }
 }
 
 fn error_block(p: &mut Parser, message: &str) {

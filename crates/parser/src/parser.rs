@@ -1,6 +1,7 @@
 //! See [`Parser`].
 
 use drop_bomb::DropBomb;
+use std::ops::Deref;
 
 use crate::{
     event::Event,
@@ -22,6 +23,7 @@ pub struct Parser<'t> {
     token_source: &'t mut dyn TokenSource,
     events: Vec<Event>,
     // steps: Cell<u32>,
+    // stop_recovery: Option<Box<dyn Fn(/*&Parser*/) -> bool>>,
 }
 
 // static PARSER_STEP_LIMIT: Limit = Limit::new(15_000_000);
@@ -31,6 +33,7 @@ impl<'t> Parser<'t> {
         Parser {
             token_source,
             events: Vec::new(), /*steps: Cell::new(0)*/
+                                // stop_recovery: None,
         }
     }
 
@@ -259,7 +262,12 @@ impl<'t> Parser<'t> {
     }
 
     /// Emit error with the `message`.
-    pub(crate) fn error<T: Into<String>>(&mut self, message: T) {
+    pub(crate) fn error(&mut self, message: impl Into<String>) {
+        self.error_and_bump_until(&message.into(), |p| false);
+        // self.push_error(message);
+    }
+
+    fn push_error(&mut self, message: impl Into<String>) {
         let msg = ParseError(Box::new(message.into()));
         self.push_event(Event::Error { msg });
     }
@@ -280,8 +288,8 @@ impl<'t> Parser<'t> {
     // }
 
     /// Create an error node and consume the next token.
-    pub(crate) fn error_and_recover_until_ts(&mut self, message: &str, recovery_ts: TokenSet) {
-        self.error_and_recover_until(message, |p| p.at_ts(recovery_ts));
+    pub(crate) fn error_and_bump_until_at_ts(&mut self, message: &str, stop_at_ts: TokenSet) {
+        self.error_and_bump_until(message, |p| p.at_ts(stop_at_ts));
         // match self.current() {
         //     T!['{'] | T!['}'] => {
         //         self.error(message);
@@ -301,36 +309,31 @@ impl<'t> Parser<'t> {
         // m.complete(self, ERROR);
     }
 
-    /// adds error and then bumps until it finds `stop_recovery()` item
-    pub(crate) fn error_and_recover_until(&mut self, message: &str, stop_recovery: impl Fn(&Parser) -> bool) {
-        // match self.current() {
-        //     T!['{'] | T!['}'] => {
-        //         self.error(message);
-        //         return;
-        //     }
-        //     _ => (),
-        // }
+    /// adds error and then bumps until `stop()` is true
+    pub(crate) fn error_and_bump_until(&mut self, message: &str, stop: impl Fn(&Parser) -> bool) {
+        self.push_error(message);
+        self.bump_until(stop);
+    }
 
-        self.error(message);
+    // pub(crate) fn with_recover_until(&mut self, f: impl Fn(&mut Parser)) {
+    //     // self.stop_recovery = Some(Box::new(stop_recovery));
+    //     f(self);
+    //     // self.stop_recovery = None;
+    // }
 
+    pub(crate) fn bump_until(&mut self, stop: impl Fn(&Parser) -> bool) {
         while !self.at(EOF) {
-            if stop_recovery(self) {
+            if stop(self) {
                 break;
             }
             self.bump_any();
         }
-
-        // if stop_recovery(self) {
-        //     self.error(message);
-        //     return;
-        // }
-        //
-        // self.error_and_bump_any(message);
     }
 
     pub(crate) fn error_and_bump_any(&mut self, message: &str) {
         let m = self.start();
-        self.error(message);
+        self.push_error(message);
+        // self.error(message);
         self.bump_any();
         m.complete(self, ERROR);
     }

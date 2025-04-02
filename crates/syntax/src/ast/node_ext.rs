@@ -1,5 +1,4 @@
 mod address_ref;
-mod fields_owner;
 mod any_generic_item;
 mod assert_macro_expr;
 pub mod attr;
@@ -11,6 +10,7 @@ mod const_;
 mod enum_;
 mod expr;
 mod field_ref;
+mod fields_owner;
 pub mod fun;
 mod ident_pat;
 mod if_expr;

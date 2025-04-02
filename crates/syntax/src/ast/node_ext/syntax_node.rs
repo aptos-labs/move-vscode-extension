@@ -11,18 +11,16 @@ pub trait SyntaxElementExt {
 impl SyntaxElementExt for SyntaxElement {
     fn prev_sibling_or_token_no_trivia(&self) -> Option<SyntaxElement> {
         match self {
-            NodeOrToken::Node(node) => {
-                node.siblings_with_tokens(Direction::Prev)
-                    .dropping(1)
-                    .filter(|it| !it.kind().is_trivia())
-                    .next()
-            }
-            NodeOrToken::Token(token) => {
-                token.siblings_with_tokens(Direction::Prev)
-                    .dropping(1)
-                    .filter(|it| !it.kind().is_trivia())
-                    .next()
-            }
+            NodeOrToken::Node(node) => node
+                .siblings_with_tokens(Direction::Prev)
+                .dropping(1)
+                .filter(|it| !it.kind().is_trivia())
+                .next(),
+            NodeOrToken::Token(token) => token
+                .siblings_with_tokens(Direction::Prev)
+                .dropping(1)
+                .filter(|it| !it.kind().is_trivia())
+                .next(),
         }
     }
 }
@@ -108,7 +106,6 @@ impl SyntaxNodeExt for SyntaxNode {
     fn descendants_of_type<Ast: AstNode>(&self) -> impl Iterator<Item = Ast> {
         self.descendants().filter_map(Ast::cast)
     }
-
 
     fn next_sibling_or_token_no_trivia(&self) -> Option<SyntaxElement> {
         self.siblings_with_tokens(Direction::Next)

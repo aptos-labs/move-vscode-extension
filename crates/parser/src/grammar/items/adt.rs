@@ -1,9 +1,6 @@
 use crate::grammar::attributes::ATTRIBUTE_FIRST;
-use crate::grammar::items::ITEM_KEYWORDS;
 use crate::grammar::utils::list;
-use crate::grammar::{
-    ability, error_block, expressions, generic_params, item_name_r, name, name_r, types,
-};
+use crate::grammar::{ability, error_block, generic_params, item_name, name, types};
 use crate::parser::Marker;
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
@@ -13,7 +10,12 @@ use crate::{Parser, T};
 // struct S {}
 pub(super) fn struct_(p: &mut Parser<'_>, m: Marker) {
     p.bump(T![struct]);
-    item_name_r(p);
+    // name_or_bump_until(p, item_first);
+    if !item_name(p) {
+        m.complete(p, STRUCT);
+        return;
+    }
+
     generic_params::opt_generic_param_list(p);
     opt_abilities_list(p);
     match p.current() {
@@ -70,7 +72,7 @@ fn opt_abilities_list(p: &mut Parser) -> bool {
             }
             if !p.eat(delim) {
                 if p.at_ts(ABILITY_FIRST) {
-                    p.error(format!("expected {delim:?}"));
+                    p.error(&format!("expected {delim:?}"));
                 } else {
                     break;
                 }
@@ -86,7 +88,17 @@ pub(crate) const ABILITY_FIRST: TokenSet = TokenSet::new(&[IDENT]);
 
 pub(super) fn enum_(p: &mut Parser<'_>, m: Marker) {
     p.bump_remap(T![enum]);
-    item_name_r(p);
+
+    if !item_name(p) {
+        m.complete(p, ENUM);
+        return;
+    }
+    // if !name_or_bump_until(p, item_first) {
+    //     m.complete(p, ENUM);
+    //     // m.abandon(p);
+    //     return;
+    // }
+
     // name_r(p, ITEM_KW_RECOVERY_SET);
     generic_params::opt_generic_param_list(p);
     opt_abilities_list(p);

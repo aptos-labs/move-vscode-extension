@@ -1,14 +1,16 @@
 use crate::grammar::expressions::atom::block_expr;
+use crate::grammar::items::item_start;
 use crate::grammar::paths::PATH_FIRST;
-use crate::grammar::types::path_type_;
+use crate::grammar::types::path_type;
 use crate::grammar::utils::delimited;
-use crate::grammar::{generic_params, item_name_r, opt_ret_type, params};
+use crate::grammar::{generic_params, item_name, params, paths, types};
 use crate::parser::Marker;
 use crate::token_set::TokenSet;
-use crate::SyntaxKind::{ACQUIRES, EOF, FUN, IDENT, SPEC_FUN, SPEC_INLINE_FUN, VISIBILITY_MODIFIER};
-use crate::{Parser, SyntaxKind, T};
+use crate::SyntaxKind::{
+    ACQUIRES, EOF, FUN, IDENT, RET_TYPE, SPEC_FUN, SPEC_INLINE_FUN, VISIBILITY_MODIFIER,
+};
+use crate::{ts, Parser, SyntaxKind, T};
 use std::collections::HashSet;
-use crate::grammar::items::item_first;
 
 pub(crate) fn spec_function(p: &mut Parser, m: Marker) {
     p.bump(T![spec]);
@@ -28,7 +30,8 @@ pub(crate) fn function(p: &mut Parser, m: Marker) {
     if p.at(T![fun]) {
         fun_signature(p, false, true);
     } else {
-        p.error_and_recover_until("expected 'fun'", item_first);
+        p.error("expected 'fun'");
+        p.error_and_bump_until("expected 'fun'", item_start);
     }
     m.complete(p, FUN);
 }
@@ -42,8 +45,8 @@ fn opt_modifiers(p: &mut Parser) {
         T![friend],
         T![package],
     ]
-        .into_iter()
-        .collect();
+    .into_iter()
+    .collect();
 
     while !p.at(EOF) {
         match p.current() {
@@ -111,7 +114,7 @@ fn opt_inner_public_modifier(p: &mut Parser) {
                 p.bump(T![script]);
             }
             _ => {
-                p.error_and_recover_until_ts("expected public modifier", TokenSet::new(&[T![')']]));
+                p.error_and_bump_until_at_ts("expected public modifier", TokenSet::new(&[T![')']]));
             }
         }
         p.expect(T![')']);
@@ -121,6 +124,9 @@ fn opt_inner_public_modifier(p: &mut Parser) {
 fn acquires(p: &mut Parser) {
     let m = p.start();
     p.bump(T![acquires]);
+    if !paths::is_path_start(p) {
+        p.error_and_bump_until("expected type", |p| item_start(p) || p.at(T!['{']) || p.at(T![;]));
+    }
     delimited(
         p,
         T![,],
@@ -128,7 +134,11 @@ fn acquires(p: &mut Parser) {
         |p| p.at(T!['{']) || p.at(T![;]),
         PATH_FIRST,
         |p| {
-            path_type_(p, false);
+            if paths::is_path_start(p) {
+                path_type(p);
+            } else {
+                p.error("expected type");
+            }
             true
         },
     );
@@ -138,7 +148,11 @@ fn acquires(p: &mut Parser) {
 fn fun_signature(p: &mut Parser, is_spec: bool, allow_acquires: bool) {
     p.bump(T![fun]);
 
-    item_name_r(p);
+    if !item_name(p) {
+        return;
+    }
+
+    // name_or_bump_until(p, item_first);
     // name_r(p, ITEM_KW_RECOVERY_SET);
     // test function_type_params
     // fn foo<T: Clone + Copy>(){}
@@ -147,8 +161,12 @@ fn fun_signature(p: &mut Parser, is_spec: bool, allow_acquires: bool) {
     if p.at(T!['(']) {
         params::fun_param_list(p);
     } else {
-        p.error("expected function arguments");
+        p.error_and_bump_until("expected function arguments", |p| {
+            item_start(p) || p.at_ts(ts!(T![;], T!['{']))
+        });
+        // p.error("expected function arguments");
     }
+
     opt_ret_type(p);
 
     if p.at(T![acquires]) {
@@ -160,13 +178,24 @@ fn fun_signature(p: &mut Parser, is_spec: bool, allow_acquires: bool) {
     }
 
     if p.at(T![;]) {
-        // test fn_decl
-        // trait T { fn foo(); }
         p.bump(T![;]);
     } else {
         block_expr(p, is_spec);
     }
 }
+
+pub(crate) fn opt_ret_type(p: &mut Parser<'_>) {
+    if p.at(T![:]) {
+        let m = p.start();
+        p.bump(T![:]);
+        types::type_or_recover_until(p, |p| item_start(p) || p.at_ts(ts!(T![acquires], T![;], T!['{'])));
+        m.complete(p, RET_TYPE);
+    }
+}
+
+// fn signature_end(p: &Parser) -> bool {
+//     p.at_ts(ts!(T![;], T!['{']))
+// }
 
 pub(crate) fn on_function_modifiers_start(p: &Parser) -> bool {
     match p.current() {

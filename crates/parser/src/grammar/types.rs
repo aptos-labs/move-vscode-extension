@@ -24,73 +24,43 @@ pub(super) fn ascription(p: &mut Parser) {
 }
 
 pub(crate) fn type_(p: &mut Parser) {
-    type_with_bounds_cond(p, true)
+    type_or_recover_until(p, |_| true)
+    // match p.current() {
+    //     T!['('] => paren_or_tuple_or_unit_type(p),
+    //     T![&] => ref_type(p),
+    //     T![|] => lambda_type(p),
+    //     _ if paths::is_path_start(p) => path_type(p),
+    //     _ => {
+    //         p.error("expected type");
+    //         // p.error_and_recover_until_ts("expected type", TYPE_RECOVERY_SET);
+    //     }
+    // }
 }
 
-pub(super) fn type_no_bounds(p: &mut Parser) {
-    type_with_bounds_cond(p, false);
-}
-
-fn type_with_bounds_cond(p: &mut Parser, allow_bounds: bool) {
+pub(crate) fn type_or_recover_until(p: &mut Parser, stop: impl Fn(&Parser) -> bool) {
     match p.current() {
         T!['('] => paren_or_tuple_or_unit_type(p),
         T![&] => ref_type(p),
         T![|] => lambda_type(p),
-        // T![<] => path_type_(p, allow_bounds),
-        _ if paths::is_use_path_start(p) => path_or_macro_type_(p, allow_bounds),
+        _ if paths::is_path_start(p) => path_type(p),
         _ => {
-            p.error_and_recover_until_ts("expected type", TYPE_RECOVERY_SET);
+            // p.error("expected type");
+            // return false
+            p.error_and_bump_until("expected type", stop);
+            // p.error("expected type");
+            // p.error_and_recover_until_ts("expected type", TYPE_RECOVERY_SET);
         }
     }
+    // true
 }
 
-// test path_type
-// type A = Foo;
-// type B = ::Foo;
-// type C = self::Foo;
-// type D = super::Foo;
 pub(super) fn path_type(p: &mut Parser) {
-    path_type_(p, true);
-}
-
-// test macro_call_type
-// type A = foo!();
-// type B = crate::foo!();
-fn path_or_macro_type_(p: &mut Parser, allow_bounds: bool) {
     assert!(paths::is_path_start(p));
-    let r = p.start();
-    let m = p.start();
 
-    paths::type_path(p);
-
-    let kind = /*if p.at(T![!]) && !p.at(T![!=]) {
-        items::macro_call_after_excl(p);
-        m.complete(p, MACRO_CALL);
-        MACRO_TYPE
-    } else*/ {
-        m.abandon(p);
-        PATH_TYPE
-    };
-
-    let path = r.complete(p, kind);
-
-    // if allow_bounds {
-    //     opt_type_bounds_as_dyn_trait_type(p, path);
-    // }
-}
-
-pub(super) fn path_type_(p: &mut Parser, allow_bounds: bool) {
-    assert!(paths::is_path_start(p));
     let m = p.start();
     paths::type_path(p);
 
-    // test path_type_with_bounds
-    // fn foo() -> Box<T + 'f> {}
-    // fn foo() -> Box<dyn T + 'f> {}
-    let path = m.complete(p, PATH_TYPE);
-    // if allow_bounds {
-    //     opt_type_bounds_as_dyn_trait_type(p, path);
-    // }
+    m.complete(p, PATH_TYPE);
 }
 
 // test reference_type;
@@ -102,7 +72,7 @@ fn ref_type(p: &mut Parser) {
     let m = p.start();
     p.bump(T![&]);
     p.eat(T![mut]);
-    type_no_bounds(p);
+    type_(p);
     m.complete(p, REF_TYPE);
 }
 

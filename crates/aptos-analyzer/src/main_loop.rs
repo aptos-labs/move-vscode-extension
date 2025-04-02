@@ -5,6 +5,7 @@ use crate::global_state::{
     FetchWorkspaceRequest, FetchWorkspaceResponse, GlobalState, file_id_to_url, url_to_file_id,
 };
 use crate::handlers::dispatch::{NotificationDispatcher, RequestDispatcher};
+use crate::handlers::request;
 use crate::lsp::from_proto;
 use crate::lsp::utils::{Progress, notification_is};
 use crate::reload::ProjectWorkspaceProgress;
@@ -22,7 +23,6 @@ use stdx::thread::ThreadIntent;
 use tracing::{Level, span};
 use vfs::loader::LoadingProgress;
 use vfs::{FileId, VfsPath};
-use crate::handlers::request;
 
 pub fn main_loop(config: Config, connection: Connection) -> anyhow::Result<()> {
     tracing::info!("initial config: {:#?}", config);

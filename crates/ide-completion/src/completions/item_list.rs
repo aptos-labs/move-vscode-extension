@@ -23,7 +23,11 @@ pub(crate) fn complete_item_list(
     add_keywords(acc, ctx, Some(kind));
 }
 
-fn add_keywords(acc: &RefCell<Completions>, ctx: &CompletionContext, kind: Option<&ItemListKind>) -> Option<()> {
+fn add_keywords(
+    acc: &RefCell<Completions>,
+    ctx: &CompletionContext,
+    kind: Option<&ItemListKind>,
+) -> Option<()> {
     let add_keyword = |kw: &str| {
         acc.borrow_mut()
             .add_keyword_snippet(ctx, kw, format!("{} $0", kw).leak())

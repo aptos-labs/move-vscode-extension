@@ -122,7 +122,6 @@ pub enum SymbolKind {
     ValueParam,
     Label,
     Local,
-
     // SpecFunction,
     // SpecInlineFunction,
     // Schema,
@@ -152,7 +151,7 @@ pub fn ast_kind_to_symbol_kind(kind: SyntaxKind) -> Option<SymbolKind> {
         _ => {
             tracing::error!("unhandled ast kind {:?}", kind);
             None
-        },
+        }
     }
 }
 

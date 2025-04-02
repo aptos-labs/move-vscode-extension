@@ -1,19 +1,16 @@
 use crate::grammar::expressions::atom::{block_or_inline_expr, EXPR_FIRST};
+use crate::grammar::items::{fun, use_item};
 use crate::grammar::params::lambda_param_list;
 use crate::grammar::patterns::pattern;
 use crate::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt};
 use crate::grammar::specs::quants::{choose_expr, exists_expr, forall_expr, is_at_quant_kw};
 use crate::grammar::specs::schemas::{apply_schema, global_variable, include_schema, schema_field};
-use crate::grammar::utils::{delimited, list};
-use crate::grammar::{
-    error_block, name_ref, name_ref_or_index, paths, patterns, type_args, types,
-    IDENT_OR_INT_NUMBER,
-};
+use crate::grammar::utils::list;
+use crate::grammar::{error_block, name_ref, paths, patterns, type_args, types};
 use crate::parser::{CompletedMarker, Marker, Parser};
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{SyntaxKind, T};
-use crate::grammar::items::{fun, use_item};
 
 pub(crate) mod atom;
 
@@ -114,9 +111,9 @@ fn expr_bp(
 fn is_expr(p: &mut Parser, lhs: CompletedMarker) -> CompletedMarker {
     let m = lhs.precede(p);
     p.bump_remap(T![is]);
-    types::type_no_bounds(p);
+    types::type_(p);
     while p.eat(T![|]) {
-        types::type_no_bounds(p);
+        types::type_(p);
     }
     m.complete(p, IS_EXPR)
 }
@@ -134,42 +131,10 @@ fn cast_expr(p: &mut Parser, lhs: CompletedMarker) -> CompletedMarker {
     p.bump(T![as]);
     // Use type_no_bounds(), because cast expressions are not
     // allowed to have bounds.
-    types::type_no_bounds(p);
+    types::type_(p);
     m.complete(p, CAST_EXPR)
 }
 
-// // test path_expr
-// // fn foo() {
-// //     let _ = a;
-// //     let _ = a::b;
-// //     let _ = ::a::<b>;
-// //     let _ = format!();
-// // }
-// fn path_expr(p: &mut Parser) -> Option<Marker> {
-//     assert!(paths::is_path_start(p));
-//     let m = p.start();
-//     paths::expr_path(p);
-//     match p.current() {
-//         T!['{'] /*if !r.forbid_structs*/ => {
-//             struct_lit_field_list(p);
-//             m.complete(p, STRUCT_LIT);
-//             None
-//         }
-//         // T![!] if !p.at(T![!=]) => {
-//         //     let block_like = items::macro_call_after_excl(p);
-//         //     complete(p, MACRO_CALL)
-//         // }
-//         _ => { Some(m) },
-//     }
-// }
-
-// test record_lit
-// fn foo() {
-//     S {};
-//     S { x, y: 32, };
-//     S { x, y: 32, ..Default::default() };
-//     TupleStruct { 0: 1 };
-// }
 pub(crate) fn struct_lit_field_list(p: &mut Parser) {
     assert!(p.at(T!['{']));
     let m = p.start();
@@ -638,12 +603,10 @@ pub(super) fn stmt_expr(p: &mut Parser, m: Option<Marker>) -> Option<(CompletedM
 
 pub(super) fn expr_block_contents(p: &mut Parser, is_spec: bool) {
     while !p.at(EOF) && !p.at(T!['}']) {
-
         if p.at(T![;]) {
             p.bump(T![;]);
             continue;
         }
-
         stmt(p, StmtWithSemi::Yes, false, is_spec);
     }
 }

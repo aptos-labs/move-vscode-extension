@@ -1,6 +1,5 @@
 use crate::grammar::type_args::opt_path_type_arg_list;
-use crate::grammar::utils::list;
-use crate::grammar::{address, address_ref, items, name_ref, type_args, types};
+use crate::grammar::{any_address, items, name_ref};
 use crate::parser::{CompletedMarker, Parser};
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
@@ -9,10 +8,6 @@ use crate::T;
 pub(super) const PATH_FIRST: TokenSet = TokenSet::new(&[IDENT, INT_NUMBER]);
 
 pub(super) fn is_path_start(p: &Parser) -> bool {
-    is_use_path_start(p)
-}
-
-pub(super) fn is_use_path_start(p: &Parser) -> bool {
     match p.current() {
         // addresses
         INT_NUMBER if p.nth_at(1, T![::]) => true,
@@ -79,11 +74,11 @@ fn path_segment(p: &mut Parser, mode: Mode, first: bool) {
         }
         INT_NUMBER if first => {
             let m = p.start();
-            address(p);
+            any_address(p);
             m.complete(p, PATH_ADDRESS);
         }
         _ => {
-            p.error_and_recover_until_ts("expected identifier", items::ITEM_KEYWORDS);
+            p.error_and_bump_until("expected identifier", items::item_start);
             if empty {
                 // test_err empty_segment
                 // use crate::;

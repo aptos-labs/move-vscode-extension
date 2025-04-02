@@ -1,23 +1,19 @@
-use crate::entry_points::expr;
 use crate::grammar::expressions::atom::{block_expr, IDENT_FIRST};
 use crate::grammar::expressions::opt_initializer_expr;
-use crate::grammar::items::ITEM_KEYWORDS;
+use crate::grammar::items::item_start;
 use crate::grammar::paths::type_path;
 use crate::grammar::specs::predicates::opt_predicate_property_list;
-use crate::grammar::utils::{delimited, delimited_fn, list};
-use crate::grammar::{
-    expressions, generic_params, item_list, item_name_r, patterns, types, TOP_LEVEL_RECOVERY_SET,
-};
-use crate::parser::{CompletedMarker, Marker};
+use crate::grammar::utils::{delimited_fn, list};
+use crate::grammar::{expressions, generic_params, name_or_bump_until, patterns, types};
+use crate::parser::Marker;
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{Parser, T};
-use log::log;
 
 pub(crate) fn schema(p: &mut Parser, m: Marker) {
     assert!(p.at(IDENT) && p.at_contextual_kw("schema"));
     p.bump_remap(T![schema]);
-    item_name_r(p);
+    name_or_bump_until(p, item_start);
     generic_params::opt_generic_param_list(p);
     block_expr(p, true);
     m.complete(p, SCHEMA);

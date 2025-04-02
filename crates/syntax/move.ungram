@@ -384,6 +384,7 @@ NameLike =
 Name =
     'ident'
 
+// not present in syntax tree
 AddressRef =
     NamedAddress | ValueAddress
 

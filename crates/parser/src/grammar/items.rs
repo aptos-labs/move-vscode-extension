@@ -4,30 +4,37 @@ pub(crate) mod use_item;
 
 use crate::grammar::expressions::atom::block_expr;
 use crate::grammar::expressions::expr;
-use crate::grammar::paths::{use_path, PATH_FIRST};
+use crate::grammar::paths::use_path;
 use crate::grammar::specs::schemas::schema;
-use crate::grammar::types::path_type_;
-use crate::grammar::utils::delimited;
 use crate::grammar::{
-    attributes, error_block, generic_params, item_name_r, name_ref, opt_ret_type, params, types,
+    attributes, error_block, generic_params, item_name, name_or_bump_until, name_ref,
+    name_ref_or_bump_until, params, types,
 };
 use crate::parser::{Marker, Parser};
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
-use crate::{SyntaxKind, T};
-use std::collections::HashSet;
+use crate::T;
 use std::ops::Index;
 
-// test mod_contents
-// fn foo() {}
-// macro_rules! foo {}
-// foo::bar!();
-// super::baz! {}
-// struct S;
-pub(super) fn mod_contents(p: &mut Parser) {
+// // test mod_contents
+// // fn foo() {}
+// // macro_rules! foo {}
+// // foo::bar!();
+// // super::baz! {}
+// // struct S;
+// pub(super) fn mod_contents(p: &mut Parser) {
+//     while !p.at(EOF) && !(p.at(T!['}'])) {
+//         item(p);
+//     }
+// }
+
+pub(crate) fn item_list(p: &mut Parser<'_>) {
+    assert!(p.at(T!['{']));
+    p.bump(T!['{']);
     while !p.at(EOF) && !(p.at(T!['}'])) {
         item(p);
     }
+    p.expect(T!['}']);
 }
 
 pub(super) fn item(p: &mut Parser) {
@@ -94,13 +101,12 @@ fn try_items_with_no_modifiers(p: &mut Parser, m: Marker) -> Result<(), Marker> 
         T![friend] if !p.nth_at(1, T![fun]) => friend_decl(p, m),
         T![spec] if !p.nth_at(1, T![fun]) => {
             p.bump(T![spec]);
-            if p.at(IDENT) && p.at_contextual_kw("schema") {
+            if p.at_contextual_kw_ident("schema") {
                 schema(p, m);
                 return Ok(());
             }
             item_spec(p, m)
         }
-        T![spec] if p.nth_at(1, T![fun]) => fun::spec_function(p, m),
         IDENT if p.at_contextual_kw("enum") => adt::enum_(p, m),
         _ => return Err(m),
     };
@@ -109,7 +115,13 @@ fn try_items_with_no_modifiers(p: &mut Parser, m: Marker) -> Result<(), Marker> 
 
 fn const_(p: &mut Parser, m: Marker) {
     p.bump(T![const]);
-    item_name_r(p);
+    // name_or_bump_until(p, item_first);
+
+    if !item_name(p) {
+        m.complete(p, CONST);
+        return;
+    }
+
     if p.at(T![:]) {
         types::ascription(p);
     } else {
@@ -123,17 +135,17 @@ fn const_(p: &mut Parser, m: Marker) {
 }
 
 fn item_spec(p: &mut Parser, m: Marker) {
-    // p.bump(T![spec]);
     if p.at(T![module]) {
         p.bump(T![module]);
     } else {
-        name_ref(p);
-        // item_name_r(p);
-        // function signature
+        if !name_ref_or_bump_until(p, item_start) {
+            m.complete(p, ITEM_SPEC);
+            return;
+        }
         generic_params::opt_generic_param_list(p);
         if p.at(T!['(']) {
             params::fun_param_list(p);
-            opt_ret_type(p);
+            fun::opt_ret_type(p);
         }
     }
     block_expr(p, true);
@@ -147,20 +159,27 @@ pub(crate) fn friend_decl(p: &mut Parser, m: Marker) {
     m.complete(p, FRIEND);
 }
 
-pub(crate) fn item_first(p: &Parser) -> bool {
-    p.at_ts(ITEM_KEYWORDS) || fun::on_function_modifiers_start(p)
+// pub(crate) fn item_first_or_l_curly(p: &Parser) -> bool {
+//     item_first(p)
+// }
+
+pub(crate) fn block_start(p: &Parser) -> bool {
+    p.at(T!['{'])
 }
 
-pub(super) const ITEM_KEYWORDS: TokenSet = TokenSet::new(&[
+pub(crate) fn item_start(p: &Parser) -> bool {
+    p.at_ts(ITEM_KEYWORDS)
+        || p.at(T!['}'])
+        || fun::on_function_modifiers_start(p)
+        || p.at_contextual_kw_ident("enum")
+}
+
+const ITEM_KEYWORDS: TokenSet = TokenSet::new(&[
     T![fun],
     T![struct],
     T![const],
     T![spec],
-    T![public],
+    T![schema],
     T![friend],
-    T![package],
-    T![native],
     T![use],
-    T![;],
-    T!['}'],
 ]);

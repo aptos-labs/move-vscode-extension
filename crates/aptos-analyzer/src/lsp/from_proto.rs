@@ -3,8 +3,8 @@ use crate::line_index::{LineIndex, PositionEncoding};
 use anyhow::format_err;
 use camino::Utf8PathBuf;
 use line_index::{LineCol, TextRange, TextSize, WideLineCol};
-use vfs::{AbsPathBuf, FileId};
 use syntax::files::{FilePosition, FileRange};
+use vfs::{AbsPathBuf, FileId};
 
 pub(crate) fn abs_path(url: &lsp_types::Url) -> anyhow::Result<AbsPathBuf> {
     let path = url
