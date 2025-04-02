@@ -1,4 +1,4 @@
-use crate::grammar::items::ITEM_KW_RECOVERY_SET;
+use crate::grammar::items::ITEM_KEYWORDS;
 use crate::grammar::{name, paths};
 use crate::parser::Marker;
 use crate::SyntaxKind::*;
@@ -58,11 +58,11 @@ fn use_speck(p: &mut Parser, top_level: bool) {
             m.abandon(p);
             let msg = "expected one of `*`, `::`, `{`, `self`, `super` or an identifier";
             if top_level {
-                p.err_recover(msg, ITEM_KW_RECOVERY_SET);
+                p.error_and_recover_until_ts(msg, ITEM_KEYWORDS);
             } else {
                 // if we are parsing a nested tree, we have to eat a token to
                 // main balanced `{}`
-                p.err_and_bump(msg);
+                p.error_and_bump_any(msg);
             }
             return;
         }

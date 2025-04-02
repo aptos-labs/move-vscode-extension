@@ -6,6 +6,10 @@ use crate::SyntaxKind;
 #[derive(Clone, Copy)]
 pub(crate) struct TokenSet(u128);
 
+pub(crate) fn ts(kinds: &[SyntaxKind]) -> TokenSet {
+    TokenSet::new(kinds)
+}
+
 impl TokenSet {
     pub(crate) const EMPTY: TokenSet = TokenSet(0);
 

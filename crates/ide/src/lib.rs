@@ -19,6 +19,7 @@ mod navigation_target;
 pub mod syntax_highlighting;
 pub mod test_utils;
 mod type_info;
+mod view_syntax_tree;
 
 use crate::hover::HoverResult;
 pub use crate::navigation_target::NavigationTarget;
@@ -214,9 +215,9 @@ impl Analysis {
     //     })
     // }
 
-    // pub fn view_syntax_tree(&self, file_id: FileId) -> Cancellable<String> {
-    //     self.with_db(|db| view_syntax_tree::view_syntax_tree(db, file_id))
-    // }
+    pub fn view_syntax_tree(&self, file_id: FileId) -> Cancellable<String> {
+        self.with_db(|db| view_syntax_tree::view_syntax_tree(db, file_id))
+    }
 
     // pub fn view_lang(&self, position: FilePosition) -> Cancellable<String> {
     //     self.with_db(|db| view_lang::view_lang(db, position))

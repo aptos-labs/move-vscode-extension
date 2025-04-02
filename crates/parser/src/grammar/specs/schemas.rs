@@ -1,7 +1,7 @@
 use crate::entry_points::expr;
 use crate::grammar::expressions::atom::{block_expr, IDENT_FIRST};
 use crate::grammar::expressions::opt_initializer_expr;
-use crate::grammar::items::ITEM_KW_RECOVERY_SET;
+use crate::grammar::items::ITEM_KEYWORDS;
 use crate::grammar::paths::type_path;
 use crate::grammar::specs::predicates::opt_predicate_property_list;
 use crate::grammar::utils::{delimited, delimited_fn, list};
@@ -138,7 +138,7 @@ fn opt_wildcard_pattern_modifier(p: &mut Parser) {
     while !p.at(EOF) {
         if p.at(T![public]) {
             if !all_modifiers.contains(&T![public]) {
-                p.err_and_bump("duplicate modifier 'public'");
+                p.error_and_bump_any("duplicate modifier 'public'");
                 continue;
             }
             found = true;
@@ -148,7 +148,7 @@ fn opt_wildcard_pattern_modifier(p: &mut Parser) {
         }
         if p.at_contextual_kw_ident("internal") {
             if !all_modifiers.contains(&T![internal]) {
-                p.err_and_bump("duplicate modifier 'internal'");
+                p.error_and_bump_any("duplicate modifier 'internal'");
                 continue;
             }
             found = true;

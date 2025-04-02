@@ -49,7 +49,7 @@ fn atom_pat(p: &mut Parser, recovery_set: TokenSet) -> Option<CompletedMarker> {
         T!['('] => tuple_pat(p),
         // T!['['] => slice_pat(p),
         _ => {
-            p.err_recover("expected pattern", recovery_set);
+            p.error_and_recover_until_ts("expected pattern", recovery_set);
             return None;
         }
     };

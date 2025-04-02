@@ -39,7 +39,7 @@ fn type_with_bounds_cond(p: &mut Parser, allow_bounds: bool) {
         // T![<] => path_type_(p, allow_bounds),
         _ if paths::is_use_path_start(p) => path_or_macro_type_(p, allow_bounds),
         _ => {
-            p.err_recover("expected type", TYPE_RECOVERY_SET);
+            p.error_and_recover_until_ts("expected type", TYPE_RECOVERY_SET);
         }
     }
 }

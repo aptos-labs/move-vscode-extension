@@ -83,7 +83,7 @@ fn path_segment(p: &mut Parser, mode: Mode, first: bool) {
             m.complete(p, PATH_ADDRESS);
         }
         _ => {
-            p.err_recover("expected identifier", items::ITEM_KW_RECOVERY_SET);
+            p.error_and_recover_until_ts("expected identifier", items::ITEM_KEYWORDS);
             if empty {
                 // test_err empty_segment
                 // use crate::;

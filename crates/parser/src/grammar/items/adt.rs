@@ -1,5 +1,5 @@
 use crate::grammar::attributes::ATTRIBUTE_FIRST;
-use crate::grammar::items::{item_recovery_set, ITEM_KW_RECOVERY_SET};
+use crate::grammar::items::ITEM_KEYWORDS;
 use crate::grammar::utils::list;
 use crate::grammar::{
     ability, error_block, expressions, generic_params, item_name_r, name, name_r, types,
@@ -143,7 +143,7 @@ pub(crate) fn variant_list(p: &mut Parser<'_>) {
             m.complete(p, VARIANT);
         } else {
             m.abandon(p);
-            p.err_and_bump("expected enum variant");
+            p.error_and_bump_any("expected enum variant");
         }
         curly_braces
     }
@@ -178,7 +178,7 @@ pub(crate) fn named_field_list(p: &mut Parser<'_>) {
             m.complete(p, NAMED_FIELD);
         } else {
             m.abandon(p);
-            p.err_and_bump("expected named field declaration");
+            p.error_and_bump_any("expected named field declaration");
         }
     }
 }

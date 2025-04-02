@@ -66,6 +66,14 @@ impl<'t> Parser<'t> {
         self.nth_at(0, kind)
     }
 
+    pub(crate) fn if_at(&mut self, kind: SyntaxKind, mut f: impl FnMut(&mut Parser)) {
+        if self.at(kind) {
+            f(self);
+        } else {
+            self.error(format!("expected {:?}", kind));
+        }
+    }
+
     pub(crate) fn nth_at(&self, n: usize, kind: SyntaxKind) -> bool {
         match kind {
             // T![-=] => self.at_composite2(n, T![-], T![=]),
@@ -250,10 +258,7 @@ impl<'t> Parser<'t> {
         self.do_bump(kind, n_tokens);
     }
 
-    /// Emit error with the `message`
-    /// FIXME: this should be much more fancy and support
-    /// structured errors with spans and notes, like rustc
-    /// does.
+    /// Emit error with the `message`.
     pub(crate) fn error<T: Into<String>>(&mut self, message: T) {
         let msg = ParseError(Box::new(message.into()));
         self.push_event(Event::Error { msg });
@@ -269,14 +274,14 @@ impl<'t> Parser<'t> {
         false
     }
 
-    /// Create an error node and consume the next token.
-    pub(crate) fn err_and_bump(&mut self, message: &str) {
-        self.err_recover(message, TokenSet::EMPTY);
-    }
+    // /// Create an error node and consume the next token.
+    // pub(crate) fn error_and_bump(&mut self, message: &str) {
+    //     self.err_recover_at_ts(message, TokenSet::EMPTY);
+    // }
 
     /// Create an error node and consume the next token.
-    pub(crate) fn err_recover(&mut self, message: &str, recovery: TokenSet) {
-        self.err_recover_fn(message, |p| p.at_ts(recovery));
+    pub(crate) fn error_and_recover_until_ts(&mut self, message: &str, recovery_ts: TokenSet) {
+        self.error_and_recover_until(message, |p| p.at_ts(recovery_ts));
         // match self.current() {
         //     T!['{'] | T!['}'] => {
         //         self.error(message);
@@ -296,11 +301,8 @@ impl<'t> Parser<'t> {
         // m.complete(self, ERROR);
     }
 
-    /// Create an error node and consume the next token.
-    pub(crate) fn err_recover_fn<Recovery>(&mut self, message: &str, recovery: Recovery)
-    where
-        Recovery: Fn(&Parser) -> bool,
-    {
+    /// adds error and then bumps until it finds `stop_recovery()` item
+    pub(crate) fn error_and_recover_until(&mut self, message: &str, stop_recovery: impl Fn(&Parser) -> bool) {
         // match self.current() {
         //     T!['{'] | T!['}'] => {
         //         self.error(message);
@@ -309,11 +311,24 @@ impl<'t> Parser<'t> {
         //     _ => (),
         // }
 
-        if recovery(self) {
-            self.error(message);
-            return;
+        self.error(message);
+
+        while !self.at(EOF) {
+            if stop_recovery(self) {
+                break;
+            }
+            self.bump_any();
         }
 
+        // if stop_recovery(self) {
+        //     self.error(message);
+        //     return;
+        // }
+        //
+        // self.error_and_bump_any(message);
+    }
+
+    pub(crate) fn error_and_bump_any(&mut self, message: &str) {
         let m = self.start();
         self.error(message);
         self.bump_any();

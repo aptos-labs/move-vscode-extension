@@ -15,7 +15,7 @@ module 0x1::m {
     "#,
         vec![
             "fun", "struct", "const", "enum", "use", "spec", "friend",
-            "public", "entry", "native", "inline",
+            "public", "entry", "native", "inline", "package",
         ],
     );
 }
@@ -43,6 +43,39 @@ mod/*caret*/
 module $0
     "#,
     );
+}
+
+#[test]
+fn test_complete_fun_keyword() {
+    check_completions_contains(
+        // language=Move
+        r#"
+module 0x1::m {
+    public fu/*caret*/
+}
+    "#, vec!["fun"]);
+}
+
+#[test]
+fn test_no_friend_after_public() {
+    check_no_completions(
+        // language=Move
+        r#"
+module 0x1::m {
+    public fri/*caret*/
+}
+    "#);
+}
+
+#[test]
+fn test_no_package_after_public() {
+    check_no_completions(
+        // language=Move
+        r#"
+module 0x1::m {
+    public pack/*caret*/
+}
+    "#);
 }
 
 #[test]

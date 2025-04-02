@@ -1,10 +1,56 @@
 use crate::ast;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::ast::NamedElement;
+use crate::SyntaxKind::*;
+use parser::SyntaxKind;
+use std::collections::HashSet;
 
 impl ast::Fun {
     pub fn module(&self) -> Option<ast::Module> {
         self.syntax.parent_of_type::<ast::Module>()
+    }
+    pub fn modifiers(&self) -> HashSet<SyntaxKind> {
+        let mut modifiers = HashSet::new();
+        let vis_modifier = self.visibility_modifier();
+        if let Some(vis_modifier) = vis_modifier {
+            if vis_modifier.is_public() {
+                modifiers.insert(PUBLIC_KW);
+            }
+            if vis_modifier.is_friend() {
+                modifiers.insert(FRIEND_KW);
+            }
+            if vis_modifier.is_package() {
+                modifiers.insert(PACKAGE_KW);
+            }
+        }
+        if self.is_inline() {
+            modifiers.insert(INLINE_KW);
+        }
+        if self.is_entry() {
+            modifiers.insert(ENTRY_KW);
+        }
+        if self.is_native() {
+            modifiers.insert(NATIVE_KW);
+        }
+        modifiers
+    }
+
+    pub fn modifiers_as_strings(&self) -> HashSet<String> {
+        self.modifiers()
+            .into_iter()
+            .map(|it| {
+                match it {
+                    PUBLIC_KW => "public",
+                    INLINE_KW => "inline",
+                    ENTRY_KW => "entry",
+                    FRIEND_KW => "friend",
+                    PACKAGE_KW => "package",
+                    NATIVE_KW => "native",
+                    _ => unreachable!(),
+                }
+                .to_string()
+            })
+            .collect()
     }
 
     pub fn params(&self) -> Vec<ast::Param> {
