@@ -40,6 +40,10 @@ export class Configuration {
         );
     }
 
+    get showSyntaxTree() {
+        return this.get<boolean>("showSyntaxTree");
+    }
+
     /**
      * Beware that postfix `!` operator erases both `null` and `undefined`.
      * This is why the following doesn't work as expected:

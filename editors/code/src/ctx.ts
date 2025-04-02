@@ -2,7 +2,8 @@ import * as vscode from 'vscode';
 import {IndentAction} from 'vscode';
 import * as lc from "vscode-languageclient/node";
 import {Configuration} from "./config";
-import {log} from "./util";
+import {isAptosEditor, log} from "./util";
+import {SyntaxElement, SyntaxTreeProvider} from "./syntax_tree_provider";
 
 export class Ctx {
     private _client: lc.LanguageClient | undefined;
@@ -10,8 +11,19 @@ export class Ctx {
     private commandFactories: Record<string, CommandFactory>;
     private commandDisposables: Disposable[];
 
+    private _syntaxTreeProvider: SyntaxTreeProvider | undefined;
+    private _syntaxTreeView: vscode.TreeView<SyntaxElement> | undefined;
+
     get client(): lc.LanguageClient | undefined {
         return this._client;
+    }
+
+    get syntaxTreeView() {
+        return this._syntaxTreeView;
+    }
+
+    get syntaxTreeProvider() {
+        return this._syntaxTreeProvider;
     }
 
     constructor(
@@ -106,6 +118,65 @@ export class Ctx {
         await client.start();
 
         this.updateCommands();
+
+        if (this.config.showSyntaxTree) {
+            this.prepareSyntaxTreeView(client);
+        }
+    }
+
+    private prepareSyntaxTreeView(client: lc.LanguageClient) {
+        const ctxInit: CtxInit = {
+            ...this,
+            client: client,
+        };
+        this._syntaxTreeProvider = new SyntaxTreeProvider(ctxInit);
+        this._syntaxTreeView = vscode.window.createTreeView("aptosSyntaxTree", {
+            treeDataProvider: this._syntaxTreeProvider,
+            showCollapseAll: true,
+        });
+
+        this.pushExtCleanup(this._syntaxTreeView);
+
+        vscode.window.onDidChangeActiveTextEditor(async () => {
+            if (this.syntaxTreeView?.visible) {
+                await this.syntaxTreeProvider?.refresh();
+            }
+        });
+
+        vscode.workspace.onDidChangeTextDocument(async (e) => {
+            if (
+                vscode.window.activeTextEditor?.document !== e.document ||
+                e.contentChanges.length === 0
+            ) {
+                return;
+            }
+
+            if (this.syntaxTreeView?.visible) {
+                await this.syntaxTreeProvider?.refresh();
+            }
+        });
+
+        vscode.window.onDidChangeTextEditorSelection(async (e) => {
+            if (!this.syntaxTreeView?.visible || !isAptosEditor(e.textEditor)) {
+                return;
+            }
+
+            const selection = e.selections[0];
+            if (selection === undefined) {
+                return;
+            }
+
+            const result = this.syntaxTreeProvider?.getElementByRange(selection);
+            if (result !== undefined) {
+                await this.syntaxTreeView?.reveal(result);
+            }
+        });
+
+        this._syntaxTreeView.onDidChangeVisibility(async (e) => {
+            if (e.visible) {
+                await this.syntaxTreeProvider?.refresh();
+            }
+        });
     }
 
     async restart() {

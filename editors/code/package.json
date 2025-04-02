@@ -31,6 +31,18 @@
                 "command": "aptos-analyzer.toggleLSPLogs",
                 "title": "Toggle LSP Logs",
                 "category": "aptos-analyzer"
+            },
+            {
+                "command": "aptos-analyzer.syntaxTreeHideWhitespace",
+                "title": "Hide Whitespace",
+                "icon": "$(filter)",
+                "category": "aptos-analyzer (syntax tree)"
+            },
+            {
+                "command": "aptos-analyzer.syntaxTreeShowWhitespace",
+                "title": "Show Whitespace",
+                "icon": "$(filter-filled)",
+                "category": "aptos-analyzer (syntax tree)"
             }
         ],
         "configuration": [
@@ -71,6 +83,11 @@
                         ],
                         "default": "off",
                         "description": "Trace requests to the aptos-analyzer (this is usually overly verbose and not recommended for regular users)."
+                    },
+                    "aptos-analyzer.showSyntaxTree": {
+                        "markdownDescription": "Whether to show the syntax tree view.",
+                        "default": false,
+                        "type": "boolean"
                     }
                 }
             },
@@ -136,7 +153,50 @@
                 ],
                 "configuration": "./language-configuration.json"
             }
-        ]
+        ],
+        "menus": {
+            "commandPalette": [
+                {
+                    "command": "aptos-analyzer.syntaxTreeHideWhitespace",
+                    "when": "false"
+                },
+                {
+                    "command": "aptos-analyzer.syntaxTreeShowWhitespace",
+                    "when": "false"
+                }
+            ],
+            "view/title": [
+                {
+                    "command": "aptos-analyzer.syntaxTreeHideWhitespace",
+                    "group": "navigation",
+                    "when": "view == aptosSyntaxTree && !aptosSyntaxTree.hideWhitespace"
+                },
+                {
+                    "command": "aptos-analyzer.syntaxTreeShowWhitespace",
+                    "group": "navigation",
+                    "when": "view == aptosSyntaxTree && aptosSyntaxTree.hideWhitespace"
+                }
+            ]
+        },
+        "views": {
+            "aptosSyntaxTreeContainer": [
+                {
+                    "id": "aptosSyntaxTree",
+                    "name": "Move on Aptos Syntax Tree",
+                    "icon": "$(file-code)",
+                    "when": "inAptosProject && config.aptos-analyzer.showSyntaxTree"
+                }
+            ]
+        },
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "aptosSyntaxTreeContainer",
+                    "title": "Move on Aptos Syntax Tree",
+                    "icon": "$(list-tree)"
+                }
+            ]
+        }
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",

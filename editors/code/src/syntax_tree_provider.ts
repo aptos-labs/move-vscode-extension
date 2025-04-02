@@ -1,5 +1,6 @@
-import vscode from "vscode";
-import {CtxInit} from "./ctx";
+import * as vscode from "vscode";
+
+import type {CtxInit} from "./ctx";
 import {isAptosEditor, setContextValue} from "./util";
 import * as lsp_ext from "./lsp_ext";
 
@@ -155,7 +156,7 @@ export class SyntaxTreeProvider implements vscode.TreeDataProvider<SyntaxElement
     async toggleWhitespace() {
         this.hideWhitespace = !this.hideWhitespace;
         this._onDidChangeTreeData.fire();
-        await setContextValue("rustSyntaxTree.hideWhitespace", this.hideWhitespace);
+        await setContextValue("aptosSyntaxTree.hideWhitespace", this.hideWhitespace);
     }
 }
 
