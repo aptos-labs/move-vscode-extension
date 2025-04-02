@@ -1,7 +1,7 @@
 use crate::diagnostics::convert_diagnostic;
 use crate::global_state::{FetchWorkspaceRequest, GlobalState, GlobalStateSnapshot};
 use crate::lsp::{from_proto, to_proto};
-use crate::try_default;
+use crate::{lsp_ext, try_default};
 use line_index::TextRange;
 use lsp_types::{HoverContents, Range, SemanticTokensParams, SemanticTokensResult};
 use syntax::files::FileRange;
@@ -252,4 +252,14 @@ pub(crate) fn handle_hover(
     };
 
     Ok(Some(hover))
+}
+
+pub(crate) fn handle_view_syntax_tree(
+    snap: GlobalStateSnapshot,
+    params: lsp_ext::ViewSyntaxTreeParams,
+) -> anyhow::Result<String> {
+    let _p = tracing::info_span!("handle_view_syntax_tree").entered();
+    let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
+    let syn = snap.analysis.view_syntax_tree(file_id)?;
+    Ok(syn)
 }

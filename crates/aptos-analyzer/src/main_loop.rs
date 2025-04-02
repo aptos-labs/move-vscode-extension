@@ -22,6 +22,7 @@ use stdx::thread::ThreadIntent;
 use tracing::{Level, span};
 use vfs::loader::LoadingProgress;
 use vfs::{FileId, VfsPath};
+use crate::handlers::request;
 
 pub fn main_loop(config: Config, connection: Connection) -> anyhow::Result<()> {
     tracing::info!("initial config: {:#?}", config);
@@ -779,7 +780,7 @@ impl GlobalState {
             // .on::<RETRY, lsp_ext::WorkspaceSymbol>(handlers::handle_workspace_symbol)
             // .on::<NO_RETRY, lsp_ext::Ssr>(handlers::handle_ssr)
             // .on::<NO_RETRY, lsp_ext::ViewRecursiveMemoryLayout>(handlers::handle_view_recursive_memory_layout)
-            // .on::<NO_RETRY, lsp_ext::ViewSyntaxTree>(handlers::handle_view_syntax_tree)
+            .on::<NO_RETRY, lsp_ext::ViewSyntaxTree>(request::handle_view_syntax_tree)
             // .on::<NO_RETRY, lsp_ext::ViewHir>(handlers::handle_view_lang)
             // .on::<NO_RETRY, lsp_ext::ViewMir>(handlers::handle_view_mir)
             // .on::<NO_RETRY, lsp_ext::InterpretFunction>(handlers::handle_interpret_function)
