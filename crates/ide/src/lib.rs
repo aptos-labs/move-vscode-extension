@@ -1,8 +1,7 @@
 #![allow(dead_code)]
 
-use base_db::change::FileChange;
-use base_db::input::{SourceRoot, SourceRootId};
-use base_db::{SourceDatabase, SourceRootDatabase};
+use base_db::change::{FileChange, PackageGraph};
+use base_db::{SourceDatabase, PackageRootDatabase};
 use ide_completion::item::CompletionItem;
 use ide_db::{LineIndexDatabase, RootDatabase};
 use line_index::{LineCol, LineIndex};
@@ -27,6 +26,7 @@ pub use crate::syntax_highlighting::HlRange;
 use ide_completion::config::CompletionConfig;
 use ide_diagnostics::{Diagnostic, DiagnosticsConfig};
 pub use ra_salsa::Cancelled;
+use base_db::package::{PackageRoot, PackageRootId};
 use syntax::files::{FilePosition, FileRange};
 
 pub type Cancellable<T> = Result<T, Cancelled>;
@@ -118,39 +118,18 @@ impl Analysis {
         let mut file_set = FileSet::default();
         file_set.insert(file_id, VfsPath::new_virtual_path("/main.move".to_owned()));
 
-        let source_root = SourceRoot::new_local(file_set);
+        let package_root = PackageRoot::new_local(file_set);
+
         let mut change = FileChange::new();
-        change.set_roots(vec![source_root]);
-
-        // let mut crate_graph = CrateGraph::default();
-        // FIXME: cfg options
-        // Default to enable test for single file.
-        // let mut cfg_options = CfgOptions::default();
-        // cfg_options.insert_atom(sym::test.clone());
-        // crate_graph.add_crate_root(
-        //     file_id,
-        //     Edition::CURRENT,
-        //     None,
-        //     None,
-        //     Arc::new(cfg_options),
-        //     None,
-        //     Env::default(),
-        //     false,
-        //     CrateOrigin::Local { repo: None, name: None },
-        // );
-
+        change.set_package_roots(vec![package_root]);
         change.change_file(file_id, Some(text));
+        host.apply_change(change);
 
-        // let ws_data = crate_graph
-        //     .iter()
-        //     .zip(iter::repeat(Arc::new(CrateWorkspaceData {
-        //         proc_macro_cwd: None,
-        //         data_layout: Err("fixture has no layout".into()),
-        //         toolchain: None,
-        //     })))
-        //     .collect();
-        // change.set_crate_graph(crate_graph, ws_data);
+        let mut package_graph = PackageGraph::default();
+        package_graph.insert(file_id, vec![]);
 
+        let mut change = FileChange::new();
+        change.set_package_graph(package_graph);
         host.apply_change(change);
 
         (host.analysis(), file_id)
@@ -161,16 +140,16 @@ impl Analysis {
     //     self.with_db(|db| status::status(db, file_id))
     // }
 
-    pub fn source_root_id(&self, file_id: FileId) -> Cancellable<SourceRootId> {
-        self.with_db(|db| db.file_source_root(file_id))
-    }
+    // pub fn source_root_id(&self, file_id: FileId) -> Cancellable<SourceRoot> {
+    //     self.with_db(|db| db.file_source_root(file_id))
+    // }
 
-    pub fn is_local_source_root(&self, source_root_id: SourceRootId) -> Cancellable<bool> {
-        self.with_db(|db| {
-            let sr = db.source_root(source_root_id);
-            !sr.is_library
-        })
-    }
+    // pub fn is_local_source_root(&self, source_root_id: SourceRoot) -> Cancellable<bool> {
+    //     self.with_db(|db| {
+    //         let sr = db.source_root(source_root_id);
+    //         !sr.is_library
+    //     })
+    // }
 
     // pub fn parallel_prime_caches<F>(&self, num_worker_threads: usize, cb: F) -> Cancellable<()>
     // where
@@ -189,10 +168,10 @@ impl Analysis {
         self.with_db(|db| db.parse(file_id).tree())
     }
 
-    /// Returns true if this file belongs to an immutable library.
-    pub fn is_library_file(&self, file_id: FileId) -> Cancellable<bool> {
-        self.with_db(|db| db.source_root(db.file_source_root(file_id)).is_library)
-    }
+    // /// Returns true if this file belongs to an immutable library.
+    // pub fn is_library_file(&self, file_id: FileId) -> Cancellable<bool> {
+    //     self.with_db(|db| db.source_root(db.file_source_root(file_id)).is_library)
+    // }
 
     /// Gets the file's `LineIndex`: data structure to convert between absolute
     /// offsets and line/column representation.

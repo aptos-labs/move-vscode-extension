@@ -1,22 +1,22 @@
 use crate::db::HirDatabase;
 use crate::loc::SyntaxLocFileExt;
-use crate::nameres::ResolveReference;
 use crate::nameres::name_resolution::{
     get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
-use crate::nameres::namespaces::{FUNCTIONS, Ns};
-use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
+use crate::nameres::namespaces::{Ns, FUNCTIONS};
+use crate::nameres::path_kind::{path_kind, PathKind, QualifiedKind};
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt};
+use crate::nameres::ResolveReference;
 use crate::types::inference::InferenceCtx;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
-use base_db::input::SourceRootId;
+use base_db::package::{PackageRoot, PackageRootId};
 use parser::SyntaxKind::CALL_EXPR;
-use syntax::ast::HasItems;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::OptionSyntaxNodeExt;
+use syntax::ast::HasItems;
 use syntax::files::{InFile, InFileExt, OptionInFileExt};
-use syntax::{AstNode, ast};
+use syntax::{ast, AstNode};
 use vfs::FileId;
 
 pub fn get_path_resolve_variants_with_expected_type(
@@ -79,7 +79,7 @@ pub fn get_path_resolve_variants(
         PathKind::Qualified {
             kind: QualifiedKind::Module { address },
             ..
-        } => get_modules_as_entries(db, ctx.source_root_id(db), address),
+        } => get_modules_as_entries(db, ctx.package_root_id(db), address),
 
         PathKind::Qualified { qualifier, ns, .. } => get_qualified_path_entries(db, ctx, qualifier)
             .unwrap_or_default()
@@ -189,7 +189,7 @@ impl ResolutionContext {
         self.path.value.root_path().syntax().parent().is_kind(CALL_EXPR)
     }
 
-    pub fn source_root_id(&self, db: &dyn HirDatabase) -> SourceRootId {
-        db.file_source_root(self.path.file_id)
+    pub fn package_root_id(&self, db: &dyn HirDatabase) -> PackageRootId {
+        db.file_package_root_id(self.path.file_id)
     }
 }

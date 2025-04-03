@@ -12,7 +12,7 @@ pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow:
 
     let req = FetchWorkspaceRequest {
         path: None,
-        force_crate_graph_reload: false,
+        force_reload_deps: false,
     };
     state
         .fetch_workspaces_queue

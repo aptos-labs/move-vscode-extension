@@ -1,15 +1,19 @@
+use paths::{AbsPath, AbsPathBuf, Utf8Path, Utf8PathBuf};
 use serde_derive::Deserialize;
 use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
 pub struct MoveToml {
+    pub contents: String,
     package: Option<Package>,
-    dependencies: Vec<MoveTomlDependency>,
+    pub dependencies: Vec<MoveTomlDependency>,
 }
 
 impl MoveToml {
     pub fn from_str(file_contents: &str) -> anyhow::Result<Self> {
         let mut move_toml = MoveToml::default();
+        move_toml.contents = file_contents.to_string();
 
         let deserialized = toml::from_str::<HashMap<String, toml::Value>>(file_contents)?;
         if let Some(package_table) = deserialized.get("package") {
@@ -55,12 +59,45 @@ pub struct LocalDependency {
     path: String,
 }
 
+impl LocalDependency {
+    pub fn dep_root(&self, move_toml_root: &AbsPathBuf) -> Option<AbsPathBuf> {
+        let root = move_toml_root.join(self.path.clone());
+        if !std::fs::metadata(&root).is_ok() {
+            tracing::warn!("Dependency content root does not exist: {:?}", root.to_string());
+            return None;
+        }
+        Some(root)
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct GitDependency {
     name: String,
     git: String,
     rev: Option<String>,
     subdir: Option<String>,
+}
+
+impl GitDependency {
+    pub fn dep_root(&self) -> Option<AbsPathBuf> {
+        let home_dir = dirs::home_dir()?;
+        let move_home_dir = home_dir.join(".move");
+        let sanitized_repo_name: String = self
+            .git
+            .chars()
+            .map(|ch| match ch {
+                '/' | ':' | '.' | '@' => '_',
+                _ => ch,
+            })
+            .collect();
+        let rev_name = self.rev.clone()?.replace("/", "_");
+        let dep_dir_name = format!("{sanitized_repo_name}_{rev_name}");
+        let dep_root = move_home_dir
+            .join(dep_dir_name)
+            .join(self.subdir.clone().unwrap_or_default());
+        let abs_dep_root = AbsPathBuf::try_from(Utf8PathBuf::from_path_buf(dep_root).ok()?).ok()?;
+        Some(abs_dep_root)
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -82,6 +119,13 @@ impl MoveTomlDependency {
             _ => None,
         }
     }
+
+    pub fn dep_root(&self, current_pkg_root: &AbsPathBuf) -> Option<AbsPathBuf> {
+        match self {
+            MoveTomlDependency::Git(git_dep) => git_dep.dep_root(),
+            MoveTomlDependency::Local(local_dep) => local_dep.dep_root(current_pkg_root),
+        }
+    }
 }
 
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
@@ -101,6 +145,7 @@ struct DependencyTable {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use paths::RelPath;
 
     #[test]
     fn test_parse_basic_move_toml_with_dependencies() {
@@ -136,5 +181,9 @@ rev = "main"
             .find_map(|dep| dep.clone().git())
             .unwrap();
         assert_eq!(git_dep.name, "AptosFramework");
+
+        assert!(git_dep.dep_root().unwrap().ends_with(RelPath::new_unchecked(
+            ".move/https___github_com_aptos-labs_move-stdlib_git_main/".into()
+        )));
     }
 }

@@ -5,14 +5,14 @@ use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::ty::Ty;
-use base_db::{SourceRootDatabase, Upcast};
+use base_db::{PackageRootDatabase, Upcast};
 use parser::SyntaxKind;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 use triomphe::Arc;
 
 #[ra_salsa::query_group(HirDatabaseStorage)]
-pub trait HirDatabase: SourceRootDatabase + Upcast<dyn SourceRootDatabase> {
+pub trait HirDatabase: PackageRootDatabase + Upcast<dyn PackageRootDatabase> {
     fn resolve_path(&self, path_loc: SyntaxLoc) -> Option<ScopeEntry>;
     fn inference_for_ctx_owner(&self, ctx_owner_loc: SyntaxLoc) -> Arc<InferenceResult>;
 }
