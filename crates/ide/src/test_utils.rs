@@ -13,7 +13,9 @@ pub fn get_and_replace_caret(source: &str, caret_mark: &str) -> (&'static str, T
 }
 
 pub fn get_marked_position(source: &str, mark: &str) -> (u32, u32) {
-    let offset = source.find(mark).unwrap() as u32;
+    let offset = source
+        .find(mark)
+        .expect(&format!("No `{}` found in the source file", mark)) as u32;
     let file_index = line_index::LineIndex::new(source);
     let LineCol { line, col } = file_index.line_col(TextSize::new(offset));
     let ref_line = line - 1; // it's a //^ comment underneath the element

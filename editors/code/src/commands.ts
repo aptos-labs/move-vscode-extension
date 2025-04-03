@@ -1,5 +1,5 @@
 import vscode from "vscode";
-import {Cmd, Ctx} from "./ctx";
+import {Cmd, Ctx, CtxInit} from "./ctx";
 
 export function toggleLSPLogs(ctx: Ctx): Cmd {
     return async () => {
@@ -13,3 +13,21 @@ export function toggleLSPLogs(ctx: Ctx): Cmd {
         }
     };
 }
+
+
+export function syntaxTreeHideWhitespace(ctx: CtxInit): Cmd {
+    return async () => {
+        if (ctx.syntaxTreeProvider !== undefined) {
+            await ctx.syntaxTreeProvider.toggleWhitespace();
+        }
+    };
+}
+
+export function syntaxTreeShowWhitespace(ctx: CtxInit): Cmd {
+    return async () => {
+        if (ctx.syntaxTreeProvider !== undefined) {
+            await ctx.syntaxTreeProvider.toggleWhitespace();
+        }
+    };
+}
+

@@ -51,3 +51,21 @@ module 0x1::m {
 "#,
     )
 }
+
+#[test]
+fn test_resolve_lambda_expr_with_lambda_and_wildcard_pattern_with_invalid_binary_expr() {
+    // language=Move
+    check_resolve(
+        r#"
+module 0x1::m {
+    fun main() {
+        let a = 1;
+          //X
+        let s = self.all(|_| {
+            a; 1 + });
+          //^
+    }
+}
+"#,
+    )
+}

@@ -1,70 +1,85 @@
-SOURCE_FILE@0..149
-  MODULE@0..103
+SOURCE_FILE@0..191
+  MODULE@0..10
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
-    ADDRESS_REF@7..10
-      VALUE_ADDRESS@7..10
-        INT_NUMBER@7..10 "0x1"
-    COLON_COLON@10..12 "::"
-    NAME@12..25
-      IDENT@12..25 "item_recovery"
-    WHITESPACE@25..26 " "
-    ITEM_LIST@26..103
-      L_CURLY@26..27 "{"
-      WHITESPACE@27..32 "\n    "
-      ERROR@32..39
-        IDENT@32..39 "unknown"
-      WHITESPACE@39..44 "\n    "
-      ENUM@44..48
-        ENUM_KW@44..48 "enum"
-      WHITESPACE@48..53 "\n    "
-      FUN@53..56
-        FUN_KW@53..56 "fun"
-      WHITESPACE@56..61 "\n    "
-      STRUCT@61..67
-        STRUCT_KW@61..67 "struct"
-      WHITESPACE@67..72 "\n    "
-      ITEM_SPEC@72..76
-        SPEC_KW@72..76 "spec"
-      WHITESPACE@76..81 "\n    "
-      ITEM_SPEC@81..88
-        SPEC_KW@81..85 "spec"
-        WHITESPACE@85..86 " "
-        BLOCK_EXPR@86..88
-          STMT_LIST@86..88
-            L_CURLY@86..87 "{"
-            R_CURLY@87..88 "}"
-      WHITESPACE@88..93 "\n    "
-      ITEM_SPEC@93..101
-        SPEC_KW@93..97 "spec"
-        WHITESPACE@97..98 " "
-        NAME@98..101
-          IDENT@98..101 "ref"
-      WHITESPACE@101..102 "\n"
-      R_CURLY@102..103 "}"
-  WHITESPACE@103..104 "\n"
-  ERROR@104..111
-    IDENT@104..111 "unknown"
-  WHITESPACE@111..112 "\n"
-  SCRIPT@112..118
-    SCRIPT_KW@112..118 "script"
-  WHITESPACE@118..119 "\n"
-  MODULE_SPEC@119..123
-    SPEC_KW@119..123 "spec"
-  WHITESPACE@123..124 "\n"
-  MODULE_SPEC@124..132
-    SPEC_KW@124..128 "spec"
-    WHITESPACE@128..129 " "
-    NAME@129..132
-      IDENT@129..132 "ref"
-  WHITESPACE@132..133 "\n"
-  MODULE_SPEC@133..146
-    SPEC_KW@133..137 "spec"
-    WHITESPACE@137..138 " "
-    ADDRESS_REF@138..141
-      VALUE_ADDRESS@138..141
-        INT_NUMBER@138..141 "0x1"
-    COLON_COLON@141..143 "::"
-    NAME@143..146
-      IDENT@143..146 "ref"
-  WHITESPACE@146..149 "\n\n\n"
+    INT_NUMBER@7..10 "0x1"
+  WHITESPACE@10..11 "\n"
+  MODULE@11..23
+    MODULE_KW@11..17 "module"
+    WHITESPACE@17..18 " "
+    VALUE_ADDRESS@18..21
+      INT_NUMBER@18..21 "0x1"
+    COLON_COLON@21..23 "::"
+  WHITESPACE@23..24 "\n"
+  MODULE@24..40
+    MODULE_KW@24..30 "module"
+    WHITESPACE@30..31 " "
+    VALUE_ADDRESS@31..34
+      INT_NUMBER@31..34 "0x1"
+    COLON_COLON@34..36 "::"
+    NAME@36..40
+      IDENT@36..40 "item"
+  WHITESPACE@40..42 "\n\n"
+  MODULE@42..130
+    MODULE_KW@42..48 "module"
+    WHITESPACE@48..49 " "
+    VALUE_ADDRESS@49..52
+      INT_NUMBER@49..52 "0x1"
+    COLON_COLON@52..54 "::"
+    NAME@54..67
+      IDENT@54..67 "item_recovery"
+    WHITESPACE@67..68 " "
+    L_CURLY@68..69 "{"
+    WHITESPACE@69..74 "\n    "
+    ERROR@74..81
+      IDENT@74..81 "unknown"
+    WHITESPACE@81..86 "\n    "
+    ENUM@86..90
+      ENUM_KW@86..90 "enum"
+    WHITESPACE@90..95 "\n    "
+    FUN@95..98
+      FUN_KW@95..98 "fun"
+    WHITESPACE@98..103 "\n    "
+    STRUCT@103..109
+      STRUCT_KW@103..109 "struct"
+    WHITESPACE@109..114 "\n    "
+    ITEM_SPEC@114..118
+      SPEC_KW@114..118 "spec"
+    WHITESPACE@118..123 "\n    "
+    ITEM_SPEC@123..129
+      SPEC_KW@123..127 "spec"
+      WHITESPACE@127..128 " "
+      L_CURLY@128..129 "{"
+    R_CURLY@129..130 "}"
+  WHITESPACE@130..135 "\n    "
+  MODULE_SPEC@135..153
+    SPEC_KW@135..139 "spec"
+    WHITESPACE@139..140 " "
+    NAME@140..143
+      IDENT@140..143 "ref"
+    WHITESPACE@143..144 "\n"
+    R_CURLY@144..145 "}"
+    WHITESPACE@145..146 "\n"
+    IDENT@146..153 "unknown"
+  WHITESPACE@153..154 "\n"
+  SCRIPT@154..160
+    SCRIPT_KW@154..160 "script"
+  WHITESPACE@160..161 "\n"
+  MODULE_SPEC@161..165
+    SPEC_KW@161..165 "spec"
+  WHITESPACE@165..166 "\n"
+  MODULE_SPEC@166..174
+    SPEC_KW@166..170 "spec"
+    WHITESPACE@170..171 " "
+    NAME@171..174
+      IDENT@171..174 "ref"
+  WHITESPACE@174..175 "\n"
+  MODULE_SPEC@175..188
+    SPEC_KW@175..179 "spec"
+    WHITESPACE@179..180 " "
+    VALUE_ADDRESS@180..183
+      INT_NUMBER@180..183 "0x1"
+    COLON_COLON@183..185 "::"
+    NAME@185..188
+      IDENT@185..188 "ref"
+  WHITESPACE@188..191 "\n\n\n"

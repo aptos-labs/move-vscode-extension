@@ -6,6 +6,7 @@ use lang::Semantics;
 use syntax::SyntaxKind::*;
 use syntax::algo::find_node_at_offset;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
+use syntax::ast::node_ext::syntax_node::SyntaxElementExt;
 use syntax::files::{FilePosition, InFile, InFileExt};
 use syntax::{AstNode, SyntaxToken, TextRange, TextSize, ast};
 
@@ -111,14 +112,26 @@ impl<'a> CompletionContext<'a> {
             });
         }
 
-        let mut ident_parent = ctx.original_token.parent().unwrap();
+        let ident = ctx.original_token.clone();
+        let mut ident_parent = ident.parent().unwrap();
         if ident_parent.kind().is_error() {
             ident_parent = ident_parent.parent().unwrap();
         }
 
+        let ident_in_parent = ident_parent.child_or_token_at_range(ident.text_range()).unwrap();
+        let ident_prev_sibling = ident_in_parent
+            .prev_sibling_or_token_no_trivia()
+            .map(|it| it.kind());
+
         let item_list_kind = match ident_parent.kind() {
-            MODULE => ItemListKind::Module,
             SOURCE_FILE => ItemListKind::SourceFile,
+            MODULE => ItemListKind::Module,
+            FUN if ident_prev_sibling == Some(VISIBILITY_MODIFIER) => {
+                let fun = ident_parent.cast::<ast::Fun>().unwrap();
+                ItemListKind::Function {
+                    existing_modifiers: fun.modifiers_as_strings(),
+                }
+            }
             _ => {
                 // not an item list
                 return None;

@@ -12,8 +12,8 @@ use line_index::{TextRange, TextSize};
 use std::ops::Not;
 use std::sync::atomic::{AtomicU32, Ordering};
 use stdx::itertools::Itertools;
-use vfs::{AbsPath, FileId};
 use syntax::files::FileRange;
+use vfs::{AbsPath, FileId};
 
 pub(crate) fn position(line_index: &LineIndex, offset: TextSize) -> lsp_types::Position {
     let line_col = line_index.index.line_col(offset);

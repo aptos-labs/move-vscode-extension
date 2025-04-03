@@ -6,6 +6,17 @@ use crate::SyntaxKind;
 #[derive(Clone, Copy)]
 pub(crate) struct TokenSet(u128);
 
+#[macro_export]
+macro_rules! ts {
+    ($($x:expr),+ $(,)?) => (
+        TokenSet::new(&[$($x),+])
+    );
+}
+// pub(crate) fn ts(kinds: &[SyntaxKind]) -> TokenSet {
+//     vec![];
+//     TokenSet::new(kinds)
+// }
+
 impl TokenSet {
     pub(crate) const EMPTY: TokenSet = TokenSet(0);
 

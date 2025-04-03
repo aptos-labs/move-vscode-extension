@@ -49,7 +49,7 @@ pub(crate) fn delimited(
     unexpected_delim_message: impl Fn() -> String,
     is_end: impl Fn(&Parser) -> bool,
     item_first_set: TokenSet,
-    mut parser: impl FnMut(&mut Parser<'_>) -> bool,
+    parse: impl FnMut(&mut Parser<'_>) -> bool,
 ) {
     delimited_fn(
         p,
@@ -57,7 +57,7 @@ pub(crate) fn delimited(
         unexpected_delim_message,
         is_end,
         |p| p.at_ts(item_first_set),
-        parser,
+        parse,
     );
 }
 
@@ -67,7 +67,7 @@ pub(crate) fn delimited_fn(
     unexpected_delim_message: impl Fn() -> String,
     is_end: impl Fn(&Parser) -> bool,
     at_item_first: impl Fn(&Parser) -> bool,
-    mut parser: impl FnMut(&mut Parser<'_>) -> bool,
+    mut parse: impl FnMut(&mut Parser<'_>) -> bool,
 ) {
     while !p.at(EOF) && !is_end(p) {
         if p.at(delim) {
@@ -80,7 +80,7 @@ pub(crate) fn delimited_fn(
             m.complete(p, ERROR);
             continue;
         }
-        if !parser(p) {
+        if !parse(p) {
             break;
         }
         if !p.eat(delim) {

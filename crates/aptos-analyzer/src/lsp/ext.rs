@@ -78,3 +78,17 @@ impl ops::BitOrAssign for Health {
         }
     }
 }
+
+pub enum ViewSyntaxTree {}
+
+impl Request for ViewSyntaxTree {
+    type Params = ViewSyntaxTreeParams;
+    type Result = String;
+    const METHOD: &'static str = "aptos-analyzer/viewSyntaxTree";
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ViewSyntaxTreeParams {
+    pub text_document: TextDocumentIdentifier,
+}

@@ -1,6 +1,7 @@
 //! See [`Parser`].
 
 use drop_bomb::DropBomb;
+use std::ops::Deref;
 
 use crate::{
     event::Event,
@@ -22,6 +23,7 @@ pub struct Parser<'t> {
     token_source: &'t mut dyn TokenSource,
     events: Vec<Event>,
     // steps: Cell<u32>,
+    // stop_recovery: Option<Box<dyn Fn(/*&Parser*/) -> bool>>,
 }
 
 // static PARSER_STEP_LIMIT: Limit = Limit::new(15_000_000);
@@ -31,6 +33,7 @@ impl<'t> Parser<'t> {
         Parser {
             token_source,
             events: Vec::new(), /*steps: Cell::new(0)*/
+                                // stop_recovery: None,
         }
     }
 
@@ -64,6 +67,14 @@ impl<'t> Parser<'t> {
     /// Checks if the current token is `kind`.
     pub(crate) fn at(&self, kind: SyntaxKind) -> bool {
         self.nth_at(0, kind)
+    }
+
+    pub(crate) fn if_at(&mut self, kind: SyntaxKind, mut f: impl FnMut(&mut Parser)) {
+        if self.at(kind) {
+            f(self);
+        } else {
+            self.error(format!("expected {:?}", kind));
+        }
     }
 
     pub(crate) fn nth_at(&self, n: usize, kind: SyntaxKind) -> bool {
@@ -250,11 +261,13 @@ impl<'t> Parser<'t> {
         self.do_bump(kind, n_tokens);
     }
 
-    /// Emit error with the `message`
-    /// FIXME: this should be much more fancy and support
-    /// structured errors with spans and notes, like rustc
-    /// does.
-    pub(crate) fn error<T: Into<String>>(&mut self, message: T) {
+    /// Emit error with the `message`.
+    pub(crate) fn error(&mut self, message: impl Into<String>) {
+        self.error_and_bump_until(&message.into(), |p| false);
+        // self.push_error(message);
+    }
+
+    fn push_error(&mut self, message: impl Into<String>) {
         let msg = ParseError(Box::new(message.into()));
         self.push_event(Event::Error { msg });
     }
@@ -269,14 +282,14 @@ impl<'t> Parser<'t> {
         false
     }
 
-    /// Create an error node and consume the next token.
-    pub(crate) fn err_and_bump(&mut self, message: &str) {
-        self.err_recover(message, TokenSet::EMPTY);
-    }
+    // /// Create an error node and consume the next token.
+    // pub(crate) fn error_and_bump(&mut self, message: &str) {
+    //     self.err_recover_at_ts(message, TokenSet::EMPTY);
+    // }
 
     /// Create an error node and consume the next token.
-    pub(crate) fn err_recover(&mut self, message: &str, recovery: TokenSet) {
-        self.err_recover_fn(message, |p| p.at_ts(recovery));
+    pub(crate) fn error_and_bump_until_at_ts(&mut self, message: &str, stop_at_ts: TokenSet) {
+        self.error_and_bump_until(message, |p| p.at_ts(stop_at_ts));
         // match self.current() {
         //     T!['{'] | T!['}'] => {
         //         self.error(message);
@@ -296,26 +309,31 @@ impl<'t> Parser<'t> {
         // m.complete(self, ERROR);
     }
 
-    /// Create an error node and consume the next token.
-    pub(crate) fn err_recover_fn<Recovery>(&mut self, message: &str, recovery: Recovery)
-    where
-        Recovery: Fn(&Parser) -> bool,
-    {
-        // match self.current() {
-        //     T!['{'] | T!['}'] => {
-        //         self.error(message);
-        //         return;
-        //     }
-        //     _ => (),
-        // }
+    /// adds error and then bumps until `stop()` is true
+    pub(crate) fn error_and_bump_until(&mut self, message: &str, stop: impl Fn(&Parser) -> bool) {
+        self.push_error(message);
+        self.bump_until(stop);
+    }
 
-        if recovery(self) {
-            self.error(message);
-            return;
+    // pub(crate) fn with_recover_until(&mut self, f: impl Fn(&mut Parser)) {
+    //     // self.stop_recovery = Some(Box::new(stop_recovery));
+    //     f(self);
+    //     // self.stop_recovery = None;
+    // }
+
+    pub(crate) fn bump_until(&mut self, stop: impl Fn(&Parser) -> bool) {
+        while !self.at(EOF) {
+            if stop(self) {
+                break;
+            }
+            self.bump_any();
         }
+    }
 
+    pub(crate) fn error_and_bump_any(&mut self, message: &str) {
         let m = self.start();
-        self.error(message);
+        self.push_error(message);
+        // self.error(message);
         self.bump_any();
         m.complete(self, ERROR);
     }

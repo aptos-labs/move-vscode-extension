@@ -1,4 +1,4 @@
-use crate::grammar::items::ITEM_KW_RECOVERY_SET;
+use crate::grammar::items::{item_start, ITEM_KEYWORDS};
 use crate::grammar::{name, paths};
 use crate::parser::Marker;
 use crate::SyntaxKind::*;
@@ -24,14 +24,7 @@ fn use_speck(p: &mut Parser, top_level: bool) {
             use_group(p);
         }
 
-        // test use_tree_path
-        // use ::std;
-        // use std::collections;
-        //
-        // use self::m;
-        // use super::m;
-        // use crate::m;
-        _ if paths::is_use_path_start(p) => {
+        _ if paths::is_path_start(p) => {
             paths::use_path(p);
             match p.current() {
                 // test use_tree_alias
@@ -58,11 +51,11 @@ fn use_speck(p: &mut Parser, top_level: bool) {
             m.abandon(p);
             let msg = "expected one of `*`, `::`, `{`, `self`, `super` or an identifier";
             if top_level {
-                p.err_recover(msg, ITEM_KW_RECOVERY_SET);
+                p.error_and_bump_until(msg, item_start);
             } else {
                 // if we are parsing a nested tree, we have to eat a token to
                 // main balanced `{}`
-                p.err_and_bump(msg);
+                p.error_and_bump_any(msg);
             }
             return;
         }

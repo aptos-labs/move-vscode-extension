@@ -179,8 +179,8 @@ impl<'db> InferenceCtx<'db> {
             .ty_lowering()
             .type_args_substitution(path.into(), struct_or_enum.in_file_into());
 
-        let tuple_ty = TyCallable::new(param_types, ret_type, CallKind::Fun)
-            .substitute(&type_args_subst);
+        let tuple_ty =
+            TyCallable::new(param_types, ret_type, CallKind::Fun).substitute(&type_args_subst);
 
         Some(tuple_ty.substitute(&ty_vars_subst))
     }

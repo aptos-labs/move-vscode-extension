@@ -48,7 +48,7 @@ fn generic_param(p: &mut Parser<'_>, m: Marker) -> bool {
         // T![const] => const_param(p, m),
         _ => {
             m.abandon(p);
-            p.err_and_bump("expected generic parameter");
+            p.error_and_bump_any("expected generic parameter");
             return false;
         }
     }

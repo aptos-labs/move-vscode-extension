@@ -5,6 +5,7 @@ use crate::global_state::{
     FetchWorkspaceRequest, FetchWorkspaceResponse, GlobalState, file_id_to_url, url_to_file_id,
 };
 use crate::handlers::dispatch::{NotificationDispatcher, RequestDispatcher};
+use crate::handlers::request;
 use crate::lsp::from_proto;
 use crate::lsp::utils::{Progress, notification_is};
 use crate::reload::ProjectWorkspaceProgress;
@@ -779,7 +780,7 @@ impl GlobalState {
             // .on::<RETRY, lsp_ext::WorkspaceSymbol>(handlers::handle_workspace_symbol)
             // .on::<NO_RETRY, lsp_ext::Ssr>(handlers::handle_ssr)
             // .on::<NO_RETRY, lsp_ext::ViewRecursiveMemoryLayout>(handlers::handle_view_recursive_memory_layout)
-            // .on::<NO_RETRY, lsp_ext::ViewSyntaxTree>(handlers::handle_view_syntax_tree)
+            .on::<NO_RETRY, lsp_ext::ViewSyntaxTree>(request::handle_view_syntax_tree)
             // .on::<NO_RETRY, lsp_ext::ViewHir>(handlers::handle_view_lang)
             // .on::<NO_RETRY, lsp_ext::ViewMir>(handlers::handle_view_mir)
             // .on::<NO_RETRY, lsp_ext::InterpretFunction>(handlers::handle_interpret_function)

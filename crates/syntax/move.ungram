@@ -307,7 +307,7 @@ LambdaParamList =
     '|' lambda_params:(LambdaParam (',' LambdaParam)* ','?)? '|'
 
 LambdaParam =
-    IdentPat (':' Type)?
+    (IdentPat | Wildcard) (':' Type)?
 
 IsExpr =
     Expr 'is' types:(Type ('|' Type)*)
@@ -384,6 +384,7 @@ NameLike =
 Name =
     'ident'
 
+// not present in syntax tree
 AddressRef =
     NamedAddress | ValueAddress
 

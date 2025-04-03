@@ -16,3 +16,13 @@ export type ServerStatusParams = {
     quiescent: boolean;
     message?: string;
 };
+
+// export type SyntaxTreeParams = {
+//     textDocument: lc.TextDocumentIdentifier;
+//     range: lc.Range | null;
+// };
+export type ViewSyntaxTreeParams = { textDocument: lc.TextDocumentIdentifier };
+
+export const viewSyntaxTree = new lc.RequestType<ViewSyntaxTreeParams, string, void>(
+    "aptos-analyzer/viewSyntaxTree",
+);

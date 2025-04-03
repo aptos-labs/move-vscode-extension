@@ -28,3 +28,4 @@ ide-diagnostics = { path = "../ide-diagnostics" }
 
 [dev-dependencies]
 itertools = { workspace = true }
+expect-test = "1.5.1"
