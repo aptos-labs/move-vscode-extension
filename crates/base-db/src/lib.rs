@@ -1,12 +1,14 @@
 #![allow(dead_code)]
 
 pub mod change;
-pub mod input;
+pub mod source_root;
+pub mod package;
 
-use crate::input::{SourceRoot, SourceRootId};
 use syntax::{Parse, SourceFile, SyntaxError};
 use triomphe::Arc;
-use vfs::FileId;
+use vfs::{FileId, VfsPath};
+use crate::change::ManifestFileId;
+use crate::package::{PackageRoot, PackageRootId};
 
 pub trait Upcast<T: ?Sized> {
     fn upcast(&self) -> &T;
@@ -42,14 +44,29 @@ fn parse_errors(db: &dyn SourceDatabase, file_id: FileId) -> Option<Arc<[SyntaxE
 
 /// We don't want to give HIR knowledge of source roots, hence we extract these
 /// methods into a separate DB.
-#[ra_salsa::query_group(SourceRootDatabaseStorage)]
-pub trait SourceRootDatabase: SourceDatabase + Upcast<dyn SourceDatabase> {
-    /// Path to a file, relative to the root of its source root.
-    /// Source root of the file.
-    #[ra_salsa::input]
-    fn file_source_root(&self, file_id: FileId) -> SourceRootId;
+#[ra_salsa::query_group(PackageRootDatabaseStorage)]
+pub trait PackageRootDatabase: SourceDatabase + Upcast<dyn SourceDatabase> {
+    // /// Path to a file, relative to the root of its source root.
+    // /// Source root of the file.
+    // #[ra_salsa::input]
+    // fn file_source_root(&self, file_id: FileId) -> SourceRootId;
 
-    /// Contents of the source root.
     #[ra_salsa::input]
-    fn source_root(&self, id: SourceRootId) -> Arc<SourceRoot>;
+    fn file_package_root_id(&self, file_id: FileId) -> PackageRootId;
+
+    // #[ra_salsa::input]
+    // fn manifest_file_id(&self, vfs_path: VfsPath) -> FileId;
+
+    #[ra_salsa::input]
+    fn package_root(&self, id: PackageRootId) -> Arc<PackageRoot>;
+
+    #[ra_salsa::input]
+    fn package_deps(&self, manifest_file_id: PackageRootId) -> Arc<Vec<PackageRootId>>;
+
+    // #[ra_salsa::input]
+    // fn package_deps(&self, manifest_file_id: ManifestFileId) -> Arc<Vec<ManifestFileId>>;
+
+    // /// Contents of the source root.
+    // #[ra_salsa::input]
+    // fn source_root(&self, id: SourceRoot) -> Arc<SourceRoot>;
 }

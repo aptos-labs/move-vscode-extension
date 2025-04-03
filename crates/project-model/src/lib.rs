@@ -60,7 +60,7 @@ impl ManifestPath {
 
             while let Some(path) = curr {
                 let candidate = path.join(target_file_name);
-                if fs::metadata(&candidate).is_ok() {
+                if fs::exists(&candidate).is_ok() {
                     if let Ok(manifest) = ManifestPath::try_from(candidate) {
                         return Some(manifest);
                     }

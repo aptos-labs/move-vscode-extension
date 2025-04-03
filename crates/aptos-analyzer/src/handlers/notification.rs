@@ -149,7 +149,7 @@ pub(crate) fn handle_did_save_text_document(
                     format!("workspace vfs file change saved {path}"),
                     FetchWorkspaceRequest {
                         path: Some(path.to_owned()),
-                        force_crate_graph_reload: false,
+                        force_reload_deps: false,
                     },
                 );
             }
@@ -244,7 +244,7 @@ pub(crate) fn handle_did_change_workspace_folders(
 
     let req = FetchWorkspaceRequest {
         path: None,
-        force_crate_graph_reload: false,
+        force_reload_deps: false,
     };
     state
         .fetch_workspaces_queue

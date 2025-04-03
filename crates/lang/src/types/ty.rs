@@ -23,7 +23,7 @@ use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::{TyInfer, TyVar};
 use crate::types::ty::type_param::TyTypeParameter;
-use base_db::SourceRootDatabase;
+use base_db::PackageRootDatabase;
 use syntax::ast;
 use syntax::files::InFile;
 use vfs::FileId;
@@ -99,7 +99,7 @@ impl Ty {
             }
             Ty::Seq(TySequence::Vector(_)) => {
                 let module =
-                    get_modules_as_entries(db, db.file_source_root(file_id), Address::named("std"))
+                    get_modules_as_entries(db, db.file_package_root_id(file_id), Address::named("std"))
                         .filter_by_name("vector".to_string())
                         .single_or_none()?;
                 module.cast_into::<ast::Module>(db)
@@ -143,7 +143,7 @@ impl Ty {
         }
     }
 
-    pub fn render(&self, db: &dyn SourceRootDatabase) -> String {
+    pub fn render(&self, db: &dyn PackageRootDatabase) -> String {
         TypeRenderer::new(db).render(self)
     }
 }

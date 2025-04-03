@@ -37,6 +37,7 @@ anyhow = "1.0.95"
 clap = { version = "4.5.28", features = ["derive"] }
 la-arena = "0.3.1"
 indexmap = "2.7.1"
+toml = "0.8.20"
 
 tracing = "0.1.41"
 tracing-tree = "0.3.0"

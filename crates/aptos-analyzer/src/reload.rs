@@ -5,9 +5,13 @@ use crate::main_loop::Task;
 use crate::op_queue::Cause;
 use crate::project_folders::ProjectFolders;
 use crate::{Config, lsp_ext};
-use base_db::change::FileChange;
+use base_db::PackageRootDatabase;
+use base_db::change::{FileChange, PackageGraph};
+use base_db::package::PackageRootId;
 use lsp_types::FileSystemWatcher;
 use project_model::AptosWorkspace;
+use project_model::aptos_workspace::FileLoader;
+use std::collections::HashMap;
 use std::mem;
 use stdx::format_to;
 use stdx::itertools::Itertools;
@@ -49,7 +53,7 @@ impl GlobalState {
         if self.config.linked_or_discovered_projects() != old_config.linked_or_discovered_projects() {
             let req = FetchWorkspaceRequest {
                 path: None,
-                force_crate_graph_reload: false,
+                force_reload_deps: false,
             };
             self.fetch_workspaces_queue
                 .request_op("discovered projects changed".to_owned(), req)
@@ -104,7 +108,7 @@ impl GlobalState {
         status
     }
 
-    pub(crate) fn fetch_workspaces(&mut self, cause: Cause, force_crate_graph_reload: bool) {
+    pub(crate) fn fetch_workspaces(&mut self, cause: Cause, force_reload_deps: bool) {
         tracing::info!(%cause, "will fetch workspaces");
 
         self.task_pool.handle.spawn_with_sender(ThreadIntent::Worker, {
@@ -126,6 +130,7 @@ impl GlobalState {
                 sender
                     .send(Task::FetchWorkspace(ProjectWorkspaceProgress::Begin))
                     .unwrap();
+
 
                 let mut workspaces = linked_projects
                     .iter()
@@ -155,7 +160,7 @@ impl GlobalState {
                 sender
                     .send(Task::FetchWorkspace(ProjectWorkspaceProgress::End(
                         workspaces,
-                        force_crate_graph_reload,
+                        force_reload_deps,
                     )))
                     .unwrap();
             }
@@ -168,16 +173,16 @@ impl GlobalState {
 
         let Some(FetchWorkspaceResponse {
             workspaces,
-            force_crate_graph_reload,
+            force_reload_deps,
         }) = self.fetch_workspaces_queue.last_op_result()
         else {
             return;
         };
 
-        tracing::info!(%cause, ?force_crate_graph_reload);
+        tracing::info!(%cause, ?force_reload_deps);
         if self.fetch_workspace_error().is_err() && !self.workspaces.is_empty() {
-            if *force_crate_graph_reload {
-                self.recreate_crate_graph(cause);
+            if *force_reload_deps {
+                self.reload_package_deps(format!("fetch workspace error while handling {:?}", cause));
             }
             // It only makes sense to switch to a partially broken workspace
             // if we don't have any workspace at all yet.
@@ -188,16 +193,13 @@ impl GlobalState {
             .iter()
             .filter_map(|res| res.as_ref().ok().cloned())
             .collect::<Vec<_>>();
-
-        // Here, we completely changed the workspace (Cargo.toml edit), so
-        // we don't care about build-script results, they are stale.
         self.workspaces = Arc::new(workspaces);
 
         if let FilesWatcher::Client = self.config.files().watcher {
             let filter = self
                 .workspaces
                 .iter()
-                .flat_map(|ws| ws.to_roots())
+                .flat_map(|ws| ws.to_folder_roots())
                 .filter(|it| it.is_local)
                 .map(|it| it.include);
 
@@ -272,20 +274,20 @@ impl GlobalState {
             watch,
             version: self.vfs_config_version,
         });
-        self.source_root_config = project_folders.source_root_config;
-        // self.local_roots_parent_map = Arc::new(self.source_root_config.source_root_parent_map());
 
-        tracing::info!(?cause, "recreating the crate graph");
-        self.recreate_crate_graph(cause);
+        tracing::info!(?project_folders.source_root_config);
+        self.source_root_config = project_folders.source_root_config;
+
+        tracing::info!(?cause, "recreating the package graph");
+        self.reload_package_deps(cause);
 
         tracing::info!("did switch workspaces");
     }
 
-    fn recreate_crate_graph(&mut self, cause: String) {
-        // todo: noop for now
-        tracing::info!(?cause, "Building Crate Graph");
+    fn reload_package_deps(&mut self, cause: String) {
+        tracing::info!(?cause, "Reload PackageGraph");
         self.report_progress(
-            "Building CrateGraph",
+            "Building PackageGraph",
             crate::lsp::utils::Progress::Begin,
             None,
             None,
@@ -296,31 +298,40 @@ impl GlobalState {
         // deleted or created we trigger a reconstruction of the crate graph
         // self.crate_graph_file_dependencies.clear();
 
-        // let crate_graph = {
-        //     // Create crate graph from all the workspaces
-        //     let vfs = &mut self.vfs.write().0;
-        //
-        //     let load = |path: &AbsPath| {
-        //         let vfs_path = vfs::VfsPath::from(path.to_path_buf());
-        //         self.crate_graph_file_dependencies.insert(vfs_path.clone());
-        //         vfs.file_id(&vfs_path)
-        //     };
-        //
-        //     ws_to_crate_graph(&self.workspaces, load)
-        // };
+        let package_graph = {
 
-        let change = FileChange::new();
+            let vfs = &self.vfs.read().0;
+            let load = |path: &AbsPath| {
+                let vfs_path = vfs::VfsPath::from(path.to_path_buf());
+                // self.crate_graph_file_dependencies.insert(vfs_path.clone());
+                vfs.file_id(&vfs_path)
+            };
+
+            ws_to_package_graph(&self.workspaces, load)
+        };
+
+        self.process_file_changes();
+
+        let mut change = FileChange::new();
+
+        {
+            let vfs = &self.vfs.read().0;
+            let roots = self.source_root_config.partition_into_roots(vfs);
+            change.set_package_roots(roots);
+            // depends on roots being available
+            change.set_package_graph(package_graph);
+        }
+
         self.analysis_host.apply_change(change);
 
         self.report_progress(
-            "Building CrateGraph",
+            "Building PackageGraph",
             crate::lsp::utils::Progress::End,
             None,
             None,
             None,
         );
 
-        self.process_changes();
         self.reload_flycheck();
     }
 
@@ -373,29 +384,17 @@ impl GlobalState {
     }
 }
 
-// pub fn ws_to_crate_graph(
-//     workspaces: &[AptosWorkspace],
-//     mut load: impl FnMut(&AbsPath) -> Option<vfs::FileId>,
-// ) -> CrateGraph {
-//     // ) -> (CrateGraph, FxHashMap<CrateId, Arc<CrateWorkspaceData>>) {
-//     let mut crate_graph = CrateGraph::default();
-//
-//     // let mut ws_data = FxHashMap::default();
-//     for ws in workspaces {
-//         let other = ws.to_crate_graph(&mut load);
-//
-//         let _mapping = crate_graph.extend(other);
-//         // Populate the side tables for the newly merged crates
-//         // ws_data.extend(mapping.values().copied().zip(iter::repeat(Arc::new(CrateWorkspaceData {
-//         //     toolchain: toolchain.clone(),
-//         //     data_layout: target_layout.clone(),
-//         //     proc_macro_cwd: Some(ws.workspace_root().to_owned()),
-//         // }))));
-//     }
-//
-//     crate_graph.shrink_to_fit();
-//     crate_graph
-// }
+pub fn ws_to_package_graph(
+    workspaces: &[AptosWorkspace],
+    mut load: impl FnMut(&AbsPath) -> Option<vfs::FileId>,
+) -> PackageGraph {
+    let mut package_graph = PackageGraph::default();
+    for ws in workspaces {
+        let other = ws.to_package_graph(&mut load);
+        package_graph.extend(other.unwrap_or_default());
+    }
+    package_graph
+}
 
 pub(crate) fn should_refresh_for_file_change(
     changed_file_path: &AbsPath,

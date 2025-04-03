@@ -1,7 +1,7 @@
 use crate::context::CompletionContext;
 use crate::item::CompletionItemBuilder;
 use crate::render::render_named_item;
-use base_db::{SourceRootDatabase, Upcast};
+use base_db::{PackageRootDatabase, Upcast};
 use lang::types::lowering::TyLowering;
 use lang::types::substitution::{ApplySubstitution, Substitution};
 use lang::types::ty::Ty;
@@ -58,7 +58,7 @@ pub(crate) fn render_function(
 }
 
 fn render_params(
-    db: &dyn SourceRootDatabase,
+    db: &dyn PackageRootDatabase,
     fun: ast::Fun,
     call_ty: TyCallable,
 ) -> Option<Vec<String>> {

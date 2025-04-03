@@ -28,12 +28,12 @@ use vfs::{AnchoredPathBuf, ChangeKind, FileId, VfsPath};
 
 pub(crate) struct FetchWorkspaceRequest {
     pub(crate) path: Option<AbsPathBuf>,
-    pub(crate) force_crate_graph_reload: bool,
+    pub(crate) force_reload_deps: bool,
 }
 
 pub(crate) struct FetchWorkspaceResponse {
     pub(crate) workspaces: Vec<anyhow::Result<AptosWorkspace>>,
-    pub(crate) force_crate_graph_reload: bool,
+    pub(crate) force_reload_deps: bool,
 }
 
 // Enforces drop order
@@ -99,7 +99,7 @@ pub(crate) struct GlobalState {
     /// interactions and should be moved away from the main thread.
     ///
     /// For certain features, such as [`GlobalState::handle_discover_msg`],
-    /// this queue should run only *after* [`GlobalState::process_changes`] has
+    /// this queue should run only *after* [`GlobalState::process_file_changes`] has
     /// been called.
     pub(crate) deferred_task_queue: TaskQueue,
 }
@@ -183,49 +183,40 @@ impl GlobalState {
         this
     }
 
-    pub(crate) fn process_changes(&mut self) -> bool {
+    pub(crate) fn process_file_changes(&mut self) -> bool {
         let _p = tracing::span!(Level::INFO, "GlobalState::process_changes").entered();
 
-        // We cannot directly resolve a change in a ratoml file to a format
-        // that can be used by the config module because config talks
-        // in `SourceRootId`s instead of `FileId`s and `FileId` -> `SourceRootId`
-        // mapping is not ready until `AnalysisHost::apply_changes` has been called.
-        let modified_ratoml_files: FxHashMap<FileId, (ChangeKind, VfsPath)> = FxHashMap::default();
-
-        let (change, modified_rust_files, workspace_structure_change) = {
+        let (change, workspace_structure_change) = {
             let mut change = FileChange::new();
-            let mut write_vfs_lock = self.vfs.write();
-            let changed_files = write_vfs_lock.0.take_changes();
+
+            let mut vfs_lock = self.vfs.write();
+            let changed_files = vfs_lock.0.take_changes();
             if changed_files.is_empty() {
                 return false;
             }
 
             // downgrade to read lock to allow more readers while we are normalizing text
-            let read_vfs_lock = RwLockWriteGuard::downgrade_to_upgradable(write_vfs_lock);
-            let vfs: &vfs::Vfs = &read_vfs_lock.0;
+            let vfs_lock = RwLockWriteGuard::downgrade_to_upgradable(vfs_lock);
+            let vfs: &vfs::Vfs = &vfs_lock.0;
 
             let mut workspace_structure_change = None;
             // A file was added or deleted
             let mut has_structure_changes = false;
             let mut bytes = vec![];
-            let mut modified_move_files = vec![];
+
             for changed_file in changed_files.into_values() {
                 let changed_file_vfs_path = vfs.file_path(changed_file.file_id);
 
                 if let Some(changed_file_path) = changed_file_vfs_path.as_path() {
                     has_structure_changes |= changed_file.is_created_or_deleted();
 
-                    if changed_file.is_modified() && changed_file_path.extension() == Some("move") {
-                        modified_move_files.push(changed_file.file_id);
-                    }
-
                     let changed_file_path = changed_file_path.to_path_buf();
                     if changed_file.is_created_or_deleted() {
-                        workspace_structure_change.get_or_insert((changed_file_path, false));
-                        // .1 |= self.crate_graph_file_dependencies.contains(changed_file_vfs_path);
+                        workspace_structure_change.get_or_insert(changed_file_path);
+
                     } else if reload::should_refresh_for_file_change(&changed_file_path) {
                         tracing::trace!(?changed_file_path, kind = ?changed_file.kind(), "refreshing for a change");
-                        workspace_structure_change.get_or_insert((changed_file_path.clone(), false));
+                        workspace_structure_change.get_or_insert(changed_file_path.clone());
                     }
                 }
 
@@ -237,20 +228,19 @@ impl GlobalState {
                 let text_with_line_endings =
                     if let vfs::Change::Create(v, _) | vfs::Change::Modify(v, _) = changed_file.change {
                         String::from_utf8(v).ok().map(|text| {
-                            // FIXME: Consider doing normalization in the `vfs` instead? That allows
-                            // getting rid of some locking
                             let (text, line_endings) = LineEndings::normalize(text);
                             (text, line_endings)
                         })
                     } else {
                         None
                     };
+
                 // delay `line_endings_map` changes until we are done normalizing the text
                 // this allows delaying the re-acquisition of the write lock
                 bytes.push((changed_file.file_id, text_with_line_endings));
             }
 
-            let (vfs, line_endings_map) = &mut *RwLockUpgradableReadGuard::upgrade(read_vfs_lock);
+            let (vfs, line_endings_map) = &mut *RwLockUpgradableReadGuard::upgrade(vfs_lock);
             bytes.into_iter().for_each(|(file_id, text_with_line_endings)| {
                 let text = match text_with_line_endings {
                     None => None,
@@ -262,38 +252,25 @@ impl GlobalState {
                 change.change_file(file_id, text);
             });
             if has_structure_changes {
-                let roots = self.source_root_config.partition(vfs);
-                change.set_roots(roots);
+                let roots = self.source_root_config.partition_into_roots(vfs);
+                change.set_package_roots(roots);
             }
-            (change, modified_move_files, workspace_structure_change)
+            (change, workspace_structure_change)
         };
 
         let _p = tracing::span!(Level::INFO, "GlobalState::process_changes/apply_change").entered();
         self.analysis_host.apply_change(change);
 
-        // FIXME: `workspace_structure_change` is computed from `should_refresh_for_change` which is
-        // path syntax based. That is not sufficient for all cases so we should lift that check out
-        // into a `QueuedTask`, see `handle_did_save_text_document`.
-        // Or maybe instead of replacing that check, kick off a semantic one if the syntactic one
-        // didn't find anything (to make up for the lack of precision).
         {
-            // rebuilds proc macros in changed files
-            // if !matches!(&workspace_structure_change, Some((.., true))) {
-            //     _ = self.deferred_task_queue.sender.send(
-            //         crate::main_loop::QueuedTask::CheckProcMacroSources(modified_rust_files),
-            //     );
-            // }
-            // todo: figure out the `_force_crate_graph_reload` thing
-            if let Some((path, _force_crate_graph_reload)) = workspace_structure_change {
+            if let Some(workspace_path) = workspace_structure_change {
                 let _p = tracing::span!(Level::INFO, "GlobalState::process_changes/ws_structure_change")
                     .entered();
 
-                let force_crate_graph_reload = true;
                 self.fetch_workspaces_queue.request_op(
-                    format!("workspace vfs file change: {path}"),
+                    format!("workspace vfs file change: {workspace_path}"),
                     FetchWorkspaceRequest {
-                        path: Some(path.to_owned()),
-                        force_crate_graph_reload,
+                        path: Some(workspace_path.to_owned()),
+                        force_reload_deps: true,
                     },
                 );
             }

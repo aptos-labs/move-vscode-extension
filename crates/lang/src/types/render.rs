@@ -6,17 +6,17 @@ use crate::types::ty::range_like::TySequence;
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyVar, TyVarKind};
 use crate::types::ty::type_param::TyTypeParameter;
-use base_db::SourceRootDatabase;
+use base_db::PackageRootDatabase;
 use stdx::itertools::Itertools;
 use syntax::ast;
 use syntax::ast::NamedElement;
 
 pub struct TypeRenderer<'db> {
-    db: &'db dyn SourceRootDatabase,
+    db: &'db dyn PackageRootDatabase,
 }
 
 impl<'db> TypeRenderer<'db> {
-    pub fn new(db: &'db dyn SourceRootDatabase) -> Self {
+    pub fn new(db: &'db dyn PackageRootDatabase) -> Self {
         TypeRenderer { db }
     }
 

@@ -9,7 +9,7 @@ mod source_change;
 mod syntax_helpers;
 pub mod text_edit;
 
-use base_db::{SourceDatabase, SourceRootDatabase, Upcast};
+use base_db::{SourceDatabase, PackageRootDatabase, Upcast};
 use lang::db::HirDatabase;
 use line_index::LineIndex;
 use std::fmt;
@@ -24,7 +24,7 @@ pub type FxIndexMap<K, V> =
 
 #[ra_salsa::database(
     base_db::SourceDatabaseStorage,
-    base_db::SourceRootDatabaseStorage,
+    base_db::PackageRootDatabaseStorage,
     lang::db::HirDatabaseStorage,
     LineIndexDatabaseStorage
 )]
@@ -62,9 +62,9 @@ impl Upcast<dyn SourceDatabase> for RootDatabase {
     }
 }
 
-impl Upcast<dyn SourceRootDatabase> for RootDatabase {
+impl Upcast<dyn PackageRootDatabase> for RootDatabase {
     #[inline]
-    fn upcast(&self) -> &(dyn SourceRootDatabase + 'static) {
+    fn upcast(&self) -> &(dyn PackageRootDatabase + 'static) {
         self
     }
 }

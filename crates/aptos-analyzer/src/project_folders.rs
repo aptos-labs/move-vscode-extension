@@ -1,7 +1,7 @@
-use base_db::input::SourceRoot;
+use base_db::package::PackageRoot;
 use paths::AbsPathBuf;
 use project_model::AptosWorkspace;
-use project_model::aptos_workspace::PackageRoot;
+use project_model::aptos_workspace::PackageFolderRoot;
 use rustc_hash::FxHashMap;
 use std::collections::hash_map::Entry;
 use std::mem;
@@ -16,74 +16,22 @@ pub struct SourceRootConfig {
 }
 
 impl SourceRootConfig {
-    pub fn partition(&self, vfs: &vfs::Vfs) -> Vec<SourceRoot> {
+    pub fn partition_into_roots(&self, vfs: &vfs::Vfs) -> Vec<PackageRoot> {
+        tracing::info!("partition with {:?}", self.fsc);
         self.fsc
             .partition(vfs)
             .into_iter()
             .enumerate()
-            .map(|(idx, file_set)| {
+            .map(|(idx, package_file_set)| {
                 let is_local = self.local_filesets.contains(&(idx as u64));
                 if is_local {
-                    SourceRoot::new_local(file_set)
+                    PackageRoot::new_local(package_file_set)
                 } else {
-                    SourceRoot::new_library(file_set)
+                    PackageRoot::new_library(package_file_set)
                 }
             })
             .collect()
     }
-
-    // /// Maps local source roots to their parent source roots by bytewise comparing of root paths .
-    // /// If a `SourceRoot` doesn't have a parent and is local then it is not contained in this mapping but it can be asserted that it is a root `SourceRoot`.
-    // pub fn source_root_parent_map(&self) -> FxHashMap<SourceRootId, SourceRootId> {
-    //     let roots = self.fsc.roots();
-    //
-    //     let mut map = FxHashMap::default();
-    //
-    //     // See https://github.com/rust-lang/rust-analyzer/issues/17409
-    //     //
-    //     // We can view the connections between roots as a graph. The problem is
-    //     // that this graph may contain cycles, so when adding edges, it is necessary
-    //     // to check whether it will lead to a cycle.
-    //     //
-    //     // Since we ensure that each node has at most one outgoing edge (because
-    //     // each SourceRoot can have only one parent), we can use a disjoint-set to
-    //     // maintain the connectivity between nodes. If an edge’s two nodes belong
-    //     // to the same set, they are already connected.
-    //     let mut dsu = FxHashMap::default();
-    //     fn find_parent(dsu: &mut FxHashMap<u64, u64>, id: u64) -> u64 {
-    //         if let Some(&parent) = dsu.get(&id) {
-    //             let parent = find_parent(dsu, parent);
-    //             dsu.insert(id, parent);
-    //             parent
-    //         } else {
-    //             id
-    //         }
-    //     }
-    //
-    //     for (idx, (root, root_id)) in roots.iter().enumerate() {
-    //         if !self.local_filesets.contains(root_id) || map.contains_key(&SourceRootId(*root_id as u32))
-    //         {
-    //             continue;
-    //         }
-    //
-    //         for (root2, root2_id) in roots[..idx].iter().rev() {
-    //             if self.local_filesets.contains(root2_id)
-    //                 && root_id != root2_id
-    //                 && root.starts_with(root2)
-    //             {
-    //                 // check if the edge will create a cycle
-    //                 if find_parent(&mut dsu, *root_id) != find_parent(&mut dsu, *root2_id) {
-    //                     map.insert(SourceRootId(*root_id as u32), SourceRootId(*root2_id as u32));
-    //                     dsu.insert(*root_id, *root2_id);
-    //                 }
-    //
-    //                 break;
-    //             }
-    //         }
-    //     }
-    //
-    //     map
-    // }
 }
 
 #[derive(Default)]
@@ -95,7 +43,7 @@ pub struct ProjectFolders {
 
 impl ProjectFolders {
     pub fn new(workspaces: &[AptosWorkspace], global_excludes: &[AbsPathBuf]) -> ProjectFolders {
-        let mut res = ProjectFolders::default();
+        let mut folders = ProjectFolders::default();
         let mut fsc = FileSetConfig::builder();
         let mut local_filesets = vec![];
 
@@ -116,9 +64,9 @@ impl ProjectFolders {
         // So we need to deduplicate these, usually it would be enough to deduplicate by `include`, but as the rustc example shows here that doesn't work,
         // so we need to also coalesce the includes if they overlap.
 
-        let mut roots: Vec<_> = workspaces
+        let mut folder_roots: Vec<_> = workspaces
             .iter()
-            .flat_map(|ws| ws.to_roots())
+            .flat_map(|ws| ws.to_folder_roots())
             .update(|root| root.include.sort())
             .sorted_by(|a, b| a.include.cmp(&b.include))
             .collect();
@@ -131,7 +79,7 @@ impl ProjectFolders {
             // maps include paths to indices of the corresponding root
             let mut include_to_idx = FxHashMap::default();
             // Find and note down the indices of overlapping roots
-            for (idx, root) in roots.iter().enumerate().filter(|(_, it)| !it.include.is_empty()) {
+            for (idx, root) in folder_roots.iter().enumerate().filter(|(_, it)| !it.include.is_empty()) {
                 for include in &root.include {
                     match include_to_idx.entry(include) {
                         Entry::Occupied(e) => {
@@ -147,33 +95,33 @@ impl ProjectFolders {
                 done = false;
                 for v in v {
                     let r = mem::replace(
-                        &mut roots[v],
-                        PackageRoot {
+                        &mut folder_roots[v],
+                        PackageFolderRoot {
                             is_local: false,
                             include: vec![],
                             exclude: vec![],
                         },
                     );
-                    roots[k].is_local |= r.is_local;
-                    roots[k].include.extend(r.include);
-                    roots[k].exclude.extend(r.exclude);
+                    folder_roots[k].is_local |= r.is_local;
+                    folder_roots[k].include.extend(r.include);
+                    folder_roots[k].exclude.extend(r.exclude);
                 }
-                roots[k].include.sort();
-                roots[k].exclude.sort();
-                roots[k].include.dedup();
-                roots[k].exclude.dedup();
+                folder_roots[k].include.sort();
+                folder_roots[k].exclude.sort();
+                folder_roots[k].include.dedup();
+                folder_roots[k].exclude.dedup();
             }
         }
 
-        for root in roots.into_iter().filter(|it| !it.include.is_empty()) {
-            let file_set_roots: Vec<VfsPath> = root.include.iter().cloned().map(VfsPath::from).collect();
+        for folder_root in folder_roots.into_iter().filter(|it| !it.include.is_empty()) {
+            let file_set_roots: Vec<VfsPath> = folder_root.include.iter().cloned().map(VfsPath::from).collect();
 
             let entry = {
                 let mut dirs = vfs::loader::Directories::default();
                 dirs.extensions.push("move".into());
                 dirs.extensions.push("toml".into());
-                dirs.include.extend(root.include);
-                dirs.exclude.extend(root.exclude);
+                dirs.include.extend(folder_root.include);
+                dirs.exclude.extend(folder_root.exclude);
                 for excl in global_excludes {
                     if dirs
                         .include
@@ -187,20 +135,20 @@ impl ProjectFolders {
                 vfs::loader::Entry::Directories(dirs)
             };
 
-            if root.is_local {
-                res.watch.push(res.load.len());
+            if folder_root.is_local {
+                folders.watch.push(folders.load.len());
             }
-            res.load.push(entry);
+            folders.load.push(entry);
 
-            if root.is_local {
+            if folder_root.is_local {
                 local_filesets.push(fsc.len() as u64);
             }
             fsc.add_file_set(file_set_roots)
         }
 
         let fsc = fsc.build();
-        res.source_root_config = SourceRootConfig { fsc, local_filesets };
+        folders.source_root_config = SourceRootConfig { fsc, local_filesets };
 
-        res
+        folders
     }
 }

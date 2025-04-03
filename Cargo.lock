@@ -1228,8 +1228,10 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "base-db",
+ "dirs",
  "paths",
  "rustc-hash 2.1.1",
+ "salsa",
  "serde",
  "serde_derive",
  "toml",

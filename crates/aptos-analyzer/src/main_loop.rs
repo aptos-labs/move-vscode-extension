@@ -10,7 +10,7 @@ use crate::lsp::from_proto;
 use crate::lsp::utils::{Progress, notification_is};
 use crate::reload::ProjectWorkspaceProgress;
 use crate::{flycheck, lsp_ext};
-use base_db::SourceRootDatabase;
+use base_db::PackageRootDatabase;
 use crossbeam_channel::Receiver;
 use lsp_server::Connection;
 use lsp_types::notification::Notification;
@@ -112,7 +112,6 @@ pub(crate) enum Task {
     Response(lsp_server::Response),
     Retry(lsp_server::Request),
     Diagnostics(DiagnosticsTaskKind),
-    // PrimeCaches(PrimeCachesProgress),
     FetchWorkspace(ProjectWorkspaceProgress),
 }
 
@@ -124,18 +123,18 @@ impl GlobalState {
             "startup".to_owned(),
             FetchWorkspaceRequest {
                 path: None,
-                force_crate_graph_reload: false,
+                force_reload_deps: false,
             },
         );
         if let Some((
             cause,
             FetchWorkspaceRequest {
                 path: _,
-                force_crate_graph_reload,
+                force_reload_deps,
             },
         )) = self.fetch_workspaces_queue.should_start_op()
         {
-            self.fetch_workspaces(cause, force_crate_graph_reload);
+            self.fetch_workspaces(cause, force_reload_deps);
         }
 
         while let Ok(event) = self.next_event(&inbox) {
@@ -168,9 +167,6 @@ impl GlobalState {
             recv(self.task_pool.receiver) -> task =>
                 task.map(Event::Task),
 
-            // recv(self.fmt_pool.receiver) -> task =>
-            //     task.map(Event::Task),
-
             recv(self.loader.receiver) -> task =>
                 task.map(Event::Vfs),
 
@@ -202,56 +198,11 @@ impl GlobalState {
             },
             Event::Task(task) => {
                 let _p = tracing::info_span!("GlobalState::handle_event/task").entered();
-                // let mut prime_caches_progress = Vec::new();
-                self.handle_task(/*&mut prime_caches_progress, */ task);
+                self.handle_task(task);
                 // Coalesce multiple task events into one loop turn
                 while let Ok(task) = self.task_pool.receiver.try_recv() {
-                    self.handle_task(/*&mut prime_caches_progress, */ task);
+                    self.handle_task(task);
                 }
-
-                // for progress in prime_caches_progress {
-                //     let (state, message, fraction);
-                //     match progress {
-                //         PrimeCachesProgress::Begin => {
-                //             state = Progress::Begin;
-                //             message = None;
-                //             fraction = 0.0;
-                //         }
-                //         PrimeCachesProgress::Report(report) => {
-                //             state = Progress::Report;
-                //
-                //             message = match &report.crates_currently_indexing[..] {
-                //                 [crate_name] => Some(format!(
-                //                     "{}/{} ({crate_name})",
-                //                     report.crates_done, report.crates_total
-                //                 )),
-                //                 [crate_name, rest @ ..] => Some(format!(
-                //                     "{}/{} ({} + {} more)",
-                //                     report.crates_done,
-                //                     report.crates_total,
-                //                     crate_name,
-                //                     rest.len()
-                //                 )),
-                //                 _ => None,
-                //             };
-                //
-                //             fraction = Progress::fraction(report.crates_done, report.crates_total);
-                //         }
-                //         PrimeCachesProgress::End { cancelled } => {
-                //             state = Progress::End;
-                //             message = None;
-                //             fraction = 1.0;
-                //
-                //             self.prime_caches_queue.op_completed(());
-                //             if cancelled {
-                //                 self.prime_caches_queue
-                //                     .request_op("restart after cancellation".to_owned(), ());
-                //             }
-                //         }
-                //     };
-                //
-                //     self.report_progress("Indexing", state, message, Some(fraction), None);
-                // }
             }
             Event::Vfs(message) => {
                 let _p = tracing::info_span!("GlobalState::handle_event/vfs").entered();
@@ -276,7 +227,7 @@ impl GlobalState {
             if let Some(cause) = self.wants_to_switch.take() {
                 self.switch_workspaces(cause);
             }
-            (self.process_changes(), self.mem_docs.take_changes())
+            (self.process_file_changes(), self.mem_docs.take_changes())
         } else {
             (false, false)
         };
@@ -290,9 +241,6 @@ impl GlobalState {
                         .iter()
                         .for_each(|flycheck| flycheck.restart_workspace());
                 }
-                // if self.config.prefill_caches() {
-                //     self.prime_caches_queue.request_op("became quiescent".to_owned(), ());
-                // }
             }
 
             let client_refresh = became_quiescent || state_changed;
@@ -349,7 +297,7 @@ impl GlobalState {
                 cause,
                 FetchWorkspaceRequest {
                     path: _,
-                    force_crate_graph_reload,
+                    force_reload_deps: force_crate_graph_reload,
                 },
             )) = self.fetch_workspaces_queue.should_start_op()
             {
@@ -380,13 +328,13 @@ impl GlobalState {
                 .iter()
                 .map(|path| vfs.file_id(path).unwrap())
                 .filter(|&file_id| {
-                    let source_root = db.file_source_root(file_id);
+                    let package_root_id = db.file_package_root_id(file_id);
                     // Only publish diagnostics for files in the workspace, not from crates.io deps
                     // or the sysroot.
                     // While theoretically these should never have errors, we have quite a few false
                     // positives particularly in the stdlib, and those diagnostics would stay around
                     // forever if we emitted them here.
-                    !db.source_root(source_root).is_library
+                    !db.package_root(package_root_id).is_library
                 })
                 .collect::<std::sync::Arc<_>>()
         };
@@ -481,10 +429,7 @@ impl GlobalState {
         }
     }
 
-    fn handle_task(
-        &mut self,
-        /*prime_caches_progress: &mut Vec<PrimeCachesProgress>, */ task: Task,
-    ) {
+    fn handle_task(&mut self, task: Task) {
         match task {
             Task::Response(response) => self.respond(response),
             // Only retry requests that haven't been cancelled. Otherwise we do unnecessary work.
@@ -492,27 +437,15 @@ impl GlobalState {
             Task::Retry(_) => (),
             Task::Diagnostics(kind) => {
                 self.diagnostics.set_native_diagnostics(kind);
-            } // Task::PrimeCaches(progress) => match progress {
-            //     PrimeCachesProgress::Begin => prime_caches_progress.push(progress),
-            //     PrimeCachesProgress::Report(_) => {
-            //         match prime_caches_progress.last_mut() {
-            //             Some(last @ PrimeCachesProgress::Report(_)) => {
-            //                 // Coalesce subsequent update events.
-            //                 *last = progress;
-            //             }
-            //             _ => prime_caches_progress.push(progress),
-            //         }
-            //     }
-            //     PrimeCachesProgress::End { .. } => prime_caches_progress.push(progress),
-            // },
+            }
             Task::FetchWorkspace(progress) => {
                 let (state, msg) = match progress {
                     ProjectWorkspaceProgress::Begin => (Progress::Begin, None),
                     ProjectWorkspaceProgress::Report(msg) => (Progress::Report, Some(msg)),
-                    ProjectWorkspaceProgress::End(workspaces, force_crate_graph_reload) => {
+                    ProjectWorkspaceProgress::End(workspaces, force_reload_deps) => {
                         let resp = FetchWorkspaceResponse {
                             workspaces,
-                            force_crate_graph_reload,
+                            force_reload_deps,
                         };
                         self.fetch_workspaces_queue.op_completed(resp);
                         if let Err(e) = self.fetch_workspace_error() {

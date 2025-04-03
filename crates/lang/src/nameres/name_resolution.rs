@@ -7,12 +7,14 @@ use crate::nameres::path_resolution::ResolutionContext;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use crate::nameres::scope_entries_owner::get_entries_in_scope;
 use crate::node_ext::ModuleLangExt;
-use base_db::input::SourceRootId;
+use base_db::package::PackageRootId;
 use parser::SyntaxKind;
 use parser::SyntaxKind::MODULE_SPEC;
 use std::collections::HashMap;
-use std::fmt;
 use std::fmt::Formatter;
+use std::ops::Deref;
+use std::{fmt, iter};
+use vfs::AnchoredPath;
 use syntax::ast::{HasItems, ReferenceElement};
 use syntax::files::{InFile, InFileVecExt};
 use syntax::{AstNode, SyntaxNode, ast};
@@ -118,20 +120,26 @@ pub fn get_entries_from_walking_scopes(
 #[tracing::instrument(level = "debug", skip(db))]
 pub fn get_modules_as_entries(
     db: &dyn HirDatabase,
-    source_root_id: SourceRootId,
+    package_root_id: PackageRootId,
     address: Address,
 ) -> Vec<ScopeEntry> {
     // get all files in the current package
-    let source_root = db.source_root(source_root_id);
+    let dep_ids = db.package_deps(package_root_id).deref().to_owned();
+    let file_sets = iter::once(package_root_id)
+        .chain(dep_ids)
+        .map(|id| db.package_root(id).file_set.clone())
+        .collect::<Vec<_>>();
 
     let mut entries = vec![];
-    for source_file_id in source_root.iter() {
-        let source_file = db.parse(source_file_id).tree();
-        let modules = source_file
-            .all_modules()
-            .filter(|m| m.address_equals_to(address.clone(), false))
-            .collect::<Vec<_>>();
-        entries.extend(modules.wrapped_in_file(source_file_id).to_entries());
+    for file_set in file_sets {
+        for source_file_id in file_set.iter() {
+            let source_file = db.parse(source_file_id).tree();
+            let modules = source_file
+                .all_modules()
+                .filter(|m| m.address_equals_to(address.clone(), false))
+                .collect::<Vec<_>>();
+            entries.extend(modules.wrapped_in_file(source_file_id).to_entries());
+        }
     }
     entries
 }
@@ -152,7 +160,7 @@ pub fn get_qualified_path_entries(
         if let Some(qualifier_name) = qualifier.value.reference_name() {
             return Some(get_modules_as_entries(
                 db,
-                ctx.source_root_id(db),
+                ctx.package_root_id(db),
                 Address::Named(NamedAddr::new(qualifier_name)),
             ));
         }
