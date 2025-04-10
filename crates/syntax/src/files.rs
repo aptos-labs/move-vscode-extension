@@ -1,5 +1,6 @@
 use crate::{AstNode, SyntaxNode, TextRange, TextSize};
 use parser::SyntaxKind;
+use std::borrow::Borrow;
 use vfs::FileId;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -30,6 +31,21 @@ pub struct InFile<T> {
 impl<T> InFile<T> {
     pub fn new(file_id: FileId, value: T) -> Self {
         Self { file_id, value }
+    }
+
+    pub fn with_value<U>(&self, value: U) -> InFile<U> {
+        InFile::new(self.file_id, value)
+    }
+
+    pub fn as_ref(&self) -> InFile<&T> {
+        self.with_value(&self.value)
+    }
+
+    pub fn borrow<U>(&self) -> InFile<&U>
+    where
+        T: Borrow<U>,
+    {
+        self.with_value(self.value.borrow())
     }
 
     pub fn unpack(self) -> (FileId, T) {
@@ -71,11 +87,18 @@ impl<T: AstNode> InFile<T> {
         let value = IntoT::cast(value.syntax().clone())?;
         Some(InFile::new(*file_id, value))
     }
+
+    pub fn file_range(&self) -> FileRange {
+        FileRange {
+            file_id: self.file_id,
+            range: self.value.syntax().text_range(),
+        }
+    }
 }
 
 impl InFile<SyntaxNode> {
-    pub fn syntax_cast<T: AstNode>(self) -> Option<InFile<T>> {
-        let InFile { file_id, value } = self;
+    pub fn syntax_cast<T: AstNode>(&self) -> Option<InFile<T>> {
+        let InFile { file_id, value } = self.clone();
         let value = T::cast(value)?;
         Some(InFile::new(file_id, value))
     }

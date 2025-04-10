@@ -1,10 +1,14 @@
 use crate::diagnostics::convert_diagnostic;
 use crate::global_state::{FetchWorkspaceRequest, GlobalState, GlobalStateSnapshot};
-use crate::lsp::{from_proto, to_proto};
-use crate::{lsp_ext, try_default};
+use crate::lsp::{LspError, from_proto, to_proto};
+use crate::{Config, lsp_ext, try_default};
 use line_index::TextRange;
-use lsp_types::{HoverContents, Range, SemanticTokensParams, SemanticTokensResult};
+use lsp_server::ErrorCode;
+use lsp_types::{
+    HoverContents, Range, ResourceOp, ResourceOperationKind, SemanticTokensParams, SemanticTokensResult,
+};
 use syntax::files::FileRange;
+use crate::lsp::utils::invalid_params_error;
 
 pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
     // state.proc_macro_clients = Arc::from_iter([]);
@@ -145,7 +149,7 @@ pub(crate) fn handle_document_diagnostics(
     // let mut related_documents = FxHashMap::default();
     let diagnostics = snap
         .analysis
-        .syntax_diagnostics(&config, file_id)?
+        .full_diagnostics(&config, file_id)?
         .into_iter()
         .filter_map(|d| {
             let file = d.range.file_id;
@@ -262,4 +266,122 @@ pub(crate) fn handle_view_syntax_tree(
     let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
     let syn = snap.analysis.view_syntax_tree(file_id)?;
     Ok(syn)
+}
+
+pub(crate) fn handle_code_action(
+    snap: GlobalStateSnapshot,
+    params: lsp_types::CodeActionParams,
+) -> anyhow::Result<Option<Vec<lsp_ext::CodeAction>>> {
+    let _p = tracing::info_span!("handle_code_action").entered();
+
+    // if !snap.config.code_action_literals() {
+    //     // We intentionally don't support command-based actions, as those either
+    //     // require either custom client-code or server-initiated edits. Server
+    //     // initiated edits break causality, so we avoid those.
+    //     return Ok(None);
+    // }
+
+    // let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
+    // let line_index = snap.file_line_index(file_id)?;
+    let frange = try_default!(from_proto::file_range(
+        &snap,
+        &params.text_document,
+        params.range
+    )?);
+    // let package_root_id = snap.analysis.source_root_id(file_id)?;
+
+    // let mut assists_config = snap.config.assist(Some(package_root_id));
+    // assists_config.allowed = params
+    //     .context
+    //     .only
+    //     .clone()
+    //     .map(|it| it.into_iter().filter_map(from_proto::assist_kind).collect());
+
+    let mut res: Vec<lsp_ext::CodeAction> = Vec::new();
+
+    // let code_action_resolve_cap = snap.config.code_action_resolve();
+    // let resolve = if code_action_resolve_cap {
+    //     AssistResolveStrategy::None
+    // } else {
+    //     AssistResolveStrategy::All
+    // };
+    let assists = snap.analysis.assists_with_fixes(
+        // &assists_config,
+        &snap.config.diagnostics(/*Some(package_root_id)*/),
+        // resolve,
+        frange,
+    )?;
+    for (index, assist) in assists.into_iter().enumerate() {
+        // let resolve_data = if code_action_resolve_cap {
+        //     Some((index, params.clone(), snap.file_version(file_id)))
+        // } else {
+        //     None
+        // };
+        let code_action = to_proto::code_action(&snap, assist /*resolve_data*/)?;
+
+        // Check if the client supports the necessary `ResourceOperation`s.
+        let changes = code_action
+            .edit
+            .as_ref()
+            .and_then(|it| it.document_changes.as_ref());
+        if let Some(changes) = changes {
+            for change in changes {
+                if let lsp_ext::SnippetDocumentChangeOperation::Op(res_op) = change {
+                    resource_ops_supported(&snap.config, resolve_resource_op(res_op))?
+                }
+            }
+        }
+
+        res.push(code_action)
+    }
+
+    // Fixes from `cargo check`.
+    // for fix in snap
+    //     .check_fixes
+    //     .iter()
+    //     .flat_map(|it| it.values())
+    //     .filter_map(|it| it.get(&frange.file_id))
+    //     .flatten()
+    // {
+    //     // FIXME: this mapping is awkward and shouldn't exist. Refactor
+    //     // `snap.check_fixes` to not convert to LSP prematurely.
+    //     let intersect_fix_range = fix
+    //         .ranges
+    //         .iter()
+    //         .copied()
+    //         .filter_map(|range| from_proto::text_range(&line_index, range).ok())
+    //         .any(|fix_range| fix_range.intersect(frange.range).is_some());
+    //     if intersect_fix_range {
+    //         res.push(fix.action.clone());
+    //     }
+    // }
+
+    Ok(Some(res))
+}
+
+fn resource_ops_supported(config: &Config, kind: ResourceOperationKind) -> anyhow::Result<()> {
+    if !matches!(config.workspace_edit_resource_operations(), Some(resops) if resops.contains(&kind)) {
+        return Err(LspError::new(
+            ErrorCode::RequestFailed as i32,
+            format!(
+                "Client does not support {} capability.",
+                match kind {
+                    ResourceOperationKind::Create => "create",
+                    ResourceOperationKind::Rename => "rename",
+                    ResourceOperationKind::Delete => "delete",
+                }
+            ),
+        )
+        .into());
+    }
+
+    Ok(())
+}
+
+fn resolve_resource_op(op: &ResourceOp) -> ResourceOperationKind {
+    match op {
+        ResourceOp::Create(_) => ResourceOperationKind::Create,
+        ResourceOp::Rename(_) => ResourceOperationKind::Rename,
+        ResourceOp::Delete(_) => ResourceOperationKind::Delete,
+    }
 }

@@ -1,4 +1,5 @@
-use crate::Config;
+use std::mem;
+use crate::{lsp_ext, Config};
 use crate::global_state::GlobalStateSnapshot;
 use crate::line_index::{LineEndings, LineIndex, PositionEncoding};
 use crate::lsp::semantic_tokens;
@@ -14,6 +15,9 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use stdx::itertools::Itertools;
 use syntax::files::FileRange;
 use vfs::{AbsPath, FileId};
+use ide_db::assists::{Assist, AssistKind};
+use ide_db::source_change::{FileSystemEdit, SnippetEdit, SourceChange};
+use crate::lsp_ext::SnippetTextEdit;
 
 pub(crate) fn position(line_index: &LineIndex, offset: TextSize) -> lsp_types::Position {
     let line_col = line_index.index.line_col(offset);
@@ -109,6 +113,25 @@ pub(crate) fn text_edit(line_index: &LineIndex, indel: Indel) -> lsp_types::Text
         LineEndings::Dos => indel.insert.replace('\n', "\r\n"),
     };
     lsp_types::TextEdit { range, new_text }
+}
+
+pub(crate) fn snippet_text_edit(
+    line_index: &LineIndex,
+    is_snippet: bool,
+    indel: Indel,
+    // annotation: Option<ChangeAnnotationId>,
+    // client_supports_annotations: bool,
+) -> SnippetTextEdit {
+    // let annotation_id = annotation.filter(|_| client_supports_annotations).map(|it| it.to_string());
+    let text_edit = text_edit(line_index, indel);
+    let insert_text_format =
+        if is_snippet { Some(lsp_types::InsertTextFormat::SNIPPET) } else { None };
+    SnippetTextEdit {
+        range: text_edit.range,
+        new_text: text_edit.new_text,
+        insert_text_format,
+        // annotation_id,
+    }
 }
 
 pub(crate) fn completion_text_edit(
@@ -236,6 +259,15 @@ fn location_info(
         .map(|it| range(&line_index, it))
         .unwrap_or(target_range);
     Ok((target_uri, target_range, target_selection_range))
+}
+
+pub(crate) fn optional_versioned_text_document_identifier(
+    snap: &GlobalStateSnapshot,
+    file_id: FileId,
+) -> lsp_types::OptionalVersionedTextDocumentIdentifier {
+    let url = url(snap, file_id);
+    let version = snap.url_file_version(&url);
+    lsp_types::OptionalVersionedTextDocumentIdentifier { uri: url, version }
 }
 
 pub(crate) fn location(
@@ -430,10 +462,10 @@ pub(crate) fn completion_items(
             config,
             // fields_to_resolve,
             line_index,
-            version,
+            // version,
             &tdpp,
             // max_relevance,
-            completion_trigger_character,
+            // completion_trigger_character,
             item,
         );
     }
@@ -451,10 +483,10 @@ fn completion_item(
     config: &Config,
     // fields_to_resolve: &CompletionFieldsToResolve,
     line_index: &LineIndex,
-    version: Option<i32>,
+    // version: Option<i32>,
     tdpp: &lsp_types::TextDocumentPositionParams,
     // max_relevance: u32,
-    completion_trigger_character: Option<char>,
+    // completion_trigger_character: Option<char>,
     item: CompletionItem,
 ) {
     let insert_replace_support = config.insert_replace_support().then_some(tdpp.position);
@@ -647,4 +679,389 @@ pub(crate) fn markup_content(markup: String) -> lsp_types::MarkupContent {
         kind: lsp_types::MarkupKind::Markdown,
         value: markup,
     }
+}
+
+fn merge_text_and_snippet_edits(
+    line_index: &LineIndex,
+    edit: TextEdit,
+    snippet_edit: SnippetEdit,
+    // client_supports_annotations: bool,
+) -> Vec<SnippetTextEdit> {
+    let mut edits: Vec<SnippetTextEdit> = vec![];
+    let mut snippets = snippet_edit.into_edit_ranges().into_iter().peekable();
+    // let annotation = edit.change_annotation();
+    let text_edits = edit.into_iter();
+    // offset to go from the final source location to the original source location
+    let mut source_text_offset = 0i32;
+
+    let offset_range = |range: TextRange, offset: i32| -> TextRange {
+        // map the snippet range from the target location into the original source location
+        let start = u32::from(range.start()).checked_add_signed(offset).unwrap_or(0);
+        let end = u32::from(range.end()).checked_add_signed(offset).unwrap_or(0);
+
+        TextRange::new(start.into(), end.into())
+    };
+
+    for current_indel in text_edits {
+        let new_range = {
+            let insert_len =
+                TextSize::try_from(current_indel.insert.len()).unwrap_or(TextSize::from(u32::MAX));
+            TextRange::at(current_indel.delete.start(), insert_len)
+        };
+
+        // figure out how much this Indel will shift future ranges from the initial source
+        let offset_adjustment =
+            u32::from(current_indel.delete.len()) as i32 - u32::from(new_range.len()) as i32;
+
+        // insert any snippets before the text edit
+        for (snippet_index, snippet_range) in snippets.peeking_take_while(|(_, range)| {
+            offset_range(*range, source_text_offset).end() < new_range.start()
+        }) {
+            // adjust the snippet range into the corresponding initial source location
+            let snippet_range = offset_range(snippet_range, source_text_offset);
+
+            let snippet_range = if !stdx::always!(
+                snippet_range.is_empty(),
+                "placeholder range {:?} is before current text edit range {:?}",
+                snippet_range,
+                new_range
+            ) {
+                // only possible for tabstops, so make sure it's an empty/insert range
+                TextRange::empty(snippet_range.start())
+            } else {
+                snippet_range
+            };
+
+            edits.push(snippet_text_edit(
+                line_index,
+                true,
+                Indel { insert: format!("${snippet_index}"), delete: snippet_range },
+                // annotation,
+                // client_supports_annotations,
+            ))
+        }
+
+        if snippets.peek().is_some_and(|(_, range)| {
+            new_range.intersect(offset_range(*range, source_text_offset)).is_some()
+        }) {
+            // at least one snippet edit intersects this text edit,
+            // so gather all of the edits that intersect this text edit
+            let mut all_snippets = snippets
+                .peeking_take_while(|(_, range)| {
+                    new_range.intersect(offset_range(*range, source_text_offset)).is_some()
+                })
+                .map(|(tabstop, range)| (tabstop, offset_range(range, source_text_offset)))
+                .collect_vec();
+
+            // ensure all of the ranges are wholly contained inside of the new range
+            all_snippets.retain(|(_, range)| {
+                stdx::always!(
+                        new_range.contains_range(*range),
+                        "found placeholder range {:?} which wasn't fully inside of text edit's new range {:?}", range, new_range
+                    )
+            });
+
+            let mut new_text = current_indel.insert;
+
+            // find which snippet bits need to be escaped
+            let escape_places =
+                new_text.rmatch_indices(['\\', '$', '}']).map(|(insert, _)| insert).collect_vec();
+            let mut escape_places = escape_places.into_iter().peekable();
+            let mut escape_prior_bits = |new_text: &mut String, up_to: usize| {
+                for before in escape_places.peeking_take_while(|insert| *insert >= up_to) {
+                    new_text.insert(before, '\\');
+                }
+            };
+
+            // insert snippets, and escaping any needed bits along the way
+            for (index, range) in all_snippets.iter().rev() {
+                let text_range = range - new_range.start();
+                let (start, end) = (text_range.start().into(), text_range.end().into());
+
+                if range.is_empty() {
+                    escape_prior_bits(&mut new_text, start);
+                    new_text.insert_str(start, &format!("${index}"));
+                } else {
+                    escape_prior_bits(&mut new_text, end);
+                    new_text.insert(end, '}');
+                    escape_prior_bits(&mut new_text, start);
+                    new_text.insert_str(start, &format!("${{{index}:"));
+                }
+            }
+
+            // escape any remaining bits
+            escape_prior_bits(&mut new_text, 0);
+
+            edits.push(snippet_text_edit(
+                line_index,
+                true,
+                Indel { insert: new_text, delete: current_indel.delete },
+                // annotation,
+                // client_supports_annotations,
+            ))
+        } else {
+            // snippet edit was beyond the current one
+            // since it wasn't consumed, it's available for the next pass
+            edits.push(snippet_text_edit(
+                line_index,
+                false,
+                current_indel,
+                // annotation,
+                // client_supports_annotations,
+            ));
+        }
+
+        // update the final source -> initial source mapping offset
+        source_text_offset += offset_adjustment;
+    }
+
+    // insert any remaining tabstops
+    edits.extend(snippets.map(|(snippet_index, snippet_range)| {
+        // adjust the snippet range into the corresponding initial source location
+        let snippet_range = offset_range(snippet_range, source_text_offset);
+
+        let snippet_range = if !stdx::always!(
+            snippet_range.is_empty(),
+            "found placeholder snippet {:?} without a text edit",
+            snippet_range
+        ) {
+            TextRange::empty(snippet_range.start())
+        } else {
+            snippet_range
+        };
+
+        snippet_text_edit(
+            line_index,
+            true,
+            Indel { insert: format!("${snippet_index}"), delete: snippet_range },
+            // annotation,
+            // client_supports_annotations,
+        )
+    }));
+
+    edits
+}
+
+pub(crate) fn snippet_text_document_edit(
+    snap: &GlobalStateSnapshot,
+    is_snippet: bool,
+    file_id: FileId,
+    edit: TextEdit,
+    snippet_edit: Option<SnippetEdit>,
+) -> Cancellable<lsp_ext::SnippetTextDocumentEdit> {
+    let text_document = optional_versioned_text_document_identifier(snap, file_id);
+    let line_index = snap.file_line_index(file_id)?;
+    // let client_supports_annotations = snap.config.change_annotation_support();
+    let mut edits = if let Some(snippet_edit) = snippet_edit {
+        merge_text_and_snippet_edits(&line_index, edit, snippet_edit/*, client_supports_annotations*/)
+    } else {
+        // let annotation = edit.change_annotation();
+        edit.into_iter()
+            .map(|it| {
+                snippet_text_edit(
+                    &line_index,
+                    is_snippet,
+                    it,
+                    // annotation,
+                    // client_supports_annotations,
+                )
+            })
+            .collect()
+    };
+
+    // if snap.analysis.is_library_file(file_id)? && snap.config.change_annotation_support() {
+    //     for edit in &mut edits {
+    //         edit.annotation_id = Some(outside_workspace_annotation_id())
+    //     }
+    // }
+    Ok(lsp_ext::SnippetTextDocumentEdit { text_document, edits })
+}
+
+pub(crate) fn snippet_text_document_ops(
+    snap: &GlobalStateSnapshot,
+    file_system_edit: FileSystemEdit,
+) -> Cancellable<Vec<lsp_ext::SnippetDocumentChangeOperation>> {
+    let mut ops = Vec::new();
+    match file_system_edit {
+        FileSystemEdit::CreateFile { dst, initial_contents } => {
+            let uri = snap.anchored_path(&dst);
+            let create_file = lsp_types::ResourceOp::Create(lsp_types::CreateFile {
+                uri: uri.clone(),
+                options: None,
+                annotation_id: None,
+            });
+            ops.push(lsp_ext::SnippetDocumentChangeOperation::Op(create_file));
+            if !initial_contents.is_empty() {
+                let text_document =
+                    lsp_types::OptionalVersionedTextDocumentIdentifier { uri, version: None };
+                let text_edit = SnippetTextEdit {
+                    range: lsp_types::Range::default(),
+                    new_text: initial_contents,
+                    insert_text_format: Some(lsp_types::InsertTextFormat::PLAIN_TEXT),
+                    // annotation_id: None,
+                };
+                let edit_file =
+                    lsp_ext::SnippetTextDocumentEdit { text_document, edits: vec![text_edit] };
+                ops.push(lsp_ext::SnippetDocumentChangeOperation::Edit(edit_file));
+            }
+        }
+        FileSystemEdit::MoveFile { src, dst } => {
+            let old_uri = snap.file_id_to_url(src);
+            let new_uri = snap.anchored_path(&dst);
+            let mut rename_file =
+                lsp_types::RenameFile { old_uri, new_uri, options: None, annotation_id: None };
+            // if snap.analysis.is_library_file(src).ok() == Some(true)
+            //     && snap.config.change_annotation_support()
+            // {
+            //     rename_file.annotation_id = Some(outside_workspace_annotation_id())
+            // }
+            ops.push(lsp_ext::SnippetDocumentChangeOperation::Op(lsp_types::ResourceOp::Rename(
+                rename_file,
+            )))
+        }
+        FileSystemEdit::MoveDir { src, src_id, dst } => {
+            let old_uri = snap.anchored_path(&src);
+            let new_uri = snap.anchored_path(&dst);
+            let mut rename_file =
+                lsp_types::RenameFile { old_uri, new_uri, options: None, annotation_id: None };
+            // if snap.analysis.is_library_file(src_id).ok() == Some(true)
+            //     && snap.config.change_annotation_support()
+            // {
+            //     rename_file.annotation_id = Some(outside_workspace_annotation_id())
+            // }
+            ops.push(lsp_ext::SnippetDocumentChangeOperation::Op(lsp_types::ResourceOp::Rename(
+                rename_file,
+            )))
+        }
+    }
+    Ok(ops)
+}
+
+pub(crate) fn snippet_workspace_edit(
+    snap: &GlobalStateSnapshot,
+    mut source_change: SourceChange,
+) -> Cancellable<lsp_ext::SnippetWorkspaceEdit> {
+    let mut document_changes: Vec<lsp_ext::SnippetDocumentChangeOperation> = Vec::new();
+
+    for op in &mut source_change.file_system_edits {
+        if let FileSystemEdit::CreateFile { dst, initial_contents } = op {
+            // replace with a placeholder to avoid cloneing the edit
+            let op = FileSystemEdit::CreateFile {
+                dst: dst.clone(),
+                initial_contents: mem::take(initial_contents),
+            };
+            let ops = snippet_text_document_ops(snap, op)?;
+            document_changes.extend_from_slice(&ops);
+        }
+    }
+    for (file_id, (edit, snippet_edit)) in source_change.source_file_edits {
+        let edit = snippet_text_document_edit(
+            snap,
+            source_change.is_snippet,
+            file_id,
+            edit,
+            snippet_edit,
+        )?;
+        document_changes.push(lsp_ext::SnippetDocumentChangeOperation::Edit(edit));
+    }
+    for op in source_change.file_system_edits {
+        if !matches!(op, FileSystemEdit::CreateFile { .. }) {
+            let ops = snippet_text_document_ops(snap, op)?;
+            document_changes.extend_from_slice(&ops);
+        }
+    }
+    let mut workspace_edit = lsp_ext::SnippetWorkspaceEdit {
+        changes: None,
+        document_changes: Some(document_changes),
+        change_annotations: None,
+    };
+    // if snap.config.change_annotation_support() {
+    //     workspace_edit.change_annotations = Some(
+    //         once((
+    //             outside_workspace_annotation_id(),
+    //             lsp_types::ChangeAnnotation {
+    //                 label: String::from("Edit outside of the workspace"),
+    //                 needs_confirmation: Some(true),
+    //                 description: Some(String::from(
+    //                     "This edit lies outside of the workspace and may affect dependencies",
+    //                 )),
+    //             },
+    //         ))
+    //             .chain(source_change.annotations.into_iter().map(|(id, annotation)| {
+    //                 (
+    //                     id.to_string(),
+    //                     lsp_types::ChangeAnnotation {
+    //                         label: annotation.label,
+    //                         description: annotation.description,
+    //                         needs_confirmation: Some(annotation.needs_confirmation),
+    //                     },
+    //                 )
+    //             }))
+    //             .collect(),
+    //     )
+    // }
+    Ok(workspace_edit)
+}
+
+pub(crate) fn code_action_kind(kind: AssistKind) -> lsp_types::CodeActionKind {
+    match kind {
+        AssistKind::None | AssistKind::Generate => lsp_types::CodeActionKind::EMPTY,
+        AssistKind::QuickFix => lsp_types::CodeActionKind::QUICKFIX,
+        AssistKind::Refactor => lsp_types::CodeActionKind::REFACTOR,
+        AssistKind::RefactorExtract => lsp_types::CodeActionKind::REFACTOR_EXTRACT,
+        AssistKind::RefactorInline => lsp_types::CodeActionKind::REFACTOR_INLINE,
+        AssistKind::RefactorRewrite => lsp_types::CodeActionKind::REFACTOR_REWRITE,
+    }
+}
+
+pub(crate) fn code_action(
+    snap: &GlobalStateSnapshot,
+    assist: Assist,
+    // resolve_data: Option<(usize, lsp_types::CodeActionParams, Option<i32>)>,
+) -> Cancellable<lsp_ext::CodeAction> {
+    let mut res = lsp_ext::CodeAction {
+        title: assist.label.to_string(),
+        group: None,
+        // diagnostics: None,
+        // group: assist.group.filter(|_| snap.config.code_action_group()).map(|gr| gr.0),
+        kind: Some(code_action_kind(assist.id.1)),
+        edit: None,
+        is_preferred: None,
+        data: None,
+        command: None,
+        // disabled: None,
+    };
+
+    // let commands = snap.config.client_commands();
+    // res.command = match assist.command {
+    //     Some(assists::Command::TriggerParameterHints) if commands.trigger_parameter_hints => {
+    //         Some(command::trigger_parameter_hints())
+    //     }
+    //     Some(assists::Command::Rename) if commands.rename => Some(command::rename()),
+    //     _ => None,
+    // };
+
+    match (assist.source_change/*, resolve_data*/) {
+        Some(it) => res.edit = Some(snippet_workspace_edit(snap, it)?),
+        // (Some(it), _) => res.edit = Some(snippet_workspace_edit(snap, it)?),
+        None => {
+
+        }
+        // (None, Some((index, code_action_params, version))) => {
+        //     res.data = Some(lsp_ext::CodeActionData {
+        //         id: format!(
+        //             "{}:{}",
+        //             assist.id.0,
+        //             assist.id.1.name(),
+        //             // assist.id.2.map(|x| x.to_string()).unwrap_or("".to_owned())
+        //         ),
+        //         code_action_params,
+        //         version,
+        //     });
+        // }
+        // (None, None) => {
+        //     stdx::never!("assist should always be resolved if client can't do lazy resolving")
+        // }
+    };
+    Ok(res)
 }

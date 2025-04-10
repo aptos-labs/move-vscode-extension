@@ -87,16 +87,16 @@ pub fn get_path_resolve_variants(
     }
 }
 
-#[tracing::instrument(level = "debug", skip(db, file_id))]
+#[tracing::instrument(level = "debug", skip(db, current_file_id))]
 pub fn get_method_resolve_variants(
     db: &dyn HirDatabase,
     self_ty: &Ty,
-    file_id: FileId,
+    current_file_id: FileId,
 ) -> Vec<ScopeEntry> {
     let Some(InFile {
         file_id,
         value: receiver_item_module,
-    }) = self_ty.item_module(db, file_id)
+    }) = self_ty.inner_item_module(db, current_file_id)
     else {
         return vec![];
     };

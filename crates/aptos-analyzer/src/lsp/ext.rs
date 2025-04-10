@@ -1,8 +1,9 @@
-use lsp_types::TextDocumentIdentifier;
+use lsp_types::{CodeActionKind, Range, TextDocumentIdentifier};
 use lsp_types::notification::Notification;
 use lsp_types::request::Request;
 use serde::{Deserialize, Serialize};
 use std::ops;
+use rustc_hash::FxHashMap;
 
 pub enum ReloadWorkspace {}
 
@@ -92,3 +93,91 @@ impl Request for ViewSyntaxTree {
 pub struct ViewSyntaxTreeParams {
     pub text_document: TextDocumentIdentifier,
 }
+
+
+pub enum CodeActionRequest {}
+
+impl Request for CodeActionRequest {
+    type Params = lsp_types::CodeActionParams;
+    type Result = Option<Vec<CodeAction>>;
+    const METHOD: &'static str = "textDocument/codeAction";
+}
+
+// pub enum CodeActionResolveRequest {}
+
+// impl Request for CodeActionResolveRequest {
+//     type Params = CodeAction;
+//     type Result = CodeAction;
+//     const METHOD: &'static str = "codeAction/resolve";
+// }
+
+#[derive(Debug, PartialEq, Clone, Default, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CodeAction {
+    pub title: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub group: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub kind: Option<CodeActionKind>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub command: Option<lsp_types::Command>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub edit: Option<SnippetWorkspaceEdit>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub is_preferred: Option<bool>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub data: Option<CodeActionData>,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CodeActionData {
+    pub code_action_params: lsp_types::CodeActionParams,
+    pub id: String,
+    pub version: Option<i32>,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone, Default, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SnippetWorkspaceEdit {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub changes: Option<FxHashMap<lsp_types::Url, Vec<lsp_types::TextEdit>>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub document_changes: Option<Vec<SnippetDocumentChangeOperation>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub change_annotations: Option<
+        std::collections::HashMap<
+            lsp_types::ChangeAnnotationIdentifier,
+            lsp_types::ChangeAnnotation,
+        >,
+    >,
+}
+
+
+#[derive(Debug, Eq, PartialEq, Clone, Deserialize, Serialize)]
+#[serde(untagged, rename_all = "lowercase")]
+pub enum SnippetDocumentChangeOperation {
+    Op(lsp_types::ResourceOp),
+    Edit(SnippetTextDocumentEdit),
+}
+
+#[derive(Debug, Eq, PartialEq, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SnippetTextDocumentEdit {
+    pub text_document: lsp_types::OptionalVersionedTextDocumentIdentifier,
+    pub edits: Vec<SnippetTextEdit>,
+}
+
+#[derive(Debug, Eq, PartialEq, Clone, Default, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SnippetTextEdit {
+    pub range: Range,
+    pub new_text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub insert_text_format: Option<lsp_types::InsertTextFormat>,
+    // /// The annotation id if this is an annotated
+    // #[serde(skip_serializing_if = "Option::is_none")]
+    // pub annotation_id: Option<lsp_types::ChangeAnnotationIdentifier>,
+}
+

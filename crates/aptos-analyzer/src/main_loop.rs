@@ -672,7 +672,7 @@ impl GlobalState {
                         lsp_types::RelatedFullDocumentDiagnosticReport {
                             related_documents: None,
                             full_document_diagnostic_report: lsp_types::FullDocumentDiagnosticReport {
-                                result_id: Some("rust-analyzer".to_owned()),
+                                result_id: Some("aptos-analyzer".to_owned()),
                                 items: vec![],
                             },
                         },
@@ -721,7 +721,7 @@ impl GlobalState {
             // .on::<NO_RETRY, lsp_ext::ParentModule>(handlers::handle_parent_module)
             // .on::<NO_RETRY, lsp_ext::Runnables>(handlers::handle_runnables)
             // .on::<NO_RETRY, lsp_ext::RelatedTests>(handlers::handle_related_tests)
-            // .on::<NO_RETRY, lsp_ext::CodeActionRequest>(handlers::handle_code_action)
+            // .on::<NO_RETRY, lsp_ext::CodeActionRequest>(request::handle_code_action)
             // .on_identity::<RETRY, lsp_ext::CodeActionResolveRequest, _>(handlers::handle_code_action_resolve)
             .on::<NO_RETRY, lsp_request::HoverRequest>(handlers::handle_hover)
             // .on::<NO_RETRY, lsp_ext::ExternalDocs>(handlers::handle_open_docs)

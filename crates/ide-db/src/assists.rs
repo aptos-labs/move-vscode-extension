@@ -104,5 +104,11 @@ impl FromStr for AssistKind {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct AssistId(pub &'static str, pub AssistKind);
 
+impl AssistId {
+    pub fn quick_fix(id: &'static str) -> AssistId {
+        AssistId(id, AssistKind::QuickFix)
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct GroupLabel(pub String);

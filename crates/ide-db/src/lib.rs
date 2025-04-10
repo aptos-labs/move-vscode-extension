@@ -1,11 +1,11 @@
 #![allow(dead_code)]
 
 pub mod apply_change;
-mod assists;
+pub mod assists;
 pub mod defs;
 pub mod helpers;
-mod label;
-mod source_change;
+pub mod label;
+pub mod source_change;
 mod syntax_helpers;
 pub mod text_edit;
 

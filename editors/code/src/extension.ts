@@ -1,10 +1,10 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import {CommandFactory, Ctx} from './ctx';
+import { CommandFactory, Ctx } from './ctx';
 import * as commands from "./commands";
-import {Configuration} from './config';
-import {setContextValue} from "./util";
+import { Configuration } from './config';
+import { setContextValue } from "./util";
 import commandExists from "command-exists";
 
 const APTOS_PROJECT_CONTEXT_NAME = "inAptosProject";
@@ -110,15 +110,15 @@ function createCommands(): Record<string, CommandFactory> {
         // serverVersion: { enabled: commands.serverVersion },
         // viewMemoryLayout: { enabled: commands.viewMemoryLayout },
         // toggleCheckOnSave: { enabled: commands.toggleCheckOnSave },
-        toggleLSPLogs: {enabled: commands.toggleLSPLogs},
+        toggleLSPLogs: { enabled: commands.toggleLSPLogs },
         // openWalkthrough: { enabled: commands.openWalkthrough },
         // // Internal commands which are invoked by the server.
-        // applyActionGroup: { enabled: commands.applyActionGroup },
-        // applySnippetWorkspaceEdit: { enabled: commands.applySnippetWorkspaceEditCommand },
+        applyActionGroup: { enabled: commands.applyActionGroup },
+        applySnippetWorkspaceEdit: { enabled: commands.applySnippetWorkspaceEditCommand },
         // debugSingle: { enabled: commands.debugSingle },
         // gotoLocation: { enabled: commands.gotoLocation },
         // hoverRefCommandProxy: { enabled: commands.hoverRefCommandProxy },
-        // resolveCodeAction: { enabled: commands.resolveCodeAction },
+        resolveCodeAction: { enabled: commands.resolveCodeAction },
         // runSingle: { enabled: commands.runSingle },
         // showReferences: { enabled: commands.showReferences },
         // triggerParameterHints: { enabled: commands.triggerParameterHints },

@@ -5,7 +5,6 @@ use crate::lsp::capabilities::ClientCapabilities;
 use camino::Utf8PathBuf;
 use ide_completion::config::CompletionConfig;
 use ide_db::SnippetCap;
-use ide_diagnostics::DiagnosticsConfig;
 use paths::AbsPath;
 use std::fmt;
 use std::sync::OnceLock;
@@ -17,6 +16,7 @@ use project_model::manifest_path::ManifestPath;
 use serde_derive::{Deserialize, Serialize};
 use stdx::itertools::Itertools;
 use triomphe::Arc;
+use ide_diagnostics::config::DiagnosticsConfig;
 
 #[derive(Clone)]
 pub struct Config {
