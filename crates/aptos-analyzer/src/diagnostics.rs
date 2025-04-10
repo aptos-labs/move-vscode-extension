@@ -1,13 +1,19 @@
 pub(crate) mod to_proto;
 
 use crate::global_state::GlobalStateSnapshot;
-use crate::lsp;
 use crate::main_loop::DiagnosticsTaskKind;
+use crate::{lsp, lsp_ext};
+use base_db::package::PackageRootId;
 use nohash_hasher::{IntMap, IntSet};
+use rustc_hash::FxHashMap;
 use std::mem;
 use stdx::iter_eq_by;
 use stdx::itertools::Itertools;
+use triomphe::Arc;
 use vfs::FileId;
+
+pub(crate) type CheckFixes =
+    Arc<Vec<FxHashMap<Option<Arc<PackageRootId>>, FxHashMap<FileId, Vec<Fix>>>>>;
 
 pub(crate) type DiagnosticsGeneration = usize;
 
@@ -18,7 +24,9 @@ pub(crate) struct DiagnosticCollection {
     pub(crate) native_semantic: IntMap<FileId, (DiagnosticsGeneration, Vec<lsp_types::Diagnostic>)>,
 
     // flycheck_id (ws_id) -> (file_id -> Vec<Diagnostic>)
-    pub(crate) check: IntMap<usize, IntMap<FileId, Vec<lsp_types::Diagnostic>>>,
+    pub(crate) flycheck: IntMap<usize, IntMap<FileId, Vec<lsp_types::Diagnostic>>>,
+    // pub(crate) flycheck_fixes: Arc<IntMap<usize, IntMap<FileId, Vec<Fix>>>>,
+
     changes: IntSet<FileId>,
 
     /// Counter for supplying a new generation number for diagnostics.
@@ -28,17 +36,27 @@ pub(crate) struct DiagnosticCollection {
     generation: DiagnosticsGeneration,
 }
 
+#[derive(Debug, Clone)]
+pub(crate) struct Fix {
+    // Fixes may be triggerable from multiple ranges.
+    pub(crate) ranges: Vec<lsp_types::Range>,
+    pub(crate) action: lsp_ext::CodeAction,
+}
+
 impl DiagnosticCollection {
     pub(crate) fn clear_check(&mut self, flycheck_id: usize) {
-        if let Some(check) = self.check.get_mut(&flycheck_id) {
+        if let Some(check) = self.flycheck.get_mut(&flycheck_id) {
             let drained_keys = check.drain().map(|(k, _)| k.to_owned());
             self.changes.extend(drained_keys)
         }
+        // if let Some(fixes) = Arc::make_mut(&mut self.check_fixes).get_mut(&flycheck_id) {
+        //     fixes.clear();
+        // }
     }
 
     pub(crate) fn clear_check_all(&mut self) {
-        let all_package_diags = self.check.values_mut();
-        for files_diags in self.check.values_mut() {
+        // Arc::make_mut(&mut self.check_fixes).clear();
+        for files_diags in self.flycheck.values_mut() {
             let drained_keys = files_diags.drain().map(|(k, _)| k.to_owned());
             self.changes.extend(drained_keys);
         }
@@ -46,7 +64,7 @@ impl DiagnosticCollection {
 
     pub(crate) fn clear_native_for(&mut self, file_id: FileId) {
         self.native_syntax.remove(&file_id);
-        // self.native_semantic.remove(&file_id);
+        self.native_semantic.remove(&file_id);
         self.changes.insert(file_id);
     }
 
@@ -55,9 +73,10 @@ impl DiagnosticCollection {
         flycheck_id: usize,
         file_id: FileId,
         diagnostic: lsp_types::Diagnostic,
+        // fix: Option<Box<Fix>>,
     ) {
         let existing_diagnostics = self
-            .check
+            .flycheck
             .entry(flycheck_id)
             .or_default()
             .entry(file_id)
@@ -73,12 +92,11 @@ impl DiagnosticCollection {
         //     check_fixes
         //         .entry(flycheck_id)
         //         .or_default()
-        //         .entry(package_id.clone())
-        //         .or_default()
         //         .entry(file_id)
         //         .or_default()
         //         .push(*fix);
         // }
+
         existing_diagnostics.push(diagnostic);
         self.changes.insert(file_id);
     }
@@ -125,7 +143,7 @@ impl DiagnosticCollection {
         let native_syntax = self.native_syntax.get(&file_id).into_iter().flat_map(|(_, d)| d);
         // let native_semantic = self.native_semantic.get(&file_id).into_iter().flat_map(|(_, d)| d);
         let check = self
-            .check
+            .flycheck
             .values()
             .filter_map(move |it| it.get(&file_id))
             .flatten();
@@ -182,10 +200,9 @@ pub(crate) fn fetch_native_diagnostics(
                 NativeDiagnosticsFetchKind::Syntax => {
                     snapshot.analysis.syntax_diagnostics(config, file_id).ok()?
                 }
-                // NativeDiagnosticsFetchKind::Semantic if config.enabled => snapshot
-                //     .analysis
-                //     .semantic_diagnostics(config, ide::AssistResolveStrategy::None, file_id)
-                //     .ok()?,
+                NativeDiagnosticsFetchKind::Semantic if config.enabled => {
+                    snapshot.analysis.semantic_diagnostics(config, file_id).ok()?
+                }
                 NativeDiagnosticsFetchKind::Semantic => return None,
             };
             let diagnostics = diagnostics
@@ -228,7 +245,7 @@ pub(crate) fn fetch_native_diagnostics(
 
 pub(crate) fn convert_diagnostic(
     line_index: &crate::line_index::LineIndex,
-    d: ide_diagnostics::Diagnostic,
+    d: ide_diagnostics::diagnostic::Diagnostic,
 ) -> lsp_types::Diagnostic {
     lsp_types::Diagnostic {
         range: lsp::to_proto::range(line_index, d.range.range),

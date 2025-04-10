@@ -11,9 +11,14 @@ tracing-subscriber.workspace = true
 tracing-tree = "0.4.0"
 line-index.workspace = true
 dissimilar = "1.0.9"
+expect-test = "1.5.1"
+
+vfs.workspace = true
 
 syntax = { path = "../syntax" }
+base-db = { path = "../base-db" }
 lang = { path = "../lang" }
 ide = { path = "../ide" }
 ide-db = { path = "../ide-db" }
 ide-completion = { path = "../ide-completion" }
+ide-diagnostics = { path = "../ide-diagnostics" }

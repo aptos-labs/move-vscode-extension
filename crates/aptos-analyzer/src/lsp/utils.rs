@@ -2,13 +2,17 @@
 
 use crate::global_state::GlobalState;
 use crate::line_index::{LineEndings, LineIndex, PositionEncoding};
-use crate::lsp::from_proto;
+use crate::lsp::{from_proto, LspError};
 use crate::lsp_ext;
 use lsp_server::Notification;
 use lsp_types::request::Request;
 use std::mem;
 use std::ops::Range;
 use triomphe::Arc;
+
+pub(crate) fn invalid_params_error(message: String) -> LspError {
+    LspError { code: lsp_server::ErrorCode::InvalidParams as i32, message }
+}
 
 pub(crate) fn notification_is<N: lsp_types::notification::Notification>(
     notification: &Notification,

@@ -1,27 +1,27 @@
-mod quote;
+pub(crate) mod quote;
 
 use crate::ast::make::quote::quote;
 use crate::{ast, AstNode, SourceFile, SyntaxToken};
 use parser::SyntaxKind;
 
-pub fn name(name: &str) -> ast::Name {
-    ast_from_text(&format!("module {name}"))
-}
-pub fn name_ref(name_ref: &str) -> ast::NameRef {
-    quote! {
-        NameRef {
-            [IDENT format!("{name_ref}")]
-        }
-    }
-}
+// // pub fn name(name: &str) -> ast::Name {
+// //     ast_from_text(&format!("module {name}"))
+// // }
+// pub fn name_ref(name_ref: &str) -> ast::NameRef {
+//     quote! {
+//         NameRef {
+//             [IDENT format!("{name_ref}")]
+//         }
+//     }
+// }
 
-fn ty_from_text(text: &str) -> ast::Type {
-    ast_from_text(&format!("module 0x1::m {{ const M: {}; }}", text))
-}
+// fn ty_from_text(text: &str) -> ast::Type {
+//     ast_from_text(&format!("module 0x1::m {{ const M: {}; }}", text))
+// }
 
-fn expr_from_text<E: Into<ast::Expr> + AstNode>(text: &str) -> E {
-    ast_from_text(&format!("module 0x1::m {{ fun main() {{ {} }} }}", text))
-}
+// fn expr_from_text<E: Into<ast::Expr> + AstNode>(text: &str) -> E {
+//     ast_from_text(&format!("module 0x1::m {{ fun main() {{ {} }} }}", text))
+// }
 
 #[track_caller]
 fn ast_from_text<N: AstNode>(text: &str) -> N {
@@ -38,23 +38,23 @@ fn ast_from_text<N: AstNode>(text: &str) -> N {
     node
 }
 
-pub fn token(kind: SyntaxKind) -> SyntaxToken {
-    tokens::SOURCE_FILE
-        .tree()
-        .syntax()
-        .clone_for_update()
-        .descendants_with_tokens()
-        .filter_map(|it| it.into_token())
-        .find(|it| it.kind() == kind)
-        .unwrap_or_else(|| panic!("unhandled token: {kind:?}"))
-}
+// pub fn token(kind: SyntaxKind) -> SyntaxToken {
+//     tokens::SOURCE_FILE
+//         .tree()
+//         .syntax()
+//         .clone_for_update()
+//         .descendants_with_tokens()
+//         .filter_map(|it| it.into_token())
+//         .find(|it| it.kind() == kind)
+//         .unwrap_or_else(|| panic!("unhandled token: {kind:?}"))
+// }
 
 pub mod tokens {
     use std::sync::LazyLock;
 
     use crate::{ast, AstNode, Parse, SourceFile, SyntaxKind::*, SyntaxToken};
 
-    pub(super) static SOURCE_FILE: LazyLock<Parse> =
+    pub(crate) static SOURCE_FILE: LazyLock<Parse> =
         LazyLock::new(|| SourceFile::parse("module 0x1::m { fun main() { 1; 1 + 1; } }"));
 
     pub fn semicolon() -> SyntaxToken {

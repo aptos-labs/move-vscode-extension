@@ -15,14 +15,14 @@ members = [
 resolver = "2"
 
 [workspace.package]
-rust-version = "1.85"
+rust-version = "1.85.1"
 edition = "2024"
 license = "MIT"
 
 [workspace.dependencies]
 text-size = "1.1.1"
 either = "1.13.0"
-rowan = "0.16.1"
+rowan = "=0.15.15"
 itertools = "0.14.0"
 smol_str = "0.3.2"
 lsp-types = { version = "0.95.1", features = ["proposed"] }

@@ -28,6 +28,7 @@ impl<T: ast::GenericElement> GenericItemExt for InFile<T> {
         Substitution::new(subst)
     }
 
+    /// Substitution `TyTypeParam -> TyVar(origin=TypeParam)`.
     fn ty_vars_subst(&self) -> Substitution {
         let subst = self
             .ty_type_params()

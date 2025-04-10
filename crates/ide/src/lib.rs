@@ -24,9 +24,11 @@ use crate::hover::HoverResult;
 pub use crate::navigation_target::NavigationTarget;
 pub use crate::syntax_highlighting::HlRange;
 use ide_completion::config::CompletionConfig;
-use ide_diagnostics::{Diagnostic, DiagnosticsConfig};
 pub use ra_salsa::Cancelled;
 use base_db::package::{PackageRoot, PackageRootId};
+use ide_db::assists::Assist;
+use ide_diagnostics::config::DiagnosticsConfig;
+use ide_diagnostics::diagnostic::Diagnostic;
 use syntax::files::{FilePosition, FileRange};
 
 pub type Cancellable<T> = Result<T, Cancelled>;
@@ -135,14 +137,18 @@ impl Analysis {
         (host.analysis(), file_id)
     }
 
+    pub fn db(&self) -> &RootDatabase {
+        &self.db
+    }
+
     // /// Debug info about the current state of the analysis.
     // pub fn status(&self, file_id: Option<FileId>) -> Cancellable<String> {
     //     self.with_db(|db| status::status(db, file_id))
     // }
 
-    // pub fn source_root_id(&self, file_id: FileId) -> Cancellable<SourceRoot> {
-    //     self.with_db(|db| db.file_source_root(file_id))
-    // }
+    pub fn source_root_id(&self, file_id: FileId) -> Cancellable<PackageRootId> {
+        self.with_db(|db| db.file_package_root_id(file_id))
+    }
 
     // pub fn is_local_source_root(&self, source_root_id: SourceRoot) -> Cancellable<bool> {
     //     self.with_db(|db| {
@@ -533,60 +539,59 @@ impl Analysis {
         self.with_db(|db| ide_diagnostics::syntax_diagnostics(db, config, file_id))
     }
 
-    // /// Computes the set of semantic diagnostics for the given file.
-    // pub fn semantic_diagnostics(
-    //     &self,
-    //     config: &DiagnosticsConfig,
-    //     resolve: AssistResolveStrategy,
-    //     file_id: FileId,
-    // ) -> Cancellable<Vec<Diagnostic>> {
-    //     self.with_db(|db| ide_diagnostics::semantic_diagnostics(db, config, &resolve, file_id))
-    // }
-    //
-    // /// Computes the set of both syntax and semantic diagnostics for the given file.
-    // pub fn full_diagnostics(
-    //     &self,
-    //     config: &DiagnosticsConfig,
-    //     // resolve: AssistResolveStrategy,
-    //     file_id: FileId,
-    // ) -> Cancellable<Vec<Diagnostic>> {
-    //     self.with_db(|db| ide_diagnostics::full_diagnostics(db, config, &resolve, file_id))
-    // }
+    /// Computes the set of semantic diagnostics for the given file.
+    pub fn semantic_diagnostics(
+        &self,
+        config: &DiagnosticsConfig,
+        file_id: FileId,
+    ) -> Cancellable<Vec<Diagnostic>> {
+        self.with_db(|db| ide_diagnostics::semantic_diagnostics(db, config, file_id))
+    }
 
-    // /// Convenience function to return assists + quick fixes for diagnostics
-    // pub fn assists_with_fixes(
-    //     &self,
-    //     assist_config: &AssistConfig,
-    //     diagnostics_config: &DiagnosticsConfig,
-    //     resolve: AssistResolveStrategy,
-    //     frange: FileRange,
-    // ) -> Cancellable<Vec<Assist>> {
-    //     let include_fixes = match &assist_config.allowed {
-    //         Some(it) => it.iter().any(|&it| it == AssistKind::None || it == AssistKind::QuickFix),
-    //         None => true,
-    //     };
-    //
-    //     self.with_db(|db| {
-    //         let diagnostic_assists = if diagnostics_config.enabled && include_fixes {
-    //             ide_diagnostics::full_diagnostics(db, diagnostics_config, &resolve, frange.file_id)
-    //                 .into_iter()
-    //                 .flat_map(|it| it.fixes.unwrap_or_default())
-    //                 .filter(|it| it.target.intersect(frange.range).is_some())
-    //                 .collect()
-    //         } else {
-    //             Vec::new()
-    //         };
-    //         let ssr_assists = ssr::ssr_assists(db, &resolve, frange);
-    //         let assists = ide_assists::assists(db, assist_config, resolve, frange);
-    //
-    //         let mut res = diagnostic_assists;
-    //         res.extend(ssr_assists);
-    //         res.extend(assists);
-    //
-    //         res
-    //     })
-    // }
-    //
+    /// Computes the set of both syntax and semantic diagnostics for the given file.
+    pub fn full_diagnostics(
+        &self,
+        config: &DiagnosticsConfig,
+        file_id: FileId,
+    ) -> Cancellable<Vec<Diagnostic>> {
+        self.with_db(|db| ide_diagnostics::full_diagnostics(db, config, file_id))
+    }
+
+    /// Convenience function to return assists + quick fixes for diagnostics
+    pub fn assists_with_fixes(
+        &self,
+        // assist_config: &AssistConfig,
+        diagnostics_config: &DiagnosticsConfig,
+        // resolve: AssistResolveStrategy,
+        frange: FileRange,
+    ) -> Cancellable<Vec<Assist>> {
+        // let include_fixes = match &assist_config.allowed {
+        //     Some(it) => it.iter().any(|&it| it == AssistKind::None || it == AssistKind::QuickFix),
+        //     None => true,
+        // };
+        let include_fixes = true;
+
+        self.with_db(|db| {
+            let diagnostic_assists = if diagnostics_config.enabled && include_fixes {
+                ide_diagnostics::full_diagnostics(db, diagnostics_config, /*&resolve,*/ frange.file_id)
+                    .into_iter()
+                    .flat_map(|it| it.fixes.unwrap_or_default())
+                    .filter(|it| it.target.intersect(frange.range).is_some())
+                    .collect()
+            } else {
+                Vec::new()
+            };
+            // let ssr_assists = ssr::ssr_assists(db, &resolve, frange);
+            // let assists = ide_assists::assists(db, assist_config, resolve, frange);
+
+            let mut res = diagnostic_assists;
+            // res.extend(ssr_assists);
+            // res.extend(assists);
+
+            res
+        })
+    }
+
     // /// Returns the edit required to rename reference at the position to the new
     // /// name.
     // pub fn rename(

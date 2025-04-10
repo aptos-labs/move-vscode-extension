@@ -235,6 +235,12 @@ impl ClientCapabilities {
         PositionEncoding::Wide(WideEncoding::Utf16)
     }
 
+    pub fn workspace_edit_resource_operations(
+        &self,
+    ) -> Option<&[lsp_types::ResourceOperationKind]> {
+        self.0.workspace.as_ref()?.workspace_edit.as_ref()?.resource_operations.as_deref()
+    }
+
     pub fn insert_replace_support(&self) -> bool {
         (|| -> _ {
             self.0

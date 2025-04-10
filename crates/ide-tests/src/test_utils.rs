@@ -1,3 +1,7 @@
+pub(crate) mod diagnostics;
+
+pub use diagnostics::{check_diagnostic, check_fix};
+
 use line_index::LineCol;
 use syntax::TextSize;
 

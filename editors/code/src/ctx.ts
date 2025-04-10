@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
-import {IndentAction} from 'vscode';
+import { IndentAction } from 'vscode';
 import * as lc from "vscode-languageclient/node";
-import {Configuration} from "./config";
-import {isAptosEditor, log} from "./util";
-import {SyntaxElement, SyntaxTreeProvider} from "./syntax_tree_provider";
+import { Configuration } from "./config";
+import { isAptosEditor, log } from "./util";
+import { SyntaxElement, SyntaxTreeProvider } from "./syntax_tree_provider";
+import { createClient } from "./client";
 
 export class Ctx {
     private _client: lc.LanguageClient | undefined;
@@ -56,13 +57,13 @@ export class Ctx {
                     // Doc single-line comment
                     // e.g. ///|
                     beforeText: /^\s*\/{3}.*$/,
-                    action: {indentAction: IndentAction.None, appendText: '/// '},
+                    action: { indentAction: IndentAction.None, appendText: '/// ' },
                 },
                 {
                     // Parent doc single-line comment
                     // e.g. //!|
                     beforeText: /^\s*\/{2}!.*$/,
-                    action: {indentAction: IndentAction.None, appendText: '//! '},
+                    action: { indentAction: IndentAction.None, appendText: '//! ' },
                 },
             ],
         });
@@ -73,7 +74,7 @@ export class Ctx {
         const newEnv = Object.assign({}, process.env, this.config.serverExtraEnv);
         const executable: lc.Executable = {
             command: this.config.serverPath,
-            options: {shell: true, env: newEnv},
+            options: { shell: true, env: newEnv },
         };
         const serverOptions: lc.ServerOptions = {
             run: executable,
@@ -89,6 +90,8 @@ export class Ctx {
         const traceOutputChannel = vscode.window.createOutputChannel(
             'Aptos Analyzer Trace',
         );
+        this._client = await createClient(traceOutputChannel, serverOptions)
+
         vscode.workspace.onDidChangeConfiguration(
             async (_) => {
                 await this.client?.sendNotification(lc.DidChangeConfigurationNotification.type, {
@@ -97,16 +100,17 @@ export class Ctx {
             },
             null,
         )
-        const clientOptions: lc.LanguageClientOptions = {
-            documentSelector: [{scheme: 'file', language: 'move'}],
-            traceOutputChannel,
-        };
-        this._client = new lc.LanguageClient(
-            'aptos-analyzer',
-            'Aptos Analyzer Language Server',
-            serverOptions,
-            clientOptions,
-        );
+
+        // const clientOptions: lc.LanguageClientOptions = {
+        //     documentSelector: [{scheme: 'file', language: 'move'}],
+        //     traceOutputChannel,
+        // };
+        // this._client = new lc.LanguageClient(
+        //     'aptos-analyzer',
+        //     'Aptos Analyzer Language Server',
+        //     serverOptions,
+        //     clientOptions,
+        // );
 
         return this._client;
     }
