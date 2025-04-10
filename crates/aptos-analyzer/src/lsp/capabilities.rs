@@ -187,10 +187,6 @@ impl ClientCapabilities {
             .unwrap_or_default()
     }
 
-    pub fn text_document_diagnostic(&self) -> bool {
-        (|| -> _ { self.0.text_document.as_ref()?.diagnostic.as_ref() })().is_some()
-    }
-
     // fn completions_resolve_provider(&self) -> bool {
     //     let client_capabilities = self.completion_resolve_support_properties();
     //     let fields_to_resolve =
@@ -235,10 +231,14 @@ impl ClientCapabilities {
         PositionEncoding::Wide(WideEncoding::Utf16)
     }
 
-    pub fn workspace_edit_resource_operations(
-        &self,
-    ) -> Option<&[lsp_types::ResourceOperationKind]> {
-        self.0.workspace.as_ref()?.workspace_edit.as_ref()?.resource_operations.as_deref()
+    pub fn workspace_edit_resource_operations(&self) -> Option<&[lsp_types::ResourceOperationKind]> {
+        self.0
+            .workspace
+            .as_ref()?
+            .workspace_edit
+            .as_ref()?
+            .resource_operations
+            .as_deref()
     }
 
     pub fn insert_replace_support(&self) -> bool {
@@ -299,6 +299,19 @@ impl ClientCapabilities {
         .unwrap_or_default()
     }
 
+    pub fn code_action_literals(&self) -> bool {
+        (|| -> _ {
+            self.0
+                .text_document
+                .as_ref()?
+                .code_action
+                .as_ref()?
+                .code_action_literal_support
+                .as_ref()
+        })()
+        .is_some()
+    }
+
     pub fn work_done_progress(&self) -> bool {
         (|| -> _ { self.0.window.as_ref()?.work_done_progress })().unwrap_or_default()
     }
@@ -306,6 +319,69 @@ impl ClientCapabilities {
     pub fn will_rename(&self) -> bool {
         (|| -> _ { self.0.workspace.as_ref()?.file_operations.as_ref()?.will_rename })()
             .unwrap_or_default()
+    }
+
+    pub fn change_annotation_support(&self) -> bool {
+        (|| -> _ {
+            self.0
+                .workspace
+                .as_ref()?
+                .workspace_edit
+                .as_ref()?
+                .change_annotation_support
+                .as_ref()
+        })()
+        .is_some()
+    }
+
+    pub fn code_action_resolve(&self) -> bool {
+        (|| -> _ {
+            Some(
+                self.0
+                    .text_document
+                    .as_ref()?
+                    .code_action
+                    .as_ref()?
+                    .resolve_support
+                    .as_ref()?
+                    .properties
+                    .as_slice(),
+            )
+        })()
+        .unwrap_or_default()
+        .iter()
+        .any(|it| it == "edit")
+    }
+
+    pub fn signature_help_label_offsets(&self) -> bool {
+        (|| -> _ {
+            self.0
+                .text_document
+                .as_ref()?
+                .signature_help
+                .as_ref()?
+                .signature_information
+                .as_ref()?
+                .parameter_information
+                .as_ref()?
+                .label_offset_support
+        })()
+        .unwrap_or_default()
+    }
+
+    pub fn text_document_diagnostic(&self) -> bool {
+        (|| -> _ { self.0.text_document.as_ref()?.diagnostic.as_ref() })().is_some()
+    }
+
+    pub fn text_document_diagnostic_related_document_support(&self) -> bool {
+        (|| -> _ {
+            self.0
+                .text_document
+                .as_ref()?
+                .diagnostic
+                .as_ref()?
+                .related_document_support
+        })() == Some(true)
     }
 
     pub fn open_server_logs(&self) -> bool {

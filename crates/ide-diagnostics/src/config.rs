@@ -1,4 +1,3 @@
-
 #[derive(Debug, Clone)]
 pub struct DiagnosticsConfig {
     /// Whether native diagnostics are enabled.

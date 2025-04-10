@@ -1,9 +1,9 @@
-use lsp_types::{CodeActionKind, Range, TextDocumentIdentifier};
 use lsp_types::notification::Notification;
 use lsp_types::request::Request;
+use lsp_types::{CodeActionKind, Range, TextDocumentIdentifier};
+use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
 use std::ops;
-use rustc_hash::FxHashMap;
 
 pub enum ReloadWorkspace {}
 
@@ -94,7 +94,6 @@ pub struct ViewSyntaxTreeParams {
     pub text_document: TextDocumentIdentifier,
 }
 
-
 pub enum CodeActionRequest {}
 
 impl Request for CodeActionRequest {
@@ -103,13 +102,13 @@ impl Request for CodeActionRequest {
     const METHOD: &'static str = "textDocument/codeAction";
 }
 
-// pub enum CodeActionResolveRequest {}
+pub enum CodeActionResolveRequest {}
 
-// impl Request for CodeActionResolveRequest {
-//     type Params = CodeAction;
-//     type Result = CodeAction;
-//     const METHOD: &'static str = "codeAction/resolve";
-// }
+impl Request for CodeActionResolveRequest {
+    type Params = CodeAction;
+    type Result = CodeAction;
+    const METHOD: &'static str = "codeAction/resolve";
+}
 
 #[derive(Debug, PartialEq, Clone, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -147,13 +146,9 @@ pub struct SnippetWorkspaceEdit {
     pub document_changes: Option<Vec<SnippetDocumentChangeOperation>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub change_annotations: Option<
-        std::collections::HashMap<
-            lsp_types::ChangeAnnotationIdentifier,
-            lsp_types::ChangeAnnotation,
-        >,
+        std::collections::HashMap<lsp_types::ChangeAnnotationIdentifier, lsp_types::ChangeAnnotation>,
     >,
 }
-
 
 #[derive(Debug, Eq, PartialEq, Clone, Deserialize, Serialize)]
 #[serde(untagged, rename_all = "lowercase")]
@@ -180,4 +175,3 @@ pub struct SnippetTextEdit {
     // #[serde(skip_serializing_if = "Option::is_none")]
     // pub annotation_id: Option<lsp_types::ChangeAnnotationIdentifier>,
 }
-

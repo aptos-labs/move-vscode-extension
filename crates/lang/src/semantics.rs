@@ -7,7 +7,7 @@ use crate::semantics::source_to_def::SourceToDefCache;
 use std::cell::RefCell;
 use std::{fmt, ops};
 use syntax::files::{FileRange, InFile};
-use syntax::{AstNode, SyntaxNode, SyntaxToken, ast, SyntaxNodePtr};
+use syntax::{AstNode, SyntaxNode, SyntaxNodePtr, SyntaxToken, ast};
 use vfs::FileId;
 
 /// Primary API to get semantic information, like types, from syntax trees.

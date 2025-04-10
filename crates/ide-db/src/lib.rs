@@ -9,7 +9,7 @@ pub mod source_change;
 mod syntax_helpers;
 pub mod text_edit;
 
-use base_db::{SourceDatabase, PackageRootDatabase, Upcast};
+use base_db::{PackageRootDatabase, SourceDatabase, Upcast};
 use lang::db::HirDatabase;
 use line_index::LineIndex;
 use std::fmt;

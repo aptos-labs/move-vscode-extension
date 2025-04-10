@@ -90,7 +90,11 @@ impl Ty {
     //     }
     // }
 
-    pub fn inner_item_module(&self, db: &dyn HirDatabase, file_id: FileId) -> Option<InFile<ast::Module>> {
+    pub fn inner_item_module(
+        &self,
+        db: &dyn HirDatabase,
+        file_id: FileId,
+    ) -> Option<InFile<ast::Module>> {
         let ty = self.unwrap_all_refs();
         match ty {
             Ty::Adt(ty_adt) => {

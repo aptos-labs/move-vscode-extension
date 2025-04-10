@@ -1,14 +1,14 @@
 #![allow(dead_code)]
 
 pub mod change;
-pub mod source_root;
 pub mod package;
+pub mod source_root;
 
+use crate::change::ManifestFileId;
+use crate::package::{PackageRoot, PackageRootId};
 use syntax::{Parse, SourceFile, SyntaxError};
 use triomphe::Arc;
 use vfs::{FileId, VfsPath};
-use crate::change::ManifestFileId;
-use crate::package::{PackageRoot, PackageRootId};
 
 pub trait Upcast<T: ?Sized> {
     fn upcast(&self) -> &T;

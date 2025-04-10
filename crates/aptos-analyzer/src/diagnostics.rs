@@ -26,7 +26,6 @@ pub(crate) struct DiagnosticCollection {
     // flycheck_id (ws_id) -> (file_id -> Vec<Diagnostic>)
     pub(crate) flycheck: IntMap<usize, IntMap<FileId, Vec<lsp_types::Diagnostic>>>,
     // pub(crate) flycheck_fixes: Arc<IntMap<usize, IntMap<FileId, Vec<Fix>>>>,
-
     changes: IntSet<FileId>,
 
     /// Counter for supplying a new generation number for diagnostics.

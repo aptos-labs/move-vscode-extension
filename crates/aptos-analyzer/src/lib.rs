@@ -45,3 +45,4 @@ macro_rules! try_default_ {
     };
 }
 pub(crate) use try_default_ as try_default;
+pub(crate) use try_default_ as unwrap_or_return_default;

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use base_db::change::{FileChange, PackageGraph};
-use base_db::{SourceDatabase, PackageRootDatabase};
+use base_db::{PackageRootDatabase, SourceDatabase};
 use ide_completion::item::CompletionItem;
 use ide_db::{LineIndexDatabase, RootDatabase};
 use line_index::{LineCol, LineIndex};
@@ -23,12 +23,12 @@ mod view_syntax_tree;
 use crate::hover::HoverResult;
 pub use crate::navigation_target::NavigationTarget;
 pub use crate::syntax_highlighting::HlRange;
-use ide_completion::config::CompletionConfig;
-pub use ra_salsa::Cancelled;
 use base_db::package::{PackageRoot, PackageRootId};
+use ide_completion::config::CompletionConfig;
 use ide_db::assists::Assist;
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
+pub use ra_salsa::Cancelled;
 use syntax::files::{FilePosition, FileRange};
 
 pub type Cancellable<T> = Result<T, Cancelled>;
@@ -573,11 +573,15 @@ impl Analysis {
 
         self.with_db(|db| {
             let diagnostic_assists = if diagnostics_config.enabled && include_fixes {
-                ide_diagnostics::full_diagnostics(db, diagnostics_config, /*&resolve,*/ frange.file_id)
-                    .into_iter()
-                    .flat_map(|it| it.fixes.unwrap_or_default())
-                    .filter(|it| it.target.intersect(frange.range).is_some())
-                    .collect()
+                ide_diagnostics::full_diagnostics(
+                    db,
+                    diagnostics_config,
+                    /*&resolve,*/ frange.file_id,
+                )
+                .into_iter()
+                .flat_map(|it| it.fixes.unwrap_or_default())
+                .filter(|it| it.target.intersect(frange.range).is_some())
+                .collect()
             } else {
                 Vec::new()
             };
