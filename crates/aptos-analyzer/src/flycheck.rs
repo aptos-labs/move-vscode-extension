@@ -108,10 +108,7 @@ impl FlycheckHandle {
 
 pub(crate) enum FlycheckMessage {
     /// Request adding a diagnostic with fixes included to a file
-    AddDiagnostic {
-        ws_id: usize,
-        diagnostic: AptosDiagnostic,
-    },
+    AddDiagnostic { ws_id: usize, diagnostic: AptosDiagnostic },
 
     /// Request clearing all outdated diagnostics.
     ClearDiagnostics { ws_id: usize },

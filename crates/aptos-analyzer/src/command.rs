@@ -22,11 +22,7 @@ struct AptosActor<T> {
 
 impl<T: ParseFromLine> AptosActor<T> {
     fn new(sender: Sender<T>, stdout: ChildStdout, stderr: ChildStderr) -> Self {
-        AptosActor {
-            sender,
-            stdout,
-            stderr,
-        }
+        AptosActor { sender, stdout, stderr }
     }
 
     fn run(self) -> io::Result<(bool, String)> {

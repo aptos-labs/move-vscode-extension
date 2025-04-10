@@ -66,9 +66,7 @@ impl AnalysisHost {
     /// Returns a snapshot of the current state, which you can query for
     /// semantic information.
     pub fn analysis(&self) -> Analysis {
-        Analysis {
-            db: self.db.snapshot(),
-        }
+        Analysis { db: self.db.snapshot() }
     }
 
     /// Applies changes to the current state of the world. If there are

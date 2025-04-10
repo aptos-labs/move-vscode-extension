@@ -901,10 +901,7 @@ pub(crate) fn snippet_text_document_ops(
 ) -> Cancellable<Vec<lsp_ext::SnippetDocumentChangeOperation>> {
     let mut ops = Vec::new();
     match file_system_edit {
-        FileSystemEdit::CreateFile {
-            dst,
-            initial_contents,
-        } => {
+        FileSystemEdit::CreateFile { dst, initial_contents } => {
             let uri = snap.anchored_path(&dst);
             let create_file = lsp_types::ResourceOp::Create(lsp_types::CreateFile {
                 uri: uri.clone(),
@@ -975,11 +972,7 @@ pub(crate) fn snippet_workspace_edit(
     let mut document_changes: Vec<lsp_ext::SnippetDocumentChangeOperation> = Vec::new();
 
     for op in &mut source_change.file_system_edits {
-        if let FileSystemEdit::CreateFile {
-            dst,
-            initial_contents,
-        } = op
-        {
+        if let FileSystemEdit::CreateFile { dst, initial_contents } = op {
             // replace with a placeholder to avoid cloneing the edit
             let op = FileSystemEdit::CreateFile {
                 dst: dst.clone(),
