@@ -1,6 +1,6 @@
-use std::fmt::format;
 use crate::ast::syntax_factory::{ast_from_text, SyntaxFactory};
 use crate::{ast, AstNode};
+use std::fmt::format;
 
 impl SyntaxFactory {
     pub fn expr_paren(&self, expr: ast::Expr) -> ast::Expr {
@@ -14,7 +14,9 @@ impl SyntaxFactory {
         type_arg_list: Option<ast::TypeArgList>,
         arg_list: ast::ArgList,
     ) -> ast::Expr {
-        let type_arg_list = type_arg_list.map(|it| format!("::{it}")).unwrap_or("".to_string());
+        let type_arg_list = type_arg_list
+            .map(|it| format!("::{it}"))
+            .unwrap_or("".to_string());
         expr_from_text(&format!("{receiver}.{name_ref}{type_arg_list}{arg_list}"))
     }
 }

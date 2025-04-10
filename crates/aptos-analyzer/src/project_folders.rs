@@ -79,7 +79,11 @@ impl ProjectFolders {
             // maps include paths to indices of the corresponding root
             let mut include_to_idx = FxHashMap::default();
             // Find and note down the indices of overlapping roots
-            for (idx, root) in folder_roots.iter().enumerate().filter(|(_, it)| !it.include.is_empty()) {
+            for (idx, root) in folder_roots
+                .iter()
+                .enumerate()
+                .filter(|(_, it)| !it.include.is_empty())
+            {
                 for include in &root.include {
                     match include_to_idx.entry(include) {
                         Entry::Occupied(e) => {
@@ -114,7 +118,8 @@ impl ProjectFolders {
         }
 
         for folder_root in folder_roots.into_iter().filter(|it| !it.include.is_empty()) {
-            let file_set_roots: Vec<VfsPath> = folder_root.include.iter().cloned().map(VfsPath::from).collect();
+            let file_set_roots: Vec<VfsPath> =
+                folder_root.include.iter().cloned().map(VfsPath::from).collect();
 
             let entry = {
                 let mut dirs = vfs::loader::Directories::default();

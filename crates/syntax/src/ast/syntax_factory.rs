@@ -9,9 +9,9 @@
 mod constructors;
 mod exprs;
 
-use std::cell::{RefCell, RefMut};
-use crate::{ast, AstNode, SourceFile};
 use crate::syntax_editor::mapping::SyntaxMapping;
+use crate::{ast, AstNode, SourceFile};
+use std::cell::{RefCell, RefMut};
 
 pub struct SyntaxFactory {
     // Stored in a refcell so that the factory methods can be &self

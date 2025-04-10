@@ -1,23 +1,23 @@
-use std::mem;
-use crate::{lsp_ext, Config};
 use crate::global_state::GlobalStateSnapshot;
 use crate::line_index::{LineEndings, LineIndex, PositionEncoding};
 use crate::lsp::semantic_tokens;
+use crate::lsp_ext::SnippetTextEdit;
+use crate::{Config, lsp_ext};
 use camino::{Utf8Component, Utf8Prefix};
 use ide::syntax_highlighting::tags::{Highlight, HlTag};
 use ide::{Cancellable, HlRange, NavigationTarget};
 use ide_completion::item::{CompletionItem, CompletionItemKind};
+use ide_db::assists::{Assist, AssistKind};
+use ide_db::source_change::{FileSystemEdit, SnippetEdit, SourceChange};
 use ide_db::text_edit::{Indel, TextEdit};
 use ide_db::{Severity, SymbolKind};
 use line_index::{TextRange, TextSize};
+use std::mem;
 use std::ops::Not;
 use std::sync::atomic::{AtomicU32, Ordering};
 use stdx::itertools::Itertools;
 use syntax::files::FileRange;
 use vfs::{AbsPath, FileId};
-use ide_db::assists::{Assist, AssistKind};
-use ide_db::source_change::{FileSystemEdit, SnippetEdit, SourceChange};
-use crate::lsp_ext::SnippetTextEdit;
 
 pub(crate) fn position(line_index: &LineIndex, offset: TextSize) -> lsp_types::Position {
     let line_col = line_index.index.line_col(offset);
@@ -124,8 +124,11 @@ pub(crate) fn snippet_text_edit(
 ) -> SnippetTextEdit {
     // let annotation_id = annotation.filter(|_| client_supports_annotations).map(|it| it.to_string());
     let text_edit = text_edit(line_index, indel);
-    let insert_text_format =
-        if is_snippet { Some(lsp_types::InsertTextFormat::SNIPPET) } else { None };
+    let insert_text_format = if is_snippet {
+        Some(lsp_types::InsertTextFormat::SNIPPET)
+    } else {
+        None
+    };
     SnippetTextEdit {
         range: text_edit.range,
         new_text: text_edit.new_text,
@@ -458,13 +461,9 @@ pub(crate) fn completion_items(
     let mut res = Vec::with_capacity(items.len());
     for item in items {
         completion_item(
-            &mut res,
-            config,
-            // fields_to_resolve,
-            line_index,
-            // version,
-            &tdpp,
-            // max_relevance,
+            &mut res, config,     // fields_to_resolve,
+            line_index, // version,
+            &tdpp,      // max_relevance,
             // completion_trigger_character,
             item,
         );
@@ -735,20 +734,27 @@ fn merge_text_and_snippet_edits(
             edits.push(snippet_text_edit(
                 line_index,
                 true,
-                Indel { insert: format!("${snippet_index}"), delete: snippet_range },
+                Indel {
+                    insert: format!("${snippet_index}"),
+                    delete: snippet_range,
+                },
                 // annotation,
                 // client_supports_annotations,
             ))
         }
 
         if snippets.peek().is_some_and(|(_, range)| {
-            new_range.intersect(offset_range(*range, source_text_offset)).is_some()
+            new_range
+                .intersect(offset_range(*range, source_text_offset))
+                .is_some()
         }) {
             // at least one snippet edit intersects this text edit,
             // so gather all of the edits that intersect this text edit
             let mut all_snippets = snippets
                 .peeking_take_while(|(_, range)| {
-                    new_range.intersect(offset_range(*range, source_text_offset)).is_some()
+                    new_range
+                        .intersect(offset_range(*range, source_text_offset))
+                        .is_some()
                 })
                 .map(|(tabstop, range)| (tabstop, offset_range(range, source_text_offset)))
                 .collect_vec();
@@ -764,8 +770,10 @@ fn merge_text_and_snippet_edits(
             let mut new_text = current_indel.insert;
 
             // find which snippet bits need to be escaped
-            let escape_places =
-                new_text.rmatch_indices(['\\', '$', '}']).map(|(insert, _)| insert).collect_vec();
+            let escape_places = new_text
+                .rmatch_indices(['\\', '$', '}'])
+                .map(|(insert, _)| insert)
+                .collect_vec();
             let mut escape_places = escape_places.into_iter().peekable();
             let mut escape_prior_bits = |new_text: &mut String, up_to: usize| {
                 for before in escape_places.peeking_take_while(|insert| *insert >= up_to) {
@@ -795,7 +803,10 @@ fn merge_text_and_snippet_edits(
             edits.push(snippet_text_edit(
                 line_index,
                 true,
-                Indel { insert: new_text, delete: current_indel.delete },
+                Indel {
+                    insert: new_text,
+                    delete: current_indel.delete,
+                },
                 // annotation,
                 // client_supports_annotations,
             ))
@@ -833,7 +844,10 @@ fn merge_text_and_snippet_edits(
         snippet_text_edit(
             line_index,
             true,
-            Indel { insert: format!("${snippet_index}"), delete: snippet_range },
+            Indel {
+                insert: format!("${snippet_index}"),
+                delete: snippet_range,
+            },
             // annotation,
             // client_supports_annotations,
         )
@@ -853,7 +867,11 @@ pub(crate) fn snippet_text_document_edit(
     let line_index = snap.file_line_index(file_id)?;
     // let client_supports_annotations = snap.config.change_annotation_support();
     let mut edits = if let Some(snippet_edit) = snippet_edit {
-        merge_text_and_snippet_edits(&line_index, edit, snippet_edit/*, client_supports_annotations*/)
+        merge_text_and_snippet_edits(
+            &line_index,
+            edit,
+            snippet_edit, /*, client_supports_annotations*/
+        )
     } else {
         // let annotation = edit.change_annotation();
         edit.into_iter()
@@ -883,7 +901,10 @@ pub(crate) fn snippet_text_document_ops(
 ) -> Cancellable<Vec<lsp_ext::SnippetDocumentChangeOperation>> {
     let mut ops = Vec::new();
     match file_system_edit {
-        FileSystemEdit::CreateFile { dst, initial_contents } => {
+        FileSystemEdit::CreateFile {
+            dst,
+            initial_contents,
+        } => {
             let uri = snap.anchored_path(&dst);
             let create_file = lsp_types::ResourceOp::Create(lsp_types::CreateFile {
                 uri: uri.clone(),
@@ -900,38 +921,48 @@ pub(crate) fn snippet_text_document_ops(
                     insert_text_format: Some(lsp_types::InsertTextFormat::PLAIN_TEXT),
                     // annotation_id: None,
                 };
-                let edit_file =
-                    lsp_ext::SnippetTextDocumentEdit { text_document, edits: vec![text_edit] };
+                let edit_file = lsp_ext::SnippetTextDocumentEdit {
+                    text_document,
+                    edits: vec![text_edit],
+                };
                 ops.push(lsp_ext::SnippetDocumentChangeOperation::Edit(edit_file));
             }
         }
         FileSystemEdit::MoveFile { src, dst } => {
             let old_uri = snap.file_id_to_url(src);
             let new_uri = snap.anchored_path(&dst);
-            let mut rename_file =
-                lsp_types::RenameFile { old_uri, new_uri, options: None, annotation_id: None };
+            let mut rename_file = lsp_types::RenameFile {
+                old_uri,
+                new_uri,
+                options: None,
+                annotation_id: None,
+            };
             // if snap.analysis.is_library_file(src).ok() == Some(true)
             //     && snap.config.change_annotation_support()
             // {
             //     rename_file.annotation_id = Some(outside_workspace_annotation_id())
             // }
-            ops.push(lsp_ext::SnippetDocumentChangeOperation::Op(lsp_types::ResourceOp::Rename(
-                rename_file,
-            )))
+            ops.push(lsp_ext::SnippetDocumentChangeOperation::Op(
+                lsp_types::ResourceOp::Rename(rename_file),
+            ))
         }
         FileSystemEdit::MoveDir { src, src_id, dst } => {
             let old_uri = snap.anchored_path(&src);
             let new_uri = snap.anchored_path(&dst);
-            let mut rename_file =
-                lsp_types::RenameFile { old_uri, new_uri, options: None, annotation_id: None };
+            let mut rename_file = lsp_types::RenameFile {
+                old_uri,
+                new_uri,
+                options: None,
+                annotation_id: None,
+            };
             // if snap.analysis.is_library_file(src_id).ok() == Some(true)
             //     && snap.config.change_annotation_support()
             // {
             //     rename_file.annotation_id = Some(outside_workspace_annotation_id())
             // }
-            ops.push(lsp_ext::SnippetDocumentChangeOperation::Op(lsp_types::ResourceOp::Rename(
-                rename_file,
-            )))
+            ops.push(lsp_ext::SnippetDocumentChangeOperation::Op(
+                lsp_types::ResourceOp::Rename(rename_file),
+            ))
         }
     }
     Ok(ops)
@@ -944,7 +975,11 @@ pub(crate) fn snippet_workspace_edit(
     let mut document_changes: Vec<lsp_ext::SnippetDocumentChangeOperation> = Vec::new();
 
     for op in &mut source_change.file_system_edits {
-        if let FileSystemEdit::CreateFile { dst, initial_contents } = op {
+        if let FileSystemEdit::CreateFile {
+            dst,
+            initial_contents,
+        } = op
+        {
             // replace with a placeholder to avoid cloneing the edit
             let op = FileSystemEdit::CreateFile {
                 dst: dst.clone(),
@@ -955,13 +990,8 @@ pub(crate) fn snippet_workspace_edit(
         }
     }
     for (file_id, (edit, snippet_edit)) in source_change.source_file_edits {
-        let edit = snippet_text_document_edit(
-            snap,
-            source_change.is_snippet,
-            file_id,
-            edit,
-            snippet_edit,
-        )?;
+        let edit =
+            snippet_text_document_edit(snap, source_change.is_snippet, file_id, edit, snippet_edit)?;
         document_changes.push(lsp_ext::SnippetDocumentChangeOperation::Edit(edit));
     }
     for op in source_change.file_system_edits {
@@ -1044,24 +1074,21 @@ pub(crate) fn code_action(
     match (assist.source_change/*, resolve_data*/) {
         Some(it) => res.edit = Some(snippet_workspace_edit(snap, it)?),
         // (Some(it), _) => res.edit = Some(snippet_workspace_edit(snap, it)?),
-        None => {
-
-        }
-        // (None, Some((index, code_action_params, version))) => {
-        //     res.data = Some(lsp_ext::CodeActionData {
-        //         id: format!(
-        //             "{}:{}",
-        //             assist.id.0,
-        //             assist.id.1.name(),
-        //             // assist.id.2.map(|x| x.to_string()).unwrap_or("".to_owned())
-        //         ),
-        //         code_action_params,
-        //         version,
-        //     });
-        // }
-        // (None, None) => {
-        //     stdx::never!("assist should always be resolved if client can't do lazy resolving")
-        // }
+        None => {} // (None, Some((index, code_action_params, version))) => {
+                   //     res.data = Some(lsp_ext::CodeActionData {
+                   //         id: format!(
+                   //             "{}:{}",
+                   //             assist.id.0,
+                   //             assist.id.1.name(),
+                   //             // assist.id.2.map(|x| x.to_string()).unwrap_or("".to_owned())
+                   //         ),
+                   //         code_action_params,
+                   //         version,
+                   //     });
+                   // }
+                   // (None, None) => {
+                   //     stdx::never!("assist should always be resolved if client can't do lazy resolving")
+                   // }
     };
     Ok(res)
 }

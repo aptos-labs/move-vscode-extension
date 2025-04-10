@@ -14,10 +14,10 @@ use std::collections::HashMap;
 use std::fmt::Formatter;
 use std::ops::Deref;
 use std::{fmt, iter};
-use vfs::AnchoredPath;
 use syntax::ast::{HasItems, ReferenceElement};
 use syntax::files::{InFile, InFileVecExt};
 use syntax::{AstNode, SyntaxNode, ast};
+use vfs::AnchoredPath;
 
 pub struct ResolveScope {
     scope: InFile<SyntaxNode>,

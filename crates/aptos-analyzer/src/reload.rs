@@ -131,7 +131,6 @@ impl GlobalState {
                     .send(Task::FetchWorkspace(ProjectWorkspaceProgress::Begin))
                     .unwrap();
 
-
                 let mut workspaces = linked_projects
                     .iter()
                     .map(|project| match project {
@@ -299,7 +298,6 @@ impl GlobalState {
         // self.crate_graph_file_dependencies.clear();
 
         let package_graph = {
-
             let vfs = &self.vfs.read().0;
             let load = |path: &AbsPath| {
                 let vfs_path = vfs::VfsPath::from(path.to_path_buf());

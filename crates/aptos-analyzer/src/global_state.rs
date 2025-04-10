@@ -213,7 +213,6 @@ impl GlobalState {
                     let changed_file_path = changed_file_path.to_path_buf();
                     if changed_file.is_created_or_deleted() {
                         workspace_structure_change.get_or_insert(changed_file_path);
-
                     } else if reload::should_refresh_for_file_change(&changed_file_path) {
                         tracing::trace!(?changed_file_path, kind = ?changed_file.kind(), "refreshing for a change");
                         workspace_structure_change.get_or_insert(changed_file_path.clone());

@@ -1,14 +1,14 @@
 use crate::diagnostics::convert_diagnostic;
 use crate::global_state::{FetchWorkspaceRequest, GlobalState, GlobalStateSnapshot};
+use crate::lsp::utils::invalid_params_error;
 use crate::lsp::{LspError, from_proto, to_proto};
-use crate::{Config, lsp_ext, try_default};
+use crate::{Config, lsp_ext, try_default, try_or_return_default, unwrap_or_return_default};
 use line_index::TextRange;
 use lsp_server::ErrorCode;
 use lsp_types::{
     HoverContents, Range, ResourceOp, ResourceOperationKind, SemanticTokensParams, SemanticTokensResult,
 };
 use syntax::files::FileRange;
-use crate::lsp::utils::invalid_params_error;
 
 pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
     // state.proc_macro_clients = Arc::from_iter([]);
@@ -274,16 +274,16 @@ pub(crate) fn handle_code_action(
 ) -> anyhow::Result<Option<Vec<lsp_ext::CodeAction>>> {
     let _p = tracing::info_span!("handle_code_action").entered();
 
-    // if !snap.config.code_action_literals() {
-    //     // We intentionally don't support command-based actions, as those either
-    //     // require either custom client-code or server-initiated edits. Server
-    //     // initiated edits break causality, so we avoid those.
-    //     return Ok(None);
-    // }
+    if !snap.config.code_action_literals() {
+        // We intentionally don't support command-based actions, as those either
+        // require either custom client-code or server-initiated edits. Server
+        // initiated edits break causality, so we avoid those.
+        return Ok(None);
+    }
 
     // let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
     // let line_index = snap.file_line_index(file_id)?;
-    let frange = try_default!(from_proto::file_range(
+    let frange = unwrap_or_return_default!(from_proto::file_range(
         &snap,
         &params.text_document,
         params.range

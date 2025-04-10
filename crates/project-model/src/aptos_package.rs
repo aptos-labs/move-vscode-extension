@@ -2,10 +2,10 @@ use crate::aptos_workspace::{FileLoader, PackageFolderRoot};
 use crate::manifest_path::ManifestPath;
 use crate::move_toml::MoveToml;
 use anyhow::Context;
+use base_db::change::ManifestFileId;
 use paths::AbsPath;
 use std::fs;
 use vfs::{Vfs, VfsPath};
-use base_db::change::ManifestFileId;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct AptosPackage {

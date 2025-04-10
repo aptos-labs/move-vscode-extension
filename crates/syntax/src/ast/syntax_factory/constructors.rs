@@ -57,7 +57,9 @@ impl SyntaxFactory {
 // In that case, the iterator would be evaluated inside of the call to `map_children`,
 // and the inner constructor would try to take a mutable borrow of the mappings `RefCell`,
 // which would panic since it's already being mutably borrowed in the outer constructor.
-pub(crate) fn iterator_input<N: AstNode>(input: impl IntoIterator<Item = N>) -> (Vec<N>, Vec<SyntaxNode>) {
+pub(crate) fn iterator_input<N: AstNode>(
+    input: impl IntoIterator<Item = N>,
+) -> (Vec<N>, Vec<SyntaxNode>) {
     input
         .into_iter()
         .map(|it| {

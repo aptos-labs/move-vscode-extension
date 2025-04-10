@@ -1,5 +1,5 @@
-use ide_db::assists::Assist;
 use ide_db::Severity;
+use ide_db::assists::Assist;
 use syntax::files::FileRange;
 use vfs::FileId;
 

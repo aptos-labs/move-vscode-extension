@@ -12,11 +12,11 @@ use vfs::AbsPathBuf;
 
 use crate::config::options::{DefaultConfigData, FullConfigInput};
 use crate::flycheck::FlycheckConfig;
+use ide_diagnostics::config::DiagnosticsConfig;
 use project_model::manifest_path::ManifestPath;
 use serde_derive::{Deserialize, Serialize};
 use stdx::itertools::Itertools;
 use triomphe::Arc;
-use ide_diagnostics::config::DiagnosticsConfig;
 
 #[derive(Clone)]
 pub struct Config {
