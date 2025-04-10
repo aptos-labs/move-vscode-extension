@@ -2,6 +2,7 @@ use crate::global_state::GlobalStateSnapshot;
 use crate::line_index::{LineIndex, PositionEncoding};
 use anyhow::format_err;
 use camino::Utf8PathBuf;
+use ide_db::assists::AssistKind;
 use line_index::{LineCol, TextRange, TextSize, WideLineCol};
 use syntax::files::{FilePosition, FileRange};
 use vfs::{AbsPathBuf, FileId};
@@ -93,4 +94,18 @@ pub(crate) fn file_range_uri(
     let line_index = snap.file_line_index(file_id)?;
     let range = text_range(&line_index, range)?;
     Ok(Some(FileRange { file_id, range }))
+}
+
+pub(crate) fn assist_kind(kind: lsp_types::CodeActionKind) -> Option<AssistKind> {
+    let assist_kind = match &kind {
+        k if k == &lsp_types::CodeActionKind::EMPTY => AssistKind::None,
+        k if k == &lsp_types::CodeActionKind::QUICKFIX => AssistKind::QuickFix,
+        k if k == &lsp_types::CodeActionKind::REFACTOR => AssistKind::Refactor,
+        k if k == &lsp_types::CodeActionKind::REFACTOR_EXTRACT => AssistKind::RefactorExtract,
+        k if k == &lsp_types::CodeActionKind::REFACTOR_INLINE => AssistKind::RefactorInline,
+        k if k == &lsp_types::CodeActionKind::REFACTOR_REWRITE => AssistKind::RefactorRewrite,
+        _ => return None,
+    };
+
+    Some(assist_kind)
 }

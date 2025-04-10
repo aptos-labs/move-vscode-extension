@@ -25,7 +25,8 @@ pub use crate::navigation_target::NavigationTarget;
 pub use crate::syntax_highlighting::HlRange;
 use base_db::package::{PackageRoot, PackageRootId};
 use ide_completion::config::CompletionConfig;
-use ide_db::assists::Assist;
+use ide_db::assist_config::AssistConfig;
+pub use ide_db::assists::{Assist, AssistKind, AssistResolveStrategy};
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 pub use ra_salsa::Cancelled;
@@ -541,45 +542,43 @@ impl Analysis {
     pub fn semantic_diagnostics(
         &self,
         config: &DiagnosticsConfig,
+        resolve: AssistResolveStrategy,
         file_id: FileId,
     ) -> Cancellable<Vec<Diagnostic>> {
-        self.with_db(|db| ide_diagnostics::semantic_diagnostics(db, config, file_id))
+        self.with_db(|db| ide_diagnostics::semantic_diagnostics(db, config, &resolve, file_id))
     }
 
     /// Computes the set of both syntax and semantic diagnostics for the given file.
     pub fn full_diagnostics(
         &self,
         config: &DiagnosticsConfig,
+        resolve: AssistResolveStrategy,
         file_id: FileId,
     ) -> Cancellable<Vec<Diagnostic>> {
-        self.with_db(|db| ide_diagnostics::full_diagnostics(db, config, file_id))
+        self.with_db(|db| ide_diagnostics::full_diagnostics(db, config, &resolve, file_id))
     }
 
     /// Convenience function to return assists + quick fixes for diagnostics
     pub fn assists_with_fixes(
         &self,
-        // assist_config: &AssistConfig,
+        assist_config: &AssistConfig,
         diagnostics_config: &DiagnosticsConfig,
-        // resolve: AssistResolveStrategy,
+        resolve: AssistResolveStrategy,
         frange: FileRange,
     ) -> Cancellable<Vec<Assist>> {
-        // let include_fixes = match &assist_config.allowed {
-        //     Some(it) => it.iter().any(|&it| it == AssistKind::None || it == AssistKind::QuickFix),
-        //     None => true,
-        // };
-        let include_fixes = true;
-
+        let include_fixes = match &assist_config.allowed {
+            Some(it) => it
+                .iter()
+                .any(|&it| it == AssistKind::None || it == AssistKind::QuickFix),
+            None => true,
+        };
         self.with_db(|db| {
             let diagnostic_assists = if diagnostics_config.enabled && include_fixes {
-                ide_diagnostics::full_diagnostics(
-                    db,
-                    diagnostics_config,
-                    /*&resolve,*/ frange.file_id,
-                )
-                .into_iter()
-                .flat_map(|it| it.fixes.unwrap_or_default())
-                .filter(|it| it.target.intersect(frange.range).is_some())
-                .collect()
+                ide_diagnostics::full_diagnostics(db, diagnostics_config, &resolve, frange.file_id)
+                    .into_iter()
+                    .flat_map(|it| it.fixes.unwrap_or_default())
+                    .filter(|it| it.target.intersect(frange.range).is_some())
+                    .collect()
             } else {
                 Vec::new()
             };

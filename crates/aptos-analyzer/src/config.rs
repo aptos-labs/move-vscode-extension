@@ -12,6 +12,7 @@ use vfs::AbsPathBuf;
 
 use crate::config::options::{DefaultConfigData, FullConfigInput};
 use crate::flycheck::FlycheckConfig;
+use ide_db::assist_config::AssistConfig;
 use ide_diagnostics::config::DiagnosticsConfig;
 use project_model::manifest_path::ManifestPath;
 use serde_derive::{Deserialize, Serialize};
@@ -179,6 +180,21 @@ impl Config {
         self.aptos_autoreload(/*source_root*/).to_owned()
     }
 
+    pub fn assist(&self /*source_root: Option<SourceRootId>*/) -> AssistConfig {
+        AssistConfig {
+            snippet_cap: self.snippet_cap(),
+            allowed: None,
+            // insert_use: self.insert_use_config(source_root),
+            // prefer_no_std: self.imports_preferNoStd(source_root).to_owned(),
+            // assist_emit_must_use: self.assist_emitMustUse(source_root).to_owned(),
+            // prefer_prelude: self.imports_preferPrelude(source_root).to_owned(),
+            // prefer_absolute: self.imports_prefixExternPrelude(source_root).to_owned(),
+            // term_search_fuel: self.assist_termSearch_fuel(source_root).to_owned() as u64,
+            // term_search_borrowck: self.assist_termSearch_borrowcheck(source_root).to_owned(),
+            code_action_grouping: self.code_action_group(),
+        }
+    }
+
     pub fn completion(&self /*source_root: Option<SourceRootId>*/) -> CompletionConfig {
         // let client_capability_fields = self.completion_resolve_support_properties();
         CompletionConfig {
@@ -324,6 +340,16 @@ impl Config {
 
     pub fn publish_diagnostics(&self /*source_root: Option<SourceRootId>*/) -> bool {
         self.diagnostics_enable(/*source_root*/).to_owned()
+    }
+
+    pub fn snippet_text_edit(&self) -> bool {
+        self.experimental_bool("snippetTextEdit")
+    }
+
+    pub fn snippet_cap(&self) -> Option<SnippetCap> {
+        // FIXME: Also detect the proposed lsp version at caps.workspace.workspaceEdit.snippetEditSupport
+        // once lsp-types has it.
+        SnippetCap::new(self.snippet_text_edit())
     }
 
     pub fn main_loop_num_threads(&self) -> usize {

@@ -2,7 +2,8 @@ use crate::diagnostics::convert_diagnostic;
 use crate::global_state::{FetchWorkspaceRequest, GlobalState, GlobalStateSnapshot};
 use crate::lsp::utils::invalid_params_error;
 use crate::lsp::{LspError, from_proto, to_proto};
-use crate::{Config, lsp_ext, try_default, try_or_return_default, unwrap_or_return_default};
+use crate::{Config, lsp_ext, try_default, unwrap_or_return_default};
+use ide_db::assists::{AssistKind, AssistResolveStrategy, SingleResolve};
 use line_index::TextRange;
 use lsp_server::ErrorCode;
 use lsp_types::{
@@ -149,7 +150,7 @@ pub(crate) fn handle_document_diagnostics(
     // let mut related_documents = FxHashMap::default();
     let diagnostics = snap
         .analysis
-        .full_diagnostics(&config, file_id)?
+        .full_diagnostics(&config, AssistResolveStrategy::None, file_id)?
         .into_iter()
         .filter_map(|d| {
             let file = d.range.file_id;
@@ -281,43 +282,41 @@ pub(crate) fn handle_code_action(
         return Ok(None);
     }
 
-    // let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
-    // let line_index = snap.file_line_index(file_id)?;
+    let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
     let frange = unwrap_or_return_default!(from_proto::file_range(
         &snap,
         &params.text_document,
         params.range
     )?);
-    // let package_root_id = snap.analysis.source_root_id(file_id)?;
 
-    // let mut assists_config = snap.config.assist(Some(package_root_id));
-    // assists_config.allowed = params
-    //     .context
-    //     .only
-    //     .clone()
-    //     .map(|it| it.into_iter().filter_map(from_proto::assist_kind).collect());
+    let mut assists_config = snap.config.assist(/*Some(package_root_id)*/);
+    assists_config.allowed = params
+        .context
+        .only
+        .clone()
+        .map(|it| it.into_iter().filter_map(from_proto::assist_kind).collect());
 
     let mut res: Vec<lsp_ext::CodeAction> = Vec::new();
 
-    // let code_action_resolve_cap = snap.config.code_action_resolve();
-    // let resolve = if code_action_resolve_cap {
-    //     AssistResolveStrategy::None
-    // } else {
-    //     AssistResolveStrategy::All
-    // };
+    let code_action_resolve_cap = snap.config.code_action_resolve();
+    let resolve = if code_action_resolve_cap {
+        AssistResolveStrategy::None
+    } else {
+        AssistResolveStrategy::All
+    };
     let assists = snap.analysis.assists_with_fixes(
-        // &assists_config,
+        &assists_config,
         &snap.config.diagnostics(/*Some(package_root_id)*/),
-        // resolve,
+        resolve,
         frange,
     )?;
     for (index, assist) in assists.into_iter().enumerate() {
-        // let resolve_data = if code_action_resolve_cap {
-        //     Some((index, params.clone(), snap.file_version(file_id)))
-        // } else {
-        //     None
-        // };
-        let code_action = to_proto::code_action(&snap, assist /*resolve_data*/)?;
+        let resolve_data = if code_action_resolve_cap {
+            Some((index, params.clone(), snap.file_version(file_id)))
+        } else {
+            None
+        };
+        let code_action = to_proto::code_action(&snap, assist, resolve_data)?;
 
         // Check if the client supports the necessary `ResourceOperation`s.
         let changes = code_action
@@ -357,6 +356,108 @@ pub(crate) fn handle_code_action(
     // }
 
     Ok(Some(res))
+}
+
+pub(crate) fn handle_code_action_resolve(
+    snap: GlobalStateSnapshot,
+    mut code_action: lsp_ext::CodeAction,
+) -> anyhow::Result<lsp_ext::CodeAction> {
+    let _p = tracing::info_span!("handle_code_action_resolve").entered();
+    let Some(params) = code_action.data.take() else {
+        return Ok(code_action);
+    };
+
+    let file_id = from_proto::file_id(&snap, &params.code_action_params.text_document.uri)?;
+    // .expect("we never provide code actions for excluded files");
+    if snap.file_version(file_id) != params.version {
+        return Err(invalid_params_error("stale code action".to_owned()).into());
+    }
+    let line_index = snap.file_line_index(file_id)?;
+    let range = from_proto::text_range(&line_index, params.code_action_params.range)?;
+    let frange = FileRange { file_id, range };
+    // let source_root = snap.analysis.source_root_id(file_id)?;
+
+    let mut assists_config = snap.config.assist(/*Some(source_root)*/);
+    assists_config.allowed = params
+        .code_action_params
+        .context
+        .only
+        .map(|it| it.into_iter().filter_map(from_proto::assist_kind).collect());
+
+    let (assist_index, assist_resolve) = match parse_action_id(&params.id) {
+        Ok(parsed_data) => parsed_data,
+        Err(e) => {
+            return Err(invalid_params_error(format!(
+                "Failed to parse action id string '{}': {e}",
+                params.id
+            ))
+            .into());
+        }
+    };
+
+    let expected_assist_id = assist_resolve.assist_id.clone();
+    let expected_kind = assist_resolve.assist_kind;
+
+    let assists = snap.analysis.assists_with_fixes(
+        &assists_config,
+        &snap.config.diagnostics(/*Some(source_root)*/),
+        AssistResolveStrategy::Single(assist_resolve),
+        frange,
+    )?;
+
+    let assist = match assists.get(assist_index) {
+        Some(assist) => assist,
+        None => return Err(invalid_params_error(format!(
+            "Failed to find the assist for index {} provided by the resolve request. Resolve request assist id: {}",
+            assist_index, params.id,
+        ))
+            .into())
+    };
+    if assist.id.0 != expected_assist_id || assist.id.1 != expected_kind {
+        return Err(invalid_params_error(format!(
+            "Mismatching assist at index {} for the resolve parameters given. Resolve request assist id: {}, actual id: {:?}.",
+            assist_index, params.id, assist.id
+        ))
+            .into());
+    }
+    let ca = to_proto::code_action(&snap, assist.clone(), None)?;
+    code_action.edit = ca.edit;
+    code_action.command = ca.command;
+
+    if let Some(edit) = code_action.edit.as_ref() {
+        if let Some(changes) = edit.document_changes.as_ref() {
+            for change in changes {
+                if let lsp_ext::SnippetDocumentChangeOperation::Op(res_op) = change {
+                    resource_ops_supported(&snap.config, resolve_resource_op(res_op))?
+                }
+            }
+        }
+    }
+
+    Ok(code_action)
+}
+
+fn parse_action_id(action_id: &str) -> anyhow::Result<(usize, SingleResolve), String> {
+    let id_parts = action_id.split(':').collect::<Vec<_>>();
+    match id_parts.as_slice() {
+        [assist_id_string, assist_kind_string, index_string, subtype_str] => {
+            let assist_kind: AssistKind = assist_kind_string.parse()?;
+            let index: usize = match index_string.parse() {
+                Ok(index) => index,
+                Err(e) => return Err(format!("Incorrect index string: {e}")),
+            };
+            let assist_subtype = subtype_str.parse::<usize>().ok();
+            Ok((
+                index,
+                SingleResolve {
+                    assist_id: assist_id_string.to_string(),
+                    assist_kind,
+                    assist_subtype,
+                },
+            ))
+        }
+        _ => Err("Action id contains incorrect number of segments".to_owned()),
+    }
 }
 
 fn resource_ops_supported(config: &Config, kind: ResourceOperationKind) -> anyhow::Result<()> {

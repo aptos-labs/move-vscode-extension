@@ -102,11 +102,54 @@ impl FromStr for AssistKind {
 /// Unique identifier of the assist, should not be shown to the user
 /// directly.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct AssistId(pub &'static str, pub AssistKind);
+pub struct AssistId(pub &'static str, pub AssistKind, pub Option<usize>);
 
 impl AssistId {
+    pub fn none(id: &'static str) -> AssistId {
+        AssistId(id, AssistKind::None, None)
+    }
+
     pub fn quick_fix(id: &'static str) -> AssistId {
-        AssistId(id, AssistKind::QuickFix)
+        AssistId(id, AssistKind::QuickFix, None)
+    }
+}
+
+/// A way to control how many assist to resolve during the assist resolution.
+/// When an assist is resolved, its edits are calculated that might be costly to always do by default.
+#[derive(Debug)]
+pub enum AssistResolveStrategy {
+    /// No assists should be resolved.
+    None,
+    /// All assists should be resolved.
+    All,
+    /// Only a certain assist should be resolved.
+    Single(SingleResolve),
+}
+
+/// Hold the [`AssistId`] data of a certain assist to resolve.
+/// The original id object cannot be used due to a `'static` lifetime
+/// and the requirement to construct this struct dynamically during the resolve handling.
+#[derive(Debug)]
+pub struct SingleResolve {
+    /// The id of the assist.
+    pub assist_id: String,
+    // The kind of the assist.
+    pub assist_kind: AssistKind,
+    /// Subtype of the assist. When many assists have the same id, it differentiates among them.
+    pub assist_subtype: Option<usize>,
+}
+
+impl AssistResolveStrategy {
+    pub fn should_resolve(&self, id: &AssistId) -> bool {
+        match self {
+            AssistResolveStrategy::None => false,
+            AssistResolveStrategy::All => true,
+            AssistResolveStrategy::Single(single_resolve) => {
+                single_resolve.assist_id == id.0
+                    && single_resolve.assist_kind == id.1
+                    && single_resolve.assist_subtype == id.2
+            }
+        }
     }
 }
 
