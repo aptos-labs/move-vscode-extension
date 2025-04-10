@@ -3,10 +3,11 @@ use crate::line_index::PositionEncoding;
 use crate::lsp::semantic_tokens;
 use line_index::WideEncoding;
 use lsp_types::{
-    CompletionOptions, CompletionOptionsCompletionItem, HoverProviderCapability, OneOf,
-    PositionEncodingKind, SelectionRangeProviderCapability, SemanticTokensFullOptions,
-    SemanticTokensLegend, SemanticTokensOptions, ServerCapabilities, TextDocumentSyncCapability,
-    TextDocumentSyncKind, WorkDoneProgressOptions,
+    CodeActionKind, CodeActionOptions, CodeActionProviderCapability, CompletionOptions,
+    CompletionOptionsCompletionItem, HoverProviderCapability, OneOf, PositionEncodingKind,
+    SelectionRangeProviderCapability, SemanticTokensFullOptions, SemanticTokensLegend,
+    SemanticTokensOptions, ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind,
+    WorkDoneProgressOptions,
 };
 
 pub fn server_capabilities(config: &Config) -> ServerCapabilities {
@@ -57,7 +58,7 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
         // document_highlight_provider: Some(OneOf::Left(true)),
         // document_symbol_provider: Some(OneOf::Left(true)),
         // workspace_symbol_provider: Some(OneOf::Left(true)),
-        // code_action_provider: Some(config.caps().code_action_capabilities()),
+        code_action_provider: Some(config.caps().code_action_capabilities()),
         // code_lens_provider: Some(CodeLensOptions { resolve_provider: Some(true) }),
         // document_formatting_provider: Some(OneOf::Left(true)),
         // document_range_formatting_provider: match config.rustfmt(None) {
@@ -211,6 +212,31 @@ impl ClientCapabilities {
         Some(CompletionOptionsCompletionItem {
             label_details_support: Some(self.completion_label_details_support()),
         })
+    }
+
+    fn code_action_capabilities(&self) -> CodeActionProviderCapability {
+        self.0
+            .text_document
+            .as_ref()
+            .and_then(|it| it.code_action.as_ref())
+            .and_then(|it| it.code_action_literal_support.as_ref())
+            .map_or(CodeActionProviderCapability::Simple(true), |_| {
+                CodeActionProviderCapability::Options(CodeActionOptions {
+                    // Advertise support for all built-in CodeActionKinds.
+                    // Ideally we would base this off of the client capabilities
+                    // but the client is supposed to fall back gracefully for unknown values.
+                    code_action_kinds: Some(vec![
+                        CodeActionKind::EMPTY,
+                        CodeActionKind::QUICKFIX,
+                        CodeActionKind::REFACTOR,
+                        CodeActionKind::REFACTOR_EXTRACT,
+                        CodeActionKind::REFACTOR_INLINE,
+                        CodeActionKind::REFACTOR_REWRITE,
+                    ]),
+                    resolve_provider: Some(true),
+                    work_done_progress_options: Default::default(),
+                })
+            })
     }
 
     pub fn negotiated_encoding(&self) -> PositionEncoding {
@@ -384,6 +410,10 @@ impl ClientCapabilities {
         })() == Some(true)
     }
 
+    pub fn code_action_group(&self) -> bool {
+        self.experimental_bool("codeActionGroup")
+    }
+
     pub fn open_server_logs(&self) -> bool {
         self.experimental_bool("openServerLogs")
     }
@@ -392,7 +422,7 @@ impl ClientCapabilities {
         self.experimental_bool("serverStatusNotification")
     }
 
-    fn experimental_bool(&self, index: &'static str) -> bool {
+    pub fn experimental_bool(&self, index: &'static str) -> bool {
         || -> _ { self.0.experimental.as_ref()?.get(index)?.as_bool() }().unwrap_or_default()
     }
 }

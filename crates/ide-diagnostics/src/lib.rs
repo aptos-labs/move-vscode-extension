@@ -8,6 +8,7 @@ mod tests;
 use crate::config::DiagnosticsConfig;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use base_db::SourceDatabase;
+use ide_db::assists::AssistResolveStrategy;
 use ide_db::{RootDatabase, Severity};
 use lang::Semantics;
 use syntax::files::{FileRange, InFile, InFileExt};
@@ -15,8 +16,15 @@ use syntax::{AstNode, SyntaxNodePtr, TextRange, ast, match_ast};
 use vfs::FileId;
 
 struct DiagnosticsContext<'a> {
-    pub config: &'a DiagnosticsConfig,
-    pub sema: Semantics<'a, RootDatabase>,
+    config: &'a DiagnosticsConfig,
+    sema: Semantics<'a, RootDatabase>,
+    resolve: &'a AssistResolveStrategy,
+}
+
+impl DiagnosticsContext<'_> {
+    pub fn db(&self) -> &RootDatabase {
+        self.sema.db
+    }
 }
 
 /// Request parser level diagnostics for the given [`FileId`].
@@ -49,6 +57,7 @@ pub fn syntax_diagnostics(
 pub fn semantic_diagnostics(
     db: &RootDatabase,
     config: &DiagnosticsConfig,
+    resolve: &AssistResolveStrategy,
     file_id: FileId,
 ) -> Vec<Diagnostic> {
     let _p = tracing::info_span!("semantic_diagnostics").entered();
@@ -57,7 +66,7 @@ pub fn semantic_diagnostics(
     let mut res = vec![];
 
     let file = sema.parse(file_id);
-    let ctx = DiagnosticsContext { config, sema };
+    let ctx = DiagnosticsContext { config, sema, resolve };
     for node in file.syntax().descendants() {
         match_ast! {
             match node {
@@ -75,9 +84,10 @@ pub fn semantic_diagnostics(
 pub fn full_diagnostics(
     db: &RootDatabase,
     config: &DiagnosticsConfig,
+    resolve: &AssistResolveStrategy,
     file_id: FileId,
 ) -> Vec<Diagnostic> {
     let mut res = syntax_diagnostics(db, config, file_id);
-    res.extend(semantic_diagnostics(db, config, file_id));
+    res.extend(semantic_diagnostics(db, config, resolve, file_id));
     res
 }

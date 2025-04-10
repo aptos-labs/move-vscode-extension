@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 pub mod apply_change;
+pub mod assist_config;
 pub mod assists;
 pub mod defs;
 pub mod helpers;

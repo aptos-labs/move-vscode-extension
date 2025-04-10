@@ -1040,13 +1040,15 @@ pub(crate) fn code_action_kind(kind: AssistKind) -> lsp_types::CodeActionKind {
 pub(crate) fn code_action(
     snap: &GlobalStateSnapshot,
     assist: Assist,
-    // resolve_data: Option<(usize, lsp_types::CodeActionParams, Option<i32>)>,
+    resolve_data: Option<(usize, lsp_types::CodeActionParams, Option<i32>)>,
 ) -> Cancellable<lsp_ext::CodeAction> {
     let mut res = lsp_ext::CodeAction {
         title: assist.label.to_string(),
-        group: None,
         // diagnostics: None,
-        // group: assist.group.filter(|_| snap.config.code_action_group()).map(|gr| gr.0),
+        group: assist
+            .group
+            .filter(|_| snap.config.code_action_group())
+            .map(|gr| gr.0),
         kind: Some(code_action_kind(assist.id.1)),
         edit: None,
         is_preferred: None,
@@ -1064,24 +1066,23 @@ pub(crate) fn code_action(
     //     _ => None,
     // };
 
-    match (assist.source_change/*, resolve_data*/) {
-        Some(it) => res.edit = Some(snippet_workspace_edit(snap, it)?),
-        // (Some(it), _) => res.edit = Some(snippet_workspace_edit(snap, it)?),
-        None => {} // (None, Some((index, code_action_params, version))) => {
-                   //     res.data = Some(lsp_ext::CodeActionData {
-                   //         id: format!(
-                   //             "{}:{}",
-                   //             assist.id.0,
-                   //             assist.id.1.name(),
-                   //             // assist.id.2.map(|x| x.to_string()).unwrap_or("".to_owned())
-                   //         ),
-                   //         code_action_params,
-                   //         version,
-                   //     });
-                   // }
-                   // (None, None) => {
-                   //     stdx::never!("assist should always be resolved if client can't do lazy resolving")
-                   // }
+    match (assist.source_change, resolve_data) {
+        (Some(it), _) => res.edit = Some(snippet_workspace_edit(snap, it)?),
+        (None, Some((index, code_action_params, version))) => {
+            res.data = Some(lsp_ext::CodeActionData {
+                id: format!(
+                    "{}:{}:{index}:{}",
+                    assist.id.0,
+                    assist.id.1.name(),
+                    assist.id.2.map(|x| x.to_string()).unwrap_or("".to_owned())
+                ),
+                code_action_params,
+                version,
+            });
+        }
+        (None, None) => {
+            stdx::never!("assist should always be resolved if client can't do lazy resolving")
+        }
     };
     Ok(res)
 }

@@ -21,7 +21,7 @@ pub(crate) fn can_be_replaced_with_method_call(
     call_expr: InFile<ast::CallExpr>,
 ) -> Option<Diagnostic> {
     let file_id = call_expr.file_id;
-    let db = ctx.sema.db;
+    let db = ctx.db();
     let (fun_file_id, fun) = call_expr
         .clone()
         .map(|it| it.path().reference())
