@@ -17,9 +17,7 @@ use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 
 pub enum PathResolver<'ctx, 'db> {
-    Inference {
-        ctx: RefCell<&'ctx mut InferenceCtx<'db>>,
-    },
+    Inference { ctx: RefCell<&'ctx mut InferenceCtx<'db>> },
     Outer,
 }
 
@@ -32,9 +30,7 @@ impl<'ctx, 'db> TyLowering<'ctx, 'db> {
     pub fn new(db: &'db dyn HirDatabase, ctx: &'ctx mut InferenceCtx<'db>) -> Self {
         TyLowering {
             db,
-            path_resolver: PathResolver::Inference {
-                ctx: RefCell::new(ctx),
-            },
+            path_resolver: PathResolver::Inference { ctx: RefCell::new(ctx) },
         }
     }
     pub fn new_no_inf(db: &'db dyn HirDatabase) -> Self {

@@ -75,13 +75,8 @@ impl std::ops::Deref for Config {
 
 #[derive(Debug)]
 pub enum ConfigErrorInner {
-    Json {
-        config_key: String,
-        error: serde_json::Error,
-    },
-    ParseError {
-        reason: String,
-    },
+    Json { config_key: String, error: serde_json::Error },
+    ParseError { reason: String },
 }
 
 #[derive(Clone, Debug, Default)]

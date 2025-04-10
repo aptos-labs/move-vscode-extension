@@ -639,11 +639,7 @@ fn lower_rule(
             let ty = grammar[*node].name.clone();
             let name = label.cloned().unwrap_or_else(|| to_lower_snake_case(&ty));
             let cardinality = get_rule_cardinality(&name);
-            let field = Field::Node {
-                name,
-                ty,
-                cardinality,
-            };
+            let field = Field::Node { name, ty, cardinality };
             acc.push(field);
         }
         Rule::Token(token) => {

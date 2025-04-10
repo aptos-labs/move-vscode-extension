@@ -117,7 +117,9 @@ impl SyntaxMapping {
         let mut upmap_chain = vec![current.index()];
 
         loop {
-            let Some(parent) = current.parent() else { break };
+            let Some(parent) = current.parent() else {
+                break;
+            };
 
             if &parent == output_ancestor {
                 return Ok(upmap_chain);

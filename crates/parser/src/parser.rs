@@ -347,11 +347,7 @@ impl<'t> Parser<'t> {
     }
 
     fn rollback(&mut self) {
-        if let Some(Event::Token {
-            kind: _,
-            n_raw_tokens,
-        }) = self.events.pop()
-        {
+        if let Some(Event::Token { kind: _, n_raw_tokens }) = self.events.pop() {
             for _ in 0..n_raw_tokens {
                 self.token_source.rollback();
             }
