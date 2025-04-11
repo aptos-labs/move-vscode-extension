@@ -1,4 +1,4 @@
-use base_db::package::PackageRoot;
+use base_db::package_root::PackageRoot;
 use paths::AbsPathBuf;
 use project_model::AptosWorkspace;
 use project_model::aptos_workspace::PackageFolderRoot;
@@ -10,12 +10,12 @@ use vfs::VfsPath;
 use vfs::file_set::FileSetConfig;
 
 #[derive(Default, Debug)]
-pub struct SourceRootConfig {
+pub struct PackageRootConfig {
     pub fsc: FileSetConfig,
     pub local_filesets: Vec<u64>,
 }
 
-impl SourceRootConfig {
+impl PackageRootConfig {
     pub fn partition_into_roots(&self, vfs: &vfs::Vfs) -> Vec<PackageRoot> {
         tracing::info!("partition with {:?}", self.fsc);
         self.fsc
@@ -38,7 +38,7 @@ impl SourceRootConfig {
 pub struct ProjectFolders {
     pub load: Vec<vfs::loader::Entry>,
     pub watch: Vec<usize>,
-    pub source_root_config: SourceRootConfig,
+    pub package_root_config: PackageRootConfig,
 }
 
 impl ProjectFolders {
@@ -152,7 +152,7 @@ impl ProjectFolders {
         }
 
         let fsc = fsc.build();
-        folders.source_root_config = SourceRootConfig { fsc, local_filesets };
+        folders.package_root_config = PackageRootConfig { fsc, local_filesets };
 
         folders
     }

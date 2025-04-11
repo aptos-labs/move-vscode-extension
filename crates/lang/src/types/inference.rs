@@ -23,6 +23,7 @@ use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 use vfs::FileId;
 
+#[derive(Debug)]
 pub struct InferenceCtx<'db> {
     pub db: &'db dyn HirDatabase,
     pub file_id: FileId,
@@ -68,6 +69,7 @@ impl<'db> InferenceCtx<'db> {
         }
     }
 
+    #[tracing::instrument(level = "debug", skip(self, path, expected_ty), fields(ctx_file_id = ?self.file_id))]
     pub fn resolve_path_cached(
         &mut self,
         path: ast::Path,
@@ -149,7 +151,7 @@ impl<'db> InferenceCtx<'db> {
         path: ast::Path,
         fields_owner: InFile<ast::AnyFieldsOwner>,
     ) -> Option<TyCallable> {
-        let (file_id, fields_owner) = fields_owner.unpack();
+        let (owner_file_id, fields_owner) = fields_owner.unpack();
 
         let owner_kind = fields_owner.syntax().kind();
         let (path, struct_or_enum): (ast::Path, ast::StructOrEnum) = match owner_kind {
@@ -161,23 +163,25 @@ impl<'db> InferenceCtx<'db> {
             }
             _ => unreachable!(),
         };
-        let struct_or_enum = struct_or_enum.in_file(file_id);
+        let struct_or_enum = struct_or_enum.in_file(owner_file_id);
 
         let tuple_fields = fields_owner.tuple_field_list()?.fields().collect::<Vec<_>>();
         let param_types = tuple_fields
             .into_iter()
             .map(|it| {
                 self.ty_lowering()
-                    .lower_tuple_field(it.in_file(file_id))
+                    .lower_tuple_field(it.in_file(owner_file_id))
                     .unwrap_or(Ty::Unknown)
             })
             .collect::<Vec<_>>();
         let ret_type = Ty::new_ty_adt(struct_or_enum.clone());
 
         let ty_vars_subst = struct_or_enum.ty_vars_subst();
-        let type_args_subst = self
-            .ty_lowering()
-            .type_args_substitution(path.into(), struct_or_enum.in_file_into());
+        let ctx_file_id = self.file_id;
+        let type_args_subst = self.ty_lowering().type_args_substitution(
+            path.in_file(ctx_file_id).in_file_into(),
+            struct_or_enum.in_file_into(),
+        );
 
         let tuple_ty =
             TyCallable::new(param_types, ret_type, CallKind::Fun).substitute(&type_args_subst);
@@ -202,9 +206,11 @@ impl<'db> InferenceCtx<'db> {
         method_or_path: ast::MethodOrPath,
         generic_item: InFile<ast::AnyGenericElement>,
     ) -> Ty {
-        let mut path_ty = self
-            .ty_lowering()
-            .lower_path(method_or_path, generic_item.clone().in_file_into());
+        let ctx_file_id = self.file_id;
+        let mut path_ty = self.ty_lowering().lower_path(
+            method_or_path.in_file(ctx_file_id),
+            generic_item.clone().in_file_into(),
+        );
 
         let ty_vars_subst = generic_item.ty_vars_subst();
         path_ty = path_ty.substitute(&ty_vars_subst);

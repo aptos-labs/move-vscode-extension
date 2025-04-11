@@ -7,7 +7,7 @@ use crate::nameres::path_resolution::ResolutionContext;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use crate::nameres::scope_entries_owner::get_entries_in_scope;
 use crate::node_ext::ModuleLangExt;
-use base_db::package::PackageRootId;
+use base_db::package_root::PackageRootId;
 use parser::SyntaxKind;
 use parser::SyntaxKind::MODULE_SPEC;
 use std::collections::HashMap;

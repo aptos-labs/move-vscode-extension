@@ -295,6 +295,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let expected_ty = expected.ty(self.ctx);
         let named_element = self.ctx.resolve_path_cached(path_expr.path(), expected_ty)?;
 
+        let file_id = self.ctx.file_id;
         let ty_lowering = self.ctx.ty_lowering();
         match named_element.kind() {
             IDENT_PAT => {
@@ -313,8 +314,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
             STRUCT | ENUM => {
                 // base for index expr
+                let path = path_expr.path().in_file(file_id);
                 let index_base_ty =
-                    ty_lowering.lower_path(path_expr.path().into(), named_element.in_file_into());
+                    ty_lowering.lower_path(path.in_file_into(), named_element.in_file_into());
                 Some(index_base_ty)
             }
             VARIANT => {

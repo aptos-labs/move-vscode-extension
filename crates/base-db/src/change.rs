@@ -1,5 +1,5 @@
 use crate::PackageRootDatabase;
-use crate::package::{PackageRoot, PackageRootId};
+use crate::package_root::{PackageRoot, PackageRootId};
 use ra_salsa::Durability;
 use std::collections::HashMap;
 use std::fmt;
@@ -12,6 +12,7 @@ pub type PackageGraph = HashMap<ManifestFileId, Vec<ManifestFileId>>;
 /// Encapsulate a bunch of raw `.set` calls on the database.
 #[derive(Default)]
 pub struct FileChange {
+    pub builtins_file: Option<(FileId, String)>,
     pub files_changed: Vec<(FileId, Option<String>)>,
     pub package_roots: Option<Vec<PackageRoot>>,
     pub package_graph: Option<HashMap<ManifestFileId, Vec<ManifestFileId>>>,
@@ -34,6 +35,10 @@ impl FileChange {
         self.files_changed.push((file_id, new_text))
     }
 
+    pub fn add_builtins_file(&mut self, file_id: FileId, builtins_text: String) {
+        self.builtins_file = Some((file_id, builtins_text));
+    }
+
     pub fn apply(self, db: &mut dyn PackageRootDatabase) {
         let _p = tracing::info_span!("FileChange::apply").entered();
 
@@ -46,6 +51,11 @@ impl FileChange {
                 }
                 db.set_package_root(root_id, Arc::from(root))
             }
+        }
+
+        if let Some((builtins_file_id, builtins_text)) = self.builtins_file {
+            db.set_builtins_file_id(builtins_file_id);
+            db.set_file_text(builtins_file_id, Arc::from(builtins_text));
         }
 
         if let Some(package_graph) = self.package_graph {

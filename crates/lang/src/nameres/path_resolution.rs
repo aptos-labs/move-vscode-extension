@@ -10,7 +10,7 @@ use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt};
 use crate::types::inference::InferenceCtx;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
-use base_db::package::{PackageRoot, PackageRootId};
+use base_db::package_root::{PackageRoot, PackageRootId};
 use parser::SyntaxKind::CALL_EXPR;
 use syntax::ast::HasItems;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
@@ -131,7 +131,7 @@ pub fn get_method_resolve_variants(
 #[tracing::instrument(
     level = "debug",
     skip(db, path),
-    fields(path = ?path.syntax_text()))]
+    fields(path = ?path.syntax_text(), file_id = ?path.file_id))]
 pub fn resolve_path(
     db: &dyn HirDatabase,
     path: InFile<ast::Path>,
