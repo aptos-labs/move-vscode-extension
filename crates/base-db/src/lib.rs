@@ -1,12 +1,14 @@
 #![allow(dead_code)]
 
 pub mod change;
-pub mod package;
-pub mod source_root;
+pub mod package_root;
 
 use crate::change::ManifestFileId;
-use crate::package::{PackageRoot, PackageRootId};
-use syntax::{Parse, SourceFile, SyntaxError};
+use crate::package_root::{PackageRoot, PackageRootId};
+use std::fs::File;
+use syntax::ast::HasItems;
+use syntax::files::{InFile, InFileExt};
+use syntax::{Parse, SourceFile, SyntaxError, ast};
 use triomphe::Arc;
 use vfs::{FileId, VfsPath};
 
@@ -54,19 +56,12 @@ pub trait PackageRootDatabase: SourceDatabase + Upcast<dyn SourceDatabase> {
     #[ra_salsa::input]
     fn file_package_root_id(&self, file_id: FileId) -> PackageRootId;
 
-    // #[ra_salsa::input]
-    // fn manifest_file_id(&self, vfs_path: VfsPath) -> FileId;
+    #[ra_salsa::input]
+    fn builtins_file_id(&self) -> FileId;
 
     #[ra_salsa::input]
     fn package_root(&self, id: PackageRootId) -> Arc<PackageRoot>;
 
     #[ra_salsa::input]
     fn package_deps(&self, manifest_file_id: PackageRootId) -> Arc<Vec<PackageRootId>>;
-
-    // #[ra_salsa::input]
-    // fn package_deps(&self, manifest_file_id: ManifestFileId) -> Arc<Vec<ManifestFileId>>;
-
-    // /// Contents of the source root.
-    // #[ra_salsa::input]
-    // fn source_root(&self, id: SourceRoot) -> Arc<SourceRoot>;
 }

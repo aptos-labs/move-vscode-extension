@@ -3,7 +3,7 @@ use base_db::SourceDatabase;
 use ide::Analysis;
 use ide::test_utils::{get_marked_position_line_index, get_marked_position_offset_with_line};
 use ide_db::Severity;
-use ide_db::assists::Assist;
+use ide_db::assists::{Assist, AssistResolveStrategy};
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 use syntax::TextRange;
@@ -69,7 +69,9 @@ fn get_diagnostic_at_mark(source: &str) -> (Analysis, FileId, Option<Diagnostic>
     let (analysis, file_id) = Analysis::from_single_file(source.to_string());
 
     let config = DiagnosticsConfig::test_sample();
-    let mut diagnostics = analysis.semantic_diagnostics(&config, file_id).unwrap();
+    let mut diagnostics = analysis
+        .semantic_diagnostics(&config, AssistResolveStrategy::None, file_id)
+        .unwrap();
 
     let diagnostic = diagnostics.pop();
 

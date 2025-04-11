@@ -8,7 +8,7 @@ use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::integer::IntegerKind;
-use crate::types::ty::reference::{Mutability, TyReference};
+use crate::types::ty::reference::Mutability;
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::type_param::TyTypeParameter;
@@ -30,7 +30,8 @@ impl<'ctx, 'db> TyLowering<'ctx, 'db> {
     pub fn new(db: &'db dyn HirDatabase, ctx: &'ctx mut InferenceCtx<'db>) -> Self {
         TyLowering {
             db,
-            path_resolver: PathResolver::Inference { ctx: RefCell::new(ctx) },
+            path_resolver: PathResolver::Outer,
+            // path_resolver: PathResolver::Inference { ctx: RefCell::new(ctx) },
         }
     }
     pub fn new_no_inf(db: &'db dyn HirDatabase) -> Self {
@@ -54,7 +55,9 @@ impl<'ctx, 'db> TyLowering<'ctx, 'db> {
                     Some(named_item_entry) => named_item_entry
                         .node_loc
                         .to_ast::<ast::AnyNamedElement>(self.db.upcast())
-                        .map(|named_item| self.lower_path(path.value.into(), named_item.in_file_into()))
+                        .map(|named_item| {
+                            self.lower_path(path.in_file_into(), named_item.in_file_into())
+                        })
                         .unwrap_or(Ty::Unknown),
                 }
             }
@@ -92,7 +95,7 @@ impl<'ctx, 'db> TyLowering<'ctx, 'db> {
 
     pub fn lower_path(
         &self,
-        method_or_path: ast::MethodOrPath,
+        method_or_path: InFile<ast::MethodOrPath>,
         named_item: InFile<ast::AnyNamedElement>,
     ) -> Ty {
         use syntax::SyntaxKind::*;
@@ -114,15 +117,15 @@ impl<'ctx, 'db> TyLowering<'ctx, 'db> {
             VARIANT => {
                 let variant = named_item.clone().cast_into::<ast::Variant>().unwrap();
                 let enum_ = variant.map(|it| it.enum_());
+                let (file_id, method_or_path) = method_or_path.clone().unpack();
                 let Some(enum_path) = method_or_path
-                    .clone()
                     .path()
                     .expect("MethodCallExpr cannot be resolved to Variant")
                     .qualifier()
                 else {
                     return Ty::Unknown;
                 };
-                self.lower_path(enum_path.into(), enum_.in_file_into())
+                self.lower_path(enum_path.in_file(file_id).in_file_into(), enum_.in_file_into())
             }
             _ => Ty::Unknown,
         };

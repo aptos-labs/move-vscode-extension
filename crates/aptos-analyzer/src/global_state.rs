@@ -7,12 +7,13 @@ use crate::lsp::to_proto::url_from_abs_path;
 use crate::main_loop::Task;
 use crate::mem_docs::MemDocs;
 use crate::op_queue::{Cause, OpQueue};
-use crate::project_folders::SourceRootConfig;
+use crate::project_folders::PackageRootConfig;
 use crate::task_pool::{TaskPool, TaskQueue};
 use crate::{lsp_ext, reload};
 use base_db::change::FileChange;
 use crossbeam_channel::{Receiver, Sender, unbounded};
 use ide::{Analysis, AnalysisHost, Cancellable};
+use lang::builtin_files::BUILTINS_FILE;
 use lsp_types::Url;
 use nohash_hasher::IntMap;
 use parking_lot::{
@@ -63,7 +64,7 @@ pub(crate) struct GlobalState {
     pub(crate) analysis_host: AnalysisHost,
     pub(crate) diagnostics: DiagnosticCollection,
     pub(crate) mem_docs: MemDocs,
-    pub(crate) source_root_config: SourceRootConfig,
+    pub(crate) package_root_config: PackageRootConfig,
 
     // status
     pub(crate) shutdown_requested: bool,
@@ -81,6 +82,7 @@ pub(crate) struct GlobalState {
     pub(crate) vfs_config_version: u32,
     pub(crate) vfs_progress_config_version: u32,
     pub(crate) vfs_done: bool,
+    pub(crate) builtins_file_id: FileId,
     // used to track how long VFS loading takes. this can't be on `vfs::loader::Handle`,
     // as that handle's lifetime is the same as `GlobalState` itself.
     pub(crate) vfs_span: Option<tracing::span::EnteredSpan>,
@@ -142,6 +144,14 @@ impl GlobalState {
 
         let (flycheck_sender, flycheck_receiver) = unbounded();
 
+        let vfs = Arc::new(RwLock::new((vfs::Vfs::default(), IntMap::default())));
+        let builtins_file_id = {
+            let vfs = &mut vfs.write().0;
+            let builtins_path = VfsPath::new_virtual_path("/builtins.move".to_string());
+            vfs.set_file_contents(builtins_path.clone(), Some(BUILTINS_FILE.bytes().collect()));
+            vfs.file_id(&builtins_path).unwrap()
+        };
+
         let mut this = GlobalState {
             sender,
             req_queue: ReqQueue::default(),
@@ -156,7 +166,7 @@ impl GlobalState {
                 quiescent: true,
                 message: None,
             },
-            source_root_config: SourceRootConfig::default(),
+            package_root_config: PackageRootConfig::default(),
             config_errors: Default::default(),
 
             flycheck: Arc::from_iter([]),
@@ -165,7 +175,9 @@ impl GlobalState {
             last_flycheck_error: None,
 
             loader,
-            vfs: Arc::new(RwLock::new((vfs::Vfs::default(), IntMap::default()))),
+            // vfs: Arc::new(RwLock::new((vfs::Vfs::default(), IntMap::default()))),
+            vfs,
+            builtins_file_id,
             vfs_config_version: 0,
             vfs_progress_config_version: 0,
             vfs_done: true,
@@ -251,7 +263,7 @@ impl GlobalState {
                 change.change_file(file_id, text);
             });
             if has_structure_changes {
-                let roots = self.source_root_config.partition_into_roots(vfs);
+                let roots = self.package_root_config.partition_into_roots(vfs);
                 change.set_package_roots(roots);
             }
             (change, workspace_structure_change)

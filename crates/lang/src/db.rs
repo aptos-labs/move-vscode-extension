@@ -22,6 +22,7 @@ fn resolve_path(db: &dyn HirDatabase, ref_loc: SyntaxLoc) -> Option<ScopeEntry> 
     path_resolution::resolve_path(db, path, None).single_or_none()
 }
 
+#[tracing::instrument(level = "debug", skip(db))]
 fn inference_for_ctx_owner(db: &dyn HirDatabase, ctx_owner_loc: SyntaxLoc) -> Arc<InferenceResult> {
     let InFile {
         file_id,

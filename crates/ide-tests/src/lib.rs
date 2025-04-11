@@ -17,6 +17,10 @@ mod types;
 pub(crate) fn init_tracing_for_test() {
     let _ = Registry::default()
         // .with(fmt::Layer::new().with_max_level(Level::DEBUG))
-        .with(HierarchicalLayer::new(2).with_filter(LevelFilter::from_level(Level::DEBUG)))
+        .with(
+            HierarchicalLayer::new(2)
+                .with_indent_lines(true)
+                .with_filter(LevelFilter::from_level(Level::DEBUG)),
+        )
         .try_init();
 }

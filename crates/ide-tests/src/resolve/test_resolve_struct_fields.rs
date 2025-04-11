@@ -200,7 +200,7 @@ module 0x1::M {
 
 // language=Move
 #[test]
-fn test_resolve_field_for_borrow_global_mut() {
+fn est_resolve_field_for_borrow_global_mut() {
     check_resolve(
         r#"
 module 0x1::M {

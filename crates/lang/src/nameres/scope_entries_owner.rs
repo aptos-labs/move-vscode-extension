@@ -1,10 +1,11 @@
 use crate::db::HirDatabase;
 use crate::nameres::blocks::get_entries_in_blocks;
 use crate::nameres::node_ext::ModuleResolutionExt;
-use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
+use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::nameres::use_speck_entries::use_speck_entries;
+use base_db::PackageRootDatabase;
 use syntax::ast::{GenericElement, HasItems};
-use syntax::files::InFile;
+use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, SyntaxNode, ast};
 
 pub fn get_entries_in_scope(
@@ -21,15 +22,11 @@ pub fn get_entries_in_scope(
     }
 
     entries.extend(get_entries_in_blocks(scope.clone(), prev));
-    // if scope.syntax_kind() == BLOCK_EXPR {
-    //     return entries;
-    // }
-
     entries.extend(get_entries_from_owner(db, scope));
     entries
 }
 
-pub fn get_entries_from_owner(_db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -> Vec<ScopeEntry> {
+pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -> Vec<ScopeEntry> {
     use syntax::SyntaxKind::*;
 
     let file_id = scope.file_id;
@@ -44,12 +41,24 @@ pub fn get_entries_from_owner(_db: &dyn HirDatabase, scope: InFile<SyntaxNode>) 
             let module = scope.syntax_cast::<ast::Module>().unwrap();
             entries.extend(module.member_entries());
             entries.extend(module.value.enum_variants().to_in_file_entries(file_id));
+
+            entries.extend(builtin_functions(db.upcast()).to_entries());
         }
         MODULE_SPEC => {
-            let module_spec = scope.syntax_cast::<ast::ModuleSpec>().unwrap();
-            entries.extend(module_spec.value.spec_functions().to_in_file_entries(file_id));
-            // entries.extend(module_spec.value.spec_inline_functions().to_entries());
-            // entries.extend(module_spec.value.schemas().to_entries());
+            let (module_spec_file_id, module_spec) =
+                scope.syntax_cast::<ast::ModuleSpec>().unwrap().unpack();
+            entries.extend(
+                module_spec
+                    .spec_functions()
+                    .to_in_file_entries(module_spec_file_id),
+            );
+            entries.extend(
+                module_spec
+                    .spec_inline_functions()
+                    .to_in_file_entries(module_spec_file_id),
+            );
+
+            entries.extend(builtin_spec_functions(db.upcast()).to_entries());
         }
         SCRIPT => {
             let script = scope.syntax_cast::<ast::Script>().unwrap();
@@ -88,4 +97,36 @@ pub fn get_entries_from_owner(_db: &dyn HirDatabase, scope: InFile<SyntaxNode>) 
     }
 
     entries
+}
+
+fn builtin_functions(db: &dyn PackageRootDatabase) -> Vec<InFile<ast::Fun>> {
+    let file_id = db.builtins_file_id();
+    let builtin_module = builtin_module(db);
+    builtin_module
+        .functions()
+        .into_iter()
+        .map(|fun| fun.in_file(file_id))
+        .collect()
+}
+
+fn builtin_spec_functions(db: &dyn PackageRootDatabase) -> Vec<InFile<ast::SpecFun>> {
+    let file_id = db.builtins_file_id();
+    let builtin_module = builtin_module(db);
+    builtin_module
+        .spec_functions()
+        .into_iter()
+        .map(|fun| fun.in_file(file_id))
+        .collect()
+}
+
+fn builtin_module(db: &dyn PackageRootDatabase) -> ast::Module {
+    let file_id = db.builtins_file_id();
+    let builtins_module = db
+        .parse(file_id)
+        .tree()
+        .modules()
+        .collect::<Vec<_>>()
+        .pop()
+        .expect("0x0::builtins");
+    builtins_module
 }

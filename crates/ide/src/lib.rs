@@ -9,7 +9,7 @@ use ra_salsa::ParallelDatabase;
 use syntax::{SourceFile, TextRange, TextSize};
 use triomphe::Arc;
 use vfs::file_set::FileSet;
-use vfs::{FileId, VfsPath};
+use vfs::{FileId, Vfs, VfsPath};
 
 pub mod extend_selection;
 mod goto_definition;
@@ -23,13 +23,14 @@ mod view_syntax_tree;
 use crate::hover::HoverResult;
 pub use crate::navigation_target::NavigationTarget;
 pub use crate::syntax_highlighting::HlRange;
-use base_db::package::{PackageRoot, PackageRootId};
+use base_db::package_root::{PackageRoot, PackageRootId};
 use ide_completion::config::CompletionConfig;
 use ide_db::assist_config::AssistConfig;
 pub use ide_db::assists::{Assist, AssistKind, AssistResolveStrategy};
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 pub use ra_salsa::Cancelled;
+use lang::builtin_files::BUILTINS_FILE;
 use syntax::files::{FilePosition, FileRange};
 
 pub type Cancellable<T> = Result<T, Cancelled>;
@@ -124,6 +125,10 @@ impl Analysis {
         let mut change = FileChange::new();
         change.set_package_roots(vec![package_root]);
         change.change_file(file_id, Some(text));
+
+        let builtins_file_id = FileId::from_raw(1);
+        change.add_builtins_file(builtins_file_id, BUILTINS_FILE.to_string());
+
         host.apply_change(change);
 
         let mut package_graph = PackageGraph::default();
@@ -145,7 +150,7 @@ impl Analysis {
     //     self.with_db(|db| status::status(db, file_id))
     // }
 
-    pub fn source_root_id(&self, file_id: FileId) -> Cancellable<PackageRootId> {
+    pub fn package_root_id(&self, file_id: FileId) -> Cancellable<PackageRootId> {
         self.with_db(|db| db.file_package_root_id(file_id))
     }
 

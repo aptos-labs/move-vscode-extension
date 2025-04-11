@@ -10,17 +10,18 @@ use syntax::{AstNode, ast};
 impl TyLowering<'_, '_> {
     pub fn type_args_substitution(
         &self,
-        method_or_path: ast::MethodOrPath,
+        method_or_path: InFile<ast::MethodOrPath>,
         generic_item: InFile<ast::AnyGenericElement>,
     ) -> Substitution {
-        let mut subst_mapping = HashMap::new();
+        let (method_or_path_file_id, method_or_path) = method_or_path.unpack();
 
+        let mut subst_mapping = HashMap::new();
         let psi_subst = psi_type_args_subst(method_or_path, generic_item.value.type_params());
         for (type_param, psi_type_arg) in psi_subst {
             let type_param = InFile::new(generic_item.file_id, type_param);
             let type_param_ty = TyTypeParameter::new(type_param);
             let ty = match psi_type_arg {
-                PsiTypeArg::Present(type_) => self.lower_type(type_.in_file(generic_item.file_id)),
+                PsiTypeArg::Present(type_) => self.lower_type(type_.in_file(method_or_path_file_id)),
                 PsiTypeArg::OptionalAbsent => Ty::TypeParam(type_param_ty.clone()),
                 PsiTypeArg::RequiredAbsent => Ty::Unknown,
             };

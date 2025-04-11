@@ -3,7 +3,7 @@ pub(crate) mod to_proto;
 use crate::global_state::GlobalStateSnapshot;
 use crate::main_loop::DiagnosticsTaskKind;
 use crate::{lsp, lsp_ext};
-use base_db::package::PackageRootId;
+use base_db::package_root::PackageRootId;
 use nohash_hasher::{IntMap, IntSet};
 use rustc_hash::FxHashMap;
 use std::mem;

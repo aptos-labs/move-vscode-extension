@@ -1,9 +1,13 @@
+use crate::node_ext::ModuleLangExt;
 use base_db::PackageRootDatabase;
 use parser::SyntaxKind;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::algo::ancestors_at_offset;
-use syntax::files::InFile;
+use syntax::ast::NamedElement;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
+use syntax::ast::syntax_factory::SyntaxFactory;
+use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, TextSize, ast};
 use vfs::FileId;
 
@@ -30,11 +34,6 @@ impl SyntaxLoc {
                     || kind == SyntaxKind::NAME_REF
                     || kind == SyntaxKind::PATH_SEGMENT
             })
-            // .first_child_by_kind(&|kind| {
-            //     kind == SyntaxKind::NAME
-            //         || kind == SyntaxKind::NAME_REF
-            //         || kind == SyntaxKind::PATH_SEGMENT
-            // })
             .map(|it| it.text().to_string());
 
         SyntaxLoc {

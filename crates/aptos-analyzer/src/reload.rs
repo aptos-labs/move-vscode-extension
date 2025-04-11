@@ -7,7 +7,8 @@ use crate::project_folders::ProjectFolders;
 use crate::{Config, lsp_ext};
 use base_db::PackageRootDatabase;
 use base_db::change::{FileChange, PackageGraph};
-use base_db::package::PackageRootId;
+use base_db::package_root::PackageRootId;
+use lang::builtin_files::BUILTINS_FILE;
 use lsp_types::FileSystemWatcher;
 use project_model::AptosWorkspace;
 use project_model::aptos_workspace::FileLoader;
@@ -17,7 +18,7 @@ use stdx::format_to;
 use stdx::itertools::Itertools;
 use stdx::thread::ThreadIntent;
 use triomphe::Arc;
-use vfs::AbsPath;
+use vfs::{AbsPath, FileId, VfsPath};
 
 #[derive(Debug)]
 pub(crate) enum ProjectWorkspaceProgress {
@@ -274,8 +275,8 @@ impl GlobalState {
             version: self.vfs_config_version,
         });
 
-        tracing::info!(?project_folders.source_root_config);
-        self.source_root_config = project_folders.source_root_config;
+        tracing::info!(?project_folders.package_root_config);
+        self.package_root_config = project_folders.package_root_config;
 
         tracing::info!(?cause, "recreating the package graph");
         self.reload_package_deps(cause);
@@ -314,8 +315,9 @@ impl GlobalState {
 
         {
             let vfs = &self.vfs.read().0;
-            let roots = self.source_root_config.partition_into_roots(vfs);
+            let roots = self.package_root_config.partition_into_roots(vfs);
             change.set_package_roots(roots);
+            change.add_builtins_file(self.builtins_file_id, BUILTINS_FILE.to_string());
             // depends on roots being available
             change.set_package_graph(package_graph);
         }
