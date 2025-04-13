@@ -2,367 +2,364 @@ SOURCE_FILE@0..493
   MODULE@0..492
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
-    ADDRESS_REF@7..10
-      VALUE_ADDRESS@7..10
-        INT_NUMBER@7..10 "0x1"
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
     COLON_COLON@10..12 "::"
     NAME@12..17
       IDENT@12..17 "enums"
     WHITESPACE@17..18 " "
-    ITEM_LIST@18..492
-      L_CURLY@18..19 "{"
-      WHITESPACE@19..24 "\n    "
-      ENUM@24..130
-        ENUM_KW@24..28 "enum"
-        WHITESPACE@28..29 " "
-        NAME@29..34
-          IDENT@29..34 "Color"
-        WHITESPACE@34..35 " "
-        ABILITY_LIST@35..49
-          HAS_KW@35..38 "has"
-          WHITESPACE@38..39 " "
-          ABILITY@39..43
-            IDENT@39..43 "copy"
-          COMMA@43..44 ","
-          WHITESPACE@44..45 " "
-          ABILITY@45..49
-            IDENT@45..49 "drop"
-        WHITESPACE@49..50 " "
-        VARIANT_LIST@50..130
-          L_CURLY@50..51 "{"
-          WHITESPACE@51..60 "\n        "
-          VARIANT@60..96
-            NAME@60..63
-              IDENT@60..63 "RGB"
-            STRUCT_FIELD_LIST@63..96
-              L_CURLY@63..64 "{"
-              STRUCT_FIELD@64..72
-                NAME@64..67
-                  IDENT@64..67 "red"
-                COLON@67..68 ":"
-                WHITESPACE@68..69 " "
-                PATH_TYPE@69..72
-                  PATH@69..72
-                    PATH_SEGMENT@69..72
-                      NAME_REF@69..72
-                        IDENT@69..72 "u64"
-              COMMA@72..73 ","
-              WHITESPACE@73..74 " "
-              STRUCT_FIELD@74..84
-                NAME@74..79
-                  IDENT@74..79 "green"
-                COLON@79..80 ":"
-                WHITESPACE@80..81 " "
-                PATH_TYPE@81..84
-                  PATH@81..84
-                    PATH_SEGMENT@81..84
-                      NAME_REF@81..84
-                        IDENT@81..84 "u64"
-              COMMA@84..85 ","
-              WHITESPACE@85..86 " "
-              STRUCT_FIELD@86..95
-                NAME@86..90
-                  IDENT@86..90 "blue"
-                COLON@90..91 ":"
-                WHITESPACE@91..92 " "
-                PATH_TYPE@92..95
-                  PATH@92..95
-                    PATH_SEGMENT@92..95
-                      NAME_REF@92..95
-                        IDENT@92..95 "u64"
-              R_CURLY@95..96 "}"
-          COMMA@96..97 ","
-          WHITESPACE@97..106 "\n        "
-          VARIANT@106..109
-            NAME@106..109
-              IDENT@106..109 "Red"
-          COMMA@109..110 ","
-          WHITESPACE@110..119 "\n        "
-          VARIANT@119..123
-            NAME@119..123
-              IDENT@119..123 "Blue"
-          COMMA@123..124 ","
-          WHITESPACE@124..129 "\n    "
-          R_CURLY@129..130 "}"
-      WHITESPACE@130..136 "\n\n    "
-      ENUM@136..257
-        ENUM_KW@136..140 "enum"
-        WHITESPACE@140..141 " "
-        NAME@141..162
-          IDENT@141..162 "ColorUsesBlockNoComma"
-        TYPE_PARAM_LIST@162..168
-          L_ANGLE@162..163 "<"
-          TYPE_PARAM@163..164
-            NAME@163..164
-              IDENT@163..164 "T"
-          COMMA@164..165 ","
-          WHITESPACE@165..166 " "
-          TYPE_PARAM@166..167
-            NAME@166..167
-              IDENT@166..167 "U"
-          R_ANGLE@167..168 ">"
-        WHITESPACE@168..169 " "
-        VARIANT_LIST@169..247
-          L_CURLY@169..170 "{"
-          WHITESPACE@170..179 "\n        "
-          VARIANT@179..214
-            NAME@179..182
-              IDENT@179..182 "RGB"
-            WHITESPACE@182..183 " "
-            STRUCT_FIELD_LIST@183..214
-              L_CURLY@183..184 "{"
-              STRUCT_FIELD@184..192
-                NAME@184..187
-                  IDENT@184..187 "red"
-                COLON@187..188 ":"
-                WHITESPACE@188..189 " "
-                PATH_TYPE@189..192
-                  PATH@189..192
-                    PATH_SEGMENT@189..192
-                      NAME_REF@189..192
-                        IDENT@189..192 "u64"
-              COMMA@192..193 ","
-              WHITESPACE@193..194 " "
-              STRUCT_FIELD@194..204
-                NAME@194..199
-                  IDENT@194..199 "green"
-                COLON@199..200 ":"
-                WHITESPACE@200..201 " "
-                PATH_TYPE@201..204
-                  PATH@201..204
-                    PATH_SEGMENT@201..204
-                      NAME_REF@201..204
-                        IDENT@201..204 "u64"
-              COMMA@204..205 ","
-              WHITESPACE@205..206 " "
-              STRUCT_FIELD@206..213
-                NAME@206..210
-                  IDENT@206..210 "blue"
-                COLON@210..211 ":"
-                WHITESPACE@211..212 " "
-                PATH_TYPE@212..213
-                  PATH@212..213
-                    PATH_SEGMENT@212..213
-                      NAME_REF@212..213
-                        IDENT@212..213 "T"
-              R_CURLY@213..214 "}"
-          WHITESPACE@214..223 "\n        "
-          VARIANT@223..226
-            NAME@223..226
-              IDENT@223..226 "Red"
-          COMMA@226..227 ","
-          WHITESPACE@227..236 "\n        "
-          VARIANT@236..240
-            NAME@236..240
-              IDENT@236..240 "Blue"
-          COMMA@240..241 ","
-          WHITESPACE@241..246 "\n    "
-          R_CURLY@246..247 "}"
-        WHITESPACE@247..248 " "
-        ABILITY_LIST@248..256
-          HAS_KW@248..251 "has"
-          WHITESPACE@251..252 " "
-          ABILITY@252..256
-            IDENT@252..256 "copy"
-        SEMICOLON@256..257 ";"
-      WHITESPACE@257..263 "\n\n    "
-      ENUM@263..344
-        ENUM_KW@263..267 "enum"
-        WHITESPACE@267..268 " "
-        NAME@268..280
-          IDENT@268..280 "CommonFields"
-        WHITESPACE@280..281 " "
-        VARIANT_LIST@281..344
-          L_CURLY@281..282 "{"
-          WHITESPACE@282..291 "\n        "
-          VARIANT@291..309
-            NAME@291..294
-              IDENT@291..294 "Foo"
-            STRUCT_FIELD_LIST@294..309
-              L_CURLY@294..295 "{"
-              STRUCT_FIELD@295..301
-                NAME@295..296
-                  IDENT@295..296 "x"
-                COLON@296..297 ":"
-                WHITESPACE@297..298 " "
-                PATH_TYPE@298..301
-                  PATH@298..301
-                    PATH_SEGMENT@298..301
-                      NAME_REF@298..301
-                        IDENT@298..301 "u64"
-              COMMA@301..302 ","
-              WHITESPACE@302..303 " "
-              STRUCT_FIELD@303..308
-                NAME@303..304
-                  IDENT@303..304 "y"
-                COLON@304..305 ":"
-                WHITESPACE@305..306 " "
-                PATH_TYPE@306..308
-                  PATH@306..308
-                    PATH_SEGMENT@306..308
-                      NAME_REF@306..308
-                        IDENT@306..308 "u8"
-              R_CURLY@308..309 "}"
-          COMMA@309..310 ","
-          WHITESPACE@310..319 "\n        "
-          VARIANT@319..338
-            NAME@319..322
-              IDENT@319..322 "Bar"
-            STRUCT_FIELD_LIST@322..338
-              L_CURLY@322..323 "{"
-              STRUCT_FIELD@323..329
-                NAME@323..324
-                  IDENT@323..324 "x"
-                COLON@324..325 ":"
-                WHITESPACE@325..326 " "
-                PATH_TYPE@326..329
-                  PATH@326..329
-                    PATH_SEGMENT@326..329
-                      NAME_REF@326..329
-                        IDENT@326..329 "u64"
-              COMMA@329..330 ","
-              WHITESPACE@330..331 " "
-              STRUCT_FIELD@331..337
-                NAME@331..332
-                  IDENT@331..332 "z"
-                COLON@332..333 ":"
-                WHITESPACE@333..334 " "
-                PATH_TYPE@334..337
-                  PATH@334..337
-                    PATH_SEGMENT@334..337
-                      NAME_REF@334..337
-                        IDENT@334..337 "u32"
-              R_CURLY@337..338 "}"
-          WHITESPACE@338..343 "\n    "
-          R_CURLY@343..344 "}"
-      WHITESPACE@344..350 "\n\n    "
-      ENUM@350..436
-        ENUM_KW@350..354 "enum"
-        WHITESPACE@354..355 " "
-        NAME@355..360
-          IDENT@355..360 "Outer"
-        WHITESPACE@360..361 " "
-        VARIANT_LIST@361..436
-          L_CURLY@361..362 "{"
-          WHITESPACE@362..371 "\n        "
-          VARIANT@371..375
-            NAME@371..375
-              IDENT@371..375 "None"
-          COMMA@375..376 ","
-          WHITESPACE@376..385 "\n        "
-          VARIANT@385..398
-            NAME@385..388
-              IDENT@385..388 "One"
-            STRUCT_FIELD_LIST@388..398
-              L_CURLY@388..389 "{"
-              STRUCT_FIELD@389..397
-                NAME@389..390
-                  IDENT@389..390 "i"
-                COLON@390..391 ":"
-                WHITESPACE@391..392 " "
-                PATH_TYPE@392..397
-                  PATH@392..397
-                    PATH_SEGMENT@392..397
-                      NAME_REF@392..397
-                        IDENT@392..397 "Inner"
-              R_CURLY@397..398 "}"
-          COMMA@398..399 ","
-          WHITESPACE@399..408 "\n        "
-          VARIANT@408..429
-            NAME@408..411
-              IDENT@408..411 "Two"
-            STRUCT_FIELD_LIST@411..429
-              L_CURLY@411..412 "{"
-              STRUCT_FIELD@412..420
-                NAME@412..413
-                  IDENT@412..413 "i"
-                COLON@413..414 ":"
-                WHITESPACE@414..415 " "
-                PATH_TYPE@415..420
-                  PATH@415..420
-                    PATH_SEGMENT@415..420
-                      NAME_REF@415..420
-                        IDENT@415..420 "Inner"
-              COMMA@420..421 ","
-              WHITESPACE@421..422 " "
-              STRUCT_FIELD@422..428
-                NAME@422..423
-                  IDENT@422..423 "b"
-                COLON@423..424 ":"
-                WHITESPACE@424..425 " "
-                PATH_TYPE@425..428
-                  PATH@425..428
-                    PATH_SEGMENT@425..428
-                      NAME_REF@425..428
-                        IDENT@425..428 "Box"
-              R_CURLY@428..429 "}"
-          COMMA@429..430 ","
-          WHITESPACE@430..435 "\n    "
-          R_CURLY@435..436 "}"
-      WHITESPACE@436..442 "\n\n    "
-      FUN@442..490
-        FUN_KW@442..445 "fun"
-        WHITESPACE@445..446 " "
-        NAME@446..450
-          IDENT@446..450 "main"
-        PARAM_LIST@450..487
-          L_PAREN@450..451 "("
-          PARAM@451..470
-            IDENT_PAT@451..454
-              NAME@451..454
-                IDENT@451..454 "one"
-            COLON@454..455 ":"
-            WHITESPACE@455..456 " "
-            PATH_TYPE@456..470
-              PATH@456..470
-                PATH@456..465
-                  PATH@456..462
-                    PATH@456..459
-                      PATH_SEGMENT@456..459
-                        PATH_ADDRESS@456..459
-                          VALUE_ADDRESS@456..459
-                            INT_NUMBER@456..459 "0x1"
-                    COLON_COLON@459..461 "::"
-                    PATH_SEGMENT@461..462
-                      NAME_REF@461..462
-                        IDENT@461..462 "m"
-                  COLON_COLON@462..464 "::"
-                  PATH_SEGMENT@464..465
-                    NAME_REF@464..465
-                      IDENT@464..465 "S"
-                COLON_COLON@465..467 "::"
-                PATH_SEGMENT@467..470
-                  NAME_REF@467..470
-                    IDENT@467..470 "One"
-          COMMA@470..471 ","
-          WHITESPACE@471..472 " "
-          PARAM@472..486
-            IDENT_PAT@472..475
-              NAME@472..475
-                IDENT@472..475 "two"
-            COLON@475..476 ":"
-            WHITESPACE@476..477 " "
-            PATH_TYPE@477..486
-              PATH@477..486
-                PATH@477..481
-                  PATH@477..478
-                    PATH_SEGMENT@477..478
-                      NAME_REF@477..478
-                        IDENT@477..478 "m"
-                  COLON_COLON@478..480 "::"
-                  PATH_SEGMENT@480..481
-                    NAME_REF@480..481
-                      IDENT@480..481 "S"
-                COLON_COLON@481..483 "::"
-                PATH_SEGMENT@483..486
-                  NAME_REF@483..486
-                    IDENT@483..486 "Two"
-          R_PAREN@486..487 ")"
-        WHITESPACE@487..488 " "
-        BLOCK_EXPR@488..490
-          STMT_LIST@488..490
-            L_CURLY@488..489 "{"
-            R_CURLY@489..490 "}"
-      WHITESPACE@490..491 "\n"
-      R_CURLY@491..492 "}"
+    L_CURLY@18..19 "{"
+    WHITESPACE@19..24 "\n    "
+    ENUM@24..130
+      ENUM_KW@24..28 "enum"
+      WHITESPACE@28..29 " "
+      NAME@29..34
+        IDENT@29..34 "Color"
+      WHITESPACE@34..35 " "
+      ABILITY_LIST@35..49
+        HAS_KW@35..38 "has"
+        WHITESPACE@38..39 " "
+        ABILITY@39..43
+          IDENT@39..43 "copy"
+        COMMA@43..44 ","
+        WHITESPACE@44..45 " "
+        ABILITY@45..49
+          IDENT@45..49 "drop"
+      WHITESPACE@49..50 " "
+      VARIANT_LIST@50..130
+        L_CURLY@50..51 "{"
+        WHITESPACE@51..60 "\n        "
+        VARIANT@60..96
+          NAME@60..63
+            IDENT@60..63 "RGB"
+          NAMED_FIELD_LIST@63..96
+            L_CURLY@63..64 "{"
+            NAMED_FIELD@64..72
+              NAME@64..67
+                IDENT@64..67 "red"
+              COLON@67..68 ":"
+              WHITESPACE@68..69 " "
+              PATH_TYPE@69..72
+                PATH@69..72
+                  PATH_SEGMENT@69..72
+                    NAME_REF@69..72
+                      IDENT@69..72 "u64"
+            COMMA@72..73 ","
+            WHITESPACE@73..74 " "
+            NAMED_FIELD@74..84
+              NAME@74..79
+                IDENT@74..79 "green"
+              COLON@79..80 ":"
+              WHITESPACE@80..81 " "
+              PATH_TYPE@81..84
+                PATH@81..84
+                  PATH_SEGMENT@81..84
+                    NAME_REF@81..84
+                      IDENT@81..84 "u64"
+            COMMA@84..85 ","
+            WHITESPACE@85..86 " "
+            NAMED_FIELD@86..95
+              NAME@86..90
+                IDENT@86..90 "blue"
+              COLON@90..91 ":"
+              WHITESPACE@91..92 " "
+              PATH_TYPE@92..95
+                PATH@92..95
+                  PATH_SEGMENT@92..95
+                    NAME_REF@92..95
+                      IDENT@92..95 "u64"
+            R_CURLY@95..96 "}"
+        COMMA@96..97 ","
+        WHITESPACE@97..106 "\n        "
+        VARIANT@106..109
+          NAME@106..109
+            IDENT@106..109 "Red"
+        COMMA@109..110 ","
+        WHITESPACE@110..119 "\n        "
+        VARIANT@119..123
+          NAME@119..123
+            IDENT@119..123 "Blue"
+        COMMA@123..124 ","
+        WHITESPACE@124..129 "\n    "
+        R_CURLY@129..130 "}"
+    WHITESPACE@130..136 "\n\n    "
+    ENUM@136..257
+      ENUM_KW@136..140 "enum"
+      WHITESPACE@140..141 " "
+      NAME@141..162
+        IDENT@141..162 "ColorUsesBlockNoComma"
+      TYPE_PARAM_LIST@162..168
+        L_ANGLE@162..163 "<"
+        TYPE_PARAM@163..164
+          NAME@163..164
+            IDENT@163..164 "T"
+        COMMA@164..165 ","
+        WHITESPACE@165..166 " "
+        TYPE_PARAM@166..167
+          NAME@166..167
+            IDENT@166..167 "U"
+        R_ANGLE@167..168 ">"
+      WHITESPACE@168..169 " "
+      VARIANT_LIST@169..247
+        L_CURLY@169..170 "{"
+        WHITESPACE@170..179 "\n        "
+        VARIANT@179..214
+          NAME@179..182
+            IDENT@179..182 "RGB"
+          WHITESPACE@182..183 " "
+          NAMED_FIELD_LIST@183..214
+            L_CURLY@183..184 "{"
+            NAMED_FIELD@184..192
+              NAME@184..187
+                IDENT@184..187 "red"
+              COLON@187..188 ":"
+              WHITESPACE@188..189 " "
+              PATH_TYPE@189..192
+                PATH@189..192
+                  PATH_SEGMENT@189..192
+                    NAME_REF@189..192
+                      IDENT@189..192 "u64"
+            COMMA@192..193 ","
+            WHITESPACE@193..194 " "
+            NAMED_FIELD@194..204
+              NAME@194..199
+                IDENT@194..199 "green"
+              COLON@199..200 ":"
+              WHITESPACE@200..201 " "
+              PATH_TYPE@201..204
+                PATH@201..204
+                  PATH_SEGMENT@201..204
+                    NAME_REF@201..204
+                      IDENT@201..204 "u64"
+            COMMA@204..205 ","
+            WHITESPACE@205..206 " "
+            NAMED_FIELD@206..213
+              NAME@206..210
+                IDENT@206..210 "blue"
+              COLON@210..211 ":"
+              WHITESPACE@211..212 " "
+              PATH_TYPE@212..213
+                PATH@212..213
+                  PATH_SEGMENT@212..213
+                    NAME_REF@212..213
+                      IDENT@212..213 "T"
+            R_CURLY@213..214 "}"
+        WHITESPACE@214..223 "\n        "
+        VARIANT@223..226
+          NAME@223..226
+            IDENT@223..226 "Red"
+        COMMA@226..227 ","
+        WHITESPACE@227..236 "\n        "
+        VARIANT@236..240
+          NAME@236..240
+            IDENT@236..240 "Blue"
+        COMMA@240..241 ","
+        WHITESPACE@241..246 "\n    "
+        R_CURLY@246..247 "}"
+      WHITESPACE@247..248 " "
+      ABILITY_LIST@248..256
+        HAS_KW@248..251 "has"
+        WHITESPACE@251..252 " "
+        ABILITY@252..256
+          IDENT@252..256 "copy"
+      SEMICOLON@256..257 ";"
+    WHITESPACE@257..263 "\n\n    "
+    ENUM@263..344
+      ENUM_KW@263..267 "enum"
+      WHITESPACE@267..268 " "
+      NAME@268..280
+        IDENT@268..280 "CommonFields"
+      WHITESPACE@280..281 " "
+      VARIANT_LIST@281..344
+        L_CURLY@281..282 "{"
+        WHITESPACE@282..291 "\n        "
+        VARIANT@291..309
+          NAME@291..294
+            IDENT@291..294 "Foo"
+          NAMED_FIELD_LIST@294..309
+            L_CURLY@294..295 "{"
+            NAMED_FIELD@295..301
+              NAME@295..296
+                IDENT@295..296 "x"
+              COLON@296..297 ":"
+              WHITESPACE@297..298 " "
+              PATH_TYPE@298..301
+                PATH@298..301
+                  PATH_SEGMENT@298..301
+                    NAME_REF@298..301
+                      IDENT@298..301 "u64"
+            COMMA@301..302 ","
+            WHITESPACE@302..303 " "
+            NAMED_FIELD@303..308
+              NAME@303..304
+                IDENT@303..304 "y"
+              COLON@304..305 ":"
+              WHITESPACE@305..306 " "
+              PATH_TYPE@306..308
+                PATH@306..308
+                  PATH_SEGMENT@306..308
+                    NAME_REF@306..308
+                      IDENT@306..308 "u8"
+            R_CURLY@308..309 "}"
+        COMMA@309..310 ","
+        WHITESPACE@310..319 "\n        "
+        VARIANT@319..338
+          NAME@319..322
+            IDENT@319..322 "Bar"
+          NAMED_FIELD_LIST@322..338
+            L_CURLY@322..323 "{"
+            NAMED_FIELD@323..329
+              NAME@323..324
+                IDENT@323..324 "x"
+              COLON@324..325 ":"
+              WHITESPACE@325..326 " "
+              PATH_TYPE@326..329
+                PATH@326..329
+                  PATH_SEGMENT@326..329
+                    NAME_REF@326..329
+                      IDENT@326..329 "u64"
+            COMMA@329..330 ","
+            WHITESPACE@330..331 " "
+            NAMED_FIELD@331..337
+              NAME@331..332
+                IDENT@331..332 "z"
+              COLON@332..333 ":"
+              WHITESPACE@333..334 " "
+              PATH_TYPE@334..337
+                PATH@334..337
+                  PATH_SEGMENT@334..337
+                    NAME_REF@334..337
+                      IDENT@334..337 "u32"
+            R_CURLY@337..338 "}"
+        WHITESPACE@338..343 "\n    "
+        R_CURLY@343..344 "}"
+    WHITESPACE@344..350 "\n\n    "
+    ENUM@350..436
+      ENUM_KW@350..354 "enum"
+      WHITESPACE@354..355 " "
+      NAME@355..360
+        IDENT@355..360 "Outer"
+      WHITESPACE@360..361 " "
+      VARIANT_LIST@361..436
+        L_CURLY@361..362 "{"
+        WHITESPACE@362..371 "\n        "
+        VARIANT@371..375
+          NAME@371..375
+            IDENT@371..375 "None"
+        COMMA@375..376 ","
+        WHITESPACE@376..385 "\n        "
+        VARIANT@385..398
+          NAME@385..388
+            IDENT@385..388 "One"
+          NAMED_FIELD_LIST@388..398
+            L_CURLY@388..389 "{"
+            NAMED_FIELD@389..397
+              NAME@389..390
+                IDENT@389..390 "i"
+              COLON@390..391 ":"
+              WHITESPACE@391..392 " "
+              PATH_TYPE@392..397
+                PATH@392..397
+                  PATH_SEGMENT@392..397
+                    NAME_REF@392..397
+                      IDENT@392..397 "Inner"
+            R_CURLY@397..398 "}"
+        COMMA@398..399 ","
+        WHITESPACE@399..408 "\n        "
+        VARIANT@408..429
+          NAME@408..411
+            IDENT@408..411 "Two"
+          NAMED_FIELD_LIST@411..429
+            L_CURLY@411..412 "{"
+            NAMED_FIELD@412..420
+              NAME@412..413
+                IDENT@412..413 "i"
+              COLON@413..414 ":"
+              WHITESPACE@414..415 " "
+              PATH_TYPE@415..420
+                PATH@415..420
+                  PATH_SEGMENT@415..420
+                    NAME_REF@415..420
+                      IDENT@415..420 "Inner"
+            COMMA@420..421 ","
+            WHITESPACE@421..422 " "
+            NAMED_FIELD@422..428
+              NAME@422..423
+                IDENT@422..423 "b"
+              COLON@423..424 ":"
+              WHITESPACE@424..425 " "
+              PATH_TYPE@425..428
+                PATH@425..428
+                  PATH_SEGMENT@425..428
+                    NAME_REF@425..428
+                      IDENT@425..428 "Box"
+            R_CURLY@428..429 "}"
+        COMMA@429..430 ","
+        WHITESPACE@430..435 "\n    "
+        R_CURLY@435..436 "}"
+    WHITESPACE@436..442 "\n\n    "
+    FUN@442..490
+      FUN_KW@442..445 "fun"
+      WHITESPACE@445..446 " "
+      NAME@446..450
+        IDENT@446..450 "main"
+      PARAM_LIST@450..487
+        L_PAREN@450..451 "("
+        PARAM@451..470
+          IDENT_PAT@451..454
+            NAME@451..454
+              IDENT@451..454 "one"
+          COLON@454..455 ":"
+          WHITESPACE@455..456 " "
+          PATH_TYPE@456..470
+            PATH@456..470
+              PATH@456..465
+                PATH@456..462
+                  PATH@456..459
+                    PATH_SEGMENT@456..459
+                      PATH_ADDRESS@456..459
+                        VALUE_ADDRESS@456..459
+                          INT_NUMBER@456..459 "0x1"
+                  COLON_COLON@459..461 "::"
+                  PATH_SEGMENT@461..462
+                    NAME_REF@461..462
+                      IDENT@461..462 "m"
+                COLON_COLON@462..464 "::"
+                PATH_SEGMENT@464..465
+                  NAME_REF@464..465
+                    IDENT@464..465 "S"
+              COLON_COLON@465..467 "::"
+              PATH_SEGMENT@467..470
+                NAME_REF@467..470
+                  IDENT@467..470 "One"
+        COMMA@470..471 ","
+        WHITESPACE@471..472 " "
+        PARAM@472..486
+          IDENT_PAT@472..475
+            NAME@472..475
+              IDENT@472..475 "two"
+          COLON@475..476 ":"
+          WHITESPACE@476..477 " "
+          PATH_TYPE@477..486
+            PATH@477..486
+              PATH@477..481
+                PATH@477..478
+                  PATH_SEGMENT@477..478
+                    NAME_REF@477..478
+                      IDENT@477..478 "m"
+                COLON_COLON@478..480 "::"
+                PATH_SEGMENT@480..481
+                  NAME_REF@480..481
+                    IDENT@480..481 "S"
+              COLON_COLON@481..483 "::"
+              PATH_SEGMENT@483..486
+                NAME_REF@483..486
+                  IDENT@483..486 "Two"
+        R_PAREN@486..487 ")"
+      WHITESPACE@487..488 " "
+      BLOCK_EXPR@488..490
+        L_CURLY@488..489 "{"
+        R_CURLY@489..490 "}"
+    WHITESPACE@490..491 "\n"
+    R_CURLY@491..492 "}"
   WHITESPACE@492..493 "\n"

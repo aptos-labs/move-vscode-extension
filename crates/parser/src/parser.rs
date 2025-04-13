@@ -267,7 +267,7 @@ impl<'t> Parser<'t> {
         // self.push_error(message);
     }
 
-    fn push_error(&mut self, message: impl Into<String>) {
+    pub(crate) fn push_error(&mut self, message: impl Into<String>) {
         let msg = ParseError(Box::new(message.into()));
         self.push_event(Event::Error { msg });
     }
@@ -278,7 +278,8 @@ impl<'t> Parser<'t> {
         if self.eat(kind) {
             return true;
         }
-        self.error(format!("expected {:?}", kind));
+        self.push_error(format!("expected {:?}", kind));
+        // self.error(format!("expected {:?}", kind));
         false
     }
 
@@ -333,7 +334,6 @@ impl<'t> Parser<'t> {
     pub(crate) fn error_and_bump_any(&mut self, message: &str) {
         let m = self.start();
         self.push_error(message);
-        // self.error(message);
         self.bump_any();
         m.complete(self, ERROR);
     }

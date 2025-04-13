@@ -372,3 +372,34 @@ module 0x1::m {
     "#,
     );
 }
+
+#[test]
+fn test_variable_completion_in_nested_block() {
+    check_completions_contains(
+        // language=Move
+        r#"
+module 0x1::m {
+    fun main(var: u8) {
+        {
+            va/*caret*/
+        }
+    }
+}
+    "#, vec!["var"]);
+}
+
+#[test]
+fn test_variable_completion_in_if_block_after_incomplete_call_expr() {
+    check_completions_contains(
+        // language=Move
+        r#"
+module 0x1::m {
+    fun main(var: u8) {
+        if (true) {
+            call(;
+            va/*caret*/
+        }
+    }
+}
+    "#, vec!["var"]);
+}

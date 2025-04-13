@@ -2,132 +2,129 @@ SOURCE_FILE@0..150
   MODULE@0..149
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
-    ADDRESS_REF@7..10
-      VALUE_ADDRESS@7..10
-        INT_NUMBER@7..10 "0x1"
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
     COLON_COLON@10..12 "::"
     NAME@12..21
       IDENT@12..21 "cast_expr"
     WHITESPACE@21..22 " "
-    ITEM_LIST@22..149
-      L_CURLY@22..23 "{"
-      WHITESPACE@23..28 "\n    "
-      FUN@28..147
-        FUN_KW@28..31 "fun"
-        WHITESPACE@31..32 " "
-        NAME@32..36
-          IDENT@32..36 "main"
-        PARAM_LIST@36..38
-          L_PAREN@36..37 "("
-          R_PAREN@37..38 ")"
-        WHITESPACE@38..39 " "
-        BLOCK_EXPR@39..147
-          STMT_LIST@39..147
-            L_CURLY@39..40 "{"
-            WHITESPACE@40..49 "\n        "
-            EXPR_STMT@49..57
-              CAST_EXPR@49..56
-                LITERAL@49..50
-                  INT_NUMBER@49..50 "1"
-                WHITESPACE@50..51 " "
-                AS_KW@51..53 "as"
-                WHITESPACE@53..54 " "
-                PATH_TYPE@54..56
-                  PATH@54..56
-                    PATH_SEGMENT@54..56
-                      NAME_REF@54..56
-                        IDENT@54..56 "u8"
-              SEMICOLON@56..57 ";"
-            WHITESPACE@57..66 "\n        "
-            EXPR_STMT@66..74
-              CAST_EXPR@66..73
-                PATH_EXPR@66..67
-                  PATH@66..67
-                    PATH_SEGMENT@66..67
-                      NAME_REF@66..67
-                        IDENT@66..67 "a"
-                WHITESPACE@67..68 " "
-                AS_KW@68..70 "as"
-                WHITESPACE@70..71 " "
-                PATH_TYPE@71..73
-                  PATH@71..73
-                    PATH_SEGMENT@71..73
-                      NAME_REF@71..73
-                        IDENT@71..73 "u8"
-              SEMICOLON@73..74 ";"
-            WHITESPACE@74..83 "\n        "
-            EXPR_STMT@83..95
-              BIN_EXPR@83..94
-                LITERAL@83..84
-                  INT_NUMBER@83..84 "1"
-                WHITESPACE@84..85 " "
-                PLUS@85..86 "+"
-                WHITESPACE@86..87 " "
-                CAST_EXPR@87..94
-                  LITERAL@87..88
-                    INT_NUMBER@87..88 "1"
-                  WHITESPACE@88..89 " "
-                  AS_KW@89..91 "as"
-                  WHITESPACE@91..92 " "
-                  PATH_TYPE@92..94
-                    PATH@92..94
-                      PATH_SEGMENT@92..94
-                        NAME_REF@92..94
-                          IDENT@92..94 "u8"
-              SEMICOLON@94..95 ";"
-            WHITESPACE@95..104 "\n        "
-            EXPR_STMT@104..118
-              BIN_EXPR@104..117
-                PAREN_EXPR@104..113
-                  L_PAREN@104..105 "("
-                  CAST_EXPR@105..112
-                    PATH_EXPR@105..106
-                      PATH@105..106
-                        PATH_SEGMENT@105..106
-                          NAME_REF@105..106
-                            IDENT@105..106 "a"
-                    WHITESPACE@106..107 " "
-                    AS_KW@107..109 "as"
-                    WHITESPACE@109..110 " "
-                    PATH_TYPE@110..112
-                      PATH@110..112
-                        PATH_SEGMENT@110..112
-                          NAME_REF@110..112
-                            IDENT@110..112 "u8"
-                  R_PAREN@112..113 ")"
-                WHITESPACE@113..114 " "
-                PLUS@114..115 "+"
-                WHITESPACE@115..116 " "
-                LITERAL@116..117
-                  INT_NUMBER@116..117 "1"
-              SEMICOLON@117..118 ";"
-            WHITESPACE@118..127 "\n        "
-            EXPR_STMT@127..141
-              CALL_EXPR@127..140
-                PATH@127..131
-                  PATH_SEGMENT@127..131
-                    NAME_REF@127..131
-                      IDENT@127..131 "call"
-                ARG_LIST@131..140
-                  L_PAREN@131..132 "("
-                  CAST_EXPR@132..139
-                    PATH_EXPR@132..133
-                      PATH@132..133
-                        PATH_SEGMENT@132..133
-                          NAME_REF@132..133
-                            IDENT@132..133 "a"
-                    WHITESPACE@133..134 " "
-                    AS_KW@134..136 "as"
-                    WHITESPACE@136..137 " "
-                    PATH_TYPE@137..139
-                      PATH@137..139
-                        PATH_SEGMENT@137..139
-                          NAME_REF@137..139
-                            IDENT@137..139 "u8"
-                  R_PAREN@139..140 ")"
-              SEMICOLON@140..141 ";"
-            WHITESPACE@141..146 "\n    "
-            R_CURLY@146..147 "}"
-      WHITESPACE@147..148 "\n"
-      R_CURLY@148..149 "}"
+    L_CURLY@22..23 "{"
+    WHITESPACE@23..28 "\n    "
+    FUN@28..147
+      FUN_KW@28..31 "fun"
+      WHITESPACE@31..32 " "
+      NAME@32..36
+        IDENT@32..36 "main"
+      PARAM_LIST@36..38
+        L_PAREN@36..37 "("
+        R_PAREN@37..38 ")"
+      WHITESPACE@38..39 " "
+      BLOCK_EXPR@39..147
+        L_CURLY@39..40 "{"
+        WHITESPACE@40..49 "\n        "
+        EXPR_STMT@49..57
+          CAST_EXPR@49..56
+            LITERAL@49..50
+              INT_NUMBER@49..50 "1"
+            WHITESPACE@50..51 " "
+            AS_KW@51..53 "as"
+            WHITESPACE@53..54 " "
+            PATH_TYPE@54..56
+              PATH@54..56
+                PATH_SEGMENT@54..56
+                  NAME_REF@54..56
+                    IDENT@54..56 "u8"
+          SEMICOLON@56..57 ";"
+        WHITESPACE@57..66 "\n        "
+        EXPR_STMT@66..74
+          CAST_EXPR@66..73
+            PATH_EXPR@66..67
+              PATH@66..67
+                PATH_SEGMENT@66..67
+                  NAME_REF@66..67
+                    IDENT@66..67 "a"
+            WHITESPACE@67..68 " "
+            AS_KW@68..70 "as"
+            WHITESPACE@70..71 " "
+            PATH_TYPE@71..73
+              PATH@71..73
+                PATH_SEGMENT@71..73
+                  NAME_REF@71..73
+                    IDENT@71..73 "u8"
+          SEMICOLON@73..74 ";"
+        WHITESPACE@74..83 "\n        "
+        EXPR_STMT@83..95
+          BIN_EXPR@83..94
+            LITERAL@83..84
+              INT_NUMBER@83..84 "1"
+            WHITESPACE@84..85 " "
+            PLUS@85..86 "+"
+            WHITESPACE@86..87 " "
+            CAST_EXPR@87..94
+              LITERAL@87..88
+                INT_NUMBER@87..88 "1"
+              WHITESPACE@88..89 " "
+              AS_KW@89..91 "as"
+              WHITESPACE@91..92 " "
+              PATH_TYPE@92..94
+                PATH@92..94
+                  PATH_SEGMENT@92..94
+                    NAME_REF@92..94
+                      IDENT@92..94 "u8"
+          SEMICOLON@94..95 ";"
+        WHITESPACE@95..104 "\n        "
+        EXPR_STMT@104..118
+          BIN_EXPR@104..117
+            PAREN_EXPR@104..113
+              L_PAREN@104..105 "("
+              CAST_EXPR@105..112
+                PATH_EXPR@105..106
+                  PATH@105..106
+                    PATH_SEGMENT@105..106
+                      NAME_REF@105..106
+                        IDENT@105..106 "a"
+                WHITESPACE@106..107 " "
+                AS_KW@107..109 "as"
+                WHITESPACE@109..110 " "
+                PATH_TYPE@110..112
+                  PATH@110..112
+                    PATH_SEGMENT@110..112
+                      NAME_REF@110..112
+                        IDENT@110..112 "u8"
+              R_PAREN@112..113 ")"
+            WHITESPACE@113..114 " "
+            PLUS@114..115 "+"
+            WHITESPACE@115..116 " "
+            LITERAL@116..117
+              INT_NUMBER@116..117 "1"
+          SEMICOLON@117..118 ";"
+        WHITESPACE@118..127 "\n        "
+        EXPR_STMT@127..141
+          CALL_EXPR@127..140
+            PATH@127..131
+              PATH_SEGMENT@127..131
+                NAME_REF@127..131
+                  IDENT@127..131 "call"
+            ARG_LIST@131..140
+              L_PAREN@131..132 "("
+              CAST_EXPR@132..139
+                PATH_EXPR@132..133
+                  PATH@132..133
+                    PATH_SEGMENT@132..133
+                      NAME_REF@132..133
+                        IDENT@132..133 "a"
+                WHITESPACE@133..134 " "
+                AS_KW@134..136 "as"
+                WHITESPACE@136..137 " "
+                PATH_TYPE@137..139
+                  PATH@137..139
+                    PATH_SEGMENT@137..139
+                      NAME_REF@137..139
+                        IDENT@137..139 "u8"
+              R_PAREN@139..140 ")"
+          SEMICOLON@140..141 ";"
+        WHITESPACE@141..146 "\n    "
+        R_CURLY@146..147 "}"
+    WHITESPACE@147..148 "\n"
+    R_CURLY@148..149 "}"
   WHITESPACE@149..150 "\n"

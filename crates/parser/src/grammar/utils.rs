@@ -1,7 +1,65 @@
-use crate::parser::Marker;
 use crate::token_set::TokenSet;
-use crate::SyntaxKind::{EOF, ERROR, FUN, IDENT};
+use crate::SyntaxKind::{EOF, ERROR};
 use crate::{Parser, SyntaxKind, T};
+
+pub(crate) fn list_with_recover(
+    p: &mut Parser<'_>,
+    lbrace: SyntaxKind,
+    rbrace: SyntaxKind,
+    delim: SyntaxKind,
+    unexpected_delim_message: impl Fn() -> String,
+    end_at: TokenSet,
+    item_first: TokenSet,
+    mut parse_item: impl FnMut(&mut Parser<'_>) -> bool,
+) {
+    p.bump(lbrace);
+
+    // let at_item_first = |p: &mut Parser<'_>| p.at_ts(item_first);
+
+    while !p.at(EOF) && !p.at(rbrace) && !p.at_ts(end_at) {
+        let is_item = parse_item(p);
+        if !is_item {
+            // invalid item encountered, stop iterating
+            break;
+        }
+        if !p.eat(delim) {
+            break;
+        }
+    }
+
+    // while !p.at(EOF) && !p.at_ts(end_at) {
+    //     if p.at(delim) {
+    //         // Recover if an argument is missing and only got a delimiter,
+    //         // e.g. `(a, , b)`.
+    //         // Wrap the erroneous delimiter in an error node so that fixup logic gets rid of it.
+    //         let m = p.start();
+    //         p.error(unexpected_delim_message());
+    //         p.bump(delim);
+    //         m.complete(p, ERROR);
+    //         continue;
+    //     }
+    //     if !parse_item(p) {
+    //         break;
+    //     }
+    //     if !p.eat(delim) {
+    //         if at_item_first(p) {
+    //             p.error(format!("expected {delim:?}"));
+    //         } else {
+    //             break;
+    //         }
+    //     }
+    // }
+
+    // delimited(
+    //     p,
+    //     delim,
+    //     unexpected_delim_message,
+    //     |p| p.at(rbrace) || p.at_ts(end_at),
+    //     item_first,
+    //     parse_item,
+    // );
+    p.expect(rbrace);
+}
 
 /// The `parser` passed this is required to at least consume one token if it returns `true`.
 /// If the `parser` returns false, parsing will stop.

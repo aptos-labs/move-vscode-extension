@@ -2,70 +2,67 @@ SOURCE_FILE@0..198
   MODULE@0..197
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
-    ADDRESS_REF@7..10
-      VALUE_ADDRESS@7..10
-        INT_NUMBER@7..10 "0x1"
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
     COLON_COLON@10..12 "::"
     NAME@12..21
       IDENT@12..21 "addresses"
     WHITESPACE@21..22 " "
-    ITEM_LIST@22..197
-      L_CURLY@22..23 "{"
-      WHITESPACE@23..28 "\n    "
-      FUN@28..195
-        FUN_KW@28..31 "fun"
-        WHITESPACE@31..32 " "
-        NAME@32..36
-          IDENT@32..36 "main"
-        PARAM_LIST@36..38
-          L_PAREN@36..37 "("
-          R_PAREN@37..38 ")"
-        WHITESPACE@38..39 " "
-        BLOCK_EXPR@39..195
-          STMT_LIST@39..195
-            L_CURLY@39..40 "{"
-            WHITESPACE@40..49 "\n        "
-            EXPR_STMT@49..54
-              LITERAL@49..53
-                AT@49..50 "@"
-                ADDRESS_REF@50..53
-                  VALUE_ADDRESS@50..53
-                    INT_NUMBER@50..53 "0x0"
-              SEMICOLON@53..54 ";"
-            WHITESPACE@54..63 "\n        "
-            EXPR_STMT@63..71
-              LITERAL@63..70
-                AT@63..64 "@"
-                ADDRESS_REF@64..70
-                  VALUE_ADDRESS@64..70
-                    INT_NUMBER@64..70 "0x0000"
-              SEMICOLON@70..71 ";"
-            WHITESPACE@71..80 "\n        "
-            EXPR_STMT@80..148
-              LITERAL@80..147
-                AT@80..81 "@"
-                ADDRESS_REF@81..147
-                  VALUE_ADDRESS@81..147
-                    INT_NUMBER@81..147 "0x89b9f9d1fadc027cf95 ..."
-              SEMICOLON@147..148 ";"
-            WHITESPACE@148..158 "\n\n        "
-            EXPR_STMT@158..163
-              LITERAL@158..162
-                AT@158..159 "@"
-                ADDRESS_REF@159..162
-                  NAMED_ADDRESS@159..162
-                    IDENT@159..162 "std"
-              SEMICOLON@162..163 ";"
-            WHITESPACE@163..172 "\n        "
-            EXPR_STMT@172..189
-              LITERAL@172..188
-                AT@172..173 "@"
-                ADDRESS_REF@173..188
-                  NAMED_ADDRESS@173..188
-                    IDENT@173..188 "aptos_framework"
-              SEMICOLON@188..189 ";"
-            WHITESPACE@189..194 "\n    "
-            R_CURLY@194..195 "}"
-      WHITESPACE@195..196 "\n"
-      R_CURLY@196..197 "}"
+    L_CURLY@22..23 "{"
+    WHITESPACE@23..28 "\n    "
+    FUN@28..195
+      FUN_KW@28..31 "fun"
+      WHITESPACE@31..32 " "
+      NAME@32..36
+        IDENT@32..36 "main"
+      PARAM_LIST@36..38
+        L_PAREN@36..37 "("
+        R_PAREN@37..38 ")"
+      WHITESPACE@38..39 " "
+      BLOCK_EXPR@39..195
+        L_CURLY@39..40 "{"
+        WHITESPACE@40..49 "\n        "
+        EXPR_STMT@49..54
+          LITERAL@49..53
+            ADDRESS_LIT@49..53
+              AT@49..50 "@"
+              VALUE_ADDRESS@50..53
+                INT_NUMBER@50..53 "0x0"
+          SEMICOLON@53..54 ";"
+        WHITESPACE@54..63 "\n        "
+        EXPR_STMT@63..71
+          LITERAL@63..70
+            ADDRESS_LIT@63..70
+              AT@63..64 "@"
+              VALUE_ADDRESS@64..70
+                INT_NUMBER@64..70 "0x0000"
+          SEMICOLON@70..71 ";"
+        WHITESPACE@71..80 "\n        "
+        EXPR_STMT@80..148
+          LITERAL@80..147
+            ADDRESS_LIT@80..147
+              AT@80..81 "@"
+              VALUE_ADDRESS@81..147
+                INT_NUMBER@81..147 "0x89b9f9d1fadc027cf95 ..."
+          SEMICOLON@147..148 ";"
+        WHITESPACE@148..158 "\n\n        "
+        EXPR_STMT@158..163
+          LITERAL@158..162
+            ADDRESS_LIT@158..162
+              AT@158..159 "@"
+              NAMED_ADDRESS@159..162
+                IDENT@159..162 "std"
+          SEMICOLON@162..163 ";"
+        WHITESPACE@163..172 "\n        "
+        EXPR_STMT@172..189
+          LITERAL@172..188
+            ADDRESS_LIT@172..188
+              AT@172..173 "@"
+              NAMED_ADDRESS@173..188
+                IDENT@173..188 "aptos_framework"
+          SEMICOLON@188..189 ";"
+        WHITESPACE@189..194 "\n    "
+        R_CURLY@194..195 "}"
+    WHITESPACE@195..196 "\n"
+    R_CURLY@196..197 "}"
   WHITESPACE@197..198 "\n"
