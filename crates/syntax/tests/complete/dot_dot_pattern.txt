@@ -2,851 +2,848 @@ SOURCE_FILE@0..831
   MODULE@0..830
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
-    ADDRESS_REF@7..10
-      VALUE_ADDRESS@7..10
-        INT_NUMBER@7..10 "0x1"
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
     COLON_COLON@10..12 "::"
     NAME@12..27
       IDENT@12..27 "dot_dot_pattern"
     WHITESPACE@27..28 " "
-    ITEM_LIST@28..830
-      L_CURLY@28..29 "{"
-      WHITESPACE@29..34 "\n    "
-      FUN@34..828
-        FUN_KW@34..37 "fun"
-        WHITESPACE@37..38 " "
-        NAME@38..42
-          IDENT@38..42 "main"
-        PARAM_LIST@42..44
-          L_PAREN@42..43 "("
-          R_PAREN@43..44 ")"
-        WHITESPACE@44..45 " "
-        BLOCK_EXPR@45..828
-          STMT_LIST@45..828
-            L_CURLY@45..46 "{"
-            WHITESPACE@46..55 "\n        "
-            LET_STMT@55..70
-              LET_KW@55..58 "let"
-              WHITESPACE@58..59 " "
-              TUPLE_STRUCT_PAT@59..65
-                PATH@59..61
-                  PATH_SEGMENT@59..61
-                    NAME_REF@59..61
-                      IDENT@59..61 "S2"
-                L_PAREN@61..62 "("
-                REST_PAT@62..64
-                  DOT_DOT@62..64 ".."
-                R_PAREN@64..65 ")"
-              WHITESPACE@65..66 " "
-              EQ@66..67 "="
-              WHITESPACE@67..68 " "
-              PATH_EXPR@68..69
-                PATH@68..69
-                  PATH_SEGMENT@68..69
-                    NAME_REF@68..69
-                      IDENT@68..69 "x"
-              SEMICOLON@69..70 ";"
-            WHITESPACE@70..79 "\n        "
-            LET_STMT@79..98
-              LET_KW@79..82 "let"
-              WHITESPACE@82..83 " "
-              TUPLE_STRUCT_PAT@83..93
-                PATH@83..85
-                  PATH_SEGMENT@83..85
-                    NAME_REF@83..85
-                      IDENT@83..85 "S2"
-                L_PAREN@85..86 "("
-                IDENT_PAT@86..88
-                  NAME@86..88
-                    IDENT@86..88 "_x"
-                COMMA@88..89 ","
-                WHITESPACE@89..90 " "
-                REST_PAT@90..92
-                  DOT_DOT@90..92 ".."
-                R_PAREN@92..93 ")"
-              WHITESPACE@93..94 " "
-              EQ@94..95 "="
-              WHITESPACE@95..96 " "
-              PATH_EXPR@96..97
-                PATH@96..97
-                  PATH_SEGMENT@96..97
-                    NAME_REF@96..97
-                      IDENT@96..97 "x"
-              SEMICOLON@97..98 ";"
-            WHITESPACE@98..107 "\n        "
-            LET_STMT@107..126
-              LET_KW@107..110 "let"
-              WHITESPACE@110..111 " "
-              TUPLE_STRUCT_PAT@111..121
-                PATH@111..113
-                  PATH_SEGMENT@111..113
-                    NAME_REF@111..113
-                      IDENT@111..113 "S2"
-                L_PAREN@113..114 "("
-                REST_PAT@114..116
-                  DOT_DOT@114..116 ".."
-                COMMA@116..117 ","
-                WHITESPACE@117..118 " "
-                IDENT_PAT@118..120
-                  NAME@118..120
-                    IDENT@118..120 "_x"
-                R_PAREN@120..121 ")"
-              WHITESPACE@121..122 " "
-              EQ@122..123 "="
-              WHITESPACE@123..124 " "
-              PATH_EXPR@124..125
-                PATH@124..125
-                  PATH_SEGMENT@124..125
-                    NAME_REF@124..125
-                      IDENT@124..125 "x"
-              SEMICOLON@125..126 ";"
-            WHITESPACE@126..135 "\n        "
-            LET_STMT@135..153
-              LET_KW@135..138 "let"
-              WHITESPACE@138..139 " "
-              TUPLE_STRUCT_PAT@139..148
-                PATH@139..141
-                  PATH_SEGMENT@139..141
-                    NAME_REF@139..141
-                      IDENT@139..141 "S2"
-                L_PAREN@141..142 "("
-                REST_PAT@142..144
-                  DOT_DOT@142..144 ".."
-                COMMA@144..145 ","
-                WHITESPACE@145..146 " "
-                WILDCARD_PAT@146..147
-                  UNDERSCORE@146..147 "_"
-                R_PAREN@147..148 ")"
-              WHITESPACE@148..149 " "
-              EQ@149..150 "="
-              WHITESPACE@150..151 " "
-              PATH_EXPR@151..152
-                PATH@151..152
-                  PATH_SEGMENT@151..152
-                    NAME_REF@151..152
-                      IDENT@151..152 "x"
-              SEMICOLON@152..153 ";"
-            WHITESPACE@153..162 "\n        "
-            LET_STMT@162..180
-              LET_KW@162..165 "let"
-              WHITESPACE@165..166 " "
-              TUPLE_STRUCT_PAT@166..175
-                PATH@166..168
-                  PATH_SEGMENT@166..168
-                    NAME_REF@166..168
-                      IDENT@166..168 "S2"
-                L_PAREN@168..169 "("
-                WILDCARD_PAT@169..170
-                  UNDERSCORE@169..170 "_"
-                COMMA@170..171 ","
-                WHITESPACE@171..172 " "
-                REST_PAT@172..174
-                  DOT_DOT@172..174 ".."
-                R_PAREN@174..175 ")"
-              WHITESPACE@175..176 " "
-              EQ@176..177 "="
-              WHITESPACE@177..178 " "
-              PATH_EXPR@178..179
-                PATH@178..179
-                  PATH_SEGMENT@178..179
-                    NAME_REF@178..179
-                      IDENT@178..179 "x"
-              SEMICOLON@179..180 ";"
-            WHITESPACE@180..189 "\n        "
-            LET_STMT@189..212
-              LET_KW@189..192 "let"
-              WHITESPACE@192..193 " "
-              TUPLE_STRUCT_PAT@193..207
-                PATH@193..195
-                  PATH_SEGMENT@193..195
-                    NAME_REF@193..195
-                      IDENT@193..195 "S2"
-                L_PAREN@195..196 "("
-                IDENT_PAT@196..198
-                  NAME@196..198
-                    IDENT@196..198 "_x"
-                COMMA@198..199 ","
-                WHITESPACE@199..200 " "
-                IDENT_PAT@200..202
-                  NAME@200..202
-                    IDENT@200..202 "_y"
-                COMMA@202..203 ","
-                WHITESPACE@203..204 " "
-                REST_PAT@204..206
-                  DOT_DOT@204..206 ".."
-                R_PAREN@206..207 ")"
-              WHITESPACE@207..208 " "
-              EQ@208..209 "="
-              WHITESPACE@209..210 " "
-              PATH_EXPR@210..211
-                PATH@210..211
-                  PATH_SEGMENT@210..211
-                    NAME_REF@210..211
-                      IDENT@210..211 "x"
-              SEMICOLON@211..212 ";"
-            WHITESPACE@212..221 "\n        "
-            LET_STMT@221..244
-              LET_KW@221..224 "let"
-              WHITESPACE@224..225 " "
-              TUPLE_STRUCT_PAT@225..239
-                PATH@225..227
-                  PATH_SEGMENT@225..227
-                    NAME_REF@225..227
-                      IDENT@225..227 "S2"
-                L_PAREN@227..228 "("
-                IDENT_PAT@228..230
-                  NAME@228..230
-                    IDENT@228..230 "_x"
-                COMMA@230..231 ","
-                WHITESPACE@231..232 " "
-                REST_PAT@232..234
-                  DOT_DOT@232..234 ".."
-                COMMA@234..235 ","
-                WHITESPACE@235..236 " "
-                IDENT_PAT@236..238
-                  NAME@236..238
-                    IDENT@236..238 "_y"
-                R_PAREN@238..239 ")"
-              WHITESPACE@239..240 " "
-              EQ@240..241 "="
-              WHITESPACE@241..242 " "
-              PATH_EXPR@242..243
-                PATH@242..243
-                  PATH_SEGMENT@242..243
-                    NAME_REF@242..243
-                      IDENT@242..243 "x"
-              SEMICOLON@243..244 ";"
-            WHITESPACE@244..253 "\n        "
-            LET_STMT@253..276
-              LET_KW@253..256 "let"
-              WHITESPACE@256..257 " "
-              TUPLE_STRUCT_PAT@257..271
-                PATH@257..259
-                  PATH_SEGMENT@257..259
-                    NAME_REF@257..259
-                      IDENT@257..259 "S2"
-                L_PAREN@259..260 "("
-                REST_PAT@260..262
-                  DOT_DOT@260..262 ".."
-                COMMA@262..263 ","
-                WHITESPACE@263..264 " "
-                IDENT_PAT@264..266
-                  NAME@264..266
-                    IDENT@264..266 "_x"
-                COMMA@266..267 ","
-                WHITESPACE@267..268 " "
-                IDENT_PAT@268..270
-                  NAME@268..270
-                    IDENT@268..270 "_y"
-                R_PAREN@270..271 ")"
-              WHITESPACE@271..272 " "
-              EQ@272..273 "="
-              WHITESPACE@273..274 " "
-              PATH_EXPR@274..275
-                PATH@274..275
-                  PATH_SEGMENT@274..275
-                    NAME_REF@274..275
-                      IDENT@274..275 "x"
-              SEMICOLON@275..276 ";"
-            WHITESPACE@276..286 "\n\n        "
-            LET_STMT@286..304
-              LET_KW@286..289 "let"
-              WHITESPACE@289..290 " "
-              STRUCT_PAT@290..299
-                PATH@290..292
-                  PATH_SEGMENT@290..292
-                    NAME_REF@290..292
-                      IDENT@290..292 "S3"
-                WHITESPACE@292..293 " "
-                STRUCT_PAT_FIELD_LIST@293..299
-                  L_CURLY@293..294 "{"
-                  WHITESPACE@294..295 " "
-                  REST_PAT@295..297
-                    DOT_DOT@295..297 ".."
-                  WHITESPACE@297..298 " "
-                  R_CURLY@298..299 "}"
-              WHITESPACE@299..300 " "
-              EQ@300..301 "="
-              WHITESPACE@301..302 " "
-              PATH_EXPR@302..303
-                PATH@302..303
-                  PATH_SEGMENT@302..303
-                    NAME_REF@302..303
-                      IDENT@302..303 "x"
-              SEMICOLON@303..304 ";"
-            WHITESPACE@304..313 "\n        "
-            LET_STMT@313..338
-              LET_KW@313..316 "let"
-              WHITESPACE@316..317 " "
-              STRUCT_PAT@317..333
-                PATH@317..319
-                  PATH_SEGMENT@317..319
-                    NAME_REF@317..319
-                      IDENT@317..319 "S3"
-                WHITESPACE@319..320 " "
-                STRUCT_PAT_FIELD_LIST@320..333
-                  L_CURLY@320..321 "{"
-                  WHITESPACE@321..322 " "
-                  STRUCT_PAT_FIELD@322..327
-                    NAME_REF@322..323
-                      IDENT@322..323 "x"
-                    COLON@323..324 ":"
-                    WHITESPACE@324..325 " "
-                    IDENT_PAT@325..327
-                      NAME@325..327
-                        IDENT@325..327 "_x"
-                  COMMA@327..328 ","
-                  WHITESPACE@328..329 " "
-                  REST_PAT@329..331
-                    DOT_DOT@329..331 ".."
-                  WHITESPACE@331..332 " "
-                  R_CURLY@332..333 "}"
-              WHITESPACE@333..334 " "
-              EQ@334..335 "="
-              WHITESPACE@335..336 " "
-              PATH_EXPR@336..337
-                PATH@336..337
-                  PATH_SEGMENT@336..337
-                    NAME_REF@336..337
-                      IDENT@336..337 "x"
-              SEMICOLON@337..338 ";"
-            WHITESPACE@338..347 "\n        "
-            LET_STMT@347..372
-              LET_KW@347..350 "let"
-              WHITESPACE@350..351 " "
-              STRUCT_PAT@351..367
-                PATH@351..353
-                  PATH_SEGMENT@351..353
-                    NAME_REF@351..353
-                      IDENT@351..353 "S3"
-                WHITESPACE@353..354 " "
-                STRUCT_PAT_FIELD_LIST@354..367
-                  L_CURLY@354..355 "{"
-                  WHITESPACE@355..356 " "
-                  STRUCT_PAT_FIELD@356..361
-                    NAME_REF@356..357
-                      IDENT@356..357 "y"
-                    COLON@357..358 ":"
-                    WHITESPACE@358..359 " "
-                    IDENT_PAT@359..361
-                      NAME@359..361
-                        IDENT@359..361 "_y"
-                  COMMA@361..362 ","
-                  WHITESPACE@362..363 " "
-                  REST_PAT@363..365
-                    DOT_DOT@363..365 ".."
-                  WHITESPACE@365..366 " "
-                  R_CURLY@366..367 "}"
-              WHITESPACE@367..368 " "
-              EQ@368..369 "="
-              WHITESPACE@369..370 " "
-              PATH_EXPR@370..371
-                PATH@370..371
-                  PATH_SEGMENT@370..371
-                    NAME_REF@370..371
-                      IDENT@370..371 "x"
-              SEMICOLON@371..372 ";"
-            WHITESPACE@372..382 "\n\n        "
-            LET_STMT@382..407
-              LET_KW@382..385 "let"
-              WHITESPACE@385..386 " "
-              STRUCT_PAT@386..402
-                PATH@386..388
-                  PATH_SEGMENT@386..388
-                    NAME_REF@386..388
-                      IDENT@386..388 "S4"
-                WHITESPACE@388..389 " "
-                STRUCT_PAT_FIELD_LIST@389..402
-                  L_CURLY@389..390 "{"
-                  WHITESPACE@390..391 " "
-                  STRUCT_PAT_FIELD@391..396
-                    NAME_REF@391..392
-                      IDENT@391..392 "x"
-                    COLON@392..393 ":"
-                    WHITESPACE@393..394 " "
-                    IDENT_PAT@394..396
-                      NAME@394..396
-                        IDENT@394..396 "_x"
-                  COMMA@396..397 ","
-                  WHITESPACE@397..398 " "
-                  REST_PAT@398..400
-                    DOT_DOT@398..400 ".."
-                  WHITESPACE@400..401 " "
-                  R_CURLY@401..402 "}"
-              WHITESPACE@402..403 " "
-              EQ@403..404 "="
-              WHITESPACE@404..405 " "
-              PATH_EXPR@405..406
-                PATH@405..406
-                  PATH_SEGMENT@405..406
-                    NAME_REF@405..406
-                      IDENT@405..406 "x"
-              SEMICOLON@406..407 ";"
-            WHITESPACE@407..416 "\n        "
-            LET_STMT@416..441
-              LET_KW@416..419 "let"
-              WHITESPACE@419..420 " "
-              STRUCT_PAT@420..436
-                PATH@420..422
-                  PATH_SEGMENT@420..422
-                    NAME_REF@420..422
-                      IDENT@420..422 "S4"
-                WHITESPACE@422..423 " "
-                STRUCT_PAT_FIELD_LIST@423..436
-                  L_CURLY@423..424 "{"
-                  WHITESPACE@424..425 " "
-                  STRUCT_PAT_FIELD@425..430
-                    NAME_REF@425..426
-                      IDENT@425..426 "y"
-                    COLON@426..427 ":"
-                    WHITESPACE@427..428 " "
-                    IDENT_PAT@428..430
-                      NAME@428..430
-                        IDENT@428..430 "_y"
-                  COMMA@430..431 ","
-                  WHITESPACE@431..432 " "
-                  REST_PAT@432..434
-                    DOT_DOT@432..434 ".."
-                  WHITESPACE@434..435 " "
-                  R_CURLY@435..436 "}"
-              WHITESPACE@436..437 " "
-              EQ@437..438 "="
-              WHITESPACE@438..439 " "
-              PATH_EXPR@439..440
-                PATH@439..440
-                  PATH_SEGMENT@439..440
-                    NAME_REF@439..440
-                      IDENT@439..440 "x"
-              SEMICOLON@440..441 ";"
-            WHITESPACE@441..450 "\n        "
-            LET_STMT@450..482
-              LET_KW@450..453 "let"
-              WHITESPACE@453..454 " "
-              STRUCT_PAT@454..477
-                PATH@454..456
-                  PATH_SEGMENT@454..456
-                    NAME_REF@454..456
-                      IDENT@454..456 "S4"
-                WHITESPACE@456..457 " "
-                STRUCT_PAT_FIELD_LIST@457..477
-                  L_CURLY@457..458 "{"
-                  WHITESPACE@458..459 " "
-                  STRUCT_PAT_FIELD@459..471
-                    NAME_REF@459..460
-                      IDENT@459..460 "y"
-                    COLON@460..461 ":"
-                    WHITESPACE@461..462 " "
-                    STRUCT_PAT@462..471
-                      PATH@462..464
-                        PATH_SEGMENT@462..464
-                          NAME_REF@462..464
-                            IDENT@462..464 "S3"
-                      WHITESPACE@464..465 " "
-                      STRUCT_PAT_FIELD_LIST@465..471
-                        L_CURLY@465..466 "{"
-                        WHITESPACE@466..467 " "
-                        REST_PAT@467..469
-                          DOT_DOT@467..469 ".."
-                        WHITESPACE@469..470 " "
-                        R_CURLY@470..471 "}"
-                  COMMA@471..472 ","
-                  WHITESPACE@472..473 " "
-                  REST_PAT@473..475
-                    DOT_DOT@473..475 ".."
-                  WHITESPACE@475..476 " "
-                  R_CURLY@476..477 "}"
-              WHITESPACE@477..478 " "
-              EQ@478..479 "="
-              WHITESPACE@479..480 " "
-              PATH_EXPR@480..481
-                PATH@480..481
-                  PATH_SEGMENT@480..481
-                    NAME_REF@480..481
-                      IDENT@480..481 "x"
-              SEMICOLON@481..482 ";"
-            WHITESPACE@482..491 "\n        "
-            LET_STMT@491..530
-              LET_KW@491..494 "let"
-              WHITESPACE@494..495 " "
-              STRUCT_PAT@495..525
-                PATH@495..497
-                  PATH_SEGMENT@495..497
-                    NAME_REF@495..497
-                      IDENT@495..497 "S4"
-                WHITESPACE@497..498 " "
-                STRUCT_PAT_FIELD_LIST@498..525
-                  L_CURLY@498..499 "{"
-                  WHITESPACE@499..500 " "
-                  STRUCT_PAT_FIELD@500..519
-                    NAME_REF@500..501
-                      IDENT@500..501 "y"
-                    COLON@501..502 ":"
-                    WHITESPACE@502..503 " "
-                    STRUCT_PAT@503..519
-                      PATH@503..505
-                        PATH_SEGMENT@503..505
-                          NAME_REF@503..505
-                            IDENT@503..505 "S3"
-                      WHITESPACE@505..506 " "
-                      STRUCT_PAT_FIELD_LIST@506..519
-                        L_CURLY@506..507 "{"
-                        WHITESPACE@507..508 " "
-                        STRUCT_PAT_FIELD@508..513
-                          NAME_REF@508..509
-                            IDENT@508..509 "x"
-                          COLON@509..510 ":"
-                          WHITESPACE@510..511 " "
-                          IDENT_PAT@511..513
-                            NAME@511..513
-                              IDENT@511..513 "_x"
-                        COMMA@513..514 ","
-                        WHITESPACE@514..515 " "
-                        REST_PAT@515..517
-                          DOT_DOT@515..517 ".."
-                        WHITESPACE@517..518 " "
-                        R_CURLY@518..519 "}"
-                  COMMA@519..520 ","
-                  WHITESPACE@520..521 " "
-                  REST_PAT@521..523
-                    DOT_DOT@521..523 ".."
-                  WHITESPACE@523..524 " "
-                  R_CURLY@524..525 "}"
-              WHITESPACE@525..526 " "
-              EQ@526..527 "="
-              WHITESPACE@527..528 " "
-              PATH_EXPR@528..529
-                PATH@528..529
-                  PATH_SEGMENT@528..529
-                    NAME_REF@528..529
-                      IDENT@528..529 "x"
-              SEMICOLON@529..530 ";"
-            WHITESPACE@530..539 "\n        "
-            LET_STMT@539..583
-              LET_KW@539..542 "let"
-              WHITESPACE@542..543 " "
-              STRUCT_PAT@543..578
-                PATH@543..545
-                  PATH_SEGMENT@543..545
-                    NAME_REF@543..545
-                      IDENT@543..545 "S4"
-                WHITESPACE@545..546 " "
-                STRUCT_PAT_FIELD_LIST@546..578
-                  L_CURLY@546..547 "{"
-                  WHITESPACE@547..548 " "
-                  STRUCT_PAT_FIELD@548..568
-                    NAME_REF@548..549
-                      IDENT@548..549 "y"
-                    COLON@549..550 ":"
-                    WHITESPACE@550..551 " "
-                    STRUCT_PAT@551..568
-                      PATH@551..553
-                        PATH_SEGMENT@551..553
-                          NAME_REF@551..553
-                            IDENT@551..553 "S3"
-                      WHITESPACE@553..554 " "
-                      STRUCT_PAT_FIELD_LIST@554..568
-                        L_CURLY@554..555 "{"
-                        WHITESPACE@555..556 " "
-                        STRUCT_PAT_FIELD@556..562
-                          NAME_REF@556..557
-                            IDENT@556..557 "x"
-                          COLON@557..558 ":"
-                          WHITESPACE@558..559 " "
-                          IDENT_PAT@559..562
-                            NAME@559..562
-                              IDENT@559..562 "_x1"
-                        COMMA@562..563 ","
-                        WHITESPACE@563..564 " "
-                        REST_PAT@564..566
-                          DOT_DOT@564..566 ".."
-                        WHITESPACE@566..567 " "
-                        R_CURLY@567..568 "}"
-                  COMMA@568..569 ","
-                  WHITESPACE@569..570 " "
-                  STRUCT_PAT_FIELD@570..576
-                    NAME_REF@570..571
-                      IDENT@570..571 "x"
-                    COLON@571..572 ":"
-                    WHITESPACE@572..573 " "
-                    IDENT_PAT@573..576
-                      NAME@573..576
-                        IDENT@573..576 "_x2"
-                  WHITESPACE@576..577 " "
-                  R_CURLY@577..578 "}"
-              WHITESPACE@578..579 " "
-              EQ@579..580 "="
-              WHITESPACE@580..581 " "
-              PATH_EXPR@581..582
-                PATH@581..582
-                  PATH_SEGMENT@581..582
-                    NAME_REF@581..582
-                      IDENT@581..582 "x"
-              SEMICOLON@582..583 ";"
-            WHITESPACE@583..592 "\n        "
-            LET_STMT@592..631
-              LET_KW@592..595 "let"
-              WHITESPACE@595..596 " "
-              STRUCT_PAT@596..626
-                PATH@596..598
-                  PATH_SEGMENT@596..598
-                    NAME_REF@596..598
-                      IDENT@596..598 "S4"
-                WHITESPACE@598..599 " "
-                STRUCT_PAT_FIELD_LIST@599..626
-                  L_CURLY@599..600 "{"
-                  WHITESPACE@600..601 " "
-                  STRUCT_PAT_FIELD@601..620
-                    NAME_REF@601..602
-                      IDENT@601..602 "y"
-                    COLON@602..603 ":"
-                    WHITESPACE@603..604 " "
-                    STRUCT_PAT@604..620
-                      PATH@604..606
-                        PATH_SEGMENT@604..606
-                          NAME_REF@604..606
-                            IDENT@604..606 "S3"
-                      WHITESPACE@606..607 " "
-                      STRUCT_PAT_FIELD_LIST@607..620
-                        L_CURLY@607..608 "{"
-                        WHITESPACE@608..609 " "
-                        STRUCT_PAT_FIELD@609..614
-                          NAME_REF@609..610
-                            IDENT@609..610 "y"
-                          COLON@610..611 ":"
-                          WHITESPACE@611..612 " "
-                          IDENT_PAT@612..614
-                            NAME@612..614
-                              IDENT@612..614 "_y"
-                        COMMA@614..615 ","
-                        WHITESPACE@615..616 " "
-                        REST_PAT@616..618
-                          DOT_DOT@616..618 ".."
-                        WHITESPACE@618..619 " "
-                        R_CURLY@619..620 "}"
-                  COMMA@620..621 ","
-                  WHITESPACE@621..622 " "
-                  REST_PAT@622..624
-                    DOT_DOT@622..624 ".."
-                  WHITESPACE@624..625 " "
-                  R_CURLY@625..626 "}"
-              WHITESPACE@626..627 " "
-              EQ@627..628 "="
-              WHITESPACE@628..629 " "
-              PATH_EXPR@629..630
-                PATH@629..630
-                  PATH_SEGMENT@629..630
-                    NAME_REF@629..630
-                      IDENT@629..630 "x"
-              SEMICOLON@630..631 ";"
-            WHITESPACE@631..640 "\n        "
-            LET_STMT@640..684
-              LET_KW@640..643 "let"
-              WHITESPACE@643..644 " "
-              STRUCT_PAT@644..679
-                PATH@644..646
-                  PATH_SEGMENT@644..646
-                    NAME_REF@644..646
-                      IDENT@644..646 "S4"
-                WHITESPACE@646..647 " "
-                STRUCT_PAT_FIELD_LIST@647..679
-                  L_CURLY@647..648 "{"
-                  WHITESPACE@648..649 " "
-                  STRUCT_PAT_FIELD@649..669
-                    NAME_REF@649..650
-                      IDENT@649..650 "y"
-                    COLON@650..651 ":"
-                    WHITESPACE@651..652 " "
-                    STRUCT_PAT@652..669
-                      PATH@652..654
-                        PATH_SEGMENT@652..654
-                          NAME_REF@652..654
-                            IDENT@652..654 "S3"
-                      WHITESPACE@654..655 " "
-                      STRUCT_PAT_FIELD_LIST@655..669
-                        L_CURLY@655..656 "{"
-                        WHITESPACE@656..657 " "
-                        STRUCT_PAT_FIELD@657..663
-                          NAME_REF@657..658
-                            IDENT@657..658 "x"
-                          COLON@658..659 ":"
-                          WHITESPACE@659..660 " "
-                          IDENT_PAT@660..663
-                            NAME@660..663
-                              IDENT@660..663 "_x1"
-                        COMMA@663..664 ","
-                        WHITESPACE@664..665 " "
-                        REST_PAT@665..667
-                          DOT_DOT@665..667 ".."
-                        WHITESPACE@667..668 " "
-                        R_CURLY@668..669 "}"
-                  COMMA@669..670 ","
-                  WHITESPACE@670..671 " "
-                  STRUCT_PAT_FIELD@671..677
-                    NAME_REF@671..672
-                      IDENT@671..672 "x"
-                    COLON@672..673 ":"
-                    WHITESPACE@673..674 " "
-                    IDENT_PAT@674..677
-                      NAME@674..677
-                        IDENT@674..677 "_x2"
-                  WHITESPACE@677..678 " "
-                  R_CURLY@678..679 "}"
-              WHITESPACE@679..680 " "
-              EQ@680..681 "="
-              WHITESPACE@681..682 " "
-              PATH_EXPR@682..683
-                PATH@682..683
-                  PATH_SEGMENT@682..683
-                    NAME_REF@682..683
-                      IDENT@682..683 "x"
-              SEMICOLON@683..684 ";"
-            WHITESPACE@684..694 "\n\n        "
-            LET_STMT@694..717
-              LET_KW@694..697 "let"
-              WHITESPACE@697..698 " "
-              TUPLE_STRUCT_PAT@698..712
-                PATH@698..700
-                  PATH_SEGMENT@698..700
-                    NAME_REF@698..700
-                      IDENT@698..700 "S5"
-                L_PAREN@700..701 "("
-                REST_PAT@701..703
-                  DOT_DOT@701..703 ".."
-                COMMA@703..704 ","
-                WHITESPACE@704..705 " "
-                TUPLE_STRUCT_PAT@705..711
-                  PATH@705..707
-                    PATH_SEGMENT@705..707
-                      NAME_REF@705..707
-                        IDENT@705..707 "S1"
-                  L_PAREN@707..708 "("
-                  REST_PAT@708..710
-                    DOT_DOT@708..710 ".."
-                  R_PAREN@710..711 ")"
-                R_PAREN@711..712 ")"
-              WHITESPACE@712..713 " "
-              EQ@713..714 "="
-              WHITESPACE@714..715 " "
-              PATH_EXPR@715..716
-                PATH@715..716
-                  PATH_SEGMENT@715..716
-                    NAME_REF@715..716
-                      IDENT@715..716 "x"
-              SEMICOLON@716..717 ";"
-            WHITESPACE@717..726 "\n        "
-            LET_STMT@726..749
-              LET_KW@726..729 "let"
-              WHITESPACE@729..730 " "
-              TUPLE_STRUCT_PAT@730..744
-                PATH@730..732
-                  PATH_SEGMENT@730..732
-                    NAME_REF@730..732
-                      IDENT@730..732 "S5"
-                L_PAREN@732..733 "("
-                REST_PAT@733..735
-                  DOT_DOT@733..735 ".."
-                COMMA@735..736 ","
-                WHITESPACE@736..737 " "
-                TUPLE_STRUCT_PAT@737..743
-                  PATH@737..739
-                    PATH_SEGMENT@737..739
-                      NAME_REF@737..739
-                        IDENT@737..739 "S1"
-                  L_PAREN@739..740 "("
-                  REST_PAT@740..742
-                    DOT_DOT@740..742 ".."
-                  R_PAREN@742..743 ")"
-                R_PAREN@743..744 ")"
-              WHITESPACE@744..745 " "
-              EQ@745..746 "="
-              WHITESPACE@746..747 " "
-              PATH_EXPR@747..748
-                PATH@747..748
-                  PATH_SEGMENT@747..748
-                    NAME_REF@747..748
-                      IDENT@747..748 "x"
-              SEMICOLON@748..749 ";"
-            WHITESPACE@749..758 "\n        "
-            LET_STMT@758..784
-              LET_KW@758..761 "let"
-              WHITESPACE@761..762 " "
-              TUPLE_STRUCT_PAT@762..779
-                PATH@762..764
-                  PATH_SEGMENT@762..764
-                    NAME_REF@762..764
-                      IDENT@762..764 "S5"
-                L_PAREN@764..765 "("
-                REST_PAT@765..767
-                  DOT_DOT@765..767 ".."
-                COMMA@767..768 ","
-                WHITESPACE@768..769 " "
-                STRUCT_PAT@769..778
-                  PATH@769..771
-                    PATH_SEGMENT@769..771
-                      NAME_REF@769..771
-                        IDENT@769..771 "S4"
-                  WHITESPACE@771..772 " "
-                  STRUCT_PAT_FIELD_LIST@772..778
-                    L_CURLY@772..773 "{"
-                    WHITESPACE@773..774 " "
-                    REST_PAT@774..776
-                      DOT_DOT@774..776 ".."
-                    WHITESPACE@776..777 " "
-                    R_CURLY@777..778 "}"
-                R_PAREN@778..779 ")"
-              WHITESPACE@779..780 " "
-              EQ@780..781 "="
-              WHITESPACE@781..782 " "
-              PATH_EXPR@782..783
-                PATH@782..783
-                  PATH_SEGMENT@782..783
-                    NAME_REF@782..783
-                      IDENT@782..783 "x"
-              SEMICOLON@783..784 ";"
-            WHITESPACE@784..793 "\n        "
-            LET_STMT@793..822
-              LET_KW@793..796 "let"
-              WHITESPACE@796..797 " "
-              STRUCT_PAT@797..817
-                PATH@797..799
-                  PATH_SEGMENT@797..799
-                    NAME_REF@797..799
-                      IDENT@797..799 "S4"
-                WHITESPACE@799..800 " "
-                STRUCT_PAT_FIELD_LIST@800..817
-                  L_CURLY@800..801 "{"
-                  WHITESPACE@801..802 " "
-                  STRUCT_PAT_FIELD@802..811
-                    NAME_REF@802..803
-                      IDENT@802..803 "x"
-                    COLON@803..804 ":"
-                    WHITESPACE@804..805 " "
-                    TUPLE_STRUCT_PAT@805..811
-                      PATH@805..807
-                        PATH_SEGMENT@805..807
-                          NAME_REF@805..807
-                            IDENT@805..807 "S1"
-                      L_PAREN@807..808 "("
-                      REST_PAT@808..810
-                        DOT_DOT@808..810 ".."
-                      R_PAREN@810..811 ")"
-                  COMMA@811..812 ","
-                  WHITESPACE@812..813 " "
-                  REST_PAT@813..815
-                    DOT_DOT@813..815 ".."
-                  WHITESPACE@815..816 " "
-                  R_CURLY@816..817 "}"
-              WHITESPACE@817..818 " "
-              EQ@818..819 "="
-              WHITESPACE@819..820 " "
-              PATH_EXPR@820..821
-                PATH@820..821
-                  PATH_SEGMENT@820..821
-                    NAME_REF@820..821
-                      IDENT@820..821 "x"
-              SEMICOLON@821..822 ";"
-            WHITESPACE@822..827 "\n    "
-            R_CURLY@827..828 "}"
-      WHITESPACE@828..829 "\n"
-      R_CURLY@829..830 "}"
+    L_CURLY@28..29 "{"
+    WHITESPACE@29..34 "\n    "
+    FUN@34..828
+      FUN_KW@34..37 "fun"
+      WHITESPACE@37..38 " "
+      NAME@38..42
+        IDENT@38..42 "main"
+      PARAM_LIST@42..44
+        L_PAREN@42..43 "("
+        R_PAREN@43..44 ")"
+      WHITESPACE@44..45 " "
+      BLOCK_EXPR@45..828
+        L_CURLY@45..46 "{"
+        WHITESPACE@46..55 "\n        "
+        LET_STMT@55..70
+          LET_KW@55..58 "let"
+          WHITESPACE@58..59 " "
+          TUPLE_STRUCT_PAT@59..65
+            PATH@59..61
+              PATH_SEGMENT@59..61
+                NAME_REF@59..61
+                  IDENT@59..61 "S2"
+            L_PAREN@61..62 "("
+            REST_PAT@62..64
+              DOT_DOT@62..64 ".."
+            R_PAREN@64..65 ")"
+          WHITESPACE@65..66 " "
+          EQ@66..67 "="
+          WHITESPACE@67..68 " "
+          PATH_EXPR@68..69
+            PATH@68..69
+              PATH_SEGMENT@68..69
+                NAME_REF@68..69
+                  IDENT@68..69 "x"
+          SEMICOLON@69..70 ";"
+        WHITESPACE@70..79 "\n        "
+        LET_STMT@79..98
+          LET_KW@79..82 "let"
+          WHITESPACE@82..83 " "
+          TUPLE_STRUCT_PAT@83..93
+            PATH@83..85
+              PATH_SEGMENT@83..85
+                NAME_REF@83..85
+                  IDENT@83..85 "S2"
+            L_PAREN@85..86 "("
+            IDENT_PAT@86..88
+              NAME@86..88
+                IDENT@86..88 "_x"
+            COMMA@88..89 ","
+            WHITESPACE@89..90 " "
+            REST_PAT@90..92
+              DOT_DOT@90..92 ".."
+            R_PAREN@92..93 ")"
+          WHITESPACE@93..94 " "
+          EQ@94..95 "="
+          WHITESPACE@95..96 " "
+          PATH_EXPR@96..97
+            PATH@96..97
+              PATH_SEGMENT@96..97
+                NAME_REF@96..97
+                  IDENT@96..97 "x"
+          SEMICOLON@97..98 ";"
+        WHITESPACE@98..107 "\n        "
+        LET_STMT@107..126
+          LET_KW@107..110 "let"
+          WHITESPACE@110..111 " "
+          TUPLE_STRUCT_PAT@111..121
+            PATH@111..113
+              PATH_SEGMENT@111..113
+                NAME_REF@111..113
+                  IDENT@111..113 "S2"
+            L_PAREN@113..114 "("
+            REST_PAT@114..116
+              DOT_DOT@114..116 ".."
+            COMMA@116..117 ","
+            WHITESPACE@117..118 " "
+            IDENT_PAT@118..120
+              NAME@118..120
+                IDENT@118..120 "_x"
+            R_PAREN@120..121 ")"
+          WHITESPACE@121..122 " "
+          EQ@122..123 "="
+          WHITESPACE@123..124 " "
+          PATH_EXPR@124..125
+            PATH@124..125
+              PATH_SEGMENT@124..125
+                NAME_REF@124..125
+                  IDENT@124..125 "x"
+          SEMICOLON@125..126 ";"
+        WHITESPACE@126..135 "\n        "
+        LET_STMT@135..153
+          LET_KW@135..138 "let"
+          WHITESPACE@138..139 " "
+          TUPLE_STRUCT_PAT@139..148
+            PATH@139..141
+              PATH_SEGMENT@139..141
+                NAME_REF@139..141
+                  IDENT@139..141 "S2"
+            L_PAREN@141..142 "("
+            REST_PAT@142..144
+              DOT_DOT@142..144 ".."
+            COMMA@144..145 ","
+            WHITESPACE@145..146 " "
+            WILDCARD_PAT@146..147
+              UNDERSCORE@146..147 "_"
+            R_PAREN@147..148 ")"
+          WHITESPACE@148..149 " "
+          EQ@149..150 "="
+          WHITESPACE@150..151 " "
+          PATH_EXPR@151..152
+            PATH@151..152
+              PATH_SEGMENT@151..152
+                NAME_REF@151..152
+                  IDENT@151..152 "x"
+          SEMICOLON@152..153 ";"
+        WHITESPACE@153..162 "\n        "
+        LET_STMT@162..180
+          LET_KW@162..165 "let"
+          WHITESPACE@165..166 " "
+          TUPLE_STRUCT_PAT@166..175
+            PATH@166..168
+              PATH_SEGMENT@166..168
+                NAME_REF@166..168
+                  IDENT@166..168 "S2"
+            L_PAREN@168..169 "("
+            WILDCARD_PAT@169..170
+              UNDERSCORE@169..170 "_"
+            COMMA@170..171 ","
+            WHITESPACE@171..172 " "
+            REST_PAT@172..174
+              DOT_DOT@172..174 ".."
+            R_PAREN@174..175 ")"
+          WHITESPACE@175..176 " "
+          EQ@176..177 "="
+          WHITESPACE@177..178 " "
+          PATH_EXPR@178..179
+            PATH@178..179
+              PATH_SEGMENT@178..179
+                NAME_REF@178..179
+                  IDENT@178..179 "x"
+          SEMICOLON@179..180 ";"
+        WHITESPACE@180..189 "\n        "
+        LET_STMT@189..212
+          LET_KW@189..192 "let"
+          WHITESPACE@192..193 " "
+          TUPLE_STRUCT_PAT@193..207
+            PATH@193..195
+              PATH_SEGMENT@193..195
+                NAME_REF@193..195
+                  IDENT@193..195 "S2"
+            L_PAREN@195..196 "("
+            IDENT_PAT@196..198
+              NAME@196..198
+                IDENT@196..198 "_x"
+            COMMA@198..199 ","
+            WHITESPACE@199..200 " "
+            IDENT_PAT@200..202
+              NAME@200..202
+                IDENT@200..202 "_y"
+            COMMA@202..203 ","
+            WHITESPACE@203..204 " "
+            REST_PAT@204..206
+              DOT_DOT@204..206 ".."
+            R_PAREN@206..207 ")"
+          WHITESPACE@207..208 " "
+          EQ@208..209 "="
+          WHITESPACE@209..210 " "
+          PATH_EXPR@210..211
+            PATH@210..211
+              PATH_SEGMENT@210..211
+                NAME_REF@210..211
+                  IDENT@210..211 "x"
+          SEMICOLON@211..212 ";"
+        WHITESPACE@212..221 "\n        "
+        LET_STMT@221..244
+          LET_KW@221..224 "let"
+          WHITESPACE@224..225 " "
+          TUPLE_STRUCT_PAT@225..239
+            PATH@225..227
+              PATH_SEGMENT@225..227
+                NAME_REF@225..227
+                  IDENT@225..227 "S2"
+            L_PAREN@227..228 "("
+            IDENT_PAT@228..230
+              NAME@228..230
+                IDENT@228..230 "_x"
+            COMMA@230..231 ","
+            WHITESPACE@231..232 " "
+            REST_PAT@232..234
+              DOT_DOT@232..234 ".."
+            COMMA@234..235 ","
+            WHITESPACE@235..236 " "
+            IDENT_PAT@236..238
+              NAME@236..238
+                IDENT@236..238 "_y"
+            R_PAREN@238..239 ")"
+          WHITESPACE@239..240 " "
+          EQ@240..241 "="
+          WHITESPACE@241..242 " "
+          PATH_EXPR@242..243
+            PATH@242..243
+              PATH_SEGMENT@242..243
+                NAME_REF@242..243
+                  IDENT@242..243 "x"
+          SEMICOLON@243..244 ";"
+        WHITESPACE@244..253 "\n        "
+        LET_STMT@253..276
+          LET_KW@253..256 "let"
+          WHITESPACE@256..257 " "
+          TUPLE_STRUCT_PAT@257..271
+            PATH@257..259
+              PATH_SEGMENT@257..259
+                NAME_REF@257..259
+                  IDENT@257..259 "S2"
+            L_PAREN@259..260 "("
+            REST_PAT@260..262
+              DOT_DOT@260..262 ".."
+            COMMA@262..263 ","
+            WHITESPACE@263..264 " "
+            IDENT_PAT@264..266
+              NAME@264..266
+                IDENT@264..266 "_x"
+            COMMA@266..267 ","
+            WHITESPACE@267..268 " "
+            IDENT_PAT@268..270
+              NAME@268..270
+                IDENT@268..270 "_y"
+            R_PAREN@270..271 ")"
+          WHITESPACE@271..272 " "
+          EQ@272..273 "="
+          WHITESPACE@273..274 " "
+          PATH_EXPR@274..275
+            PATH@274..275
+              PATH_SEGMENT@274..275
+                NAME_REF@274..275
+                  IDENT@274..275 "x"
+          SEMICOLON@275..276 ";"
+        WHITESPACE@276..286 "\n\n        "
+        LET_STMT@286..304
+          LET_KW@286..289 "let"
+          WHITESPACE@289..290 " "
+          STRUCT_PAT@290..299
+            PATH@290..292
+              PATH_SEGMENT@290..292
+                NAME_REF@290..292
+                  IDENT@290..292 "S3"
+            WHITESPACE@292..293 " "
+            STRUCT_PAT_FIELD_LIST@293..299
+              L_CURLY@293..294 "{"
+              WHITESPACE@294..295 " "
+              REST_PAT@295..297
+                DOT_DOT@295..297 ".."
+              WHITESPACE@297..298 " "
+              R_CURLY@298..299 "}"
+          WHITESPACE@299..300 " "
+          EQ@300..301 "="
+          WHITESPACE@301..302 " "
+          PATH_EXPR@302..303
+            PATH@302..303
+              PATH_SEGMENT@302..303
+                NAME_REF@302..303
+                  IDENT@302..303 "x"
+          SEMICOLON@303..304 ";"
+        WHITESPACE@304..313 "\n        "
+        LET_STMT@313..338
+          LET_KW@313..316 "let"
+          WHITESPACE@316..317 " "
+          STRUCT_PAT@317..333
+            PATH@317..319
+              PATH_SEGMENT@317..319
+                NAME_REF@317..319
+                  IDENT@317..319 "S3"
+            WHITESPACE@319..320 " "
+            STRUCT_PAT_FIELD_LIST@320..333
+              L_CURLY@320..321 "{"
+              WHITESPACE@321..322 " "
+              STRUCT_PAT_FIELD@322..327
+                NAME_REF@322..323
+                  IDENT@322..323 "x"
+                COLON@323..324 ":"
+                WHITESPACE@324..325 " "
+                IDENT_PAT@325..327
+                  NAME@325..327
+                    IDENT@325..327 "_x"
+              COMMA@327..328 ","
+              WHITESPACE@328..329 " "
+              REST_PAT@329..331
+                DOT_DOT@329..331 ".."
+              WHITESPACE@331..332 " "
+              R_CURLY@332..333 "}"
+          WHITESPACE@333..334 " "
+          EQ@334..335 "="
+          WHITESPACE@335..336 " "
+          PATH_EXPR@336..337
+            PATH@336..337
+              PATH_SEGMENT@336..337
+                NAME_REF@336..337
+                  IDENT@336..337 "x"
+          SEMICOLON@337..338 ";"
+        WHITESPACE@338..347 "\n        "
+        LET_STMT@347..372
+          LET_KW@347..350 "let"
+          WHITESPACE@350..351 " "
+          STRUCT_PAT@351..367
+            PATH@351..353
+              PATH_SEGMENT@351..353
+                NAME_REF@351..353
+                  IDENT@351..353 "S3"
+            WHITESPACE@353..354 " "
+            STRUCT_PAT_FIELD_LIST@354..367
+              L_CURLY@354..355 "{"
+              WHITESPACE@355..356 " "
+              STRUCT_PAT_FIELD@356..361
+                NAME_REF@356..357
+                  IDENT@356..357 "y"
+                COLON@357..358 ":"
+                WHITESPACE@358..359 " "
+                IDENT_PAT@359..361
+                  NAME@359..361
+                    IDENT@359..361 "_y"
+              COMMA@361..362 ","
+              WHITESPACE@362..363 " "
+              REST_PAT@363..365
+                DOT_DOT@363..365 ".."
+              WHITESPACE@365..366 " "
+              R_CURLY@366..367 "}"
+          WHITESPACE@367..368 " "
+          EQ@368..369 "="
+          WHITESPACE@369..370 " "
+          PATH_EXPR@370..371
+            PATH@370..371
+              PATH_SEGMENT@370..371
+                NAME_REF@370..371
+                  IDENT@370..371 "x"
+          SEMICOLON@371..372 ";"
+        WHITESPACE@372..382 "\n\n        "
+        LET_STMT@382..407
+          LET_KW@382..385 "let"
+          WHITESPACE@385..386 " "
+          STRUCT_PAT@386..402
+            PATH@386..388
+              PATH_SEGMENT@386..388
+                NAME_REF@386..388
+                  IDENT@386..388 "S4"
+            WHITESPACE@388..389 " "
+            STRUCT_PAT_FIELD_LIST@389..402
+              L_CURLY@389..390 "{"
+              WHITESPACE@390..391 " "
+              STRUCT_PAT_FIELD@391..396
+                NAME_REF@391..392
+                  IDENT@391..392 "x"
+                COLON@392..393 ":"
+                WHITESPACE@393..394 " "
+                IDENT_PAT@394..396
+                  NAME@394..396
+                    IDENT@394..396 "_x"
+              COMMA@396..397 ","
+              WHITESPACE@397..398 " "
+              REST_PAT@398..400
+                DOT_DOT@398..400 ".."
+              WHITESPACE@400..401 " "
+              R_CURLY@401..402 "}"
+          WHITESPACE@402..403 " "
+          EQ@403..404 "="
+          WHITESPACE@404..405 " "
+          PATH_EXPR@405..406
+            PATH@405..406
+              PATH_SEGMENT@405..406
+                NAME_REF@405..406
+                  IDENT@405..406 "x"
+          SEMICOLON@406..407 ";"
+        WHITESPACE@407..416 "\n        "
+        LET_STMT@416..441
+          LET_KW@416..419 "let"
+          WHITESPACE@419..420 " "
+          STRUCT_PAT@420..436
+            PATH@420..422
+              PATH_SEGMENT@420..422
+                NAME_REF@420..422
+                  IDENT@420..422 "S4"
+            WHITESPACE@422..423 " "
+            STRUCT_PAT_FIELD_LIST@423..436
+              L_CURLY@423..424 "{"
+              WHITESPACE@424..425 " "
+              STRUCT_PAT_FIELD@425..430
+                NAME_REF@425..426
+                  IDENT@425..426 "y"
+                COLON@426..427 ":"
+                WHITESPACE@427..428 " "
+                IDENT_PAT@428..430
+                  NAME@428..430
+                    IDENT@428..430 "_y"
+              COMMA@430..431 ","
+              WHITESPACE@431..432 " "
+              REST_PAT@432..434
+                DOT_DOT@432..434 ".."
+              WHITESPACE@434..435 " "
+              R_CURLY@435..436 "}"
+          WHITESPACE@436..437 " "
+          EQ@437..438 "="
+          WHITESPACE@438..439 " "
+          PATH_EXPR@439..440
+            PATH@439..440
+              PATH_SEGMENT@439..440
+                NAME_REF@439..440
+                  IDENT@439..440 "x"
+          SEMICOLON@440..441 ";"
+        WHITESPACE@441..450 "\n        "
+        LET_STMT@450..482
+          LET_KW@450..453 "let"
+          WHITESPACE@453..454 " "
+          STRUCT_PAT@454..477
+            PATH@454..456
+              PATH_SEGMENT@454..456
+                NAME_REF@454..456
+                  IDENT@454..456 "S4"
+            WHITESPACE@456..457 " "
+            STRUCT_PAT_FIELD_LIST@457..477
+              L_CURLY@457..458 "{"
+              WHITESPACE@458..459 " "
+              STRUCT_PAT_FIELD@459..471
+                NAME_REF@459..460
+                  IDENT@459..460 "y"
+                COLON@460..461 ":"
+                WHITESPACE@461..462 " "
+                STRUCT_PAT@462..471
+                  PATH@462..464
+                    PATH_SEGMENT@462..464
+                      NAME_REF@462..464
+                        IDENT@462..464 "S3"
+                  WHITESPACE@464..465 " "
+                  STRUCT_PAT_FIELD_LIST@465..471
+                    L_CURLY@465..466 "{"
+                    WHITESPACE@466..467 " "
+                    REST_PAT@467..469
+                      DOT_DOT@467..469 ".."
+                    WHITESPACE@469..470 " "
+                    R_CURLY@470..471 "}"
+              COMMA@471..472 ","
+              WHITESPACE@472..473 " "
+              REST_PAT@473..475
+                DOT_DOT@473..475 ".."
+              WHITESPACE@475..476 " "
+              R_CURLY@476..477 "}"
+          WHITESPACE@477..478 " "
+          EQ@478..479 "="
+          WHITESPACE@479..480 " "
+          PATH_EXPR@480..481
+            PATH@480..481
+              PATH_SEGMENT@480..481
+                NAME_REF@480..481
+                  IDENT@480..481 "x"
+          SEMICOLON@481..482 ";"
+        WHITESPACE@482..491 "\n        "
+        LET_STMT@491..530
+          LET_KW@491..494 "let"
+          WHITESPACE@494..495 " "
+          STRUCT_PAT@495..525
+            PATH@495..497
+              PATH_SEGMENT@495..497
+                NAME_REF@495..497
+                  IDENT@495..497 "S4"
+            WHITESPACE@497..498 " "
+            STRUCT_PAT_FIELD_LIST@498..525
+              L_CURLY@498..499 "{"
+              WHITESPACE@499..500 " "
+              STRUCT_PAT_FIELD@500..519
+                NAME_REF@500..501
+                  IDENT@500..501 "y"
+                COLON@501..502 ":"
+                WHITESPACE@502..503 " "
+                STRUCT_PAT@503..519
+                  PATH@503..505
+                    PATH_SEGMENT@503..505
+                      NAME_REF@503..505
+                        IDENT@503..505 "S3"
+                  WHITESPACE@505..506 " "
+                  STRUCT_PAT_FIELD_LIST@506..519
+                    L_CURLY@506..507 "{"
+                    WHITESPACE@507..508 " "
+                    STRUCT_PAT_FIELD@508..513
+                      NAME_REF@508..509
+                        IDENT@508..509 "x"
+                      COLON@509..510 ":"
+                      WHITESPACE@510..511 " "
+                      IDENT_PAT@511..513
+                        NAME@511..513
+                          IDENT@511..513 "_x"
+                    COMMA@513..514 ","
+                    WHITESPACE@514..515 " "
+                    REST_PAT@515..517
+                      DOT_DOT@515..517 ".."
+                    WHITESPACE@517..518 " "
+                    R_CURLY@518..519 "}"
+              COMMA@519..520 ","
+              WHITESPACE@520..521 " "
+              REST_PAT@521..523
+                DOT_DOT@521..523 ".."
+              WHITESPACE@523..524 " "
+              R_CURLY@524..525 "}"
+          WHITESPACE@525..526 " "
+          EQ@526..527 "="
+          WHITESPACE@527..528 " "
+          PATH_EXPR@528..529
+            PATH@528..529
+              PATH_SEGMENT@528..529
+                NAME_REF@528..529
+                  IDENT@528..529 "x"
+          SEMICOLON@529..530 ";"
+        WHITESPACE@530..539 "\n        "
+        LET_STMT@539..583
+          LET_KW@539..542 "let"
+          WHITESPACE@542..543 " "
+          STRUCT_PAT@543..578
+            PATH@543..545
+              PATH_SEGMENT@543..545
+                NAME_REF@543..545
+                  IDENT@543..545 "S4"
+            WHITESPACE@545..546 " "
+            STRUCT_PAT_FIELD_LIST@546..578
+              L_CURLY@546..547 "{"
+              WHITESPACE@547..548 " "
+              STRUCT_PAT_FIELD@548..568
+                NAME_REF@548..549
+                  IDENT@548..549 "y"
+                COLON@549..550 ":"
+                WHITESPACE@550..551 " "
+                STRUCT_PAT@551..568
+                  PATH@551..553
+                    PATH_SEGMENT@551..553
+                      NAME_REF@551..553
+                        IDENT@551..553 "S3"
+                  WHITESPACE@553..554 " "
+                  STRUCT_PAT_FIELD_LIST@554..568
+                    L_CURLY@554..555 "{"
+                    WHITESPACE@555..556 " "
+                    STRUCT_PAT_FIELD@556..562
+                      NAME_REF@556..557
+                        IDENT@556..557 "x"
+                      COLON@557..558 ":"
+                      WHITESPACE@558..559 " "
+                      IDENT_PAT@559..562
+                        NAME@559..562
+                          IDENT@559..562 "_x1"
+                    COMMA@562..563 ","
+                    WHITESPACE@563..564 " "
+                    REST_PAT@564..566
+                      DOT_DOT@564..566 ".."
+                    WHITESPACE@566..567 " "
+                    R_CURLY@567..568 "}"
+              COMMA@568..569 ","
+              WHITESPACE@569..570 " "
+              STRUCT_PAT_FIELD@570..576
+                NAME_REF@570..571
+                  IDENT@570..571 "x"
+                COLON@571..572 ":"
+                WHITESPACE@572..573 " "
+                IDENT_PAT@573..576
+                  NAME@573..576
+                    IDENT@573..576 "_x2"
+              WHITESPACE@576..577 " "
+              R_CURLY@577..578 "}"
+          WHITESPACE@578..579 " "
+          EQ@579..580 "="
+          WHITESPACE@580..581 " "
+          PATH_EXPR@581..582
+            PATH@581..582
+              PATH_SEGMENT@581..582
+                NAME_REF@581..582
+                  IDENT@581..582 "x"
+          SEMICOLON@582..583 ";"
+        WHITESPACE@583..592 "\n        "
+        LET_STMT@592..631
+          LET_KW@592..595 "let"
+          WHITESPACE@595..596 " "
+          STRUCT_PAT@596..626
+            PATH@596..598
+              PATH_SEGMENT@596..598
+                NAME_REF@596..598
+                  IDENT@596..598 "S4"
+            WHITESPACE@598..599 " "
+            STRUCT_PAT_FIELD_LIST@599..626
+              L_CURLY@599..600 "{"
+              WHITESPACE@600..601 " "
+              STRUCT_PAT_FIELD@601..620
+                NAME_REF@601..602
+                  IDENT@601..602 "y"
+                COLON@602..603 ":"
+                WHITESPACE@603..604 " "
+                STRUCT_PAT@604..620
+                  PATH@604..606
+                    PATH_SEGMENT@604..606
+                      NAME_REF@604..606
+                        IDENT@604..606 "S3"
+                  WHITESPACE@606..607 " "
+                  STRUCT_PAT_FIELD_LIST@607..620
+                    L_CURLY@607..608 "{"
+                    WHITESPACE@608..609 " "
+                    STRUCT_PAT_FIELD@609..614
+                      NAME_REF@609..610
+                        IDENT@609..610 "y"
+                      COLON@610..611 ":"
+                      WHITESPACE@611..612 " "
+                      IDENT_PAT@612..614
+                        NAME@612..614
+                          IDENT@612..614 "_y"
+                    COMMA@614..615 ","
+                    WHITESPACE@615..616 " "
+                    REST_PAT@616..618
+                      DOT_DOT@616..618 ".."
+                    WHITESPACE@618..619 " "
+                    R_CURLY@619..620 "}"
+              COMMA@620..621 ","
+              WHITESPACE@621..622 " "
+              REST_PAT@622..624
+                DOT_DOT@622..624 ".."
+              WHITESPACE@624..625 " "
+              R_CURLY@625..626 "}"
+          WHITESPACE@626..627 " "
+          EQ@627..628 "="
+          WHITESPACE@628..629 " "
+          PATH_EXPR@629..630
+            PATH@629..630
+              PATH_SEGMENT@629..630
+                NAME_REF@629..630
+                  IDENT@629..630 "x"
+          SEMICOLON@630..631 ";"
+        WHITESPACE@631..640 "\n        "
+        LET_STMT@640..684
+          LET_KW@640..643 "let"
+          WHITESPACE@643..644 " "
+          STRUCT_PAT@644..679
+            PATH@644..646
+              PATH_SEGMENT@644..646
+                NAME_REF@644..646
+                  IDENT@644..646 "S4"
+            WHITESPACE@646..647 " "
+            STRUCT_PAT_FIELD_LIST@647..679
+              L_CURLY@647..648 "{"
+              WHITESPACE@648..649 " "
+              STRUCT_PAT_FIELD@649..669
+                NAME_REF@649..650
+                  IDENT@649..650 "y"
+                COLON@650..651 ":"
+                WHITESPACE@651..652 " "
+                STRUCT_PAT@652..669
+                  PATH@652..654
+                    PATH_SEGMENT@652..654
+                      NAME_REF@652..654
+                        IDENT@652..654 "S3"
+                  WHITESPACE@654..655 " "
+                  STRUCT_PAT_FIELD_LIST@655..669
+                    L_CURLY@655..656 "{"
+                    WHITESPACE@656..657 " "
+                    STRUCT_PAT_FIELD@657..663
+                      NAME_REF@657..658
+                        IDENT@657..658 "x"
+                      COLON@658..659 ":"
+                      WHITESPACE@659..660 " "
+                      IDENT_PAT@660..663
+                        NAME@660..663
+                          IDENT@660..663 "_x1"
+                    COMMA@663..664 ","
+                    WHITESPACE@664..665 " "
+                    REST_PAT@665..667
+                      DOT_DOT@665..667 ".."
+                    WHITESPACE@667..668 " "
+                    R_CURLY@668..669 "}"
+              COMMA@669..670 ","
+              WHITESPACE@670..671 " "
+              STRUCT_PAT_FIELD@671..677
+                NAME_REF@671..672
+                  IDENT@671..672 "x"
+                COLON@672..673 ":"
+                WHITESPACE@673..674 " "
+                IDENT_PAT@674..677
+                  NAME@674..677
+                    IDENT@674..677 "_x2"
+              WHITESPACE@677..678 " "
+              R_CURLY@678..679 "}"
+          WHITESPACE@679..680 " "
+          EQ@680..681 "="
+          WHITESPACE@681..682 " "
+          PATH_EXPR@682..683
+            PATH@682..683
+              PATH_SEGMENT@682..683
+                NAME_REF@682..683
+                  IDENT@682..683 "x"
+          SEMICOLON@683..684 ";"
+        WHITESPACE@684..694 "\n\n        "
+        LET_STMT@694..717
+          LET_KW@694..697 "let"
+          WHITESPACE@697..698 " "
+          TUPLE_STRUCT_PAT@698..712
+            PATH@698..700
+              PATH_SEGMENT@698..700
+                NAME_REF@698..700
+                  IDENT@698..700 "S5"
+            L_PAREN@700..701 "("
+            REST_PAT@701..703
+              DOT_DOT@701..703 ".."
+            COMMA@703..704 ","
+            WHITESPACE@704..705 " "
+            TUPLE_STRUCT_PAT@705..711
+              PATH@705..707
+                PATH_SEGMENT@705..707
+                  NAME_REF@705..707
+                    IDENT@705..707 "S1"
+              L_PAREN@707..708 "("
+              REST_PAT@708..710
+                DOT_DOT@708..710 ".."
+              R_PAREN@710..711 ")"
+            R_PAREN@711..712 ")"
+          WHITESPACE@712..713 " "
+          EQ@713..714 "="
+          WHITESPACE@714..715 " "
+          PATH_EXPR@715..716
+            PATH@715..716
+              PATH_SEGMENT@715..716
+                NAME_REF@715..716
+                  IDENT@715..716 "x"
+          SEMICOLON@716..717 ";"
+        WHITESPACE@717..726 "\n        "
+        LET_STMT@726..749
+          LET_KW@726..729 "let"
+          WHITESPACE@729..730 " "
+          TUPLE_STRUCT_PAT@730..744
+            PATH@730..732
+              PATH_SEGMENT@730..732
+                NAME_REF@730..732
+                  IDENT@730..732 "S5"
+            L_PAREN@732..733 "("
+            REST_PAT@733..735
+              DOT_DOT@733..735 ".."
+            COMMA@735..736 ","
+            WHITESPACE@736..737 " "
+            TUPLE_STRUCT_PAT@737..743
+              PATH@737..739
+                PATH_SEGMENT@737..739
+                  NAME_REF@737..739
+                    IDENT@737..739 "S1"
+              L_PAREN@739..740 "("
+              REST_PAT@740..742
+                DOT_DOT@740..742 ".."
+              R_PAREN@742..743 ")"
+            R_PAREN@743..744 ")"
+          WHITESPACE@744..745 " "
+          EQ@745..746 "="
+          WHITESPACE@746..747 " "
+          PATH_EXPR@747..748
+            PATH@747..748
+              PATH_SEGMENT@747..748
+                NAME_REF@747..748
+                  IDENT@747..748 "x"
+          SEMICOLON@748..749 ";"
+        WHITESPACE@749..758 "\n        "
+        LET_STMT@758..784
+          LET_KW@758..761 "let"
+          WHITESPACE@761..762 " "
+          TUPLE_STRUCT_PAT@762..779
+            PATH@762..764
+              PATH_SEGMENT@762..764
+                NAME_REF@762..764
+                  IDENT@762..764 "S5"
+            L_PAREN@764..765 "("
+            REST_PAT@765..767
+              DOT_DOT@765..767 ".."
+            COMMA@767..768 ","
+            WHITESPACE@768..769 " "
+            STRUCT_PAT@769..778
+              PATH@769..771
+                PATH_SEGMENT@769..771
+                  NAME_REF@769..771
+                    IDENT@769..771 "S4"
+              WHITESPACE@771..772 " "
+              STRUCT_PAT_FIELD_LIST@772..778
+                L_CURLY@772..773 "{"
+                WHITESPACE@773..774 " "
+                REST_PAT@774..776
+                  DOT_DOT@774..776 ".."
+                WHITESPACE@776..777 " "
+                R_CURLY@777..778 "}"
+            R_PAREN@778..779 ")"
+          WHITESPACE@779..780 " "
+          EQ@780..781 "="
+          WHITESPACE@781..782 " "
+          PATH_EXPR@782..783
+            PATH@782..783
+              PATH_SEGMENT@782..783
+                NAME_REF@782..783
+                  IDENT@782..783 "x"
+          SEMICOLON@783..784 ";"
+        WHITESPACE@784..793 "\n        "
+        LET_STMT@793..822
+          LET_KW@793..796 "let"
+          WHITESPACE@796..797 " "
+          STRUCT_PAT@797..817
+            PATH@797..799
+              PATH_SEGMENT@797..799
+                NAME_REF@797..799
+                  IDENT@797..799 "S4"
+            WHITESPACE@799..800 " "
+            STRUCT_PAT_FIELD_LIST@800..817
+              L_CURLY@800..801 "{"
+              WHITESPACE@801..802 " "
+              STRUCT_PAT_FIELD@802..811
+                NAME_REF@802..803
+                  IDENT@802..803 "x"
+                COLON@803..804 ":"
+                WHITESPACE@804..805 " "
+                TUPLE_STRUCT_PAT@805..811
+                  PATH@805..807
+                    PATH_SEGMENT@805..807
+                      NAME_REF@805..807
+                        IDENT@805..807 "S1"
+                  L_PAREN@807..808 "("
+                  REST_PAT@808..810
+                    DOT_DOT@808..810 ".."
+                  R_PAREN@810..811 ")"
+              COMMA@811..812 ","
+              WHITESPACE@812..813 " "
+              REST_PAT@813..815
+                DOT_DOT@813..815 ".."
+              WHITESPACE@815..816 " "
+              R_CURLY@816..817 "}"
+          WHITESPACE@817..818 " "
+          EQ@818..819 "="
+          WHITESPACE@819..820 " "
+          PATH_EXPR@820..821
+            PATH@820..821
+              PATH_SEGMENT@820..821
+                NAME_REF@820..821
+                  IDENT@820..821 "x"
+          SEMICOLON@821..822 ";"
+        WHITESPACE@822..827 "\n    "
+        R_CURLY@827..828 "}"
+    WHITESPACE@828..829 "\n"
+    R_CURLY@829..830 "}"
   WHITESPACE@830..831 "\n"

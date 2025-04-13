@@ -2,55 +2,53 @@ SOURCE_FILE@0..76
   MODULE@0..75
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
-    ADDRESS_REF@7..10
-      VALUE_ADDRESS@7..10
-        INT_NUMBER@7..10 "0x1"
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
     COLON_COLON@10..12 "::"
     NAME@12..13
       IDENT@12..13 "m"
     WHITESPACE@13..14 " "
-    ITEM_LIST@14..75
-      L_CURLY@14..15 "{"
-      WHITESPACE@15..20 "\n    "
-      FRIEND@20..35
-        FRIEND_KW@20..26 "friend"
-        WHITESPACE@26..27 " "
-        PATH@27..34
-          PATH@27..30
-            PATH_SEGMENT@27..30
-              PATH_ADDRESS@27..30
-                VALUE_ADDRESS@27..30
-                  INT_NUMBER@27..30 "0x1"
-          COLON_COLON@30..32 "::"
-          PATH_SEGMENT@32..34
-            NAME_REF@32..34
-              IDENT@32..34 "M2"
-        SEMICOLON@34..35 ";"
-      WHITESPACE@35..41 "\n\n    "
-      FRIEND@41..73
-        ATTR@41..53
-          POUND@41..42 "#"
-          L_BRACK@42..43 "["
-          ATTR_ITEM@43..52
-            PATH@43..52
-              PATH_SEGMENT@43..52
-                NAME_REF@43..52
-                  IDENT@43..52 "test_only"
-          R_BRACK@52..53 "]"
-        WHITESPACE@53..58 "\n    "
-        FRIEND_KW@58..64 "friend"
-        WHITESPACE@64..65 " "
-        PATH@65..72
-          PATH@65..68
-            PATH_SEGMENT@65..68
-              PATH_ADDRESS@65..68
-                VALUE_ADDRESS@65..68
-                  INT_NUMBER@65..68 "0x2"
-          COLON_COLON@68..70 "::"
-          PATH_SEGMENT@70..72
-            NAME_REF@70..72
-              IDENT@70..72 "M2"
-        SEMICOLON@72..73 ";"
-      WHITESPACE@73..74 "\n"
-      R_CURLY@74..75 "}"
+    L_CURLY@14..15 "{"
+    WHITESPACE@15..20 "\n    "
+    FRIEND@20..35
+      FRIEND_KW@20..26 "friend"
+      WHITESPACE@26..27 " "
+      PATH@27..34
+        PATH@27..30
+          PATH_SEGMENT@27..30
+            PATH_ADDRESS@27..30
+              VALUE_ADDRESS@27..30
+                INT_NUMBER@27..30 "0x1"
+        COLON_COLON@30..32 "::"
+        PATH_SEGMENT@32..34
+          NAME_REF@32..34
+            IDENT@32..34 "M2"
+      SEMICOLON@34..35 ";"
+    WHITESPACE@35..41 "\n\n    "
+    FRIEND@41..73
+      ATTR@41..53
+        POUND@41..42 "#"
+        L_BRACK@42..43 "["
+        ATTR_ITEM@43..52
+          PATH@43..52
+            PATH_SEGMENT@43..52
+              NAME_REF@43..52
+                IDENT@43..52 "test_only"
+        R_BRACK@52..53 "]"
+      WHITESPACE@53..58 "\n    "
+      FRIEND_KW@58..64 "friend"
+      WHITESPACE@64..65 " "
+      PATH@65..72
+        PATH@65..68
+          PATH_SEGMENT@65..68
+            PATH_ADDRESS@65..68
+              VALUE_ADDRESS@65..68
+                INT_NUMBER@65..68 "0x2"
+        COLON_COLON@68..70 "::"
+        PATH_SEGMENT@70..72
+          NAME_REF@70..72
+            IDENT@70..72 "M2"
+      SEMICOLON@72..73 ";"
+    WHITESPACE@73..74 "\n"
+    R_CURLY@74..75 "}"
   WHITESPACE@75..76 "\n"

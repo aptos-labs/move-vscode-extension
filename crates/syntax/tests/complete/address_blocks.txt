@@ -2,9 +2,8 @@ SOURCE_FILE@0..57
   ADDRESS_DEF@0..28
     ADDRESS_KW@0..7 "address"
     WHITESPACE@7..8 " "
-    ADDRESS_REF@8..11
-      VALUE_ADDRESS@8..11
-        INT_NUMBER@8..11 "0x1"
+    VALUE_ADDRESS@8..11
+      INT_NUMBER@8..11 "0x1"
     WHITESPACE@11..12 " "
     L_CURLY@12..13 "{"
     WHITESPACE@13..14 "\n"
@@ -14,19 +13,17 @@ SOURCE_FILE@0..57
       NAME@21..22
         IDENT@21..22 "m"
       WHITESPACE@22..23 " "
-      ITEM_LIST@23..26
-        L_CURLY@23..24 "{"
-        WHITESPACE@24..25 "\n"
-        R_CURLY@25..26 "}"
+      L_CURLY@23..24 "{"
+      WHITESPACE@24..25 "\n"
+      R_CURLY@25..26 "}"
     WHITESPACE@26..27 "\n"
     R_CURLY@27..28 "}"
   WHITESPACE@28..29 "\n"
   ADDRESS_DEF@29..57
     ADDRESS_KW@29..36 "address"
     WHITESPACE@36..37 " "
-    ADDRESS_REF@37..40
-      VALUE_ADDRESS@37..40
-        INT_NUMBER@37..40 "0x2"
+    VALUE_ADDRESS@37..40
+      INT_NUMBER@37..40 "0x2"
     WHITESPACE@40..41 " "
     L_CURLY@41..42 "{"
     WHITESPACE@42..43 "\n"
@@ -36,9 +33,8 @@ SOURCE_FILE@0..57
       NAME@50..51
         IDENT@50..51 "m"
       WHITESPACE@51..52 " "
-      ITEM_LIST@52..55
-        L_CURLY@52..53 "{"
-        WHITESPACE@53..54 "\n"
-        R_CURLY@54..55 "}"
+      L_CURLY@52..53 "{"
+      WHITESPACE@53..54 "\n"
+      R_CURLY@54..55 "}"
     WHITESPACE@55..56 "\n"
     R_CURLY@56..57 "}"
