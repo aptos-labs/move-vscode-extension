@@ -18,6 +18,7 @@ pub(crate) fn list_with_recover(
 
     while !p.at(EOF) && !p.at(rbrace) && !p.at_ts(end_at) {
         let is_item = parse_item(p);
+        dbg!(p.current());
         if !is_item {
             // invalid item encountered, stop iterating
             break;
