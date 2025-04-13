@@ -2,78 +2,75 @@ SOURCE_FILE@0..141
   MODULE@0..140
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
-    ADDRESS_REF@7..10
-      VALUE_ADDRESS@7..10
-        INT_NUMBER@7..10 "0x1"
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
     COLON_COLON@10..12 "::"
     NAME@12..24
       IDENT@12..24 "prefix_exprs"
     WHITESPACE@24..25 " "
-    ITEM_LIST@25..140
-      L_CURLY@25..26 "{"
-      WHITESPACE@26..31 "\n    "
-      FUN@31..138
-        FUN_KW@31..34 "fun"
-        WHITESPACE@34..35 " "
-        NAME@35..39
-          IDENT@35..39 "main"
-        PARAM_LIST@39..41
-          L_PAREN@39..40 "("
-          R_PAREN@40..41 ")"
-        WHITESPACE@41..42 " "
-        BLOCK_EXPR@42..138
-          STMT_LIST@42..138
-            L_CURLY@42..43 "{"
-            WHITESPACE@43..52 "\n        "
-            EXPR_STMT@52..59
-              PREFIX_EXPR@52..58
-                MOVE_KW@52..56 "move"
-                WHITESPACE@56..57 " "
-                LITERAL@57..58
-                  INT_NUMBER@57..58 "1"
-              SEMICOLON@58..59 ";"
-            WHITESPACE@59..68 "\n        "
-            EXPR_STMT@68..75
-              PREFIX_EXPR@68..74
-                COPY_KW@68..72 "copy"
-                WHITESPACE@72..73 " "
-                LITERAL@73..74
-                  INT_NUMBER@73..74 "1"
-              SEMICOLON@74..75 ";"
-            WHITESPACE@75..84 "\n        "
-            EXPR_STMT@84..87
-              PREFIX_EXPR@84..86
-                STAR@84..85 "*"
-                LITERAL@85..86
-                  INT_NUMBER@85..86 "1"
-              SEMICOLON@86..87 ";"
-            WHITESPACE@87..96 "\n        "
-            EXPR_STMT@96..99
-              PREFIX_EXPR@96..98
-                BANG@96..97 "!"
-                LITERAL@97..98
-                  INT_NUMBER@97..98 "1"
-              SEMICOLON@98..99 ";"
-            WHITESPACE@99..108 "\n        "
-            EXPR_STMT@108..122
-              PREFIX_EXPR@108..121
-                MOVE_KW@108..112 "move"
-                WHITESPACE@112..113 " "
-                PREFIX_EXPR@113..121
-                  COPY_KW@113..117 "copy"
-                  WHITESPACE@117..118 " "
-                  PREFIX_EXPR@118..121
-                    BANG@118..119 "!"
-                    PREFIX_EXPR@119..121
-                      STAR@119..120 "*"
-                      LITERAL@120..121
-                        INT_NUMBER@120..121 "1"
-              SEMICOLON@121..122 ";"
-            WHITESPACE@122..131 "\n        "
-            LITERAL@131..132
-              INT_NUMBER@131..132 "1"
-            WHITESPACE@132..137 "\n    "
-            R_CURLY@137..138 "}"
-      WHITESPACE@138..139 "\n"
-      R_CURLY@139..140 "}"
+    L_CURLY@25..26 "{"
+    WHITESPACE@26..31 "\n    "
+    FUN@31..138
+      FUN_KW@31..34 "fun"
+      WHITESPACE@34..35 " "
+      NAME@35..39
+        IDENT@35..39 "main"
+      PARAM_LIST@39..41
+        L_PAREN@39..40 "("
+        R_PAREN@40..41 ")"
+      WHITESPACE@41..42 " "
+      BLOCK_EXPR@42..138
+        L_CURLY@42..43 "{"
+        WHITESPACE@43..52 "\n        "
+        EXPR_STMT@52..59
+          RESOURCE_EXPR@52..58
+            MOVE_KW@52..56 "move"
+            WHITESPACE@56..57 " "
+            LITERAL@57..58
+              INT_NUMBER@57..58 "1"
+          SEMICOLON@58..59 ";"
+        WHITESPACE@59..68 "\n        "
+        EXPR_STMT@68..75
+          RESOURCE_EXPR@68..74
+            COPY_KW@68..72 "copy"
+            WHITESPACE@72..73 " "
+            LITERAL@73..74
+              INT_NUMBER@73..74 "1"
+          SEMICOLON@74..75 ";"
+        WHITESPACE@75..84 "\n        "
+        EXPR_STMT@84..87
+          DEREF_EXPR@84..86
+            STAR@84..85 "*"
+            LITERAL@85..86
+              INT_NUMBER@85..86 "1"
+          SEMICOLON@86..87 ";"
+        WHITESPACE@87..96 "\n        "
+        EXPR_STMT@96..99
+          BANG_EXPR@96..98
+            BANG@96..97 "!"
+            LITERAL@97..98
+              INT_NUMBER@97..98 "1"
+          SEMICOLON@98..99 ";"
+        WHITESPACE@99..108 "\n        "
+        EXPR_STMT@108..122
+          RESOURCE_EXPR@108..121
+            MOVE_KW@108..112 "move"
+            WHITESPACE@112..113 " "
+            RESOURCE_EXPR@113..121
+              COPY_KW@113..117 "copy"
+              WHITESPACE@117..118 " "
+              BANG_EXPR@118..121
+                BANG@118..119 "!"
+                DEREF_EXPR@119..121
+                  STAR@119..120 "*"
+                  LITERAL@120..121
+                    INT_NUMBER@120..121 "1"
+          SEMICOLON@121..122 ";"
+        WHITESPACE@122..131 "\n        "
+        LITERAL@131..132
+          INT_NUMBER@131..132 "1"
+        WHITESPACE@132..137 "\n    "
+        R_CURLY@137..138 "}"
+    WHITESPACE@138..139 "\n"
+    R_CURLY@139..140 "}"
   WHITESPACE@140..141 "\n"

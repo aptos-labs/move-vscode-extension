@@ -5,116 +5,114 @@ SOURCE_FILE@0..237
     NAME@7..8
       IDENT@7..8 "M"
     WHITESPACE@8..9 " "
-    ITEM_LIST@9..236
-      L_CURLY@9..10 "{"
-      WHITESPACE@10..15 "\n    "
-      ITEM_SPEC@15..234
-        SPEC_KW@15..19 "spec"
-        WHITESPACE@19..20 " "
-        MODULE_KW@20..26 "module"
-        WHITESPACE@26..27 " "
-        BLOCK_EXPR@27..234
-          STMT_LIST@27..234
-            L_CURLY@27..28 "{"
-            WHITESPACE@28..37 "\n        "
-            PRAGMA_STMT@37..51
-              PRAGMA_KW@37..43 "pragma"
-              WHITESPACE@43..44 " "
-              PRAGMA_ATTR_ITEM@44..50
-                IDENT@44..50 "verify"
-              SEMICOLON@50..51 ";"
-            WHITESPACE@51..60 "\n        "
-            PRAGMA_STMT@60..81
-              PRAGMA_KW@60..66 "pragma"
-              WHITESPACE@66..67 " "
-              PRAGMA_ATTR_ITEM@67..80
-                IDENT@67..73 "verify"
-                WHITESPACE@73..74 " "
-                EQ@74..75 "="
-                WHITESPACE@75..76 " "
-                LITERAL@76..80
-                  TRUE_KW@76..80 "true"
-              SEMICOLON@80..81 ";"
-            WHITESPACE@81..90 "\n        "
-            PRAGMA_STMT@90..120
-              PRAGMA_KW@90..96 "pragma"
-              WHITESPACE@96..97 " "
-              PRAGMA_ATTR_ITEM@97..110
-                IDENT@97..103 "verify"
-                WHITESPACE@103..104 " "
-                EQ@104..105 "="
-                WHITESPACE@105..106 " "
-                LITERAL@106..110
-                  TRUE_KW@106..110 "true"
-              COMMA@110..111 ","
-              WHITESPACE@111..112 " "
-              PRAGMA_ATTR_ITEM@112..119
-                IDENT@112..119 "timeout"
-              SEMICOLON@119..120 ";"
-            WHITESPACE@120..129 "\n        "
-            PRAGMA_STMT@129..164
-              PRAGMA_KW@129..135 "pragma"
-              WHITESPACE@135..136 " "
-              PRAGMA_ATTR_ITEM@136..149
-                IDENT@136..142 "verify"
-                WHITESPACE@142..143 " "
-                EQ@143..144 "="
-                WHITESPACE@144..145 " "
-                LITERAL@145..149
-                  TRUE_KW@145..149 "true"
-              COMMA@149..150 ","
-              WHITESPACE@150..151 " "
-              PRAGMA_ATTR_ITEM@151..163
-                IDENT@151..158 "timeout"
-                WHITESPACE@158..159 " "
-                EQ@159..160 "="
-                WHITESPACE@160..161 " "
-                LITERAL@161..163
-                  INT_NUMBER@161..163 "60"
-              SEMICOLON@163..164 ";"
-            WHITESPACE@164..173 "\n        "
-            PRAGMA_STMT@173..192
-              PRAGMA_KW@173..179 "pragma"
-              WHITESPACE@179..180 " "
-              PRAGMA_ATTR_ITEM@180..191
-                IDENT@180..186 "friend"
-                WHITESPACE@186..187 " "
-                EQ@187..188 "="
-                WHITESPACE@188..189 " "
-                PATH_EXPR@189..191
-                  PATH@189..191
-                    PATH_SEGMENT@189..191
-                      NAME_REF@189..191
-                        IDENT@189..191 "gg"
-              SEMICOLON@191..192 ";"
-            WHITESPACE@192..201 "\n        "
-            PRAGMA_STMT@201..228
-              PRAGMA_KW@201..207 "pragma"
-              WHITESPACE@207..208 " "
-              PRAGMA_ATTR_ITEM@208..227
-                IDENT@208..214 "friend"
-                WHITESPACE@214..215 " "
-                EQ@215..216 "="
-                WHITESPACE@216..217 " "
-                PATH_EXPR@217..227
-                  PATH@217..227
-                    PATH@217..223
-                      PATH@217..220
-                        PATH_SEGMENT@217..220
-                          PATH_ADDRESS@217..220
-                            VALUE_ADDRESS@217..220
-                              INT_NUMBER@217..220 "0x1"
-                      COLON_COLON@220..222 "::"
-                      PATH_SEGMENT@222..223
-                        NAME_REF@222..223
-                          IDENT@222..223 "m"
-                    COLON_COLON@223..225 "::"
-                    PATH_SEGMENT@225..227
-                      NAME_REF@225..227
-                        IDENT@225..227 "gg"
-              SEMICOLON@227..228 ";"
-            WHITESPACE@228..233 "\n    "
-            R_CURLY@233..234 "}"
-      WHITESPACE@234..235 "\n"
-      R_CURLY@235..236 "}"
+    L_CURLY@9..10 "{"
+    WHITESPACE@10..15 "\n    "
+    ITEM_SPEC@15..234
+      SPEC_KW@15..19 "spec"
+      WHITESPACE@19..20 " "
+      MODULE_KW@20..26 "module"
+      WHITESPACE@26..27 " "
+      BLOCK_EXPR@27..234
+        L_CURLY@27..28 "{"
+        WHITESPACE@28..37 "\n        "
+        PRAGMA_STMT@37..51
+          PRAGMA_KW@37..43 "pragma"
+          WHITESPACE@43..44 " "
+          PRAGMA_ATTR_ITEM@44..50
+            IDENT@44..50 "verify"
+          SEMICOLON@50..51 ";"
+        WHITESPACE@51..60 "\n        "
+        PRAGMA_STMT@60..81
+          PRAGMA_KW@60..66 "pragma"
+          WHITESPACE@66..67 " "
+          PRAGMA_ATTR_ITEM@67..80
+            IDENT@67..73 "verify"
+            WHITESPACE@73..74 " "
+            EQ@74..75 "="
+            WHITESPACE@75..76 " "
+            LITERAL@76..80
+              TRUE_KW@76..80 "true"
+          SEMICOLON@80..81 ";"
+        WHITESPACE@81..90 "\n        "
+        PRAGMA_STMT@90..120
+          PRAGMA_KW@90..96 "pragma"
+          WHITESPACE@96..97 " "
+          PRAGMA_ATTR_ITEM@97..110
+            IDENT@97..103 "verify"
+            WHITESPACE@103..104 " "
+            EQ@104..105 "="
+            WHITESPACE@105..106 " "
+            LITERAL@106..110
+              TRUE_KW@106..110 "true"
+          COMMA@110..111 ","
+          WHITESPACE@111..112 " "
+          PRAGMA_ATTR_ITEM@112..119
+            IDENT@112..119 "timeout"
+          SEMICOLON@119..120 ";"
+        WHITESPACE@120..129 "\n        "
+        PRAGMA_STMT@129..164
+          PRAGMA_KW@129..135 "pragma"
+          WHITESPACE@135..136 " "
+          PRAGMA_ATTR_ITEM@136..149
+            IDENT@136..142 "verify"
+            WHITESPACE@142..143 " "
+            EQ@143..144 "="
+            WHITESPACE@144..145 " "
+            LITERAL@145..149
+              TRUE_KW@145..149 "true"
+          COMMA@149..150 ","
+          WHITESPACE@150..151 " "
+          PRAGMA_ATTR_ITEM@151..163
+            IDENT@151..158 "timeout"
+            WHITESPACE@158..159 " "
+            EQ@159..160 "="
+            WHITESPACE@160..161 " "
+            LITERAL@161..163
+              INT_NUMBER@161..163 "60"
+          SEMICOLON@163..164 ";"
+        WHITESPACE@164..173 "\n        "
+        PRAGMA_STMT@173..192
+          PRAGMA_KW@173..179 "pragma"
+          WHITESPACE@179..180 " "
+          PRAGMA_ATTR_ITEM@180..191
+            IDENT@180..186 "friend"
+            WHITESPACE@186..187 " "
+            EQ@187..188 "="
+            WHITESPACE@188..189 " "
+            PATH_EXPR@189..191
+              PATH@189..191
+                PATH_SEGMENT@189..191
+                  NAME_REF@189..191
+                    IDENT@189..191 "gg"
+          SEMICOLON@191..192 ";"
+        WHITESPACE@192..201 "\n        "
+        PRAGMA_STMT@201..228
+          PRAGMA_KW@201..207 "pragma"
+          WHITESPACE@207..208 " "
+          PRAGMA_ATTR_ITEM@208..227
+            IDENT@208..214 "friend"
+            WHITESPACE@214..215 " "
+            EQ@215..216 "="
+            WHITESPACE@216..217 " "
+            PATH_EXPR@217..227
+              PATH@217..227
+                PATH@217..223
+                  PATH@217..220
+                    PATH_SEGMENT@217..220
+                      PATH_ADDRESS@217..220
+                        VALUE_ADDRESS@217..220
+                          INT_NUMBER@217..220 "0x1"
+                  COLON_COLON@220..222 "::"
+                  PATH_SEGMENT@222..223
+                    NAME_REF@222..223
+                      IDENT@222..223 "m"
+                COLON_COLON@223..225 "::"
+                PATH_SEGMENT@225..227
+                  NAME_REF@225..227
+                    IDENT@225..227 "gg"
+          SEMICOLON@227..228 ";"
+        WHITESPACE@228..233 "\n    "
+        R_CURLY@233..234 "}"
+    WHITESPACE@234..235 "\n"
+    R_CURLY@235..236 "}"
   WHITESPACE@236..237 "\n"

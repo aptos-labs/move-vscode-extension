@@ -19,8 +19,9 @@ pub(super) const PATTERN_FIRST: TokenSet = expressions::atom::LITERAL_FIRST
         T![..],
     ]));
 
-pub(crate) fn pattern(p: &mut Parser) {
-    atom_pat(p, PAT_RECOVERY_SET);
+pub(crate) fn pattern(p: &mut Parser) -> Option<CompletedMarker> {
+    let completed = atom_pat(p, PAT_RECOVERY_SET);
+    completed
 }
 
 fn atom_pat(p: &mut Parser, recovery_set: TokenSet) -> Option<CompletedMarker> {

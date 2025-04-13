@@ -1,6 +1,6 @@
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::{EOF, ERROR};
-use crate::{Parser, SyntaxKind, T};
+use crate::{ts, Parser, SyntaxKind, T};
 
 pub(crate) fn list_with_recover(
     p: &mut Parser<'_>,
@@ -16,17 +16,7 @@ pub(crate) fn list_with_recover(
 
     // let at_item_first = |p: &mut Parser<'_>| p.at_ts(item_first);
 
-    while !p.at(EOF) && !p.at(rbrace) && !p.at_ts(end_at) {
-        let is_item = parse_item(p);
-        dbg!(p.current());
-        if !is_item {
-            // invalid item encountered, stop iterating
-            break;
-        }
-        if !p.eat(delim) {
-            break;
-        }
-    }
+    list_with_recover_inner(p, rbrace, delim, end_at, parse_item);
 
     // while !p.at(EOF) && !p.at_ts(end_at) {
     //     if p.at(delim) {
@@ -60,6 +50,36 @@ pub(crate) fn list_with_recover(
     //     parse_item,
     // );
     p.expect(rbrace);
+}
+
+pub(crate) fn list_with_recover_inner(
+    p: &mut Parser<'_>,
+    rbrace: SyntaxKind,
+    delim: SyntaxKind,
+    end_at: TokenSet,
+    mut parse_item: impl FnMut(&mut Parser<'_>) -> bool,
+) {
+    while !p.at(EOF) && !p.at(rbrace) && !p.at_ts(end_at) {
+        if p.at(delim) {
+            // Recover if an argument is missing and only got a delimiter,
+            // e.g. `(a, , b)`.
+            // Wrap the erroneous delimiter in an error node so that fixup logic gets rid of it.
+            let m = p.start();
+            p.error(format!("unexpected {:?}", delim));
+            p.bump(delim);
+            m.complete(p, ERROR);
+            continue;
+        }
+        let is_item = parse_item(p);
+        if !is_item {
+            // p.bump_until(|p| p.at(delim) || p.at_ts(end_at) || p.at(rbrace) || p.at(EOF));
+            // invalid item encountered, stop iterating
+            break;
+        }
+        if !p.eat(delim) {
+            break;
+        }
+    }
 }
 
 /// The `parser` passed this is required to at least consume one token if it returns `true`.

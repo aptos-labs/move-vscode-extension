@@ -1,6 +1,6 @@
 use crate::grammar::expressions::atom::{block_or_inline_expr, EXPR_FIRST, STMT_FIRST};
 use crate::grammar::items::{fun, use_item};
-use crate::grammar::params::lambda_param_list;
+use crate::grammar::lambdas::lambda_param_list;
 use crate::grammar::patterns::pattern;
 use crate::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt};
 use crate::grammar::specs::quants::{choose_expr, exists_expr, forall_expr, is_at_quant_kw};
@@ -206,23 +206,27 @@ pub(crate) fn lhs(p: &mut Parser, r: Restrictions) -> Option<(CompletedMarker, B
             p.bump(T![!]);
             BANG_EXPR
         }
-        _ => {
-            for op in [/*T![..=], */ T![..]] {
-                if p.at(op) {
-                    m = p.start();
-                    p.bump(op);
-                    if p.at_ts(EXPR_FIRST) && !(r.forbid_structs && p.at(T!['{'])) {
-                        expr_bp(p, None, r, 2);
-                    }
-                    let cm = m.complete(p, RANGE_EXPR);
-                    // return Some(cm);
-                    return Some((cm, BlockLike::NotBlock));
-                }
+        T![..] => {
+            m = p.start();
+            p.bump(T![..]);
+            if p.at_ts(EXPR_FIRST) && !(r.forbid_structs && p.at(T!['{'])) {
+                expr_bp(p, None, r, 2);
             }
+            let cm = m.complete(p, RANGE_EXPR);
+            // return Some(cm);
+            return Some((cm, BlockLike::NotBlock));
+        }
+        _ => {
+            // if p.at(T![..]) {
+            // }
+            // for op in [/*T![..=], */ T![..]] {
+            // }
 
             // let (lhs, blocklike) = atom::atom_expr(p, r)?;
             let (lhs, blocklike) = atom::atom_expr(p)?;
-            let cm = postfix_expr(p, lhs, blocklike, !(r.prefer_stmt && blocklike.is_block()), false);
+
+            let allow_postfix_calls = !(r.prefer_stmt && blocklike.is_block());
+            let cm = postfix_expr(p, lhs, blocklike, allow_postfix_calls, false);
 
             // let cm = postfix_expr(p, lhs, !r.prefer_stmt);
             // let (cm, block_like) =

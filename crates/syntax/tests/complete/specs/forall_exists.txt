@@ -2,841 +2,839 @@ SOURCE_FILE@0..1087
   MODULE@0..1086
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
-    ADDRESS_REF@7..10
-      VALUE_ADDRESS@7..10
-        INT_NUMBER@7..10 "0x1"
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
     COLON_COLON@10..12 "::"
     NAME@12..13
       IDENT@12..13 "M"
     WHITESPACE@13..14 " "
-    ITEM_LIST@14..1086
-      L_CURLY@14..15 "{"
-      WHITESPACE@15..20 "\n    "
-      SPEC_FUN@20..89
-        SPEC_KW@20..24 "spec"
-        WHITESPACE@24..25 " "
-        FUN_KW@25..28 "fun"
-        WHITESPACE@28..29 " "
-        NAME@29..38
-          IDENT@29..38 "spec_call"
-        PARAM_LIST@38..40
-          L_PAREN@38..39 "("
-          R_PAREN@39..40 ")"
-        RET_TYPE@40..46
-          COLON@40..41 ":"
-          WHITESPACE@41..42 " "
-          PATH_TYPE@42..46
-            PATH@42..46
-              PATH_SEGMENT@42..46
-                NAME_REF@42..46
-                  IDENT@42..46 "bool"
-        WHITESPACE@46..47 " "
-        BLOCK_EXPR@47..89
-          STMT_LIST@47..89
-            L_CURLY@47..48 "{"
-            WHITESPACE@48..57 "\n        "
-            EXISTS_EXPR@57..83
-              EXISTS_KW@57..63 "exists"
-              WHITESPACE@63..64 " "
-              QUANT_BINDING_LIST@64..75
-                QUANT_BINDING@64..75
-                  IDENT_PAT@64..65
-                    NAME@64..65
-                      IDENT@64..65 "i"
-                  WHITESPACE@65..66 " "
-                  IN_KW@66..68 "in"
-                  WHITESPACE@68..69 " "
-                  RANGE_EXPR@69..75
-                    LITERAL@69..70
-                      INT_NUMBER@69..70 "1"
-                    DOT_DOT@70..72 ".."
-                    LITERAL@72..75
-                      INT_NUMBER@72..75 "100"
-              COLON@75..76 ":"
-              WHITESPACE@76..77 " "
-              BIN_EXPR@77..83
-                PATH_EXPR@77..78
-                  PATH@77..78
-                    PATH_SEGMENT@77..78
-                      NAME_REF@77..78
-                        IDENT@77..78 "i"
-                WHITESPACE@78..79 " "
-                EQ_EQ@79..81 "=="
-                WHITESPACE@81..82 " "
-                LITERAL@82..83
-                  INT_NUMBER@82..83 "3"
-            WHITESPACE@83..88 "\n    "
-            R_CURLY@88..89 "}"
-      WHITESPACE@89..94 "\n    "
-      ITEM_SPEC@94..960
-        SPEC_KW@94..98 "spec"
-        WHITESPACE@98..99 " "
-        MODULE_KW@99..105 "module"
-        WHITESPACE@105..106 " "
-        BLOCK_EXPR@106..960
-          STMT_LIST@106..960
-            L_CURLY@106..107 "{"
-            WHITESPACE@107..116 "\n        "
-            INVARIANT_STMT@116..194
-              INVARIANT_KW@116..125 "invariant"
-              WHITESPACE@125..138 "\n            "
-              FORALL_EXPR@138..194
-                FORALL_KW@138..144 "forall"
-                WHITESPACE@144..145 " "
-                QUANT_BINDING_LIST@145..159
-                  QUANT_BINDING@145..159
-                    IDENT_PAT@145..150
-                      NAME@145..150
-                        IDENT@145..150 "addr1"
-                    COLON@150..151 ":"
-                    WHITESPACE@151..152 " "
-                    PATH_TYPE@152..159
-                      PATH@152..159
-                        PATH_SEGMENT@152..159
-                          NAME_REF@152..159
-                            IDENT@152..159 "address"
-                WHITESPACE@159..160 " "
-                WHERE_EXPR@160..188
-                  WHERE_KW@160..165 "where"
-                  WHITESPACE@165..166 " "
-                  CALL_EXPR@166..188
-                    PATH@166..169
-                      PATH_SEGMENT@166..169
-                        NAME_REF@166..169
-                          IDENT@166..169 "old"
-                    ARG_LIST@169..188
-                      L_PAREN@169..170 "("
-                      CALL_EXPR@170..187
-                        PATH@170..180
-                          PATH_SEGMENT@170..180
-                            NAME_REF@170..176
-                              IDENT@170..176 "exists"
-                            TYPE_ARG_LIST@176..180
-                              L_ANGLE@176..177 "<"
-                              TYPE_ARG@177..179
-                                PATH_TYPE@177..179
-                                  PATH@177..179
-                                    PATH_SEGMENT@177..179
-                                      NAME_REF@177..179
-                                        IDENT@177..179 "u8"
-                              R_ANGLE@179..180 ">"
-                        ARG_LIST@180..187
-                          L_PAREN@180..181 "("
-                          PATH_EXPR@181..186
-                            PATH@181..186
-                              PATH_SEGMENT@181..186
-                                NAME_REF@181..186
-                                  IDENT@181..186 "addr1"
-                          R_PAREN@186..187 ")"
-                      R_PAREN@187..188 ")"
-                COLON@188..189 ":"
-                WHITESPACE@189..190 " "
-                LITERAL@190..194
-                  TRUE_KW@190..194 "true"
-            SEMICOLON@194..195 ";"
-            WHITESPACE@195..205 "\n\n        "
-            INVARIANT_STMT@205..302
-              INVARIANT_KW@205..214 "invariant"
-              WHITESPACE@214..227 "\n            "
-              FORALL_EXPR@227..302
-                FORALL_KW@227..233 "forall"
-                WHITESPACE@233..234 " "
-                QUANT_BINDING_LIST@234..256
-                  QUANT_BINDING@234..240
-                    IDENT_PAT@234..235
-                      NAME@234..235
-                        IDENT@234..235 "x"
-                    COLON@235..236 ":"
-                    WHITESPACE@236..237 " "
-                    PATH_TYPE@237..240
-                      PATH@237..240
-                        PATH_SEGMENT@237..240
-                          NAME_REF@237..240
-                            IDENT@237..240 "num"
-                  COMMA@240..241 ","
-                  WHITESPACE@241..242 " "
-                  QUANT_BINDING@242..248
-                    IDENT_PAT@242..243
-                      NAME@242..243
-                        IDENT@242..243 "y"
-                    COLON@243..244 ":"
-                    WHITESPACE@244..245 " "
-                    PATH_TYPE@245..248
-                      PATH@245..248
-                        PATH_SEGMENT@245..248
-                          NAME_REF@245..248
-                            IDENT@245..248 "num"
-                  COMMA@248..249 ","
-                  WHITESPACE@249..250 " "
-                  QUANT_BINDING@250..256
-                    IDENT_PAT@250..251
-                      NAME@250..251
-                        IDENT@250..251 "z"
-                    COLON@251..252 ":"
-                    WHITESPACE@252..253 " "
-                    PATH_TYPE@253..256
-                      PATH@253..256
-                        PATH_SEGMENT@253..256
-                          NAME_REF@253..256
-                            IDENT@253..256 "num"
-                WHITESPACE@256..273 "\n                "
-                COLON@273..274 ":"
-                WHITESPACE@274..275 " "
-                BIN_EXPR@275..302
-                  BIN_EXPR@275..291
-                    BIN_EXPR@275..281
-                      PATH_EXPR@275..276
-                        PATH@275..276
-                          PATH_SEGMENT@275..276
-                            NAME_REF@275..276
-                              IDENT@275..276 "x"
-                      WHITESPACE@276..277 " "
-                      EQ_EQ@277..279 "=="
-                      WHITESPACE@279..280 " "
-                      PATH_EXPR@280..281
-                        PATH@280..281
-                          PATH_SEGMENT@280..281
-                            NAME_REF@280..281
-                              IDENT@280..281 "y"
-                    WHITESPACE@281..282 " "
-                    AMP_AMP@282..284 "&&"
-                    WHITESPACE@284..285 " "
-                    BIN_EXPR@285..291
-                      PATH_EXPR@285..286
-                        PATH@285..286
-                          PATH_SEGMENT@285..286
-                            NAME_REF@285..286
-                              IDENT@285..286 "y"
-                      WHITESPACE@286..287 " "
-                      EQ_EQ@287..289 "=="
-                      WHITESPACE@289..290 " "
-                      PATH_EXPR@290..291
-                        PATH@290..291
-                          PATH_SEGMENT@290..291
-                            NAME_REF@290..291
-                              IDENT@290..291 "z"
-                  WHITESPACE@291..292 " "
-                  IMPLIES@292..295 "==>"
-                  WHITESPACE@295..296 " "
-                  BIN_EXPR@296..302
-                    PATH_EXPR@296..297
-                      PATH@296..297
-                        PATH_SEGMENT@296..297
-                          NAME_REF@296..297
-                            IDENT@296..297 "x"
-                    WHITESPACE@297..298 " "
-                    EQ_EQ@298..300 "=="
-                    WHITESPACE@300..301 " "
-                    PATH_EXPR@301..302
-                      PATH@301..302
-                        PATH_SEGMENT@301..302
-                          NAME_REF@301..302
-                            IDENT@301..302 "z"
-            SEMICOLON@302..303 ";"
-            WHITESPACE@303..312 "\n        "
-            INVARIANT_STMT@312..400
-              INVARIANT_KW@312..321 "invariant"
-              WHITESPACE@321..334 "\n            "
-              FORALL_EXPR@334..400
-                FORALL_KW@334..340 "forall"
-                WHITESPACE@340..341 " "
-                QUANT_BINDING_LIST@341..347
-                  QUANT_BINDING@341..347
-                    IDENT_PAT@341..342
-                      NAME@341..342
-                        IDENT@341..342 "x"
-                    COLON@342..343 ":"
-                    WHITESPACE@343..344 " "
-                    PATH_TYPE@344..347
-                      PATH@344..347
-                        PATH_SEGMENT@344..347
-                          NAME_REF@344..347
-                            IDENT@344..347 "num"
-                WHITESPACE@347..360 "\n            "
-                COLON@360..361 ":"
-                WHITESPACE@361..362 " "
-                EXISTS_EXPR@362..400
-                  EXISTS_KW@362..368 "exists"
-                  WHITESPACE@368..369 " "
-                  QUANT_BINDING_LIST@369..375
-                    QUANT_BINDING@369..375
-                      IDENT_PAT@369..370
-                        NAME@369..370
-                          IDENT@369..370 "y"
-                      COLON@370..371 ":"
-                      WHITESPACE@371..372 " "
-                      PATH_TYPE@372..375
-                        PATH@372..375
-                          PATH_SEGMENT@372..375
-                            NAME_REF@372..375
-                              IDENT@372..375 "num"
-                  WHITESPACE@375..392 "\n                "
-                  COLON@392..393 ":"
-                  WHITESPACE@393..394 " "
-                  BIN_EXPR@394..400
-                    PATH_EXPR@394..395
-                      PATH@394..395
-                        PATH_SEGMENT@394..395
-                          NAME_REF@394..395
-                            IDENT@394..395 "y"
-                    WHITESPACE@395..396 " "
-                    GT_EQ@396..398 ">="
-                    WHITESPACE@398..399 " "
-                    PATH_EXPR@399..400
-                      PATH@399..400
-                        PATH_SEGMENT@399..400
-                          NAME_REF@399..400
-                            IDENT@399..400 "x"
-            SEMICOLON@400..401 ";"
-            WHITESPACE@401..411 "\n\n        "
-            INVARIANT_STMT@411..528
-              INVARIANT_KW@411..420 "invariant"
-              WHITESPACE@420..433 "\n            "
-              FORALL_EXPR@433..528
-                FORALL_KW@433..439 "forall"
-                WHITESPACE@439..440 " "
-                QUANT_BINDING_LIST@440..446
-                  QUANT_BINDING@440..446
-                    IDENT_PAT@440..441
-                      NAME@440..441
-                        IDENT@440..441 "x"
-                    COLON@441..442 ":"
-                    WHITESPACE@442..443 " "
-                    PATH_TYPE@443..446
-                      PATH@443..446
-                        PATH_SEGMENT@443..446
-                          NAME_REF@443..446
-                            IDENT@443..446 "num"
-                WHITESPACE@446..447 " "
-                WHERE_EXPR@447..457
-                  WHERE_KW@447..452 "where"
-                  WHITESPACE@452..453 " "
-                  LITERAL@453..457
-                    TRUE_KW@453..457 "true"
-                COLON@457..458 ":"
-                WHITESPACE@458..475 "\n                "
-                FORALL_EXPR@475..528
-                  FORALL_KW@475..481 "forall"
-                  WHITESPACE@481..482 " "
-                  QUANT_BINDING_LIST@482..488
-                    QUANT_BINDING@482..488
-                      IDENT_PAT@482..483
-                        NAME@482..483
-                          IDENT@482..483 "y"
-                      COLON@483..484 ":"
-                      WHITESPACE@484..485 " "
-                      PATH_TYPE@485..488
-                        PATH@485..488
-                          PATH_SEGMENT@485..488
-                            NAME_REF@485..488
-                              IDENT@485..488 "num"
-                  WHITESPACE@488..489 " "
-                  WHERE_EXPR@489..500
-                    WHERE_KW@489..494 "where"
-                    WHITESPACE@494..495 " "
-                    LITERAL@495..500
-                      FALSE_KW@495..500 "false"
-                  COLON@500..501 ":"
-                  WHITESPACE@501..522 "\n                    "
-                  BIN_EXPR@522..528
-                    PATH_EXPR@522..523
-                      PATH@522..523
-                        PATH_SEGMENT@522..523
-                          NAME_REF@522..523
-                            IDENT@522..523 "x"
-                    WHITESPACE@523..524 " "
-                    GT_EQ@524..526 ">="
-                    WHITESPACE@526..527 " "
-                    PATH_EXPR@527..528
-                      PATH@527..528
-                        PATH_SEGMENT@527..528
-                          NAME_REF@527..528
-                            IDENT@527..528 "y"
-            SEMICOLON@528..529 ";"
-            WHITESPACE@529..539 "\n\n        "
-            INVARIANT_STMT@539..587
-              INVARIANT_KW@539..548 "invariant"
-              WHITESPACE@548..549 " "
-              EXISTS_EXPR@549..587
-                EXISTS_KW@549..555 "exists"
-                WHITESPACE@555..556 " "
-                QUANT_BINDING_LIST@556..578
-                  QUANT_BINDING@556..566
-                    IDENT_PAT@556..557
-                      NAME@556..557
-                        IDENT@556..557 "x"
-                    WHITESPACE@557..558 " "
-                    IN_KW@558..560 "in"
-                    WHITESPACE@560..561 " "
-                    RANGE_EXPR@561..566
-                      LITERAL@561..562
-                        INT_NUMBER@561..562 "1"
-                      DOT_DOT@562..564 ".."
-                      LITERAL@564..566
-                        INT_NUMBER@564..566 "10"
-                  COMMA@566..567 ","
-                  WHITESPACE@567..568 " "
-                  QUANT_BINDING@568..578
-                    IDENT_PAT@568..569
-                      NAME@568..569
-                        IDENT@568..569 "y"
-                    WHITESPACE@569..570 " "
-                    IN_KW@570..572 "in"
-                    WHITESPACE@572..573 " "
-                    RANGE_EXPR@573..578
-                      LITERAL@573..574
-                        INT_NUMBER@573..574 "8"
-                      DOT_DOT@574..576 ".."
-                      LITERAL@576..578
-                        INT_NUMBER@576..578 "12"
-                WHITESPACE@578..579 " "
-                COLON@579..580 ":"
-                WHITESPACE@580..581 " "
-                BIN_EXPR@581..587
-                  PATH_EXPR@581..582
-                    PATH@581..582
-                      PATH_SEGMENT@581..582
-                        NAME_REF@581..582
-                          IDENT@581..582 "x"
-                  WHITESPACE@582..583 " "
-                  EQ_EQ@583..585 "=="
-                  WHITESPACE@585..586 " "
-                  PATH_EXPR@586..587
-                    PATH@586..587
-                      PATH_SEGMENT@586..587
-                        NAME_REF@586..587
-                          IDENT@586..587 "y"
-            SEMICOLON@587..588 ";"
-            WHITESPACE@588..597 "\n        "
-            INVARIANT_STMT@597..645
-              INVARIANT_KW@597..606 "invariant"
-              WHITESPACE@606..607 " "
-              EXISTS_EXPR@607..645
-                EXISTS_KW@607..613 "exists"
-                WHITESPACE@613..614 " "
-                QUANT_BINDING_LIST@614..636
-                  QUANT_BINDING@614..624
-                    IDENT_PAT@614..615
-                      NAME@614..615
-                        IDENT@614..615 "x"
-                    WHITESPACE@615..616 " "
-                    IN_KW@616..618 "in"
-                    WHITESPACE@618..619 " "
-                    RANGE_EXPR@619..624
-                      LITERAL@619..620
-                        INT_NUMBER@619..620 "1"
-                      DOT_DOT@620..622 ".."
-                      LITERAL@622..624
-                        INT_NUMBER@622..624 "10"
-                  COMMA@624..625 ","
-                  WHITESPACE@625..626 " "
-                  QUANT_BINDING@626..636
-                    IDENT_PAT@626..627
-                      NAME@626..627
-                        IDENT@626..627 "y"
-                    WHITESPACE@627..628 " "
-                    IN_KW@628..630 "in"
-                    WHITESPACE@630..631 " "
-                    RANGE_EXPR@631..636
-                      LITERAL@631..632
-                        INT_NUMBER@631..632 "8"
-                      DOT_DOT@632..634 ".."
-                      LITERAL@634..636
-                        INT_NUMBER@634..636 "12"
-                WHITESPACE@636..637 " "
-                COLON@637..638 ":"
-                WHITESPACE@638..639 " "
-                BIN_EXPR@639..645
-                  PATH_EXPR@639..640
-                    PATH@639..640
-                      PATH_SEGMENT@639..640
-                        NAME_REF@639..640
-                          IDENT@639..640 "x"
-                  WHITESPACE@640..641 " "
-                  EQ_EQ@641..643 "=="
-                  WHITESPACE@643..644 " "
-                  PATH_EXPR@644..645
-                    PATH@644..645
-                      PATH_SEGMENT@644..645
-                        NAME_REF@644..645
-                          IDENT@644..645 "y"
-            SEMICOLON@645..646 ";"
-            WHITESPACE@646..656 "\n\n        "
-            SPEC_PREDICATE_STMT@656..701
-              ENSURES_KW@656..663 "ensures"
-              WHITESPACE@663..664 " "
-              BIN_EXPR@664..701
-                PATH_EXPR@664..670
-                  PATH@664..670
-                    PATH_SEGMENT@664..670
-                      NAME_REF@664..670
-                        IDENT@664..670 "result"
-                WHITESPACE@670..671 " "
-                IMPLIES@671..674 "==>"
-                WHITESPACE@674..675 " "
-                PAREN_EXPR@675..701
-                  L_PAREN@675..676 "("
-                  FORALL_EXPR@676..700
-                    FORALL_KW@676..682 "forall"
-                    WHITESPACE@682..683 " "
-                    QUANT_BINDING_LIST@683..694
-                      QUANT_BINDING@683..694
-                        IDENT_PAT@683..684
-                          NAME@683..684
-                            IDENT@683..684 "j"
-                        WHITESPACE@684..685 " "
-                        IN_KW@685..687 "in"
-                        WHITESPACE@687..688 " "
-                        RANGE_EXPR@688..694
-                          LITERAL@688..689
-                            INT_NUMBER@688..689 "0"
-                          DOT_DOT@689..691 ".."
-                          LITERAL@691..694
-                            INT_NUMBER@691..694 "100"
-                    COLON@694..695 ":"
-                    WHITESPACE@695..696 " "
-                    LITERAL@696..700
-                      TRUE_KW@696..700 "true"
-                  R_PAREN@700..701 ")"
-            SEMICOLON@701..702 ";"
-            WHITESPACE@702..711 "\n        "
-            SPEC_PREDICATE_STMT@711..745
-              ENSURES_KW@711..718 "ensures"
-              WHITESPACE@718..719 " "
-              EXISTS_EXPR@719..745
-                EXISTS_KW@719..725 "exists"
-                WHITESPACE@725..726 " "
-                QUANT_BINDING_LIST@726..736
-                  QUANT_BINDING@726..736
-                    IDENT_PAT@726..727
-                      NAME@726..727
-                        IDENT@726..727 "x"
-                    WHITESPACE@727..728 " "
-                    IN_KW@728..730 "in"
-                    WHITESPACE@730..731 " "
-                    RANGE_EXPR@731..736
-                      LITERAL@731..732
-                        INT_NUMBER@731..732 "1"
-                      DOT_DOT@732..734 ".."
-                      LITERAL@734..736
-                        INT_NUMBER@734..736 "10"
-                WHITESPACE@736..737 " "
-                COLON@737..738 ":"
-                WHITESPACE@738..739 " "
-                BIN_EXPR@739..745
-                  PATH_EXPR@739..740
-                    PATH@739..740
-                      PATH_SEGMENT@739..740
-                        NAME_REF@739..740
-                          IDENT@739..740 "x"
-                  WHITESPACE@740..741 " "
-                  EQ_EQ@741..743 "=="
-                  WHITESPACE@743..744 " "
-                  LITERAL@744..745
-                    INT_NUMBER@744..745 "1"
-            SEMICOLON@745..746 ";"
-            WHITESPACE@746..756 "\n\n        "
-            EXPR_STMT@756..819
-              CHOOSE_EXPR@756..818
-                CHOOSE_KW@756..762 "choose"
-                WHITESPACE@762..763 " "
-                QUANT_BINDING_LIST@763..773
-                  QUANT_BINDING@763..773
-                    IDENT_PAT@763..764
-                      NAME@763..764
-                        IDENT@763..764 "a"
-                    COLON@764..765 ":"
-                    WHITESPACE@765..766 " "
-                    PATH_TYPE@766..773
-                      PATH@766..773
-                        PATH_SEGMENT@766..773
-                          NAME_REF@766..773
-                            IDENT@766..773 "address"
-                WHITESPACE@773..774 " "
-                WHERE_EXPR@774..818
-                  WHERE_KW@774..779 "where"
-                  WHITESPACE@779..780 " "
-                  BIN_EXPR@780..818
-                    CALL_EXPR@780..792
-                      PATH@780..789
-                        PATH_SEGMENT@780..789
-                          NAME_REF@780..786
-                            IDENT@780..786 "exists"
-                          TYPE_ARG_LIST@786..789
-                            L_ANGLE@786..787 "<"
-                            TYPE_ARG@787..788
-                              PATH_TYPE@787..788
-                                PATH@787..788
-                                  PATH_SEGMENT@787..788
-                                    NAME_REF@787..788
-                                      IDENT@787..788 "R"
-                            R_ANGLE@788..789 ">"
-                      ARG_LIST@789..792
-                        L_PAREN@789..790 "("
-                        PATH_EXPR@790..791
-                          PATH@790..791
-                            PATH_SEGMENT@790..791
-                              NAME_REF@790..791
-                                IDENT@790..791 "a"
-                        R_PAREN@791..792 ")"
-                    WHITESPACE@792..793 " "
-                    AMP_AMP@793..795 "&&"
-                    WHITESPACE@795..796 " "
-                    BIN_EXPR@796..818
-                      DOT_EXPR@796..814
-                        CALL_EXPR@796..808
-                          PATH@796..805
-                            PATH_SEGMENT@796..805
-                              NAME_REF@796..802
-                                IDENT@796..802 "global"
-                              TYPE_ARG_LIST@802..805
-                                L_ANGLE@802..803 "<"
-                                TYPE_ARG@803..804
-                                  PATH_TYPE@803..804
-                                    PATH@803..804
-                                      PATH_SEGMENT@803..804
-                                        NAME_REF@803..804
-                                          IDENT@803..804 "R"
-                                R_ANGLE@804..805 ">"
-                          ARG_LIST@805..808
-                            L_PAREN@805..806 "("
-                            PATH_EXPR@806..807
-                              PATH@806..807
-                                PATH_SEGMENT@806..807
-                                  NAME_REF@806..807
-                                    IDENT@806..807 "a"
-                            R_PAREN@807..808 ")"
-                        DOT@808..809 "."
-                        NAME_REF@809..814
-                          IDENT@809..814 "value"
-                      WHITESPACE@814..815 " "
-                      R_ANGLE@815..816 ">"
-                      WHITESPACE@816..817 " "
-                      LITERAL@817..818
-                        INT_NUMBER@817..818 "0"
-              SEMICOLON@818..819 ";"
-            WHITESPACE@819..828 "\n        "
-            EXPR_STMT@828..880
-              CHOOSE_EXPR@828..879
-                CHOOSE_KW@828..834 "choose"
-                WHITESPACE@834..835 " "
-                MIN_KW@835..838 "min"
-                WHITESPACE@838..839 " "
-                QUANT_BINDING_LIST@839..845
-                  QUANT_BINDING@839..845
-                    IDENT_PAT@839..840
-                      NAME@839..840
-                        IDENT@839..840 "i"
-                    COLON@840..841 ":"
-                    WHITESPACE@841..842 " "
-                    PATH_TYPE@842..845
-                      PATH@842..845
-                        PATH_SEGMENT@842..845
-                          NAME_REF@842..845
-                            IDENT@842..845 "num"
-                WHITESPACE@845..846 " "
-                WHERE_EXPR@846..879
-                  WHERE_KW@846..851 "where"
-                  WHITESPACE@851..852 " "
-                  BIN_EXPR@852..879
-                    CALL_EXPR@852..866
-                      PATH@852..860
-                        PATH_SEGMENT@852..860
-                          NAME_REF@852..860
-                            IDENT@852..860 "in_range"
-                      ARG_LIST@860..866
-                        L_PAREN@860..861 "("
-                        PATH_EXPR@861..862
-                          PATH@861..862
-                            PATH_SEGMENT@861..862
-                              NAME_REF@861..862
-                                IDENT@861..862 "v"
-                        COMMA@862..863 ","
-                        WHITESPACE@863..864 " "
-                        PATH_EXPR@864..865
-                          PATH@864..865
-                            PATH_SEGMENT@864..865
-                              NAME_REF@864..865
-                                IDENT@864..865 "i"
-                        R_PAREN@865..866 ")"
-                    WHITESPACE@866..867 " "
-                    AMP_AMP@867..869 "&&"
-                    WHITESPACE@869..870 " "
-                    BIN_EXPR@870..879
-                      INDEX_EXPR@870..874
-                        PATH_EXPR@870..871
-                          PATH@870..871
-                            PATH_SEGMENT@870..871
-                              NAME_REF@870..871
-                                IDENT@870..871 "v"
-                        L_BRACK@871..872 "["
-                        PATH_EXPR@872..873
-                          PATH@872..873
-                            PATH_SEGMENT@872..873
-                              NAME_REF@872..873
-                                IDENT@872..873 "i"
-                        R_BRACK@873..874 "]"
-                      WHITESPACE@874..875 " "
-                      EQ_EQ@875..877 "=="
-                      WHITESPACE@877..878 " "
-                      LITERAL@878..879
-                        INT_NUMBER@878..879 "2"
-              SEMICOLON@879..880 ";"
-            WHITESPACE@880..889 "\n        "
-            LET_STMT@889..954
-              LET_KW@889..892 "let"
-              WHITESPACE@892..893 " "
-              IDENT_PAT@893..894
-                NAME@893..894
-                  IDENT@893..894 "a"
-              WHITESPACE@894..895 " "
-              EQ@895..896 "="
-              WHITESPACE@896..897 " "
-              CHOOSE_EXPR@897..953
-                CHOOSE_KW@897..903 "choose"
-                WHITESPACE@903..904 " "
-                MIN_KW@904..907 "min"
-                WHITESPACE@907..908 " "
-                QUANT_BINDING_LIST@908..927
-                  QUANT_BINDING@908..927
-                    IDENT_PAT@908..909
-                      NAME@908..909
-                        IDENT@908..909 "i"
-                    WHITESPACE@909..910 " "
-                    IN_KW@910..912 "in"
-                    WHITESPACE@912..913 " "
-                    CALL_EXPR@913..927
-                      PATH@913..918
-                        PATH_SEGMENT@913..918
-                          NAME_REF@913..918
-                            IDENT@913..918 "range"
-                      ARG_LIST@918..927
-                        L_PAREN@918..919 "("
-                        PATH_EXPR@919..926
-                          PATH@919..926
-                            PATH_SEGMENT@919..926
-                              NAME_REF@919..926
-                                IDENT@919..926 "gallery"
-                        R_PAREN@926..927 ")"
-                WHITESPACE@927..928 " "
-                WHERE_EXPR@928..953
-                  WHERE_KW@928..933 "where"
-                  WHITESPACE@933..934 " "
-                  BIN_EXPR@934..953
-                    DOT_EXPR@934..947
-                      INDEX_EXPR@934..944
-                        PATH_EXPR@934..941
-                          PATH@934..941
-                            PATH_SEGMENT@934..941
-                              NAME_REF@934..941
-                                IDENT@934..941 "gallery"
-                        L_BRACK@941..942 "["
-                        PATH_EXPR@942..943
-                          PATH@942..943
-                            PATH_SEGMENT@942..943
-                              NAME_REF@942..943
-                                IDENT@942..943 "i"
-                        R_BRACK@943..944 "]"
-                      DOT@944..945 "."
-                      NAME_REF@945..947
-                        IDENT@945..947 "id"
-                    WHITESPACE@947..948 " "
-                    EQ_EQ@948..950 "=="
-                    WHITESPACE@950..951 " "
-                    PATH_EXPR@951..953
-                      PATH@951..953
-                        PATH_SEGMENT@951..953
-                          NAME_REF@951..953
-                            IDENT@951..953 "id"
-              SEMICOLON@953..954 ";"
-            WHITESPACE@954..959 "\n    "
-            R_CURLY@959..960 "}"
-      WHITESPACE@960..966 "\n\n    "
-      SPEC_FUN@966..1084
-        SPEC_KW@966..970 "spec"
-        WHITESPACE@970..971 " "
-        FUN_KW@971..974 "fun"
-        WHITESPACE@974..975 " "
-        NAME@975..997
-          IDENT@975..997 "find_token_index_by_id"
-        TYPE_PARAM_LIST@997..1008
-          L_ANGLE@997..998 "<"
-          TYPE_PARAM@998..1007
-            NAME@998..1007
-              IDENT@998..1007 "TokenType"
-          R_ANGLE@1007..1008 ">"
-        PARAM_LIST@1008..1010
-          L_PAREN@1008..1009 "("
-          R_PAREN@1009..1010 ")"
-        RET_TYPE@1010..1015
-          COLON@1010..1011 ":"
-          WHITESPACE@1011..1012 " "
-          PATH_TYPE@1012..1015
-            PATH@1012..1015
-              PATH_SEGMENT@1012..1015
-                NAME_REF@1012..1015
-                  IDENT@1012..1015 "u64"
-        WHITESPACE@1015..1016 " "
-        BLOCK_EXPR@1016..1084
-          STMT_LIST@1016..1084
-            L_CURLY@1016..1017 "{"
-            WHITESPACE@1017..1026 "\n        "
-            CHOOSE_EXPR@1026..1078
-              CHOOSE_KW@1026..1032 "choose"
-              WHITESPACE@1032..1033 " "
-              QUANT_BINDING_LIST@1033..1052
-                QUANT_BINDING@1033..1052
-                  IDENT_PAT@1033..1034
-                    NAME@1033..1034
-                      IDENT@1033..1034 "i"
-                  WHITESPACE@1034..1035 " "
-                  IN_KW@1035..1037 "in"
-                  WHITESPACE@1037..1038 " "
-                  CALL_EXPR@1038..1052
-                    PATH@1038..1043
-                      PATH_SEGMENT@1038..1043
-                        NAME_REF@1038..1043
-                          IDENT@1038..1043 "range"
-                    ARG_LIST@1043..1052
-                      L_PAREN@1043..1044 "("
-                      PATH_EXPR@1044..1051
-                        PATH@1044..1051
-                          PATH_SEGMENT@1044..1051
-                            NAME_REF@1044..1051
-                              IDENT@1044..1051 "gallery"
-                      R_PAREN@1051..1052 ")"
-              WHITESPACE@1052..1053 " "
-              WHERE_EXPR@1053..1078
-                WHERE_KW@1053..1058 "where"
-                WHITESPACE@1058..1059 " "
-                BIN_EXPR@1059..1078
-                  DOT_EXPR@1059..1072
-                    INDEX_EXPR@1059..1069
-                      PATH_EXPR@1059..1066
-                        PATH@1059..1066
-                          PATH_SEGMENT@1059..1066
-                            NAME_REF@1059..1066
-                              IDENT@1059..1066 "gallery"
-                      L_BRACK@1066..1067 "["
-                      PATH_EXPR@1067..1068
-                        PATH@1067..1068
-                          PATH_SEGMENT@1067..1068
-                            NAME_REF@1067..1068
-                              IDENT@1067..1068 "i"
-                      R_BRACK@1068..1069 "]"
-                    DOT@1069..1070 "."
-                    NAME_REF@1070..1072
-                      IDENT@1070..1072 "id"
-                  WHITESPACE@1072..1073 " "
-                  EQ_EQ@1073..1075 "=="
-                  WHITESPACE@1075..1076 " "
-                  PATH_EXPR@1076..1078
-                    PATH@1076..1078
-                      PATH_SEGMENT@1076..1078
-                        NAME_REF@1076..1078
-                          IDENT@1076..1078 "id"
-            WHITESPACE@1078..1083 "\n    "
-            R_CURLY@1083..1084 "}"
-      WHITESPACE@1084..1085 "\n"
-      R_CURLY@1085..1086 "}"
+    L_CURLY@14..15 "{"
+    WHITESPACE@15..20 "\n    "
+    SPEC_FUN@20..89
+      SPEC_KW@20..24 "spec"
+      WHITESPACE@24..25 " "
+      FUN_KW@25..28 "fun"
+      WHITESPACE@28..29 " "
+      NAME@29..38
+        IDENT@29..38 "spec_call"
+      PARAM_LIST@38..40
+        L_PAREN@38..39 "("
+        R_PAREN@39..40 ")"
+      RET_TYPE@40..46
+        COLON@40..41 ":"
+        WHITESPACE@41..42 " "
+        PATH_TYPE@42..46
+          PATH@42..46
+            PATH_SEGMENT@42..46
+              NAME_REF@42..46
+                IDENT@42..46 "bool"
+      WHITESPACE@46..47 " "
+      BLOCK_EXPR@47..89
+        L_CURLY@47..48 "{"
+        WHITESPACE@48..57 "\n        "
+        EXISTS_EXPR@57..83
+          EXISTS_KW@57..63 "exists"
+          WHITESPACE@63..64 " "
+          QUANT_BINDING_LIST@64..75
+            QUANT_BINDING@64..75
+              IDENT_PAT@64..65
+                NAME@64..65
+                  IDENT@64..65 "i"
+              WHITESPACE@65..66 " "
+              IN_KW@66..68 "in"
+              WHITESPACE@68..69 " "
+              RANGE_EXPR@69..75
+                LITERAL@69..70
+                  INT_NUMBER@69..70 "1"
+                DOT_DOT@70..72 ".."
+                LITERAL@72..75
+                  INT_NUMBER@72..75 "100"
+          COLON@75..76 ":"
+          WHITESPACE@76..77 " "
+          BIN_EXPR@77..83
+            PATH_EXPR@77..78
+              PATH@77..78
+                PATH_SEGMENT@77..78
+                  NAME_REF@77..78
+                    IDENT@77..78 "i"
+            WHITESPACE@78..79 " "
+            EQ_EQ@79..81 "=="
+            WHITESPACE@81..82 " "
+            LITERAL@82..83
+              INT_NUMBER@82..83 "3"
+        WHITESPACE@83..88 "\n    "
+        R_CURLY@88..89 "}"
+    WHITESPACE@89..94 "\n    "
+    ITEM_SPEC@94..960
+      SPEC_KW@94..98 "spec"
+      WHITESPACE@98..99 " "
+      MODULE_KW@99..105 "module"
+      WHITESPACE@105..106 " "
+      BLOCK_EXPR@106..960
+        L_CURLY@106..107 "{"
+        WHITESPACE@107..116 "\n        "
+        INVARIANT_STMT@116..194
+          INVARIANT_KW@116..125 "invariant"
+          WHITESPACE@125..138 "\n            "
+          FORALL_EXPR@138..194
+            FORALL_KW@138..144 "forall"
+            WHITESPACE@144..145 " "
+            QUANT_BINDING_LIST@145..159
+              QUANT_BINDING@145..159
+                IDENT_PAT@145..150
+                  NAME@145..150
+                    IDENT@145..150 "addr1"
+                COLON@150..151 ":"
+                WHITESPACE@151..152 " "
+                PATH_TYPE@152..159
+                  PATH@152..159
+                    PATH_SEGMENT@152..159
+                      NAME_REF@152..159
+                        IDENT@152..159 "address"
+            WHITESPACE@159..160 " "
+            WHERE_EXPR@160..188
+              WHERE_KW@160..165 "where"
+              WHITESPACE@165..166 " "
+              CALL_EXPR@166..188
+                PATH@166..169
+                  PATH_SEGMENT@166..169
+                    NAME_REF@166..169
+                      IDENT@166..169 "old"
+                ARG_LIST@169..188
+                  L_PAREN@169..170 "("
+                  CALL_EXPR@170..187
+                    PATH@170..180
+                      PATH_SEGMENT@170..180
+                        NAME_REF@170..176
+                          IDENT@170..176 "exists"
+                        TYPE_ARG_LIST@176..180
+                          L_ANGLE@176..177 "<"
+                          TYPE_ARG@177..179
+                            PATH_TYPE@177..179
+                              PATH@177..179
+                                PATH_SEGMENT@177..179
+                                  NAME_REF@177..179
+                                    IDENT@177..179 "u8"
+                          R_ANGLE@179..180 ">"
+                    ARG_LIST@180..187
+                      L_PAREN@180..181 "("
+                      PATH_EXPR@181..186
+                        PATH@181..186
+                          PATH_SEGMENT@181..186
+                            NAME_REF@181..186
+                              IDENT@181..186 "addr1"
+                      R_PAREN@186..187 ")"
+                  R_PAREN@187..188 ")"
+            COLON@188..189 ":"
+            WHITESPACE@189..190 " "
+            LITERAL@190..194
+              TRUE_KW@190..194 "true"
+        SEMICOLON@194..195 ";"
+        WHITESPACE@195..205 "\n\n        "
+        INVARIANT_STMT@205..302
+          INVARIANT_KW@205..214 "invariant"
+          WHITESPACE@214..227 "\n            "
+          FORALL_EXPR@227..302
+            FORALL_KW@227..233 "forall"
+            WHITESPACE@233..234 " "
+            QUANT_BINDING_LIST@234..256
+              QUANT_BINDING@234..240
+                IDENT_PAT@234..235
+                  NAME@234..235
+                    IDENT@234..235 "x"
+                COLON@235..236 ":"
+                WHITESPACE@236..237 " "
+                PATH_TYPE@237..240
+                  PATH@237..240
+                    PATH_SEGMENT@237..240
+                      NAME_REF@237..240
+                        IDENT@237..240 "num"
+              COMMA@240..241 ","
+              WHITESPACE@241..242 " "
+              QUANT_BINDING@242..248
+                IDENT_PAT@242..243
+                  NAME@242..243
+                    IDENT@242..243 "y"
+                COLON@243..244 ":"
+                WHITESPACE@244..245 " "
+                PATH_TYPE@245..248
+                  PATH@245..248
+                    PATH_SEGMENT@245..248
+                      NAME_REF@245..248
+                        IDENT@245..248 "num"
+              COMMA@248..249 ","
+              WHITESPACE@249..250 " "
+              QUANT_BINDING@250..256
+                IDENT_PAT@250..251
+                  NAME@250..251
+                    IDENT@250..251 "z"
+                COLON@251..252 ":"
+                WHITESPACE@252..253 " "
+                PATH_TYPE@253..256
+                  PATH@253..256
+                    PATH_SEGMENT@253..256
+                      NAME_REF@253..256
+                        IDENT@253..256 "num"
+            WHITESPACE@256..273 "\n                "
+            COLON@273..274 ":"
+            WHITESPACE@274..275 " "
+            BIN_EXPR@275..302
+              BIN_EXPR@275..291
+                BIN_EXPR@275..281
+                  PATH_EXPR@275..276
+                    PATH@275..276
+                      PATH_SEGMENT@275..276
+                        NAME_REF@275..276
+                          IDENT@275..276 "x"
+                  WHITESPACE@276..277 " "
+                  EQ_EQ@277..279 "=="
+                  WHITESPACE@279..280 " "
+                  PATH_EXPR@280..281
+                    PATH@280..281
+                      PATH_SEGMENT@280..281
+                        NAME_REF@280..281
+                          IDENT@280..281 "y"
+                WHITESPACE@281..282 " "
+                AMP_AMP@282..284 "&&"
+                WHITESPACE@284..285 " "
+                BIN_EXPR@285..291
+                  PATH_EXPR@285..286
+                    PATH@285..286
+                      PATH_SEGMENT@285..286
+                        NAME_REF@285..286
+                          IDENT@285..286 "y"
+                  WHITESPACE@286..287 " "
+                  EQ_EQ@287..289 "=="
+                  WHITESPACE@289..290 " "
+                  PATH_EXPR@290..291
+                    PATH@290..291
+                      PATH_SEGMENT@290..291
+                        NAME_REF@290..291
+                          IDENT@290..291 "z"
+              WHITESPACE@291..292 " "
+              IMPLIES@292..295 "==>"
+              WHITESPACE@295..296 " "
+              BIN_EXPR@296..302
+                PATH_EXPR@296..297
+                  PATH@296..297
+                    PATH_SEGMENT@296..297
+                      NAME_REF@296..297
+                        IDENT@296..297 "x"
+                WHITESPACE@297..298 " "
+                EQ_EQ@298..300 "=="
+                WHITESPACE@300..301 " "
+                PATH_EXPR@301..302
+                  PATH@301..302
+                    PATH_SEGMENT@301..302
+                      NAME_REF@301..302
+                        IDENT@301..302 "z"
+        SEMICOLON@302..303 ";"
+        WHITESPACE@303..312 "\n        "
+        INVARIANT_STMT@312..400
+          INVARIANT_KW@312..321 "invariant"
+          WHITESPACE@321..334 "\n            "
+          FORALL_EXPR@334..400
+            FORALL_KW@334..340 "forall"
+            WHITESPACE@340..341 " "
+            QUANT_BINDING_LIST@341..347
+              QUANT_BINDING@341..347
+                IDENT_PAT@341..342
+                  NAME@341..342
+                    IDENT@341..342 "x"
+                COLON@342..343 ":"
+                WHITESPACE@343..344 " "
+                PATH_TYPE@344..347
+                  PATH@344..347
+                    PATH_SEGMENT@344..347
+                      NAME_REF@344..347
+                        IDENT@344..347 "num"
+            WHITESPACE@347..360 "\n            "
+            COLON@360..361 ":"
+            WHITESPACE@361..362 " "
+            EXISTS_EXPR@362..400
+              EXISTS_KW@362..368 "exists"
+              WHITESPACE@368..369 " "
+              QUANT_BINDING_LIST@369..375
+                QUANT_BINDING@369..375
+                  IDENT_PAT@369..370
+                    NAME@369..370
+                      IDENT@369..370 "y"
+                  COLON@370..371 ":"
+                  WHITESPACE@371..372 " "
+                  PATH_TYPE@372..375
+                    PATH@372..375
+                      PATH_SEGMENT@372..375
+                        NAME_REF@372..375
+                          IDENT@372..375 "num"
+              WHITESPACE@375..392 "\n                "
+              COLON@392..393 ":"
+              WHITESPACE@393..394 " "
+              BIN_EXPR@394..400
+                PATH_EXPR@394..395
+                  PATH@394..395
+                    PATH_SEGMENT@394..395
+                      NAME_REF@394..395
+                        IDENT@394..395 "y"
+                WHITESPACE@395..396 " "
+                GT_EQ@396..398 ">="
+                WHITESPACE@398..399 " "
+                PATH_EXPR@399..400
+                  PATH@399..400
+                    PATH_SEGMENT@399..400
+                      NAME_REF@399..400
+                        IDENT@399..400 "x"
+        SEMICOLON@400..401 ";"
+        WHITESPACE@401..411 "\n\n        "
+        INVARIANT_STMT@411..528
+          INVARIANT_KW@411..420 "invariant"
+          WHITESPACE@420..433 "\n            "
+          FORALL_EXPR@433..528
+            FORALL_KW@433..439 "forall"
+            WHITESPACE@439..440 " "
+            QUANT_BINDING_LIST@440..446
+              QUANT_BINDING@440..446
+                IDENT_PAT@440..441
+                  NAME@440..441
+                    IDENT@440..441 "x"
+                COLON@441..442 ":"
+                WHITESPACE@442..443 " "
+                PATH_TYPE@443..446
+                  PATH@443..446
+                    PATH_SEGMENT@443..446
+                      NAME_REF@443..446
+                        IDENT@443..446 "num"
+            WHITESPACE@446..447 " "
+            WHERE_EXPR@447..457
+              WHERE_KW@447..452 "where"
+              WHITESPACE@452..453 " "
+              LITERAL@453..457
+                TRUE_KW@453..457 "true"
+            COLON@457..458 ":"
+            WHITESPACE@458..475 "\n                "
+            FORALL_EXPR@475..528
+              FORALL_KW@475..481 "forall"
+              WHITESPACE@481..482 " "
+              QUANT_BINDING_LIST@482..488
+                QUANT_BINDING@482..488
+                  IDENT_PAT@482..483
+                    NAME@482..483
+                      IDENT@482..483 "y"
+                  COLON@483..484 ":"
+                  WHITESPACE@484..485 " "
+                  PATH_TYPE@485..488
+                    PATH@485..488
+                      PATH_SEGMENT@485..488
+                        NAME_REF@485..488
+                          IDENT@485..488 "num"
+              WHITESPACE@488..489 " "
+              WHERE_EXPR@489..500
+                WHERE_KW@489..494 "where"
+                WHITESPACE@494..495 " "
+                LITERAL@495..500
+                  FALSE_KW@495..500 "false"
+              COLON@500..501 ":"
+              WHITESPACE@501..522 "\n                    "
+              BIN_EXPR@522..528
+                PATH_EXPR@522..523
+                  PATH@522..523
+                    PATH_SEGMENT@522..523
+                      NAME_REF@522..523
+                        IDENT@522..523 "x"
+                WHITESPACE@523..524 " "
+                GT_EQ@524..526 ">="
+                WHITESPACE@526..527 " "
+                PATH_EXPR@527..528
+                  PATH@527..528
+                    PATH_SEGMENT@527..528
+                      NAME_REF@527..528
+                        IDENT@527..528 "y"
+        SEMICOLON@528..529 ";"
+        WHITESPACE@529..539 "\n\n        "
+        INVARIANT_STMT@539..587
+          INVARIANT_KW@539..548 "invariant"
+          WHITESPACE@548..549 " "
+          EXISTS_EXPR@549..587
+            EXISTS_KW@549..555 "exists"
+            WHITESPACE@555..556 " "
+            QUANT_BINDING_LIST@556..578
+              QUANT_BINDING@556..566
+                IDENT_PAT@556..557
+                  NAME@556..557
+                    IDENT@556..557 "x"
+                WHITESPACE@557..558 " "
+                IN_KW@558..560 "in"
+                WHITESPACE@560..561 " "
+                RANGE_EXPR@561..566
+                  LITERAL@561..562
+                    INT_NUMBER@561..562 "1"
+                  DOT_DOT@562..564 ".."
+                  LITERAL@564..566
+                    INT_NUMBER@564..566 "10"
+              COMMA@566..567 ","
+              WHITESPACE@567..568 " "
+              QUANT_BINDING@568..578
+                IDENT_PAT@568..569
+                  NAME@568..569
+                    IDENT@568..569 "y"
+                WHITESPACE@569..570 " "
+                IN_KW@570..572 "in"
+                WHITESPACE@572..573 " "
+                RANGE_EXPR@573..578
+                  LITERAL@573..574
+                    INT_NUMBER@573..574 "8"
+                  DOT_DOT@574..576 ".."
+                  LITERAL@576..578
+                    INT_NUMBER@576..578 "12"
+            WHITESPACE@578..579 " "
+            COLON@579..580 ":"
+            WHITESPACE@580..581 " "
+            BIN_EXPR@581..587
+              PATH_EXPR@581..582
+                PATH@581..582
+                  PATH_SEGMENT@581..582
+                    NAME_REF@581..582
+                      IDENT@581..582 "x"
+              WHITESPACE@582..583 " "
+              EQ_EQ@583..585 "=="
+              WHITESPACE@585..586 " "
+              PATH_EXPR@586..587
+                PATH@586..587
+                  PATH_SEGMENT@586..587
+                    NAME_REF@586..587
+                      IDENT@586..587 "y"
+        SEMICOLON@587..588 ";"
+        WHITESPACE@588..597 "\n        "
+        INVARIANT_STMT@597..645
+          INVARIANT_KW@597..606 "invariant"
+          WHITESPACE@606..607 " "
+          EXISTS_EXPR@607..645
+            EXISTS_KW@607..613 "exists"
+            WHITESPACE@613..614 " "
+            QUANT_BINDING_LIST@614..636
+              QUANT_BINDING@614..624
+                IDENT_PAT@614..615
+                  NAME@614..615
+                    IDENT@614..615 "x"
+                WHITESPACE@615..616 " "
+                IN_KW@616..618 "in"
+                WHITESPACE@618..619 " "
+                RANGE_EXPR@619..624
+                  LITERAL@619..620
+                    INT_NUMBER@619..620 "1"
+                  DOT_DOT@620..622 ".."
+                  LITERAL@622..624
+                    INT_NUMBER@622..624 "10"
+              COMMA@624..625 ","
+              WHITESPACE@625..626 " "
+              QUANT_BINDING@626..636
+                IDENT_PAT@626..627
+                  NAME@626..627
+                    IDENT@626..627 "y"
+                WHITESPACE@627..628 " "
+                IN_KW@628..630 "in"
+                WHITESPACE@630..631 " "
+                RANGE_EXPR@631..636
+                  LITERAL@631..632
+                    INT_NUMBER@631..632 "8"
+                  DOT_DOT@632..634 ".."
+                  LITERAL@634..636
+                    INT_NUMBER@634..636 "12"
+            WHITESPACE@636..637 " "
+            COLON@637..638 ":"
+            WHITESPACE@638..639 " "
+            BIN_EXPR@639..645
+              PATH_EXPR@639..640
+                PATH@639..640
+                  PATH_SEGMENT@639..640
+                    NAME_REF@639..640
+                      IDENT@639..640 "x"
+              WHITESPACE@640..641 " "
+              EQ_EQ@641..643 "=="
+              WHITESPACE@643..644 " "
+              PATH_EXPR@644..645
+                PATH@644..645
+                  PATH_SEGMENT@644..645
+                    NAME_REF@644..645
+                      IDENT@644..645 "y"
+        SEMICOLON@645..646 ";"
+        WHITESPACE@646..656 "\n\n        "
+        SPEC_PREDICATE_STMT@656..702
+          ENSURES_KW@656..663 "ensures"
+          WHITESPACE@663..664 " "
+          BIN_EXPR@664..701
+            PATH_EXPR@664..670
+              PATH@664..670
+                PATH_SEGMENT@664..670
+                  NAME_REF@664..670
+                    IDENT@664..670 "result"
+            WHITESPACE@670..671 " "
+            IMPLIES@671..674 "==>"
+            WHITESPACE@674..675 " "
+            PAREN_EXPR@675..701
+              L_PAREN@675..676 "("
+              FORALL_EXPR@676..700
+                FORALL_KW@676..682 "forall"
+                WHITESPACE@682..683 " "
+                QUANT_BINDING_LIST@683..694
+                  QUANT_BINDING@683..694
+                    IDENT_PAT@683..684
+                      NAME@683..684
+                        IDENT@683..684 "j"
+                    WHITESPACE@684..685 " "
+                    IN_KW@685..687 "in"
+                    WHITESPACE@687..688 " "
+                    RANGE_EXPR@688..694
+                      LITERAL@688..689
+                        INT_NUMBER@688..689 "0"
+                      DOT_DOT@689..691 ".."
+                      LITERAL@691..694
+                        INT_NUMBER@691..694 "100"
+                COLON@694..695 ":"
+                WHITESPACE@695..696 " "
+                LITERAL@696..700
+                  TRUE_KW@696..700 "true"
+              R_PAREN@700..701 ")"
+          SEMICOLON@701..702 ";"
+        WHITESPACE@702..711 "\n        "
+        SPEC_PREDICATE_STMT@711..746
+          ENSURES_KW@711..718 "ensures"
+          WHITESPACE@718..719 " "
+          EXISTS_EXPR@719..745
+            EXISTS_KW@719..725 "exists"
+            WHITESPACE@725..726 " "
+            QUANT_BINDING_LIST@726..736
+              QUANT_BINDING@726..736
+                IDENT_PAT@726..727
+                  NAME@726..727
+                    IDENT@726..727 "x"
+                WHITESPACE@727..728 " "
+                IN_KW@728..730 "in"
+                WHITESPACE@730..731 " "
+                RANGE_EXPR@731..736
+                  LITERAL@731..732
+                    INT_NUMBER@731..732 "1"
+                  DOT_DOT@732..734 ".."
+                  LITERAL@734..736
+                    INT_NUMBER@734..736 "10"
+            WHITESPACE@736..737 " "
+            COLON@737..738 ":"
+            WHITESPACE@738..739 " "
+            BIN_EXPR@739..745
+              PATH_EXPR@739..740
+                PATH@739..740
+                  PATH_SEGMENT@739..740
+                    NAME_REF@739..740
+                      IDENT@739..740 "x"
+              WHITESPACE@740..741 " "
+              EQ_EQ@741..743 "=="
+              WHITESPACE@743..744 " "
+              LITERAL@744..745
+                INT_NUMBER@744..745 "1"
+          SEMICOLON@745..746 ";"
+        WHITESPACE@746..756 "\n\n        "
+        EXPR_STMT@756..819
+          CHOOSE_EXPR@756..818
+            CHOOSE_KW@756..762 "choose"
+            WHITESPACE@762..763 " "
+            QUANT_BINDING_LIST@763..773
+              QUANT_BINDING@763..773
+                IDENT_PAT@763..764
+                  NAME@763..764
+                    IDENT@763..764 "a"
+                COLON@764..765 ":"
+                WHITESPACE@765..766 " "
+                PATH_TYPE@766..773
+                  PATH@766..773
+                    PATH_SEGMENT@766..773
+                      NAME_REF@766..773
+                        IDENT@766..773 "address"
+            WHITESPACE@773..774 " "
+            WHERE_EXPR@774..818
+              WHERE_KW@774..779 "where"
+              WHITESPACE@779..780 " "
+              BIN_EXPR@780..818
+                CALL_EXPR@780..792
+                  PATH@780..789
+                    PATH_SEGMENT@780..789
+                      NAME_REF@780..786
+                        IDENT@780..786 "exists"
+                      TYPE_ARG_LIST@786..789
+                        L_ANGLE@786..787 "<"
+                        TYPE_ARG@787..788
+                          PATH_TYPE@787..788
+                            PATH@787..788
+                              PATH_SEGMENT@787..788
+                                NAME_REF@787..788
+                                  IDENT@787..788 "R"
+                        R_ANGLE@788..789 ">"
+                  ARG_LIST@789..792
+                    L_PAREN@789..790 "("
+                    PATH_EXPR@790..791
+                      PATH@790..791
+                        PATH_SEGMENT@790..791
+                          NAME_REF@790..791
+                            IDENT@790..791 "a"
+                    R_PAREN@791..792 ")"
+                WHITESPACE@792..793 " "
+                AMP_AMP@793..795 "&&"
+                WHITESPACE@795..796 " "
+                BIN_EXPR@796..818
+                  DOT_EXPR@796..814
+                    CALL_EXPR@796..808
+                      PATH@796..805
+                        PATH_SEGMENT@796..805
+                          NAME_REF@796..802
+                            IDENT@796..802 "global"
+                          TYPE_ARG_LIST@802..805
+                            L_ANGLE@802..803 "<"
+                            TYPE_ARG@803..804
+                              PATH_TYPE@803..804
+                                PATH@803..804
+                                  PATH_SEGMENT@803..804
+                                    NAME_REF@803..804
+                                      IDENT@803..804 "R"
+                            R_ANGLE@804..805 ">"
+                      ARG_LIST@805..808
+                        L_PAREN@805..806 "("
+                        PATH_EXPR@806..807
+                          PATH@806..807
+                            PATH_SEGMENT@806..807
+                              NAME_REF@806..807
+                                IDENT@806..807 "a"
+                        R_PAREN@807..808 ")"
+                    DOT@808..809 "."
+                    FIELD_REF@809..814
+                      NAME_REF@809..814
+                        IDENT@809..814 "value"
+                  WHITESPACE@814..815 " "
+                  R_ANGLE@815..816 ">"
+                  WHITESPACE@816..817 " "
+                  LITERAL@817..818
+                    INT_NUMBER@817..818 "0"
+          SEMICOLON@818..819 ";"
+        WHITESPACE@819..828 "\n        "
+        EXPR_STMT@828..880
+          CHOOSE_EXPR@828..879
+            CHOOSE_KW@828..834 "choose"
+            WHITESPACE@834..835 " "
+            MIN_KW@835..838 "min"
+            WHITESPACE@838..839 " "
+            QUANT_BINDING_LIST@839..845
+              QUANT_BINDING@839..845
+                IDENT_PAT@839..840
+                  NAME@839..840
+                    IDENT@839..840 "i"
+                COLON@840..841 ":"
+                WHITESPACE@841..842 " "
+                PATH_TYPE@842..845
+                  PATH@842..845
+                    PATH_SEGMENT@842..845
+                      NAME_REF@842..845
+                        IDENT@842..845 "num"
+            WHITESPACE@845..846 " "
+            WHERE_EXPR@846..879
+              WHERE_KW@846..851 "where"
+              WHITESPACE@851..852 " "
+              BIN_EXPR@852..879
+                CALL_EXPR@852..866
+                  PATH@852..860
+                    PATH_SEGMENT@852..860
+                      NAME_REF@852..860
+                        IDENT@852..860 "in_range"
+                  ARG_LIST@860..866
+                    L_PAREN@860..861 "("
+                    PATH_EXPR@861..862
+                      PATH@861..862
+                        PATH_SEGMENT@861..862
+                          NAME_REF@861..862
+                            IDENT@861..862 "v"
+                    COMMA@862..863 ","
+                    WHITESPACE@863..864 " "
+                    PATH_EXPR@864..865
+                      PATH@864..865
+                        PATH_SEGMENT@864..865
+                          NAME_REF@864..865
+                            IDENT@864..865 "i"
+                    R_PAREN@865..866 ")"
+                WHITESPACE@866..867 " "
+                AMP_AMP@867..869 "&&"
+                WHITESPACE@869..870 " "
+                BIN_EXPR@870..879
+                  INDEX_EXPR@870..874
+                    PATH_EXPR@870..871
+                      PATH@870..871
+                        PATH_SEGMENT@870..871
+                          NAME_REF@870..871
+                            IDENT@870..871 "v"
+                    L_BRACK@871..872 "["
+                    PATH_EXPR@872..873
+                      PATH@872..873
+                        PATH_SEGMENT@872..873
+                          NAME_REF@872..873
+                            IDENT@872..873 "i"
+                    R_BRACK@873..874 "]"
+                  WHITESPACE@874..875 " "
+                  EQ_EQ@875..877 "=="
+                  WHITESPACE@877..878 " "
+                  LITERAL@878..879
+                    INT_NUMBER@878..879 "2"
+          SEMICOLON@879..880 ";"
+        WHITESPACE@880..889 "\n        "
+        LET_STMT@889..954
+          LET_KW@889..892 "let"
+          WHITESPACE@892..893 " "
+          IDENT_PAT@893..894
+            NAME@893..894
+              IDENT@893..894 "a"
+          WHITESPACE@894..895 " "
+          EQ@895..896 "="
+          WHITESPACE@896..897 " "
+          CHOOSE_EXPR@897..953
+            CHOOSE_KW@897..903 "choose"
+            WHITESPACE@903..904 " "
+            MIN_KW@904..907 "min"
+            WHITESPACE@907..908 " "
+            QUANT_BINDING_LIST@908..927
+              QUANT_BINDING@908..927
+                IDENT_PAT@908..909
+                  NAME@908..909
+                    IDENT@908..909 "i"
+                WHITESPACE@909..910 " "
+                IN_KW@910..912 "in"
+                WHITESPACE@912..913 " "
+                CALL_EXPR@913..927
+                  PATH@913..918
+                    PATH_SEGMENT@913..918
+                      NAME_REF@913..918
+                        IDENT@913..918 "range"
+                  ARG_LIST@918..927
+                    L_PAREN@918..919 "("
+                    PATH_EXPR@919..926
+                      PATH@919..926
+                        PATH_SEGMENT@919..926
+                          NAME_REF@919..926
+                            IDENT@919..926 "gallery"
+                    R_PAREN@926..927 ")"
+            WHITESPACE@927..928 " "
+            WHERE_EXPR@928..953
+              WHERE_KW@928..933 "where"
+              WHITESPACE@933..934 " "
+              BIN_EXPR@934..953
+                DOT_EXPR@934..947
+                  INDEX_EXPR@934..944
+                    PATH_EXPR@934..941
+                      PATH@934..941
+                        PATH_SEGMENT@934..941
+                          NAME_REF@934..941
+                            IDENT@934..941 "gallery"
+                    L_BRACK@941..942 "["
+                    PATH_EXPR@942..943
+                      PATH@942..943
+                        PATH_SEGMENT@942..943
+                          NAME_REF@942..943
+                            IDENT@942..943 "i"
+                    R_BRACK@943..944 "]"
+                  DOT@944..945 "."
+                  FIELD_REF@945..947
+                    NAME_REF@945..947
+                      IDENT@945..947 "id"
+                WHITESPACE@947..948 " "
+                EQ_EQ@948..950 "=="
+                WHITESPACE@950..951 " "
+                PATH_EXPR@951..953
+                  PATH@951..953
+                    PATH_SEGMENT@951..953
+                      NAME_REF@951..953
+                        IDENT@951..953 "id"
+          SEMICOLON@953..954 ";"
+        WHITESPACE@954..959 "\n    "
+        R_CURLY@959..960 "}"
+    WHITESPACE@960..966 "\n\n    "
+    SPEC_FUN@966..1084
+      SPEC_KW@966..970 "spec"
+      WHITESPACE@970..971 " "
+      FUN_KW@971..974 "fun"
+      WHITESPACE@974..975 " "
+      NAME@975..997
+        IDENT@975..997 "find_token_index_by_id"
+      TYPE_PARAM_LIST@997..1008
+        L_ANGLE@997..998 "<"
+        TYPE_PARAM@998..1007
+          NAME@998..1007
+            IDENT@998..1007 "TokenType"
+        R_ANGLE@1007..1008 ">"
+      PARAM_LIST@1008..1010
+        L_PAREN@1008..1009 "("
+        R_PAREN@1009..1010 ")"
+      RET_TYPE@1010..1015
+        COLON@1010..1011 ":"
+        WHITESPACE@1011..1012 " "
+        PATH_TYPE@1012..1015
+          PATH@1012..1015
+            PATH_SEGMENT@1012..1015
+              NAME_REF@1012..1015
+                IDENT@1012..1015 "u64"
+      WHITESPACE@1015..1016 " "
+      BLOCK_EXPR@1016..1084
+        L_CURLY@1016..1017 "{"
+        WHITESPACE@1017..1026 "\n        "
+        CHOOSE_EXPR@1026..1078
+          CHOOSE_KW@1026..1032 "choose"
+          WHITESPACE@1032..1033 " "
+          QUANT_BINDING_LIST@1033..1052
+            QUANT_BINDING@1033..1052
+              IDENT_PAT@1033..1034
+                NAME@1033..1034
+                  IDENT@1033..1034 "i"
+              WHITESPACE@1034..1035 " "
+              IN_KW@1035..1037 "in"
+              WHITESPACE@1037..1038 " "
+              CALL_EXPR@1038..1052
+                PATH@1038..1043
+                  PATH_SEGMENT@1038..1043
+                    NAME_REF@1038..1043
+                      IDENT@1038..1043 "range"
+                ARG_LIST@1043..1052
+                  L_PAREN@1043..1044 "("
+                  PATH_EXPR@1044..1051
+                    PATH@1044..1051
+                      PATH_SEGMENT@1044..1051
+                        NAME_REF@1044..1051
+                          IDENT@1044..1051 "gallery"
+                  R_PAREN@1051..1052 ")"
+          WHITESPACE@1052..1053 " "
+          WHERE_EXPR@1053..1078
+            WHERE_KW@1053..1058 "where"
+            WHITESPACE@1058..1059 " "
+            BIN_EXPR@1059..1078
+              DOT_EXPR@1059..1072
+                INDEX_EXPR@1059..1069
+                  PATH_EXPR@1059..1066
+                    PATH@1059..1066
+                      PATH_SEGMENT@1059..1066
+                        NAME_REF@1059..1066
+                          IDENT@1059..1066 "gallery"
+                  L_BRACK@1066..1067 "["
+                  PATH_EXPR@1067..1068
+                    PATH@1067..1068
+                      PATH_SEGMENT@1067..1068
+                        NAME_REF@1067..1068
+                          IDENT@1067..1068 "i"
+                  R_BRACK@1068..1069 "]"
+                DOT@1069..1070 "."
+                FIELD_REF@1070..1072
+                  NAME_REF@1070..1072
+                    IDENT@1070..1072 "id"
+              WHITESPACE@1072..1073 " "
+              EQ_EQ@1073..1075 "=="
+              WHITESPACE@1075..1076 " "
+              PATH_EXPR@1076..1078
+                PATH@1076..1078
+                  PATH_SEGMENT@1076..1078
+                    NAME_REF@1076..1078
+                      IDENT@1076..1078 "id"
+        WHITESPACE@1078..1083 "\n    "
+        R_CURLY@1083..1084 "}"
+    WHITESPACE@1084..1085 "\n"
+    R_CURLY@1085..1086 "}"
   WHITESPACE@1086..1087 "\n"

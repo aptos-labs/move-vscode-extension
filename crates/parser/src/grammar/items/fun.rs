@@ -30,7 +30,7 @@ pub(crate) fn function(p: &mut Parser, m: Marker) {
     if p.at(T![fun]) {
         fun_signature(p, false, true);
     } else {
-        p.error("expected 'fun'");
+        // p.error("expected 'fun'");
         p.error_and_bump_until("expected 'fun'", item_start);
     }
     m.complete(p, FUN);

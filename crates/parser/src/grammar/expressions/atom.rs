@@ -38,6 +38,10 @@ pub(crate) fn literal(p: &mut Parser) -> Option<CompletedMarker> {
         INT_NUMBER | BYTE_STRING | HEX_STRING | T![true] | T![false] => {
             p.bump_any();
         }
+        BAD_CHARACTER => {
+            p.error_and_bump_any("unexpected character");
+            // return None;
+        }
         _ => {
             m.abandon(p);
             return None;
