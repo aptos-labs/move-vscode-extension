@@ -318,14 +318,6 @@ fn postfix_dot_expr(
     dot_expr(p, lhs)
 }
 
-// test method_call_expr
-// fn foo() {
-//     x.foo();
-//     y.bar::<T>(1, 2,);
-//     x.0.0.call();
-//     x.0. call();
-//     x.0()
-// }
 fn method_call_expr(p: &mut Parser<'_>, lhs: CompletedMarker) -> CompletedMarker {
     assert!(p.at(T![.]) && p.nth_at(1, IDENT) && (p.nth(2) == T!['('] || p.nth_at(2, T![::])));
     let m = lhs.precede(p);

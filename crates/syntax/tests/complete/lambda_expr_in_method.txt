@@ -1,0 +1,71 @@
+SOURCE_FILE@0..97
+  MODULE@0..96
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..33
+      IDENT@12..33 "lambda_expr_in_method"
+    WHITESPACE@33..34 " "
+    L_CURLY@34..35 "{"
+    WHITESPACE@35..40 "\n    "
+    FUN@40..94
+      FUN_KW@40..43 "fun"
+      WHITESPACE@43..44 " "
+      NAME@44..48
+        IDENT@44..48 "main"
+      PARAM_LIST@48..50
+        L_PAREN@48..49 "("
+        R_PAREN@49..50 ")"
+      WHITESPACE@50..51 " "
+      BLOCK_EXPR@51..94
+        L_CURLY@51..52 "{"
+        WHITESPACE@52..61 "\n        "
+        EXPR_STMT@61..88
+          METHOD_CALL_EXPR@61..87
+            PATH_EXPR@61..65
+              PATH@61..65
+                PATH_SEGMENT@61..65
+                  NAME_REF@61..65
+                    IDENT@61..65 "self"
+            DOT@65..66 "."
+            NAME_REF@66..69
+              IDENT@66..69 "add"
+            ARG_LIST@69..87
+              L_PAREN@69..70 "("
+              LAMBDA_EXPR@70..86
+                LAMBDA_PARAM_LIST@70..76
+                  PIPE@70..71 "|"
+                  LAMBDA_PARAM@71..72
+                    IDENT_PAT@71..72
+                      NAME@71..72
+                        IDENT@71..72 "a"
+                  COMMA@72..73 ","
+                  WHITESPACE@73..74 " "
+                  LAMBDA_PARAM@74..75
+                    IDENT_PAT@74..75
+                      NAME@74..75
+                        IDENT@74..75 "b"
+                  PIPE@75..76 "|"
+                WHITESPACE@76..77 " "
+                BLOCK_EXPR@77..86
+                  L_CURLY@77..78 "{"
+                  WHITESPACE@78..79 " "
+                  BIN_EXPR@79..84
+                    LITERAL@79..80
+                      INT_NUMBER@79..80 "1"
+                    WHITESPACE@80..81 " "
+                    PLUS@81..82 "+"
+                    WHITESPACE@82..83 " "
+                    LITERAL@83..84
+                      INT_NUMBER@83..84 "1"
+                  WHITESPACE@84..85 " "
+                  R_CURLY@85..86 "}"
+              R_PAREN@86..87 ")"
+          SEMICOLON@87..88 ";"
+        WHITESPACE@88..93 "\n    "
+        R_CURLY@93..94 "}"
+    WHITESPACE@94..95 "\n"
+    R_CURLY@95..96 "}"
+  WHITESPACE@96..97 "\n"

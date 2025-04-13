@@ -307,7 +307,7 @@ LambdaParamList =
     '|' lambda_params:(LambdaParam (',' LambdaParam)* ','?)? '|'
 
 LambdaParam =
-    (IdentPat | Wildcard) (':' Type)?
+    (IdentPat | WildcardPat) (':' Type)?
 
 IsExpr =
     Expr 'is' types:(Type ('|' Type)*)

@@ -1,6 +1,7 @@
+use crate::grammar::patterns::PATTERN_FIRST;
 use super::*;
 use crate::grammar::utils::delimited;
-use crate::T;
+use crate::{ts, T};
 
 pub(crate) fn fun_param_list(p: &mut Parser) {
     let list_marker = p.start();
@@ -44,10 +45,10 @@ pub(crate) fn lambda_param_list(p: &mut Parser) -> bool {
         T![,],
         || "expected parameter".into(),
         |p| p.at(T![|]),
-        TokenSet::new(&[IDENT]),
+        ts!(IDENT, T!['_']),
         |p| {
             let m = p.start();
-            patterns::ident_pat(p);
+            patterns::pattern(p);
             if p.at(T![:]) {
                 types::ascription(p);
             }
