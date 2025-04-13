@@ -2,160 +2,155 @@ SOURCE_FILE@0..365
   MODULE_SPEC@0..364
     SPEC_KW@0..4 "spec"
     WHITESPACE@4..5 " "
-    ADDRESS_REF@5..11
-      NAMED_ADDRESS@5..11
-        IDENT@5..11 "sender"
+    NAMED_ADDRESS@5..11
+      IDENT@5..11 "sender"
     COLON_COLON@11..13 "::"
     NAME@13..22
       IDENT@13..22 "my_module"
     WHITESPACE@22..23 " "
-    ITEM_LIST@23..364
-      L_CURLY@23..24 "{"
-      WHITESPACE@24..29 "\n    "
-      ITEM_SPEC@29..79
-        SPEC_KW@29..33 "spec"
-        WHITESPACE@33..34 " "
-        NAME@34..48
-          IDENT@34..48 "create_address"
-        WHITESPACE@48..49 " "
-        BLOCK_EXPR@49..79
-          STMT_LIST@49..79
-            L_CURLY@49..50 "{"
-            WHITESPACE@50..59 "\n        "
-            PRAGMA_STMT@59..73
-              PRAGMA_KW@59..65 "pragma"
-              WHITESPACE@65..66 " "
-              PRAGMA_ATTR_ITEM@66..72
-                IDENT@66..72 "opaque"
-              SEMICOLON@72..73 ";"
-            WHITESPACE@73..78 "\n    "
-            R_CURLY@78..79 "}"
-      WHITESPACE@79..85 "\n\n    "
-      SPEC_FUN@85..201
-        SPEC_KW@85..89 "spec"
-        WHITESPACE@89..90 " "
-        FUN_KW@90..93 "fun"
-        WHITESPACE@93..94 " "
-        NAME@94..115
-          IDENT@94..115 "spec_now_microseconds"
-        PARAM_LIST@115..117
-          L_PAREN@115..116 "("
-          R_PAREN@116..117 ")"
-        RET_TYPE@117..122
-          COLON@117..118 ":"
-          WHITESPACE@118..119 " "
-          PATH_TYPE@119..122
-            PATH@119..122
-              PATH_SEGMENT@119..122
-                NAME_REF@119..122
-                  IDENT@119..122 "u64"
-        WHITESPACE@122..123 " "
-        BLOCK_EXPR@123..201
-          STMT_LIST@123..201
-            L_CURLY@123..124 "{"
-            WHITESPACE@124..133 "\n        "
-            DOT_EXPR@133..195
-              CALL_EXPR@133..182
-                PATH@133..164
-                  PATH_SEGMENT@133..164
-                    NAME_REF@133..139
-                      IDENT@133..139 "global"
-                    TYPE_ARG_LIST@139..164
-                      L_ANGLE@139..140 "<"
-                      TYPE_ARG@140..163
-                        PATH_TYPE@140..163
-                          PATH@140..163
-                            PATH_SEGMENT@140..163
-                              NAME_REF@140..163
-                                IDENT@140..163 "CurrentTimeMicroseconds"
-                      R_ANGLE@163..164 ">"
-                ARG_LIST@164..182
-                  L_PAREN@164..165 "("
-                  LITERAL@165..181
-                    AT@165..166 "@"
-                    ADDRESS_REF@166..181
-                      NAMED_ADDRESS@166..181
-                        IDENT@166..181 "aptos_framework"
-                  R_PAREN@181..182 ")"
-              DOT@182..183 "."
-              NAME_REF@183..195
-                IDENT@183..195 "microseconds"
-            WHITESPACE@195..200 "\n    "
-            R_CURLY@200..201 "}"
-      WHITESPACE@201..207 "\n\n    "
-      SCHEMA@207..304
-        SPEC_KW@207..211 "spec"
-        WHITESPACE@211..212 " "
-        SCHEMA_KW@212..218 "schema"
-        WHITESPACE@218..219 " "
-        NAME@219..237
-          IDENT@219..237 "AbortsIfNotGenesis"
-        WHITESPACE@237..238 " "
-        BLOCK_EXPR@238..304
-          STMT_LIST@238..304
-            L_CURLY@238..239 "{"
-            WHITESPACE@239..248 "\n        "
-            ABORTS_IF_STMT@248..297
-              ABORTS_IF_KW@248..257 "aborts_if"
-              WHITESPACE@257..258 " "
-              PREFIX_EXPR@258..271
-                BANG@258..259 "!"
-                CALL_EXPR@259..271
-                  PATH@259..269
-                    PATH_SEGMENT@259..269
-                      NAME_REF@259..269
-                        IDENT@259..269 "is_genesis"
-                  ARG_LIST@269..271
-                    L_PAREN@269..270 "("
-                    R_PAREN@270..271 ")"
-              WHITESPACE@271..272 " "
-              ABORTS_IF_WITH@272..297
-                WITH_KW@272..276 "with"
-                WHITESPACE@276..277 " "
-                PATH_EXPR@277..297
-                  PATH@277..297
-                    PATH@277..282
-                      PATH_SEGMENT@277..282
-                        NAME_REF@277..282
-                          IDENT@277..282 "error"
-                    COLON_COLON@282..284 "::"
-                    PATH_SEGMENT@284..297
-                      NAME_REF@284..297
-                        IDENT@284..297 "INVALID_STATE"
-            SEMICOLON@297..298 ";"
-            WHITESPACE@298..303 "\n    "
-            R_CURLY@303..304 "}"
-      WHITESPACE@304..310 "\n\n    "
-      ITEM_SPEC@310..362
-        SPEC_KW@310..314 "spec"
-        WHITESPACE@314..315 " "
-        NAME@315..335
-          IDENT@315..335 "write_to_event_store"
-        TYPE_PARAM_LIST@335..352
-          L_ANGLE@335..336 "<"
-          TYPE_PARAM@336..351
-            NAME@336..337
-              IDENT@336..337 "T"
-            COLON@337..338 ":"
-            WHITESPACE@338..339 " "
-            ABILITY_BOUND_LIST@339..351
-              ABILITY@339..343
-                IDENT@339..343 "drop"
-              WHITESPACE@343..344 " "
-              PLUS@344..345 "+"
-              WHITESPACE@345..346 " "
-              ABILITY@346..351
-                IDENT@346..351 "store"
-          R_ANGLE@351..352 ">"
-        PARAM_LIST@352..354
-          L_PAREN@352..353 "("
-          R_PAREN@353..354 ")"
-        WHITESPACE@354..355 " "
-        BLOCK_EXPR@355..362
-          STMT_LIST@355..362
-            L_CURLY@355..356 "{"
-            WHITESPACE@356..361 "\n    "
-            R_CURLY@361..362 "}"
-      WHITESPACE@362..363 "\n"
-      R_CURLY@363..364 "}"
+    L_CURLY@23..24 "{"
+    WHITESPACE@24..29 "\n    "
+    ITEM_SPEC@29..79
+      SPEC_KW@29..33 "spec"
+      WHITESPACE@33..34 " "
+      NAME_REF@34..48
+        IDENT@34..48 "create_address"
+      WHITESPACE@48..49 " "
+      BLOCK_EXPR@49..79
+        L_CURLY@49..50 "{"
+        WHITESPACE@50..59 "\n        "
+        PRAGMA_STMT@59..73
+          PRAGMA_KW@59..65 "pragma"
+          WHITESPACE@65..66 " "
+          PRAGMA_ATTR_ITEM@66..72
+            IDENT@66..72 "opaque"
+          SEMICOLON@72..73 ";"
+        WHITESPACE@73..78 "\n    "
+        R_CURLY@78..79 "}"
+    WHITESPACE@79..85 "\n\n    "
+    SPEC_FUN@85..201
+      SPEC_KW@85..89 "spec"
+      WHITESPACE@89..90 " "
+      FUN_KW@90..93 "fun"
+      WHITESPACE@93..94 " "
+      NAME@94..115
+        IDENT@94..115 "spec_now_microseconds"
+      PARAM_LIST@115..117
+        L_PAREN@115..116 "("
+        R_PAREN@116..117 ")"
+      RET_TYPE@117..122
+        COLON@117..118 ":"
+        WHITESPACE@118..119 " "
+        PATH_TYPE@119..122
+          PATH@119..122
+            PATH_SEGMENT@119..122
+              NAME_REF@119..122
+                IDENT@119..122 "u64"
+      WHITESPACE@122..123 " "
+      BLOCK_EXPR@123..201
+        L_CURLY@123..124 "{"
+        WHITESPACE@124..133 "\n        "
+        DOT_EXPR@133..195
+          CALL_EXPR@133..182
+            PATH@133..164
+              PATH_SEGMENT@133..164
+                NAME_REF@133..139
+                  IDENT@133..139 "global"
+                TYPE_ARG_LIST@139..164
+                  L_ANGLE@139..140 "<"
+                  TYPE_ARG@140..163
+                    PATH_TYPE@140..163
+                      PATH@140..163
+                        PATH_SEGMENT@140..163
+                          NAME_REF@140..163
+                            IDENT@140..163 "CurrentTimeMicroseconds"
+                  R_ANGLE@163..164 ">"
+            ARG_LIST@164..182
+              L_PAREN@164..165 "("
+              LITERAL@165..181
+                ADDRESS_LIT@165..181
+                  AT@165..166 "@"
+                  NAMED_ADDRESS@166..181
+                    IDENT@166..181 "aptos_framework"
+              R_PAREN@181..182 ")"
+          DOT@182..183 "."
+          FIELD_REF@183..195
+            NAME_REF@183..195
+              IDENT@183..195 "microseconds"
+        WHITESPACE@195..200 "\n    "
+        R_CURLY@200..201 "}"
+    WHITESPACE@201..207 "\n\n    "
+    SCHEMA@207..304
+      SPEC_KW@207..211 "spec"
+      WHITESPACE@211..212 " "
+      SCHEMA_KW@212..218 "schema"
+      WHITESPACE@218..219 " "
+      NAME@219..237
+        IDENT@219..237 "AbortsIfNotGenesis"
+      WHITESPACE@237..238 " "
+      BLOCK_EXPR@238..304
+        L_CURLY@238..239 "{"
+        WHITESPACE@239..248 "\n        "
+        ABORTS_IF_STMT@248..298
+          ABORTS_IF_KW@248..257 "aborts_if"
+          WHITESPACE@257..258 " "
+          BANG_EXPR@258..271
+            BANG@258..259 "!"
+            CALL_EXPR@259..271
+              PATH@259..269
+                PATH_SEGMENT@259..269
+                  NAME_REF@259..269
+                    IDENT@259..269 "is_genesis"
+              ARG_LIST@269..271
+                L_PAREN@269..270 "("
+                R_PAREN@270..271 ")"
+          WHITESPACE@271..272 " "
+          ABORTS_IF_WITH@272..297
+            WITH_KW@272..276 "with"
+            WHITESPACE@276..277 " "
+            PATH_EXPR@277..297
+              PATH@277..297
+                PATH@277..282
+                  PATH_SEGMENT@277..282
+                    NAME_REF@277..282
+                      IDENT@277..282 "error"
+                COLON_COLON@282..284 "::"
+                PATH_SEGMENT@284..297
+                  NAME_REF@284..297
+                    IDENT@284..297 "INVALID_STATE"
+          SEMICOLON@297..298 ";"
+        WHITESPACE@298..303 "\n    "
+        R_CURLY@303..304 "}"
+    WHITESPACE@304..310 "\n\n    "
+    ITEM_SPEC@310..362
+      SPEC_KW@310..314 "spec"
+      WHITESPACE@314..315 " "
+      NAME_REF@315..335
+        IDENT@315..335 "write_to_event_store"
+      TYPE_PARAM_LIST@335..352
+        L_ANGLE@335..336 "<"
+        TYPE_PARAM@336..351
+          NAME@336..337
+            IDENT@336..337 "T"
+          COLON@337..338 ":"
+          WHITESPACE@338..339 " "
+          ABILITY_BOUND_LIST@339..351
+            ABILITY@339..343
+              IDENT@339..343 "drop"
+            WHITESPACE@343..344 " "
+            PLUS@344..345 "+"
+            WHITESPACE@345..346 " "
+            ABILITY@346..351
+              IDENT@346..351 "store"
+        R_ANGLE@351..352 ">"
+      PARAM_LIST@352..354
+        L_PAREN@352..353 "("
+        R_PAREN@353..354 ")"
+      WHITESPACE@354..355 " "
+      BLOCK_EXPR@355..362
+        L_CURLY@355..356 "{"
+        WHITESPACE@356..361 "\n    "
+        R_CURLY@361..362 "}"
+    WHITESPACE@362..363 "\n"
+    R_CURLY@363..364 "}"
   WHITESPACE@364..365 "\n"

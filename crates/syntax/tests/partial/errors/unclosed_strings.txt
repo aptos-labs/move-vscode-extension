@@ -2,47 +2,46 @@ SOURCE_FILE@0..113
   MODULE@0..112
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
-    ADDRESS_REF@7..10
-      VALUE_ADDRESS@7..10
-        INT_NUMBER@7..10 "0x1"
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
     COLON_COLON@10..12 "::"
     NAME@12..28
       IDENT@12..28 "unclosed_strings"
     WHITESPACE@28..29 " "
-    ITEM_LIST@29..112
-      L_CURLY@29..30 "{"
-      WHITESPACE@30..35 "\n    "
-      FUN@35..110
-        FUN_KW@35..38 "fun"
-        WHITESPACE@38..39 " "
-        NAME@39..43
-          IDENT@39..43 "main"
-        PARAM_LIST@43..45
-          L_PAREN@43..44 "("
-          R_PAREN@44..45 ")"
-        WHITESPACE@45..46 " "
-        BLOCK_EXPR@46..110
-          STMT_LIST@46..110
-            L_CURLY@46..47 "{"
-            WHITESPACE@47..56 "\n        "
-            EXPR_STMT@56..59
-              LITERAL@56..58
-                HEX_STRING@56..58 "x\""
-              SEMICOLON@58..59 ";"
-            WHITESPACE@59..68 "\n        "
-            EXPR_STMT@68..71
-              LITERAL@68..71
-                BYTE_STRING@68..71 "b\";"
-            WHITESPACE@71..80 "\n        "
-            EXPR_STMT@80..93
-              LITERAL@80..93
-                BYTE_STRING@80..93 "b\"2423534;;;;"
-            WHITESPACE@93..102 "\n        "
+    L_CURLY@29..30 "{"
+    WHITESPACE@30..35 "\n    "
+    FUN@35..110
+      FUN_KW@35..38 "fun"
+      WHITESPACE@38..39 " "
+      NAME@39..43
+        IDENT@39..43 "main"
+      PARAM_LIST@43..45
+        L_PAREN@43..44 "("
+        R_PAREN@44..45 ")"
+      WHITESPACE@45..46 " "
+      BLOCK_EXPR@46..110
+        L_CURLY@46..47 "{"
+        WHITESPACE@47..56 "\n        "
+        EXPR_STMT@56..59
+          LITERAL@56..58
+            HEX_STRING@56..58 "x\""
+          SEMICOLON@58..59 ";"
+        WHITESPACE@59..68 "\n        "
+        EXPR_STMT@68..71
+          LITERAL@68..71
+            BYTE_STRING@68..71 "b\";"
+        WHITESPACE@71..80 "\n        "
+        EXPR_STMT@80..93
+          LITERAL@80..93
+            BYTE_STRING@80..93 "b\"2423534;;;;"
+        WHITESPACE@93..102 "\n        "
+        EXPR_STMT@102..104
+          LITERAL@102..103
             ERROR@102..103
               BAD_CHARACTER@102..103 "\""
-            SEMICOLON@103..104 ";"
-            WHITESPACE@104..109 "\n    "
-            R_CURLY@109..110 "}"
-      WHITESPACE@110..111 "\n"
-      R_CURLY@111..112 "}"
+          SEMICOLON@103..104 ";"
+        WHITESPACE@104..109 "\n    "
+        R_CURLY@109..110 "}"
+    WHITESPACE@110..111 "\n"
+    R_CURLY@111..112 "}"
   WHITESPACE@112..113 "\n"

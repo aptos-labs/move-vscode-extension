@@ -2,58 +2,56 @@ SOURCE_FILE@0..159
   SCRIPT@0..158
     SCRIPT_KW@0..6 "script"
     WHITESPACE@6..7 " "
-    ITEM_LIST@7..158
-      L_CURLY@7..8 "{"
-      WHITESPACE@8..13 "\n    "
-      FUN@13..156
-        FUN_KW@13..16 "fun"
-        WHITESPACE@16..17 " "
-        NAME@17..21
-          IDENT@17..21 "main"
-        PARAM_LIST@21..23
-          L_PAREN@21..22 "("
-          R_PAREN@22..23 ")"
-        WHITESPACE@23..24 " "
-        BLOCK_EXPR@24..156
-          STMT_LIST@24..156
-            L_CURLY@24..25 "{"
-            WHITESPACE@25..34 "\n        "
-            EXPR_STMT@34..52
-              LITERAL@34..51
-                BYTE_STRING@34..51 "b\"(false: bool);\""
-              SEMICOLON@51..52 ";"
-            WHITESPACE@52..61 "\n        "
-            EXPR_STMT@61..69
-              LITERAL@61..68
-                HEX_STRING@61..68 "x\"0101\""
-              SEMICOLON@68..69 ";"
-            WHITESPACE@69..78 "\n        "
-            EXPR_STMT@78..82
-              LITERAL@78..81
-                HEX_STRING@78..81 "x\"\""
-              SEMICOLON@81..82 ";"
-            WHITESPACE@82..91 "\n        "
-            EXPR_STMT@91..103
-              LITERAL@91..102
-                BYTE_STRING@91..102 "b\"\\t\\n\\r\\0\""
-              SEMICOLON@102..103 ";"
-            WHITESPACE@103..112 "\n        "
-            EXPR_STMT@112..118
-              LITERAL@112..117
-                BYTE_STRING@112..117 "b\"\\\\\""
-              SEMICOLON@117..118 ";"
-            WHITESPACE@118..127 "\n        "
-            EXPR_STMT@127..133
-              LITERAL@127..132
-                BYTE_STRING@127..132 "b\"\\\"\""
-              SEMICOLON@132..133 ";"
-            WHITESPACE@133..142 "\n        "
-            EXPR_STMT@142..150
-              LITERAL@142..149
-                BYTE_STRING@142..149 "b\"\\x01\""
-              SEMICOLON@149..150 ";"
-            WHITESPACE@150..155 "\n    "
-            R_CURLY@155..156 "}"
-      WHITESPACE@156..157 "\n"
-      R_CURLY@157..158 "}"
+    L_CURLY@7..8 "{"
+    WHITESPACE@8..13 "\n    "
+    FUN@13..156
+      FUN_KW@13..16 "fun"
+      WHITESPACE@16..17 " "
+      NAME@17..21
+        IDENT@17..21 "main"
+      PARAM_LIST@21..23
+        L_PAREN@21..22 "("
+        R_PAREN@22..23 ")"
+      WHITESPACE@23..24 " "
+      BLOCK_EXPR@24..156
+        L_CURLY@24..25 "{"
+        WHITESPACE@25..34 "\n        "
+        EXPR_STMT@34..52
+          LITERAL@34..51
+            BYTE_STRING@34..51 "b\"(false: bool);\""
+          SEMICOLON@51..52 ";"
+        WHITESPACE@52..61 "\n        "
+        EXPR_STMT@61..69
+          LITERAL@61..68
+            HEX_STRING@61..68 "x\"0101\""
+          SEMICOLON@68..69 ";"
+        WHITESPACE@69..78 "\n        "
+        EXPR_STMT@78..82
+          LITERAL@78..81
+            HEX_STRING@78..81 "x\"\""
+          SEMICOLON@81..82 ";"
+        WHITESPACE@82..91 "\n        "
+        EXPR_STMT@91..103
+          LITERAL@91..102
+            BYTE_STRING@91..102 "b\"\\t\\n\\r\\0\""
+          SEMICOLON@102..103 ";"
+        WHITESPACE@103..112 "\n        "
+        EXPR_STMT@112..118
+          LITERAL@112..117
+            BYTE_STRING@112..117 "b\"\\\\\""
+          SEMICOLON@117..118 ";"
+        WHITESPACE@118..127 "\n        "
+        EXPR_STMT@127..133
+          LITERAL@127..132
+            BYTE_STRING@127..132 "b\"\\\"\""
+          SEMICOLON@132..133 ";"
+        WHITESPACE@133..142 "\n        "
+        EXPR_STMT@142..150
+          LITERAL@142..149
+            BYTE_STRING@142..149 "b\"\\x01\""
+          SEMICOLON@149..150 ";"
+        WHITESPACE@150..155 "\n    "
+        R_CURLY@155..156 "}"
+    WHITESPACE@156..157 "\n"
+    R_CURLY@157..158 "}"
   WHITESPACE@158..159 "\n"

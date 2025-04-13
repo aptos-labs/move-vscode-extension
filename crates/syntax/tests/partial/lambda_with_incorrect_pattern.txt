@@ -1,0 +1,56 @@
+SOURCE_FILE@0..95
+  MODULE@0..94
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..41
+      IDENT@12..41 "lambda_with_incorrect ..."
+    WHITESPACE@41..42 " "
+    L_CURLY@42..43 "{"
+    WHITESPACE@43..48 "\n    "
+    FUN@48..92
+      FUN_KW@48..51 "fun"
+      WHITESPACE@51..52 " "
+      NAME@52..56
+        IDENT@52..56 "main"
+      PARAM_LIST@56..58
+        L_PAREN@56..57 "("
+        R_PAREN@57..58 ")"
+      WHITESPACE@58..59 " "
+      BLOCK_EXPR@59..92
+        L_CURLY@59..60 "{"
+        WHITESPACE@60..69 "\n        "
+        EXPR_STMT@69..86
+          LAMBDA_EXPR@69..85
+            LAMBDA_PARAM_LIST@69..83
+              PIPE@69..70 "|"
+              LAMBDA_PARAM@70..72
+                AMP@70..71 "&"
+                IDENT@71..72 "a"
+              COMMA@72..73 ","
+              WHITESPACE@73..74 " "
+              LAMBDA_PARAM@74..75
+                WILDCARD_PAT@74..75
+                  UNDERSCORE@74..75 "_"
+              COMMA@75..76 ","
+              WHITESPACE@76..77 " "
+              LAMBDA_PARAM@77..79
+                INT_NUMBER@77..79 "22"
+              COMMA@79..80 ","
+              WHITESPACE@80..81 " "
+              LAMBDA_PARAM@81..82
+                IDENT_PAT@81..82
+                  NAME@81..82
+                    IDENT@81..82 "d"
+              PIPE@82..83 "|"
+            WHITESPACE@83..84 " "
+            LITERAL@84..85
+              INT_NUMBER@84..85 "1"
+          SEMICOLON@85..86 ";"
+        WHITESPACE@86..91 "\n    "
+        R_CURLY@91..92 "}"
+    WHITESPACE@92..93 "\n"
+    R_CURLY@93..94 "}"
+  WHITESPACE@94..95 "\n"

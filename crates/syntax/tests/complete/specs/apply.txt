@@ -5,210 +5,208 @@ SOURCE_FILE@0..339
     NAME@7..8
       IDENT@7..8 "M"
     WHITESPACE@8..9 " "
-    ITEM_LIST@9..338
-      L_CURLY@9..10 "{"
-      WHITESPACE@10..15 "\n    "
-      ITEM_SPEC@15..336
-        SPEC_KW@15..19 "spec"
-        WHITESPACE@19..20 " "
-        MODULE_KW@20..26 "module"
-        WHITESPACE@26..27 " "
-        BLOCK_EXPR@27..336
-          STMT_LIST@27..336
-            L_CURLY@27..28 "{"
-            WHITESPACE@28..37 "\n        "
-            APPLY_SCHEMA@37..57
-              APPLY_KW@37..42 "apply"
-              WHITESPACE@42..43 " "
-              SCHEMA_LIT@43..49
-                PATH@43..49
-                  PATH_SEGMENT@43..49
-                    NAME_REF@43..46
-                      IDENT@43..46 "Foo"
-                    TYPE_ARG_LIST@46..49
-                      L_ANGLE@46..47 "<"
-                      TYPE_ARG@47..48
-                        PATH_TYPE@47..48
-                          PATH@47..48
-                            PATH_SEGMENT@47..48
-                              NAME_REF@47..48
-                                IDENT@47..48 "S"
-                      R_ANGLE@48..49 ">"
-              WHITESPACE@49..50 " "
-              APPLY_TO@50..57
-                TO_KW@50..52 "to"
-                WHITESPACE@52..53 " "
-                WILDCARD_PATTERN@53..57
-                  WILDCARD_IDENT@53..57 "*foo"
-            SEMICOLON@57..58 ";"
-            WHITESPACE@58..67 "\n        "
-            APPLY_SCHEMA@67..106
-              APPLY_KW@67..72 "apply"
-              WHITESPACE@72..73 " "
-              SCHEMA_LIT@73..83
-                PATH@73..83
-                  PATH_SEGMENT@73..83
-                    NAME_REF@73..83
-                      IDENT@73..83 "ExactlyOne"
-              WHITESPACE@83..84 " "
-              APPLY_TO@84..88
-                TO_KW@84..86 "to"
-                WHITESPACE@86..87 " "
-                WILDCARD_PATTERN@87..88
-                  WILDCARD_IDENT@87..88 "*"
-              WHITESPACE@88..89 " "
-              APPLY_EXCEPT@89..106
-                EXCEPT_KW@89..95 "except"
-                WHITESPACE@95..96 " "
-                WILDCARD_PATTERN@96..106
-                  WILDCARD_IDENT@96..106 "initialize"
-            SEMICOLON@106..107 ";"
-            WHITESPACE@107..116 "\n        "
-            APPLY_SCHEMA@116..158
-              APPLY_KW@116..121 "apply"
-              WHITESPACE@121..122 " "
-              SCHEMA_LIT@122..143
-                PATH@122..143
-                  PATH_SEGMENT@122..143
-                    NAME_REF@122..137
-                      IDENT@122..137 "ModuleInvariant"
-                    TYPE_ARG_LIST@137..143
-                      L_ANGLE@137..138 "<"
-                      TYPE_ARG@138..139
-                        PATH_TYPE@138..139
-                          PATH@138..139
-                            PATH_SEGMENT@138..139
-                              NAME_REF@138..139
-                                IDENT@138..139 "X"
-                      COMMA@139..140 ","
-                      WHITESPACE@140..141 " "
-                      TYPE_ARG@141..142
-                        PATH_TYPE@141..142
-                          PATH@141..142
-                            PATH_SEGMENT@141..142
-                              NAME_REF@141..142
-                                IDENT@141..142 "Y"
-                      R_ANGLE@142..143 ">"
-              WHITESPACE@143..144 " "
-              APPLY_TO@144..158
-                TO_KW@144..146 "to"
-                WHITESPACE@146..147 " "
-                WILDCARD_PATTERN@147..158
-                  WILDCARD_IDENT@147..152 "*foo*"
-                  TYPE_PARAM_LIST@152..158
-                    L_ANGLE@152..153 "<"
-                    TYPE_PARAM@153..154
-                      NAME@153..154
-                        IDENT@153..154 "Y"
-                    COMMA@154..155 ","
-                    WHITESPACE@155..156 " "
-                    TYPE_PARAM@156..157
-                      NAME@156..157
-                        IDENT@156..157 "X"
-                    R_ANGLE@157..158 ">"
-            SEMICOLON@158..159 ";"
-            WHITESPACE@159..168 "\n        "
-            APPLY_SCHEMA@168..239
-              APPLY_KW@168..173 "apply"
-              WHITESPACE@173..174 " "
-              SCHEMA_LIT@174..223
-                PATH@174..198
-                  PATH_SEGMENT@174..198
-                    NAME_REF@174..198
-                      IDENT@174..198 "EnsuresHasKeyRotationCap"
-                WHITESPACE@198..199 " "
-                L_CURLY@199..200 "{"
-                WHITESPACE@200..201 " "
-                SCHEMA_LIT_FIELD@201..221
-                  IDENT@201..208 "account"
-                  COLON@208..209 ":"
-                  WHITESPACE@209..210 " "
-                  PATH_TYPE@210..221
-                    PATH@210..221
-                      PATH_SEGMENT@210..221
-                        NAME_REF@210..221
-                          IDENT@210..221 "new_account"
-                WHITESPACE@221..222 " "
-                R_CURLY@222..223 "}"
-              WHITESPACE@223..224 " "
-              APPLY_TO@224..239
-                TO_KW@224..226 "to"
-                WHITESPACE@226..227 " "
-                WILDCARD_PATTERN@227..239
-                  WILDCARD_IDENT@227..239 "make_account"
-            SEMICOLON@239..240 ";"
-            WHITESPACE@240..249 "\n        "
-            APPLY_SCHEMA@249..329
-              APPLY_KW@249..254 "apply"
-              WHITESPACE@254..255 " "
-              SCHEMA_LIT@255..276
-                PATH@255..276
-                  PATH_SEGMENT@255..276
-                    NAME_REF@255..270
-                      IDENT@255..270 "ModuleInvariant"
-                    TYPE_ARG_LIST@270..276
-                      L_ANGLE@270..271 "<"
-                      TYPE_ARG@271..272
-                        PATH_TYPE@271..272
-                          PATH@271..272
-                            PATH_SEGMENT@271..272
-                              NAME_REF@271..272
-                                IDENT@271..272 "X"
-                      COMMA@272..273 ","
-                      WHITESPACE@273..274 " "
-                      TYPE_ARG@274..275
-                        PATH_TYPE@274..275
-                          PATH@274..275
-                            PATH_SEGMENT@274..275
-                              NAME_REF@274..275
-                                IDENT@274..275 "Y"
-                      R_ANGLE@275..276 ">"
-              WHITESPACE@276..277 " "
-              APPLY_TO@277..296
-                TO_KW@277..279 "to"
-                WHITESPACE@279..280 " "
-                WILDCARD_PATTERN@280..291
-                  WILDCARD_IDENT@280..285 "*foo*"
-                  TYPE_PARAM_LIST@285..291
-                    L_ANGLE@285..286 "<"
-                    TYPE_PARAM@286..287
-                      NAME@286..287
-                        IDENT@286..287 "Y"
-                    COMMA@287..288 ","
-                    WHITESPACE@288..289 " "
-                    TYPE_PARAM@289..290
-                      NAME@289..290
-                        IDENT@289..290 "X"
-                    R_ANGLE@290..291 ">"
-                COMMA@291..292 ","
-                WHITESPACE@292..293 " "
-                WILDCARD_PATTERN@293..296
-                  WILDCARD_IDENT@293..296 "bar"
-              WHITESPACE@296..297 " "
-              APPLY_EXCEPT@297..329
-                EXCEPT_KW@297..303 "except"
-                WHITESPACE@303..304 " "
-                WILDCARD_PATTERN@304..312
-                  WILDCARD_PATTERN_MODIFIER@304..310
-                    PUBLIC_KW@304..310 "public"
-                  WHITESPACE@310..311 " "
-                  WILDCARD_IDENT@311..312 "*"
-                COMMA@312..313 ","
-                WHITESPACE@313..314 " "
-                WILDCARD_PATTERN@314..329
-                  WILDCARD_PATTERN_MODIFIER@314..322
-                    INTERNAL_KW@314..322 "internal"
-                  WHITESPACE@322..323 " "
-                  WILDCARD_IDENT@323..326 "baz"
-                  TYPE_PARAM_LIST@326..329
-                    L_ANGLE@326..327 "<"
-                    TYPE_PARAM@327..328
-                      NAME@327..328
-                        IDENT@327..328 "X"
-                    R_ANGLE@328..329 ">"
-            SEMICOLON@329..330 ";"
-            WHITESPACE@330..335 "\n    "
-            R_CURLY@335..336 "}"
-      WHITESPACE@336..337 "\n"
-      R_CURLY@337..338 "}"
+    L_CURLY@9..10 "{"
+    WHITESPACE@10..15 "\n    "
+    ITEM_SPEC@15..336
+      SPEC_KW@15..19 "spec"
+      WHITESPACE@19..20 " "
+      MODULE_KW@20..26 "module"
+      WHITESPACE@26..27 " "
+      BLOCK_EXPR@27..336
+        L_CURLY@27..28 "{"
+        WHITESPACE@28..37 "\n        "
+        APPLY_SCHEMA@37..57
+          APPLY_KW@37..42 "apply"
+          WHITESPACE@42..43 " "
+          SCHEMA_LIT@43..49
+            PATH@43..49
+              PATH_SEGMENT@43..49
+                NAME_REF@43..46
+                  IDENT@43..46 "Foo"
+                TYPE_ARG_LIST@46..49
+                  L_ANGLE@46..47 "<"
+                  TYPE_ARG@47..48
+                    PATH_TYPE@47..48
+                      PATH@47..48
+                        PATH_SEGMENT@47..48
+                          NAME_REF@47..48
+                            IDENT@47..48 "S"
+                  R_ANGLE@48..49 ">"
+          WHITESPACE@49..50 " "
+          APPLY_TO@50..57
+            TO_KW@50..52 "to"
+            WHITESPACE@52..53 " "
+            WILDCARD_PATTERN@53..57
+              WILDCARD_IDENT@53..57 "*foo"
+        SEMICOLON@57..58 ";"
+        WHITESPACE@58..67 "\n        "
+        APPLY_SCHEMA@67..106
+          APPLY_KW@67..72 "apply"
+          WHITESPACE@72..73 " "
+          SCHEMA_LIT@73..83
+            PATH@73..83
+              PATH_SEGMENT@73..83
+                NAME_REF@73..83
+                  IDENT@73..83 "ExactlyOne"
+          WHITESPACE@83..84 " "
+          APPLY_TO@84..88
+            TO_KW@84..86 "to"
+            WHITESPACE@86..87 " "
+            WILDCARD_PATTERN@87..88
+              WILDCARD_IDENT@87..88 "*"
+          WHITESPACE@88..89 " "
+          APPLY_EXCEPT@89..106
+            EXCEPT_KW@89..95 "except"
+            WHITESPACE@95..96 " "
+            WILDCARD_PATTERN@96..106
+              WILDCARD_IDENT@96..106 "initialize"
+        SEMICOLON@106..107 ";"
+        WHITESPACE@107..116 "\n        "
+        APPLY_SCHEMA@116..158
+          APPLY_KW@116..121 "apply"
+          WHITESPACE@121..122 " "
+          SCHEMA_LIT@122..143
+            PATH@122..143
+              PATH_SEGMENT@122..143
+                NAME_REF@122..137
+                  IDENT@122..137 "ModuleInvariant"
+                TYPE_ARG_LIST@137..143
+                  L_ANGLE@137..138 "<"
+                  TYPE_ARG@138..139
+                    PATH_TYPE@138..139
+                      PATH@138..139
+                        PATH_SEGMENT@138..139
+                          NAME_REF@138..139
+                            IDENT@138..139 "X"
+                  COMMA@139..140 ","
+                  WHITESPACE@140..141 " "
+                  TYPE_ARG@141..142
+                    PATH_TYPE@141..142
+                      PATH@141..142
+                        PATH_SEGMENT@141..142
+                          NAME_REF@141..142
+                            IDENT@141..142 "Y"
+                  R_ANGLE@142..143 ">"
+          WHITESPACE@143..144 " "
+          APPLY_TO@144..158
+            TO_KW@144..146 "to"
+            WHITESPACE@146..147 " "
+            WILDCARD_PATTERN@147..158
+              WILDCARD_IDENT@147..152 "*foo*"
+              TYPE_PARAM_LIST@152..158
+                L_ANGLE@152..153 "<"
+                TYPE_PARAM@153..154
+                  NAME@153..154
+                    IDENT@153..154 "Y"
+                COMMA@154..155 ","
+                WHITESPACE@155..156 " "
+                TYPE_PARAM@156..157
+                  NAME@156..157
+                    IDENT@156..157 "X"
+                R_ANGLE@157..158 ">"
+        SEMICOLON@158..159 ";"
+        WHITESPACE@159..168 "\n        "
+        APPLY_SCHEMA@168..239
+          APPLY_KW@168..173 "apply"
+          WHITESPACE@173..174 " "
+          SCHEMA_LIT@174..223
+            PATH@174..198
+              PATH_SEGMENT@174..198
+                NAME_REF@174..198
+                  IDENT@174..198 "EnsuresHasKeyRotationCap"
+            WHITESPACE@198..199 " "
+            L_CURLY@199..200 "{"
+            WHITESPACE@200..201 " "
+            SCHEMA_LIT_FIELD@201..221
+              IDENT@201..208 "account"
+              COLON@208..209 ":"
+              WHITESPACE@209..210 " "
+              PATH_TYPE@210..221
+                PATH@210..221
+                  PATH_SEGMENT@210..221
+                    NAME_REF@210..221
+                      IDENT@210..221 "new_account"
+            WHITESPACE@221..222 " "
+            R_CURLY@222..223 "}"
+          WHITESPACE@223..224 " "
+          APPLY_TO@224..239
+            TO_KW@224..226 "to"
+            WHITESPACE@226..227 " "
+            WILDCARD_PATTERN@227..239
+              WILDCARD_IDENT@227..239 "make_account"
+        SEMICOLON@239..240 ";"
+        WHITESPACE@240..249 "\n        "
+        APPLY_SCHEMA@249..329
+          APPLY_KW@249..254 "apply"
+          WHITESPACE@254..255 " "
+          SCHEMA_LIT@255..276
+            PATH@255..276
+              PATH_SEGMENT@255..276
+                NAME_REF@255..270
+                  IDENT@255..270 "ModuleInvariant"
+                TYPE_ARG_LIST@270..276
+                  L_ANGLE@270..271 "<"
+                  TYPE_ARG@271..272
+                    PATH_TYPE@271..272
+                      PATH@271..272
+                        PATH_SEGMENT@271..272
+                          NAME_REF@271..272
+                            IDENT@271..272 "X"
+                  COMMA@272..273 ","
+                  WHITESPACE@273..274 " "
+                  TYPE_ARG@274..275
+                    PATH_TYPE@274..275
+                      PATH@274..275
+                        PATH_SEGMENT@274..275
+                          NAME_REF@274..275
+                            IDENT@274..275 "Y"
+                  R_ANGLE@275..276 ">"
+          WHITESPACE@276..277 " "
+          APPLY_TO@277..296
+            TO_KW@277..279 "to"
+            WHITESPACE@279..280 " "
+            WILDCARD_PATTERN@280..291
+              WILDCARD_IDENT@280..285 "*foo*"
+              TYPE_PARAM_LIST@285..291
+                L_ANGLE@285..286 "<"
+                TYPE_PARAM@286..287
+                  NAME@286..287
+                    IDENT@286..287 "Y"
+                COMMA@287..288 ","
+                WHITESPACE@288..289 " "
+                TYPE_PARAM@289..290
+                  NAME@289..290
+                    IDENT@289..290 "X"
+                R_ANGLE@290..291 ">"
+            COMMA@291..292 ","
+            WHITESPACE@292..293 " "
+            WILDCARD_PATTERN@293..296
+              WILDCARD_IDENT@293..296 "bar"
+          WHITESPACE@296..297 " "
+          APPLY_EXCEPT@297..329
+            EXCEPT_KW@297..303 "except"
+            WHITESPACE@303..304 " "
+            WILDCARD_PATTERN@304..312
+              WILDCARD_PATTERN_MODIFIER@304..310
+                PUBLIC_KW@304..310 "public"
+              WHITESPACE@310..311 " "
+              WILDCARD_IDENT@311..312 "*"
+            COMMA@312..313 ","
+            WHITESPACE@313..314 " "
+            WILDCARD_PATTERN@314..329
+              WILDCARD_PATTERN_MODIFIER@314..322
+                INTERNAL_KW@314..322 "internal"
+              WHITESPACE@322..323 " "
+              WILDCARD_IDENT@323..326 "baz"
+              TYPE_PARAM_LIST@326..329
+                L_ANGLE@326..327 "<"
+                TYPE_PARAM@327..328
+                  NAME@327..328
+                    IDENT@327..328 "X"
+                R_ANGLE@328..329 ">"
+        SEMICOLON@329..330 ";"
+        WHITESPACE@330..335 "\n    "
+        R_CURLY@335..336 "}"
+    WHITESPACE@336..337 "\n"
+    R_CURLY@337..338 "}"
   WHITESPACE@338..339 "\n"

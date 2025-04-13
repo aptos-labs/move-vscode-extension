@@ -8,8 +8,11 @@ pub(crate) struct TokenSet(u128);
 
 #[macro_export]
 macro_rules! ts {
+    () => (
+        crate::token_set::TokenSet::EMPTY
+    );
     ($($x:expr),+ $(,)?) => (
-        TokenSet::new(&[$($x),+])
+        crate::token_set::TokenSet::new(&[$($x),+])
     );
 }
 // pub(crate) fn ts(kinds: &[SyntaxKind]) -> TokenSet {

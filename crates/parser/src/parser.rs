@@ -21,7 +21,7 @@ use crate::{
 /// finish expression". See `Event` docs for more.
 pub struct Parser<'t> {
     token_source: &'t mut dyn TokenSource,
-    events: Vec<Event>,
+    pub events: Vec<Event>,
     // steps: Cell<u32>,
     // stop_recovery: Option<Box<dyn Fn(/*&Parser*/) -> bool>>,
 }
@@ -263,8 +263,8 @@ impl<'t> Parser<'t> {
 
     /// Emit error with the `message`.
     pub(crate) fn error(&mut self, message: impl Into<String>) {
-        self.error_and_bump_until(&message.into(), |p| false);
-        // self.push_error(message);
+        // self.error_and_bump_until(&message.into(), |p| false);
+        self.push_error(message);
     }
 
     pub(crate) fn push_error(&mut self, message: impl Into<String>) {
@@ -426,6 +426,7 @@ impl Marker {
     }
 }
 
+#[derive(Debug)]
 pub(crate) struct CompletedMarker {
     pos: u32,
     end_pos: u32,

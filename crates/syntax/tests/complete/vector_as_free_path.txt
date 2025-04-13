@@ -2,49 +2,46 @@ SOURCE_FILE@0..93
   MODULE@0..92
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
-    ADDRESS_REF@7..10
-      VALUE_ADDRESS@7..10
-        INT_NUMBER@7..10 "0x1"
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
     COLON_COLON@10..12 "::"
     NAME@12..31
       IDENT@12..31 "vector_as_free_path"
     WHITESPACE@31..32 " "
-    ITEM_LIST@32..92
-      L_CURLY@32..33 "{"
-      WHITESPACE@33..38 "\n    "
-      FUN@38..90
-        FUN_KW@38..41 "fun"
-        WHITESPACE@41..42 " "
-        NAME@42..46
-          IDENT@42..46 "main"
-        PARAM_LIST@46..48
-          L_PAREN@46..47 "("
-          R_PAREN@47..48 ")"
-        WHITESPACE@48..49 " "
-        BLOCK_EXPR@49..90
-          STMT_LIST@49..90
-            L_CURLY@49..50 "{"
-            WHITESPACE@50..59 "\n        "
-            LET_STMT@59..69
-              LET_KW@59..62 "let"
-              WHITESPACE@62..63 " "
-              IDENT_PAT@63..64
-                NAME@63..64
-                  IDENT@63..64 "a"
-              WHITESPACE@64..65 " "
-              EQ@65..66 "="
-              WHITESPACE@66..67 " "
-              LITERAL@67..68
-                INT_NUMBER@67..68 "1"
-              SEMICOLON@68..69 ";"
-            WHITESPACE@69..78 "\n        "
-            PATH_EXPR@78..84
-              PATH@78..84
-                PATH_SEGMENT@78..84
-                  NAME_REF@78..84
-                    IDENT@78..84 "vector"
-            WHITESPACE@84..89 "\n    "
-            R_CURLY@89..90 "}"
-      WHITESPACE@90..91 "\n"
-      R_CURLY@91..92 "}"
+    L_CURLY@32..33 "{"
+    WHITESPACE@33..38 "\n    "
+    FUN@38..90
+      FUN_KW@38..41 "fun"
+      WHITESPACE@41..42 " "
+      NAME@42..46
+        IDENT@42..46 "main"
+      PARAM_LIST@46..48
+        L_PAREN@46..47 "("
+        R_PAREN@47..48 ")"
+      WHITESPACE@48..49 " "
+      BLOCK_EXPR@49..90
+        L_CURLY@49..50 "{"
+        WHITESPACE@50..59 "\n        "
+        LET_STMT@59..69
+          LET_KW@59..62 "let"
+          WHITESPACE@62..63 " "
+          IDENT_PAT@63..64
+            NAME@63..64
+              IDENT@63..64 "a"
+          WHITESPACE@64..65 " "
+          EQ@65..66 "="
+          WHITESPACE@66..67 " "
+          LITERAL@67..68
+            INT_NUMBER@67..68 "1"
+          SEMICOLON@68..69 ";"
+        WHITESPACE@69..78 "\n        "
+        PATH_EXPR@78..84
+          PATH@78..84
+            PATH_SEGMENT@78..84
+              NAME_REF@78..84
+                IDENT@78..84 "vector"
+        WHITESPACE@84..89 "\n    "
+        R_CURLY@89..90 "}"
+    WHITESPACE@90..91 "\n"
+    R_CURLY@91..92 "}"
   WHITESPACE@92..93 "\n"
