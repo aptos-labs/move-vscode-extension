@@ -1,4 +1,4 @@
-use crate::loc::{SyntaxLoc, SyntaxLocFileExt, SyntaxLocNodeExt};
+use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::nameres::path_resolution;
 use crate::nameres::scope::{ScopeEntry, VecExt};
 use crate::types::inference::InferenceCtx;

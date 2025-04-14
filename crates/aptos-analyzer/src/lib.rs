@@ -33,8 +33,6 @@ pub fn from_json<T: DeserializeOwned>(
         .map_err(|e| anyhow::format_err!("Failed to deserialize {what}: {e}; {json}"))
 }
 
-fn main() {}
-
 #[doc(hidden)]
 macro_rules! try_default_ {
     ($it:expr $(,)?) => {

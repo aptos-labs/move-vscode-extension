@@ -529,6 +529,7 @@ fn generate_syntax_kinds(grammar: KindsSrc<'_>) -> String {
             [hex_string] => { $crate::SyntaxKind::HEX_STRING };
             [byte_string] => { $crate::SyntaxKind::BYTE_STRING };
         }
+        #[allow(unused_imports)]
         pub use T;
     };
 

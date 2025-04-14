@@ -7,9 +7,9 @@ pub(crate) fn list_with_recover(
     lbrace: SyntaxKind,
     rbrace: SyntaxKind,
     delim: SyntaxKind,
-    unexpected_delim_message: impl Fn() -> String,
+    _unexpected_delim_message: impl Fn() -> String,
     end_at: TokenSet,
-    item_first: TokenSet,
+    _item_first: TokenSet,
     parse_item: impl FnMut(&mut Parser<'_>) -> bool,
 ) {
     p.bump(lbrace);

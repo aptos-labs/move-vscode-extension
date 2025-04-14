@@ -1,7 +1,7 @@
 use crate::aptos_package::AptosPackage;
 use crate::manifest_path::ManifestPath;
 use anyhow::Context;
-use base_db::change::{ManifestFileId, PackageGraph};
+use base_db::change::PackageGraph;
 use paths::{AbsPath, AbsPathBuf};
 use std::iter;
 use vfs::FileId;
@@ -92,17 +92,6 @@ impl AptosWorkspace {
         package_graph.insert(manifest_file_id, deps);
 
         Some(package_graph)
-    }
-
-    fn load_manifest_file_id(package: &AptosPackage, load: FileLoader<'_>) -> Option<ManifestFileId> {
-        let manifest_file = package.manifest().file;
-        match load(manifest_file.as_path()) {
-            Some(file_id) => Some(file_id),
-            None => {
-                tracing::info!("cannot load FileId for {:?}", manifest_file.as_path());
-                None
-            }
-        }
     }
 
     pub fn iter_packages(&self) -> impl Iterator<Item = &AptosPackage> {

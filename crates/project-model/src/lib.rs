@@ -39,15 +39,6 @@ impl ManifestPath {
             Some(it) => Ok(vec![it]),
             None => Ok(find_move_toml_in_child_dir(read_dir(path)?)),
         };
-        // return find_move_toml(path);
-        // .map(|paths| paths.into_iter().map(Self::from_manifest_file).collect());
-
-        fn find_move_toml(path: &AbsPath) -> io::Result<Vec<ManifestPath>> {
-            match find_in_parent_dirs(path, "Move.toml") {
-                Some(it) => Ok(vec![it]),
-                None => Ok(find_move_toml_in_child_dir(read_dir(path)?)),
-            }
-        }
 
         fn find_in_parent_dirs(path: &AbsPath, target_file_name: &str) -> Option<ManifestPath> {
             if path.file_name().unwrap_or_default() == target_file_name {

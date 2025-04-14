@@ -61,7 +61,7 @@ pub(crate) fn can_be_replaced_with_method_call(
 }
 
 fn fixes(
-    ctx: &DiagnosticsContext<'_>,
+    _ctx: &DiagnosticsContext<'_>,
     call_expr: InFile<ast::CallExpr>,
     diagnostic_range: FileRange,
 ) -> Option<Vec<Assist>> {

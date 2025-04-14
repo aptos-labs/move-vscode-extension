@@ -20,7 +20,7 @@ use crate::{
 /// finish expression". See `Event` docs for more.
 pub struct Parser<'t> {
     token_source: &'t mut dyn TokenSource,
-    pub events: Vec<Event>,
+    events: Vec<Event>,
     // steps: Cell<u32>,
     // stop_recovery: Option<Box<dyn Fn(/*&Parser*/) -> bool>>,
 }
@@ -385,8 +385,8 @@ impl Marker {
             _ => unreachable!(),
         }
         p.push_event(Event::Finish);
-        let end_pos = p.events.len() as u32;
-        CompletedMarker::new(self.pos, end_pos, kind)
+        // let end_pos = p.events.len() as u32;
+        CompletedMarker::new(self.pos /*, end_pos*/, kind)
     }
 
     /// Abandons the syntax tree node. All its children
@@ -428,13 +428,16 @@ impl Marker {
 #[derive(Debug)]
 pub(crate) struct CompletedMarker {
     pos: u32,
-    end_pos: u32,
+    // end_pos: u32,
     kind: SyntaxKind,
 }
 
 impl CompletedMarker {
-    fn new(pos: u32, end_pos: u32, kind: SyntaxKind) -> Self {
-        CompletedMarker { pos, end_pos, kind }
+    fn new(pos: u32 /*, end_pos: u32*/, kind: SyntaxKind) -> Self {
+        CompletedMarker {
+            pos, /*, end_pos*/
+            kind,
+        }
     }
 
     /// This method allows to create a new node which starts
@@ -479,12 +482,12 @@ impl CompletedMarker {
         self.kind
     }
 
-    pub(crate) fn last_token(&self, p: &Parser<'_>) -> Option<SyntaxKind> {
-        let end_pos = self.end_pos as usize;
-        // debug_assert_eq!(p.events[end_pos - 1], Event::Finish);
-        p.events[..end_pos].iter().rev().find_map(|event| match event {
-            Event::Token { kind, .. } => Some(*kind),
-            _ => None,
-        })
-    }
+    // pub(crate) fn last_token(&self, p: &Parser<'_>) -> Option<SyntaxKind> {
+    //     let end_pos = self.end_pos as usize;
+    //     // debug_assert_eq!(p.events[end_pos - 1], Event::Finish);
+    //     p.events[..end_pos].iter().rev().find_map(|event| match event {
+    //         Event::Token { kind, .. } => Some(*kind),
+    //         _ => None,
+    //     })
+    // }
 }

@@ -74,7 +74,7 @@ impl TypeAstWalker<'_, '_> {
                 }
             }
             ast::Pat::TupleStructPat(tuple_struct_pat) => {
-                let (expected, pat_bm) = strip_references(ty.clone(), def_bm);
+                let (expected, _) = strip_references(ty.clone(), def_bm);
                 self.ctx
                     .pat_types
                     .insert(tuple_struct_pat.clone().into(), expected.clone());

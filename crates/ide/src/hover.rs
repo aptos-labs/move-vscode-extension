@@ -12,7 +12,7 @@ use syntax::algo::find_node_at_offset;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::{DocCommentsOwner, NamedElement};
 use syntax::files::{FilePosition, InFileExt};
-use syntax::{AstNode, AstToken, ast};
+use syntax::{AstNode, ast};
 
 /// Contains the results when hovering over an item
 #[derive(Clone, Debug, Default, Hash, PartialEq, Eq)]

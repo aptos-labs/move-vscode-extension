@@ -1,5 +1,5 @@
 use crate::db::HirDatabase;
-use crate::loc::{SyntaxLocFileExt, SyntaxLocNodeExt};
+use crate::loc::SyntaxLocFileExt;
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt, VecExt};
 use syntax::ast;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;

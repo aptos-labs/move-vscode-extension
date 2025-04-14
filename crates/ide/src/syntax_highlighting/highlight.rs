@@ -37,7 +37,7 @@ pub(super) fn token(sema: &Semantics<'_, RootDatabase>, token: SyntaxToken) -> O
 
 fn keyword(
     _sema: &Semantics<'_, RootDatabase>,
-    token: SyntaxToken,
+    _token: SyntaxToken,
     kind: SyntaxKind,
 ) -> Option<Highlight> {
     let h = Highlight::new(HlTag::Keyword);

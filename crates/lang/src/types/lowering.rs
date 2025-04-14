@@ -13,8 +13,8 @@ use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::type_param::TyTypeParameter;
 use std::cell::RefCell;
+use syntax::ast;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, ast};
 
 pub enum PathResolver<'ctx, 'db> {
     Inference { ctx: RefCell<&'ctx mut InferenceCtx<'db>> },
@@ -27,7 +27,7 @@ pub struct TyLowering<'ctx, 'db> {
 }
 
 impl<'ctx, 'db> TyLowering<'ctx, 'db> {
-    pub fn new(db: &'db dyn HirDatabase, ctx: &'ctx mut InferenceCtx<'db>) -> Self {
+    pub fn new(db: &'db dyn HirDatabase, _ctx: &'ctx mut InferenceCtx<'db>) -> Self {
         TyLowering {
             db,
             path_resolver: PathResolver::Outer,

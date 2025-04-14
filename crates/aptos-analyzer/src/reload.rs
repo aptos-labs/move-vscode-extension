@@ -5,7 +5,6 @@ use crate::main_loop::Task;
 use crate::op_queue::Cause;
 use crate::project_folders::ProjectFolders;
 use crate::{Config, lsp_ext};
-use base_db::PackageRootDatabase;
 use base_db::change::{FileChange, PackageGraph};
 use lang::builtin_files::BUILTINS_FILE;
 use lsp_types::FileSystemWatcher;
@@ -373,7 +372,7 @@ impl GlobalState {
             .iter()
             .enumerate()
             .filter_map(|(id, ws)| Some((id, ws.workspace_root(), ws.manifest_path())))
-            .map(|(ws_id, ws_root, manifest_path)| {
+            .map(|(ws_id, ws_root, _)| {
                 FlycheckHandle::spawn(ws_id, sender.clone(), config.clone(), ws_root.to_path_buf())
             })
             .collect::<Vec<_>>()
