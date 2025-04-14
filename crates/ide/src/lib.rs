@@ -29,8 +29,8 @@ use ide_db::assist_config::AssistConfig;
 pub use ide_db::assists::{Assist, AssistKind, AssistResolveStrategy};
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
-pub use ra_salsa::Cancelled;
 use lang::builtin_files::BUILTINS_FILE;
+pub use ra_salsa::Cancelled;
 use syntax::files::{FilePosition, FileRange};
 
 pub type Cancellable<T> = Result<T, Cancelled>;

@@ -4,15 +4,10 @@ use parser::T;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum LiteralKind {
-    // String(ast::String),
     ByteString(ast::ByteString),
     HexString(ast::HexString),
-    // CString(ast::CString),
     IntNumber(ast::IntNumber),
     Address(ast::AddressLit),
-    // FloatNumber(ast::FloatNumber),
-    // Char(ast::Char),
-    // Byte(ast::Byte),
     Bool(bool),
     Invalid,
 }

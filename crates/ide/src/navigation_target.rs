@@ -1,4 +1,4 @@
-use base_db::Upcast;
+use base_db::{PackageRootDatabase, Upcast};
 use ide_db::{RootDatabase, SymbolKind, ast_kind_to_symbol_kind};
 use lang::nameres::scope::ScopeEntry;
 use std::fmt;
@@ -90,6 +90,9 @@ impl NavigationTarget {
     ) -> Option<NavigationTarget> {
         let entry_name = scope_entry.name;
         let file_id = scope_entry.node_loc.file_id();
+        if file_id == db.builtins_file_id() {
+            return None;
+        }
         let entry_item = scope_entry
             .node_loc
             .to_ast::<ast::AnyNamedElement>(db.upcast())?
@@ -108,25 +111,25 @@ impl NavigationTarget {
         ))
     }
 
-    /// Allows `NavigationTarget` to be created from a `NameOwner`
-    pub(crate) fn from_named(
-        InFile { file_id, value }: InFile<&dyn ast::NamedElement>,
-    ) -> Option<NavigationTarget> {
-        let name: SmolStr = value
-            .name()
-            .map(|it| it.text().into())
-            .unwrap_or_else(|| "_".into());
-        let kind = ast_kind_to_symbol_kind(value.syntax().kind())?;
-        Some(NavigationTarget::from_syntax(
-            file_id,
-            name.clone(),
-            value.name().map(|it| it.syntax().text_range()),
-            value.syntax().text_range(),
-            kind,
-        ))
-    }
+    // /// Allows `NavigationTarget` to be created from a `NameOwner`
+    // pub(crate) fn from_named(
+    //     InFile { file_id, value }: InFile<&dyn NamedElement>,
+    // ) -> Option<NavigationTarget> {
+    //     let name: SmolStr = value
+    //         .name()
+    //         .map(|it| it.text().into())
+    //         .unwrap_or_else(|| "_".into());
+    //     let kind = ast_kind_to_symbol_kind(value.syntax().kind())?;
+    //     Some(NavigationTarget::from_syntax(
+    //         file_id,
+    //         name.clone(),
+    //         value.name().map(|it| it.syntax().text_range()),
+    //         value.syntax().text_range(),
+    //         kind,
+    //     ))
+    // }
 
-    pub(crate) fn from_syntax(
+    fn from_syntax(
         file_id: FileId,
         name: SmolStr,
         focus_range: Option<TextRange>,

@@ -2,7 +2,7 @@ use crate::global_state::GlobalStateSnapshot;
 use crate::line_index::{LineEndings, LineIndex, PositionEncoding};
 use crate::lsp::semantic_tokens;
 use crate::lsp_ext::SnippetTextEdit;
-use crate::{Config, lsp_ext};
+use crate::{Config, lsp_ext, unwrap_or_return_default};
 use camino::{Utf8Component, Utf8Prefix};
 use ide::syntax_highlighting::tags::{Highlight, HlTag};
 use ide::{Cancellable, HlRange, NavigationTarget};
@@ -164,6 +164,7 @@ pub(crate) fn text_edit_vec(line_index: &LineIndex, text_edit: TextEdit) -> Vec<
         .collect()
 }
 
+/// Fails if invoked on in-memory FileId, i.e. on builtins.
 pub(crate) fn url(snap: &GlobalStateSnapshot, file_id: FileId) -> lsp_types::Url {
     snap.file_id_to_url(file_id)
 }

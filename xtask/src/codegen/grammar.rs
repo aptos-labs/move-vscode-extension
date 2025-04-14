@@ -914,6 +914,9 @@ fn to_pascal_case(s: &str) -> String {
 }
 
 fn pluralize(s: &str) -> String {
+    if s.ends_with("y") {
+        return format!("{}ies", s.strip_suffix("y").unwrap());
+    }
     format!("{s}s")
 }
 

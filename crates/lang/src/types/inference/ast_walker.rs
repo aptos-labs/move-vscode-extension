@@ -568,15 +568,13 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     fn infer_lambda_expr(&mut self, lambda_expr: &LambdaExpr, expected: Expected) -> Ty {
         let mut param_tys = vec![];
 
-        for lambda_param in lambda_expr.lambda_params() {
+        for (lambda_param, ident_pat) in lambda_expr.params_with_ident_pats() {
             let file_id = self.ctx.file_id;
             let param_ty = match lambda_param.type_() {
                 Some(type_) => self.ctx.ty_lowering().lower_type(type_.in_file(file_id)),
                 None => Ty::new_ty_var(self.ctx),
             };
-            self.ctx
-                .pat_types
-                .insert(lambda_param.ident_pat().into(), param_ty.clone());
+            self.ctx.pat_types.insert(ident_pat.into(), param_ty.clone());
             param_tys.push(param_ty);
         }
 

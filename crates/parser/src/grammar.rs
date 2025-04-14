@@ -32,6 +32,7 @@ mod attributes;
 mod expressions;
 mod generic_params;
 mod items;
+mod lambdas;
 mod params;
 pub(crate) mod paths;
 mod patterns;
@@ -39,7 +40,6 @@ pub(crate) mod specs;
 mod type_args;
 mod types;
 pub(crate) mod utils;
-mod lambdas;
 
 use crate::grammar::items::{block_start, item_start};
 use crate::parser::Marker;

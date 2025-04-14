@@ -19,7 +19,7 @@ mod test_resolve_types;
 mod test_resolve_variables;
 
 #[track_caller]
- pub(crate) fn check_resolve(source: &str) {
+pub(crate) fn check_resolve(source: &str) {
     init_tracing_for_test();
 
     let (ref_offset, data) = get_marked_position_offset_with_data(&source, "//^");
