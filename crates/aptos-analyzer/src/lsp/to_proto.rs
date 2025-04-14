@@ -2,7 +2,7 @@ use crate::global_state::GlobalStateSnapshot;
 use crate::line_index::{LineEndings, LineIndex, PositionEncoding};
 use crate::lsp::semantic_tokens;
 use crate::lsp_ext::SnippetTextEdit;
-use crate::{Config, lsp_ext, unwrap_or_return_default};
+use crate::{Config, lsp_ext};
 use camino::{Utf8Component, Utf8Prefix};
 use ide::syntax_highlighting::tags::{Highlight, HlTag};
 use ide::{Cancellable, HlRange, NavigationTarget};
@@ -867,7 +867,7 @@ pub(crate) fn snippet_text_document_edit(
     let text_document = optional_versioned_text_document_identifier(snap, file_id);
     let line_index = snap.file_line_index(file_id)?;
     // let client_supports_annotations = snap.config.change_annotation_support();
-    let mut edits = if let Some(snippet_edit) = snippet_edit {
+    let edits = if let Some(snippet_edit) = snippet_edit {
         merge_text_and_snippet_edits(
             &line_index,
             edit,
@@ -929,7 +929,7 @@ pub(crate) fn snippet_text_document_ops(
         FileSystemEdit::MoveFile { src, dst } => {
             let old_uri = snap.file_id_to_url(src);
             let new_uri = snap.anchored_path(&dst);
-            let mut rename_file = lsp_types::RenameFile {
+            let rename_file = lsp_types::RenameFile {
                 old_uri,
                 new_uri,
                 options: None,
@@ -947,7 +947,7 @@ pub(crate) fn snippet_text_document_ops(
         FileSystemEdit::MoveDir { src, src_id, dst } => {
             let old_uri = snap.anchored_path(&src);
             let new_uri = snap.anchored_path(&dst);
-            let mut rename_file = lsp_types::RenameFile {
+            let rename_file = lsp_types::RenameFile {
                 old_uri,
                 new_uri,
                 options: None,
@@ -994,7 +994,7 @@ pub(crate) fn snippet_workspace_edit(
             document_changes.extend_from_slice(&ops);
         }
     }
-    let mut workspace_edit = lsp_ext::SnippetWorkspaceEdit {
+    let workspace_edit = lsp_ext::SnippetWorkspaceEdit {
         changes: None,
         document_changes: Some(document_changes),
         change_annotations: None,

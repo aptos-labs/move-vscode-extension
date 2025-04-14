@@ -1,13 +1,10 @@
 use crate::aptos_package::AptosPackage;
 use crate::manifest_path::ManifestPath;
 use anyhow::Context;
-use base_db::PackageRootDatabase;
 use base_db::change::{ManifestFileId, PackageGraph};
-use base_db::package_root::PackageRootId;
 use paths::{AbsPath, AbsPathBuf};
-use std::collections::HashMap;
 use std::iter;
-use vfs::{FileId, Vfs, VfsPath};
+use vfs::FileId;
 
 pub type FileLoader<'a> = &'a mut dyn for<'b> FnMut(&'b AbsPath) -> Option<FileId>;
 

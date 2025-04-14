@@ -5,7 +5,6 @@ use anyhow::Context;
 use base_db::change::ManifestFileId;
 use paths::AbsPath;
 use std::fs;
-use vfs::{Vfs, VfsPath};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct AptosPackage {

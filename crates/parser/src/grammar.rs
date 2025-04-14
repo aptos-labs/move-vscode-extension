@@ -44,7 +44,7 @@ pub(crate) mod utils;
 use crate::grammar::items::{block_start, item_start};
 use crate::parser::Marker;
 use crate::token_set::TokenSet;
-use crate::{parser::Parser, SyntaxKind, SyntaxKind::*, T};
+use crate::{parser::Parser, SyntaxKind::*, T};
 
 pub mod entry_points {
     use super::*;

@@ -9,10 +9,10 @@ use crate::config::DiagnosticsConfig;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use base_db::SourceDatabase;
 use ide_db::assists::AssistResolveStrategy;
-use ide_db::{RootDatabase, Severity};
+use ide_db::RootDatabase;
 use lang::Semantics;
-use syntax::files::{FileRange, InFile, InFileExt};
-use syntax::{AstNode, SyntaxNodePtr, TextRange, ast, match_ast};
+use syntax::files::{FileRange, InFileExt};
+use syntax::{AstNode, ast, match_ast};
 use vfs::FileId;
 
 struct DiagnosticsContext<'a> {

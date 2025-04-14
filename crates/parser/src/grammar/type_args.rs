@@ -1,6 +1,6 @@
 use super::*;
 use crate::grammar::paths::Mode;
-use crate::grammar::utils::{delimited, list};
+use crate::grammar::utils::list;
 
 pub(crate) fn opt_path_type_arg_list(p: &mut Parser<'_>, mode: Mode) {
     match mode {
@@ -45,7 +45,7 @@ pub(crate) fn opt_type_arg_list_for_type(p: &mut Parser<'_>) {
 }
 
 pub(super) fn opt_type_arg_list_for_expr(p: &mut Parser<'_>, colon_colon_required: bool) {
-    let mut m;
+    let m;
     if p.at(T![::]) && p.nth(1) == T![<] {
         m = p.start();
         p.bump(T![::]);

@@ -3,14 +3,10 @@
 pub mod change;
 pub mod package_root;
 
-use crate::change::ManifestFileId;
 use crate::package_root::{PackageRoot, PackageRootId};
-use std::fs::File;
-use syntax::ast::HasItems;
-use syntax::files::{InFile, InFileExt};
-use syntax::{Parse, SourceFile, SyntaxError, ast};
+use syntax::{Parse, SourceFile, SyntaxError};
 use triomphe::Arc;
-use vfs::{FileId, VfsPath};
+use vfs::FileId;
 
 pub trait Upcast<T: ?Sized> {
     fn upcast(&self) -> &T;

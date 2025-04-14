@@ -1,4 +1,3 @@
-use base_db::PackageRootDatabase;
 use lang::nameres::fq_named_element::ItemFQNameOwner;
 use std::fmt::Write;
 use syntax::SyntaxKind::*;

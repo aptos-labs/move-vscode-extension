@@ -2,12 +2,12 @@ use crate::diagnostics::convert_diagnostic;
 use crate::global_state::{FetchWorkspaceRequest, GlobalState, GlobalStateSnapshot};
 use crate::lsp::utils::invalid_params_error;
 use crate::lsp::{LspError, from_proto, to_proto};
-use crate::{Config, lsp_ext, try_default, unwrap_or_return_default};
+use crate::{Config, lsp_ext, unwrap_or_return_default};
 use ide_db::assists::{AssistKind, AssistResolveStrategy, SingleResolve};
 use line_index::TextRange;
 use lsp_server::ErrorCode;
 use lsp_types::{
-    HoverContents, Range, ResourceOp, ResourceOperationKind, SemanticTokensParams, SemanticTokensResult,
+    HoverContents, ResourceOp, ResourceOperationKind, SemanticTokensParams, SemanticTokensResult,
 };
 use syntax::files::FileRange;
 

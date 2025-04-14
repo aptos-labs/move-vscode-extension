@@ -9,7 +9,7 @@ use ra_salsa::ParallelDatabase;
 use syntax::{SourceFile, TextRange, TextSize};
 use triomphe::Arc;
 use vfs::file_set::FileSet;
-use vfs::{FileId, Vfs, VfsPath};
+use vfs::{FileId, VfsPath};
 
 pub mod extend_selection;
 mod goto_definition;
@@ -590,7 +590,7 @@ impl Analysis {
             // let ssr_assists = ssr::ssr_assists(db, &resolve, frange);
             // let assists = ide_assists::assists(db, assist_config, resolve, frange);
 
-            let mut res = diagnostic_assists;
+            let res = diagnostic_assists;
             // res.extend(ssr_assists);
             // res.extend(assists);
 

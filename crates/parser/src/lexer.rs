@@ -2,7 +2,6 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::lexer::Tok::{BlockComment, LineComment, Mut};
 use regex::Regex;
 use std::fmt;
 use std::sync::LazyLock;
@@ -739,7 +738,7 @@ fn get_block_comment_len(text: &str) -> usize {
     let mut chars = text[2..].chars().peekable();
     let mut pos = 0;
     let mut nested_counter = 0;
-    let mut len = 0;
+    let len = 0;
     while let Some(curr) = chars.next() {
         let Some(&next) = chars.peek() else {
             return text.len();

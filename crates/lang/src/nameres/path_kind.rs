@@ -2,7 +2,7 @@ use crate::nameres::address::{Address, NamedAddr, ValueAddr, resolve_named_addre
 use crate::nameres::namespaces::{
     ALL_NS, ENUMS, ENUMS_N_MODULES, IMPORTABLE_NS, MODULES, NAMES, NAMES_N_FUNCTIONS_N_VARIANTS,
     NAMES_N_VARIANTS, NONE, NsSet, TYPES_N_ENUMS, TYPES_N_ENUMS_N_ENUM_VARIANTS,
-    TYPES_N_ENUMS_N_MODULES, TYPES_N_ENUMS_N_NAMES, TYPES_N_NAMES,
+    TYPES_N_ENUMS_N_MODULES, TYPES_N_ENUMS_N_NAMES,
 };
 use parser::T;
 use std::fmt;

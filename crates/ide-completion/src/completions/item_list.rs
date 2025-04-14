@@ -3,7 +3,6 @@ use crate::context::CompletionContext;
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::ops::Sub;
-use syntax::SyntaxKind;
 
 /// The kind of item list a [`PathKind::Item`] belongs to.
 #[derive(Debug, PartialEq, Eq)]

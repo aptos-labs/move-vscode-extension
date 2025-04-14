@@ -1,6 +1,5 @@
 use crate::PackageRootDatabase;
 use crate::package_root::{PackageRoot, PackageRootId};
-use ra_salsa::Durability;
 use std::collections::HashMap;
 use std::fmt;
 use triomphe::Arc;

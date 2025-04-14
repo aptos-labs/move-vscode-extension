@@ -1,14 +1,11 @@
-use crate::node_ext::ModuleLangExt;
 use base_db::PackageRootDatabase;
 use parser::SyntaxKind;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::algo::ancestors_at_offset;
-use syntax::ast::NamedElement;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
-use syntax::ast::syntax_factory::SyntaxFactory;
-use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, TextSize, ast};
+use syntax::files::InFile;
+use syntax::{AstNode, TextSize};
 use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]

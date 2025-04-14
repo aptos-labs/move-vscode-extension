@@ -21,11 +21,10 @@ use parking_lot::{
 };
 use paths::AbsPathBuf;
 use project_model::aptos_workspace::AptosWorkspace;
-use rustc_hash::{FxHashMap, FxHashSet};
 use std::time::Instant;
 use tracing::Level;
 use triomphe::Arc;
-use vfs::{AnchoredPathBuf, ChangeKind, FileId, VfsPath};
+use vfs::{AnchoredPathBuf, FileId, VfsPath};
 
 pub(crate) struct FetchWorkspaceRequest {
     pub(crate) path: Option<AbsPathBuf>,

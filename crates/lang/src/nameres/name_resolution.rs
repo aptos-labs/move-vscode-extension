@@ -17,7 +17,6 @@ use std::{fmt, iter};
 use syntax::ast::{HasItems, ReferenceElement};
 use syntax::files::{InFile, InFileVecExt};
 use syntax::{AstNode, SyntaxNode, ast};
-use vfs::AnchoredPath;
 
 pub struct ResolveScope {
     scope: InFile<SyntaxNode>,

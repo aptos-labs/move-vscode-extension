@@ -60,7 +60,7 @@ pub fn check_completions_contains(source: &str, contains_items: Vec<&str>) {
     let completion_items = completions_at_offset(source, offset, false);
 
     let mut lookup_labels = lookup_labels(completion_items);
-    let mut lookup_labels_txt = format!("{:?}", lookup_labels);
+    let lookup_labels_txt = format!("{:?}", lookup_labels);
     for item in contains_items.clone() {
         let item = item.to_string();
         assert!(

@@ -1,8 +1,6 @@
 use crate::grammar::specs::predicates::expect_expr;
-use crate::grammar::utils::delimited;
 use crate::grammar::{patterns, types};
 use crate::parser::CompletedMarker;
-use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{Parser, T};
 

@@ -1,4 +1,4 @@
-use crate::grammar::expressions::atom::{block_or_inline_expr, EXPR_FIRST, STMT_FIRST};
+use crate::grammar::expressions::atom::EXPR_FIRST;
 use crate::grammar::items::{fun, use_item};
 use crate::grammar::lambdas::lambda_param_list;
 use crate::grammar::patterns::pattern;
@@ -6,7 +6,7 @@ use crate::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt
 use crate::grammar::specs::quants::{choose_expr, exists_expr, forall_expr, is_at_quant_kw};
 use crate::grammar::specs::schemas::{apply_schema, global_variable, include_schema, schema_field};
 use crate::grammar::utils::{list, list_with_recover};
-use crate::grammar::{attributes, error_block, name_ref, paths, patterns, type_args, types};
+use crate::grammar::{attributes, error_block, name_ref, patterns, type_args, types};
 use crate::parser::{CompletedMarker, Marker, Parser};
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;

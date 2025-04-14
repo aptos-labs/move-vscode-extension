@@ -1,7 +1,6 @@
 //! See [`Parser`].
 
 use drop_bomb::DropBomb;
-use std::ops::Deref;
 
 use crate::{
     event::Event,

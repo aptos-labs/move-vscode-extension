@@ -3,9 +3,8 @@ pub(crate) mod quants;
 pub(crate) mod schemas;
 
 use crate::grammar::expressions::atom::block_expr;
-use crate::grammar::expressions::expr;
 use crate::parser::CompletedMarker;
-use crate::SyntaxKind::{IDENT, SPEC_BLOCK_EXPR, SPEC_PREDICATE_STMT};
+use crate::SyntaxKind::SPEC_BLOCK_EXPR;
 use crate::{Parser, T};
 
 pub(crate) fn opt_spec_block_expr(p: &mut Parser) {

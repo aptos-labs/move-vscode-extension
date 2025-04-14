@@ -1,5 +1,4 @@
 use crate::assert_eq_text;
-use base_db::SourceDatabase;
 use ide::Analysis;
 use ide::test_utils::{get_marked_position_line_index, get_marked_position_offset_with_line};
 use ide_db::Severity;

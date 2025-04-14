@@ -1,4 +1,4 @@
-use crate::grammar::utils::{list_with_recover, list_with_recover_inner};
+use crate::grammar::utils::list_with_recover_inner;
 use crate::grammar::{patterns, types};
 use crate::SyntaxKind::*;
 use crate::{ts, Parser, T};

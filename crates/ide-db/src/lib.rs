@@ -17,7 +17,7 @@ use std::fmt;
 use std::mem::ManuallyDrop;
 use syntax::{SyntaxKind, SyntaxKind::*};
 use triomphe::Arc;
-use vfs::{AnchoredPath, FileId};
+use vfs::FileId;
 
 pub type FxIndexSet<T> = indexmap::IndexSet<T, std::hash::BuildHasherDefault<rustc_hash::FxHasher>>;
 pub type FxIndexMap<K, V> =

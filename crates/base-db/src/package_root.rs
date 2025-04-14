@@ -1,4 +1,3 @@
-use std::fs::File;
 use vfs::file_set::FileSet;
 use vfs::{AnchoredPath, FileId, VfsPath};
 
