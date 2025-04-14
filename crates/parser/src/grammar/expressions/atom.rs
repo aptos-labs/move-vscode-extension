@@ -220,9 +220,9 @@ pub(crate) fn atom_expr(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> 
 fn paren_or_tuple_or_annotated_expr(p: &mut Parser) -> CompletedMarker {
     assert!(p.at(T!['(']));
     let m = p.start();
-    p.expect(T!['(']);
+    p.bump(T!['(']);
 
-    let mut first = true;
+    let mut outer = true;
     let mut saw_comma = false;
     let mut saw_expr = false;
     while !p.at(EOF) && !p.at(T![')']) {
@@ -232,14 +232,15 @@ fn paren_or_tuple_or_annotated_expr(p: &mut Parser) -> CompletedMarker {
             break;
         }
 
+        // dbg!(p.current());
         // try for `(a: u8)` annotated expr
-        if first {
+        if outer {
             if p.at(T![:]) {
                 types::ascription(p);
                 p.expect(T![')']);
                 return m.complete(p, ANNOTATED_EXPR);
             }
-            first = false;
+            outer = false;
         }
 
         if !p.at(T![')']) {

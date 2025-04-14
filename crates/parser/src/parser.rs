@@ -324,10 +324,10 @@ impl<'t> Parser<'t> {
 
     pub(crate) fn bump_until(&mut self, stop: impl Fn(&Parser) -> bool) {
         while !self.at(EOF) {
+            self.bump_any();
             if stop(self) {
                 break;
             }
-            self.bump_any();
         }
     }
 
