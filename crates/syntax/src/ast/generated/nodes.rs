@@ -8,6 +8,28 @@ use crate::{
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Ability {
+    pub(crate) syntax: SyntaxNode,
+}
+impl Ability {
+    #[inline]
+    pub fn ident_token(&self) -> SyntaxToken {
+        support::token(&self.syntax, T![ident]).expect("Ability.ident_token required by the parser")
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AbilityList {
+    pub(crate) syntax: SyntaxNode,
+}
+impl AbilityList {
+    #[inline]
+    pub fn abilities(&self) -> AstChildren<Ability> { support::children(&self.syntax) }
+    #[inline]
+    pub fn has_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![has]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AbortExpr {
     pub(crate) syntax: SyntaxNode,
 }
@@ -272,6 +294,8 @@ impl ast::HasVisibility for Enum {}
 impl ast::NamedElement for Enum {}
 impl Enum {
     #[inline]
+    pub fn ability_list(&self) -> Option<AbilityList> { support::child(&self.syntax) }
+    #[inline]
     pub fn variant_list(&self) -> Option<VariantList> { support::child(&self.syntax) }
     #[inline]
     pub fn enum_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![enum]) }
@@ -484,11 +508,11 @@ pub struct LambdaParam {
 }
 impl LambdaParam {
     #[inline]
-    pub fn ident_pat(&self) -> IdentPat {
-        support::child(&self.syntax).expect("LambdaParam.ident_pat required by the parser")
-    }
+    pub fn ident_pat(&self) -> Option<IdentPat> { support::child(&self.syntax) }
     #[inline]
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
+    #[inline]
+    pub fn wildcard_pat(&self) -> Option<WildcardPat> { support::child(&self.syntax) }
     #[inline]
     pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
 }
@@ -1141,6 +1165,8 @@ impl ast::HasVisibility for Struct {}
 impl ast::NamedElement for Struct {}
 impl Struct {
     #[inline]
+    pub fn ability_list(&self) -> Option<AbilityList> { support::child(&self.syntax) }
+    #[inline]
     pub fn struct_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![struct]) }
 }
 
@@ -1737,6 +1763,48 @@ pub struct AnyReferenceElement {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::ReferenceElement for AnyReferenceElement {}
+impl AstNode for Ability {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ABILITY
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == ABILITY }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for AbilityList {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ABILITY_LIST
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == ABILITY_LIST }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for AbortExpr {
     #[inline]
     fn kind() -> SyntaxKind
@@ -5957,6 +6025,16 @@ impl std::fmt::Display for StructOrEnum {
     }
 }
 impl std::fmt::Display for Type {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for Ability {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for AbilityList {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

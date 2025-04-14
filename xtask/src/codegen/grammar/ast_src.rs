@@ -269,7 +269,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
 
 pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     // ("ExprStmt", &["expr"]), - invalid
-    ("LambdaParam", &["ident_pat"]),
+    // ("LambdaParam", &["ident_pat"]), - can be wildcard_pat or invalid pat
     ("LambdaTypeParam", &["type"]),
     ("CallExpr", &["path"]),
     ("CastExpr", &["expr"]),
@@ -290,6 +290,7 @@ pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     // ("Path", &["segment"]),  - invalid
     ("PathAddress", &["value_address"]),
     ("Name", &["ident"]),
+    ("Ability", &["ident"]),
     ("NameRef", &["ident"]),
     ("NamedAddress", &["ident"]),
     ("ValueAddress", &["int_number"]),

@@ -1,5 +1,5 @@
-use crate::grammar::patterns::PATTERN_FIRST;
 use super::*;
+use crate::grammar::patterns::PATTERN_FIRST;
 use crate::grammar::utils::{delimited, list_with_recover};
 use crate::{ts, T};
 
@@ -32,4 +32,3 @@ fn param(p: &mut Parser) {
 }
 
 const PARAM_FIRST: TokenSet = patterns::PATTERN_FIRST/*.union(types::TYPE_FIRST)*/;
-

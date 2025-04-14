@@ -55,12 +55,10 @@ pub(crate) fn hover(db: &RootDatabase, file_position: FilePosition) -> Option<Ra
 
     let mut doc_string = String::new();
 
-    writeln!(doc_string, "```").ok()?;
-
-    named_element.owner(&mut doc_string);
+    writeln!(doc_string, "```move").ok()?;
+    named_element.header(&mut doc_string);
     writeln!(doc_string).ok()?;
     named_element.signature(&mut doc_string);
-
     writeln!(doc_string).ok()?;
     writeln!(doc_string, "```").ok()?;
 

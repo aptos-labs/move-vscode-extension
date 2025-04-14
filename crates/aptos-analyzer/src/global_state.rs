@@ -519,8 +519,12 @@ impl GlobalStateSnapshot {
 
 pub(crate) fn file_id_to_url(vfs: &vfs::Vfs, id: FileId) -> Url {
     let path = vfs.file_path(id);
-    let path = path.as_path().unwrap();
-    url_from_abs_path(path)
+    match path.as_path() {
+        Some(path) => url_from_abs_path(path),
+        None => {
+            panic!("cannot convert builtins file {:?} into the Url", id)
+        }
+    }
 }
 
 pub(crate) fn url_to_file_id(vfs: &vfs::Vfs, url: &Url) -> anyhow::Result<FileId> {

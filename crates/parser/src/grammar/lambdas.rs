@@ -1,7 +1,7 @@
-use crate::{ts, Parser, T};
-use crate::grammar::{patterns, types};
 use crate::grammar::utils::{list_with_recover, list_with_recover_inner};
+use crate::grammar::{patterns, types};
 use crate::SyntaxKind::*;
+use crate::{ts, Parser, T};
 
 pub(crate) fn lambda_param_list(p: &mut Parser) -> bool {
     let list_marker = p.start();

@@ -69,3 +69,38 @@ module 0x1::m {
 "#,
     )
 }
+
+#[test]
+fn test_resolve_field_of_index_expr() {
+    // language=Move
+    check_resolve(
+        r#"
+module 0x1::m {
+    struct Features { features: u8 }
+                        //X
+    fun main() {
+        if (true) {
+        } else if (true) {
+            Features[@std].features;
+                           //^
+        }
+    }
+}
+    "#,
+    );
+}
+
+#[test]
+fn test_cannot_resolve_borrow_global_mut() {
+    // language=Move
+    check_resolve(
+        r#"
+module 0x1::m {
+    fun main() {
+        borrow_global_mut<u8>(@0x1);
+         //^ unresolved
+    }
+}
+    "#,
+    );
+}

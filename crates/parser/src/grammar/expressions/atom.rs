@@ -39,8 +39,9 @@ pub(crate) fn literal(p: &mut Parser) -> Option<CompletedMarker> {
             p.bump_any();
         }
         BAD_CHARACTER => {
+            m.abandon(p);
             p.error_and_bump_any("unexpected character");
-            // return None;
+            return None;
         }
         _ => {
             m.abandon(p);
@@ -275,11 +276,13 @@ fn if_expr(p: &mut Parser) -> CompletedMarker {
     block_or_inline_expr(p, false);
     if p.at(T![else]) {
         p.bump(T![else]);
-        if p.at(T![if]) {
-            if_expr(p);
-        } else {
-            block_or_inline_expr(p, false);
-        }
+        block_or_inline_expr(p, false);
+        // if p.at(T![if]) {
+        //     let inline_expr = p.start();
+        //     if_expr(p);
+        //     inline_expr.complete(p, INLINE_EXPR);
+        // } else {
+        // }
     }
     m.complete(p, IF_EXPR)
 }

@@ -67,11 +67,13 @@ StructOrEnum =
 Struct =
     Attr*
     'struct' Name TypeParamList?
+    AbilityList?
     (NamedFieldList | TupleFieldList)
 
 Enum =
     Attr*
     'enum' Name TypeParamList?
+    AbilityList?
     VariantList
 
 VariantList =
@@ -79,6 +81,11 @@ VariantList =
 
 Variant =
     Attr* Name (NamedFieldList | TupleFieldList)?
+
+AbilityList =
+    'has' (Ability (',' Ability)* ','?)?
+
+Ability = 'ident'
 
 FieldList =
     NamedFieldList | TupleFieldList
