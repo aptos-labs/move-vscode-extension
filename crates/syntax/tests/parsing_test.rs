@@ -23,9 +23,11 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
     }
 
     pretty_assertions::assert_eq!(&expected_output.unwrap_or("".to_string()), &actual_output);
+
     let errors = parse.errors();
     if !allow_errors && !errors.is_empty() {
         println!("{:#?}", errors);
+        // println!("{}", &actual_output);
         panic!("errors are not expected")
     }
 

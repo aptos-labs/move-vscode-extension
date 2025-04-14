@@ -6,7 +6,7 @@ use crate::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt
 use crate::grammar::specs::quants::{choose_expr, exists_expr, forall_expr, is_at_quant_kw};
 use crate::grammar::specs::schemas::{apply_schema, global_variable, include_schema, schema_field};
 use crate::grammar::utils::{list, list_with_recover};
-use crate::grammar::{error_block, name_ref, paths, patterns, type_args, types};
+use crate::grammar::{attributes, error_block, name_ref, paths, patterns, type_args, types};
 use crate::parser::{CompletedMarker, Marker, Parser};
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
@@ -449,6 +449,8 @@ pub(super) enum StmtWithSemi {
 pub(super) fn stmt(p: &mut Parser, with_semi: StmtWithSemi, prefer_expr: bool, is_spec: bool) {
     let m = p.start();
 
+    attributes::outer_attrs(p);
+
     if p.at(T![let]) {
         let_stmt(p, m, with_semi);
         return;
@@ -495,30 +497,37 @@ pub(super) fn stmt(p: &mut Parser, with_semi: StmtWithSemi, prefer_expr: bool, i
 
             m.complete(p, EXPR_STMT);
         }
+        return;
     }
 
-    fn let_stmt(p: &mut Parser, m: Marker, with_semi: StmtWithSemi) {
-        p.bump(T![let]);
-        if p.at_contextual_kw_ident("post") {
-            p.bump_remap(T![post]);
-        }
-        pattern(p);
-        if p.at(T![:]) {
-            types::ascription(p);
-        }
-        opt_initializer_expr(p);
+    // p.error(&format!("unexpected token {:?}", p.current()));
+    p.error_and_bump_any(&format!("unexpected token {:?}", p.current()));
+    // p.error_and_bump_until(&format!("unexpected token {:?}", p.current()), |p| {
+    //     p.at_ts(STMT_FIRST) || p.at(T!['}'])
+    // });
+}
 
-        match with_semi {
-            StmtWithSemi::No => (),
-            StmtWithSemi::Optional => {
-                p.eat(T![;]);
-            }
-            StmtWithSemi::Yes => {
-                p.expect(T![;]);
-            }
-        }
-        m.complete(p, LET_STMT);
+fn let_stmt(p: &mut Parser, m: Marker, with_semi: StmtWithSemi) {
+    p.bump(T![let]);
+    if p.at_contextual_kw_ident("post") {
+        p.bump_remap(T![post]);
     }
+    pattern(p);
+    if p.at(T![:]) {
+        types::ascription(p);
+    }
+    opt_initializer_expr(p);
+
+    match with_semi {
+        StmtWithSemi::No => (),
+        StmtWithSemi::Optional => {
+            p.eat(T![;]);
+        }
+        StmtWithSemi::Yes => {
+            p.expect(T![;]);
+        }
+    }
+    m.complete(p, LET_STMT);
 }
 
 pub(crate) fn opt_initializer_expr(p: &mut Parser) {
@@ -607,8 +616,11 @@ fn current_op(p: &Parser) -> (u8, SyntaxKind) {
         T![-=]  => (1,  T![-=]),
         // T![-] if p.at(T![-=])  => (1,  T![-=]),
         T![-]                  => (10, T![-]),
+
         T![as]                 => (12, T![as]),
         T![ident] if p.at_contextual_kw("is") => (12, T![is]),
+        // T![:] => (12, T![:]),
+
         _                      => NOT_AN_OP
     }
 }
