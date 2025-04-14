@@ -12,8 +12,6 @@ pub(crate) fn add_reference_completions(
     ctx: &CompletionContext<'_>,
     reference_kind: ReferenceKind,
 ) -> Option<()> {
-    
-
     match reference_kind {
         ReferenceKind::Path(path) => add_path_completions(completions, ctx, path),
         ReferenceKind::FieldRef { receiver_expr } => {
