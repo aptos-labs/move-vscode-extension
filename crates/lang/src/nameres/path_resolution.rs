@@ -10,7 +10,7 @@ use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt};
 use crate::types::inference::InferenceCtx;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
-use base_db::package_root::{PackageRoot, PackageRootId};
+use base_db::package_root::PackageRootId;
 use parser::SyntaxKind::CALL_EXPR;
 use syntax::ast::HasItems;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;

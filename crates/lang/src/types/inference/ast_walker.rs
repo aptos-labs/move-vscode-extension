@@ -15,7 +15,7 @@ use crate::types::ty::ty_var::{TyInfer, TyIntVar};
 use std::iter;
 use std::ops::Deref;
 use syntax::ast::node_ext::named_field::FilterNamedFieldsByName;
-use syntax::ast::{BindingTypeOwner, FieldsOwner, HasStmts, LambdaExpr, LoopLike};
+use syntax::ast::{BindingTypeOwner, FieldsOwner, HasStmts, LambdaExpr};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, IntoNodeOrToken, ast};
 
@@ -594,7 +594,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         lambda_ty
     }
 
-    fn infer_match_expr(&mut self, match_expr: &ast::MatchExpr, expected: Expected) -> Ty {
+    fn infer_match_expr(&mut self, match_expr: &ast::MatchExpr, _expected: Expected) -> Ty {
         let match_arg_ty = match_expr
             .expr()
             .map(|expr| {
@@ -784,7 +784,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         Some(Ty::new_reference(inner_ty, mutability))
     }
 
-    fn infer_deref_expr(&mut self, deref_expr: &ast::DerefExpr, expected: Expected) -> Option<Ty> {
+    fn infer_deref_expr(&mut self, deref_expr: &ast::DerefExpr, _expected: Expected) -> Option<Ty> {
         let inner_expr = deref_expr.expr()?;
         let inner_ty = self.infer_expr(&inner_expr, Expected::NoValue);
 

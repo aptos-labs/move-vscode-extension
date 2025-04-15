@@ -1,7 +1,5 @@
 use super::*;
-use crate::grammar::patterns::PATTERN_FIRST;
-use crate::grammar::utils::{delimited, list_with_recover};
-use crate::{ts, T};
+use crate::T;
 
 pub(crate) fn fun_param_list(p: &mut Parser) {
     let list_marker = p.start();

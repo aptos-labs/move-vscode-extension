@@ -1,16 +1,16 @@
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::{EOF, ERROR};
-use crate::{ts, Parser, SyntaxKind, T};
+use crate::{Parser, SyntaxKind, T};
 
 pub(crate) fn list_with_recover(
     p: &mut Parser<'_>,
     lbrace: SyntaxKind,
     rbrace: SyntaxKind,
     delim: SyntaxKind,
-    unexpected_delim_message: impl Fn() -> String,
+    _unexpected_delim_message: impl Fn() -> String,
     end_at: TokenSet,
-    item_first: TokenSet,
-    mut parse_item: impl FnMut(&mut Parser<'_>) -> bool,
+    _item_first: TokenSet,
+    parse_item: impl FnMut(&mut Parser<'_>) -> bool,
 ) {
     p.bump(lbrace);
 
@@ -91,7 +91,7 @@ pub(crate) fn list(
     delim: SyntaxKind,
     unexpected_delim_message: impl Fn() -> String,
     item_first_set: TokenSet,
-    mut parser: impl FnMut(&mut Parser<'_>) -> bool,
+    parser: impl FnMut(&mut Parser<'_>) -> bool,
 ) {
     p.bump(bra);
     delimited(
@@ -110,7 +110,7 @@ pub(crate) fn comma_separated_list(
     unexpected_delim_message: &str,
     is_end: impl Fn(&Parser) -> bool,
     item_first_set: TokenSet,
-    mut parser: impl FnMut(&mut Parser<'_>) -> bool,
+    parser: impl FnMut(&mut Parser<'_>) -> bool,
 ) {
     delimited(
         p,

@@ -1,4 +1,4 @@
-use crate::grammar::items::{item_start, ITEM_KEYWORDS};
+use crate::grammar::items::item_start;
 use crate::grammar::{name, paths};
 use crate::parser::Marker;
 use crate::SyntaxKind::*;

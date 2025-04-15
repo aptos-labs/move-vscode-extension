@@ -66,7 +66,7 @@ fn path_for_qualifier(p: &mut Parser, mode: Mode, mut qual: CompletedMarker) -> 
 fn path_segment(p: &mut Parser, mode: Mode, first: bool) {
     let m = p.start();
 
-    let mut empty = if first { !p.eat(T![::]) } else { true };
+    let empty = if first { !p.eat(T![::]) } else { true };
     match p.current() {
         IDENT => {
             name_ref(p);

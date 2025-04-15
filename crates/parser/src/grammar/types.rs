@@ -107,14 +107,6 @@ fn lambda_type(p: &mut Parser) {
     m.complete(p, LAMBDA_TYPE);
 }
 
-fn unit_type(p: &mut Parser) {
-    assert!(p.at(T!['(']));
-    let m = p.start();
-    p.bump(T!['(']);
-    p.bump(T![')']);
-    m.complete(p, UNIT_TYPE);
-}
-
 fn paren_or_tuple_or_unit_type(p: &mut Parser) {
     assert!(p.at(T!['(']));
     let m = p.start();

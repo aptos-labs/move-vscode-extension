@@ -7,7 +7,6 @@ use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::{NamedElement, NamedItemScope};
 use syntax::files::InFile;
 use syntax::{AstNode, ast};
-use vfs::FileId;
 
 pub fn use_speck_entries(
     db: &dyn HirDatabase,
@@ -50,7 +49,7 @@ pub struct UseItem {
     scope: NamedItemScope,
 }
 
-pub fn use_stmt_items(use_stmt: ast::UseStmt, file_id: FileId) -> Vec<UseItem> {
+pub fn use_stmt_items(use_stmt: ast::UseStmt) -> Vec<UseItem> {
     #[rustfmt::skip]
     let Some(root_use_speck) = use_stmt.use_speck() else { return vec![]; };
 
@@ -63,7 +62,7 @@ pub fn use_stmt_items(use_stmt: ast::UseStmt, file_id: FileId) -> Vec<UseItem> {
             let use_item = collect_child_use_speck(
                 root_use_speck.clone(),
                 child_use_speck,
-                file_id,
+                // file_id,
                 use_stmt_scope,
             );
             if let Some(use_item) = use_item {
@@ -144,7 +143,6 @@ pub fn use_stmt_items(use_stmt: ast::UseStmt, file_id: FileId) -> Vec<UseItem> {
 fn collect_child_use_speck(
     root_use_speck: ast::UseSpeck,
     child_use_speck: ast::UseSpeck,
-    file_id: FileId,
     use_stmt_scope: NamedItemScope,
 ) -> Option<UseItem> {
     let qualifier_path = root_use_speck.path();

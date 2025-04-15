@@ -5,20 +5,16 @@ use crate::main_loop::Task;
 use crate::op_queue::Cause;
 use crate::project_folders::ProjectFolders;
 use crate::{Config, lsp_ext};
-use base_db::PackageRootDatabase;
 use base_db::change::{FileChange, PackageGraph};
-use base_db::package_root::PackageRootId;
 use lang::builtin_files::BUILTINS_FILE;
 use lsp_types::FileSystemWatcher;
 use project_model::AptosWorkspace;
-use project_model::aptos_workspace::FileLoader;
-use std::collections::HashMap;
 use std::mem;
 use stdx::format_to;
 use stdx::itertools::Itertools;
 use stdx::thread::ThreadIntent;
 use triomphe::Arc;
-use vfs::{AbsPath, FileId, VfsPath};
+use vfs::AbsPath;
 
 #[derive(Debug)]
 pub(crate) enum ProjectWorkspaceProgress {
@@ -376,7 +372,7 @@ impl GlobalState {
             .iter()
             .enumerate()
             .filter_map(|(id, ws)| Some((id, ws.workspace_root(), ws.manifest_path())))
-            .map(|(ws_id, ws_root, manifest_path)| {
+            .map(|(ws_id, ws_root, _)| {
                 FlycheckHandle::spawn(ws_id, sender.clone(), config.clone(), ws_root.to_path_buf())
             })
             .collect::<Vec<_>>()

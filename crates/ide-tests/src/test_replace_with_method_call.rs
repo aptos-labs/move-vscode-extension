@@ -1,5 +1,4 @@
 use crate::test_utils::diagnostics::{check_diagnostic_and_fix, check_no_diagnostics};
-use crate::test_utils::{check_diagnostic, check_fix};
 
 #[test]
 fn test_no_warning_if_parameter_is_not_self() {

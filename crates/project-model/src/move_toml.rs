@@ -1,7 +1,6 @@
-use paths::{AbsPath, AbsPathBuf, Utf8Path, Utf8PathBuf};
+use paths::{AbsPathBuf, Utf8PathBuf};
 use serde_derive::Deserialize;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
 
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
 pub struct MoveToml {

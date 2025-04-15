@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use core::fmt;
 
 pub(crate) mod capabilities;

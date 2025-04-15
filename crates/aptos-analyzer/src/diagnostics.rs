@@ -1,19 +1,16 @@
 pub(crate) mod to_proto;
 
 use crate::global_state::GlobalStateSnapshot;
+use crate::lsp;
 use crate::main_loop::DiagnosticsTaskKind;
-use crate::{lsp, lsp_ext};
-use base_db::package_root::PackageRootId;
 use nohash_hasher::{IntMap, IntSet};
-use rustc_hash::FxHashMap;
 use std::mem;
 use stdx::iter_eq_by;
 use stdx::itertools::Itertools;
-use triomphe::Arc;
 use vfs::FileId;
 
-pub(crate) type CheckFixes =
-    Arc<Vec<FxHashMap<Option<Arc<PackageRootId>>, FxHashMap<FileId, Vec<Fix>>>>>;
+// pub(crate) type CheckFixes =
+//     Arc<Vec<FxHashMap<Option<Arc<PackageRootId>>, FxHashMap<FileId, Vec<Fix>>>>>;
 
 pub(crate) type DiagnosticsGeneration = usize;
 
@@ -35,12 +32,12 @@ pub(crate) struct DiagnosticCollection {
     generation: DiagnosticsGeneration,
 }
 
-#[derive(Debug, Clone)]
-pub(crate) struct Fix {
-    // Fixes may be triggerable from multiple ranges.
-    pub(crate) ranges: Vec<lsp_types::Range>,
-    pub(crate) action: lsp_ext::CodeAction,
-}
+// #[derive(Debug, Clone)]
+// pub(crate) struct Fix {
+//     // Fixes may be triggerable from multiple ranges.
+//     pub(crate) ranges: Vec<lsp_types::Range>,
+//     pub(crate) action: lsp_ext::CodeAction,
+// }
 
 impl DiagnosticCollection {
     pub(crate) fn clear_check(&mut self, flycheck_id: usize) {

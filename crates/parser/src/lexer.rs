@@ -2,13 +2,10 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::lexer::Tok::{BlockComment, LineComment, Mut};
 use regex::Regex;
 use std::fmt;
 use std::sync::LazyLock;
 use unicode_segmentation::UnicodeSegmentation;
-
-type Diagnostic = String;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Tok {
@@ -197,8 +194,6 @@ impl fmt::Display for Tok {
 
 pub struct Lexer<'input> {
     text: &'input str,
-    // doc_comments: FileCommentMap,
-    prev_end: usize,
     cur_start: usize,
     cur_end: usize,
     token: Tok,
@@ -208,8 +203,6 @@ impl<'input> Lexer<'input> {
     pub fn new(text: &'input str) -> Lexer<'input> {
         Lexer {
             text,
-            // doc_comments: FileCommentMap::new(),
-            prev_end: 0,
             cur_start: 0,
             cur_end: 0,
             token: Tok::EOF,
@@ -224,226 +217,17 @@ impl<'input> Lexer<'input> {
         &self.text[self.cur_start..self.cur_end]
     }
 
-    /// Strips line and block comments from input source, and collects documentation comments,
-    /// putting them into a map indexed by the span of the comment region. Comments in the original
-    /// source will be replaced by spaces, such that positions of source items stay unchanged.
-    /// Block comments can be nested.
-    ///
-    /// Documentation comments are comments which start with
-    /// `///` or `/**`, but not `////` or `/***`. The actual comment delimiters
-    /// (`/// .. <newline>` and `/** .. */`) will be not included in extracted comment string. The
-    /// span in the returned map, however, covers the whole region of the comment, including the
-    /// delimiters.
-    fn trim_whitespace_and_comments(&mut self, offset: usize) -> Result<&'input str, Box<Diagnostic>> {
-        let mut text = &self.text[offset..];
-
-        // A helper function to compute the index of the start of the given substring.
-        let len = text.len();
-        let get_offset = |substring: &str| offset + len - substring.len();
-
-        // Loop until we find text that isn't whitespace, and that isn't part of
-        // a multi-line or single-line comment.
-        loop {
-            if text.starts_with("/*") {
-                // Strip multi-line comments like '/* ... */' or '/** ... */'.
-                // These can be nested, as in '/* /* ... */ */', so record the
-                // start locations of each nested comment as a stack. The
-                // boolean indicates whether it's a documentation comment.
-                let mut locs: Vec<(usize, bool)> = vec![];
-                loop {
-                    text = text.trim_start_matches(|c: char| c != '/' && c != '*');
-                    if text.is_empty() {
-                        // We've reached the end of string while searching for a
-                        // terminating '*/'.
-                        let loc = *locs.last().unwrap();
-                        // Highlight the '/**' if it's a documentation comment, or the '/*'
-                        // otherwise.
-                        // let location =
-                        //     make_loc(self.file_hash, loc.0, loc.0 + if loc.1 { 3 } else { 2 });
-                        return Err(Box::new("Unclosed block comment".to_string()));
-                    } else if text.starts_with("/*") {
-                        // We've found a (perhaps nested) multi-line comment.
-                        let start = get_offset(text);
-                        text = &text[2..];
-
-                        // Check if this is a documentation comment: '/**', but neither '/***' nor '/**/'.
-                        // A documentation comment cannot be nested within another comment.
-                        let is_doc = text.starts_with('*')
-                            && !text.starts_with("**")
-                            && !text.starts_with("*/")
-                            && locs.is_empty();
-
-                        locs.push((start, is_doc));
-                    } else if text.starts_with("*/") {
-                        // We've found a multi-line comment terminator that ends
-                        // our innermost nested comment.
-                        let loc = locs.pop().unwrap();
-                        text = &text[2..];
-
-                        // If this was a documentation comment, record it in our map.
-                        if loc.1 {
-                            let end = get_offset(text);
-                            // self.doc_comments.insert(
-                            //     (loc.0 as u32, end as u32),
-                            //     self.text[(loc.0 + 3)..(end - 2)].to_string(),
-                            // );
-                        }
-
-                        // If this terminated our last comment, exit the loop.
-                        if locs.is_empty() {
-                            break;
-                        }
-                    } else {
-                        // This is a solitary '/' or '*' that isn't part of any comment delimiter.
-                        // Skip over it.
-                        text = &text[1..];
-                    }
-                }
-
-                // Continue the loop immediately after the multi-line comment.
-                // There may be whitespace or another comment following this one.
-                continue;
-            } else if text.starts_with("//") {
-                let start = get_offset(text);
-                let is_doc_comment = text.starts_with("///") && !text.starts_with("////");
-                text = text.trim_start_matches(|c: char| c != '\n');
-
-                let end = get_offset(text);
-                let mut comment = &self.text[start..end];
-
-                // If this was a documentation comment, record it in our map.
-                if is_doc_comment {
-                    comment = comment.trim_end_matches(|c: char| c == '\r');
-
-                    // self.doc_comments.insert((start as u32, end as u32), comment.to_string());
-                }
-
-                // Continue the loop on the following line, which may contain leading
-                // whitespace or comments of its own.
-                continue;
-            }
-            break;
-        }
-        Ok(text)
-    }
-
-    // // Look ahead to the next token after the current one and return it, and its starting offset,
-    // // without advancing the state of the lexer.
-    // pub fn lookahead_with_start_loc(&mut self) -> Result<(Tok, usize), Box<Diagnostic>> {
-    //     let text = self.trim_whitespace_and_comments(self.cur_end)?;
-    //     let next_start = self.text.len() - text.len();
-    //     let (tok, _) = find_token(self.file_hash, text, next_start)?;
-    //     Ok((tok, next_start))
-    // }
-
-    // // Look ahead to the next token after the current one and return it without advancing
-    // // the state of the lexer.
-    // pub fn lookahead(&mut self) -> Result<Tok, Box<Diagnostic>> {
-    //     Ok(self.lookahead_with_start_loc()?.0)
-    // }
-
-    // // Look ahead to the next two tokens after the current one and return them without advancing
-    // // the state of the lexer.
-    // pub fn lookahead2(&mut self) -> Result<(Tok, Tok), Box<Diagnostic>> {
-    //     let text = self.trim_whitespace_and_comments(self.cur_end)?;
-    //     let offset = self.text.len() - text.len();
-    //     let (first, length) = find_token(self.file_hash, text, offset)?;
-    //     let text2 = self.trim_whitespace_and_comments(offset + length)?;
-    //     let offset2 = self.text.len() - text2.len();
-    //     let (second, _) = find_token(self.file_hash, text2, offset2)?;
-    //     Ok((first, second))
-    // }
-
-    // // Look ahead to the nth token after the current one and return it without advancing
-    // // the state of the lexer.
-    // pub fn lookahead_nth(&mut self, n: usize) -> Result<Tok, Box<Diagnostic>> {
-    //     let mut current_offset = self.cur_end;
-    //     let mut token = Tok::EOF;
-    //
-    //     for _ in 0..=n {
-    //         let text = self.trim_whitespace_and_comments(current_offset)?;
-    //         let offset = self.text.len() - text.len();
-    //         let (found_token, length) = find_token(self.file_hash, text, offset)?;
-    //         token = found_token;
-    //         current_offset = offset + length;
-    //     }
-    //     Ok(token)
-    // }
-
-    // // Matches the doc comments after the last token (or the beginning of the file) to the position
-    // // of the current token. This moves the comments out of `doc_comments` and
-    // // into `matched_doc_comments`. At the end of parsing, if `doc_comments` is not empty, errors
-    // // for stale doc comments will be produced.
-    // //
-    // // Calling this function during parsing effectively marks a valid point for documentation
-    // // comments. The documentation comments are not stored in the AST, but can be retrieved by
-    // // using the start position of an item as an index into `matched_doc_comments`.
-    // pub fn match_doc_comments(&mut self) {
-    //     let start = self.previous_end_loc() as u32;
-    //     let end = self.cur_start as u32;
-    //     let mut matched = vec![];
-    //     let merged = self
-    //         .doc_comments
-    //         .range((start, start)..(end, end))
-    //         .map(|(span, s)| {
-    //             matched.push(*span);
-    //             s.clone()
-    //         })
-    //         .collect::<Vec<String>>()
-    //         .join("\n");
-    //     for span in matched {
-    //         self.doc_comments.remove(&span);
-    //     }
-    //     self.matched_doc_comments.insert(end, merged);
-    // }
-
-    // // At the end of parsing, checks whether there are any unmatched documentation comments,
-    // // producing errors if so. Otherwise returns a map from file position to associated
-    // // documentation.
-    // pub fn check_and_get_doc_comments(
-    //     &mut self,
-    //     env: &mut CompilationEnv,
-    // ) -> MatchedFileCommentMap {
-    //     let msg = "Documentation comment cannot be matched to a language item";
-    //     let diags = self
-    //         .doc_comments
-    //         .iter()
-    //         .map(|((start, end), _)| {
-    //             let loc = Loc::new(self.file_hash, *start, *end);
-    //             diag!(Syntax::InvalidDocComment, (loc, msg))
-    //         })
-    //         .collect();
-    //     env.add_diags(diags);
-    //     std::mem::take(&mut self.matched_doc_comments)
-    // }
-
     pub fn advance(&mut self) {
-        self.prev_end = self.cur_end;
         let text = &self.text[self.cur_end..];
         self.cur_start = self.text.len() - text.len();
-        let (token, len) = find_token(text, self.cur_start);
+        let (token, len) = find_token(text);
         self.cur_end = self.cur_start + len;
         self.token = token;
     }
-
-    // pub fn advance_with_loc(&mut self) -> Result<Loc, Box<Diagnostic>> {
-    //     let start_loc = self.start_loc();
-    //     self.advance()?;
-    //     let end_loc = self.previous_end_loc();
-    //     Ok(make_loc(self.file_hash, start_loc, end_loc))
-    // }
-
-    // // Replace the current token. The lexer will always match the longest token,
-    // // but sometimes the parser will prefer to replace it with a shorter one,
-    // // e.g., ">" instead of ">>".
-    // pub fn replace_token(&mut self, token: Tok, len: usize) {
-    //     self.token = token;
-    //     self.cur_end = self.cur_start + len
-    // }
 }
 
 // Find the next token and its length without changing the state of the lexer.
-fn find_token(text: &str, start_offset: usize) -> (Tok, usize) {
+fn find_token(text: &str) -> (Tok, usize) {
     let curr = match text.graphemes(true).next() {
         Some(next_char) => next_char,
         None => {
@@ -628,15 +412,7 @@ fn find_token(text: &str, start_offset: usize) -> (Tok, usize) {
         "}" => (Tok::RBrace, 1),
         "#" => (Tok::NumSign, 1),
         "@" => (Tok::AtSign, 1),
-        _ => {
-            (Tok::BadCharacter, curr.len())
-            // return Err(Box::new(format!("Invalid character: '{}'", curr)));
-            // let loc = make_loc(file_hash, start_offset, start_offset);
-            // return Err(Box::new(diag!(
-            //     Syntax::InvalidCharacter,
-            //     (loc, )
-            // )));
-        }
+        _ => (Tok::BadCharacter, curr.len()),
     };
 
     (tok, len)
@@ -715,31 +491,13 @@ static BYTE_STRING_REGEX: LazyLock<Regex> =
 static QUOTE_IDENT_REGEX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r#"^'[_a-zA-Z][_a-zA-Z0-9]*"#).unwrap());
 
-// Return the length of the quoted string until newline or EOF.
-fn get_string_len(text: &str) -> Option<usize> {
-    let mut pos = 0;
-    let mut iter = text.chars();
-    while let Some(chr) = iter.next() {
-        if chr == '\\' {
-            // Skip over the escaped character (e.g., a quote or another backslash)
-            if iter.next().is_some() {
-                pos += 1;
-            }
-        } else if chr == '"' {
-            return Some(pos);
-        }
-        pos += 1;
-    }
-    None
-}
-
 fn get_block_comment_len(text: &str) -> usize {
     assert!(text.starts_with("/*"));
 
     let mut chars = text[2..].chars().peekable();
     let mut pos = 0;
     let mut nested_counter = 0;
-    let mut len = 0;
+
     while let Some(curr) = chars.next() {
         let Some(&next) = chars.peek() else {
             return text.len();
@@ -798,22 +556,6 @@ fn get_name_token(name: &str) -> Tok {
         "_" => Tok::Underscore,
         _ => Tok::Identifier,
     }
-}
-
-// Trim the start whitespace characters, include: space, tab, lf(\n) and crlf(\r\n).
-fn trim_start_whitespace(text: &str) -> &str {
-    let mut pos = 0;
-    let mut iter = text.chars();
-
-    while let Some(chr) = iter.next() {
-        match chr {
-            ' ' | '\t' | '\n' => pos += 1,
-            '\r' if matches!(iter.next(), Some('\n')) => pos += 2,
-            _ => break,
-        };
-    }
-
-    &text[pos..]
 }
 
 #[cfg(test)]

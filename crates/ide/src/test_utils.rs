@@ -36,7 +36,7 @@ pub fn get_marked_position_line_index(source: &str, mark: &str) -> usize {
     let (line_idx, _) = source
         .lines()
         .enumerate()
-        .find(|(i, line)| line.contains(mark))
+        .find(|(_, line)| line.contains(mark))
         .expect(&format!("no {} mark", mark));
     line_idx
     //

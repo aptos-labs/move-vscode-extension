@@ -1,5 +1,4 @@
-use crate::grammar::generic_params::opt_generic_param_list;
-use crate::grammar::{attributes, error_block, expressions, name, name_ref, name_ref_or_index, paths};
+use crate::grammar::{error_block, expressions, name, name_ref, paths};
 use crate::parser::{CompletedMarker, Parser};
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
@@ -263,20 +262,20 @@ fn tuple_pat(p: &mut Parser) -> CompletedMarker {
     assert!(p.at(T!['(']));
     let m = p.start();
     p.bump(T!['(']);
-    let mut has_comma = false;
-    let mut has_pat = false;
-    let mut has_rest = false;
+    // let mut has_comma = false;
+    // let mut has_pat = false;
+    // let mut has_rest = false;
     while !p.at(EOF) && !p.at(T![')']) {
-        has_pat = true;
+        // has_pat = true;
         if !p.at_ts(PATTERN_FIRST) {
             p.error("expected a pattern");
             break;
         }
-        has_rest |= p.at(T![..]);
+        // has_rest |= p.at(T![..]);
 
         pattern(p);
         if !p.at(T![')']) {
-            has_comma = true;
+            // has_comma = true;
             p.expect(T![,]);
         }
     }

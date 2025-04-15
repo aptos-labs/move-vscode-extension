@@ -7,14 +7,12 @@ use crate::grammar::expressions::expr;
 use crate::grammar::paths::use_path;
 use crate::grammar::specs::schemas::schema;
 use crate::grammar::{
-    attributes, error_block, generic_params, item_name, name_or_bump_until, name_ref,
-    name_ref_or_bump_until, params, types,
+    attributes, error_block, generic_params, item_name, name_ref_or_bump_until, params, types,
 };
 use crate::parser::{Marker, Parser};
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::T;
-use std::ops::Index;
 
 // // test mod_contents
 // // fn foo() {}

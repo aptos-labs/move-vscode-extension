@@ -4,9 +4,6 @@ use ide::test_utils::{get_marked_position_offset, get_marked_position_offset_wit
 use syntax::SyntaxKind::IDENT;
 use syntax::files::FilePosition;
 use syntax::{AstNode, SyntaxKind};
-use tracing_subscriber::Layer;
-use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::util::SubscriberInitExt;
 
 mod test_resolve_1;
 mod test_resolve_functions;

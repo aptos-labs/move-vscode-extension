@@ -10,7 +10,6 @@ use lang::types::has_type_params_ext::GenericItemExt;
 use lang::types::inference::InferenceCtx;
 use lang::types::lowering::TyLowering;
 use lang::types::substitution::ApplySubstitution;
-use syntax::SyntaxKind::BORROW_EXPR;
 use syntax::ast::syntax_factory::SyntaxFactory;
 use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, ast};
@@ -62,7 +61,7 @@ pub(crate) fn can_be_replaced_with_method_call(
 }
 
 fn fixes(
-    ctx: &DiagnosticsContext<'_>,
+    _ctx: &DiagnosticsContext<'_>,
     call_expr: InFile<ast::CallExpr>,
     diagnostic_range: FileRange,
 ) -> Option<Vec<Assist>> {

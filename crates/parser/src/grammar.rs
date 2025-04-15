@@ -44,7 +44,7 @@ pub(crate) mod utils;
 use crate::grammar::items::{block_start, item_start};
 use crate::parser::Marker;
 use crate::token_set::TokenSet;
-use crate::{parser::Parser, SyntaxKind, SyntaxKind::*, T};
+use crate::{parser::Parser, SyntaxKind::*, T};
 
 pub mod entry_points {
     use super::*;
@@ -192,8 +192,10 @@ fn name_ref(p: &mut Parser) {
     }
 }
 
+#[allow(unused)]
 const IDENT_OR_INT_NUMBER: TokenSet = TokenSet::new(&[INT_NUMBER, IDENT]);
 
+#[allow(unused)]
 fn name_ref_or_index(p: &mut Parser<'_>) {
     if p.at_ts(IDENT_OR_INT_NUMBER) {
         let m = p.start();
@@ -209,23 +211,6 @@ fn name_ref_or_index(p: &mut Parser<'_>) {
 //     let m = p.start();
 //     p.bump_any();
 //     m.complete(p, NAME_REF);
-// }
-
-fn named_address(p: &mut Parser) {
-    let named_addr = p.start();
-    p.bump(IDENT);
-    named_addr.complete(p, NAMED_ADDRESS);
-}
-
-// fn item_name_or_bump_until_next_item(p: &mut Parser) {
-//     // if p.at(IDENT) {
-//     //     let m = p.start();
-//     //     p.bump(IDENT);
-//     //     m.complete(p, NAME);
-//     // } else {
-//     //     p.err_recover("expected a name", recovery);
-//     // }
-//     name_or_bump_until(p, item_first);
 // }
 
 fn item_name(p: &mut Parser) -> bool {

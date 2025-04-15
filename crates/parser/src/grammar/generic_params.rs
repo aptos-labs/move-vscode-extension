@@ -1,7 +1,7 @@
 use crate::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::grammar::utils::list;
 use crate::grammar::{ability, name};
-use crate::parser::{CompletedMarker, Marker};
+use crate::parser::Marker;
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{Parser, T};
