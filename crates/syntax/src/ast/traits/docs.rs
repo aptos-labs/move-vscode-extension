@@ -1,7 +1,7 @@
 use crate::{ast, AstNode, AstToken};
 use std::cmp::Ordering;
 
-pub trait DocCommentsOwner: AstNode {
+pub trait HoverDocsOwner: AstNode {
     fn doc_comments(&self) -> Vec<ast::Comment> {
         self.syntax()
             .children_with_tokens()

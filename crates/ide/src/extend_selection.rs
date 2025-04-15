@@ -20,7 +20,7 @@ use crate::FileRange;
 //
 // ![Expand and Shrink Selection](https://user-images.githubusercontent.com/48062697/113020651-b42fc800-917a-11eb-8a4f-cf1a07859fac.gif)
 pub(crate) fn extend_selection(db: &RootDatabase, frange: FileRange) -> TextRange {
-    let sema = Semantics::new(db);
+    let sema = Semantics::new(db, frange.file_id);
     let file = sema.parse(frange.file_id);
     try_extend_selection(file.syntax(), frange).unwrap_or(frange.range)
 }

@@ -24,6 +24,7 @@ use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::{TyInfer, TyVar};
 use crate::types::ty::type_param::TyTypeParameter;
 use base_db::PackageRootDatabase;
+use base_db::package_root::PackageRootId;
 use syntax::ast;
 use syntax::files::InFile;
 use vfs::FileId;
@@ -83,17 +84,10 @@ impl Ty {
         }
     }
 
-    // pub fn deref_once(&self) -> Ty {
-    //     match self {
-    //         Ty::Reference(ty_ref) => ty_ref.referenced(),
-    //         _ => self.to_owned(),
-    //     }
-    // }
-
-    pub fn inner_item_module(
+    pub fn adt_item_module(
         &self,
         db: &dyn HirDatabase,
-        file_id: FileId,
+        current_package_id: PackageRootId,
     ) -> Option<InFile<ast::Module>> {
         let ty = self.unwrap_all_refs();
         match ty {
@@ -102,10 +96,9 @@ impl Ty {
                 Some(item.map(|it| it.module()))
             }
             Ty::Seq(TySequence::Vector(_)) => {
-                let module =
-                    get_modules_as_entries(db, db.file_package_root_id(file_id), Address::named("std"))
-                        .filter_by_name("vector".to_string())
-                        .single_or_none()?;
+                let module = get_modules_as_entries(db, current_package_id, Address::named("std"))
+                    .filter_by_name("vector".to_string())
+                    .single_or_none()?;
                 module.cast_into::<ast::Module>(db)
             }
             _ => None,

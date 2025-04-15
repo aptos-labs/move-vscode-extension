@@ -13,7 +13,8 @@ use crate::{ts, Parser, SyntaxKind, T};
 use std::collections::HashSet;
 
 pub(crate) fn spec_function(p: &mut Parser, m: Marker) {
-    p.bump(T![spec]);
+    // p.bump(T![spec]);
+    opt_modifiers(p);
     fun_signature(p, true, false);
     m.complete(p, SPEC_FUN);
 }

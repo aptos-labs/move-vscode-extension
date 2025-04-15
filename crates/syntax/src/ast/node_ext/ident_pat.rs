@@ -3,8 +3,8 @@ use crate::ast::NamedElement;
 use crate::{ast, AstNode};
 
 impl ast::IdentPat {
-    pub fn type_owner(&self) -> Option<ast::BindingTypeOwner> {
-        self.syntax().ancestor_strict::<ast::BindingTypeOwner>()
+    pub fn owner(&self) -> Option<ast::IdentPatOwner> {
+        self.syntax().ancestor_strict::<ast::IdentPatOwner>()
     }
 
     pub fn as_string(&self) -> String {

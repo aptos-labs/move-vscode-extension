@@ -13,4 +13,6 @@ spec sender::my_module {
 
     spec write_to_event_store<T: drop + store>() {
     }
+
+    spec native fun is_txn_signer(s: signer): bool;
 }

@@ -21,12 +21,6 @@ struct DiagnosticsContext<'a> {
     resolve: &'a AssistResolveStrategy,
 }
 
-impl DiagnosticsContext<'_> {
-    pub fn db(&self) -> &RootDatabase {
-        self.sema.db
-    }
-}
-
 /// Request parser level diagnostics for the given [`FileId`].
 pub fn syntax_diagnostics(
     db: &RootDatabase,
@@ -61,7 +55,7 @@ pub fn semantic_diagnostics(
     file_id: FileId,
 ) -> Vec<Diagnostic> {
     let _p = tracing::info_span!("semantic_diagnostics").entered();
-    let sema = Semantics::new(db);
+    let sema = Semantics::new(db, file_id);
 
     let mut res = vec![];
 

@@ -29,7 +29,7 @@ pub(crate) fn highlight(
     range_to_highlight: Option<TextRange>,
 ) -> Vec<HlRange> {
     let _p = tracing::info_span!("highlight").entered();
-    let sema = Semantics::new(db);
+    let sema = Semantics::new(db, file_id);
 
     // Determine the root based on the given range.
     let (root, range_to_highlight) = {

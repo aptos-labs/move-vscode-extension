@@ -43,7 +43,7 @@ Item =
 InferenceCtxOwner =
     Fun | SpecFun
 
-BindingTypeOwner =
+IdentPatOwner =
     LetStmt | Param | SchemaField
 
 UseStmt =

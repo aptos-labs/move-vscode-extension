@@ -62,7 +62,7 @@ impl<'a> CompletionContext<'a> {
         config: &'a CompletionConfig,
     ) -> Option<(CompletionContext<'a>, CompletionAnalysis)> {
         let _p = tracing::info_span!("CompletionContext::new").entered();
-        let sema = Semantics::new(db);
+        let sema = Semantics::new(db, file_id);
 
         let original_file = sema.parse(file_id);
         // always pick the token to the immediate left of the cursor, as that is what we are actually

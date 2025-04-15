@@ -1,5 +1,5 @@
-SOURCE_FILE@0..365
-  MODULE_SPEC@0..364
+SOURCE_FILE@0..418
+  MODULE_SPEC@0..417
     SPEC_KW@0..4 "spec"
     WHITESPACE@4..5 " "
     NAMED_ADDRESS@5..11
@@ -151,6 +151,39 @@ SOURCE_FILE@0..365
         L_CURLY@355..356 "{"
         WHITESPACE@356..361 "\n    "
         R_CURLY@361..362 "}"
-    WHITESPACE@362..363 "\n"
-    R_CURLY@363..364 "}"
-  WHITESPACE@364..365 "\n"
+    WHITESPACE@362..368 "\n\n    "
+    SPEC_FUN@368..415
+      SPEC_KW@368..372 "spec"
+      WHITESPACE@372..373 " "
+      NATIVE_KW@373..379 "native"
+      WHITESPACE@379..380 " "
+      FUN_KW@380..383 "fun"
+      WHITESPACE@383..384 " "
+      NAME@384..397
+        IDENT@384..397 "is_txn_signer"
+      PARAM_LIST@397..408
+        L_PAREN@397..398 "("
+        PARAM@398..407
+          IDENT_PAT@398..399
+            NAME@398..399
+              IDENT@398..399 "s"
+          COLON@399..400 ":"
+          WHITESPACE@400..401 " "
+          PATH_TYPE@401..407
+            PATH@401..407
+              PATH_SEGMENT@401..407
+                NAME_REF@401..407
+                  IDENT@401..407 "signer"
+        R_PAREN@407..408 ")"
+      RET_TYPE@408..414
+        COLON@408..409 ":"
+        WHITESPACE@409..410 " "
+        PATH_TYPE@410..414
+          PATH@410..414
+            PATH_SEGMENT@410..414
+              NAME_REF@410..414
+                IDENT@410..414 "bool"
+      SEMICOLON@414..415 ";"
+    WHITESPACE@415..416 "\n"
+    R_CURLY@416..417 "}"
+  WHITESPACE@417..418 "\n"

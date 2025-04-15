@@ -5,10 +5,7 @@ use ide_db::assists::{Assist, AssistId};
 use ide_db::label::Label;
 use ide_db::source_change::SourceChangeBuilder;
 use lang::db::ExprInferenceExt;
-use lang::nameres::ResolveReference;
 use lang::types::has_type_params_ext::GenericItemExt;
-use lang::types::inference::InferenceCtx;
-use lang::types::lowering::TyLowering;
 use lang::types::substitution::ApplySubstitution;
 use syntax::ast::syntax_factory::SyntaxFactory;
 use syntax::files::{FileRange, InFile, InFileExt};
@@ -19,34 +16,35 @@ pub(crate) fn can_be_replaced_with_method_call(
     ctx: &DiagnosticsContext<'_>,
     call_expr: InFile<ast::CallExpr>,
 ) -> Option<Diagnostic> {
-    let file_id = call_expr.file_id;
-    let db = ctx.db();
-    let (fun_file_id, fun) = call_expr
-        .clone()
-        .map(|it| it.path().reference())
-        .resolve(db)?
-        .cast_into::<ast::Fun>(db)?
-        .unpack();
+    // let (file_id, call_expr) = call_expr.clone().unpack();
+
+    let reference = call_expr.clone().map(|it| it.path().reference());
+    // let reference = call_expr.clone().path().reference();
+    let (fun_file_id, fun) = ctx.sema.resolve_to_element::<ast::Fun>(reference)?.unpack();
+
     let self_param = fun.self_param()?;
     let self_param_type = self_param.type_()?;
 
-    let inference = call_expr.clone().in_file_into::<ast::Expr>().inference(db)?;
-    let first_arg_expr = call_expr.value.args().first()?.to_owned();
-    let first_arg_expr_ty = inference.get_expr_type(&first_arg_expr)?;
+    let inference = ctx.sema.inference(call_expr.clone().in_file_into())?;
 
+    let first_arg_expr = call_expr.value.args().first()?.to_owned();
+    let first_arg_ty = inference.get_expr_type(&first_arg_expr)?;
+
+    // if function module is different to the first argument expr module,
+    // then it's not a method even if `self` argument is present
     let fun_module = fun.module()?;
-    let arg_ty_module = first_arg_expr_ty.inner_item_module(db, file_id)?.value;
+    let arg_ty_module = ctx.sema.ty_module(&first_arg_ty)?;
     if fun_module != arg_ty_module {
         return None;
     }
 
     let fun_subst = fun.in_file(fun_file_id).ty_vars_subst();
-    let self_ty = TyLowering::new_no_inf(db)
+    let self_ty = ctx
+        .sema
         .lower_type(self_param_type.in_file(fun_file_id))
         .substitute(&fun_subst);
 
-    let mut inf = InferenceCtx::new(db, file_id);
-    if inf.is_tys_compatible_with_autoborrow(first_arg_expr_ty, self_ty) {
+    if ctx.sema.is_tys_compatible(first_arg_ty, self_ty, true) {
         acc.push(
             Diagnostic::new(
                 DiagnosticCode::Lsp("replace-with-method-call", Severity::WeakWarning),

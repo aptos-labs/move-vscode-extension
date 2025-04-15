@@ -35,10 +35,9 @@ SOURCE_FILE@0..113
           LITERAL@80..93
             BYTE_STRING@80..93 "b\"2423534;;;;"
         WHITESPACE@93..102 "\n        "
-        EXPR_STMT@102..104
-          LITERAL@102..103
-            ERROR@102..103
-              BAD_CHARACTER@102..103 "\""
+        ERROR@102..103
+          BAD_CHARACTER@102..103 "\""
+        ERROR@103..104
           SEMICOLON@103..104 ";"
         WHITESPACE@104..109 "\n    "
         R_CURLY@109..110 "}"

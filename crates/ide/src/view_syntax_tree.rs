@@ -14,7 +14,7 @@ use vfs::FileId;
 // |---------|-------------|
 // | VS Code | **Rust Syntax Tree** |
 pub(crate) fn view_syntax_tree(db: &RootDatabase, file_id: FileId) -> String {
-    let sema = Semantics::new(db);
+    let sema = Semantics::new(db, file_id);
     let line_index = db.line_index(file_id);
     let parse = sema.parse(file_id);
 
