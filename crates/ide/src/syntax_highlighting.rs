@@ -6,10 +6,12 @@ pub mod tags;
 use crate::syntax_highlighting::highlights::Highlights;
 use ide_db::RootDatabase;
 use lang::Semantics;
+use stdx::itertools::Either;
 use syntax::SyntaxKind::WHITESPACE;
-use syntax::{AstNode, NodeOrToken, SyntaxNode, TextRange, WalkEvent, ast};
+use syntax::{AstNode, NodeOrToken, SyntaxNode, TextRange, WalkEvent, ast, match_ast};
 use vfs::FileId;
 
+use crate::syntax_highlighting::tags::HlTag;
 pub(crate) use html::{highlight_as_html, highlight_as_html_no_style};
 use syntax::ast::node_ext::syntax_node::SyntaxTokenExt;
 pub(crate) use tags::Highlight;
@@ -80,20 +82,20 @@ fn traverse(
             Leave(NodeOrToken::Node(_)) => continue,
         };
 
-        let element = match element.clone() {
-            NodeOrToken::Node(n) => match ast::NameLike::cast(n) {
-                Some(n) => NodeOrToken::Node(n),
-                None => continue,
-            },
-            NodeOrToken::Token(t) => NodeOrToken::Token(t),
+        let highlight = match element.clone() {
+            NodeOrToken::Node(node) => {
+                match_ast! {
+                    match (node) {
+                        ast::NameLike(it) => highlight::name_like::name_like(sema, it),
+                        ast::AddressLit(_) => Some(Highlight::new(HlTag::NumericLiteral)),
+                        _ => continue,
+                    }
+                }
+            }
+            NodeOrToken::Token(t) => highlight::token(sema, t),
         };
 
-        let element = match element {
-            NodeOrToken::Node(name_like) => highlight::name_like::name_like(sema, name_like),
-            NodeOrToken::Token(token) => highlight::token(sema, token),
-            // _ => None,
-        };
-        if let Some(highlight) = element {
+        if let Some(highlight) = highlight {
             highlights.add(HlRange {
                 range: element_range,
                 highlight,
