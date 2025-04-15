@@ -7,7 +7,7 @@ use syntax::AstNode;
 use crate::{FileId, RootDatabase, syntax_highlighting::highlight};
 
 pub(crate) fn highlight_as_html_no_style(db: &RootDatabase, file_id: FileId) -> String {
-    let sema = Semantics::new(db);
+    let sema = Semantics::new(db, file_id);
     let file = sema.parse(file_id);
 
     let hl_ranges = highlight(db, file_id.into(), None);
@@ -26,7 +26,7 @@ pub(crate) fn highlight_as_html_no_style(db: &RootDatabase, file_id: FileId) -> 
 }
 
 pub(crate) fn highlight_as_html(db: &RootDatabase, file_id: FileId) -> String {
-    let sema = Semantics::new(db);
+    let sema = Semantics::new(db, file_id);
     let file = sema.parse(file_id);
     let file = file.syntax();
 

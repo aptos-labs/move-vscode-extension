@@ -93,10 +93,11 @@ pub fn get_method_resolve_variants(
     self_ty: &Ty,
     current_file_id: FileId,
 ) -> Vec<ScopeEntry> {
+    let package_id = db.file_package_root_id(current_file_id);
     let Some(InFile {
         file_id,
         value: receiver_item_module,
-    }) = self_ty.inner_item_module(db, current_file_id)
+    }) = self_ty.adt_item_module(db, package_id)
     else {
         return vec![];
     };

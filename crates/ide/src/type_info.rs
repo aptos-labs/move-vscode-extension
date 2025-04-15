@@ -10,7 +10,7 @@ pub(crate) fn expr_type_info(
     db: &RootDatabase,
     FilePosition { file_id, offset }: FilePosition,
 ) -> Option<String> {
-    let sema = Semantics::new(db);
+    let sema = Semantics::new(db, file_id);
 
     let file = sema.parse(file_id);
 

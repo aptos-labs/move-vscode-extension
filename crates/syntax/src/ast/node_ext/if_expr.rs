@@ -7,8 +7,6 @@ impl ast::IfExpr {
     }
 
     pub fn else_branch(&self) -> Option<ast::BlockOrInlineExpr> {
-        // dbg!(&support::children::<ast::BlockOrInlineExpr>(self.syntax()).collect::<Vec<_>>());
-        // let else_token = self.else_token()?;
         support::children::<ast::BlockOrInlineExpr>(self.syntax()).nth(1)
     }
 }

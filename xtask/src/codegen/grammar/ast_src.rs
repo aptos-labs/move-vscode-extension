@@ -339,7 +339,7 @@ pub(crate) const NON_METHOD_TRAITS: &[(&str, &[&str])] = &[
         ],
     ),
     (
-        "DocCommentsOwner",
+        "HoverDocsOwner",
         &[
             "Module",
             "Fun",
@@ -351,6 +351,7 @@ pub(crate) const NON_METHOD_TRAITS: &[(&str, &[&str])] = &[
             "Variant",
             "Const",
             "Schema",
+            "IdentPat",
         ],
     ),
 ];

@@ -28,6 +28,13 @@ impl ItemFQName {
         }
     }
 
+    pub fn address_identifier_text(&self) -> String {
+        match self {
+            ItemFQName::Module { address, .. } => address.identifier_text(),
+            ItemFQName::Item { module_fq_name, .. } => module_fq_name.address_identifier_text(),
+        }
+    }
+
     pub fn module_identifier_text(&self) -> String {
         match self {
             ItemFQName::Module { .. } => self.identifier_text(),

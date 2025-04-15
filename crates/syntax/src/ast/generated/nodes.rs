@@ -225,9 +225,9 @@ impl Condition {
 pub struct Const {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::DocCommentsOwner for Const {}
 impl ast::HasAttrs for Const {}
 impl ast::HasVisibility for Const {}
+impl ast::HoverDocsOwner for Const {}
 impl ast::NamedElement for Const {}
 impl Const {
     #[inline]
@@ -287,10 +287,10 @@ impl DotExpr {
 pub struct Enum {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::DocCommentsOwner for Enum {}
 impl ast::GenericElement for Enum {}
 impl ast::HasAttrs for Enum {}
 impl ast::HasVisibility for Enum {}
+impl ast::HoverDocsOwner for Enum {}
 impl ast::NamedElement for Enum {}
 impl Enum {
     #[inline]
@@ -370,10 +370,10 @@ impl Friend {
 pub struct Fun {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::DocCommentsOwner for Fun {}
 impl ast::GenericElement for Fun {}
 impl ast::HasAttrs for Fun {}
 impl ast::HasVisibility for Fun {}
+impl ast::HoverDocsOwner for Fun {}
 impl ast::NamedElement for Fun {}
 impl Fun {
     #[inline]
@@ -400,6 +400,7 @@ impl Fun {
 pub struct IdentPat {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::HoverDocsOwner for IdentPat {}
 impl ast::NamedElement for IdentPat {}
 impl ast::ReferenceElement for IdentPat {}
 impl IdentPat {}
@@ -692,10 +693,10 @@ impl MethodCallExpr {
 pub struct Module {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::DocCommentsOwner for Module {}
 impl ast::HasAttrs for Module {}
 impl ast::HasItems for Module {}
 impl ast::HasUseStmts for Module {}
+impl ast::HoverDocsOwner for Module {}
 impl ast::NamedElement for Module {}
 impl Module {
     #[inline]
@@ -766,8 +767,8 @@ impl NamedAddress {
 pub struct NamedField {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::DocCommentsOwner for NamedField {}
 impl ast::HasAttrs for NamedField {}
+impl ast::HoverDocsOwner for NamedField {}
 impl ast::NamedElement for NamedField {}
 impl NamedField {
     #[inline]
@@ -986,9 +987,9 @@ impl ReturnExpr {
 pub struct Schema {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::DocCommentsOwner for Schema {}
 impl ast::GenericElement for Schema {}
 impl ast::HasAttrs for Schema {}
+impl ast::HoverDocsOwner for Schema {}
 impl ast::MslOnly for Schema {}
 impl ast::NamedElement for Schema {}
 impl Schema {
@@ -1053,10 +1054,10 @@ impl SourceFile {
 pub struct SpecFun {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::DocCommentsOwner for SpecFun {}
 impl ast::GenericElement for SpecFun {}
 impl ast::HasAttrs for SpecFun {}
 impl ast::HasVisibility for SpecFun {}
+impl ast::HoverDocsOwner for SpecFun {}
 impl ast::MslOnly for SpecFun {}
 impl ast::NamedElement for SpecFun {}
 impl SpecFun {
@@ -1080,9 +1081,9 @@ impl SpecFun {
 pub struct SpecInlineFun {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::DocCommentsOwner for SpecInlineFun {}
 impl ast::GenericElement for SpecInlineFun {}
 impl ast::HasVisibility for SpecInlineFun {}
+impl ast::HoverDocsOwner for SpecInlineFun {}
 impl ast::MslOnly for SpecInlineFun {}
 impl ast::NamedElement for SpecInlineFun {}
 impl SpecInlineFun {
@@ -1157,11 +1158,11 @@ impl SpecPredicateStmt {
 pub struct Struct {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::DocCommentsOwner for Struct {}
 impl ast::FieldsOwner for Struct {}
 impl ast::GenericElement for Struct {}
 impl ast::HasAttrs for Struct {}
 impl ast::HasVisibility for Struct {}
+impl ast::HoverDocsOwner for Struct {}
 impl ast::NamedElement for Struct {}
 impl Struct {
     #[inline]
@@ -1463,9 +1464,9 @@ impl ValueAddress {
 pub struct Variant {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::DocCommentsOwner for Variant {}
 impl ast::FieldsOwner for Variant {}
 impl ast::HasAttrs for Variant {}
+impl ast::HoverDocsOwner for Variant {}
 impl ast::NamedElement for Variant {}
 impl Variant {}
 
@@ -1553,13 +1554,6 @@ pub enum AnyField {
 impl ast::HasAttrs for AnyField {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum BindingTypeOwner {
-    LetStmt(LetStmt),
-    Param(Param),
-    SchemaField(SchemaField),
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum BlockOrInlineExpr {
     BlockExpr(BlockExpr),
     InlineExpr(InlineExpr),
@@ -1606,14 +1600,21 @@ pub enum FieldList {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum IdentPatOwner {
+    LetStmt(LetStmt),
+    Param(Param),
+    SchemaField(SchemaField),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum InferenceCtxOwner {
     Fun(Fun),
     SpecFun(SpecFun),
 }
-impl ast::DocCommentsOwner for InferenceCtxOwner {}
 impl ast::GenericElement for InferenceCtxOwner {}
 impl ast::HasAttrs for InferenceCtxOwner {}
 impl ast::HasVisibility for InferenceCtxOwner {}
+impl ast::HoverDocsOwner for InferenceCtxOwner {}
 impl ast::NamedElement for InferenceCtxOwner {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1665,10 +1666,10 @@ pub enum StructOrEnum {
     Enum(Enum),
     Struct(Struct),
 }
-impl ast::DocCommentsOwner for StructOrEnum {}
 impl ast::GenericElement for StructOrEnum {}
 impl ast::HasAttrs for StructOrEnum {}
 impl ast::HasVisibility for StructOrEnum {}
+impl ast::HoverDocsOwner for StructOrEnum {}
 impl ast::NamedElement for StructOrEnum {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1682,19 +1683,12 @@ pub enum Type {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct AnyDocCommentsOwner {
-    pub(crate) syntax: SyntaxNode,
-}
-impl ast::DocCommentsOwner for AnyDocCommentsOwner {}
-impl ast::NamedElement for AnyDocCommentsOwner {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyFieldsOwner {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::FieldsOwner for AnyFieldsOwner {}
-impl ast::DocCommentsOwner for AnyFieldsOwner {}
 impl ast::HasAttrs for AnyFieldsOwner {}
+impl ast::HoverDocsOwner for AnyFieldsOwner {}
 impl ast::NamedElement for AnyFieldsOwner {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1702,7 +1696,7 @@ pub struct AnyGenericElement {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::GenericElement for AnyGenericElement {}
-impl ast::DocCommentsOwner for AnyGenericElement {}
+impl ast::HoverDocsOwner for AnyGenericElement {}
 impl ast::NamedElement for AnyGenericElement {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1737,8 +1731,15 @@ pub struct AnyHasVisibility {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HasVisibility for AnyHasVisibility {}
-impl ast::DocCommentsOwner for AnyHasVisibility {}
+impl ast::HoverDocsOwner for AnyHasVisibility {}
 impl ast::NamedElement for AnyHasVisibility {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AnyHoverDocsOwner {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::HoverDocsOwner for AnyHoverDocsOwner {}
+impl ast::NamedElement for AnyHoverDocsOwner {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyLoopLike {
@@ -4157,60 +4158,6 @@ impl AstNode for AnyField {
         }
     }
 }
-impl From<LetStmt> for BindingTypeOwner {
-    #[inline]
-    fn from(node: LetStmt) -> BindingTypeOwner { BindingTypeOwner::LetStmt(node) }
-}
-impl From<Param> for BindingTypeOwner {
-    #[inline]
-    fn from(node: Param) -> BindingTypeOwner { BindingTypeOwner::Param(node) }
-}
-impl From<SchemaField> for BindingTypeOwner {
-    #[inline]
-    fn from(node: SchemaField) -> BindingTypeOwner { BindingTypeOwner::SchemaField(node) }
-}
-impl BindingTypeOwner {
-    pub fn let_stmt(self) -> Option<LetStmt> {
-        match (self) {
-            BindingTypeOwner::LetStmt(item) => Some(item),
-            _ => None,
-        }
-    }
-    pub fn param(self) -> Option<Param> {
-        match (self) {
-            BindingTypeOwner::Param(item) => Some(item),
-            _ => None,
-        }
-    }
-    pub fn schema_field(self) -> Option<SchemaField> {
-        match (self) {
-            BindingTypeOwner::SchemaField(item) => Some(item),
-            _ => None,
-        }
-    }
-}
-impl AstNode for BindingTypeOwner {
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, LET_STMT | PARAM | SCHEMA_FIELD) }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        let res = match syntax.kind() {
-            LET_STMT => BindingTypeOwner::LetStmt(LetStmt { syntax }),
-            PARAM => BindingTypeOwner::Param(Param { syntax }),
-            SCHEMA_FIELD => BindingTypeOwner::SchemaField(SchemaField { syntax }),
-            _ => return None,
-        };
-        Some(res)
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode {
-        match self {
-            BindingTypeOwner::LetStmt(it) => &it.syntax,
-            BindingTypeOwner::Param(it) => &it.syntax,
-            BindingTypeOwner::SchemaField(it) => &it.syntax,
-        }
-    }
-}
 impl From<BlockExpr> for BlockOrInlineExpr {
     #[inline]
     fn from(node: BlockExpr) -> BlockOrInlineExpr { BlockOrInlineExpr::BlockExpr(node) }
@@ -4704,6 +4651,60 @@ impl AstNode for FieldList {
         match self {
             FieldList::NamedFieldList(it) => &it.syntax,
             FieldList::TupleFieldList(it) => &it.syntax,
+        }
+    }
+}
+impl From<LetStmt> for IdentPatOwner {
+    #[inline]
+    fn from(node: LetStmt) -> IdentPatOwner { IdentPatOwner::LetStmt(node) }
+}
+impl From<Param> for IdentPatOwner {
+    #[inline]
+    fn from(node: Param) -> IdentPatOwner { IdentPatOwner::Param(node) }
+}
+impl From<SchemaField> for IdentPatOwner {
+    #[inline]
+    fn from(node: SchemaField) -> IdentPatOwner { IdentPatOwner::SchemaField(node) }
+}
+impl IdentPatOwner {
+    pub fn let_stmt(self) -> Option<LetStmt> {
+        match (self) {
+            IdentPatOwner::LetStmt(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn param(self) -> Option<Param> {
+        match (self) {
+            IdentPatOwner::Param(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn schema_field(self) -> Option<SchemaField> {
+        match (self) {
+            IdentPatOwner::SchemaField(item) => Some(item),
+            _ => None,
+        }
+    }
+}
+impl AstNode for IdentPatOwner {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, LET_STMT | PARAM | SCHEMA_FIELD) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            LET_STMT => IdentPatOwner::LetStmt(LetStmt { syntax }),
+            PARAM => IdentPatOwner::Param(Param { syntax }),
+            SCHEMA_FIELD => IdentPatOwner::SchemaField(SchemaField { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            IdentPatOwner::LetStmt(it) => &it.syntax,
+            IdentPatOwner::Param(it) => &it.syntax,
+            IdentPatOwner::SchemaField(it) => &it.syntax,
         }
     }
 }
@@ -5264,100 +5265,6 @@ impl AstNode for Type {
         }
     }
 }
-impl AnyDocCommentsOwner {
-    #[inline]
-    pub fn new<T: ast::DocCommentsOwner>(node: T) -> AnyDocCommentsOwner {
-        AnyDocCommentsOwner {
-            syntax: node.syntax().clone(),
-        }
-    }
-    #[inline]
-    pub fn cast_from<T: ast::DocCommentsOwner>(t: T) -> AnyDocCommentsOwner {
-        AnyDocCommentsOwner::cast(t.syntax().to_owned()).expect("required by code generator")
-    }
-    #[inline]
-    pub fn cast_into<T: ast::DocCommentsOwner>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
-}
-impl AstNode for AnyDocCommentsOwner {
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(
-            kind,
-            CONST
-                | ENUM
-                | FUN
-                | MODULE
-                | NAMED_FIELD
-                | SCHEMA
-                | SPEC_FUN
-                | SPEC_INLINE_FUN
-                | STRUCT
-                | VARIANT
-        )
-    }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        Self::can_cast(syntax.kind()).then_some(AnyDocCommentsOwner { syntax })
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode { &self.syntax }
-}
-impl From<Const> for AnyDocCommentsOwner {
-    #[inline]
-    fn from(node: Const) -> AnyDocCommentsOwner { AnyDocCommentsOwner { syntax: node.syntax } }
-}
-impl From<Enum> for AnyDocCommentsOwner {
-    #[inline]
-    fn from(node: Enum) -> AnyDocCommentsOwner { AnyDocCommentsOwner { syntax: node.syntax } }
-}
-impl From<Fun> for AnyDocCommentsOwner {
-    #[inline]
-    fn from(node: Fun) -> AnyDocCommentsOwner { AnyDocCommentsOwner { syntax: node.syntax } }
-}
-impl From<Module> for AnyDocCommentsOwner {
-    #[inline]
-    fn from(node: Module) -> AnyDocCommentsOwner { AnyDocCommentsOwner { syntax: node.syntax } }
-}
-impl From<NamedField> for AnyDocCommentsOwner {
-    #[inline]
-    fn from(node: NamedField) -> AnyDocCommentsOwner { AnyDocCommentsOwner { syntax: node.syntax } }
-}
-impl From<Schema> for AnyDocCommentsOwner {
-    #[inline]
-    fn from(node: Schema) -> AnyDocCommentsOwner { AnyDocCommentsOwner { syntax: node.syntax } }
-}
-impl From<SpecFun> for AnyDocCommentsOwner {
-    #[inline]
-    fn from(node: SpecFun) -> AnyDocCommentsOwner { AnyDocCommentsOwner { syntax: node.syntax } }
-}
-impl From<SpecInlineFun> for AnyDocCommentsOwner {
-    #[inline]
-    fn from(node: SpecInlineFun) -> AnyDocCommentsOwner { AnyDocCommentsOwner { syntax: node.syntax } }
-}
-impl From<Struct> for AnyDocCommentsOwner {
-    #[inline]
-    fn from(node: Struct) -> AnyDocCommentsOwner { AnyDocCommentsOwner { syntax: node.syntax } }
-}
-impl From<Variant> for AnyDocCommentsOwner {
-    #[inline]
-    fn from(node: Variant) -> AnyDocCommentsOwner { AnyDocCommentsOwner { syntax: node.syntax } }
-}
-impl From<AnyFieldsOwner> for AnyDocCommentsOwner {
-    #[inline]
-    fn from(node: AnyFieldsOwner) -> AnyDocCommentsOwner { AnyDocCommentsOwner { syntax: node.syntax } }
-}
-impl From<AnyGenericElement> for AnyDocCommentsOwner {
-    #[inline]
-    fn from(node: AnyGenericElement) -> AnyDocCommentsOwner {
-        AnyDocCommentsOwner { syntax: node.syntax }
-    }
-}
-impl From<AnyHasVisibility> for AnyDocCommentsOwner {
-    #[inline]
-    fn from(node: AnyHasVisibility) -> AnyDocCommentsOwner {
-        AnyDocCommentsOwner { syntax: node.syntax }
-    }
-}
 impl AnyFieldsOwner {
     #[inline]
     pub fn new<T: ast::FieldsOwner>(node: T) -> AnyFieldsOwner {
@@ -5708,6 +5615,101 @@ impl From<Struct> for AnyHasVisibility {
     #[inline]
     fn from(node: Struct) -> AnyHasVisibility { AnyHasVisibility { syntax: node.syntax } }
 }
+impl AnyHoverDocsOwner {
+    #[inline]
+    pub fn new<T: ast::HoverDocsOwner>(node: T) -> AnyHoverDocsOwner {
+        AnyHoverDocsOwner {
+            syntax: node.syntax().clone(),
+        }
+    }
+    #[inline]
+    pub fn cast_from<T: ast::HoverDocsOwner>(t: T) -> AnyHoverDocsOwner {
+        AnyHoverDocsOwner::cast(t.syntax().to_owned()).expect("required by code generator")
+    }
+    #[inline]
+    pub fn cast_into<T: ast::HoverDocsOwner>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
+}
+impl AstNode for AnyHoverDocsOwner {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(
+            kind,
+            CONST
+                | ENUM
+                | FUN
+                | IDENT_PAT
+                | MODULE
+                | NAMED_FIELD
+                | SCHEMA
+                | SPEC_FUN
+                | SPEC_INLINE_FUN
+                | STRUCT
+                | VARIANT
+        )
+    }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        Self::can_cast(syntax.kind()).then_some(AnyHoverDocsOwner { syntax })
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl From<Const> for AnyHoverDocsOwner {
+    #[inline]
+    fn from(node: Const) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
+}
+impl From<Enum> for AnyHoverDocsOwner {
+    #[inline]
+    fn from(node: Enum) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
+}
+impl From<Fun> for AnyHoverDocsOwner {
+    #[inline]
+    fn from(node: Fun) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
+}
+impl From<IdentPat> for AnyHoverDocsOwner {
+    #[inline]
+    fn from(node: IdentPat) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
+}
+impl From<Module> for AnyHoverDocsOwner {
+    #[inline]
+    fn from(node: Module) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
+}
+impl From<NamedField> for AnyHoverDocsOwner {
+    #[inline]
+    fn from(node: NamedField) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
+}
+impl From<Schema> for AnyHoverDocsOwner {
+    #[inline]
+    fn from(node: Schema) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
+}
+impl From<SpecFun> for AnyHoverDocsOwner {
+    #[inline]
+    fn from(node: SpecFun) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
+}
+impl From<SpecInlineFun> for AnyHoverDocsOwner {
+    #[inline]
+    fn from(node: SpecInlineFun) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
+}
+impl From<Struct> for AnyHoverDocsOwner {
+    #[inline]
+    fn from(node: Struct) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
+}
+impl From<Variant> for AnyHoverDocsOwner {
+    #[inline]
+    fn from(node: Variant) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
+}
+impl From<AnyFieldsOwner> for AnyHoverDocsOwner {
+    #[inline]
+    fn from(node: AnyFieldsOwner) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
+}
+impl From<AnyGenericElement> for AnyHoverDocsOwner {
+    #[inline]
+    fn from(node: AnyGenericElement) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
+}
+impl From<AnyHasVisibility> for AnyHoverDocsOwner {
+    #[inline]
+    fn from(node: AnyHasVisibility) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
+}
 impl AnyLoopLike {
     #[inline]
     pub fn new<T: ast::LoopLike>(node: T) -> AnyLoopLike {
@@ -5890,10 +5892,6 @@ impl From<Variant> for AnyNamedElement {
     #[inline]
     fn from(node: Variant) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
-impl From<AnyDocCommentsOwner> for AnyNamedElement {
-    #[inline]
-    fn from(node: AnyDocCommentsOwner) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
 impl From<AnyFieldsOwner> for AnyNamedElement {
     #[inline]
     fn from(node: AnyFieldsOwner) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
@@ -5905,6 +5903,10 @@ impl From<AnyGenericElement> for AnyNamedElement {
 impl From<AnyHasVisibility> for AnyNamedElement {
     #[inline]
     fn from(node: AnyHasVisibility) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
+}
+impl From<AnyHoverDocsOwner> for AnyNamedElement {
+    #[inline]
+    fn from(node: AnyHoverDocsOwner) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
 impl AnyReferenceElement {
     #[inline]
@@ -5969,11 +5971,6 @@ impl std::fmt::Display for AnyField {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
-impl std::fmt::Display for BindingTypeOwner {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self.syntax(), f)
-    }
-}
 impl std::fmt::Display for BlockOrInlineExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -5985,6 +5982,11 @@ impl std::fmt::Display for Expr {
     }
 }
 impl std::fmt::Display for FieldList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for IdentPatOwner {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

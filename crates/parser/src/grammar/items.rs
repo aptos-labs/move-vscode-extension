@@ -77,10 +77,31 @@ pub(super) fn opt_item(p: &mut Parser, m: Marker) -> Result<(), Marker> {
     };
 
     match p.current() {
-        T![spec] if p.nth_at(1, T![fun]) => fun::spec_function(p, m),
-
-        _ if p.at_ts_fn(fun::on_function_modifiers_start) => fun::function(p, m),
         T![fun] => fun::function(p, m),
+        _ if p.at_ts_fn(fun::on_function_modifiers_start) => fun::function(p, m),
+
+        T![spec] => {
+            p.bump(T![spec]);
+            if p.at_contextual_kw_ident("schema") {
+                schema(p, m);
+                return Ok(());
+            }
+            match p.current() {
+                T![fun] => fun::spec_function(p, m),
+                _ if p.at_ts_fn(fun::on_function_modifiers_start) => fun::spec_function(p, m),
+                _ => item_spec(p, m),
+            }
+        }
+
+        // T![spec] if !p.nth_at(1, T![fun]) => {
+        //     p.bump(T![spec]);
+        //     if p.at_contextual_kw_ident("schema") {
+        //         schema(p, m);
+        //         return Ok(());
+        //     }
+        //     item_spec(p, m)
+        // }
+        // T![spec] if p.nth_at(1, T![fun]) => fun::spec_function(p, m),
 
         // _ => {
         //     p.error("expected an item");
@@ -97,14 +118,6 @@ fn try_items_with_no_modifiers(p: &mut Parser, m: Marker) -> Result<(), Marker> 
         T![struct] => adt::struct_(p, m),
         T![const] => const_(p, m),
         T![friend] if !p.nth_at(1, T![fun]) => friend_decl(p, m),
-        T![spec] if !p.nth_at(1, T![fun]) => {
-            p.bump(T![spec]);
-            if p.at_contextual_kw_ident("schema") {
-                schema(p, m);
-                return Ok(());
-            }
-            item_spec(p, m)
-        }
         IDENT if p.at_contextual_kw("enum") => adt::enum_(p, m),
         _ => return Err(m),
     };

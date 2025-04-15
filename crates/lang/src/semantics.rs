@@ -1,23 +1,32 @@
 mod source_to_def;
 
-use crate::db::HirDatabase;
+use crate::db::{ExprInferenceExt, HirDatabase};
 use crate::nameres::ResolveReference;
 use crate::nameres::scope::ScopeEntry;
 use crate::semantics::source_to_def::SourceToDefCache;
+use crate::types::inference::InferenceCtx;
+use crate::types::inference::inference_result::InferenceResult;
+use crate::types::inference::ty_from_inf::TyFromInferenceExt;
+use crate::types::lowering::TyLowering;
+use crate::types::ty::Ty;
+use base_db::package_root::PackageRootId;
 use std::cell::RefCell;
 use std::{fmt, ops};
 use syntax::files::InFile;
-use syntax::{AstNode, SyntaxNode, SyntaxToken, ast};
+use syntax::{AstNode, SyntaxNode, SyntaxToken, ast, match_ast};
+use triomphe::Arc;
 use vfs::FileId;
 
 /// Primary API to get semantic information, like types, from syntax trees.
 pub struct Semantics<'db, DB> {
-    pub db: &'db DB,
+    db: &'db DB,
+    ws_root: PackageRootId,
     imp: SemanticsImpl<'db>,
 }
 
 pub struct SemanticsImpl<'db> {
-    pub db: &'db dyn HirDatabase,
+    db: &'db dyn HirDatabase,
+    ws_root: PackageRootId,
     s2d_cache: RefCell<SourceToDefCache>,
 }
 
@@ -36,16 +45,22 @@ impl<'db, DB> ops::Deref for Semantics<'db, DB> {
 }
 
 impl<DB: HirDatabase> Semantics<'_, DB> {
-    pub fn new(db: &DB) -> Semantics<'_, DB> {
-        let impl_ = SemanticsImpl::new(db);
-        Semantics { db, imp: impl_ }
+    pub fn new(db: &DB, ws_file_id: FileId) -> Semantics<'_, DB> {
+        let ws_root = db.file_package_root_id(ws_file_id);
+        let impl_ = SemanticsImpl::new(db, ws_root);
+        Semantics {
+            db,
+            ws_root,
+            imp: impl_,
+        }
     }
 }
 
 impl<'db> SemanticsImpl<'db> {
-    fn new(db: &'db dyn HirDatabase) -> Self {
+    fn new(db: &'db dyn HirDatabase, ws_root: PackageRootId) -> Self {
         SemanticsImpl {
             db,
+            ws_root,
             s2d_cache: Default::default(),
         }
     }
@@ -56,10 +71,52 @@ impl<'db> SemanticsImpl<'db> {
         tree
     }
 
-    pub fn resolve_reference(&self, reference: ast::AnyReferenceElement) -> Option<ScopeEntry> {
+    pub fn resolve_to_scope_entry(&self, reference: ast::AnyReferenceElement) -> Option<ScopeEntry> {
         let reference = self.wrap_node_infile(reference);
         reference.resolve(self.db)
     }
+
+    pub fn resolve_to_element<N: ast::NamedElement>(
+        &self,
+        reference: InFile<ast::AnyReferenceElement>,
+    ) -> Option<InFile<N>> {
+        // let reference = self.wrap_node_infile(reference);
+        let scope_entry = reference.resolve(self.db);
+        scope_entry?.cast_into::<N>(self.db)
+    }
+
+    pub fn inference(&self, expr: InFile<ast::Expr>) -> Option<Arc<InferenceResult>> {
+        expr.inference(self.db)
+    }
+
+    /// returns module for the Ty inner item, for the tys where is makes sense
+    pub fn ty_module(&self, ty: &Ty) -> Option<ast::Module> {
+        ty.adt_item_module(self.db, self.ws_root).map(|it| it.value)
+    }
+
+    pub fn lower_type(&self, type_: InFile<ast::Type>) -> Ty {
+        TyLowering::new_no_inf(self.db).lower_type(type_)
+    }
+
+    pub fn is_tys_compatible(&self, left_ty: Ty, right_ty: Ty, with_autoborrow: bool) -> bool {
+        // Any file_id could be used here, we are not interested in unification. Could be improved later.
+        let any_file_id = self.db.builtins_file_id();
+        let ctx = &mut InferenceCtx::new(self.db, any_file_id);
+        if with_autoborrow {
+            ctx.is_tys_compatible_with_autoborrow(left_ty, right_ty)
+        } else {
+            ctx.is_tys_compatible(left_ty, right_ty)
+        }
+    }
+
+    // pub fn ty(&self, node: SyntaxNode) -> Option<Ty> {
+    //     match_ast! {
+    //         match (node) {
+    //             ast::IdentPat(it) => it.ty(self.db),
+    //             _ => None,
+    //         }
+    //     }
+    // }
 
     // todo: rename to root_file_id()
     fn lookup(&self, root_node: &SyntaxNode) -> Option<FileId> {

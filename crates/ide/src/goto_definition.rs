@@ -23,12 +23,12 @@ pub(crate) fn goto_definition(
     db: &RootDatabase,
     FilePosition { file_id, offset }: FilePosition,
 ) -> Option<RangeInfo<NavigationTarget>> {
-    let sema = Semantics::new(db);
+    let sema = Semantics::new(db, file_id);
 
     let file = sema.parse(file_id);
 
     let reference = algo::find_node_at_offset::<ast::AnyReferenceElement>(file.syntax(), offset)?;
-    let scope_entry = sema.resolve_reference(reference)?;
+    let scope_entry = sema.resolve_to_scope_entry(reference)?;
 
     let original_token = pick_best_token(file.syntax().token_at_offset(offset), |kind| match kind {
         IDENT

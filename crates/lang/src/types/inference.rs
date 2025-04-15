@@ -1,6 +1,7 @@
 pub(crate) mod ast_walker;
 pub(crate) mod combine_types;
 pub(crate) mod inference_result;
+pub mod ty_from_inf;
 
 use crate::db::HirDatabase;
 use crate::nameres::binding::resolve_ident_pat_with_expected_type;

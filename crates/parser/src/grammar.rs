@@ -159,7 +159,8 @@ pub(crate) fn any_address(p: &mut Parser) {
         p.bump(IDENT);
         m.complete(p, NAMED_ADDRESS);
     } else {
-        p.error_and_bump_any("expected address reference");
+        p.error("expected address reference");
+        // p.error_and_bump_any("expected address reference");
     }
 }
 

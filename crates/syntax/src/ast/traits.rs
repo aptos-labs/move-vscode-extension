@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::io::Read;
 
-pub use docs::DocCommentsOwner;
+pub use docs::HoverDocsOwner;
 pub use has_item_list::HasItems;
 pub use has_use_stmts::HasUseStmts;
 

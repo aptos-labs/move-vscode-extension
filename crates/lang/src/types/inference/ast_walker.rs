@@ -15,7 +15,7 @@ use crate::types::ty::ty_var::{TyInfer, TyIntVar};
 use std::iter;
 use std::ops::Deref;
 use syntax::ast::node_ext::named_field::FilterNamedFieldsByName;
-use syntax::ast::{BindingTypeOwner, FieldsOwner, HasStmts, LambdaExpr};
+use syntax::ast::{FieldsOwner, HasStmts};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, IntoNodeOrToken, ast};
 
@@ -78,10 +78,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let file_id = self.ctx.file_id;
         for binding in bindings {
             let binding_ty = {
-                let binding_type_owner = binding.type_owner();
+                let binding_type_owner = binding.owner();
                 let ty_lowering = self.ctx.ty_lowering();
                 match binding_type_owner {
-                    Some(BindingTypeOwner::Param(fun_param)) => fun_param
+                    Some(ast::IdentPatOwner::Param(fun_param)) => fun_param
                         .type_()
                         .map(|it| ty_lowering.lower_type(it.in_file(file_id)))
                         .unwrap_or(Ty::Unknown),
@@ -565,7 +565,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         Ty::Unknown
     }
 
-    fn infer_lambda_expr(&mut self, lambda_expr: &LambdaExpr, expected: Expected) -> Ty {
+    fn infer_lambda_expr(&mut self, lambda_expr: &ast::LambdaExpr, expected: Expected) -> Ty {
         let mut param_tys = vec![];
 
         for (lambda_param, ident_pat) in lambda_expr.params_with_ident_pats() {
