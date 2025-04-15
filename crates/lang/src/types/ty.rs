@@ -27,7 +27,6 @@ use base_db::PackageRootDatabase;
 use base_db::package_root::PackageRootId;
 use syntax::ast;
 use syntax::files::InFile;
-use vfs::FileId;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Ty {

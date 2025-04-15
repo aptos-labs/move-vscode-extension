@@ -92,23 +92,12 @@ pub(crate) struct GlobalState {
 
     // op queues
     pub(crate) fetch_workspaces_queue: OpQueue<FetchWorkspaceRequest, FetchWorkspaceResponse>,
-    // /// A deferred task queue.
-    // ///
-    // /// This queue is used for doing database-dependent work inside of sync
-    // /// handlers, as accessing the database may block latency-sensitive
-    // /// interactions and should be moved away from the main thread.
-    // ///
-    // /// For certain features, such as [`GlobalState::handle_discover_msg`],
-    // /// this queue should run only *after* [`GlobalState::process_file_changes`] has
-    // /// been called.
-    // pub(crate) deferred_task_queue: TaskQueue,
 }
 
 /// An immutable snapshot of the world's state at a point in time.
 pub(crate) struct GlobalStateSnapshot {
     pub(crate) config: Arc<Config>,
     pub(crate) analysis: Analysis,
-    // pub(crate) check_fixes: CheckFixes,
     mem_docs: MemDocs,
     // pub(crate) semantic_tokens_cache: Arc<Mutex<FxHashMap<Url, SemanticTokens>>>,
     vfs: Arc<RwLock<(vfs::Vfs, IntMap<FileId, LineEndings>)>>,
@@ -133,10 +122,6 @@ impl GlobalState {
             let handle = TaskPool::new_with_threads(sender, num_threads);
             Handle { handle, receiver }
         };
-        // let task_queue = {
-        //     let (sender, receiver) = unbounded();
-        //     TaskQueue { sender, receiver }
-        // };
 
         let analysis_host = AnalysisHost::new();
 
@@ -173,7 +158,6 @@ impl GlobalState {
             last_flycheck_error: None,
 
             loader,
-            // vfs: Arc::new(RwLock::new((vfs::Vfs::default(), IntMap::default()))),
             vfs,
             builtins_file_id,
             vfs_config_version: 0,
@@ -185,7 +169,6 @@ impl GlobalState {
             workspaces: Arc::from(Vec::new()),
             // crate_graph_file_dependencies: FxHashSet::default(),
             fetch_workspaces_queue: OpQueue::default(),
-            // deferred_task_queue: task_queue,
         };
         // Apply any required database inputs from the config.
         this.update_configuration(config);
