@@ -43,18 +43,3 @@ impl<T> TaskPool<T> {
         self.pool.len()
     }
 }
-
-/// `TaskQueue`, like its name suggests, queues tasks.
-///
-/// This should only be used if a task must run after [`GlobalState::process_changes`]
-/// has been called.
-pub(crate) struct TaskQueue {
-    pub(crate) sender: crossbeam_channel::Sender<QueuedTask>,
-    pub(crate) receiver: crossbeam_channel::Receiver<QueuedTask>,
-}
-
-#[derive(Debug)]
-pub(crate) enum QueuedTask {
-    CheckIfIndexed(lsp_types::Url),
-    // CheckProcMacroSources(Vec<FileId>),
-}

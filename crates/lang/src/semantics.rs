@@ -6,7 +6,6 @@ use crate::nameres::scope::ScopeEntry;
 use crate::semantics::source_to_def::SourceToDefCache;
 use crate::types::inference::InferenceCtx;
 use crate::types::inference::inference_result::InferenceResult;
-use crate::types::inference::ty_from_inf::TyFromInferenceExt;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
 use base_db::package_root::PackageRootId;
@@ -20,7 +19,6 @@ use vfs::FileId;
 /// Primary API to get semantic information, like types, from syntax trees.
 pub struct Semantics<'db, DB> {
     db: &'db DB,
-    ws_root: PackageRootId,
     imp: SemanticsImpl<'db>,
 }
 
@@ -50,7 +48,6 @@ impl<DB: HirDatabase> Semantics<'_, DB> {
         let impl_ = SemanticsImpl::new(db, ws_root);
         Semantics {
             db,
-            ws_root,
             imp: impl_,
         }
     }

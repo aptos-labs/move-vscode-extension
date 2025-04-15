@@ -2,7 +2,6 @@ use ide_db::RootDatabase;
 use lang::Semantics;
 use lang::nameres::fq_named_element::ItemFQNameOwner;
 use std::fmt::Write;
-use syntax::SyntaxKind::*;
 use syntax::ast::NamedElement;
 use syntax::{AstNode, ast, match_ast};
 
@@ -12,7 +11,7 @@ pub trait DocSignatureOwner {
 }
 
 impl DocSignatureOwner for ast::AnyNamedElement {
-    fn header(&self, sema: &Semantics<'_, RootDatabase>, buffer: &mut String) -> Option<()> {
+    fn header(&self, _sema: &Semantics<'_, RootDatabase>, buffer: &mut String) -> Option<()> {
         let header = match_ast! {
             match (self.syntax()) {
                 ast::Module(it) => it.fq_name()?.address_identifier_text(),
