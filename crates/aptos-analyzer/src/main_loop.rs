@@ -235,7 +235,7 @@ impl GlobalState {
         if self.is_quiescent() {
             let became_quiescent = !was_quiescent;
             if became_quiescent {
-                if self.config.check_on_save(/*None*/) && self.config.flycheck_workspace(/*None*/) {
+                if self.config.check_on_save() {
                     // Project has loaded properly, kick off initial flycheck
                     self.flycheck
                         .iter()
@@ -292,7 +292,7 @@ impl GlobalState {
             }
         }
 
-        if self.config.cargo_autoreload_config(/*None*/) {
+        if self.config.cargo_autoreload_config() {
             if let Some((
                 cause,
                 FetchWorkspaceRequest {
@@ -304,10 +304,6 @@ impl GlobalState {
                 self.fetch_workspaces(cause, force_crate_graph_reload);
             }
         }
-
-        // if let Some((cause, ())) = self.prime_caches_queue.should_start_op() {
-        //     self.prime_caches(cause);
-        // }
 
         self.update_status_or_notify();
 

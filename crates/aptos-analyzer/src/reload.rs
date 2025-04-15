@@ -67,7 +67,7 @@ impl GlobalState {
         };
         let mut message = String::new();
 
-        if !self.config.cargo_autoreload_config(/*None*/)
+        if !self.config.cargo_autoreload_config()
             && self.is_quiescent()
             && self.fetch_workspaces_queue.op_requested()
         {
