@@ -1,6 +1,6 @@
 mod source_to_def;
 
-use crate::db::{ExprInferenceExt, HirDatabase};
+use crate::db::{HirDatabase, NodeInferenceExt};
 use crate::nameres::ResolveReference;
 use crate::nameres::scope::ScopeEntry;
 use crate::semantics::source_to_def::SourceToDefCache;
@@ -13,7 +13,7 @@ use base_db::package_root::PackageRootId;
 use std::cell::RefCell;
 use std::{fmt, ops};
 use syntax::files::InFile;
-use syntax::{AstNode, SyntaxNode, SyntaxToken, ast, match_ast};
+use syntax::{AstNode, SyntaxNode, SyntaxToken, ast};
 use triomphe::Arc;
 use vfs::FileId;
 
@@ -85,8 +85,12 @@ impl<'db> SemanticsImpl<'db> {
         scope_entry?.cast_into::<N>(self.db)
     }
 
-    pub fn inference(&self, expr: InFile<ast::Expr>) -> Option<Arc<InferenceResult>> {
-        expr.inference(self.db)
+    pub fn inference<T: AstNode>(&self, node: &InFile<T>) -> Option<Arc<InferenceResult>> {
+        node.inference(self.db)
+    }
+
+    pub fn render_ty(&self, ty: Ty) -> String {
+        ty.render(self.db.upcast())
     }
 
     /// returns module for the Ty inner item, for the tys where is makes sense
@@ -109,24 +113,15 @@ impl<'db> SemanticsImpl<'db> {
         }
     }
 
-    // pub fn ty(&self, node: SyntaxNode) -> Option<Ty> {
-    //     match_ast! {
-    //         match (node) {
-    //             ast::IdentPat(it) => it.ty(self.db),
-    //             _ => None,
-    //         }
-    //     }
-    // }
+    pub fn wrap_node_infile<N: AstNode>(&self, node: N) -> InFile<N> {
+        let (file_id, _) = self.find_file(node.syntax()).unpack();
+        InFile::new(file_id, node)
+    }
 
     // todo: rename to root_file_id()
     fn lookup(&self, root_node: &SyntaxNode) -> Option<FileId> {
         let cache = self.s2d_cache.borrow();
         cache.root_to_file_cache.get(root_node).copied()
-    }
-
-    fn wrap_node_infile<N: AstNode>(&self, node: N) -> InFile<N> {
-        let (file_id, _) = self.find_file(node.syntax()).unpack();
-        InFile::new(file_id, node)
     }
 
     fn wrap_token_infile(&self, token: SyntaxToken) -> InFile<SyntaxToken> {

@@ -7,6 +7,7 @@ use crate::types::inference::inference_result::InferenceResult;
 use crate::types::ty::Ty;
 use base_db::{PackageRootDatabase, Upcast};
 use parser::SyntaxKind;
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 use triomphe::Arc;
@@ -47,24 +48,15 @@ fn inference_for_ctx_owner(db: &dyn HirDatabase, ctx_owner_loc: SyntaxLoc) -> Ar
     Arc::new(InferenceResult::from_ctx(ctx))
 }
 
-pub trait OwnerInferenceExt {
-    fn inference(&self, db: &dyn HirDatabase) -> Arc<InferenceResult>;
-}
-
-impl OwnerInferenceExt for InFile<ast::InferenceCtxOwner> {
-    fn inference(&self, db: &dyn HirDatabase) -> Arc<InferenceResult> {
-        db.inference_for_ctx_owner(self.loc())
-    }
-}
-
-pub trait ExprInferenceExt {
+pub trait NodeInferenceExt {
     fn inference(&self, db: &dyn HirDatabase) -> Option<Arc<InferenceResult>>;
 }
 
-impl ExprInferenceExt for InFile<ast::Expr> {
+impl<T: AstNode> NodeInferenceExt for InFile<T> {
     fn inference(&self, db: &dyn HirDatabase) -> Option<Arc<InferenceResult>> {
-        let (file_id, expr) = self.unpack_ref();
-        let inference = expr.inference_ctx_owner()?.in_file(file_id).inference(db);
+        let (file_id, node) = self.unpack_ref();
+        let inference_owner = node.syntax().ancestor_or_self::<ast::InferenceCtxOwner>()?;
+        let inference = db.inference_for_ctx_owner(inference_owner.in_file(file_id).loc());
         Some(inference)
     }
 }

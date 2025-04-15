@@ -85,9 +85,10 @@ fn test_hover_for_function() {
         // language=Move
         r#"
 module 0x1::m {
+    struct S<T> { val: T }
     /// function docs
-    fun main() {
-        main();
+    fun main(a: u8, b: S<u8>) {
+        main(1, S { val: 1 });
         //^
     }
 }
@@ -97,7 +98,7 @@ module 0x1::m {
             ```move
             0x1::m
 
-            fun main()
+            fun main(a: u8, b: S<u8>)
             ```
             ---
             function docs
@@ -183,7 +184,33 @@ module 0x1::m {
         expect![[r#"
             ```move
 
-            variable my_var
+            variable my_var: u8
+            ```
+            ---
+
+        "#]],
+    )
+}
+
+#[test]
+fn test_hover_for_const_with_type() {
+    check_hover(
+        // language=Move
+        r#"
+module 0x1::m {
+    const MY_CONST: u8 = 1;
+    fun main() {
+        MY_CONST;
+        //^
+    }
+}
+    "#,
+        // language=Markdown
+        expect![[r#"
+            ```move
+            0x1::m
+
+            const MY_CONST: u8
             ```
             ---
 
@@ -207,7 +234,7 @@ module 0x1::m {
         expect![[r#"
             ```move
 
-            parameter my_param
+            parameter my_param: u8
             ```
             ---
 

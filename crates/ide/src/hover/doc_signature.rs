@@ -19,6 +19,7 @@ impl DocSignatureOwner for ast::AnyNamedElement {
                 ast::Item(it) => it.fq_name()?.module_identifier_text(),
                 ast::NamedField(it) => it.fields_owner().fq_name()?.identifier_text(),
                 ast::Variant(it) => it.enum_().fq_name()?.identifier_text(),
+                ast::Const(it) => it.fq_name()?.module_identifier_text(),
                 ast::IdentPat(_) => {
                     // no header
                     return None;
@@ -40,9 +41,10 @@ impl DocSignatureOwner for ast::AnyNamedElement {
                 ast::Fun(it) => generate_fun(it, buffer),
                 ast::Struct(it) => generate_struct(it, buffer),
                 ast::Enum(it) => generate_enum(it, buffer),
+                ast::Const(it) => generate_const(it, buffer),
                 ast::NamedField(it) => generate_field(it, buffer),
                 ast::Variant(it) => generate_enum_variant(it, buffer),
-                ast::IdentPat(it) => generate_ident_pat(it, buffer),
+                ast::IdentPat(it) => generate_ident_pat(it, sema, buffer),
                 _ => {
                     // do not fail on empty signature
                     Some(())
@@ -63,7 +65,9 @@ fn generate_fun(fun: ast::Fun, buffer: &mut String) -> Option<()> {
     write!(buffer, "fun").ok()?;
     write!(buffer, " ").ok()?;
     write!(buffer, "{}", fun.name()?).ok()?;
-    write!(buffer, "()").ok()?;
+    if let Some(param_list) = fun.param_list() {
+        generate_param_list(param_list, buffer);
+    }
     Some(())
 }
 
@@ -72,13 +76,18 @@ fn generate_param_list(param_list: ast::ParamList, buffer: &mut String) -> Optio
     let ps = param_list.params().collect::<Vec<_>>();
     for (i, param) in ps.iter().enumerate() {
         write!(buffer, "{}", param.ident_pat().as_string()).ok()?;
-        if let Some(type_) = param.type_() {
-            generate_type_annotation(type_, buffer);
-        }
+        generate_type_annotation(param.type_(), buffer)?;
         if i != ps.len() - 1 {
             write!(buffer, ", ").ok()?;
         }
     }
+    write!(buffer, ")").ok()?;
+    Some(())
+}
+
+fn generate_const(const_: ast::Const, buffer: &mut String) -> Option<()> {
+    write!(buffer, "const {}", const_.name()?.as_string()).ok()?;
+    generate_type_annotation(const_.type_(), buffer)?;
     Some(())
 }
 
@@ -104,9 +113,7 @@ fn generate_struct(struct_: ast::Struct, buffer: &mut String) -> Option<()> {
 
 fn generate_field(field: ast::NamedField, buffer: &mut String) -> Option<()> {
     write!(buffer, "field {}", field.name()?.as_string()).ok()?;
-    if let Some(field_type) = field.type_() {
-        generate_type_annotation(field_type, buffer)?;
-    }
+    generate_type_annotation(field.type_(), buffer)?;
     Some(())
 }
 
@@ -115,18 +122,28 @@ fn generate_enum_variant(variant: ast::Variant, buffer: &mut String) -> Option<(
     Some(())
 }
 
-fn generate_ident_pat(ident_pat: ast::IdentPat, buffer: &mut String) -> Option<()> {
+fn generate_ident_pat(
+    ident_pat: ast::IdentPat,
+    sema: &Semantics<'_, RootDatabase>,
+    buffer: &mut String,
+) -> Option<()> {
     let owner = ident_pat.owner()?;
-    let ident_type = match owner {
-        ast::IdentPatOwner::Param(_) => "parameter",
-        ast::IdentPatOwner::LetStmt(_) => "variable",
-        ast::IdentPatOwner::SchemaField(_) => "schema field",
+    let ident_kind = match owner {
+        ast::IdentPatKind::Param(_) => "parameter",
+        ast::IdentPatKind::LetStmt(_) => "variable",
+        ast::IdentPatKind::SchemaField(_) => "schema field",
     };
-    write!(buffer, "{ident_type} {}", ident_pat.name()?.as_string()).ok()?;
+    write!(buffer, "{ident_kind} {}", ident_pat.name()?.as_string()).ok()?;
 
-    // if let Some(field_type) = field.type_() {
-    //     generate_type_annotation(field_type, buffer)?;
-    // }
+    let ident_pat = sema.wrap_node_infile(ident_pat);
+    if let Some(inference) = sema.inference(&ident_pat) {
+        let ident_pat_type = inference.get_pat_type(&ast::Pat::IdentPat(ident_pat.value));
+        if let Some(ty) = ident_pat_type {
+            let rendered_ty = sema.render_ty(ty);
+            write!(buffer, ": {}", rendered_ty).ok()?;
+        }
+    }
+
     Some(())
 }
 
@@ -144,7 +161,9 @@ fn generate_abilities_list(abilities_list: ast::AbilityList, buffer: &mut String
     Some(())
 }
 
-fn generate_type_annotation(type_: ast::Type, buf: &mut String) -> Option<()> {
-    write!(buf, ": {}", type_.to_string()).ok()?;
+fn generate_type_annotation(type_: Option<ast::Type>, buf: &mut String) -> Option<()> {
+    if let Some(type_) = type_ {
+        write!(buf, ": {}", type_.to_string()).ok()?;
+    }
     Some(())
 }
