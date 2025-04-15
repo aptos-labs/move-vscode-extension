@@ -134,10 +134,6 @@ pub(crate) fn handle_did_save_text_document(
     params: DidSaveTextDocumentParams,
 ) -> anyhow::Result<()> {
     if let Ok(vfs_path) = from_proto::vfs_path(&params.text_document.uri) {
-        // let snap = state.snapshot();
-        // let file_id = snap.vfs_path_to_file_id(&vfs_path)?;
-        // let source_root_id = snap.analysis.source_root_id(file_id)?;
-
         // Re-fetch workspaces if a workspace related file has changed
         if let Some(path) = vfs_path.as_path() {
             // FIXME: We should move this check into a QueuedTask and do semantic resolution of
@@ -154,11 +150,10 @@ pub(crate) fn handle_did_save_text_document(
                 );
             }
         }
-
-        if !state.config.check_on_save(/*Some(source_root_id)*/) || run_flycheck(state, vfs_path) {
+        if !state.config.check_on_save() || run_flycheck(state, vfs_path) {
             return Ok(());
         }
-    } else if state.config.check_on_save(/*None*/) && state.config.flycheck_workspace(/*None*/) {
+    } else if state.config.check_on_save() {
         // No specific flycheck was triggered, so let's trigger all of them.
         for flycheck in state.flycheck.iter() {
             flycheck.restart_workspace();
@@ -343,10 +338,8 @@ pub(crate) fn handle_run_flycheck(
         }
     }
     // No specific flycheck was triggered, so let's trigger all of them.
-    if state.config.flycheck_workspace(/*None*/) {
-        for ws_flycheck in state.flycheck.iter() {
-            ws_flycheck.restart_workspace();
-        }
+    for ws_flycheck in state.flycheck.iter() {
+        ws_flycheck.restart_workspace();
     }
     Ok(())
 }

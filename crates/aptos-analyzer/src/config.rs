@@ -100,11 +100,6 @@ impl fmt::Display for ConfigErrors {
                 f(&": ")?;
                 f(e)
             }
-            // ConfigErrorInner::Toml { config_key: key, error: e } => {
-            //     f(key)?;
-            //     f(&": ")?;
-            //     f(e)
-            // }
             ConfigErrorInner::ParseError { reason } => f(reason),
         });
         write!(
@@ -176,8 +171,8 @@ impl Config {
         }
     }
 
-    pub fn cargo_autoreload_config(&self /*source_root: Option<SourceRootId>*/) -> bool {
-        self.aptos_autoreload(/*source_root*/).to_owned()
+    pub fn cargo_autoreload_config(&self) -> bool {
+        self.aptos_autoreload().to_owned()
     }
 
     pub fn assist(&self /*source_root: Option<SourceRootId>*/) -> AssistConfig {
@@ -185,12 +180,6 @@ impl Config {
             snippet_cap: self.snippet_cap(),
             allowed: None,
             // insert_use: self.insert_use_config(source_root),
-            // prefer_no_std: self.imports_preferNoStd(source_root).to_owned(),
-            // assist_emit_must_use: self.assist_emitMustUse(source_root).to_owned(),
-            // prefer_prelude: self.imports_preferPrelude(source_root).to_owned(),
-            // prefer_absolute: self.imports_prefixExternPrelude(source_root).to_owned(),
-            // term_search_fuel: self.assist_termSearch_fuel(source_root).to_owned() as u64,
-            // term_search_borrowck: self.assist_termSearch_borrowcheck(source_root).to_owned(),
             code_action_grouping: self.code_action_group(),
         }
     }
@@ -261,12 +250,7 @@ impl Config {
             // },
             // snippet_cap: self.snippet_cap(),
             // insert_use: self.insert_use_config(source_root),
-            // prefer_no_std: self.imports_preferNoStd(source_root).to_owned(),
-            // prefer_prelude: self.imports_preferPrelude(source_root).to_owned(),
-            // prefer_absolute: self.imports_prefixExternPrelude(source_root).to_owned(),
             // style_lints: self.diagnostics_styleLints_enable(source_root).to_owned(),
-            // term_search_fuel: self.assist_termSearch_fuel(source_root).to_owned() as u64,
-            // term_search_borrowck: self.assist_termSearch_borrowcheck(source_root).to_owned(),
         }
     }
 
@@ -275,13 +259,7 @@ impl Config {
             .map(|cli_path| FlycheckConfig::new(cli_path, "compile".to_string()))
     }
 
-    pub fn flycheck_workspace(&self /*source_root: Option<SourceRootId>*/) -> bool {
-        // whether to run with --workspace
-        true
-        // *self.check_workspace(source_root)
-    }
-
-    pub fn check_on_save(&self /*source_root: Option<SourceRootId>*/) -> bool {
+    pub fn check_on_save(&self) -> bool {
         *self.aptos_checkOnSave()
     }
 
