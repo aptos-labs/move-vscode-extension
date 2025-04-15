@@ -4,7 +4,6 @@ use ide_db::Severity;
 use ide_db::assists::{Assist, AssistId};
 use ide_db::label::Label;
 use ide_db::source_change::SourceChangeBuilder;
-use lang::db::ExprInferenceExt;
 use lang::types::has_type_params_ext::GenericItemExt;
 use lang::types::substitution::ApplySubstitution;
 use syntax::ast::syntax_factory::SyntaxFactory;
@@ -25,7 +24,7 @@ pub(crate) fn can_be_replaced_with_method_call(
     let self_param = fun.self_param()?;
     let self_param_type = self_param.type_()?;
 
-    let inference = ctx.sema.inference(call_expr.clone().in_file_into())?;
+    let inference = ctx.sema.inference(&call_expr)?;
 
     let first_arg_expr = call_expr.value.args().first()?.to_owned();
     let first_arg_ty = inference.get_expr_type(&first_arg_expr)?;

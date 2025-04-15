@@ -1600,7 +1600,7 @@ pub enum FieldList {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum IdentPatOwner {
+pub enum IdentPatKind {
     LetStmt(LetStmt),
     Param(Param),
     SchemaField(SchemaField),
@@ -4654,47 +4654,47 @@ impl AstNode for FieldList {
         }
     }
 }
-impl From<LetStmt> for IdentPatOwner {
+impl From<LetStmt> for IdentPatKind {
     #[inline]
-    fn from(node: LetStmt) -> IdentPatOwner { IdentPatOwner::LetStmt(node) }
+    fn from(node: LetStmt) -> IdentPatKind { IdentPatKind::LetStmt(node) }
 }
-impl From<Param> for IdentPatOwner {
+impl From<Param> for IdentPatKind {
     #[inline]
-    fn from(node: Param) -> IdentPatOwner { IdentPatOwner::Param(node) }
+    fn from(node: Param) -> IdentPatKind { IdentPatKind::Param(node) }
 }
-impl From<SchemaField> for IdentPatOwner {
+impl From<SchemaField> for IdentPatKind {
     #[inline]
-    fn from(node: SchemaField) -> IdentPatOwner { IdentPatOwner::SchemaField(node) }
+    fn from(node: SchemaField) -> IdentPatKind { IdentPatKind::SchemaField(node) }
 }
-impl IdentPatOwner {
+impl IdentPatKind {
     pub fn let_stmt(self) -> Option<LetStmt> {
         match (self) {
-            IdentPatOwner::LetStmt(item) => Some(item),
+            IdentPatKind::LetStmt(item) => Some(item),
             _ => None,
         }
     }
     pub fn param(self) -> Option<Param> {
         match (self) {
-            IdentPatOwner::Param(item) => Some(item),
+            IdentPatKind::Param(item) => Some(item),
             _ => None,
         }
     }
     pub fn schema_field(self) -> Option<SchemaField> {
         match (self) {
-            IdentPatOwner::SchemaField(item) => Some(item),
+            IdentPatKind::SchemaField(item) => Some(item),
             _ => None,
         }
     }
 }
-impl AstNode for IdentPatOwner {
+impl AstNode for IdentPatKind {
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, LET_STMT | PARAM | SCHEMA_FIELD) }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
-            LET_STMT => IdentPatOwner::LetStmt(LetStmt { syntax }),
-            PARAM => IdentPatOwner::Param(Param { syntax }),
-            SCHEMA_FIELD => IdentPatOwner::SchemaField(SchemaField { syntax }),
+            LET_STMT => IdentPatKind::LetStmt(LetStmt { syntax }),
+            PARAM => IdentPatKind::Param(Param { syntax }),
+            SCHEMA_FIELD => IdentPatKind::SchemaField(SchemaField { syntax }),
             _ => return None,
         };
         Some(res)
@@ -4702,9 +4702,9 @@ impl AstNode for IdentPatOwner {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            IdentPatOwner::LetStmt(it) => &it.syntax,
-            IdentPatOwner::Param(it) => &it.syntax,
-            IdentPatOwner::SchemaField(it) => &it.syntax,
+            IdentPatKind::LetStmt(it) => &it.syntax,
+            IdentPatKind::Param(it) => &it.syntax,
+            IdentPatKind::SchemaField(it) => &it.syntax,
         }
     }
 }
@@ -5986,7 +5986,7 @@ impl std::fmt::Display for FieldList {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
-impl std::fmt::Display for IdentPatOwner {
+impl std::fmt::Display for IdentPatKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

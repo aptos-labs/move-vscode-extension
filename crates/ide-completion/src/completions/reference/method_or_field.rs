@@ -3,7 +3,7 @@ use crate::context::CompletionContext;
 use crate::render::function::{FunctionKind, render_function};
 use crate::render::render_named_item;
 use base_db::Upcast;
-use lang::db::ExprInferenceExt;
+use lang::db::NodeInferenceExt;
 use lang::nameres::path_resolution::get_method_resolve_variants;
 use lang::types::has_type_params_ext::GenericItemExt;
 use lang::types::inference::InferenceCtx;

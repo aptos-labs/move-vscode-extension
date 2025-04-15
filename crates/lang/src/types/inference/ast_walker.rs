@@ -81,7 +81,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 let binding_type_owner = binding.owner();
                 let ty_lowering = self.ctx.ty_lowering();
                 match binding_type_owner {
-                    Some(ast::IdentPatOwner::Param(fun_param)) => fun_param
+                    Some(ast::IdentPatKind::Param(fun_param)) => fun_param
                         .type_()
                         .map(|it| ty_lowering.lower_type(it.in_file(file_id)))
                         .unwrap_or(Ty::Unknown),
