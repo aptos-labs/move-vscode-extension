@@ -63,6 +63,8 @@ pub struct AddressLit {
 }
 impl AddressLit {
     #[inline]
+    pub fn named_address(&self) -> Option<NamedAddress> { support::child(&self.syntax) }
+    #[inline]
     pub fn value_address(&self) -> Option<ValueAddress> { support::child(&self.syntax) }
     #[inline]
     pub fn at_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![@]) }
