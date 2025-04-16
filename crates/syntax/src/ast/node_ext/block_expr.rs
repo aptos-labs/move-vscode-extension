@@ -3,8 +3,8 @@ use crate::{ast, AstNode};
 use parser::SyntaxKind::{FOR_EXPR, FUN, IF_EXPR, LOOP_EXPR, WHILE_EXPR};
 
 impl ast::BlockExpr {
-    pub fn schema_fields(&self) -> Vec<ast::SchemaField> {
-        self.stmts().filter_map(|it| it.schema_field()).collect()
+    pub fn schema_field_stmts(&self) -> Vec<ast::SchemaFieldStmt> {
+        self.stmts().filter_map(|it| it.schema_field_stmt()).collect()
     }
 
     pub fn spec_inline_functions(&self) -> Vec<ast::SpecInlineFun> {

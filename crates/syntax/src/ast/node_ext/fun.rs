@@ -60,7 +60,10 @@ impl ast::Fun {
     }
 
     pub fn params_as_bindings(&self) -> Vec<ast::IdentPat> {
-        self.params().into_iter().map(|param| param.ident_pat()).collect()
+        self.params()
+            .into_iter()
+            .filter_map(|param| param.ident_pat())
+            .collect()
     }
 
     pub fn return_type(&self) -> Option<ast::Type> {
@@ -78,9 +81,10 @@ impl ast::Fun {
     }
 
     pub fn self_param(&self) -> Option<ast::Param> {
-        self.params()
-            .first()
-            .map(|it| it.to_owned())
-            .take_if(|param| param.ident_pat().name().is_some_and(|name| name.text() == "self"))
+        let param = self.params().first()?.to_owned();
+        if param.ident_name() != "self" {
+            return None;
+        }
+        Some(param)
     }
 }

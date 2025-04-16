@@ -44,7 +44,7 @@ InferenceCtxOwner =
     Fun | SpecFun | SpecInlineFun | ItemSpec | Schema
 
 IdentPatKind =
-    LetStmt | Param | SchemaField
+    LetStmt | Param | SchemaFieldStmt
 
 UseStmt =
     Attr* 'use' UseSpeck ';'
@@ -124,7 +124,7 @@ ParamList =
         (Param (',' Param)* ','?)?
     ')'
 
-Param = IdentPat (':' Type)?
+Param = (IdentPat | WildcardPat) (':' Type)?
 
 RetType =
   ':' Type
@@ -198,7 +198,7 @@ Stmt =
     ';'
     | ExprStmt
     | LetStmt
-    | SchemaField
+    | SchemaFieldStmt
     | SpecPredicateStmt | AbortsIfStmt
     | SpecInlineFun
 
@@ -438,7 +438,7 @@ Schema =
     'spec' 'schema' Name TypeParamList?
     spec_block:BlockExpr
 
-SchemaField =
+SchemaFieldStmt =
     'local'? IdentPat ':' Type ';'
 
 SpecPredicateStmt =

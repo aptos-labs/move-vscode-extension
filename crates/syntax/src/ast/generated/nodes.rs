@@ -828,11 +828,11 @@ pub struct Param {
 }
 impl Param {
     #[inline]
-    pub fn ident_pat(&self) -> IdentPat {
-        support::child(&self.syntax).expect("Param.ident_pat required by the parser")
-    }
+    pub fn ident_pat(&self) -> Option<IdentPat> { support::child(&self.syntax) }
     #[inline]
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
+    #[inline]
+    pub fn wildcard_pat(&self) -> Option<WildcardPat> { support::child(&self.syntax) }
     #[inline]
     pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
 }
@@ -1034,11 +1034,10 @@ impl Schema {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct SchemaField {
+pub struct SchemaFieldStmt {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::MslOnly for SchemaField {}
-impl SchemaField {
+impl SchemaFieldStmt {
     #[inline]
     pub fn ident_pat(&self) -> Option<IdentPat> { support::child(&self.syntax) }
     #[inline]
@@ -1646,7 +1645,7 @@ pub enum FieldList {
 pub enum IdentPatKind {
     LetStmt(LetStmt),
     Param(Param),
-    SchemaField(SchemaField),
+    SchemaFieldStmt(SchemaFieldStmt),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1699,7 +1698,7 @@ pub enum Stmt {
     AbortsIfStmt(AbortsIfStmt),
     ExprStmt(ExprStmt),
     LetStmt(LetStmt),
-    SchemaField(SchemaField),
+    SchemaFieldStmt(SchemaFieldStmt),
     SpecInlineFun(SpecInlineFun),
     SpecPredicateStmt(SpecPredicateStmt),
 }
@@ -3382,16 +3381,16 @@ impl AstNode for Schema {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
-impl AstNode for SchemaField {
+impl AstNode for SchemaFieldStmt {
     #[inline]
     fn kind() -> SyntaxKind
     where
         Self: Sized,
     {
-        SCHEMA_FIELD
+        SCHEMA_FIELD_STMT
     }
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { kind == SCHEMA_FIELD }
+    fn can_cast(kind: SyntaxKind) -> bool { kind == SCHEMA_FIELD_STMT }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -4881,9 +4880,9 @@ impl From<Param> for IdentPatKind {
     #[inline]
     fn from(node: Param) -> IdentPatKind { IdentPatKind::Param(node) }
 }
-impl From<SchemaField> for IdentPatKind {
+impl From<SchemaFieldStmt> for IdentPatKind {
     #[inline]
-    fn from(node: SchemaField) -> IdentPatKind { IdentPatKind::SchemaField(node) }
+    fn from(node: SchemaFieldStmt) -> IdentPatKind { IdentPatKind::SchemaFieldStmt(node) }
 }
 impl IdentPatKind {
     pub fn let_stmt(self) -> Option<LetStmt> {
@@ -4898,22 +4897,22 @@ impl IdentPatKind {
             _ => None,
         }
     }
-    pub fn schema_field(self) -> Option<SchemaField> {
+    pub fn schema_field_stmt(self) -> Option<SchemaFieldStmt> {
         match (self) {
-            IdentPatKind::SchemaField(item) => Some(item),
+            IdentPatKind::SchemaFieldStmt(item) => Some(item),
             _ => None,
         }
     }
 }
 impl AstNode for IdentPatKind {
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, LET_STMT | PARAM | SCHEMA_FIELD) }
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, LET_STMT | PARAM | SCHEMA_FIELD_STMT) }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
             LET_STMT => IdentPatKind::LetStmt(LetStmt { syntax }),
             PARAM => IdentPatKind::Param(Param { syntax }),
-            SCHEMA_FIELD => IdentPatKind::SchemaField(SchemaField { syntax }),
+            SCHEMA_FIELD_STMT => IdentPatKind::SchemaFieldStmt(SchemaFieldStmt { syntax }),
             _ => return None,
         };
         Some(res)
@@ -4923,7 +4922,7 @@ impl AstNode for IdentPatKind {
         match self {
             IdentPatKind::LetStmt(it) => &it.syntax,
             IdentPatKind::Param(it) => &it.syntax,
-            IdentPatKind::SchemaField(it) => &it.syntax,
+            IdentPatKind::SchemaFieldStmt(it) => &it.syntax,
         }
     }
 }
@@ -5338,9 +5337,9 @@ impl From<LetStmt> for Stmt {
     #[inline]
     fn from(node: LetStmt) -> Stmt { Stmt::LetStmt(node) }
 }
-impl From<SchemaField> for Stmt {
+impl From<SchemaFieldStmt> for Stmt {
     #[inline]
-    fn from(node: SchemaField) -> Stmt { Stmt::SchemaField(node) }
+    fn from(node: SchemaFieldStmt) -> Stmt { Stmt::SchemaFieldStmt(node) }
 }
 impl From<SpecInlineFun> for Stmt {
     #[inline]
@@ -5369,9 +5368,9 @@ impl Stmt {
             _ => None,
         }
     }
-    pub fn schema_field(self) -> Option<SchemaField> {
+    pub fn schema_field_stmt(self) -> Option<SchemaFieldStmt> {
         match (self) {
-            Stmt::SchemaField(item) => Some(item),
+            Stmt::SchemaFieldStmt(item) => Some(item),
             _ => None,
         }
     }
@@ -5393,7 +5392,12 @@ impl AstNode for Stmt {
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            ABORTS_IF_STMT | EXPR_STMT | LET_STMT | SCHEMA_FIELD | SPEC_INLINE_FUN | SPEC_PREDICATE_STMT
+            ABORTS_IF_STMT
+                | EXPR_STMT
+                | LET_STMT
+                | SCHEMA_FIELD_STMT
+                | SPEC_INLINE_FUN
+                | SPEC_PREDICATE_STMT
         )
     }
     #[inline]
@@ -5402,7 +5406,7 @@ impl AstNode for Stmt {
             ABORTS_IF_STMT => Stmt::AbortsIfStmt(AbortsIfStmt { syntax }),
             EXPR_STMT => Stmt::ExprStmt(ExprStmt { syntax }),
             LET_STMT => Stmt::LetStmt(LetStmt { syntax }),
-            SCHEMA_FIELD => Stmt::SchemaField(SchemaField { syntax }),
+            SCHEMA_FIELD_STMT => Stmt::SchemaFieldStmt(SchemaFieldStmt { syntax }),
             SPEC_INLINE_FUN => Stmt::SpecInlineFun(SpecInlineFun { syntax }),
             SPEC_PREDICATE_STMT => Stmt::SpecPredicateStmt(SpecPredicateStmt { syntax }),
             _ => return None,
@@ -5415,7 +5419,7 @@ impl AstNode for Stmt {
             Stmt::AbortsIfStmt(it) => &it.syntax,
             Stmt::ExprStmt(it) => &it.syntax,
             Stmt::LetStmt(it) => &it.syntax,
-            Stmt::SchemaField(it) => &it.syntax,
+            Stmt::SchemaFieldStmt(it) => &it.syntax,
             Stmt::SpecInlineFun(it) => &it.syntax,
             Stmt::SpecPredicateStmt(it) => &it.syntax,
         }
@@ -6117,7 +6121,7 @@ impl AstNode for AnyMslOnly {
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            ITEM_SPEC | MODULE_SPEC | SCHEMA | SCHEMA_FIELD | SPEC_FUN | SPEC_INLINE_FUN
+            ITEM_SPEC | MODULE_SPEC | SCHEMA | SPEC_FUN | SPEC_INLINE_FUN
         )
     }
     #[inline]
@@ -6138,10 +6142,6 @@ impl From<ModuleSpec> for AnyMslOnly {
 impl From<Schema> for AnyMslOnly {
     #[inline]
     fn from(node: Schema) -> AnyMslOnly { AnyMslOnly { syntax: node.syntax } }
-}
-impl From<SchemaField> for AnyMslOnly {
-    #[inline]
-    fn from(node: SchemaField) -> AnyMslOnly { AnyMslOnly { syntax: node.syntax } }
 }
 impl From<SpecFun> for AnyMslOnly {
     #[inline]
@@ -6763,7 +6763,7 @@ impl std::fmt::Display for Schema {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
-impl std::fmt::Display for SchemaField {
+impl std::fmt::Display for SchemaFieldStmt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

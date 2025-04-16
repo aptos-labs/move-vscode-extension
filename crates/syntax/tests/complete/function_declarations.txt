@@ -1,5 +1,5 @@
-SOURCE_FILE@0..1128
-  MODULE@0..1127
+SOURCE_FILE@0..1154
+  MODULE@0..1153
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
     VALUE_ADDRESS@7..10
@@ -819,6 +819,28 @@ SOURCE_FILE@0..1128
               NAME_REF@1123..1124
                 IDENT@1123..1124 "T"
       SEMICOLON@1124..1125 ";"
-    WHITESPACE@1125..1126 "\n"
-    R_CURLY@1126..1127 "}"
-  WHITESPACE@1127..1128 "\n"
+    WHITESPACE@1125..1131 "\n\n    "
+    FUN@1131..1151
+      NATIVE_KW@1131..1137 "native"
+      WHITESPACE@1137..1138 " "
+      FUN_KW@1138..1141 "fun"
+      WHITESPACE@1141..1142 " "
+      NAME@1142..1143
+        IDENT@1142..1143 "m"
+      PARAM_LIST@1143..1150
+        L_PAREN@1143..1144 "("
+        PARAM@1144..1149
+          WILDCARD_PAT@1144..1145
+            UNDERSCORE@1144..1145 "_"
+          COLON@1145..1146 ":"
+          WHITESPACE@1146..1147 " "
+          PATH_TYPE@1147..1149
+            PATH@1147..1149
+              PATH_SEGMENT@1147..1149
+                NAME_REF@1147..1149
+                  IDENT@1147..1149 "u8"
+        R_PAREN@1149..1150 ")"
+      SEMICOLON@1150..1151 ";"
+    WHITESPACE@1151..1152 "\n"
+    R_CURLY@1152..1153 "}"
+  WHITESPACE@1153..1154 "\n"

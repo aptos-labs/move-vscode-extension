@@ -62,7 +62,7 @@ SOURCE_FILE@0..1295
       BLOCK_EXPR@165..1292
         L_CURLY@165..166 "{"
         WHITESPACE@166..175 "\n        "
-        SCHEMA_FIELD@175..196
+        SCHEMA_FIELD_STMT@175..196
           IDENT_PAT@175..182
             NAME@175..182
               IDENT@175..182 "sending"
@@ -79,7 +79,7 @@ SOURCE_FILE@0..1295
                     IDENT@189..195 "signer"
           SEMICOLON@195..196 ";"
         WHITESPACE@196..206 "\n\n        "
-        SCHEMA_FIELD@206..218
+        SCHEMA_FIELD_STMT@206..218
           IDENT_PAT@206..212
             NAME@206..212
               IDENT@206..212 "amount"
@@ -92,7 +92,7 @@ SOURCE_FILE@0..1295
                   IDENT@214..217 "u64"
           SEMICOLON@217..218 ";"
         WHITESPACE@218..227 "\n        "
-        SCHEMA_FIELD@227..245
+        SCHEMA_FIELD_STMT@227..245
           LOCAL_KW@227..232 "local"
           WHITESPACE@232..233 " "
           IDENT_PAT@233..239

@@ -20,7 +20,7 @@ pub(crate) fn fun_param_list(p: &mut Parser) {
 
 fn param(p: &mut Parser) {
     let m = p.start();
-    patterns::ident_pat(p);
+    patterns::pattern(p);
     if p.at(T![:]) {
         types::ascription(p);
     } else {

@@ -8,7 +8,10 @@ impl ast::AnyFun {
     }
 
     pub fn params_as_bindings(&self) -> Vec<ast::IdentPat> {
-        self.params().into_iter().map(|param| param.ident_pat()).collect()
+        self.params()
+            .into_iter()
+            .filter_map(|param| param.ident_pat())
+            .collect()
     }
 
     pub fn return_type(&self) -> Option<ast::Type> {

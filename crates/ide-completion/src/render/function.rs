@@ -69,7 +69,7 @@ fn render_params(
         .collect::<Vec<_>>();
     let mut res = vec![];
     for (param, ty) in params_with_types.into_iter() {
-        let param_name = param.ident_pat().name()?.as_string();
+        let param_name = param.ident_name();
         let rendered_ty = ty.render(db);
         res.push(format!("{}: {}", param_name, rendered_ty));
     }
