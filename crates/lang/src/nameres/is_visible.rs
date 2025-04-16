@@ -78,8 +78,8 @@ pub fn is_visible_in_context(
     }
 
     let item_module = item.syntax().containing_module();
-    // 0x0::builtins module items are always visible
-    if item_module.is_some() && item_module.clone().unwrap().is_builtins() {
+    // 0x0::builtins module functions are always visible
+    if item.syntax().kind() == FUN && item_module.clone().is_some_and(|m| m.is_builtins()) {
         return true;
     }
 
