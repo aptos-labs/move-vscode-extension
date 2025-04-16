@@ -18,7 +18,7 @@ pub fn check_expr_type(source: &str) {
     };
 
     let opt_ty = analysis.expr_type_info(position).unwrap();
-    let expr_ty = opt_ty.expect("should be an expr at the file position");
+    let expr_ty = opt_ty.expect("could not find an expr / outside inference context");
 
     assert_eq!(expr_ty, data);
     // assert_eq!(expr_ty, data, "expected `{}`, actual `{}`", expr_ty, data);

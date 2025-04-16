@@ -41,7 +41,7 @@ Item =
     | ItemSpec
 
 InferenceCtxOwner =
-    Fun | SpecFun
+    Fun | SpecFun | ItemSpec
 
 IdentPatKind =
     LetStmt | Param | SchemaField
@@ -199,6 +199,7 @@ Stmt =
     | ExprStmt
     | LetStmt
     | SchemaField
+    | SpecPredicateStmt | AbortsIfStmt
     | SpecInlineFun
 
 LetStmt =
@@ -429,6 +430,9 @@ SpecInlineFun =
     'native'? 'fun' Name TypeParamList? ParamList RetType?
     (spec_block:BlockExpr | ';')
 
+AnyFun =
+    Fun | SpecFun | SpecInlineFun
+
 Schema =
     Attr*
     'spec' 'schema' Name TypeParamList?
@@ -441,6 +445,12 @@ SpecPredicateStmt =
     ('assert' | 'assume' | 'requires' | 'ensures' | 'decreases' | 'modifies')
     SpecPredicatePropertyList?
     Expr ';'
+
+AbortsIfStmt =
+    'aborts_if' SpecPredicatePropertyList? Expr AbortsIfWith? ';'
+
+AbortsIfWith =
+    'with' Expr
 
 SpecPredicatePropertyList =
     '[' properties:(SpecPredicateProperty (',' SpecPredicateProperty)* ','?)? ']'

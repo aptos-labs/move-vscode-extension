@@ -41,6 +41,36 @@ impl AbortExpr {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AbortsIfStmt {
+    pub(crate) syntax: SyntaxNode,
+}
+impl AbortsIfStmt {
+    #[inline]
+    pub fn aborts_if_with(&self) -> Option<AbortsIfWith> { support::child(&self.syntax) }
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn spec_predicate_property_list(&self) -> Option<SpecPredicatePropertyList> {
+        support::child(&self.syntax)
+    }
+    #[inline]
+    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
+    #[inline]
+    pub fn aborts_if_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![aborts_if]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AbortsIfWith {
+    pub(crate) syntax: SyntaxNode,
+}
+impl AbortsIfWith {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn with_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![with]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AddressDef {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1556,6 +1586,17 @@ pub enum AnyField {
 impl ast::HasAttrs for AnyField {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum AnyFun {
+    Fun(Fun),
+    SpecFun(SpecFun),
+    SpecInlineFun(SpecInlineFun),
+}
+impl ast::GenericElement for AnyFun {}
+impl ast::HasVisibility for AnyFun {}
+impl ast::HoverDocsOwner for AnyFun {}
+impl ast::NamedElement for AnyFun {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum BlockOrInlineExpr {
     BlockExpr(BlockExpr),
     InlineExpr(InlineExpr),
@@ -1611,13 +1652,10 @@ pub enum IdentPatKind {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum InferenceCtxOwner {
     Fun(Fun),
+    ItemSpec(ItemSpec),
     SpecFun(SpecFun),
 }
-impl ast::GenericElement for InferenceCtxOwner {}
 impl ast::HasAttrs for InferenceCtxOwner {}
-impl ast::HasVisibility for InferenceCtxOwner {}
-impl ast::HoverDocsOwner for InferenceCtxOwner {}
-impl ast::NamedElement for InferenceCtxOwner {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Item {
@@ -1657,10 +1695,12 @@ pub enum Pat {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Stmt {
+    AbortsIfStmt(AbortsIfStmt),
     ExprStmt(ExprStmt),
     LetStmt(LetStmt),
     SchemaField(SchemaField),
     SpecInlineFun(SpecInlineFun),
+    SpecPredicateStmt(SpecPredicateStmt),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1818,6 +1858,48 @@ impl AstNode for AbortExpr {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == ABORT_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for AbortsIfStmt {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ABORTS_IF_STMT
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == ABORTS_IF_STMT }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for AbortsIfWith {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ABORTS_IF_WITH
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == ABORTS_IF_WITH }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -4167,6 +4249,60 @@ impl AstNode for AnyField {
         }
     }
 }
+impl From<Fun> for AnyFun {
+    #[inline]
+    fn from(node: Fun) -> AnyFun { AnyFun::Fun(node) }
+}
+impl From<SpecFun> for AnyFun {
+    #[inline]
+    fn from(node: SpecFun) -> AnyFun { AnyFun::SpecFun(node) }
+}
+impl From<SpecInlineFun> for AnyFun {
+    #[inline]
+    fn from(node: SpecInlineFun) -> AnyFun { AnyFun::SpecInlineFun(node) }
+}
+impl AnyFun {
+    pub fn fun(self) -> Option<Fun> {
+        match (self) {
+            AnyFun::Fun(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn spec_fun(self) -> Option<SpecFun> {
+        match (self) {
+            AnyFun::SpecFun(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn spec_inline_fun(self) -> Option<SpecInlineFun> {
+        match (self) {
+            AnyFun::SpecInlineFun(item) => Some(item),
+            _ => None,
+        }
+    }
+}
+impl AstNode for AnyFun {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, FUN | SPEC_FUN | SPEC_INLINE_FUN) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            FUN => AnyFun::Fun(Fun { syntax }),
+            SPEC_FUN => AnyFun::SpecFun(SpecFun { syntax }),
+            SPEC_INLINE_FUN => AnyFun::SpecInlineFun(SpecInlineFun { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            AnyFun::Fun(it) => &it.syntax,
+            AnyFun::SpecFun(it) => &it.syntax,
+            AnyFun::SpecInlineFun(it) => &it.syntax,
+        }
+    }
+}
 impl From<BlockExpr> for BlockOrInlineExpr {
     #[inline]
     fn from(node: BlockExpr) -> BlockOrInlineExpr { BlockOrInlineExpr::BlockExpr(node) }
@@ -4721,6 +4857,10 @@ impl From<Fun> for InferenceCtxOwner {
     #[inline]
     fn from(node: Fun) -> InferenceCtxOwner { InferenceCtxOwner::Fun(node) }
 }
+impl From<ItemSpec> for InferenceCtxOwner {
+    #[inline]
+    fn from(node: ItemSpec) -> InferenceCtxOwner { InferenceCtxOwner::ItemSpec(node) }
+}
 impl From<SpecFun> for InferenceCtxOwner {
     #[inline]
     fn from(node: SpecFun) -> InferenceCtxOwner { InferenceCtxOwner::SpecFun(node) }
@@ -4729,6 +4869,12 @@ impl InferenceCtxOwner {
     pub fn fun(self) -> Option<Fun> {
         match (self) {
             InferenceCtxOwner::Fun(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn item_spec(self) -> Option<ItemSpec> {
+        match (self) {
+            InferenceCtxOwner::ItemSpec(item) => Some(item),
             _ => None,
         }
     }
@@ -4748,11 +4894,12 @@ impl InferenceCtxOwner {
 }
 impl AstNode for InferenceCtxOwner {
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, FUN | SPEC_FUN) }
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, FUN | ITEM_SPEC | SPEC_FUN) }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
             FUN => InferenceCtxOwner::Fun(Fun { syntax }),
+            ITEM_SPEC => InferenceCtxOwner::ItemSpec(ItemSpec { syntax }),
             SPEC_FUN => InferenceCtxOwner::SpecFun(SpecFun { syntax }),
             _ => return None,
         };
@@ -4762,6 +4909,7 @@ impl AstNode for InferenceCtxOwner {
     fn syntax(&self) -> &SyntaxNode {
         match self {
             InferenceCtxOwner::Fun(it) => &it.syntax,
+            InferenceCtxOwner::ItemSpec(it) => &it.syntax,
             InferenceCtxOwner::SpecFun(it) => &it.syntax,
         }
     }
@@ -5076,6 +5224,10 @@ impl AstNode for Pat {
         }
     }
 }
+impl From<AbortsIfStmt> for Stmt {
+    #[inline]
+    fn from(node: AbortsIfStmt) -> Stmt { Stmt::AbortsIfStmt(node) }
+}
 impl From<ExprStmt> for Stmt {
     #[inline]
     fn from(node: ExprStmt) -> Stmt { Stmt::ExprStmt(node) }
@@ -5092,7 +5244,17 @@ impl From<SpecInlineFun> for Stmt {
     #[inline]
     fn from(node: SpecInlineFun) -> Stmt { Stmt::SpecInlineFun(node) }
 }
+impl From<SpecPredicateStmt> for Stmt {
+    #[inline]
+    fn from(node: SpecPredicateStmt) -> Stmt { Stmt::SpecPredicateStmt(node) }
+}
 impl Stmt {
+    pub fn aborts_if_stmt(self) -> Option<AbortsIfStmt> {
+        match (self) {
+            Stmt::AbortsIfStmt(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn expr_stmt(self) -> Option<ExprStmt> {
         match (self) {
             Stmt::ExprStmt(item) => Some(item),
@@ -5117,19 +5279,30 @@ impl Stmt {
             _ => None,
         }
     }
+    pub fn spec_predicate_stmt(self) -> Option<SpecPredicateStmt> {
+        match (self) {
+            Stmt::SpecPredicateStmt(item) => Some(item),
+            _ => None,
+        }
+    }
 }
 impl AstNode for Stmt {
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(kind, EXPR_STMT | LET_STMT | SCHEMA_FIELD | SPEC_INLINE_FUN)
+        matches!(
+            kind,
+            ABORTS_IF_STMT | EXPR_STMT | LET_STMT | SCHEMA_FIELD | SPEC_INLINE_FUN | SPEC_PREDICATE_STMT
+        )
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
+            ABORTS_IF_STMT => Stmt::AbortsIfStmt(AbortsIfStmt { syntax }),
             EXPR_STMT => Stmt::ExprStmt(ExprStmt { syntax }),
             LET_STMT => Stmt::LetStmt(LetStmt { syntax }),
             SCHEMA_FIELD => Stmt::SchemaField(SchemaField { syntax }),
             SPEC_INLINE_FUN => Stmt::SpecInlineFun(SpecInlineFun { syntax }),
+            SPEC_PREDICATE_STMT => Stmt::SpecPredicateStmt(SpecPredicateStmt { syntax }),
             _ => return None,
         };
         Some(res)
@@ -5137,10 +5310,12 @@ impl AstNode for Stmt {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
+            Stmt::AbortsIfStmt(it) => &it.syntax,
             Stmt::ExprStmt(it) => &it.syntax,
             Stmt::LetStmt(it) => &it.syntax,
             Stmt::SchemaField(it) => &it.syntax,
             Stmt::SpecInlineFun(it) => &it.syntax,
+            Stmt::SpecPredicateStmt(it) => &it.syntax,
         }
     }
 }
@@ -5987,6 +6162,11 @@ impl std::fmt::Display for AnyField {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for AnyFun {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for BlockOrInlineExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -6058,6 +6238,16 @@ impl std::fmt::Display for AbilityList {
     }
 }
 impl std::fmt::Display for AbortExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for AbortsIfStmt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for AbortsIfWith {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

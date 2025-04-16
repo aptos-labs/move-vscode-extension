@@ -36,7 +36,12 @@ fn inference_for_ctx_owner(db: &dyn HirDatabase, ctx_owner_loc: SyntaxLoc) -> Ar
     let return_ty = match ctx_owner.syntax().kind() {
         SyntaxKind::FUN => {
             let fun = ctx_owner.clone().fun().unwrap();
-            let ret_ty = ctx.ty_lowering().lower_function(fun.in_file(file_id)).ret_type();
+            let ret_ty = ctx.ty_lowering().lower_any_function(fun.in_file(file_id).in_file_into()).ret_type();
+            ret_ty
+        }
+        SyntaxKind::SPEC_FUN => {
+            let spec_fun = ctx_owner.clone().spec_fun().unwrap();
+            let ret_ty = ctx.ty_lowering().lower_any_function(spec_fun.in_file(file_id).into()).ret_type();
             ret_ty
         }
         _ => Ty::Unknown,
