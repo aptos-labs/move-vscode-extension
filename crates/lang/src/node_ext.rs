@@ -4,16 +4,6 @@ use crate::nameres::address::{Address, NamedAddr, ValueAddr};
 use syntax::ast;
 use syntax::ast::NamedElement;
 
-// pub trait PathLangExt {
-//     fn reference_name(&self) -> Option<String>;
-// }
-
-// impl PathLangExt for ast::Path {
-//     fn reference_name(&self) -> Option<String> {
-//         self.segment().name_ref().map(|it| it.as_string())
-//     }
-// }
-
 pub trait ModuleLangExt {
     fn address(&self) -> Option<Address>;
     fn address_equals_to(&self, address: Address, is_completion: bool) -> bool;
