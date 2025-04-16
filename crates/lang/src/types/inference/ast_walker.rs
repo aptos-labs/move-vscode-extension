@@ -139,14 +139,13 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         }
     }
 
-    fn process_stmt(&mut self, stmt: ast::Stmt) {
+    fn process_stmt(&mut self, stmt: ast::Stmt) -> Option<()> {
         let file_id = self.ctx.file_id;
         match stmt {
             ast::Stmt::LetStmt(let_stmt) => {
                 let explicit_ty = let_stmt
                     .type_()
                     .map(|it| self.ctx.ty_lowering().lower_type(it.in_file(file_id)));
-                let pat = let_stmt.pat();
                 let initializer_ty = match let_stmt.initializer() {
                     Some(initializer_expr) => {
                         let initializer_ty =
@@ -163,21 +162,19 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                             initializer_ty
                         }
                     }
-                    None => pat
+                    None => let_stmt
+                        .pat()
                         .clone()
                         .map(|it| anonymous_pat_ty_var(self.ctx, &it))
                         .unwrap_or(Ty::Unknown),
                 };
-                if let Some(pat) = pat {
-                    let pat_ty =
-                        explicit_ty.unwrap_or(self.ctx.resolve_ty_vars_if_possible(initializer_ty));
-                    self.collect_pat_bindings(pat, pat_ty, BindingMode::BindByValue);
-                }
+                let pat = let_stmt.pat()?;
+                let pat_ty = explicit_ty.unwrap_or(self.ctx.resolve_ty_vars_if_possible(initializer_ty));
+                self.collect_pat_bindings(pat, pat_ty, BindingMode::BindByValue);
             }
             ast::Stmt::ExprStmt(expr_stmt) => {
-                if let Some(expr) = expr_stmt.expr() {
-                    self.infer_expr(&expr, Expected::NoValue);
-                }
+                let expr = expr_stmt.expr()?;
+                self.infer_expr(&expr, Expected::NoValue);
             }
             ast::Stmt::SpecPredicateStmt(spec_predicate_stmt) => {
                 self.process_predicate_stmt(&spec_predicate_stmt);
@@ -185,8 +182,21 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::Stmt::AbortsIfStmt(aborts_if_stmt) => {
                 self.process_aborts_if_stmt(&aborts_if_stmt);
             }
-            _ => {}
+            ast::Stmt::SchemaFieldStmt(schema_field) => {
+                let ident_pat = schema_field.ident_pat()?;
+                let ident_pat_ty = schema_field
+                    .type_()
+                    .map(|t| self.ctx.ty_lowering().lower_type(t.in_file(file_id)))
+                    .unwrap_or(Ty::Unknown);
+                self.ctx.pat_types.insert(
+                    ident_pat.into(),
+                    self.ctx.resolve_ty_vars_if_possible(ident_pat_ty),
+                );
+            }
+            _ => (),
         }
+
+        Some(())
     }
 
     // returns inferred

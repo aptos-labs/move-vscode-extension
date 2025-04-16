@@ -32,7 +32,7 @@ pub(crate) fn schema_field(p: &mut Parser) -> bool {
         return false;
     }
     p.expect(T![;]);
-    m.complete(p, SCHEMA_FIELD);
+    m.complete(p, SCHEMA_FIELD_STMT);
     true
 }
 

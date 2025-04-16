@@ -74,7 +74,7 @@ fn generate_param_list(param_list: ast::ParamList, buffer: &mut String) -> Optio
     write!(buffer, "(").ok()?;
     let ps = param_list.params().collect::<Vec<_>>();
     for (i, param) in ps.iter().enumerate() {
-        write!(buffer, "{}", param.ident_pat().as_string()).ok()?;
+        write!(buffer, "{}", param.ident_name()).ok()?;
         generate_type_annotation(param.type_(), buffer)?;
         if i != ps.len() - 1 {
             write!(buffer, ", ").ok()?;
@@ -130,7 +130,7 @@ fn generate_ident_pat(
     let ident_kind = match owner {
         ast::IdentPatKind::Param(_) => "parameter",
         ast::IdentPatKind::LetStmt(_) => "variable",
-        ast::IdentPatKind::SchemaField(_) => "schema field",
+        ast::IdentPatKind::SchemaFieldStmt(_) => "schema field",
     };
     write!(buffer, "{ident_kind} {}", ident_pat.name()?.as_string()).ok()?;
 

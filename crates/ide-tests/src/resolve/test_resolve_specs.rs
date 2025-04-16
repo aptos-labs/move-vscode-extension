@@ -461,6 +461,24 @@ module 0x1::M {
 
 // language=Move
 #[test]
+fn test_resolve_schema_parameter() {
+    check_resolve(
+        r#"
+module 0x1::M {
+    struct S { val: u8 }
+    spec schema SS {
+        s: S;
+      //X
+        s;
+      //^
+    }
+}    
+"#,
+    )
+}
+
+// language=Move
+#[test]
 fn test_dot_access_resolution_for_spec_parameters() {
     check_resolve(
         r#"
@@ -472,7 +490,7 @@ module 0x1::M {
         s.val;
         //^
     }
-}    
+}
 "#,
     )
 }

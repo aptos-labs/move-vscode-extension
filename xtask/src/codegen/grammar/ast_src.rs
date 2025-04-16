@@ -196,7 +196,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "GLOBAL_VARIABLE_DECL",
 
         "SCHEMA",
-        "SCHEMA_FIELD",
+        "SCHEMA_FIELD_STMT",
         "INCLUDE_SCHEMA",
 
         // "INCLUDE_EXPR",
@@ -288,7 +288,7 @@ pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     ("ParenType", &["type"]),
     ("StructLit", &["path"]),
     ("UseSpeck", &["path"]),
-    ("Param", &["ident_pat"]),
+    // ("Param", &["ident_pat"]),  - can be wildcard_pat too
     // ("Path", &["segment"]),  - invalid
     ("PathAddress", &["value_address"]),
     ("Name", &["ident"]),

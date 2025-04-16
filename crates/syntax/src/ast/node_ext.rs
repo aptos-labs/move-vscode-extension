@@ -26,6 +26,7 @@ mod module;
 pub mod move_syntax_node;
 pub mod name_ref;
 pub mod named_field;
+mod param;
 mod pat;
 pub mod path;
 pub mod prefix_expr;

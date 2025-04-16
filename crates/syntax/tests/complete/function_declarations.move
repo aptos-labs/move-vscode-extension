@@ -37,4 +37,6 @@ module 0x1::m {
     native public(friend) fun native_fn(a: vector<u8>): u8;
 
     native fun native_fn_with_acquires() acquires T;
+
+    native fun m(_: u8);
 }
