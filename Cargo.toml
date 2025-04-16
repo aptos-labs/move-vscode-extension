@@ -27,7 +27,7 @@ itertools = "0.14.0"
 smol_str = "0.3.2"
 lsp-types = { version = "0.95.1", features = ["proposed"] }
 line-index = "0.1.2"
-crossbeam-channel = "0.5.14"
+crossbeam-channel = "0.5.15"
 rustc-hash = "2.1.1"
 triomphe = "0.1.14"
 serde = "1.0.217"
