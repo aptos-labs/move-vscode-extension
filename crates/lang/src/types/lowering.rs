@@ -111,7 +111,7 @@ impl<'ctx, 'db> TyLowering<'ctx, 'db> {
             }
             FUN => {
                 let fun = named_item.clone().cast_into::<ast::Fun>().unwrap();
-                let ty_callable = self.lower_function(fun);
+                let ty_callable = self.lower_any_function(fun.in_file_into());
                 Ty::Callable(ty_callable)
             }
             VARIANT => {
@@ -155,19 +155,23 @@ impl<'ctx, 'db> TyLowering<'ctx, 'db> {
             .map(|type_| self.lower_type(type_.in_file(file_id)))
     }
 
-    pub fn lower_function(&self, fun: InFile<ast::Fun>) -> TyCallable {
-        let (file_id, fun) = fun.unpack();
-        let param_types = fun
-            .params()
-            .into_iter()
-            .map(|it| {
-                it.type_()
-                    .map(|t| self.lower_type(t.in_file(file_id)))
-                    .unwrap_or(Ty::Unknown)
-            })
-            .collect();
-        let ret_type = self.lower_ret_type(fun.ret_type().map(|t| t.in_file(file_id)));
-        TyCallable::new(param_types, ret_type, CallKind::Fun)
+    pub fn lower_any_function(&self, any_fun: InFile<ast::AnyFun>) -> TyCallable {
+        let (file_id, any_fun) = any_fun.unpack();
+        match any_fun {
+            ast::AnyFun::Fun(fun) => {
+                let param_types = fun
+                    .params()
+                    .into_iter()
+                    .map(|it| {
+                        it.type_()
+                            .map(|t| self.lower_type(t.in_file(file_id)))
+                            .unwrap_or(Ty::Unknown)
+                    })
+                    .collect();
+                let ret_type = self.lower_ret_type(fun.ret_type().map(|t| t.in_file(file_id)));
+                TyCallable::new(param_types, ret_type, CallKind::Fun)
+            }
+        }
     }
 
     fn lower_ret_type(&self, ret_type: Option<InFile<ast::RetType>>) -> Ty {

@@ -84,7 +84,7 @@ fn add_method_completion_items(
 
         let subst = method.ty_vars_subst();
         let callable_ty = TyLowering::new_no_inf(hir_db)
-            .lower_function(method.clone())
+            .lower_any_function(method.clone())
             .substitute(&subst);
         let self_ty = callable_ty
             .param_types

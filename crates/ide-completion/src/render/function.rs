@@ -19,7 +19,7 @@ pub(crate) fn render_function(
     let mut completion_item = render_named_item(ctx, function.clone().in_file_into());
 
     let ty_lowering = TyLowering::new_no_inf(ctx.db);
-    let mut call_ty = ty_lowering.lower_function(function.clone());
+    let mut call_ty = ty_lowering.lower_any_function(function.clone().in_file_into());
     if let Some(apply_subst) = apply_subst {
         call_ty = call_ty.substitute(&apply_subst);
     }

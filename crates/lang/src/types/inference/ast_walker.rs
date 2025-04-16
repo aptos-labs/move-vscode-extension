@@ -1,23 +1,25 @@
+mod infer_specs;
+
 use crate::nameres::name_resolution::get_entries_from_walking_scopes;
 use crate::nameres::namespaces::NAMES;
 use crate::nameres::path_resolution::get_method_resolve_variants;
 use crate::nameres::scope::{ScopeEntryExt, ScopeEntryListExt, VecExt};
 use crate::types::expectation::Expected;
 use crate::types::inference::InferenceCtx;
-use crate::types::patterns::{BindingMode, anonymous_pat_ty_var};
+use crate::types::patterns::{anonymous_pat_ty_var, BindingMode};
 use crate::types::substitution::ApplySubstitution;
-use crate::types::ty::Ty;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::range_like::TySequence;
-use crate::types::ty::reference::{Mutability, autoborrow};
+use crate::types::ty::reference::{autoborrow, Mutability};
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar};
+use crate::types::ty::Ty;
 use std::iter;
 use std::ops::Deref;
 use syntax::ast::node_ext::named_field::FilterNamedFieldsByName;
 use syntax::ast::{FieldsOwner, HasStmts};
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, IntoNodeOrToken, ast};
+use syntax::{ast, AstNode, IntoNodeOrToken};
 
 pub struct TypeAstWalker<'a, 'db> {
     pub ctx: &'a mut InferenceCtx<'db>,
@@ -41,7 +43,16 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     self.infer_block_expr(&fun_block_expr, Expected::NoValue);
                 }
             }
-            _ => {}
+            ast::InferenceCtxOwner::SpecFun(spec_fun) => {
+                if let Some(spec_block_expr) = spec_fun.spec_block() {
+                    self.infer_block_expr(&spec_block_expr, Expected::NoValue);
+                }
+            }
+            ast::InferenceCtxOwner::ItemSpec(item_spec) => {
+                if let Some(spec_block_expr) = item_spec.spec_block() {
+                    self.infer_block_expr(&spec_block_expr, Expected::NoValue);
+                }
+            }
         }
 
         self.walk_lambda_expr_bodies();
@@ -96,7 +107,6 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         for stmt in block_expr.stmts() {
             self.process_stmt(stmt);
         }
-
         let tail_expr = block_expr.tail_expr();
         let opt_expected_ty = expected.ty(self.ctx);
         match tail_expr {
@@ -158,6 +168,12 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 if let Some(expr) = expr_stmt.expr() {
                     self.infer_expr(&expr, Expected::NoValue);
                 }
+            }
+            ast::Stmt::SpecPredicateStmt(spec_predicate_stmt) => {
+                self.process_predicate_stmt(&spec_predicate_stmt);
+            }
+            ast::Stmt::AbortsIfStmt(aborts_if_stmt) => {
+                self.process_aborts_if_stmt(&aborts_if_stmt);
             }
             _ => {}
         }
