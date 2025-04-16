@@ -7,21 +7,6 @@ on:
     pull_request:
 
 jobs:
-    changes:
-        runs-on: ubuntu-latest
-        permissions:
-            pull-requests: read
-        outputs:
-            typescript: ${{ steps.filter.outputs.typescript }}
-        steps:
-            -   uses: actions/checkout@v4
-            -   uses: dorny/paths-filter@1441771bbfdd59dcd748680ee64ebd8faab1a242
-                id: filter
-                with:
-                    filters: |
-                        typescript:
-                          - 'editors/code/**'
-
     rust_tests:
         strategy:
             matrix:
@@ -38,8 +23,6 @@ jobs:
                 run: cargo xtask install --server
 
     typescript:
-        needs: changes
-        if: needs.changes.outputs.typescript == 'true'
         name: TypeScript
         strategy:
             matrix:
