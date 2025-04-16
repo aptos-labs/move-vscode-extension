@@ -4,11 +4,9 @@ mod codegen;
 mod install;
 mod testgen;
 
-use anyhow::Context;
 use clap::{Parser, Subcommand};
 use std::env;
 use std::path::PathBuf;
-use xshell::Shell;
 
 #[derive(Parser)]
 struct Cli {
@@ -31,17 +29,11 @@ enum Command {
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
-    let sh = Shell::new()?;
     match cli.command {
         Command::Codegen => codegen::generate(),
         Command::Testgen => testgen::generate(),
         Command::Install { client, server } => {
-            if client {
-                install::install_client(&sh).context("install client")?;
-            }
-            if server {
-                install::install_server(&sh).context("install server")?;
-            }
+            install::install(client, server)?;
         }
     }
 

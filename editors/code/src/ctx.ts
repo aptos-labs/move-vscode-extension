@@ -88,7 +88,7 @@ export class Ctx {
         // that is 'Move Language Server'). For more information, see:
         // https://code.visualstudio.com/api/language-extensions/language-server-extension-guide#logging-support-for-language-server
         const traceOutputChannel = vscode.window.createOutputChannel(
-            'Aptos Analyzer Trace',
+            'aptos-analyzer LSP Trace',
         );
         this._client = await createClient(traceOutputChannel, serverOptions)
 

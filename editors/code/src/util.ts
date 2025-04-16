@@ -16,7 +16,7 @@ export type Env = {
 };
 
 class Log {
-    private readonly output = vscode.window.createOutputChannel("Aptos Analyzer Client", {
+    private readonly output = vscode.window.createOutputChannel("aptos-analyzer Extension", {
         log: true,
     });
 
