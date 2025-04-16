@@ -33,6 +33,9 @@ impl InferenceCtx<'_> {
     }
 
     pub fn combine_types(&mut self, left_ty: Ty, right_ty: Ty) -> CombineResult {
+        let left_ty = left_ty.refine_for_specs(self.msl);
+        let right_ty = right_ty.refine_for_specs(self.msl);
+
         let left_ty = self.resolve_ty_infer_shallow(left_ty);
         let right_ty = self.resolve_ty_infer_shallow(right_ty);
 

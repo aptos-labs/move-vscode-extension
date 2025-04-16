@@ -5,6 +5,7 @@ use syntax::ast;
 
 impl<'a, 'db> TypeAstWalker<'a, 'db> {
     pub(super) fn process_predicate_stmt(&mut self, predicate: &ast::SpecPredicateStmt) -> Option<()> {
+        dbg!(&predicate);
         let expr = predicate.expr()?;
         self.infer_expr_coerceable_to(&expr, Ty::Bool);
         Some(())

@@ -48,12 +48,12 @@ pub struct InferenceCtx<'db> {
 }
 
 impl<'db> InferenceCtx<'db> {
-    pub fn new(db: &'db dyn HirDatabase, file_id: FileId) -> Self {
+    pub fn new(db: &'db dyn HirDatabase, file_id: FileId, msl: bool) -> Self {
         InferenceCtx {
             db,
             file_id,
             ty_var_counter: 0,
-            msl: false,
+            msl,
             var_table: UnificationTable::new(),
             int_table: UnificationTable::new(),
             expr_types: HashMap::new(),
@@ -218,8 +218,8 @@ impl<'db> InferenceCtx<'db> {
         path_ty
     }
 
-    pub fn ty_lowering<'ctx>(&'ctx mut self) -> TyLowering<'ctx, 'db> {
-        TyLowering::new(self.db, self)
+    pub fn ty_lowering(&mut self) -> TyLowering<'db> {
+        TyLowering::new(self.db)
     }
 
     pub fn resolve_ty_infer(&self, ty_infer: &TyInfer) -> Ty {

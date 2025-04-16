@@ -79,8 +79,8 @@ impl<'db> SemanticsImpl<'db> {
         scope_entry?.cast_into::<N>(self.db)
     }
 
-    pub fn inference<T: AstNode>(&self, node: &InFile<T>) -> Option<Arc<InferenceResult>> {
-        node.inference(self.db)
+    pub fn inference<T: AstNode>(&self, node: &InFile<T>, msl: bool) -> Option<Arc<InferenceResult>> {
+        node.inference(self.db, msl)
     }
 
     pub fn render_ty(&self, ty: Ty) -> String {
@@ -93,13 +93,13 @@ impl<'db> SemanticsImpl<'db> {
     }
 
     pub fn lower_type(&self, type_: InFile<ast::Type>) -> Ty {
-        TyLowering::new_no_inf(self.db).lower_type(type_)
+        TyLowering::new(self.db).lower_type(type_)
     }
 
     pub fn is_tys_compatible(&self, left_ty: Ty, right_ty: Ty, with_autoborrow: bool) -> bool {
         // Any file_id could be used here, we are not interested in unification. Could be improved later.
         let any_file_id = self.db.builtins_file_id();
-        let ctx = &mut InferenceCtx::new(self.db, any_file_id);
+        let ctx = &mut InferenceCtx::new(self.db, any_file_id, false);
         if with_autoborrow {
             ctx.is_tys_compatible_with_autoborrow(left_ty, right_ty)
         } else {

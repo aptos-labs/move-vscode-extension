@@ -135,7 +135,7 @@ fn generate_ident_pat(
     write!(buffer, "{ident_kind} {}", ident_pat.name()?.as_string()).ok()?;
 
     let ident_pat = sema.wrap_node_infile(ident_pat);
-    if let Some(inference) = sema.inference(&ident_pat) {
+    if let Some(inference) = sema.inference(&ident_pat, false) {
         let ident_pat_type = inference.get_pat_type(&ast::Pat::IdentPat(ident_pat.value));
         if let Some(ty) = ident_pat_type {
             let rendered_ty = sema.render_ty(ty);

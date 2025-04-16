@@ -6,20 +6,20 @@ use crate::nameres::path_resolution::get_method_resolve_variants;
 use crate::nameres::scope::{ScopeEntryExt, ScopeEntryListExt, VecExt};
 use crate::types::expectation::Expected;
 use crate::types::inference::InferenceCtx;
-use crate::types::patterns::{anonymous_pat_ty_var, BindingMode};
+use crate::types::patterns::{BindingMode, anonymous_pat_ty_var};
 use crate::types::substitution::ApplySubstitution;
+use crate::types::ty::Ty;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::range_like::TySequence;
-use crate::types::ty::reference::{autoborrow, Mutability};
+use crate::types::ty::reference::{Mutability, autoborrow};
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar};
-use crate::types::ty::Ty;
 use std::iter;
 use std::ops::Deref;
 use syntax::ast::node_ext::named_field::FilterNamedFieldsByName;
 use syntax::ast::{FieldsOwner, HasStmts};
 use syntax::files::{InFile, InFileExt};
-use syntax::{ast, AstNode, IntoNodeOrToken};
+use syntax::{AstNode, IntoNodeOrToken, ast};
 
 pub struct TypeAstWalker<'a, 'db> {
     pub ctx: &'a mut InferenceCtx<'db>,
@@ -44,6 +44,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 }
             }
             ast::InferenceCtxOwner::SpecFun(spec_fun) => {
+                if let Some(spec_block_expr) = spec_fun.spec_block() {
+                    self.infer_block_expr(&spec_block_expr, Expected::NoValue);
+                }
+            }
+            ast::InferenceCtxOwner::SpecInlineFun(spec_fun) => {
                 if let Some(spec_block_expr) = spec_fun.spec_block() {
                     self.infer_block_expr(&spec_block_expr, Expected::NoValue);
                 }
@@ -300,6 +305,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::Expr::Literal(lit) => self.infer_literal(lit),
         };
 
+        let expr_ty = expr_ty.refine_for_specs(self.ctx.msl);
         self.ctx.expr_types.insert(expr.to_owned(), expr_ty.clone());
 
         expr_ty

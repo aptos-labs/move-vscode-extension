@@ -139,6 +139,28 @@ impl Ty {
         }
     }
 
+    pub fn refine_for_specs(self, msl: bool) -> Ty {
+        let mut ty = self;
+        if !msl {
+            return ty;
+        }
+        if matches!(ty, Ty::Reference(_)) {
+            ty = ty.unwrap_ty_refs();
+        }
+        if matches!(ty, Ty::Integer(_) | Ty::Infer(TyInfer::IntVar(_))) {
+            ty = Ty::Num;
+        }
+        ty
+    }
+
+    pub fn unwrap_ty_refs(self) -> Ty {
+        if let Ty::Reference(ty_ref) = self {
+            ty_ref.referenced().unwrap_ty_refs()
+        } else {
+            self
+        }
+    }
+
     pub fn render(&self, db: &dyn PackageRootDatabase) -> String {
         TypeRenderer::new(db).render(self)
     }

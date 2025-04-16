@@ -7,7 +7,7 @@ use syntax::ast::GenericElement;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 
-impl TyLowering<'_, '_> {
+impl TyLowering<'_> {
     pub fn type_args_substitution(
         &self,
         method_or_path: InFile<ast::MethodOrPath>,

@@ -21,7 +21,7 @@ pub(crate) fn add_method_or_field_completions(
     ctx: &CompletionContext<'_>,
     receiver_expr: InFile<ast::Expr>,
 ) -> Option<()> {
-    let inference = receiver_expr.inference(ctx.db)?;
+    let inference = receiver_expr.inference(ctx.db, false)?;
     let (_, receiver_expr) = receiver_expr.unpack();
 
     let receiver_ty = inference.get_expr_type(&receiver_expr)?;
@@ -55,7 +55,7 @@ fn add_field_completion_items(
         .to_ast::<ast::StructOrEnum>(ctx.db.upcast())?
         .unpack();
     let named_fields = adt_item.field_ref_lookup_fields();
-    let ty_lowering = TyLowering::new_no_inf(ctx.db);
+    let ty_lowering = TyLowering::new(ctx.db);
     for named_field in named_fields {
         let named_field = named_field.in_file(file_id);
         let mut completion_item = render_named_item(ctx, named_field.clone().in_file_into());
@@ -83,8 +83,8 @@ fn add_method_completion_items(
         let method = method_entry.cast_into::<ast::Fun>(hir_db)?;
 
         let subst = method.ty_vars_subst();
-        let callable_ty = TyLowering::new_no_inf(hir_db)
-            .lower_any_function(method.clone())
+        let callable_ty = TyLowering::new(hir_db)
+            .lower_any_function(method.clone().in_file_into())
             .substitute(&subst);
         let self_ty = callable_ty
             .param_types
@@ -93,7 +93,7 @@ fn add_method_completion_items(
         let coerced_receiver_ty =
             ty::reference::autoborrow(receiver_ty.clone(), self_ty).expect("should be compatible");
 
-        let mut inference_ctx = InferenceCtx::new(hir_db, method.file_id);
+        let mut inference_ctx = InferenceCtx::new(hir_db, method.file_id, false);
         let _ = inference_ctx.combine_types(self_ty.clone(), coerced_receiver_ty);
 
         let apply_subst = inference_ctx.fully_resolve_vars_fallback_to_origin(subst);

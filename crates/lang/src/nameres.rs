@@ -2,6 +2,7 @@ use crate::db::HirDatabase;
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt, VecExt};
 use syntax::ast;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::{FieldsOwner, ReferenceElement};
 use syntax::files::{InFile, InFileExt};
@@ -38,9 +39,9 @@ impl<T: ast::ReferenceElement> ResolveReference for InFile<T> {
             .syntax()
             .ancestor_or_self::<ast::Expr>()
             .and_then(|expr| expr.inference_ctx_owner().map(|it| it.in_file(*file_id)));
-
+        let msl = self.value.syntax().is_msl_context();
         if let Some(inference_ctx_owner) = opt_inference_ctx_owner {
-            let inference = db.inference_for_ctx_owner(inference_ctx_owner.loc());
+            let inference = db.inference_for_ctx_owner(inference_ctx_owner.loc(), msl);
 
             if let Some(method_or_path) = ref_element.cast_into::<ast::MethodOrPath>() {
                 let entry = inference.get_resolve_method_or_path(method_or_path.clone());

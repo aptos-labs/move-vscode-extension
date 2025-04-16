@@ -24,7 +24,7 @@ pub(crate) fn can_be_replaced_with_method_call(
     let self_param = fun.self_param()?;
     let self_param_type = self_param.type_()?;
 
-    let inference = ctx.sema.inference(&call_expr)?;
+    let inference = ctx.sema.inference(&call_expr, false)?;
 
     let first_arg_expr = call_expr.value.args().first()?.to_owned();
     let first_arg_ty = inference.get_expr_type(&first_arg_expr)?;
