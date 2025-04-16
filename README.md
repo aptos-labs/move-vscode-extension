@@ -13,9 +13,24 @@ Open any project with the `Move.toml` in the root. Disable other VSCode extensio
 
 ## Features
 
-### Syntax / semantic highlighting
+### Language support
 
-Highlights keywords, modules items, builtin types. 
+* syntax / semantic highlighting
+* go-to-definition
+* completion
+* lints and quickfixes
+```
+module 0x1::m {
+    struct S { val: u8 }
+    fun method(self: S, a: u8, b: u8): u8 {
+        self.val
+    }
+    fun main(s: S) {
+        method(s, 1, 2);
+      //^^^^^^^^^^^^^^^ weak: Can be replaced with method call
+    }
+}
+  ```
 
 ### Flycheck
 
@@ -24,11 +39,7 @@ Checks code in the editor after saving the document.
 To enable, specify in your `settings.json`: 
 ```json5
 {
-    "aptos-analyzer.aptos.cliPath": "/home/mkurnikov/bin/aptos"  // path to aptos-cli on your machine
+    "aptos-analyzer.aptos.cliPath": "/home/mkurnikov/bin/aptos", // path to aptos-cli on your machine
     "aptos-analyzer.aptos.checkOnSave": true,
 }
 ```
-
-### Go-to-definition / completions
-
-
