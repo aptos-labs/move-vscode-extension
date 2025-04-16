@@ -7,6 +7,7 @@ use crate::types::inference::inference_result::InferenceResult;
 use crate::types::ty::Ty;
 use base_db::{PackageRootDatabase, Upcast};
 use parser::SyntaxKind;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
@@ -15,7 +16,7 @@ use triomphe::Arc;
 #[ra_salsa::query_group(HirDatabaseStorage)]
 pub trait HirDatabase: PackageRootDatabase + Upcast<dyn PackageRootDatabase> {
     fn resolve_path(&self, path_loc: SyntaxLoc) -> Option<ScopeEntry>;
-    fn inference_for_ctx_owner(&self, ctx_owner_loc: SyntaxLoc) -> Arc<InferenceResult>;
+    fn inference_for_ctx_owner(&self, ctx_owner_loc: SyntaxLoc, msl: bool) -> Arc<InferenceResult>;
 }
 
 fn resolve_path(db: &dyn HirDatabase, ref_loc: SyntaxLoc) -> Option<ScopeEntry> {
@@ -24,27 +25,27 @@ fn resolve_path(db: &dyn HirDatabase, ref_loc: SyntaxLoc) -> Option<ScopeEntry> 
 }
 
 #[tracing::instrument(level = "debug", skip(db))]
-fn inference_for_ctx_owner(db: &dyn HirDatabase, ctx_owner_loc: SyntaxLoc) -> Arc<InferenceResult> {
+fn inference_for_ctx_owner(
+    db: &dyn HirDatabase,
+    ctx_owner_loc: SyntaxLoc,
+    msl: bool,
+) -> Arc<InferenceResult> {
     let InFile {
         file_id,
         value: ctx_owner,
     } = ctx_owner_loc
         .to_ast::<ast::InferenceCtxOwner>(db.upcast())
         .unwrap();
-    let mut ctx = InferenceCtx::new(db, file_id);
+    let mut ctx = InferenceCtx::new(db, file_id, msl);
 
-    let return_ty = match ctx_owner.syntax().kind() {
-        SyntaxKind::FUN => {
-            let fun = ctx_owner.clone().fun().unwrap();
-            let ret_ty = ctx.ty_lowering().lower_any_function(fun.in_file(file_id).in_file_into()).ret_type();
-            ret_ty
-        }
-        SyntaxKind::SPEC_FUN => {
-            let spec_fun = ctx_owner.clone().spec_fun().unwrap();
-            let ret_ty = ctx.ty_lowering().lower_any_function(spec_fun.in_file(file_id).into()).ret_type();
-            ret_ty
-        }
-        _ => Ty::Unknown,
+    let return_ty = if let Some(any_fun) = ctx_owner.syntax().clone().cast::<ast::AnyFun>() {
+        let ret_ty = ctx
+            .ty_lowering()
+            .lower_any_function(any_fun.in_file(file_id).in_file_into())
+            .ret_type();
+        ret_ty
+    } else {
+        Ty::Unknown
     };
 
     let mut type_walker = TypeAstWalker::new(&mut ctx, return_ty);
@@ -54,14 +55,14 @@ fn inference_for_ctx_owner(db: &dyn HirDatabase, ctx_owner_loc: SyntaxLoc) -> Ar
 }
 
 pub trait NodeInferenceExt {
-    fn inference(&self, db: &dyn HirDatabase) -> Option<Arc<InferenceResult>>;
+    fn inference(&self, db: &dyn HirDatabase, msl: bool) -> Option<Arc<InferenceResult>>;
 }
 
 impl<T: AstNode> NodeInferenceExt for InFile<T> {
-    fn inference(&self, db: &dyn HirDatabase) -> Option<Arc<InferenceResult>> {
+    fn inference(&self, db: &dyn HirDatabase, msl: bool) -> Option<Arc<InferenceResult>> {
         let (file_id, node) = self.unpack_ref();
         let inference_owner = node.syntax().ancestor_or_self::<ast::InferenceCtxOwner>()?;
-        let inference = db.inference_for_ctx_owner(inference_owner.in_file(file_id).loc());
+        let inference = db.inference_for_ctx_owner(inference_owner.in_file(file_id).loc(), msl);
         Some(inference)
     }
 }

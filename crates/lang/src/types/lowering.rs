@@ -3,7 +3,6 @@ mod type_args;
 use crate::db::HirDatabase;
 use crate::nameres::ResolveReference;
 use crate::nameres::scope::{ScopeEntry, ScopeEntryExt};
-use crate::types::inference::InferenceCtx;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
@@ -12,33 +11,16 @@ use crate::types::ty::reference::Mutability;
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::type_param::TyTypeParameter;
-use std::cell::RefCell;
 use syntax::ast;
 use syntax::files::{InFile, InFileExt};
 
-pub enum PathResolver<'ctx, 'db> {
-    Inference { ctx: RefCell<&'ctx mut InferenceCtx<'db>> },
-    Outer,
-}
-
-pub struct TyLowering<'ctx, 'db> {
+pub struct TyLowering<'db> {
     db: &'db dyn HirDatabase,
-    path_resolver: PathResolver<'ctx, 'db>,
 }
 
-impl<'ctx, 'db> TyLowering<'ctx, 'db> {
-    pub fn new(db: &'db dyn HirDatabase, _ctx: &'ctx mut InferenceCtx<'db>) -> Self {
-        TyLowering {
-            db,
-            path_resolver: PathResolver::Outer,
-            // path_resolver: PathResolver::Inference { ctx: RefCell::new(ctx) },
-        }
-    }
-    pub fn new_no_inf(db: &'db dyn HirDatabase) -> Self {
-        TyLowering {
-            db,
-            path_resolver: PathResolver::Outer,
-        }
+impl<'db> TyLowering<'db> {
+    pub fn new(db: &'db dyn HirDatabase) -> Self {
+        TyLowering { db }
     }
 
     pub fn lower_type(&self, type_: InFile<ast::Type>) -> Ty {
@@ -157,21 +139,17 @@ impl<'ctx, 'db> TyLowering<'ctx, 'db> {
 
     pub fn lower_any_function(&self, any_fun: InFile<ast::AnyFun>) -> TyCallable {
         let (file_id, any_fun) = any_fun.unpack();
-        match any_fun {
-            ast::AnyFun::Fun(fun) => {
-                let param_types = fun
-                    .params()
-                    .into_iter()
-                    .map(|it| {
-                        it.type_()
-                            .map(|t| self.lower_type(t.in_file(file_id)))
-                            .unwrap_or(Ty::Unknown)
-                    })
-                    .collect();
-                let ret_type = self.lower_ret_type(fun.ret_type().map(|t| t.in_file(file_id)));
-                TyCallable::new(param_types, ret_type, CallKind::Fun)
-            }
-        }
+        let param_types = any_fun
+            .params()
+            .into_iter()
+            .map(|it| {
+                it.type_()
+                    .map(|t| self.lower_type(t.in_file(file_id)))
+                    .unwrap_or(Ty::Unknown)
+            })
+            .collect();
+        let ret_type = self.lower_ret_type(any_fun.ret_type().map(|t| t.in_file(file_id)));
+        TyCallable::new(param_types, ret_type, CallKind::Fun)
     }
 
     fn lower_ret_type(&self, ret_type: Option<InFile<ast::RetType>>) -> Ty {
@@ -214,11 +192,12 @@ impl<'ctx, 'db> TyLowering<'ctx, 'db> {
 
     //noinspection ALL
     fn resolve_path(&self, path: InFile<ast::Path>) -> Option<ScopeEntry> {
-        match &self.path_resolver {
-            PathResolver::Inference { ctx } => {
-                ctx.borrow_mut().resolve_path_cached(path.value, None)?.to_entry()
-            }
-            PathResolver::Outer => path.resolve_no_inf(self.db),
-        }
+        path.resolve_no_inf(self.db)
+        // match &self.path_resolver {
+        //     PathResolver::Inference { ctx } => {
+        //         ctx.borrow_mut().resolve_path_cached(path.value, None)?.to_entry()
+        //     }
+        //     PathResolver::Outer => path.resolve_no_inf(self.db),
+        // }
     }
 }

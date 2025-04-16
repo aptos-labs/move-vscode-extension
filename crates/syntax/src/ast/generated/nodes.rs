@@ -1654,8 +1654,8 @@ pub enum InferenceCtxOwner {
     Fun(Fun),
     ItemSpec(ItemSpec),
     SpecFun(SpecFun),
+    SpecInlineFun(SpecInlineFun),
 }
-impl ast::HasAttrs for InferenceCtxOwner {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Item {
@@ -4280,6 +4280,30 @@ impl AnyFun {
             _ => None,
         }
     }
+    #[inline]
+    pub fn type_param_list(&self) -> Option<TypeParamList> {
+        match self {
+            AnyFun::Fun(it) => ast::GenericElement::type_param_list(it),
+            AnyFun::SpecFun(it) => ast::GenericElement::type_param_list(it),
+            AnyFun::SpecInlineFun(it) => ast::GenericElement::type_param_list(it),
+        }
+    }
+    #[inline]
+    pub fn param_list(&self) -> Option<ParamList> {
+        match self {
+            AnyFun::Fun(it) => it.param_list(),
+            AnyFun::SpecFun(it) => it.param_list(),
+            AnyFun::SpecInlineFun(it) => it.param_list(),
+        }
+    }
+    #[inline]
+    pub fn ret_type(&self) -> Option<RetType> {
+        match self {
+            AnyFun::Fun(it) => it.ret_type(),
+            AnyFun::SpecFun(it) => it.ret_type(),
+            AnyFun::SpecInlineFun(it) => it.ret_type(),
+        }
+    }
 }
 impl AstNode for AnyFun {
     #[inline]
@@ -4865,6 +4889,10 @@ impl From<SpecFun> for InferenceCtxOwner {
     #[inline]
     fn from(node: SpecFun) -> InferenceCtxOwner { InferenceCtxOwner::SpecFun(node) }
 }
+impl From<SpecInlineFun> for InferenceCtxOwner {
+    #[inline]
+    fn from(node: SpecInlineFun) -> InferenceCtxOwner { InferenceCtxOwner::SpecInlineFun(node) }
+}
 impl InferenceCtxOwner {
     pub fn fun(self) -> Option<Fun> {
         match (self) {
@@ -4884,23 +4912,25 @@ impl InferenceCtxOwner {
             _ => None,
         }
     }
-    #[inline]
-    pub fn param_list(&self) -> Option<ParamList> {
-        match self {
-            InferenceCtxOwner::Fun(it) => it.param_list(),
-            InferenceCtxOwner::SpecFun(it) => it.param_list(),
+    pub fn spec_inline_fun(self) -> Option<SpecInlineFun> {
+        match (self) {
+            InferenceCtxOwner::SpecInlineFun(item) => Some(item),
+            _ => None,
         }
     }
 }
 impl AstNode for InferenceCtxOwner {
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, FUN | ITEM_SPEC | SPEC_FUN) }
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(kind, FUN | ITEM_SPEC | SPEC_FUN | SPEC_INLINE_FUN)
+    }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
             FUN => InferenceCtxOwner::Fun(Fun { syntax }),
             ITEM_SPEC => InferenceCtxOwner::ItemSpec(ItemSpec { syntax }),
             SPEC_FUN => InferenceCtxOwner::SpecFun(SpecFun { syntax }),
+            SPEC_INLINE_FUN => InferenceCtxOwner::SpecInlineFun(SpecInlineFun { syntax }),
             _ => return None,
         };
         Some(res)
@@ -4911,6 +4941,7 @@ impl AstNode for InferenceCtxOwner {
             InferenceCtxOwner::Fun(it) => &it.syntax,
             InferenceCtxOwner::ItemSpec(it) => &it.syntax,
             InferenceCtxOwner::SpecFun(it) => &it.syntax,
+            InferenceCtxOwner::SpecInlineFun(it) => &it.syntax,
         }
     }
 }
@@ -5338,6 +5369,20 @@ impl StructOrEnum {
         match (self) {
             StructOrEnum::Struct(item) => Some(item),
             _ => None,
+        }
+    }
+    #[inline]
+    pub fn type_param_list(&self) -> Option<TypeParamList> {
+        match self {
+            StructOrEnum::Enum(it) => ast::GenericElement::type_param_list(it),
+            StructOrEnum::Struct(it) => ast::GenericElement::type_param_list(it),
+        }
+    }
+    #[inline]
+    pub fn ability_list(&self) -> Option<AbilityList> {
+        match self {
+            StructOrEnum::Enum(it) => it.ability_list(),
+            StructOrEnum::Struct(it) => it.ability_list(),
         }
     }
 }

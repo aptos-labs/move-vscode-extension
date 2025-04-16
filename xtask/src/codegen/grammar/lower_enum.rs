@@ -1,9 +1,10 @@
-use std::collections::HashSet;
-use std::env::var;
-use quote::{format_ident, quote};
-use ungrammar::{Grammar, Rule};
 use crate::codegen::grammar::ast_src::{Cardinality, Field};
 use crate::codegen::grammar::lower_rule;
+use quote::{format_ident, quote};
+use std::collections::HashSet;
+use std::env::var;
+use std::ops::Deref;
+use ungrammar::{Grammar, Rule};
 
 #[derive(Debug)]
 pub(crate) struct AstEnumSrc {
@@ -30,12 +31,19 @@ pub(super) fn lower_enum(grammar: &Grammar, node_name: &str, rule: &Rule) -> Opt
             Rule::Node(it) => {
                 let node_data = &grammar[*it];
                 let variant_name = node_data.name.clone();
-                // dbg!(&variant_name);
                 let mut variant_fields = vec![];
                 if let Rule::Seq(rules) = &node_data.rule {
                     for child_rule in rules {
-                        if let Rule::Node(child_node ) = child_rule {
-                            lower_rule(&mut variant_fields, grammar, None, child_rule, &[]);
+                        match child_rule {
+                            Rule::Opt(rule) => {
+                                if let Rule::Node(child_node) = rule.deref() {
+                                    lower_rule(&mut variant_fields, grammar, None, child_rule, &[]);
+                                }
+                            }
+                            Rule::Node(node) => {
+                                lower_rule(&mut variant_fields, grammar, None, child_rule, &[]);
+                            }
+                            _ => (),
                         }
                     }
                 }
@@ -73,12 +81,30 @@ pub(super) fn lower_enum(grammar: &Grammar, node_name: &str, rule: &Rule) -> Opt
     Some(enum_src)
 }
 
-pub(super) fn generate_field_method_for_enum(enum_src: &AstEnumSrc, field: &Field) -> proc_macro2::TokenStream {
+pub(super) fn generate_field_method_for_enum(
+    enum_src: &AstEnumSrc,
+    field: &Field,
+) -> proc_macro2::TokenStream {
     if field.method_name() == "name" {
         return quote! {};
     }
     let method_name = format_ident!("{}", field.method_name());
-    let variants = enum_src.variants.iter().map(|v| format_ident!("{}", v)).collect::<Vec<_>>();
+    let method_body = match field.method_name().as_str() {
+        "name" => {
+            quote! { ast::NamedElement::name(it) }
+        }
+        "type_param_list" => {
+            quote! { ast::GenericElement::type_param_list(it) }
+        }
+        _ => {
+            quote! { it.#method_name() }
+        }
+    };
+    let variants = enum_src
+        .variants
+        .iter()
+        .map(|v| format_ident!("{}", v))
+        .collect::<Vec<_>>();
     let ty = field.ty();
     let enum_name = format_ident!("{}", enum_src.name);
     match field {
@@ -98,12 +124,12 @@ pub(super) fn generate_field_method_for_enum(enum_src: &AstEnumSrc, field: &Fiel
                     #[inline]
                     pub fn #method_name(&self) -> Option<#ty> {
                         match self {
-                            #(#enum_name::#variants(it) => it.#method_name()),*
+                            #(#enum_name::#variants(it) => #method_body),*
                         }
                     }
                 }
             }
-            _ => quote! {}
+            _ => quote! {},
         },
         Field::Token { name, cardinality } => {
             let token: proc_macro2::TokenStream = name.parse().unwrap();
@@ -113,7 +139,7 @@ pub(super) fn generate_field_method_for_enum(enum_src: &AstEnumSrc, field: &Fiel
                     quote! {
                         #[inline]
                         pub fn #method_name(&self) -> Option<#ty> {
-                            #(#enum_name::#variants(it) => it.#method_name()),*
+                            #(#enum_name::#variants(it) => #method_body),*
                         }
                     }
                 }

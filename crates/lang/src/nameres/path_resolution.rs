@@ -104,7 +104,7 @@ pub fn get_method_resolve_variants(
     let function_entries = receiver_item_module
         .non_test_functions()
         .to_in_file_entries(file_id);
-    let ty_lowering = TyLowering::new_no_inf(db);
+    let ty_lowering = TyLowering::new(db);
     let mut method_entries = vec![];
     for function_entry in function_entries {
         let Some(InFile { file_id, value: f }) = function_entry.node_loc.to_ast::<ast::Fun>(db.upcast())
@@ -120,7 +120,7 @@ pub fn get_method_resolve_variants(
         };
         let self_param_with_ty_vars =
             self_param_ty.fold_ty_type_params(|ty_tp| Ty::new_ty_var_with_origin(ty_tp.origin_loc));
-        let mut inference_ctx = InferenceCtx::new(db, file_id);
+        let mut inference_ctx = InferenceCtx::new(db, file_id, false);
         if inference_ctx.is_tys_compatible_with_autoborrow(self_ty.clone(), self_param_with_ty_vars) {
             method_entries.push(function_entry);
         }
