@@ -2,11 +2,15 @@ SOURCE_FILE@0..418
   MODULE_SPEC@0..417
     SPEC_KW@0..4 "spec"
     WHITESPACE@4..5 " "
-    NAMED_ADDRESS@5..11
-      IDENT@5..11 "sender"
-    COLON_COLON@11..13 "::"
-    NAME@13..22
-      IDENT@13..22 "my_module"
+    PATH@5..22
+      PATH@5..11
+        PATH_SEGMENT@5..11
+          NAME_REF@5..11
+            IDENT@5..11 "sender"
+      COLON_COLON@11..13 "::"
+      PATH_SEGMENT@13..22
+        NAME_REF@13..22
+          IDENT@13..22 "my_module"
     WHITESPACE@22..23 " "
     L_CURLY@23..24 "{"
     WHITESPACE@24..29 "\n    "
