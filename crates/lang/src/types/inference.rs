@@ -121,8 +121,8 @@ impl<'db> InferenceCtx<'db> {
         let callable_ty = if let Some(named_item) = named_item {
             let item_kind = named_item.value.syntax().kind();
             match item_kind {
-                FUN => {
-                    let fun = named_item.cast_into::<ast::Fun>().unwrap();
+                FUN | SPEC_FUN | SPEC_INLINE_FUN => {
+                    let fun = named_item.cast_into::<ast::AnyFun>().unwrap();
                     self.instantiate_path_for_fun(path.into(), fun)
                 }
                 STRUCT | VARIANT => {
@@ -178,10 +178,9 @@ impl<'db> InferenceCtx<'db> {
 
         let ty_vars_subst = struct_or_enum.ty_vars_subst();
         let ctx_file_id = self.file_id;
-        let type_args_subst = self.ty_lowering().type_args_substitution(
-            path.in_file(ctx_file_id).in_file_into(),
-            struct_or_enum.in_file_into(),
-        );
+        let type_args_subst = self
+            .ty_lowering()
+            .type_args_substitution(path.in_file(ctx_file_id).map_into(), struct_or_enum.map_into());
 
         let tuple_ty =
             TyCallable::new(param_types, ret_type, CallKind::Fun).substitute(&type_args_subst);
@@ -192,12 +191,15 @@ impl<'db> InferenceCtx<'db> {
     pub fn instantiate_path_for_fun(
         &mut self,
         method_or_path: ast::MethodOrPath,
-        fun: InFile<ast::Fun>,
+        any_fun: InFile<ast::AnyFun>,
     ) -> TyCallable {
-        let ty = self.instantiate_path(method_or_path, fun.in_file_into());
+        let ty = self.instantiate_path(method_or_path, any_fun.map_into());
         match ty {
             Ty::Callable(ty_callable) => ty_callable,
-            _ => unreachable!("instantiate_path() returns TyCallable for FUN items"),
+            _ => unreachable!(
+                "instantiate_path_for_fun() should return Ty::Callable, but returned {:?}",
+                ty
+            ),
         }
     }
 
@@ -207,12 +209,11 @@ impl<'db> InferenceCtx<'db> {
         generic_item: InFile<ast::AnyGenericElement>,
     ) -> Ty {
         let ctx_file_id = self.file_id;
-        let mut path_ty = self.ty_lowering().lower_path(
-            method_or_path.in_file(ctx_file_id),
-            generic_item.clone().in_file_into(),
-        );
-
         let ty_vars_subst = generic_item.ty_vars_subst();
+
+        let mut path_ty = self
+            .ty_lowering()
+            .lower_path(method_or_path.in_file(ctx_file_id), generic_item.map_into());
         path_ty = path_ty.substitute(&ty_vars_subst);
 
         path_ty

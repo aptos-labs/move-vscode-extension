@@ -66,7 +66,7 @@ impl<T> InFile<T> {
         f(self.value).map(|value| InFile::new(self.file_id, value))
     }
 
-    pub fn in_file_into<U: From<T>>(self) -> InFile<U> {
+    pub fn map_into<U: From<T>>(self) -> InFile<U> {
         self.map(|it| it.into())
     }
 }

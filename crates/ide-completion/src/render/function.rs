@@ -12,19 +12,19 @@ use syntax::files::InFile;
 
 pub(crate) fn render_function(
     ctx: &CompletionContext<'_>,
-    function: InFile<ast::Fun>,
+    fun: InFile<ast::AnyFun>,
     kind: FunctionKind,
     apply_subst: Option<Substitution>,
 ) -> CompletionItemBuilder {
-    let mut completion_item = render_named_item(ctx, function.clone().in_file_into());
+    let mut completion_item = render_named_item(ctx, fun.clone().map_into());
 
     let ty_lowering = TyLowering::new(ctx.db);
-    let mut call_ty = ty_lowering.lower_any_function(function.clone().in_file_into());
+    let mut call_ty = ty_lowering.lower_any_function(fun.clone().map_into());
     if let Some(apply_subst) = apply_subst {
         call_ty = call_ty.substitute(&apply_subst);
     }
 
-    let (_, fun) = function.unpack();
+    let (_, fun) = fun.unpack();
 
     let function_name = fun.name().unwrap().as_string();
     completion_item.lookup_by(function_name.clone());
@@ -59,7 +59,7 @@ pub(crate) fn render_function(
 
 fn render_params(
     db: &dyn PackageRootDatabase,
-    fun: ast::Fun,
+    fun: ast::AnyFun,
     call_ty: TyCallable,
 ) -> Option<Vec<String>> {
     let params_with_types = fun

@@ -518,6 +518,40 @@ spec 0x1::Module {
 
 // language=Move
 #[test]
+fn test_resolve_module_in_spec() {
+    check_resolve(
+        r#"
+module 0x1::main {
+           //X
+}
+spec 0x1::main {
+         //^
+}
+"#,
+    )
+}
+
+// language=Move
+#[test]
+fn test_resolve_type_in_spec_global_function() {
+    check_resolve(
+        r#"
+module 0x1::main {
+    struct S has key { val: u8 }
+         //X
+}
+spec 0x1::main {
+    spec fun spec_now(): u8 {
+        global<S>(@0x1);
+             //^
+    }
+}
+"#,
+    )
+}
+
+// language=Move
+#[test]
 fn test_dot_field_for_fields_in_module() {
     check_resolve(
         r#"
@@ -528,9 +562,9 @@ module 0x1::main {
 spec 0x1::main {
     spec fun spec_now() {
         global<S>(@0x1).val;
-                       //^ 
+                       //^
     }
-} 
+}
 "#,
     )
 }

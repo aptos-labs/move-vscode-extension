@@ -41,7 +41,7 @@ fn inference_for_ctx_owner(
     let return_ty = if let Some(any_fun) = ctx_owner.syntax().clone().cast::<ast::AnyFun>() {
         let ret_ty = ctx
             .ty_lowering()
-            .lower_any_function(any_fun.in_file(file_id).in_file_into())
+            .lower_any_function(any_fun.in_file(file_id).map_into())
             .ret_type();
         ret_ty
     } else {

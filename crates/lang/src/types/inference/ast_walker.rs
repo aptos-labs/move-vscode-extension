@@ -58,6 +58,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     self.infer_block_expr(&spec_block_expr, Expected::NoValue);
                 }
             }
+            ast::InferenceCtxOwner::Schema(schema) => {
+                if let Some(spec_block_expr) = schema.spec_block() {
+                    self.infer_block_expr(&spec_block_expr, Expected::NoValue);
+                }
+            }
         }
 
         self.walk_lambda_expr_bodies();
@@ -337,8 +342,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             STRUCT | ENUM => {
                 // base for index expr
                 let path = path_expr.path().in_file(file_id);
-                let index_base_ty =
-                    ty_lowering.lower_path(path.in_file_into(), named_element.in_file_into());
+                let index_base_ty = ty_lowering.lower_path(path.map_into(), named_element.map_into());
                 Some(index_base_ty)
             }
             VARIANT => {
@@ -347,7 +351,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 let enum_path = path_expr.path().qualifier().unwrap_or(path_expr.path());
                 let variant_ty = self
                     .ctx
-                    .instantiate_path(enum_path.into(), variant.map(|it| it.enum_()).in_file_into())
+                    .instantiate_path(enum_path.into(), variant.map(|it| it.enum_()).map_into())
                     .into_ty_adt()?;
                 Some(Ty::Adt(variant_ty))
             }
@@ -421,7 +425,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let method_ty = match resolved_method {
             Some(method) => self
                 .ctx
-                .instantiate_path_for_fun(method_call_expr.to_owned().into(), method),
+                .instantiate_path_for_fun(method_call_expr.to_owned().into(), method.map_into()),
             None => {
                 // add 1 for `self` parameter
                 TyCallable::fake(1 + method_call_expr.args().len(), CallKind::Fun)
@@ -489,7 +493,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let struct_or_enum = fields_owner.struct_or_enum();
         let mut ty_adt = self
             .ctx
-            .instantiate_path(path.into(), struct_or_enum.in_file(item_file_id).in_file_into())
+            .instantiate_path(path.into(), struct_or_enum.in_file(item_file_id).map_into())
             .into_ty_adt()?;
         if let Some(Ty::Adt(expected_ty_adt)) = expected_ty {
             let expected_subst = expected_ty_adt.substitution;

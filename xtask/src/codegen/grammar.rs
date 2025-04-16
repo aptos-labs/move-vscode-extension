@@ -190,6 +190,20 @@ fn generate_nodes(kinds: KindsSrc, grammar: &AstSrc) -> String {
                 .map(|common_field| generate_field_method_for_enum(enum_src, common_field))
                 .collect::<Vec<_>>();
 
+            let trait_froms = enum_src.traits.iter().map(|t| {
+                let any_trait_name = format_ident!("Any{}", t);
+                quote! {
+                    impl From<#name> for #any_trait_name {
+                        #[inline]
+                        fn from(node: #name) -> #any_trait_name {
+                            match node {
+                                #(#name::#variants(it) => it.into()),*
+                            }
+                        }
+                    }
+                }
+            });
+
             let ast_node = quote! {
                 impl #name {
                     #(#converters)*
@@ -240,6 +254,7 @@ fn generate_nodes(kinds: KindsSrc, grammar: &AstSrc) -> String {
                             }
                         }
                     )*
+                    #(#trait_froms)*
                     #ast_node
                 },
             )
@@ -808,16 +823,16 @@ fn extract_struct_traits(ast: &mut AstSrc) {
 }
 
 fn extract_struct_trait(node: &mut AstNodeSrc, trait_name: &str, methods: &[&str]) {
-    let mut to_remove = Vec::new();
+    let mut methods_to_remove = Vec::new();
     for (i, field) in node.fields.iter().enumerate() {
         let method_name = field.method_name();
         if methods.iter().any(|&it| it == method_name) {
-            to_remove.push(i);
+            methods_to_remove.push(i);
         }
     }
-    if to_remove.len() == methods.len() {
+    if methods_to_remove.len() == methods.len() {
         node.traits.push(trait_name.to_owned());
-        node.remove_field(to_remove);
+        node.remove_field(methods_to_remove);
     }
 }
 

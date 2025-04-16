@@ -37,7 +37,7 @@ pub fn get_path_resolve_variants_with_expected_type(
                     .resolve_no_inf(db)
                     .and_then(|it| it.cast_into::<ast::Enum>(db));
                 if let Some(enum_item) = enum_item {
-                    expected_type = Some(Ty::new_ty_adt(enum_item.in_file_into()));
+                    expected_type = Some(Ty::new_ty_adt(enum_item.map_into()));
                 }
             }
             _ => (),

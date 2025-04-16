@@ -157,7 +157,7 @@ impl TypeAstWalker<'_, '_> {
                 .into_ty_adt()?
                 .adt_item(self.ctx.db)?
                 .cast_into::<ast::Struct>()
-                .map(|it| it.in_file_into());
+                .map(|it| it.map_into());
         }
         fields_owner
     }

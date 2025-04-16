@@ -7,7 +7,7 @@ use lang::nameres::path_kind::path_kind;
 use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variants};
 use lang::nameres::scope::ScopeEntryListExt;
 use std::cell::RefCell;
-use syntax::SyntaxKind::FUN;
+use syntax::SyntaxKind::*;
 use syntax::ast;
 use syntax::files::InFile;
 
@@ -35,19 +35,23 @@ pub(crate) fn add_path_completions(
 
     for entry in entries {
         let named_item = entry.cast_into::<ast::AnyNamedElement>(ctx.db.upcast())?;
-        if named_item.kind() == FUN {
-            acc.add(
-                render_function(
-                    ctx,
-                    named_item.cast_into::<ast::Fun>().unwrap(),
-                    FunctionKind::Fun,
-                    None,
-                )
-                .build(ctx.db),
-            );
-            continue;
+        match named_item.kind() {
+            FUN | SPEC_FUN | SPEC_INLINE_FUN => {
+                acc.add(
+                    render_function(
+                        ctx,
+                        named_item.cast_into::<ast::AnyFun>()?,
+                        FunctionKind::Fun,
+                        None,
+                    )
+                    .build(ctx.db),
+                );
+                continue;
+            }
+            _ => {
+                acc.add(render_named_item(ctx, named_item).build(ctx.db));
+            }
         }
-        acc.add(render_named_item(ctx, named_item).build(ctx.db));
     }
 
     Some(())

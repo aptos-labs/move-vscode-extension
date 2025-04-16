@@ -14,4 +14,12 @@ impl ast::AnyFun {
     pub fn return_type(&self) -> Option<ast::Type> {
         self.ret_type()?.type_()
     }
+
+    pub fn into_generic_element(self) -> ast::AnyGenericElement {
+        match self {
+            ast::AnyFun::Fun(it) => it.into(),
+            ast::AnyFun::SpecFun(it) => it.into(),
+            ast::AnyFun::SpecInlineFun(it) => it.into(),
+        }
+    }
 }
