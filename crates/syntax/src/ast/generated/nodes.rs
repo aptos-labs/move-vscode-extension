@@ -4139,6 +4139,13 @@ impl AnyField {
             _ => None,
         }
     }
+    #[inline]
+    pub fn type_(&self) -> Option<Type> {
+        match self {
+            AnyField::NamedField(it) => it.type_(),
+            AnyField::TupleField(it) => it.type_(),
+        }
+    }
 }
 impl AstNode for AnyField {
     #[inline]
@@ -4729,6 +4736,13 @@ impl InferenceCtxOwner {
         match (self) {
             InferenceCtxOwner::SpecFun(item) => Some(item),
             _ => None,
+        }
+    }
+    #[inline]
+    pub fn param_list(&self) -> Option<ParamList> {
+        match self {
+            InferenceCtxOwner::Fun(it) => it.param_list(),
+            InferenceCtxOwner::SpecFun(it) => it.param_list(),
         }
     }
 }

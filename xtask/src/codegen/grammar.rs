@@ -7,14 +7,16 @@
 
 pub(crate) mod any_node_def;
 mod ast_src;
+mod lower_enum;
 
 use crate::codegen::grammar::any_node_def::{
     extract_any_node_def, find_node_defs_with_trait, generate_any_node_def,
 };
 use crate::codegen::grammar::ast_src::{
-    AstEnumSrc, AstNodeSrc, AstSrc, Cardinality, Field, KINDS_SRC, KindsSrc, NON_METHOD_TRAITS, TRAITS,
+    AstNodeSrc, AstSrc, Cardinality, Field, KINDS_SRC, KindsSrc, NON_METHOD_TRAITS, TRAITS,
     get_required_fields,
 };
+use crate::codegen::grammar::lower_enum::{generate_field_method_for_enum, lower_enum};
 use crate::codegen::{add_preamble, ensure_file_contents, reformat};
 use check_keyword::CheckKeyword;
 use itertools::{Either, Itertools};
@@ -148,19 +150,19 @@ fn generate_nodes(kinds: KindsSrc, grammar: &AstSrc) -> String {
     let (enum_defs, enum_boilerplate_impls): (Vec<_>, Vec<_>) = grammar
         .enums
         .iter()
-        .map(|en| {
-            let variants: Vec<_> = en
+        .map(|enum_src| {
+            let variants: Vec<_> = enum_src
                 .variants
                 .iter()
                 .map(|var| format_ident!("{}", var))
                 .sorted()
                 .collect();
-            let name = format_ident!("{}", en.name);
+            let name = format_ident!("{}", enum_src.name);
             let kinds: Vec<_> = variants
                 .iter()
                 .map(|name| format_ident!("{}", to_upper_snake_case(&name.to_string())))
                 .collect();
-            let traits = en.traits.iter().sorted().map(|trait_name| {
+            let traits = enum_src.traits.iter().sorted().map(|trait_name| {
                 let trait_name = format_ident!("{}", trait_name);
                 quote!(impl ast::#trait_name for #name {})
             });
@@ -182,9 +184,16 @@ fn generate_nodes(kinds: KindsSrc, grammar: &AstSrc) -> String {
                 }
             });
 
+            let common_fields = enum_src
+                .common_fields
+                .iter()
+                .map(|common_field| generate_field_method_for_enum(enum_src, common_field))
+                .collect::<Vec<_>>();
+
             let ast_node = quote! {
                 impl #name {
                     #(#converters)*
+                    #(#common_fields)*
                 }
                 impl AstNode for #name {
                     #[inline]
@@ -548,26 +557,20 @@ fn lower(grammar: &Grammar) -> AstSrc {
     let nodes = grammar.iter().collect::<Vec<_>>();
 
     for &node in &nodes {
-        let name = grammar[node].name.clone();
+        let node_name = grammar[node].name.clone();
         let rule = &grammar[node].rule;
-        let _g = panic_context::enter(name.clone());
-        match lower_enum(grammar, name.as_str(), rule) {
-            Some(variants) => {
-                let enum_src = AstEnumSrc {
-                    doc: Vec::new(),
-                    name,
-                    traits: Vec::new(),
-                    variants,
-                };
+        let _g = panic_context::enter(node_name.clone());
+        match lower_enum(grammar, node_name.as_str(), rule) {
+            Some(enum_src) => {
                 res.enums.push(enum_src);
             }
             None => {
                 let mut fields = Vec::new();
-                let required_fields = get_required_fields(name.as_str());
+                let required_fields = get_required_fields(node_name.as_str());
                 lower_rule(&mut fields, grammar, None, rule, required_fields);
                 res.nodes.push(AstNodeSrc {
                     doc: Vec::new(),
-                    name,
+                    name: node_name,
                     traits: Vec::new(),
                     fields,
                 });
@@ -594,26 +597,6 @@ fn lower(grammar: &Grammar) -> AstSrc {
         it.variants.sort();
     });
     res
-}
-
-fn lower_enum(grammar: &Grammar, node_name: &str, rule: &Rule) -> Option<Vec<String>> {
-    // exclude FieldRef as it should be a struct
-    if node_name == "FieldRef" {
-        return None;
-    }
-    let alternatives = match rule {
-        Rule::Alt(it) => it,
-        _ => return None,
-    };
-    let mut variants = Vec::new();
-    for alternative in alternatives {
-        match alternative {
-            Rule::Node(it) => variants.push(grammar[*it].name.clone()),
-            Rule::Token(it) if grammar[*it].name == ";" => (),
-            _ => return None,
-        }
-    }
-    Some(variants)
 }
 
 fn lower_rule(

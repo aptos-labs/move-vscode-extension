@@ -1,5 +1,7 @@
 //! Defines input for code generation process.
 
+use crate::codegen::grammar::lower_enum::AstEnumSrc;
+
 pub(crate) struct KindsSrc<'a> {
     pub(crate) punct: &'a [(&'a str, &'a str)],
     pub(crate) keywords: &'a [&'a str],
@@ -398,12 +400,4 @@ pub(crate) enum Cardinality {
     Required,
     Optional,
     Many,
-}
-
-#[derive(Debug)]
-pub(crate) struct AstEnumSrc {
-    pub(crate) doc: Vec<String>,
-    pub(crate) name: String,
-    pub(crate) traits: Vec<String>,
-    pub(crate) variants: Vec<String>,
 }
