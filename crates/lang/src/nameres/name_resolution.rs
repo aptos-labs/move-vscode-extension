@@ -14,8 +14,9 @@ use std::collections::HashMap;
 use std::fmt::Formatter;
 use std::ops::Deref;
 use std::{fmt, iter};
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::{HasItems, ReferenceElement};
-use syntax::files::{InFile, InFileVecExt};
+use syntax::files::{InFile, InFileExt, InFileVecExt};
 use syntax::{AstNode, SyntaxNode, ast};
 
 pub struct ResolveScope {
@@ -33,7 +34,7 @@ impl fmt::Debug for ResolveScope {
 }
 
 pub fn get_resolve_scopes(
-    _db: &dyn HirDatabase,
+    db: &dyn HirDatabase,
     start_at: InFile<impl ReferenceElement>,
 ) -> Vec<ResolveScope> {
     let mut scopes = vec![];
@@ -48,32 +49,53 @@ pub fn get_resolve_scopes(
         });
 
         if scope.kind() == SyntaxKind::MODULE {
-            let module = ast::Module::cast(scope.clone()).unwrap();
-            for module_item_spec in module.module_item_specs() {
-                if let Some(module_item_spec_block) = module_item_spec.spec_block() {
-                    let scope = module_item_spec_block.syntax().to_owned();
-                    scopes.push(ResolveScope {
-                        scope: InFile::new(file_id, scope),
-                        prev: prev.clone(),
-                    })
-                }
-            }
+            let module = ast::Module::cast(scope.clone()).unwrap().in_file(file_id);
+            scopes.extend(module_inner_spec_scopes(module, prev));
+            break;
             // todo: all `spec MODULE {}` specs
         }
 
         if scope.kind() == MODULE_SPEC {
-            // todo: resolve to module item, then add it as a next scope
+            let module_spec = scope.clone().cast::<ast::ModuleSpec>().unwrap();
+            if let Some(path) = module_spec.path() {
+                let module = path
+                    .reference()
+                    .in_file(file_id)
+                    .resolve_no_inf(db)
+                    .and_then(|it| it.cast_into::<ast::Module>(db));
+                if let Some(module) = module {
+                    let prev = Some(module_spec.syntax().clone());
+                    scopes.push(ResolveScope {
+                        scope: module.clone().map(|it| it.syntax().clone()),
+                        prev: prev.clone(),
+                    });
+                    scopes.extend(module_inner_spec_scopes(module, prev.clone()));
+                }
+            }
+            break;
         }
 
         let parent_scope = scope.parent();
         prev = Some(scope);
-        // skip StmtList to be able to use came_from in let stmts shadowing
-        // if scope.kind() != STMT_LIST {
-        // }
         opt_scope = parent_scope;
     }
 
     scopes
+}
+
+fn module_inner_spec_scopes(module: InFile<ast::Module>, prev: Option<SyntaxNode>) -> Vec<ResolveScope> {
+    let (file_id, module) = module.unpack();
+    let mut inner_scopes = vec![];
+    for module_item_spec in module.module_item_specs() {
+        if let Some(module_item_spec_block) = module_item_spec.spec_block() {
+            let scope = module_item_spec_block.syntax().to_owned();
+            inner_scopes.push(ResolveScope {
+                scope: InFile::new(file_id, scope),
+                prev: prev.clone(),
+            })
+        }
+    }
+    inner_scopes
 }
 
 pub fn get_entries_from_walking_scopes(

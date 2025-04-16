@@ -37,9 +37,7 @@ impl<'db> TyLowering<'db> {
                     Some(named_item_entry) => named_item_entry
                         .node_loc
                         .to_ast::<ast::AnyNamedElement>(self.db.upcast())
-                        .map(|named_item| {
-                            self.lower_path(path.in_file_into(), named_item.in_file_into())
-                        })
+                        .map(|named_item| self.lower_path(path.map_into(), named_item.map_into()))
                         .unwrap_or(Ty::Unknown),
                 }
             }
@@ -91,9 +89,9 @@ impl<'db> TyLowering<'db> {
                 let item = named_item.clone().cast_into::<ast::StructOrEnum>().unwrap();
                 Ty::Adt(TyAdt::new(item))
             }
-            FUN => {
-                let fun = named_item.clone().cast_into::<ast::Fun>().unwrap();
-                let ty_callable = self.lower_any_function(fun.in_file_into());
+            FUN | SPEC_FUN | SPEC_INLINE_FUN => {
+                let fun = named_item.clone().cast_into::<ast::AnyFun>().unwrap();
+                let ty_callable = self.lower_any_function(fun);
                 Ty::Callable(ty_callable)
             }
             VARIANT => {
@@ -107,7 +105,7 @@ impl<'db> TyLowering<'db> {
                 else {
                     return Ty::Unknown;
                 };
-                self.lower_path(enum_path.in_file(file_id).in_file_into(), enum_.in_file_into())
+                self.lower_path(enum_path.in_file(file_id).map_into(), enum_.map_into())
             }
             _ => Ty::Unknown,
         };

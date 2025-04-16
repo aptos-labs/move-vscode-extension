@@ -58,7 +58,7 @@ fn add_field_completion_items(
     let ty_lowering = TyLowering::new(ctx.db);
     for named_field in named_fields {
         let named_field = named_field.in_file(file_id);
-        let mut completion_item = render_named_item(ctx, named_field.clone().in_file_into());
+        let mut completion_item = render_named_item(ctx, named_field.clone().map_into());
 
         if let Some(field_ty) = ty_lowering.lower_named_field(named_field) {
             let field_detail = field_ty.substitute(&ty_adt.substitution).render(ctx.db.upcast());
@@ -84,7 +84,7 @@ fn add_method_completion_items(
 
         let subst = method.ty_vars_subst();
         let callable_ty = TyLowering::new(hir_db)
-            .lower_any_function(method.clone().in_file_into())
+            .lower_any_function(method.clone().map_into())
             .substitute(&subst);
         let self_ty = callable_ty
             .param_types
@@ -97,7 +97,10 @@ fn add_method_completion_items(
         let _ = inference_ctx.combine_types(self_ty.clone(), coerced_receiver_ty);
 
         let apply_subst = inference_ctx.fully_resolve_vars_fallback_to_origin(subst);
-        acc.add(render_function(ctx, method, FunctionKind::Method, Some(apply_subst)).build(ctx.db));
+        acc.add(
+            render_function(ctx, method.map_into(), FunctionKind::Method, Some(apply_subst))
+                .build(ctx.db),
+        );
     }
 
     Some(())

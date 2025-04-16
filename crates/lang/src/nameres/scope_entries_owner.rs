@@ -43,6 +43,7 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
             entries.extend(module.value.enum_variants().to_in_file_entries(file_id));
 
             entries.extend(builtin_functions(db.upcast()).to_entries());
+            entries.extend(builtin_spec_functions(db.upcast()).to_entries());
         }
         MODULE_SPEC => {
             let (module_spec_file_id, module_spec) =
@@ -57,15 +58,14 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
                     .spec_inline_functions()
                     .to_in_file_entries(module_spec_file_id),
             );
-
             entries.extend(builtin_spec_functions(db.upcast()).to_entries());
         }
         SCRIPT => {
             let script = scope.syntax_cast::<ast::Script>().unwrap();
             entries.extend(script.value.consts().to_in_file_entries(file_id));
         }
-        FUN => {
-            let fun = scope.syntax_cast::<ast::Fun>().unwrap();
+        FUN | SPEC_FUN | SPEC_INLINE_FUN => {
+            let fun = scope.syntax_cast::<ast::AnyFun>().unwrap();
             entries.extend(fun.value.params_as_bindings().to_in_file_entries(file_id));
         }
         LAMBDA_EXPR => {

@@ -41,7 +41,7 @@ Item =
     | ItemSpec
 
 InferenceCtxOwner =
-    Fun | SpecFun | SpecInlineFun | ItemSpec
+    Fun | SpecFun | SpecInlineFun | ItemSpec | Schema
 
 IdentPatKind =
     LetStmt | Param | SchemaField

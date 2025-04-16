@@ -1653,6 +1653,7 @@ pub enum IdentPatKind {
 pub enum InferenceCtxOwner {
     Fun(Fun),
     ItemSpec(ItemSpec),
+    Schema(Schema),
     SpecFun(SpecFun),
     SpecInlineFun(SpecInlineFun),
 }
@@ -4208,6 +4209,15 @@ impl From<TupleField> for AnyField {
     #[inline]
     fn from(node: TupleField) -> AnyField { AnyField::TupleField(node) }
 }
+impl From<AnyField> for AnyHasAttrs {
+    #[inline]
+    fn from(node: AnyField) -> AnyHasAttrs {
+        match node {
+            AnyField::NamedField(it) => it.into(),
+            AnyField::TupleField(it) => it.into(),
+        }
+    }
+}
 impl AnyField {
     pub fn named_field(self) -> Option<NamedField> {
         match (self) {
@@ -4260,6 +4270,46 @@ impl From<SpecFun> for AnyFun {
 impl From<SpecInlineFun> for AnyFun {
     #[inline]
     fn from(node: SpecInlineFun) -> AnyFun { AnyFun::SpecInlineFun(node) }
+}
+impl From<AnyFun> for AnyGenericElement {
+    #[inline]
+    fn from(node: AnyFun) -> AnyGenericElement {
+        match node {
+            AnyFun::Fun(it) => it.into(),
+            AnyFun::SpecFun(it) => it.into(),
+            AnyFun::SpecInlineFun(it) => it.into(),
+        }
+    }
+}
+impl From<AnyFun> for AnyHasVisibility {
+    #[inline]
+    fn from(node: AnyFun) -> AnyHasVisibility {
+        match node {
+            AnyFun::Fun(it) => it.into(),
+            AnyFun::SpecFun(it) => it.into(),
+            AnyFun::SpecInlineFun(it) => it.into(),
+        }
+    }
+}
+impl From<AnyFun> for AnyHoverDocsOwner {
+    #[inline]
+    fn from(node: AnyFun) -> AnyHoverDocsOwner {
+        match node {
+            AnyFun::Fun(it) => it.into(),
+            AnyFun::SpecFun(it) => it.into(),
+            AnyFun::SpecInlineFun(it) => it.into(),
+        }
+    }
+}
+impl From<AnyFun> for AnyNamedElement {
+    #[inline]
+    fn from(node: AnyFun) -> AnyNamedElement {
+        match node {
+            AnyFun::Fun(it) => it.into(),
+            AnyFun::SpecFun(it) => it.into(),
+            AnyFun::SpecInlineFun(it) => it.into(),
+        }
+    }
 }
 impl AnyFun {
     pub fn fun(self) -> Option<Fun> {
@@ -4885,6 +4935,10 @@ impl From<ItemSpec> for InferenceCtxOwner {
     #[inline]
     fn from(node: ItemSpec) -> InferenceCtxOwner { InferenceCtxOwner::ItemSpec(node) }
 }
+impl From<Schema> for InferenceCtxOwner {
+    #[inline]
+    fn from(node: Schema) -> InferenceCtxOwner { InferenceCtxOwner::Schema(node) }
+}
 impl From<SpecFun> for InferenceCtxOwner {
     #[inline]
     fn from(node: SpecFun) -> InferenceCtxOwner { InferenceCtxOwner::SpecFun(node) }
@@ -4906,6 +4960,12 @@ impl InferenceCtxOwner {
             _ => None,
         }
     }
+    pub fn schema(self) -> Option<Schema> {
+        match (self) {
+            InferenceCtxOwner::Schema(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn spec_fun(self) -> Option<SpecFun> {
         match (self) {
             InferenceCtxOwner::SpecFun(item) => Some(item),
@@ -4922,13 +4982,14 @@ impl InferenceCtxOwner {
 impl AstNode for InferenceCtxOwner {
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(kind, FUN | ITEM_SPEC | SPEC_FUN | SPEC_INLINE_FUN)
+        matches!(kind, FUN | ITEM_SPEC | SCHEMA | SPEC_FUN | SPEC_INLINE_FUN)
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
             FUN => InferenceCtxOwner::Fun(Fun { syntax }),
             ITEM_SPEC => InferenceCtxOwner::ItemSpec(ItemSpec { syntax }),
+            SCHEMA => InferenceCtxOwner::Schema(Schema { syntax }),
             SPEC_FUN => InferenceCtxOwner::SpecFun(SpecFun { syntax }),
             SPEC_INLINE_FUN => InferenceCtxOwner::SpecInlineFun(SpecInlineFun { syntax }),
             _ => return None,
@@ -4940,6 +5001,7 @@ impl AstNode for InferenceCtxOwner {
         match self {
             InferenceCtxOwner::Fun(it) => &it.syntax,
             InferenceCtxOwner::ItemSpec(it) => &it.syntax,
+            InferenceCtxOwner::Schema(it) => &it.syntax,
             InferenceCtxOwner::SpecFun(it) => &it.syntax,
             InferenceCtxOwner::SpecInlineFun(it) => &it.syntax,
         }
@@ -5071,6 +5133,15 @@ impl From<MethodCallExpr> for MethodOrPath {
 impl From<Path> for MethodOrPath {
     #[inline]
     fn from(node: Path) -> MethodOrPath { MethodOrPath::Path(node) }
+}
+impl From<MethodOrPath> for AnyReferenceElement {
+    #[inline]
+    fn from(node: MethodOrPath) -> AnyReferenceElement {
+        match node {
+            MethodOrPath::MethodCallExpr(it) => it.into(),
+            MethodOrPath::Path(it) => it.into(),
+        }
+    }
 }
 impl MethodOrPath {
     pub fn method_call_expr(self) -> Option<MethodCallExpr> {
@@ -5357,6 +5428,51 @@ impl From<Enum> for StructOrEnum {
 impl From<Struct> for StructOrEnum {
     #[inline]
     fn from(node: Struct) -> StructOrEnum { StructOrEnum::Struct(node) }
+}
+impl From<StructOrEnum> for AnyGenericElement {
+    #[inline]
+    fn from(node: StructOrEnum) -> AnyGenericElement {
+        match node {
+            StructOrEnum::Enum(it) => it.into(),
+            StructOrEnum::Struct(it) => it.into(),
+        }
+    }
+}
+impl From<StructOrEnum> for AnyHasAttrs {
+    #[inline]
+    fn from(node: StructOrEnum) -> AnyHasAttrs {
+        match node {
+            StructOrEnum::Enum(it) => it.into(),
+            StructOrEnum::Struct(it) => it.into(),
+        }
+    }
+}
+impl From<StructOrEnum> for AnyHasVisibility {
+    #[inline]
+    fn from(node: StructOrEnum) -> AnyHasVisibility {
+        match node {
+            StructOrEnum::Enum(it) => it.into(),
+            StructOrEnum::Struct(it) => it.into(),
+        }
+    }
+}
+impl From<StructOrEnum> for AnyHoverDocsOwner {
+    #[inline]
+    fn from(node: StructOrEnum) -> AnyHoverDocsOwner {
+        match node {
+            StructOrEnum::Enum(it) => it.into(),
+            StructOrEnum::Struct(it) => it.into(),
+        }
+    }
+}
+impl From<StructOrEnum> for AnyNamedElement {
+    #[inline]
+    fn from(node: StructOrEnum) -> AnyNamedElement {
+        match node {
+            StructOrEnum::Enum(it) => it.into(),
+            StructOrEnum::Struct(it) => it.into(),
+        }
+    }
 }
 impl StructOrEnum {
     pub fn enum_(self) -> Option<Enum> {
