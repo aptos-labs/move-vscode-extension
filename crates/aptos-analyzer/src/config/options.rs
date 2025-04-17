@@ -30,7 +30,7 @@ config_data! {
         aptos_cliPath: Option<Utf8PathBuf>                         = None,
 
         /// Whether to show native aptos-analyzer diagnostics.
-        diagnostics_enable: bool                = false,
+        diagnostics_enable: bool                = true,
     }
 }
 
