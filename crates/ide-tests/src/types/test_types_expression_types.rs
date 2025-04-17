@@ -1528,8 +1528,8 @@ fn test_nested_struct_literal_inferred_type() {
     check_expr_type(
         r#"
 module 0x1::main {
-    struct V<T> { val: T }
-    struct S<T> { val: V<T> }
+    struct V<VT> { val: VT }
+    struct S<ST> { val: V<ST> }
     fun main() {
         let s = S { val: V { val: 1u64 }};
         s;

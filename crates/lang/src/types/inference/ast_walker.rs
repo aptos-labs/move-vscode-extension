@@ -318,6 +318,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 .unwrap_or(Ty::Unknown),
 
             ast::Expr::Literal(lit) => self.infer_literal(lit),
+
+            ast::Expr::ForallExpr(it) => self.infer_quant_expr(&it.clone().into()).unwrap_or(Ty::Bool),
+            ast::Expr::ExistsExpr(it) => self.infer_quant_expr(&it.clone().into()).unwrap_or(Ty::Bool),
+            ast::Expr::ChooseExpr(it) => self.infer_quant_expr(&it.clone().into()).unwrap_or(Ty::Bool),
         };
 
         let expr_ty = expr_ty.refine_for_specs(self.ctx.msl);
@@ -537,9 +541,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                         .lower_named_field(it.to_owned().in_file(item_file_id))
                 })
                 .unwrap_or(Ty::Unknown);
+            let field_ty = declared_field_ty.substitute(&ty_adt.substitution);
 
             if let Some(lit_field_expr) = lit_field.expr() {
-                self.infer_expr_coerceable_to(&lit_field_expr, declared_field_ty);
+                self.infer_expr_coerceable_to(&lit_field_expr, field_ty);
             } else {
                 let binding = get_entries_from_walking_scopes(
                     self.ctx.db,
@@ -553,7 +558,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     .and_then(|it| self.ctx.get_binding_type(it.value))
                     .unwrap_or(Ty::Unknown);
                 self.ctx
-                    .coerce_types(lit_field.node_or_token(), binding_ty, declared_field_ty);
+                    .coerce_types(lit_field.node_or_token(), binding_ty, field_ty);
             }
         }
 

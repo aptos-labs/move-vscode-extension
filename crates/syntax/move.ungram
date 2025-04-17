@@ -227,6 +227,7 @@ Expr =
     | BreakExpr | ContinueExpr | ReturnExpr
     | CastExpr
     | MatchExpr
+    | ForallExpr | ExistsExpr | ChooseExpr
 
 ForExpr =
     'for' ForCondition loop_body_expr:(BlockExpr | InlineExpr)
@@ -457,3 +458,24 @@ SpecPredicatePropertyList =
 
 SpecPredicateProperty =
     'ident' '=' Literal
+
+QuantExpr =
+    ForallExpr | ExistsExpr | ChooseExpr
+
+ForallExpr =
+    'forall' QuantBindingList WhereExpr? ':' Expr
+
+ExistsExpr =
+    'exists' QuantBindingList WhereExpr? ':' Expr
+
+ChooseExpr =
+    'choose' 'min'? QuantBindingList WhereExpr?
+
+QuantBindingList =
+    bindings:(QuantBinding (',' QuantBinding)* ','?)?
+
+QuantBinding =
+    IdentPat ('in' Expr) | (':' Type)
+
+WhereExpr =
+    'where' Expr

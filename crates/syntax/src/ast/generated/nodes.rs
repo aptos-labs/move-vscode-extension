@@ -241,6 +241,21 @@ impl CastExpr {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ChooseExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ChooseExpr {
+    #[inline]
+    pub fn quant_binding_list(&self) -> Option<QuantBindingList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn where_expr(&self) -> Option<WhereExpr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn choose_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![choose]) }
+    #[inline]
+    pub fn min_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![min]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Condition {
     pub(crate) syntax: SyntaxNode,
 }
@@ -334,6 +349,23 @@ impl Enum {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ExistsExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ExistsExpr {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn quant_binding_list(&self) -> Option<QuantBindingList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn where_expr(&self) -> Option<WhereExpr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
+    #[inline]
+    pub fn exists_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![exists]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ExprStmt {
     pub(crate) syntax: SyntaxNode,
 }
@@ -383,6 +415,23 @@ impl ForExpr {
     pub fn for_condition(&self) -> Option<ForCondition> { support::child(&self.syntax) }
     #[inline]
     pub fn for_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![for]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ForallExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ForallExpr {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn quant_binding_list(&self) -> Option<QuantBindingList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn where_expr(&self) -> Option<WhereExpr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
+    #[inline]
+    pub fn forall_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![forall]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -947,6 +996,32 @@ impl PathType {
     pub fn path(&self) -> Path {
         support::child(&self.syntax).expect("PathType.path required by the parser")
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct QuantBinding {
+    pub(crate) syntax: SyntaxNode,
+}
+impl QuantBinding {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn ident_pat(&self) -> Option<IdentPat> { support::child(&self.syntax) }
+    #[inline]
+    pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
+    #[inline]
+    pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
+    #[inline]
+    pub fn in_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![in]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct QuantBindingList {
+    pub(crate) syntax: SyntaxNode,
+}
+impl QuantBindingList {
+    #[inline]
+    pub fn bindings(&self) -> AstChildren<QuantBinding> { support::children(&self.syntax) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1551,6 +1626,17 @@ impl VisibilityModifier {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct WhereExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl WhereExpr {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn where_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![where]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct WhileExpr {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1612,10 +1698,13 @@ pub enum Expr {
     BreakExpr(BreakExpr),
     CallExpr(CallExpr),
     CastExpr(CastExpr),
+    ChooseExpr(ChooseExpr),
     ContinueExpr(ContinueExpr),
     DerefExpr(DerefExpr),
     DotExpr(DotExpr),
+    ExistsExpr(ExistsExpr),
     ForExpr(ForExpr),
+    ForallExpr(ForallExpr),
     IfExpr(IfExpr),
     IndexExpr(IndexExpr),
     IsExpr(IsExpr),
@@ -1691,6 +1780,13 @@ pub enum Pat {
     TuplePat(TuplePat),
     TupleStructPat(TupleStructPat),
     WildcardPat(WildcardPat),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum QuantExpr {
+    ChooseExpr(ChooseExpr),
+    ExistsExpr(ExistsExpr),
+    ForallExpr(ForallExpr),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -2184,6 +2280,27 @@ impl AstNode for CastExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for ChooseExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        CHOOSE_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == CHOOSE_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for Condition {
     #[inline]
     fn kind() -> SyntaxKind
@@ -2310,6 +2427,27 @@ impl AstNode for Enum {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for ExistsExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        EXISTS_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == EXISTS_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for ExprStmt {
     #[inline]
     fn kind() -> SyntaxKind
@@ -2383,6 +2521,27 @@ impl AstNode for ForExpr {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == FOR_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for ForallExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        FORALL_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == FORALL_EXPR }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -3223,6 +3382,48 @@ impl AstNode for PathType {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == PATH_TYPE }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for QuantBinding {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        QUANT_BINDING
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == QUANT_BINDING }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for QuantBindingList {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        QUANT_BINDING_LIST
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == QUANT_BINDING_LIST }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -4116,6 +4317,27 @@ impl AstNode for VisibilityModifier {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for WhereExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        WHERE_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == WHERE_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for WhileExpr {
     #[inline]
     fn kind() -> SyntaxKind
@@ -4454,6 +4676,10 @@ impl From<CastExpr> for Expr {
     #[inline]
     fn from(node: CastExpr) -> Expr { Expr::CastExpr(node) }
 }
+impl From<ChooseExpr> for Expr {
+    #[inline]
+    fn from(node: ChooseExpr) -> Expr { Expr::ChooseExpr(node) }
+}
 impl From<ContinueExpr> for Expr {
     #[inline]
     fn from(node: ContinueExpr) -> Expr { Expr::ContinueExpr(node) }
@@ -4466,9 +4692,17 @@ impl From<DotExpr> for Expr {
     #[inline]
     fn from(node: DotExpr) -> Expr { Expr::DotExpr(node) }
 }
+impl From<ExistsExpr> for Expr {
+    #[inline]
+    fn from(node: ExistsExpr) -> Expr { Expr::ExistsExpr(node) }
+}
 impl From<ForExpr> for Expr {
     #[inline]
     fn from(node: ForExpr) -> Expr { Expr::ForExpr(node) }
+}
+impl From<ForallExpr> for Expr {
+    #[inline]
+    fn from(node: ForallExpr) -> Expr { Expr::ForallExpr(node) }
 }
 impl From<IfExpr> for Expr {
     #[inline]
@@ -4593,6 +4827,12 @@ impl Expr {
             _ => None,
         }
     }
+    pub fn choose_expr(self) -> Option<ChooseExpr> {
+        match (self) {
+            Expr::ChooseExpr(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn continue_expr(self) -> Option<ContinueExpr> {
         match (self) {
             Expr::ContinueExpr(item) => Some(item),
@@ -4611,9 +4851,21 @@ impl Expr {
             _ => None,
         }
     }
+    pub fn exists_expr(self) -> Option<ExistsExpr> {
+        match (self) {
+            Expr::ExistsExpr(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn for_expr(self) -> Option<ForExpr> {
         match (self) {
             Expr::ForExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn forall_expr(self) -> Option<ForallExpr> {
+        match (self) {
+            Expr::ForallExpr(item) => Some(item),
             _ => None,
         }
     }
@@ -4734,10 +4986,13 @@ impl AstNode for Expr {
                 | BREAK_EXPR
                 | CALL_EXPR
                 | CAST_EXPR
+                | CHOOSE_EXPR
                 | CONTINUE_EXPR
                 | DEREF_EXPR
                 | DOT_EXPR
+                | EXISTS_EXPR
                 | FOR_EXPR
+                | FORALL_EXPR
                 | IF_EXPR
                 | INDEX_EXPR
                 | IS_EXPR
@@ -4769,10 +5024,13 @@ impl AstNode for Expr {
             BREAK_EXPR => Expr::BreakExpr(BreakExpr { syntax }),
             CALL_EXPR => Expr::CallExpr(CallExpr { syntax }),
             CAST_EXPR => Expr::CastExpr(CastExpr { syntax }),
+            CHOOSE_EXPR => Expr::ChooseExpr(ChooseExpr { syntax }),
             CONTINUE_EXPR => Expr::ContinueExpr(ContinueExpr { syntax }),
             DEREF_EXPR => Expr::DerefExpr(DerefExpr { syntax }),
             DOT_EXPR => Expr::DotExpr(DotExpr { syntax }),
+            EXISTS_EXPR => Expr::ExistsExpr(ExistsExpr { syntax }),
             FOR_EXPR => Expr::ForExpr(ForExpr { syntax }),
+            FORALL_EXPR => Expr::ForallExpr(ForallExpr { syntax }),
             IF_EXPR => Expr::IfExpr(IfExpr { syntax }),
             INDEX_EXPR => Expr::IndexExpr(IndexExpr { syntax }),
             IS_EXPR => Expr::IsExpr(IsExpr { syntax }),
@@ -4806,10 +5064,13 @@ impl AstNode for Expr {
             Expr::BreakExpr(it) => &it.syntax,
             Expr::CallExpr(it) => &it.syntax,
             Expr::CastExpr(it) => &it.syntax,
+            Expr::ChooseExpr(it) => &it.syntax,
             Expr::ContinueExpr(it) => &it.syntax,
             Expr::DerefExpr(it) => &it.syntax,
             Expr::DotExpr(it) => &it.syntax,
+            Expr::ExistsExpr(it) => &it.syntax,
             Expr::ForExpr(it) => &it.syntax,
+            Expr::ForallExpr(it) => &it.syntax,
             Expr::IfExpr(it) => &it.syntax,
             Expr::IndexExpr(it) => &it.syntax,
             Expr::IsExpr(it) => &it.syntax,
@@ -5322,6 +5583,76 @@ impl AstNode for Pat {
             Pat::TuplePat(it) => &it.syntax,
             Pat::TupleStructPat(it) => &it.syntax,
             Pat::WildcardPat(it) => &it.syntax,
+        }
+    }
+}
+impl From<ChooseExpr> for QuantExpr {
+    #[inline]
+    fn from(node: ChooseExpr) -> QuantExpr { QuantExpr::ChooseExpr(node) }
+}
+impl From<ExistsExpr> for QuantExpr {
+    #[inline]
+    fn from(node: ExistsExpr) -> QuantExpr { QuantExpr::ExistsExpr(node) }
+}
+impl From<ForallExpr> for QuantExpr {
+    #[inline]
+    fn from(node: ForallExpr) -> QuantExpr { QuantExpr::ForallExpr(node) }
+}
+impl QuantExpr {
+    pub fn choose_expr(self) -> Option<ChooseExpr> {
+        match (self) {
+            QuantExpr::ChooseExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn exists_expr(self) -> Option<ExistsExpr> {
+        match (self) {
+            QuantExpr::ExistsExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn forall_expr(self) -> Option<ForallExpr> {
+        match (self) {
+            QuantExpr::ForallExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn quant_binding_list(&self) -> Option<QuantBindingList> {
+        match self {
+            QuantExpr::ChooseExpr(it) => it.quant_binding_list(),
+            QuantExpr::ExistsExpr(it) => it.quant_binding_list(),
+            QuantExpr::ForallExpr(it) => it.quant_binding_list(),
+        }
+    }
+    #[inline]
+    pub fn where_expr(&self) -> Option<WhereExpr> {
+        match self {
+            QuantExpr::ChooseExpr(it) => it.where_expr(),
+            QuantExpr::ExistsExpr(it) => it.where_expr(),
+            QuantExpr::ForallExpr(it) => it.where_expr(),
+        }
+    }
+}
+impl AstNode for QuantExpr {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, CHOOSE_EXPR | EXISTS_EXPR | FORALL_EXPR) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            CHOOSE_EXPR => QuantExpr::ChooseExpr(ChooseExpr { syntax }),
+            EXISTS_EXPR => QuantExpr::ExistsExpr(ExistsExpr { syntax }),
+            FORALL_EXPR => QuantExpr::ForallExpr(ForallExpr { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            QuantExpr::ChooseExpr(it) => &it.syntax,
+            QuantExpr::ExistsExpr(it) => &it.syntax,
+            QuantExpr::ForallExpr(it) => &it.syntax,
         }
     }
 }
@@ -6373,6 +6704,11 @@ impl std::fmt::Display for Pat {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for QuantExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for Stmt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -6478,6 +6814,11 @@ impl std::fmt::Display for CastExpr {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for ChooseExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for Condition {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -6508,6 +6849,11 @@ impl std::fmt::Display for Enum {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for ExistsExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for ExprStmt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -6524,6 +6870,11 @@ impl std::fmt::Display for ForCondition {
     }
 }
 impl std::fmt::Display for ForExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for ForallExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -6724,6 +7075,16 @@ impl std::fmt::Display for PathSegment {
     }
 }
 impl std::fmt::Display for PathType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for QuantBinding {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for QuantBindingList {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -6934,6 +7295,11 @@ impl std::fmt::Display for VectorLitExpr {
     }
 }
 impl std::fmt::Display for VisibilityModifier {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for WhereExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
