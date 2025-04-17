@@ -209,11 +209,12 @@ impl<'db> InferenceCtx<'db> {
         generic_item: InFile<ast::AnyGenericElement>,
     ) -> Ty {
         let ctx_file_id = self.file_id;
-        let ty_vars_subst = generic_item.ty_vars_subst();
 
         let mut path_ty = self
             .ty_lowering()
-            .lower_path(method_or_path.in_file(ctx_file_id), generic_item.map_into());
+            .lower_path(method_or_path.in_file(ctx_file_id), generic_item.clone().map_into());
+
+        let ty_vars_subst = generic_item.ty_vars_subst();
         path_ty = path_ty.substitute(&ty_vars_subst);
 
         path_ty

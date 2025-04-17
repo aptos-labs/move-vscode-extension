@@ -272,6 +272,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
 pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     // ("ExprStmt", &["expr"]), - invalid
     // ("LambdaParam", &["ident_pat"]), - can be wildcard_pat or invalid pat
+    // ("QuantBinding", &["ident_pat"]),
     ("LambdaTypeParam", &["type"]),
     ("CallExpr", &["path"]),
     ("CastExpr", &["expr"]),
