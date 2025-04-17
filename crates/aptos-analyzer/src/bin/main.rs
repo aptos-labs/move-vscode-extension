@@ -181,6 +181,7 @@ fn run_server() -> anyhow::Result<()> {
         })
         .filter(|workspaces| !workspaces.is_empty())
         .unwrap_or_else(|| vec![root_path.clone()]);
+    tracing::info!(?workspace_roots);
 
     let mut config = Config::new(root_path, capabilities, workspace_roots);
     if let Some(json) = initialization_options {

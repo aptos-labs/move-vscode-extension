@@ -24,7 +24,7 @@ pub struct Config {
     /// Projects that have a Move.toml in a
     /// parent directory, so we can discover them by walking the
     /// file system.
-    discovered_projects_from_filesystem: Vec<ManifestPath>,
+    discovered_manifests_from_filesystem: Vec<ManifestPath>,
 
     /// The workspace roots as registered by the LSP client
     workspace_roots: Vec<AbsPathBuf>,
@@ -49,7 +49,7 @@ impl fmt::Debug for Config {
         f.debug_struct("Config")
             .field(
                 "discovered_projects_from_filesystem",
-                &self.discovered_projects_from_filesystem,
+                &self.discovered_manifests_from_filesystem,
             )
             // .field("discovered_projects_from_command", &self.discovered_projects_from_command)
             .field("workspace_roots", &self.workspace_roots)
@@ -123,29 +123,21 @@ impl Config {
 
         Config {
             caps: ClientCapabilities::new(caps),
-            discovered_projects_from_filesystem: Vec::new(),
+            discovered_manifests_from_filesystem: Vec::new(),
             root_path,
-            // snippets: Default::default(),
             workspace_roots,
-            // client_info: client_info.map(|it| ClientInfo {
-            //     name: it.name,
-            //     version: it.version.as_deref().map(Version::parse).and_then(Result::ok),
-            // }),
             client_config: (FullConfigInput::default(), ConfigErrors(vec![])),
             default_config: DEFAULT_CONFIG_DATA.get_or_init(|| Box::leak(Box::default())),
-            // source_root_parent_map: Arc::new(FxHashMap::default()),
-            // user_config: None,
-            // validation_errors: Default::default(),
         }
     }
 
     pub fn rediscover_workspaces(&mut self) {
-        let discovered = ManifestPath::discover_all(&self.workspace_roots);
-        tracing::info!("discovered project manifests: {:?}", discovered);
-        if discovered.is_empty() {
+        let discovered_manifests = ManifestPath::discover_all(&self.workspace_roots);
+        tracing::info!("discovered manifests: {:?}", discovered_manifests);
+        if discovered_manifests.is_empty() {
             tracing::error!("failed to find any manifests in {:?}", &self.workspace_roots);
         }
-        self.discovered_projects_from_filesystem = discovered;
+        self.discovered_manifests_from_filesystem = discovered_manifests;
     }
 
     pub fn remove_workspace(&mut self, path: &AbsPath) {
@@ -273,7 +265,7 @@ impl Config {
         // let exclude_dirs = vec![];
 
         let mut manifests = vec![];
-        for manifest_from_fs in &self.discovered_projects_from_filesystem {
+        for manifest_from_fs in &self.discovered_manifests_from_filesystem {
             // if exclude_dirs.iter().any(|p| manifest_path.starts_with(p)) {
             //     continue;
             // }

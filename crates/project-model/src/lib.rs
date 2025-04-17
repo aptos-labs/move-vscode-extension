@@ -21,72 +21,53 @@ impl ManifestPath {
         bail!("project root must point to a Cargo.toml file: {file}");
     }
 
-    pub fn discover_single(path: &AbsPath) -> anyhow::Result<ManifestPath> {
-        let mut candidates = ManifestPath::discover(path)?;
-        let res = match candidates.pop() {
-            None => bail!("no projects"),
-            Some(it) => it,
-        };
+    // pub fn discover_single(path: &AbsPath) -> anyhow::Result<ManifestPath> {
+    //     let mut candidates = ManifestPath::discover(path)?;
+    //     let res = match candidates.pop() {
+    //         None => bail!("no projects"),
+    //         Some(it) => it,
+    //     };
+    //
+    //     if !candidates.is_empty() {
+    //         bail!("more than one project");
+    //     }
+    //     Ok(res)
+    // }
 
-        if !candidates.is_empty() {
-            bail!("more than one project");
+    pub fn discover(ws_root: &AbsPath) -> io::Result<Vec<ManifestPath>> {
+        let mut manifests = vec![];
+        let root_manifest = ws_root.join("Move.toml");
+        if fs::exists(&root_manifest)? {
+            manifests.push(ManifestPath { file: root_manifest });
         }
-        Ok(res)
+        manifests.extend(Self::find_manifests_in_child_directories(read_dir(ws_root)?));
+        Ok(manifests)
     }
 
-    pub fn discover(path: &AbsPath) -> io::Result<Vec<ManifestPath>> {
-        return match find_in_parent_dirs(path, "Move.toml") {
-            Some(it) => Ok(vec![it]),
-            None => Ok(find_move_toml_in_child_dir(read_dir(path)?)),
-        };
-
-        fn find_in_parent_dirs(path: &AbsPath, target_file_name: &str) -> Option<ManifestPath> {
-            if path.file_name().unwrap_or_default() == target_file_name {
-                if let Ok(manifest) = ManifestPath::try_from(path.to_path_buf()) {
-                    return Some(manifest);
-                }
-            }
-
-            let mut curr = Some(path);
-
-            while let Some(path) = curr {
-                let candidate = path.join(target_file_name);
-                if fs::exists(&candidate).is_ok() {
-                    if let Ok(manifest) = ManifestPath::try_from(candidate) {
-                        return Some(manifest);
-                    }
-                }
-                curr = path.parent();
-            }
-
-            None
-        }
-
-        fn find_move_toml_in_child_dir(entities: ReadDir) -> Vec<ManifestPath> {
-            // Only one level down to avoid cycles the easy way and stop a runaway scan with large projects
-            entities
-                .filter_map(Result::ok)
-                .map(|it| it.path().join("Move.toml"))
-                .filter(|it| it.exists())
-                .map(Utf8PathBuf::from_path_buf)
-                .filter_map(Result::ok)
-                .map(AbsPathBuf::try_from)
-                .filter_map(Result::ok)
-                .filter_map(|it| it.try_into().ok())
-                .collect()
-        }
+    fn find_manifests_in_child_directories(entities: ReadDir) -> Vec<ManifestPath> {
+        // Only one level down to avoid cycles the easy way and stop a runaway scan with large projects
+        entities
+            .filter_map(Result::ok)
+            .map(|it| it.path().join("Move.toml"))
+            .filter(|it| it.exists())
+            .map(Utf8PathBuf::from_path_buf)
+            .filter_map(Result::ok)
+            .map(AbsPathBuf::try_from)
+            .filter_map(Result::ok)
+            .filter_map(|it| it.try_into().ok())
+            .collect()
     }
 
-    pub fn discover_all(paths: &[AbsPathBuf]) -> Vec<ManifestPath> {
-        let mut res = paths
+    pub fn discover_all(ws_roots: &[AbsPathBuf]) -> Vec<ManifestPath> {
+        let mut manifests = ws_roots
             .iter()
-            .filter_map(|it| ManifestPath::discover(it.as_ref()).ok())
+            .filter_map(|ws_root| ManifestPath::discover(ws_root.as_ref()).ok())
             .flatten()
             .collect::<FxHashSet<_>>()
             .into_iter()
             .collect::<Vec<_>>();
-        res.sort();
-        res
+        manifests.sort();
+        manifests
     }
 }
 
