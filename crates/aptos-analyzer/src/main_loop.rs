@@ -8,7 +8,7 @@ use crate::handlers::dispatch::{NotificationDispatcher, RequestDispatcher};
 use crate::handlers::request;
 use crate::lsp::from_proto;
 use crate::lsp::utils::{Progress, notification_is};
-use crate::reload::ProjectWorkspaceProgress;
+use crate::reload::FetchWorkspacesProgress;
 use crate::{flycheck, lsp_ext};
 use base_db::PackageRootDatabase;
 use crossbeam_channel::Receiver;
@@ -112,7 +112,7 @@ pub(crate) enum Task {
     Response(lsp_server::Response),
     Retry(lsp_server::Request),
     Diagnostics(DiagnosticsTaskKind),
-    FetchWorkspace(ProjectWorkspaceProgress),
+    FetchWorkspace(FetchWorkspacesProgress),
 }
 
 impl GlobalState {
@@ -122,17 +122,11 @@ impl GlobalState {
         self.fetch_workspaces_queue.request_op(
             "startup".to_owned(),
             FetchWorkspaceRequest {
-                path: None,
                 force_reload_deps: false,
             },
         );
-        if let Some((
-            cause,
-            FetchWorkspaceRequest {
-                path: _,
-                force_reload_deps,
-            },
-        )) = self.fetch_workspaces_queue.should_start_op()
+        if let Some((cause, FetchWorkspaceRequest { force_reload_deps })) =
+            self.fetch_workspaces_queue.should_start_op()
         {
             self.fetch_workspaces(cause, force_reload_deps);
         }
@@ -270,7 +264,7 @@ impl GlobalState {
                 became_quiescent || state_changed || memdocs_added_or_removed;
             if project_or_mem_docs_changed
                 && !self.config.text_document_diagnostic()
-                && self.config.publish_diagnostics(/*None*/)
+                && self.config.publish_diagnostics()
             {
                 self.update_diagnostics();
             }
@@ -296,7 +290,6 @@ impl GlobalState {
             if let Some((
                 cause,
                 FetchWorkspaceRequest {
-                    path: _,
                     force_reload_deps: force_crate_graph_reload,
                 },
             )) = self.fetch_workspaces_queue.should_start_op()
@@ -436,9 +429,9 @@ impl GlobalState {
             }
             Task::FetchWorkspace(progress) => {
                 let (state, msg) = match progress {
-                    ProjectWorkspaceProgress::Begin => (Progress::Begin, None),
-                    ProjectWorkspaceProgress::Report(msg) => (Progress::Report, Some(msg)),
-                    ProjectWorkspaceProgress::End(workspaces, force_reload_deps) => {
+                    FetchWorkspacesProgress::Begin => (Progress::Begin, None),
+                    FetchWorkspacesProgress::Report(msg) => (Progress::Report, Some(msg)),
+                    FetchWorkspacesProgress::End(workspaces, force_reload_deps) => {
                         let resp = FetchWorkspaceResponse {
                             workspaces,
                             force_reload_deps,
@@ -570,7 +563,7 @@ impl GlobalState {
                     }
                 };
 
-                let flycheck_config = self.config.flycheck().unwrap();
+                let flycheck_config = self.config.flycheck_config().unwrap();
 
                 // When we're running multiple flychecks, we have to include a disambiguator in
                 // the title, or the editor complains. Note that this is a user-facing string.

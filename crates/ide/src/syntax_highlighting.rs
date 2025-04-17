@@ -6,7 +6,6 @@ pub mod tags;
 use crate::syntax_highlighting::highlights::Highlights;
 use ide_db::RootDatabase;
 use lang::Semantics;
-use stdx::itertools::Either;
 use syntax::SyntaxKind::WHITESPACE;
 use syntax::{AstNode, NodeOrToken, SyntaxNode, TextRange, WalkEvent, ast, match_ast};
 use vfs::FileId;

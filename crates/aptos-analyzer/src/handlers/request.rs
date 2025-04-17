@@ -12,11 +12,7 @@ use lsp_types::{
 use syntax::files::FileRange;
 
 pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
-    // state.proc_macro_clients = Arc::from_iter([]);
-    // state.build_deps_changed = false;
-
     let req = FetchWorkspaceRequest {
-        path: None,
         force_reload_deps: false,
     };
     state

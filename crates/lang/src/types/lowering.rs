@@ -2,7 +2,7 @@ mod type_args;
 
 use crate::db::HirDatabase;
 use crate::nameres::ResolveReference;
-use crate::nameres::scope::{ScopeEntry, ScopeEntryExt};
+use crate::nameres::scope::ScopeEntry;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;

@@ -254,7 +254,7 @@ impl Config {
         }
     }
 
-    pub(crate) fn flycheck(&self /*source_root: Option<SourceRootId>*/) -> Option<FlycheckConfig> {
+    pub(crate) fn flycheck_config(&self) -> Option<FlycheckConfig> {
         self.aptos_cli_path()
             .map(|cli_path| FlycheckConfig::new(cli_path, "compile".to_string()))
     }
@@ -267,57 +267,34 @@ impl Config {
         self.aptos_cliPath().clone()
     }
 
-    fn discovered_projects(&self) -> Vec<ManifestOrProjectJson> {
+    pub fn discovered_manifests(&self) -> Vec<DiscoveredManifest> {
         // let exclude_dirs: Vec<_> =
         //     self.files_excludeDirs().iter().map(|p| self.root_path.join(p)).collect();
         // let exclude_dirs = vec![];
 
-        let mut projects = vec![];
-        for fs_proj in &self.discovered_projects_from_filesystem {
-            let manifest_path = fs_proj;
+        let mut manifests = vec![];
+        for manifest_from_fs in &self.discovered_projects_from_filesystem {
             // if exclude_dirs.iter().any(|p| manifest_path.starts_with(p)) {
             //     continue;
             // }
-
-            let buf: Utf8PathBuf = manifest_path.to_path_buf().into();
-            projects.push(ManifestOrProjectJson::Manifest(buf));
+            let buf: Utf8PathBuf = manifest_from_fs.to_path_buf().into();
+            manifests.push(buf);
         }
 
-        // for dis_proj in &self.discovered_projects_from_command {
-        //     projects.push(ManifestOrProjectJson::DiscoveredProjectJson {
-        //         data: dis_proj.data.clone(),
-        //         buildfile: dis_proj.buildfile.clone(),
-        //     });
-        // }
-
-        projects
-    }
-
-    pub fn linked_or_discovered_projects(&self) -> Vec<LinkedProject> {
-        let projects = self.discovered_projects();
-        projects
+        manifests
             .iter()
-            .filter_map(|linked_project| match linked_project {
-                ManifestOrProjectJson::Manifest(it) => {
-                    let path = self.root_path.join(it);
-                    ManifestPath::from_manifest_file(path)
-                        .map_err(|e| tracing::error!("failed to load linked project: {}", e))
-                        .ok()
-                        .map(|manifest| LinkedProject::ProjectManifest(manifest))
-                } // ManifestOrProjectJson::DiscoveredProjectJson { data, buildfile } => {
-                  //     let root_path = buildfile.parent().expect("Unable to get parent of buildfile");
-                  //
-                  //     Some(ProjectJson::new(None, root_path, data.clone()).into())
-                  // }
-                  // ManifestOrProjectJson::ProjectJson(it) => {
-                  //     Some(ProjectJson::new(None, &self.root_path, it.clone()).into())
-                  // }
+            .filter_map(|manifest_buf| {
+                let path = self.root_path.join(manifest_buf);
+                ManifestPath::from_manifest_file(path)
+                    .map_err(|e| tracing::error!("failed to load linked project: {}", e))
+                    .ok()
+                    .map(|manifest| DiscoveredManifest { path: manifest })
             })
             .collect()
     }
 
-    pub fn publish_diagnostics(&self /*source_root: Option<SourceRootId>*/) -> bool {
-        self.diagnostics_enable(/*source_root*/).to_owned()
+    pub fn publish_diagnostics(&self) -> bool {
+        self.diagnostics_enable().to_owned()
     }
 
     pub fn snippet_text_edit(&self) -> bool {
@@ -362,27 +339,14 @@ impl Config {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum LinkedProject {
-    ProjectManifest(ManifestPath),
+pub struct DiscoveredManifest {
+    pub path: ManifestPath,
 }
 
-impl From<ManifestPath> for LinkedProject {
+impl From<ManifestPath> for DiscoveredManifest {
     fn from(v: ManifestPath) -> Self {
-        LinkedProject::ProjectManifest(v)
+        DiscoveredManifest { path: v }
     }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
-#[serde(untagged)]
-enum ManifestOrProjectJson {
-    Manifest(Utf8PathBuf),
-    // ProjectJson(ProjectJsonData),
-    // DiscoveredProjectJson {
-    //     data: ProjectJsonData,
-    //     #[serde(serialize_with = "serialize_abs_pathbuf")]
-    //     #[serde(deserialize_with = "deserialize_abs_pathbuf")]
-    //     buildfile: AbsPathBuf,
-    // },
 }
 
 #[derive(Debug, Clone)]

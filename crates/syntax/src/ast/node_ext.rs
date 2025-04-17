@@ -29,6 +29,7 @@ pub mod named_field;
 mod param;
 mod pat;
 pub mod path;
+mod quant_expr;
 mod range_expr;
 mod ref_type;
 mod schema;
@@ -42,7 +43,6 @@ pub mod syntax_node;
 pub mod type_;
 mod vector_lit_expr;
 pub mod visibility;
-mod quant_expr;
 
 use crate::token_text::TokenText;
 use crate::{ast, AstNode, AstToken, SyntaxNode};

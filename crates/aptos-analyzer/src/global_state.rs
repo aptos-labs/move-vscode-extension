@@ -19,7 +19,6 @@ use nohash_hasher::IntMap;
 use parking_lot::{
     MappedRwLockReadGuard, RwLock, RwLockReadGuard, RwLockUpgradableReadGuard, RwLockWriteGuard,
 };
-use paths::AbsPathBuf;
 use project_model::aptos_workspace::AptosWorkspace;
 use std::time::Instant;
 use tracing::Level;
@@ -27,7 +26,6 @@ use triomphe::Arc;
 use vfs::{AnchoredPathBuf, FileId, VfsPath};
 
 pub(crate) struct FetchWorkspaceRequest {
-    pub(crate) path: Option<AbsPathBuf>,
     pub(crate) force_reload_deps: bool,
 }
 
@@ -167,7 +165,6 @@ impl GlobalState {
             wants_to_switch: None,
 
             workspaces: Arc::from(Vec::new()),
-            // crate_graph_file_dependencies: FxHashSet::default(),
             fetch_workspaces_queue: OpQueue::default(),
         };
         // Apply any required database inputs from the config.
@@ -178,7 +175,7 @@ impl GlobalState {
     pub(crate) fn process_file_changes(&mut self) -> bool {
         let _p = tracing::span!(Level::INFO, "GlobalState::process_changes").entered();
 
-        let (change, workspace_structure_change) = {
+        let (change, refresh_workspaces) = {
             let mut change = FileChange::new();
 
             let mut vfs_lock = self.vfs.write();
@@ -191,23 +188,17 @@ impl GlobalState {
             let vfs_lock = RwLockWriteGuard::downgrade_to_upgradable(vfs_lock);
             let vfs: &vfs::Vfs = &vfs_lock.0;
 
-            let mut workspace_structure_change = None;
-            // A file was added or deleted
-            let mut has_structure_changes = false;
+            let mut refresh_workspaces = false;
             let mut bytes = vec![];
 
             for changed_file in changed_files.into_values() {
                 let changed_file_vfs_path = vfs.file_path(changed_file.file_id);
 
                 if let Some(changed_file_path) = changed_file_vfs_path.as_path() {
-                    has_structure_changes |= changed_file.is_created_or_deleted();
-
-                    let changed_file_path = changed_file_path.to_path_buf();
-                    if changed_file.is_created_or_deleted() {
-                        workspace_structure_change.get_or_insert(changed_file_path);
-                    } else if reload::should_refresh_for_file_change(&changed_file_path) {
+                    refresh_workspaces |= changed_file.is_created_or_deleted();
+                    if reload::should_refresh_for_file_change(&changed_file_path) {
                         tracing::trace!(?changed_file_path, kind = ?changed_file.kind(), "refreshing for a change");
-                        workspace_structure_change.get_or_insert(changed_file_path.clone());
+                        refresh_workspaces |= true;
                     }
                 }
 
@@ -242,25 +233,23 @@ impl GlobalState {
                 };
                 change.change_file(file_id, text);
             });
-            if has_structure_changes {
+            if refresh_workspaces {
                 let roots = self.package_root_config.partition_into_roots(vfs);
                 change.set_package_roots(roots);
             }
-            (change, workspace_structure_change)
+            (change, refresh_workspaces)
         };
 
         let _p = tracing::span!(Level::INFO, "GlobalState::process_changes/apply_change").entered();
         self.analysis_host.apply_change(change);
 
         {
-            if let Some(workspace_path) = workspace_structure_change {
+            if refresh_workspaces {
                 let _p = tracing::span!(Level::INFO, "GlobalState::process_changes/ws_structure_change")
                     .entered();
-
                 self.fetch_workspaces_queue.request_op(
-                    format!("workspace vfs file change: {workspace_path}"),
+                    "workspace vfs file change".to_string(),
                     FetchWorkspaceRequest {
-                        path: Some(workspace_path.to_owned()),
                         force_reload_deps: true,
                     },
                 );

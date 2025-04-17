@@ -54,7 +54,7 @@ pub(crate) fn map_aptos_diagnostic_to_lsp(
             code_description: None,
             source: snap
                 .config
-                .flycheck()
+                .flycheck_config()
                 .map(|it| format!("aptos move {}", it.command())),
             message,
             related_information: None,

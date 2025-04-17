@@ -1,4 +1,4 @@
-use crate::config::{FilesWatcher, LinkedProject};
+use crate::config::FilesWatcher;
 use crate::flycheck::FlycheckHandle;
 use crate::global_state::{FetchWorkspaceRequest, FetchWorkspaceResponse, GlobalState};
 use crate::main_loop::Task;
@@ -14,10 +14,10 @@ use stdx::format_to;
 use stdx::itertools::Itertools;
 use stdx::thread::ThreadIntent;
 use triomphe::Arc;
-use vfs::AbsPath;
+use vfs::{AbsPath, Vfs};
 
 #[derive(Debug)]
-pub(crate) enum ProjectWorkspaceProgress {
+pub(crate) enum FetchWorkspacesProgress {
     Begin,
     Report(String),
     End(Vec<anyhow::Result<AptosWorkspace>>, bool),
@@ -47,14 +47,13 @@ impl GlobalState {
         let _p = tracing::info_span!("GlobalState::update_configuration").entered();
         let old_config = mem::replace(&mut self.config, Arc::new(config));
 
-        if self.config.linked_or_discovered_projects() != old_config.linked_or_discovered_projects() {
+        if self.config.discovered_manifests() != old_config.discovered_manifests() {
             let req = FetchWorkspaceRequest {
-                path: None,
                 force_reload_deps: false,
             };
             self.fetch_workspaces_queue
                 .request_op("discovered projects changed".to_owned(), req)
-        } else if self.config.flycheck(/*None*/) != old_config.flycheck(/*None*/) {
+        } else if self.config.flycheck_config() != old_config.flycheck_config() {
             self.reload_flycheck();
         }
     }
@@ -80,13 +79,13 @@ impl GlobalState {
             format_to!(message, "{err}\n");
         }
 
-        // if let Some(err) = &self.last_flycheck_error {
-        //     status.health |= lsp_ext::Health::Warning;
-        //     message.push_str(err);
-        //     message.push('\n');
-        // }
+        if let Some(err) = &self.last_flycheck_error {
+            status.health |= lsp_ext::Health::Warning;
+            message.push_str(err);
+            message.push('\n');
+        }
 
-        if self.config.linked_or_discovered_projects().is_empty() {
+        if self.config.discovered_manifests().is_empty() {
             status.health |= lsp_ext::Health::Warning;
             message.push_str("Failed to discover workspace.\n");
         }
@@ -109,32 +108,18 @@ impl GlobalState {
         tracing::info!(%cause, "will fetch workspaces");
 
         self.task_pool.handle.spawn_with_sender(ThreadIntent::Worker, {
-            let linked_projects = self.config.linked_or_discovered_projects();
-
-            // todo: use for `aptos metadata`
-            // let aptos_config = self.config.aptos(None);
-
+            let discovered_manifests = self.config.discovered_manifests();
             move |sender| {
-                // let progress = {
-                //     let sender = sender.clone();
-                //     move |msg| {
-                //         sender
-                //             .send(Task::FetchWorkspace(ProjectWorkspaceProgress::Report(msg)))
-                //             .unwrap()
-                //     }
-                // };
-
                 sender
-                    .send(Task::FetchWorkspace(ProjectWorkspaceProgress::Begin))
+                    .send(Task::FetchWorkspace(FetchWorkspacesProgress::Begin))
                     .unwrap();
 
-                let mut workspaces = linked_projects
+                let mut workspaces = discovered_manifests
                     .iter()
-                    .map(|project| match project {
-                        LinkedProject::ProjectManifest(manifest) => {
-                            tracing::debug!(path = %manifest, "loading project from manifest");
-                            AptosWorkspace::load(manifest.clone())
-                        }
+                    .map(|manifest| {
+                        let manifest_path = &manifest.path;
+                        tracing::debug!(path = %manifest_path, "loading workspace from manifest");
+                        AptosWorkspace::load(manifest_path.to_owned())
                     })
                     .collect::<Vec<_>>();
 
@@ -154,7 +139,7 @@ impl GlobalState {
 
                 tracing::info!(?workspaces, "did fetch workspaces");
                 sender
-                    .send(Task::FetchWorkspace(ProjectWorkspaceProgress::End(
+                    .send(Task::FetchWorkspace(FetchWorkspacesProgress::End(
                         workspaces,
                         force_reload_deps,
                     )))
@@ -296,19 +281,11 @@ impl GlobalState {
 
         let package_graph = {
             let vfs = &self.vfs.read().0;
-            let load = |path: &AbsPath| {
-                let vfs_path = vfs::VfsPath::from(path.to_path_buf());
-                // self.crate_graph_file_dependencies.insert(vfs_path.clone());
-                vfs.file_id(&vfs_path)
-            };
-
-            ws_to_package_graph(&self.workspaces, load)
+            ws_to_package_graph(&self.workspaces, vfs)
         };
-
         self.process_file_changes();
 
         let mut change = FileChange::new();
-
         {
             let vfs = &self.vfs.read().0;
             let roots = self.package_root_config.partition_into_roots(vfs);
@@ -317,7 +294,6 @@ impl GlobalState {
             // depends on roots being available
             change.set_package_graph(package_graph);
         }
-
         self.analysis_host.apply_change(change);
 
         self.report_progress(
@@ -359,7 +335,7 @@ impl GlobalState {
 
     fn reload_flycheck(&mut self) {
         let _p = tracing::info_span!("GlobalState::reload_flycheck").entered();
-        let config = self.config.flycheck(/*None*/);
+        let config = self.config.flycheck_config(/*None*/);
         if config.is_none() {
             self.flycheck = Arc::from_iter([]);
             return;
@@ -380,11 +356,9 @@ impl GlobalState {
     }
 }
 
-pub fn ws_to_package_graph(
-    workspaces: &[AptosWorkspace],
-    mut load: impl FnMut(&AbsPath) -> Option<vfs::FileId>,
-) -> PackageGraph {
+pub fn ws_to_package_graph(workspaces: &[AptosWorkspace], vfs_read: &Vfs) -> PackageGraph {
     let mut package_graph = PackageGraph::default();
+    let mut load = |path: &AbsPath| vfs_read.file_id(&vfs::VfsPath::from(path.to_path_buf()));
     for ws in workspaces {
         let other = ws.to_package_graph(&mut load);
         package_graph.extend(other.unwrap_or_default());

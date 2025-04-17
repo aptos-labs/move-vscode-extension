@@ -3,14 +3,15 @@ use crate::manifest_path::ManifestPath;
 use crate::move_toml::MoveToml;
 use anyhow::Context;
 use base_db::change::ManifestFileId;
-use paths::AbsPath;
+use paths::{AbsPath, AbsPathBuf};
 use std::fs;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct AptosPackage {
-    content_root: paths::AbsPathBuf,
+    content_root: AbsPathBuf,
     move_toml: MoveToml,
     is_dep: bool,
+    deps: Vec<AptosPackage>,
 }
 
 impl AptosPackage {
@@ -22,18 +23,37 @@ impl AptosPackage {
 
         let move_toml = MoveToml::from_str(file_contents.as_str())
             .with_context(|| format!("Failed to deserialize Move.toml file {manifest_path}"))?;
-        let package_root = manifest_path.parent().to_path_buf();
+        let content_root = manifest_path.parent().to_path_buf();
 
-        let package = AptosPackage {
+        let mut dep_manifests = vec![];
+        for toml_dep in move_toml.dependencies.clone() {
+            if let Some(dep_root) = toml_dep.dep_root(&content_root) {
+                let move_toml_path = dep_root.join("Move.toml");
+                if fs::exists(&move_toml_path).is_ok() {
+                    let manifest_path = ManifestPath::from_manifest_file(move_toml_path).unwrap();
+                    dep_manifests.push(manifest_path);
+                }
+            }
+        }
+        let deps = dep_manifests
+            .into_iter()
+            .filter_map(|it| AptosPackage::load(it, true).ok())
+            .collect();
+
+        Ok(AptosPackage {
+            content_root,
             move_toml,
-            content_root: package_root,
             is_dep,
-        };
-        Ok(package)
+            deps,
+        })
     }
 
     pub fn content_root(&self) -> &AbsPath {
         self.content_root.as_path()
+    }
+
+    pub fn deps(&self) -> impl Iterator<Item = &AptosPackage> {
+        self.deps.iter()
     }
 
     pub fn manifest(&self) -> ManifestPath {
@@ -53,18 +73,18 @@ impl AptosPackage {
         }
     }
 
-    pub fn deps(&self) -> Vec<ManifestPath> {
-        let mut deps = vec![];
+    pub fn dependency_manifests(&self) -> Vec<ManifestPath> {
+        let mut manifests = vec![];
         for toml_dep in self.move_toml.dependencies.clone() {
             if let Some(dep_root) = toml_dep.dep_root(&self.content_root) {
                 let move_toml_path = dep_root.join("Move.toml");
                 if fs::exists(&move_toml_path).is_ok() {
                     let manifest_path = ManifestPath::from_manifest_file(move_toml_path).unwrap();
-                    deps.push(manifest_path);
+                    manifests.push(manifest_path);
                 }
             }
         }
-        deps
+        manifests
     }
 
     pub fn contains_file(&self, file_path: &AbsPath) -> bool {
