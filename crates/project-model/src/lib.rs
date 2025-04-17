@@ -37,10 +37,11 @@ impl ManifestPath {
     pub fn discover(ws_root: &AbsPath) -> io::Result<Vec<ManifestPath>> {
         let mut manifests = vec![];
         let root_manifest = ws_root.join("Move.toml");
-        if fs::exists(&root_manifest)? {
+        if fs::exists(&root_manifest).is_ok_and(|it| it) {
             manifests.push(ManifestPath { file: root_manifest });
         }
         manifests.extend(Self::find_manifests_in_child_directories(read_dir(ws_root)?));
+
         Ok(manifests)
     }
 
@@ -66,8 +67,37 @@ impl ManifestPath {
             .collect::<FxHashSet<_>>()
             .into_iter()
             .collect::<Vec<_>>();
+
+        let aptos_move_manifests = Self::discover_aptos_move(ws_roots).unwrap_or_default();
+        manifests.extend(aptos_move_manifests);
+
+        manifests.dedup();
         manifests.sort();
         manifests
+    }
+
+    fn discover_aptos_move(ws_roots: &[AbsPathBuf]) -> Option<Vec<ManifestPath>> {
+        // hardcoded discovery for aptos-core repository
+        let mut manifests = vec![];
+        for ws_root in ws_roots {
+            let aptos_move_dir = ws_root.join("aptos-move");
+            if fs::exists(&aptos_move_dir).ok()? {
+                for entry in walkdir::WalkDir::new(aptos_move_dir)
+                    .into_iter()
+                    .filter_map(|it| it.ok())
+                {
+                    let path = entry.path();
+                    let mfile_path = path.join("Move.toml");
+                    if mfile_path.exists() {
+                        let mfile =
+                            ManifestPath::from_manifest_file(AbsPathBuf::assert_utf8(mfile_path))
+                                .ok()?;
+                        manifests.push(mfile);
+                    }
+                }
+            }
+        }
+        Some(manifests)
     }
 }
 
