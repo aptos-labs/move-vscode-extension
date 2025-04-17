@@ -3,7 +3,6 @@ use crate::manifest_path::ManifestPath;
 use anyhow::Context;
 use base_db::change::PackageGraph;
 use paths::{AbsPath, AbsPathBuf};
-use std::iter;
 use vfs::FileId;
 
 pub type FileLoader<'a> = &'a mut dyn for<'b> FnMut(&'b AbsPath) -> Option<FileId>;
@@ -21,11 +20,9 @@ pub struct PackageFolderRoot {
     pub exclude: Vec<AbsPathBuf>,
 }
 
-// todo: rename to AptosProject
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct AptosWorkspace {
     main_package: AptosPackage,
-    deps: Vec<AptosPackage>,
 }
 
 impl AptosWorkspace {
@@ -34,26 +31,15 @@ impl AptosWorkspace {
             .with_context(|| format!("Failed to load the project at {manifest}"))
     }
 
-    fn load_inner(manifest: ManifestPath) -> anyhow::Result<AptosWorkspace> {
+    fn load_inner(root_manifest: ManifestPath) -> anyhow::Result<AptosWorkspace> {
         // todo: run `aptos metadata` (see rust-analyzer for error handling and progress reporting)
 
-        let main_package = AptosPackage::load(manifest, false)?;
-        let mut deps = vec![];
-        for dep_manifest_file in main_package.deps() {
-            let dep_package = AptosPackage::load(dep_manifest_file, true);
-            match dep_package {
-                Ok(dep_package) => {
-                    deps.push(dep_package);
-                }
-                Err(err) => {
-                    tracing::error!("cannot load dependency: {:?}", err.to_string());
-                }
-            }
-        }
+        let main_package = AptosPackage::load(root_manifest, false)?;
+
         // todo: fetch package dependencies
         // todo: fetch declared named addresses
 
-        Ok(AptosWorkspace { main_package, deps })
+        Ok(AptosWorkspace { main_package })
     }
 
     pub fn workspace_root(&self) -> &AbsPath {
@@ -72,7 +58,10 @@ impl AptosWorkspace {
     /// The return type contains the path and whether or not
     /// the root is a member of the current workspace
     pub fn to_folder_roots(&self) -> Vec<PackageFolderRoot> {
-        self.iter_packages().map(|it| it.to_folder_root()).collect()
+        self.all_package_refs()
+            .into_iter()
+            .map(|it| it.to_folder_root())
+            .collect()
     }
 
     pub fn to_package_graph(&self, load: FileLoader<'_>) -> Option<PackageGraph> {
@@ -81,24 +70,35 @@ impl AptosWorkspace {
             self.main_package.content_root()
         );
 
-        let manifest_file_id = self.main_package.load_manifest_file_id(load)?;
-
         let mut package_graph = PackageGraph::default();
-        let mut deps = vec![];
-        for dep in self.deps.iter() {
-            let dep_manifest_file_id = dep.load_manifest_file_id(load)?;
-            deps.push(dep_manifest_file_id);
+        for package_ref in self.all_package_refs() {
+            let main_file_id = package_ref.load_manifest_file_id(load)?;
+            let mut dep_ids = vec![];
+            for dep_package_ref in package_ref.deps() {
+                let dep_file_id = dep_package_ref.load_manifest_file_id(load)?;
+                dep_ids.push(dep_file_id);
+            }
+            package_graph.insert(main_file_id, dep_ids);
         }
-        package_graph.insert(manifest_file_id, deps);
 
         Some(package_graph)
     }
 
-    pub fn iter_packages(&self) -> impl Iterator<Item = &AptosPackage> {
-        iter::once(&self.main_package).chain(self.deps.iter())
+    pub fn all_package_refs(&self) -> Vec<&AptosPackage> {
+        package_refs(&self.main_package)
     }
 
     pub fn contains_file(&self, file_path: &AbsPath) -> bool {
-        self.iter_packages().any(|pkg| pkg.contains_file(file_path))
+        self.all_package_refs()
+            .iter()
+            .any(|pkg| pkg.contains_file(file_path))
     }
+}
+
+fn package_refs(package: &AptosPackage) -> Vec<&AptosPackage> {
+    let mut refs = vec![package];
+    for dep in package.deps() {
+        refs.extend(package_refs(dep));
+    }
+    refs
 }

@@ -11,7 +11,6 @@ use triomphe::Arc;
 
 pub(crate) mod compiler_diagnostic;
 pub use crate::flycheck::compiler_diagnostic::AptosDiagnostic;
-use crate::global_state::{GlobalState, GlobalStateSnapshot};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub(crate) enum InvocationStrategy {

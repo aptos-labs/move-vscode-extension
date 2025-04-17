@@ -1,7 +1,7 @@
 use crate::types::expectation::Expected;
 use crate::types::inference::ast_walker::TypeAstWalker;
-use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::Ty;
+use crate::types::ty::integer::IntegerKind;
 use syntax::ast;
 use syntax::files::InFileExt;
 
