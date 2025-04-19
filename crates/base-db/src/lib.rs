@@ -3,7 +3,9 @@
 pub mod change;
 pub mod package_root;
 
+use crate::change::ManifestFileId;
 use crate::package_root::{PackageRoot, PackageRootId};
+use std::collections::HashSet;
 use syntax::{Parse, SourceFile, SyntaxError};
 use triomphe::Arc;
 use vfs::FileId;
@@ -44,11 +46,6 @@ fn parse_errors(db: &dyn SourceDatabase, file_id: FileId) -> Option<Arc<[SyntaxE
 /// methods into a separate DB.
 #[ra_salsa::query_group(PackageRootDatabaseStorage)]
 pub trait PackageRootDatabase: SourceDatabase + Upcast<dyn SourceDatabase> {
-    // /// Path to a file, relative to the root of its source root.
-    // /// Source root of the file.
-    // #[ra_salsa::input]
-    // fn file_source_root(&self, file_id: FileId) -> SourceRootId;
-
     #[ra_salsa::input]
     fn file_package_root_id(&self, file_id: FileId) -> PackageRootId;
 
@@ -59,5 +56,5 @@ pub trait PackageRootDatabase: SourceDatabase + Upcast<dyn SourceDatabase> {
     fn package_root(&self, id: PackageRootId) -> Arc<PackageRoot>;
 
     #[ra_salsa::input]
-    fn package_deps(&self, manifest_file_id: PackageRootId) -> Arc<Vec<PackageRootId>>;
+    fn package_deps(&self, id: PackageRootId) -> Arc<Vec<PackageRootId>>;
 }

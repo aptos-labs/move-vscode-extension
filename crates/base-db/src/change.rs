@@ -1,6 +1,6 @@
 use crate::PackageRootDatabase;
 use crate::package_root::{PackageRoot, PackageRootId};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt;
 use triomphe::Arc;
 use vfs::FileId;
@@ -58,9 +58,9 @@ impl FileChange {
         }
 
         if let Some(package_graph) = self.package_graph {
-            for (manifest_file_id, dep_manifest_ids) in package_graph.into_iter() {
-                let main_package_id = db.file_package_root_id(manifest_file_id);
-                let deps_package_ids = dep_manifest_ids
+            for (oackage_root_id, dep_package_root_ids) in package_graph.into_iter() {
+                let main_package_id = db.file_package_root_id(oackage_root_id);
+                let deps_package_ids = dep_package_root_ids
                     .into_iter()
                     .map(|it| db.file_package_root_id(it))
                     .collect::<Vec<_>>();
