@@ -19,7 +19,6 @@ serde = { workspace = true }
 serde_json = { workspace = true, features = ["preserve_order", "unbounded_depth"] }
 anyhow = { workspace = true }
 
-dirs = "6.0.0"
 memchr = "2.7.4"
 lsp-server = "0.7.8"
 nohash-hasher = "0.2.0"
@@ -27,7 +26,6 @@ num_cpus = "1.16.0"
 parking_lot = "0.12.1"
 camino = { version =  "1.1.9", features = ["serde1"] }
 process-wrap = { version = "8.2.0", features = ["std"] }
-toml = "0.8.20"
 serde_derive = "1.0.217"
 
 tracing = { workspace = true }
