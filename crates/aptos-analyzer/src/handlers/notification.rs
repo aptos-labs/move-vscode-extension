@@ -13,8 +13,8 @@ use lsp_types::{
 };
 use paths::AbsPathBuf;
 use std::ops::Not;
+use std::sync::Arc;
 use stdx::itertools::Itertools;
-use triomphe::Arc;
 use vfs::VfsPath;
 
 pub(crate) fn handle_cancel(state: &mut GlobalState, params: CancelParams) -> anyhow::Result<()> {

@@ -10,9 +10,7 @@ enumset = "1.1.5"
 
 itertools = { workspace = true }
 ra_salsa.workspace = true
-la-arena.workspace = true
 tracing.workspace = true
-triomphe.workspace = true
 
 stdx = { workspace = true }
 vfs = { workspace = true }

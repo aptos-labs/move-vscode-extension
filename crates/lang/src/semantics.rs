@@ -10,10 +10,10 @@ use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
 use base_db::package_root::PackageRootId;
 use std::cell::RefCell;
+use std::sync::Arc;
 use std::{fmt, ops};
 use syntax::files::InFile;
 use syntax::{AstNode, SyntaxNode, SyntaxToken, ast};
-use triomphe::Arc;
 use vfs::FileId;
 
 /// Primary API to get semantic information, like types, from syntax trees.

@@ -8,7 +8,6 @@ license.workspace = true
 [dependencies]
 tracing = { workspace = true }
 ra_salsa = { workspace = true }
-triomphe = { workspace = true }
 
 vfs = { workspace = true }
 

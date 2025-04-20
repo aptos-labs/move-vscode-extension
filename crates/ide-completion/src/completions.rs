@@ -1,7 +1,6 @@
 use crate::context::CompletionContext;
 use crate::item::{CompletionItem, CompletionItemBuilder, CompletionItemKind};
 use ide_db::RootDatabase;
-use smol_str::SmolStr;
 
 pub mod item_list;
 pub mod reference;
@@ -37,12 +36,8 @@ impl Completions {
         }
     }
 
-    pub(crate) fn add_keyword(&mut self, ctx: &CompletionContext, keyword: &'static str) {
-        let item = CompletionItem::new(
-            CompletionItemKind::Keyword,
-            ctx.source_range(),
-            SmolStr::new_static(keyword),
-        );
+    pub(crate) fn add_keyword(&mut self, ctx: &CompletionContext, kw: &'static str) {
+        let item = CompletionItem::new(CompletionItemKind::Keyword, ctx.source_range(), kw);
         item.add_to(self, ctx.db);
     }
 

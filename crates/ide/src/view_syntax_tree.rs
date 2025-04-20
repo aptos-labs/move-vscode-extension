@@ -1,9 +1,9 @@
 use ide_db::{LineIndexDatabase, RootDatabase};
 use lang::Semantics;
 use line_index::{LineCol, LineIndex};
+use std::sync::Arc;
 use stdx::format_to;
 use syntax::{AstNode, NodeOrToken, SyntaxNode, TextSize, WalkEvent};
-use triomphe::Arc;
 use vfs::FileId;
 
 // Feature: Show Syntax Tree

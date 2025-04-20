@@ -13,7 +13,6 @@ nohash-hasher = "0.2.0"
 itertools = { workspace = true }
 line-index = { workspace = true }
 tracing = { workspace = true }
-triomphe = { workspace = true }
 
 ra_salsa = { workspace = true }
 vfs = { workspace = true }

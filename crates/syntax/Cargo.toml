@@ -12,7 +12,6 @@ either = { workspace = true }
 tracing = { workspace = true }
 rowan = { workspace = true }
 itertools = { workspace = true }
-smol_str = { workspace = true }
 
 stdx = { workspace = true }
 vfs = { workspace = true }

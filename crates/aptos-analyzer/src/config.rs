@@ -16,8 +16,8 @@ use ide_db::assist_config::AssistConfig;
 use ide_diagnostics::config::DiagnosticsConfig;
 use project_model::manifest_path::ManifestPath;
 use serde_derive::{Deserialize, Serialize};
+use std::sync::Arc;
 use stdx::itertools::Itertools;
-use triomphe::Arc;
 
 #[derive(Clone)]
 pub struct Config {

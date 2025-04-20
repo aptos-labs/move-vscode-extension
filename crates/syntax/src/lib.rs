@@ -27,7 +27,6 @@ pub use parser::{SyntaxKind, T};
 pub use rowan::{
     Direction, GreenNode, NodeOrToken, SyntaxText, TextRange, TextSize, TokenAtOffset, WalkEvent,
 };
-pub use smol_str::SmolStr;
 use std::ops::Range;
 use std::sync::Arc;
 

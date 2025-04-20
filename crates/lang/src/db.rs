@@ -6,11 +6,11 @@ use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::ty::Ty;
 use base_db::{SourceDatabase, Upcast};
+use std::sync::Arc;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
-use triomphe::Arc;
 
 #[ra_salsa::query_group(HirDatabaseStorage)]
 pub trait HirDatabase: SourceDatabase + Upcast<dyn SourceDatabase> {

@@ -6,17 +6,17 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-xshell = "0.2.7"
+xshell = "^0.2.7"
 ungrammar = "1.16.1"
-proc-macro2 = "1.0.93"
-quote = "1.0.38"
-check_keyword = "0.3.1"
+proc-macro2 = "^1.0.93"
+quote = "^1.0.38"
+check_keyword = "^0.3.1"
 
-clap = { workspace = true }
-anyhow = { workspace = true }
-itertools = { workspace = true }
+clap.workspace = true
+anyhow.workspace = true
+itertools.workspace = true
 
-stdx = { workspace = true }
+stdx.workspace = true
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(trick_rust_analyzer_into_highlighting_interpolated_bits)'] }

@@ -3,7 +3,7 @@ use crate::config::options::FullConfigInput;
 use crate::config::{ConfigErrorInner, ConfigErrors};
 use serde::de::DeserializeOwned;
 use std::iter;
-use triomphe::Arc;
+use std::sync::Arc;
 
 impl Config {
     /// Changes made to client and global configurations will partially not be reflected even after `.apply_change()` was called.

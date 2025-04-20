@@ -6,18 +6,17 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-tracing.workspace = true
-tracing-subscriber.workspace = true
-tracing-tree = "0.4.0"
-line-index.workspace = true
 dissimilar = "1.0.9"
 expect-test = "1.5.1"
+
+tracing.workspace = true
+tracing-subscriber.workspace = true
+tracing-tree.workspace = true
+line-index.workspace = true
 
 vfs.workspace = true
 
 syntax = { path = "../syntax" }
-base-db = { path = "../base-db" }
-lang = { path = "../lang" }
 ide = { path = "../ide" }
 ide-db = { path = "../ide-db" }
 ide-completion = { path = "../ide-completion" }
