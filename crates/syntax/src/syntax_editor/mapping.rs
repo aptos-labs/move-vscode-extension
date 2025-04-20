@@ -2,8 +2,8 @@
 //!
 //! [`SyntaxMappingBuilder`] should be used to create mappings to add to a [`SyntaxEditor`]
 
+use std::collections::HashMap;
 use itertools::Itertools;
-use rustc_hash::FxHashMap;
 
 use crate::{SyntaxElement, SyntaxNode};
 
@@ -16,7 +16,7 @@ pub struct SyntaxMapping {
 
     // mappings ->  parents
     entry_parents: Vec<SyntaxNode>,
-    node_mappings: FxHashMap<SyntaxNode, MappingEntry>,
+    node_mappings: HashMap<SyntaxNode, MappingEntry>,
 }
 
 impl SyntaxMapping {

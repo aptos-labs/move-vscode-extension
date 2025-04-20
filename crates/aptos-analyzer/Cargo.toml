@@ -10,7 +10,6 @@ name = "aptos-analyzer"
 path = "src/bin/main.rs"
 
 [dependencies]
-rustc-hash = { workspace = true }
 lsp-types = { workspace = true }
 line-index = { workspace = true }
 crossbeam-channel = { workspace = true }

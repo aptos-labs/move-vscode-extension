@@ -1,9 +1,8 @@
 //! Implementation of applying changes to a syntax tree.
 
 use std::{cmp::Ordering, collections::VecDeque, ops::RangeInclusive};
-
+use std::collections::HashMap;
 use rowan::TextRange;
-use rustc_hash::FxHashMap;
 
 use crate::{
     syntax_editor::{mapping::MissingMapping, Change, ChangeKind, PositionRepr},
@@ -37,7 +36,7 @@ pub(super) fn apply_edits(editor: SyntaxEditor) -> SyntaxEdit {
         annotations,
     } = editor;
 
-    let mut node_depths = FxHashMap::<SyntaxNode, usize>::default();
+    let mut node_depths = HashMap::<SyntaxNode, usize>::default();
     let mut get_node_depth = |node: SyntaxNode| {
         *node_depths
             .entry(node)
@@ -286,7 +285,7 @@ pub(super) fn apply_edits(editor: SyntaxEditor) -> SyntaxEdit {
         }
     });
 
-    let mut annotation_groups = FxHashMap::default();
+    let mut annotation_groups = HashMap::default();
 
     for (element, annotation) in annotations {
         annotation_groups

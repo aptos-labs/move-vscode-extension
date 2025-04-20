@@ -9,9 +9,9 @@ use crate::syntax_helpers::tree_diff::diff;
 use crate::text_edit::{TextEdit, TextEditBuilder};
 use itertools::Itertools;
 use nohash_hasher::IntMap;
-use rustc_hash::FxHashMap;
 use std::collections::hash_map::Entry;
 use std::{iter, mem};
+use std::collections::HashMap;
 use stdx::never;
 use syntax::syntax_editor::{SyntaxAnnotation, SyntaxEditor};
 use syntax::{AstNode, SyntaxElement, SyntaxNode, SyntaxNodePtr, SyntaxToken, TextRange, TextSize};
@@ -206,7 +206,7 @@ pub struct SourceChangeBuilder {
     pub command: Option<Command>,
 
     /// Keeps track of all edits performed on each file
-    pub file_editors: FxHashMap<FileId, SyntaxEditor>,
+    pub file_editors: HashMap<FileId, SyntaxEditor>,
     /// Keeps track of which annotations correspond to which snippets
     pub snippet_annotations: Vec<(AnnotationSnippet, SyntaxAnnotation)>,
 
@@ -254,7 +254,7 @@ impl SourceChangeBuilder {
             file_id: file_id.into(),
             source_change: SourceChange::default(),
             command: None,
-            file_editors: FxHashMap::default(),
+            file_editors: HashMap::default(),
             snippet_annotations: vec![],
             mutated_tree: None,
             snippet_builder: None,
@@ -318,7 +318,7 @@ impl SourceChangeBuilder {
             }
 
             let mut edit = TextEdit::builder();
-            diff(edit_result.old_root(), edit_result.new_root()).into_text_edit(&mut edit);
+            diff(edit_result.old_root(), edit_result.new_root()).to_text_edit(&mut edit);
             let edit = edit.finish();
 
             let snippet_edit = if !snippet_edit.is_empty() {
@@ -345,7 +345,7 @@ impl SourceChangeBuilder {
         });
 
         if let Some(tm) = self.mutated_tree.take() {
-            diff(&tm.immutable, &tm.mutable_clone).into_text_edit(&mut self.edit);
+            diff(&tm.immutable, &tm.mutable_clone).to_text_edit(&mut self.edit);
         }
 
         let edit = mem::take(&mut self.edit).finish();
@@ -389,7 +389,7 @@ impl SourceChangeBuilder {
         self.edit.replace(range, replace_with.into())
     }
     pub fn replace_ast<N: AstNode>(&mut self, old: N, new: N) {
-        diff(old.syntax(), new.syntax()).into_text_edit(&mut self.edit)
+        diff(old.syntax(), new.syntax()).to_text_edit(&mut self.edit)
     }
     pub fn create_file(&mut self, dst: AnchoredPathBuf, content: impl Into<String>) {
         let file_system_edit = FileSystemEdit::CreateFile {

@@ -1,4 +1,4 @@
-//! A [tracing_subscriber::layer::Layer] that exports new-line delinated JSON.
+//! A [tracing_subscriber::Layer] that exports new-line delinated JSON.
 //!
 //! Usage:
 //!
@@ -7,17 +7,17 @@
 //! Registry::default().with(layer).init();
 //! ```
 
-use rustc_hash::FxHashSet;
 use std::{io::Write as _, marker::PhantomData, time::Instant};
+use std::collections::HashSet;
 use tracing::{
     Event, Subscriber,
     span::{Attributes, Id},
 };
-use tracing_subscriber::{Layer, fmt::MakeWriter, layer::Context, registry::LookupSpan};
+use tracing_subscriber::{fmt::MakeWriter, layer::Context, registry::LookupSpan};
 
 struct JsonData {
     name: &'static str,
-    start: std::time::Instant,
+    start: Instant,
 }
 
 impl JsonData {
@@ -44,7 +44,7 @@ impl<S, W> TimingLayer<S, W> {
     }
 }
 
-impl<S, W> Layer<S> for TimingLayer<S, W>
+impl<S, W> tracing_subscriber::Layer<S> for TimingLayer<S, W>
 where
     S: Subscriber + for<'span> LookupSpan<'span>,
     W: for<'writer> MakeWriter<'writer> + Send + Sync + 'static,
@@ -85,7 +85,7 @@ where
 
 #[derive(Default, Clone, Debug)]
 pub(crate) struct JsonFilter {
-    pub(crate) allowed_names: Option<FxHashSet<String>>,
+    pub(crate) allowed_names: Option<HashSet<String>>,
 }
 
 impl JsonFilter {
@@ -93,7 +93,7 @@ impl JsonFilter {
         let allowed_names = if spec == "*" {
             None
         } else {
-            Some(FxHashSet::from_iter(spec.split('|').map(String::from)))
+            Some(HashSet::from_iter(spec.split('|').map(String::from)))
         };
 
         Self { allowed_names }

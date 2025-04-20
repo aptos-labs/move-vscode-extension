@@ -19,10 +19,6 @@ use syntax::{SyntaxKind, SyntaxKind::*};
 use triomphe::Arc;
 use vfs::FileId;
 
-pub type FxIndexSet<T> = indexmap::IndexSet<T, std::hash::BuildHasherDefault<rustc_hash::FxHasher>>;
-pub type FxIndexMap<K, V> =
-    indexmap::IndexMap<K, V, std::hash::BuildHasherDefault<rustc_hash::FxHasher>>;
-
 #[ra_salsa::database(
     base_db::SourceDatabaseStorage,
     base_db::PackageRootDatabaseStorage,

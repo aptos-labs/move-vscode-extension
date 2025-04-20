@@ -3,10 +3,10 @@ use crate::toolchain;
 use camino::Utf8PathBuf;
 use crossbeam_channel::{Receiver, Sender, select_biased, unbounded};
 use paths::AbsPathBuf;
-use rustc_hash::FxHashMap;
 use std::process::Command;
 use std::time::Duration;
 use std::{fmt, io};
+use std::collections::HashMap;
 use triomphe::Arc;
 
 pub(crate) mod compiler_diagnostic;
@@ -22,7 +22,7 @@ pub(crate) enum InvocationStrategy {
 #[derive(Default, Clone, Debug, PartialEq, Eq)]
 pub(crate) struct AptosOptions {
     pub(crate) extra_args: Vec<String>,
-    pub(crate) extra_env: FxHashMap<String, String>,
+    pub(crate) extra_env: HashMap<String, String>,
 }
 
 impl AptosOptions {

@@ -13,7 +13,6 @@ tracing = { workspace = true }
 rowan = { workspace = true }
 itertools = { workspace = true }
 smol_str = { workspace = true }
-rustc-hash = { workspace = true }
 
 stdx = { workspace = true }
 vfs = { workspace = true }

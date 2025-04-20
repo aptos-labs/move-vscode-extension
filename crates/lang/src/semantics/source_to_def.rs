@@ -85,18 +85,18 @@
 //! active crate for a given position, and then provide an API to resolve all
 //! syntax nodes against this specific crate.
 
-use rustc_hash::FxHashMap;
+use std::collections::HashMap;
 use syntax::SyntaxNode;
 use vfs::FileId;
 
 #[derive(Default)]
 pub(super) struct SourceToDefCache {
-    pub(super) root_to_file_cache: FxHashMap<SyntaxNode, FileId>,
+    pub(super) root_to_file_cache: HashMap<SyntaxNode, FileId>,
 }
 
 impl SourceToDefCache {
     pub(super) fn cache(
-        root_to_file_cache: &mut FxHashMap<SyntaxNode, FileId>,
+        root_to_file_cache: &mut HashMap<SyntaxNode, FileId>,
         root_node: SyntaxNode,
         file_id: FileId,
     ) {

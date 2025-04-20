@@ -2,8 +2,8 @@ use base_db::package_root::PackageRoot;
 use paths::AbsPathBuf;
 use project_model::AptosWorkspace;
 use project_model::aptos_workspace::PackageFolderRoot;
-use rustc_hash::FxHashMap;
 use std::collections::hash_map::Entry;
+use std::collections::HashMap;
 use std::mem;
 use stdx::itertools::Itertools;
 use vfs::VfsPath;
@@ -72,12 +72,12 @@ impl ProjectFolders {
             .collect();
 
         // map that tracks indices of overlapping roots
-        let mut overlap_map = FxHashMap::<_, Vec<_>>::default();
+        let mut overlap_map = HashMap::<_, Vec<_>>::default();
         let mut done = false;
 
         while !mem::replace(&mut done, true) {
             // maps include paths to indices of the corresponding root
-            let mut include_to_idx = FxHashMap::default();
+            let mut include_to_idx: HashMap<&AbsPathBuf, usize> = HashMap::default();
             // Find and note down the indices of overlapping roots
             for (idx, root) in folder_roots
                 .iter()

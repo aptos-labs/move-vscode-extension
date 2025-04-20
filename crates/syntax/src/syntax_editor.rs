@@ -1,7 +1,7 @@
 mod edit_algo;
 pub mod mapping;
 
-use rustc_hash::FxHashMap;
+use std::collections::HashMap;
 use std::num::NonZeroU32;
 use std::ops::RangeInclusive;
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -108,7 +108,7 @@ pub struct SyntaxEdit {
     old_root: SyntaxNode,
     new_root: SyntaxNode,
     changed_elements: Vec<SyntaxElement>,
-    annotations: FxHashMap<SyntaxAnnotation, Vec<SyntaxElement>>,
+    annotations: HashMap<SyntaxAnnotation, Vec<SyntaxElement>>,
 }
 
 impl SyntaxEdit {

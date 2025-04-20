@@ -10,7 +10,6 @@ oorandom = "11.1.4"
 dissimilar = "1.0.9"
 
 ra_salsa = { workspace = true }
-rustc-hash = { workspace = true }
 vfs = { workspace = true }
 line-index = { workspace = true }
 tracing = { workspace = true }
