@@ -2,7 +2,7 @@ use crate::SourceDatabase;
 use crate::package_root::{PackageRoot, PackageRootId};
 use std::collections::HashMap;
 use std::fmt;
-use triomphe::Arc;
+use std::sync::Arc;
 use vfs::FileId;
 
 pub type ManifestFileId = FileId;

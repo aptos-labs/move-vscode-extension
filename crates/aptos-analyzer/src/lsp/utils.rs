@@ -8,7 +8,7 @@ use lsp_server::Notification;
 use lsp_types::request::Request;
 use std::mem;
 use std::ops::Range;
-use triomphe::Arc;
+use std::sync::Arc;
 
 pub(crate) fn invalid_params_error(message: String) -> LspError {
     LspError {

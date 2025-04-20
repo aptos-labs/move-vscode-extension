@@ -4,8 +4,8 @@ pub mod change;
 pub mod package_root;
 
 use crate::package_root::{PackageRoot, PackageRootId};
+use std::sync::Arc;
 use syntax::{Parse, SourceFile, SyntaxError};
-use triomphe::Arc;
 use vfs::FileId;
 
 pub trait Upcast<T: ?Sized> {

@@ -10,10 +10,10 @@ use lang::builtin_files::BUILTINS_FILE;
 use lsp_types::FileSystemWatcher;
 use project_model::AptosWorkspace;
 use std::mem;
+use std::sync::Arc;
 use stdx::format_to;
 use stdx::itertools::Itertools;
 use stdx::thread::ThreadIntent;
-use triomphe::Arc;
 use vfs::{AbsPath, Vfs};
 
 #[derive(Debug)]

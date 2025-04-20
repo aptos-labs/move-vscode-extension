@@ -3,7 +3,7 @@ use ide_db::{RootDatabase, SymbolKind, ast_kind_to_symbol_kind};
 use lang::nameres::scope::ScopeEntry;
 use std::fmt;
 use syntax::ast::NamedElement;
-use syntax::{AstNode, SmolStr, TextRange, ast};
+use syntax::{AstNode, TextRange, ast};
 use vfs::FileId;
 
 /// `NavigationTarget` represents an element in the editor's UI which you can
@@ -30,14 +30,14 @@ pub struct NavigationTarget {
     ///
     /// This range must be contained within [`Self::full_range`].
     pub focus_range: Option<TextRange>,
-    pub name: SmolStr,
+    pub name: String,
     pub kind: Option<SymbolKind>,
-    pub container_name: Option<SmolStr>,
+    pub container_name: Option<String>,
     pub description: Option<String>,
     // pub docs: Option<Documentation>,
     /// In addition to a `name` field, a `NavigationTarget` may also be aliased
     /// In such cases we want a `NavigationTarget` to be accessible by its alias
-    pub alias: Option<SmolStr>,
+    pub alias: Option<String>,
 }
 
 impl fmt::Debug for NavigationTarget {
@@ -110,27 +110,9 @@ impl NavigationTarget {
         ))
     }
 
-    // /// Allows `NavigationTarget` to be created from a `NameOwner`
-    // pub(crate) fn from_named(
-    //     InFile { file_id, value }: InFile<&dyn NamedElement>,
-    // ) -> Option<NavigationTarget> {
-    //     let name: SmolStr = value
-    //         .name()
-    //         .map(|it| it.text().into())
-    //         .unwrap_or_else(|| "_".into());
-    //     let kind = ast_kind_to_symbol_kind(value.syntax().kind())?;
-    //     Some(NavigationTarget::from_syntax(
-    //         file_id,
-    //         name.clone(),
-    //         value.name().map(|it| it.syntax().text_range()),
-    //         value.syntax().text_range(),
-    //         kind,
-    //     ))
-    // }
-
     fn from_syntax(
         file_id: FileId,
-        name: SmolStr,
+        name: String,
         focus_range: Option<TextRange>,
         full_range: TextRange,
         kind: SymbolKind,

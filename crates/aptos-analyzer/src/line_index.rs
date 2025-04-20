@@ -6,7 +6,7 @@
 //! convert back to `\r\n` on the way out).
 
 use memchr::memmem;
-use triomphe::Arc;
+use std::sync::Arc;
 
 #[derive(Clone, Copy)]
 pub enum PositionEncoding {

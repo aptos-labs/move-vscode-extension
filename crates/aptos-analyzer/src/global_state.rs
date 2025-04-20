@@ -20,9 +20,9 @@ use parking_lot::{
     MappedRwLockReadGuard, RwLock, RwLockReadGuard, RwLockUpgradableReadGuard, RwLockWriteGuard,
 };
 use project_model::aptos_workspace::AptosWorkspace;
+use std::sync::Arc;
 use std::time::Instant;
 use tracing::Level;
-use triomphe::Arc;
 use vfs::{AnchoredPathBuf, FileId, VfsPath};
 
 pub(crate) struct FetchWorkspaceRequest {

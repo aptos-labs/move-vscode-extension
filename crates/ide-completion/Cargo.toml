@@ -7,7 +7,6 @@ license.workspace = true
 
 [dependencies]
 tracing = { workspace = true }
-smol_str = { workspace = true }
 
 stdx = { workspace = true }
 

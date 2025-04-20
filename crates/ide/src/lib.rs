@@ -6,8 +6,8 @@ use ide_completion::item::CompletionItem;
 use ide_db::{LineIndexDatabase, RootDatabase};
 use line_index::{LineCol, LineIndex};
 use ra_salsa::ParallelDatabase;
+use std::sync::Arc;
 use syntax::{SourceFile, TextRange, TextSize};
-use triomphe::Arc;
 use vfs::file_set::FileSet;
 use vfs::{FileId, VfsPath};
 
