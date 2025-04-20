@@ -39,7 +39,7 @@ Checks code in the editor after saving the document.
 To enable, specify in your `settings.json`: 
 ```json5
 {
-    "aptos-analyzer.aptos.cliPath": "/home/mkurnikov/bin/aptos", // path to aptos-cli on your machine
-    "aptos-analyzer.aptos.checkOnSave": true,
+    "aptos-analyzer.checkOnSave": true,
+    "aptos-analyzer.aptosPath": "/home/mkurnikov/bin/aptos", // path to aptos-cli on your machine
 }
 ```

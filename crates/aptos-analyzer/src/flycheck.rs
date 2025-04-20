@@ -39,11 +39,11 @@ pub(crate) struct FlycheckConfig {
 }
 
 impl FlycheckConfig {
-    pub fn new(aptos_cli: Utf8PathBuf, command: String) -> Self {
+    pub fn new(aptos_cli: Utf8PathBuf, command: String, options: AptosOptions) -> Self {
         FlycheckConfig {
             aptos_cli,
             command,
-            options: AptosOptions::default(),
+            options,
         }
     }
 
