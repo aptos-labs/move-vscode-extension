@@ -1,18 +1,18 @@
 mod source_to_def;
 
 use crate::db::{HirDatabase, NodeInferenceExt};
-use crate::nameres::ResolveReference;
 use crate::nameres::scope::ScopeEntry;
+use crate::nameres::ResolveReference;
 use crate::semantics::source_to_def::SourceToDefCache;
-use crate::types::inference::InferenceCtx;
 use crate::types::inference::inference_result::InferenceResult;
+use crate::types::inference::InferenceCtx;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
 use base_db::package_root::PackageRootId;
 use std::cell::RefCell;
 use std::{fmt, ops};
 use syntax::files::InFile;
-use syntax::{AstNode, SyntaxNode, SyntaxToken, ast};
+use syntax::{ast, AstNode, SyntaxNode, SyntaxToken};
 use triomphe::Arc;
 use vfs::FileId;
 
@@ -79,8 +79,14 @@ impl<'db> SemanticsImpl<'db> {
         scope_entry?.cast_into::<N>(self.db)
     }
 
-    pub fn inference<T: AstNode>(&self, node: &InFile<T>, msl: bool) -> Option<Arc<InferenceResult>> {
-        node.inference(self.db, msl)
+    pub fn get_expr_type(&self, expr: &InFile<ast::Expr>, msl: bool) -> Option<Ty> {
+        let inference = self.inference(expr, msl)?;
+        inference.get_expr_type(&expr.value)
+    }
+
+    pub fn get_ident_pat_type(&self, ident_pat: &InFile<ast::IdentPat>, msl: bool) -> Option<Ty> {
+        let inference = self.inference(ident_pat, msl)?;
+        inference.get_pat_type(&ast::Pat::IdentPat(ident_pat.value.clone()))
     }
 
     pub fn render_ty(&self, ty: Ty) -> String {
@@ -105,6 +111,10 @@ impl<'db> SemanticsImpl<'db> {
         } else {
             ctx.is_tys_compatible(left_ty, right_ty)
         }
+    }
+
+    fn inference<T: AstNode>(&self, node: &InFile<T>, msl: bool) -> Option<Arc<InferenceResult>> {
+        node.inference(self.db, msl)
     }
 
     pub fn wrap_node_infile<N: AstNode>(&self, node: N) -> InFile<N> {
