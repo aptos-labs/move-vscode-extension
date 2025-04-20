@@ -95,29 +95,9 @@
                 "title": "$generated-start"
             },
             {
-                "title": "aptos",
+                "title": "general",
                 "properties": {
-                    "aptos-analyzer.aptos.autoreload": {
-                        "markdownDescription": "Automatically refresh project info via `cargo metadata` on `Move.toml` changes.",
-                        "default": true,
-                        "type": "boolean"
-                    }
-                }
-            },
-            {
-                "title": "aptos",
-                "properties": {
-                    "aptos-analyzer.aptos.checkOnSave": {
-                        "markdownDescription": "Run the check command for diagnostics on save.",
-                        "default": true,
-                        "type": "boolean"
-                    }
-                }
-            },
-            {
-                "title": "aptos",
-                "properties": {
-                    "aptos-analyzer.aptos.cliPath": {
+                    "aptos-analyzer.aptosPath": {
                         "markdownDescription": "Run the check command for diagnostics on save.",
                         "default": null,
                         "type": [
@@ -128,11 +108,44 @@
                 }
             },
             {
+                "title": "aptos",
+                "properties": {
+                    "aptos-analyzer.aptos.autoreload": {
+                        "markdownDescription": "Automatically refresh project info on `Move.toml` changes.",
+                        "default": true,
+                        "type": "boolean"
+                    }
+                }
+            },
+            {
+                "title": "general",
+                "properties": {
+                    "aptos-analyzer.checkOnSave": {
+                        "markdownDescription": "Run the check command for diagnostics on save.",
+                        "default": true,
+                        "type": "boolean"
+                    }
+                }
+            },
+            {
+                "title": "check",
+                "properties": {
+                    "aptos-analyzer.check.extraArgs": {
+                        "markdownDescription": "Extra arguments for `aptos move compile`.",
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
                 "title": "diagnostics",
                 "properties": {
                     "aptos-analyzer.diagnostics.enable": {
                         "markdownDescription": "Whether to show native aptos-analyzer diagnostics.",
-                        "default": false,
+                        "default": true,
                         "type": "boolean"
                     }
                 }

@@ -20,14 +20,17 @@ use stdx::itertools::Itertools;
 config_data! {
     /// Global configuration options
     global: struct GlobalDefaultConfigData <- GlobalConfigInput -> {
-        /// Automatically refresh project info via `cargo metadata` on `Move.toml` changes.
+        /// Path to the `aptos-cli` executable.
+        aptosPath: Option<Utf8PathBuf>                         = None,
+
+        /// Automatically refresh project info on `Move.toml` changes.
         aptos_autoreload: bool           = true,
 
         /// Run the check command for diagnostics on save.
-        aptos_checkOnSave: bool                         = true,
+        checkOnSave: bool                         = true,
 
-        /// Run the check command for diagnostics on save.
-        aptos_cliPath: Option<Utf8PathBuf>                         = None,
+        /// Extra arguments for `aptos move compile`.
+        check_extraArgs: Vec<String>             = vec![],
 
         /// Whether to show native aptos-analyzer diagnostics.
         diagnostics_enable: bool                = true,

@@ -11,7 +11,8 @@ use std::sync::OnceLock;
 use vfs::AbsPathBuf;
 
 use crate::config::options::{DefaultConfigData, FullConfigInput};
-use crate::flycheck::FlycheckConfig;
+use crate::flycheck::{AptosOptions, FlycheckConfig};
+use base_db::package_root::PackageRootId;
 use ide_db::assist_config::AssistConfig;
 use ide_diagnostics::config::DiagnosticsConfig;
 use project_model::manifest_path::ManifestPath;
@@ -247,16 +248,24 @@ impl Config {
     }
 
     pub(crate) fn flycheck_config(&self) -> Option<FlycheckConfig> {
-        self.aptos_cli_path()
-            .map(|cli_path| FlycheckConfig::new(cli_path, "compile".to_string()))
+        let cli_path = self.aptos_cli_path()?;
+        let options = AptosOptions {
+            extra_args: self.extra_args().clone(),
+            ..AptosOptions::default()
+        };
+        Some(FlycheckConfig::new(cli_path, "compile".to_string(), options))
     }
 
     pub fn check_on_save(&self) -> bool {
-        *self.aptos_checkOnSave()
+        *self.checkOnSave()
+    }
+
+    pub fn extra_args(&self /*source_root: Option<PackageRootId>*/) -> &Vec<String> {
+        self.check_extraArgs(/*source_root*/)
     }
 
     pub fn aptos_cli_path(&self) -> Option<Utf8PathBuf> {
-        self.aptos_cliPath().clone()
+        self.aptosPath().clone()
     }
 
     pub fn discovered_manifests(&self) -> Vec<DiscoveredManifest> {
