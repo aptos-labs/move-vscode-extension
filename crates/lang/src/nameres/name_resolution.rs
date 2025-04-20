@@ -13,7 +13,7 @@ use parser::SyntaxKind::MODULE_SPEC;
 use std::collections::HashMap;
 use std::fmt::Formatter;
 use std::ops::Deref;
-use std::{fmt, iter};
+use std::{fmt, iter, panic};
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::{HasItems, ReferenceElement};
 use syntax::files::{InFile, InFileExt, InFileVecExt};
@@ -144,7 +144,6 @@ pub fn get_modules_as_entries(
     package_root_id: PackageRootId,
     address: Address,
 ) -> Vec<ScopeEntry> {
-    // get all files in the current package
     let dep_ids = db.package_deps(package_root_id).deref().to_owned();
     let file_sets = iter::once(package_root_id)
         .chain(dep_ids)
