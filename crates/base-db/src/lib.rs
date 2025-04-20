@@ -24,6 +24,18 @@ pub trait SourceDatabase: std::fmt::Debug {
 
     /// Returns the set of errors obtained from parsing the file including validation errors.
     fn parse_errors(&self, file_id: FileId) -> Option<Arc<[SyntaxError]>>;
+
+    #[ra_salsa::input]
+    fn file_package_root(&self, file_id: FileId) -> PackageRootId;
+
+    #[ra_salsa::input]
+    fn builtins_file_id(&self) -> FileId;
+
+    #[ra_salsa::input]
+    fn package_root(&self, id: PackageRootId) -> Arc<PackageRoot>;
+
+    #[ra_salsa::input]
+    fn package_deps(&self, manifest_file_id: PackageRootId) -> Arc<Vec<PackageRootId>>;
 }
 
 fn parse(db: &dyn SourceDatabase, file_id: FileId) -> Parse {
@@ -38,26 +50,4 @@ fn parse_errors(db: &dyn SourceDatabase, file_id: FileId) -> Option<Arc<[SyntaxE
         [] => None,
         [..] => Some(errors.into()),
     }
-}
-
-/// We don't want to give HIR knowledge of source roots, hence we extract these
-/// methods into a separate DB.
-#[ra_salsa::query_group(PackageRootDatabaseStorage)]
-pub trait PackageRootDatabase: SourceDatabase + Upcast<dyn SourceDatabase> {
-    // /// Path to a file, relative to the root of its source root.
-    // /// Source root of the file.
-    // #[ra_salsa::input]
-    // fn file_source_root(&self, file_id: FileId) -> SourceRootId;
-
-    #[ra_salsa::input]
-    fn file_package_root_id(&self, file_id: FileId) -> PackageRootId;
-
-    #[ra_salsa::input]
-    fn builtins_file_id(&self) -> FileId;
-
-    #[ra_salsa::input]
-    fn package_root(&self, id: PackageRootId) -> Arc<PackageRoot>;
-
-    #[ra_salsa::input]
-    fn package_deps(&self, manifest_file_id: PackageRootId) -> Arc<Vec<PackageRootId>>;
 }

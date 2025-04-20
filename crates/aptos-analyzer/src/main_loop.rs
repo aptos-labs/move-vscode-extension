@@ -10,7 +10,7 @@ use crate::lsp::from_proto;
 use crate::lsp::utils::{Progress, notification_is};
 use crate::reload::FetchWorkspacesProgress;
 use crate::{flycheck, lsp_ext};
-use base_db::PackageRootDatabase;
+use base_db::SourceDatabase;
 use crossbeam_channel::Receiver;
 use lsp_server::Connection;
 use lsp_types::notification::Notification;
@@ -317,7 +317,7 @@ impl GlobalState {
                 .iter()
                 .map(|path| vfs.file_id(path).unwrap())
                 .filter(|&file_id| {
-                    let package_root_id = db.file_package_root_id(file_id);
+                    let package_root_id = db.file_package_root(file_id);
                     // Only publish diagnostics for files in the workspace, not from crates.io deps
                     // or the sysroot.
                     // While theoretically these should never have errors, we have quite a few false

@@ -1,4 +1,4 @@
-use crate::PackageRootDatabase;
+use crate::SourceDatabase;
 use crate::package_root::{PackageRoot, PackageRootId};
 use std::collections::HashMap;
 use std::fmt;
@@ -38,7 +38,7 @@ impl FileChange {
         self.builtins_file = Some((file_id, builtins_text));
     }
 
-    pub fn apply(self, db: &mut dyn PackageRootDatabase) {
+    pub fn apply(self, db: &mut dyn SourceDatabase) {
         let _p = tracing::info_span!("FileChange::apply").entered();
 
         if let Some(package_roots) = self.package_roots {
@@ -46,7 +46,7 @@ impl FileChange {
                 let root_id = PackageRootId(idx as u32);
                 let root_file_set = &root.file_set;
                 for file_id in root_file_set.iter() {
-                    db.set_file_package_root_id(file_id, root_id);
+                    db.set_file_package_root(file_id, root_id);
                 }
                 db.set_package_root(root_id, Arc::from(root))
             }
@@ -59,10 +59,10 @@ impl FileChange {
 
         if let Some(package_graph) = self.package_graph {
             for (manifest_file_id, dep_manifest_ids) in package_graph.into_iter() {
-                let main_package_id = db.file_package_root_id(manifest_file_id);
+                let main_package_id = db.file_package_root(manifest_file_id);
                 let deps_package_ids = dep_manifest_ids
                     .into_iter()
-                    .map(|it| db.file_package_root_id(it))
+                    .map(|it| db.file_package_root(it))
                     .collect::<Vec<_>>();
                 tracing::info!(?main_package_id, ?deps_package_ids, "reset db package deps");
                 db.set_package_deps(main_package_id, Arc::from(deps_package_ids));

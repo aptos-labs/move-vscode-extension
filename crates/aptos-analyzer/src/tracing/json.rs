@@ -7,8 +7,8 @@
 //! Registry::default().with(layer).init();
 //! ```
 
-use std::{io::Write as _, marker::PhantomData, time::Instant};
 use std::collections::HashSet;
+use std::{io::Write as _, marker::PhantomData, time::Instant};
 use tracing::{
     Event, Subscriber,
     span::{Attributes, Id},

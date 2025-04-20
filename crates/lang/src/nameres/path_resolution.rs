@@ -93,7 +93,7 @@ pub fn get_method_resolve_variants(
     self_ty: &Ty,
     current_file_id: FileId,
 ) -> Vec<ScopeEntry> {
-    let package_id = db.file_package_root_id(current_file_id);
+    let package_id = db.file_package_root(current_file_id);
     let Some(InFile {
         file_id,
         value: receiver_item_module,
@@ -191,6 +191,6 @@ impl ResolutionContext {
     }
 
     pub fn package_root_id(&self, db: &dyn HirDatabase) -> PackageRootId {
-        db.file_package_root_id(self.path.file_id)
+        db.file_package_root(self.path.file_id)
     }
 }

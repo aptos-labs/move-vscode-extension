@@ -1,10 +1,10 @@
 //! Basic tree diffing functionality.
 
-use std::collections::HashMap;
 use indexmap::IndexMap;
+use std::collections::HashMap;
 use syntax::{NodeOrToken, SyntaxElement, SyntaxNode};
 
-use crate::{text_edit::TextEditBuilder};
+use crate::text_edit::TextEditBuilder;
 
 #[derive(Debug, Hash, PartialEq, Eq)]
 enum TreeDiffInsertPos {

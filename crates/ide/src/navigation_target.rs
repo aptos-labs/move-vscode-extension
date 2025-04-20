@@ -1,4 +1,4 @@
-use base_db::{PackageRootDatabase, Upcast};
+use base_db::{SourceDatabase, Upcast};
 use ide_db::{RootDatabase, SymbolKind, ast_kind_to_symbol_kind};
 use lang::nameres::scope::ScopeEntry;
 use std::fmt;

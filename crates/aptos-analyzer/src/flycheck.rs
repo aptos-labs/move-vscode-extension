@@ -3,10 +3,10 @@ use crate::toolchain;
 use camino::Utf8PathBuf;
 use crossbeam_channel::{Receiver, Sender, select_biased, unbounded};
 use paths::AbsPathBuf;
+use std::collections::HashMap;
 use std::process::Command;
 use std::time::Duration;
 use std::{fmt, io};
-use std::collections::HashMap;
 use triomphe::Arc;
 
 pub(crate) mod compiler_diagnostic;
