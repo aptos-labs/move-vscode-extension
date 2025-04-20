@@ -65,7 +65,7 @@ impl FileChange {
                     .map(|it| db.file_package_root(it))
                     .collect::<Vec<_>>();
                 tracing::info!(?main_package_id, ?deps_package_ids, "reset db package deps");
-                db.set_package_deps(main_package_id, Arc::from(deps_package_ids));
+                db.set__package_deps(main_package_id, Arc::from(deps_package_ids));
             }
         }
 

@@ -45,9 +45,9 @@ impl ManifestPath {
         Ok(manifests)
     }
 
-    fn find_manifests_in_child_directories(entities: ReadDir) -> Vec<ManifestPath> {
+    fn find_manifests_in_child_directories(dir_entries: ReadDir) -> Vec<ManifestPath> {
         // Only one level down to avoid cycles the easy way and stop a runaway scan with large projects
-        entities
+        dir_entries
             .filter_map(Result::ok)
             .map(|it| it.path().join("Move.toml"))
             .filter(|it| it.exists())
@@ -80,9 +80,9 @@ impl ManifestPath {
         // hardcoded discovery for aptos-core repository
         let mut manifests = vec![];
         for ws_root in ws_roots {
-            let aptos_move_dir = ws_root.join("aptos-move");
-            if fs::exists(&aptos_move_dir).ok()? {
-                for entry in walkdir::WalkDir::new(aptos_move_dir)
+            let framework_dir = ws_root.join("aptos-move").join("framework");
+            if fs::exists(&framework_dir).ok()? {
+                for entry in walkdir::WalkDir::new(framework_dir)
                     .into_iter()
                     .filter_map(|it| it.ok())
                 {
