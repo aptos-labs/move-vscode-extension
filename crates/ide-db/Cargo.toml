@@ -8,8 +8,6 @@ license.workspace = true
 [dependencies]
 indexmap.workspace = true
 
-nohash-hasher = "0.2.0"
-
 itertools = { workspace = true }
 line-index = { workspace = true }
 tracing = { workspace = true }

@@ -1,9 +1,9 @@
 pub(crate) mod to_proto;
 
+use std::collections::{HashMap, HashSet};
 use crate::global_state::GlobalStateSnapshot;
 use crate::lsp;
 use crate::main_loop::DiagnosticsTaskKind;
-use nohash_hasher::{IntMap, IntSet};
 use std::mem;
 use stdx::iter_eq_by;
 use stdx::itertools::Itertools;
@@ -17,13 +17,13 @@ pub(crate) type DiagnosticsGeneration = usize;
 #[derive(Debug, Default, Clone)]
 pub(crate) struct DiagnosticCollection {
     // FIXME: should be IntMap<FileId, Vec<ra_id::Diagnostic>>
-    pub(crate) native_syntax: IntMap<FileId, (DiagnosticsGeneration, Vec<lsp_types::Diagnostic>)>,
-    pub(crate) native_semantic: IntMap<FileId, (DiagnosticsGeneration, Vec<lsp_types::Diagnostic>)>,
+    pub(crate) native_syntax: HashMap<FileId, (DiagnosticsGeneration, Vec<lsp_types::Diagnostic>)>,
+    pub(crate) native_semantic: HashMap<FileId, (DiagnosticsGeneration, Vec<lsp_types::Diagnostic>)>,
 
     // flycheck_id (ws_id) -> (file_id -> Vec<Diagnostic>)
-    pub(crate) flycheck: IntMap<usize, IntMap<FileId, Vec<lsp_types::Diagnostic>>>,
+    pub(crate) flycheck: HashMap<usize, HashMap<FileId, Vec<lsp_types::Diagnostic>>>,
     // pub(crate) flycheck_fixes: Arc<IntMap<usize, IntMap<FileId, Vec<Fix>>>>,
-    changes: IntSet<FileId>,
+    changes: HashSet<FileId>,
 
     /// Counter for supplying a new generation number for diagnostics.
     /// This is used to keep track of when to clear the diagnostics for a given file as we compute
@@ -147,7 +147,7 @@ impl DiagnosticCollection {
             .chain(check)
     }
 
-    pub(crate) fn take_changes(&mut self) -> Option<IntSet<FileId>> {
+    pub(crate) fn take_changes(&mut self) -> Option<HashSet<FileId>> {
         if self.changes.is_empty() {
             return None;
         }

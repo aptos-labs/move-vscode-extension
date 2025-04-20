@@ -8,7 +8,6 @@ use crate::assists::Command;
 use crate::syntax_helpers::tree_diff::diff;
 use crate::text_edit::{TextEdit, TextEditBuilder};
 use itertools::Itertools;
-use nohash_hasher::IntMap;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::{iter, mem};
@@ -19,7 +18,7 @@ use vfs::{AnchoredPathBuf, FileId};
 
 #[derive(Default, Debug, Clone)]
 pub struct SourceChange {
-    pub source_file_edits: IntMap<FileId, (TextEdit, Option<SnippetEdit>)>,
+    pub source_file_edits: HashMap<FileId, (TextEdit, Option<SnippetEdit>)>,
     pub file_system_edits: Vec<FileSystemEdit>,
     pub is_snippet: bool,
 }
@@ -28,7 +27,7 @@ impl SourceChange {
     /// Creates a new SourceChange with the given label
     /// from the edits.
     pub fn from_edits(
-        source_file_edits: IntMap<FileId, (TextEdit, Option<SnippetEdit>)>,
+        source_file_edits: HashMap<FileId, (TextEdit, Option<SnippetEdit>)>,
         file_system_edits: Vec<FileSystemEdit>,
     ) -> Self {
         SourceChange {
@@ -116,8 +115,8 @@ impl Extend<FileSystemEdit> for SourceChange {
     }
 }
 
-impl From<IntMap<FileId, TextEdit>> for SourceChange {
-    fn from(source_file_edits: IntMap<FileId, TextEdit>) -> SourceChange {
+impl From<HashMap<FileId, TextEdit>> for SourceChange {
+    fn from(source_file_edits: HashMap<FileId, TextEdit>) -> SourceChange {
         let source_file_edits = source_file_edits
             .into_iter()
             .map(|(file_id, edit)| (file_id, (edit, None)))

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::config::{Config, ConfigErrors};
 use crate::diagnostics::DiagnosticCollection;
 use crate::flycheck::{FlycheckHandle, FlycheckMessage};
@@ -15,7 +16,6 @@ use crossbeam_channel::{Receiver, Sender, unbounded};
 use ide::{Analysis, AnalysisHost, Cancellable};
 use lang::builtin_files::BUILTINS_FILE;
 use lsp_types::Url;
-use nohash_hasher::IntMap;
 use parking_lot::{
     MappedRwLockReadGuard, RwLock, RwLockReadGuard, RwLockUpgradableReadGuard, RwLockWriteGuard,
 };
@@ -75,7 +75,7 @@ pub(crate) struct GlobalState {
 
     // VFS
     pub(crate) loader: Handle<Box<dyn vfs::loader::Handle>, Receiver<vfs::loader::Message>>,
-    pub(crate) vfs: Arc<RwLock<(vfs::Vfs, IntMap<FileId, LineEndings>)>>,
+    pub(crate) vfs: Arc<RwLock<(vfs::Vfs, HashMap<FileId, LineEndings>)>>,
     pub(crate) vfs_config_version: u32,
     pub(crate) vfs_progress_config_version: u32,
     pub(crate) vfs_done: bool,
@@ -98,7 +98,7 @@ pub(crate) struct GlobalStateSnapshot {
     pub(crate) analysis: Analysis,
     mem_docs: MemDocs,
     // pub(crate) semantic_tokens_cache: Arc<Mutex<FxHashMap<Url, SemanticTokens>>>,
-    vfs: Arc<RwLock<(vfs::Vfs, IntMap<FileId, LineEndings>)>>,
+    vfs: Arc<RwLock<(vfs::Vfs, HashMap<FileId, LineEndings>)>>,
     pub(crate) workspaces: Arc<Vec<AptosWorkspace>>,
     pub(crate) flycheck: Arc<[FlycheckHandle]>,
 }
@@ -125,7 +125,7 @@ impl GlobalState {
 
         let (flycheck_sender, flycheck_receiver) = unbounded();
 
-        let vfs = Arc::new(RwLock::new((vfs::Vfs::default(), IntMap::default())));
+        let vfs = Arc::new(RwLock::new((vfs::Vfs::default(), HashMap::default())));
         let builtins_file_id = {
             let vfs = &mut vfs.write().0;
             let builtins_path = VfsPath::new_virtual_path("/builtins.move".to_string());
