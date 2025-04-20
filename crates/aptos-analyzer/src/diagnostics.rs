@@ -9,9 +9,6 @@ use stdx::iter_eq_by;
 use stdx::itertools::Itertools;
 use vfs::FileId;
 
-// pub(crate) type CheckFixes =
-//     Arc<Vec<FxHashMap<Option<Arc<PackageRootId>>, FxHashMap<FileId, Vec<Fix>>>>>;
-
 pub(crate) type DiagnosticsGeneration = usize;
 
 #[derive(Debug, Default, Clone)]
@@ -22,7 +19,6 @@ pub(crate) struct DiagnosticCollection {
 
     // flycheck_id (ws_id) -> (file_id -> Vec<Diagnostic>)
     pub(crate) flycheck: HashMap<usize, HashMap<FileId, Vec<lsp_types::Diagnostic>>>,
-    // pub(crate) flycheck_fixes: Arc<IntMap<usize, IntMap<FileId, Vec<Fix>>>>,
     changes: HashSet<FileId>,
 
     /// Counter for supplying a new generation number for diagnostics.
@@ -32,26 +28,15 @@ pub(crate) struct DiagnosticCollection {
     generation: DiagnosticsGeneration,
 }
 
-// #[derive(Debug, Clone)]
-// pub(crate) struct Fix {
-//     // Fixes may be triggerable from multiple ranges.
-//     pub(crate) ranges: Vec<lsp_types::Range>,
-//     pub(crate) action: lsp_ext::CodeAction,
-// }
-
 impl DiagnosticCollection {
     pub(crate) fn clear_check(&mut self, flycheck_id: usize) {
         if let Some(check) = self.flycheck.get_mut(&flycheck_id) {
             let drained_keys = check.drain().map(|(k, _)| k.to_owned());
             self.changes.extend(drained_keys)
         }
-        // if let Some(fixes) = Arc::make_mut(&mut self.check_fixes).get_mut(&flycheck_id) {
-        //     fixes.clear();
-        // }
     }
 
     pub(crate) fn clear_check_all(&mut self) {
-        // Arc::make_mut(&mut self.check_fixes).clear();
         for files_diags in self.flycheck.values_mut() {
             let drained_keys = files_diags.drain().map(|(k, _)| k.to_owned());
             self.changes.extend(drained_keys);
@@ -82,16 +67,6 @@ impl DiagnosticCollection {
                 return;
             }
         }
-
-        // if let Some(fix) = fix {
-        //     let check_fixes = Arc::make_mut(&mut self.check_fixes);
-        //     check_fixes
-        //         .entry(flycheck_id)
-        //         .or_default()
-        //         .entry(file_id)
-        //         .or_default()
-        //         .push(*fix);
-        // }
 
         existing_diagnostics.push(diagnostic);
         self.changes.insert(file_id);

@@ -67,7 +67,7 @@ pub(crate) fn map_aptos_diagnostic_to_lsp(
 pub(crate) fn aptos_diagnostic_severity(severity: &str) -> lsp_types::DiagnosticSeverity {
     match severity {
         "Bug" | "Error" => lsp_types::DiagnosticSeverity::ERROR,
-        "Warning [lint]" | "Warning" => lsp_types::DiagnosticSeverity::HINT,
+        "Warning [lint]" | "Warning" => lsp_types::DiagnosticSeverity::WARNING,
         _ => lsp_types::DiagnosticSeverity::INFORMATION,
     }
 }
