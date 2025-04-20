@@ -8,7 +8,6 @@ license.workspace = true
 [dependencies]
 enumset = "1.1.5"
 
-rustc-hash = { workspace = true }
 itertools = { workspace = true }
 ra_salsa.workspace = true
 la-arena.workspace = true

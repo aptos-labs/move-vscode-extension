@@ -1,8 +1,10 @@
 //! Basic tree diffing functionality.
-use rustc_hash::FxHashMap;
+
+use std::collections::HashMap;
+use indexmap::IndexMap;
 use syntax::{NodeOrToken, SyntaxElement, SyntaxNode};
 
-use crate::{FxIndexMap, text_edit::TextEditBuilder};
+use crate::{text_edit::TextEditBuilder};
 
 #[derive(Debug, Hash, PartialEq, Eq)]
 enum TreeDiffInsertPos {
@@ -12,14 +14,14 @@ enum TreeDiffInsertPos {
 
 #[derive(Debug)]
 pub struct TreeDiff {
-    replacements: FxHashMap<SyntaxElement, SyntaxElement>,
+    replacements: HashMap<SyntaxElement, SyntaxElement>,
     deletions: Vec<SyntaxElement>,
     // the vec as well as the indexmap are both here to preserve order
-    insertions: FxIndexMap<TreeDiffInsertPos, Vec<SyntaxElement>>,
+    insertions: IndexMap<TreeDiffInsertPos, Vec<SyntaxElement>>,
 }
 
 impl TreeDiff {
-    pub fn into_text_edit(&self, builder: &mut TextEditBuilder) {
+    pub fn to_text_edit(&self, builder: &mut TextEditBuilder) {
         let _p = tracing::info_span!("into_text_edit").entered();
 
         for (anchor, to) in &self.insertions {
@@ -52,8 +54,8 @@ pub fn diff(from: &SyntaxNode, to: &SyntaxNode) -> TreeDiff {
     let _p = tracing::info_span!("diff").entered();
 
     let mut diff = TreeDiff {
-        replacements: FxHashMap::default(),
-        insertions: FxIndexMap::default(),
+        replacements: HashMap::default(),
+        insertions: IndexMap::default(),
         deletions: Vec::new(),
     };
     let (from, to) = (from.clone().into(), to.clone().into());

@@ -1,10 +1,10 @@
 use crate::manifest_path::ManifestPath;
 use anyhow::{Context, bail};
 use paths::{AbsPath, AbsPathBuf, Utf8PathBuf};
-use rustc_hash::FxHashSet;
 use std::fs::{ReadDir, read_dir};
 use std::process::Command;
 use std::{fs, io};
+use std::collections::HashSet;
 
 pub mod aptos_package;
 pub mod aptos_workspace;
@@ -64,7 +64,7 @@ impl ManifestPath {
             .iter()
             .filter_map(|ws_root| ManifestPath::discover(ws_root.as_ref()).ok())
             .flatten()
-            .collect::<FxHashSet<_>>()
+            .collect::<HashSet<_>>()
             .into_iter()
             .collect::<Vec<_>>();
 

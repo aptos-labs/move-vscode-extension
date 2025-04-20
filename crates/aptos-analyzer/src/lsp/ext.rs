@@ -1,8 +1,8 @@
 use lsp_types::notification::Notification;
 use lsp_types::request::Request;
 use lsp_types::{CodeActionKind, Range, TextDocumentIdentifier};
-use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::ops;
 
 pub enum ReloadWorkspace {}
@@ -141,13 +141,12 @@ pub struct CodeActionData {
 #[serde(rename_all = "camelCase")]
 pub struct SnippetWorkspaceEdit {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub changes: Option<FxHashMap<lsp_types::Url, Vec<lsp_types::TextEdit>>>,
+    pub changes: Option<HashMap<lsp_types::Url, Vec<lsp_types::TextEdit>>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub document_changes: Option<Vec<SnippetDocumentChangeOperation>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub change_annotations: Option<
-        std::collections::HashMap<lsp_types::ChangeAnnotationIdentifier, lsp_types::ChangeAnnotation>,
-    >,
+    pub change_annotations:
+        Option<HashMap<lsp_types::ChangeAnnotationIdentifier, lsp_types::ChangeAnnotation>>,
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Deserialize, Serialize)]

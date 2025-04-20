@@ -9,8 +9,6 @@ license.workspace = true
 tracing = { workspace = true }
 ra_salsa = { workspace = true }
 triomphe = { workspace = true }
-la-arena.workspace = true
-rustc-hash.workspace = true
 
 vfs = { workspace = true }
 

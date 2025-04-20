@@ -1,8 +1,8 @@
 //! In-memory document information.
 
+use std::collections::HashMap;
 use std::mem;
 
-use rustc_hash::FxHashMap;
 use vfs::VfsPath;
 
 /// Holds the set of in-memory documents.
@@ -11,7 +11,7 @@ use vfs::VfsPath;
 /// might be different from what's on disk.
 #[derive(Default, Clone)]
 pub(crate) struct MemDocs {
-    mem_docs: FxHashMap<VfsPath, DocumentData>,
+    mem_docs: HashMap<VfsPath, DocumentData>,
     added_or_removed: bool,
 }
 
