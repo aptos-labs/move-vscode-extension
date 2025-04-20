@@ -23,7 +23,7 @@ use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::{TyInfer, TyVar};
 use crate::types::ty::type_param::TyTypeParameter;
-use base_db::PackageRootDatabase;
+use base_db::SourceDatabase;
 use base_db::package_root::PackageRootId;
 use syntax::ast;
 use syntax::files::InFile;
@@ -161,7 +161,7 @@ impl Ty {
         }
     }
 
-    pub fn render(&self, db: &dyn PackageRootDatabase) -> String {
+    pub fn render(&self, db: &dyn SourceDatabase) -> String {
         TypeRenderer::new(db).render(self)
     }
 }

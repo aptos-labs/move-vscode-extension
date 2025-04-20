@@ -1,10 +1,10 @@
 use crate::manifest_path::ManifestPath;
 use anyhow::{Context, bail};
 use paths::{AbsPath, AbsPathBuf, Utf8PathBuf};
+use std::collections::HashSet;
 use std::fs::{ReadDir, read_dir};
 use std::process::Command;
 use std::{fs, io};
-use std::collections::HashSet;
 
 pub mod aptos_package;
 pub mod aptos_workspace;

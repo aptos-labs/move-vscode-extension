@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
+use base_db::SourceDatabase;
 use base_db::change::{FileChange, PackageGraph};
-use base_db::{PackageRootDatabase, SourceDatabase};
 use ide_completion::item::CompletionItem;
 use ide_db::{LineIndexDatabase, RootDatabase};
 use line_index::{LineCol, LineIndex};
@@ -151,7 +151,7 @@ impl Analysis {
     // }
 
     pub fn package_root_id(&self, file_id: FileId) -> Cancellable<PackageRootId> {
-        self.with_db(|db| db.file_package_root_id(file_id))
+        self.with_db(|db| db.file_package_root(file_id))
     }
 
     // pub fn is_local_source_root(&self, source_root_id: SourceRoot) -> Cancellable<bool> {

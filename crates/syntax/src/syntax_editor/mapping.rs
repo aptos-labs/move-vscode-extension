@@ -2,8 +2,8 @@
 //!
 //! [`SyntaxMappingBuilder`] should be used to create mappings to add to a [`SyntaxEditor`]
 
-use std::collections::HashMap;
 use itertools::Itertools;
+use std::collections::HashMap;
 
 use crate::{SyntaxElement, SyntaxNode};
 

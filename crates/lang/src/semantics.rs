@@ -1,18 +1,18 @@
 mod source_to_def;
 
 use crate::db::{HirDatabase, NodeInferenceExt};
-use crate::nameres::scope::ScopeEntry;
 use crate::nameres::ResolveReference;
+use crate::nameres::scope::ScopeEntry;
 use crate::semantics::source_to_def::SourceToDefCache;
-use crate::types::inference::inference_result::InferenceResult;
 use crate::types::inference::InferenceCtx;
+use crate::types::inference::inference_result::InferenceResult;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
 use base_db::package_root::PackageRootId;
 use std::cell::RefCell;
 use std::{fmt, ops};
 use syntax::files::InFile;
-use syntax::{ast, AstNode, SyntaxNode, SyntaxToken};
+use syntax::{AstNode, SyntaxNode, SyntaxToken, ast};
 use triomphe::Arc;
 use vfs::FileId;
 
@@ -44,7 +44,7 @@ impl<'db, DB> ops::Deref for Semantics<'db, DB> {
 
 impl<DB: HirDatabase> Semantics<'_, DB> {
     pub fn new(db: &DB, ws_file_id: FileId) -> Semantics<'_, DB> {
-        let ws_root = db.file_package_root_id(ws_file_id);
+        let ws_root = db.file_package_root(ws_file_id);
         let impl_ = SemanticsImpl::new(db, ws_root);
         Semantics { db, imp: impl_ }
     }

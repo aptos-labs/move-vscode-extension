@@ -10,7 +10,7 @@ pub mod source_change;
 mod syntax_helpers;
 pub mod text_edit;
 
-use base_db::{PackageRootDatabase, SourceDatabase, Upcast};
+use base_db::{SourceDatabase, Upcast};
 use lang::db::HirDatabase;
 use line_index::LineIndex;
 use std::fmt;
@@ -21,7 +21,6 @@ use vfs::FileId;
 
 #[ra_salsa::database(
     base_db::SourceDatabaseStorage,
-    base_db::PackageRootDatabaseStorage,
     lang::db::HirDatabaseStorage,
     LineIndexDatabaseStorage
 )]
@@ -55,13 +54,6 @@ impl Upcast<dyn HirDatabase> for RootDatabase {
 impl Upcast<dyn SourceDatabase> for RootDatabase {
     #[inline]
     fn upcast(&self) -> &(dyn SourceDatabase + 'static) {
-        self
-    }
-}
-
-impl Upcast<dyn PackageRootDatabase> for RootDatabase {
-    #[inline]
-    fn upcast(&self) -> &(dyn PackageRootDatabase + 'static) {
         self
     }
 }

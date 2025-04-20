@@ -1,4 +1,4 @@
-use base_db::PackageRootDatabase;
+use base_db::SourceDatabase;
 use parser::SyntaxKind;
 use std::fmt;
 use std::fmt::Formatter;
@@ -40,7 +40,7 @@ impl SyntaxLoc {
         }
     }
 
-    pub fn to_ast<T: AstNode>(&self, db: &dyn PackageRootDatabase) -> Option<InFile<T>> {
+    pub fn to_ast<T: AstNode>(&self, db: &dyn SourceDatabase) -> Option<InFile<T>> {
         let file = db.parse(self.file_id).tree();
         if !file.syntax().text_range().contains_inclusive(self.node_offset) {
             tracing::error!(

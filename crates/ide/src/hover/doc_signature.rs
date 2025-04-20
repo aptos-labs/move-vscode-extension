@@ -1,9 +1,9 @@
 use ide_db::RootDatabase;
-use lang::nameres::fq_named_element::ItemFQNameOwner;
 use lang::Semantics;
+use lang::nameres::fq_named_element::ItemFQNameOwner;
 use std::fmt::Write;
 use syntax::ast::NamedElement;
-use syntax::{ast, match_ast, AstNode};
+use syntax::{AstNode, ast, match_ast};
 
 pub trait DocSignatureOwner {
     fn header(&self, sema: &Semantics<'_, RootDatabase>, buffer: &mut String) -> Option<()>;

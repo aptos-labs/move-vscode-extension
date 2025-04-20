@@ -1,8 +1,8 @@
 //! Implementation of applying changes to a syntax tree.
 
-use std::{cmp::Ordering, collections::VecDeque, ops::RangeInclusive};
-use std::collections::HashMap;
 use rowan::TextRange;
+use std::collections::HashMap;
+use std::{cmp::Ordering, collections::VecDeque, ops::RangeInclusive};
 
 use crate::{
     syntax_editor::{mapping::MissingMapping, Change, ChangeKind, PositionRepr},

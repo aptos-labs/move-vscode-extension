@@ -3,7 +3,7 @@ use crate::nameres::blocks::get_entries_in_blocks;
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::nameres::use_speck_entries::use_speck_entries;
-use base_db::PackageRootDatabase;
+use base_db::SourceDatabase;
 use syntax::ast::{GenericElement, HasItems};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, SyntaxNode, ast};
@@ -95,7 +95,7 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
     entries
 }
 
-fn builtin_functions(db: &dyn PackageRootDatabase) -> Vec<InFile<ast::Fun>> {
+fn builtin_functions(db: &dyn SourceDatabase) -> Vec<InFile<ast::Fun>> {
     let file_id = db.builtins_file_id();
     let builtin_module = builtin_module(db);
     builtin_module
@@ -105,7 +105,7 @@ fn builtin_functions(db: &dyn PackageRootDatabase) -> Vec<InFile<ast::Fun>> {
         .collect()
 }
 
-fn builtin_spec_functions(db: &dyn PackageRootDatabase) -> Vec<InFile<ast::SpecFun>> {
+fn builtin_spec_functions(db: &dyn SourceDatabase) -> Vec<InFile<ast::SpecFun>> {
     let file_id = db.builtins_file_id();
     let builtin_module = builtin_module(db);
     builtin_module
@@ -115,7 +115,7 @@ fn builtin_spec_functions(db: &dyn PackageRootDatabase) -> Vec<InFile<ast::SpecF
         .collect()
 }
 
-fn builtin_module(db: &dyn PackageRootDatabase) -> ast::Module {
+fn builtin_module(db: &dyn SourceDatabase) -> ast::Module {
     let file_id = db.builtins_file_id();
     let builtins_module = db
         .parse(file_id)

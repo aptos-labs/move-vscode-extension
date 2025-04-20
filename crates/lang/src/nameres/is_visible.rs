@@ -147,7 +147,7 @@ pub fn is_visible_in_context(
             VisLevel::Package => {
                 // check for the same source root
                 // todo: change later to package_id
-                db.file_package_root_id(context_file_id) == db.file_package_root_id(item_file_id)
+                db.file_package_root(context_file_id) == db.file_package_root(item_file_id)
             }
         },
     }
