@@ -1,9 +1,9 @@
 use ide_db::RootDatabase;
-use lang::Semantics;
 use lang::nameres::fq_named_element::ItemFQNameOwner;
+use lang::Semantics;
 use std::fmt::Write;
 use syntax::ast::NamedElement;
-use syntax::{AstNode, ast, match_ast};
+use syntax::{ast, match_ast, AstNode};
 
 pub trait DocSignatureOwner {
     fn header(&self, sema: &Semantics<'_, RootDatabase>, buffer: &mut String) -> Option<()>;
@@ -135,12 +135,9 @@ fn generate_ident_pat(
     write!(buffer, "{ident_kind} {}", ident_pat.name()?.as_string()).ok()?;
 
     let ident_pat = sema.wrap_node_infile(ident_pat);
-    if let Some(inference) = sema.inference(&ident_pat, false) {
-        let ident_pat_type = inference.get_pat_type(&ast::Pat::IdentPat(ident_pat.value));
-        if let Some(ty) = ident_pat_type {
-            let rendered_ty = sema.render_ty(ty);
-            write!(buffer, ": {}", rendered_ty).ok()?;
-        }
+    if let Some(ident_pat_ty) = sema.get_ident_pat_type(&ident_pat, false) {
+        let rendered_ty = sema.render_ty(ident_pat_ty);
+        write!(buffer, ": {}", rendered_ty).ok()?;
     }
 
     Some(())
