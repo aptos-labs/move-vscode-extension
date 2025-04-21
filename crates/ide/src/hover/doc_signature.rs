@@ -11,14 +11,15 @@ pub trait DocSignatureOwner {
 }
 
 impl DocSignatureOwner for ast::AnyNamedElement {
-    fn header(&self, _sema: &Semantics<'_, RootDatabase>, buffer: &mut String) -> Option<()> {
+    fn header(&self, sema: &Semantics<'_, RootDatabase>, buffer: &mut String) -> Option<()> {
         let header = match_ast! {
             match (self.syntax()) {
-                ast::Module(it) => it.fq_name()?.address_identifier_text(),
-                ast::Item(it) => it.fq_name()?.module_identifier_text(),
-                ast::NamedField(it) => it.fields_owner().fq_name()?.identifier_text(),
-                ast::Variant(it) => it.enum_().fq_name()?.identifier_text(),
-                ast::Const(it) => it.fq_name()?.module_identifier_text(),
+                ast::Module(it) => sema.fq_name(it)?.address_identifier_text(),
+                ast::Item(it) => sema.fq_name(it)?.module_identifier_text(),
+                ast::SpecInlineFun(it) => sema.fq_name(it)?.module_identifier_text(),
+                ast::NamedField(it) => sema.fq_name(it.fields_owner())?.identifier_text(),
+                ast::Variant(it) => sema.fq_name(it.enum_())?.identifier_text(),
+                ast::Const(it) => sema.fq_name(it)?.module_identifier_text(),
                 ast::IdentPat(_) => {
                     // no header
                     return None;
@@ -37,7 +38,7 @@ impl DocSignatureOwner for ast::AnyNamedElement {
         match_ast! {
             match (self.syntax()) {
                 ast::Module(it) => generate_module(it, buffer),
-                ast::Fun(it) => generate_fun(it, buffer),
+                ast::AnyFun(it) => generate_any_fun(it, buffer),
                 ast::Struct(it) => generate_struct(it, buffer),
                 ast::Enum(it) => generate_enum(it, buffer),
                 ast::Const(it) => generate_const(it, buffer),
@@ -60,13 +61,18 @@ fn generate_module(module: ast::Module, buffer: &mut String) -> Option<()> {
     Some(())
 }
 
-fn generate_fun(fun: ast::Fun, buffer: &mut String) -> Option<()> {
-    write!(buffer, "fun").ok()?;
+fn generate_any_fun(any_fun: ast::AnyFun, buffer: &mut String) -> Option<()> {
+    let item_kw = match any_fun {
+        ast::AnyFun::Fun(_) => "fun",
+        ast::AnyFun::SpecFun(_) | ast::AnyFun::SpecInlineFun(_) => "spec fun",
+    };
+    write!(buffer, "{}", item_kw).ok()?;
     write!(buffer, " ").ok()?;
-    write!(buffer, "{}", fun.name()?).ok()?;
-    if let Some(param_list) = fun.param_list() {
+    write!(buffer, "{}", any_fun.name()?).ok()?;
+    if let Some(param_list) = any_fun.param_list() {
         generate_param_list(param_list, buffer);
     }
+    generate_type_annotation(any_fun.return_type(), buffer);
     Some(())
 }
 

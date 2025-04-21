@@ -96,27 +96,25 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
 }
 
 fn builtin_functions(db: &dyn SourceDatabase) -> Vec<InFile<ast::Fun>> {
-    let file_id = db.builtins_file_id();
-    let builtin_module = builtin_module(db);
-    builtin_module
-        .functions()
-        .into_iter()
-        .map(|fun| fun.in_file(file_id))
-        .collect()
+    builtin_module(db)
+        .map(|module| module.map(|it| it.functions()).flatten())
+        .unwrap_or_default()
 }
 
 fn builtin_spec_functions(db: &dyn SourceDatabase) -> Vec<InFile<ast::SpecFun>> {
-    let file_id = db.builtins_file_id();
-    let builtin_module = builtin_module(db);
-    builtin_module
-        .spec_functions()
-        .into_iter()
-        .map(|fun| fun.in_file(file_id))
-        .collect()
+    builtin_module(db)
+        .map(|module| module.map(|it| it.spec_functions()).flatten())
+        .unwrap_or_default()
 }
 
-fn builtin_module(db: &dyn SourceDatabase) -> ast::Module {
-    let file_id = db.builtins_file_id();
+fn builtin_module(db: &dyn SourceDatabase) -> Option<InFile<ast::Module>> {
+    let file_id = match db.builtins_file_id() {
+        Some(fid) => fid,
+        None => {
+            tracing::error!("builtins_file is not set");
+            return None;
+        }
+    };
     let builtins_module = db
         .parse(file_id)
         .tree()
@@ -124,5 +122,5 @@ fn builtin_module(db: &dyn SourceDatabase) -> ast::Module {
         .collect::<Vec<_>>()
         .pop()
         .expect("0x0::builtins");
-    builtins_module
+    Some(builtins_module.in_file(file_id))
 }

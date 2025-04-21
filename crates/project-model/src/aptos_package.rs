@@ -4,9 +4,10 @@ use crate::move_toml::MoveToml;
 use anyhow::Context;
 use base_db::change::ManifestFileId;
 use paths::{AbsPath, AbsPathBuf};
-use std::fs;
+use std::fmt::Formatter;
+use std::{fmt, fs};
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct AptosPackage {
     content_root: AbsPathBuf,
     move_toml: MoveToml,
@@ -14,9 +15,17 @@ pub struct AptosPackage {
     deps: Vec<AptosPackage>,
 }
 
+impl fmt::Debug for AptosPackage {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("AptosPackage")
+            .field("content_root", &self.content_root().to_string())
+            .finish()
+    }
+}
+
 impl AptosPackage {
     pub fn load(manifest_path: ManifestPath, is_dep: bool) -> anyhow::Result<Self> {
-        tracing::info!("load package at {:?}", manifest_path.file.to_string());
+        tracing::info!("load package at {:?}", fs::canonicalize(&manifest_path.file)?);
 
         let file_contents = fs::read_to_string(&manifest_path)
             .with_context(|| format!("Failed to read Move.toml file {manifest_path}"))?;

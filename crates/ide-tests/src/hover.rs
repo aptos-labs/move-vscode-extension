@@ -87,7 +87,7 @@ fn test_hover_for_function() {
 module 0x1::m {
     struct S<T> { val: T }
     /// function docs
-    fun main(a: u8, b: S<u8>) {
+    fun main(a: u8, b: S<u8>): S<u8> {
         main(1, S { val: 1 });
         //^
     }
@@ -98,7 +98,7 @@ module 0x1::m {
             ```move
             0x1::m
 
-            fun main(a: u8, b: S<u8>)
+            fun main(a: u8, b: S<u8>): S<u8>
             ```
             ---
             function docs
@@ -262,6 +262,32 @@ module 0x1::m {
             ```
             ---
             module docs
+        "#]],
+    )
+}
+
+#[test]
+fn test_hover_for_spec_fun_in_module_spec() {
+    check_hover(
+        // language=Move
+        r#"
+module 0x1::m {
+}
+spec 0x1::m {
+    /// my spec_call function
+    spec fun spec_call(): u8 { 1 }
+            //^
+}
+    "#,
+        // language=Markdown
+        expect![[r#"
+            ```move
+            0x1::m
+
+            spec fun spec_call(): u8
+            ```
+            ---
+            my spec_call function
         "#]],
     )
 }

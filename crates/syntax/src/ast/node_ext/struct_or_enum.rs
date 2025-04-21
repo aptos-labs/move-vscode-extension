@@ -34,9 +34,3 @@ impl ast::StructOrEnum {
         }
     }
 }
-
-// impl InFile<ast::StructOrEnum> {
-//     pub fn module(&self) -> ast::Module {
-//         self.value.module()
-//     }
-// }

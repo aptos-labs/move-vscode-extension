@@ -48,12 +48,13 @@ impl FileChange {
                 for file_id in root_file_set.iter() {
                     db.set_file_package_root(file_id, root_id);
                 }
-                db.set_package_root(root_id, Arc::from(root))
+                db.set_package_root(root_id, Arc::from(root));
+                db.set_package_deps(root_id, Default::default());
             }
         }
 
         if let Some((builtins_file_id, builtins_text)) = self.builtins_file {
-            db.set_builtins_file_id(builtins_file_id);
+            db.set_builtins_file_id(Some(builtins_file_id));
             db.set_file_text(builtins_file_id, Arc::from(builtins_text));
         }
 
@@ -64,8 +65,7 @@ impl FileChange {
                     .into_iter()
                     .map(|it| db.file_package_root(it))
                     .collect::<Vec<_>>();
-                tracing::info!(?main_package_id, ?deps_package_ids, "reset db package deps");
-                db.set__package_deps(main_package_id, Arc::from(deps_package_ids));
+                db.set_package_deps(main_package_id, Arc::from(deps_package_ids));
             }
         }
 

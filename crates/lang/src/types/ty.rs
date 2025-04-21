@@ -161,7 +161,7 @@ impl Ty {
         }
     }
 
-    pub fn render(&self, db: &dyn SourceDatabase) -> String {
+    pub fn render(&self, db: &dyn HirDatabase) -> String {
         TypeRenderer::new(db).render(self)
     }
 }

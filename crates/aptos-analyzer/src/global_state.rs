@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use crate::config::{Config, ConfigErrors};
 use crate::diagnostics::DiagnosticCollection;
 use crate::flycheck::{FlycheckHandle, FlycheckMessage};
@@ -20,6 +19,7 @@ use parking_lot::{
     MappedRwLockReadGuard, RwLock, RwLockReadGuard, RwLockUpgradableReadGuard, RwLockWriteGuard,
 };
 use project_model::aptos_workspace::AptosWorkspace;
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
 use tracing::Level;

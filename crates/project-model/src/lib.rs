@@ -80,7 +80,7 @@ impl ManifestPath {
         // hardcoded discovery for aptos-core repository
         let mut manifests = vec![];
         for ws_root in ws_roots {
-            let aptos_move_dir = ws_root.join("aptos-move");
+            let aptos_move_dir = ws_root.join("aptos-move").join("framework");
             if fs::exists(&aptos_move_dir).ok()? {
                 for entry in walkdir::WalkDir::new(aptos_move_dir)
                     .into_iter()

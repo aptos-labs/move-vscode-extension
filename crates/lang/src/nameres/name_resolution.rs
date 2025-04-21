@@ -7,13 +7,14 @@ use crate::nameres::path_resolution::ResolutionContext;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use crate::nameres::scope_entries_owner::get_entries_in_scope;
 use crate::node_ext::ModuleLangExt;
+use crate::node_ext::item::ModuleItemExt;
 use base_db::package_root::PackageRootId;
 use parser::SyntaxKind;
 use parser::SyntaxKind::MODULE_SPEC;
 use std::collections::HashMap;
 use std::fmt::Formatter;
 use std::ops::Deref;
-use std::{fmt, iter, panic};
+use std::{fmt, iter};
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::{HasItems, ReferenceElement};
 use syntax::files::{InFile, InFileExt, InFileVecExt};
@@ -42,7 +43,7 @@ pub fn get_resolve_scopes(
     let file_id = start_at.file_id;
     let mut opt_scope = start_at.value.syntax().parent();
     let mut prev = None;
-    while let Some(scope) = opt_scope {
+    while let Some(ref scope) = opt_scope {
         scopes.push(ResolveScope {
             scope: InFile::new(file_id, scope.clone()),
             prev: prev.clone(),
@@ -57,26 +58,23 @@ pub fn get_resolve_scopes(
 
         if scope.kind() == MODULE_SPEC {
             let module_spec = scope.clone().cast::<ast::ModuleSpec>().unwrap();
-            if let Some(path) = module_spec.path() {
-                let module = path
-                    .reference()
-                    .in_file(file_id)
-                    .resolve_no_inf(db)
-                    .and_then(|it| it.cast_into::<ast::Module>(db));
-                if let Some(module) = module {
-                    let prev = Some(module_spec.syntax().clone());
-                    scopes.push(ResolveScope {
-                        scope: module.clone().map(|it| it.syntax().clone()),
-                        prev: prev.clone(),
-                    });
-                    scopes.extend(module_inner_spec_scopes(module, prev.clone()));
-                }
+            if prev == module_spec.path().map(|it| it.syntax().clone()) {
+                // skip if we're resolving module path for the module spec
+                break;
+            }
+            if let Some(module) = module_spec.clone().in_file(file_id).module(db) {
+                let prev = Some(module_spec.syntax().clone());
+                scopes.push(ResolveScope {
+                    scope: module.clone().map(|it| it.syntax().clone()),
+                    prev: prev.clone(),
+                });
+                scopes.extend(module_inner_spec_scopes(module, prev.clone()));
             }
             break;
         }
 
         let parent_scope = scope.parent();
-        prev = Some(scope);
+        prev = Some(scope.clone());
         opt_scope = parent_scope;
     }
 

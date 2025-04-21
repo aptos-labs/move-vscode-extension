@@ -6,9 +6,6 @@ use parser::SyntaxKind;
 use std::collections::HashSet;
 
 impl ast::Fun {
-    pub fn module(&self) -> Option<ast::Module> {
-        self.syntax.parent_of_type::<ast::Module>()
-    }
     pub fn modifiers(&self) -> HashSet<SyntaxKind> {
         let mut modifiers = HashSet::new();
         let vis_modifier = self.visibility_modifier();

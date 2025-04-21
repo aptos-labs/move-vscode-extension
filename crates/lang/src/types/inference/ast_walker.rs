@@ -463,7 +463,6 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
     fn infer_call_expr(&mut self, call_expr: &ast::CallExpr, expected: Expected) -> Option<Ty> {
         let call_ty = self.ctx.instantiate_call_expr_path(call_expr)?;
-
         let expected_arg_tys = self.infer_expected_call_arg_tys(&call_ty, expected);
         let args = call_expr
             .args()

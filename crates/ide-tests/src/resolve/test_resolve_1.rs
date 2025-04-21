@@ -104,3 +104,18 @@ module 0x1::m {
     "#,
     );
 }
+
+#[test]
+fn test_resolve_module_from_module_spec_with_named_address() {
+    // language=Move
+    check_resolve(
+        r#"
+module std::m {
+          //X
+}
+spec std::m {
+        //^
+}
+    "#,
+    );
+}

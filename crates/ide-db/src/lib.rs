@@ -68,9 +68,12 @@ impl Default for RootDatabase {
 
 impl RootDatabase {
     pub fn new() -> RootDatabase {
-        let db = RootDatabase {
+        let mut db = RootDatabase {
             storage: ManuallyDrop::new(ra_salsa::Storage::default()),
         };
+
+        db.set_builtins_file_id(None);
+
         // db.set_local_roots_with_durability(Default::default(), Durability::HIGH);
         // db.set_library_roots_with_durability(Default::default(), Durability::HIGH);
         // db.setup_syntax_context_root();

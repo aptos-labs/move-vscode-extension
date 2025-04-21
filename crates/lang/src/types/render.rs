@@ -1,3 +1,4 @@
+use crate::db::HirDatabase;
 use crate::loc::SyntaxLoc;
 use crate::nameres::fq_named_element::ItemFQNameOwner;
 use crate::types::ty::Ty;
@@ -6,17 +7,16 @@ use crate::types::ty::range_like::TySequence;
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyVar, TyVarKind};
 use crate::types::ty::type_param::TyTypeParameter;
-use base_db::SourceDatabase;
 use stdx::itertools::Itertools;
 use syntax::ast;
 use syntax::ast::NamedElement;
 
 pub struct TypeRenderer<'db> {
-    db: &'db dyn SourceDatabase,
+    db: &'db dyn HirDatabase,
 }
 
 impl<'db> TypeRenderer<'db> {
-    pub fn new(db: &'db dyn SourceDatabase) -> Self {
+    pub fn new(db: &'db dyn HirDatabase) -> Self {
         TypeRenderer { db }
     }
 
@@ -99,10 +99,12 @@ impl<'db> TypeRenderer<'db> {
     }
 
     fn render_ty_adt(&self, ty_adt: &TyAdt) -> String {
-        let item = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(self.db).unwrap();
+        let item = ty_adt
+            .adt_item_loc
+            .to_ast::<ast::StructOrEnum>(self.db.upcast())
+            .unwrap();
         let item_fq_name = item
-            .value
-            .fq_name()
+            .fq_name(self.db)
             .map(|it| it.identifier_text())
             .unwrap_or(anonymous());
         format!("{}{}", item_fq_name, self.render_type_args(&ty_adt.type_args))
@@ -117,7 +119,7 @@ impl<'db> TypeRenderer<'db> {
 
     fn origin_loc_name(&self, origin_loc: &SyntaxLoc) -> String {
         origin_loc
-            .to_ast::<ast::TypeParam>(self.db)
+            .to_ast::<ast::TypeParam>(self.db.upcast())
             .and_then(|tp| tp.value.name())
             .map(|tp_name| tp_name.as_string())
             .unwrap_or(anonymous())

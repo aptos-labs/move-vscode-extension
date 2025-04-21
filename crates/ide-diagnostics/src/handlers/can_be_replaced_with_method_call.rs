@@ -16,9 +16,9 @@ pub(crate) fn can_be_replaced_with_method_call(
     call_expr: InFile<ast::CallExpr>,
 ) -> Option<Diagnostic> {
     let reference = call_expr.clone().map(|it| it.path().reference());
-    let (fun_file_id, fun) = ctx.sema.resolve_to_element::<ast::Fun>(reference)?.unpack();
+    let fun = ctx.sema.resolve_to_element::<ast::Fun>(reference)?;
 
-    let self_param = fun.self_param()?;
+    let self_param = fun.value.self_param()?;
     let self_param_type = self_param.type_()?;
 
     let first_arg_expr = call_expr.value.args().first()?.to_owned();
@@ -28,16 +28,16 @@ pub(crate) fn can_be_replaced_with_method_call(
 
     // if function module is different to the first argument expr module,
     // then it's not a method even if `self` argument is present
-    let fun_module = fun.module()?;
+    let fun_module = ctx.sema.fun_module(fun.clone().map_into())?.value;
     let arg_ty_module = ctx.sema.ty_module(&first_arg_ty)?;
     if fun_module != arg_ty_module {
         return None;
     }
 
-    let fun_subst = fun.in_file(fun_file_id).ty_vars_subst();
+    let fun_subst = fun.ty_vars_subst();
     let self_ty = ctx
         .sema
-        .lower_type(self_param_type.in_file(fun_file_id))
+        .lower_type(self_param_type.in_file(fun.file_id))
         .substitute(&fun_subst);
 
     if ctx.sema.is_tys_compatible(first_arg_ty, self_ty, true) {
