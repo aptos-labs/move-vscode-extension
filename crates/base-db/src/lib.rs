@@ -29,16 +29,13 @@ pub trait SourceDatabase: std::fmt::Debug + std::panic::RefUnwindSafe {
     fn file_package_root(&self, file_id: FileId) -> PackageRootId;
 
     #[ra_salsa::input]
-    fn builtins_file_id(&self) -> FileId;
+    fn builtins_file_id(&self) -> Option<FileId>;
 
     #[ra_salsa::input]
     fn package_root(&self, id: PackageRootId) -> Arc<PackageRoot>;
 
     #[ra_salsa::input]
-    fn _package_deps(&self, manifest_file_id: PackageRootId) -> Arc<Vec<PackageRootId>>;
-
-    #[ra_salsa::transparent]
-    fn package_deps(&self, package_root_id: PackageRootId) -> Arc<Vec<PackageRootId>>;
+    fn package_deps(&self, manifest_file_id: PackageRootId) -> Arc<Vec<PackageRootId>>;
 }
 
 fn parse(db: &dyn SourceDatabase, file_id: FileId) -> Parse {
@@ -52,16 +49,5 @@ fn parse_errors(db: &dyn SourceDatabase, file_id: FileId) -> Option<Arc<[SyntaxE
     match &*errors {
         [] => None,
         [..] => Some(errors.into()),
-    }
-}
-
-fn package_deps(db: &dyn SourceDatabase, package_root_id: PackageRootId) -> Arc<Vec<PackageRootId>> {
-    let deps = std::panic::catch_unwind(|| db._package_deps(package_root_id));
-    match deps {
-        Ok(deps) => deps,
-        Err(_) => {
-            tracing::error!(?package_root_id, "cannot resolve dependencies for the package");
-            Default::default()
-        }
     }
 }

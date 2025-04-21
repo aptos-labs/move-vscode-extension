@@ -1,4 +1,4 @@
-use crate::db::HirDatabase;
+use crate::db::{HirDatabase, resolve_path};
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt, VecExt};
 use syntax::ast;

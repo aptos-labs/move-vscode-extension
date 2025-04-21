@@ -27,6 +27,7 @@ pub struct AptosWorkspace {
 
 impl AptosWorkspace {
     pub fn load(manifest: ManifestPath) -> anyhow::Result<AptosWorkspace> {
+        tracing::info!("load ws {:?}", manifest.file.as_path().to_string());
         AptosWorkspace::load_inner(manifest.clone())
             .with_context(|| format!("Failed to load the project at {manifest}"))
     }

@@ -2,7 +2,9 @@ mod source_to_def;
 
 use crate::db::{HirDatabase, NodeInferenceExt};
 use crate::nameres::ResolveReference;
+use crate::nameres::fq_named_element::{ItemFQName, ItemFQNameOwner};
 use crate::nameres::scope::ScopeEntry;
+use crate::node_ext::item::ModuleItemExt;
 use crate::semantics::source_to_def::SourceToDefCache;
 use crate::types::inference::InferenceCtx;
 use crate::types::inference::inference_result::InferenceResult;
@@ -79,6 +81,10 @@ impl<'db> SemanticsImpl<'db> {
         scope_entry?.cast_into::<N>(self.db)
     }
 
+    pub fn fun_module(&self, fun: InFile<ast::AnyFun>) -> Option<InFile<ast::Module>> {
+        fun.module(self.db)
+    }
+
     pub fn get_expr_type(&self, expr: &InFile<ast::Expr>, msl: bool) -> Option<Ty> {
         let inference = self.inference(expr, msl)?;
         inference.get_expr_type(&expr.value)
@@ -90,7 +96,12 @@ impl<'db> SemanticsImpl<'db> {
     }
 
     pub fn render_ty(&self, ty: Ty) -> String {
-        ty.render(self.db.upcast())
+        ty.render(self.db)
+    }
+
+    pub fn fq_name(&self, item: impl AstNode) -> Option<ItemFQName> {
+        let item = self.wrap_node_infile(item);
+        item.fq_name(self.db)
     }
 
     /// returns module for the Ty inner item, for the tys where is makes sense
@@ -104,8 +115,7 @@ impl<'db> SemanticsImpl<'db> {
 
     pub fn is_tys_compatible(&self, left_ty: Ty, right_ty: Ty, with_autoborrow: bool) -> bool {
         // Any file_id could be used here, we are not interested in unification. Could be improved later.
-        let any_file_id = self.db.builtins_file_id();
-        let ctx = &mut InferenceCtx::new(self.db, any_file_id, false);
+        let ctx = &mut InferenceCtx::new(self.db, FileId::from_raw(u32::MAX), false);
         if with_autoborrow {
             ctx.is_tys_compatible_with_autoborrow(left_ty, right_ty)
         } else {

@@ -18,7 +18,7 @@ pub trait HirDatabase: SourceDatabase + Upcast<dyn SourceDatabase> {
     fn inference_for_ctx_owner(&self, ctx_owner_loc: SyntaxLoc, msl: bool) -> Arc<InferenceResult>;
 }
 
-fn resolve_path(db: &dyn HirDatabase, ref_loc: SyntaxLoc) -> Option<ScopeEntry> {
+pub(crate) fn resolve_path(db: &dyn HirDatabase, ref_loc: SyntaxLoc) -> Option<ScopeEntry> {
     let path = ref_loc.to_ast::<ast::Path>(db.upcast())?;
     path_resolution::resolve_path(db, path, None).single_or_none()
 }

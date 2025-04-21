@@ -1,6 +1,9 @@
+use crate::db::HirDatabase;
 use crate::nameres::address::Address;
 use crate::node_ext::ModuleLangExt;
+use crate::node_ext::item::ModuleItemExt;
 use syntax::ast::NamedElement;
+use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast, match_ast};
 
 pub enum ItemFQName {
@@ -43,13 +46,13 @@ impl ItemFQName {
     }
 }
 
-pub trait ItemFQNameOwner: AstNode {
-    fn fq_name(&self) -> Option<ItemFQName>;
+pub trait ItemFQNameOwner {
+    fn fq_name(&self, db: &dyn HirDatabase) -> Option<ItemFQName>;
 }
 
 macro_rules! module_item_fq_name {
     ($module: expr, $it: expr) => {{
-        let module_fq_name = $module.fq_name()?;
+        let module_fq_name = $module.fq_name(db)?;
         let name = $it.name()?;
         Some(ItemFQName::Item {
             module_fq_name: Box::new(module_fq_name),
@@ -58,9 +61,10 @@ macro_rules! module_item_fq_name {
     }};
 }
 
-impl<T: AstNode> ItemFQNameOwner for T {
-    fn fq_name(&self) -> Option<ItemFQName> {
-        let node = self.syntax();
+impl<T: AstNode> ItemFQNameOwner for InFile<T> {
+    fn fq_name(&self, db: &dyn HirDatabase) -> Option<ItemFQName> {
+        let it_file_id = self.file_id;
+        let node = self.value.syntax();
         match_ast! {
             match node {
                 ast::Module(it) => {
@@ -71,9 +75,30 @@ impl<T: AstNode> ItemFQNameOwner for T {
                         name: name.as_string(),
                     })
                 },
-                ast::StructOrEnum(it) => module_item_fq_name!(it.module(), it),
-                ast::Fun(it) => module_item_fq_name!(it.module()?, it),
-                ast::Const(it) => module_item_fq_name!(it.module()?, it),
+                ast::StructOrEnum(it) => {
+                    let module_fq_name = it.module().in_file(it_file_id).fq_name(db)?;
+                    let name = it.name()?;
+                    Some(ItemFQName::Item {
+                        module_fq_name: Box::new(module_fq_name),
+                        name: name.as_string(),
+                    })
+                },
+                ast::Const(it) => {
+                    let module_fq_name = it.module()?.in_file(it_file_id).fq_name(db)?;
+                    let name = it.name()?;
+                    Some(ItemFQName::Item {
+                        module_fq_name: Box::new(module_fq_name),
+                        name: name.as_string(),
+                    })
+                },
+                ast::AnyFun(it) => {
+                    let module_fq_name = it.clone().in_file(it_file_id).module(db)?.fq_name(db)?;
+                    let name = it.name()?;
+                    Some(ItemFQName::Item {
+                        module_fq_name: Box::new(module_fq_name),
+                        name: name.as_string(),
+                    })
+                },
                 _ => None
             }
         }

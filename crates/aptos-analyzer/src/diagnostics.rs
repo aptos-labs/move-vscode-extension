@@ -1,9 +1,9 @@
 pub(crate) mod to_proto;
 
-use std::collections::{HashMap, HashSet};
 use crate::global_state::GlobalStateSnapshot;
 use crate::lsp;
 use crate::main_loop::DiagnosticsTaskKind;
+use std::collections::{HashMap, HashSet};
 use std::mem;
 use stdx::iter_eq_by;
 use stdx::itertools::Itertools;

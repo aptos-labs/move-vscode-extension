@@ -105,7 +105,7 @@ impl GlobalState {
     }
 
     pub(crate) fn fetch_workspaces(&mut self, cause: Cause, force_reload_deps: bool) {
-        tracing::info!(%cause, "will fetch workspaces");
+        tracing::info!(?cause, "will fetch workspaces");
 
         self.task_pool.handle.spawn_with_sender(ThreadIntent::Worker, {
             let discovered_manifests = self.config.discovered_manifests();
@@ -266,9 +266,9 @@ impl GlobalState {
     }
 
     fn reload_package_deps(&mut self, cause: String) {
-        tracing::info!(?cause, "Reload PackageGraph");
+        tracing::info!(?cause, "reload PackageGraph");
         self.report_progress(
-            "Building PackageGraph",
+            "building PackageGraph",
             crate::lsp::utils::Progress::Begin,
             None,
             None,
@@ -288,9 +288,12 @@ impl GlobalState {
         let mut change = FileChange::new();
         {
             let vfs = &self.vfs.read().0;
+
             let roots = self.package_root_config.partition_into_roots(vfs);
             change.set_package_roots(roots);
             change.add_builtins_file(self.builtins_file_id, BUILTINS_FILE.to_string());
+            tracing::info!("builtins_file {:?}", self.builtins_file_id);
+
             // depends on roots being available
             change.set_package_graph(package_graph);
         }
