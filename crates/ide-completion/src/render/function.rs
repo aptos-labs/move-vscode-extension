@@ -19,7 +19,7 @@ pub(crate) fn render_function(
 ) -> CompletionItemBuilder {
     let mut completion_item = render_named_item(ctx, fun.clone().map_into());
 
-    let ty_lowering = TyLowering::new(ctx.db);
+    let ty_lowering = TyLowering::new(ctx.db, ctx.msl);
     let mut call_ty = ty_lowering.lower_any_function(fun.clone().map_into());
     if let Some(apply_subst) = apply_subst {
         call_ty = call_ty.substitute(&apply_subst);

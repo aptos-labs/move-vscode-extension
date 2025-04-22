@@ -441,10 +441,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let self_ty = self.infer_expr(&method_call_expr.receiver_expr(), Expected::NoValue);
         let self_ty = self.ctx.resolve_ty_vars_if_possible(self_ty);
 
-        let method_entry = get_method_resolve_variants(self.ctx.db, &self_ty, self.ctx.file_id)
-            .filter_by_name(method_call_expr.reference_name())
-            .filter_by_visibility(self.ctx.db, &method_call_expr.clone().in_file(self.ctx.file_id))
-            .single_or_none();
+        let method_entry =
+            get_method_resolve_variants(self.ctx.db, &self_ty, self.ctx.file_id, self.ctx.msl)
+                .filter_by_name(method_call_expr.reference_name())
+                .filter_by_visibility(self.ctx.db, &method_call_expr.clone().in_file(self.ctx.file_id))
+                .single_or_none();
         self.ctx
             .resolved_method_calls
             .insert(method_call_expr.to_owned(), method_entry.clone());

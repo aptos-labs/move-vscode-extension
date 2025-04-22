@@ -6,7 +6,7 @@ use crate::nameres::scope::ScopeEntry;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
-use crate::types::ty::integer::IntegerKind;
+use crate::types::ty::integer::{IntegerKind, INTEGER_IDENTS};
 use crate::types::ty::reference::Mutability;
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
@@ -16,11 +16,12 @@ use syntax::files::{InFile, InFileExt};
 
 pub struct TyLowering<'db> {
     db: &'db dyn HirDatabase,
+    msl: bool,
 }
 
 impl<'db> TyLowering<'db> {
-    pub fn new(db: &'db dyn HirDatabase) -> Self {
-        TyLowering { db }
+    pub fn new(db: &'db dyn HirDatabase, msl: bool) -> Self {
+        TyLowering { db, msl }
     }
 
     pub fn lower_type(&self, type_: InFile<ast::Type>) -> Ty {
@@ -28,7 +29,7 @@ impl<'db> TyLowering<'db> {
         match type_ {
             ast::Type::PathType(path_type) => {
                 let path = path_type.path().in_file(file_id);
-                let named_item = self.resolve_path(path.clone());
+                let named_item = path.clone().resolve_no_inf(self.db);
                 match named_item {
                     None => {
                         // can be primitive type
@@ -163,6 +164,9 @@ impl<'db> TyLowering<'db> {
     fn lower_primitive_type(&self, path: InFile<ast::Path>) -> Option<Ty> {
         let (file_id, path) = path.unpack();
         let path_name = path.reference_name()?;
+        if self.msl && INTEGER_IDENTS.contains(&path_name.as_str()) {
+            return Some(Ty::Num);
+        }
         let ty = match path_name.as_str() {
             "u8" => Ty::Integer(IntegerKind::U8),
             "u16" => Ty::Integer(IntegerKind::U16),
@@ -187,16 +191,5 @@ impl<'db> TyLowering<'db> {
             }
         };
         Some(ty)
-    }
-
-    //noinspection ALL
-    fn resolve_path(&self, path: InFile<ast::Path>) -> Option<ScopeEntry> {
-        path.resolve_no_inf(self.db)
-        // match &self.path_resolver {
-        //     PathResolver::Inference { ctx } => {
-        //         ctx.borrow_mut().resolve_path_cached(path.value, None)?.to_entry()
-        //     }
-        //     PathResolver::Outer => path.resolve_no_inf(self.db),
-        // }
     }
 }
