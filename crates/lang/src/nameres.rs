@@ -91,6 +91,9 @@ impl<T: ast::ReferenceElement> ResolveReference for InFile<T> {
                     let ident_pat = ref_element.cast_into::<ast::IdentPat>().unwrap();
                     inference.get_resolved_ident_pat(&ident_pat)
                 }
+                ITEM_SPEC_REF => {
+                    None
+                }
                 _ => None,
             };
 

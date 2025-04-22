@@ -553,13 +553,23 @@ impl ast::HasAttrs for ItemSpec {}
 impl ast::MslOnly for ItemSpec {}
 impl ItemSpec {
     #[inline]
-    pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
+    pub fn item_spec_ref(&self) -> Option<ItemSpecRef> { support::child(&self.syntax) }
     #[inline]
     pub fn spec_block(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
     #[inline]
     pub fn module_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![module]) }
     #[inline]
     pub fn spec_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![spec]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ItemSpecRef {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::ReferenceElement for ItemSpecRef {}
+impl ItemSpecRef {
+    #[inline]
+    pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -2743,6 +2753,27 @@ impl AstNode for ItemSpec {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == ITEM_SPEC }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for ItemSpecRef {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ITEM_SPEC_REF
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == ITEM_SPEC_REF }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -6656,7 +6687,13 @@ impl AstNode for AnyReferenceElement {
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            FIELD_REF | IDENT_PAT | METHOD_CALL_EXPR | PATH | STRUCT_LIT_FIELD | STRUCT_PAT_FIELD
+            FIELD_REF
+                | IDENT_PAT
+                | ITEM_SPEC_REF
+                | METHOD_CALL_EXPR
+                | PATH
+                | STRUCT_LIT_FIELD
+                | STRUCT_PAT_FIELD
         )
     }
     #[inline]
@@ -6673,6 +6710,10 @@ impl From<FieldRef> for AnyReferenceElement {
 impl From<IdentPat> for AnyReferenceElement {
     #[inline]
     fn from(node: IdentPat) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
+}
+impl From<ItemSpecRef> for AnyReferenceElement {
+    #[inline]
+    fn from(node: ItemSpecRef) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
 }
 impl From<MethodCallExpr> for AnyReferenceElement {
     #[inline]
@@ -6966,6 +7007,11 @@ impl std::fmt::Display for IsExpr {
     }
 }
 impl std::fmt::Display for ItemSpec {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for ItemSpecRef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

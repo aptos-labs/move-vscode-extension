@@ -1,5 +1,6 @@
 pub mod has_item_list;
 pub mod item;
+pub mod item_spec;
 
 use crate::nameres::address::{Address, NamedAddr, ValueAddr};
 use syntax::ast;

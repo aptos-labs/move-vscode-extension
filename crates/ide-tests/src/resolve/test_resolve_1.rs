@@ -141,3 +141,22 @@ module 0x1::main {
 "#,
     )
 }
+
+// language=Move
+#[test]
+fn test_resolve_spec_fun_from_spec_module_to_fun() {
+    check_resolve(
+        r#"
+module 0x1::main {
+    fun main() {}
+       //X
+}
+spec 0x1::main {
+    spec main {
+        //^
+
+    }
+}
+"#,
+    )
+}

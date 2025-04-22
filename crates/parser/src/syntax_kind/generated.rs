@@ -139,6 +139,7 @@ pub enum SyntaxKind {
     SCRIPT,
     MODULE_SPEC,
     ITEM_SPEC,
+    ITEM_SPEC_REF,
     STRUCT,
     FRIEND,
     ENUM,
