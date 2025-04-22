@@ -1,4 +1,5 @@
 use crate::resolve::check_resolve;
+use crate::types::check_expr_type;
 
 #[test]
 fn test_resolve_base_for_index_expr() {
@@ -118,4 +119,25 @@ spec std::m {
 }
     "#,
     );
+}
+
+// language=Move
+#[test]
+fn test_integer_inference_with_spec_blocks_inside_block() {
+    check_resolve(
+        r#"
+module 0x1::main {
+    spec fun get_num(): num { 1 }
+    fun main() {
+        let myint = 1;
+            //X
+        myint + 1u8;
+        spec {
+            myint
+            //^ num
+        };
+    }
+}
+"#,
+    )
 }
