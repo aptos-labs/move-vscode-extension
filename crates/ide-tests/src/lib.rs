@@ -11,6 +11,7 @@ mod completion;
 mod hover;
 mod resolve;
 mod test_replace_with_method_call;
+mod test_syntax_highlighting;
 mod test_utils;
 mod types;
 
