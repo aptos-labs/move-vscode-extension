@@ -55,7 +55,7 @@ fn add_field_completion_items(
         .to_ast::<ast::StructOrEnum>(ctx.db.upcast())?
         .unpack();
     let named_fields = adt_item.field_ref_lookup_fields();
-    let ty_lowering = TyLowering::new(ctx.db);
+    let ty_lowering = TyLowering::new(ctx.db, ctx.msl);
     for named_field in named_fields {
         let named_field = named_field.in_file(file_id);
         let mut completion_item = render_named_item(ctx, named_field.clone().map_into());
@@ -78,12 +78,13 @@ fn add_method_completion_items(
     let hir_db = ctx.db.upcast();
     let acc = &mut completions.borrow_mut();
 
-    let method_entries = get_method_resolve_variants(hir_db, &receiver_ty, ctx.position.file_id);
+    let method_entries =
+        get_method_resolve_variants(hir_db, &receiver_ty, ctx.position.file_id, ctx.msl);
     for method_entry in method_entries {
         let method = method_entry.cast_into::<ast::Fun>(hir_db)?;
 
         let subst = method.ty_vars_subst();
-        let callable_ty = TyLowering::new(hir_db)
+        let callable_ty = TyLowering::new(hir_db, ctx.msl)
             .lower_any_function(method.clone().map_into())
             .substitute(&subst);
         let self_ty = callable_ty

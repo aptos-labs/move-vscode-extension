@@ -7,6 +7,7 @@ use ide_db::source_change::SourceChangeBuilder;
 use lang::types::has_type_params_ext::GenericItemExt;
 use lang::types::substitution::ApplySubstitution;
 use syntax::ast::ReferenceElement;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::syntax_factory::SyntaxFactory;
 use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, ast};
@@ -16,6 +17,8 @@ pub(crate) fn can_be_replaced_with_method_call(
     ctx: &DiagnosticsContext<'_>,
     call_expr: InFile<ast::CallExpr>,
 ) -> Option<Diagnostic> {
+    let msl = call_expr.value.syntax().is_msl_context();
+
     let reference = call_expr.clone().map(|it| it.path().reference());
     let fun = ctx.sema.resolve_to_element::<ast::Fun>(reference)?;
 
@@ -38,7 +41,7 @@ pub(crate) fn can_be_replaced_with_method_call(
     let fun_subst = fun.ty_vars_subst();
     let self_ty = ctx
         .sema
-        .lower_type(self_param_type.in_file(fun.file_id))
+        .lower_type(self_param_type.in_file(fun.file_id), msl)
         .substitute(&fun_subst);
 
     if ctx.sema.is_tys_compatible(first_arg_ty, self_ty, true) {

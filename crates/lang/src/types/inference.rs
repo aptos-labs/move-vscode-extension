@@ -10,17 +10,17 @@ use crate::types::fold::{Fallback, FullTyVarResolver, TyVarResolver, TypeFoldabl
 use crate::types::has_type_params_ext::GenericItemExt;
 use crate::types::lowering::TyLowering;
 use crate::types::substitution::ApplySubstitution;
-use crate::types::ty::Ty;
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
+use crate::types::ty::Ty;
 use crate::types::unification::UnificationTable;
 use std::collections::HashMap;
 use std::hash::Hash;
-use syntax::SyntaxKind::*;
-use syntax::ast::FieldsOwner;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
+use syntax::ast::FieldsOwner;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, ast};
+use syntax::SyntaxKind::*;
+use syntax::{ast, AstNode};
 use vfs::FileId;
 
 #[derive(Debug)]
@@ -222,7 +222,7 @@ impl<'db> InferenceCtx<'db> {
     }
 
     pub fn ty_lowering(&mut self) -> TyLowering<'db> {
-        TyLowering::new(self.db)
+        TyLowering::new(self.db, self.msl)
     }
 
     pub fn resolve_ty_infer(&self, ty_infer: &TyInfer) -> Ty {

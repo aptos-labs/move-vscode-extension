@@ -16,6 +16,8 @@ pub enum IntegerKind {
     U256,
 }
 
+pub(crate) const INTEGER_IDENTS: &[&str] = &["u8", "u16", "u32", "u64", "u128", "u256"];
+
 impl IntegerKind {
     pub fn from_suffixed_literal(int_number: ast::IntNumber) -> Option<Self> {
         let lit = int_number.text().to_lowercase();

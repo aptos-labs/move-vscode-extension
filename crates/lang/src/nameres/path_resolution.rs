@@ -1,12 +1,12 @@
 use crate::db::HirDatabase;
 use crate::loc::SyntaxLocFileExt;
-use crate::nameres::ResolveReference;
 use crate::nameres::name_resolution::{
     get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
-use crate::nameres::namespaces::{FUNCTIONS, Ns};
-use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
+use crate::nameres::namespaces::{Ns, FUNCTIONS};
+use crate::nameres::path_kind::{path_kind, PathKind, QualifiedKind};
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt};
+use crate::nameres::ResolveReference;
 use crate::types::inference::InferenceCtx;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
@@ -16,7 +16,7 @@ use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::OptionSyntaxNodeExt;
 use syntax::ast::{HasItems, ReferenceElement};
 use syntax::files::{InFile, InFileExt, OptionInFileExt};
-use syntax::{AstNode, ast};
+use syntax::{ast, AstNode};
 use vfs::FileId;
 
 pub fn get_path_resolve_variants_with_expected_type(
@@ -92,6 +92,7 @@ pub fn get_method_resolve_variants(
     db: &dyn HirDatabase,
     self_ty: &Ty,
     current_file_id: FileId,
+    msl: bool,
 ) -> Vec<ScopeEntry> {
     let package_id = db.file_package_root(current_file_id);
     let Some(InFile {
@@ -104,7 +105,7 @@ pub fn get_method_resolve_variants(
     let function_entries = receiver_item_module
         .non_test_functions()
         .to_in_file_entries(file_id);
-    let ty_lowering = TyLowering::new(db);
+    let ty_lowering = TyLowering::new(db, msl);
     let mut method_entries = vec![];
     for function_entry in function_entries {
         let Some(InFile { file_id, value: f }) = function_entry.node_loc.to_ast::<ast::Fun>(db.upcast())

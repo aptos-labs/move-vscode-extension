@@ -117,8 +117,8 @@ impl<'db> SemanticsImpl<'db> {
         ty.adt_item_module(self.db, self.ws_root).map(|it| it.value)
     }
 
-    pub fn lower_type(&self, type_: InFile<ast::Type>) -> Ty {
-        TyLowering::new(self.db).lower_type(type_)
+    pub fn lower_type(&self, type_: InFile<ast::Type>, msl: bool) -> Ty {
+        TyLowering::new(self.db, msl).lower_type(type_)
     }
 
     pub fn is_tys_compatible(&self, left_ty: Ty, right_ty: Ty, with_autoborrow: bool) -> bool {
