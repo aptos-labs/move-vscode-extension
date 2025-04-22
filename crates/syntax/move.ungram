@@ -477,6 +477,9 @@ ExistsExpr =
 ChooseExpr =
     'choose' 'min'? QuantBindingList WhereExpr?
 
+QuantBindingsOwner =
+    ForallExpr | ExistsExpr | ChooseExpr
+
 QuantBindingList =
     bindings:(QuantBinding (',' QuantBinding)* ','?)?
 

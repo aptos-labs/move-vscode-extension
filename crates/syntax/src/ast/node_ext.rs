@@ -30,6 +30,7 @@ pub mod named_field;
 mod param;
 mod pat;
 pub mod path;
+mod quant_bindings_owner;
 mod quant_expr;
 mod range_expr;
 mod ref_type;

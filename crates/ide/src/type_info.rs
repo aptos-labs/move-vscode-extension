@@ -17,9 +17,7 @@ pub(crate) fn expr_type_info(
 
     let expr = algo::find_node_at_offset::<ast::Expr>(file.syntax(), offset)?;
     let msl = expr.syntax().is_msl_context();
-    let inference = expr.clone().in_file(file_id).inference(db.upcast(), msl)?;
-
-    let expr_ty = inference.get_expr_type(&expr).unwrap_or(Ty::Unknown);
+    let expr_ty = sema.get_expr_type(&expr.in_file(file_id), msl)?;
 
     Some(expr_ty.render(db.upcast()))
 }
