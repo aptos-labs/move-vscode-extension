@@ -83,13 +83,12 @@ impl TypeFolder for FullTyVarResolver<'_> {
             Ty::Infer(ty_infer) => {
                 let resolved_ty = self.ctx.resolve_ty_infer(&ty_infer);
                 match resolved_ty {
-                    Ty::Unknown => Ty::Unknown,
-                    Ty::Infer(ty_var) => match (self.fallback, &ty_var) {
+                    Ty::Infer(TyInfer::Var(ty_var)) => match (self.fallback, &ty_var) {
                         (
                             Fallback::Origin,
-                            TyInfer::Var(TyVar {
+                            TyVar {
                                 kind: TyVarKind::WithOrigin { origin_loc },
-                            }),
+                            },
                         ) => Ty::TypeParam(TyTypeParameter::from_loc(origin_loc.to_owned())),
                         _ => Ty::Unknown,
                     },

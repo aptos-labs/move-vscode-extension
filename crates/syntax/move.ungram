@@ -190,6 +190,9 @@ BlockExpr =
         tail_expr:Expr?
     '}'
 
+SpecBlockExpr =
+    'spec' BlockExpr
+
 InlineExpr = Expr
 
 BlockOrInlineExpr = BlockExpr | InlineExpr
@@ -228,6 +231,7 @@ Expr =
     | CastExpr
     | MatchExpr
     | ForallExpr | ExistsExpr | ChooseExpr
+    | SpecBlockExpr
 
 ForExpr =
     'for' ForCondition loop_body_expr:(BlockExpr | InlineExpr)

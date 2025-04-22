@@ -291,3 +291,32 @@ spec 0x1::m {
         "#]],
     )
 }
+
+#[test]
+fn test_hover_for_builtin_spec_fun_in_module_spec() {
+    check_hover(
+        // language=Move
+        r#"
+module 0x1::m {
+}
+spec 0x1::m {
+    spec fun main(): u8 {
+        spec {
+            len(vector[]);
+            //^
+        }
+    }
+}
+    "#,
+        // language=Markdown
+        expect![[r#"
+            ```move
+            0x0::builtins
+
+            spec fun len(t: vector<T>): num
+            ```
+            ---
+
+        "#]],
+    )
+}

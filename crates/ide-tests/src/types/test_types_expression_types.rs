@@ -2436,7 +2436,26 @@ module 0x1::m {
 
 // language=Move
 #[test]
-fn test_integer_inference_with_spec_blocks_inside_block() {
+fn test_integer_inference_with_spec_blocks_inside_block_1() {
+    check_expr_type(
+        r#"
+module 0x1::main {
+    spec fun get_num(): num { 1 }
+    fun main() {
+        let myint = 1;
+        spec {
+            myint
+            //^ num
+        };
+    }
+}    
+"#,
+    )
+}
+
+// language=Move
+#[test]
+fn test_integer_inference_with_spec_blocks_inside_block_2() {
     check_expr_type(
         r#"
 module 0x1::main {
@@ -2449,7 +2468,7 @@ module 0x1::main {
             //^ num
         };
     }
-}    
+}
 "#,
     )
 }

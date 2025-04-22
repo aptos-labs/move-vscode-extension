@@ -1157,6 +1157,17 @@ impl SourceFile {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SpecBlockExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl SpecBlockExpr {
+    #[inline]
+    pub fn block_expr(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn spec_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![spec]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SpecFun {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1718,6 +1729,7 @@ pub enum Expr {
     RangeExpr(RangeExpr),
     ResourceExpr(ResourceExpr),
     ReturnExpr(ReturnExpr),
+    SpecBlockExpr(SpecBlockExpr),
     StructLit(StructLit),
     TupleExpr(TupleExpr),
     VectorLitExpr(VectorLitExpr),
@@ -3645,6 +3657,27 @@ impl AstNode for SourceFile {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for SpecBlockExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        SPEC_BLOCK_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == SPEC_BLOCK_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for SpecFun {
     #[inline]
     fn kind() -> SyntaxKind
@@ -4756,6 +4789,10 @@ impl From<ReturnExpr> for Expr {
     #[inline]
     fn from(node: ReturnExpr) -> Expr { Expr::ReturnExpr(node) }
 }
+impl From<SpecBlockExpr> for Expr {
+    #[inline]
+    fn from(node: SpecBlockExpr) -> Expr { Expr::SpecBlockExpr(node) }
+}
 impl From<StructLit> for Expr {
     #[inline]
     fn from(node: StructLit) -> Expr { Expr::StructLit(node) }
@@ -4947,6 +4984,12 @@ impl Expr {
             _ => None,
         }
     }
+    pub fn spec_block_expr(self) -> Option<SpecBlockExpr> {
+        match (self) {
+            Expr::SpecBlockExpr(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn struct_lit(self) -> Option<StructLit> {
         match (self) {
             Expr::StructLit(item) => Some(item),
@@ -5006,6 +5049,7 @@ impl AstNode for Expr {
                 | RANGE_EXPR
                 | RESOURCE_EXPR
                 | RETURN_EXPR
+                | SPEC_BLOCK_EXPR
                 | STRUCT_LIT
                 | TUPLE_EXPR
                 | VECTOR_LIT_EXPR
@@ -5044,6 +5088,7 @@ impl AstNode for Expr {
             RANGE_EXPR => Expr::RangeExpr(RangeExpr { syntax }),
             RESOURCE_EXPR => Expr::ResourceExpr(ResourceExpr { syntax }),
             RETURN_EXPR => Expr::ReturnExpr(ReturnExpr { syntax }),
+            SPEC_BLOCK_EXPR => Expr::SpecBlockExpr(SpecBlockExpr { syntax }),
             STRUCT_LIT => Expr::StructLit(StructLit { syntax }),
             TUPLE_EXPR => Expr::TupleExpr(TupleExpr { syntax }),
             VECTOR_LIT_EXPR => Expr::VectorLitExpr(VectorLitExpr { syntax }),
@@ -5084,6 +5129,7 @@ impl AstNode for Expr {
             Expr::RangeExpr(it) => &it.syntax,
             Expr::ResourceExpr(it) => &it.syntax,
             Expr::ReturnExpr(it) => &it.syntax,
+            Expr::SpecBlockExpr(it) => &it.syntax,
             Expr::StructLit(it) => &it.syntax,
             Expr::TupleExpr(it) => &it.syntax,
             Expr::VectorLitExpr(it) => &it.syntax,
@@ -7135,6 +7181,11 @@ impl std::fmt::Display for Script {
     }
 }
 impl std::fmt::Display for SourceFile {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for SpecBlockExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
