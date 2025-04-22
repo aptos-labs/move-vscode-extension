@@ -148,7 +148,7 @@ pub fn get_modules_as_entries(
         .map(|id| db.package_root(id).file_set.clone())
         .collect::<Vec<_>>();
 
-    let mut entries = vec![];
+    let mut module_entries = vec![];
     for file_set in file_sets {
         for source_file_id in file_set.iter() {
             let source_file = db.parse(source_file_id).tree();
@@ -156,10 +156,11 @@ pub fn get_modules_as_entries(
                 .all_modules()
                 .filter(|m| m.address_equals_to(address.clone(), false))
                 .collect::<Vec<_>>();
-            entries.extend(modules.wrapped_in_file(source_file_id).to_entries());
+            module_entries.extend(modules.wrapped_in_file(source_file_id).to_entries());
         }
     }
-    entries
+    tracing::debug!(?module_entries);
+    module_entries
 }
 
 #[tracing::instrument(
@@ -174,12 +175,12 @@ pub fn get_qualified_path_entries(
     let qualifier = ctx.wrap_in_file(qualifier);
     let qualifier_item = qualifier.clone().resolve_no_inf(db);
     if qualifier_item.is_none() {
-        // qualifier can be an address
+        // try resolving assuming it's a named address
         if let Some(qualifier_name) = qualifier.value.reference_name() {
             return Some(get_modules_as_entries(
                 db,
                 ctx.package_root_id(db),
-                Address::Named(NamedAddr::new(qualifier_name)),
+                Address::named(&qualifier_name),
             ));
         }
         return None;
