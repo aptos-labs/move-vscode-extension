@@ -1,12 +1,14 @@
 use crate::db::HirDatabase;
+use crate::nameres::ResolveReference;
 use crate::nameres::blocks::get_entries_in_blocks;
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::nameres::use_speck_entries::use_speck_entries;
+use crate::node_ext::item_spec::ItemSpecExt;
 use base_db::SourceDatabase;
-use syntax::ast::{GenericElement, HasItems};
+use syntax::ast::{FieldsOwner, GenericElement, HasItems, ReferenceElement};
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, SyntaxNode, ast};
+use syntax::{AstNode, SyntaxNode, ast, match_ast};
 
 pub fn get_entries_in_scope(
     db: &dyn HirDatabase,
@@ -62,6 +64,21 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
         }
         ITEM_SPEC => {
             let item_spec = scope.syntax_cast::<ast::ItemSpec>().unwrap();
+            if let Some(item) = item_spec.item(db) {
+                let (fid, item) = item.unpack();
+                match_ast! {
+                    match (item.syntax()) {
+                        ast::Fun(fun) => {
+                            entries.extend(fun.type_params().to_in_file_entries(fid));
+                            entries.extend(fun.params_as_bindings().to_in_file_entries(fid));
+                        },
+                        ast::Struct(struct_) => {
+                            entries.extend(struct_.named_fields().to_in_file_entries(fid));
+                        },
+                        _ => ()
+                    }
+                }
+            }
         }
         // todo: ITEM_SPEC should have access to params / fields of the item
         SCRIPT => {

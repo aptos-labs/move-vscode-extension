@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::io::Read;
 
+use crate::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 pub use docs::HoverDocsOwner;
 pub use has_item_list::HasItems;
 pub use has_use_stmts::HasUseStmts;
@@ -101,6 +102,13 @@ pub trait ReferenceElement: AstNode + fmt::Debug {
     #[inline]
     fn cast_into<T: ReferenceElement>(&self) -> Option<T> {
         T::cast(self.syntax().to_owned())
+    }
+
+    fn reference(&self) -> ast::AnyReferenceElement {
+        self.syntax()
+            .to_owned()
+            .cast::<ast::AnyReferenceElement>()
+            .unwrap()
     }
 }
 

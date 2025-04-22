@@ -80,9 +80,11 @@ impl<'db> SemanticsImpl<'db> {
         &self,
         reference: InFile<ast::AnyReferenceElement>,
     ) -> Option<InFile<N>> {
-        // let reference = self.wrap_node_infile(reference);
         let scope_entry = reference.resolve(self.db);
-        scope_entry?.cast_into::<N>(self.db)
+        let element = scope_entry?.cast_into::<N>(self.db)?;
+        // cache file_id
+        self.parse(element.file_id);
+        Some(element)
     }
 
     pub fn fun_module(&self, fun: InFile<ast::AnyFun>) -> Option<InFile<ast::Module>> {
