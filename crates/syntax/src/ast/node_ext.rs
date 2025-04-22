@@ -43,6 +43,7 @@ pub mod syntax_node;
 pub mod type_;
 mod vector_lit_expr;
 pub mod visibility;
+mod item_spec_ref;
 
 use crate::token_text::TokenText;
 use crate::{ast, AstNode, AstToken, SyntaxNode};

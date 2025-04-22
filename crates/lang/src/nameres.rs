@@ -1,6 +1,7 @@
-use crate::db::{HirDatabase, resolve_path};
+use crate::db::HirDatabase;
 use crate::loc::SyntaxLocFileExt;
-use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt, VecExt};
+use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt, VecExt};
+use crate::node_ext::item::ModuleItemExt;
 use syntax::ast;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
@@ -91,9 +92,6 @@ impl<T: ast::ReferenceElement> ResolveReference for InFile<T> {
                     let ident_pat = ref_element.cast_into::<ast::IdentPat>().unwrap();
                     inference.get_resolved_ident_pat(&ident_pat)
                 }
-                ITEM_SPEC_REF => {
-                    None
-                }
                 _ => None,
             };
 
@@ -106,6 +104,14 @@ impl<T: ast::ReferenceElement> ResolveReference for InFile<T> {
 
     fn resolve_no_inf(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
         // outside inference context
+        if let Some(item_spec_ref) = self.cast_into_ref::<ast::ItemSpecRef>() {
+            let ref_name = item_spec_ref.value.name_ref()?.as_string();
+            let item_spec = item_spec_ref.map(|it| it.item_spec());
+            let module = item_spec.module(db)?;
+            let verified_items = module.map(|it| it.verifiable_items()).flatten().to_entries();
+            return verified_items.filter_by_name(ref_name).single_or_none();
+        }
+
         let path = self.cast_into_ref::<ast::Path>()?;
         db.resolve_path(path.loc())
     }

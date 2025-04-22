@@ -1,6 +1,6 @@
+use crate::ast;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::ast::HasItems;
-use crate::{ast, AstNode};
 
 impl ast::Module {
     pub fn parent_address_def(&self) -> Option<ast::AddressDef> {
@@ -17,5 +17,13 @@ impl ast::Module {
             .into_iter()
             .filter_map(|item| item.friend())
             .collect()
+    }
+
+    pub fn verifiable_items(&self) -> Vec<ast::AnyNamedElement> {
+        let mut items: Vec<ast::AnyNamedElement> = vec![];
+        items.extend(self.non_test_functions().into_iter().map(|it| it.into()));
+        items.extend(self.structs().into_iter().map(|it| it.into()));
+        items.extend(self.enums().into_iter().map(|it| it.into()));
+        items
     }
 }

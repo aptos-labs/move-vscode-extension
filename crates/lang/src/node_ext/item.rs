@@ -2,7 +2,7 @@ use crate::db::HirDatabase;
 use crate::nameres::ResolveReference;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, ast};
+use syntax::{ast, match_ast, AstNode};
 
 pub trait ModuleItemExt {
     fn module(&self, db: &dyn HirDatabase) -> Option<InFile<ast::Module>>;
@@ -31,5 +31,20 @@ impl ModuleItemExt for InFile<ast::AnyFun> {
             .clone()
             .and_then(|it| it.syntax().parent_of_type::<ast::ModuleSpec>());
         module_spec?.module(db)
+    }
+}
+
+impl ModuleItemExt for InFile<ast::ItemSpec> {
+    fn module(&self, db: &dyn HirDatabase) -> Option<InFile<ast::Module>> {
+        let parent = self.value.syntax().parent()?;
+        match_ast! {
+            match parent {
+                ast::Module(it) => Some(it.in_file(self.file_id)),
+                ast::ModuleSpec(it) => {
+                    it.in_file(self.file_id).module(db)
+                },
+                _ => None
+            }
+        }
     }
 }
