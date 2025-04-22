@@ -25,27 +25,27 @@ impl ModuleLangExt for ast::Module {
         }
     }
 
-    fn address_equals_to(&self, address: Address, is_completion: bool) -> bool {
-        let module_address = self.address();
-        let Some(module_address) = module_address else {
+    fn address_equals_to(&self, candidate_address: Address, is_completion: bool) -> bool {
+        let self_address = self.address();
+        let Some(self_address) = self_address else {
             return false;
         };
-        if module_address == address {
+        if self_address == candidate_address {
             return true;
         }
 
-        let left_numeric = module_address.clone().resolve_to_numeric_address();
-        let right_numeric = address.clone().resolve_to_numeric_address();
-        tracing::debug!(?left_numeric, ?right_numeric);
+        let self_numeric = self_address.clone().resolve_to_numeric_address();
+        let candidate_numeric = candidate_address.clone().resolve_to_numeric_address();
+        tracing::debug!(?self_numeric, ?candidate_numeric);
 
-        let same_values = match (left_numeric, right_numeric) {
-            (Some(left), Some(right)) => left.normalized() == right.short(),
+        let same_values = match (self_numeric, candidate_numeric) {
+            (Some(left), Some(right)) => left.short() == right.short(),
             _ => false,
         };
 
         if same_values && is_completion {
             // compare named addresses by name in case of the same values for the completion
-            match (module_address, address) {
+            match (self_address, candidate_address) {
                 (Address::Named(left_named), Address::Named(right_named)) => {
                     return left_named == right_named;
                 }

@@ -34,8 +34,8 @@ impl ScopeEntry {
 impl fmt::Debug for ScopeEntry {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_tuple("ScopeEntry")
-            .field(&self.name.to_string())
-            .field(&self.ns)
+            // .field(&self.name.to_string())
+            // .field(&self.ns)
             .field(&self.node_loc)
             .finish()
     }
