@@ -92,15 +92,14 @@ impl NavigationTarget {
         if db.builtins_file_id().is_some_and(|fid| fid == file_id) {
             return None;
         }
-        let entry_item = scope_entry
+        let named_item = scope_entry
             .node_loc
             .to_ast::<ast::AnyNamedElement>(db.upcast())?
             .value;
+        let name_range = named_item.name().map(|name| name.ident_token().text_range());
+        let node_range = named_item.syntax().text_range();
 
-        let name_range = entry_item.name().map(|name| name.ident_token().text_range());
-        let node_range = entry_item.syntax().text_range();
-
-        let kind = ast_kind_to_symbol_kind(entry_item.syntax().kind())?;
+        let kind = ast_kind_to_symbol_kind(named_item.syntax().kind())?;
         Some(NavigationTarget::from_syntax(
             file_id,
             entry_name.into(),

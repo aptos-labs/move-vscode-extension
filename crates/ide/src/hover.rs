@@ -32,7 +32,6 @@ pub(crate) fn hover(
     FilePosition { file_id, offset }: FilePosition,
 ) -> Option<RangeInfo<HoverResult>> {
     let sema = &Semantics::new(db, file_id);
-    // let FilePosition { file_id, offset } = file_position;
     let file = sema.parse(file_id).syntax().clone();
 
     let name_like = find_node_at_offset::<ast::NameLike>(&file, offset)?;
@@ -41,8 +40,8 @@ pub(crate) fn hover(
     let hover_docs_owner = match name_like {
         ast::NameLike::NameRef(name_ref) => {
             let ref_element = name_ref.syntax().ancestor_strict::<ast::AnyReferenceElement>()?;
-            let entry = ref_element.in_file(file_id).resolve(db.upcast())?;
-            let doc_comments_owner = entry.cast_into::<ast::AnyHoverDocsOwner>(db.upcast())?;
+            let doc_comments_owner =
+                sema.resolve_to_element::<ast::AnyHoverDocsOwner>(ref_element.in_file(file_id))?;
             doc_comments_owner.value
         }
         ast::NameLike::Name(name) => {

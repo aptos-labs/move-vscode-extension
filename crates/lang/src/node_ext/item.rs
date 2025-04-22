@@ -1,8 +1,9 @@
 use crate::db::HirDatabase;
 use crate::nameres::ResolveReference;
+use syntax::ast::ReferenceElement;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{ast, match_ast, AstNode};
+use syntax::{AstNode, ast, match_ast};
 
 pub trait ModuleItemExt {
     fn module(&self, db: &dyn HirDatabase) -> Option<InFile<ast::Module>>;

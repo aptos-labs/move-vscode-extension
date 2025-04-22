@@ -6,6 +6,7 @@ use ide_db::label::Label;
 use ide_db::source_change::SourceChangeBuilder;
 use lang::types::has_type_params_ext::GenericItemExt;
 use lang::types::substitution::ApplySubstitution;
+use syntax::ast::ReferenceElement;
 use syntax::ast::syntax_factory::SyntaxFactory;
 use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, ast};
