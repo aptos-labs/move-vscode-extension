@@ -18,6 +18,8 @@ use syntax::files::InFile;
 use syntax::{AstNode, SyntaxNode, SyntaxToken, ast};
 use vfs::FileId;
 
+const MAX_FILE_ID: u32 = 0x7fff_ffff;
+
 /// Primary API to get semantic information, like types, from syntax trees.
 pub struct Semantics<'db, DB> {
     db: &'db DB,
@@ -121,7 +123,7 @@ impl<'db> SemanticsImpl<'db> {
 
     pub fn is_tys_compatible(&self, left_ty: Ty, right_ty: Ty, with_autoborrow: bool) -> bool {
         // Any file_id could be used here, we are not interested in unification. Could be improved later.
-        let ctx = &mut InferenceCtx::new(self.db, FileId::from_raw(u32::MAX), false);
+        let ctx = &mut InferenceCtx::new(self.db, FileId::from_raw(MAX_FILE_ID), false);
         if with_autoborrow {
             ctx.is_tys_compatible_with_autoborrow(left_ty, right_ty)
         } else {
