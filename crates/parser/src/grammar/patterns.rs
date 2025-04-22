@@ -315,6 +315,7 @@ pub(crate) fn ident_pat(p: &mut Parser) -> CompletedMarker {
 
 const PAT_RECOVERY_SET: TokenSet = TokenSet::new(&[
     T![let],
+    T![spec],
     T![if],
     T![while],
     T![loop],

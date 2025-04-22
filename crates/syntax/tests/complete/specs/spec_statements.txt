@@ -90,8 +90,9 @@ SOURCE_FILE@0..1362
     ITEM_SPEC@151..1257
       SPEC_KW@151..155 "spec"
       WHITESPACE@155..156 " "
-      NAME_REF@156..160
-        IDENT@156..160 "main"
+      ITEM_SPEC_REF@156..160
+        NAME_REF@156..160
+          IDENT@156..160 "main"
       WHITESPACE@160..161 " "
       BLOCK_EXPR@161..1257
         L_CURLY@161..162 "{"

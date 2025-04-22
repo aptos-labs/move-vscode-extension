@@ -1,0 +1,41 @@
+SOURCE_FILE@0..107
+  MODULE@0..106
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..29
+      IDENT@12..29 "let_expr_recovery"
+    WHITESPACE@29..30 " "
+    L_CURLY@30..31 "{"
+    WHITESPACE@31..36 "\n    "
+    FUN@36..104
+      FUN_KW@36..39 "fun"
+      WHITESPACE@39..40 " "
+      NAME@40..44
+        IDENT@40..44 "main"
+      PARAM_LIST@44..46
+        L_PAREN@44..45 "("
+        R_PAREN@45..46 ")"
+      WHITESPACE@46..47 " "
+      BLOCK_EXPR@47..104
+        L_CURLY@47..48 "{"
+        WHITESPACE@48..57 "\n        "
+        LET_STMT@57..60
+          LET_KW@57..60 "let"
+        WHITESPACE@60..69 "\n        "
+        EXPR_STMT@69..73
+          SPEC_BLOCK_EXPR@69..73
+            SPEC_KW@69..73 "spec"
+        WHITESPACE@73..82 "\n        "
+        LET_STMT@82..85
+          LET_KW@82..85 "let"
+        WHITESPACE@85..94 "\n        "
+        SPEC_BLOCK_EXPR@94..98
+          SPEC_KW@94..98 "spec"
+        WHITESPACE@98..103 "\n    "
+        R_CURLY@103..104 "}"
+    WHITESPACE@104..105 "\n"
+    R_CURLY@105..106 "}"
+  WHITESPACE@106..107 "\n"

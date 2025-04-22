@@ -17,8 +17,9 @@ SOURCE_FILE@0..418
     ITEM_SPEC@29..79
       SPEC_KW@29..33 "spec"
       WHITESPACE@33..34 " "
-      NAME_REF@34..48
-        IDENT@34..48 "create_address"
+      ITEM_SPEC_REF@34..48
+        NAME_REF@34..48
+          IDENT@34..48 "create_address"
       WHITESPACE@48..49 " "
       BLOCK_EXPR@49..79
         L_CURLY@49..50 "{"
@@ -129,8 +130,9 @@ SOURCE_FILE@0..418
     ITEM_SPEC@310..362
       SPEC_KW@310..314 "spec"
       WHITESPACE@314..315 " "
-      NAME_REF@315..335
-        IDENT@315..335 "write_to_event_store"
+      ITEM_SPEC_REF@315..335
+        NAME_REF@315..335
+          IDENT@315..335 "write_to_event_store"
       TYPE_PARAM_LIST@335..352
         L_ANGLE@335..336 "<"
         TYPE_PARAM@336..351
