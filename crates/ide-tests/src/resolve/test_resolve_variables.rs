@@ -696,7 +696,7 @@ fn test_resolve_attribute_location_for_named_address() {
     check_resolve(
         r#"
 module aptos_std::m {
-          //X  
+                //X
     fun main() {
     }
     #[test(location=aptos_std::m)]
