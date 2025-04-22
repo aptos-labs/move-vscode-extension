@@ -109,6 +109,15 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
                 entries.extend(InFile::new(file_id, idx_binding).to_entry())
             }
         }
+        FORALL_EXPR | EXISTS_EXPR | CHOOSE_EXPR => {
+            let owner = scope.syntax_cast::<ast::QuantBindingsOwner>().unwrap();
+            entries.extend(
+                owner
+                    .value
+                    .quant_bindings_as_ident_pats()
+                    .to_in_file_entries(owner.file_id),
+            );
+        }
         _ => {}
     }
 
