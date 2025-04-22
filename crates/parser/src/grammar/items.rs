@@ -149,7 +149,17 @@ fn item_spec(p: &mut Parser, m: Marker) {
     if p.at(T![module]) {
         p.bump(T![module]);
     } else {
-        if !name_ref_or_bump_until(p, item_start) {
+        let ref_exists = {
+            let ref_m = p.start();
+            let res = name_ref_or_bump_until(p, item_start);
+            if res {
+                ref_m.complete(p, ITEM_SPEC_REF);
+            } else {
+                ref_m.abandon(p);
+            }
+            res
+        };
+        if !ref_exists {
             m.complete(p, ITEM_SPEC);
             return;
         }

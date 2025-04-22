@@ -47,7 +47,7 @@ pub trait HasItems: AstNode {
     fn item_specs(&self) -> Vec<ast::ItemSpec> {
         self.all_item_specs()
             .into_iter()
-            .filter(|it| it.name_ref().is_some())
+            .filter(|it| it.item_spec_ref().is_some())
             .collect()
     }
 

@@ -424,7 +424,9 @@ ModuleSpec =
     Attr* 'spec' Path '{' UseStmt* Item* '}'
 
 ItemSpec =
-    Attr* 'spec' ('module' | NameRef) spec_block:BlockExpr
+    Attr* 'spec' ('module' | ItemSpecRef) spec_block:BlockExpr
+
+ItemSpecRef = NameRef
 
 SpecFun =
     Attr*

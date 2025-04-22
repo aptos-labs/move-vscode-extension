@@ -60,6 +60,9 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
             );
             entries.extend(builtin_spec_functions(db.upcast()).to_entries());
         }
+        ITEM_SPEC => {
+            let item_spec = scope.syntax_cast::<ast::ItemSpec>().unwrap();
+        }
         // todo: ITEM_SPEC should have access to params / fields of the item
         SCRIPT => {
             let script = scope.syntax_cast::<ast::Script>().unwrap();

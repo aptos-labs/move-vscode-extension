@@ -62,8 +62,16 @@ impl<T> InFile<T> {
         InFile::new(self.file_id, f(self.value))
     }
 
+    pub fn map_ref<F: FnOnce(&T) -> U, U>(&self, f: F) -> InFile<U> {
+        InFile::new(self.file_id, f(&self.value))
+    }
+
     pub fn and_then<F: FnOnce(T) -> Option<U>, U>(self, f: F) -> Option<InFile<U>> {
         f(self.value).map(|value| InFile::new(self.file_id, value))
+    }
+
+    pub fn and_then_ref<F: FnOnce(&T) -> Option<U>, U>(&self, f: F) -> Option<InFile<U>> {
+        f(&self.value).map(|value| InFile::new(self.file_id, value))
     }
 
     pub fn map_into<U: From<T>>(self) -> InFile<U> {
