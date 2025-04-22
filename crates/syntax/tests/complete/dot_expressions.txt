@@ -192,8 +192,9 @@ SOURCE_FILE@0..313
     ITEM_SPEC@253..310
       SPEC_KW@253..257 "spec"
       WHITESPACE@257..258 " "
-      NAME_REF@258..261
-        IDENT@258..261 "dot"
+      ITEM_SPEC_REF@258..261
+        NAME_REF@258..261
+          IDENT@258..261 "dot"
       WHITESPACE@261..262 " "
       BLOCK_EXPR@262..310
         L_CURLY@262..263 "{"
