@@ -54,9 +54,7 @@ pub mod entry_points {
         let m = p.start();
         while !p.at(EOF) {
             let m = p.start();
-
             attributes::outer_attrs(p);
-
             match p.current() {
                 T![module] => module(p, m),
                 T![spec] => module_spec(p, m),
