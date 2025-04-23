@@ -438,6 +438,7 @@ impl ForallExpr {
 pub struct Friend {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::HasAttrs for Friend {}
 impl Friend {
     #[inline]
     pub fn path(&self) -> Option<Path> { support::child(&self.syntax) }
@@ -1779,6 +1780,7 @@ pub enum Item {
     SpecFun(SpecFun),
     Struct(Struct),
 }
+impl ast::HasAttrs for Item {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MethodOrPath {
@@ -5383,6 +5385,21 @@ impl From<Struct> for Item {
     #[inline]
     fn from(node: Struct) -> Item { Item::Struct(node) }
 }
+impl From<Item> for AnyHasAttrs {
+    #[inline]
+    fn from(node: Item) -> AnyHasAttrs {
+        match node {
+            Item::Const(it) => it.into(),
+            Item::Enum(it) => it.into(),
+            Item::Friend(it) => it.into(),
+            Item::Fun(it) => it.into(),
+            Item::ItemSpec(it) => it.into(),
+            Item::Schema(it) => it.into(),
+            Item::SpecFun(it) => it.into(),
+            Item::Struct(it) => it.into(),
+        }
+    }
+}
 impl Item {
     pub fn const_(self) -> Option<Const> {
         match (self) {
@@ -6209,6 +6226,7 @@ impl AstNode for AnyHasAttrs {
             kind,
             CONST
                 | ENUM
+                | FRIEND
                 | FUN
                 | ITEM_SPEC
                 | MODULE
@@ -6237,6 +6255,10 @@ impl From<Const> for AnyHasAttrs {
 impl From<Enum> for AnyHasAttrs {
     #[inline]
     fn from(node: Enum) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<Friend> for AnyHasAttrs {
+    #[inline]
+    fn from(node: Friend) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
 impl From<Fun> for AnyHasAttrs {
     #[inline]

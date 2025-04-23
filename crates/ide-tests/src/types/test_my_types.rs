@@ -56,3 +56,21 @@ spec std::m {
     "#,
     );
 }
+
+#[test]
+fn test_infer_type_of_lambda_parameter() {
+    // language=Move
+    check_expr_type(
+        r#"
+module std::vector {
+    public inline fun for_each_ref<Element>(self: &vector<Element>, f: |&Element|)  {}
+}
+module std::m {
+    fun main() {
+        vector[vector[true]].for_each_ref(|elem| { elem })
+                                                   //^ &vector<bool>
+    }
+}
+    "#,
+    );
+}

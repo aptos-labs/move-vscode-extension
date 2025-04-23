@@ -59,6 +59,7 @@ UseGroup =
     '{' UseSpeck* '}'
 
 Friend =
+    Attr*
     'friend' Path ';'
 
 StructOrEnum =
@@ -434,6 +435,7 @@ SpecFun =
     (spec_block:BlockExpr | ';')
 
 SpecInlineFun =
+    Attr*
     'native'? 'fun' Name TypeParamList? ParamList RetType?
     (spec_block:BlockExpr | ';')
 

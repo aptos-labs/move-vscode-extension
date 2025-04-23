@@ -240,6 +240,21 @@ module 0x1::Main {
 
 // language=Move
 #[test]
+fn test_friend_module_resolution() {
+    check_resolve(
+        r#"
+module 0x1::M {
+    friend 0x1::MTest;
+               //^
+}    
+module 0x1::MTest {}
+           //X
+"#,
+    )
+}
+
+// language=Move
+#[test]
 fn test_friend_module_resolution_for_test_only_modules() {
     check_resolve(
         r#"
@@ -247,10 +262,33 @@ module 0x1::M {
     #[test_only]
     friend 0x1::MTest;
                //^
-}    
+}
 #[test_only]
 module 0x1::MTest {}
            //X
+"#,
+    )
+}
+
+// language=Move
+#[test]
+fn test_resolve_test_only_fun_from_test_only_module() {
+    check_resolve(
+        r#"
+module std::m {
+    public fun call() {
+               //X
+    }
+}
+#[test_only]
+module std::m_tests {
+    use std::m::call;
+    #[test]
+    fun main() {
+        call();
+        //^
+    }
+}
 "#,
     )
 }
