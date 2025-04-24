@@ -1828,10 +1828,11 @@ SOURCE_FILE@0..2739
                 IF_KW@2566..2568 "if"
                 WHITESPACE@2568..2569 " "
                 CALL_EXPR@2569..2579
-                  PATH@2569..2576
-                    PATH_SEGMENT@2569..2576
-                      NAME_REF@2569..2576
-                        IDENT@2569..2576 "consume"
+                  PATH_EXPR@2569..2576
+                    PATH@2569..2576
+                      PATH_SEGMENT@2569..2576
+                        NAME_REF@2569..2576
+                          IDENT@2569..2576 "consume"
                   ARG_LIST@2576..2579
                     L_PAREN@2576..2577 "("
                     PATH_EXPR@2577..2578
@@ -1927,10 +1928,11 @@ SOURCE_FILE@0..2739
         WHITESPACE@2712..2721 "\n        "
         EXPR_STMT@2721..2730
           CALL_EXPR@2721..2729
-            PATH@2721..2726
-              PATH_SEGMENT@2721..2726
-                NAME_REF@2721..2726
-                  IDENT@2721..2726 "match"
+            PATH_EXPR@2721..2726
+              PATH@2721..2726
+                PATH_SEGMENT@2721..2726
+                  NAME_REF@2721..2726
+                    IDENT@2721..2726 "match"
             ARG_LIST@2726..2729
               L_PAREN@2726..2727 "("
               LITERAL@2727..2728

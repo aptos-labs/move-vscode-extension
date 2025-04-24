@@ -101,10 +101,11 @@ SOURCE_FILE@0..150
         WHITESPACE@118..127 "\n        "
         EXPR_STMT@127..141
           CALL_EXPR@127..140
-            PATH@127..131
-              PATH_SEGMENT@127..131
-                NAME_REF@127..131
-                  IDENT@127..131 "call"
+            PATH_EXPR@127..131
+              PATH@127..131
+                PATH_SEGMENT@127..131
+                  NAME_REF@127..131
+                    IDENT@127..131 "call"
             ARG_LIST@131..140
               L_PAREN@131..132 "("
               CAST_EXPR@132..139

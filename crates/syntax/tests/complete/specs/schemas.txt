@@ -158,19 +158,20 @@ SOURCE_FILE@0..386
           BIN_EXPR@282..320
             DOT_EXPR@282..299
               CALL_EXPR@282..297
-                PATH@282..291
-                  PATH_SEGMENT@282..291
-                    NAME_REF@282..288
-                      IDENT@282..288 "global"
-                    TYPE_ARG_LIST@288..291
-                      L_ANGLE@288..289 "<"
-                      TYPE_ARG@289..290
-                        PATH_TYPE@289..290
-                          PATH@289..290
-                            PATH_SEGMENT@289..290
-                              NAME_REF@289..290
-                                IDENT@289..290 "X"
-                      R_ANGLE@290..291 ">"
+                PATH_EXPR@282..291
+                  PATH@282..291
+                    PATH_SEGMENT@282..291
+                      NAME_REF@282..288
+                        IDENT@282..288 "global"
+                      TYPE_ARG_LIST@288..291
+                        L_ANGLE@288..289 "<"
+                        TYPE_ARG@289..290
+                          PATH_TYPE@289..290
+                            PATH@289..290
+                              PATH_SEGMENT@289..290
+                                NAME_REF@289..290
+                                  IDENT@289..290 "X"
+                        R_ANGLE@290..291 ">"
                 ARG_LIST@291..297
                   L_PAREN@291..292 "("
                   LITERAL@292..296
@@ -188,19 +189,20 @@ SOURCE_FILE@0..386
             WHITESPACE@302..303 " "
             DOT_EXPR@303..320
               CALL_EXPR@303..318
-                PATH@303..312
-                  PATH_SEGMENT@303..312
-                    NAME_REF@303..309
-                      IDENT@303..309 "global"
-                    TYPE_ARG_LIST@309..312
-                      L_ANGLE@309..310 "<"
-                      TYPE_ARG@310..311
-                        PATH_TYPE@310..311
-                          PATH@310..311
-                            PATH_SEGMENT@310..311
-                              NAME_REF@310..311
-                                IDENT@310..311 "X"
-                      R_ANGLE@311..312 ">"
+                PATH_EXPR@303..312
+                  PATH@303..312
+                    PATH_SEGMENT@303..312
+                      NAME_REF@303..309
+                        IDENT@303..309 "global"
+                      TYPE_ARG_LIST@309..312
+                        L_ANGLE@309..310 "<"
+                        TYPE_ARG@310..311
+                          PATH_TYPE@310..311
+                            PATH@310..311
+                              PATH_SEGMENT@310..311
+                                NAME_REF@310..311
+                                  IDENT@310..311 "X"
+                        R_ANGLE@311..312 ">"
                 ARG_LIST@312..318
                   L_PAREN@312..313 "("
                   LITERAL@313..317
@@ -221,19 +223,20 @@ SOURCE_FILE@0..386
           BIN_EXPR@338..376
             DOT_EXPR@338..355
               CALL_EXPR@338..353
-                PATH@338..347
-                  PATH_SEGMENT@338..347
-                    NAME_REF@338..344
-                      IDENT@338..344 "global"
-                    TYPE_ARG_LIST@344..347
-                      L_ANGLE@344..345 "<"
-                      TYPE_ARG@345..346
-                        PATH_TYPE@345..346
-                          PATH@345..346
-                            PATH_SEGMENT@345..346
-                              NAME_REF@345..346
-                                IDENT@345..346 "X"
-                      R_ANGLE@346..347 ">"
+                PATH_EXPR@338..347
+                  PATH@338..347
+                    PATH_SEGMENT@338..347
+                      NAME_REF@338..344
+                        IDENT@338..344 "global"
+                      TYPE_ARG_LIST@344..347
+                        L_ANGLE@344..345 "<"
+                        TYPE_ARG@345..346
+                          PATH_TYPE@345..346
+                            PATH@345..346
+                              PATH_SEGMENT@345..346
+                                NAME_REF@345..346
+                                  IDENT@345..346 "X"
+                        R_ANGLE@346..347 ">"
                 ARG_LIST@347..353
                   L_PAREN@347..348 "("
                   LITERAL@348..352
@@ -251,19 +254,20 @@ SOURCE_FILE@0..386
             WHITESPACE@358..359 " "
             DOT_EXPR@359..376
               CALL_EXPR@359..374
-                PATH@359..368
-                  PATH_SEGMENT@359..368
-                    NAME_REF@359..365
-                      IDENT@359..365 "global"
-                    TYPE_ARG_LIST@365..368
-                      L_ANGLE@365..366 "<"
-                      TYPE_ARG@366..367
-                        PATH_TYPE@366..367
-                          PATH@366..367
-                            PATH_SEGMENT@366..367
-                              NAME_REF@366..367
-                                IDENT@366..367 "X"
-                      R_ANGLE@367..368 ">"
+                PATH_EXPR@359..368
+                  PATH@359..368
+                    PATH_SEGMENT@359..368
+                      NAME_REF@359..365
+                        IDENT@359..365 "global"
+                      TYPE_ARG_LIST@365..368
+                        L_ANGLE@365..366 "<"
+                        TYPE_ARG@366..367
+                          PATH_TYPE@366..367
+                            PATH@366..367
+                              PATH_SEGMENT@366..367
+                                NAME_REF@366..367
+                                  IDENT@366..367 "X"
+                        R_ANGLE@367..368 ">"
                 ARG_LIST@368..374
                   L_PAREN@368..369 "("
                   LITERAL@369..373

@@ -77,10 +77,11 @@ SOURCE_FILE@0..168
           BIN_EXPR@101..121
             DOT_EXPR@101..116
               CALL_EXPR@101..107
-                PATH@101..105
-                  PATH_SEGMENT@101..105
-                    NAME_REF@101..105
-                      IDENT@101..105 "call"
+                PATH_EXPR@101..105
+                  PATH@101..105
+                    PATH_SEGMENT@101..105
+                      NAME_REF@101..105
+                        IDENT@101..105 "call"
                 ARG_LIST@105..107
                   L_PAREN@105..106 "("
                   R_PAREN@106..107 ")"
@@ -100,10 +101,11 @@ SOURCE_FILE@0..168
             METHOD_CALL_EXPR@131..153
               DOT_EXPR@131..146
                 CALL_EXPR@131..137
-                  PATH@131..135
-                    PATH_SEGMENT@131..135
-                      NAME_REF@131..135
-                        IDENT@131..135 "call"
+                  PATH_EXPR@131..135
+                    PATH@131..135
+                      PATH_SEGMENT@131..135
+                        NAME_REF@131..135
+                          IDENT@131..135 "call"
                   ARG_LIST@135..137
                     L_PAREN@135..136 "("
                     R_PAREN@136..137 ")"

@@ -250,31 +250,33 @@ SOURCE_FILE@0..1362
           ABORTS_IF_KW@436..445 "aborts_if"
           WHITESPACE@445..446 " "
           CALL_EXPR@446..495
-            PATH@446..460
-              PATH_SEGMENT@446..460
-                NAME_REF@446..452
-                  IDENT@446..452 "exists"
-                TYPE_ARG_LIST@452..460
-                  L_ANGLE@452..453 "<"
-                  TYPE_ARG@453..459
-                    PATH_TYPE@453..459
-                      PATH@453..459
-                        PATH_SEGMENT@453..459
-                          NAME_REF@453..459
-                            IDENT@453..459 "Window"
-                  R_ANGLE@459..460 ">"
+            PATH_EXPR@446..460
+              PATH@446..460
+                PATH_SEGMENT@446..460
+                  NAME_REF@446..452
+                    IDENT@446..452 "exists"
+                  TYPE_ARG_LIST@452..460
+                    L_ANGLE@452..453 "<"
+                    TYPE_ARG@453..459
+                      PATH_TYPE@453..459
+                        PATH@453..459
+                          PATH_SEGMENT@453..459
+                            NAME_REF@453..459
+                              IDENT@453..459 "Window"
+                    R_ANGLE@459..460 ">"
             ARG_LIST@460..495
               L_PAREN@460..461 "("
               CALL_EXPR@461..494
-                PATH@461..484
-                  PATH@461..467
-                    PATH_SEGMENT@461..467
-                      NAME_REF@461..467
-                        IDENT@461..467 "Signer"
-                  COLON_COLON@467..469 "::"
-                  PATH_SEGMENT@469..484
-                    NAME_REF@469..484
-                      IDENT@469..484 "spec_address_of"
+                PATH_EXPR@461..484
+                  PATH@461..484
+                    PATH@461..467
+                      PATH_SEGMENT@461..467
+                        NAME_REF@461..467
+                          IDENT@461..467 "Signer"
+                    COLON_COLON@467..469 "::"
+                    PATH_SEGMENT@469..484
+                      NAME_REF@469..484
+                        IDENT@469..484 "spec_address_of"
                 ARG_LIST@484..494
                   L_PAREN@484..485 "("
                   PATH_EXPR@485..493
@@ -290,31 +292,33 @@ SOURCE_FILE@0..1362
           ABORTS_IF_KW@505..514 "aborts_if"
           WHITESPACE@514..515 " "
           CALL_EXPR@515..564
-            PATH@515..529
-              PATH_SEGMENT@515..529
-                NAME_REF@515..521
-                  IDENT@515..521 "exists"
-                TYPE_ARG_LIST@521..529
-                  L_ANGLE@521..522 "<"
-                  TYPE_ARG@522..528
-                    PATH_TYPE@522..528
-                      PATH@522..528
-                        PATH_SEGMENT@522..528
-                          NAME_REF@522..528
-                            IDENT@522..528 "Window"
-                  R_ANGLE@528..529 ">"
+            PATH_EXPR@515..529
+              PATH@515..529
+                PATH_SEGMENT@515..529
+                  NAME_REF@515..521
+                    IDENT@515..521 "exists"
+                  TYPE_ARG_LIST@521..529
+                    L_ANGLE@521..522 "<"
+                    TYPE_ARG@522..528
+                      PATH_TYPE@522..528
+                        PATH@522..528
+                          PATH_SEGMENT@522..528
+                            NAME_REF@522..528
+                              IDENT@522..528 "Window"
+                    R_ANGLE@528..529 ">"
             ARG_LIST@529..564
               L_PAREN@529..530 "("
               CALL_EXPR@530..563
-                PATH@530..553
-                  PATH@530..536
-                    PATH_SEGMENT@530..536
-                      NAME_REF@530..536
-                        IDENT@530..536 "Signer"
-                  COLON_COLON@536..538 "::"
-                  PATH_SEGMENT@538..553
-                    NAME_REF@538..553
-                      IDENT@538..553 "spec_address_of"
+                PATH_EXPR@530..553
+                  PATH@530..553
+                    PATH@530..536
+                      PATH_SEGMENT@530..536
+                        NAME_REF@530..536
+                          IDENT@530..536 "Signer"
+                    COLON_COLON@536..538 "::"
+                    PATH_SEGMENT@538..553
+                      NAME_REF@538..553
+                        IDENT@538..553 "spec_address_of"
                 ARG_LIST@553..563
                   L_PAREN@553..554 "("
                   PATH_EXPR@554..562
@@ -369,19 +373,20 @@ SOURCE_FILE@0..1362
           ENSURES_KW@660..667 "ensures"
           WHITESPACE@667..668 " "
           CALL_EXPR@668..690
-            PATH@668..684
-              PATH_SEGMENT@668..684
-                NAME_REF@668..674
-                  IDENT@668..674 "exists"
-                TYPE_ARG_LIST@674..684
-                  L_ANGLE@674..675 "<"
-                  TYPE_ARG@675..683
-                    PATH_TYPE@675..683
-                      PATH@675..683
-                        PATH_SEGMENT@675..683
-                          NAME_REF@675..683
-                            IDENT@675..683 "CoinType"
-                  R_ANGLE@683..684 ">"
+            PATH_EXPR@668..684
+              PATH@668..684
+                PATH_SEGMENT@668..684
+                  NAME_REF@668..674
+                    IDENT@668..674 "exists"
+                  TYPE_ARG_LIST@674..684
+                    L_ANGLE@674..675 "<"
+                    TYPE_ARG@675..683
+                      PATH_TYPE@675..683
+                        PATH@675..683
+                          PATH_SEGMENT@675..683
+                            NAME_REF@675..683
+                              IDENT@675..683 "CoinType"
+                    R_ANGLE@683..684 ">"
             ARG_LIST@684..690
               L_PAREN@684..685 "("
               LITERAL@685..689
@@ -405,10 +410,11 @@ SOURCE_FILE@0..1362
             EQ_EQ@715..717 "=="
             WHITESPACE@717..718 " "
             CALL_EXPR@718..761
-              PATH@718..723
-                PATH_SEGMENT@718..723
-                  NAME_REF@718..723
-                    IDENT@718..723 "TRACE"
+              PATH_EXPR@718..723
+                PATH@718..723
+                  PATH_SEGMENT@718..723
+                    NAME_REF@718..723
+                      IDENT@718..723 "TRACE"
               ARG_LIST@723..761
                 L_PAREN@723..724 "("
                 CHOOSE_EXPR@724..760
@@ -537,15 +543,16 @@ SOURCE_FILE@0..1362
                 COLON@903..904 ":"
                 WHITESPACE@904..905 " "
                 CALL_EXPR@905..928
-                  PATH@905..923
-                    PATH@905..911
-                      PATH_SEGMENT@905..911
-                        NAME_REF@905..911
-                          IDENT@905..911 "Signer"
-                    COLON_COLON@911..913 "::"
-                    PATH_SEGMENT@913..923
-                      NAME_REF@913..923
-                        IDENT@913..923 "address_of"
+                  PATH_EXPR@905..923
+                    PATH@905..923
+                      PATH@905..911
+                        PATH_SEGMENT@905..911
+                          NAME_REF@905..911
+                            IDENT@905..911 "Signer"
+                      COLON_COLON@911..913 "::"
+                      PATH_SEGMENT@913..923
+                        NAME_REF@913..923
+                          IDENT@913..923 "address_of"
                   ARG_LIST@923..928
                     L_PAREN@923..924 "("
                     PATH_EXPR@924..927

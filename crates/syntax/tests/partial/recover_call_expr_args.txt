@@ -24,20 +24,22 @@ SOURCE_FILE@0..124
         WHITESPACE@53..62 "\n        "
         EXPR_STMT@62..68
           CALL_EXPR@62..67
-            PATH@62..66
-              PATH_SEGMENT@62..66
-                NAME_REF@62..66
-                  IDENT@62..66 "call"
+            PATH_EXPR@62..66
+              PATH@62..66
+                PATH_SEGMENT@62..66
+                  NAME_REF@62..66
+                    IDENT@62..66 "call"
             ARG_LIST@66..67
               L_PAREN@66..67 "("
           SEMICOLON@67..68 ";"
         WHITESPACE@68..77 "\n        "
         EXPR_STMT@77..82
           CALL_EXPR@77..82
-            PATH@77..81
-              PATH_SEGMENT@77..81
-                NAME_REF@77..81
-                  IDENT@77..81 "call"
+            PATH_EXPR@77..81
+              PATH@77..81
+                PATH_SEGMENT@77..81
+                  NAME_REF@77..81
+                    IDENT@77..81 "call"
             ARG_LIST@81..82
               L_PAREN@81..82 "("
         WHITESPACE@82..91 "\n        "
@@ -55,10 +57,11 @@ SOURCE_FILE@0..124
           SEMICOLON@100..101 ";"
         WHITESPACE@101..110 "\n        "
         CALL_EXPR@110..115
-          PATH@110..114
-            PATH_SEGMENT@110..114
-              NAME_REF@110..114
-                IDENT@110..114 "call"
+          PATH_EXPR@110..114
+            PATH@110..114
+              PATH_SEGMENT@110..114
+                NAME_REF@110..114
+                  IDENT@110..114 "call"
           ARG_LIST@114..115
             L_PAREN@114..115 "("
         WHITESPACE@115..120 "\n    "

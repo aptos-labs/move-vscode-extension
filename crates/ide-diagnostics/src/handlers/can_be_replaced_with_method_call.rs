@@ -19,7 +19,10 @@ pub(crate) fn can_be_replaced_with_method_call(
 ) -> Option<Diagnostic> {
     let msl = call_expr.value.syntax().is_msl_context();
 
-    let reference = call_expr.clone().map(|it| it.path().reference());
+    let reference = call_expr
+        .clone()
+        .and_then(|it| it.path())?
+        .map(|it| it.reference());
     let fun = ctx.sema.resolve_to_element::<ast::Fun>(reference)?;
 
     let self_param = fun.value.self_param()?;
@@ -91,9 +94,9 @@ fn fixes(
     let method_args = call_expr.args().clone().into_iter().skip(1).collect::<Vec<_>>();
     let method_arg_list = make.arg_list(method_args);
 
-    let type_arg_list = call_expr.path().segment().and_then(|it| it.type_arg_list());
+    let type_arg_list = call_expr.path()?.segment().and_then(|it| it.type_arg_list());
 
-    let name = call_expr.path().reference_name()?;
+    let name = call_expr.path()?.reference_name()?;
     let method_call_expr = make.expr_method_call(
         receiver_expr,
         make.name_ref(&name),

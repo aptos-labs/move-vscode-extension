@@ -1,5 +1,4 @@
-use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
-use crate::{ast, match_ast, AstNode};
+use crate::ast;
 
 impl ast::AnyFun {
     pub fn params(&self) -> Vec<ast::Param> {
@@ -25,5 +24,23 @@ impl ast::AnyFun {
             ast::AnyFun::SpecFun(it) => it.into(),
             ast::AnyFun::SpecInlineFun(it) => it.into(),
         }
+    }
+}
+
+impl ast::Fun {
+    pub fn to_any_fun(&self) -> ast::AnyFun {
+        ast::AnyFun::Fun(self.clone())
+    }
+}
+
+impl ast::SpecFun {
+    pub fn to_any_fun(&self) -> ast::AnyFun {
+        ast::AnyFun::SpecFun(self.clone())
+    }
+}
+
+impl ast::SpecInlineFun {
+    pub fn to_any_fun(&self) -> ast::AnyFun {
+        ast::AnyFun::SpecInlineFun(self.clone())
     }
 }

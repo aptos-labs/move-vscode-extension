@@ -223,19 +223,20 @@ SOURCE_FILE@0..1295
           BIN_EXPR@418..448
             DOT_EXPR@418..442
               CALL_EXPR@418..436
-                PATH@418..433
-                  PATH_SEGMENT@418..433
-                    NAME_REF@418..424
-                      IDENT@418..424 "global"
-                    TYPE_ARG_LIST@424..433
-                      L_ANGLE@424..425 "<"
-                      TYPE_ARG@425..432
-                        PATH_TYPE@425..432
-                          PATH@425..432
-                            PATH_SEGMENT@425..432
-                              NAME_REF@425..432
-                                IDENT@425..432 "Counter"
-                      R_ANGLE@432..433 ">"
+                PATH_EXPR@418..433
+                  PATH@418..433
+                    PATH_SEGMENT@418..433
+                      NAME_REF@418..424
+                        IDENT@418..424 "global"
+                      TYPE_ARG_LIST@424..433
+                        L_ANGLE@424..425 "<"
+                        TYPE_ARG@425..432
+                          PATH_TYPE@425..432
+                            PATH@425..432
+                              PATH_SEGMENT@425..432
+                                NAME_REF@425..432
+                                  IDENT@425..432 "Counter"
+                        R_ANGLE@432..433 ">"
                 ARG_LIST@433..436
                   L_PAREN@433..434 "("
                   PATH_EXPR@434..435
@@ -262,10 +263,11 @@ SOURCE_FILE@0..1295
           WHITESPACE@474..475 " "
           BIN_EXPR@475..485
             CALL_EXPR@475..481
-              PATH@475..478
-                PATH_SEGMENT@475..478
-                  NAME_REF@475..478
-                    IDENT@475..478 "old"
+              PATH_EXPR@475..478
+                PATH@475..478
+                  PATH_SEGMENT@475..478
+                    NAME_REF@475..478
+                      IDENT@475..478 "old"
               ARG_LIST@478..481
                 L_PAREN@478..479 "("
                 PATH_EXPR@479..480
@@ -309,10 +311,11 @@ SOURCE_FILE@0..1295
                 MINUS@550..551 "-"
                 WHITESPACE@551..552 " "
                 CALL_EXPR@552..558
-                  PATH@552..555
-                    PATH_SEGMENT@552..555
-                      NAME_REF@552..555
-                        IDENT@552..555 "old"
+                  PATH_EXPR@552..555
+                    PATH@552..555
+                      PATH_SEGMENT@552..555
+                        NAME_REF@552..555
+                          IDENT@552..555 "old"
                   ARG_LIST@555..558
                     L_PAREN@555..556 "("
                     PATH_EXPR@556..557
@@ -620,10 +623,11 @@ SOURCE_FILE@0..1295
           ENSURES_KW@979..986 "ensures"
           WHITESPACE@986..987 " "
           CALL_EXPR@987..1011
-            PATH@987..990
-              PATH_SEGMENT@987..990
-                NAME_REF@987..990
-                  IDENT@987..990 "all"
+            PATH_EXPR@987..990
+              PATH@987..990
+                PATH_SEGMENT@987..990
+                  NAME_REF@987..990
+                    IDENT@987..990 "all"
             ARG_LIST@990..1011
               L_PAREN@990..991 "("
               PATH_EXPR@991..992

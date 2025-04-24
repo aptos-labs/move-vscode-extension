@@ -304,10 +304,11 @@ SOURCE_FILE@0..540
                   INT_NUMBER@373..374 "1"
               DOT_DOT@374..376 ".."
               CALL_EXPR@376..383
-                PATH@376..379
-                  PATH_SEGMENT@376..379
-                    NAME_REF@376..379
-                      IDENT@376..379 "len"
+                PATH_EXPR@376..379
+                  PATH@376..379
+                    PATH_SEGMENT@376..379
+                      NAME_REF@376..379
+                        IDENT@376..379 "len"
                 ARG_LIST@379..383
                   L_PAREN@379..380 "("
                   PATH_EXPR@380..382

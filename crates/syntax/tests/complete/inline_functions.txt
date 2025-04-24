@@ -102,10 +102,11 @@ SOURCE_FILE@0..687
         WHITESPACE@166..175 "\n        "
         EXPR_STMT@175..226
           CALL_EXPR@175..225
-            PATH@175..182
-              PATH_SEGMENT@175..182
-                NAME_REF@175..182
-                  IDENT@175..182 "foreach"
+            PATH_EXPR@175..182
+              PATH@175..182
+                PATH_SEGMENT@175..182
+                  NAME_REF@175..182
+                    IDENT@175..182 "foreach"
             ARG_LIST@182..225
               L_PAREN@182..183 "("
               PATH_EXPR@183..184
@@ -125,10 +126,11 @@ SOURCE_FILE@0..687
                   PIPE@191..192 "|"
                 WHITESPACE@192..193 " "
                 CALL_EXPR@193..224
-                  PATH@193..202
-                    PATH_SEGMENT@193..202
-                      NAME_REF@193..202
-                        IDENT@193..202 "push_back"
+                  PATH_EXPR@193..202
+                    PATH@193..202
+                      PATH_SEGMENT@193..202
+                        NAME_REF@193..202
+                          IDENT@193..202 "push_back"
                   ARG_LIST@202..224
                     L_PAREN@202..203 "("
                     BORROW_EXPR@203..214
@@ -143,10 +145,11 @@ SOURCE_FILE@0..687
                     COMMA@214..215 ","
                     WHITESPACE@215..216 " "
                     CALL_EXPR@216..223
-                      PATH@216..217
-                        PATH_SEGMENT@216..217
-                          NAME_REF@216..217
-                            IDENT@216..217 "f"
+                      PATH_EXPR@216..217
+                        PATH@216..217
+                          PATH_SEGMENT@216..217
+                            NAME_REF@216..217
+                              IDENT@216..217 "f"
                       ARG_LIST@217..223
                         L_PAREN@217..218 "("
                         PATH_EXPR@218..222
@@ -207,10 +210,11 @@ SOURCE_FILE@0..687
         WHITESPACE@301..310 "\n        "
         EXPR_STMT@310..397
           CALL_EXPR@310..396
-            PATH@310..317
-              PATH_SEGMENT@310..317
-                NAME_REF@310..317
-                  IDENT@310..317 "foreach"
+            PATH_EXPR@310..317
+              PATH@310..317
+                PATH_SEGMENT@310..317
+                  NAME_REF@310..317
+                    IDENT@310..317 "foreach"
             ARG_LIST@317..396
               L_PAREN@317..318 "("
               PATH_EXPR@318..319
@@ -239,10 +243,11 @@ SOURCE_FILE@0..687
                       CONDITION@345..355
                         L_PAREN@345..346 "("
                         CALL_EXPR@346..354
-                          PATH@346..347
-                            PATH_SEGMENT@346..347
-                              NAME_REF@346..347
-                                IDENT@346..347 "p"
+                          PATH_EXPR@346..347
+                            PATH@346..347
+                              PATH_SEGMENT@346..347
+                                NAME_REF@346..347
+                                  IDENT@346..347 "p"
                           ARG_LIST@347..354
                             L_PAREN@347..348 "("
                             BORROW_EXPR@348..353
@@ -257,10 +262,11 @@ SOURCE_FILE@0..687
                       WHITESPACE@355..356 " "
                       INLINE_EXPR@356..384
                         CALL_EXPR@356..384
-                          PATH@356..365
-                            PATH_SEGMENT@356..365
-                              NAME_REF@356..365
-                                IDENT@356..365 "push_back"
+                          PATH_EXPR@356..365
+                            PATH@356..365
+                              PATH_SEGMENT@356..365
+                                NAME_REF@356..365
+                                  IDENT@356..365 "push_back"
                           ARG_LIST@365..384
                             L_PAREN@365..366 "("
                             BORROW_EXPR@366..377
@@ -401,10 +407,11 @@ SOURCE_FILE@0..687
         L_CURLY@582..583 "{"
         WHITESPACE@583..592 "\n        "
         CALL_EXPR@592..599
-          PATH@592..593
-            PATH_SEGMENT@592..593
-              NAME_REF@592..593
-                IDENT@592..593 "f"
+          PATH_EXPR@592..593
+            PATH@592..593
+              PATH_SEGMENT@592..593
+                NAME_REF@592..593
+                  IDENT@592..593 "f"
           ARG_LIST@593..599
             L_PAREN@593..594 "("
             PATH_EXPR@594..595
@@ -462,10 +469,11 @@ SOURCE_FILE@0..687
         WHITESPACE@638..647 "\n        "
         EXPR_STMT@647..658
           CALL_EXPR@647..657
-            PATH@647..650
-              PATH_SEGMENT@647..650
-                NAME_REF@647..650
-                  IDENT@647..650 "foo"
+            PATH_EXPR@647..650
+              PATH@647..650
+                PATH_SEGMENT@647..650
+                  NAME_REF@647..650
+                    IDENT@647..650 "foo"
             ARG_LIST@650..657
               L_PAREN@650..651 "("
               LAMBDA_EXPR@651..656
@@ -481,10 +489,11 @@ SOURCE_FILE@0..687
         WHITESPACE@658..667 "\n        "
         EXPR_STMT@667..677
           CALL_EXPR@667..676
-            PATH@667..670
-              PATH_SEGMENT@667..670
-                NAME_REF@667..670
-                  IDENT@667..670 "bar"
+            PATH_EXPR@667..670
+              PATH@667..670
+                PATH_SEGMENT@667..670
+                  NAME_REF@667..670
+                    IDENT@667..670 "bar"
             ARG_LIST@670..676
               L_PAREN@670..671 "("
               LAMBDA_EXPR@671..675

@@ -1,9 +1,13 @@
 use crate::nameres::address::{Address, NamedAddr, ValueAddr, resolve_named_address};
-use crate::nameres::namespaces::{ALL_NS, ENUMS, ENUMS_N_MODULES, IMPORTABLE_NS, MODULES, NAMES, NAMES_N_FUNCTIONS_N_VARIANTS, NAMES_N_VARIANTS, NONE, NsSet, TYPES_N_ENUMS, TYPES_N_ENUMS_N_ENUM_VARIANTS, TYPES_N_ENUMS_N_MODULES, TYPES_N_ENUMS_N_NAMES, Ns};
+use crate::nameres::namespaces::{
+    ALL_NS, ENUMS, ENUMS_N_MODULES, IMPORTABLE_NS, MODULES, NAMES, NAMES_N_FUNCTIONS_N_VARIANTS,
+    NAMES_N_VARIANTS, NONE, Ns, NsSet, TYPES_N_ENUMS, TYPES_N_ENUMS_N_ENUM_VARIANTS,
+    TYPES_N_ENUMS_N_MODULES, TYPES_N_ENUMS_N_NAMES,
+};
+use enumset::enum_set;
 use parser::T;
 use std::fmt;
 use std::fmt::Formatter;
-use enumset::enum_set;
 use syntax::ast::node_ext::syntax_node::{OptionSyntaxNodeExt, SyntaxNodeExt};
 use syntax::{AstNode, ast};
 
@@ -270,7 +274,8 @@ fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
             if is_completion {
                 ALL_NS
             } else {
-                NAMES_N_VARIANTS
+                NAMES_N_FUNCTIONS_N_VARIANTS
+                // NAMES_N_VARIANTS
             }
         }
 

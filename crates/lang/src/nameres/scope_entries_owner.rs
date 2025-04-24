@@ -69,8 +69,9 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
                 match_ast! {
                     match (item.syntax()) {
                         ast::Fun(fun) => {
-                            entries.extend(fun.type_params().to_in_file_entries(fid));
-                            entries.extend(fun.params_as_bindings().to_in_file_entries(fid));
+                            let any_fun = fun.clone().to_any_fun();
+                            entries.extend(any_fun.type_params().to_in_file_entries(fid));
+                            entries.extend(any_fun.params_as_bindings().to_in_file_entries(fid));
                         },
                         ast::Struct(struct_) => {
                             entries.extend(struct_.named_fields().to_in_file_entries(fid));

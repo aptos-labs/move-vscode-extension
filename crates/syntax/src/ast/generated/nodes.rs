@@ -220,9 +220,7 @@ impl CallExpr {
     #[inline]
     pub fn arg_list(&self) -> Option<ArgList> { support::child(&self.syntax) }
     #[inline]
-    pub fn path(&self) -> Path {
-        support::child(&self.syntax).expect("CallExpr.path required by the parser")
-    }
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1210,6 +1208,7 @@ pub struct SpecInlineFun {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::GenericElement for SpecInlineFun {}
+impl ast::HasAttrs for SpecInlineFun {}
 impl ast::HasVisibility for SpecInlineFun {}
 impl ast::HoverDocsOwner for SpecInlineFun {}
 impl ast::MslOnly for SpecInlineFun {}
@@ -1699,6 +1698,7 @@ pub enum AnyFun {
     SpecInlineFun(SpecInlineFun),
 }
 impl ast::GenericElement for AnyFun {}
+impl ast::HasAttrs for AnyFun {}
 impl ast::HasVisibility for AnyFun {}
 impl ast::HoverDocsOwner for AnyFun {}
 impl ast::NamedElement for AnyFun {}
@@ -1768,6 +1768,7 @@ pub enum InferenceCtxOwner {
     SpecFun(SpecFun),
     SpecInlineFun(SpecInlineFun),
 }
+impl ast::HasAttrs for InferenceCtxOwner {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Item {
@@ -1865,6 +1866,7 @@ pub struct AnyGenericElement {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::GenericElement for AnyGenericElement {}
+impl ast::HasAttrs for AnyGenericElement {}
 impl ast::HoverDocsOwner for AnyGenericElement {}
 impl ast::NamedElement for AnyGenericElement {}
 
@@ -1900,6 +1902,7 @@ pub struct AnyHasVisibility {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HasVisibility for AnyHasVisibility {}
+impl ast::HasAttrs for AnyHasVisibility {}
 impl ast::HoverDocsOwner for AnyHasVisibility {}
 impl ast::NamedElement for AnyHasVisibility {}
 
@@ -1921,6 +1924,7 @@ pub struct AnyMslOnly {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::MslOnly for AnyMslOnly {}
+impl ast::HasAttrs for AnyMslOnly {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyNamedElement {
@@ -4575,6 +4579,16 @@ impl From<AnyFun> for AnyGenericElement {
         }
     }
 }
+impl From<AnyFun> for AnyHasAttrs {
+    #[inline]
+    fn from(node: AnyFun) -> AnyHasAttrs {
+        match node {
+            AnyFun::Fun(it) => it.into(),
+            AnyFun::SpecFun(it) => it.into(),
+            AnyFun::SpecInlineFun(it) => it.into(),
+        }
+    }
+}
 impl From<AnyFun> for AnyHasVisibility {
     #[inline]
     fn from(node: AnyFun) -> AnyHasVisibility {
@@ -5292,6 +5306,18 @@ impl From<SpecFun> for InferenceCtxOwner {
 impl From<SpecInlineFun> for InferenceCtxOwner {
     #[inline]
     fn from(node: SpecInlineFun) -> InferenceCtxOwner { InferenceCtxOwner::SpecInlineFun(node) }
+}
+impl From<InferenceCtxOwner> for AnyHasAttrs {
+    #[inline]
+    fn from(node: InferenceCtxOwner) -> AnyHasAttrs {
+        match node {
+            InferenceCtxOwner::Fun(it) => it.into(),
+            InferenceCtxOwner::ItemSpec(it) => it.into(),
+            InferenceCtxOwner::Schema(it) => it.into(),
+            InferenceCtxOwner::SpecFun(it) => it.into(),
+            InferenceCtxOwner::SpecInlineFun(it) => it.into(),
+        }
+    }
 }
 impl InferenceCtxOwner {
     pub fn fun(self) -> Option<Fun> {
@@ -6235,6 +6261,7 @@ impl AstNode for AnyHasAttrs {
                 | SCHEMA
                 | SCRIPT
                 | SPEC_FUN
+                | SPEC_INLINE_FUN
                 | STRUCT
                 | TUPLE_FIELD
                 | USE_STMT
@@ -6292,6 +6319,10 @@ impl From<SpecFun> for AnyHasAttrs {
     #[inline]
     fn from(node: SpecFun) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
+impl From<SpecInlineFun> for AnyHasAttrs {
+    #[inline]
+    fn from(node: SpecInlineFun) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
 impl From<Struct> for AnyHasAttrs {
     #[inline]
     fn from(node: Struct) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
@@ -6312,9 +6343,21 @@ impl From<AnyFieldsOwner> for AnyHasAttrs {
     #[inline]
     fn from(node: AnyFieldsOwner) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
+impl From<AnyGenericElement> for AnyHasAttrs {
+    #[inline]
+    fn from(node: AnyGenericElement) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
 impl From<AnyHasItems> for AnyHasAttrs {
     #[inline]
     fn from(node: AnyHasItems) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<AnyHasVisibility> for AnyHasAttrs {
+    #[inline]
+    fn from(node: AnyHasVisibility) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<AnyMslOnly> for AnyHasAttrs {
+    #[inline]
+    fn from(node: AnyMslOnly) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
 impl AnyHasItems {
     #[inline]

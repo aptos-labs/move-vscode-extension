@@ -3,6 +3,7 @@ use ide::Analysis;
 use ide::test_utils::get_marked_position_offset_with_data;
 use syntax::files::FilePosition;
 
+mod test_function_values;
 mod test_my_types;
 mod test_types_expression_types;
 
@@ -38,8 +39,8 @@ module 0x1::m {
         val
     }
     fun main() {
-        call(1u8);
-       //^ u8
+        (call(1u8));
+      //^ u8
     }
 }
 "#,
