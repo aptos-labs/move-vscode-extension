@@ -4,6 +4,7 @@ use crate::nameres::name_resolution::get_entries_from_walking_scopes;
 use crate::nameres::namespaces::NAMES;
 use crate::nameres::path_resolution::get_method_resolve_variants;
 use crate::nameres::scope::{ScopeEntryExt, ScopeEntryListExt, VecExt};
+use crate::node_ext::item_spec::ItemSpecExt;
 use crate::types::expectation::Expected;
 use crate::types::inference::InferenceCtx;
 use crate::types::patterns::{BindingMode, anonymous_pat_ty_var};
@@ -89,14 +90,27 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         }
     }
 
-    pub fn collect_parameter_bindings(&mut self, ctx_owner: &ast::InferenceCtxOwner) {
+    pub fn collect_parameter_bindings(&mut self, ctx_owner: &ast::InferenceCtxOwner) -> Option<()> {
+        let mut binding_file_id = self.ctx.file_id;
         let bindings = match ctx_owner {
-            ast::InferenceCtxOwner::Fun(fun) => fun.params_as_bindings(),
+            ast::InferenceCtxOwner::Fun(fun) => fun.to_any_fun().params_as_bindings(),
+            ast::InferenceCtxOwner::SpecFun(fun) => fun.to_any_fun().params_as_bindings(),
+            ast::InferenceCtxOwner::SpecInlineFun(fun) => fun.to_any_fun().params_as_bindings(),
+            ast::InferenceCtxOwner::ItemSpec(item_spec) => {
+                let item = item_spec.clone().in_file(self.ctx.file_id).item(self.ctx.db)?;
+                binding_file_id = item.file_id;
+
+                let item = item.value;
+                match item {
+                    ast::Item::Fun(fun) => fun.to_any_fun().params_as_bindings(),
+                    ast::Item::SpecFun(fun) => fun.to_any_fun().params_as_bindings(),
+                    _ => vec![],
+                }
+            }
             _ => {
-                return;
+                return None;
             }
         };
-        let file_id = self.ctx.file_id;
         for binding in bindings {
             let binding_ty = {
                 let binding_type_owner = binding.owner();
@@ -104,13 +118,14 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 match binding_type_owner {
                     Some(ast::IdentPatKind::Param(fun_param)) => fun_param
                         .type_()
-                        .map(|it| ty_lowering.lower_type(it.in_file(file_id)))
+                        .map(|it| ty_lowering.lower_type(it.in_file(binding_file_id)))
                         .unwrap_or(Ty::Unknown),
                     _ => continue,
                 }
             };
             self.ctx.pat_types.insert(binding.into(), binding_ty);
         }
+        Some(())
     }
 
     pub fn process_msl_block_expr(&mut self, block_expr: &ast::BlockExpr) -> Option<()> {
@@ -380,14 +395,16 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 let enum_path = path_expr.path().qualifier().unwrap_or(path_expr.path());
                 let variant_ty = self
                     .ctx
-                    .instantiate_path(enum_path.into(), variant.map(|it| it.enum_()).map_into())
-                    .into_ty_adt()?;
-                Some(Ty::Adt(variant_ty))
+                    .instantiate_path(enum_path.into(), variant.map(|it| it.enum_()).map_into());
+                let variant_ty_adt = variant_ty.into_ty_adt()?;
+                Some(Ty::Adt(variant_ty_adt))
             }
             MODULE => None,
-            // todo: return TyCallable when "function values" feature is implemented
-            FUN | SPEC_FUN | SPEC_INLINE_FUN => None,
-
+            FUN | SPEC_FUN | SPEC_INLINE_FUN => {
+                let any_fun = named_element.cast_into::<ast::AnyFun>().unwrap();
+                let method_or_path: ast::MethodOrPath = path_expr.path().into();
+                Some(self.ctx.instantiate_path_for_fun(method_or_path, any_fun).into())
+            }
             _ => None,
         }
     }
@@ -478,16 +495,28 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     }
 
     fn infer_call_expr(&mut self, call_expr: &ast::CallExpr, expected: Expected) -> Option<Ty> {
-        let call_ty = self.ctx.instantiate_call_expr_path(call_expr)?;
-        let expected_arg_tys = self.infer_expected_call_arg_tys(&call_ty, expected);
+        let lhs_expr = call_expr.expr()?;
+        let lhs_ty = self.infer_expr(&lhs_expr, Expected::NoValue);
+        let callable_ty = match lhs_ty {
+            Ty::Callable(ty_callable) => ty_callable,
+            Ty::Adt(ty_adt) => {
+                let path = call_expr.path()?;
+                let callable_ty = self.ctx.instantiate_adt_item_as_callable(path, ty_adt)?;
+                callable_ty
+            }
+            _ => {
+                return None;
+            }
+        };
+        let expected_arg_tys = self.infer_expected_call_arg_tys(&callable_ty, expected);
         let args = call_expr
             .args()
             .into_iter()
             .map(|expr| CallArg::Arg { expr })
             .collect();
-        self.coerce_call_arg_types(args, call_ty.param_types.clone(), expected_arg_tys);
+        self.coerce_call_arg_types(args, callable_ty.param_types.clone(), expected_arg_tys);
 
-        Some(call_ty.ret_type())
+        Some(callable_ty.ret_type())
     }
 
     fn infer_assert_macro_expr(&mut self, assert_macro_expr: &ast::AssertMacroExpr) -> Ty {

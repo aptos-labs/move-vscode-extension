@@ -339,7 +339,7 @@ MatchGuard =
     'if' Expr
 
 CallExpr =
-    Path ArgList
+    Expr ArgList
 
 MethodCallExpr =
     receiver_expr:Expr '.' NameRef ('::' TypeArgList)? ArgList

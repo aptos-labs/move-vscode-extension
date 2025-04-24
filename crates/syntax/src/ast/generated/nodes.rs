@@ -220,9 +220,7 @@ impl CallExpr {
     #[inline]
     pub fn arg_list(&self) -> Option<ArgList> { support::child(&self.syntax) }
     #[inline]
-    pub fn path(&self) -> Path {
-        support::child(&self.syntax).expect("CallExpr.path required by the parser")
-    }
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

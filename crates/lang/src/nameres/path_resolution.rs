@@ -1,22 +1,22 @@
 use crate::db::HirDatabase;
 use crate::loc::SyntaxLocFileExt;
+use crate::nameres::ResolveReference;
 use crate::nameres::name_resolution::{
     get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
-use crate::nameres::namespaces::{Ns, FUNCTIONS};
-use crate::nameres::path_kind::{path_kind, PathKind, QualifiedKind};
+use crate::nameres::namespaces::{FUNCTIONS, Ns};
+use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt};
-use crate::nameres::ResolveReference;
 use crate::types::inference::InferenceCtx;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
 use base_db::package_root::PackageRootId;
 use parser::SyntaxKind::CALL_EXPR;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
-use syntax::ast::node_ext::syntax_node::OptionSyntaxNodeExt;
+use syntax::ast::node_ext::syntax_node::{OptionSyntaxNodeExt, SyntaxNodeExt};
 use syntax::ast::{HasItems, ReferenceElement};
 use syntax::files::{InFile, InFileExt, OptionInFileExt};
-use syntax::{ast, AstNode};
+use syntax::{AstNode, ast};
 use vfs::FileId;
 
 pub fn get_path_resolve_variants_with_expected_type(
@@ -188,7 +188,13 @@ impl ResolutionContext {
     }
 
     pub fn is_call_expr(&self) -> bool {
-        self.path.value.root_path().syntax().parent().is_kind(CALL_EXPR)
+        let path_expr = self
+            .path
+            .value
+            .root_path()
+            .syntax()
+            .parent_of_type::<ast::PathExpr>();
+        path_expr.is_some_and(|it| it.syntax().parent().is_kind(CALL_EXPR))
     }
 
     pub fn package_root_id(&self, db: &dyn HirDatabase) -> PackageRootId {

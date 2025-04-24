@@ -1,6 +1,6 @@
 use crate::grammar::generic_params::ability_bound_list;
-use crate::grammar::{ability, paths};
 use crate::grammar::utils::delimited;
+use crate::grammar::{ability, paths};
 use crate::parser::Parser;
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;

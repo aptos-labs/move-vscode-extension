@@ -141,10 +141,6 @@ fn path_expr(p: &mut Parser) -> CompletedMarker {
             struct_lit_field_list(p);
             m.complete(p, STRUCT_LIT)
         }
-        // T!['('] => {
-        //     arg_list(p);
-        //     m.complete(p, CALL_EXPR)
-        // }
         _ => { m.complete(p, PATH_EXPR) }
     };
     cm

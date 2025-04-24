@@ -6,7 +6,7 @@ use crate::nameres::scope::ScopeEntry;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
-use crate::types::ty::integer::{IntegerKind, INTEGER_IDENTS};
+use crate::types::ty::integer::{INTEGER_IDENTS, IntegerKind};
 use crate::types::ty::reference::Mutability;
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::{CallKind, TyCallable};

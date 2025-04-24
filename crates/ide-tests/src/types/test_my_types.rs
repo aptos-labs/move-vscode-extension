@@ -43,14 +43,14 @@ module 0x1::m {
 }
 
 #[test]
-fn test_cannot_resolve_builtin_spec_function_in_module_spec() {
+fn test_resolve_builtin_function_in_module_spec() {
     // language=Move
     check_expr_type(
         r#"
 spec std::m {
     spec module {
-        len(vector[1, 2]) == 2;
-        //^ num
+        (len(vector[1, 2])) == 2;
+      //^ num
     }
 }
     "#,

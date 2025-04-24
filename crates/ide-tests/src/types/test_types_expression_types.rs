@@ -543,8 +543,8 @@ module 0x1::option {
         let unknown/*: unknown*/ = unknown_variable;
         let a2 = @0x1;
         unknown != some(a2);
-        unknown == some(a2);
-                   //^ 0x1::option::Option<address>
+        unknown == (some(a2));
+                 //^ 0x1::option::Option<address>
     }
 }        
 "#,
@@ -939,7 +939,7 @@ module 0x1::M {
     struct S {}
     fun call(a: S) {}
     spec call {
-        old(a);
+        (old(a));
       //^ 0x1::M::S 
     }
 }    
@@ -1004,7 +1004,7 @@ fn test_return_type_of_unit_returning_function() {
 module 0x1::M {
     fun call(): () {}
     fun m() {
-        call();
+        (call());
       //^ ()
     }
 }    
@@ -1128,7 +1128,8 @@ fn test_lambda_expr_integer_return_type() {
         r#"
 module 0x1::m {
     inline fun main<Element>(e: Element, f: |Element| u8) {
-        f(e);
+        let a = f(e);
+        a;
       //^ u8  
     }
 }        
@@ -1409,7 +1410,7 @@ module 0x1::m {
     fun call() {}
     fun main() {
         call;
-      //^ <unknown>  
+      //^ fn()
     }
 }        
 "#,
@@ -1816,7 +1817,7 @@ fn test_lambda_expr_unit_type() {
         r#"
 module 0x1::m {
     inline fun main<Element>(f: |Element|) {
-        f();
+        (f());
       //^ ()  
     }
 }        
@@ -2409,7 +2410,8 @@ fn test_lambda_expr_returning_type() {
         r#"
 module 0x1::m {
     inline fun main<Element>(f: |Element| Element) {
-        f();
+        let a = f();
+        a;
       //^ Element  
     }
 }        
@@ -2784,11 +2786,11 @@ module 0x1::m {
 fn test_unpack_struct_into_field() {
     check_expr_type(
         r#"
-    module 0x1::M {
+module 0x1::M {
     struct S { val: u8 }
-    fun s(): S { S { val: 10 } }
+    fun my_s(): S { S { val: 10 } }
     fun main() {
-        let s = s();
+        let s = my_s();
         s;
       //^ 0x1::M::S   
     }
@@ -2985,8 +2987,8 @@ fn test_msl_callable_num() {
 module 0x1::M {
     fun call(): u8 { 1 }
     spec module {
-        call();
-        //^ num
+        (call());
+      //^ num
     }
 }    
 "#,

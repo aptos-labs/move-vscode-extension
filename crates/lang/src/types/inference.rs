@@ -10,17 +10,19 @@ use crate::types::fold::{Fallback, FullTyVarResolver, TyVarResolver, TypeFoldabl
 use crate::types::has_type_params_ext::GenericItemExt;
 use crate::types::lowering::TyLowering;
 use crate::types::substitution::ApplySubstitution;
+use crate::types::ty::Ty;
+use crate::types::ty::adt::TyAdt;
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
-use crate::types::ty::Ty;
 use crate::types::unification::UnificationTable;
 use std::collections::HashMap;
+use std::env::var;
 use std::hash::Hash;
-use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
-use syntax::ast::FieldsOwner;
-use syntax::files::{InFile, InFileExt};
 use syntax::SyntaxKind::*;
-use syntax::{ast, AstNode};
+use syntax::ast::FieldsOwner;
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
+use syntax::files::{InFile, InFileExt};
+use syntax::{AstNode, ast};
 use vfs::FileId;
 
 #[derive(Debug)]
@@ -115,77 +117,43 @@ impl<'db> InferenceCtx<'db> {
         entry.and_then(|it| it.cast_into::<ast::AnyNamedElement>(self.db))
     }
 
-    fn instantiate_call_expr_path(&mut self, call_expr: &ast::CallExpr) -> Option<TyCallable> {
-        let path = call_expr.path();
-        let named_item = self.resolve_path_cached(path.clone(), None);
-        let callable_ty = if let Some(named_item) = named_item {
-            let item_kind = named_item.value.syntax().kind();
-            match item_kind {
-                FUN | SPEC_FUN | SPEC_INLINE_FUN => {
-                    let fun = named_item.cast_into::<ast::AnyFun>().unwrap();
-                    self.instantiate_path_for_fun(path.into(), fun)
-                }
-                STRUCT | VARIANT => {
-                    let fields_owner = named_item.cast_into::<ast::AnyFieldsOwner>().unwrap();
-                    let call_ty = self.instantiate_call_expr_for_tuple_fields(path, fields_owner)?;
-                    call_ty
-                }
-                // lambdas
-                IDENT_PAT => {
-                    let ident_pat = named_item.cast_into::<ast::IdentPat>().unwrap();
-                    let binding_ty = self.get_binding_type(ident_pat.value);
-                    binding_ty
-                        .and_then(|it| it.into_ty_callable())
-                        .unwrap_or(TyCallable::fake(call_expr.args().len(), CallKind::Lambda))
-                }
-                _ => TyCallable::fake(call_expr.args().len(), CallKind::Fun),
-            }
-        } else {
-            TyCallable::fake(call_expr.args().len(), CallKind::Fun)
-        };
-        Some(callable_ty)
-    }
-
-    fn instantiate_call_expr_for_tuple_fields(
+    fn instantiate_adt_item_as_callable(
         &mut self,
         path: ast::Path,
-        fields_owner: InFile<ast::AnyFieldsOwner>,
+        ty_adt: TyAdt,
     ) -> Option<TyCallable> {
-        let (owner_file_id, fields_owner) = fields_owner.unpack();
+        let adt_item = ty_adt.adt_item(self.db)?;
+        let (adt_item_file_id, adt_item_value) = adt_item.clone().unpack();
 
-        let owner_kind = fields_owner.syntax().kind();
-        let (path, struct_or_enum): (ast::Path, ast::StructOrEnum) = match owner_kind {
-            STRUCT => (path, fields_owner.struct_or_enum()),
-            VARIANT => {
-                let qualifier_path = path.qualifier()?;
-                let variant = fields_owner.cast_into::<ast::Variant>()?;
-                (qualifier_path, variant.enum_().into())
+        let fields_owner: ast::AnyFieldsOwner = match adt_item_value {
+            ast::StructOrEnum::Struct(s) => s.into(),
+            ast::StructOrEnum::Enum(_) => {
+                // fetch variant
+                let variant = self
+                    .resolved_paths
+                    .get(&path)?
+                    .clone()
+                    .single_or_none()?
+                    .cast_into::<ast::Variant>(self.db)?;
+                variant.value.into()
             }
-            _ => unreachable!(),
         };
-        let struct_or_enum = struct_or_enum.in_file(owner_file_id);
 
         let tuple_fields = fields_owner.tuple_field_list()?.fields().collect::<Vec<_>>();
         let param_types = tuple_fields
             .into_iter()
             .map(|it| {
                 self.ty_lowering()
-                    .lower_tuple_field(it.in_file(owner_file_id))
+                    .lower_tuple_field(it.in_file(adt_item_file_id))
                     .unwrap_or(Ty::Unknown)
             })
             .collect::<Vec<_>>();
-        let ret_type = Ty::new_ty_adt(struct_or_enum.clone());
+        let ret_type = Ty::new_ty_adt(adt_item.clone());
+        let callable_ty =
+            TyCallable::new(param_types, ret_type, CallKind::Fun).substitute(&ty_adt.substitution);
 
-        let ty_vars_subst = struct_or_enum.ty_vars_subst();
-        let ctx_file_id = self.file_id;
-        let type_args_subst = self
-            .ty_lowering()
-            .type_args_substitution(path.in_file(ctx_file_id).map_into(), struct_or_enum.map_into());
-
-        let tuple_ty =
-            TyCallable::new(param_types, ret_type, CallKind::Fun).substitute(&type_args_subst);
-
-        Some(tuple_ty.substitute(&ty_vars_subst))
+        let ty_vars_subst = adt_item.ty_vars_subst();
+        Some(callable_ty.substitute(&ty_vars_subst))
     }
 
     pub fn instantiate_path_for_fun(
