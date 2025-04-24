@@ -76,6 +76,11 @@ impl<'t> Parser<'t> {
         }
     }
 
+    pub(crate) fn nth_at_ts(&self, n: usize, ts: TokenSet) -> bool {
+        let nth_kind = self.nth(n);
+        ts.contains(nth_kind)
+    }
+
     pub(crate) fn nth_at(&self, n: usize, kind: SyntaxKind) -> bool {
         match kind {
             // T![-=] => self.at_composite2(n, T![-], T![=]),

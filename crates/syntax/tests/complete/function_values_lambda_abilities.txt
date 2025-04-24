@@ -1,0 +1,116 @@
+SOURCE_FILE@0..186
+  MODULE@0..185
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..44
+      IDENT@12..44 "function_values_lambd ..."
+    WHITESPACE@44..45 " "
+    L_CURLY@45..46 "{"
+    WHITESPACE@46..51 "\n    "
+    FUN@51..183
+      FUN_KW@51..54 "fun"
+      WHITESPACE@54..55 " "
+      NAME@55..59
+        IDENT@55..59 "main"
+      PARAM_LIST@59..175
+        L_PAREN@59..60 "("
+        WHITESPACE@60..69 "\n        "
+        PARAM@69..112
+          IDENT_PAT@69..70
+            NAME@69..70
+              IDENT@69..70 "a"
+          COLON@70..71 ":"
+          WHITESPACE@71..72 " "
+          LAMBDA_TYPE@72..112
+            PIPE@72..73 "|"
+            LAMBDA_TYPE_PARAM@73..77
+              PATH_TYPE@73..77
+                PATH@73..77
+                  PATH_SEGMENT@73..77
+                    NAME_REF@73..77
+                      IDENT@73..77 "bool"
+            PIPE@77..78 "|"
+            WHITESPACE@78..79 " "
+            PATH_TYPE@79..96
+              PATH@79..96
+                PATH_SEGMENT@79..96
+                  NAME_REF@79..96
+                    IDENT@79..96 "SettleTradeResult"
+            WHITESPACE@96..97 " "
+            LAMBDA_TYPE_ABILITY_LIST@97..112
+              HAS_KW@97..100 "has"
+              WHITESPACE@100..101 " "
+              ABILITY_BOUND_LIST@101..112
+                ABILITY@101..105
+                  IDENT@101..105 "drop"
+                WHITESPACE@105..106 " "
+                PLUS@106..107 "+"
+                WHITESPACE@107..108 " "
+                ABILITY@108..112
+                  IDENT@108..112 "copy"
+        COMMA@112..113 ","
+        WHITESPACE@113..122 "\n        "
+        PARAM@122..168
+          IDENT_PAT@122..123
+            NAME@122..123
+              IDENT@122..123 "a"
+          COLON@123..124 ":"
+          WHITESPACE@124..125 " "
+          LAMBDA_TYPE@125..168
+            PIPE@125..126 "|"
+            LAMBDA_TYPE_PARAM@126..130
+              PATH_TYPE@126..130
+                PATH@126..130
+                  PATH_SEGMENT@126..130
+                    NAME_REF@126..130
+                      IDENT@126..130 "bool"
+            COMMA@130..131 ","
+            WHITESPACE@131..132 " "
+            LAMBDA_TYPE_PARAM@132..139
+              PATH_TYPE@132..139
+                PATH@132..139
+                  PATH_SEGMENT@132..139
+                    NAME_REF@132..139
+                      IDENT@132..139 "address"
+            PIPE@139..140 "|"
+            WHITESPACE@140..141 " "
+            PATH_TYPE@141..152
+              PATH@141..152
+                PATH_SEGMENT@141..152
+                  NAME_REF@141..147
+                    IDENT@141..147 "Option"
+                  TYPE_ARG_LIST@147..152
+                    L_ANGLE@147..148 "<"
+                    TYPE_ARG@148..151
+                      PATH_TYPE@148..151
+                        PATH@148..151
+                          PATH_SEGMENT@148..151
+                            NAME_REF@148..151
+                              IDENT@148..151 "u64"
+                    R_ANGLE@151..152 ">"
+            WHITESPACE@152..153 " "
+            LAMBDA_TYPE_ABILITY_LIST@153..168
+              HAS_KW@153..156 "has"
+              WHITESPACE@156..157 " "
+              ABILITY_BOUND_LIST@157..168
+                ABILITY@157..161
+                  IDENT@157..161 "drop"
+                WHITESPACE@161..162 " "
+                PLUS@162..163 "+"
+                WHITESPACE@163..164 " "
+                ABILITY@164..168
+                  IDENT@164..168 "copy"
+        COMMA@168..169 ","
+        WHITESPACE@169..174 "\n    "
+        R_PAREN@174..175 ")"
+      WHITESPACE@175..176 " "
+      BLOCK_EXPR@176..183
+        L_CURLY@176..177 "{"
+        WHITESPACE@177..182 "\n    "
+        R_CURLY@182..183 "}"
+    WHITESPACE@183..184 "\n"
+    R_CURLY@184..185 "}"
+  WHITESPACE@185..186 "\n"

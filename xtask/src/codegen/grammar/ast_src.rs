@@ -107,6 +107,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "PATH_TYPE",
         "LAMBDA_TYPE",
         "LAMBDA_TYPE_PARAM",
+        "LAMBDA_TYPE_ABILITY_LIST",
         "REF_TYPE",
         "UNIT_TYPE",
         // "INFER_TYPE",
