@@ -207,10 +207,11 @@ SOURCE_FILE@0..445
           EQ@292..293 "="
           WHITESPACE@293..294 " "
           CALL_EXPR@294..299
-            PATH@294..295
-              PATH_SEGMENT@294..295
-                NAME_REF@294..295
-                  IDENT@294..295 "S"
+            PATH_EXPR@294..295
+              PATH@294..295
+                PATH_SEGMENT@294..295
+                  NAME_REF@294..295
+                    IDENT@294..295 "S"
             ARG_LIST@295..299
               L_PAREN@295..296 "("
               LITERAL@296..298
@@ -228,15 +229,16 @@ SOURCE_FILE@0..445
           EQ@315..316 "="
           WHITESPACE@316..317 " "
           CALL_EXPR@317..331
-            PATH@317..321
-              PATH@317..318
-                PATH_SEGMENT@317..318
-                  NAME_REF@317..318
-                    IDENT@317..318 "E"
-              COLON_COLON@318..320 "::"
-              PATH_SEGMENT@320..321
-                NAME_REF@320..321
-                  IDENT@320..321 "V"
+            PATH_EXPR@317..321
+              PATH@317..321
+                PATH@317..318
+                  PATH_SEGMENT@317..318
+                    NAME_REF@317..318
+                      IDENT@317..318 "E"
+                COLON_COLON@318..320 "::"
+                PATH_SEGMENT@320..321
+                  NAME_REF@320..321
+                    IDENT@320..321 "V"
             ARG_LIST@321..331
               L_PAREN@321..322 "("
               LITERAL@322..326

@@ -96,26 +96,28 @@ SOURCE_FILE@0..1087
               WHERE_KW@160..165 "where"
               WHITESPACE@165..166 " "
               CALL_EXPR@166..188
-                PATH@166..169
-                  PATH_SEGMENT@166..169
-                    NAME_REF@166..169
-                      IDENT@166..169 "old"
+                PATH_EXPR@166..169
+                  PATH@166..169
+                    PATH_SEGMENT@166..169
+                      NAME_REF@166..169
+                        IDENT@166..169 "old"
                 ARG_LIST@169..188
                   L_PAREN@169..170 "("
                   CALL_EXPR@170..187
-                    PATH@170..180
-                      PATH_SEGMENT@170..180
-                        NAME_REF@170..176
-                          IDENT@170..176 "exists"
-                        TYPE_ARG_LIST@176..180
-                          L_ANGLE@176..177 "<"
-                          TYPE_ARG@177..179
-                            PATH_TYPE@177..179
-                              PATH@177..179
-                                PATH_SEGMENT@177..179
-                                  NAME_REF@177..179
-                                    IDENT@177..179 "u8"
-                          R_ANGLE@179..180 ">"
+                    PATH_EXPR@170..180
+                      PATH@170..180
+                        PATH_SEGMENT@170..180
+                          NAME_REF@170..176
+                            IDENT@170..176 "exists"
+                          TYPE_ARG_LIST@176..180
+                            L_ANGLE@176..177 "<"
+                            TYPE_ARG@177..179
+                              PATH_TYPE@177..179
+                                PATH@177..179
+                                  PATH_SEGMENT@177..179
+                                    NAME_REF@177..179
+                                      IDENT@177..179 "u8"
+                            R_ANGLE@179..180 ">"
                     ARG_LIST@180..187
                       L_PAREN@180..181 "("
                       PATH_EXPR@181..186
@@ -554,19 +556,20 @@ SOURCE_FILE@0..1087
               WHITESPACE@779..780 " "
               BIN_EXPR@780..818
                 CALL_EXPR@780..792
-                  PATH@780..789
-                    PATH_SEGMENT@780..789
-                      NAME_REF@780..786
-                        IDENT@780..786 "exists"
-                      TYPE_ARG_LIST@786..789
-                        L_ANGLE@786..787 "<"
-                        TYPE_ARG@787..788
-                          PATH_TYPE@787..788
-                            PATH@787..788
-                              PATH_SEGMENT@787..788
-                                NAME_REF@787..788
-                                  IDENT@787..788 "R"
-                        R_ANGLE@788..789 ">"
+                  PATH_EXPR@780..789
+                    PATH@780..789
+                      PATH_SEGMENT@780..789
+                        NAME_REF@780..786
+                          IDENT@780..786 "exists"
+                        TYPE_ARG_LIST@786..789
+                          L_ANGLE@786..787 "<"
+                          TYPE_ARG@787..788
+                            PATH_TYPE@787..788
+                              PATH@787..788
+                                PATH_SEGMENT@787..788
+                                  NAME_REF@787..788
+                                    IDENT@787..788 "R"
+                          R_ANGLE@788..789 ">"
                   ARG_LIST@789..792
                     L_PAREN@789..790 "("
                     PATH_EXPR@790..791
@@ -581,19 +584,20 @@ SOURCE_FILE@0..1087
                 BIN_EXPR@796..818
                   DOT_EXPR@796..814
                     CALL_EXPR@796..808
-                      PATH@796..805
-                        PATH_SEGMENT@796..805
-                          NAME_REF@796..802
-                            IDENT@796..802 "global"
-                          TYPE_ARG_LIST@802..805
-                            L_ANGLE@802..803 "<"
-                            TYPE_ARG@803..804
-                              PATH_TYPE@803..804
-                                PATH@803..804
-                                  PATH_SEGMENT@803..804
-                                    NAME_REF@803..804
-                                      IDENT@803..804 "R"
-                            R_ANGLE@804..805 ">"
+                      PATH_EXPR@796..805
+                        PATH@796..805
+                          PATH_SEGMENT@796..805
+                            NAME_REF@796..802
+                              IDENT@796..802 "global"
+                            TYPE_ARG_LIST@802..805
+                              L_ANGLE@802..803 "<"
+                              TYPE_ARG@803..804
+                                PATH_TYPE@803..804
+                                  PATH@803..804
+                                    PATH_SEGMENT@803..804
+                                      NAME_REF@803..804
+                                        IDENT@803..804 "R"
+                              R_ANGLE@804..805 ">"
                       ARG_LIST@805..808
                         L_PAREN@805..806 "("
                         PATH_EXPR@806..807
@@ -637,10 +641,11 @@ SOURCE_FILE@0..1087
               WHITESPACE@851..852 " "
               BIN_EXPR@852..879
                 CALL_EXPR@852..866
-                  PATH@852..860
-                    PATH_SEGMENT@852..860
-                      NAME_REF@852..860
-                        IDENT@852..860 "in_range"
+                  PATH_EXPR@852..860
+                    PATH@852..860
+                      PATH_SEGMENT@852..860
+                        NAME_REF@852..860
+                          IDENT@852..860 "in_range"
                   ARG_LIST@860..866
                     L_PAREN@860..861 "("
                     PATH_EXPR@861..862
@@ -703,10 +708,11 @@ SOURCE_FILE@0..1087
                 IN_KW@910..912 "in"
                 WHITESPACE@912..913 " "
                 CALL_EXPR@913..927
-                  PATH@913..918
-                    PATH_SEGMENT@913..918
-                      NAME_REF@913..918
-                        IDENT@913..918 "range"
+                  PATH_EXPR@913..918
+                    PATH@913..918
+                      PATH_SEGMENT@913..918
+                        NAME_REF@913..918
+                          IDENT@913..918 "range"
                   ARG_LIST@918..927
                     L_PAREN@918..919 "("
                     PATH_EXPR@919..926
@@ -790,10 +796,11 @@ SOURCE_FILE@0..1087
               IN_KW@1035..1037 "in"
               WHITESPACE@1037..1038 " "
               CALL_EXPR@1038..1052
-                PATH@1038..1043
-                  PATH_SEGMENT@1038..1043
-                    NAME_REF@1038..1043
-                      IDENT@1038..1043 "range"
+                PATH_EXPR@1038..1043
+                  PATH@1038..1043
+                    PATH_SEGMENT@1038..1043
+                      NAME_REF@1038..1043
+                        IDENT@1038..1043 "range"
                 ARG_LIST@1043..1052
                   L_PAREN@1043..1044 "("
                   PATH_EXPR@1044..1051

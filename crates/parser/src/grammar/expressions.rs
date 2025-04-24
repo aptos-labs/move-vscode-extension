@@ -1,4 +1,4 @@
-use crate::grammar::expressions::atom::EXPR_FIRST;
+use crate::grammar::expressions::atom::{call_expr, EXPR_FIRST};
 use crate::grammar::items::{fun, use_item};
 use crate::grammar::lambdas::lambda_param_list;
 use crate::grammar::patterns::pattern;
@@ -207,8 +207,8 @@ pub(crate) fn lhs(p: &mut Parser, r: Restrictions) -> Option<(CompletedMarker, B
         _ => {
             let (lhs, blocklike) = atom::atom_expr(p)?;
 
-            let allow_postfix_calls = !(r.prefer_stmt && blocklike.is_block());
-            let cm = postfix_expr(p, lhs, blocklike, allow_postfix_calls);
+            let allow_calls = !(r.prefer_stmt && blocklike.is_block());
+            let cm = postfix_expr(p, lhs, blocklike, allow_calls);
 
             return Some(cm);
         }
@@ -230,6 +230,7 @@ fn postfix_expr(
 ) -> (CompletedMarker, BlockLike) {
     loop {
         lhs = match p.current() {
+            T!['('] if allow_calls => call_expr(p, lhs),
             T!['['] if allow_calls => index_expr(p, lhs),
             T![.] => match postfix_dot_expr(p, lhs) {
                 Ok(it) => it,

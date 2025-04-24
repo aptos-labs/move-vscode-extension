@@ -141,14 +141,13 @@ fn path_expr(p: &mut Parser) -> CompletedMarker {
             struct_lit_field_list(p);
             m.complete(p, STRUCT_LIT)
         }
-        T!['('] => {
-            arg_list(p);
-            m.complete(p, CALL_EXPR)
-        }
+        // T!['('] => {
+        //     arg_list(p);
+        //     m.complete(p, CALL_EXPR)
+        // }
         _ => { m.complete(p, PATH_EXPR) }
     };
     cm
-    // return Some((cm, BlockLike::NotBlock));
 }
 
 fn vector_lit_expr(p: &mut Parser) -> CompletedMarker {
@@ -194,7 +193,7 @@ fn assert_macro_expr(p: &mut Parser) -> CompletedMarker {
     m.complete(p, ASSERT_MACRO_EXPR)
 }
 
-fn call_expr(p: &mut Parser, lhs: CompletedMarker) -> CompletedMarker {
+pub(crate) fn call_expr(p: &mut Parser, lhs: CompletedMarker) -> CompletedMarker {
     assert!(p.at(T!['(']));
     let m = lhs.precede(p);
     arg_list(p);

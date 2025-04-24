@@ -56,19 +56,20 @@ SOURCE_FILE@0..107
         WHITESPACE@78..87 "\n        "
         EXPR_STMT@87..98
           CALL_EXPR@87..97
-            PATH@87..95
-              PATH_SEGMENT@87..95
-                NAME_REF@87..91
-                  IDENT@87..91 "call"
-                TYPE_ARG_LIST@91..95
-                  L_ANGLE@91..92 "<"
-                  TYPE_ARG@92..94
-                    PATH_TYPE@92..94
-                      PATH@92..94
-                        PATH_SEGMENT@92..94
-                          NAME_REF@92..94
-                            IDENT@92..94 "u8"
-                  R_ANGLE@94..95 ">"
+            PATH_EXPR@87..95
+              PATH@87..95
+                PATH_SEGMENT@87..95
+                  NAME_REF@87..91
+                    IDENT@87..91 "call"
+                  TYPE_ARG_LIST@91..95
+                    L_ANGLE@91..92 "<"
+                    TYPE_ARG@92..94
+                      PATH_TYPE@92..94
+                        PATH@92..94
+                          PATH_SEGMENT@92..94
+                            NAME_REF@92..94
+                              IDENT@92..94 "u8"
+                    R_ANGLE@94..95 ">"
             ARG_LIST@95..97
               L_PAREN@95..96 "("
               R_PAREN@96..97 ")"

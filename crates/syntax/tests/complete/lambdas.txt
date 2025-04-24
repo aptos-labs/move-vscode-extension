@@ -62,10 +62,11 @@ SOURCE_FILE@0..146
         WHITESPACE@57..66 "\n        "
         EXPR_STMT@66..97
           CALL_EXPR@66..96
-            PATH@66..74
-              PATH_SEGMENT@66..74
-                NAME_REF@66..74
-                  IDENT@66..74 "for_each"
+            PATH_EXPR@66..74
+              PATH@66..74
+                PATH_SEGMENT@66..74
+                  NAME_REF@66..74
+                    IDENT@66..74 "for_each"
             ARG_LIST@74..96
               L_PAREN@74..75 "("
               PATH_EXPR@75..76
@@ -101,10 +102,11 @@ SOURCE_FILE@0..146
         WHITESPACE@97..106 "\n        "
         EXPR_STMT@106..137
           CALL_EXPR@106..136
-            PATH@106..114
-              PATH_SEGMENT@106..114
-                NAME_REF@106..114
-                  IDENT@106..114 "for_each"
+            PATH_EXPR@106..114
+              PATH@106..114
+                PATH_SEGMENT@106..114
+                  NAME_REF@106..114
+                    IDENT@106..114 "for_each"
             ARG_LIST@114..136
               L_PAREN@114..115 "("
               PATH_EXPR@115..116

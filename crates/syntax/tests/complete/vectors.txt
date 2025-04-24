@@ -112,15 +112,16 @@ SOURCE_FILE@0..225
         WHITESPACE@193..202 "\n        "
         EXPR_STMT@202..216
           CALL_EXPR@202..215
-            PATH@202..213
-              PATH@202..208
-                PATH_SEGMENT@202..208
-                  NAME_REF@202..208
-                    IDENT@202..208 "vector"
-              COLON_COLON@208..210 "::"
-              PATH_SEGMENT@210..213
-                NAME_REF@210..213
-                  IDENT@210..213 "add"
+            PATH_EXPR@202..213
+              PATH@202..213
+                PATH@202..208
+                  PATH_SEGMENT@202..208
+                    NAME_REF@202..208
+                      IDENT@202..208 "vector"
+                COLON_COLON@208..210 "::"
+                PATH_SEGMENT@210..213
+                  NAME_REF@210..213
+                    IDENT@210..213 "add"
             ARG_LIST@213..215
               L_PAREN@213..214 "("
               R_PAREN@214..215 ")"

@@ -57,19 +57,20 @@ SOURCE_FILE@0..418
         WHITESPACE@124..133 "\n        "
         DOT_EXPR@133..195
           CALL_EXPR@133..182
-            PATH@133..164
-              PATH_SEGMENT@133..164
-                NAME_REF@133..139
-                  IDENT@133..139 "global"
-                TYPE_ARG_LIST@139..164
-                  L_ANGLE@139..140 "<"
-                  TYPE_ARG@140..163
-                    PATH_TYPE@140..163
-                      PATH@140..163
-                        PATH_SEGMENT@140..163
-                          NAME_REF@140..163
-                            IDENT@140..163 "CurrentTimeMicroseconds"
-                  R_ANGLE@163..164 ">"
+            PATH_EXPR@133..164
+              PATH@133..164
+                PATH_SEGMENT@133..164
+                  NAME_REF@133..139
+                    IDENT@133..139 "global"
+                  TYPE_ARG_LIST@139..164
+                    L_ANGLE@139..140 "<"
+                    TYPE_ARG@140..163
+                      PATH_TYPE@140..163
+                        PATH@140..163
+                          PATH_SEGMENT@140..163
+                            NAME_REF@140..163
+                              IDENT@140..163 "CurrentTimeMicroseconds"
+                    R_ANGLE@163..164 ">"
             ARG_LIST@164..182
               L_PAREN@164..165 "("
               LITERAL@165..181
@@ -102,10 +103,11 @@ SOURCE_FILE@0..418
           BANG_EXPR@258..271
             BANG@258..259 "!"
             CALL_EXPR@259..271
-              PATH@259..269
-                PATH_SEGMENT@259..269
-                  NAME_REF@259..269
-                    IDENT@259..269 "is_genesis"
+              PATH_EXPR@259..269
+                PATH@259..269
+                  PATH_SEGMENT@259..269
+                    NAME_REF@259..269
+                      IDENT@259..269 "is_genesis"
               ARG_LIST@269..271
                 L_PAREN@269..270 "("
                 R_PAREN@270..271 ")"

@@ -1,0 +1,60 @@
+SOURCE_FILE@0..110
+  MODULE@0..109
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..37
+      IDENT@12..37 "function_values_calla ..."
+    WHITESPACE@37..38 " "
+    L_CURLY@38..39 "{"
+    WHITESPACE@39..44 "\n    "
+    FUN@44..107
+      FUN_KW@44..47 "fun"
+      WHITESPACE@47..48 " "
+      NAME@48..52
+        IDENT@48..52 "main"
+      PARAM_LIST@52..54
+        L_PAREN@52..53 "("
+        R_PAREN@53..54 ")"
+      WHITESPACE@54..55 " "
+      BLOCK_EXPR@55..107
+        L_CURLY@55..56 "{"
+        WHITESPACE@56..65 "\n        "
+        EXPR_STMT@65..101
+          CALL_EXPR@65..100
+            PAREN_EXPR@65..86
+              L_PAREN@65..66 "("
+              DOT_EXPR@66..85
+                PATH_EXPR@66..70
+                  PATH@66..70
+                    PATH_SEGMENT@66..70
+                      NAME_REF@66..70
+                        IDENT@66..70 "self"
+                DOT@70..71 "."
+                FIELD_REF@71..85
+                  NAME_REF@71..85
+                    IDENT@71..85 "settle_trade_f"
+              R_PAREN@85..86 ")"
+            ARG_LIST@86..100
+              L_PAREN@86..87 "("
+              PATH_EXPR@87..92
+                PATH@87..92
+                  PATH_SEGMENT@87..92
+                    NAME_REF@87..92
+                      IDENT@87..92 "taker"
+              COMMA@92..93 ","
+              WHITESPACE@93..94 " "
+              PATH_EXPR@94..99
+                PATH@94..99
+                  PATH_SEGMENT@94..99
+                    NAME_REF@94..99
+                      IDENT@94..99 "maker"
+              R_PAREN@99..100 ")"
+          SEMICOLON@100..101 ";"
+        WHITESPACE@101..106 "\n    "
+        R_CURLY@106..107 "}"
+    WHITESPACE@107..108 "\n"
+    R_CURLY@108..109 "}"
+  WHITESPACE@109..110 "\n"

@@ -24,10 +24,11 @@ SOURCE_FILE@0..112
         WHITESPACE@41..50 "\n        "
         EXPR_STMT@50..57
           CALL_EXPR@50..56
-            PATH@50..54
-              PATH_SEGMENT@50..54
-                NAME_REF@50..54
-                  IDENT@50..54 "call"
+            PATH_EXPR@50..54
+              PATH@50..54
+                PATH_SEGMENT@50..54
+                  NAME_REF@50..54
+                    IDENT@50..54 "call"
             ARG_LIST@54..56
               L_PAREN@54..55 "("
               R_PAREN@55..56 ")"
