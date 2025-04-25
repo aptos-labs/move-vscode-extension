@@ -38,6 +38,7 @@ pub(crate) fn add_method_or_field_completions(
     Some(())
 }
 
+#[tracing::instrument(level = "debug", skip(completions, ctx, ty_adt))]
 fn add_field_completion_items(
     completions: &RefCell<Completions>,
     ctx: &CompletionContext<'_>,
@@ -70,6 +71,7 @@ fn add_field_completion_items(
     Some(())
 }
 
+#[tracing::instrument(level = "debug", skip(completions, ctx, receiver_ty))]
 fn add_method_completion_items(
     completions: &RefCell<Completions>,
     ctx: &CompletionContext<'_>,

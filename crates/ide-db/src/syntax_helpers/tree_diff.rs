@@ -22,7 +22,7 @@ pub struct TreeDiff {
 
 impl TreeDiff {
     pub fn to_text_edit(&self, builder: &mut TextEditBuilder) {
-        let _p = tracing::info_span!("into_text_edit").entered();
+        // let _p = tracing::debug_span!("into_text_edit").entered();
 
         for (anchor, to) in &self.insertions {
             let offset = match anchor {
@@ -51,7 +51,7 @@ impl TreeDiff {
 ///
 /// This function tries to find a fine-grained diff.
 pub fn diff(from: &SyntaxNode, to: &SyntaxNode) -> TreeDiff {
-    let _p = tracing::info_span!("diff").entered();
+    // let _p = tracing::debug_span!("diff").entered();
 
     let mut diff = TreeDiff {
         replacements: HashMap::default(),

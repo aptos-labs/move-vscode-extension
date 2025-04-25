@@ -16,6 +16,7 @@ crossbeam-channel = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true, features = ["preserve_order", "unbounded_depth"] }
 anyhow = { workspace = true }
+tracing-tree.workspace = true
 
 memchr = "2.7.4"
 lsp-server = "0.7.8"

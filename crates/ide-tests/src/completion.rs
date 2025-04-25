@@ -34,10 +34,7 @@ pub fn do_single_completion(before: &str, after: &str) {
 }
 
 pub fn check_completions_with_prefix_exact(source: &str, expected_items: Vec<&str>) {
-    let _ = Registry::default()
-        // .with(fmt::Layer::new().with_max_level(Level::DEBUG))
-        .with(HierarchicalLayer::new(2).with_filter(LevelFilter::from_level(Level::DEBUG)))
-        .try_init();
+    init_tracing_for_test();
 
     let (source, caret_offset) = get_and_replace_caret(source, "/*caret*/");
     let completion_items = completions_at_offset(source, caret_offset, true);

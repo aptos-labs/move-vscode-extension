@@ -44,7 +44,7 @@ InferenceCtxOwner =
     Fun | SpecFun | SpecInlineFun | ItemSpec | Schema
 
 IdentPatKind =
-    LetStmt | Param | SchemaFieldStmt
+    LetStmt | Param | LambdaParam | SchemaFieldStmt
 
 UseStmt =
     Attr* 'use' UseSpeck ';'
