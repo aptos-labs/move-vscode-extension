@@ -31,20 +31,12 @@ pub fn get_marked_position_offset(source: &str, mark: &str) -> TextSize {
 }
 
 pub fn get_marked_position_line_index(source: &str, mark: &str) -> usize {
-    // let position_offset = get_marked_position_offset(source, mark);
-
     let (line_idx, _) = source
         .lines()
         .enumerate()
         .find(|(_, line)| line.contains(mark))
         .expect(&format!("no {} mark", mark));
     line_idx
-    //
-    // let offset = source.find(mark).unwrap();
-    // let trimmed_source = source.chars().skip(offset).collect::<String>();
-    // let line = trimmed_source.lines().next().map(|it| it.to_string());
-    //
-    // (position_offset, line.unwrap_or("".to_string()))
 }
 
 pub fn get_marked_position_offset_with_line(source: &str, mark: &str) -> (TextSize, String) {

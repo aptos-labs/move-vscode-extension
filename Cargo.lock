@@ -708,6 +708,7 @@ dependencies = [
  "ide-completion",
  "ide-db",
  "ide-diagnostics",
+ "lang",
  "line-index",
  "syntax",
  "tracing",

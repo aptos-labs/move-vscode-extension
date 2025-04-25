@@ -2,16 +2,16 @@ mod type_args;
 
 use crate::db::HirDatabase;
 use crate::nameres::ResolveReference;
-use crate::nameres::scope::ScopeEntry;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
-use crate::types::ty::integer::{INTEGER_IDENTS, IntegerKind};
+use crate::types::ty::integer::{IntegerKind};
 use crate::types::ty::reference::Mutability;
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::type_param::TyTypeParameter;
 use syntax::ast;
+use syntax::ast::idents::INTEGER_IDENTS;
 use syntax::files::{InFile, InFileExt};
 
 pub struct TyLowering<'db> {
