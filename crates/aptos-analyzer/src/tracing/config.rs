@@ -1,15 +1,19 @@
 //! Simple logger that logs either to stderr or to a file, using `tracing_subscriber`
 //! filter syntax and `tracing_appender` for non blocking output.
 
+use crate::tracing::json;
 use anyhow::Context;
+use std::env;
+use std::str::FromStr;
+use tracing::Level;
+use tracing::level_filters::LevelFilter;
 use tracing_subscriber::{
     Layer, Registry,
     filter::{Targets, filter_fn},
     fmt::{MakeWriter, time},
     layer::SubscriberExt,
 };
-
-use crate::tracing::json;
+use tracing_tree::HierarchicalLayer;
 
 #[derive(Debug)]
 pub struct Config<T> {
@@ -90,7 +94,16 @@ where
             None => None,
         };
 
-        let subscriber = Registry::default().with(ra_fmt_layer).with(json_profiler_layer);
+        let level = Level::from_str(&env::var("RA_LOG").ok().unwrap_or_else(|| "error".to_owned()))?;
+        let subscriber = Registry::default()
+            .with(
+                HierarchicalLayer::new(2)
+                    .with_indent_lines(true)
+                    .with_deferred_spans(true)
+                    .with_filter(LevelFilter::from_level(level)),
+            )
+            .with(ra_fmt_layer)
+            .with(json_profiler_layer);
 
         tracing::subscriber::set_global_default(subscriber)?;
 

@@ -107,6 +107,7 @@ dependencies = [
  "syntax",
  "tracing",
  "tracing-subscriber",
+ "tracing-tree",
  "vfs",
  "vfs-notify",
  "windows-sys 0.59.0",

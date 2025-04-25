@@ -1755,6 +1755,7 @@ pub enum FieldList {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum IdentPatKind {
+    LambdaParam(LambdaParam),
     LetStmt(LetStmt),
     Param(Param),
     SchemaFieldStmt(SchemaFieldStmt),
@@ -5233,6 +5234,10 @@ impl AstNode for FieldList {
         }
     }
 }
+impl From<LambdaParam> for IdentPatKind {
+    #[inline]
+    fn from(node: LambdaParam) -> IdentPatKind { IdentPatKind::LambdaParam(node) }
+}
 impl From<LetStmt> for IdentPatKind {
     #[inline]
     fn from(node: LetStmt) -> IdentPatKind { IdentPatKind::LetStmt(node) }
@@ -5246,6 +5251,12 @@ impl From<SchemaFieldStmt> for IdentPatKind {
     fn from(node: SchemaFieldStmt) -> IdentPatKind { IdentPatKind::SchemaFieldStmt(node) }
 }
 impl IdentPatKind {
+    pub fn lambda_param(self) -> Option<LambdaParam> {
+        match (self) {
+            IdentPatKind::LambdaParam(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn let_stmt(self) -> Option<LetStmt> {
         match (self) {
             IdentPatKind::LetStmt(item) => Some(item),
@@ -5267,10 +5278,13 @@ impl IdentPatKind {
 }
 impl AstNode for IdentPatKind {
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, LET_STMT | PARAM | SCHEMA_FIELD_STMT) }
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(kind, LAMBDA_PARAM | LET_STMT | PARAM | SCHEMA_FIELD_STMT)
+    }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
+            LAMBDA_PARAM => IdentPatKind::LambdaParam(LambdaParam { syntax }),
             LET_STMT => IdentPatKind::LetStmt(LetStmt { syntax }),
             PARAM => IdentPatKind::Param(Param { syntax }),
             SCHEMA_FIELD_STMT => IdentPatKind::SchemaFieldStmt(SchemaFieldStmt { syntax }),
@@ -5281,6 +5295,7 @@ impl AstNode for IdentPatKind {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
+            IdentPatKind::LambdaParam(it) => &it.syntax,
             IdentPatKind::LetStmt(it) => &it.syntax,
             IdentPatKind::Param(it) => &it.syntax,
             IdentPatKind::SchemaFieldStmt(it) => &it.syntax,

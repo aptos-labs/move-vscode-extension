@@ -135,6 +135,7 @@ fn generate_ident_pat(
     let owner = ident_pat.owner()?;
     let ident_kind = match owner {
         ast::IdentPatKind::Param(_) => "parameter",
+        ast::IdentPatKind::LambdaParam(_) => "parameter",
         ast::IdentPatKind::LetStmt(_) => "variable",
         ast::IdentPatKind::SchemaFieldStmt(_) => "schema field",
     };

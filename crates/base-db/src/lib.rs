@@ -39,7 +39,7 @@ pub trait SourceDatabase: std::fmt::Debug + std::panic::RefUnwindSafe {
 }
 
 fn parse(db: &dyn SourceDatabase, file_id: FileId) -> Parse {
-    let _p = tracing::info_span!("parse", ?file_id).entered();
+    let _p = tracing::debug_span!("parse", ?file_id).entered();
     let text = db.file_text(file_id);
     SourceFile::parse(&text)
 }

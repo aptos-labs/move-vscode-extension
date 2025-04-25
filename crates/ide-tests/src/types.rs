@@ -6,6 +6,7 @@ use syntax::files::FilePosition;
 mod test_function_values;
 mod test_my_types;
 mod test_types_expression_types;
+mod test_lambda_param_types;
 
 pub fn check_expr_type(source: &str) {
     init_tracing_for_test();

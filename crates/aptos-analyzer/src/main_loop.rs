@@ -175,11 +175,11 @@ impl GlobalState {
         let _p = tracing::info_span!("GlobalState::handle_event", event = %event).entered();
 
         let event_dbg_msg = format!("{event:?}");
-        tracing::debug!(?loop_start, ?event, "handle_event");
-        if tracing::enabled!(Level::INFO) {
+        tracing::debug!(/*?loop_start, */?event, "handle_event");
+        if tracing::enabled!(Level::DEBUG) {
             let task_queue_len = self.task_pool.handle.len();
             if task_queue_len > 0 {
-                tracing::info!("task queue len: {}", task_queue_len);
+                tracing::debug!("task queue len: {}", task_queue_len);
             }
         }
 

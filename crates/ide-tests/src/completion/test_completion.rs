@@ -2,6 +2,7 @@ use crate::completion::{
     check_completion_exact, check_completions_contains, check_completions_with_prefix_exact,
     check_no_completions, do_single_completion,
 };
+use crate::types::check_expr_type;
 
 #[rustfmt::skip]
 #[test]
@@ -405,5 +406,33 @@ module 0x1::m {
 }
     "#,
         vec!["var"],
+    );
+}
+
+#[test]
+fn test_for_each_ref_lambda_parameter() {
+    check_completions_contains(
+        // language=Move
+        r#"
+module std::option {
+    struct Option<Element> has copy, drop, store {
+        vec: vector<Element>
+    }
+    public inline fun for_each_ref<Element>(self: &Option<Element>, f: |&Element|) {
+    }
+}
+module std::asset {
+    use std::option::Option;
+    struct FunctionInfo has copy, drop, store {
+        module_address: address,
+    }
+    public fun main(function: Option<FunctionInfo>) {
+        function.for_each_ref(|function| {
+            function.mod/*caret*/;
+        })
+    }
+}
+    "#,
+        vec!["module_address -> address"],
     );
 }
