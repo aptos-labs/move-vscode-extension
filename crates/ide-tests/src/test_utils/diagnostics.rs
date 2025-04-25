@@ -8,10 +8,11 @@ use ide_diagnostics::diagnostic::Diagnostic;
 use syntax::TextRange;
 use syntax::files::FileRange;
 use vfs::FileId;
+use lang::nameres::scope::VecExt;
 
 pub fn check_diagnostic(source: &str) {
-    let (_, file_id, diagnostic) = get_diagnostic_at_mark(source);
-    let diag = diagnostic.expect("no diagnostics");
+    let (_, file_id, diagnostics) = get_diagnostic_at_mark(source);
+    let diag = diagnostics.first().expect("no diagnostics");
 
     let (expected_range, expected_severity, expected_message) =
         get_expected_diagnostic_at_mark(source, file_id);
@@ -23,7 +24,7 @@ pub fn check_diagnostic(source: &str) {
 pub fn check_no_diagnostics(source: &str) {
     let (_, _, diagnostic) = get_diagnostic_at_mark(source);
     assert!(
-        diagnostic.is_none(),
+        diagnostic.is_empty(),
         "No diagnostics expected, actually {:?}",
         diagnostic
     );
@@ -31,7 +32,7 @@ pub fn check_no_diagnostics(source: &str) {
 
 pub fn check_diagnostic_and_fix(before: &str, after: &str) {
     let (_, file_id, diagnostic) = get_diagnostic_at_mark(before);
-    let diag = diagnostic.expect("no diagnostics");
+    let diag = diagnostic.single_or_none().expect("no diagnostics");
 
     let (expected_range, expected_severity, expected_message) =
         get_expected_diagnostic_at_mark(before, file_id);
@@ -55,7 +56,7 @@ pub fn check_diagnostic_and_fix(before: &str, after: &str) {
 pub fn check_fix(before: &str, after: &str) {
     let (_, _, diag) = get_diagnostic_at_mark(before);
 
-    let diag = diag.expect("no diagnostics");
+    let diag = diag.single_or_none().expect("no diagnostics");
     let fix = &diag
         .fixes
         .unwrap_or_else(|| panic!("{:?} diagnostic misses fixes", diag.code))[0];
@@ -64,7 +65,7 @@ pub fn check_fix(before: &str, after: &str) {
     assert_eq_text!(&actual_after, after);
 }
 
-fn get_diagnostic_at_mark(source: &str) -> (Analysis, FileId, Option<Diagnostic>) {
+fn get_diagnostic_at_mark(source: &str) -> (Analysis, FileId, Vec<Diagnostic>) {
     let (analysis, file_id) = Analysis::from_single_file(source.to_string());
 
     let config = DiagnosticsConfig::test_sample();
@@ -72,9 +73,7 @@ fn get_diagnostic_at_mark(source: &str) -> (Analysis, FileId, Option<Diagnostic>
         .semantic_diagnostics(&config, AssistResolveStrategy::None, file_id)
         .unwrap();
 
-    let diagnostic = diagnostics.pop();
-
-    (analysis, file_id, diagnostic)
+    (analysis, file_id, diagnostics)
 }
 
 fn get_expected_diagnostic_at_mark(source: &str, file_id: FileId) -> (FileRange, Severity, String) {
@@ -93,7 +92,7 @@ fn get_expected_diagnostic_at_mark(source: &str, file_id: FileId) -> (FileRange,
         "err:" => Severity::Error,
         "warn:" => Severity::Warning,
         "weak:" => Severity::WeakWarning,
-        _ => unreachable!(),
+        _ => unreachable!("unknown severity {:?}", severity),
     };
     let expected_message = parts.next().unwrap();
     (expected_range, expected_severity, expected_message.to_string())

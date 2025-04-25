@@ -73,8 +73,12 @@ impl<'db> SemanticsImpl<'db> {
         tree
     }
 
-    pub fn resolve_to_scope_entry(&self, reference: ast::AnyReferenceElement) -> Option<ScopeEntry> {
+    pub fn resolve(&self, reference: ast::AnyReferenceElement) -> Option<ScopeEntry> {
         let reference = self.wrap_node_infile(reference);
+        self.resolve_in_file(reference)
+    }
+
+    pub fn resolve_in_file(&self, reference: InFile<ast::AnyReferenceElement>) -> Option<ScopeEntry> {
         reference.resolve(self.db)
     }
 

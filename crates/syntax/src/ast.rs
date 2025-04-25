@@ -11,6 +11,7 @@ pub mod operators;
 pub mod syntax_factory;
 pub mod token_ext;
 pub mod visibility;
+pub mod idents;
 
 use std::marker::PhantomData;
 
