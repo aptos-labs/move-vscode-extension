@@ -110,9 +110,11 @@ impl ProjectFolders {
                     folder_roots[k].include.extend(r.include);
                     folder_roots[k].exclude.extend(r.exclude);
                 }
+
                 folder_roots[k].include.sort();
-                folder_roots[k].exclude.sort();
                 folder_roots[k].include.dedup();
+
+                folder_roots[k].exclude.sort();
                 folder_roots[k].exclude.dedup();
             }
         }

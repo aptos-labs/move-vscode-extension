@@ -98,7 +98,7 @@
                 "title": "general",
                 "properties": {
                     "aptos-analyzer.aptosPath": {
-                        "markdownDescription": "Run the check command for diagnostics on save.",
+                        "markdownDescription": "Path to the `aptos-cli` executable.",
                         "default": null,
                         "type": [
                             "null",
@@ -145,6 +145,16 @@
                 "properties": {
                     "aptos-analyzer.diagnostics.enable": {
                         "markdownDescription": "Whether to show native aptos-analyzer diagnostics.",
+                        "default": true,
+                        "type": "boolean"
+                    }
+                }
+            },
+            {
+                "title": "diagnostics",
+                "properties": {
+                    "aptos-analyzer.diagnostics.enableUnresolvedReference": {
+                        "markdownDescription": "Whether to show \"Unresolved reference\" diagnostic.",
                         "default": true,
                         "type": "boolean"
                     }

@@ -38,9 +38,11 @@ impl AptosPackage {
         for toml_dep in move_toml.dependencies.clone() {
             if let Some(dep_root) = toml_dep.dep_root(&content_root) {
                 let move_toml_path = dep_root.join("Move.toml");
-                if fs::exists(&move_toml_path).is_ok() {
+                if fs::exists(&move_toml_path).is_ok_and(|it| it) {
                     let manifest_path = ManifestPath::from_manifest_file(move_toml_path).unwrap();
                     dep_manifests.push(manifest_path);
+                } else {
+                    tracing::warn!(?move_toml_path, "invalid dependency: manifest does not exist");
                 }
             }
         }
