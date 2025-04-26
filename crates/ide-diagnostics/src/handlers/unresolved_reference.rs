@@ -15,6 +15,9 @@ pub(crate) fn unresolved_reference(
     ctx: &DiagnosticsContext<'_>,
     reference: InFile<impl AstNode>,
 ) -> Option<()> {
+    if !ctx.config.unresolved_reference_enabled {
+        return None;
+    }
     // for now
     let msl = reference.value.syntax().is_msl_context();
     if msl {

@@ -2,6 +2,7 @@
 pub struct DiagnosticsConfig {
     /// Whether native diagnostics are enabled.
     pub enabled: bool,
+    pub unresolved_reference_enabled: bool,
     // pub proc_macros_enabled: bool,
     // pub proc_attr_macros_enabled: bool,
     // pub disable_experimental: bool,
@@ -22,6 +23,7 @@ impl DiagnosticsConfig {
     pub fn test_sample() -> Self {
         Self {
             enabled: true,
+            unresolved_reference_enabled: true,
             // disable_experimental: Default::default(),
             // disabled: Default::default(),
             // expr_fill_default: Default::default(),

@@ -34,6 +34,9 @@ config_data! {
 
         /// Whether to show native aptos-analyzer diagnostics.
         diagnostics_enable: bool                = true,
+
+        /// Whether to show "Unresolved reference" diagnostic.
+        diagnostics_enable_unresolvedReference: bool                = false,
     }
 }
 
