@@ -41,9 +41,7 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
             all_commit_characters: None,
             completion_item: None,
             // completion_item: config.caps().completion_item(),
-            work_done_progress_options: WorkDoneProgressOptions {
-                work_done_progress: None,
-            },
+            work_done_progress_options: WorkDoneProgressOptions { work_done_progress: None },
         }),
         // signature_help_provider: Some(SignatureHelpOptions {
         //     trigger_characters: Some(vec!["(".to_owned(), ",".to_owned(), "<".to_owned()]),
@@ -161,9 +159,7 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
                 inter_file_dependencies: true,
                 // FIXME
                 workspace_diagnostics: false,
-                work_done_progress_options: WorkDoneProgressOptions {
-                    work_done_progress: None,
-                },
+                work_done_progress_options: WorkDoneProgressOptions { work_done_progress: None },
             },
         )),
         // inline_completion_provider: None,

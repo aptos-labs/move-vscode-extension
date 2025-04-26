@@ -364,10 +364,7 @@ impl TreeMutator {
     fn new(immutable: &SyntaxNode) -> TreeMutator {
         let immutable = immutable.clone();
         let mutable_clone = immutable.clone_for_update();
-        TreeMutator {
-            immutable,
-            mutable_clone,
-        }
+        TreeMutator { immutable, mutable_clone }
     }
 
     fn make_element_mut(&self, element: &SyntaxElement) -> SyntaxElement {

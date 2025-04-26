@@ -249,9 +249,7 @@ impl GlobalState {
                     .entered();
                 self.fetch_workspaces_queue.request_op(
                     "workspace vfs file change".to_string(),
-                    FetchWorkspaceRequest {
-                        force_reload_deps: true,
-                    },
+                    FetchWorkspaceRequest { force_reload_deps: true },
                 );
             }
         }

@@ -56,9 +56,7 @@ pub struct AnalysisHost {
 
 impl AnalysisHost {
     pub fn new() -> AnalysisHost {
-        AnalysisHost {
-            db: RootDatabase::new(),
-        }
+        AnalysisHost { db: RootDatabase::new() }
     }
 
     /// Returns a snapshot of the current state, which you can query for

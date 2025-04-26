@@ -33,9 +33,7 @@ impl TypeFoldable<Substitution> for Substitution {
             .into_iter()
             .map(|(k, v)| (k, v.fold_with(folder.clone())))
             .collect();
-        Substitution {
-            mapping: folded_mapping,
-        }
+        Substitution { mapping: folded_mapping }
     }
 
     fn deep_visit_with(&self, _visitor: impl TypeVisitor) -> bool {

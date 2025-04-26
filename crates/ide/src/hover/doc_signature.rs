@@ -1,6 +1,5 @@
 use ide_db::RootDatabase;
 use lang::Semantics;
-use lang::nameres::fq_named_element::ItemFQNameOwner;
 use std::fmt::Write;
 use syntax::ast::NamedElement;
 use syntax::{AstNode, ast, match_ast};

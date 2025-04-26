@@ -1,5 +1,4 @@
 use crate::resolve::check_resolve;
-use crate::types::check_expr_type;
 
 #[test]
 fn test_resolve_base_for_index_expr() {

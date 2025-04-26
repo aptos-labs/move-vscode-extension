@@ -40,11 +40,7 @@ pub(crate) struct FlycheckConfig {
 
 impl FlycheckConfig {
     pub fn new(aptos_cli: Utf8PathBuf, command: String, options: AptosOptions) -> Self {
-        FlycheckConfig {
-            aptos_cli,
-            command,
-            options,
-        }
+        FlycheckConfig { aptos_cli, command, options }
     }
 
     pub fn command(&self) -> String {
@@ -206,10 +202,7 @@ impl FlycheckActor {
     }
 
     fn report_progress(&self, progress: Progress) {
-        self.send(FlycheckMessage::Progress {
-            ws_id: self.ws_id,
-            progress,
-        });
+        self.send(FlycheckMessage::Progress { ws_id: self.ws_id, progress });
     }
 
     fn next_event(&self, inbox: &Receiver<StateChange>) -> Option<Event> {
@@ -333,11 +326,7 @@ impl FlycheckActor {
     /// has specified a custom command with placeholders that we cannot fill,
     /// return None.
     fn flycheck_command(&self) -> Command {
-        let FlycheckConfig {
-            aptos_cli,
-            command,
-            options,
-        } = &self.config;
+        let FlycheckConfig { aptos_cli, command, options } = &self.config;
 
         let mut cmd = toolchain::command(aptos_cli, &*self.root);
 

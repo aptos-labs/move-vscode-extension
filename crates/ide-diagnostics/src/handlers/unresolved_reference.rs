@@ -1,7 +1,6 @@
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use ide_db::Severity;
-use syntax::ast::ReferenceElement;
 use syntax::ast::idents::PRIMITIVE_TYPES;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::InFile;

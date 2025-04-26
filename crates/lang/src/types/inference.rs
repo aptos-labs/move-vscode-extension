@@ -16,7 +16,6 @@ use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
 use crate::types::unification::UnificationTable;
 use std::collections::HashMap;
-use std::env::var;
 use std::hash::Hash;
 use syntax::SyntaxKind::*;
 use syntax::ast::FieldsOwner;

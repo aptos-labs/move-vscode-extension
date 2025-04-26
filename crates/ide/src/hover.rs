@@ -2,10 +2,8 @@ mod doc_signature;
 
 use crate::RangeInfo;
 use crate::hover::doc_signature::DocSignatureOwner;
-use base_db::Upcast;
 use ide_db::RootDatabase;
 use lang::Semantics;
-use lang::nameres::ResolveReference;
 use std::fmt::Write;
 use stdx::itertools::Itertools;
 use syntax::algo::find_node_at_offset;

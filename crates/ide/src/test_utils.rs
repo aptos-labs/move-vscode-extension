@@ -4,12 +4,52 @@ pub mod resolve;
 use line_index::LineCol;
 use syntax::TextSize;
 
-pub fn get_and_replace_caret(source: &str, caret_mark: &str) -> (&'static str, TextSize) {
-    let caret_offset = source
-        .find(caret_mark)
-        .expect(&format!("{} not found", caret_mark));
-    let source_no_caret = source.replace(caret_mark, "");
-    (source_no_caret.leak(), TextSize::new(caret_offset as u32))
+pub struct MarkedPos {
+    pub mark_offset: TextSize,
+    pub item_offset: TextSize,
+    pub mark_line_col: LineCol,
+    pub item_line_col: LineCol,
+    pub line: String,
+    pub data: String,
+}
+
+pub fn get_all_marked_positions(source: &str, mark: &str) -> Vec<MarkedPos> {
+    let mut positions = vec![];
+    let file_index = line_index::LineIndex::new(source);
+    let pattern = Regex::new(&regex::escape(mark)).unwrap();
+    for match_ in pattern.find_iter(source) {
+        let match_offset = match_.start();
+        let LineCol { line, col } = file_index.line_col(TextSize::new(match_offset as u32));
+        let ref_line = line - 1; // it's a //^ comment underneath the element
+        let ref_col = col + 2; // we need a position of ^
+        let line_text = source
+            .chars()
+            .skip(match_offset)
+            .collect::<String>()
+            .lines()
+            .next()
+            .map(|it| it.to_string())
+            .unwrap();
+        let item_line_col = LineCol { line: ref_line, col: ref_col };
+        let offset = file_index.offset(item_line_col).unwrap();
+        let data = line_text.trim_start_matches(mark).trim().to_string();
+        positions.push(MarkedPos {
+            mark_offset: TextSize::from(match_offset as u32),
+            item_offset: offset,
+            mark_line_col: LineCol { line, col },
+            item_line_col: LineCol { line: ref_line, col: ref_col },
+            line: line_text,
+            data,
+        });
+    }
+    positions
+}
+
+pub fn get_first_marked_position(source: &str, mark: &str) -> MarkedPos {
+    let marked_pos = get_all_marked_positions(source, mark)
+        .pop()
+        .expect(&format!("no positions marked with {mark:?} found in file source"));
+    marked_pos
 }
 
 pub fn get_marked_position(source: &str, mark: &str) -> (u32, u32) {
@@ -23,49 +63,9 @@ pub fn get_marked_position(source: &str, mark: &str) -> (u32, u32) {
     (ref_line, ref_col)
 }
 
-pub fn get_marked_position_offset(source: &str, mark: &str) -> TextSize {
-    let (line, col) = get_marked_position(source, mark);
-    let file_index = line_index::LineIndex::new(source);
-    let offset = file_index.offset(LineCol { line, col }).unwrap();
-    TextSize::new(offset.into())
-}
-
-pub fn get_marked_position_line_index(source: &str, mark: &str) -> usize {
-    let (line_idx, _) = source
-        .lines()
-        .enumerate()
-        .find(|(_, line)| line.contains(mark))
-        .expect(&format!("no {} mark", mark));
-    line_idx
-}
-
-pub fn get_marked_position_offset_with_line(source: &str, mark: &str) -> (TextSize, String) {
-    let position_offset = get_marked_position_offset(source, mark);
-
-    let offset = source.find(mark).unwrap();
-    let trimmed_source = source.chars().skip(offset).collect::<String>();
-    let line = trimmed_source.lines().next().map(|it| it.to_string());
-
-    (position_offset, line.unwrap_or("".to_string()))
-}
-
 pub fn get_marked_position_offset_with_data(source: &str, mark: &str) -> (TextSize, String) {
-    let (offset, line) = get_marked_position_offset_with_line(source, mark);
-
-    let data = line.trim_start_matches(mark).trim();
-    (offset, data.to_string())
-    // let position_offset = get_marked_position_offset(source, mark);
-    //
-    // let offset = source.find(mark).unwrap();
-    // let trimmed_source = source.chars().skip(offset).collect::<String>();
-    // let data = trimmed_source
-    //     .trim_start_matches(mark)
-    //     .lines()
-    //     .next()
-    //     .unwrap_or("")
-    //     .trim();
-    //
-    // (position_offset, data.to_string())
+    let marked = get_first_marked_position(source, mark);
+    (marked.item_offset, marked.data)
 }
 
 /// Asserts that two strings are equal, otherwise displays a rich diff between them.
@@ -96,6 +96,7 @@ macro_rules! assert_eq_text {
 }
 
 pub use dissimilar::diff as __diff;
+use regex::Regex;
 
 pub fn format_diff(chunks: Vec<dissimilar::Chunk<'_>>) -> String {
     let mut buf = String::new();

@@ -143,9 +143,7 @@ pub(crate) fn handle_did_save_text_document(
             ) {
                 state.fetch_workspaces_queue.request_op(
                     format!("workspace vfs file change saved {path}"),
-                    FetchWorkspaceRequest {
-                        force_reload_deps: false,
-                    },
+                    FetchWorkspaceRequest { force_reload_deps: false },
                 );
             }
         }
@@ -236,9 +234,7 @@ pub(crate) fn handle_did_change_workspace_folders(
 
     config.rediscover_workspaces();
 
-    let req = FetchWorkspaceRequest {
-        force_reload_deps: false,
-    };
+    let req = FetchWorkspaceRequest { force_reload_deps: false };
     state
         .fetch_workspaces_queue
         .request_op("client workspaces changed".to_owned(), req);

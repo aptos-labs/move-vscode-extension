@@ -1,4 +1,3 @@
-use crate::resolve::check_resolve;
 use crate::types::check_expr_type;
 
 // language=Move

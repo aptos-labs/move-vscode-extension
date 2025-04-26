@@ -29,10 +29,7 @@ pub struct TypeAstWalker<'a, 'db> {
 
 impl<'a, 'db> TypeAstWalker<'a, 'db> {
     pub fn new(ctx: &'a mut InferenceCtx<'db>, expected_return_ty: Ty) -> Self {
-        TypeAstWalker {
-            ctx,
-            expected_return_ty,
-        }
+        TypeAstWalker { ctx, expected_return_ty }
     }
 
     pub fn walk(&mut self, ctx_owner: ast::InferenceCtxOwner) {

@@ -147,10 +147,7 @@ pub fn resolve_path(
     let path_kind = path_kind(path.clone().value, false);
     tracing::debug!(?path_kind);
 
-    let ctx = ResolutionContext {
-        path,
-        is_completion: false,
-    };
+    let ctx = ResolutionContext { path, is_completion: false };
     let entries = get_path_resolve_variants_with_expected_type(db, &ctx, path_kind, expected_type);
     tracing::debug!(?entries);
 

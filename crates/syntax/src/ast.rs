@@ -4,6 +4,7 @@ mod generated;
 mod traits;
 
 pub mod edit;
+pub mod idents;
 pub mod item_scope;
 pub mod make;
 pub mod node_ext;
@@ -11,7 +12,6 @@ pub mod operators;
 pub mod syntax_factory;
 pub mod token_ext;
 pub mod visibility;
-pub mod idents;
 
 use std::marker::PhantomData;
 

@@ -220,10 +220,7 @@ impl SyntaxMapping {
     }
 
     pub fn add_mapping(&mut self, syntax_mapping: SyntaxMappingBuilder) {
-        let SyntaxMappingBuilder {
-            parent_node,
-            node_mappings,
-        } = syntax_mapping;
+        let SyntaxMappingBuilder { parent_node, node_mappings } = syntax_mapping;
 
         let parent_entry: u32 = self.entry_parents.len().try_into().unwrap();
         self.entry_parents.push(parent_node);

@@ -65,10 +65,7 @@ fn mk_token(pos: usize, token_offset_pairs: &[(Token, TextSize)]) -> parser::Tok
         ),
         None => (EOF, false),
     };
-    parser::Token {
-        kind,
-        is_jointed_to_next,
-    }
+    parser::Token { kind, is_jointed_to_next }
 }
 
 impl<'t> TextTokenSource<'t> {
