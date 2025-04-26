@@ -1,10 +1,9 @@
-use crate::test_utils::check_diagnostic;
-use crate::test_utils::diagnostics::check_no_diagnostics;
+use crate::test_utils::check_diagnostics;
 
 #[test]
 fn test_unresolved_variable() {
     // language=Move
-    check_diagnostic(
+    check_diagnostics(
         r#"
 module 0x1::main {
     fun main() {
@@ -19,7 +18,7 @@ module 0x1::main {
 #[test]
 fn test_unresolved_function_call() {
     // language=Move
-    check_diagnostic(
+    check_diagnostics(
         r#"
 module 0x1::main {
     fun main() {
@@ -34,7 +33,7 @@ module 0x1::main {
 #[test]
 fn test_unresolved_module_member_with_unresolved_module() {
     // language=Move
-    check_diagnostic(
+    check_diagnostics(
         r#"
 module 0x1::main {
     use 0x1::mod::call;
@@ -52,7 +51,7 @@ module 0x1::main {
 #[test]
 fn test_no_unresolved_reference_for_builtin() {
     // language=Move
-    check_no_diagnostics(
+    check_diagnostics(
         r#"
 module 0x1::m {
     fun main() {
@@ -66,7 +65,7 @@ module 0x1::m {
 #[test]
 fn test_no_unresolved_reference_for_primitive_type() {
     // language=Move
-    check_no_diagnostics(
+    check_diagnostics(
         r#"
 script {
     fun main(s: &signer) {
@@ -79,7 +78,7 @@ script {
 #[test]
 fn test_unresolved_reference_for_variable_in_struct_lit_field() {
     // language=Move
-    check_diagnostic(
+    check_diagnostics(
         r#"
 module 0x1::M {
     struct T {
@@ -98,7 +97,7 @@ module 0x1::M {
 #[test]
 fn test_no_unresolved_reference_for_field_shorthand() {
     // language=Move
-    check_no_diagnostics(
+    check_diagnostics(
         r#"
 module 0x1::M {
     struct T {
@@ -117,7 +116,7 @@ module 0x1::M {
 #[test]
 fn test_unresolved_field_in_struct_lit() {
     // language=Move
-    check_diagnostic(
+    check_diagnostics(
         r#"
 module 0x1::M {
     struct T {
@@ -137,7 +136,7 @@ module 0x1::M {
 #[test]
 fn test_unresolved_field_in_struct_pat() {
     // language=Move
-    check_diagnostic(
+    check_diagnostics(
         r#"
 module 0x1::M {
     struct T {
@@ -157,7 +156,7 @@ module 0x1::M {
 #[test]
 fn test_unresolved_field_in_struct_pat_shorthand() {
     // language=Move
-    check_diagnostic(
+    check_diagnostics(
         r#"
 module 0x1::M {
     struct T {
@@ -177,7 +176,7 @@ module 0x1::M {
 #[test]
 fn test_unresolved_module() {
     // language=Move
-    check_diagnostic(
+    check_diagnostics(
         r#"
 module 0x1::M {
     fun main() {
@@ -192,7 +191,7 @@ module 0x1::M {
 #[test]
 fn test_unresolved_fq_module() {
     // language=Move
-    check_diagnostic(
+    check_diagnostics(
         r#"
 module 0x1::M {
     fun main() {

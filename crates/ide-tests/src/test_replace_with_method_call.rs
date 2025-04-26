@@ -1,9 +1,10 @@
-use crate::test_utils::diagnostics::{check_diagnostic_and_fix, check_no_diagnostics};
+use crate::test_utils::check_diagnostics;
+use crate::test_utils::diagnostics::check_diagnostic_and_fix;
 
 #[test]
 fn test_no_warning_if_parameter_is_not_self() {
     // language=Move
-    check_no_diagnostics(
+    check_diagnostics(
         r#"
 module 0x1::main {
     struct S { field: u8 }
@@ -19,12 +20,12 @@ module 0x1::main {
 #[test]
 fn test_no_warning_if_first_parameter_has_different_type() {
     // language=Move
-    check_no_diagnostics(
+    check_diagnostics(
         r#"
 module 0x1::main {
     struct S { field: u8 }
     struct T { field: u8 }
-    fun get_field(self: &T): u8 { s.field }
+    fun get_field(self: &T): u8 { self.field }
     fun main(s: S) {
         get_field(&s);
     }
@@ -36,7 +37,7 @@ module 0x1::main {
 #[test]
 fn test_no_warning_if_references_are_incompatible() {
     // language=Move
-    check_no_diagnostics(
+    check_diagnostics(
         r#"
 module 0x1::main {
     struct S { field: u8 }
@@ -52,14 +53,14 @@ module 0x1::main {
 #[test]
 fn test_no_warning_if_self_parameter_struct_is_from_another_module() {
     // language=Move
-    check_no_diagnostics(
+    check_diagnostics(
         r#"
 module 0x1::m {
     struct S { field: u8 }
 }
 module 0x1::main {
     use 0x1::m::S;
-    fun get_field(self: S): u8 { s.field }
+    fun get_field(self: S): u8 { self.field }
     fun main(s: S) {
         get_field(s);
     }
@@ -71,7 +72,7 @@ module 0x1::main {
 #[test]
 fn test_no_warning_if_self_parameter_is_not_provided() {
     // language=Move
-    check_no_diagnostics(
+    check_diagnostics(
         r#"
 module 0x1::main {
     struct S { field: u8 }
@@ -87,7 +88,7 @@ module 0x1::main {
 #[test]
 fn test_no_warning_if_not_enough_parameters() {
     // language=Move
-    check_no_diagnostics(
+    check_diagnostics(
         r#"
 module 0x1::main {
     struct S { field: u8 }
@@ -103,11 +104,11 @@ module 0x1::main {
 #[test]
 fn test_no_warning_if_generics_are_incompatible() {
     // language=Move
-    check_no_diagnostics(
+    check_diagnostics(
         r#"
 module 0x1::main {
     struct S<T> { field: T }
-    fun get_field(self: &S<u8>): u8 { s.field }
+    fun get_field(self: &S<u8>): u8 { self.field }
     fun main(s: &S<u16>) {
         get_field(s);
     }
@@ -119,11 +120,11 @@ module 0x1::main {
 #[test]
 fn test_no_warning_if_generic_is_unknown() {
     // language=Move
-    check_no_diagnostics(
+    check_diagnostics(
         r#"
 module 0x1::main {
     struct S<T> { field: T }
-    fun get_field(self: &S<u8>): u8 { s.field }
+    fun get_field(self: &S<u8>): u8 { self.field }
     fun main(s: &S<u12345>) {
         get_field(s);
     }
