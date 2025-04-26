@@ -1,44 +1,56 @@
 use crate::assert_eq_text;
+use ide::test_utils::{get_all_marked_positions, get_first_marked_position};
 use ide::Analysis;
-use ide::test_utils::get_first_marked_position;
-use ide_db::Severity;
 use ide_db::assists::{Assist, AssistResolveStrategy};
+use ide_db::Severity;
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 use lang::nameres::scope::VecExt;
-use syntax::TextRange;
+use line_index::LineIndex;
+use std::fmt::Debug;
+use std::iter;
 use syntax::files::FileRange;
+use syntax::TextRange;
 use vfs::FileId;
 
-pub fn check_diagnostic(source: &str) {
+pub fn check_diagnostics(source: &str) {
     let (_, file_id, mut diagnostics) = get_diagnostics(source);
-    let diag = diagnostics.pop().expect("no diagnostics");
-
-    let (expected_range, expected_severity, expected_message) =
-        get_expected_diagnostic_at_mark(source, file_id);
-    assert_eq!(diag.range, expected_range);
-    assert_eq!(diag.severity, expected_severity);
-    assert_eq!(diag.message, expected_message);
-}
-
-pub fn check_no_diagnostics(source: &str) {
-    let (_, _, diagnostic) = get_diagnostics(source);
+    let mut exps = get_expected_diagnostics(source, file_id);
+    let mut missing_exps = vec![];
+    loop {
+        if let Some((range, severity, message)) = exps.last().cloned() {
+            if let Some(indx) = diagnostics.iter().position(|x| x.range == range) {
+                let diag = diagnostics.remove(indx);
+                assert_eq!(diag.severity, severity);
+                assert_eq!(diag.message, message);
+            } else {
+                missing_exps.push((range, severity, message));
+            }
+            exps.pop();
+        } else {
+            break;
+        }
+    }
     assert!(
-        diagnostic.is_empty(),
-        "No diagnostics expected, actually {:?}",
-        diagnostic
+        missing_exps.is_empty(),
+        "Missing diagnostics {:#?}, \n actual {:#?}",
+        missing_exps,
+        diagnostics
     );
+    assert_no_extra_diagnostics(source, diagnostics);
+    // assert!(diagnostics.is_empty(), "Extra diagnostics: {:#?}", diagnostics);
 }
 
 pub fn check_diagnostic_and_fix(before: &str, after: &str) {
     let (_, file_id, mut diagnostic) = get_diagnostics(before);
     let diag = diagnostic.pop().expect("diagnostics expected, but none returned");
 
-    let (expected_range, expected_severity, expected_message) =
-        get_expected_diagnostic_at_mark(before, file_id);
-    assert_eq!(diag.range, expected_range);
-    assert_eq!(diag.severity, expected_severity);
-    assert_eq!(diag.message, expected_message);
+    let (exp_range, exp_severity, exp_message) = get_expected_diagnostics(before, file_id)
+        .pop()
+        .expect("missing diagnostic mark");
+    assert_eq!(diag.range, exp_range);
+    assert_eq!(diag.severity, exp_severity);
+    assert_eq!(diag.message, exp_message);
 
     let fix = &diag
         .fixes
@@ -76,26 +88,29 @@ fn get_diagnostics(source: &str) -> (Analysis, FileId, Vec<Diagnostic>) {
     (analysis, file_id, diagnostics)
 }
 
-fn get_expected_diagnostic_at_mark(source: &str, file_id: FileId) -> (FileRange, Severity, String) {
-    let marked = get_first_marked_position(source, "//^");
+fn get_expected_diagnostics(source: &str, file_id: FileId) -> Vec<(FileRange, Severity, String)> {
+    let marked_positions = get_all_marked_positions(source, "//^");
 
-    let mut parts = marked.line.splitn(3, " ");
-    let prefix = parts.next().unwrap();
-    let severity = parts.next().unwrap();
-
-    let len = prefix.trim_start_matches("//").len();
-    let expected_range = FileRange {
-        file_id,
-        range: TextRange::at(marked.item_offset, (len as u32).into()),
-    };
-    let expected_severity = match severity {
-        "err:" => Severity::Error,
-        "warn:" => Severity::Warning,
-        "weak:" => Severity::WeakWarning,
-        _ => unreachable!("unknown severity {:?}", severity),
-    };
-    let expected_message = parts.next().unwrap();
-    (expected_range, expected_severity, expected_message.to_string())
+    let mut exps = vec![];
+    for marked in marked_positions {
+        let mut parts = marked.line.splitn(3, " ");
+        let prefix = parts.next().unwrap();
+        let severity = parts.next().unwrap();
+        let len = prefix.trim_start_matches("//").len();
+        let expected_range = FileRange {
+            file_id,
+            range: TextRange::at(marked.item_offset, (len as u32).into()),
+        };
+        let expected_severity = match severity {
+            "err:" => Severity::Error,
+            "warn:" => Severity::Warning,
+            "weak:" => Severity::WeakWarning,
+            _ => unreachable!("unknown severity {:?}", severity),
+        };
+        let expected_message = parts.next().unwrap();
+        exps.push((expected_range, expected_severity, expected_message.to_string()));
+    }
+    exps
 }
 
 fn apply_fix(fix: &Assist, before: &str) -> String {
@@ -113,4 +128,40 @@ fn apply_fix(fix: &Assist, before: &str) -> String {
     }
 
     after
+}
+
+pub(crate) fn assert_no_extra_diagnostics(source: &str, diags: Vec<Diagnostic>) {
+    if diags.is_empty() {
+        return;
+    }
+
+    println!("Extra diagnostics:");
+    for d in diags {
+        let s = diagnostic_in_file(source, &d);
+        println!("{}", s);
+    }
+    println!("======================================");
+
+    panic!("Extra diagnostics available");
+}
+
+fn diagnostic_in_file(source: &str, diagnostic: &Diagnostic) -> String {
+    let line_index = LineIndex::new(source);
+
+    let text_range = diagnostic.range.range;
+    let lc_start = line_index.line_col(text_range.start());
+    let lc_end = line_index.line_col(text_range.end());
+
+    let prefix = iter::repeat_n(" ", (lc_start.col - 2) as usize)
+        .collect::<Vec<_>>()
+        .join("");
+    let range = iter::repeat_n("^", (lc_end.col - lc_start.col) as usize)
+        .collect::<Vec<_>>()
+        .join("");
+    let message = diagnostic.message.clone();
+    let line = format!("{prefix}//{range} {message}");
+
+    let mut lines = source.lines().collect::<Vec<_>>();
+    lines.insert((lc_start.line + 1) as usize, &line);
+    lines.join("\n")
 }

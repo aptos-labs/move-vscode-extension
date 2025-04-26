@@ -1,6 +1,6 @@
 pub(crate) mod diagnostics;
 
-pub use diagnostics::check_diagnostic;
+pub use diagnostics::check_diagnostics;
 
 use syntax::TextSize;
 
