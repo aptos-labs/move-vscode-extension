@@ -96,7 +96,7 @@ impl<'a> CompletionContext<'a> {
                         find_node_at_offset::<ast::Path>(&original_file.syntax(), offset)?;
                     Some(ReferenceKind::Path(original_path.in_file(file_id)))
                 }
-                FIELD_REF => {
+                DOT_EXPR => {
                     let original_receiver_expr =
                         find_node_at_offset::<ast::DotExpr>(&original_file.syntax(), offset)?
                             .receiver_expr();

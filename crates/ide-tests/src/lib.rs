@@ -22,6 +22,7 @@ pub(crate) fn init_tracing_for_test() {
         .with(
             HierarchicalLayer::new(2)
                 .with_indent_lines(true)
+                .with_deferred_spans(true)
                 .with_filter(LevelFilter::from_level(Level::DEBUG)),
         )
         .try_init();

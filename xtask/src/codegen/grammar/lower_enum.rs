@@ -1,4 +1,4 @@
-use crate::codegen::grammar::ast_src::{Cardinality, Field};
+use crate::codegen::grammar::ast_src::{Cardinality, Field, get_required_fields};
 use crate::codegen::grammar::lower_rule;
 use quote::{format_ident, quote};
 use std::collections::HashSet;
@@ -31,17 +31,41 @@ pub(super) fn lower_enum(grammar: &Grammar, node_name: &str, rule: &Rule) -> Opt
             Rule::Node(it) => {
                 let node_data = &grammar[*it];
                 let variant_name = node_data.name.clone();
+                let required_fields = get_required_fields(&variant_name);
                 let mut variant_fields = vec![];
                 if let Rule::Seq(rules) = &node_data.rule {
                     for child_rule in rules {
                         match child_rule {
                             Rule::Opt(rule) => {
-                                if let Rule::Node(child_node) = rule.deref() {
-                                    lower_rule(&mut variant_fields, grammar, None, child_rule, &[]);
+                                if let Rule::Node(_) = rule.deref() {
+                                    lower_rule(
+                                        &mut variant_fields,
+                                        grammar,
+                                        None,
+                                        child_rule,
+                                        required_fields,
+                                    );
                                 }
                             }
                             Rule::Node(node) => {
-                                lower_rule(&mut variant_fields, grammar, None, child_rule, &[]);
+                                lower_rule(
+                                    &mut variant_fields,
+                                    grammar,
+                                    None,
+                                    child_rule,
+                                    required_fields,
+                                );
+                            }
+                            Rule::Labeled { label, rule } => {
+                                if let Rule::Node(_) = rule.deref() {
+                                    lower_rule(
+                                        &mut variant_fields,
+                                        grammar,
+                                        Some(label),
+                                        rule,
+                                        required_fields,
+                                    );
+                                }
                             }
                             _ => (),
                         }
@@ -123,6 +147,16 @@ pub(super) fn generate_field_method_for_enum(
                 quote! {
                     #[inline]
                     pub fn #method_name(&self) -> Option<#ty> {
+                        match self {
+                            #(#enum_name::#variants(it) => #method_body),*
+                        }
+                    }
+                }
+            }
+            Cardinality::Required => {
+                quote! {
+                    #[inline]
+                    pub fn #method_name(&self) -> #ty {
                         match self {
                             #(#enum_name::#variants(it) => #method_body),*
                         }

@@ -75,13 +75,6 @@ impl Ty {
         Ty::Reference(TyReference::new(inner_ty, mutability))
     }
 
-    pub fn unwrap_all_refs(&self) -> Ty {
-        match self {
-            Ty::Reference(ty_ref) => ty_ref.referenced().unwrap_all_refs(),
-            _ => self.to_owned(),
-        }
-    }
-
     pub fn adt_item_module(
         &self,
         db: &dyn HirDatabase,
@@ -144,7 +137,7 @@ impl Ty {
             return ty;
         }
         if matches!(ty, Ty::Reference(_)) {
-            ty = ty.unwrap_ty_refs();
+            ty = ty.unwrap_all_refs();
         }
         if matches!(ty, Ty::Integer(_) | Ty::Infer(TyInfer::IntVar(_))) {
             ty = Ty::Num;
@@ -152,11 +145,10 @@ impl Ty {
         ty
     }
 
-    pub fn unwrap_ty_refs(self) -> Ty {
-        if let Ty::Reference(ty_ref) = self {
-            ty_ref.referenced().unwrap_ty_refs()
-        } else {
-            self
+    pub fn unwrap_all_refs(&self) -> Ty {
+        match self {
+            Ty::Reference(ty_ref) => ty_ref.referenced().unwrap_all_refs(),
+            _ => self.to_owned(),
         }
     }
 

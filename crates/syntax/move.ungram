@@ -265,6 +265,9 @@ BinExpr =
 DotExpr =
     receiver_expr:Expr '.' FieldRef
 
+MethodOrDotExpr =
+    MethodCallExpr | DotExpr
+
 FieldRef =
     NameRef | IndexRef
 

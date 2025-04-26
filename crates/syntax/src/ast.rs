@@ -38,7 +38,7 @@ pub use self::{
 /// conversion itself has zero runtime cost: ast and syntax nodes have exactly
 /// the same representation: a pointer to the tree root and a pointer to the
 /// node itself.
-pub trait AstNode {
+pub trait AstNode: std::fmt::Debug + Clone {
     /// This panics if the `SyntaxKind` is not statically known.
     fn kind() -> SyntaxKind
     where

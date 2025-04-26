@@ -169,3 +169,25 @@ pub enum Severity {
     WeakWarning,
     Allow,
 }
+
+impl Severity {
+    pub fn from_test_ident(ident: &str) -> Severity {
+        let expected_severity = match ident {
+            "err:" => Severity::Error,
+            "warn:" => Severity::Warning,
+            "weak:" => Severity::WeakWarning,
+            "allow:" => Severity::Allow,
+            _ => unreachable!("unknown severity {:?}", ident),
+        };
+        expected_severity
+    }
+
+    pub fn to_test_ident(&self) -> &str {
+        match self {
+            Severity::Error => "err:",
+            Severity::Warning => "warn",
+            Severity::WeakWarning => "weak:",
+            Severity::Allow => "allow:",
+        }
+    }
+}

@@ -150,9 +150,42 @@ impl<V: Fn(&TyInfer) -> bool + Clone> TypeVisitor for TyInferVisitor<V> {
     }
 }
 
+#[derive(Clone, Default)]
+struct HasTyUnknownVisitor {}
+
+impl TypeVisitor for HasTyUnknownVisitor {
+    fn visit_ty(&self, ty: &Ty) -> bool {
+        match ty {
+            Ty::Unknown => true,
+            _ => ty.deep_visit_with(self.clone()),
+        }
+    }
+}
+
 impl Ty {
     pub fn deep_visit_ty_infers(&self, visitor: impl Fn(&TyInfer) -> bool + Clone) -> bool {
         let visitor = TyInferVisitor::new(visitor);
         self.visit_with(visitor)
+    }
+
+    pub fn has_ty_unknown(&self) -> bool {
+        let visitor = HasTyUnknownVisitor::default();
+        self.visit_with(visitor)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::ty::range_like::TySequence;
+    use crate::types::ty::reference::{Mutability, TyReference};
+
+    #[test]
+    fn test_has_ty_unknown() {
+        let ty = Ty::Reference(TyReference::new(
+            Ty::Seq(TySequence::Vector(Box::new(Ty::Unknown))),
+            Mutability::Immutable,
+        ));
+        assert!(ty.has_ty_unknown());
     }
 }

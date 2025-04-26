@@ -81,8 +81,9 @@ impl<T: ast::ReferenceElement> ResolveReference for InFile<T> {
                         .filter_by_name(field_name)
                         .single_or_none()
                 }
-                FIELD_REF => {
-                    let field_ref = ref_element.cast_into::<ast::FieldRef>().unwrap();
+                DOT_EXPR => {
+                    let dot_expr = ref_element.cast_into::<ast::DotExpr>().unwrap();
+                    let field_ref = dot_expr.field_ref();
                     inference.get_resolved_field(&field_ref)
                 }
                 IDENT_PAT => {

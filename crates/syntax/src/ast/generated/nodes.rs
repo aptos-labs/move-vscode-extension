@@ -315,6 +315,7 @@ impl DerefExpr {
 pub struct DotExpr {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::ReferenceElement for DotExpr {}
 impl DotExpr {
     #[inline]
     pub fn field_ref(&self) -> FieldRef {
@@ -378,7 +379,6 @@ impl ExprStmt {
 pub struct FieldRef {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::ReferenceElement for FieldRef {}
 impl FieldRef {
     #[inline]
     pub fn index_ref(&self) -> Option<IndexRef> { support::child(&self.syntax) }
@@ -1169,6 +1169,7 @@ impl SourceFile {
 pub struct SpecBlockExpr {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::MslOnly for SpecBlockExpr {}
 impl SpecBlockExpr {
     #[inline]
     pub fn block_expr(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
@@ -1785,6 +1786,13 @@ pub enum Item {
 impl ast::HasAttrs for Item {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum MethodOrDotExpr {
+    DotExpr(DotExpr),
+    MethodCallExpr(MethodCallExpr),
+}
+impl ast::ReferenceElement for MethodOrDotExpr {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MethodOrPath {
     MethodCallExpr(MethodCallExpr),
     Path(Path),
@@ -1925,7 +1933,6 @@ pub struct AnyMslOnly {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::MslOnly for AnyMslOnly {}
-impl ast::HasAttrs for AnyMslOnly {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyNamedElement {
@@ -5528,6 +5535,64 @@ impl AstNode for Item {
         }
     }
 }
+impl From<DotExpr> for MethodOrDotExpr {
+    #[inline]
+    fn from(node: DotExpr) -> MethodOrDotExpr { MethodOrDotExpr::DotExpr(node) }
+}
+impl From<MethodCallExpr> for MethodOrDotExpr {
+    #[inline]
+    fn from(node: MethodCallExpr) -> MethodOrDotExpr { MethodOrDotExpr::MethodCallExpr(node) }
+}
+impl From<MethodOrDotExpr> for AnyReferenceElement {
+    #[inline]
+    fn from(node: MethodOrDotExpr) -> AnyReferenceElement {
+        match node {
+            MethodOrDotExpr::DotExpr(it) => it.into(),
+            MethodOrDotExpr::MethodCallExpr(it) => it.into(),
+        }
+    }
+}
+impl MethodOrDotExpr {
+    pub fn dot_expr(self) -> Option<DotExpr> {
+        match (self) {
+            MethodOrDotExpr::DotExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn method_call_expr(self) -> Option<MethodCallExpr> {
+        match (self) {
+            MethodOrDotExpr::MethodCallExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn receiver_expr(&self) -> Expr {
+        match self {
+            MethodOrDotExpr::DotExpr(it) => it.receiver_expr(),
+            MethodOrDotExpr::MethodCallExpr(it) => it.receiver_expr(),
+        }
+    }
+}
+impl AstNode for MethodOrDotExpr {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, DOT_EXPR | METHOD_CALL_EXPR) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            DOT_EXPR => MethodOrDotExpr::DotExpr(DotExpr { syntax }),
+            METHOD_CALL_EXPR => MethodOrDotExpr::MethodCallExpr(MethodCallExpr { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            MethodOrDotExpr::DotExpr(it) => &it.syntax,
+            MethodOrDotExpr::MethodCallExpr(it) => &it.syntax,
+        }
+    }
+}
 impl From<MethodCallExpr> for MethodOrPath {
     #[inline]
     fn from(node: MethodCallExpr) -> MethodOrPath { MethodOrPath::MethodCallExpr(node) }
@@ -6370,10 +6435,6 @@ impl From<AnyHasVisibility> for AnyHasAttrs {
     #[inline]
     fn from(node: AnyHasVisibility) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
-impl From<AnyMslOnly> for AnyHasAttrs {
-    #[inline]
-    fn from(node: AnyMslOnly) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
-}
 impl AnyHasItems {
     #[inline]
     pub fn new<T: ast::HasItems>(node: T) -> AnyHasItems {
@@ -6686,7 +6747,7 @@ impl AstNode for AnyMslOnly {
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            ITEM_SPEC | MODULE_SPEC | SCHEMA | SPEC_FUN | SPEC_INLINE_FUN
+            ITEM_SPEC | MODULE_SPEC | SCHEMA | SPEC_BLOCK_EXPR | SPEC_FUN | SPEC_INLINE_FUN
         )
     }
     #[inline]
@@ -6707,6 +6768,10 @@ impl From<ModuleSpec> for AnyMslOnly {
 impl From<Schema> for AnyMslOnly {
     #[inline]
     fn from(node: Schema) -> AnyMslOnly { AnyMslOnly { syntax: node.syntax } }
+}
+impl From<SpecBlockExpr> for AnyMslOnly {
+    #[inline]
+    fn from(node: SpecBlockExpr) -> AnyMslOnly { AnyMslOnly { syntax: node.syntax } }
 }
 impl From<SpecFun> for AnyMslOnly {
     #[inline]
@@ -6844,7 +6909,7 @@ impl AstNode for AnyReferenceElement {
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            FIELD_REF
+            DOT_EXPR
                 | IDENT_PAT
                 | ITEM_SPEC_REF
                 | METHOD_CALL_EXPR
@@ -6860,9 +6925,9 @@ impl AstNode for AnyReferenceElement {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
-impl From<FieldRef> for AnyReferenceElement {
+impl From<DotExpr> for AnyReferenceElement {
     #[inline]
-    fn from(node: FieldRef) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
+    fn from(node: DotExpr) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
 }
 impl From<IdentPat> for AnyReferenceElement {
     #[inline]
@@ -6929,6 +6994,11 @@ impl std::fmt::Display for InferenceCtxOwner {
     }
 }
 impl std::fmt::Display for Item {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for MethodOrDotExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

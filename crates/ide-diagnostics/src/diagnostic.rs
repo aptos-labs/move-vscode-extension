@@ -3,7 +3,7 @@ use ide_db::assists::Assist;
 use syntax::files::FileRange;
 use vfs::FileId;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Diagnostic {
     pub code: DiagnosticCode,
     pub message: String,

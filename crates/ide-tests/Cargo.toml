@@ -13,6 +13,7 @@ tracing.workspace = true
 tracing-subscriber.workspace = true
 tracing-tree.workspace = true
 line-index.workspace = true
+stdx.workspace = true
 
 vfs.workspace = true
 

@@ -1,33 +1,29 @@
 use crate::test_utils::check_diagnostics;
+use crate::test_utils::diagnostics::check_diagnostic_expect;
+use expect_test::expect;
 
 #[test]
 fn test_unresolved_variable() {
     // language=Move
-    check_diagnostics(
-        r#"
-module 0x1::main {
-    fun main() {
-        x;
-      //^ err: Unresolved reference `x`
-    }
-}
-"#,
-    );
+    check_diagnostic_expect(expect![[r#"
+        module 0x1::main {
+            fun main() {
+                x;
+              //^ err: Unresolved reference `x`
+            }
+        }"#]]);
 }
 
 #[test]
 fn test_unresolved_function_call() {
     // language=Move
-    check_diagnostics(
-        r#"
-module 0x1::main {
-    fun main() {
-        call();
-      //^^^^ err: Unresolved reference `call`
-    }
-}
-"#,
-    );
+    check_diagnostic_expect(expect![[r#"
+        module 0x1::main {
+            fun main() {
+                call();
+              //^^^^ err: Unresolved reference `call`
+            }
+        }"#]]);
 }
 
 #[test]
@@ -197,6 +193,462 @@ module 0x1::M {
     fun main() {
         let t = std::transaction::create();
                    //^^^^^^^^^^^ err: Unresolved reference `transaction`
+    }
+}
+"#,
+    );
+}
+
+#[test]
+fn test_unresolved_reference_for_method_of_another_module() {
+    // language=Move
+    check_diagnostics(
+        r#"
+module 0x1::other {}
+module 0x1::m {
+    use 0x1::other;
+    fun main() {
+        other::emit();
+             //^^^^ err: Unresolved reference `emit`
+    }
+}
+"#,
+    );
+}
+
+#[test]
+fn test_unresolved_reference_for_type_in_generic() {
+    // language=Move
+    check_diagnostics(
+        r#"
+module 0x1::m {
+    fun deposit<Token> () {}
+
+    fun main() {
+        deposit<PONT>()
+              //^^^^ err: Unresolved reference `PONT`
+    }
+}
+"#,
+    );
+}
+
+#[test]
+fn test_no_error_for_wildcard_in_struct_pat() {
+    // language=Move
+    check_diagnostics(
+        r#"
+module 0x1::M {
+    struct Coin { value: u64 }
+    fun call(): Coin { Coin { value: 1 } }
+    fun m() {
+        Coin { value: _ } = call();
+    }
+}
+"#,
+    );
+}
+
+#[test]
+fn test_no_error_correct_destructuring() {
+    // language=Move
+    check_diagnostics(
+        r#"
+module 0x1::M {
+    struct Coin { value: u64 }
+    fun call(): Coin { Coin { value: 1 } }
+    fun m() {
+        let val;
+        Coin { value: val } = call();
+    }
+}
+"#,
+    );
+}
+
+#[test]
+fn test_error_for_unbound_desctructured_value() {
+    // language=Move
+    check_diagnostic_expect(expect![[r#"
+        module 0x1::M {
+            struct Coin { value: u64 }
+            fun call(): Coin { Coin { value: 1 } }
+            fun m() {
+                Coin { value: val } = call();
+                            //^^^ err: Unresolved reference `val`
+            }
+        }"#]]);
+}
+
+#[test]
+fn test_no_error_for_result_variable_in_spec() {
+    // language=Move
+    check_diagnostics(
+        r#"
+module 0x1::M {
+    fun call(): u8 { 1 }
+    spec call {
+        ensures result >= 1;
+    }
+}
+"#,
+    );
+}
+
+#[test]
+fn test_unresolved_reference_for_schema_field() {
+    // language=Move
+    check_diagnostics(
+        r#"
+    module 0x1::M {
+        spec schema Schema {}
+        spec module {
+            include Schema { addr: @0x1 };
+                           //^^^^ err: Unresolved reference `addr`
+        }
+    }
+"#,
+    );
+}
+
+#[test]
+fn test_unresolved_reference_for_schema_field_shorthand() {
+    // language=Move
+    check_diagnostics(
+        r#"
+    module 0x1::M {
+        spec schema Schema {}
+        spec module {
+            include Schema { addr };
+                           //^^^^ err: Unresolved reference `addr`
+        }
+    }
+"#,
+    );
+}
+
+#[test]
+fn test_no_unresolved_reference_for_schema_field_and_function_param() {
+    // language=Move
+    check_diagnostics(
+        r#"
+    module 0x1::M {
+        spec schema Schema {
+            root_account: signer;
+        }
+        fun call(root_account: &signer) {}
+        spec call {
+            include Schema { root_account };
+        }
+    }
+"#,
+    );
+}
+
+#[test]
+fn test_no_error_for_tuple_result() {
+    // language=Move
+    check_diagnostics(
+        r#"
+    module 0x1::M {
+        fun call(): (u8, u8) { (1, 1) }
+        spec call {
+            ensures result_1 == result_2
+        }
+    }
+"#,
+    );
+}
+
+#[test]
+fn test_no_error_for_update_field_arguments() {
+    // language=Move
+    check_diagnostics(
+        r#"
+    module 0x1::M {
+        struct S { val: u8 }
+        spec module {
+            let s = S { val: 1 };
+            ensures update_field(s, val, s.val + 1) == 1;
+        }
+    }
+"#,
+    );
+}
+
+#[test]
+fn test_num_type() {
+    // language=Move
+    check_diagnostics(
+        r#"
+    module 0x1::M {
+        spec schema SS {
+            val: num;
+        }
+    }
+"#,
+    );
+}
+
+#[test]
+fn test_unresolved_field_for_dot_expr() {
+    // language=Move
+    check_diagnostic_expect(expect![[r#"
+        module 0x1::M {
+            struct S has key {}
+            fun call() acquires S {
+                let a = borrow_global_mut<S>(@0x1);
+                a.val;
+                //^^^ err: Unresolved reference `val`
+            }
+        }"#]]);
+}
+
+#[test]
+fn test_unresolved_module_import() {
+    // language=Move
+    check_diagnostics(
+        r#"
+    module 0x1::main {
+        use 0x1::M1;
+               //^^ err: Unresolved reference `M1`
+    }
+"#,
+    );
+}
+
+#[test]
+fn test_unresolved_module_import_in_item_import() {
+    // language=Move
+    check_diagnostics(
+        r#"
+    module 0x1::main {
+        use 0x1::M1::call;
+               //^^ err: Unresolved reference `M1`
+    }
+"#,
+    );
+}
+
+#[test]
+fn test_unresolved_item_import() {
+    // language=Move
+    check_diagnostics(
+        r#"
+    module 0x1::M1 {}
+    module 0x1::Main {
+        use 0x1::M1::call;
+                   //^^^^ err: Unresolved reference `call`
+    }
+"#,
+    );
+}
+
+#[test]
+fn test_no_error_for_field_of_item_of_unknown_type() {
+    // language=Move
+    check_diagnostics(
+        r#"
+module 0x1::main {
+    fun main() {
+        let var = (1 + false);
+        var.key;
+    }
+}
+"#,
+    );
+}
+
+#[test]
+fn test_no_error_for_field_of_reference_of_unknown_type() {
+    // language=Move
+    check_diagnostics(
+        r#"
+module 0x1::main {
+    fun call<T>(t: T): &T { &t }
+    fun main() {
+        let var = &(1 + false);
+        var.key;
+    }
+}
+"#,
+    );
+}
+
+#[test]
+fn test_no_error_for_named_address_in_test_location() {
+    // language=Move
+    check_diagnostics(
+        r#"
+#[test_only]
+module 0x1::string_tests {
+    #[expected_failure(location = aptos_framework::coin)]
+    fun test_abort() {
+    }
+}
+"#,
+    );
+}
+
+#[test]
+fn test_no_error_for_self_module_in_location() {
+    // language=Move
+    check_diagnostics(
+        r#"
+#[test_only]
+module 0x1::string_tests {
+    #[test]
+    #[expected_failure(location = Self)]
+    fun test_a() {
+
+    }
+}
+"#,
+    );
+}
+
+#[test]
+fn test_lhs_of_dot_assignment() {
+    // language=Move
+    check_diagnostics(
+        r#"
+module 0x1::mod {
+    struct S { val: u8 }
+    fun main() {
+        s.val = 1;
+      //^ err: Unresolved reference `s`
+    }
+}
+"#,
+    );
+}
+
+#[test]
+fn test_no_error_for_attribute_item() {
+    // language=Move
+    check_diagnostics(
+        r#"
+module 0x1::m {
+    #[resource_group(scope = global)]
+    /// A shared resource group for storing object resources together in storage.
+    struct ObjectGroup { }
+}
+"#,
+    );
+}
+
+#[test]
+fn test_spec_builtin_not_available_outside_specs() {
+    // language=Move
+    check_diagnostics(
+        r#"
+module 0x1::m {
+    fun main() {
+        MAX_U128;
+      //^^^^^^^^ err: Unresolved reference `MAX_U128`
+    }
+}
+"#,
+    );
+}
+
+#[test]
+fn test_spec_builtin_const_inside_spec() {
+    // language=Move
+    check_diagnostic_expect(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                spec {
+                    MAX_U128;
+                }
+            }
+        }"#]]);
+}
+
+#[test]
+fn test_no_unresolved_reference_in_pragma() {
+    // language=Move
+    check_diagnostics(
+        r#"
+module 0x1::m {
+    spec module {
+        pragma intrinsic = map;
+    }
+}
+"#,
+    );
+}
+
+#[test]
+fn test_no_unresolved_for_named_address_in_use() {
+    // language=Move
+    check_diagnostics(
+        r#"
+module std::m {
+}
+module std::main {
+    use std::m;
+}
+"#,
+    );
+}
+
+#[test]
+fn test_no_unresolved_for_named_address_in_fq() {
+    // language=Move
+    check_diagnostic_expect(expect![[r#"
+        module std::mymodule {
+            public fun call() {}
+        }
+        module 0x1::main {
+            fun main() {
+                std::mymodule::call();
+            }
+        }"#]]);
+}
+
+#[test]
+fn test_no_error_for_invariant_index_variable() {
+    // language=Move
+    check_diagnostics(
+        r#"
+module 0x1::m {
+    spec module {
+        let vec = vector[1, 2, 3];
+        let ind = 1;
+        invariant forall ind in 0..10: vec[ind] < 10;
+    }
+}
+"#,
+    );
+}
+
+#[test]
+fn test_unresolved_method() {
+    // language=Move
+    check_diagnostics(
+        r#"
+module 0x1::m {
+    struct S { field: u8 }
+    fun main(s: S) {
+        s.receiver();
+        //^^^^^^^^ err: Unresolved reference `receiver`
+    }
+}
+"#,
+    );
+}
+
+#[test]
+fn test_no_unresolved_method_error() {
+    // language=Move
+    check_diagnostics(
+        r#"
+module 0x1::m {
+    struct S { field: u8 }
+    fun receiver(self: S): u8 { self.field }
+    fun main(s: S) {
+        s.receiver();
     }
 }
 "#,

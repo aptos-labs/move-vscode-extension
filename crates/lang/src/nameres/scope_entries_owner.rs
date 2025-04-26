@@ -45,6 +45,7 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
 
             entries.extend(builtin_functions(db.upcast()).to_entries());
             entries.extend(builtin_spec_functions(db.upcast()).to_entries());
+            entries.extend(builtin_spec_consts(db.upcast()).to_entries());
         }
         MODULE_SPEC => {
             let (module_spec_file_id, module_spec) =
@@ -127,6 +128,12 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
 fn builtin_functions(db: &dyn SourceDatabase) -> Vec<InFile<ast::Fun>> {
     builtin_module(db)
         .map(|module| module.map(|it| it.functions()).flatten())
+        .unwrap_or_default()
+}
+
+fn builtin_spec_consts(db: &dyn SourceDatabase) -> Vec<InFile<ast::Const>> {
+    builtin_module(db)
+        .map(|module| module.map(|it| it.consts()).flatten())
         .unwrap_or_default()
 }
 
