@@ -29,10 +29,7 @@ fn inference_for_ctx_owner(
     ctx_owner_loc: SyntaxLoc,
     msl: bool,
 ) -> Arc<InferenceResult> {
-    let InFile {
-        file_id,
-        value: ctx_owner,
-    } = ctx_owner_loc
+    let InFile { file_id, value: ctx_owner } = ctx_owner_loc
         .to_ast::<ast::InferenceCtxOwner>(db.upcast())
         .unwrap();
     let mut ctx = InferenceCtx::new(db, file_id, msl);

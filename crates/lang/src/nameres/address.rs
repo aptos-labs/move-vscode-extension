@@ -48,9 +48,7 @@ impl fmt::Debug for Address {
 
 pub fn resolve_named_address(name: &str) -> Option<NumericAddress> {
     if matches!(name, "std" | "aptos_std" | "aptos_framework" | "aptos_token") {
-        return Some(NumericAddress {
-            value: "0x1".to_string(),
-        });
+        return Some(NumericAddress { value: "0x1".to_string() });
     }
     // todo: get it from AptosWorkspace
     None

@@ -48,11 +48,7 @@ impl TyCallable {
 
 impl TypeFoldable<TyCallable> for TyCallable {
     fn deep_fold_with(self, folder: impl TypeFolder) -> TyCallable {
-        let TyCallable {
-            param_types,
-            ret_type,
-            kind,
-        } = self;
+        let TyCallable { param_types, ret_type, kind } = self;
         TyCallable::new(folder.fold_tys(param_types), folder.fold_ty(*ret_type), kind)
     }
 

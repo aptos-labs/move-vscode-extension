@@ -36,10 +36,7 @@ impl Highlights {
 
 impl Node {
     fn new(hl_range: HlRange) -> Node {
-        Node {
-            hl_range,
-            nested: Vec::new(),
-        }
+        Node { hl_range, nested: Vec::new() }
     }
 
     fn add(&mut self, hl_range: HlRange) {

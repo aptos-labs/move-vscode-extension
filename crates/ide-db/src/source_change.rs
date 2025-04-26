@@ -230,10 +230,7 @@ impl TreeMutator {
     pub fn new(immutable: &SyntaxNode) -> TreeMutator {
         let immutable = immutable.ancestors().last().unwrap();
         let mutable_clone = immutable.clone_for_update();
-        TreeMutator {
-            immutable,
-            mutable_clone,
-        }
+        TreeMutator { immutable, mutable_clone }
     }
 
     pub fn make_mut<N: AstNode>(&self, node: &N) -> N {

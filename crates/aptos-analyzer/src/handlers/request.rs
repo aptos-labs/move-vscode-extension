@@ -12,9 +12,7 @@ use lsp_types::{
 use syntax::files::FileRange;
 
 pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
-    let req = FetchWorkspaceRequest {
-        force_reload_deps: false,
-    };
+    let req = FetchWorkspaceRequest { force_reload_deps: false };
     state
         .fetch_workspaces_queue
         .request_op("reload workspace request".to_owned(), req);
@@ -107,10 +105,7 @@ pub(crate) fn handle_completion(
         items,
     );
 
-    let completion_list = lsp_types::CompletionList {
-        is_incomplete: true,
-        items,
-    };
+    let completion_list = lsp_types::CompletionList { is_incomplete: true, items };
     Ok(Some(completion_list.into()))
 }
 

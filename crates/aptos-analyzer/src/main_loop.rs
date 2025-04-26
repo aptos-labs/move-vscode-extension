@@ -121,9 +121,7 @@ impl GlobalState {
 
         self.fetch_workspaces_queue.request_op(
             "startup".to_owned(),
-            FetchWorkspaceRequest {
-                force_reload_deps: false,
-            },
+            FetchWorkspaceRequest { force_reload_deps: false },
         );
         if let Some((cause, FetchWorkspaceRequest { force_reload_deps })) =
             self.fetch_workspaces_queue.should_start_op()
@@ -175,7 +173,7 @@ impl GlobalState {
         let _p = tracing::info_span!("GlobalState::handle_event", event = %event).entered();
 
         let event_dbg_msg = format!("{event:?}");
-        tracing::debug!(/*?loop_start, */?event, "handle_event");
+        tracing::debug!(/*?loop_start, */ ?event, "handle_event");
         if tracing::enabled!(Level::DEBUG) {
             let task_queue_len = self.task_pool.handle.len();
             if task_queue_len > 0 {

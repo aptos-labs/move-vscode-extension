@@ -60,12 +60,7 @@ impl fmt::Debug for PathKind {
                     // .field("ns", &ns.into_iter().join(" | "))
                     .finish()
             }
-            PathKind::Qualified {
-                path,
-                qualifier,
-                ns,
-                kind,
-            } => f
+            PathKind::Qualified { path, qualifier, ns, kind } => f
                 .debug_struct("Qualified")
                 .field("kind", &kind)
                 .field("path", &path.syntax().text())

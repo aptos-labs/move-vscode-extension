@@ -1,8 +1,7 @@
 pub(crate) mod diagnostics;
 
-pub use diagnostics::{check_diagnostic, check_fix};
+pub use diagnostics::check_diagnostic;
 
-use line_index::LineCol;
 use syntax::TextSize;
 
 pub fn get_and_replace_caret(source: &str, caret_mark: &str) -> (&'static str, TextSize) {
@@ -11,37 +10,6 @@ pub fn get_and_replace_caret(source: &str, caret_mark: &str) -> (&'static str, T
         .expect(&format!("{} not found", caret_mark));
     let source_no_caret = source.replace(caret_mark, "");
     (source_no_caret.leak(), TextSize::new(caret_offset as u32))
-}
-
-pub fn get_marked_position(source: &str, mark: &str) -> (u32, u32) {
-    let offset = source.find(mark).unwrap() as u32;
-    let file_index = line_index::LineIndex::new(source);
-    let LineCol { line, col } = file_index.line_col(TextSize::new(offset));
-    let ref_line = line - 1; // it's a //^ comment underneath the element
-    let ref_col = col + 2; // we need a position of ^
-    (ref_line, ref_col)
-}
-
-pub fn get_marked_position_offset(source: &str, mark: &str) -> TextSize {
-    let (line, col) = get_marked_position(source, mark);
-    let file_index = line_index::LineIndex::new(source);
-    let offset = file_index.offset(LineCol { line, col }).unwrap();
-    TextSize::new(offset.into())
-}
-
-pub fn get_marked_position_offset_with_data(source: &str, mark: &str) -> (TextSize, String) {
-    let position_offset = get_marked_position_offset(source, mark);
-
-    let offset = source.find(mark).unwrap();
-    let trimmed_source = source.chars().skip(offset).collect::<String>();
-    let data = trimmed_source
-        .trim_start_matches(mark)
-        .lines()
-        .next()
-        .unwrap_or("")
-        .trim();
-
-    (position_offset, data.to_string())
 }
 
 /// Asserts that two strings are equal, otherwise displays a rich diff between them.

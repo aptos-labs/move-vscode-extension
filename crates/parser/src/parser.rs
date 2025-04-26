@@ -439,10 +439,7 @@ pub(crate) struct CompletedMarker {
 
 impl CompletedMarker {
     fn new(pos: u32 /*, end_pos: u32*/, kind: SyntaxKind) -> Self {
-        CompletedMarker {
-            pos, /*, end_pos*/
-            kind,
-        }
+        CompletedMarker { pos /*, end_pos*/, kind }
     }
 
     /// This method allows to create a new node which starts

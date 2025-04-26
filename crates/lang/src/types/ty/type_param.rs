@@ -9,9 +9,7 @@ pub struct TyTypeParameter {
 
 impl TyTypeParameter {
     pub fn new(origin: InFile<ast::TypeParam>) -> Self {
-        TyTypeParameter {
-            origin_loc: origin.loc(),
-        }
+        TyTypeParameter { origin_loc: origin.loc() }
     }
 
     pub fn from_loc(origin_loc: SyntaxLoc) -> Self {

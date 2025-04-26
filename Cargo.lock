@@ -651,6 +651,7 @@ dependencies = [
  "itertools 0.14.0",
  "lang",
  "line-index",
+ "regex",
  "salsa",
  "stdx",
  "syntax",

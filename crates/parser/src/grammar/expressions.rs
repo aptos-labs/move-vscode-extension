@@ -61,10 +61,7 @@ fn expr_bp(
         let m = lhs.precede(p);
         p.bump(op);
 
-        r = Restrictions {
-            prefer_stmt: false,
-            ..r
-        };
+        r = Restrictions { prefer_stmt: false, ..r };
 
         if is_range {
             let has_trailing_expression = p.at_ts(EXPR_FIRST) && !(r.forbid_structs && p.at(T!['{']));
@@ -75,15 +72,7 @@ fn expr_bp(
             }
         }
 
-        expr_bp(
-            p,
-            None,
-            Restrictions {
-                prefer_stmt: false,
-                ..r
-            },
-            op_bp + 1,
-        );
+        expr_bp(p, None, Restrictions { prefer_stmt: false, ..r }, op_bp + 1);
         lhs = m.complete(p, if is_range { RANGE_EXPR } else { BIN_EXPR });
     }
     Some((lhs, BlockLike::NotBlock))

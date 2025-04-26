@@ -262,9 +262,7 @@ fn strip_references(ty: Ty, def_bm: BindingMode) -> (Ty, BindingMode) {
                 } else {
                     ty_ref.mutability.to_owned()
                 };
-                BindByReference {
-                    mutability: new_mutability,
-                }
+                BindByReference { mutability: new_mutability }
             }
             BindByValue => BindByReference {
                 mutability: ty_ref.mutability.to_owned(),

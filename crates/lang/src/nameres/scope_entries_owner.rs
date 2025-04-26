@@ -1,12 +1,11 @@
 use crate::db::HirDatabase;
-use crate::nameres::ResolveReference;
 use crate::nameres::blocks::get_entries_in_blocks;
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::nameres::use_speck_entries::use_speck_entries;
 use crate::node_ext::item_spec::ItemSpecExt;
 use base_db::SourceDatabase;
-use syntax::ast::{FieldsOwner, GenericElement, HasItems, ReferenceElement};
+use syntax::ast::{FieldsOwner, GenericElement, HasItems};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, SyntaxNode, ast, match_ast};
 

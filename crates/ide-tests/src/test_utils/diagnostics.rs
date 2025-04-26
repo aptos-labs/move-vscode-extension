@@ -1,18 +1,18 @@
 use crate::assert_eq_text;
 use ide::Analysis;
-use ide::test_utils::{get_marked_position_line_index, get_marked_position_offset_with_line};
+use ide::test_utils::get_first_marked_position;
 use ide_db::Severity;
 use ide_db::assists::{Assist, AssistResolveStrategy};
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
+use lang::nameres::scope::VecExt;
 use syntax::TextRange;
 use syntax::files::FileRange;
 use vfs::FileId;
-use lang::nameres::scope::VecExt;
 
 pub fn check_diagnostic(source: &str) {
-    let (_, file_id, diagnostics) = get_diagnostic_at_mark(source);
-    let diag = diagnostics.first().expect("no diagnostics");
+    let (_, file_id, mut diagnostics) = get_diagnostics(source);
+    let diag = diagnostics.pop().expect("no diagnostics");
 
     let (expected_range, expected_severity, expected_message) =
         get_expected_diagnostic_at_mark(source, file_id);
@@ -22,7 +22,7 @@ pub fn check_diagnostic(source: &str) {
 }
 
 pub fn check_no_diagnostics(source: &str) {
-    let (_, _, diagnostic) = get_diagnostic_at_mark(source);
+    let (_, _, diagnostic) = get_diagnostics(source);
     assert!(
         diagnostic.is_empty(),
         "No diagnostics expected, actually {:?}",
@@ -31,8 +31,8 @@ pub fn check_no_diagnostics(source: &str) {
 }
 
 pub fn check_diagnostic_and_fix(before: &str, after: &str) {
-    let (_, file_id, diagnostic) = get_diagnostic_at_mark(before);
-    let diag = diagnostic.single_or_none().expect("no diagnostics");
+    let (_, file_id, mut diagnostic) = get_diagnostics(before);
+    let diag = diagnostic.pop().expect("diagnostics expected, but none returned");
 
     let (expected_range, expected_severity, expected_message) =
         get_expected_diagnostic_at_mark(before, file_id);
@@ -44,9 +44,9 @@ pub fn check_diagnostic_and_fix(before: &str, after: &str) {
         .fixes
         .unwrap_or_else(|| panic!("{:?} diagnostic misses fixes", diag.code))[0];
 
-    let line_idx = get_marked_position_line_index(before, "//^");
+    let line_idx = get_first_marked_position(before, "//^").mark_line_col.line;
     let mut lines = before.lines().collect::<Vec<_>>();
-    lines.remove(line_idx);
+    lines.remove(line_idx as usize);
     let before_no_error_line = lines.join("\n");
 
     let actual_after = apply_fix(fix, &before_no_error_line);
@@ -54,7 +54,7 @@ pub fn check_diagnostic_and_fix(before: &str, after: &str) {
 }
 
 pub fn check_fix(before: &str, after: &str) {
-    let (_, _, diag) = get_diagnostic_at_mark(before);
+    let (_, _, diag) = get_diagnostics(before);
 
     let diag = diag.single_or_none().expect("no diagnostics");
     let fix = &diag
@@ -65,11 +65,11 @@ pub fn check_fix(before: &str, after: &str) {
     assert_eq_text!(&actual_after, after);
 }
 
-fn get_diagnostic_at_mark(source: &str) -> (Analysis, FileId, Vec<Diagnostic>) {
+fn get_diagnostics(source: &str) -> (Analysis, FileId, Vec<Diagnostic>) {
     let (analysis, file_id) = Analysis::from_single_file(source.to_string());
 
     let config = DiagnosticsConfig::test_sample();
-    let mut diagnostics = analysis
+    let diagnostics = analysis
         .semantic_diagnostics(&config, AssistResolveStrategy::None, file_id)
         .unwrap();
 
@@ -77,16 +77,16 @@ fn get_diagnostic_at_mark(source: &str) -> (Analysis, FileId, Vec<Diagnostic>) {
 }
 
 fn get_expected_diagnostic_at_mark(source: &str, file_id: FileId) -> (FileRange, Severity, String) {
-    let (offset, line) = get_marked_position_offset_with_line(source, "//^");
-    let mut parts = line.splitn(3, " ");
+    let marked = get_first_marked_position(source, "//^");
 
+    let mut parts = marked.line.splitn(3, " ");
     let prefix = parts.next().unwrap();
     let severity = parts.next().unwrap();
 
     let len = prefix.trim_start_matches("//").len();
     let expected_range = FileRange {
         file_id,
-        range: TextRange::at(offset, (len as u32).into()),
+        range: TextRange::at(marked.item_offset, (len as u32).into()),
     };
     let expected_severity = match severity {
         "err:" => Severity::Error,

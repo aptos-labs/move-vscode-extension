@@ -1,8 +1,6 @@
 use base_db::Upcast;
 use ide_db::RootDatabase;
 use lang::Semantics;
-use lang::db::NodeInferenceExt;
-use lang::types::ty::Ty;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::files::{FilePosition, InFileExt};
 use syntax::{AstNode, algo, ast};

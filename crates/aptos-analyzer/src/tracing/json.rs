@@ -22,10 +22,7 @@ struct JsonData {
 
 impl JsonData {
     fn new(name: &'static str) -> Self {
-        Self {
-            name,
-            start: Instant::now(),
-        }
+        Self { name, start: Instant::now() }
     }
 }
 
@@ -37,10 +34,7 @@ pub(crate) struct TimingLayer<S, W> {
 
 impl<S, W> TimingLayer<S, W> {
     pub(crate) fn new(writer: W) -> Self {
-        Self {
-            writer,
-            _inner: PhantomData,
-        }
+        Self { writer, _inner: PhantomData }
     }
 }
 

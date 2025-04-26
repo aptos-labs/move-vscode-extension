@@ -1,6 +1,6 @@
 use crate::init_tracing_for_test;
 use ide::Analysis;
-use ide::test_utils::{get_marked_position_offset, get_marked_position_offset_with_data};
+use ide::test_utils::{get_first_marked_position, get_marked_position_offset_with_data};
 use syntax::SyntaxKind::IDENT;
 use syntax::files::FilePosition;
 use syntax::{AstNode, SyntaxKind};
@@ -22,10 +22,7 @@ pub(crate) fn check_resolve(source: &str) {
     let (ref_offset, data) = get_marked_position_offset_with_data(&source, "//^");
 
     let (analysis, file_id) = Analysis::from_single_file(source.to_string());
-    let position = FilePosition {
-        file_id,
-        offset: ref_offset,
-    };
+    let position = FilePosition { file_id, offset: ref_offset };
 
     let item = analysis
         .goto_definition(position)
@@ -41,7 +38,7 @@ pub(crate) fn check_resolve(source: &str) {
     }
     let item = item.expect("item is unresolved");
 
-    let target_offset = get_marked_position_offset(&source, "//X");
+    let target_offset = get_first_marked_position(&source, "//X").item_offset;
     let file = analysis.parse(file_id).unwrap();
 
     let ident_token = file

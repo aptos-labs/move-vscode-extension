@@ -28,10 +28,7 @@ impl Config {
                     ConfigErrors(
                         json_errors
                             .into_iter()
-                            .map(|(a, b)| ConfigErrorInner::Json {
-                                config_key: a,
-                                error: b,
-                            })
+                            .map(|(a, b)| ConfigErrorInner::Json { config_key: a, error: b })
                             .map(Arc::new)
                             .collect(),
                     ),

@@ -93,10 +93,7 @@ impl ConfigErrors {
 impl fmt::Display for ConfigErrors {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let errors = self.0.iter().format_with("\n", |inner, f| match &**inner {
-            ConfigErrorInner::Json {
-                config_key: key,
-                error: e,
-            } => {
+            ConfigErrorInner::Json { config_key: key, error: e } => {
                 f(key)?;
                 f(&": ")?;
                 f(e)

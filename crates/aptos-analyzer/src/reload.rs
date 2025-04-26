@@ -48,9 +48,7 @@ impl GlobalState {
         let old_config = mem::replace(&mut self.config, Arc::new(config));
 
         if self.config.discovered_manifests() != old_config.discovered_manifests() {
-            let req = FetchWorkspaceRequest {
-                force_reload_deps: false,
-            };
+            let req = FetchWorkspaceRequest { force_reload_deps: false };
             self.fetch_workspaces_queue
                 .request_op("discovered projects changed".to_owned(), req)
         } else if self.config.flycheck_config() != old_config.flycheck_config() {

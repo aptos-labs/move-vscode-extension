@@ -31,10 +31,7 @@ impl<T: ast::ReferenceElement> ResolveReference for InFile<T> {
     fn resolve(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
         use syntax::SyntaxKind::*;
 
-        let InFile {
-            file_id,
-            value: ref_element,
-        } = self;
+        let InFile { file_id, value: ref_element } = self;
 
         let opt_inference_ctx_owner = ref_element
             .syntax()
@@ -118,9 +115,6 @@ impl<T: ast::ReferenceElement> ResolveReference for InFile<T> {
 }
 
 fn get_named_field_entries(fields_owner: InFile<ast::AnyFieldsOwner>) -> Vec<ScopeEntry> {
-    let InFile {
-        file_id,
-        value: fields_owner,
-    } = fields_owner;
+    let InFile { file_id, value: fields_owner } = fields_owner;
     fields_owner.named_fields().to_in_file_entries(file_id)
 }

@@ -3,7 +3,7 @@ max_width = 105
 use_small_heuristics = "Default"
 
 #struct_lit_width = 20
-struct_lit_width = 22
+struct_lit_width = 28
 
 #struct_variant_width = 40
 struct_variant_width = 44
