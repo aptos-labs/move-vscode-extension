@@ -269,8 +269,10 @@ impl GlobalState {
 
     fn reload_package_deps(&mut self, cause: String) {
         tracing::info!(?cause, "reload PackageGraph");
+
+        let progress_title = "Building PackageGraph";
         self.report_progress(
-            "building PackageGraph",
+            progress_title,
             crate::lsp::utils::Progress::Begin,
             Some(format!("after {:?}", cause)),
             None,
@@ -288,7 +290,7 @@ impl GlobalState {
                 let ws_root = self.workspaces.get(i).unwrap().workspace_root().to_string();
                 {
                     self.report_progress(
-                        "loading workspace into PackageGraph",
+                        progress_title,
                         crate::lsp::utils::Progress::Report,
                         Some(ws_root.clone()),
                         Some((i as f64) / (n_ws as f64)),
@@ -335,7 +337,7 @@ impl GlobalState {
         self.analysis_host.apply_change(change);
 
         self.report_progress(
-            "Building PackageGraph",
+            progress_title,
             crate::lsp::utils::Progress::End,
             None,
             None,
