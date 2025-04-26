@@ -4,9 +4,10 @@ use crate::nameres::ResolveReference;
 use crate::nameres::name_resolution::{
     get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
-use crate::nameres::namespaces::{FUNCTIONS, Ns};
+use crate::nameres::namespaces::Ns::FUNCTION;
+use crate::nameres::namespaces::{FUNCTIONS, NAMES, Ns};
 use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
-use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt};
+use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::types::inference::InferenceCtx;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
@@ -156,14 +157,26 @@ pub fn resolve_path(
 
     let final_entries = entries_filtered_by_name.filter_by_visibility(db, &context_element);
 
-    if ctx.is_call_expr() {
+    let path_expr = ctx.parent_path_expr();
+    if path_expr.is_some_and(|it| it.syntax().parent_of_type::<ast::CallExpr>().is_some()) {
         let function_entries = final_entries.clone().filter_by_ns(FUNCTIONS);
-
         return if !function_entries.is_empty() {
             function_entries
         } else {
             final_entries
         };
+    }
+
+    if final_entries.len() > 1 {
+        // we're not at the callable, so drop function entries and see whether we'd get to a single entry
+        let non_function_entries = final_entries
+            .clone()
+            .into_iter()
+            .filter(|it| it.ns != FUNCTION)
+            .collect::<Vec<_>>();
+        if non_function_entries.len() == 1 {
+            return non_function_entries;
+        }
     }
 
     final_entries
@@ -182,6 +195,14 @@ impl ResolutionContext {
 
     pub fn wrap_in_file<T: AstNode>(&self, node: T) -> InFile<T> {
         InFile::new(self.path.file_id, node)
+    }
+
+    pub fn parent_path_expr(&self) -> Option<ast::PathExpr> {
+        self.path
+            .value
+            .root_path()
+            .syntax()
+            .parent_of_type::<ast::PathExpr>()
     }
 
     pub fn is_call_expr(&self) -> bool {

@@ -1,7 +1,7 @@
 use crate::aptos_package::AptosPackage;
 use crate::manifest_path::ManifestPath;
 use anyhow::Context;
-use base_db::change::PackageGraph;
+use base_db::change::{ManifestFileId, PackageGraph};
 use paths::{AbsPath, AbsPathBuf};
 use vfs::FileId;
 
@@ -59,7 +59,7 @@ impl AptosWorkspace {
     /// The return type contains the path and whether or not
     /// the root is a member of the current workspace
     pub fn to_folder_roots(&self) -> Vec<PackageFolderRoot> {
-        self.all_package_refs()
+        self.all_ws_packages()
             .into_iter()
             .map(|it| it.to_folder_root())
             .collect()
@@ -72,27 +72,38 @@ impl AptosWorkspace {
         );
 
         let mut package_graph = PackageGraph::default();
-        for package_ref in self.all_package_refs() {
-            let main_file_id = package_ref.load_manifest_file_id(load)?;
+        for ws_package in self.all_ws_packages() {
+            let main_file_id = ws_package.load_manifest_file_id(load)?;
             let mut dep_ids = vec![];
-            for dep_package_ref in package_ref.deps() {
-                let dep_file_id = dep_package_ref.load_manifest_file_id(load)?;
-                dep_ids.push(dep_file_id);
-            }
+            self.collect_dep_ids(&mut dep_ids, ws_package, load);
+            dep_ids.sort();
+            dep_ids.dedup();
             package_graph.insert(main_file_id, dep_ids);
         }
 
         Some(package_graph)
     }
 
-    pub fn all_package_refs(&self) -> Vec<&AptosPackage> {
+    pub fn all_ws_packages(&self) -> Vec<&AptosPackage> {
         package_refs(&self.main_package)
     }
 
+    fn collect_dep_ids(
+        &self,
+        dep_ids: &mut Vec<ManifestFileId>,
+        package_ref: &AptosPackage,
+        load: FileLoader<'_>,
+    ) {
+        for dep_package in package_ref.deps() {
+            if let Some(dep_file_id) = dep_package.load_manifest_file_id(load) {
+                dep_ids.push(dep_file_id);
+                self.collect_dep_ids(dep_ids, dep_package, load);
+            }
+        }
+    }
+
     pub fn contains_file(&self, file_path: &AbsPath) -> bool {
-        self.all_package_refs()
-            .iter()
-            .any(|pkg| pkg.contains_file(file_path))
+        self.all_ws_packages().iter().any(|pkg| pkg.contains_file(file_path))
     }
 }
 

@@ -159,3 +159,20 @@ spec 0x1::main {
 "#,
     )
 }
+
+// language=Move
+#[test]
+fn test_prioritize_variable_in_variable_context_in_case_of_multiple_resolution() {
+    check_resolve(
+        r#"
+module 0x1::main {
+    fun bytes() {}
+    fun main(bytes: vector<u8>) {
+            //X
+        bytes;
+         //^
+    }
+}
+"#,
+    )
+}

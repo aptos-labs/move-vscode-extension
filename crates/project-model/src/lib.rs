@@ -71,8 +71,8 @@ impl ManifestPath {
         let aptos_move_manifests = Self::discover_aptos_move(ws_roots).unwrap_or_default();
         manifests.extend(aptos_move_manifests);
 
-        manifests.dedup();
         manifests.sort();
+        manifests.dedup();
         manifests
     }
 

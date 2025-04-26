@@ -113,26 +113,10 @@ pub(crate) fn handle_document_diagnostics(
     snap: GlobalStateSnapshot,
     params: lsp_types::DocumentDiagnosticParams,
 ) -> anyhow::Result<lsp_types::DocumentDiagnosticReportResult> {
-    let empty = || {
-        lsp_types::DocumentDiagnosticReportResult::Report(lsp_types::DocumentDiagnosticReport::Full(
-            lsp_types::RelatedFullDocumentDiagnosticReport {
-                related_documents: None,
-                full_document_diagnostic_report: lsp_types::FullDocumentDiagnosticReport {
-                    result_id: Some("rust-analyzer".to_owned()),
-                    items: vec![],
-                },
-            },
-        ))
-    };
-
     let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
-    // let source_root = snap.analysis.source_root_id(file_id)?;
-    // if !snap.analysis.is_local_source_root(source_root)? {
-    //     return Ok(empty());
-    // }
-    let config = snap.config.diagnostics(/*Some(source_root)*/);
+    let config = snap.config.diagnostics();
     if !config.enabled {
-        return Ok(empty());
+        return Ok(empty_diagnostic_report());
     }
     let line_index = snap.file_line_index(file_id)?;
     // let supports_related = false;
@@ -182,6 +166,18 @@ pub(crate) fn handle_document_diagnostics(
             //         .collect()
             // }),
         }),
+    ))
+}
+
+pub(crate) fn empty_diagnostic_report() -> lsp_types::DocumentDiagnosticReportResult {
+    lsp_types::DocumentDiagnosticReportResult::Report(lsp_types::DocumentDiagnosticReport::Full(
+        lsp_types::RelatedFullDocumentDiagnosticReport {
+            related_documents: None,
+            full_document_diagnostic_report: lsp_types::FullDocumentDiagnosticReport {
+                result_id: Some("aptos-analyzer".to_owned()),
+                items: vec![],
+            },
+        },
     ))
 }
 

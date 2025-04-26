@@ -61,13 +61,14 @@ impl FileChange {
         }
 
         if let Some(package_graph) = self.package_graph {
-            tracing::info!(?package_graph);
+            let _p = tracing::info_span!("set package graph").entered();
             for (manifest_file_id, dep_manifest_ids) in package_graph.into_iter() {
                 let main_package_id = db.file_package_root(manifest_file_id);
                 let deps_package_ids = dep_manifest_ids
                     .into_iter()
                     .map(|it| db.file_package_root(it))
                     .collect::<Vec<_>>();
+                tracing::info!(?main_package_id, ?deps_package_ids);
                 db.set_package_deps(main_package_id, Arc::from(deps_package_ids));
             }
         }

@@ -36,7 +36,7 @@ config_data! {
         diagnostics_enable: bool                = true,
 
         /// Whether to show "Unresolved reference" diagnostic.
-        diagnostics_enable_unresolvedReference: bool                = false,
+        diagnostics_enableUnresolvedReference: bool                = true,
     }
 }
 
