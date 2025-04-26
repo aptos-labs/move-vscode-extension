@@ -321,7 +321,7 @@ pub(crate) const NON_METHOD_TRAITS: &[(&str, &[&str])] = &[
         &[
             "Path",
             "MethodCallExpr",
-            "FieldRef",
+            "DotExpr",
             "StructPatField",
             "StructLitField",
             "IdentPat",
@@ -342,6 +342,7 @@ pub(crate) const NON_METHOD_TRAITS: &[(&str, &[&str])] = &[
             "SpecInlineFun",
             "ModuleSpec",
             "ItemSpec",
+            "SpecBlockExpr",
         ],
     ),
     (

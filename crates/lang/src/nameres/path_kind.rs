@@ -128,7 +128,7 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> PathKind {
         // check whether there's a '::' after it, then try for a named address
         if let Some(next_sibling) = path.syntax().next_sibling_or_token_no_trivia() {
             if next_sibling.kind() == T![::] {
-                if let Some(_) = resolve_named_address(&ref_name) {
+                if resolve_named_address(&ref_name).is_some() {
                     return PathKind::NamedAddressOrUnqualifiedPath {
                         address: NamedAddr::new(ref_name),
                         ns,

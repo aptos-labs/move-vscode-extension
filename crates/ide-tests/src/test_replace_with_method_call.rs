@@ -61,6 +61,7 @@ module 0x1::m {
 module 0x1::main {
     use 0x1::m::S;
     fun get_field(self: S): u8 { self.field }
+                                    //^^^^^ err: Unresolved reference `field`
     fun main(s: S) {
         get_field(s);
     }
@@ -126,6 +127,7 @@ module 0x1::main {
     struct S<T> { field: T }
     fun get_field(self: &S<u8>): u8 { self.field }
     fun main(s: &S<u12345>) {
+                 //^^^^^^ err: Unresolved reference `u12345`
         get_field(s);
     }
 }

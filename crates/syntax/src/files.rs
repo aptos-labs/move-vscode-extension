@@ -97,10 +97,7 @@ impl<T: AstNode> InFile<T> {
     }
 
     pub fn file_range(&self) -> FileRange {
-        FileRange {
-            file_id: self.file_id,
-            range: self.value.syntax().text_range(),
-        }
+        self.map_ref(|it| it.syntax().to_owned()).file_range()
     }
 }
 
@@ -109,6 +106,13 @@ impl InFile<SyntaxNode> {
         let InFile { file_id, value } = self.clone();
         let value = T::cast(value)?;
         Some(InFile::new(file_id, value))
+    }
+
+    pub fn file_range(&self) -> FileRange {
+        FileRange {
+            file_id: self.file_id,
+            range: self.value.text_range(),
+        }
     }
 }
 

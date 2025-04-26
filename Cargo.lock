@@ -711,6 +711,7 @@ dependencies = [
  "ide-diagnostics",
  "lang",
  "line-index",
+ "stdx",
  "syntax",
  "tracing",
  "tracing-subscriber",

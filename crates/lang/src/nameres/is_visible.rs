@@ -18,6 +18,7 @@ pub fn is_visible_in_context(
     use syntax::SyntaxKind::*;
 
     let (context_file_id, context) = context.unpack_ref();
+
     // inside msl everything is visible
     if context.syntax().is_msl_context() {
         return true;

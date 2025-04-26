@@ -109,6 +109,7 @@ impl SyntaxNodeExt for SyntaxNode {
 
     fn next_sibling_or_token_no_trivia(&self) -> Option<SyntaxElement> {
         self.siblings_with_tokens(Direction::Next)
+            .skip(1)
             .filter(|it| !it.kind().is_trivia())
             .next()
     }

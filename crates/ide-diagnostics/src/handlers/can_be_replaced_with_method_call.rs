@@ -47,6 +47,10 @@ pub(crate) fn can_be_replaced_with_method_call(
         .lower_type(self_param_type.in_file(fun.file_id), msl)
         .substitute(&fun_subst);
 
+    if self_ty.has_ty_unknown() || first_arg_ty.has_ty_unknown() {
+        return None;
+    }
+
     if ctx.sema.is_tys_compatible(first_arg_ty, self_ty, true) {
         acc.push(
             Diagnostic::new(
