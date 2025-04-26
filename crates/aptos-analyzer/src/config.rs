@@ -232,6 +232,7 @@ impl Config {
     pub fn diagnostics(&self) -> DiagnosticsConfig {
         DiagnosticsConfig {
             enabled: *self.diagnostics_enable(),
+            unresolved_reference_enabled: *self.diagnostics_enable_unresolvedReference(),
             // disable_experimental: !self.diagnostics_experimental_enable(source_root),
             // disabled: self.diagnostics_disabled.clone(),
             // expr_fill_default: match self.assist_expressionFillDefault(source_root) {
