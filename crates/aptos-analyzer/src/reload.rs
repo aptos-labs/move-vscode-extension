@@ -10,6 +10,7 @@ use lang::builtin_files::BUILTINS_FILE;
 use lsp_types::FileSystemWatcher;
 use project_model::AptosWorkspace;
 use std::mem;
+use std::ops::Deref;
 use std::sync::Arc;
 use stdx::format_to;
 use stdx::itertools::Itertools;
@@ -103,7 +104,7 @@ impl GlobalState {
     }
 
     pub(crate) fn fetch_workspaces(&mut self, cause: Cause, force_reload_deps: bool) {
-        tracing::info!(?cause, "will fetch workspaces");
+        let _p = tracing::info_span!("will fetch workspaces", ?cause).entered();
 
         self.task_pool.handle.spawn_with_sender(ThreadIntent::Worker, {
             let discovered_manifests = self.config.discovered_manifests();
@@ -254,7 +255,10 @@ impl GlobalState {
             version: self.vfs_config_version,
         });
 
-        tracing::info!(?project_folders.package_root_config);
+        tracing::info!(
+            "project_folders.package_root_config = {:#?}",
+            project_folders.package_root_config
+        );
         self.package_root_config = project_folders.package_root_config;
 
         tracing::info!(?cause, "recreating the package graph");
@@ -268,7 +272,7 @@ impl GlobalState {
         self.report_progress(
             "building PackageGraph",
             crate::lsp::utils::Progress::Begin,
-            None,
+            Some(format!("after {:?}", cause)),
             None,
             None,
         );
@@ -278,15 +282,48 @@ impl GlobalState {
         // self.crate_graph_file_dependencies.clear();
 
         let package_graph = {
-            let vfs = &self.vfs.read().0;
-            ws_to_package_graph(&self.workspaces, vfs)
+            let mut package_graph = PackageGraph::default();
+            let n_ws = self.workspaces.len();
+            for i in 0..n_ws {
+                let ws_root = self.workspaces.get(i).unwrap().workspace_root().to_string();
+                {
+                    self.report_progress(
+                        "loading workspace into PackageGraph",
+                        crate::lsp::utils::Progress::Report,
+                        Some(ws_root.clone()),
+                        Some((i as f64) / (n_ws as f64)),
+                        None,
+                    );
+                }
+
+                let ws = self.workspaces.get(i).unwrap();
+                let _p =
+                    tracing::info_span!("waiting for the vfs read lock (ws.to_package_graph)").entered();
+                let vfs = &self.vfs.read().0;
+                tracing::info!("vfs read lock acquired");
+                let mut load = |path: &AbsPath| vfs.file_id(&vfs::VfsPath::from(path.to_path_buf()));
+
+                let ws_graph = ws.to_package_graph(&mut load);
+                match ws_graph {
+                    Some(ws_graph) => {
+                        package_graph.extend(ws_graph);
+                    }
+                    None => {
+                        tracing::info!("could not load PackageGraph from workspace {:?}, vfs is not ready", ws_root);
+                    }
+                }
+            }
+            package_graph
         };
+
+        tracing::info!("process file changes");
         self.process_file_changes();
 
         let mut change = FileChange::new();
         {
+            let _p = tracing::info_span!("waiting for the vfs read lock (set package roots)").entered();
             let vfs = &self.vfs.read().0;
-
+            tracing::info!("vfs read lock acquired");
             let roots = self.package_root_config.partition_into_roots(vfs);
             change.set_package_roots(roots);
             change.add_builtins_file(self.builtins_file_id, BUILTINS_FILE.to_string());
@@ -357,15 +394,15 @@ impl GlobalState {
     }
 }
 
-pub fn ws_to_package_graph(workspaces: &[AptosWorkspace], vfs_read: &Vfs) -> PackageGraph {
-    let mut package_graph = PackageGraph::default();
-    let mut load = |path: &AbsPath| vfs_read.file_id(&vfs::VfsPath::from(path.to_path_buf()));
-    for ws in workspaces {
-        let other = ws.to_package_graph(&mut load);
-        package_graph.extend(other.unwrap_or_default());
-    }
-    package_graph
-}
+// pub fn ws_to_package_graph(workspaces: &[AptosWorkspace], vfs_read: &Vfs) -> PackageGraph {
+//     let mut package_graph = PackageGraph::default();
+//     let mut load = |path: &AbsPath| vfs_read.file_id(&vfs::VfsPath::from(path.to_path_buf()));
+//     for ws in workspaces {
+//         let other = ws.to_package_graph(&mut load);
+//         package_graph.extend(other.unwrap_or_default());
+//     }
+//     package_graph
+// }
 
 pub(crate) fn should_refresh_for_file_change(
     changed_file_path: &AbsPath,

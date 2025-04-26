@@ -42,6 +42,7 @@ impl FileChange {
         let _p = tracing::info_span!("FileChange::apply").entered();
 
         if let Some(package_roots) = self.package_roots {
+            tracing::info!("set package roots");
             for (idx, root) in package_roots.into_iter().enumerate() {
                 let root_id = PackageRootId(idx as u32);
                 let root_file_set = &root.file_set;
@@ -54,11 +55,13 @@ impl FileChange {
         }
 
         if let Some((builtins_file_id, builtins_text)) = self.builtins_file {
+            tracing::info!(?builtins_file_id);
             db.set_builtins_file_id(Some(builtins_file_id));
             db.set_file_text(builtins_file_id, Arc::from(builtins_text));
         }
 
         if let Some(package_graph) = self.package_graph {
+            tracing::info!(?package_graph);
             for (manifest_file_id, dep_manifest_ids) in package_graph.into_iter() {
                 let main_package_id = db.file_package_root(manifest_file_id);
                 let deps_package_ids = dep_manifest_ids

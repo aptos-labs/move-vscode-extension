@@ -27,7 +27,7 @@ pub struct AptosWorkspace {
 
 impl AptosWorkspace {
     pub fn load(manifest: ManifestPath) -> anyhow::Result<AptosWorkspace> {
-        tracing::info!("load ws {:?}", manifest.file.as_path().to_string());
+        let _p = tracing::info_span!("load ws", "{:?}", manifest.file.as_path().to_string()).entered();
         AptosWorkspace::load_inner(manifest.clone())
             .with_context(|| format!("Failed to load the project at {manifest}"))
     }
@@ -67,7 +67,7 @@ impl AptosWorkspace {
 
     pub fn to_package_graph(&self, load: FileLoader<'_>) -> Option<PackageGraph> {
         tracing::info!(
-            "aptos package at {:?} into PackageGraph",
+            "loading aptos workspace at {:?} into PackageGraph",
             self.main_package.content_root()
         );
 
