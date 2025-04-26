@@ -173,7 +173,7 @@ impl GlobalState {
     }
 
     pub(crate) fn process_file_changes(&mut self) -> bool {
-        let _p = tracing::span!(Level::INFO, "GlobalState::process_changes").entered();
+        let _p = tracing::info_span!("GlobalState::process_changes").entered();
 
         let (change, refresh_workspaces) = {
             let mut change = FileChange::new();
@@ -185,6 +185,7 @@ impl GlobalState {
             }
 
             // downgrade to read lock to allow more readers while we are normalizing text
+            tracing::info!("acquire upgradable write lock");
             let vfs_lock = RwLockWriteGuard::downgrade_to_upgradable(vfs_lock);
             let vfs: &vfs::Vfs = &vfs_lock.0;
 
@@ -222,6 +223,7 @@ impl GlobalState {
                 bytes.push((changed_file.file_id, text_with_line_endings));
             }
 
+            let _p = tracing::info_span!("upgrade lock to exclusive write lock").entered();
             let (vfs, line_endings_map) = &mut *RwLockUpgradableReadGuard::upgrade(vfs_lock);
             bytes.into_iter().for_each(|(file_id, text_with_line_endings)| {
                 let text = match text_with_line_endings {
@@ -240,13 +242,13 @@ impl GlobalState {
             (change, refresh_workspaces)
         };
 
-        let _p = tracing::span!(Level::INFO, "GlobalState::process_changes/apply_change").entered();
+        let _p = tracing::info_span!("GlobalState::process_changes/apply_change").entered();
         self.analysis_host.apply_change(change);
 
         {
             if refresh_workspaces {
-                let _p = tracing::span!(Level::INFO, "GlobalState::process_changes/ws_structure_change")
-                    .entered();
+                let _p =
+                    tracing::info_span!("GlobalState::process_changes/ws_structure_change").entered();
                 self.fetch_workspaces_queue.request_op(
                     "workspace vfs file change".to_string(),
                     FetchWorkspaceRequest { force_reload_deps: true },

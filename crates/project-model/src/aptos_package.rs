@@ -108,7 +108,7 @@ impl AptosPackage {
         match load(manifest_file.as_path()) {
             Some(file_id) => Some(file_id),
             None => {
-                tracing::info!("cannot load FileId for {:?}", manifest_file.as_path());
+                tracing::info!("cannot load {:?} from filesystem", manifest_file.as_path());
                 None
             }
         }

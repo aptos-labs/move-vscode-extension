@@ -99,6 +99,7 @@ pub(crate) fn handle_did_change_text_document(
         .into_bytes();
         if *data != new_contents {
             data.clone_from(&new_contents);
+            tracing::info!("acquire vfs write lock to set file contents");
             state.vfs.write().0.set_file_contents(path, Some(new_contents));
         }
     }
@@ -116,6 +117,7 @@ pub(crate) fn handle_did_close_text_document(
             tracing::error!("orphan DidCloseTextDocument: {}", path);
         }
 
+        tracing::info!("acquire vfs read lock to retrieve path file_id");
         if let Some(file_id) = state.vfs.read().0.file_id(&path) {
             state.diagnostics.clear_native_for(file_id);
         }
