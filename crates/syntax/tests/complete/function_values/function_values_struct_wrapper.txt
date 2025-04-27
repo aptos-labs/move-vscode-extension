@@ -1,0 +1,138 @@
+SOURCE_FILE@0..183
+  MODULE@0..182
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..42
+      IDENT@12..42 "function_values_struc ..."
+    WHITESPACE@42..43 " "
+    L_CURLY@43..44 "{"
+    WHITESPACE@44..49 "\n    "
+    STRUCT@49..88
+      STRUCT_KW@49..55 "struct"
+      WHITESPACE@55..56 " "
+      NAME@56..65
+        IDENT@56..65 "Predicate"
+      TYPE_PARAM_LIST@65..68
+        L_ANGLE@65..66 "<"
+        TYPE_PARAM@66..67
+          NAME@66..67
+            IDENT@66..67 "T"
+        R_ANGLE@67..68 ">"
+      TUPLE_FIELD_LIST@68..78
+        L_PAREN@68..69 "("
+        TUPLE_FIELD@69..77
+          LAMBDA_TYPE@69..77
+            PIPE@69..70 "|"
+            LAMBDA_TYPE_PARAM@70..72
+              REF_TYPE@70..72
+                AMP@70..71 "&"
+                PATH_TYPE@71..72
+                  PATH@71..72
+                    PATH_SEGMENT@71..72
+                      NAME_REF@71..72
+                        IDENT@71..72 "T"
+            PIPE@72..73 "|"
+            PATH_TYPE@73..77
+              PATH@73..77
+                PATH_SEGMENT@73..77
+                  NAME_REF@73..77
+                    IDENT@73..77 "bool"
+        R_PAREN@77..78 ")"
+      WHITESPACE@78..79 " "
+      ABILITY_LIST@79..87
+        HAS_KW@79..82 "has"
+        WHITESPACE@82..83 " "
+        ABILITY@83..87
+          IDENT@83..87 "copy"
+      SEMICOLON@87..88 ";"
+    WHITESPACE@88..93 "\n    "
+    FUN@93..180
+      FUN_KW@93..96 "fun"
+      WHITESPACE@96..97 " "
+      NAME@97..101
+        IDENT@97..101 "main"
+      PARAM_LIST@101..103
+        L_PAREN@101..102 "("
+        R_PAREN@102..103 ")"
+      WHITESPACE@103..104 " "
+      BLOCK_EXPR@104..180
+        L_CURLY@104..105 "{"
+        WHITESPACE@105..114 "\n        "
+        LET_STMT@114..149
+          LET_KW@114..117 "let"
+          WHITESPACE@117..118 " "
+          IDENT_PAT@118..119
+            NAME@118..119
+              IDENT@118..119 "f"
+          COLON@119..120 ":"
+          WHITESPACE@120..121 " "
+          PATH_TYPE@121..135
+            PATH@121..135
+              PATH_SEGMENT@121..135
+                NAME_REF@121..130
+                  IDENT@121..130 "Predicate"
+                TYPE_ARG_LIST@130..135
+                  L_ANGLE@130..131 "<"
+                  TYPE_ARG@131..134
+                    PATH_TYPE@131..134
+                      PATH@131..134
+                        PATH_SEGMENT@131..134
+                          NAME_REF@131..134
+                            IDENT@131..134 "u64"
+                  R_ANGLE@134..135 ">"
+          WHITESPACE@135..136 " "
+          EQ@136..137 "="
+          WHITESPACE@137..138 " "
+          BIN_EXPR@138..148
+            LAMBDA_EXPR@138..144
+              LAMBDA_PARAM_LIST@138..141
+                PIPE@138..139 "|"
+                LAMBDA_PARAM@139..140
+                  IDENT_PAT@139..140
+                    NAME@139..140
+                      IDENT@139..140 "x"
+                PIPE@140..141 "|"
+              WHITESPACE@141..142 " "
+              DEREF_EXPR@142..144
+                STAR@142..143 "*"
+                PATH_EXPR@143..144
+                  PATH@143..144
+                    PATH_SEGMENT@143..144
+                      NAME_REF@143..144
+                        IDENT@143..144 "x"
+            WHITESPACE@144..145 " "
+            R_ANGLE@145..146 ">"
+            WHITESPACE@146..147 " "
+            LITERAL@147..148
+              INT_NUMBER@147..148 "0"
+          SEMICOLON@148..149 ";"
+        WHITESPACE@149..158 "\n        "
+        EXPR_STMT@158..174
+          ASSERT_MACRO_EXPR@158..173
+            IDENT@158..164 "assert"
+            BANG@164..165 "!"
+            ARG_LIST@165..173
+              L_PAREN@165..166 "("
+              CALL_EXPR@166..172
+                PATH_EXPR@166..167
+                  PATH@166..167
+                    PATH_SEGMENT@166..167
+                      NAME_REF@166..167
+                        IDENT@166..167 "f"
+                ARG_LIST@167..172
+                  L_PAREN@167..168 "("
+                  BORROW_EXPR@168..171
+                    AMP@168..169 "&"
+                    LITERAL@169..171
+                      INT_NUMBER@169..171 "22"
+                  R_PAREN@171..172 ")"
+              R_PAREN@172..173 ")"
+          SEMICOLON@173..174 ";"
+        WHITESPACE@174..179 "\n    "
+        R_CURLY@179..180 "}"
+    WHITESPACE@180..181 "\n"
+    R_CURLY@181..182 "}"
+  WHITESPACE@182..183 "\n"

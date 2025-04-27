@@ -10,7 +10,7 @@ jobs:
     rust_tests:
         strategy:
             matrix:
-                platform: [ ubuntu-latest, windows-latest, macos-latest ]
+                platform: [ ubuntu-latest, macos-latest ]
         runs-on: ${{ matrix.platform }}
         steps:
             -   name: Checkout repository

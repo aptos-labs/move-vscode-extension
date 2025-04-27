@@ -1,3 +1,4 @@
+use crate::resolve::check_resolve;
 use crate::types::check_expr_type;
 
 #[test]
@@ -15,4 +16,21 @@ module 0x1::m {
 }
     "#,
     );
+}
+
+// language=Move
+#[test]
+fn test_function_value_named_wrapper() {
+    check_expr_type(
+        r#"
+module 0x1::main {
+    struct Predicate<T>(|&T|bool) has copy;
+    fun main() {
+        let a = Predicate(&22);
+        a;
+      //^ bool
+    }
+}
+"#,
+    )
 }

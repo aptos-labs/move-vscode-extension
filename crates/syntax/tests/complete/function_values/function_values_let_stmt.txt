@@ -1,0 +1,82 @@
+SOURCE_FILE@0..111
+  MODULE@0..110
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..36
+      IDENT@12..36 "function_values_let_stmt"
+    WHITESPACE@36..37 " "
+    L_CURLY@37..38 "{"
+    WHITESPACE@38..43 "\n    "
+    FUN@43..108
+      FUN_KW@43..46 "fun"
+      WHITESPACE@46..47 " "
+      NAME@47..51
+        IDENT@47..51 "main"
+      PARAM_LIST@51..53
+        L_PAREN@51..52 "("
+        R_PAREN@52..53 ")"
+      WHITESPACE@53..54 " "
+      BLOCK_EXPR@54..108
+        L_CURLY@54..55 "{"
+        WHITESPACE@55..64 "\n        "
+        LET_STMT@64..102
+          LET_KW@64..67 "let"
+          WHITESPACE@67..68 " "
+          IDENT_PAT@68..69
+            NAME@68..69
+              IDENT@68..69 "f"
+          COLON@69..70 ":"
+          WHITESPACE@70..71 " "
+          LAMBDA_TYPE@71..89
+            PIPE@71..72 "|"
+            LAMBDA_TYPE_PARAM@72..75
+              PATH_TYPE@72..75
+                PATH@72..75
+                  PATH_SEGMENT@72..75
+                    NAME_REF@72..75
+                      IDENT@72..75 "u64"
+            PIPE@75..76 "|"
+            PATH_TYPE@76..80
+              PATH@76..80
+                PATH_SEGMENT@76..80
+                  NAME_REF@76..80
+                    IDENT@76..80 "bool"
+            WHITESPACE@80..81 " "
+            LAMBDA_TYPE_ABILITY_LIST@81..89
+              HAS_KW@81..84 "has"
+              WHITESPACE@84..85 " "
+              ABILITY_BOUND_LIST@85..89
+                ABILITY@85..89
+                  IDENT@85..89 "copy"
+          WHITESPACE@89..90 " "
+          EQ@90..91 "="
+          WHITESPACE@91..92 " "
+          BIN_EXPR@92..101
+            LAMBDA_EXPR@92..97
+              LAMBDA_PARAM_LIST@92..95
+                PIPE@92..93 "|"
+                LAMBDA_PARAM@93..94
+                  IDENT_PAT@93..94
+                    NAME@93..94
+                      IDENT@93..94 "x"
+                PIPE@94..95 "|"
+              WHITESPACE@95..96 " "
+              PATH_EXPR@96..97
+                PATH@96..97
+                  PATH_SEGMENT@96..97
+                    NAME_REF@96..97
+                      IDENT@96..97 "x"
+            WHITESPACE@97..98 " "
+            R_ANGLE@98..99 ">"
+            WHITESPACE@99..100 " "
+            LITERAL@100..101
+              INT_NUMBER@100..101 "0"
+          SEMICOLON@101..102 ";"
+        WHITESPACE@102..107 "\n    "
+        R_CURLY@107..108 "}"
+    WHITESPACE@108..109 "\n"
+    R_CURLY@109..110 "}"
+  WHITESPACE@110..111 "\n"

@@ -63,7 +63,7 @@ pub(super) fn opt_type_arg_list_for_expr(p: &mut Parser<'_>, colon_colon_require
         }
         if !p.eat(T![,]) {
             if p.at_ts(TYPE_ARG_FIRST) {
-                p.error(format!("expected {:?}", T![,]));
+                p.error("expected ','");
             } else {
                 break;
             }

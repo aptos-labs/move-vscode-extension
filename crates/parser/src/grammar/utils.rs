@@ -105,22 +105,22 @@ pub(crate) fn list(
     p.expect(ket);
 }
 
-pub(crate) fn comma_separated_list(
-    p: &mut Parser,
-    unexpected_delim_message: &str,
-    is_end: impl Fn(&Parser) -> bool,
-    item_first_set: TokenSet,
-    parser: impl FnMut(&mut Parser<'_>) -> bool,
-) {
-    delimited(
-        p,
-        T![,],
-        || unexpected_delim_message.into(),
-        is_end,
-        item_first_set,
-        parser,
-    )
-}
+// pub(crate) fn comma_separated_list(
+//     p: &mut Parser,
+//     unexpected_delim_message: &str,
+//     is_end: impl Fn(&Parser) -> bool,
+//     item_first_set: TokenSet,
+//     parser: impl FnMut(&mut Parser<'_>) -> bool,
+// ) {
+//     delimited(
+//         p,
+//         T![,],
+//         || unexpected_delim_message.into(),
+//         is_end,
+//         item_first_set,
+//         parser,
+//     )
+// }
 
 pub(crate) fn delimited(
     p: &mut Parser,
