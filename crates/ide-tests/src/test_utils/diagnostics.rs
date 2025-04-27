@@ -7,7 +7,7 @@ use ide_db::assists::{Assist, AssistResolveStrategy};
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 use lang::nameres::scope::VecExt;
-use line_index::LineIndex;
+use line_index::{LineCol, LineIndex};
 use std::fmt::Debug;
 use std::iter;
 use syntax::TextRange;
@@ -47,18 +47,11 @@ pub fn check_diagnostic_expect(expect: Expect) {
     let source = stdx::trim_indent(expect.data());
     let trimmed_source = remove_expected_diagnostics(&source);
 
-    let (_, _, mut diagnostics) = get_diagnostics(trimmed_source.as_str());
-    let mut actual = trimmed_source.clone();
-    match diagnostics.pop() {
-        Some(diag) => {
-            actual = apply_diagnostic_to_file(&trimmed_source, &diag);
-        }
-        None => {}
-    }
-    assert!(
-        diagnostics.is_empty(),
-        "Multiple diagnostics are not supported, use check_diagnostic()"
-    );
+    let (_, _, diagnostics) = get_diagnostics(trimmed_source.as_str());
+
+    let mut actual = apply_diagnostics_to_file(&trimmed_source, &diagnostics);
+    actual.push_str("\n");
+
     expect.assert_eq(stdx::trim_indent(&actual).as_str());
 }
 
@@ -169,7 +162,7 @@ pub(crate) fn assert_no_extra_diagnostics(source: &str, diags: Vec<Diagnostic>) 
 
     println!("Extra diagnostics:");
     for d in diags {
-        let s = apply_diagnostic_to_file(source, &d);
+        let s = apply_diagnostics_to_file(source, &vec![d]);
         println!("{}", s);
     }
     println!("======================================");
@@ -177,24 +170,37 @@ pub(crate) fn assert_no_extra_diagnostics(source: &str, diags: Vec<Diagnostic>) 
     panic!("Extra diagnostics available");
 }
 
-fn apply_diagnostic_to_file(source: &str, diagnostic: &Diagnostic) -> String {
+fn apply_diagnostics_to_file(source: &str, diagnostics: &Vec<Diagnostic>) -> String {
     let line_index = LineIndex::new(source);
 
-    let text_range = diagnostic.range.range;
-    let lc_start = line_index.line_col(text_range.start());
-    let lc_end = line_index.line_col(text_range.end());
+    let mut lines = vec![];
+    for diagnostic in diagnostics {
+        let text_range = diagnostic.range.range;
+        let lc_start = line_index.line_col(text_range.start());
+        let lc_end = line_index.line_col(text_range.end());
+        let line = diagnostic_line(diagnostic, lc_start, lc_end);
+        lines.push((lc_start.line, line));
+    }
 
-    let prefix = iter::repeat_n(" ", (lc_start.col - 2) as usize)
+    let mut source_lines = source.lines().map(|it| it.to_string()).collect::<Vec<_>>();
+    let mut added = 0;
+    for (line, line_text) in lines {
+        let line = line + 1 + added;
+        source_lines.insert(line as usize, line_text.clone());
+        added += 1;
+    }
+    source_lines.join("\n")
+}
+
+fn diagnostic_line(diagnostic: &Diagnostic, start: LineCol, end: LineCol) -> String {
+    let prefix = iter::repeat_n(" ", (start.col - 2) as usize)
         .collect::<Vec<_>>()
         .join("");
-    let range = iter::repeat_n("^", (lc_end.col - lc_start.col) as usize)
+    let range = iter::repeat_n("^", (end.col - start.col) as usize)
         .collect::<Vec<_>>()
         .join("");
     let message = diagnostic.message.clone();
     let severity = diagnostic.severity.to_test_ident();
     let line = format!("{prefix}//{range} {severity} {message}");
-
-    let mut lines = source.lines().collect::<Vec<_>>();
-    lines.insert((lc_start.line + 1) as usize, &line);
-    lines.join("\n")
+    line
 }

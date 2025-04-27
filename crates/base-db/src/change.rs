@@ -42,7 +42,6 @@ impl FileChange {
         let _p = tracing::info_span!("FileChange::apply").entered();
 
         if let Some(package_roots) = self.package_roots {
-            tracing::info!("set package roots");
             for (idx, root) in package_roots.into_iter().enumerate() {
                 let root_id = PackageRootId(idx as u32);
                 let root_file_set = &root.file_set;
