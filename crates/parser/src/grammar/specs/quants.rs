@@ -76,7 +76,7 @@ pub(crate) fn quant_binding_list(p: &mut Parser) {
         }
         if !p.eat(T![,]) {
             if p.at(IDENT) && !p.at_contextual_kw_ident("where") {
-                p.error(format!("expected {:?}", T![,]));
+                p.error("expected ','");
             } else {
                 break;
             }

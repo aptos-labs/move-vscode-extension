@@ -4,19 +4,14 @@ use crate::grammar::utils::delimited;
 use crate::parser::Parser;
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
-use crate::T;
+use crate::{ts, T};
 
-pub(super) const TYPE_FIRST: TokenSet =
+pub(super) const TYPE_FIRST_NO_LAMBDA: TokenSet =
     paths::PATH_FIRST.union(TokenSet::new(&[T!['('], T!['['], T![<], T![!], T![*], T![&]]));
 
-pub(super) const TYPE_RECOVERY_SET: TokenSet = TokenSet::new(&[
-    T![')'],
-    T![>],
-    T![,],
-    // test_err struct_field_recover
-    // struct S { f pub g: () }
-    // T![pub],
-]);
+pub(super) const TYPE_FIRST: TokenSet = TYPE_FIRST_NO_LAMBDA.union(ts!(T![|]));
+
+pub(super) const TYPE_RECOVERY_SET: TokenSet = TokenSet::new(&[T![')'], T![>], T![,]]);
 
 pub(super) fn ascription(p: &mut Parser) {
     assert!(p.at(T![:]));
@@ -25,17 +20,8 @@ pub(super) fn ascription(p: &mut Parser) {
 }
 
 pub(crate) fn type_(p: &mut Parser) {
+    // never recover
     type_or_recover_until(p, |_| true)
-    // match p.current() {
-    //     T!['('] => paren_or_tuple_or_unit_type(p),
-    //     T![&] => ref_type(p),
-    //     T![|] => lambda_type(p),
-    //     _ if paths::is_path_start(p) => path_type(p),
-    //     _ => {
-    //         p.error("expected type");
-    //         // p.error_and_recover_until_ts("expected type", TYPE_RECOVERY_SET);
-    //     }
-    // }
 }
 
 pub(crate) fn type_or_recover_until(p: &mut Parser, stop: impl Fn(&Parser) -> bool) {
@@ -45,14 +31,11 @@ pub(crate) fn type_or_recover_until(p: &mut Parser, stop: impl Fn(&Parser) -> bo
         T![|] => lambda_type(p),
         _ if paths::is_path_start(p) => path_type(p),
         _ => {
-            // p.error("expected type");
-            // return false
             p.error_and_bump_until("expected type", stop);
             // p.error("expected type");
             // p.error_and_recover_until_ts("expected type", TYPE_RECOVERY_SET);
         }
     }
-    // true
 }
 
 pub(super) fn path_type(p: &mut Parser) {
@@ -90,7 +73,7 @@ fn lambda_type(p: &mut Parser) {
         T![,],
         || "unexpected type".into(),
         |p| p.at(T![|]),
-        TYPE_FIRST,
+        TYPE_FIRST_NO_LAMBDA,
         |p| {
             let m = p.start();
             type_(p);
@@ -102,6 +85,7 @@ fn lambda_type(p: &mut Parser) {
         m.abandon_with_rollback(p);
         return;
     }
+    // return type
     if p.at_ts(TYPE_FIRST) {
         type_(p);
     }

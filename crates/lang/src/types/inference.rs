@@ -147,6 +147,13 @@ impl<'db> InferenceCtx<'db> {
                     .unwrap_or(Ty::Unknown)
             })
             .collect::<Vec<_>>();
+        if param_types.len() == 1 {
+            // check if it's a single lambda type
+            let maybe_lambda_ty = param_types.clone().pop().unwrap();
+            if let Ty::Callable(lambda_ty) = maybe_lambda_ty {
+                return Some(lambda_ty);
+            }
+        }
         let ret_type = Ty::new_ty_adt(adt_item.clone());
         let callable_ty =
             TyCallable::new(param_types, ret_type, CallKind::Fun).substitute(&ty_adt.substitution);

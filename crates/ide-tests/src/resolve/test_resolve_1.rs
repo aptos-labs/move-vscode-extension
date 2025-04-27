@@ -176,3 +176,24 @@ module 0x1::main {
 "#,
     )
 }
+
+// language=Move
+#[test]
+fn test_resolve_lambda_return_value_from_struct_field() {
+    check_resolve(
+        r#"
+module 0x1::main {
+    struct S<T, U> { settle_trade_f: |T, U| T }
+    struct TT { val: u8 }
+               //X
+    struct UU { val: u16 }
+    fun main(self: S<TT, UU>) {
+        let tt = TT { val: 1 };
+        let uu = UU { val: 1 };
+        (self.settle_trade_f)(tt, uu).val;
+                                     //^
+    }
+}
+"#,
+    )
+}

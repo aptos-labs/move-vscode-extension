@@ -1,6 +1,6 @@
 use crate::grammar::expressions::atom::EXPR_FIRST;
 use crate::grammar::expressions::{expr, opt_initializer_expr, Restrictions};
-use crate::grammar::utils::{comma_separated_list, delimited, list};
+use crate::grammar::utils::{delimited, list};
 use crate::grammar::{expressions, generic_params};
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
@@ -108,13 +108,21 @@ pub(crate) fn aborts_with_predicate(p: &mut Parser) -> bool {
     let m = p.start();
     p.bump_remap(T![aborts_with]);
     opt_predicate_property_list(p);
-    comma_separated_list(
+    delimited(
         p,
-        "expected expression",
+        T![,],
+        || "expected expression".into(),
         |p| p.at(T![;]) || p.at(T!['}']),
         EXPR_FIRST,
         expr,
     );
+    // comma_separated_list(
+    //     p,
+    //     "expected expression",
+    //     |p| p.at(T![;]) || p.at(T!['}']),
+    //     EXPR_FIRST,
+    //     expr,
+    // );
     m.complete(p, ABORTS_WITH_STMT);
     true
 }
