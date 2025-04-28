@@ -11,7 +11,8 @@ fn test_unresolved_variable() {
                 x;
               //^ err: Unresolved reference `x`
             }
-        }"#]]);
+        }
+    "#]]);
 }
 
 #[test]
@@ -23,7 +24,8 @@ fn test_unresolved_function_call() {
                 call();
               //^^^^ err: Unresolved reference `call`
             }
-        }"#]]);
+        }
+    "#]]);
 }
 
 #[test]
@@ -267,7 +269,7 @@ module 0x1::M {
 }
 
 #[test]
-fn test_error_for_unbound_desctructured_value() {
+fn test_error_for_unbound_destructured_value() {
     // language=Move
     check_diagnostic_expect(expect![[r#"
         module 0x1::M {
@@ -277,7 +279,8 @@ fn test_error_for_unbound_desctructured_value() {
                 Coin { value: val } = call();
                             //^^^ err: Unresolved reference `val`
             }
-        }"#]]);
+        }
+    "#]]);
 }
 
 #[test]
@@ -401,7 +404,8 @@ fn test_unresolved_field_for_dot_expr() {
                 a.val;
                 //^^^ err: Unresolved reference `val`
             }
-        }"#]]);
+        }
+    "#]]);
 }
 
 #[test]
@@ -562,7 +566,8 @@ fn test_spec_builtin_const_inside_spec() {
                     MAX_U128;
                 }
             }
-        }"#]]);
+        }
+    "#]]);
 }
 
 #[test]
@@ -604,7 +609,8 @@ fn test_no_unresolved_for_named_address_in_fq() {
             fun main() {
                 std::mymodule::call();
             }
-        }"#]]);
+        }
+    "#]]);
 }
 
 #[test]
@@ -652,5 +658,146 @@ module 0x1::m {
     }
 }
 "#,
+    );
+}
+
+#[test]
+fn test_no_error_if_method_receiver_of_type_unknown() {
+    // language=Move
+    check_diagnostic_expect(expect![[
+        r#"
+        module 0x1::m {
+            struct S { field: u8 }
+            fun receiver(self: S): u8 { self.field }
+            fun main() {
+                let t = &(1 + false);
+                t.receiver();
+            }
+        }
+"#]],
+    );
+}
+
+#[test]
+fn test_no_error_for_fields_if_destructuring_unknown_struct() {
+    // language=Move
+    check_diagnostic_expect(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                let S { val } = 1;
+                  //^ err: Unresolved reference `S`
+                let S(val) = 1;
+                  //^ err: Unresolved reference `S`
+            }
+        }
+"#]],
+    );
+}
+
+#[test]
+fn test_no_error_for_fields_if_destructuring_unknown_struct_with_qualifier() {
+    // language=Move
+    check_diagnostic_expect(expect![[r#"
+        module 0x1::m {
+            enum R {}
+            fun main() {
+                let R::Inner { val } = 1;
+                     //^^^^^ err: Unresolved reference `Inner`
+                let R::Inner(val) = 1;
+                     //^^^^^ err: Unresolved reference `Inner`
+            }
+        }
+    "#]],
+    );
+}
+
+#[test]
+fn test_no_error_path_in_attr() {
+    // language=Move
+    check_diagnostic_expect(expect![[r#"
+        module 0x1::m {
+            #[lint::my_lint]
+            fun main() {}
+        }
+"#]],
+    );
+}
+
+#[test]
+fn test_no_error_for_unknown_receiver_method_of_result_of_unknown_resource_borrow() {
+    // language=Move
+    check_diagnostic_expect(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                let perm_storage = &PermissionStorage[@0x1];
+                                  //^^^^^^^^^^^^^^^^^ err: Unresolved reference `PermissionStorage`
+                perm_storage.contains();
+            }
+        }
+    "#]],
+    );
+}
+
+#[test]
+fn test_no_error_for_unknown_receiver_method_of_result_of_unknown_mut_resource_borrow() {
+    // language=Move
+    check_diagnostic_expect(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                let perm_storage = &mut PermissionStorage[@0x1];
+                                      //^^^^^^^^^^^^^^^^^ err: Unresolved reference `PermissionStorage`
+                perm_storage.contains();
+            }
+        }
+    "#]],
+    );
+}
+
+#[test]
+fn test_no_error_on_module_for_unresolved_module_if_same_name_as_address() {
+    // language=Move
+    check_diagnostic_expect(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                aptos_std::call();
+            }
+        }
+    "#]],
+    );
+}
+
+#[test]
+fn test_error_on_known_item_of_module_with_the_same_name_as_address() {
+    // language=Move
+    check_diagnostic_expect(expect![[r#"
+        module aptos_std::aptos_std {
+        }
+        module 0x1::m {
+            use aptos_std::aptos_std;
+            fun main() {
+                aptos_std::call();
+                         //^^^^ err: Unresolved reference `call`
+            }
+        }
+    "#]],
+    );
+}
+
+#[test]
+fn test_no_error_for_const_in_spec() {
+    // language=Move
+    check_diagnostic_expect(expect![[r#"
+        module 0x1::features {
+            const PERMISSIONED_SIGNER: u64 = 84;
+
+        }
+        module 0x1::m {}
+        spec 0x1::m {
+            spec fun is_permissioned_signer(): bool {
+                use 0x1::features::PERMISSIONED_SIGNER;
+                PERMISSIONED_SIGNER;
+            }
+        }
+"#]],
     );
 }
