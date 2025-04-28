@@ -1,48 +1,48 @@
 name: CI
 
 on:
-    push:
-        branches:
-            - master
-    pull_request:
+  push:
+    branches:
+      - master
+  pull_request:
 
 jobs:
-    rust_tests:
-        strategy:
-            matrix:
-                platform: [ ubuntu-latest, macos-latest ]
-        runs-on: ${{ matrix.platform }}
-        steps:
-            -   name: Checkout repository
-                uses: actions/checkout@v4
+  rust_tests:
+    strategy:
+      matrix:
+        platform: [ ubuntu-latest, macos-latest ]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-            -   name: Install Rust toolchain
-                uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
 
-            -   name: Build aptos-analyzer binary with xtask
-                run: cargo xtask install --server
+      - name: Build aptos-analyzer binary with xtask
+        run: cargo xtask install --server
 
-    typescript:
-        name: TypeScript
-        strategy:
-            matrix:
-                platform: [ ubuntu-latest, windows-latest ]
-        runs-on: ${{ matrix.platform }}
-        steps:
-            -   name: Checkout repository
-                uses: actions/checkout@v4
+  typescript:
+    name: TypeScript
+    strategy:
+      matrix:
+        platform: [ ubuntu-latest, windows-latest ]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-            -   name: Install Nodejs
-                uses: actions/setup-node@v4
-                with:
-                    node-version: 22
+      - name: Install Nodejs
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
-            -   name: Install xvfb
-                if: matrix.platform == 'ubuntu-latest'
-                run: sudo apt-get install -y xvfb
+      - name: Install xvfb
+        if: matrix.platform == 'ubuntu-latest'
+        run: sudo apt-get install -y xvfb
 
-            -   run: npm ci
-                working-directory: ./editors/code
+      - run: npm ci
+        working-directory: ./editors/code
 
-            -   run: npm run package --scripts-prepend-node-path
-                working-directory: ./editors/code
+      - run: npm run package --scripts-prepend-node-path
+        working-directory: ./editors/code
