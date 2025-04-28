@@ -1,4 +1,4 @@
-# Aptos Move Analyzer
+# Aptos Move Analyzer 
 
 To install:
 
@@ -7,9 +7,17 @@ cargo xtask install --server --client
 ```
 
 It will build `aptos-analyzer.vsix` extension file and install it into your VSCode.
-Then it will run `cargo install` for the language server. 
+Then it will run `cargo install` for the language server.
 
-Open any project with the `Move.toml` in the root. Disable other VSCode extensions for `.move` files if needed.  
+Put
+
+```
+"aptos-analyzer.server.path": "~/.cargo/bin/aptos-analyzer",
+```
+
+to your `settings.json` to point the extension to your locally built language server.
+
+Now, open any Move file to instantiate the extension. Disable other VSCode extensions for `.move` files if needed.
 
 ## Features
 
