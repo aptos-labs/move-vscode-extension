@@ -3,7 +3,7 @@
 import * as vscode from 'vscode';
 import { CommandFactory, Ctx } from './ctx';
 import * as commands from "./commands";
-import { Configuration } from './config';
+import { Config } from './config';
 import { setContextValue } from "./util";
 import commandExists from "command-exists";
 
@@ -18,24 +18,24 @@ export async function deactivate() {
 // Your extension is activated the very first time the command is executed
 export async function activate(extensionContext: Readonly<vscode.ExtensionContext>) {
 
-    const configuration = new Configuration();
+    const configuration = new Config();
 
-    const serverPath = configuration.serverPath;
-    if (!commandExists.sync(serverPath)) {
-        const context = new Error(
-            `language server executable '${serverPath}' could not be found, so ` +
-            'most extension features will be unavailable to you. Follow the instructions in ' +
-            'the aptos-analyzer Visual Studio Code extension README to install the language ' +
-            'server.',
-        );
-        // An error here -- for example, if the path to the `aptos-analyzer` binary that the user
-        // specified in their settings is not valid -- prevents the extension from providing any
-        // more utility, so return early.
-        void vscode.window.showErrorMessage(
-            `Could not activate aptos-analyzer: ${context.message}.`,
-        );
-        return;
-    }
+    // const serverPath = configuration.serverPath;
+    // if (!commandExists.sync(serverPath)) {
+    //     const context = new Error(
+    //         `language server executable '${serverPath}' could not be found, so ` +
+    //         'most extension features will be unavailable to you. Follow the instructions in ' +
+    //         'the aptos-analyzer Visual Studio Code extension README to install the language ' +
+    //         'server.',
+    //     );
+    //     // An error here -- for example, if the path to the `aptos-analyzer` binary that the user
+    //     // specified in their settings is not valid -- prevents the extension from providing any
+    //     // more utility, so return early.
+    //     void vscode.window.showErrorMessage(
+    //         `Could not activate aptos-analyzer: ${context.message}.`,
+    //     );
+    //     return;
+    // }
 
     const context = new Ctx(extensionContext, configuration, createCommands())
     context.configureLanguage();

@@ -5,7 +5,7 @@ import Path from "path";
 import {Env, expectNotUndefined, unwrapUndefinable} from "./util";
 import path from "path";
 
-export class Configuration {
+export class Config {
     private readonly cfg: vscode.WorkspaceConfiguration;
 
     constructor() {
@@ -13,9 +13,11 @@ export class Configuration {
     }
 
     /** The path to the aptos-analyzer executable. */
-    get serverPath(): string {
-        const defaultName = os.homedir() + '/.cargo/bin/aptos-analyzer';
-        let serverPath = this.cfg.get<string>('server.path', defaultName);
+    get serverPath() {
+        let serverPath = this.cfg.get<string>('server.path');
+        if (!serverPath) {
+            return undefined;
+        }
 
         if (serverPath.startsWith('~/')) {
             serverPath = os.homedir() + serverPath.slice('~'.length);
@@ -42,6 +44,10 @@ export class Configuration {
 
     get showSyntaxTree() {
         return this.get<boolean>("showSyntaxTree");
+    }
+
+    get checkOnSave() {
+        return this.get<boolean>("checkOnSave") ?? false;
     }
 
     /**

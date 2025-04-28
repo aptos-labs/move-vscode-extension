@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
 import { IndentAction } from 'vscode';
 import * as lc from "vscode-languageclient/node";
-import { Configuration } from "./config";
+import { Config } from "./config";
 import { isAptosEditor, log } from "./util";
 import { SyntaxElement, SyntaxTreeProvider } from "./syntax_tree_provider";
 import { createClient } from "./client";
+import { bootstrap } from "./bootstrap";
 
 export class Ctx {
     private _client: lc.LanguageClient | undefined;
@@ -29,7 +30,7 @@ export class Ctx {
 
     constructor(
         private readonly extensionContext: Readonly<vscode.ExtensionContext>,
-        readonly config: Readonly<Configuration>,
+        readonly config: Readonly<Config>,
         commandFactories: Record<string, CommandFactory>,
         client: lc.LanguageClient | undefined = undefined,
     ) {
@@ -71,14 +72,29 @@ export class Ctx {
     }
 
     async createClient(): Promise<lc.LanguageClient> {
+        const serverPath = await this.bootstrap();
+        // text(spawn(serverPath, ["--version"]).stdout.setEncoding("utf-8")).then(
+        //     (data) => {
+        //         const prefix = `aptos-analyzer `;
+        //         this._serverVersion = data
+        //             .slice(data.startsWith(prefix) ? prefix.length : 0)
+        //             .trim();
+        //         this.refreshServerStatus();
+        //     },
+        //     (_) => {
+        //         this._serverVersion = "<unknown>";
+        //         this.refreshServerStatus();
+        //     },
+        // );
+
         const newEnv = Object.assign({}, process.env, this.config.serverExtraEnv);
-        const executable: lc.Executable = {
-            command: this.config.serverPath,
-            options: { shell: true, env: newEnv },
+        const run: lc.Executable = {
+            command: serverPath,
+            options: { env: newEnv },
         };
         const serverOptions: lc.ServerOptions = {
-            run: executable,
-            debug: executable,
+            run,
+            debug: run,
         };
 
         // The vscode-languageclient module reads a configuration option named
@@ -113,6 +129,20 @@ export class Ctx {
         // );
 
         return this._client;
+    }
+
+    private async bootstrap(): Promise<string> {
+        return bootstrap(this.extensionContext, this.config).catch((err) => {
+            let message = "bootstrap error. ";
+
+            message +=
+                'See the logs in "OUTPUT > Aptos Analyzer Client" (should open automatically).';
+            message +=
+                'To enable verbose logs, click the gear icon in the "OUTPUT" tab and select "Debug".';
+
+            log.error("Bootstrap error", err);
+            throw new Error(message);
+        });
     }
 
     async start(): Promise<void> {
