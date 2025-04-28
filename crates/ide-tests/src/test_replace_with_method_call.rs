@@ -1,5 +1,6 @@
 use crate::test_utils::check_diagnostics;
-use crate::test_utils::diagnostics::check_diagnostic_and_fix;
+use crate::test_utils::diagnostics::{check_diagnostic_and_fix, check_diagnostic_and_fix_expect};
+use expect_test::expect;
 
 #[test]
 fn test_no_warning_if_parameter_is_not_self() {
@@ -138,30 +139,30 @@ module 0x1::main {
 #[test]
 fn test_method_with_fix() {
     // language=Move
-    check_diagnostic_and_fix(
-        r#"
-module 0x1::m {
-    struct S { val: u8 }
-    fun method(self: S): u8 {
-        self.val
-    }
-    fun main(s: S) {
-        method(s);
-      //^^^^^^^^^ weak: Can be replaced with method call
-    }
-}
-    "#,
-        r#"
-module 0x1::m {
-    struct S { val: u8 }
-    fun method(self: S): u8 {
-        self.val
-    }
-    fun main(s: S) {
-        s.method();
-    }
-}
-    "#,
+    check_diagnostic_and_fix_expect(
+        expect![[r#"
+            module 0x1::m {
+                struct S { val: u8 }
+                fun method(self: S): u8 {
+                    self.val
+                }
+                fun main(s: S) {
+                    method(s);
+                  //^^^^^^^^^ weak: Can be replaced with method call
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::m {
+                struct S { val: u8 }
+                fun method(self: S): u8 {
+                    self.val
+                }
+                fun main(s: S) {
+                    s.method();
+                }
+            }
+        "#]],
     );
 }
 
