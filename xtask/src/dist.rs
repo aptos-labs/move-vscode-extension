@@ -11,9 +11,9 @@ use xshell::{cmd, Cmd, Shell};
 use zip::write::SimpleFileOptions;
 use zip::{DateTime, ZipWriter};
 
-const VERSION_STABLE: &str = "0.3";
-const VERSION_NIGHTLY: &str = "0.4";
-const VERSION_DEV: &str = "0.5"; // keep this one in sync with `package.json`
+const VERSION_STABLE: &str = "0.1";
+// const VERSION_NIGHTLY: &str = "0.1";
+const VERSION_DEV: &str = "0.1"; // keep this one in sync with `package.json`
 
 pub(crate) fn dist(client_patch_version: Option<String>) -> anyhow::Result<()> {
     let sh = Shell::new()?;
@@ -211,7 +211,7 @@ impl Patch {
     }
 
     fn replace(&mut self, from: &str, to: &str) -> &mut Patch {
-        assert!(self.contents.contains(from), "{:?}", from);
+        assert!(self.contents.contains(from), "Text not found: {:?}", from);
         self.contents = self.contents.replace(from, to);
         self
     }
