@@ -70,6 +70,9 @@ pub fn semantic_diagnostics(
                 ast::AnyReferenceElement(it) => {
                     handlers::unresolved_reference(&mut res, &ctx, it.in_file(file_id));
                 },
+                ast::BinExpr(it) => {
+                    handlers::can_be_replaced_with_compound_expr(&mut res, &ctx, it.in_file(file_id));
+                },
                 _ => (),
             }
         }

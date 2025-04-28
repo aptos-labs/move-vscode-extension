@@ -15,6 +15,7 @@ mod test_syntax_highlighting;
 mod test_unresolved_reference;
 mod test_utils;
 mod types;
+mod test_replace_with_compound_expr;
 
 pub(crate) fn init_tracing_for_test() {
     let _ = Registry::default()

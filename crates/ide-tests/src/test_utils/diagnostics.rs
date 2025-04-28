@@ -11,7 +11,6 @@ use line_index::{LineCol, LineIndex};
 use std::fmt::Debug;
 use std::iter;
 use syntax::TextRange;
-use syntax::files::FileRange;
 use vfs::FileId;
 
 pub fn check_diagnostics(source: &str) {
@@ -77,6 +76,38 @@ pub fn check_diagnostic_and_fix(before: &str, after: &str) {
 
     let actual_after = apply_fix(fix, &before_no_error_line);
     assert_eq_text!(&actual_after, after);
+}
+
+pub fn check_diagnostic_and_fix_expect(before: Expect, after: Expect) {
+    init_tracing_for_test();
+
+    let before_source = stdx::trim_indent(before.data());
+    let trimmed_before_source = remove_expected_diagnostics(&before_source);
+
+    let (_, _, mut diagnostics) = get_diagnostics(trimmed_before_source.as_str());
+
+    let diagnostic = diagnostics.pop().expect("no diagnostics found");
+    assert_no_extra_diagnostics(&trimmed_before_source, diagnostics);
+
+    let mut actual = apply_diagnostics_to_file(&trimmed_before_source, &vec![diagnostic.clone()]);
+    actual.push_str("\n");
+
+    before.assert_eq(stdx::trim_indent(&actual).as_str());
+
+    let fix = &diagnostic
+        .fixes
+        .unwrap_or_else(|| panic!("{:?} diagnostic misses fixes", diagnostic.code))[0];
+
+    let line_idx = get_first_marked_position(&before_source, "//^")
+        .mark_line_col
+        .line;
+    let mut lines = before_source.lines().collect::<Vec<_>>();
+    lines.remove(line_idx as usize);
+    let before_no_error_line = lines.join("\n");
+
+    let mut actual_after = apply_fix(fix, &before_no_error_line);
+    actual_after.push_str("\n");
+    after.assert_eq(&stdx::trim_indent(&actual_after).as_str());
 }
 
 pub fn check_fix(before: &str, after: &str) {
