@@ -59,9 +59,9 @@ jobs:
       - run: npm ci
         working-directory: editors/code
 
-      - name: Package Extension (release)
-        if: github.ref == 'refs/heads/release' && matrix.code-target
-        run: npx vsce package -o "../../dist/aptos-analyzer-${{ matrix.code-target }}.vsix" --target ${{ matrix.code-target }}
+      - name: Package Extension (nightly)
+        if: github.ref != 'refs/heads/release' && matrix.code-target
+        run: npx vsce package -o "../../dist/aptos-analyzer-${{ matrix.code-target }}.vsix" --target ${{ matrix.code-target }} --pre-release
         working-directory: editors/code
 
       - name: Upload artifacts
