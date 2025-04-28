@@ -50,14 +50,14 @@ fn dist_client(sh: &Shell, version: &str, release_tag: &str, target: &Target) ->
 
     let mut patch = Patch::new(sh, "./package.json")?;
     patch
-        .replace(
-            &format!(r#""version": "{VERSION_DEV}.0-dev""#),
-            &format!(r#""version": "{version}""#),
-        )
-        .replace(
-            r#""releaseTag": null"#,
-            &format!(r#""releaseTag": "{release_tag}""#),
-        )
+        // .replace(
+        //     &format!(r#""version": "{VERSION_DEV}.0-dev""#),
+        //     &format!(r#""version": "{version}""#),
+        // )
+        // .replace(
+        //     r#""releaseTag": null"#,
+        //     &format!(r#""releaseTag": "{release_tag}""#),
+        // )
         .replace(r#""title": "$generated-start""#, "")
         .replace(r#""title": "$generated-end""#, "");
     patch.commit(sh)?;
