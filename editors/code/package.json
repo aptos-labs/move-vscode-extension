@@ -3,8 +3,8 @@
     "displayName": "aptos-analyzer",
     "description": "",
     "publisher": "Aptos",
-    "version": "0.3.1",
-    "releaseTag": "2025-04-28",
+    "version": "0.1.0-dev",
+    "releaseTag": null,
     "homepage": "https://github.com/mkurnikov/aptos-analyzer",
     "repository": {
         "url": "https://github.com/mkurnikov/aptos-analyzer.git",

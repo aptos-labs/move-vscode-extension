@@ -11,9 +11,9 @@ use xshell::{cmd, Cmd, Shell};
 use zip::write::SimpleFileOptions;
 use zip::{DateTime, ZipWriter};
 
-const VERSION_STABLE: &str = "0.3";
-const VERSION_NIGHTLY: &str = "0.4";
-const VERSION_DEV: &str = "0.5"; // keep this one in sync with `package.json`
+const VERSION_STABLE: &str = "0.1";
+// const VERSION_NIGHTLY: &str = "0.1";
+const VERSION_DEV: &str = "0.1"; // keep this one in sync with `package.json`
 
 pub(crate) fn dist(client_patch_version: Option<String>) -> anyhow::Result<()> {
     let sh = Shell::new()?;
@@ -50,14 +50,14 @@ fn dist_client(sh: &Shell, version: &str, release_tag: &str, target: &Target) ->
 
     let mut patch = Patch::new(sh, "./package.json")?;
     patch
-        // .replace(
-        //     &format!(r#""version": "{VERSION_DEV}.0-dev""#),
-        //     &format!(r#""version": "{version}""#),
-        // )
-        // .replace(
-        //     r#""releaseTag": null"#,
-        //     &format!(r#""releaseTag": "{release_tag}""#),
-        // )
+        .replace(
+            &format!(r#""version": "{VERSION_DEV}.0-dev""#),
+            &format!(r#""version": "{version}""#),
+        )
+        .replace(
+            r#""releaseTag": null"#,
+            &format!(r#""releaseTag": "{release_tag}""#),
+        )
         .replace(r#""title": "$generated-start""#, "")
         .replace(r#""title": "$generated-end""#, "");
     patch.commit(sh)?;
