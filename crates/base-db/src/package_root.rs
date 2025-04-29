@@ -19,7 +19,6 @@ impl PackageRoot {
         PackageRoot {
             file_set,
             is_library: false,
-            // dependencies: vec![],
         }
     }
 
@@ -27,13 +26,8 @@ impl PackageRoot {
         PackageRoot {
             file_set,
             is_library: true,
-            // dependencies: vec![],
         }
     }
-
-    // pub fn set_dependencies(&mut self, deps: Vec<PackageRootId>) {
-    //     self.dependencies = deps;
-    // }
 
     pub fn path_for_file(&self, file: &FileId) -> Option<&VfsPath> {
         self.file_set.path_for_file(file)

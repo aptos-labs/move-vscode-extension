@@ -333,8 +333,8 @@ impl GlobalState {
             let roots = self.package_root_config.partition_into_roots(vfs);
             change.set_package_roots(roots);
 
-            change.add_builtins_file(self.builtins_file_id, BUILTINS_FILE.to_string());
-            tracing::info!("builtins_file {:?}", self.builtins_file_id);
+            // change.add_builtins_file(self.builtins_file_id, BUILTINS_FILE.to_string());
+            // tracing::info!("builtins_file {:?}", self.builtins_file_id);
 
             // depends on roots being available
             change.set_package_graph(package_graph);

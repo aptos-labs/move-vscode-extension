@@ -18,8 +18,8 @@ pub struct PackageRootConfig {
 impl PackageRootConfig {
     pub fn partition_into_roots(&self, vfs: &vfs::Vfs) -> Vec<PackageRoot> {
         tracing::info!("partition with {:?}", self.fsc);
-        self.fsc
-            .partition(vfs)
+        let package_file_sets = self.fsc.partition(vfs);
+        package_file_sets
             .into_iter()
             .enumerate()
             .map(|(idx, package_file_set)| {

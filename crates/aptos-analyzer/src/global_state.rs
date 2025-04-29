@@ -121,8 +121,6 @@ impl GlobalState {
             Handle { handle, receiver }
         };
 
-        let analysis_host = AnalysisHost::new();
-
         let (flycheck_sender, flycheck_receiver) = unbounded();
 
         let vfs = Arc::new(RwLock::new((vfs::Vfs::default(), HashMap::default())));
@@ -134,6 +132,12 @@ impl GlobalState {
             tracing::info!("load `builtins.move` file to {:?}", file_id);
             file_id
         };
+
+        let mut builtins_change = FileChanges::default();
+        builtins_change.add_builtins_file(builtins_file_id, BUILTINS_FILE.to_string());
+
+        let mut analysis_host = AnalysisHost::new();
+        analysis_host.apply_change(builtins_change);
 
         let mut this = GlobalState {
             sender,
