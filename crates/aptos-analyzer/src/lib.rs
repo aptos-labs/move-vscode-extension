@@ -11,6 +11,7 @@ mod version;
 
 mod command;
 pub mod diagnostics;
+mod file_changes;
 mod flycheck;
 pub mod lsp;
 mod project_folders;

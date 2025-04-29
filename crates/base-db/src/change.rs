@@ -10,16 +10,16 @@ pub type PackageGraph = HashMap<ManifestFileId, Vec<ManifestFileId>>;
 
 /// Encapsulate a bunch of raw `.set` calls on the database.
 #[derive(Default)]
-pub struct FileChange {
+pub struct FileChanges {
     pub builtins_file: Option<(FileId, String)>,
     pub files_changed: Vec<(FileId, Option<String>)>,
     pub package_roots: Option<Vec<PackageRoot>>,
     pub package_graph: Option<HashMap<ManifestFileId, Vec<ManifestFileId>>>,
 }
 
-impl FileChange {
+impl FileChanges {
     pub fn new() -> Self {
-        FileChange::default()
+        FileChanges::default()
     }
 
     pub fn set_package_roots(&mut self, packages: Vec<PackageRoot>) {
@@ -80,7 +80,7 @@ impl FileChange {
     }
 }
 
-impl fmt::Debug for FileChange {
+impl fmt::Debug for FileChanges {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut d = fmt.debug_struct("Change");
         if let Some(packages) = &self.package_roots {

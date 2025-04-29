@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use base_db::SourceDatabase;
-use base_db::change::{FileChange, PackageGraph};
+use base_db::change::{FileChanges, PackageGraph};
 use ide_completion::item::CompletionItem;
 use ide_db::{LineIndexDatabase, RootDatabase};
 use line_index::{LineCol, LineIndex};
@@ -67,7 +67,7 @@ impl AnalysisHost {
 
     /// Applies changes to the current state of the world. If there are
     /// outstanding snapshots, they will be canceled.
-    pub fn apply_change(&mut self, change: FileChange) {
+    pub fn apply_change(&mut self, change: FileChanges) {
         self.db.apply_change(change);
     }
 
@@ -113,7 +113,7 @@ impl Analysis {
 
         let package_root = PackageRoot::new_local(file_set);
 
-        let mut change = FileChange::new();
+        let mut change = FileChanges::new();
         change.set_package_roots(vec![package_root]);
         change.change_file(file_id, Some(text));
 
@@ -125,7 +125,7 @@ impl Analysis {
         let mut package_graph = PackageGraph::default();
         package_graph.insert(file_id, vec![]);
 
-        let mut change = FileChange::new();
+        let mut change = FileChanges::new();
         change.set_package_graph(package_graph);
         host.apply_change(change);
 

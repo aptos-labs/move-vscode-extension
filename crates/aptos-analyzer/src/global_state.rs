@@ -10,7 +10,7 @@ use crate::op_queue::{Cause, OpQueue};
 use crate::project_folders::PackageRootConfig;
 use crate::task_pool::TaskPool;
 use crate::{lsp_ext, reload};
-use base_db::change::FileChange;
+use base_db::change::FileChanges;
 use crossbeam_channel::{Receiver, Sender, unbounded};
 use ide::{Analysis, AnalysisHost, Cancellable};
 use lang::builtin_files::BUILTINS_FILE;
@@ -130,7 +130,9 @@ impl GlobalState {
             let vfs = &mut vfs.write().0;
             let builtins_path = VfsPath::new_virtual_path("/builtins.move".to_string());
             vfs.set_file_contents(builtins_path.clone(), Some(BUILTINS_FILE.bytes().collect()));
-            vfs.file_id(&builtins_path).unwrap()
+            let file_id = vfs.file_id(&builtins_path).unwrap();
+            tracing::info!("load `builtins.move` file to {:?}", file_id);
+            file_id
         };
 
         let mut this = GlobalState {
@@ -170,93 +172,6 @@ impl GlobalState {
         // Apply any required database inputs from the config.
         this.update_configuration(config);
         this
-    }
-
-    pub(crate) fn process_file_changes(&mut self) -> bool {
-        let _p = tracing::info_span!("GlobalState::process_changes").entered();
-
-        let (change, refresh_workspaces) = {
-            let mut change = FileChange::new();
-
-            let mut vfs_lock = self.vfs.write();
-            let changed_files = vfs_lock.0.take_changes();
-            if changed_files.is_empty() {
-                return false;
-            }
-
-            // downgrade to read lock to allow more readers while we are normalizing text
-            tracing::info!("acquire upgradable write lock");
-            let vfs_lock = RwLockWriteGuard::downgrade_to_upgradable(vfs_lock);
-            let vfs: &vfs::Vfs = &vfs_lock.0;
-
-            let mut refresh_workspaces = false;
-            let mut bytes = vec![];
-
-            for changed_file in changed_files.into_values() {
-                let changed_file_vfs_path = vfs.file_path(changed_file.file_id);
-
-                if let Some(changed_file_path) = changed_file_vfs_path.as_path() {
-                    refresh_workspaces |= changed_file.is_created_or_deleted();
-                    if reload::should_refresh_for_file_change(&changed_file_path) {
-                        tracing::trace!(?changed_file_path, kind = ?changed_file.kind(), "refreshing for a change");
-                        refresh_workspaces |= true;
-                    }
-                }
-
-                // Clear native diagnostics when their file gets deleted
-                if !changed_file.exists() {
-                    self.diagnostics.clear_native_for(changed_file.file_id);
-                }
-
-                let text_with_line_endings =
-                    if let vfs::Change::Create(v, _) | vfs::Change::Modify(v, _) = changed_file.change {
-                        String::from_utf8(v).ok().map(|text| {
-                            let (text, line_endings) = LineEndings::normalize(text);
-                            (text, line_endings)
-                        })
-                    } else {
-                        None
-                    };
-
-                // delay `line_endings_map` changes until we are done normalizing the text
-                // this allows delaying the re-acquisition of the write lock
-                bytes.push((changed_file.file_id, text_with_line_endings));
-            }
-
-            let _p = tracing::info_span!("upgrade lock to exclusive write lock").entered();
-            let (vfs, line_endings_map) = &mut *RwLockUpgradableReadGuard::upgrade(vfs_lock);
-            bytes.into_iter().for_each(|(file_id, text_with_line_endings)| {
-                let text = match text_with_line_endings {
-                    None => None,
-                    Some((text, line_endings)) => {
-                        line_endings_map.insert(file_id, line_endings);
-                        Some(text)
-                    }
-                };
-                change.change_file(file_id, text);
-            });
-            if refresh_workspaces {
-                let roots = self.package_root_config.partition_into_roots(vfs);
-                change.set_package_roots(roots);
-            }
-            (change, refresh_workspaces)
-        };
-
-        let _p = tracing::info_span!("GlobalState::process_changes/apply_change").entered();
-        self.analysis_host.apply_change(change);
-
-        {
-            if refresh_workspaces {
-                let _p =
-                    tracing::info_span!("GlobalState::process_changes/ws_structure_change").entered();
-                self.fetch_workspaces_queue.request_op(
-                    "workspace vfs file change".to_string(),
-                    FetchWorkspaceRequest { force_reload_deps: true },
-                );
-            }
-        }
-
-        true
     }
 
     pub(crate) fn snapshot(&self) -> GlobalStateSnapshot {
