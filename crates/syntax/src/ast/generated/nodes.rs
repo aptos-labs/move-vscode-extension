@@ -407,12 +407,13 @@ impl ForCondition {
 pub struct ForExpr {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::LoopLike for ForExpr {}
 impl ForExpr {
     #[inline]
     pub fn for_condition(&self) -> Option<ForCondition> { support::child(&self.syntax) }
     #[inline]
     pub fn label_decl(&self) -> Option<LabelDecl> { support::child(&self.syntax) }
+    #[inline]
+    pub fn loop_body_expr(&self) -> Option<BlockOrInlineExpr> { support::child(&self.syntax) }
     #[inline]
     pub fn for_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![for]) }
 }
@@ -708,10 +709,11 @@ impl Literal {
 pub struct LoopExpr {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::LoopLike for LoopExpr {}
 impl LoopExpr {
     #[inline]
     pub fn label_decl(&self) -> Option<LabelDecl> { support::child(&self.syntax) }
+    #[inline]
+    pub fn loop_body_expr(&self) -> Option<BlockOrInlineExpr> { support::child(&self.syntax) }
     #[inline]
     pub fn loop_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![loop]) }
 }
@@ -1679,12 +1681,13 @@ impl WhereExpr {
 pub struct WhileExpr {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::LoopLike for WhileExpr {}
 impl WhileExpr {
     #[inline]
     pub fn condition(&self) -> Option<Condition> { support::child(&self.syntax) }
     #[inline]
     pub fn label_decl(&self) -> Option<LabelDecl> { support::child(&self.syntax) }
+    #[inline]
+    pub fn loop_body_expr(&self) -> Option<BlockOrInlineExpr> { support::child(&self.syntax) }
     #[inline]
     pub fn while_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![while]) }
 }
@@ -1803,6 +1806,13 @@ pub enum Item {
     Struct(Struct),
 }
 impl ast::HasAttrs for Item {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum LoopLike {
+    ForExpr(ForExpr),
+    LoopExpr(LoopExpr),
+    WhileExpr(WhileExpr),
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MethodOrDotExpr {
@@ -1940,12 +1950,6 @@ pub struct AnyHoverDocsOwner {
 }
 impl ast::HoverDocsOwner for AnyHoverDocsOwner {}
 impl ast::NamedElement for AnyHoverDocsOwner {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct AnyLoopLike {
-    pub(crate) syntax: SyntaxNode,
-}
-impl ast::LoopLike for AnyLoopLike {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyMslOnly {
@@ -5575,6 +5579,76 @@ impl AstNode for Item {
         }
     }
 }
+impl From<ForExpr> for LoopLike {
+    #[inline]
+    fn from(node: ForExpr) -> LoopLike { LoopLike::ForExpr(node) }
+}
+impl From<LoopExpr> for LoopLike {
+    #[inline]
+    fn from(node: LoopExpr) -> LoopLike { LoopLike::LoopExpr(node) }
+}
+impl From<WhileExpr> for LoopLike {
+    #[inline]
+    fn from(node: WhileExpr) -> LoopLike { LoopLike::WhileExpr(node) }
+}
+impl LoopLike {
+    pub fn for_expr(self) -> Option<ForExpr> {
+        match (self) {
+            LoopLike::ForExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn loop_expr(self) -> Option<LoopExpr> {
+        match (self) {
+            LoopLike::LoopExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn while_expr(self) -> Option<WhileExpr> {
+        match (self) {
+            LoopLike::WhileExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn label_decl(&self) -> Option<LabelDecl> {
+        match self {
+            LoopLike::ForExpr(it) => it.label_decl(),
+            LoopLike::LoopExpr(it) => it.label_decl(),
+            LoopLike::WhileExpr(it) => it.label_decl(),
+        }
+    }
+    #[inline]
+    pub fn loop_body_expr(&self) -> Option<BlockOrInlineExpr> {
+        match self {
+            LoopLike::ForExpr(it) => it.loop_body_expr(),
+            LoopLike::LoopExpr(it) => it.loop_body_expr(),
+            LoopLike::WhileExpr(it) => it.loop_body_expr(),
+        }
+    }
+}
+impl AstNode for LoopLike {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, FOR_EXPR | LOOP_EXPR | WHILE_EXPR) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            FOR_EXPR => LoopLike::ForExpr(ForExpr { syntax }),
+            LOOP_EXPR => LoopLike::LoopExpr(LoopExpr { syntax }),
+            WHILE_EXPR => LoopLike::WhileExpr(WhileExpr { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            LoopLike::ForExpr(it) => &it.syntax,
+            LoopLike::LoopExpr(it) => &it.syntax,
+            LoopLike::WhileExpr(it) => &it.syntax,
+        }
+    }
+}
 impl From<DotExpr> for MethodOrDotExpr {
     #[inline]
     fn from(node: DotExpr) -> MethodOrDotExpr { MethodOrDotExpr::DotExpr(node) }
@@ -6732,42 +6806,6 @@ impl From<AnyHasVisibility> for AnyHoverDocsOwner {
     #[inline]
     fn from(node: AnyHasVisibility) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
 }
-impl AnyLoopLike {
-    #[inline]
-    pub fn new<T: ast::LoopLike>(node: T) -> AnyLoopLike {
-        AnyLoopLike {
-            syntax: node.syntax().clone(),
-        }
-    }
-    #[inline]
-    pub fn cast_from<T: ast::LoopLike>(t: T) -> AnyLoopLike {
-        AnyLoopLike::cast(t.syntax().to_owned()).expect("required by code generator")
-    }
-    #[inline]
-    pub fn cast_into<T: ast::LoopLike>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
-}
-impl AstNode for AnyLoopLike {
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, FOR_EXPR | LOOP_EXPR | WHILE_EXPR) }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        Self::can_cast(syntax.kind()).then_some(AnyLoopLike { syntax })
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode { &self.syntax }
-}
-impl From<ForExpr> for AnyLoopLike {
-    #[inline]
-    fn from(node: ForExpr) -> AnyLoopLike { AnyLoopLike { syntax: node.syntax } }
-}
-impl From<LoopExpr> for AnyLoopLike {
-    #[inline]
-    fn from(node: LoopExpr) -> AnyLoopLike { AnyLoopLike { syntax: node.syntax } }
-}
-impl From<WhileExpr> for AnyLoopLike {
-    #[inline]
-    fn from(node: WhileExpr) -> AnyLoopLike { AnyLoopLike { syntax: node.syntax } }
-}
 impl AnyMslOnly {
     #[inline]
     pub fn new<T: ast::MslOnly>(node: T) -> AnyMslOnly {
@@ -7034,6 +7072,11 @@ impl std::fmt::Display for InferenceCtxOwner {
     }
 }
 impl std::fmt::Display for Item {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for LoopLike {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

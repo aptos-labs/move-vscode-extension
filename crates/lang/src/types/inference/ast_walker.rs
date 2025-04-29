@@ -791,12 +791,16 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         Some(self.ctx.intersect_all_types(tys))
     }
 
+    fn infer_loop_expr(&mut self, loop_expr: &ast::LoopExpr) -> Ty {
+        self.infer_loop_like_body(loop_expr.clone().into())
+    }
+
     fn infer_while_expr(&mut self, while_expr: &ast::WhileExpr) -> Ty {
         let condition_expr = while_expr.condition().and_then(|it| it.expr());
         if let Some(condition_expr) = condition_expr {
             self.infer_expr_coerceable_to(&condition_expr, Ty::Bool);
         }
-        self.infer_loop_like_body(while_expr)
+        self.infer_loop_like_body(while_expr.clone().into())
     }
 
     fn infer_for_expr(&mut self, for_expr: &ast::ForExpr) -> Ty {
@@ -812,14 +816,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 );
             }
         }
-        self.infer_loop_like_body(for_expr)
+        self.infer_loop_like_body(for_expr.clone().into())
     }
 
-    fn infer_loop_expr(&mut self, loop_expr: &ast::LoopExpr) -> Ty {
-        self.infer_loop_like_body(loop_expr)
-    }
-
-    fn infer_loop_like_body(&mut self, loop_like: &impl ast::LoopLike) -> Ty {
+    fn infer_loop_like_body(&mut self, loop_like: ast::LoopLike) -> Ty {
         if let Some(loop_body_expr) = loop_like.loop_body_expr() {
             self.infer_block_or_inline_expr(&loop_body_expr, Expected::ExpectType(Ty::Unit));
         }
