@@ -149,6 +149,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "RETURN_EXPR",
         "CONTINUE_EXPR",
         "BREAK_EXPR",
+        "LABEL_DECL",
         "LABEL",
         "INLINE_EXPR",
         "BLOCK_EXPR",

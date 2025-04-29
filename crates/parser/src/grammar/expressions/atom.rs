@@ -261,7 +261,7 @@ fn label(p: &mut Parser<'_>) {
     let m = p.start();
     p.bump(QUOTE_IDENT);
     p.bump(T![:]);
-    m.complete(p, LABEL);
+    m.complete(p, LABEL_DECL);
 }
 
 fn loop_expr(p: &mut Parser<'_>, m: Option<Marker>) -> CompletedMarker {
@@ -419,7 +419,7 @@ fn continue_expr(p: &mut Parser<'_>) -> CompletedMarker {
     assert!(p.at(T![continue]));
     let m = p.start();
     p.bump(T![continue]);
-    p.eat(QUOTE_IDENT);
+    opt_label(p);
     m.complete(p, CONTINUE_EXPR)
 }
 
@@ -427,9 +427,7 @@ fn break_expr(p: &mut Parser<'_>) -> CompletedMarker {
     assert!(p.at(T![break]));
     let m = p.start();
     p.bump(T![break]);
-    p.eat(QUOTE_IDENT);
-    // test break_ambiguity
-    // fn foo(){
+    opt_label(p);
     //     if break {}
     //     while break {}
     //     for i in break {}
@@ -441,6 +439,22 @@ fn break_expr(p: &mut Parser<'_>) -> CompletedMarker {
         expr(p);
     }
     m.complete(p, BREAK_EXPR)
+}
+
+fn opt_label_decl(p: &mut Parser<'_>) {
+    if p.at(QUOTE_IDENT) {
+        let m = p.start();
+        p.eat(QUOTE_IDENT);
+        m.complete(p, LABEL_DECL);
+    }
+}
+
+fn opt_label(p: &mut Parser<'_>) {
+    if p.at(QUOTE_IDENT) {
+        let m = p.start();
+        p.eat(QUOTE_IDENT);
+        m.complete(p, LABEL);
+    }
 }
 
 pub(crate) const EXPR_FIRST: TokenSet = LHS_FIRST;
