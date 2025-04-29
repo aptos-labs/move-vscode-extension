@@ -664,8 +664,7 @@ module 0x1::m {
 #[test]
 fn test_no_error_if_method_receiver_of_type_unknown() {
     // language=Move
-    check_diagnostic_expect(expect![[
-        r#"
+    check_diagnostic_expect(expect![[r#"
         module 0x1::m {
             struct S { field: u8 }
             fun receiver(self: S): u8 { self.field }
@@ -674,8 +673,7 @@ fn test_no_error_if_method_receiver_of_type_unknown() {
                 t.receiver();
             }
         }
-"#]],
-    );
+"#]]);
 }
 
 #[test]
@@ -690,8 +688,7 @@ fn test_no_error_for_fields_if_destructuring_unknown_struct() {
                   //^ err: Unresolved reference `S`
             }
         }
-"#]],
-    );
+"#]]);
 }
 
 #[test]
@@ -707,8 +704,7 @@ fn test_no_error_for_fields_if_destructuring_unknown_struct_with_qualifier() {
                      //^^^^^ err: Unresolved reference `Inner`
             }
         }
-    "#]],
-    );
+    "#]]);
 }
 
 #[test]
@@ -719,8 +715,7 @@ fn test_no_error_path_in_attr() {
             #[lint::my_lint]
             fun main() {}
         }
-"#]],
-    );
+"#]]);
 }
 
 #[test]
@@ -734,8 +729,7 @@ fn test_no_error_for_unknown_receiver_method_of_result_of_unknown_resource_borro
                 perm_storage.contains();
             }
         }
-    "#]],
-    );
+    "#]]);
 }
 
 #[test]
@@ -749,8 +743,7 @@ fn test_no_error_for_unknown_receiver_method_of_result_of_unknown_mut_resource_b
                 perm_storage.contains();
             }
         }
-    "#]],
-    );
+    "#]]);
 }
 
 #[test]
@@ -762,8 +755,7 @@ fn test_no_error_on_module_for_unresolved_module_if_same_name_as_address() {
                 aptos_std::call();
             }
         }
-    "#]],
-    );
+    "#]]);
 }
 
 #[test]
@@ -779,8 +771,7 @@ fn test_error_on_known_item_of_module_with_the_same_name_as_address() {
                          //^^^^ err: Unresolved reference `call`
             }
         }
-    "#]],
-    );
+    "#]]);
 }
 
 #[test]
@@ -798,6 +789,5 @@ fn test_no_error_for_const_in_spec() {
                 PERMISSIONED_SIGNER;
             }
         }
-"#]],
-    );
+"#]]);
 }

@@ -1573,9 +1573,7 @@ pub struct UseSpeck {
 }
 impl UseSpeck {
     #[inline]
-    pub fn path(&self) -> Path {
-        support::child(&self.syntax).expect("UseSpeck.path required by the parser")
-    }
+    pub fn path(&self) -> Option<Path> { support::child(&self.syntax) }
     #[inline]
     pub fn use_alias(&self) -> Option<UseAlias> { support::child(&self.syntax) }
     #[inline]

@@ -19,6 +19,7 @@ impl MoveToml {
             move_toml.package = package_table.to_owned().try_into().ok();
         }
 
+        // [dependencies] table with inner tables
         if let Some(deps_table) = deserialized.get("dependencies").and_then(|d| d.as_table()) {
             for (name, value) in deps_table {
                 let table = value

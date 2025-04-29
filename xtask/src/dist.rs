@@ -1,13 +1,13 @@
 use crate::{date_iso, project_root};
 use anyhow::Context;
-use flate2::write::GzEncoder;
 use flate2::Compression;
+use flate2::write::GzEncoder;
 use std::fs::File;
 use std::io::BufWriter;
 use std::path::{Path, PathBuf};
 use std::{env, io};
 use time::OffsetDateTime;
-use xshell::{cmd, Cmd, Shell};
+use xshell::{Cmd, Shell, cmd};
 use zip::write::SimpleFileOptions;
 use zip::{DateTime, ZipWriter};
 

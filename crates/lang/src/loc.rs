@@ -4,7 +4,7 @@ use std::fmt;
 use std::fmt::Formatter;
 use syntax::algo::ancestors_at_offset;
 use syntax::files::InFile;
-use syntax::{match_ast, AstNode, TextSize};
+use syntax::{AstNode, TextSize, match_ast};
 use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]

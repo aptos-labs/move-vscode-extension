@@ -61,10 +61,9 @@ fn unresolved_path(
         return None;
     }
 
-    let pkind = path_kind(path.clone(), false);
+    let pkind = path_kind(path.clone(), false)?;
     match pkind {
-        PathKind::Unknown
-        | PathKind::NamedAddress(_)
+        PathKind::NamedAddress(_)
         | PathKind::NamedAddressOrUnqualifiedPath { .. }
         | PathKind::ValueAddress(_) => (),
         PathKind::Unqualified { .. } => {

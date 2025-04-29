@@ -28,8 +28,8 @@ pub use self::{
     operators::{ArithOp, BinaryOp, CmpOp, LogicOp, Ordering, RangeOp, UnaryOp},
     token_ext::{CommentKind, CommentPlacement, CommentShape, IsString, QuoteOffsets},
     traits::{
-        FieldsOwner, GenericElement, HasAttrs, HasItems, HasStmts, HasUseStmts, HoverDocsOwner,
-        MslOnly, NamedElement, ReferenceElement,
+        FieldsOwner, GenericElement, HasAttrs, HasItems, HasStmts, HasUseStmts, HoverDocsOwner, MslOnly,
+        NamedElement, ReferenceElement,
     },
     visibility::HasVisibility,
 };
