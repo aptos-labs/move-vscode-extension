@@ -329,7 +329,7 @@ pub(crate) const NON_METHOD_TRAITS: &[(&str, &[&str])] = &[
             "ItemSpecRef",
         ],
     ),
-    ("LoopLike", &["LoopExpr", "WhileExpr", "ForExpr"]),
+    // ("LoopLike", &["LoopExpr", "WhileExpr", "ForExpr"]),
     (
         "HasVisibility",
         &["Fun", "SpecFun", "SpecInlineFun", "Struct", "Enum", "Const"],

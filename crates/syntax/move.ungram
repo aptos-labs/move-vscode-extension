@@ -234,12 +234,6 @@ Expr =
     | ForallExpr | ExistsExpr | ChooseExpr
     | SpecBlockExpr
 
-ForExpr =
-    LabelDecl? 'for' ForCondition loop_body_expr:(BlockExpr | InlineExpr)
-
-ForCondition =
-    '(' IdentPat 'in' Expr ')'
-
 BorrowExpr =
     '&' 'mut'? Expr
 
@@ -290,17 +284,25 @@ ParenExpr =
     '(' Expr ')'
 
 IfExpr =
-    'if' Condition then_branch:(BlockExpr | InlineExpr)
-    ('else' else_branch:(BlockExpr | InlineExpr))?
+    'if' Condition then_branch:BlockOrInlineExpr ('else' else_branch:BlockOrInlineExpr)?
 
 WhileExpr =
-    LabelDecl? 'while' Condition loop_body_expr:(BlockExpr | InlineExpr)
+    LabelDecl? 'while' Condition loop_body_expr:BlockOrInlineExpr
 
 Condition =
     '(' Expr ')'
 
 LoopExpr =
-    LabelDecl? 'loop' loop_body_expr:(BlockExpr | InlineExpr)
+    LabelDecl? 'loop' loop_body_expr:BlockOrInlineExpr
+
+ForExpr =
+    LabelDecl? 'for' ForCondition loop_body_expr:BlockOrInlineExpr
+
+ForCondition =
+    '(' IdentPat 'in' Expr ')'
+
+LoopLike =
+    LoopExpr | WhileExpr | ForExpr
 
 BreakExpr =
     'break' Label?

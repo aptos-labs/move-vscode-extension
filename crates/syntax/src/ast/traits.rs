@@ -114,8 +114,8 @@ pub trait ReferenceElement: AstNode + fmt::Debug {
 
 pub trait MslOnly: AstNode {}
 
-pub trait LoopLike: AstNode {
-    fn loop_body_expr(&self) -> Option<ast::BlockOrInlineExpr> {
-        support::child(&self.syntax())
-    }
-}
+// pub trait LoopLike: AstNode {
+//     fn loop_body_expr(&self) -> Option<ast::BlockOrInlineExpr> {
+//         support::child(&self.syntax())
+//     }
+// }
