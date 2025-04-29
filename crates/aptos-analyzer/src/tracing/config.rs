@@ -98,16 +98,15 @@ where
         // };
 
         // let level = Level::from_str(&env::var("RA_LOG").ok().unwrap_or_else(|| "error".to_owned()))?;
-        let subscriber = Registry::default()
-            .with(
-                HierarchicalLayer::new(2)
-                    .with_ansi(false)
-                    .with_indent_lines(true)
-                    .with_deferred_spans(true)
-                    .with_writer(writer)
-                    .with_filter(targets_filter)
-            );
-            // .with(ra_fmt_layer);
+        let subscriber = Registry::default().with(
+            HierarchicalLayer::new(2)
+                .with_ansi(false)
+                .with_indent_lines(true)
+                .with_deferred_spans(true)
+                .with_writer(writer)
+                .with_filter(targets_filter),
+        );
+        // .with(ra_fmt_layer);
         // .with(json_profiler_layer);
 
         tracing::subscriber::set_global_default(subscriber)?;

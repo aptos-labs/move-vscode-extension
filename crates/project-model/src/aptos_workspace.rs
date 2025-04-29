@@ -103,7 +103,9 @@ impl AptosWorkspace {
     }
 
     pub fn contains_file(&self, file_path: &AbsPath) -> bool {
-        self.all_ws_packages().iter().any(|pkg| pkg.contains_file(file_path))
+        self.all_ws_packages()
+            .iter()
+            .any(|pkg| pkg.contains_file(file_path))
     }
 }
 

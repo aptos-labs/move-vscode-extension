@@ -5,8 +5,9 @@ use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::has_item_list::HasUseStmtsInFileExt;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::{NamedElement, NamedItemScope};
-use syntax::files::InFile;
+use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
+use vfs::FileId;
 
 pub fn use_speck_entries(
     db: &dyn HirDatabase,
@@ -16,21 +17,27 @@ pub fn use_speck_entries(
 
     let mut entries = vec![];
     for use_item in use_items {
-        let path = InFile::new(items_owner.file_id, use_item.use_speck.path());
-        let Some(scope_entry) = path.clone().resolve_no_inf(db) else {
-            tracing::debug!(path = &path.syntax_text(), "use_speck unresolved");
-            continue;
-        };
-        let node_loc = scope_entry.node_loc;
-        entries.push(ScopeEntry {
-            name: use_item.alias_or_name,
-            node_loc,
-            ns: scope_entry.ns,
-            scope_adjustment: Some(use_item.scope),
-        });
+        if let Some(entry) = use_item_to_entry(db, use_item, items_owner.file_id) {
+            entries.push(entry);
+        }
     }
 
     entries
+}
+
+fn use_item_to_entry(db: &dyn HirDatabase, use_item: UseItem, file_id: FileId) -> Option<ScopeEntry> {
+    let path = use_item.use_speck.path()?.in_file(file_id);
+    let Some(scope_entry) = path.clone().resolve_no_inf(db) else {
+        tracing::debug!(path = &path.syntax_text(), "use_speck unresolved");
+        return None;
+    };
+    let node_loc = scope_entry.node_loc;
+    Some(ScopeEntry {
+        name: use_item.alias_or_name,
+        node_loc,
+        ns: scope_entry.ns,
+        scope_adjustment: Some(use_item.scope),
+    })
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -49,9 +56,8 @@ pub struct UseItem {
     scope: NamedItemScope,
 }
 
-pub fn use_stmt_items(use_stmt: ast::UseStmt) -> Vec<UseItem> {
-    #[rustfmt::skip]
-    let Some(root_use_speck) = use_stmt.use_speck() else { return vec![]; };
+pub fn use_stmt_items(use_stmt: ast::UseStmt) -> Option<Vec<UseItem>> {
+    let root_use_speck = use_stmt.use_speck()?;
 
     let use_stmt_scope = use_stmt.syntax().item_scope();
     let mut use_items = vec![];
@@ -59,21 +65,17 @@ pub fn use_stmt_items(use_stmt: ast::UseStmt) -> Vec<UseItem> {
     let use_group = root_use_speck.use_group();
     if let Some(use_group) = use_group {
         for child_use_speck in use_group.use_specks() {
-            let use_item = collect_child_use_speck(
-                root_use_speck.clone(),
-                child_use_speck,
-                // file_id,
-                use_stmt_scope,
-            );
+            let use_item =
+                collect_child_use_speck(root_use_speck.clone(), child_use_speck, use_stmt_scope);
             if let Some(use_item) = use_item {
                 use_items.push(use_item);
             }
         }
-        return use_items;
+        return Some(use_items);
     }
 
-    #[rustfmt::skip]
-    let Some(root_name) = root_use_speck.path().reference_name() else { return use_items; };
+    let root_path = root_use_speck.path()?;
+    let root_name = root_path.reference_name()?;
 
     let root_use_speck_alias = root_use_speck.use_alias();
     let root_alias_name = root_use_speck_alias
@@ -81,9 +83,7 @@ pub fn use_stmt_items(use_stmt: ast::UseStmt) -> Vec<UseItem> {
         .and_then(|alias| alias.name())
         .map(|it| it.as_string());
 
-    let root_path = root_use_speck.path();
-    let root_path_kind = path_kind(root_path, false);
-    // tracing::debug!(root_path_kind = ?root_path_kind);
+    let root_path_kind = path_kind(root_path, false)?;
 
     if let PathKind::Qualified { qualifier, kind, .. } = root_path_kind {
         match kind {
@@ -101,7 +101,7 @@ pub fn use_stmt_items(use_stmt: ast::UseStmt) -> Vec<UseItem> {
             // use aptos_std::m::Self;
             QualifiedKind::FQModuleItem { .. } => {
                 let Some(module_name) = qualifier.reference_name() else {
-                    return use_items;
+                    return Some(use_items);
                 };
                 if root_name.as_str() == "Self" {
                     use_items.push(UseItem {
@@ -137,7 +137,7 @@ pub fn use_stmt_items(use_stmt: ast::UseStmt) -> Vec<UseItem> {
         }
     }
 
-    use_items
+    Some(use_items)
 }
 
 fn collect_child_use_speck(
@@ -145,10 +145,10 @@ fn collect_child_use_speck(
     child_use_speck: ast::UseSpeck,
     use_stmt_scope: NamedItemScope,
 ) -> Option<UseItem> {
-    let qualifier_path = root_use_speck.path();
+    let qualifier_path = root_use_speck.path()?;
     let module_name = qualifier_path.reference_name()?;
 
-    let child_name = child_use_speck.path().reference_name()?;
+    let child_name = child_use_speck.path()?.reference_name()?;
     let child_alias = child_use_speck.use_alias();
     let child_alias_name = child_alias
         .clone()
@@ -165,7 +165,7 @@ fn collect_child_use_speck(
         });
     }
 
-    let qualifier_kind = path_kind(qualifier_path, false);
+    let qualifier_kind = path_kind(qualifier_path, false)?;
     tracing::debug!(qualifier_kind = ?qualifier_kind);
 
     if let PathKind::Qualified { .. } = qualifier_kind {

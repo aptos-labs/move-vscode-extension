@@ -38,8 +38,7 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
         if let Some(loop_label) = ref_element.cast_into::<ast::Label>() {
             let label = loop_label.in_file(*file_id);
             let label_name = label.value.name_as_string();
-            let filtered_entries = get_loop_labels_resolve_variants(label)
-                .filter_by_name(label_name);
+            let filtered_entries = get_loop_labels_resolve_variants(label).filter_by_name(label_name);
             tracing::debug!(?filtered_entries);
             return filtered_entries.single_or_none();
         }

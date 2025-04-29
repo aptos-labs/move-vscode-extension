@@ -55,7 +55,6 @@ pub fn get_path_resolve_variants(
     path_kind: PathKind,
 ) -> Vec<ScopeEntry> {
     match path_kind {
-        PathKind::Unknown => vec![],
         PathKind::NamedAddress(_) | PathKind::ValueAddress(_) => {
             // no path resolution for named / value addresses
             vec![]
@@ -145,7 +144,9 @@ pub fn resolve_path(
     };
     let context_element = path.clone();
 
-    let path_kind = path_kind(path.clone().value, false);
+    let Some(path_kind) = path_kind(path.clone().value, false) else {
+        return vec![];
+    };
     tracing::debug!(?path_kind);
 
     let ctx = ResolutionContext { path, is_completion: false };

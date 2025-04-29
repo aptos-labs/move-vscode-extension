@@ -33,9 +33,7 @@ impl ScopeEntry {
 
 impl fmt::Debug for ScopeEntry {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_tuple("ScopeEntry")
-            .field(&self.node_loc)
-            .finish()
+        f.debug_tuple("ScopeEntry").field(&self.node_loc).finish()
     }
 }
 

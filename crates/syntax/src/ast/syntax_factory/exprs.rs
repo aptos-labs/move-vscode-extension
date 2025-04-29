@@ -1,12 +1,11 @@
 use crate::ast::syntax_factory::{ast_from_text, SyntaxFactory};
+use crate::syntax_editor::mapping::SyntaxMappingBuilder;
 use crate::{ast, AstNode};
 use std::fmt::format;
-use crate::syntax_editor::mapping::SyntaxMappingBuilder;
 
 impl SyntaxFactory {
     pub fn expr_bin(&self, lhs: ast::Expr, op: ast::BinaryOp, rhs: ast::Expr) -> ast::BinExpr {
-        let ast::Expr::BinExpr(ast) =
-            expr_bin_op(lhs.clone(), op, rhs.clone()).clone_for_update()
+        let ast::Expr::BinExpr(ast) = expr_bin_op(lhs.clone(), op, rhs.clone()).clone_for_update()
         else {
             unreachable!()
         };

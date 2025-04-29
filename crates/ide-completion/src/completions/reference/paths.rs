@@ -16,7 +16,7 @@ pub(crate) fn add_path_completions(
     ctx: &CompletionContext<'_>,
     context_path: InFile<ast::Path>,
 ) -> Option<()> {
-    let path_kind = path_kind(context_path.clone().value, true);
+    let path_kind = path_kind(context_path.clone().value, true)?;
     tracing::debug!(path_kind = ?path_kind);
 
     if path_kind.is_unqualified() {

@@ -1,6 +1,6 @@
-use expect_test::expect;
 use crate::test_utils::check_diagnostics;
 use crate::test_utils::diagnostics::{check_diagnostic_and_fix, check_diagnostic_and_fix_expect};
+use expect_test::expect;
 
 #[test]
 fn test_replace_variable_assignment_with_plus() {
@@ -14,14 +14,15 @@ fn test_replace_variable_assignment_with_plus() {
                   //^^^^^^^^^ weak: Can be replaced with compound assignment
                 }
             }
-        "#]], expect![[r#"
+        "#]],
+        expect![[r#"
             module 0x1::m {
                 fun main() {
                     let x = 1;
                     x += 1;
                 }
             }
-        "#]]
+        "#]],
     );
 }
 
@@ -37,14 +38,15 @@ fn test_replace_variable_assignment_with_left_shift() {
                   //^^^^^^^^^^ weak: Can be replaced with compound assignment
                 }
             }
-        "#]], expect![[r#"
+        "#]],
+        expect![[r#"
             module 0x1::m {
                 fun main() {
                     let x = 1;
                     x <<= 1;
                 }
             }
-        "#]]
+        "#]],
     );
 }
 
@@ -59,12 +61,13 @@ fn test_replace_deref_assignment_with_plus() {
                   //^^^^^^^^^^^ weak: Can be replaced with compound assignment
                 }
             }
-        "#]], expect![[r#"
+        "#]],
+        expect![[r#"
             module 0x1::m {
                 fun main(p: &u8) {
                     *p += 1;
                 }
             }
-        "#]]
+        "#]],
     );
 }

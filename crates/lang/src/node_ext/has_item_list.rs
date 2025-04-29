@@ -11,7 +11,7 @@ impl<T: ast::HasUseStmts> HasUseStmtsInFileExt for InFile<T> {
         self.value
             .use_stmts()
             .into_iter()
-            .flat_map(|it| use_stmt_items(it /*, self.file_id*/))
+            .flat_map(|it| use_stmt_items(it).unwrap_or_default())
             .collect()
     }
 }

@@ -311,7 +311,10 @@ impl GlobalState {
                         package_graph.extend(ws_graph);
                     }
                     None => {
-                        tracing::info!("could not load PackageGraph from workspace {:?}, vfs is not ready", ws_root);
+                        tracing::info!(
+                            "could not load PackageGraph from workspace {:?}, vfs is not ready",
+                            ws_root
+                        );
                     }
                 }
             }
@@ -336,13 +339,7 @@ impl GlobalState {
         }
         self.analysis_host.apply_change(change);
 
-        self.report_progress(
-            progress_title,
-            crate::lsp::utils::Progress::End,
-            None,
-            None,
-            None,
-        );
+        self.report_progress(progress_title, crate::lsp::utils::Progress::End, None, None, None);
 
         self.reload_flycheck();
     }

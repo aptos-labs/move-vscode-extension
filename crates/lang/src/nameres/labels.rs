@@ -5,7 +5,7 @@ use parser::SyntaxKind;
 use parser::SyntaxKind::*;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{ast, AstNode};
+use syntax::{AstNode, ast};
 
 #[tracing::instrument(level = "debug", skip(label))]
 pub(crate) fn get_loop_labels_resolve_variants(label: InFile<ast::Label>) -> Vec<ScopeEntry> {
