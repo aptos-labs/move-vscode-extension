@@ -32,6 +32,7 @@ pub(crate) fn goto_definition(
 
     let original_token = pick_best_token(file.syntax().token_at_offset(offset), |kind| match kind {
         IDENT
+        | QUOTE_IDENT
         | INT_NUMBER
         | COMMENT => 4,
         // index and prefix ops

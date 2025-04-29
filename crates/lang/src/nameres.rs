@@ -1,5 +1,6 @@
 use crate::db::HirDatabase;
 use crate::loc::SyntaxLocFileExt;
+use crate::nameres::labels::get_loop_labels_resolve_variants;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::node_ext::item::ModuleItemExt;
 use syntax::ast;
@@ -13,6 +14,7 @@ pub mod binding;
 mod blocks;
 pub mod fq_named_element;
 mod is_visible;
+mod labels;
 pub mod name_resolution;
 pub mod namespaces;
 mod node_ext;
@@ -21,18 +23,26 @@ pub mod path_resolution;
 pub mod scope;
 mod scope_entries_owner;
 pub mod use_speck_entries;
-mod labels;
 
 pub trait ResolveReference {
     fn resolve(&self, db: &dyn HirDatabase) -> Option<ScopeEntry>;
     fn resolve_no_inf(&self, db: &dyn HirDatabase) -> Option<ScopeEntry>;
 }
 
-impl<T: ast::ReferenceElement> ResolveReference for InFile<T> {
+impl<T: ReferenceElement> ResolveReference for InFile<T> {
     fn resolve(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
         use syntax::SyntaxKind::*;
 
         let InFile { file_id, value: ref_element } = self;
+
+        if let Some(loop_label) = ref_element.cast_into::<ast::Label>() {
+            let label = loop_label.in_file(*file_id);
+            let label_name = label.value.name_as_string();
+            let filtered_entries = get_loop_labels_resolve_variants(label)
+                .filter_by_name(label_name);
+            tracing::debug!(?filtered_entries);
+            return filtered_entries.single_or_none();
+        }
 
         let opt_inference_ctx_owner = ref_element
             .syntax()

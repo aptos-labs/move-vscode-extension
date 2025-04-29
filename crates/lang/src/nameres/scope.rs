@@ -34,8 +34,6 @@ impl ScopeEntry {
 impl fmt::Debug for ScopeEntry {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_tuple("ScopeEntry")
-            // .field(&self.name.to_string())
-            // .field(&self.ns)
             .field(&self.node_loc)
             .finish()
     }
@@ -47,11 +45,11 @@ pub trait ScopeEntryExt {
 
 impl<T: ast::NamedElement> ScopeEntryExt for InFile<T> {
     fn to_entry(self) -> Option<ScopeEntry> {
-        let name = self.value.name()?;
+        let name = self.value.name()?.as_string();
         let item_loc = self.loc();
         let item_ns = named_item_ns(item_loc.kind());
         let entry = ScopeEntry {
-            name: name.as_string(),
+            name,
             node_loc: item_loc,
             ns: item_ns,
             scope_adjustment: None,
