@@ -21,6 +21,7 @@ pub mod path_resolution;
 pub mod scope;
 mod scope_entries_owner;
 pub mod use_speck_entries;
+mod labels;
 
 pub trait ResolveReference {
     fn resolve(&self, db: &dyn HirDatabase) -> Option<ScopeEntry>;

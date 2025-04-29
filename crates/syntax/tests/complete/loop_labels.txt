@@ -24,7 +24,7 @@ SOURCE_FILE@0..236
         WHITESPACE@42..51 "\n        "
         EXPR_STMT@51..131
           LOOP_EXPR@51..130
-            LABEL@51..58
+            LABEL_DECL@51..58
               QUOTE_IDENT@51..57 "'label"
               COLON@57..58 ":"
             WHITESPACE@58..59 " "
@@ -37,21 +37,23 @@ SOURCE_FILE@0..236
                 BREAK_EXPR@78..90
                   BREAK_KW@78..83 "break"
                   WHITESPACE@83..84 " "
-                  QUOTE_IDENT@84..90 "'label"
+                  LABEL@84..90
+                    QUOTE_IDENT@84..90 "'label"
                 SEMICOLON@90..91 ";"
               WHITESPACE@91..104 "\n            "
               EXPR_STMT@104..120
                 CONTINUE_EXPR@104..119
                   CONTINUE_KW@104..112 "continue"
                   WHITESPACE@112..113 " "
-                  QUOTE_IDENT@113..119 "'label"
+                  LABEL@113..119
+                    QUOTE_IDENT@113..119 "'label"
                 SEMICOLON@119..120 ";"
               WHITESPACE@120..129 "\n        "
               R_CURLY@129..130 "}"
           SEMICOLON@130..131 ";"
         WHITESPACE@131..140 "\n        "
         WHILE_EXPR@140..227
-          LABEL@140..147
+          LABEL_DECL@140..147
             QUOTE_IDENT@140..146 "'label"
             COLON@146..147 ":"
           WHITESPACE@147..148 " "
@@ -70,14 +72,16 @@ SOURCE_FILE@0..236
               BREAK_EXPR@175..187
                 BREAK_KW@175..180 "break"
                 WHITESPACE@180..181 " "
-                QUOTE_IDENT@181..187 "'label"
+                LABEL@181..187
+                  QUOTE_IDENT@181..187 "'label"
               SEMICOLON@187..188 ";"
             WHITESPACE@188..201 "\n            "
             EXPR_STMT@201..217
               CONTINUE_EXPR@201..216
                 CONTINUE_KW@201..209 "continue"
                 WHITESPACE@209..210 " "
-                QUOTE_IDENT@210..216 "'label"
+                LABEL@210..216
+                  QUOTE_IDENT@210..216 "'label"
               SEMICOLON@216..217 ";"
             WHITESPACE@217..226 "\n        "
             R_CURLY@226..227 "}"

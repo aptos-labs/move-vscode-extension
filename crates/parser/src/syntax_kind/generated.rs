@@ -188,6 +188,7 @@ pub enum SyntaxKind {
     RETURN_EXPR,
     CONTINUE_EXPR,
     BREAK_EXPR,
+    LABEL_DECL,
     LABEL,
     INLINE_EXPR,
     BLOCK_EXPR,

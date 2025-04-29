@@ -412,6 +412,8 @@ impl ForExpr {
     #[inline]
     pub fn for_condition(&self) -> Option<ForCondition> { support::child(&self.syntax) }
     #[inline]
+    pub fn label_decl(&self) -> Option<LabelDecl> { support::child(&self.syntax) }
+    #[inline]
     pub fn for_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![for]) }
 }
 
@@ -583,6 +585,19 @@ impl Label {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct LabelDecl {
+    pub(crate) syntax: SyntaxNode,
+}
+impl LabelDecl {
+    #[inline]
+    pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
+    #[inline]
+    pub fn quote_ident_token(&self) -> Option<SyntaxToken> {
+        support::token(&self.syntax, T![quote_ident])
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct LambdaExpr {
     pub(crate) syntax: SyntaxNode,
 }
@@ -695,6 +710,8 @@ pub struct LoopExpr {
 }
 impl ast::LoopLike for LoopExpr {}
 impl LoopExpr {
+    #[inline]
+    pub fn label_decl(&self) -> Option<LabelDecl> { support::child(&self.syntax) }
     #[inline]
     pub fn loop_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![loop]) }
 }
@@ -1666,6 +1683,8 @@ impl ast::LoopLike for WhileExpr {}
 impl WhileExpr {
     #[inline]
     pub fn condition(&self) -> Option<Condition> { support::child(&self.syntax) }
+    #[inline]
+    pub fn label_decl(&self) -> Option<LabelDecl> { support::child(&self.syntax) }
     #[inline]
     pub fn while_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![while]) }
 }
@@ -2816,6 +2835,27 @@ impl AstNode for Label {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == LABEL }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for LabelDecl {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        LABEL_DECL
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == LABEL_DECL }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -7249,6 +7289,11 @@ impl std::fmt::Display for ItemSpecRef {
     }
 }
 impl std::fmt::Display for Label {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for LabelDecl {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
