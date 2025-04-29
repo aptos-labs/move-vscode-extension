@@ -276,6 +276,8 @@ pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     // ("ExprStmt", &["expr"]), - invalid
     // ("LambdaParam", &["ident_pat"]), - can be wildcard_pat or invalid pat
     // ("QuantBinding", &["ident_pat"]),
+    ("LabelDecl", &["quote_ident"]),
+    ("Label", &["quote_ident"]),
     ("LambdaTypeParam", &["type"]),
     ("CallExpr", &["path"]),
     ("CastExpr", &["expr"]),
@@ -327,6 +329,7 @@ pub(crate) const NON_METHOD_TRAITS: &[(&str, &[&str])] = &[
             "StructLitField",
             "IdentPat",
             "ItemSpecRef",
+            "Label",
         ],
     ),
     // ("LoopLike", &["LoopExpr", "WhileExpr", "ForExpr"]),

@@ -4,7 +4,7 @@ use std::fmt;
 use std::fmt::Formatter;
 use syntax::algo::ancestors_at_offset;
 use syntax::files::InFile;
-use syntax::{AstNode, TextSize};
+use syntax::{match_ast, AstNode, TextSize};
 use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]
@@ -23,14 +23,15 @@ impl SyntaxLoc {
 
         let node_name = node
             .syntax()
-            .children()
+            .children_with_tokens()
             .find(|child| {
                 let kind = child.kind();
                 kind == SyntaxKind::NAME
                     || kind == SyntaxKind::NAME_REF
                     || kind == SyntaxKind::PATH_SEGMENT
+                    || kind == SyntaxKind::QUOTE_IDENT
             })
-            .map(|it| it.text().to_string());
+            .map(|it| it.to_string());
 
         SyntaxLoc {
             file_id: file_id.to_owned(),

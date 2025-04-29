@@ -92,6 +92,18 @@ impl NavigationTarget {
         if db.builtins_file_id().is_some_and(|fid| fid == file_id) {
             return None;
         }
+        if let Some(label_decl) = scope_entry.node_loc.to_ast::<ast::LabelDecl>(db.upcast()) {
+            let label = label_decl.value;
+            let name_range = label.quote_ident_token().text_range();
+            let node_range = label.syntax().text_range();
+            return Some(NavigationTarget::from_syntax(
+                file_id,
+                entry_name.into(),
+                Some(name_range),
+                node_range,
+                SymbolKind::Label,
+            ));
+        }
         let named_item = scope_entry
             .node_loc
             .to_ast::<ast::AnyNamedElement>(db.upcast())?

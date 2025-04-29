@@ -578,10 +578,12 @@ impl ItemSpecRef {
 pub struct Label {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::ReferenceElement for Label {}
 impl Label {
     #[inline]
-    pub fn quote_ident_token(&self) -> Option<SyntaxToken> {
+    pub fn quote_ident_token(&self) -> SyntaxToken {
         support::token(&self.syntax, T![quote_ident])
+            .expect("Label.quote_ident_token required by the parser")
     }
 }
 
@@ -593,8 +595,9 @@ impl LabelDecl {
     #[inline]
     pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
     #[inline]
-    pub fn quote_ident_token(&self) -> Option<SyntaxToken> {
+    pub fn quote_ident_token(&self) -> SyntaxToken {
         support::token(&self.syntax, T![quote_ident])
+            .expect("LabelDecl.quote_ident_token required by the parser")
     }
 }
 
@@ -6990,6 +6993,7 @@ impl AstNode for AnyReferenceElement {
             DOT_EXPR
                 | IDENT_PAT
                 | ITEM_SPEC_REF
+                | LABEL
                 | METHOD_CALL_EXPR
                 | PATH
                 | STRUCT_LIT_FIELD
@@ -7014,6 +7018,10 @@ impl From<IdentPat> for AnyReferenceElement {
 impl From<ItemSpecRef> for AnyReferenceElement {
     #[inline]
     fn from(node: ItemSpecRef) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
+}
+impl From<Label> for AnyReferenceElement {
+    #[inline]
+    fn from(node: Label) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
 }
 impl From<MethodCallExpr> for AnyReferenceElement {
     #[inline]
