@@ -86,11 +86,13 @@ impl GlobalState {
 
         if self.config.discovered_manifests().is_empty() {
             status.health |= lsp_ext::Health::Warning;
-            message.push_str("Failed to discover workspace.\n");
+            message.push_str(
+                "Failed to discover Aptos packages in the current folder."
+            );
         }
         if self.fetch_workspace_error().is_err() {
             status.health |= lsp_ext::Health::Error;
-            message.push_str("Failed to load workspaces.");
+            message.push_str("Failed to load Aptos packages.");
             message.push_str("\n\n");
         }
 
