@@ -5,7 +5,7 @@ use crate::main_loop::Task;
 use crate::op_queue::Cause;
 use crate::project_folders::ProjectFolders;
 use crate::{Config, lsp_ext};
-use base_db::change::{FileChange, PackageGraph};
+use base_db::change::{FileChanges, PackageGraph};
 use lang::builtin_files::BUILTINS_FILE;
 use lsp_types::FileSystemWatcher;
 use project_model::AptosWorkspace;
@@ -324,13 +324,15 @@ impl GlobalState {
         tracing::info!("process file changes");
         self.process_file_changes();
 
-        let mut change = FileChange::new();
+        let mut change = FileChanges::new();
         {
             let _p = tracing::info_span!("waiting for the vfs read lock (set package roots)").entered();
+
             let vfs = &self.vfs.read().0;
             tracing::info!("vfs read lock acquired");
             let roots = self.package_root_config.partition_into_roots(vfs);
             change.set_package_roots(roots);
+
             change.add_builtins_file(self.builtins_file_id, BUILTINS_FILE.to_string());
             tracing::info!("builtins_file {:?}", self.builtins_file_id);
 

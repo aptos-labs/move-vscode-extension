@@ -1,5 +1,5 @@
 use crate::RootDatabase;
-use base_db::change::FileChange;
+use base_db::change::FileChanges;
 use ra_salsa::{Database, Durability};
 
 impl RootDatabase {
@@ -8,7 +8,7 @@ impl RootDatabase {
         self.synthetic_write(Durability::LOW);
     }
 
-    pub fn apply_change(&mut self, change: FileChange) {
+    pub fn apply_change(&mut self, change: FileChanges) {
         let _p = tracing::info_span!("RootDatabase::apply_change").entered();
         self.request_cancellation();
 
