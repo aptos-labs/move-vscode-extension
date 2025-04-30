@@ -115,8 +115,7 @@ impl GlobalState {
 
                 let mut packages = discovered_manifests
                     .iter()
-                    .map(|manifest| {
-                        let manifest_path = &manifest.path;
+                    .map(|manifest_path| {
                         tracing::debug!(path = %manifest_path, "loading workspace from manifest");
                         AptosPackage::load(manifest_path)
                     })

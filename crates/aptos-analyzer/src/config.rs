@@ -263,7 +263,7 @@ impl Config {
         self.aptosPath().clone()
     }
 
-    pub fn discovered_manifests(&self) -> Vec<DiscoveredManifest> {
+    pub fn discovered_manifests(&self) -> Vec<ManifestPath> {
         // let exclude_dirs: Vec<_> =
         //     self.files_excludeDirs().iter().map(|p| self.root_path.join(p)).collect();
         // let exclude_dirs = vec![];
@@ -284,7 +284,6 @@ impl Config {
                 ManifestPath::from_manifest_file(path)
                     .map_err(|e| tracing::error!("failed to load linked project: {}", e))
                     .ok()
-                    .map(|manifest| DiscoveredManifest { path: manifest })
             })
             .collect()
     }
@@ -331,17 +330,6 @@ impl Config {
 
     pub fn caps(&self) -> &ClientCapabilities {
         &self.caps
-    }
-}
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub struct DiscoveredManifest {
-    pub path: ManifestPath,
-}
-
-impl From<ManifestPath> for DiscoveredManifest {
-    fn from(v: ManifestPath) -> Self {
-        DiscoveredManifest { path: v }
     }
 }
 
