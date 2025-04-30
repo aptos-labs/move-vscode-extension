@@ -5,7 +5,7 @@ use crate::main_loop::Task;
 use crate::op_queue::Cause;
 use crate::project_folders::ProjectFolders;
 use crate::{Config, lsp_ext};
-use base_db::change::{FileChanges, PackageGraph};
+use base_db::change::{DepGraph, FileChanges};
 use lsp_types::FileSystemWatcher;
 use project_model::aptos_package::AptosPackage;
 use std::fmt::Formatter;
@@ -170,76 +170,31 @@ impl GlobalState {
             return;
         }
 
-        let workspaces = packages
+        let packages = packages
             .iter()
             .filter_map(|res| res.as_ref().ok().cloned())
             .collect::<Vec<_>>();
-        self.packages = Arc::new(workspaces);
+
+        let same_packages = packages.len() == self.packages.len()
+            && packages.iter().zip(self.packages.iter()).all(|(l, r)| l.eq(r));
+
+        if same_packages {
+            if switching_from_empty_workspace {
+                // Switching from empty to empty is a no-op
+                return;
+            }
+            if *force_reload_deps {
+                tracing::info!(?force_reload_deps, "workspaces are unchanged");
+                self.reload_package_deps(cause);
+            }
+            // Unchanged workspaces, nothing to do here
+            return;
+        }
+
+        self.packages = Arc::new(packages);
 
         if let FilesWatcher::Client = self.config.files().watcher {
-            let filter = self
-                .packages
-                .iter()
-                .flat_map(|ws| ws.to_folder_roots())
-                .filter(|it| it.is_local)
-                .map(|it| it.include);
-
-            let mut watchers: Vec<FileSystemWatcher> =
-                if self.config.did_change_watched_files_relative_pattern_support() {
-                    // When relative patterns are supported by the client, prefer using them
-                    filter
-                        .flat_map(|include| {
-                            include.into_iter().flat_map(|base| {
-                                [(base.clone(), "**/*.move"), (base.clone(), "**/Move.toml")]
-                            })
-                        })
-                        .map(|(base, pat)| FileSystemWatcher {
-                            glob_pattern: lsp_types::GlobPattern::Relative(lsp_types::RelativePattern {
-                                base_uri: lsp_types::OneOf::Right(
-                                    lsp_types::Url::from_file_path(base).unwrap(),
-                                ),
-                                pattern: pat.to_owned(),
-                            }),
-                            kind: None,
-                        })
-                        .collect()
-                } else {
-                    // When they're not, integrate the base to make them into absolute patterns
-                    filter
-                        .flat_map(|include| {
-                            include.into_iter().flat_map(|base| {
-                                [format!("{base}/**/*.move"), format!("{base}/**/Move.toml")]
-                            })
-                        })
-                        .map(|glob_pattern| FileSystemWatcher {
-                            glob_pattern: lsp_types::GlobPattern::String(glob_pattern),
-                            kind: None,
-                        })
-                        .collect()
-                };
-
-            watchers.extend(
-                self.packages
-                    .iter()
-                    .map(|pkg| pkg.manifest_path())
-                    .map(|glob_pattern| FileSystemWatcher {
-                        glob_pattern: lsp_types::GlobPattern::String(glob_pattern.to_string()),
-                        kind: None,
-                    }),
-            );
-
-            let registration_options = lsp_types::DidChangeWatchedFilesRegistrationOptions { watchers };
-            let registration = lsp_types::Registration {
-                id: "workspace/didChangeWatchedFiles".to_owned(),
-                method: "workspace/didChangeWatchedFiles".to_owned(),
-                register_options: Some(serde_json::to_value(registration_options).unwrap()),
-            };
-            self.send_request::<lsp_types::request::RegisterCapability>(
-                lsp_types::RegistrationParams {
-                    registrations: vec![registration],
-                },
-                |_, _| (),
-            );
+            self.setup_client_file_watchers();
         }
 
         let files_config = self.config.files();
@@ -267,6 +222,75 @@ impl GlobalState {
         tracing::info!("did switch workspaces");
     }
 
+    fn setup_client_file_watchers(&mut self) {
+        let local_roots = self
+            .packages
+            .iter()
+            .flat_map(|ws| ws.to_folder_roots())
+            .filter(|it| it.is_local)
+            .map(|it| it.include);
+
+        let mut watchers: Vec<FileSystemWatcher> = if self
+            .config
+            .did_change_watched_files_relative_pattern_support()
+        {
+            // When relative patterns are supported by the client, prefer using them
+            local_roots
+                .flat_map(|include| {
+                    include
+                        .into_iter()
+                        .flat_map(|base| [(base.clone(), "**/*.move"), (base.clone(), "**/Move.toml")])
+                })
+                .map(|(base, pat)| FileSystemWatcher {
+                    glob_pattern: lsp_types::GlobPattern::Relative(lsp_types::RelativePattern {
+                        base_uri: lsp_types::OneOf::Right(lsp_types::Url::from_file_path(base).unwrap()),
+                        pattern: pat.to_owned(),
+                    }),
+                    kind: None,
+                })
+                .collect()
+        } else {
+            // When they're not, integrate the base to make them into absolute patterns
+            local_roots
+                .flat_map(|include| {
+                    include.into_iter().flat_map(|local_root| {
+                        [
+                            format!("{local_root}/**/*.move"),
+                            format!("{local_root}/**/Move.toml"),
+                        ]
+                    })
+                })
+                .map(|glob_pattern| FileSystemWatcher {
+                    glob_pattern: lsp_types::GlobPattern::String(glob_pattern),
+                    kind: None,
+                })
+                .collect()
+        };
+
+        watchers.extend(
+            self.packages
+                .iter()
+                .map(|pkg| pkg.manifest_path())
+                .map(|glob_pattern| FileSystemWatcher {
+                    glob_pattern: lsp_types::GlobPattern::String(glob_pattern.to_string()),
+                    kind: None,
+                }),
+        );
+
+        let registration_options = lsp_types::DidChangeWatchedFilesRegistrationOptions { watchers };
+        let registration = lsp_types::Registration {
+            id: "workspace/didChangeWatchedFiles".to_owned(),
+            method: "workspace/didChangeWatchedFiles".to_owned(),
+            register_options: Some(serde_json::to_value(registration_options).unwrap()),
+        };
+        self.send_request::<lsp_types::request::RegisterCapability>(
+            lsp_types::RegistrationParams {
+                registrations: vec![registration],
+            },
+            |_, _| (),
+        );
+    }
+
     #[tracing::instrument(level = "info", skip(self))]
     fn reload_package_deps(&mut self, cause: String) {
         let progress_title = "Reloading Aptos packages";
@@ -277,45 +301,15 @@ impl GlobalState {
             None,
             None,
         );
+        // tracing::info!("process file changes");
+        // self.process_pending_file_changes();
 
-        let package_graph = {
-            let mut package_graph = PackageGraph::default();
-            let n_ws = self.packages.len();
-            for i in 0..n_ws {
-                let ws_root = self.packages.get(i).unwrap().content_root().to_string();
-                {
-                    self.report_progress(
-                        progress_title,
-                        crate::lsp::utils::Progress::Report,
-                        Some(ws_root.clone()),
-                        Some((i as f64) / (n_ws as f64)),
-                        None,
-                    );
-                }
-
-                let ws = self.packages.get(i).unwrap();
-                let vfs = &self.vfs.read().0;
-
-                let mut load = |path: &AbsPath| vfs.file_id(&vfs::VfsPath::from(path.to_path_buf()));
-
-                let pkg_graph = ws.to_package_graph(&mut load);
-                match pkg_graph {
-                    Some(pkg_graph) => {
-                        package_graph.extend(pkg_graph);
-                    }
-                    None => {
-                        tracing::info!(
-                            "could not load PackageGraph for package from {:?}, vfs is not ready",
-                            ws_root
-                        );
-                    }
-                }
-            }
-            package_graph
+        let Some(dep_graph) = self.collect_dep_graph() else {
+            // vfs is not yet ready, dep graph is not valid
+            tracing::info!("cannot reload package dep graph, vfs is not ready yet");
+            self.report_progress(progress_title, crate::lsp::utils::Progress::End, None, None, None);
+            return;
         };
-
-        tracing::info!("process file changes");
-        self.process_pending_file_changes();
 
         let mut change = FileChanges::new();
         {
@@ -323,13 +317,42 @@ impl GlobalState {
             let roots = self.package_root_config.partition_into_roots(vfs);
             change.set_package_roots(roots);
             // depends on roots being available
-            change.set_package_graph(package_graph);
+            change.set_package_graph(dep_graph);
         }
         self.analysis_host.apply_change(change);
 
         self.report_progress(progress_title, crate::lsp::utils::Progress::End, None, None, None);
 
+        self.process_pending_file_changes();
         self.reload_flycheck();
+    }
+
+    fn collect_dep_graph(&mut self) -> Option<DepGraph> {
+        let mut global_dep_graph = DepGraph::default();
+        let n_ws = self.packages.len();
+
+        let vfs = &self.vfs.read().0;
+        let mut load = |path: &AbsPath| vfs.file_id(&vfs::VfsPath::from(path.to_path_buf()));
+
+        for i in 0..n_ws {
+            // let ws_root = self.packages.get(i).unwrap().content_root().to_string();
+            let pkg = self.packages.get(i).unwrap();
+
+            let dep_graph = pkg.to_dep_graph(&mut load)?;
+            global_dep_graph.extend(dep_graph);
+            // match dep_graph {
+            //     Some(dep_graph) => {
+            //     }
+            //     None => {
+            //         // tracing::info!(
+            //         //     "could not build DepGraph for {:?}, not loaded into Vfs",
+            //         //     ws_root
+            //         // );
+            //         return None;
+            //     }
+            // }
+        }
+        Some(global_dep_graph)
     }
 
     pub(super) fn fetch_workspace_error(&self) -> Result<(), String> {

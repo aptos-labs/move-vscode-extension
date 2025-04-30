@@ -1,7 +1,7 @@
 use crate::manifest_path::ManifestPath;
 use crate::move_toml::MoveToml;
 use anyhow::Context;
-use base_db::change::{ManifestFileId, PackageGraph};
+use base_db::change::{ManifestFileId, DepGraph};
 use paths::{AbsPath, AbsPathBuf};
 use std::fmt::Formatter;
 use std::{fmt, fs};
@@ -106,10 +106,10 @@ impl AptosPackage {
         package_refs(&self)
     }
 
-    pub fn to_package_graph(&self, load: FileLoader<'_>) -> Option<PackageGraph> {
-        tracing::info!("reloading aptos package at {}", self.content_root());
+    pub fn to_dep_graph(&self, load: FileLoader<'_>) -> Option<DepGraph> {
+        tracing::info!("reloading package at {}", self.content_root());
 
-        let mut package_graph = PackageGraph::default();
+        let mut package_graph = DepGraph::default();
         for pkg in self.all_reachable_packages() {
             let main_file_id = pkg.load_manifest_file_id(load)?;
             let mut dep_ids = vec![];
@@ -180,7 +180,7 @@ impl AptosPackage {
         match load(manifest_file.as_path()) {
             Some(file_id) => Some(file_id),
             None => {
-                tracing::info!("cannot load {:?} from filesystem", manifest_file.as_path());
+                tracing::info!("cannot load {:?} from the filesystem", manifest_file.as_path());
                 None
             }
         }

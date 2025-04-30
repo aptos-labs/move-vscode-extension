@@ -3,15 +3,28 @@ use crate::line_index::LineEndings;
 use crate::reload;
 use base_db::change::FileChanges;
 use parking_lot::{RwLockUpgradableReadGuard, RwLockWriteGuard};
+use paths::AbsPathBuf;
 
 impl GlobalState {
+    #[tracing::instrument(level = "info", skip(self))]
     pub(crate) fn process_pending_file_changes(&mut self) -> bool {
-        let _p = tracing::info_span!("GlobalState::process_changes").entered();
-
-        let Some((mut changes, refresh_packages)) = self.fetch_latest_file_changes() else {
+        let Some((mut changes, important_changes)) = self.fetch_latest_file_changes() else {
             return false;
         };
-        if refresh_packages {
+        let needs_to_refresh_packages = !important_changes.is_empty();
+        tracing::info!(?needs_to_refresh_packages);
+
+        if needs_to_refresh_packages {
+            let n_to_show = 5;
+            if important_changes.len() < n_to_show {
+                tracing::info!(triggered_by_changes = ?important_changes);
+            } else {
+                let changes = important_changes[0..n_to_show].to_vec();
+                tracing::info!("triggered_by_changes = {:?} ...", changes);
+            };
+        }
+
+        if needs_to_refresh_packages {
             let vfs = &self.vfs.read().0;
             let new_package_roots = self.package_root_config.partition_into_roots(vfs);
             changes.set_package_roots(new_package_roots);
@@ -20,7 +33,7 @@ impl GlobalState {
         let _p = tracing::info_span!("GlobalState::process_changes/apply_change").entered();
         self.analysis_host.apply_change(changes);
 
-        if refresh_packages {
+        if needs_to_refresh_packages {
             let _p = tracing::info_span!("GlobalState::process_changes/ws_structure_change").entered();
             self.fetch_packages_queue.request_op(
                 "workspace vfs file change".to_string(),
@@ -31,7 +44,7 @@ impl GlobalState {
         true
     }
 
-    fn fetch_latest_file_changes(&mut self) -> Option<(FileChanges, bool)> {
+    fn fetch_latest_file_changes(&mut self) -> Option<(FileChanges, Vec<AbsPathBuf>)> {
         let mut changes = FileChanges::new();
 
         let mut vfs_lock = self.vfs.write();
@@ -45,18 +58,23 @@ impl GlobalState {
         let vfs_lock = RwLockWriteGuard::downgrade_to_upgradable(vfs_lock);
         let vfs: &vfs::Vfs = &vfs_lock.0;
 
-        let mut refresh_packages = false;
+        let mut important_changes = vec![];
         let mut line_endings_changes = vec![];
 
         for changed_file in changed_files.into_values() {
             let changed_file_vfs_path = vfs.file_path(changed_file.file_id);
 
             if let Some(changed_file_path) = changed_file_vfs_path.as_path() {
-                refresh_packages |= changed_file.is_created_or_deleted();
-
-                if reload::should_refresh_for_file_change(&changed_file_path) {
+                if changed_file.is_created_or_deleted() {
+                    important_changes.push(changed_file_path.to_path_buf());
+                    // continue;
+                }
+                // refresh_packages |= changed_file.is_created_or_deleted();
+                else if reload::should_refresh_for_file_change(&changed_file_path) {
                     tracing::trace!(?changed_file_path, kind = ?changed_file.kind(), "refreshing for a change");
-                    refresh_packages |= true;
+                    important_changes.push(changed_file_path.to_path_buf());
+                    // continue;
+                    // refresh_packages |= true;
                 }
             }
 
@@ -90,6 +108,7 @@ impl GlobalState {
             };
             changes.change_file(file_id, text);
         }
-        Some((changes, refresh_packages))
+
+        Some((changes, important_changes))
     }
 }
