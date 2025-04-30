@@ -31,6 +31,7 @@ pub trait HirDatabase: SourceDatabase + Upcast<dyn SourceDatabase> {
     ) -> Vec<FileId>;
 }
 
+#[tracing::instrument(level = "debug", skip(db, path_loc))]
 pub(crate) fn resolve_path(db: &dyn HirDatabase, path_loc: SyntaxLoc) -> Vec<ScopeEntry> {
     let path = path_loc.to_ast::<ast::Path>(db.upcast());
     match path {
@@ -102,7 +103,11 @@ fn file_ids_by_module_address(
     file_ids
 }
 
-pub(crate) fn get_modules_in_file(db: &dyn HirDatabase, file_id: FileId, address: Address) -> Vec<Module> {
+pub(crate) fn get_modules_in_file(
+    db: &dyn HirDatabase,
+    file_id: FileId,
+    address: Address,
+) -> Vec<Module> {
     let source_file = db.parse(file_id).tree();
     let modules = source_file
         .all_modules()
