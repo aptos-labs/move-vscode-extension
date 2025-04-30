@@ -140,6 +140,7 @@ impl GlobalState {
 
         self.update_status_or_notify();
 
+        // todo: we might not need this first fetch_packages()
         self.fetch_packages_queue.request_op(
             "on startup".to_owned(),
             FetchPackagesRequest { force_reload_deps: false },

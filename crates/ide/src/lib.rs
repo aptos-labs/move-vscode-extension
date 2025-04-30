@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use base_db::SourceDatabase;
-use base_db::change::{FileChanges, PackageGraph};
+use base_db::change::{FileChanges, DepGraph};
 use ide_completion::item::CompletionItem;
 use ide_db::{LineIndexDatabase, RootDatabase};
 use line_index::{LineCol, LineIndex};
@@ -122,7 +122,7 @@ impl Analysis {
 
         host.apply_change(change);
 
-        let mut package_graph = PackageGraph::default();
+        let mut package_graph = DepGraph::default();
         package_graph.insert(file_id, vec![]);
 
         let mut change = FileChanges::new();

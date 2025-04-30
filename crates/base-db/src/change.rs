@@ -6,7 +6,7 @@ use std::sync::Arc;
 use vfs::FileId;
 
 pub type ManifestFileId = FileId;
-pub type PackageGraph = HashMap<ManifestFileId, Vec<ManifestFileId>>;
+pub type DepGraph = HashMap<ManifestFileId, Vec<ManifestFileId>>;
 
 /// Encapsulate a bunch of raw `.set` calls on the database.
 #[derive(Default)]
@@ -26,7 +26,7 @@ impl FileChanges {
         self.package_roots = Some(packages);
     }
 
-    pub fn set_package_graph(&mut self, package_graph: PackageGraph) {
+    pub fn set_package_graph(&mut self, package_graph: DepGraph) {
         self.package_graph = Some(package_graph);
     }
 
