@@ -1,7 +1,7 @@
 use crate::manifest_path::ManifestPath;
 use crate::move_toml::MoveToml;
 use anyhow::Context;
-use base_db::change::{ManifestFileId, DepGraph};
+use base_db::change::{DepGraph, ManifestFileId};
 use paths::{AbsPath, AbsPathBuf};
 use std::fmt::Formatter;
 use std::{fmt, fs};
@@ -14,6 +14,7 @@ pub type FileLoader<'a> = &'a mut dyn for<'b> FnMut(&'b AbsPath) -> Option<FileI
 /// the current workspace.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct PackageFolderRoot {
+    // pub content_root: AbsPathBuf,
     /// Is from the local filesystem and may be edited
     pub is_local: bool,
     /// Directories to include
@@ -102,7 +103,7 @@ impl AptosPackage {
         ManifestPath { file }
     }
 
-    pub fn all_reachable_packages(&self) -> Vec<&AptosPackage> {
+    pub fn package_with_deps(&self) -> Vec<&AptosPackage> {
         package_refs(&self)
     }
 
@@ -110,7 +111,7 @@ impl AptosPackage {
         tracing::info!("reloading package at {}", self.content_root());
 
         let mut package_graph = DepGraph::default();
-        for pkg in self.all_reachable_packages() {
+        for pkg in self.package_with_deps() {
             let main_file_id = pkg.load_manifest_file_id(load)?;
             let mut dep_ids = vec![];
             self.collect_dep_ids(&mut dep_ids, pkg, load);
@@ -140,7 +141,7 @@ impl AptosPackage {
     /// The return type contains the path and whether or not
     /// the root is a member of the current workspace
     pub fn to_folder_roots(&self) -> Vec<PackageFolderRoot> {
-        self.all_reachable_packages()
+        self.package_with_deps()
             .into_iter()
             .map(|it| it.to_folder_root())
             .collect()
@@ -148,8 +149,15 @@ impl AptosPackage {
 
     pub fn to_folder_root(&self) -> PackageFolderRoot {
         PackageFolderRoot {
+            // content_root: self.content_root.clone(),
             is_local: !self.is_dep,
             include: vec![self.content_root.clone()],
+            // include: vec![
+            //     self.content_root.join("sources"),
+            //     self.content_root.join("tests"),
+            //     self.content_root.join("scripts"),
+            // ],
+            // exclude: vec![],
             exclude: vec![self.content_root.join("build")],
         }
     }

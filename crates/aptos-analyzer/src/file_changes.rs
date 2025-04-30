@@ -15,7 +15,7 @@ impl GlobalState {
         tracing::info!(?needs_to_refresh_packages);
 
         if needs_to_refresh_packages {
-            let n_to_show = 5;
+            let n_to_show = 500;
             if important_changes.len() < n_to_show {
                 tracing::info!(triggered_by_changes = ?important_changes);
             } else {

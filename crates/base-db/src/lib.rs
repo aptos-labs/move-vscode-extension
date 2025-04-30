@@ -71,7 +71,5 @@ fn source_file_ids(db: &dyn SourceDatabase, package_root_id: PackageRootId) -> V
             source_file_ids.push(source_file_id);
         }
     }
-    // source_file_ids.sort();
-    // source_file_ids.dedup();
     source_file_ids
 }

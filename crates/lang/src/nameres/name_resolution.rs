@@ -1,4 +1,4 @@
-use crate::db::HirDatabase;
+use crate::db::{HirDatabase, get_modules_in_file};
 use crate::nameres::ResolveReference;
 use crate::nameres::address::Address;
 use crate::nameres::namespaces::{Ns, NsSet};
@@ -143,18 +143,15 @@ pub fn get_modules_as_entries(
     package_root_id: PackageRootId,
     address: Address,
 ) -> Vec<ScopeEntry> {
-    let source_file_ids = db.source_file_ids(package_root_id);
+    let interesting_file_ids = db.file_ids_by_module_address(package_root_id, address.clone());
 
     let mut module_entries = vec![];
-    for source_file_id in source_file_ids {
-        let source_file = db.parse(source_file_id).tree();
-        let modules = source_file
-            .all_modules()
-            .filter(|m| m.address_equals_to(address.clone(), false))
-            .collect::<Vec<_>>();
+    for source_file_id in interesting_file_ids {
+        let modules = get_modules_in_file(db, source_file_id, address.clone());
         module_entries.extend(modules.wrapped_in_file(source_file_id).to_entries());
     }
     tracing::debug!(?module_entries);
+
     module_entries
 }
 

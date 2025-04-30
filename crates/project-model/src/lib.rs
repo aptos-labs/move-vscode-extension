@@ -24,6 +24,7 @@ impl ManifestPath {
         if fs::exists(&root_manifest).is_ok_and(|it| it) {
             manifests.push(ManifestPath { file: root_manifest });
         }
+        // skip build/ directory here
         manifests.extend(Self::find_manifests_in_child_directories(read_dir(ws_root)?));
 
         Ok(manifests)
