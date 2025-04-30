@@ -120,9 +120,7 @@ fn try_check_resolve(
     ctx: &DiagnosticsContext<'_>,
     reference: InFile<ast::AnyReferenceElement>,
 ) -> Option<()> {
-    let entries = ctx
-        .sema
-        .resolve_in_file(reference.clone().map_into());
+    let entries = ctx.sema.resolve_in_file(reference.clone().map_into());
     let reference_node = reference.and_then_ref(|it| it.reference_node())?;
     let reference_name = reference.value.reference_name()?;
     match entries.len() {
@@ -137,7 +135,10 @@ fn try_check_resolve(
         _ => {
             acc.push(Diagnostic::new(
                 DiagnosticCode::Lsp("unresolved-reference", Severity::Error),
-                format!("Unresolved reference `{}`: resolved to multiple elements", reference_name),
+                format!(
+                    "Unresolved reference `{}`: resolved to multiple elements",
+                    reference_name
+                ),
                 reference_node.file_range(),
             ));
         }

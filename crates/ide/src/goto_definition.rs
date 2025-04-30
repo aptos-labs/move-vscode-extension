@@ -2,8 +2,8 @@ use crate::RangeInfo;
 use crate::navigation_target::NavigationTarget;
 use ide_db::RootDatabase;
 use ide_db::helpers::pick_best_token;
-use lang::nameres::scope::VecExt;
 use lang::Semantics;
+use lang::nameres::scope::VecExt;
 use syntax::files::FilePosition;
 use syntax::{AstNode, SyntaxKind::*, T, algo, ast};
 

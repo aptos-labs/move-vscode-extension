@@ -42,9 +42,8 @@ pub enum Command {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AssistKind {
-    // FIXME: does the None variant make sense? Probably not.
-    None,
-
+    // // FIXME: does the None variant make sense? Probably not.
+    // None,
     QuickFix,
     Generate,
     Refactor,
@@ -60,7 +59,7 @@ impl AssistKind {
         }
 
         match self {
-            AssistKind::None | AssistKind::Generate => true,
+            AssistKind::Generate => true,
             AssistKind::Refactor => matches!(
                 other,
                 AssistKind::RefactorExtract | AssistKind::RefactorInline | AssistKind::RefactorRewrite
@@ -71,7 +70,6 @@ impl AssistKind {
 
     pub fn name(&self) -> &str {
         match self {
-            AssistKind::None => "None",
             AssistKind::QuickFix => "QuickFix",
             AssistKind::Generate => "Generate",
             AssistKind::Refactor => "Refactor",
@@ -87,7 +85,6 @@ impl FromStr for AssistKind {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "None" => Ok(AssistKind::None),
             "QuickFix" => Ok(AssistKind::QuickFix),
             "Generate" => Ok(AssistKind::Generate),
             "Refactor" => Ok(AssistKind::Refactor),
@@ -105,10 +102,6 @@ impl FromStr for AssistKind {
 pub struct AssistId(pub &'static str, pub AssistKind, pub Option<usize>);
 
 impl AssistId {
-    pub fn none(id: &'static str) -> AssistId {
-        AssistId(id, AssistKind::None, None)
-    }
-
     pub fn quick_fix(id: &'static str) -> AssistId {
         AssistId(id, AssistKind::QuickFix, None)
     }
