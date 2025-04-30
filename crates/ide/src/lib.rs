@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use base_db::SourceDatabase;
-use base_db::change::{FileChanges, DepGraph};
+use base_db::change::{DepGraph, FileChanges};
 use ide_completion::item::CompletionItem;
 use ide_db::{LineIndexDatabase, RootDatabase};
 use line_index::{LineCol, LineIndex};

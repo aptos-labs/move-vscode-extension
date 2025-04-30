@@ -1,7 +1,9 @@
 //! Simple logger that logs either to stderr or to a file, using `tracing_subscriber`
 //! filter syntax and `tracing_appender` for non blocking output.
 
+use crate::tracing::hprof;
 use anyhow::Context;
+use std::env;
 use tracing_subscriber::{Layer, Registry, filter::Targets, fmt::MakeWriter, layer::SubscriberExt};
 use tracing_tree::HierarchicalLayer;
 
@@ -84,7 +86,12 @@ where
         //     None => None,
         // };
 
-        // let level = Level::from_str(&env::var("RA_LOG").ok().unwrap_or_else(|| "error".to_owned()))?;
+        let profiler = env::var("APT_PROFILER").ok().is_some();
+        if profiler {
+            hprof::span_tree().aggregate(true).enable();
+            return Ok(());
+        }
+
         let subscriber = Registry::default().with(
             HierarchicalLayer::new(2)
                 .with_ansi(false)
