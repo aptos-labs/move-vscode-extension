@@ -37,7 +37,9 @@ impl ModuleLangExt for ast::Module {
         let self_numeric = self_address.clone().resolve_to_numeric_address();
         let candidate_numeric = candidate_address.clone().resolve_to_numeric_address();
         let same_values = match (self_numeric, candidate_numeric) {
-            (Some(left), Some(right)) => left.short() == right.short(),
+            (Some(left), Some(right)) => {
+                left.short() == right.short()
+            },
             _ => false,
         };
 

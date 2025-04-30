@@ -25,12 +25,14 @@ mod scope_entries_owner;
 pub mod use_speck_entries;
 
 pub trait ResolveReference {
+    fn resolve_multi(&self, db: &dyn HirDatabase) -> Option<Vec<ScopeEntry>>;
     fn resolve(&self, db: &dyn HirDatabase) -> Option<ScopeEntry>;
+    fn resolve_no_inf_multi(&self, db: &dyn HirDatabase) -> Option<Vec<ScopeEntry>>;
     fn resolve_no_inf(&self, db: &dyn HirDatabase) -> Option<ScopeEntry>;
 }
 
 impl<T: ReferenceElement> ResolveReference for InFile<T> {
-    fn resolve(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
+    fn resolve_multi(&self, db: &dyn HirDatabase) -> Option<Vec<ScopeEntry>> {
         use syntax::SyntaxKind::*;
 
         let InFile { file_id, value: ref_element } = self;
@@ -40,7 +42,7 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
             let label_name = label.value.name_as_string();
             let filtered_entries = get_loop_labels_resolve_variants(label).filter_by_name(label_name);
             tracing::debug!(?filtered_entries);
-            return filtered_entries.single_or_none();
+            return Some(filtered_entries);
         }
 
         let opt_inference_ctx_owner = ref_element
@@ -52,19 +54,19 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
             let inference = db.inference_for_ctx_owner(inference_ctx_owner.loc(), msl);
 
             if let Some(method_or_path) = ref_element.cast_into::<ast::MethodOrPath>() {
-                let entry = inference.get_resolve_method_or_path(method_or_path.clone());
-                if entry.is_none() {
+                let entries = inference.get_resolve_method_or_path_entries(method_or_path.clone());
+                if entries.is_empty() {
                     // to support qualifier paths, as they're not cached
-                    return method_or_path.cast_into::<ast::Path>().and_then(|path| {
-                        path_resolution::resolve_path(db, path.in_file(self.file_id), None)
-                            .single_or_none()
-                    });
+                    let method_or_path = method_or_path.cast_into::<ast::Path>()?;
+                    let entries =
+                        path_resolution::resolve_path(db, method_or_path.in_file(self.file_id), None);
+                    return Some(entries);
                 }
-                return entry;
+                return Some(entries);
             }
 
             let kind = ref_element.syntax().kind();
-            let entry = match kind {
+            let entries = match kind {
                 STRUCT_PAT_FIELD => {
                     let struct_pat_field = ref_element.cast_into::<ast::StructPatField>().unwrap();
 
@@ -74,9 +76,8 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
                         .cast_into::<ast::AnyFieldsOwner>(db)?;
 
                     let field_name = struct_pat_field.field_name()?;
-                    get_named_field_entries(fields_owner)
-                        .filter_by_name(field_name)
-                        .single_or_none()
+                    get_named_field_entries(fields_owner).filter_by_name(field_name)
+                    // .single_or_none()
                 }
                 STRUCT_LIT_FIELD => {
                     let struct_lit_field = ref_element.cast_into::<ast::StructLitField>().unwrap();
@@ -87,46 +88,58 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
                         .cast_into::<ast::AnyFieldsOwner>(db)?;
 
                     let field_name = struct_lit_field.field_name()?;
-                    get_named_field_entries(fields_owner)
-                        .filter_by_name(field_name)
-                        .single_or_none()
+                    get_named_field_entries(fields_owner).filter_by_name(field_name)
+                    // .single_or_none()
                 }
                 DOT_EXPR => {
                     let dot_expr = ref_element.cast_into::<ast::DotExpr>().unwrap();
                     let field_ref = dot_expr.field_ref();
-                    inference.get_resolved_field(&field_ref)
+                    inference
+                        .get_resolved_field(&field_ref)
+                        .map(|it| vec![it])
+                        .unwrap_or_default()
                 }
                 IDENT_PAT => {
                     let ident_pat = ref_element.cast_into::<ast::IdentPat>().unwrap();
-                    inference.get_resolved_ident_pat(&ident_pat)
+                    inference
+                        .get_resolved_ident_pat(&ident_pat)
+                        .map(|it| vec![it])
+                        .unwrap_or_default()
                 }
-                _ => None,
+                _ => return None,
             };
-
-            return entry;
+            return Some(entries);
         }
 
         // outside inference context
-        self.resolve_no_inf(db)
+        self.resolve_no_inf_multi(db)
     }
 
-    fn resolve_no_inf(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
+    fn resolve(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
+        self.resolve_multi(db)?.single_or_none()
+    }
+
+    fn resolve_no_inf_multi(&self, db: &dyn HirDatabase) -> Option<Vec<ScopeEntry>> {
         // outside inference context
         if let Some(item_spec_ref) = self.cast_into_ref::<ast::ItemSpecRef>() {
             let ref_name = item_spec_ref.value.name_ref()?.as_string();
             let item_spec = item_spec_ref.map(|it| it.item_spec());
             let module = item_spec.module(db)?;
             let verifiable_items = module.map(|it| it.verifiable_items()).flatten().to_entries();
-            return verifiable_items.filter_by_name(ref_name).single_or_none();
+            return Some(verifiable_items.filter_by_name(ref_name));
         }
         match self.cast_into_ref::<ast::Path>() {
-            Some(path) => db.resolve_path(path.loc()),
+            Some(path) => Some(db.resolve_path(path.loc())),
             None => {
                 let kind = self.value.syntax().kind();
                 tracing::debug!("cannot resolve {:?} without inference", kind);
                 None
             }
         }
+    }
+
+    fn resolve_no_inf(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
+        self.resolve_no_inf_multi(db)?.single_or_none()
     }
 }
 

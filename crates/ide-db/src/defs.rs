@@ -2,6 +2,7 @@ use crate::{RootDatabase, SymbolKind, ast_kind_to_symbol_kind};
 use lang::Semantics;
 use std::collections::HashSet;
 use std::sync::LazyLock;
+use lang::nameres::scope::VecExt;
 use syntax::{AstNode, ast};
 
 static INTEGER_TYPE_IDENTS: LazyLock<HashSet<&str>> =
@@ -55,7 +56,7 @@ impl NameRefClass {
         let ref_parent = name_ref.syntax().parent()?;
 
         if let Some(path) = ast::PathSegment::cast(ref_parent.clone()).map(|it| it.parent_path()) {
-            let res = sema.resolve(path.into());
+            let res = sema.resolve(path.into()).single_or_none();
             return match res {
                 Some(entry) => {
                     let symbol_kind = ast_kind_to_symbol_kind(entry.node_loc.kind())?;

@@ -2,6 +2,7 @@ use crate::RangeInfo;
 use crate::navigation_target::NavigationTarget;
 use ide_db::RootDatabase;
 use ide_db::helpers::pick_best_token;
+use lang::nameres::scope::VecExt;
 use lang::Semantics;
 use syntax::files::FilePosition;
 use syntax::{AstNode, SyntaxKind::*, T, algo, ast};
@@ -28,7 +29,7 @@ pub(crate) fn goto_definition(
     let file = sema.parse(file_id);
 
     let reference = algo::find_node_at_offset::<ast::AnyReferenceElement>(file.syntax(), offset)?;
-    let scope_entry = sema.resolve(reference)?;
+    let scope_entry = sema.resolve(reference).single_or_none()?;
 
     let original_token = pick_best_token(file.syntax().token_at_offset(offset), |kind| match kind {
         IDENT
