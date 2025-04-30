@@ -116,12 +116,17 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
             let ref_name = item_spec_ref.value.name_ref()?.as_string();
             let item_spec = item_spec_ref.map(|it| it.item_spec());
             let module = item_spec.module(db)?;
-            let verified_items = module.map(|it| it.verifiable_items()).flatten().to_entries();
-            return verified_items.filter_by_name(ref_name).single_or_none();
+            let verifiable_items = module.map(|it| it.verifiable_items()).flatten().to_entries();
+            return verifiable_items.filter_by_name(ref_name).single_or_none();
         }
-
-        let path = self.cast_into_ref::<ast::Path>()?;
-        db.resolve_path(path.loc())
+        match self.cast_into_ref::<ast::Path>() {
+            Some(path) => db.resolve_path(path.loc()),
+            None => {
+                let kind = self.value.syntax().kind();
+                tracing::debug!("cannot resolve {:?} without inference", kind);
+                None
+            }
+        }
     }
 }
 

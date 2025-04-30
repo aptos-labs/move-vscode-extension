@@ -8,9 +8,6 @@ use ide_completion::item::CompletionItem;
 use ide_db::SnippetCap;
 use syntax::files::FilePosition;
 use syntax::{AstNode, AstToken, TextSize, ast};
-use tracing_subscriber::Layer;
-use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::util::SubscriberInitExt;
 
 pub fn do_single_completion(before: &str, after: &str) {
     let (source, offset) = get_and_replace_caret(before, "/*caret*/");

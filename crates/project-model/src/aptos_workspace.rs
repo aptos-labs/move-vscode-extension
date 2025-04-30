@@ -67,7 +67,7 @@ impl AptosWorkspace {
 
     pub fn to_package_graph(&self, load: FileLoader<'_>) -> Option<PackageGraph> {
         tracing::info!(
-            "loading aptos workspace at {:?} into PackageGraph",
+            "reloading aptos workspace at {}",
             self.main_package.content_root()
         );
 

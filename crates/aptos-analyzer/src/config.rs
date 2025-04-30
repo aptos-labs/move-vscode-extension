@@ -12,7 +12,6 @@ use vfs::AbsPathBuf;
 
 use crate::config::options::{DefaultConfigData, FullConfigInput};
 use crate::flycheck::{AptosOptions, FlycheckConfig};
-use base_db::package_root::PackageRootId;
 use ide_db::assist_config::AssistConfig;
 use ide_diagnostics::config::DiagnosticsConfig;
 use project_model::manifest_path::ManifestPath;

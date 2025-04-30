@@ -16,17 +16,11 @@ pub struct PackageRoot {
 
 impl PackageRoot {
     pub fn new_local(file_set: FileSet) -> PackageRoot {
-        PackageRoot {
-            file_set,
-            is_library: false,
-        }
+        PackageRoot { file_set, is_library: false }
     }
 
     pub fn new_library(file_set: FileSet) -> PackageRoot {
-        PackageRoot {
-            file_set,
-            is_library: true,
-        }
+        PackageRoot { file_set, is_library: true }
     }
 
     pub fn path_for_file(&self, file: &FileId) -> Option<&VfsPath> {

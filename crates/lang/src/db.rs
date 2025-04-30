@@ -18,9 +18,18 @@ pub trait HirDatabase: SourceDatabase + Upcast<dyn SourceDatabase> {
     fn inference_for_ctx_owner(&self, ctx_owner_loc: SyntaxLoc, msl: bool) -> Arc<InferenceResult>;
 }
 
-pub(crate) fn resolve_path(db: &dyn HirDatabase, ref_loc: SyntaxLoc) -> Option<ScopeEntry> {
-    let path = ref_loc.to_ast::<ast::Path>(db.upcast())?;
-    path_resolution::resolve_path(db, path, None).single_or_none()
+pub(crate) fn resolve_path(db: &dyn HirDatabase, path_loc: SyntaxLoc) -> Option<ScopeEntry> {
+    let path = path_loc.to_ast::<ast::Path>(db.upcast());
+    match path {
+        Some(path) => path_resolution::resolve_path(db, path, None).single_or_none(),
+        None => {
+            tracing::error!(
+                ?path_loc,
+                "resolve_path() function should only receive loc of Path, this is a bug"
+            );
+            None
+        }
+    }
 }
 
 #[tracing::instrument(level = "debug", skip(db))]

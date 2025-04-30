@@ -154,7 +154,7 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
                 return Some(PathKind::Qualified {
                     path,
                     qualifier,
-                    ns,
+                    ns: MODULES,
                     kind: QualifiedKind::Module { address: value_address },
                 });
             }
@@ -166,7 +166,7 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
                     return Some(PathKind::Qualified {
                         path,
                         qualifier,
-                        ns,
+                        ns: MODULES,
                         kind: QualifiedKind::Module { address: Address::Named(NamedAddr::new(qualifier_ref_name)) }
                     });
                 }

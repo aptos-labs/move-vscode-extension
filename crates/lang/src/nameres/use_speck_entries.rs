@@ -17,7 +17,7 @@ pub fn use_speck_entries(
 
     let mut entries = vec![];
     for use_item in use_items {
-        if let Some(entry) = use_item_to_entry(db, use_item, items_owner.file_id) {
+        if let Some(entry) = resolve_use_item(db, use_item, items_owner.file_id) {
             entries.push(entry);
         }
     }
@@ -25,10 +25,10 @@ pub fn use_speck_entries(
     entries
 }
 
-fn use_item_to_entry(db: &dyn HirDatabase, use_item: UseItem, file_id: FileId) -> Option<ScopeEntry> {
+fn resolve_use_item(db: &dyn HirDatabase, use_item: UseItem, file_id: FileId) -> Option<ScopeEntry> {
     let path = use_item.use_speck.path()?.in_file(file_id);
     let Some(scope_entry) = path.clone().resolve_no_inf(db) else {
-        tracing::debug!(path = &path.syntax_text(), "use_speck unresolved");
+        tracing::debug!(path = &path.syntax_text(), "cannot resolve use speck");
         return None;
     };
     let node_loc = scope_entry.node_loc;
@@ -166,7 +166,7 @@ fn collect_child_use_speck(
     }
 
     let qualifier_kind = path_kind(qualifier_path, false)?;
-    tracing::debug!(qualifier_kind = ?qualifier_kind);
+    // tracing::debug!(qualifier_kind = ?qualifier_kind);
 
     if let PathKind::Qualified { .. } = qualifier_kind {
         // let address = match kind {

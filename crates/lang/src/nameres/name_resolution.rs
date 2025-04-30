@@ -1,6 +1,6 @@
 use crate::db::HirDatabase;
 use crate::nameres::ResolveReference;
-use crate::nameres::address::{Address, NamedAddr};
+use crate::nameres::address::Address;
 use crate::nameres::namespaces::{Ns, NsSet};
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::path_resolution::ResolutionContext;
@@ -143,6 +143,8 @@ pub fn get_modules_as_entries(
     address: Address,
 ) -> Vec<ScopeEntry> {
     let dep_ids = db.package_deps(package_root_id).deref().to_owned();
+    tracing::debug!(?dep_ids);
+
     let file_sets = iter::once(package_root_id)
         .chain(dep_ids)
         .map(|id| db.package_root(id).file_set.clone())
@@ -175,8 +177,14 @@ pub fn get_qualified_path_entries(
     let qualifier = ctx.wrap_in_file(qualifier);
     let qualifier_item = qualifier.clone().resolve_no_inf(db);
     if qualifier_item.is_none() {
-        // try resolving assuming it's a named address
         if let Some(qualifier_name) = qualifier.value.reference_name() {
+            let _p = tracing::debug_span!(
+                "qualifier is unresolved",
+                "try to resolve assuming that {:?} is a named address",
+                qualifier_name
+            )
+            .entered();
+
             return Some(get_modules_as_entries(
                 db,
                 ctx.package_root_id(db),

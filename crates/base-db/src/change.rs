@@ -42,6 +42,7 @@ impl FileChanges {
         let _p = tracing::info_span!("FileChange::apply").entered();
 
         if let Some(package_roots) = self.package_roots {
+            tracing::info!("reset package roots and dependencies");
             for (idx, root) in package_roots.into_iter().enumerate() {
                 let root_id = PackageRootId(idx as u32);
                 let root_file_set = &root.file_set;
@@ -60,7 +61,7 @@ impl FileChanges {
         }
 
         if let Some(package_graph) = self.package_graph {
-            let _p = tracing::info_span!("set package graph").entered();
+            let _p = tracing::info_span!("set package dependencies").entered();
             for (manifest_file_id, dep_manifest_ids) in package_graph.into_iter() {
                 let main_package_id = db.file_package_root(manifest_file_id);
                 let deps_package_ids = dep_manifest_ids
