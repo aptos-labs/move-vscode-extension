@@ -1,11 +1,26 @@
-use crate::aptos_workspace::{FileLoader, PackageFolderRoot};
 use crate::manifest_path::ManifestPath;
 use crate::move_toml::MoveToml;
 use anyhow::Context;
-use base_db::change::ManifestFileId;
+use base_db::change::{ManifestFileId, PackageGraph};
 use paths::{AbsPath, AbsPathBuf};
 use std::fmt::Formatter;
 use std::{fmt, fs};
+use vfs::FileId;
+
+pub type FileLoader<'a> = &'a mut dyn for<'b> FnMut(&'b AbsPath) -> Option<FileId>;
+
+/// `PackageRoot` describes a package root folder.
+/// Which may be an external dependency, or a member of
+/// the current workspace.
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+pub struct PackageFolderRoot {
+    /// Is from the local filesystem and may be edited
+    pub is_local: bool,
+    /// Directories to include
+    pub include: Vec<AbsPathBuf>,
+    /// Directories to exclude
+    pub exclude: Vec<AbsPathBuf>,
+}
 
 #[derive(Clone, Eq, PartialEq)]
 pub struct AptosPackage {
@@ -24,14 +39,22 @@ impl fmt::Debug for AptosPackage {
 }
 
 impl AptosPackage {
-    pub fn load(manifest_path: ManifestPath, is_dep: bool) -> anyhow::Result<Self> {
+    pub fn load(root_manifest: &ManifestPath) -> anyhow::Result<AptosPackage> {
+        AptosPackage::load_inner(root_manifest, false)
+            .with_context(|| format!("Failed to load the project at {root_manifest}"))
+    }
+
+    pub fn load_dependency(root_manifest: &ManifestPath) -> anyhow::Result<AptosPackage> {
+        AptosPackage::load_inner(root_manifest, true)
+    }
+
+    fn load_inner(manifest_path: &ManifestPath, is_dep: bool) -> anyhow::Result<Self> {
         let content_root = manifest_path.parent().to_path_buf();
-        let _p =
-            tracing::info_span!("load package at", "{:?}", fs::canonicalize(&content_root)).entered();
+        let _p = tracing::info_span!("load aptos package at", "{:?}", fs::canonicalize(&content_root))
+            .entered();
 
         let file_contents = fs::read_to_string(&manifest_path)
             .with_context(|| format!("Failed to read Move.toml file {manifest_path}"))?;
-
         let move_toml = MoveToml::from_str(file_contents.as_str())
             .with_context(|| format!("Failed to deserialize Move.toml file {manifest_path}"))?;
 
@@ -50,7 +73,7 @@ impl AptosPackage {
         }
         let deps = dep_manifests
             .into_iter()
-            .filter_map(|it| AptosPackage::load(it, true).ok())
+            .filter_map(|it| AptosPackage::load_dependency(&it).ok())
             .collect();
 
         Ok(AptosPackage {
@@ -69,16 +92,56 @@ impl AptosPackage {
         self.deps.iter()
     }
 
-    pub fn manifest(&self) -> ManifestPath {
+    pub fn manifest_path(&self) -> ManifestPath {
         let file = self.content_root.join("Move.toml");
         ManifestPath { file }
     }
 
+    pub fn all_reachable_packages(&self) -> Vec<&AptosPackage> {
+        package_refs(&self)
+    }
+
+    pub fn to_package_graph(&self, load: FileLoader<'_>) -> Option<PackageGraph> {
+        tracing::info!("reloading aptos package at {}", self.content_root());
+
+        let mut package_graph = PackageGraph::default();
+        for pkg in self.all_reachable_packages() {
+            let main_file_id = pkg.load_manifest_file_id(load)?;
+            let mut dep_ids = vec![];
+            self.collect_dep_ids(&mut dep_ids, pkg, load);
+            dep_ids.sort();
+            dep_ids.dedup();
+            package_graph.insert(main_file_id, dep_ids);
+        }
+
+        Some(package_graph)
+    }
+
+    fn collect_dep_ids(
+        &self,
+        dep_ids: &mut Vec<ManifestFileId>,
+        package_ref: &AptosPackage,
+        load: FileLoader<'_>,
+    ) {
+        for dep_package in package_ref.deps() {
+            if let Some(dep_file_id) = dep_package.load_manifest_file_id(load) {
+                dep_ids.push(dep_file_id);
+                self.collect_dep_ids(dep_ids, dep_package, load);
+            }
+        }
+    }
+
+    /// Returns the roots for the current `AptosPackage`
+    /// The return type contains the path and whether or not
+    /// the root is a member of the current workspace
+    pub fn to_folder_roots(&self) -> Vec<PackageFolderRoot> {
+        self.all_reachable_packages()
+            .into_iter()
+            .map(|it| it.to_folder_root())
+            .collect()
+    }
+
     pub fn to_folder_root(&self) -> PackageFolderRoot {
-        // let sources = self.content_root.join("sources");
-        // let tests = self.content_root.join("tests");
-        // let scripts = self.content_root.join("scripts");
-        // let manifest = self.content_root.join("Move.toml");
         PackageFolderRoot {
             is_local: !self.is_dep,
             include: vec![self.content_root.clone()],
@@ -108,7 +171,7 @@ impl AptosPackage {
     }
 
     pub(crate) fn load_manifest_file_id(&self, load: FileLoader<'_>) -> Option<ManifestFileId> {
-        let manifest_file = self.manifest().file;
+        let manifest_file = self.manifest_path().file;
         match load(manifest_file.as_path()) {
             Some(file_id) => Some(file_id),
             None => {
@@ -117,4 +180,12 @@ impl AptosPackage {
             }
         }
     }
+}
+
+fn package_refs(package: &AptosPackage) -> Vec<&AptosPackage> {
+    let mut refs = vec![package];
+    for dep in package.deps() {
+        refs.extend(package_refs(dep));
+    }
+    refs
 }

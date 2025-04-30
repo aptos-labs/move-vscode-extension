@@ -50,7 +50,7 @@ pub fn resolve_named_address(name: &str) -> Option<NumericAddress> {
     if matches!(name, "std" | "aptos_std" | "aptos_framework" | "aptos_token") {
         return Some(NumericAddress { value: "0x1".to_string() });
     }
-    // todo: get it from AptosWorkspace
+    // todo: get it from AptosPackage
     None
 }
 

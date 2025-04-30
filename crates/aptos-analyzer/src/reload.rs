@@ -1,13 +1,13 @@
 use crate::config::FilesWatcher;
 use crate::flycheck::FlycheckHandle;
-use crate::global_state::{FetchWorkspaceRequest, FetchWorkspaceResponse, GlobalState};
+use crate::global_state::{FetchPackagesRequest, FetchPackagesResponse, GlobalState};
 use crate::main_loop::Task;
 use crate::op_queue::Cause;
 use crate::project_folders::ProjectFolders;
 use crate::{Config, lsp_ext};
 use base_db::change::{FileChanges, PackageGraph};
 use lsp_types::FileSystemWatcher;
-use project_model::AptosWorkspace;
+use project_model::aptos_package::AptosPackage;
 use std::mem;
 use std::sync::Arc;
 use stdx::format_to;
@@ -16,10 +16,10 @@ use stdx::thread::ThreadIntent;
 use vfs::AbsPath;
 
 #[derive(Debug)]
-pub(crate) enum FetchWorkspacesProgress {
+pub(crate) enum FetchPackagesProgress {
     Begin,
     Report(String),
-    End(Vec<anyhow::Result<AptosWorkspace>>, bool),
+    End(Vec<anyhow::Result<AptosPackage>>, bool),
 }
 
 impl GlobalState {
@@ -29,7 +29,7 @@ impl GlobalState {
     /// are ready to do semantic work.
     pub(crate) fn is_quiescent(&self) -> bool {
         self.vfs_done
-            && !self.fetch_workspaces_queue.op_in_progress()
+            && !self.fetch_packages_queue.op_in_progress()
             && self.vfs_progress_config_version >= self.vfs_config_version
     }
 
@@ -47,8 +47,8 @@ impl GlobalState {
         let old_config = mem::replace(&mut self.config, Arc::new(config));
 
         if self.config.discovered_manifests() != old_config.discovered_manifests() {
-            let req = FetchWorkspaceRequest { force_reload_deps: false };
-            self.fetch_workspaces_queue
+            let req = FetchPackagesRequest { force_reload_deps: false };
+            self.fetch_packages_queue
                 .request_op("discovered projects changed".to_owned(), req)
         } else if self.config.flycheck_config() != old_config.flycheck_config() {
             self.reload_flycheck();
@@ -65,7 +65,7 @@ impl GlobalState {
 
         if !self.config.cargo_autoreload_config()
             && self.is_quiescent()
-            && self.fetch_workspaces_queue.op_requested()
+            && self.fetch_packages_queue.op_requested()
         {
             status.health |= lsp_ext::Health::Warning;
             message.push_str("Auto-reloading is disabled and the workspace has changed, a manual workspace reload is required.\n\n");
@@ -101,64 +101,66 @@ impl GlobalState {
         status
     }
 
-    pub(crate) fn fetch_workspaces(&mut self, cause: Cause, force_reload_deps: bool) {
-        let _p = tracing::info_span!("will fetch workspaces", ?cause).entered();
-
-        self.task_pool.handle.spawn_with_sender(ThreadIntent::Worker, {
-            let discovered_manifests = self.config.discovered_manifests();
-            move |sender| {
+    #[tracing::instrument(level = "info", skip(self))]
+    pub(crate) fn fetch_packages(&mut self, _cause: Cause, force_reload_deps: bool) {
+        let discovered_manifests = self.config.discovered_manifests();
+        tracing::info!("schedule on a worker thread pool");
+        tracing::info!(?discovered_manifests);
+        self.task_pool
+            .handle
+            .spawn_with_sender(ThreadIntent::Worker, move |sender| {
                 sender
-                    .send(Task::FetchWorkspace(FetchWorkspacesProgress::Begin))
+                    .send(Task::FetchPackagesProgress(FetchPackagesProgress::Begin))
                     .unwrap();
 
-                let mut workspaces = discovered_manifests
+                let mut packages = discovered_manifests
                     .iter()
                     .map(|manifest| {
                         let manifest_path = &manifest.path;
                         tracing::debug!(path = %manifest_path, "loading workspace from manifest");
-                        AptosWorkspace::load(manifest_path.to_owned())
+                        AptosPackage::load(manifest_path)
                     })
                     .collect::<Vec<_>>();
 
+                // deduplicate
                 let mut i = 0;
-                while i < workspaces.len() {
-                    if let Ok(w) = &workspaces[i] {
-                        let dupes: Vec<_> = workspaces[i + 1..]
+                while i < packages.len() {
+                    if let Ok(p) = &packages[i] {
+                        let dupes: Vec<_> = packages[i + 1..]
                             .iter()
-                            .positions(|it| it.as_ref().is_ok_and(|ws| ws.eq(w)))
+                            .positions(|it| it.as_ref().is_ok_and(|pkg| pkg.eq(p)))
                             .collect();
                         dupes.into_iter().rev().for_each(|d| {
-                            _ = workspaces.remove(d + i + 1);
+                            _ = packages.remove(d + i + 1);
                         });
                     }
                     i += 1;
                 }
 
-                tracing::info!(?workspaces, "did fetch workspaces");
+                tracing::info!(?packages, "did fetch workspaces");
                 sender
-                    .send(Task::FetchWorkspace(FetchWorkspacesProgress::End(
-                        workspaces,
+                    .send(Task::FetchPackagesProgress(FetchPackagesProgress::End(
+                        packages,
                         force_reload_deps,
                     )))
                     .unwrap();
-            }
-        });
+            });
     }
 
     pub(crate) fn switch_workspaces(&mut self, cause: Cause) {
         let _p = tracing::info_span!("GlobalState::switch_workspaces").entered();
         tracing::info!(%cause, "will switch workspaces");
 
-        let Some(FetchWorkspaceResponse {
-            workspaces,
+        let Some(FetchPackagesResponse {
+            packages: workspaces,
             force_reload_deps,
-        }) = self.fetch_workspaces_queue.last_op_result()
+        }) = self.fetch_packages_queue.last_op_result()
         else {
             return;
         };
 
         tracing::info!(%cause, ?force_reload_deps);
-        if self.fetch_workspace_error().is_err() && !self.workspaces.is_empty() {
+        if self.fetch_workspace_error().is_err() && !self.packages.is_empty() {
             if *force_reload_deps {
                 self.reload_package_deps(format!("fetch workspace error while handling {:?}", cause));
             }
@@ -171,11 +173,11 @@ impl GlobalState {
             .iter()
             .filter_map(|res| res.as_ref().ok().cloned())
             .collect::<Vec<_>>();
-        self.workspaces = Arc::new(workspaces);
+        self.packages = Arc::new(workspaces);
 
         if let FilesWatcher::Client = self.config.files().watcher {
             let filter = self
-                .workspaces
+                .packages
                 .iter()
                 .flat_map(|ws| ws.to_folder_roots())
                 .filter(|it| it.is_local)
@@ -216,9 +218,9 @@ impl GlobalState {
                 };
 
             watchers.extend(
-                self.workspaces
+                self.packages
                     .iter()
-                    .map(|ws| ws.manifest_path())
+                    .map(|pkg| pkg.manifest_path())
                     .map(|glob_pattern| FileSystemWatcher {
                         glob_pattern: lsp_types::GlobPattern::String(glob_pattern.to_string()),
                         kind: None,
@@ -240,7 +242,7 @@ impl GlobalState {
         }
 
         let files_config = self.config.files();
-        let project_folders = ProjectFolders::new(&self.workspaces, &files_config.exclude);
+        let project_folders = ProjectFolders::new(&self.packages, &files_config.exclude);
 
         let watch = match files_config.watcher {
             FilesWatcher::Client => vec![],
@@ -275,15 +277,11 @@ impl GlobalState {
             None,
         );
 
-        // crate graph construction relies on these paths, record them so when one of them gets
-        // deleted or created we trigger a reconstruction of the crate graph
-        // self.crate_graph_file_dependencies.clear();
-
         let package_graph = {
             let mut package_graph = PackageGraph::default();
-            let n_ws = self.workspaces.len();
+            let n_ws = self.packages.len();
             for i in 0..n_ws {
-                let ws_root = self.workspaces.get(i).unwrap().workspace_root().to_string();
+                let ws_root = self.packages.get(i).unwrap().content_root().to_string();
                 {
                     self.report_progress(
                         progress_title,
@@ -294,19 +292,19 @@ impl GlobalState {
                     );
                 }
 
-                let ws = self.workspaces.get(i).unwrap();
+                let ws = self.packages.get(i).unwrap();
                 let vfs = &self.vfs.read().0;
 
                 let mut load = |path: &AbsPath| vfs.file_id(&vfs::VfsPath::from(path.to_path_buf()));
 
-                let ws_graph = ws.to_package_graph(&mut load);
-                match ws_graph {
-                    Some(ws_graph) => {
-                        package_graph.extend(ws_graph);
+                let pkg_graph = ws.to_package_graph(&mut load);
+                match pkg_graph {
+                    Some(pkg_graph) => {
+                        package_graph.extend(pkg_graph);
                     }
                     None => {
                         tracing::info!(
-                            "could not load PackageGraph from workspace {:?}, vfs is not ready",
+                            "could not load PackageGraph for package from {:?}, vfs is not ready",
                             ws_root
                         );
                     }
@@ -316,7 +314,7 @@ impl GlobalState {
         };
 
         tracing::info!("process file changes");
-        self.process_file_changes();
+        self.process_pending_file_changes();
 
         let mut change = FileChanges::new();
         {
@@ -336,8 +334,8 @@ impl GlobalState {
     pub(super) fn fetch_workspace_error(&self) -> Result<(), String> {
         let mut buf = String::new();
 
-        let Some(FetchWorkspaceResponse { workspaces, .. }) =
-            self.fetch_workspaces_queue.last_op_result()
+        let Some(FetchPackagesResponse { packages: workspaces, .. }) =
+            self.fetch_packages_queue.last_op_result()
         else {
             return Ok(());
         };
@@ -370,10 +368,10 @@ impl GlobalState {
         let config = config.unwrap();
         let sender = self.flycheck_sender.clone();
         self.flycheck = self
-            .workspaces
+            .packages
             .iter()
             .enumerate()
-            .filter_map(|(id, ws)| Some((id, ws.workspace_root(), ws.manifest_path())))
+            .filter_map(|(id, ws)| Some((id, ws.content_root(), ws.manifest_path())))
             .map(|(ws_id, ws_root, _)| {
                 FlycheckHandle::spawn(ws_id, sender.clone(), config.clone(), ws_root.to_path_buf())
             })
@@ -381,16 +379,6 @@ impl GlobalState {
             .into();
     }
 }
-
-// pub fn ws_to_package_graph(workspaces: &[AptosWorkspace], vfs_read: &Vfs) -> PackageGraph {
-//     let mut package_graph = PackageGraph::default();
-//     let mut load = |path: &AbsPath| vfs_read.file_id(&vfs::VfsPath::from(path.to_path_buf()));
-//     for ws in workspaces {
-//         let other = ws.to_package_graph(&mut load);
-//         package_graph.extend(other.unwrap_or_default());
-//     }
-//     package_graph
-// }
 
 pub(crate) fn should_refresh_for_file_change(
     changed_file_path: &AbsPath,

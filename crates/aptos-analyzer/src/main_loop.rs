@@ -2,18 +2,19 @@ use crate::config::Config;
 use crate::diagnostics::{DiagnosticsGeneration, NativeDiagnosticsFetchKind, fetch_native_diagnostics};
 use crate::flycheck::FlycheckMessage;
 use crate::global_state::{
-    FetchWorkspaceRequest, FetchWorkspaceResponse, GlobalState, file_id_to_url, url_to_file_id,
+    FetchPackagesRequest, FetchPackagesResponse, GlobalState, file_id_to_url, url_to_file_id,
 };
 use crate::handlers::dispatch::{NotificationDispatcher, RequestDispatcher};
 use crate::handlers::request;
 use crate::lsp::from_proto;
 use crate::lsp::utils::{Progress, notification_is};
-use crate::reload::FetchWorkspacesProgress;
+use crate::reload::FetchPackagesProgress;
 use crate::{flycheck, lsp_ext};
 use base_db::SourceDatabase;
 use crossbeam_channel::Receiver;
 use lsp_server::Connection;
 use lsp_types::notification::Notification;
+use std::any::Any;
 use std::fmt;
 use std::ops::Div;
 use std::panic::AssertUnwindSafe;
@@ -60,9 +61,11 @@ impl fmt::Display for Event {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Event::Lsp(_) => write!(f, "Event::Lsp"),
-            Event::Task(_) => write!(f, "Event::Task"),
             Event::Vfs(_) => write!(f, "Event::Vfs"),
-            Event::Flycheck(_) => write!(f, "Event::Flycheck"),
+            Event::Flycheck(flycheck) => write!(f, "Event::Flycheck({:?})", flycheck),
+            Event::Task(task) => {
+                write!(f, "Event::Task({})", task)
+            }
         }
     }
 }
@@ -112,21 +115,39 @@ pub(crate) enum Task {
     Response(lsp_server::Response),
     Retry(lsp_server::Request),
     Diagnostics(DiagnosticsTaskKind),
-    FetchWorkspace(FetchWorkspacesProgress),
+    FetchPackagesProgress(FetchPackagesProgress),
+}
+
+impl fmt::Display for Task {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Task::Response(_) => write!(f, "Task::Response"),
+            Task::Retry(_) => write!(f, "Task::Retry"),
+            Task::Diagnostics(kind) => match kind {
+                DiagnosticsTaskKind::Syntax(..) => write!(f, "Task::Diagnostics(Syntax)"),
+                DiagnosticsTaskKind::Semantic(..) => write!(f, "Task::Diagnostics(Semantic)"),
+            },
+            Task::FetchPackagesProgress(_) => {
+                write!(f, "Task::FetchPackagesProgress")
+            }
+        }
+    }
 }
 
 impl GlobalState {
     fn run(mut self, inbox: Receiver<lsp_server::Message>) -> anyhow::Result<()> {
+        tracing::info!("starting GlobalState");
+
         self.update_status_or_notify();
 
-        self.fetch_workspaces_queue.request_op(
-            "startup".to_owned(),
-            FetchWorkspaceRequest { force_reload_deps: false },
+        self.fetch_packages_queue.request_op(
+            "on startup".to_owned(),
+            FetchPackagesRequest { force_reload_deps: false },
         );
-        if let Some((cause, FetchWorkspaceRequest { force_reload_deps })) =
-            self.fetch_workspaces_queue.should_start_op()
+        if let Some((cause, FetchPackagesRequest { force_reload_deps })) =
+            self.fetch_packages_queue.should_start_op()
         {
-            self.fetch_workspaces(cause, force_reload_deps);
+            self.fetch_packages(cause, force_reload_deps);
         }
 
         while let Ok(event) = self.next_event(&inbox) {
@@ -219,7 +240,7 @@ impl GlobalState {
             if let Some(cause) = self.wants_to_switch.take() {
                 self.switch_workspaces(cause);
             }
-            (self.process_file_changes(), self.mem_docs.take_changes())
+            (self.process_pending_file_changes(), self.mem_docs.take_changes())
         } else {
             (false, false)
         };
@@ -287,12 +308,12 @@ impl GlobalState {
         if self.config.cargo_autoreload_config() {
             if let Some((
                 cause,
-                FetchWorkspaceRequest {
+                FetchPackagesRequest {
                     force_reload_deps: force_crate_graph_reload,
                 },
-            )) = self.fetch_workspaces_queue.should_start_op()
+            )) = self.fetch_packages_queue.should_start_op()
             {
-                self.fetch_workspaces(cause, force_crate_graph_reload);
+                self.fetch_packages(cause, force_crate_graph_reload);
             }
         }
 
@@ -350,7 +371,7 @@ impl GlobalState {
                     // Do not fetch semantic diagnostics (and populate query results) if we haven't even
                     // loaded the initial workspace yet.
                     let fetch_semantic =
-                        self.vfs_done && self.fetch_workspaces_queue.last_op_result().is_some();
+                        self.vfs_done && self.fetch_packages_queue.last_op_result().is_some();
                     move |sender| {
                         // We aren't observing the semantics token cache here
                         let snapshot = AssertUnwindSafe(&snapshot);
@@ -369,7 +390,7 @@ impl GlobalState {
                             .unwrap();
 
                         if fetch_semantic {
-                            let Ok(diags) = std::panic::catch_unwind(|| {
+                            let Ok(sema_diags) = std::panic::catch_unwind(|| {
                                 fetch_native_diagnostics(
                                     &snapshot,
                                     subscriptions.clone(),
@@ -381,7 +402,7 @@ impl GlobalState {
                             };
                             sender
                                 .send(Task::Diagnostics(DiagnosticsTaskKind::Semantic(
-                                    generation, diags,
+                                    generation, sema_diags,
                                 )))
                                 .unwrap();
                         }
@@ -425,20 +446,17 @@ impl GlobalState {
             Task::Diagnostics(kind) => {
                 self.diagnostics.set_native_diagnostics(kind);
             }
-            Task::FetchWorkspace(progress) => {
+            Task::FetchPackagesProgress(progress) => {
                 let (state, msg) = match progress {
-                    FetchWorkspacesProgress::Begin => (Progress::Begin, None),
-                    FetchWorkspacesProgress::Report(msg) => (Progress::Report, Some(msg)),
-                    FetchWorkspacesProgress::End(workspaces, force_reload_deps) => {
-                        let resp = FetchWorkspaceResponse {
-                            workspaces,
-                            force_reload_deps,
-                        };
-                        self.fetch_workspaces_queue.op_completed(resp);
+                    FetchPackagesProgress::Begin => (Progress::Begin, None),
+                    FetchPackagesProgress::Report(msg) => (Progress::Report, Some(msg)),
+                    FetchPackagesProgress::End(packages, force_reload_deps) => {
+                        let resp = FetchPackagesResponse { packages, force_reload_deps };
+                        self.fetch_packages_queue.op_completed(resp);
                         if let Err(e) = self.fetch_workspace_error() {
                             tracing::error!("FetchWorkspaceError: {e}");
                         }
-                        self.wants_to_switch = Some("fetched workspace".to_owned());
+                        self.wants_to_switch = Some("fetched packages".to_owned());
                         self.diagnostics.clear_check_all();
                         (Progress::End, None)
                     }
@@ -624,7 +642,7 @@ impl GlobalState {
         dispatcher
             // Request handlers that must run on the main thread
             // because they mutate GlobalState:
-            .on_sync_mut::<lsp_ext::ReloadWorkspace>(handlers::handle_workspace_reload)
+            // .on_sync_mut::<lsp_ext::ReloadWorkspace>(handlers::handle_workspace_reload)
             // .on_sync_mut::<lsp_ext::MemoryUsage>(handlers::handle_memory_usage)
             // .on_sync_mut::<lsp_ext::RunTest>(handlers::handle_run_test)
             // Request handlers which are related to the user typing

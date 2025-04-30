@@ -27,7 +27,7 @@ pub struct Config {
     discovered_manifests_from_filesystem: Vec<ManifestPath>,
 
     /// The workspace roots as registered by the LSP client
-    workspace_roots: Vec<AbsPathBuf>,
+    package_roots: Vec<AbsPathBuf>,
     caps: ClientCapabilities,
     root_path: AbsPathBuf,
 
@@ -51,8 +51,7 @@ impl fmt::Debug for Config {
                 "discovered_projects_from_filesystem",
                 &self.discovered_manifests_from_filesystem,
             )
-            // .field("discovered_projects_from_command", &self.discovered_projects_from_command)
-            .field("workspace_roots", &self.workspace_roots)
+            .field("package_roots", &self.package_roots)
             .field("caps", &self.caps)
             .field("root_path", &self.root_path)
             // .field("snippets", &self.snippets)
@@ -114,7 +113,7 @@ impl Config {
     pub fn new(
         root_path: AbsPathBuf,
         caps: lsp_types::ClientCapabilities,
-        workspace_roots: Vec<AbsPathBuf>,
+        package_roots: Vec<AbsPathBuf>,
     ) -> Self {
         static DEFAULT_CONFIG_DATA: OnceLock<&'static DefaultConfigData> = OnceLock::new();
 
@@ -122,29 +121,29 @@ impl Config {
             caps: ClientCapabilities::new(caps),
             discovered_manifests_from_filesystem: Vec::new(),
             root_path,
-            workspace_roots,
+            package_roots,
             client_config: (FullConfigInput::default(), ConfigErrors(vec![])),
             default_config: DEFAULT_CONFIG_DATA.get_or_init(|| Box::leak(Box::default())),
         }
     }
 
-    pub fn rediscover_workspaces(&mut self) {
-        let discovered_manifests = ManifestPath::discover_all(&self.workspace_roots);
+    pub fn rediscover_packages(&mut self) {
+        let discovered_manifests = ManifestPath::discover_all(&self.package_roots);
         tracing::info!("discovered manifests: {:?}", discovered_manifests);
         if discovered_manifests.is_empty() {
-            tracing::error!("failed to find any manifests in {:?}", &self.workspace_roots);
+            tracing::error!("failed to find any manifests in {:?}", &self.package_roots);
         }
         self.discovered_manifests_from_filesystem = discovered_manifests;
     }
 
-    pub fn remove_workspace(&mut self, path: &AbsPath) {
-        if let Some(position) = self.workspace_roots.iter().position(|it| it == path) {
-            self.workspace_roots.remove(position);
-        }
+    pub fn add_packages(&mut self, paths: impl Iterator<Item = AbsPathBuf>) {
+        self.package_roots.extend(paths);
     }
 
-    pub fn add_workspaces(&mut self, paths: impl Iterator<Item = AbsPathBuf>) {
-        self.workspace_roots.extend(paths);
+    pub fn remove_package(&mut self, path: &AbsPath) {
+        if let Some(position) = self.package_roots.iter().position(|it| it == path) {
+            self.package_roots.remove(position);
+        }
     }
 
     pub fn files(&self) -> FilesConfig {
@@ -164,11 +163,10 @@ impl Config {
         self.aptos_autoreload().to_owned()
     }
 
-    pub fn assist(&self /*source_root: Option<SourceRootId>*/) -> AssistConfig {
+    pub fn assist(&self) -> AssistConfig {
         AssistConfig {
             snippet_cap: self.snippet_cap(),
             allowed: None,
-            // insert_use: self.insert_use_config(source_root),
             code_action_grouping: self.code_action_group(),
         }
     }
@@ -257,8 +255,8 @@ impl Config {
         *self.checkOnSave()
     }
 
-    pub fn extra_args(&self /*source_root: Option<PackageRootId>*/) -> &Vec<String> {
-        self.check_extraArgs(/*source_root*/)
+    pub fn extra_args(&self) -> &Vec<String> {
+        self.check_extraArgs()
     }
 
     pub fn aptos_cli_path(&self) -> Option<Utf8PathBuf> {

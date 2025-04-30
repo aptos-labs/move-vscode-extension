@@ -1,5 +1,5 @@
 use crate::diagnostics::convert_diagnostic;
-use crate::global_state::{FetchWorkspaceRequest, GlobalState, GlobalStateSnapshot};
+use crate::global_state::{FetchPackagesRequest, GlobalState, GlobalStateSnapshot};
 use crate::lsp::utils::invalid_params_error;
 use crate::lsp::{LspError, from_proto, to_proto};
 use crate::{Config, lsp_ext, unwrap_or_return_default};
@@ -11,13 +11,13 @@ use lsp_types::{
 };
 use syntax::files::FileRange;
 
-pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
-    let req = FetchWorkspaceRequest { force_reload_deps: false };
-    state
-        .fetch_workspaces_queue
-        .request_op("reload workspace request".to_owned(), req);
-    Ok(())
-}
+// pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
+//     let req = FetchPackagesRequest { force_reload_deps: false };
+//     state
+//         .fetch_packages_queue
+//         .request_op("reload workspace request".to_owned(), req);
+//     Ok(())
+// }
 
 pub(crate) fn handle_semantic_tokens_full(
     snap: GlobalStateSnapshot,
@@ -30,9 +30,6 @@ pub(crate) fn handle_semantic_tokens_full(
     let line_index = snap.file_line_index(file_id)?;
 
     // let mut highlight_config = snap.config.highlighting_config();
-    // // Avoid flashing a bunch of unresolved references when the proc-macro servers haven't been spawned yet.
-    // highlight_config.syntactic_name_ref_highlighting =
-    //     snap.workspaces.is_empty() || !snap.proc_macros_loaded;
 
     let highlights = snap.analysis.highlight(/*highlight_config, */ file_id)?;
     let semantic_tokens = to_proto::semantic_tokens(
