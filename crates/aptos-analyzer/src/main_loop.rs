@@ -61,7 +61,7 @@ impl fmt::Display for Event {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Event::Lsp(_) => write!(f, "Event::Lsp"),
-            Event::Vfs(_) => write!(f, "Event::Vfs"),
+            Event::Vfs(msg) => write!(f, "Event::Vfs({msg:?})"),
             Event::Flycheck(flycheck) => write!(f, "Event::Flycheck({:?})", flycheck),
             Event::Task(task) => {
                 write!(f, "Event::Task({})", task)
@@ -127,8 +127,8 @@ impl fmt::Display for Task {
                 DiagnosticsTaskKind::Syntax(..) => write!(f, "Task::Diagnostics(Syntax)"),
                 DiagnosticsTaskKind::Semantic(..) => write!(f, "Task::Diagnostics(Semantic)"),
             },
-            Task::FetchPackagesProgress(_) => {
-                write!(f, "Task::FetchPackagesProgress")
+            Task::FetchPackagesProgress(progress) => {
+                write!(f, "Task::FetchPackagesProgress({progress})")
             }
         }
     }
@@ -237,7 +237,7 @@ impl GlobalState {
         let event_handling_duration = loop_start.elapsed();
 
         let (state_changed, memdocs_added_or_removed) = if self.vfs_done {
-            if let Some(cause) = self.wants_to_switch.take() {
+            if let Some(cause) = self.reason_to_switch.take() {
                 self.switch_workspaces(cause);
             }
             (self.process_pending_file_changes(), self.mem_docs.take_changes())
@@ -456,7 +456,7 @@ impl GlobalState {
                         if let Err(e) = self.fetch_workspace_error() {
                             tracing::error!("FetchWorkspaceError: {e}");
                         }
-                        self.wants_to_switch = Some("fetched packages".to_owned());
+                        self.reason_to_switch = Some("fetched packages".to_owned());
                         self.diagnostics.clear_check_all();
                         (Progress::End, None)
                     }

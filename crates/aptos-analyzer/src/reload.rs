@@ -8,8 +8,9 @@ use crate::{Config, lsp_ext};
 use base_db::change::{FileChanges, PackageGraph};
 use lsp_types::FileSystemWatcher;
 use project_model::aptos_package::AptosPackage;
-use std::mem;
+use std::fmt::Formatter;
 use std::sync::Arc;
+use std::{fmt, mem};
 use stdx::format_to;
 use stdx::itertools::Itertools;
 use stdx::thread::ThreadIntent;
@@ -20,6 +21,23 @@ pub(crate) enum FetchPackagesProgress {
     Begin,
     Report(String),
     End(Vec<anyhow::Result<AptosPackage>>, bool),
+}
+
+impl fmt::Display for FetchPackagesProgress {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match self {
+            FetchPackagesProgress::Begin => write!(f, "FetchPackagesProgress::Begin"),
+            FetchPackagesProgress::Report(s) => write!(f, "FetchPackagesProgress::Report({s})"),
+            FetchPackagesProgress::End(ps, force_reload) => {
+                write!(
+                    f,
+                    "FetchPackagesProgress::End(n_packages={}, force_reload={})",
+                    ps.len(),
+                    force_reload
+                )
+            }
+        }
+    }
 }
 
 impl GlobalState {
@@ -104,16 +122,16 @@ impl GlobalState {
     #[tracing::instrument(level = "info", skip(self))]
     pub(crate) fn fetch_packages(&mut self, _cause: Cause, force_reload_deps: bool) {
         let discovered_manifests = self.config.discovered_manifests();
-        tracing::info!("schedule on a worker thread pool");
+        tracing::info!("schedule to the worker thread pool");
         tracing::info!(?discovered_manifests);
         self.task_pool
             .handle
             .spawn_with_sender(ThreadIntent::Worker, move |sender| {
+                let _p = tracing::info_span!("on the worker thread: load packages").entered();
                 sender
                     .send(Task::FetchPackagesProgress(FetchPackagesProgress::Begin))
                     .unwrap();
-
-                let mut packages = discovered_manifests
+                let discovered_packages = discovered_manifests
                     .iter()
                     .map(|manifest_path| {
                         tracing::debug!(path = %manifest_path, "loading workspace from manifest");
@@ -121,45 +139,29 @@ impl GlobalState {
                     })
                     .collect::<Vec<_>>();
 
-                // deduplicate
-                let mut i = 0;
-                while i < packages.len() {
-                    if let Ok(p) = &packages[i] {
-                        let dupes: Vec<_> = packages[i + 1..]
-                            .iter()
-                            .positions(|it| it.as_ref().is_ok_and(|pkg| pkg.eq(p)))
-                            .collect();
-                        dupes.into_iter().rev().for_each(|d| {
-                            _ = packages.remove(d + i + 1);
-                        });
-                    }
-                    i += 1;
-                }
+                // figure out if it's needed or not
+                // dedup(&mut discovered_packages);
 
-                tracing::info!(?packages, "did fetch workspaces");
                 sender
                     .send(Task::FetchPackagesProgress(FetchPackagesProgress::End(
-                        packages,
+                        discovered_packages,
                         force_reload_deps,
                     )))
                     .unwrap();
             });
     }
 
+    #[tracing::instrument(level = "info", skip(self))]
     pub(crate) fn switch_workspaces(&mut self, cause: Cause) {
-        let _p = tracing::info_span!("GlobalState::switch_workspaces").entered();
-        tracing::info!(%cause, "will switch workspaces");
-
-        let Some(FetchPackagesResponse {
-            packages: workspaces,
-            force_reload_deps,
-        }) = self.fetch_packages_queue.last_op_result()
+        let Some(FetchPackagesResponse { packages, force_reload_deps }) =
+            self.fetch_packages_queue.last_op_result()
         else {
             return;
         };
+        let switching_from_empty_workspace = self.packages.is_empty();
 
-        tracing::info!(%cause, ?force_reload_deps);
-        if self.fetch_workspace_error().is_err() && !self.packages.is_empty() {
+        tracing::info!(?force_reload_deps, %switching_from_empty_workspace);
+        if self.fetch_workspace_error().is_err() && !switching_from_empty_workspace {
             if *force_reload_deps {
                 self.reload_package_deps(format!("fetch workspace error while handling {:?}", cause));
             }
@@ -168,7 +170,7 @@ impl GlobalState {
             return;
         }
 
-        let workspaces = workspaces
+        let workspaces = packages
             .iter()
             .filter_map(|res| res.as_ref().ok().cloned())
             .collect::<Vec<_>>();
@@ -376,6 +378,23 @@ impl GlobalState {
             })
             .collect::<Vec<_>>()
             .into();
+    }
+}
+
+fn dedup(packages: &mut Vec<anyhow::Result<AptosPackage>>) {
+    let mut i = 0;
+    while i < packages.len() {
+        if let Ok(p) = &packages[i] {
+            let duplicates: Vec<_> = packages[i + 1..]
+                .iter()
+                .positions(|it| it.as_ref().is_ok_and(|pkg| pkg.eq(p)))
+                .collect();
+            // remove all duplicate packages
+            duplicates.into_iter().rev().for_each(|dup_pos| {
+                _ = packages.remove(dup_pos + i + 1);
+            });
+        }
+        i += 1;
     }
 }
 

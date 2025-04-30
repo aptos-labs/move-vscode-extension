@@ -1,6 +1,7 @@
 use paths::{AbsPath, AbsPathBuf};
 use std::borrow::Borrow;
-use std::{fmt, ops};
+use std::path::PathBuf;
+use std::{fmt, fs, ops};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct ManifestPath {
@@ -27,16 +28,13 @@ impl From<ManifestPath> for AbsPathBuf {
 
 impl ManifestPath {
     // Shadow `parent` from `Deref`.
-    pub fn parent(&self) -> &AbsPath {
-        self.file.parent().unwrap()
+    pub fn root(&self) -> AbsPathBuf {
+        self.file.parent().unwrap().to_path_buf()
     }
 
-    pub fn canonicalize(&self) -> ! {
-        (**self).canonicalize()
-    }
-
-    pub fn is_rust_manifest(&self) -> bool {
-        self.file.extension() == Some("rs")
+    pub fn canonical_root(&self) -> PathBuf {
+        let content_root = self.root();
+        fs::canonicalize(&content_root).ok().unwrap_or(PathBuf::new())
     }
 }
 

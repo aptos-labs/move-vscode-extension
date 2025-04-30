@@ -15,7 +15,7 @@ impl ManifestPath {
         if file.file_name().unwrap_or_default() == "Move.toml" {
             return Ok(ManifestPath { file });
         }
-        bail!("project root must point to a Cargo.toml file: {file}");
+        bail!("project root must point to a Move.toml file: {file}");
     }
 
     pub fn discover(ws_root: &AbsPath) -> io::Result<Vec<ManifestPath>> {
