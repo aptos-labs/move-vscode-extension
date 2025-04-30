@@ -153,26 +153,26 @@ pub fn resolve_path(
 
     let ctx = ResolutionContext { path, is_completion: false };
     let entries = get_path_resolve_variants_with_expected_type(db, &ctx, path_kind, expected_type);
-    tracing::debug!(?entries);
 
     let entries_filtered_by_name = entries.filter_by_name(path_name.clone());
-    tracing::debug!(?path_name, ?entries_filtered_by_name);
+    tracing::debug!(filter_by_name = ?path_name, ?entries_filtered_by_name);
 
-    let final_entries = entries_filtered_by_name.filter_by_visibility(db, &context_element);
+    let entries_by_visibility = entries_filtered_by_name.filter_by_visibility(db, &context_element);
+    tracing::debug!(?entries_by_visibility);
 
     let path_expr = ctx.parent_path_expr();
     if path_expr.is_some_and(|it| it.syntax().parent_of_type::<ast::CallExpr>().is_some()) {
-        let function_entries = final_entries.clone().filter_by_ns(FUNCTIONS);
+        let function_entries = entries_by_visibility.clone().filter_by_ns(FUNCTIONS);
         return if !function_entries.is_empty() {
             function_entries
         } else {
-            final_entries
+            entries_by_visibility
         };
     }
 
-    if final_entries.len() > 1 {
+    if entries_by_visibility.len() > 1 {
         // we're not at the callable, so drop function entries and see whether we'd get to a single entry
-        let non_function_entries = final_entries
+        let non_function_entries = entries_by_visibility
             .clone()
             .into_iter()
             .filter(|it| it.ns != FUNCTION)
@@ -182,7 +182,7 @@ pub fn resolve_path(
         }
     }
 
-    final_entries
+    entries_by_visibility
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

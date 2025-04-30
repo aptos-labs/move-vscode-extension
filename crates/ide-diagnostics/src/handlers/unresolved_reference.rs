@@ -2,6 +2,7 @@ use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use ide_db::Severity;
 use lang::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
+use lang::nameres::scope::VecExt;
 use lang::types::ty::Ty;
 use syntax::ast::ReferenceElement;
 use syntax::ast::idents::PRIMITIVE_TYPES;
@@ -74,7 +75,7 @@ fn unresolved_path(
                 QualifiedKind::ModuleItemOrEnumVariant
                 | QualifiedKind::FQModuleItem
                 | QualifiedKind::UseGroupItem => {
-                    let resolved = ctx.sema.resolve(qualifier.into());
+                    let resolved = ctx.sema.resolve(qualifier.into()).single_or_none();
                     // qualifier is unresolved, no need to resolve current path
                     if resolved.is_none() {
                         return None;
@@ -119,15 +120,27 @@ fn try_check_resolve(
     ctx: &DiagnosticsContext<'_>,
     reference: InFile<ast::AnyReferenceElement>,
 ) -> Option<()> {
-    let opt_entry = ctx.sema.resolve_in_file(reference.clone().map_into());
-    if opt_entry.is_none() {
-        let reference_node = reference.and_then_ref(|it| it.reference_node())?;
-        let reference_name = reference.value.reference_name()?;
-        acc.push(Diagnostic::new(
-            DiagnosticCode::Lsp("unresolved-reference", Severity::Error),
-            format!("Unresolved reference `{}`", reference_name),
-            reference_node.file_range(),
-        ));
+    let entries = ctx
+        .sema
+        .resolve_in_file(reference.clone().map_into());
+    let reference_node = reference.and_then_ref(|it| it.reference_node())?;
+    let reference_name = reference.value.reference_name()?;
+    match entries.len() {
+        0 => {
+            acc.push(Diagnostic::new(
+                DiagnosticCode::Lsp("unresolved-reference", Severity::Error),
+                format!("Unresolved reference `{}`: cannot resolve", reference_name),
+                reference_node.file_range(),
+            ));
+        }
+        1 => (),
+        _ => {
+            acc.push(Diagnostic::new(
+                DiagnosticCode::Lsp("unresolved-reference", Severity::Error),
+                format!("Unresolved reference `{}`: resolved to multiple elements", reference_name),
+                reference_node.file_range(),
+            ));
+        }
     }
     Some(())
 }
