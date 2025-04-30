@@ -40,44 +40,49 @@ impl fmt::Debug for AptosPackage {
 
 impl AptosPackage {
     pub fn load(root_manifest: &ManifestPath) -> anyhow::Result<AptosPackage> {
+        let _p =
+            tracing::info_span!("load package at", "{:?}", root_manifest.canonical_root()).entered();
         AptosPackage::load_inner(root_manifest, false)
             .with_context(|| format!("Failed to load the project at {root_manifest}"))
     }
 
     pub fn load_dependency(root_manifest: &ManifestPath) -> anyhow::Result<AptosPackage> {
+        let _p =
+            tracing::info_span!("load dep package at", "{:?}", root_manifest.canonical_root()).entered();
         AptosPackage::load_inner(root_manifest, true)
     }
 
     fn load_inner(manifest_path: &ManifestPath, is_dep: bool) -> anyhow::Result<Self> {
-        let content_root = manifest_path.parent().to_path_buf();
-        let _p = tracing::info_span!("load aptos package at", "{:?}", fs::canonicalize(&content_root))
-            .entered();
-
         let file_contents = fs::read_to_string(&manifest_path)
             .with_context(|| format!("Failed to read Move.toml file {manifest_path}"))?;
         let move_toml = MoveToml::from_str(file_contents.as_str())
             .with_context(|| format!("Failed to deserialize Move.toml file {manifest_path}"))?;
 
+        let package_root = manifest_path.root();
+
+        let mut dep_roots = vec![];
         let mut dep_manifests = vec![];
         for toml_dep in move_toml.dependencies.clone() {
-            if let Some(dep_root) = toml_dep.dep_root(&content_root) {
-                tracing::info!(dep_root = ?fs::canonicalize(&dep_root));
+            if let Some(dep_root) = toml_dep.dep_root(&package_root) {
                 let move_toml_path = dep_root.join("Move.toml");
                 if fs::exists(&move_toml_path).is_ok_and(|it| it) {
                     let manifest_path = ManifestPath::from_manifest_file(move_toml_path).unwrap();
+                    dep_roots.push(manifest_path.canonical_root());
                     dep_manifests.push(manifest_path);
                 } else {
                     tracing::warn!(?move_toml_path, "invalid dependency: manifest does not exist");
                 }
             }
         }
+        tracing::info!("dep_roots = {:#?}", dep_roots);
+
         let deps = dep_manifests
             .into_iter()
             .filter_map(|it| AptosPackage::load_dependency(&it).ok())
             .collect();
 
         Ok(AptosPackage {
-            content_root,
+            content_root: package_root,
             move_toml,
             is_dep,
             deps,
