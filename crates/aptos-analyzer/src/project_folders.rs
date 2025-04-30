@@ -1,7 +1,6 @@
 use base_db::package_root::PackageRoot;
 use paths::AbsPathBuf;
-use project_model::AptosWorkspace;
-use project_model::aptos_workspace::PackageFolderRoot;
+use project_model::aptos_package::{AptosPackage, PackageFolderRoot};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::fmt::Formatter;
@@ -51,7 +50,7 @@ pub struct ProjectFolders {
 }
 
 impl ProjectFolders {
-    pub fn new(workspaces: &[AptosWorkspace], global_excludes: &[AbsPathBuf]) -> ProjectFolders {
+    pub fn new(packages: &[AptosPackage], global_excludes: &[AbsPathBuf]) -> ProjectFolders {
         let mut folders = ProjectFolders::default();
         let mut fsc = FileSetConfig::builder();
         let mut local_filesets = vec![];
@@ -73,9 +72,9 @@ impl ProjectFolders {
         // So we need to deduplicate these, usually it would be enough to deduplicate by `include`, but as the rustc example shows here that doesn't work,
         // so we need to also coalesce the includes if they overlap.
 
-        let mut folder_roots: Vec<_> = workspaces
+        let mut folder_roots: Vec<_> = packages
             .iter()
-            .flat_map(|ws| ws.to_folder_roots())
+            .flat_map(|pkg| pkg.to_folder_roots())
             .update(|root| root.include.sort())
             .sorted_by(|a, b| a.include.cmp(&b.include))
             .collect();

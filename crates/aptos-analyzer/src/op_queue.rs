@@ -42,8 +42,8 @@ impl<Args, Output> Default for OpQueue<Args, Output> {
 
 impl<Args, Output> OpQueue<Args, Output> {
     /// Request an operation to start.
-    pub(crate) fn request_op(&mut self, reason: Cause, args: Args) {
-        self.op_requested = Some((reason, args));
+    pub(crate) fn request_op(&mut self, cause: Cause, args: Args) {
+        self.op_requested = Some((cause, args));
     }
 
     /// If there was an operation requested, mark this queue as

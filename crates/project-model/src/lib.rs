@@ -7,11 +7,8 @@ use std::process::Command;
 use std::{fs, io};
 
 pub mod aptos_package;
-pub mod aptos_workspace;
 pub mod manifest_path;
 pub mod move_toml;
-
-pub use aptos_workspace::AptosWorkspace;
 
 impl ManifestPath {
     pub fn from_manifest_file(file: AbsPathBuf) -> anyhow::Result<ManifestPath> {
@@ -20,19 +17,6 @@ impl ManifestPath {
         }
         bail!("project root must point to a Cargo.toml file: {file}");
     }
-
-    // pub fn discover_single(path: &AbsPath) -> anyhow::Result<ManifestPath> {
-    //     let mut candidates = ManifestPath::discover(path)?;
-    //     let res = match candidates.pop() {
-    //         None => bail!("no projects"),
-    //         Some(it) => it,
-    //     };
-    //
-    //     if !candidates.is_empty() {
-    //         bail!("more than one project");
-    //     }
-    //     Ok(res)
-    // }
 
     pub fn discover(ws_root: &AbsPath) -> io::Result<Vec<ManifestPath>> {
         let mut manifests = vec![];

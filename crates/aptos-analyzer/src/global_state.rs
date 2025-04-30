@@ -16,18 +16,18 @@ use ide::{Analysis, AnalysisHost, Cancellable};
 use lang::builtin_files::BUILTINS_FILE;
 use lsp_types::Url;
 use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard};
-use project_model::aptos_workspace::AptosWorkspace;
+use project_model::aptos_package::AptosPackage;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
 use vfs::{AnchoredPathBuf, FileId, VfsPath};
 
-pub(crate) struct FetchWorkspaceRequest {
+pub(crate) struct FetchPackagesRequest {
     pub(crate) force_reload_deps: bool,
 }
 
-pub(crate) struct FetchWorkspaceResponse {
-    pub(crate) workspaces: Vec<anyhow::Result<AptosWorkspace>>,
+pub(crate) struct FetchPackagesResponse {
+    pub(crate) packages: Vec<anyhow::Result<AptosPackage>>,
     pub(crate) force_reload_deps: bool,
 }
 
@@ -82,11 +82,9 @@ pub(crate) struct GlobalState {
     pub(crate) vfs_span: Option<tracing::span::EnteredSpan>,
     pub(crate) wants_to_switch: Option<Cause>,
 
-    pub(crate) workspaces: Arc<Vec<AptosWorkspace>>,
-    // pub(crate) crate_graph_file_dependencies: FxHashSet<VfsPath>,
-
+    pub(crate) packages: Arc<Vec<AptosPackage>>,
     // op queues
-    pub(crate) fetch_workspaces_queue: OpQueue<FetchWorkspaceRequest, FetchWorkspaceResponse>,
+    pub(crate) fetch_packages_queue: OpQueue<FetchPackagesRequest, FetchPackagesResponse>,
 }
 
 /// An immutable snapshot of the world's state at a point in time.
@@ -94,9 +92,8 @@ pub(crate) struct GlobalStateSnapshot {
     pub(crate) config: Arc<Config>,
     pub(crate) analysis: Analysis,
     mem_docs: MemDocs,
-    // pub(crate) semantic_tokens_cache: Arc<Mutex<FxHashMap<Url, SemanticTokens>>>,
     vfs: Arc<RwLock<(vfs::Vfs, HashMap<FileId, LineEndings>)>>,
-    pub(crate) workspaces: Arc<Vec<AptosWorkspace>>,
+    pub(crate) packages: Arc<Vec<AptosPackage>>,
     pub(crate) flycheck: Arc<[FlycheckHandle]>,
 }
 
@@ -167,8 +164,8 @@ impl GlobalState {
             vfs_span: None,
             wants_to_switch: None,
 
-            workspaces: Arc::from(Vec::new()),
-            fetch_workspaces_queue: OpQueue::default(),
+            packages: Arc::from(Vec::new()),
+            fetch_packages_queue: OpQueue::default(),
         };
         // Apply any required database inputs from the config.
         this.update_configuration(config);
@@ -178,7 +175,7 @@ impl GlobalState {
     pub(crate) fn snapshot(&self) -> GlobalStateSnapshot {
         GlobalStateSnapshot {
             config: Arc::clone(&self.config),
-            workspaces: Arc::clone(&self.workspaces),
+            packages: Arc::clone(&self.packages),
             analysis: self.analysis_host.analysis(),
             vfs: Arc::clone(&self.vfs),
             // check_fixes: Arc::clone(&self.diagnostics.check_fixes),

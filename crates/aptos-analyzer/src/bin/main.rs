@@ -169,9 +169,9 @@ fn run_server() -> anyhow::Result<()> {
         );
     }
 
-    let workspace_roots = workspace_folders
-        .map(|workspaces| {
-            workspaces
+    let package_roots = workspace_folders
+        .map(|workspace_folders| {
+            workspace_folders
                 .into_iter()
                 .filter_map(|it| it.uri.to_file_path().ok())
                 .map(patch_path_prefix)
@@ -179,11 +179,11 @@ fn run_server() -> anyhow::Result<()> {
                 .filter_map(|it| AbsPathBuf::try_from(it).ok())
                 .collect::<Vec<_>>()
         })
-        .filter(|workspaces| !workspaces.is_empty())
+        .filter(|roots| !roots.is_empty())
         .unwrap_or_else(|| vec![root_path.clone()]);
-    tracing::info!(?workspace_roots);
+    tracing::info!(?package_roots);
 
-    let mut config = Config::new(root_path, capabilities, workspace_roots);
+    let mut config = Config::new(root_path, capabilities, package_roots);
     if let Some(json) = initialization_options {
         let mut change = ConfigChange::default();
         change.change_client_config(json);
@@ -230,7 +230,7 @@ fn run_server() -> anyhow::Result<()> {
         return Err(e.into());
     }
 
-    config.rediscover_workspaces();
+    config.rediscover_packages();
 
     // If the io_threads have an error, there's usually an error on the main
     // loop too because the channels are closed. Ensure we report both errors.

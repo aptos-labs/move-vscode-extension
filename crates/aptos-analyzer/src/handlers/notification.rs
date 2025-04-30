@@ -1,5 +1,5 @@
 use crate::config::config_change::ConfigChange;
-use crate::global_state::{FetchWorkspaceRequest, GlobalState};
+use crate::global_state::{FetchPackagesRequest, GlobalState};
 use crate::lsp::from_proto;
 use crate::lsp::utils::apply_document_changes;
 use crate::lsp_ext::RunFlycheckParams;
@@ -141,9 +141,9 @@ pub(crate) fn handle_did_save_text_document(
             if reload::should_refresh_for_file_change(
                 path, /*, ChangeKind::Modify, additional_files*/
             ) {
-                state.fetch_workspaces_queue.request_op(
+                state.fetch_packages_queue.request_op(
                     format!("workspace vfs file change saved {path}"),
-                    FetchWorkspaceRequest { force_reload_deps: false },
+                    FetchPackagesRequest { force_reload_deps: false },
                 );
             }
         }
@@ -210,8 +210,8 @@ pub(crate) fn handle_did_change_workspace_folders(
 ) -> anyhow::Result<()> {
     let config = Arc::make_mut(&mut state.config);
 
-    for workspace in params.event.removed {
-        let Ok(path) = workspace.uri.to_file_path() else {
+    for workspace_folder in params.event.removed {
+        let Ok(path) = workspace_folder.uri.to_file_path() else {
             continue;
         };
         let Ok(path) = Utf8PathBuf::from_path_buf(path) else {
@@ -220,7 +220,7 @@ pub(crate) fn handle_did_change_workspace_folders(
         let Ok(path) = AbsPathBuf::try_from(path) else {
             continue;
         };
-        config.remove_workspace(&path);
+        config.remove_package(&path);
     }
 
     let added = params
@@ -230,13 +230,13 @@ pub(crate) fn handle_did_change_workspace_folders(
         .filter_map(|it| it.uri.to_file_path().ok())
         .filter_map(|it| Utf8PathBuf::from_path_buf(it).ok())
         .filter_map(|it| AbsPathBuf::try_from(it).ok());
-    config.add_workspaces(added);
+    config.add_packages(added);
 
-    config.rediscover_workspaces();
+    config.rediscover_packages();
 
-    let req = FetchWorkspaceRequest { force_reload_deps: false };
+    let req = FetchPackagesRequest { force_reload_deps: false };
     state
-        .fetch_workspaces_queue
+        .fetch_packages_queue
         .request_op("client workspaces changed".to_owned(), req);
 
     Ok(())
@@ -270,7 +270,7 @@ fn run_flycheck(state: &mut GlobalState, vfs_path: VfsPath) -> bool {
                 .to_owned();
 
             let workspace_ids = world
-                .workspaces
+                .packages
                 .iter()
                 .enumerate()
                 .filter(|(_, ws)| ws.contains_file(saved_file_path.as_path()));
