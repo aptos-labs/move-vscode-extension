@@ -8,7 +8,6 @@ use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 use lang::nameres::scope::VecExt;
 use line_index::{LineCol, LineIndex};
-use std::fmt::Debug;
 use std::iter;
 use syntax::TextRange;
 use vfs::FileId;

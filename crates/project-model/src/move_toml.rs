@@ -19,37 +19,41 @@ impl MoveToml {
             move_toml.package = package_table.to_owned().try_into().ok();
         }
 
-        // [dependencies] table with inner tables
+        // covers both [dependencies] table with inner tables and [dependencies.AptosFramework]
         if let Some(deps_table) = deserialized.get("dependencies").and_then(|d| d.as_table()) {
-            for (name, value) in deps_table {
-                let table = value
-                    .as_table()
-                    .and_then(|table| table.to_owned().try_into::<'_, DependencyTable>().ok());
-                if let Some(table) = table {
-                    if let Some(local) = table.local {
-                        move_toml
-                            .dependencies
-                            .push(MoveTomlDependency::Local(LocalDependency {
-                                name: name.to_owned(),
-                                path: local,
-                            }));
-                        continue;
-                    }
-                    if let Some(git) = table.git {
-                        move_toml
-                            .dependencies
-                            .push(MoveTomlDependency::Git(GitDependency {
-                                name: name.to_owned(),
-                                git,
-                                rev: table.rev,
-                                subdir: table.subdir,
-                            }));
-                    }
+            for (dep_name, deps_inner_table) in deps_table {
+                if let Some(dep) =
+                    Self::parse_dependency_table(dep_name.to_string(), deps_inner_table.to_owned())
+                {
+                    move_toml.dependencies.push(dep);
                 }
             }
         }
 
         Ok(move_toml)
+    }
+
+    fn parse_dependency_table(name: String, dep_table: toml::Value) -> Option<MoveTomlDependency> {
+        let table = dep_table
+            .as_table()?
+            .to_owned()
+            .try_into::<'_, DependencyTable>()
+            .ok()?;
+        if let Some(local) = table.local {
+            return Some(MoveTomlDependency::Local(LocalDependency {
+                name: name.to_owned(),
+                path: local,
+            }));
+        }
+        if let Some(git) = table.git {
+            return Some(MoveTomlDependency::Git(GitDependency {
+                name: name.to_owned(),
+                git,
+                rev: table.rev,
+                subdir: table.subdir,
+            }));
+        }
+        None
     }
 }
 
@@ -185,5 +189,24 @@ rev = "main"
         assert!(git_dep.dep_root().unwrap().ends_with(RelPath::new_unchecked(
             ".move/https___github_com_aptos-labs_move-stdlib_git_main/".into()
         )));
+    }
+
+    #[test]
+    fn test_sibling_local_dependency() {
+        // language=Toml
+        let source = r#"
+[dependencies.LiquidswapInit]
+local = "./liquidswap_init/"
+        "#;
+
+        let move_toml = MoveToml::from_str(source).unwrap();
+
+        let local_dep = move_toml
+            .dependencies
+            .iter()
+            .find_map(|dep| dep.clone().local())
+            .unwrap();
+        assert_eq!(local_dep.name, "LiquidswapInit");
+        assert_eq!(local_dep.path, "./liquidswap_init/")
     }
 }

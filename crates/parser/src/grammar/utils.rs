@@ -1,6 +1,6 @@
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::{EOF, ERROR};
-use crate::{Parser, SyntaxKind, T};
+use crate::{Parser, SyntaxKind};
 
 pub(crate) fn list_with_recover(
     p: &mut Parser<'_>,

@@ -5,9 +5,9 @@ use crate::nameres::name_resolution::{
     get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
 use crate::nameres::namespaces::Ns::FUNCTION;
-use crate::nameres::namespaces::{FUNCTIONS, NAMES, Ns};
+use crate::nameres::namespaces::{FUNCTIONS, Ns};
 use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
-use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt, VecExt};
+use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt};
 use crate::types::inference::InferenceCtx;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
@@ -32,6 +32,8 @@ pub fn get_path_resolve_variants_with_expected_type(
     if let PathKind::Qualified { qualifier, kind, .. } = path_kind.clone() {
         match kind {
             QualifiedKind::ModuleItemOrEnumVariant | QualifiedKind::FQModuleItem => {
+                let _p =
+                    tracing::debug_span!("refine expected_type with maybe enum qualifier").entered();
                 let enum_item = qualifier
                     .reference()
                     .in_file(ctx.path.file_id)

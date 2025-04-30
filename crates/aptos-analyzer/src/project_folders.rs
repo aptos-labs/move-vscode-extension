@@ -4,12 +4,13 @@ use project_model::AptosWorkspace;
 use project_model::aptos_workspace::PackageFolderRoot;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
-use std::mem;
+use std::fmt::Formatter;
+use std::{fmt, mem};
 use stdx::itertools::Itertools;
 use vfs::VfsPath;
 use vfs::file_set::FileSetConfig;
 
-#[derive(Default, Debug)]
+#[derive(Default)]
 pub struct PackageRootConfig {
     pub fsc: FileSetConfig,
     pub local_filesets: Vec<u64>,
@@ -17,7 +18,7 @@ pub struct PackageRootConfig {
 
 impl PackageRootConfig {
     pub fn partition_into_roots(&self, vfs: &vfs::Vfs) -> Vec<PackageRoot> {
-        tracing::info!("partition with {:?}", self.fsc);
+        tracing::info!("partition with {:?}", self);
         let package_file_sets = self.fsc.partition(vfs);
         package_file_sets
             .into_iter()
@@ -31,6 +32,14 @@ impl PackageRootConfig {
                 }
             })
             .collect()
+    }
+}
+
+impl fmt::Debug for PackageRootConfig {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PackageRootConfig")
+            .field("fsc", &self.fsc)
+            .finish()
     }
 }
 

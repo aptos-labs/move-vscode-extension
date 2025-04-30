@@ -1,21 +1,8 @@
 //! Simple logger that logs either to stderr or to a file, using `tracing_subscriber`
 //! filter syntax and `tracing_appender` for non blocking output.
 
-use crate::tracing::json;
 use anyhow::Context;
-use serde::de::Expected;
-use std::env;
-use std::str::FromStr;
-use tracing::Level;
-use tracing::level_filters::LevelFilter;
-use tracing_subscriber::fmt::format::FmtSpan;
-use tracing_subscriber::{
-    Layer, Registry,
-    filter::{Targets, filter_fn},
-    fmt,
-    fmt::{MakeWriter, time},
-    layer::SubscriberExt,
-};
+use tracing_subscriber::{Layer, Registry, filter::Targets, fmt::MakeWriter, layer::SubscriberExt};
 use tracing_tree::HierarchicalLayer;
 
 #[derive(Debug)]

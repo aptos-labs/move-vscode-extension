@@ -25,18 +25,20 @@ impl fmt::Debug for AptosPackage {
 
 impl AptosPackage {
     pub fn load(manifest_path: ManifestPath, is_dep: bool) -> anyhow::Result<Self> {
-        tracing::info!("load package at {:?}", fs::canonicalize(&manifest_path.file)?);
+        let content_root = manifest_path.parent().to_path_buf();
+        let _p =
+            tracing::info_span!("load package at", "{:?}", fs::canonicalize(&content_root)).entered();
 
         let file_contents = fs::read_to_string(&manifest_path)
             .with_context(|| format!("Failed to read Move.toml file {manifest_path}"))?;
 
         let move_toml = MoveToml::from_str(file_contents.as_str())
             .with_context(|| format!("Failed to deserialize Move.toml file {manifest_path}"))?;
-        let content_root = manifest_path.parent().to_path_buf();
 
         let mut dep_manifests = vec![];
         for toml_dep in move_toml.dependencies.clone() {
             if let Some(dep_root) = toml_dep.dep_root(&content_root) {
+                tracing::info!(dep_root = ?fs::canonicalize(&dep_root));
                 let move_toml_path = dep_root.join("Move.toml");
                 if fs::exists(&move_toml_path).is_ok_and(|it| it) {
                     let manifest_path = ManifestPath::from_manifest_file(move_toml_path).unwrap();

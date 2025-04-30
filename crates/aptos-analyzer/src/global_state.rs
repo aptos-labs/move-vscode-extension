@@ -4,25 +4,22 @@ use crate::flycheck::{FlycheckHandle, FlycheckMessage};
 use crate::line_index::{LineEndings, LineIndex};
 use crate::lsp::from_proto;
 use crate::lsp::to_proto::url_from_abs_path;
+use crate::lsp_ext;
 use crate::main_loop::Task;
 use crate::mem_docs::MemDocs;
 use crate::op_queue::{Cause, OpQueue};
 use crate::project_folders::PackageRootConfig;
 use crate::task_pool::TaskPool;
-use crate::{lsp_ext, reload};
 use base_db::change::FileChanges;
 use crossbeam_channel::{Receiver, Sender, unbounded};
 use ide::{Analysis, AnalysisHost, Cancellable};
 use lang::builtin_files::BUILTINS_FILE;
 use lsp_types::Url;
-use parking_lot::{
-    MappedRwLockReadGuard, RwLock, RwLockReadGuard, RwLockUpgradableReadGuard, RwLockWriteGuard,
-};
+use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard};
 use project_model::aptos_workspace::AptosWorkspace;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
-use tracing::Level;
 use vfs::{AnchoredPathBuf, FileId, VfsPath};
 
 pub(crate) struct FetchWorkspaceRequest {

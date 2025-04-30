@@ -6,16 +6,14 @@ use crate::op_queue::Cause;
 use crate::project_folders::ProjectFolders;
 use crate::{Config, lsp_ext};
 use base_db::change::{FileChanges, PackageGraph};
-use lang::builtin_files::BUILTINS_FILE;
 use lsp_types::FileSystemWatcher;
 use project_model::AptosWorkspace;
 use std::mem;
-use std::ops::Deref;
 use std::sync::Arc;
 use stdx::format_to;
 use stdx::itertools::Itertools;
 use stdx::thread::ThreadIntent;
-use vfs::{AbsPath, Vfs};
+use vfs::AbsPath;
 
 #[derive(Debug)]
 pub(crate) enum FetchWorkspacesProgress {
@@ -86,9 +84,7 @@ impl GlobalState {
 
         if self.config.discovered_manifests().is_empty() {
             status.health |= lsp_ext::Health::Warning;
-            message.push_str(
-                "Failed to discover Aptos packages in the current folder."
-            );
+            message.push_str("Failed to discover Aptos packages in the current folder.");
         }
         if self.fetch_workspace_error().is_err() {
             status.health |= lsp_ext::Health::Error;
@@ -263,16 +259,14 @@ impl GlobalState {
         );
         self.package_root_config = project_folders.package_root_config;
 
-        tracing::info!(?cause, "recreating the package graph");
         self.reload_package_deps(cause);
 
         tracing::info!("did switch workspaces");
     }
 
+    #[tracing::instrument(level = "info", skip(self))]
     fn reload_package_deps(&mut self, cause: String) {
-        tracing::info!(?cause, "reload PackageGraph");
-
-        let progress_title = "Building PackageGraph";
+        let progress_title = "Reloading Aptos packages";
         self.report_progress(
             progress_title,
             crate::lsp::utils::Progress::Begin,
@@ -301,10 +295,8 @@ impl GlobalState {
                 }
 
                 let ws = self.workspaces.get(i).unwrap();
-                let _p =
-                    tracing::info_span!("waiting for the vfs read lock (ws.to_package_graph)").entered();
                 let vfs = &self.vfs.read().0;
-                tracing::info!("vfs read lock acquired");
+
                 let mut load = |path: &AbsPath| vfs.file_id(&vfs::VfsPath::from(path.to_path_buf()));
 
                 let ws_graph = ws.to_package_graph(&mut load);
@@ -328,16 +320,9 @@ impl GlobalState {
 
         let mut change = FileChanges::new();
         {
-            let _p = tracing::info_span!("waiting for the vfs read lock (set package roots)").entered();
-
             let vfs = &self.vfs.read().0;
-            tracing::info!("vfs read lock acquired");
             let roots = self.package_root_config.partition_into_roots(vfs);
             change.set_package_roots(roots);
-
-            // change.add_builtins_file(self.builtins_file_id, BUILTINS_FILE.to_string());
-            // tracing::info!("builtins_file {:?}", self.builtins_file_id);
-
             // depends on roots being available
             change.set_package_graph(package_graph);
         }
