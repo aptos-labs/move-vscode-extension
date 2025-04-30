@@ -17,7 +17,7 @@ pub struct PackageRootConfig {
 
 impl PackageRootConfig {
     pub fn partition_into_roots(&self, vfs: &vfs::Vfs) -> Vec<PackageRoot> {
-        tracing::info!("partition with {:?}", self);
+        tracing::info!("partition with {:?}", self.fsc);
         let package_file_sets = self.fsc.partition(vfs);
         package_file_sets
             .into_iter()
@@ -54,23 +54,6 @@ impl ProjectFolders {
         let mut folders = ProjectFolders::default();
         let mut fsc = FileSetConfig::builder();
         let mut local_filesets = vec![];
-
-        // Dedup source roots
-        // Depending on the project setup, we can have duplicated source roots, or for example in
-        // the case of the rustc workspace, we can end up with two source roots that are almost the
-        // same but not quite, like:
-        // PackageRoot { is_local: false, include: [AbsPathBuf(".../rust/src/tools/miri/cargo-miri")], exclude: [] }
-        // PackageRoot {
-        //     is_local: true,
-        //     include: [AbsPathBuf(".../rust/src/tools/miri/cargo-miri"), AbsPathBuf(".../rust/build/x86_64-pc-windows-msvc/stage0-tools/x86_64-pc-windows-msvc/release/build/cargo-miri-85801cd3d2d1dae4/out")],
-        //     exclude: [AbsPathBuf(".../rust/src/tools/miri/cargo-miri/.git"), AbsPathBuf(".../rust/src/tools/miri/cargo-miri/target")]
-        // }
-        //
-        // The first one comes from the explicit rustc workspace which points to the rustc workspace itself
-        // The second comes from the rustc workspace that we load as the actual project workspace
-        // These `is_local` differing in this kind of way gives us problems, especially when trying to filter diagnostics as we don't report diagnostics for external libraries.
-        // So we need to deduplicate these, usually it would be enough to deduplicate by `include`, but as the rustc example shows here that doesn't work,
-        // so we need to also coalesce the includes if they overlap.
 
         let mut folder_roots: Vec<_> = packages
             .iter()

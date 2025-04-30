@@ -327,6 +327,7 @@ impl GlobalState {
         self.reload_flycheck();
     }
 
+    #[tracing::instrument(level = "info", skip(self))]
     fn collect_dep_graph(&mut self) -> Option<DepGraph> {
         let mut global_dep_graph = DepGraph::default();
         let n_ws = self.packages.len();
@@ -340,17 +341,6 @@ impl GlobalState {
 
             let dep_graph = pkg.to_dep_graph(&mut load)?;
             global_dep_graph.extend(dep_graph);
-            // match dep_graph {
-            //     Some(dep_graph) => {
-            //     }
-            //     None => {
-            //         // tracing::info!(
-            //         //     "could not build DepGraph for {:?}, not loaded into Vfs",
-            //         //     ws_root
-            //         // );
-            //         return None;
-            //     }
-            // }
         }
         Some(global_dep_graph)
     }

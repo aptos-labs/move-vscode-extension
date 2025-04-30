@@ -9,9 +9,10 @@ use crate::nameres::scope_entries_owner::get_entries_in_scope;
 use crate::node_ext::ModuleLangExt;
 use crate::node_ext::item::ModuleItemExt;
 use base_db::package_root::PackageRootId;
+use itertools::Itertools;
 use parser::SyntaxKind;
 use parser::SyntaxKind::MODULE_SPEC;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Formatter;
 use std::ops::Deref;
 use std::{fmt, iter};
@@ -142,24 +143,16 @@ pub fn get_modules_as_entries(
     package_root_id: PackageRootId,
     address: Address,
 ) -> Vec<ScopeEntry> {
-    let dep_ids = db.package_deps(package_root_id).deref().to_owned();
-    tracing::debug!(?dep_ids);
-
-    let file_sets = iter::once(package_root_id)
-        .chain(dep_ids)
-        .map(|id| db.package_root(id).file_set.clone())
-        .collect::<Vec<_>>();
+    let source_file_ids = db.source_file_ids(package_root_id);
 
     let mut module_entries = vec![];
-    for file_set in file_sets {
-        for source_file_id in file_set.iter() {
-            let source_file = db.parse(source_file_id).tree();
-            let modules = source_file
-                .all_modules()
-                .filter(|m| m.address_equals_to(address.clone(), false))
-                .collect::<Vec<_>>();
-            module_entries.extend(modules.wrapped_in_file(source_file_id).to_entries());
-        }
+    for source_file_id in source_file_ids {
+        let source_file = db.parse(source_file_id).tree();
+        let modules = source_file
+            .all_modules()
+            .filter(|m| m.address_equals_to(address.clone(), false))
+            .collect::<Vec<_>>();
+        module_entries.extend(modules.wrapped_in_file(source_file_id).to_entries());
     }
     tracing::debug!(?module_entries);
     module_entries
