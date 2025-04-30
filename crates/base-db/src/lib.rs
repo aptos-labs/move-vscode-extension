@@ -4,6 +4,8 @@ pub mod change;
 pub mod package_root;
 
 use crate::package_root::{PackageRoot, PackageRootId};
+use std::iter;
+use std::ops::Deref;
 use std::sync::Arc;
 use syntax::{Parse, SourceFile, SyntaxError};
 use vfs::FileId;
@@ -36,6 +38,8 @@ pub trait SourceDatabase: std::fmt::Debug + std::panic::RefUnwindSafe {
 
     #[ra_salsa::input]
     fn package_deps(&self, manifest_file_id: PackageRootId) -> Arc<Vec<PackageRootId>>;
+
+    fn source_file_ids(&self, package_root_id: PackageRootId) -> Vec<FileId>;
 }
 
 fn parse(db: &dyn SourceDatabase, file_id: FileId) -> Parse {
@@ -50,4 +54,24 @@ fn parse_errors(db: &dyn SourceDatabase, file_id: FileId) -> Option<Arc<[SyntaxE
         [] => None,
         [..] => Some(errors.into()),
     }
+}
+
+fn source_file_ids(db: &dyn SourceDatabase, package_root_id: PackageRootId) -> Vec<FileId> {
+    let dep_ids = db.package_deps(package_root_id).deref().to_owned();
+    tracing::debug!(?dep_ids);
+
+    let file_sets = iter::once(package_root_id)
+        .chain(dep_ids)
+        .map(|id| db.package_root(id).file_set.clone())
+        .collect::<Vec<_>>();
+
+    let mut source_file_ids = vec![];
+    for file_set in file_sets.clone() {
+        for source_file_id in file_set.iter() {
+            source_file_ids.push(source_file_id);
+        }
+    }
+    // source_file_ids.sort();
+    // source_file_ids.dedup();
+    source_file_ids
 }
