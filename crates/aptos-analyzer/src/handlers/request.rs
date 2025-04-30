@@ -114,7 +114,7 @@ pub(crate) fn handle_document_diagnostics(
     params: lsp_types::DocumentDiagnosticParams,
 ) -> anyhow::Result<lsp_types::DocumentDiagnosticReportResult> {
     let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
-    let config = snap.config.diagnostics();
+    let config = snap.config.diagnostics_config();
     if !config.enabled {
         return Ok(empty_diagnostic_report());
     }
@@ -276,7 +276,7 @@ pub(crate) fn handle_code_action(
         params.range
     )?);
 
-    let mut assists_config = snap.config.assist(/*Some(package_root_id)*/);
+    let mut assists_config = snap.config.assist();
     assists_config.allowed = params
         .context
         .only
@@ -293,7 +293,7 @@ pub(crate) fn handle_code_action(
     };
     let assists = snap.analysis.assists_with_fixes(
         &assists_config,
-        &snap.config.diagnostics(/*Some(package_root_id)*/),
+        &snap.config.diagnostics_config(),
         resolve,
         frange,
     )?;
@@ -387,7 +387,7 @@ pub(crate) fn handle_code_action_resolve(
 
     let assists = snap.analysis.assists_with_fixes(
         &assists_config,
-        &snap.config.diagnostics(/*Some(source_root)*/),
+        &snap.config.diagnostics_config(/*Some(source_root)*/),
         AssistResolveStrategy::Single(assist_resolve),
         frange,
     )?;

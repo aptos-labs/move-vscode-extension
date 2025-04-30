@@ -228,7 +228,7 @@ impl Config {
         }
     }
 
-    pub fn diagnostics(&self) -> DiagnosticsConfig {
+    pub fn diagnostics_config(&self) -> DiagnosticsConfig {
         DiagnosticsConfig {
             enabled: *self.diagnostics_enable(),
             unresolved_reference_enabled: *self.diagnostics_enableUnresolvedReference(),
