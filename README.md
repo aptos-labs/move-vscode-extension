@@ -51,3 +51,24 @@ To enable, specify in your `settings.json`:
     "aptos-analyzer.aptosPath": "/home/mkurnikov/bin/aptos", // path to aptos-cli on your machine
 }
 ```
+
+## Debugging
+
+It's useful to enable INFO logging level, it's not very chatty and could provide with a valuable information to debug:
+
+```
+    "aptos-analyzer.server.extraEnv": { "RA_LOG": "info" },
+```
+
+### Resolve definitions
+
+If there's any issue with missing go-to-definition, the "unresolved reference" diagnostic could be helpful:
+
+```
+    "aptos-analyzer.diagnostics.enableUnresolvedReference": true
+```
+
+It's disabled by default, as the underlying compiler frontend still incomplete. 
+
+
+
