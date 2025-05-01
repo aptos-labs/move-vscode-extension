@@ -82,7 +82,7 @@ pub(crate) struct GlobalState {
     pub(crate) vfs_span: Option<tracing::span::EnteredSpan>,
     pub(crate) reason_to_switch: Option<Cause>,
 
-    pub(crate) packages: Arc<Vec<AptosPackage>>,
+    pub(crate) main_packages: Arc<Vec<AptosPackage>>,
     // op queues
     pub(crate) fetch_packages_queue: OpQueue<FetchPackagesRequest, FetchPackagesResponse>,
 }
@@ -93,7 +93,7 @@ pub(crate) struct GlobalStateSnapshot {
     pub(crate) analysis: Analysis,
     mem_docs: MemDocs,
     vfs: Arc<RwLock<(vfs::Vfs, HashMap<FileId, LineEndings>)>>,
-    pub(crate) packages: Arc<Vec<AptosPackage>>,
+    pub(crate) main_packages: Arc<Vec<AptosPackage>>,
     pub(crate) flycheck: Arc<[FlycheckHandle]>,
 }
 
@@ -164,7 +164,7 @@ impl GlobalState {
             vfs_span: None,
             reason_to_switch: None,
 
-            packages: Arc::from(Vec::new()),
+            main_packages: Arc::from(Vec::new()),
             fetch_packages_queue: OpQueue::default(),
         };
         // Apply any required database inputs from the config.
@@ -175,7 +175,7 @@ impl GlobalState {
     pub(crate) fn snapshot(&self) -> GlobalStateSnapshot {
         GlobalStateSnapshot {
             config: Arc::clone(&self.config),
-            packages: Arc::clone(&self.packages),
+            main_packages: Arc::clone(&self.main_packages),
             analysis: self.analysis_host.analysis(),
             vfs: Arc::clone(&self.vfs),
             // check_fixes: Arc::clone(&self.diagnostics.check_fixes),
