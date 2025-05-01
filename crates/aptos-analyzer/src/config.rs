@@ -154,7 +154,6 @@ impl Config {
                 }
                 _ => FilesWatcher::Server,
             },
-            exclude: vec![],
             // exclude: self.files_excludeDirs().iter().map(|it| self.root_path.join(it)).collect(),
         }
     }
@@ -336,7 +335,6 @@ impl Config {
 #[derive(Debug, Clone)]
 pub struct FilesConfig {
     pub watcher: FilesWatcher,
-    pub exclude: Vec<AbsPathBuf>,
 }
 
 #[derive(Debug, Clone)]

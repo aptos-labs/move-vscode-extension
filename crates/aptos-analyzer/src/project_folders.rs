@@ -17,13 +17,13 @@ pub struct PackageRootConfig {
 
 impl PackageRootConfig {
     pub fn partition_into_roots(&self, vfs: &vfs::Vfs) -> Vec<PackageRoot> {
-        tracing::info!("partition with {:?}", self.fsc);
         let package_file_sets = self.fsc.partition(vfs);
         package_file_sets
             .into_iter()
             .enumerate()
             .map(|(idx, package_file_set)| {
                 let is_local = self.local_filesets.contains(&(idx as u64));
+                tracing::info!(?package_file_set);
                 if is_local {
                     PackageRoot::new_local(package_file_set)
                 } else {
@@ -50,98 +50,32 @@ pub struct ProjectFolders {
 }
 
 impl ProjectFolders {
-    pub fn new(packages: &[AptosPackage], global_excludes: &[AbsPathBuf]) -> ProjectFolders {
+    pub fn new(main_packages: &[AptosPackage]) -> ProjectFolders {
         let mut folders = ProjectFolders::default();
         let mut fsc = FileSetConfig::builder();
         let mut local_filesets = vec![];
 
-        let mut folder_roots: Vec<_> = packages
+        let mut folder_roots = main_packages
             .iter()
             .flat_map(|pkg| pkg.to_folder_roots())
-            .update(|root| root.include.sort())
-            .sorted_by(|a, b| a.include.cmp(&b.include))
-            .collect();
+            // .update(|root| root.include.sort())
+            // .sorted_by(|a, b| a.include.cmp(&b.include))
+            .collect::<Vec<_>>();
+        folder_roots.dedup();
 
-        // map that tracks indices of overlapping roots
-        let mut overlap_map = HashMap::<_, Vec<_>>::default();
-        let mut done = false;
-
-        while !mem::replace(&mut done, true) {
-            // maps include paths to indices of the corresponding root
-            let mut include_to_idx: HashMap<&AbsPathBuf, usize> = HashMap::default();
-            // Find and note down the indices of overlapping roots
-            for (idx, root) in folder_roots
-                .iter()
-                .enumerate()
-                .filter(|(_, it)| !it.include.is_empty())
-            {
-                for include in &root.include {
-                    match include_to_idx.entry(include) {
-                        Entry::Occupied(e) => {
-                            overlap_map.entry(*e.get()).or_default().push(idx);
-                        }
-                        Entry::Vacant(e) => {
-                            e.insert(idx);
-                        }
-                    }
+        for package_folder_root in folder_roots {
+            for dir_entry in folder_root_to_dir_entries(package_folder_root.clone()) {
+                if package_folder_root.is_local {
+                    folders.watch.push(folders.load.len());
                 }
+                folders.load.push(dir_entry);
             }
-            for (k, v) in overlap_map.drain() {
-                done = false;
-                for v in v {
-                    let r = mem::replace(
-                        &mut folder_roots[v],
-                        PackageFolderRoot {
-                            is_local: false,
-                            include: vec![],
-                            exclude: vec![],
-                        },
-                    );
-                    folder_roots[k].is_local |= r.is_local;
-                    folder_roots[k].include.extend(r.include);
-                    folder_roots[k].exclude.extend(r.exclude);
-                }
 
-                folder_roots[k].include.sort();
-                folder_roots[k].include.dedup();
-
-                folder_roots[k].exclude.sort();
-                folder_roots[k].exclude.dedup();
-            }
-        }
-
-        for folder_root in folder_roots.into_iter().filter(|it| !it.include.is_empty()) {
-            let file_set_roots: Vec<VfsPath> =
-                folder_root.include.iter().cloned().map(VfsPath::from).collect();
-
-            let entry = {
-                let mut dirs = vfs::loader::Directories::default();
-                dirs.extensions.push("move".into());
-                dirs.extensions.push("toml".into());
-                dirs.include.extend(folder_root.include);
-                dirs.exclude.extend(folder_root.exclude);
-                for excl in global_excludes {
-                    if dirs
-                        .include
-                        .iter()
-                        .any(|incl| incl.starts_with(excl) || excl.starts_with(incl))
-                    {
-                        dirs.exclude.push(excl.clone());
-                    }
-                }
-
-                vfs::loader::Entry::Directories(dirs)
-            };
-
-            if folder_root.is_local {
-                folders.watch.push(folders.load.len());
-            }
-            folders.load.push(entry);
-
-            if folder_root.is_local {
+            if package_folder_root.is_local {
                 local_filesets.push(fsc.len() as u64);
             }
-            fsc.add_file_set(file_set_roots)
+            let file_set_root = VfsPath::from(package_folder_root.content_root.clone());
+            fsc.add_file_set(vec![file_set_root])
         }
 
         let fsc = fsc.build();
@@ -149,4 +83,20 @@ impl ProjectFolders {
 
         folders
     }
+}
+
+fn folder_root_to_dir_entries(folder_root: PackageFolderRoot) -> Vec<vfs::loader::Entry> {
+    let mut toml_dirs = vfs::loader::Directories::default();
+    toml_dirs.extensions.push("toml".into());
+    toml_dirs.include.extend(vec![folder_root.clone().content_root]);
+
+    let mut move_dirs = vfs::loader::Directories::default();
+    move_dirs.extensions.push("move".into());
+    move_dirs
+        .include
+        .extend(vec![folder_root.content_root.join("sources")]);
+    vec![
+        vfs::loader::Entry::Directories(toml_dirs),
+        vfs::loader::Entry::Directories(move_dirs),
+    ]
 }

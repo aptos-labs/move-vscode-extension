@@ -270,7 +270,7 @@ fn run_flycheck(state: &mut GlobalState, vfs_path: VfsPath) -> bool {
                 .to_owned();
 
             let workspace_ids = world
-                .packages
+                .main_packages
                 .iter()
                 .enumerate()
                 .filter(|(_, ws)| ws.contains_file(saved_file_path.as_path()));
