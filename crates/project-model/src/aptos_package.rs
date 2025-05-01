@@ -1,5 +1,5 @@
 use crate::manifest_path::ManifestPath;
-use crate::move_toml::MoveToml;
+use crate::move_toml::{MoveToml, MoveTomlDependency};
 use anyhow::Context;
 use base_db::change::{DepGraph, ManifestFileId};
 use paths::{AbsPath, AbsPathBuf};
@@ -23,7 +23,8 @@ pub struct PackageFolderRoot {
 pub struct AptosPackage {
     content_root: AbsPathBuf,
     move_toml: MoveToml,
-    is_dep: bool,
+    is_git: bool,
+    // is_dep: bool,
     deps: Vec<AptosPackage>,
 }
 
@@ -43,13 +44,13 @@ impl AptosPackage {
             .with_context(|| format!("Failed to load the project at {root_manifest}"))
     }
 
-    pub fn load_dependency(root_manifest: &ManifestPath) -> anyhow::Result<AptosPackage> {
+    pub fn load_dependency(root_manifest: &ManifestPath, is_git: bool) -> anyhow::Result<AptosPackage> {
         let _p =
             tracing::info_span!("load dep package at", "{:?}", root_manifest.canonical_root()).entered();
-        AptosPackage::load_inner(root_manifest, true)
+        AptosPackage::load_inner(root_manifest, is_git)
     }
 
-    fn load_inner(manifest_path: &ManifestPath, is_dep: bool) -> anyhow::Result<Self> {
+    fn load_inner(manifest_path: &ManifestPath, is_git: bool) -> anyhow::Result<Self> {
         let file_contents = fs::read_to_string(&manifest_path)
             .with_context(|| format!("Failed to read Move.toml file {manifest_path}"))?;
         let move_toml = MoveToml::from_str(file_contents.as_str())
@@ -65,7 +66,8 @@ impl AptosPackage {
                 if fs::exists(&move_toml_path).is_ok_and(|it| it) {
                     let manifest_path = ManifestPath::from_manifest_file(move_toml_path).unwrap();
                     dep_roots.push(manifest_path.canonical_root());
-                    dep_manifests.push(manifest_path);
+                    let is_git = matches!(toml_dep, MoveTomlDependency::Git(_));
+                    dep_manifests.push((manifest_path, is_git));
                 } else {
                     tracing::warn!(?move_toml_path, "invalid dependency: manifest does not exist");
                 }
@@ -75,13 +77,13 @@ impl AptosPackage {
 
         let deps = dep_manifests
             .into_iter()
-            .filter_map(|it| AptosPackage::load_dependency(&it).ok())
+            .filter_map(|(it, is_git)| AptosPackage::load_dependency(&it, is_git).ok())
             .collect();
 
         Ok(AptosPackage {
             content_root: package_root,
             move_toml,
-            is_dep,
+            is_git,
             deps,
         })
     }
@@ -152,7 +154,7 @@ impl AptosPackage {
     pub fn to_folder_root(&self) -> PackageFolderRoot {
         PackageFolderRoot {
             content_root: self.content_root.to_path_buf(),
-            is_local: !self.is_dep,
+            is_local: !self.is_git,
         }
     }
 

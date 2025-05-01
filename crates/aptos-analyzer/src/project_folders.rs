@@ -23,7 +23,6 @@ impl PackageRootConfig {
             .enumerate()
             .map(|(idx, package_file_set)| {
                 let is_local = self.local_filesets.contains(&(idx as u64));
-                tracing::info!(?package_file_set);
                 if is_local {
                     PackageRoot::new_local(package_file_set)
                 } else {
