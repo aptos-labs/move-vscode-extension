@@ -42,7 +42,7 @@ module 0x1::m {
 
 ### Flycheck
 
-Checks code in the editor after saving the document.
+Checks code in the editor after saving the document by running `aptos move compile`.
 
 To enable, specify in your `settings.json`: 
 ```json5
@@ -50,6 +50,12 @@ To enable, specify in your `settings.json`:
     "aptos-analyzer.checkOnSave": true,
     "aptos-analyzer.aptosPath": "/home/mkurnikov/bin/aptos", // path to aptos-cli on your machine
 }
+```
+
+To provide additional arguments to the `compile` command, use `aptos-analyzer.check.extraArgs`:
+
+```
+    "aptos-analyzer.check.extraArgs": ["--dev"],
 ```
 
 ## Debugging
