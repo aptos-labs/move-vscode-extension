@@ -11,7 +11,7 @@ use lsp_types::{
     SemanticTokensRangeResult, SemanticTokensResult,
 };
 use syntax::files::FileRange;
-
+use crate::movefmt::run_movefmt;
 // pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
 //     let req = FetchPackagesRequest { force_reload_deps: false };
 //     state
@@ -282,6 +282,15 @@ pub(crate) fn handle_view_syntax_tree(
     let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
     let syn = snap.analysis.view_syntax_tree(file_id)?;
     Ok(syn)
+}
+
+pub(crate) fn handle_formatting(
+    snap: GlobalStateSnapshot,
+    params: lsp_types::DocumentFormattingParams,
+) -> anyhow::Result<Option<Vec<lsp_types::TextEdit>>> {
+    let _p = tracing::info_span!("handle_formatting").entered();
+
+    run_movefmt(&snap, params.text_document)
 }
 
 pub(crate) fn handle_code_action(

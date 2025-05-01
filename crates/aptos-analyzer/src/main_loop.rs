@@ -654,10 +654,10 @@ impl GlobalState {
             // .on_sync::<lsp_ext::MatchingBrace>(handlers::handle_matching_brace)
             // .on_sync::<lsp_ext::OnTypeFormatting>(handlers::handle_on_type_formatting)
             // Formatting should be done immediately as the editor might wait on it, but we can't
-            // put it on the main thread as we do not want the main thread to block on rustfmt.
+            // put it on the main thread as we do not want the main thread to block on movefmt.
             // So we have an extra thread just for formatting requests to make sure it gets handled
             // as fast as possible.
-            // .on_fmt_thread::<lsp_request::Formatting>(handlers::handle_formatting)
+            .on_fmt_thread::<lsp_request::Formatting>(handlers::handle_formatting)
             // .on_fmt_thread::<lsp_request::RangeFormatting>(handlers::handle_range_formatting)
             // We can’t run latency-sensitive request handlers which do semantic
             // analysis on the main thread because that would block other

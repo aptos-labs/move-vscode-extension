@@ -162,6 +162,32 @@
                 }
             },
             {
+                "title": "movefmt",
+                "properties": {
+                    "aptos-analyzer.movefmt.extraArgs": {
+                        "markdownDescription": "Additional arguments to `rustfmt`.",
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "title": "movefmt",
+                "properties": {
+                    "aptos-analyzer.movefmt.path": {
+                        "markdownDescription": "Path to the `movefmt` executable.",
+                        "default": null,
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
+            {
                 "title": "$generated-end"
             }
         ],

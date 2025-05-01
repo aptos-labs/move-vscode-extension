@@ -221,7 +221,7 @@ impl FlycheckActor {
         'event: while let Some(event) = self.next_event(&inbox) {
             match event {
                 Event::RequestStateChange(StateChange::Cancel) => {
-                    tracing::debug!(flycheck_id = self.ws_id, "flycheck cancelled");
+                    tracing::info!(flycheck_id = self.ws_id, "flycheck cancelled");
                     self.cancel_check_process();
                 }
                 Event::RequestStateChange(StateChange::Restart) => {
@@ -238,11 +238,12 @@ impl FlycheckActor {
 
                     let formatted_command = format!("{command:?}");
 
-                    tracing::debug!(?command, "will restart flycheck");
+                    tracing::info!(?command, "will restart flycheck");
+
                     let (sender, receiver) = unbounded();
                     match CommandHandle::spawn(command, sender) {
                         Ok(command_handle) => {
-                            tracing::debug!(command = formatted_command, "did restart flycheck");
+                            tracing::info!(command = formatted_command, "did restart flycheck");
                             self.command_handle = Some(command_handle);
                             self.command_receiver = Some(receiver);
                             self.report_progress(Progress::DidStart);
@@ -255,7 +256,7 @@ impl FlycheckActor {
                     }
                 }
                 Event::CheckEvent(None) => {
-                    tracing::debug!(flycheck_id = self.ws_id, "flycheck finished");
+                    tracing::info!(flycheck_id = self.ws_id, "flycheck finished");
 
                     // Watcher finished
                     let command_handle = self.command_handle.take().unwrap();
@@ -264,7 +265,7 @@ impl FlycheckActor {
 
                     let res = command_handle.join();
                     if let Err(error) = &res {
-                        tracing::error!(
+                        tracing::info!(
                             "Flycheck failed to run the following command: {}, error={}",
                             formatted_handle,
                             error
@@ -306,7 +307,7 @@ impl FlycheckActor {
 
     fn cancel_check_process(&mut self) {
         if let Some(command_handle) = self.command_handle.take() {
-            tracing::debug!(
+            tracing::info!(
                 command = ?command_handle,
                 "did cancel flycheck"
             );

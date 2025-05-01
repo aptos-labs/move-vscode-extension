@@ -197,24 +197,24 @@ impl RequestDispatcher<'_> {
         )
     }
 
-    // /// Formatting requests should never block on waiting a for task thread to open up, editors will wait
-    // /// on the response and a late formatting update might mess with the document and user.
-    // /// We can't run this on the main thread though as we invoke rustfmt which may take arbitrary time to complete!
-    // pub(crate) fn on_fmt_thread<R>(
-    //     &mut self,
-    //     f: fn(GlobalStateSnapshot, R::Params) -> anyhow::Result<R::Result>,
-    // ) -> &mut Self
-    // where
-    //     R: lsp_types::request::Request + 'static,
-    //     R::Params: DeserializeOwned + panic::UnwindSafe + Send + fmt::Debug,
-    //     R::Result: Serialize,
-    // {
-    //     self.on_with_thread_intent::<false, false, R>(
-    //         ThreadIntent::LatencySensitive,
-    //         f,
-    //         Self::content_modified_error,
-    //     )
-    // }
+    /// Formatting requests should never block on waiting a for task thread to open up, editors will wait
+    /// on the response and a late formatting update might mess with the document and user.
+    /// We can't run this on the main thread though as we invoke movefmt which may take arbitrary time to complete!
+    pub(crate) fn on_fmt_thread<R>(
+        &mut self,
+        f: fn(GlobalStateSnapshot, R::Params) -> anyhow::Result<R::Result>,
+    ) -> &mut Self
+    where
+        R: lsp_types::request::Request + 'static,
+        R::Params: DeserializeOwned + panic::UnwindSafe + Send + fmt::Debug,
+        R::Result: Serialize,
+    {
+        self.on_with_thread_intent::<true, false, R>(
+            ThreadIntent::LatencySensitive,
+            f,
+            Self::content_modified_error,
+        )
+    }
 
     pub(crate) fn finish(&mut self) {
         if let Some(req) = self.req.take() {

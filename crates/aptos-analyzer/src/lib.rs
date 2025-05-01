@@ -17,6 +17,7 @@ pub mod lsp;
 mod project_folders;
 pub mod toolchain;
 pub mod tracing;
+mod movefmt;
 
 pub use config::{Config, ConfigErrors, config_change::ConfigChange};
 pub use lsp::capabilities::server_capabilities;
