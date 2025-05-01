@@ -37,6 +37,12 @@ config_data! {
 
         /// Whether to show "Unresolved reference" diagnostic.
         diagnostics_enableUnresolvedReference: bool                = true,
+
+        /// Path to the `movefmt` executable.
+        movefmt_path: Option<Utf8PathBuf>                         = None,
+
+        /// Additional arguments to `rustfmt`.
+        movefmt_extraArgs: Vec<String>               = vec![],
     }
 }
 

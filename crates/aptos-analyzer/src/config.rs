@@ -262,6 +262,14 @@ impl Config {
         self.aptosPath().clone()
     }
 
+    pub fn movefmt(&self) -> Option<MovefmtConfig> {
+        let path = self.movefmt_path().clone()?;
+        Some(MovefmtConfig {
+            path,
+            extra_args: self.movefmt_extraArgs().clone(),
+        })
+    }
+
     pub fn discovered_manifests(&self) -> Vec<ManifestPath> {
         // let exclude_dirs: Vec<_> =
         //     self.files_excludeDirs().iter().map(|p| self.root_path.join(p)).collect();
@@ -330,6 +338,12 @@ impl Config {
     pub fn caps(&self) -> &ClientCapabilities {
         &self.caps
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct MovefmtConfig {
+    pub path: Utf8PathBuf,
+    pub extra_args: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
