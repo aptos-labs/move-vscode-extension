@@ -124,8 +124,8 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
 
                 full: Some(SemanticTokensFullOptions::Bool(true)),
                 // full: Some(SemanticTokensFullOptions::Delta { delta: Some(true) }),
-                range: None,
-                // range: Some(true),
+                // range: None,
+                range: Some(true),
                 work_done_progress_options: Default::default(),
             }
             .into(),

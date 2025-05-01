@@ -31,10 +31,7 @@
 //!    2.13ms    2      leaf
 //! ```
 
-use std::{
-    fmt, mem,
-    time::{Duration, Instant},
-};
+use std::{env, fmt, mem, time::{Duration, Instant}};
 
 use tracing::{
     Event, Id, Subscriber, debug,
@@ -154,9 +151,12 @@ impl Node {
         let reset = "";
 
         // filter out everything less than 1ms
-        // if self.duration.as_millis() == 0 {
-        //     return;
-        // }
+        let skip_ns = env::var("APT_PROFILER_SKIP_NS").ok().is_some();
+        if skip_ns {
+            if self.duration.as_millis() == 0 {
+                return;
+            }
+        }
 
         let duration = format!("{:3.2?}", self.duration);
         let count = if self.count > 1 {

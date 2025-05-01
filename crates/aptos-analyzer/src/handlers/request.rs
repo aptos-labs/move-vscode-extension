@@ -7,7 +7,8 @@ use ide_db::assists::{AssistKind, AssistResolveStrategy, SingleResolve};
 use line_index::TextRange;
 use lsp_server::ErrorCode;
 use lsp_types::{
-    HoverContents, ResourceOp, ResourceOperationKind, SemanticTokensParams, SemanticTokensResult,
+    HoverContents, ResourceOp, ResourceOperationKind, SemanticTokensParams, SemanticTokensRangeParams,
+    SemanticTokensRangeResult, SemanticTokensResult,
 };
 use syntax::files::FileRange;
 
@@ -18,6 +19,36 @@ use syntax::files::FileRange;
 //         .request_op("reload workspace request".to_owned(), req);
 //     Ok(())
 // }
+
+pub(crate) fn handle_semantic_tokens_range(
+    snap: GlobalStateSnapshot,
+    params: SemanticTokensRangeParams,
+) -> anyhow::Result<Option<SemanticTokensRangeResult>> {
+    let _p = tracing::info_span!("handle_semantic_tokens_range").entered();
+
+    let frange = unwrap_or_return_default!(from_proto::file_range(
+        &snap,
+        &params.text_document,
+        params.range
+    )?);
+    let text = snap.analysis.file_text(frange.file_id)?;
+    let line_index = snap.file_line_index(frange.file_id)?;
+
+    // let mut highlight_config = snap.config.highlighting_config();
+    // Avoid flashing a bunch of unresolved references when the proc-macro servers haven't been spawned yet.
+    // highlight_config.syntactic_name_ref_highlighting =
+    //     snap.workspaces.is_empty() || !snap.proc_macros_loaded;
+
+    let highlights = snap.analysis.highlight_range(/*highlight_config, */frange)?;
+    let semantic_tokens = to_proto::semantic_tokens(
+        &text,
+        &line_index,
+        highlights,
+        // snap.config.semantics_tokens_augments_syntax_tokens(),
+        // snap.config.highlighting_non_standard_tokens(),
+    );
+    Ok(Some(semantic_tokens.into()))
+}
 
 pub(crate) fn handle_semantic_tokens_full(
     snap: GlobalStateSnapshot,
