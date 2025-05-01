@@ -1,5 +1,6 @@
 use crate::SourceDatabase;
 use crate::package_root::{PackageRoot, PackageRootId};
+use ra_salsa::Durability;
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::Arc;
@@ -15,6 +16,19 @@ pub struct FileChanges {
     pub files_changed: Vec<(FileId, Option<String>)>,
     pub package_roots: Option<Vec<PackageRoot>>,
     pub package_graph: Option<HashMap<ManifestFileId, Vec<ManifestFileId>>>,
+}
+
+impl fmt::Debug for FileChanges {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut d = fmt.debug_struct("Change");
+        if let Some(packages) = &self.package_roots {
+            d.field("packages", packages);
+        }
+        if !self.files_changed.is_empty() {
+            d.field("files_changed", &self.files_changed.len());
+        }
+        d.finish()
+    }
 }
 
 impl FileChanges {
@@ -41,23 +55,27 @@ impl FileChanges {
     pub fn apply(self, db: &mut dyn SourceDatabase) {
         let _p = tracing::info_span!("FileChange::apply").entered();
 
-        if let Some(package_roots) = self.package_roots {
+        if let Some(package_roots) = self.package_roots.clone() {
             tracing::info!("reset package roots and dependencies");
             for (idx, root) in package_roots.into_iter().enumerate() {
                 let root_id = PackageRootId(idx as u32);
-                let root_file_set = &root.file_set;
-                for file_id in root_file_set.iter() {
-                    db.set_file_package_root(file_id, root_id);
+                let durability = source_root_durability(&root);
+                for file_id in root.file_set.iter() {
+                    db.set_file_package_root_with_durability(file_id, root_id, durability);
                 }
-                db.set_package_root(root_id, Arc::from(root));
+                db.set_package_root_with_durability(root_id, Arc::from(root), durability);
                 db.set_package_deps(root_id, Default::default());
             }
         }
 
         if let Some((builtins_file_id, builtins_text)) = self.builtins_file {
             tracing::info!(?builtins_file_id, "set builtins file");
-            db.set_builtins_file_id(Some(builtins_file_id));
-            db.set_file_text(builtins_file_id, Arc::from(builtins_text));
+            db.set_builtins_file_id_with_durability(Some(builtins_file_id), Durability::HIGH);
+            db.set_file_text_with_durability(
+                builtins_file_id,
+                Arc::from(builtins_text),
+                Durability::HIGH,
+            );
         }
 
         if let Some(package_graph) = self.package_graph {
@@ -73,23 +91,35 @@ impl FileChanges {
             }
         }
 
+        let package_roots = self.package_roots;
         for (file_id, text) in self.files_changed {
-            // XXX: can't actually remove the file, just reset the text
             let text = text.unwrap_or_default();
+            // only use durability if roots are explicitly provided
+            if package_roots.is_some() {
+                let package_root_id = db.file_package_root(file_id);
+                let package_root = db.package_root(package_root_id);
+                let durability = file_text_durability(&package_root);
+                db.set_file_text_with_durability(file_id, Arc::from(text), durability);
+                continue;
+            }
+            // XXX: can't actually remove the file, just reset the text
             db.set_file_text(file_id, Arc::from(text))
         }
     }
 }
 
-impl fmt::Debug for FileChanges {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut d = fmt.debug_struct("Change");
-        if let Some(packages) = &self.package_roots {
-            d.field("packages", packages);
-        }
-        if !self.files_changed.is_empty() {
-            d.field("files_changed", &self.files_changed.len());
-        }
-        d.finish()
+fn source_root_durability(source_root: &PackageRoot) -> Durability {
+    if source_root.is_library {
+        Durability::MEDIUM
+    } else {
+        Durability::LOW
+    }
+}
+
+fn file_text_durability(source_root: &PackageRoot) -> Durability {
+    if source_root.is_library {
+        Durability::HIGH
+    } else {
+        Durability::LOW
     }
 }
