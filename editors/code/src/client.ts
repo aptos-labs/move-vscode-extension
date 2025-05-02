@@ -7,8 +7,7 @@ import { assert, unwrapUndefinable } from "./util";
 
 export async function createClient(
     traceOutputChannel: vscode.OutputChannel,
-    // outputChannel: vscode.OutputChannel,
-    // initializationOptions: vscode.WorkspaceConfiguration,
+    outputChannel: vscode.OutputChannel,
     serverOptions: lc.ServerOptions,
 ): Promise<lc.LanguageClient> {
 
@@ -137,7 +136,7 @@ export async function createClient(
         documentSelector: [{ scheme: 'file', language: 'move' }],
         // initializationOptions,
         traceOutputChannel,
-        // outputChannel,
+        outputChannel,
         middleware: raMiddleware,
         markdown: {
             supportHtml: true,
@@ -212,9 +211,9 @@ class ExperimentalFeatures implements lc.StaticFeature {
             snippetTextEdit: true,
             codeActionGroup: true,
             // hoverActions: true,
-            // serverStatusNotification: true,
+            serverStatusNotification: true,
             // colorDiagnosticOutput: true,
-            // openServerLogs: true,
+            openServerLogs: true,
             // localDocs: true,
             // testExplorer: this.testExplorer,
             // commands: {

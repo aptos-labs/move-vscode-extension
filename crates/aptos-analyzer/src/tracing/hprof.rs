@@ -31,7 +31,10 @@
 //!    2.13ms    2      leaf
 //! ```
 
-use std::{env, fmt, mem, time::{Duration, Instant}};
+use std::{
+    env, fmt, mem,
+    time::{Duration, Instant},
+};
 
 use tracing::{
     Event, Id, Subscriber, debug,

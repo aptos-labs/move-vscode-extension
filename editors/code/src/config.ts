@@ -1,15 +1,110 @@
-import vscode from "vscode";
+import vscode, { type Disposable, IndentAction } from "vscode";
 import * as Is from "vscode-languageclient/lib/common/utils/is";
 import os from "os";
 import Path from "path";
-import {Env, expectNotUndefined, unwrapUndefinable} from "./util";
+import { Env, expectNotUndefined, log, unwrapUndefinable } from "./util";
 import path from "path";
 
-export class Config {
-    private readonly cfg: vscode.WorkspaceConfiguration;
+type ShowStatusBar = "always" | "never" | { documentSelector: vscode.DocumentSelector };
 
-    constructor() {
-        this.cfg = vscode.workspace.getConfiguration('aptos-analyzer');
+export class Config {
+    readonly extensionId = "aptos.aptos-analyzer";
+    configureLang: vscode.Disposable | undefined;
+
+    readonly rootSection = "aptos-analyzer";
+
+    constructor(disposables: Disposable[]) {
+        vscode.workspace.onDidChangeConfiguration(this.onDidChangeConfiguration, this, disposables);
+        this.refreshLogging();
+        this.configureLanguage();
+    }
+
+    dispose() {
+        this.configureLang?.dispose();
+    }
+
+    private refreshLogging() {
+        log.info(
+            "Extension version:",
+            vscode.extensions.getExtension(this.extensionId)!.packageJSON.version,
+        );
+
+        const cfg = Object.entries(this.cfg).filter(([_, val]) => !(val instanceof Function));
+        log.info("Using configuration", Object.fromEntries(cfg));
+    }
+
+    private async onDidChangeConfiguration(event: vscode.ConfigurationChangeEvent) {
+        this.refreshLogging();
+
+        this.configureLanguage();
+
+        // const requiresWindowReloadOpt = this.requiresWindowReloadOpts.find((opt) =>
+        //     event.affectsConfiguration(opt),
+        // );
+        //
+        // if (requiresWindowReloadOpt) {
+        //     const message = `Changing "${requiresWindowReloadOpt}" requires a window reload`;
+        //     const userResponse = await vscode.window.showInformationMessage(message, "Reload now");
+        //
+        //     if (userResponse) {
+        //         await vscode.commands.executeCommand("workbench.action.reloadWindow");
+        //     }
+        // }
+
+        // const requiresServerReloadOpt = this.requiresServerReloadOpts.find((opt) =>
+        //     event.affectsConfiguration(opt),
+        // );
+
+        // if (!requiresServerReloadOpt) return;
+        //
+        // if (this.restartServerOnConfigChange) {
+        //     await vscode.commands.executeCommand("rust-analyzer.restartServer");
+        //     return;
+        // }
+
+        // const message = `Changing "${requiresServerReloadOpt}" requires a server restart`;
+        // const userResponse = await vscode.window.showInformationMessage(message, "Restart now");
+
+        // if (userResponse) {
+        //     const command = "aptos-analyzer.restartServer";
+        //     await vscode.commands.executeCommand(command);
+        // }
+    }
+
+    /**
+     * Sets up additional language configuration that's impossible to do via a
+     * separate language-configuration.json file. See [1] for more information.
+     *
+     * This code originates from [2](vscode-rust).
+     *
+     * [1]: https://github.com/Microsoft/vscode/issues/11514#issuecomment-244707076
+     * [2]: https://github.com/rust-lang/vscode-rust/blob/660b412701fe2ea62fad180c40ee4f8a60571c61/src/extension.ts#L287:L287
+     */
+    configureLanguage(): void {
+        // Only need to dispose of the config if there's a change
+        if (this.configureLang) {
+            this.configureLang.dispose();
+            this.configureLang = undefined;
+        }
+
+        this.configureLang = vscode.languages.setLanguageConfiguration('move', {
+            onEnterRules: [
+                {
+                    // Doc single-line comment
+                    // e.g. ///|
+                    beforeText: /^\s*\/{3}.*$/,
+                    action: { indentAction: IndentAction.None, appendText: '/// ' },
+                },
+                {
+                    // Parent doc single-line comment
+                    // e.g. //!|
+                    beforeText: /^\s*\/{2}!.*$/,
+                    action: { indentAction: IndentAction.None, appendText: '//! ' },
+                },
+            ],
+        });
+
+        // this.extCtx.subscriptions.push(disposable);
     }
 
     /** The path to the aptos-analyzer executable. */
@@ -50,6 +145,19 @@ export class Config {
         return this.get<boolean>("checkOnSave") ?? false;
     }
 
+
+    get statusBarClickAction() {
+        return this.get<string>("statusBar.clickAction");
+    }
+
+    get statusBarShowStatusBar() {
+        return this.get<ShowStatusBar>("statusBar.showStatusBar");
+    }
+
+    get initializeStopped() {
+        return this.get<boolean>("initializeStopped");
+    }
+
     /**
      * Beware that postfix `!` operator erases both `null` and `undefined`.
      * This is why the following doesn't work as expected:
@@ -68,6 +176,10 @@ export class Config {
      */
     private get<T>(path: string): T | undefined {
         return prepareVSCodeConfig(this.cfg.get<T>(path));
+    }
+
+    private get cfg(): vscode.WorkspaceConfiguration {
+        return vscode.workspace.getConfiguration(this.rootSection);
     }
 }
 

@@ -2,6 +2,7 @@ use crate::diagnostics::convert_diagnostic;
 use crate::global_state::{FetchPackagesRequest, GlobalState, GlobalStateSnapshot};
 use crate::lsp::utils::invalid_params_error;
 use crate::lsp::{LspError, from_proto, to_proto};
+use crate::movefmt::run_movefmt;
 use crate::{Config, lsp_ext, unwrap_or_return_default};
 use ide_db::assists::{AssistKind, AssistResolveStrategy, SingleResolve};
 use line_index::TextRange;
@@ -10,8 +11,8 @@ use lsp_types::{
     HoverContents, ResourceOp, ResourceOperationKind, SemanticTokensParams, SemanticTokensRangeParams,
     SemanticTokensRangeResult, SemanticTokensResult,
 };
+use stdx::format_to;
 use syntax::files::FileRange;
-use crate::movefmt::run_movefmt;
 // pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
 //     let req = FetchPackagesRequest { force_reload_deps: false };
 //     state
@@ -39,7 +40,7 @@ pub(crate) fn handle_semantic_tokens_range(
     // highlight_config.syntactic_name_ref_highlighting =
     //     snap.workspaces.is_empty() || !snap.proc_macros_loaded;
 
-    let highlights = snap.analysis.highlight_range(/*highlight_config, */frange)?;
+    let highlights = snap.analysis.highlight_range(/*highlight_config, */ frange)?;
     let semantic_tokens = to_proto::semantic_tokens(
         &text,
         &line_index,
@@ -291,6 +292,54 @@ pub(crate) fn handle_formatting(
     let _p = tracing::info_span!("handle_formatting").entered();
 
     run_movefmt(&snap, params.text_document)
+}
+
+pub(crate) fn handle_analyzer_status(
+    snap: GlobalStateSnapshot,
+    params: lsp_ext::AnalyzerStatusParams,
+) -> anyhow::Result<String> {
+    let _p = tracing::info_span!("handle_analyzer_status").entered();
+
+    let mut buf = String::new();
+
+    let mut file_id = None;
+    if let Some(tdi) = params.text_document {
+        match from_proto::file_id(&snap, &tdi.uri) {
+            Ok(it) => file_id = Some(it),
+            Err(_) => format_to!(buf, "file {} not found in vfs", tdi.uri),
+        }
+    }
+
+    if snap.main_packages.is_empty() {
+        buf.push_str("No packages\n")
+    } else {
+        buf.push_str("Packages:\n");
+        format_to!(buf, "Loaded {:?} packages.\n", snap.main_packages.len(),);
+
+        format_to!(
+            buf,
+            "Package root folders: {:?}",
+            snap.main_packages
+                .iter()
+                .map(|ws| ws.content_root())
+                .collect::<Vec<_>>()
+        );
+    }
+    // buf.push_str("\nAnalysis:\n");
+    // buf.push_str(
+    //     &snap
+    //         .analysis
+    //         .status(file_id)
+    //         .unwrap_or_else(|_| "Analysis retrieval was cancelled".to_owned()),
+    // );
+
+    buf.push_str("\nVersion: \n");
+    format_to!(buf, "{}", crate::version());
+
+    buf.push_str("\nConfiguration: \n");
+    format_to!(buf, "{:#?}", snap.config);
+
+    Ok(buf)
 }
 
 pub(crate) fn handle_code_action(

@@ -1,17 +1,17 @@
 {
     "name": "aptos-analyzer",
     "displayName": "aptos-analyzer",
-    "description": "",
-    "publisher": "Aptos",
+    "description": "Move on Aptos Language Extension",
+    "publisher": "aptos",
     "version": "0.1.0-dev",
     "releaseTag": null,
-    "homepage": "https://github.com/mkurnikov/aptos-analyzer",
+    "homepage": "https://github.com/aptos-labs/aptos-analyzer",
     "repository": {
-        "url": "https://github.com/mkurnikov/aptos-analyzer.git",
+        "url": "https://github.com/aptos-labs/aptos-analyzer.git",
         "type": "git"
     },
     "bugs": {
-        "url": "https://github.com/mkurnikov/aptos-analyzer/issues"
+        "url": "https://github.com/aptos-labs/aptos-analyzer/issues"
     },
     "engines": {
         "vscode": "^1.96.0"
@@ -28,6 +28,31 @@
     "main": "./out/extension.js",
     "contributes": {
         "commands": [
+            {
+                "command": "aptos-analyzer.analyzerStatus",
+                "title": "Status",
+                "category": "aptos-analyzer"
+            },
+            {
+                "command": "aptos-analyzer.restartServer",
+                "title": "Restart server",
+                "category": "aptos-analyzer"
+            },
+            {
+                "command": "aptos-analyzer.startServer",
+                "title": "Start server",
+                "category": "aptos-analyzer"
+            },
+            {
+                "command": "aptos-analyzer.stopServer",
+                "title": "Stop server",
+                "category": "aptos-analyzer"
+            },
+            {
+                "command": "aptos-analyzer.serverVersion",
+                "title": "Show Analyzer Version",
+                "category": "aptos-analyzer"
+            },
             {
                 "command": "aptos-analyzer.toggleLSPLogs",
                 "title": "Toggle LSP Logs",
@@ -47,6 +72,71 @@
             }
         ],
         "configuration": [
+            {
+                "title": "statusBar",
+                "properties": {
+                    "aptos-analyzer.statusBar.clickAction": {
+                        "type": "string",
+                        "enum": [
+                            "stopServer",
+                            "openLogs"
+                        ],
+                        "enumDescriptions": [
+                            "Stop Server",
+                            "Open Logs"
+                        ],
+                        "default": "openLogs",
+                        "markdownDescription": "Action to run when clicking the extension status bar item."
+                    },
+                    "aptos-analyzer.statusBar.showStatusBar": {
+                        "markdownDescription": "When to show the extension status bar.\n\n`\"always\"` Always show the status bar.\n\n`\"never\"` Never show the status bar.\n\n`{ documentSelector: <DocumentSelector>[] }` Show the status bar if the open file matches any of the given document selectors.\n\nSee [VS Code -- DocumentSelector](https://code.visualstudio.com/api/references/document-selector) for more information.",
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "enum": [
+                                    "always",
+                                    "never"
+                                ]
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "documentSelector": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "language": {
+                                                    "type": "string"
+                                                },
+                                                "notebookType": {
+                                                    "type": "string"
+                                                },
+                                                "scheme": {
+                                                    "type": "string"
+                                                },
+                                                "pattern": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        ],
+                        "default": {
+                            "documentSelector": [
+                                {
+                                    "language": "move"
+                                },
+                                {
+                                    "pattern": "**/Move.toml"
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
             {
                 "title": "server",
                 "properties": {
@@ -87,6 +177,11 @@
                     },
                     "aptos-analyzer.showSyntaxTree": {
                         "markdownDescription": "Whether to show the syntax tree view.",
+                        "default": false,
+                        "type": "boolean"
+                    },
+                    "aptos-analyzer.initializeStopped": {
+                        "markdownDescription": "Do not start aptos-analyzer server when the extension is activated.",
                         "default": false,
                         "type": "boolean"
                     }
