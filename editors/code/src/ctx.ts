@@ -2,19 +2,76 @@ import * as vscode from 'vscode';
 import { IndentAction } from 'vscode';
 import * as lc from "vscode-languageclient/node";
 import { Config } from "./config";
-import { isAptosEditor, log } from "./util";
+import { AptosEditor, isAptosDocument, isAptosEditor, isMoveTomlEditor, LazyOutputChannel, log } from "./util";
 import { SyntaxElement, SyntaxTreeProvider } from "./syntax_tree_provider";
 import { createClient } from "./client";
 import { bootstrap } from "./bootstrap";
+import * as lsp_ext from "./lsp_ext";
+import { text } from "node:stream/consumers";
+import { spawn } from "node:child_process";
+
+
+// We only support local folders, not eg. Live Share (`vlsl:` scheme), so don't activate if
+// only those are in use. We use "Empty" to represent these scenarios
+// (r-a still somewhat works with Live Share, because commands are tunneled to the host)
+
+export type Workspace =
+    | { kind: "Empty" }
+    | { kind: "Workspace Folder" }
+    | { kind: "Detached Files"; files: vscode.TextDocument[] };
+
+export function fetchWorkspace(): Workspace {
+    const folders = (vscode.workspace.workspaceFolders || []).filter(
+        (folder) => folder.uri.scheme === "file",
+    );
+    // const aptosDocuments = vscode.workspace.textDocuments.filter((document) =>
+    //     isAptosDocument(document),
+    // );
+    return folders.length === 0 ? { kind: "Empty" } : { kind: "Workspace Folder" };
+    // return folders.length === 0
+    //     ? aptosDocuments.length === 0
+    //         ? { kind: "Empty" }
+    //         : { kind: "Detached Files", files: aptosDocuments }
+    //     : { kind: "Workspace Folder" };
+}
+
+export type CommandFactory = {
+    enabled: (ctx: CtxInit) => Cmd;
+    disabled?: (ctx: Ctx) => Cmd;
+};
+
+export type CtxInit = Ctx & {
+    readonly client: lc.LanguageClient;
+};
 
 export class Ctx {
-    private _client: lc.LanguageClient | undefined;
+    readonly statusBar: vscode.StatusBarItem;
+    readonly config: Config;
+    readonly version: string;
+    readonly workspace: Workspace;
 
+    private _client: lc.LanguageClient | undefined;
+    private _serverPath: string | undefined;
+    private traceOutputChannel: vscode.OutputChannel | undefined;
+    private outputChannel: vscode.OutputChannel | undefined;
+    private clientSubscriptions: Disposable[];
     private commandFactories: Record<string, CommandFactory>;
     private commandDisposables: Disposable[];
 
     private _syntaxTreeProvider: SyntaxTreeProvider | undefined;
     private _syntaxTreeView: vscode.TreeView<SyntaxElement> | undefined;
+
+    private lastStatus: lsp_ext.ServerStatusParams | { health: "stopped" } = { health: "stopped" };
+    private _serverVersion: string;
+    private statusBarActiveEditorListener: Disposable;
+
+    get serverPath(): string | undefined {
+        return this._serverPath;
+    }
+
+    get serverVersion(): string | undefined {
+        return this._serverVersion;
+    }
 
     get client(): lc.LanguageClient | undefined {
         return this._client;
@@ -29,73 +86,67 @@ export class Ctx {
     }
 
     constructor(
-        private readonly extensionContext: Readonly<vscode.ExtensionContext>,
-        readonly config: Readonly<Config>,
+        private readonly extCtx: Readonly<vscode.ExtensionContext>,
         commandFactories: Record<string, CommandFactory>,
-        client: lc.LanguageClient | undefined = undefined,
+        workspace: Workspace,
     ) {
-        this._client = client;
+        extCtx.subscriptions.push(this);
+        this.version = extCtx.extension.packageJSON.version ?? "<unknown>";
+        this._serverVersion = "<not running>";
+        this.config = new Config(extCtx.subscriptions);
 
+        this.statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+        this.updateStatusBarVisibility(vscode.window.activeTextEditor);
+        this.statusBarActiveEditorListener = vscode.window.onDidChangeActiveTextEditor((editor) =>
+            this.updateStatusBarVisibility(editor),
+        );
+
+        this.workspace = workspace;
+        this.clientSubscriptions = [];
         this.commandFactories = commandFactories;
         this.commandDisposables = [];
 
         this.updateCommands("disable");
+        this.setServerStatus({ health: "stopped" });
     }
 
-    /**
-     * Sets up additional language configuration that's impossible to do via a
-     * separate language-configuration.json file. See [1] for more information.
-     *
-     * This code originates from [2](vscode-rust).
-     *
-     * [1]: https://github.com/Microsoft/vscode/issues/11514#issuecomment-244707076
-     * [2]: https://github.com/rust-lang/vscode-rust/blob/660b412701fe2ea62fad180c40ee4f8a60571c61/src/extension.ts#L287:L287
-     */
-    configureLanguage(): void {
-        const disposable = vscode.languages.setLanguageConfiguration('move', {
-            onEnterRules: [
-                {
-                    // Doc single-line comment
-                    // e.g. ///|
-                    beforeText: /^\s*\/{3}.*$/,
-                    action: { indentAction: IndentAction.None, appendText: '/// ' },
-                },
-                {
-                    // Parent doc single-line comment
-                    // e.g. //!|
-                    beforeText: /^\s*\/{2}!.*$/,
-                    action: { indentAction: IndentAction.None, appendText: '//! ' },
-                },
-            ],
-        });
-        this.extensionContext.subscriptions.push(disposable);
+    dispose() {
+        this.config.dispose();
+        this.statusBar.dispose();
+        this.statusBarActiveEditorListener.dispose();
+        void this.disposeClient();
+        this.commandDisposables.forEach((disposable) => disposable.dispose());
     }
 
-    async createClient(): Promise<lc.LanguageClient> {
-        const serverPath = await this.bootstrap();
-        // text(spawn(serverPath, ["--version"]).stdout.setEncoding("utf-8")).then(
-        //     (data) => {
-        //         const prefix = `aptos-analyzer `;
-        //         this._serverVersion = data
-        //             .slice(data.startsWith(prefix) ? prefix.length : 0)
-        //             .trim();
-        //         this.refreshServerStatus();
-        //     },
-        //     (_) => {
-        //         this._serverVersion = "<unknown>";
-        //         this.refreshServerStatus();
-        //     },
-        // );
+    async onWorkspaceFolderChanges() {
+        const workspace = fetchWorkspace();
+        if (workspace.kind === "Detached Files" && this.workspace.kind === "Detached Files") {
+            if (workspace.files !== this.workspace.files) {
+                if (this.client?.isRunning()) {
+                    // Ideally we wouldn't need to tear down the server here, but currently detached files
+                    // are only specified at server start
+                    await this.stopAndDispose();
+                    await this.start();
+                }
+                return;
+            }
+        }
+        if (workspace.kind === "Workspace Folder" && this.workspace.kind === "Workspace Folder") {
+            return;
+        }
+        if (workspace.kind === "Empty") {
+            await this.stopAndDispose();
+            return;
+        }
+        if (this.client?.isRunning()) {
+            await this.restart();
+        }
+    }
 
-        const newEnv = Object.assign({}, process.env, this.config.serverExtraEnv);
-        const run: lc.Executable = {
-            command: serverPath,
-            options: { env: newEnv },
-        };
-        const serverOptions: lc.ServerOptions = {
-            run,
-            debug: run,
-        };
+    private async getOrCreateClient(): Promise<lc.LanguageClient | undefined> {
+        if (this.workspace.kind === "Empty") {
+            return;
+        }
 
         // The vscode-languageclient module reads a configuration option named
         // "<extension-name>.trace.server" to determine whether to log messages. If a trace output
@@ -103,36 +154,56 @@ export class Ctx {
         // output channel that it automatically created by the `LanguageClient` (in this extension,
         // that is 'Move Language Server'). For more information, see:
         // https://code.visualstudio.com/api/language-extensions/language-server-extension-guide#logging-support-for-language-server
-        const traceOutputChannel = vscode.window.createOutputChannel(
-            'aptos-analyzer LSP Trace',
-        );
-        this._client = await createClient(traceOutputChannel, serverOptions)
+        if (!this.traceOutputChannel) {
+            this.traceOutputChannel = new LazyOutputChannel("aptos-analyzer LSP Trace");
+            this.pushExtCleanup(this.traceOutputChannel);
+        }
+        if (!this.outputChannel) {
+            this.outputChannel = vscode.window.createOutputChannel("aptos-analyzer Language Server");
+            this.pushExtCleanup(this.outputChannel);
+        }
 
-        vscode.workspace.onDidChangeConfiguration(
-            async (_) => {
-                await this.client?.sendNotification(lc.DidChangeConfigurationNotification.type, {
-                    settings: "",
-                });
-            },
-            null,
-        )
-
-        // const clientOptions: lc.LanguageClientOptions = {
-        //     documentSelector: [{scheme: 'file', language: 'move'}],
-        //     traceOutputChannel,
-        // };
-        // this._client = new lc.LanguageClient(
-        //     'aptos-analyzer',
-        //     'Aptos Analyzer Language Server',
-        //     serverOptions,
-        //     clientOptions,
-        // );
-
+        if (!this._client) {
+            this._serverPath = await this.bootstrap();
+            text(spawn(this._serverPath, ["--version"]).stdout.setEncoding("utf-8")).then(
+                (data) => {
+                    const prefix = `aptos-analyzer `;
+                    this._serverVersion = data
+                        .slice(data.startsWith(prefix) ? prefix.length : 0)
+                        .trim();
+                    this.refreshServerStatus();
+                },
+                (_) => {
+                    this._serverVersion = "<unknown>";
+                    this.refreshServerStatus();
+                },
+            );
+            const newEnv = Object.assign({}, process.env, this.config.serverExtraEnv);
+            const run: lc.Executable = {
+                command: this._serverPath,
+                options: { env: newEnv },
+            };
+            const serverOptions: lc.ServerOptions = {
+                run,
+                debug: run,
+            };
+            this._client = await createClient(this.traceOutputChannel, this.outputChannel, serverOptions)
+            this.pushClientCleanup(
+                this._client.onNotification(lsp_ext.serverStatus, (params) =>
+                    this.setServerStatus(params),
+                ),
+            );
+            this.pushClientCleanup(
+                this._client.onNotification(lsp_ext.openServerLogs, () => {
+                    this.outputChannel!.show();
+                }),
+            );
+        }
         return this._client;
     }
 
     private async bootstrap(): Promise<string> {
-        return bootstrap(this.extensionContext, this.config).catch((err) => {
+        return bootstrap(this.extCtx, this.config).catch((err) => {
             let message = "bootstrap error. ";
 
             message +=
@@ -147,10 +218,11 @@ export class Ctx {
 
     async start(): Promise<void> {
         log.info("Starting language client");
-
-        const client = await this.createClient();
+        const client = await this.getOrCreateClient();
+        if (!client) {
+            return;
+        }
         await client.start();
-
         this.updateCommands();
 
         if (this.config.showSyntaxTree) {
@@ -232,11 +304,29 @@ export class Ctx {
     }
 
     private async disposeClient() {
-        // this.clientSubscriptions?.forEach((disposable) => disposable.dispose());
-        // this.clientSubscriptions = [];
+        this.clientSubscriptions?.forEach((disposable) => disposable.dispose());
+        this.clientSubscriptions = [];
         await this._client?.dispose();
-        // this._serverPath = undefined;
+        this._serverPath = undefined;
         this._client = undefined;
+    }
+
+    get activeAptosEditor(): AptosEditor | undefined {
+        const editor = vscode.window.activeTextEditor;
+        return editor && isAptosEditor(editor) ? editor : undefined;
+    }
+
+    get activeMoveTomlEditor(): AptosEditor | undefined {
+        const editor = vscode.window.activeTextEditor;
+        return editor && isMoveTomlEditor(editor) ? editor : undefined;
+    }
+
+    get extensionPath(): string {
+        return this.extCtx.extensionPath;
+    }
+
+    get subscriptions(): Disposable[] {
+        return this.extCtx.subscriptions;
     }
 
     private updateCommands(forceDisable?: "disable") {
@@ -267,19 +357,105 @@ export class Ctx {
         }
     }
 
+    setServerStatus(status: lsp_ext.ServerStatusParams | { health: "stopped" }) {
+        this.lastStatus = status;
+        this.updateStatusBarItem();
+    }
+
+    refreshServerStatus() {
+        this.updateStatusBarItem();
+    }
+
+    private updateStatusBarItem() {
+        let icon = "";
+        const status = this.lastStatus;
+        const statusBar = this.statusBar;
+        statusBar.tooltip = new vscode.MarkdownString("", true);
+        statusBar.tooltip.isTrusted = true;
+        switch (status.health) {
+            case "ok":
+                statusBar.color = undefined;
+                statusBar.backgroundColor = undefined;
+                if (this.config.statusBarClickAction === "stopServer") {
+                    statusBar.command = "aptos-analyzer.stopServer";
+                } else {
+                    statusBar.command = "aptos-analyzer.openLogs";
+                }
+                void this.syntaxTreeProvider?.refresh();
+                break;
+            case "warning":
+                statusBar.color = new vscode.ThemeColor("statusBarItem.warningForeground");
+                statusBar.backgroundColor = new vscode.ThemeColor(
+                    "statusBarItem.warningBackground",
+                );
+                statusBar.command = "aptos-analyzer.openLogs";
+                icon = "$(warning) ";
+                break;
+            case "error":
+                statusBar.color = new vscode.ThemeColor("statusBarItem.errorForeground");
+                statusBar.backgroundColor = new vscode.ThemeColor("statusBarItem.errorBackground");
+                statusBar.command = "aptos-analyzer.openLogs";
+                icon = "$(error) ";
+                break;
+            case "stopped":
+                statusBar.tooltip.appendText("Server is stopped");
+                statusBar.tooltip.appendMarkdown(
+                    "\n\n[Start server](command:aptos-analyzer.startServer)",
+                );
+                statusBar.color = new vscode.ThemeColor("statusBarItem.warningForeground");
+                statusBar.backgroundColor = new vscode.ThemeColor(
+                    "statusBarItem.warningBackground",
+                );
+                statusBar.command = "aptos-analyzer.startServer";
+                statusBar.text = "$(stop-circle) aptos-analyzer";
+                return;
+        }
+        if (status.message) {
+            statusBar.tooltip.appendMarkdown(status.message);
+        }
+        if (statusBar.tooltip.value) {
+            statusBar.tooltip.appendMarkdown("\n\n---\n\n");
+        }
+
+        // const toggleCheckOnSave = this.config.checkOnSave ? "Disable" : "Enable";
+        statusBar.tooltip.appendMarkdown(
+            `[Extension Info](command:aptos-analyzer.serverVersion "Show version and server binary info"): Version ${this.version}, Server Version ${this._serverVersion}\n\n` +
+            `---\n\n` +
+            `[$(terminal) Open Logs](command:aptos-analyzer.openLogs "Open the server logs")\n\n` +
+            // `[$(settings) ${toggleCheckOnSave} Check on Save](command:aptos-analyzer.toggleCheckOnSave "Temporarily ${toggleCheckOnSave.toLowerCase()} check on save functionality")\n\n` +
+            // `[$(refresh) Reload Workspace](command:rust-analyzer.reloadWorkspace "Reload and rediscover workspaces")\n\n` +
+            // `[$(symbol-property) Rebuild Build Dependencies](command:rust-analyzer.rebuildProcMacros "Rebuild build scripts and proc-macros")\n\n` +
+            `[$(stop-circle) Stop server](command:aptos-analyzer.stopServer "Stop the server")\n\n` +
+            `[$(debug-restart) Restart server](command:aptos-analyzer.restartServer "Restart the server")`,
+        );
+        if (!status.quiescent) icon = "$(loading~spin) ";
+        statusBar.text = `${icon}aptos-analyzer`;
+    }
+
+    private updateStatusBarVisibility(editor: vscode.TextEditor | undefined) {
+        const showStatusBar = this.config.statusBarShowStatusBar;
+        if (showStatusBar == null || showStatusBar === "never") {
+            this.statusBar.hide();
+        } else if (showStatusBar === "always") {
+            this.statusBar.show();
+        } else {
+            const documentSelector = showStatusBar.documentSelector;
+            if (editor != null && vscode.languages.match(documentSelector, editor.document) > 0) {
+                this.statusBar.show();
+            } else {
+                this.statusBar.hide();
+            }
+        }
+    }
+
     pushExtCleanup(d: Disposable) {
-        this.extensionContext.subscriptions.push(d);
+        this.extCtx.subscriptions.push(d);
+    }
+
+    pushClientCleanup(d: Disposable) {
+        this.clientSubscriptions.push(d);
     }
 }
-
-export type CommandFactory = {
-    enabled: (ctx: CtxInit) => Cmd;
-    disabled?: (ctx: Ctx) => Cmd;
-};
-
-export type CtxInit = Ctx & {
-    readonly client: lc.LanguageClient;
-};
 
 export interface Disposable {
     dispose(): void;

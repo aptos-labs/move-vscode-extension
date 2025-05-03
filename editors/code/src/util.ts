@@ -1,6 +1,6 @@
-import {strict as nativeAssert} from "assert";
+import { strict as nativeAssert } from "assert";
 import vscode from "vscode";
-import {inspect} from "util";
+import { inspect } from "util";
 import { spawn, SpawnOptionsWithoutStdio } from "child_process";
 
 export function assert(condition: boolean, explanation: string): asserts condition {
@@ -83,6 +83,10 @@ export function isAptosEditor(editor: vscode.TextEditor): editor is AptosEditor 
     return isAptosDocument(editor.document);
 }
 
+export function isMoveTomlEditor(editor: vscode.TextEditor): editor is AptosEditor {
+    return isMoveTomlDocument(editor.document);
+}
+
 /** Sets ['when'](https://code.visualstudio.com/docs/getstarted/keybindings#_when-clause-contexts) clause contexts */
 export function setContextValue(key: string, value: any): Thenable<void> {
     return vscode.commands.executeCommand("setContext", key, value);
@@ -106,27 +110,33 @@ export class LazyOutputChannel implements vscode.OutputChannel {
     append(value: string): void {
         this.channel.append(value);
     }
+
     appendLine(value: string): void {
         this.channel.appendLine(value);
     }
+
     replace(value: string): void {
         this.channel.replace(value);
     }
+
     clear(): void {
         if (this._channel) {
             this._channel.clear();
         }
     }
+
     show(preserveFocus?: boolean): void;
     show(column?: vscode.ViewColumn, preserveFocus?: boolean): void;
     show(column?: any, preserveFocus?: any): void {
         this.channel.show(column, preserveFocus);
     }
+
     hide(): void {
         if (this._channel) {
             this._channel.hide();
         }
     }
+
     dispose(): void {
         if (this._channel) {
             this._channel.dispose();

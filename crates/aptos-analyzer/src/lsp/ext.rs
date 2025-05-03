@@ -5,6 +5,20 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ops;
 
+pub enum AnalyzerStatus {}
+
+impl Request for AnalyzerStatus {
+    type Params = AnalyzerStatusParams;
+    type Result = String;
+    const METHOD: &'static str = "aptos-analyzer/analyzerStatus";
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct AnalyzerStatusParams {
+    pub text_document: Option<TextDocumentIdentifier>,
+}
+
 pub enum ReloadWorkspace {}
 
 impl Request for ReloadWorkspace {

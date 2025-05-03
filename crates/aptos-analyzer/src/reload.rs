@@ -201,7 +201,7 @@ impl GlobalState {
         }
 
         let files_config = self.config.files();
-        let project_folders = ProjectFolders::new(&self.main_packages/*&files_config.exclude*/);
+        let project_folders = ProjectFolders::new(&self.main_packages /*&files_config.exclude*/);
 
         let watch = match files_config.watcher {
             FilesWatcher::Client => vec![],

@@ -6,7 +6,7 @@ use anyhow::Context;
 use camino::Utf8PathBuf;
 use ide_db::text_edit::TextEdit;
 use lsp_server::ErrorCode;
-use lsp_types::TextDocumentIdentifier;
+use lsp_types::{MessageType, TextDocumentIdentifier};
 use std::io::Write;
 use std::process::{Command, Stdio};
 use syntax::{TextRange, TextSize};
@@ -110,18 +110,15 @@ pub(crate) fn run_movefmt(
             // }
             _ => {
                 // Something else happened - e.g. `movefmt` is missing or caught a signal
-                Err(LspError::new(
-                    -32900,
-                    format!(
-                        r#"movefmt exited with:
+                let error_message = format!(
+                    r#"movefmt exited with:
                            Status: {}
                            command: {command_line}
                            stdout: {captured_stdout}
                            stderr: {captured_stderr}"#,
-                        output.status,
-                    ),
-                )
-                .into())
+                    output.status,
+                );
+                Err(LspError::new(-32900, error_message).into())
             }
         };
     }

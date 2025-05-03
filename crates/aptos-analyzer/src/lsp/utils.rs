@@ -102,6 +102,25 @@ impl GlobalState {
         }
     }
 
+    /// aptos-analyzer is resilient -- if it fails, this doesn't usually affect
+    /// the user experience. Part of that is that we deliberately hide panics
+    /// from the user.
+    ///
+    /// We do however want to pester aptos-analyzer developers with panics and
+    /// other "you really gotta fix that" messages. The current strategy is to
+    /// be noisy for "from source" builds or when profiling is enabled.
+    ///
+    /// It's unclear if making from source `cargo xtask install` builds more
+    /// panicky is a good idea, let's see if we can keep our awesome bleeding
+    /// edge users from being upset!
+    pub(crate) fn poke_aptos_analyzer_developer(&mut self, message: String) {
+        let poke_devs = std::env::var("POKE_APT_DEVS").ok().is_some();
+        let profiling_enabled = std::env::var("APT_PROFILER").is_ok();
+        if poke_devs || profiling_enabled {
+            self.show_and_log_error(message, None);
+        }
+    }
+
     pub(crate) fn report_progress(
         &mut self,
         title: &str,

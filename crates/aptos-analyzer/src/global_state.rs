@@ -15,6 +15,7 @@ use crossbeam_channel::{Receiver, Sender, unbounded};
 use ide::{Analysis, AnalysisHost, Cancellable};
 use lang::builtin_files::BUILTINS_FILE;
 use lsp_types::Url;
+use lsp_types::notification::{Notification, ShowMessage};
 use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard};
 use project_model::aptos_package::AptosPackage;
 use std::collections::HashMap;
@@ -95,6 +96,7 @@ pub(crate) struct GlobalStateSnapshot {
     vfs: Arc<RwLock<(vfs::Vfs, HashMap<FileId, LineEndings>)>>,
     pub(crate) main_packages: Arc<Vec<AptosPackage>>,
     pub(crate) flycheck: Arc<[FlycheckHandle]>,
+    sender: Sender<lsp_server::Message>,
 }
 
 impl std::panic::UnwindSafe for GlobalStateSnapshot {}
@@ -178,10 +180,10 @@ impl GlobalState {
             main_packages: Arc::clone(&self.main_packages),
             analysis: self.analysis_host.analysis(),
             vfs: Arc::clone(&self.vfs),
-            // check_fixes: Arc::clone(&self.diagnostics.check_fixes),
             mem_docs: self.mem_docs.clone(),
             // semantic_tokens_cache: Arc::clone(&self.semantic_tokens_cache),
             flycheck: self.flycheck.clone(),
+            sender: self.sender.clone(),
         }
     }
 
@@ -221,7 +223,7 @@ impl GlobalState {
         if let Some((method, start)) = self.req_queue.incoming.complete(&response.id) {
             if let Some(err) = &response.error {
                 if err.message.starts_with("server panicked") {
-                    // self.poke_rust_analyzer_developer(format!("{}, check the log", err.message))
+                    self.poke_aptos_analyzer_developer(format!("{}, check the log", err.message))
                 }
             }
 
@@ -345,54 +347,18 @@ impl GlobalStateSnapshot {
         self.vfs_read().file_path(file_id).clone()
     }
 
-    // pub(crate) fn target_spec_for_crate(&self, crate_id: CrateId) -> Option<TargetSpec> {
-    //     let file_id = self.analysis.crate_root(crate_id).ok()?;
-    //     let path = self.vfs_read().file_path(file_id).clone();
-    //     let path = path.as_path()?;
-    //
-    //     for workspace in self.workspaces.iter() {
-    //         match &workspace.kind {
-    //             ProjectWorkspaceKind::Cargo { cargo, .. }
-    //             | ProjectWorkspaceKind::DetachedFile { cargo: Some((cargo, _, _)), .. } => {
-    //                 let Some(target_idx) = cargo.target_by_root(path) else {
-    //                     continue;
-    //                 };
-    //
-    //                 let target_data = &cargo[target_idx];
-    //                 let package_data = &cargo[target_data.package];
-    //
-    //                 return Some(TargetSpec::Cargo(CargoTargetSpec {
-    //                     workspace_root: cargo.workspace_root().to_path_buf(),
-    //                     cargo_toml: package_data.manifest.clone(),
-    //                     crate_id,
-    //                     package: cargo.package_flag(package_data),
-    //                     target: target_data.name.clone(),
-    //                     target_kind: target_data.kind,
-    //                     required_features: target_data.required_features.clone(),
-    //                     features: package_data.features.keys().cloned().collect(),
-    //                     sysroot_root: workspace.sysroot.root().map(ToOwned::to_owned),
-    //                 }));
-    //             }
-    //             ProjectWorkspaceKind::Json(project) => {
-    //                 let Some(krate) = project.crate_by_root(path) else {
-    //                     continue;
-    //                 };
-    //                 let Some(build) = krate.build else {
-    //                     continue;
-    //                 };
-    //
-    //                 return Some(TargetSpec::ProjectJson(ProjectJsonTargetSpec {
-    //                     label: build.label,
-    //                     target_kind: build.target_kind,
-    //                     shell_runnables: project.runnables().to_owned(),
-    //                 }));
-    //             }
-    //             ProjectWorkspaceKind::DetachedFile { .. } => {}
-    //         };
-    //     }
-    //
-    //     None
-    // }
+    pub(crate) fn show_message_to_client(&self, message_type: lsp_types::MessageType, message: String) {
+        let not = lsp_server::Notification::new(
+            ShowMessage::METHOD.to_owned(),
+            lsp_types::ShowMessageParams { typ: message_type, message },
+        );
+        self.send(not.into());
+    }
+
+    #[track_caller]
+    fn send(&self, message: lsp_server::Message) {
+        self.sender.send(message).unwrap();
+    }
 
     pub(crate) fn file_exists(&self, file_id: FileId) -> bool {
         self.vfs.read().0.exists(file_id)

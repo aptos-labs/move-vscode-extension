@@ -132,15 +132,6 @@ impl Analysis {
         (host.analysis(), file_id)
     }
 
-    pub fn db(&self) -> &RootDatabase {
-        &self.db
-    }
-
-    // /// Debug info about the current state of the analysis.
-    // pub fn status(&self, file_id: Option<FileId>) -> Cancellable<String> {
-    //     self.with_db(|db| status::status(db, file_id))
-    // }
-
     pub fn package_root_id(&self, file_id: FileId) -> Cancellable<PackageRootId> {
         self.with_db(|db| db.file_package_root(file_id))
     }

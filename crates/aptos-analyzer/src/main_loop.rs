@@ -325,6 +325,9 @@ impl GlobalState {
             tracing::warn!(
                 "overly long loop turn took {loop_duration:?} (event handling took {event_handling_duration:?}): {event_dbg_msg}"
             );
+            self.poke_aptos_analyzer_developer(format!(
+                "overly long loop turn took {loop_duration:?} (event handling took {event_handling_duration:?}): {event_dbg_msg}"
+            ));
         }
     }
 
@@ -711,7 +714,7 @@ impl GlobalState {
             // .on::<NO_RETRY, lsp_request::CallHierarchyOutgoingCalls>(handlers::handle_call_hierarchy_outgoing)
             // All other request handlers (lsp extension)
             // .on::<RETRY, lsp_ext::FetchDependencyList>(handlers::fetch_dependency_list)
-            // .on::<RETRY, lsp_ext::AnalyzerStatus>(handlers::handle_analyzer_status)
+            .on::<RETRY, lsp_ext::AnalyzerStatus>(handlers::handle_analyzer_status)
             // .on::<RETRY, lsp_ext::ViewFileText>(handlers::handle_view_file_text)
             // .on::<RETRY, lsp_ext::ViewCrateGraph>(handlers::handle_view_crate_graph)
             // .on::<RETRY, lsp_ext::ViewItemTree>(handlers::handle_view_item_tree)

@@ -1,7 +1,9 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import { CommandFactory, Ctx } from './ctx';
+import * as lc from "vscode-languageclient/node";
+
+import { CommandFactory, Ctx, fetchWorkspace } from './ctx';
 import * as commands from "./commands";
 import { Config } from './config';
 import { setContextValue } from "./util";
@@ -16,33 +18,53 @@ export async function deactivate() {
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
-export async function activate(extensionContext: Readonly<vscode.ExtensionContext>) {
+export async function activate(
+    context: Readonly<vscode.ExtensionContext>
+) {
+    checkConflictingExtensions();
 
-    const configuration = new Config();
-
-    // const serverPath = configuration.serverPath;
-    // if (!commandExists.sync(serverPath)) {
-    //     const context = new Error(
-    //         `language server executable '${serverPath}' could not be found, so ` +
-    //         'most extension features will be unavailable to you. Follow the instructions in ' +
-    //         'the aptos-analyzer Visual Studio Code extension README to install the language ' +
-    //         'server.',
-    //     );
-    //     // An error here -- for example, if the path to the `aptos-analyzer` binary that the user
-    //     // specified in their settings is not valid -- prevents the extension from providing any
-    //     // more utility, so return early.
-    //     void vscode.window.showErrorMessage(
-    //         `Could not activate aptos-analyzer: ${context.message}.`,
-    //     );
-    //     return;
-    // }
-
-    const context = new Ctx(extensionContext, configuration, createCommands())
-    context.configureLanguage();
-
-    await context.start();
+    const ctx = new Ctx(context, createCommands(), fetchWorkspace());
+    // VS Code doesn't show a notification when an extension fails to activate
+    // so we do it ourselves.
+    await activateServer(ctx).catch((err) => {
+        void vscode.window.showErrorMessage(
+            `Cannot activate aptos-analyzer extension: ${err.message}`,
+        );
+        throw err;
+    });
 
     await setContextValue(APTOS_PROJECT_CONTEXT_NAME, true);
+}
+
+async function activateServer(ctx: Ctx): Promise<Ctx> {
+    // if (ctx.workspace.kind === "Workspace Folder") {
+    //     ctx.pushExtCleanup(activateTaskProvider(ctx.config));
+    // }
+
+    vscode.workspace.onDidChangeWorkspaceFolders(
+        async (_) => ctx.onWorkspaceFolderChanges(),
+        null,
+        ctx.subscriptions,
+    );
+    vscode.workspace.onDidChangeConfiguration(
+        async (_) => {
+            await ctx.client?.sendNotification(lc.DidChangeConfigurationNotification.type, {
+                settings: "",
+            });
+        },
+        null,
+        ctx.subscriptions,
+    );
+
+    if (ctx.config.initializeStopped) {
+        ctx.setServerStatus({
+            health: "stopped",
+        });
+    } else {
+        await ctx.start();
+    }
+
+    return ctx;
 }
 
 function createCommands(): Record<string, CommandFactory> {
@@ -51,34 +73,35 @@ function createCommands(): Record<string, CommandFactory> {
         // 	enabled: commands.onEnter,
         // 	disabled: (_) => () => vscode.commands.executeCommand("default:type", { text: "\n" }),
         // },
-        // restartServer: {
-        // 	enabled: (ctx) => async () => {
-        // 		await ctx.restart();
-        // 	},
-        // 	disabled: (ctx) => async () => {
-        // 		await ctx.start();
-        // 	},
-        // },
-        // startServer: {
-        // 	enabled: (ctx) => async () => {
-        // 		await ctx.start();
-        // 	},
-        // 	disabled: (ctx) => async () => {
-        // 		await ctx.start();
-        // 	},
-        // },
-        // stopServer: {
-        // 	enabled: (ctx) => async () => {
-        // 		// FIXME: We should re-use the client, that is ctx.deactivate() if none of the configs have changed
-        // 		await ctx.stopAndDispose();
-        // 		ctx.setServerStatus({
-        // 			health: "stopped",
-        // 		});
-        // 	},
-        // 	disabled: (_) => async () => {},
-        // },
+        restartServer: {
+            enabled: (ctx) => async () => {
+                await ctx.restart();
+            },
+            disabled: (ctx) => async () => {
+                await ctx.start();
+            },
+        },
+        startServer: {
+            enabled: (ctx) => async () => {
+                await ctx.start();
+            },
+            disabled: (ctx) => async () => {
+                await ctx.start();
+            },
+        },
+        stopServer: {
+            enabled: (ctx) => async () => {
+                // FIXME: We should re-use the client, that is ctx.deactivate() if none of the configs have changed
+                await ctx.stopAndDispose();
+                ctx.setServerStatus({
+                    health: "stopped",
+                });
+            },
+            disabled: (_) => async () => {
+            },
+        },
 
-        // analyzerStatus: { enabled: commands.analyzerStatus },
+        analyzerStatus: { enabled: commands.analyzerStatus },
         // memoryUsage: { enabled: commands.memoryUsage },
         // reloadWorkspace: { enabled: commands.reloadWorkspace },
         // rebuildProcMacros: { enabled: commands.rebuildProcMacros },
@@ -107,7 +130,7 @@ function createCommands(): Record<string, CommandFactory> {
         // clearFlycheck: { enabled: commands.clearFlycheck },
         // runFlycheck: { enabled: commands.runFlycheck },
         // ssr: { enabled: commands.ssr },
-        // serverVersion: { enabled: commands.serverVersion },
+        serverVersion: { enabled: commands.serverVersion },
         // viewMemoryLayout: { enabled: commands.viewMemoryLayout },
         // toggleCheckOnSave: { enabled: commands.toggleCheckOnSave },
         toggleLSPLogs: { enabled: commands.toggleLSPLogs },
@@ -123,12 +146,27 @@ function createCommands(): Record<string, CommandFactory> {
         // showReferences: { enabled: commands.showReferences },
         // triggerParameterHints: { enabled: commands.triggerParameterHints },
         // rename: { enabled: commands.rename },
-        // openLogs: { enabled: commands.openLogs },
+        openLogs: { enabled: commands.openLogs },
         // revealDependency: { enabled: commands.revealDependency },
         // syntaxTreeReveal: { enabled: commands.syntaxTreeReveal },
         // syntaxTreeCopy: { enabled: commands.syntaxTreeCopy },
         syntaxTreeHideWhitespace: { enabled: commands.syntaxTreeHideWhitespace },
         syntaxTreeShowWhitespace: { enabled: commands.syntaxTreeShowWhitespace },
     };
+}
+
+function checkConflictingExtensions() {
+    if (vscode.extensions.getExtension("MoveBit.aptos-move-analyzer")) {
+        vscode.window
+            .showWarningMessage(
+                `You have both the aptos-analyzer (aptos.aptos-analyzer) and MoveBit's aptos-move-analyzer (MoveBit.aptos-move-analyzer) ` +
+                "plugins enabled. These are known to conflict and cause various functions of " +
+                "both plugins to not work correctly. You should disable one of them.",
+                "Got it",
+            )
+            // eslint-disable-next-line no-console
+            .then(() => {
+            }, console.error);
+    }
 }
 
