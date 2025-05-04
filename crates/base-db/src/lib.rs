@@ -10,10 +10,6 @@ use std::sync::Arc;
 use syntax::{Parse, SourceFile, SyntaxError};
 use vfs::FileId;
 
-pub trait Upcast<T: ?Sized> {
-    fn upcast(&self) -> &T;
-}
-
 /// Database which stores all significant input facts: source code and project
 /// model. Everything else in rust-analyzer is derived from these queries.
 #[ra_salsa::query_group(SourceDatabaseStorage)]

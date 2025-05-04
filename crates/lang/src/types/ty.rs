@@ -83,7 +83,7 @@ impl Ty {
         let ty = self.unwrap_all_refs();
         match ty {
             Ty::Adt(ty_adt) => {
-                let item = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(db.upcast())?;
+                let item = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(db)?;
                 Some(item.map(|it| it.module()))
             }
             Ty::Seq(TySequence::Vector(_)) => {

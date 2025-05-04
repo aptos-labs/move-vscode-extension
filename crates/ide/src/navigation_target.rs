@@ -1,4 +1,4 @@
-use base_db::{SourceDatabase, Upcast};
+use base_db::SourceDatabase;
 use ide_db::{RootDatabase, SymbolKind, ast_kind_to_symbol_kind};
 use lang::nameres::scope::ScopeEntry;
 use std::fmt;
@@ -92,7 +92,7 @@ impl NavigationTarget {
         if db.builtins_file_id().is_some_and(|fid| fid == file_id) {
             return None;
         }
-        if let Some(label_decl) = scope_entry.node_loc.to_ast::<ast::LabelDecl>(db.upcast()) {
+        if let Some(label_decl) = scope_entry.node_loc.to_ast::<ast::LabelDecl>(db) {
             let label = label_decl.value;
             let name_range = label.quote_ident_token().text_range();
             let node_range = label.syntax().text_range();
@@ -104,10 +104,7 @@ impl NavigationTarget {
                 SymbolKind::Label,
             ));
         }
-        let named_item = scope_entry
-            .node_loc
-            .to_ast::<ast::AnyNamedElement>(db.upcast())?
-            .value;
+        let named_item = scope_entry.node_loc.to_ast::<ast::AnyNamedElement>(db)?.value;
         let name_range = named_item.name().map(|name| name.ident_token().text_range());
         let node_range = named_item.syntax().text_range();
 

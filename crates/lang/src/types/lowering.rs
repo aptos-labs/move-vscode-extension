@@ -37,7 +37,7 @@ impl<'db> TyLowering<'db> {
                     }
                     Some(named_item_entry) => named_item_entry
                         .node_loc
-                        .to_ast::<ast::AnyNamedElement>(self.db.upcast())
+                        .to_ast::<ast::AnyNamedElement>(self.db)
                         .map(|named_item| self.lower_path(path.map_into(), named_item.map_into()))
                         .unwrap_or(Ty::Unknown),
                 }

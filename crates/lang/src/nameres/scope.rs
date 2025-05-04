@@ -27,7 +27,7 @@ impl ScopeEntry {
     }
 
     pub fn cast_into<T: ast::AstNode>(self, db: &dyn HirDatabase) -> Option<InFile<T>> {
-        self.node_loc.to_ast(db.upcast())
+        self.node_loc.to_ast(db)
     }
 }
 

@@ -43,9 +43,9 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
             entries.extend(module.member_entries());
             entries.extend(module.value.enum_variants().to_in_file_entries(file_id));
 
-            entries.extend(builtin_functions(db.upcast()).to_entries());
-            entries.extend(builtin_spec_functions(db.upcast()).to_entries());
-            entries.extend(builtin_spec_consts(db.upcast()).to_entries());
+            entries.extend(builtin_functions(db).to_entries());
+            entries.extend(builtin_spec_functions(db).to_entries());
+            entries.extend(builtin_spec_consts(db).to_entries());
         }
         MODULE_SPEC => {
             let (module_spec_file_id, module_spec) =
@@ -60,7 +60,7 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
                     .spec_inline_functions()
                     .to_in_file_entries(module_spec_file_id),
             );
-            entries.extend(builtin_spec_functions(db.upcast()).to_entries());
+            entries.extend(builtin_spec_functions(db).to_entries());
         }
         ITEM_SPEC => {
             let item_spec = scope.syntax_cast::<ast::ItemSpec>().unwrap();

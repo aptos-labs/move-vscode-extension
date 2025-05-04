@@ -28,7 +28,7 @@ impl TyAdt {
     }
 
     pub fn adt_item(&self, db: &dyn HirDatabase) -> Option<InFile<ast::StructOrEnum>> {
-        self.adt_item_loc.to_ast::<ast::StructOrEnum>(db.upcast())
+        self.adt_item_loc.to_ast::<ast::StructOrEnum>(db)
     }
 
     pub fn adt_item_module(&self, db: &dyn HirDatabase) -> Option<ast::Module> {
