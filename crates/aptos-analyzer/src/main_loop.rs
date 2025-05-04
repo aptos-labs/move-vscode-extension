@@ -340,13 +340,13 @@ impl GlobalState {
                 .iter()
                 .map(|path| vfs.file_id(path).unwrap().0)
                 .filter(|&file_id| {
-                    let package_root_id = db.file_package_root(file_id);
+                    let package_root_id = db.file_package_root(file_id).data(db);
                     // Only publish diagnostics for files in the workspace, not from crates.io deps
                     // or the sysroot.
                     // While theoretically these should never have errors, we have quite a few false
                     // positives particularly in the stdlib, and those diagnostics would stay around
                     // forever if we emitted them here.
-                    !db.package_root(package_root_id).is_library
+                    !db.package_root(package_root_id).data(db).is_library
                 })
                 .collect::<std::sync::Arc<_>>()
         };

@@ -1,6 +1,6 @@
 use crate::RootDatabase;
 use base_db::change::FileChanges;
-use ra_salsa::{Database, Durability};
+use salsa::{Database, Durability};
 
 impl RootDatabase {
     pub fn request_cancellation(&mut self) {

@@ -7,4 +7,5 @@ pub mod loc;
 mod node_ext;
 pub mod types;
 
+pub use crate::db::HirDatabase;
 pub use semantics::{Semantics, SemanticsImpl};

@@ -7,7 +7,7 @@ pub mod ty_callable;
 pub(crate) mod ty_var;
 pub(crate) mod type_param;
 
-use crate::db::HirDatabase;
+use crate::HirDatabase;
 use crate::loc::SyntaxLoc;
 use crate::nameres::address::Address;
 use crate::nameres::name_resolution::get_modules_as_entries;

@@ -1,22 +1,25 @@
 mod source_to_def;
 
-use crate::db::{HirDatabase, NodeInferenceExt};
-use crate::nameres::ResolveReference;
 use crate::nameres::fq_named_element::{ItemFQName, ItemFQNameOwner};
 use crate::nameres::scope::ScopeEntry;
+use crate::nameres::ResolveReference;
 use crate::node_ext::item::ModuleItemExt;
 use crate::semantics::source_to_def::SourceToDefCache;
-use crate::types::inference::InferenceCtx;
 use crate::types::inference::inference_result::InferenceResult;
+use crate::types::inference::InferenceCtx;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
+use crate::HirDatabase;
+use base_db::inputs::InternFileId;
 use base_db::package_root::PackageRootId;
 use std::cell::RefCell;
 use std::sync::Arc;
 use std::{fmt, ops};
 use syntax::files::InFile;
-use syntax::{AstNode, SyntaxNode, SyntaxToken, ast};
+use syntax::{ast, AstNode, SyntaxNode, SyntaxToken};
 use vfs::FileId;
+use base_db::ParseDatabase;
+use crate::db::NodeInferenceExt;
 
 const MAX_FILE_ID: u32 = 0x7fff_ffff;
 
@@ -48,11 +51,11 @@ impl<'db, DB> ops::Deref for Semantics<'db, DB> {
 
 impl<DB: HirDatabase> Semantics<'_, DB> {
     pub fn new(db: &DB, ws_file_id: FileId) -> Semantics<'_, DB> {
-        let ws_root = db.file_package_root(ws_file_id);
+        let ws_root = db.file_package_root(ws_file_id).data(db);
         let impl_ = SemanticsImpl::new(db, ws_root);
         // add builtins file to cache
         if let Some(builtins_file_id) = db.builtins_file_id() {
-            impl_.parse(builtins_file_id);
+            impl_.parse(builtins_file_id.data(db));
         }
         Semantics { db, imp: impl_ }
     }
@@ -68,7 +71,7 @@ impl<'db> SemanticsImpl<'db> {
     }
 
     pub fn parse(&self, file_id: FileId) -> ast::SourceFile {
-        let tree = self.db.parse(file_id).tree();
+        let tree = self.db.parse(file_id.intern(self.db)).tree();
         self.cache(tree.syntax().clone(), file_id);
         tree
     }

@@ -1,4 +1,4 @@
-use crate::db::HirDatabase;
+use crate::HirDatabase;
 use crate::nameres::ResolveReference;
 use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use crate::nameres::scope::ScopeEntry;

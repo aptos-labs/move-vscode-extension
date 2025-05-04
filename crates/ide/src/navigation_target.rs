@@ -89,7 +89,7 @@ impl NavigationTarget {
     ) -> Option<NavigationTarget> {
         let entry_name = scope_entry.name;
         let file_id = scope_entry.node_loc.file_id();
-        if db.builtins_file_id().is_some_and(|fid| fid == file_id) {
+        if db.builtins_file_id().is_some_and(|fid| fid.data(db) == file_id) {
             return None;
         }
         if let Some(label_decl) = scope_entry.node_loc.to_ast::<ast::LabelDecl>(db) {

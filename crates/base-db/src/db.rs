@@ -8,7 +8,7 @@ use syntax::{ast, Parse, SyntaxError};
 use vfs::FileId;
 
 #[salsa::db]
-pub trait SourceDatabase2: salsa::Database {
+pub trait SourceDatabase: salsa::Database {
     /// Text of the file.
     fn file_text(&self, file_id: FileId) -> FileText;
 
@@ -48,7 +48,7 @@ pub trait SourceDatabase2: salsa::Database {
 }
 
 #[query_group_macro::query_group]
-pub trait ParseDatabase2: SourceDatabase2 + salsa::Database {
+pub trait ParseDatabase: SourceDatabase + salsa::Database {
     /// Parses the file into the syntax tree.
     #[salsa::invoke_actual(parse)]
     #[salsa::lru(128)]
@@ -59,16 +59,15 @@ pub trait ParseDatabase2: SourceDatabase2 + salsa::Database {
     fn parse_errors(&self, file_id: InternedFileId) -> Option<&[SyntaxError]>;
 }
 
-fn parse(db: &dyn ParseDatabase2, file_id: InternedFileId) -> Parse {
+fn parse(db: &dyn ParseDatabase, file_id: InternedFileId) -> Parse {
     let _p = tracing::info_span!("parse", ?file_id).entered();
-    let file_id = file_id.data(db);
-    let text = db.file_text(file_id).text(db);
+    let text = db.file_text(file_id.data(db)).text(db);
     ast::SourceFile::parse(&text)
 }
 
-fn parse_errors(db: &dyn ParseDatabase2, file_id: InternedFileId) -> Option<&[SyntaxError]> {
+fn parse_errors(db: &dyn ParseDatabase, file_id: InternedFileId) -> Option<&[SyntaxError]> {
     #[salsa::tracked(return_ref)]
-    fn parse_errors(db: &dyn ParseDatabase2, file_id: InternedFileId) -> Option<Box<[SyntaxError]>> {
+    fn parse_errors(db: &dyn ParseDatabase, file_id: InternedFileId) -> Option<Box<[SyntaxError]>> {
         let errors = db.parse(file_id).errors();
         match &*errors {
             [] => None,

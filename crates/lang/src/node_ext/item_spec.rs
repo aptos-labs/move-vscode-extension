@@ -1,4 +1,4 @@
-use crate::db::HirDatabase;
+use crate::HirDatabase;
 use crate::nameres::ResolveReference;
 use syntax::ast;
 use syntax::files::InFile;

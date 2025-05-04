@@ -1,4 +1,5 @@
-use base_db::SourceDatabase;
+use base_db::inputs::InternFileId;
+use base_db::{ParseDatabase, SourceDatabase};
 use parser::SyntaxKind;
 use std::fmt;
 use std::fmt::Formatter;
@@ -41,8 +42,8 @@ impl SyntaxLoc {
         }
     }
 
-    pub fn to_ast<T: AstNode>(&self, db: &dyn SourceDatabase) -> Option<InFile<T>> {
-        let file = db.parse(self.file_id).tree();
+    pub fn to_ast<T: AstNode>(&self, db: &dyn ParseDatabase) -> Option<InFile<T>> {
+        let file = db.parse(self.file_id.intern(db)).tree();
         if !file.syntax().text_range().contains_inclusive(self.node_offset) {
             tracing::error!(
                 "stale cache error: {:?} is outside of the file range {:?}",

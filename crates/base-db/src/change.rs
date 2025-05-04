@@ -1,6 +1,6 @@
 use crate::SourceDatabase;
 use crate::package_root::{PackageRoot, PackageRootId};
-use ra_salsa::Durability;
+use salsa::Durability;
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::Arc;
@@ -56,7 +56,6 @@ impl FileChanges {
         let _p = tracing::info_span!("FileChange::apply").entered();
 
         if let Some(package_roots) = self.package_roots.clone() {
-            tracing::info!("reset package roots and dependencies");
             for (idx, root) in package_roots.into_iter().enumerate() {
                 let root_id = PackageRootId(idx as u32);
                 let durability = source_root_durability(&root);
@@ -70,24 +69,20 @@ impl FileChanges {
 
         if let Some((builtins_file_id, builtins_text)) = self.builtins_file {
             tracing::info!(?builtins_file_id, "set builtins file");
-            db.set_builtins_file_id_with_durability(Some(builtins_file_id), Durability::HIGH);
-            db.set_file_text_with_durability(
-                builtins_file_id,
-                Arc::from(builtins_text),
-                Durability::HIGH,
-            );
+            db.set_builtins_file_id(Some(builtins_file_id));
+            db.set_file_text_with_durability(builtins_file_id, builtins_text.as_str(), Durability::HIGH);
         }
 
         if let Some(package_graph) = self.package_graph {
             let _p = tracing::info_span!("set package dependencies").entered();
             for (manifest_file_id, dep_manifest_ids) in package_graph.into_iter() {
-                let main_package_id = db.file_package_root(manifest_file_id);
+                let main_package_id = db.file_package_root(manifest_file_id).data(db);
                 let deps_package_ids = dep_manifest_ids
                     .into_iter()
-                    .map(|it| db.file_package_root(it))
+                    .map(|it| db.file_package_root(it).data(db))
                     .collect::<Vec<_>>();
                 tracing::info!(?main_package_id, ?deps_package_ids);
-                db.set_package_deps(main_package_id, Arc::from(deps_package_ids));
+                db.set_package_deps(main_package_id, deps_package_ids);
             }
         }
 
@@ -96,14 +91,14 @@ impl FileChanges {
             let text = text.unwrap_or_default();
             // only use durability if roots are explicitly provided
             if package_roots.is_some() {
-                let package_root_id = db.file_package_root(file_id);
-                let package_root = db.package_root(package_root_id);
+                let package_root_id = db.file_package_root(file_id).data(db);
+                let package_root = db.package_root(package_root_id).data(db);
                 let durability = file_text_durability(&package_root);
-                db.set_file_text_with_durability(file_id, Arc::from(text), durability);
+                db.set_file_text_with_durability(file_id, text.as_str(), durability);
                 continue;
             }
             // XXX: can't actually remove the file, just reset the text
-            db.set_file_text(file_id, Arc::from(text))
+            db.set_file_text(file_id, text.as_str())
         }
     }
 }

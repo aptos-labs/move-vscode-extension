@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
-use base_db::SourceDatabase;
 use base_db::change::{DepGraph, FileChanges};
+use base_db::{ParseDatabase, SourceDatabase};
 use ide_completion::item::CompletionItem;
 use ide_db::{LineIndexDatabase, RootDatabase};
 use line_index::{LineCol, LineIndex};
@@ -23,6 +23,7 @@ mod view_syntax_tree;
 use crate::hover::HoverResult;
 pub use crate::navigation_target::NavigationTarget;
 pub use crate::syntax_highlighting::HlRange;
+use base_db::inputs::InternFileId;
 use base_db::package_root::{PackageRoot, PackageRootId};
 use ide_completion::config::CompletionConfig;
 use ide_db::assist_config::AssistConfig;
@@ -91,7 +92,7 @@ impl Default for AnalysisHost {
 /// `Analysis` are canceled (most method return `Err(Canceled)`).
 #[derive(Debug)]
 pub struct Analysis {
-    db: ra_salsa::Snapshot<RootDatabase>,
+    db: RootDatabase,
 }
 
 // As a general design guideline, `Analysis` API are intended to be independent
@@ -133,7 +134,7 @@ impl Analysis {
     }
 
     pub fn package_root_id(&self, file_id: FileId) -> Cancellable<PackageRootId> {
-        self.with_db(|db| db.file_package_root(file_id))
+        self.with_db(|db| db.file_package_root(file_id).data(db))
     }
 
     // pub fn is_local_source_root(&self, source_root_id: SourceRoot) -> Cancellable<bool> {
@@ -152,12 +153,12 @@ impl Analysis {
 
     /// Gets the text of the source file.
     pub fn file_text(&self, file_id: FileId) -> Cancellable<Arc<str>> {
-        self.with_db(|db| SourceDatabase::file_text(db, file_id))
+        self.with_db(|db| SourceDatabase::file_text(db, file_id).text(db))
     }
 
     /// Gets the syntax tree of the file.
     pub fn parse(&self, file_id: FileId) -> Cancellable<SourceFile> {
-        self.with_db(|db| db.parse(file_id).tree())
+        self.with_db(|db| db.parse(file_id.intern(db)).tree())
     }
 
     // /// Returns true if this file belongs to an immutable library.

@@ -1,4 +1,4 @@
-use crate::new_db::SourceDatabase2;
+use crate::db::SourceDatabase;
 use crate::package_root::{PackageRoot, PackageRootId};
 use dashmap::{DashMap, Entry};
 use salsa::Durability;
@@ -7,16 +7,17 @@ use std::sync::Arc;
 use vfs::FileId;
 
 #[salsa::interned(no_lifetime)]
+#[derive(Debug)]
 pub struct InternedFileId {
     pub data: FileId,
 }
 
 pub trait InternFileId {
-    fn intern(self, db: &dyn SourceDatabase2) -> InternedFileId;
+    fn intern(self, db: &dyn SourceDatabase) -> InternedFileId;
 }
 
 impl InternFileId for FileId {
-    fn intern(self, db: &dyn SourceDatabase2) -> InternedFileId {
+    fn intern(self, db: &dyn SourceDatabase) -> InternedFileId {
         InternedFileId::new(db, self)
     }
 }
@@ -47,7 +48,7 @@ pub struct PackageDepsInput {
     pub data: Arc<Vec<PackageRootId>>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct Files {
     files: Arc<DashMap<FileId, FileText>>,
     source_roots: Arc<DashMap<PackageRootId, PackageRootInput>>,
@@ -65,7 +66,7 @@ impl Files {
 
     pub fn set_file_text_with_durability(
         &self,
-        db: &mut dyn SourceDatabase2,
+        db: &mut dyn SourceDatabase,
         file_id: FileId,
         text: &str,
         durability: Durability,
@@ -99,7 +100,7 @@ impl Files {
 
     pub fn set_package_root_with_durability(
         &self,
-        db: &mut dyn SourceDatabase2,
+        db: &mut dyn SourceDatabase,
         package_root_id: PackageRootId,
         package_root: Arc<PackageRoot>,
         durability: Durability,
@@ -131,7 +132,7 @@ impl Files {
 
     pub fn set_file_package_root_with_durability(
         &self,
-        db: &mut dyn SourceDatabase2,
+        db: &mut dyn SourceDatabase,
         id: FileId,
         package_root_id: PackageRootId,
         durability: Durability,
@@ -163,7 +164,7 @@ impl Files {
 
     pub fn set_package_deps(
         &self,
-        db: &mut dyn SourceDatabase2,
+        db: &mut dyn SourceDatabase,
         package_id: PackageRootId,
         deps: Arc<Vec<PackageRootId>>,
     ) {

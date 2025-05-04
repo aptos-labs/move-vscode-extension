@@ -7,7 +7,7 @@ use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::ty::Ty;
-use base_db::SourceDatabase;
+use base_db::{ParseDatabase, SourceDatabase};
 use base_db::package_root::PackageRootId;
 use std::fs::File;
 use std::sync::Arc;
@@ -17,21 +17,17 @@ use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt, InFileVecExt};
 use syntax::{AstNode, ast};
 use vfs::FileId;
+use base_db::inputs::{FileIdSet, InternFileId};
 
-#[ra_salsa::query_group(HirDatabaseStorage)]
-pub trait HirDatabase: SourceDatabase {
+#[query_group_macro::query_group]
+pub trait HirDatabase: ParseDatabase {
     fn resolve_path(&self, path_loc: SyntaxLoc) -> Vec<ScopeEntry>;
 
     fn inference_for_ctx_owner(&self, ctx_owner_loc: SyntaxLoc, msl: bool) -> Arc<InferenceResult>;
 
-    fn file_ids_by_module_address(
-        &self,
-        package_root_id: PackageRootId,
-        address: Address,
-    ) -> Vec<FileId>;
+    fn file_ids_by_module_address(&self, package_root_id: PackageRootId, address: Address) -> FileIdSet;
 }
 
-#[tracing::instrument(level = "debug", skip(db, path_loc))]
 pub(crate) fn resolve_path(db: &dyn HirDatabase, path_loc: SyntaxLoc) -> Vec<ScopeEntry> {
     let path = path_loc.to_ast::<ast::Path>(db);
     match path {
@@ -89,8 +85,8 @@ fn file_ids_by_module_address(
     db: &dyn HirDatabase,
     package_root_id: PackageRootId,
     address: Address,
-) -> Vec<FileId> {
-    let source_file_ids = db.source_file_ids(package_root_id);
+) -> FileIdSet {
+    let source_file_ids = db.source_file_ids(package_root_id).data(db);
 
     let mut file_ids = vec![];
     for source_file_id in source_file_ids {
@@ -99,15 +95,15 @@ fn file_ids_by_module_address(
             file_ids.push(source_file_id);
         }
     }
-    file_ids
+    FileIdSet::new(db, file_ids)
 }
 
 pub(crate) fn get_modules_in_file(
-    db: &dyn HirDatabase,
+    db: &dyn ParseDatabase,
     file_id: FileId,
     address: Address,
 ) -> Vec<Module> {
-    let source_file = db.parse(file_id).tree();
+    let source_file = db.parse(file_id.intern(db)).tree();
     let modules = source_file
         .all_modules()
         .filter(|m| m.address_equals_to(address.clone(), false))

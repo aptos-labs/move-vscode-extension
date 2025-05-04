@@ -1,25 +1,23 @@
-use crate::db::{HirDatabase, get_modules_in_file};
-use crate::nameres::ResolveReference;
 use crate::nameres::address::Address;
 use crate::nameres::namespaces::{Ns, NsSet};
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::path_resolution::ResolutionContext;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use crate::nameres::scope_entries_owner::get_entries_in_scope;
-use crate::node_ext::ModuleLangExt;
+use crate::nameres::ResolveReference;
 use crate::node_ext::item::ModuleItemExt;
+use crate::HirDatabase;
 use base_db::package_root::PackageRootId;
-use itertools::Itertools;
 use parser::SyntaxKind;
 use parser::SyntaxKind::MODULE_SPEC;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap};
 use std::fmt::Formatter;
-use std::ops::Deref;
-use std::{fmt, iter};
+use std::{fmt};
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::{HasItems, ReferenceElement};
 use syntax::files::{InFile, InFileExt, InFileVecExt};
-use syntax::{AstNode, SyntaxNode, ast};
+use syntax::{ast, AstNode, SyntaxNode};
+use crate::db::get_modules_in_file;
 
 pub struct ResolveScope {
     scope: InFile<SyntaxNode>,
@@ -143,7 +141,10 @@ pub fn get_modules_as_entries(
     package_root_id: PackageRootId,
     address: Address,
 ) -> Vec<ScopeEntry> {
-    let interesting_file_ids = db.file_ids_by_module_address(package_root_id, address.clone());
+    let interesting_file_ids = db
+        .file_ids_by_module_address(package_root_id, address.clone())
+        .data(db);
+    tracing::debug!(?interesting_file_ids);
 
     let mut module_entries = vec![];
     for source_file_id in interesting_file_ids {

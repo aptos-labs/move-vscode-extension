@@ -1,7 +1,7 @@
 use crate::context::CompletionContext;
 use crate::item::CompletionItemBuilder;
 use crate::render::render_named_item;
-use lang::db::HirDatabase;
+use lang::HirDatabase;
 use lang::types::lowering::TyLowering;
 use lang::types::substitution::{ApplySubstitution, Substitution};
 use lang::types::ty::Ty;

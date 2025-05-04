@@ -9,10 +9,10 @@ pub mod label;
 pub mod source_change;
 mod syntax_helpers;
 pub mod text_edit;
-pub mod new_root_db;
+pub mod root_db;
 
 use base_db::SourceDatabase;
-use lang::db::HirDatabase;
+use lang::HirDatabase;
 use line_index::LineIndex;
 use std::fmt;
 use std::mem::ManuallyDrop;
@@ -20,71 +20,8 @@ use std::sync::Arc;
 use syntax::{SyntaxKind, SyntaxKind::*};
 use vfs::FileId;
 
-#[ra_salsa::database(
-    base_db::SourceDatabaseStorage,
-    lang::db::HirDatabaseStorage,
-    LineIndexDatabaseStorage
-)]
-pub struct RootDatabase {
-    // We use `ManuallyDrop` here because every codegen unit that contains a
-    // `&RootDatabase -> &dyn OtherDatabase` cast will instantiate its drop glue in the vtable,
-    // which duplicates `Weak::drop` and `Arc::drop` tens of thousands of times, which makes
-    // compile times of all `ide_*` and downstream crates suffer greatly.
-    storage: ManuallyDrop<ra_salsa::Storage<RootDatabase>>,
-}
-
-impl Drop for RootDatabase {
-    fn drop(&mut self) {
-        unsafe { ManuallyDrop::drop(&mut self.storage) };
-    }
-}
-
-impl fmt::Debug for RootDatabase {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("RootDatabase").finish()
-    }
-}
-
-impl ra_salsa::Database for RootDatabase {}
-
-impl Default for RootDatabase {
-    fn default() -> RootDatabase {
-        RootDatabase::new(/*None*/)
-    }
-}
-
-impl RootDatabase {
-    pub fn new() -> RootDatabase {
-        let mut db = RootDatabase {
-            storage: ManuallyDrop::new(ra_salsa::Storage::default()),
-        };
-
-        db.set_builtins_file_id(None);
-
-        // db.set_local_roots_with_durability(Default::default(), Durability::HIGH);
-        // db.set_library_roots_with_durability(Default::default(), Durability::HIGH);
-        // db.setup_syntax_context_root();
-        db
-    }
-}
-
-impl ra_salsa::ParallelDatabase for RootDatabase {
-    fn snapshot(&self) -> ra_salsa::Snapshot<RootDatabase> {
-        ra_salsa::Snapshot::new(RootDatabase {
-            storage: ManuallyDrop::new(self.storage.snapshot()),
-        })
-    }
-}
-
-#[ra_salsa::query_group(LineIndexDatabaseStorage)]
-pub trait LineIndexDatabase: SourceDatabase {
-    fn line_index(&self, file_id: FileId) -> Arc<LineIndex>;
-}
-
-fn line_index(db: &dyn LineIndexDatabase, file_id: FileId) -> Arc<LineIndex> {
-    let text = db.file_text(file_id);
-    Arc::new(LineIndex::new(&text))
-}
+pub use root_db::RootDatabase;
+pub use root_db::LineIndexDatabase;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum SymbolKind {
