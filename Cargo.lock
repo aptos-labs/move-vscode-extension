@@ -18,15 +18,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "always-assert"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1078fa1ce1e34b1872d8611ad921196d76bdd7027e949fbe31231abde201892"
-dependencies = [
- "tracing",
-]
-
-[[package]]
 name = "anstream"
 version = "0.6.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -800,6 +791,7 @@ checksum = "cea70ddb795996207ad57735b50c5982d8844f38ba9ee5f1aedcfb708a2aa11e"
 dependencies = [
  "equivalent",
  "hashbrown 0.15.2",
+ "serde",
 ]
 
 [[package]]
@@ -854,9 +846,9 @@ checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 
 [[package]]
 name = "jod-thread"
-version = "0.1.2"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b23360e99b8717f20aaa4598f5a6541efbe30630039fbc7706cf954a87947ae"
+checksum = "a037eddb7d28de1d0fc42411f501b53b75838d313908078d6698d064f3029b24"
 
 [[package]]
 name = "kqueue"
@@ -1161,7 +1153,7 @@ dependencies = [
 [[package]]
 name = "paths"
 version = "0.0.0"
-source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=1f23156f51e6a064becb1103eac078c2c9d14a80#1f23156f51e6a064becb1103eac078c2c9d14a80"
+source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=6568e8f12d19b53fbb5a1c2e1116dae3ae61f912#6568e8f12d19b53fbb5a1c2e1116dae3ae61f912"
 dependencies = [
  "camino",
 ]
@@ -1532,14 +1524,14 @@ checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 [[package]]
 name = "stdx"
 version = "0.0.0"
-source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=1f23156f51e6a064becb1103eac078c2c9d14a80#1f23156f51e6a064becb1103eac078c2c9d14a80"
+source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=6568e8f12d19b53fbb5a1c2e1116dae3ae61f912#6568e8f12d19b53fbb5a1c2e1116dae3ae61f912"
 dependencies = [
- "always-assert",
  "crossbeam-channel",
- "itertools 0.12.1",
+ "itertools 0.14.0",
  "jod-thread",
  "libc",
  "miow",
+ "tracing",
  "windows-sys 0.59.0",
 ]
 
@@ -1830,7 +1822,7 @@ checksum = "ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65"
 [[package]]
 name = "vfs"
 version = "0.0.0"
-source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=1f23156f51e6a064becb1103eac078c2c9d14a80#1f23156f51e6a064becb1103eac078c2c9d14a80"
+source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=6568e8f12d19b53fbb5a1c2e1116dae3ae61f912#6568e8f12d19b53fbb5a1c2e1116dae3ae61f912"
 dependencies = [
  "crossbeam-channel",
  "fst",
@@ -1845,7 +1837,7 @@ dependencies = [
 [[package]]
 name = "vfs-notify"
 version = "0.0.0"
-source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=1f23156f51e6a064becb1103eac078c2c9d14a80#1f23156f51e6a064becb1103eac078c2c9d14a80"
+source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=6568e8f12d19b53fbb5a1c2e1116dae3ae61f912#6568e8f12d19b53fbb5a1c2e1116dae3ae61f912"
 dependencies = [
  "crossbeam-channel",
  "notify",

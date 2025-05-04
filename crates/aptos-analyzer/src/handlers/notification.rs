@@ -116,7 +116,7 @@ pub(crate) fn handle_did_close_text_document(
             tracing::error!("orphan DidCloseTextDocument: {}", path);
         }
 
-        if let Some(file_id) = state.vfs.read().0.file_id(&path) {
+        if let Some((file_id, _)) = state.vfs.read().0.file_id(&path) {
             state.diagnostics.clear_native_for(file_id);
         }
 
@@ -258,7 +258,7 @@ fn run_flycheck(state: &mut GlobalState, vfs_path: VfsPath) -> bool {
     let _p = tracing::info_span!("run_flycheck").entered();
 
     let file_id = state.vfs.read().0.file_id(&vfs_path);
-    if let Some(saved_file_id) = file_id {
+    if let Some((saved_file_id, _)) = file_id {
         let world = state.snapshot();
 
         let mut updated = false;

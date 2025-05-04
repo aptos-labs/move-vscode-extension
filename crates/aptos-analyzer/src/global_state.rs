@@ -120,7 +120,7 @@ impl GlobalState {
         let (flycheck_sender, flycheck_receiver) = unbounded();
 
         let vfs = Arc::new(RwLock::new((vfs::Vfs::default(), HashMap::default())));
-        let builtins_file_id = {
+        let (builtins_file_id, _) = {
             let vfs = &mut vfs.write().0;
             let builtins_path = VfsPath::new_virtual_path("/builtins.move".to_string());
             vfs.set_file_contents(builtins_path.clone(), Some(BUILTINS_FILE.bytes().collect()));
@@ -377,14 +377,14 @@ pub(crate) fn file_id_to_url(vfs: &vfs::Vfs, id: FileId) -> Url {
 
 pub(crate) fn url_to_file_id(vfs: &vfs::Vfs, url: &Url) -> anyhow::Result<FileId> {
     let path = from_proto::vfs_path(url)?;
-    let res = vfs
+    let (res, _) = vfs
         .file_id(&path)
         .ok_or_else(|| anyhow::format_err!("file not found: {path}"))?;
     Ok(res)
 }
 
 pub(crate) fn vfs_path_to_file_id(vfs: &vfs::Vfs, vfs_path: &VfsPath) -> anyhow::Result<FileId> {
-    let res = vfs
+    let (res, _) = vfs
         .file_id(vfs_path)
         .ok_or_else(|| anyhow::format_err!("file not found: {vfs_path}"))?;
     Ok(res)

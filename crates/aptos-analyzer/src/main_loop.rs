@@ -338,7 +338,7 @@ impl GlobalState {
             let vfs = &self.vfs.read().0;
             self.mem_docs
                 .iter()
-                .map(|path| vfs.file_id(path).unwrap())
+                .map(|path| vfs.file_id(path).unwrap().0)
                 .filter(|&file_id| {
                     let package_root_id = db.file_package_root(file_id);
                     // Only publish diagnostics for files in the workspace, not from crates.io deps
