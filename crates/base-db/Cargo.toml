@@ -9,6 +9,11 @@ license.workspace = true
 tracing = { workspace = true }
 ra_salsa = { workspace = true }
 
+dashmap.workspace = true
+query-group-macro.workspace = true
+salsa.workspace = true
+salsa-macros.workspace = true
+
 vfs = { workspace = true }
 
 syntax = { path = "../syntax" }

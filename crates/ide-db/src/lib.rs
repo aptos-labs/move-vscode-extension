@@ -9,6 +9,7 @@ pub mod label;
 pub mod source_change;
 mod syntax_helpers;
 pub mod text_edit;
+pub mod new_root_db;
 
 use base_db::SourceDatabase;
 use lang::db::HirDatabase;

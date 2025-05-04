@@ -45,9 +45,15 @@ tracing-subscriber = { version = "^0.3.18", default-features = false, features =
     "time",
     "tracing-log",
 ] }
+dashmap = "6.1.0"
+salsa = "0.19.0"
+salsa-macros = "0.19.0"
+
+ra_salsa = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "1f23156f51e6a064becb1103eac078c2c9d14a80", package = "salsa" }
 
 stdx = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "6568e8f12d19b53fbb5a1c2e1116dae3ae61f912", package = "stdx" }
 paths = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "6568e8f12d19b53fbb5a1c2e1116dae3ae61f912", package = "paths", features = ["serde1"] }
 vfs = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "6568e8f12d19b53fbb5a1c2e1116dae3ae61f912", package = "vfs" }
 vfs-notify = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "6568e8f12d19b53fbb5a1c2e1116dae3ae61f912", package = "vfs-notify" }
-ra_salsa = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "1f23156f51e6a064becb1103eac078c2c9d14a80", package = "salsa" }
+query-group-macro = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "6568e8f12d19b53fbb5a1c2e1116dae3ae61f912", package = "query-group-macro" }
+
