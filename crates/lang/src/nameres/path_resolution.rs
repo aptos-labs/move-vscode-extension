@@ -110,8 +110,7 @@ pub fn get_method_resolve_variants(
     let ty_lowering = TyLowering::new(db, msl);
     let mut method_entries = vec![];
     for function_entry in function_entries {
-        let Some(InFile { file_id, value: f }) = function_entry.node_loc.to_ast::<ast::Fun>(db.upcast())
-        else {
+        let Some(InFile { file_id, value: f }) = function_entry.node_loc.to_ast::<ast::Fun>(db) else {
             continue;
         };
         let Some(self_param_ty) = f

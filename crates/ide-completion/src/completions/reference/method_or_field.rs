@@ -2,7 +2,6 @@ use crate::completions::Completions;
 use crate::context::CompletionContext;
 use crate::render::function::{FunctionKind, render_function};
 use crate::render::render_named_item;
-use base_db::Upcast;
 use lang::db::NodeInferenceExt;
 use lang::nameres::path_resolution::get_method_resolve_variants;
 use lang::types::has_type_params_ext::GenericItemExt;
@@ -51,10 +50,7 @@ fn add_field_completion_items(
         return None;
     }
 
-    let (file_id, adt_item) = ty_adt
-        .adt_item_loc
-        .to_ast::<ast::StructOrEnum>(ctx.db.upcast())?
-        .unpack();
+    let (file_id, adt_item) = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(ctx.db)?.unpack();
     let named_fields = adt_item.field_ref_lookup_fields();
     let ty_lowering = TyLowering::new(ctx.db, ctx.msl);
     for named_field in named_fields {
@@ -62,7 +58,7 @@ fn add_field_completion_items(
         let mut completion_item = render_named_item(ctx, named_field.clone().map_into());
 
         if let Some(field_ty) = ty_lowering.lower_named_field(named_field) {
-            let field_detail = field_ty.substitute(&ty_adt.substitution).render(ctx.db.upcast());
+            let field_detail = field_ty.substitute(&ty_adt.substitution).render(ctx.db);
             completion_item.set_detail(Some(field_detail));
         }
         acc.add(completion_item.build(ctx.db));
@@ -77,7 +73,7 @@ fn add_method_completion_items(
     ctx: &CompletionContext<'_>,
     receiver_ty: Ty,
 ) -> Option<()> {
-    let hir_db = ctx.db.upcast();
+    let hir_db = ctx.db;
     let acc = &mut completions.borrow_mut();
 
     let method_entries =

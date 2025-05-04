@@ -2,7 +2,6 @@ use crate::completions::Completions;
 use crate::context::CompletionContext;
 use crate::render::function::{FunctionKind, render_function};
 use crate::render::render_named_item;
-use base_db::Upcast;
 use lang::nameres::path_kind::path_kind;
 use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variants};
 use lang::nameres::scope::ScopeEntryListExt;
@@ -29,12 +28,12 @@ pub(crate) fn add_path_completions(
         path: context_path.clone(),
         is_completion: true,
     };
-    let entries = get_path_resolve_variants(ctx.db.upcast(), &resolution_ctx, path_kind)
-        .filter_by_visibility(ctx.db.upcast(), &context_path);
+    let entries = get_path_resolve_variants(ctx.db, &resolution_ctx, path_kind)
+        .filter_by_visibility(ctx.db, &context_path);
     tracing::debug!(?entries);
 
     for entry in entries {
-        let named_item = entry.cast_into::<ast::AnyNamedElement>(ctx.db.upcast())?;
+        let named_item = entry.cast_into::<ast::AnyNamedElement>(ctx.db)?;
         match named_item.kind() {
             FUN | SPEC_FUN | SPEC_INLINE_FUN => {
                 acc.add(

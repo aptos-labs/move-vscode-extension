@@ -194,11 +194,11 @@ pub fn get_qualified_path_entries(
                 ns: Ns::MODULE,
                 scope_adjustment: None,
             });
-            let module = qualifier_item.node_loc.to_ast::<ast::Module>(db.upcast())?;
+            let module = qualifier_item.node_loc.to_ast::<ast::Module>(db)?;
             entries.extend(module.member_entries())
         }
         SyntaxKind::ENUM => {
-            let enum_ = qualifier_item.node_loc.to_ast::<ast::Enum>(db.upcast())?;
+            let enum_ = qualifier_item.node_loc.to_ast::<ast::Enum>(db)?;
             entries.extend(enum_.value.variants().to_in_file_entries(enum_.file_id));
         }
         _ => {}

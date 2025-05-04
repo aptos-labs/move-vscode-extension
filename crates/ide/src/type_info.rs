@@ -1,4 +1,3 @@
-use base_db::Upcast;
 use ide_db::RootDatabase;
 use lang::Semantics;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
@@ -17,5 +16,5 @@ pub(crate) fn expr_type_info(
     let msl = expr.syntax().is_msl_context();
     let expr_ty = sema.get_expr_type(&expr.in_file(file_id), msl)?;
 
-    Some(expr_ty.render(db.upcast()))
+    Some(expr_ty.render(db))
 }

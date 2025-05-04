@@ -417,9 +417,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             return None;
         }
 
-        let adt_item = ty_adt
-            .adt_item_loc
-            .to_ast::<ast::StructOrEnum>(self.ctx.db.upcast())?;
+        let adt_item = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(self.ctx.db)?;
         let field_reference_name = dot_expr.field_ref().name_ref()?.as_string();
 
         // todo: tuple index fields
@@ -464,8 +462,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             .resolved_method_calls
             .insert(method_call_expr.to_owned(), method_entry.clone());
 
-        let resolved_method =
-            method_entry.and_then(|it| it.node_loc.to_ast::<ast::Fun>(self.ctx.db.upcast()));
+        let resolved_method = method_entry.and_then(|it| it.node_loc.to_ast::<ast::Fun>(self.ctx.db));
         let method_ty = match resolved_method {
             Some(method) => self
                 .ctx

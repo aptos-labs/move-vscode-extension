@@ -1,7 +1,6 @@
 use crate::context::CompletionContext;
 use crate::item::CompletionItemBuilder;
 use crate::render::render_named_item;
-use base_db::Upcast;
 use lang::db::HirDatabase;
 use lang::types::lowering::TyLowering;
 use lang::types::substitution::{ApplySubstitution, Substitution};
@@ -30,7 +29,7 @@ pub(crate) fn render_function(
     let function_name = fun.name().unwrap().as_string();
     completion_item.lookup_by(function_name.clone());
 
-    let params = render_params(ctx.db.upcast(), fun.clone(), call_ty.clone()).unwrap_or_default();
+    let params = render_params(ctx.db, fun.clone(), call_ty.clone()).unwrap_or_default();
     let params = match kind {
         FunctionKind::Fun => params,
         FunctionKind::Method => params.into_iter().skip(1).collect(),
@@ -50,7 +49,7 @@ pub(crate) fn render_function(
     match call_ty.ret_type().unwrap_all_refs() {
         Ty::Unit => (),
         ret_ty => {
-            let ret_ty_txt = ret_ty.render(ctx.db.upcast());
+            let ret_ty_txt = ret_ty.render(ctx.db);
             completion_item.set_detail(Some(ret_ty_txt));
         }
     }

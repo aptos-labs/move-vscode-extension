@@ -7,8 +7,8 @@ use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::ty::Ty;
+use base_db::SourceDatabase;
 use base_db::package_root::PackageRootId;
-use base_db::{SourceDatabase, Upcast};
 use std::fs::File;
 use std::sync::Arc;
 use syntax::ast::Module;
@@ -19,7 +19,7 @@ use syntax::{AstNode, ast};
 use vfs::FileId;
 
 #[ra_salsa::query_group(HirDatabaseStorage)]
-pub trait HirDatabase: SourceDatabase + Upcast<dyn SourceDatabase> {
+pub trait HirDatabase: SourceDatabase {
     fn resolve_path(&self, path_loc: SyntaxLoc) -> Vec<ScopeEntry>;
 
     fn inference_for_ctx_owner(&self, ctx_owner_loc: SyntaxLoc, msl: bool) -> Arc<InferenceResult>;
@@ -33,7 +33,7 @@ pub trait HirDatabase: SourceDatabase + Upcast<dyn SourceDatabase> {
 
 #[tracing::instrument(level = "debug", skip(db, path_loc))]
 pub(crate) fn resolve_path(db: &dyn HirDatabase, path_loc: SyntaxLoc) -> Vec<ScopeEntry> {
-    let path = path_loc.to_ast::<ast::Path>(db.upcast());
+    let path = path_loc.to_ast::<ast::Path>(db);
     match path {
         Some(path) => path_resolution::resolve_path(db, path, None),
         None => {
@@ -52,9 +52,8 @@ fn inference_for_ctx_owner(
     ctx_owner_loc: SyntaxLoc,
     msl: bool,
 ) -> Arc<InferenceResult> {
-    let InFile { file_id, value: ctx_owner } = ctx_owner_loc
-        .to_ast::<ast::InferenceCtxOwner>(db.upcast())
-        .unwrap();
+    let InFile { file_id, value: ctx_owner } =
+        ctx_owner_loc.to_ast::<ast::InferenceCtxOwner>(db).unwrap();
     let mut ctx = InferenceCtx::new(db, file_id, msl);
 
     let return_ty = if let Some(any_fun) = ctx_owner.syntax().clone().cast::<ast::AnyFun>() {

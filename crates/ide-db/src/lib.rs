@@ -10,7 +10,7 @@ pub mod source_change;
 mod syntax_helpers;
 pub mod text_edit;
 
-use base_db::{SourceDatabase, Upcast};
+use base_db::SourceDatabase;
 use lang::db::HirDatabase;
 use line_index::LineIndex;
 use std::fmt;
@@ -41,20 +41,6 @@ impl Drop for RootDatabase {
 impl fmt::Debug for RootDatabase {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("RootDatabase").finish()
-    }
-}
-
-impl Upcast<dyn HirDatabase> for RootDatabase {
-    #[inline]
-    fn upcast(&self) -> &(dyn HirDatabase + 'static) {
-        self
-    }
-}
-
-impl Upcast<dyn SourceDatabase> for RootDatabase {
-    #[inline]
-    fn upcast(&self) -> &(dyn SourceDatabase + 'static) {
-        self
     }
 }
 

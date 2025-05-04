@@ -99,10 +99,7 @@ impl<'db> TypeRenderer<'db> {
     }
 
     fn render_ty_adt(&self, ty_adt: &TyAdt) -> String {
-        let item = ty_adt
-            .adt_item_loc
-            .to_ast::<ast::StructOrEnum>(self.db.upcast())
-            .unwrap();
+        let item = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(self.db).unwrap();
         let item_fq_name = item
             .fq_name(self.db)
             .map(|it| it.identifier_text())
@@ -119,7 +116,7 @@ impl<'db> TypeRenderer<'db> {
 
     fn origin_loc_name(&self, origin_loc: &SyntaxLoc) -> String {
         origin_loc
-            .to_ast::<ast::TypeParam>(self.db.upcast())
+            .to_ast::<ast::TypeParam>(self.db)
             .and_then(|tp| tp.value.name())
             .map(|tp_name| tp_name.as_string())
             .unwrap_or(anonymous())
