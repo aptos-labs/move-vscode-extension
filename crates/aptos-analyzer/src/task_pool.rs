@@ -19,7 +19,7 @@ impl<T> TaskPool<T> {
 
     pub(crate) fn spawn<F>(&mut self, intent: ThreadIntent, task: F)
     where
-        F: FnOnce() -> T + Send + 'static,
+        F: FnOnce() -> T + Send + 'static + std::panic::UnwindSafe,
         T: Send + 'static,
     {
         self.pool.spawn(intent, {
@@ -30,7 +30,7 @@ impl<T> TaskPool<T> {
 
     pub(crate) fn spawn_with_sender<F>(&mut self, intent: ThreadIntent, task: F)
     where
-        F: FnOnce(Sender<T>) + Send + 'static,
+        F: FnOnce(Sender<T>) + Send + 'static + std::panic::UnwindSafe,
         T: Send + 'static,
     {
         self.pool.spawn(intent, {

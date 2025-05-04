@@ -335,7 +335,10 @@ impl GlobalState {
         let mut global_dep_graph = DepGraph::default();
 
         let vfs = &self.vfs.read().0;
-        let mut load = |path: &AbsPath| vfs.file_id(&vfs::VfsPath::from(path.to_path_buf()));
+        let mut load = |path: &AbsPath| {
+            vfs.file_id(&vfs::VfsPath::from(path.to_path_buf()))
+                .map(|it| it.0)
+        };
 
         for main_package in self.main_packages.iter() {
             let dep_graph = main_package.to_dep_graph(&mut load)?;
