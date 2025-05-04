@@ -286,12 +286,7 @@ impl Config {
 
         manifests
             .iter()
-            .filter_map(|manifest_buf| {
-                let path = self.root_path.join(manifest_buf);
-                ManifestPath::from_manifest_file(path)
-                    .map_err(|e| tracing::error!("failed to load linked project: {}", e))
-                    .ok()
-            })
+            .map(|manifest_buf| ManifestPath::new(self.root_path.join(manifest_buf)))
             .collect()
     }
 

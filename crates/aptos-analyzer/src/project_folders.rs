@@ -57,8 +57,6 @@ impl ProjectFolders {
         let mut folder_roots = main_packages
             .iter()
             .flat_map(|pkg| pkg.to_folder_roots())
-            // .update(|root| root.include.sort())
-            // .sorted_by(|a, b| a.include.cmp(&b.include))
             .collect::<Vec<_>>();
         folder_roots.dedup();
 

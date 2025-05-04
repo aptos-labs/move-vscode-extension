@@ -11,11 +11,13 @@ pub mod manifest_path;
 pub mod move_toml;
 
 impl ManifestPath {
-    pub fn from_manifest_file(file: AbsPathBuf) -> anyhow::Result<ManifestPath> {
-        if file.file_name().unwrap_or_default() == "Move.toml" {
-            return Ok(ManifestPath { file });
-        }
-        bail!("project root must point to a Move.toml file: {file}");
+    pub fn new(move_toml_file: AbsPathBuf) -> ManifestPath {
+        assert_eq!(
+            move_toml_file.file_name().unwrap_or_default(),
+            "Move.toml",
+            "project root must point to a Move.toml file: {move_toml_file}"
+        );
+        Self { file: move_toml_file }
     }
 
     pub fn discover(ws_root: &AbsPath) -> io::Result<Vec<ManifestPath>> {
@@ -74,9 +76,7 @@ impl ManifestPath {
                     let path = entry.path();
                     let mfile_path = path.join("Move.toml");
                     if mfile_path.exists() {
-                        let mfile =
-                            ManifestPath::from_manifest_file(AbsPathBuf::assert_utf8(mfile_path))
-                                .ok()?;
+                        let mfile = ManifestPath::new(AbsPathBuf::assert_utf8(mfile_path));
                         manifests.push(mfile);
                     }
                 }

@@ -3,6 +3,7 @@ use crate::move_toml::{MoveToml, MoveTomlDependency};
 use anyhow::Context;
 use base_db::change::{DepGraph, ManifestFileId};
 use paths::{AbsPath, AbsPathBuf};
+use std::collections::HashSet;
 use std::fmt::Formatter;
 use std::{fmt, fs};
 use vfs::FileId;
@@ -50,17 +51,26 @@ impl AptosPackage {
     pub fn load(root_manifest: &ManifestPath) -> anyhow::Result<AptosPackage> {
         let _p =
             tracing::info_span!("load package at", "{:?}", root_manifest.canonical_root()).entered();
-        AptosPackage::load_inner(root_manifest, false)
+        let mut visited = HashSet::new();
+        AptosPackage::load_inner(root_manifest, false, &mut visited)
             .with_context(|| format!("Failed to load the project at {root_manifest}"))
     }
 
-    pub fn load_dependency(root_manifest: &ManifestPath, is_git: bool) -> anyhow::Result<AptosPackage> {
+    fn load_dependency(
+        root_manifest: &ManifestPath,
+        is_git: bool,
+        visited: &mut HashSet<AbsPathBuf>,
+    ) -> anyhow::Result<AptosPackage> {
         let _p =
             tracing::info_span!("load dep package at", "{:?}", root_manifest.canonical_root()).entered();
-        AptosPackage::load_inner(root_manifest, is_git)
+        AptosPackage::load_inner(root_manifest, is_git, visited)
     }
 
-    fn load_inner(manifest_path: &ManifestPath, is_git: bool) -> anyhow::Result<Self> {
+    fn load_inner(
+        manifest_path: &ManifestPath,
+        is_git: bool,
+        visited: &mut HashSet<AbsPathBuf>,
+    ) -> anyhow::Result<Self> {
         let file_contents = fs::read_to_string(&manifest_path)
             .with_context(|| format!("Failed to read Move.toml file {manifest_path}"))?;
         let move_toml = MoveToml::from_str(file_contents.as_str())
@@ -73,8 +83,15 @@ impl AptosPackage {
         for toml_dep in move_toml.dependencies.clone() {
             if let Some(dep_root) = toml_dep.dep_root(&package_root) {
                 let move_toml_path = dep_root.join("Move.toml");
+
+                if visited.contains(&move_toml_path) {
+                    // visited already
+                    continue;
+                }
+                visited.insert(move_toml_path.clone());
+
                 if fs::exists(&move_toml_path).is_ok_and(|it| it) {
-                    let manifest_path = ManifestPath::from_manifest_file(move_toml_path).unwrap();
+                    let manifest_path = ManifestPath::new(move_toml_path);
                     dep_roots.push(manifest_path.canonical_root());
                     let is_git = matches!(toml_dep, MoveTomlDependency::Git(_));
                     dep_manifests.push((manifest_path, is_git));
@@ -87,7 +104,7 @@ impl AptosPackage {
 
         let deps = dep_manifests
             .into_iter()
-            .filter_map(|(it, is_git)| AptosPackage::load_dependency(&it, is_git).ok())
+            .filter_map(|(it, is_git)| AptosPackage::load_dependency(&it, is_git, visited).ok())
             .collect();
 
         Ok(AptosPackage {
@@ -125,7 +142,6 @@ impl AptosPackage {
         let mut package_graph = DepGraph::default();
         for pkg in self.package_and_deps() {
             let package_file_id = pkg.load_manifest_file_id(load)?;
-
             let mut dep_ids = vec![];
             self.collect_dep_ids(&mut dep_ids, pkg, load);
             dep_ids.sort();
@@ -174,7 +190,7 @@ impl AptosPackage {
             if let Some(dep_root) = toml_dep.dep_root(&self.content_root) {
                 let move_toml_path = dep_root.join("Move.toml");
                 if fs::exists(&move_toml_path).is_ok() {
-                    let manifest_path = ManifestPath::from_manifest_file(move_toml_path).unwrap();
+                    let manifest_path = ManifestPath::new(move_toml_path);
                     manifests.push(manifest_path);
                 }
             }

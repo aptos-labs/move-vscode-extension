@@ -304,8 +304,6 @@ impl GlobalState {
             None,
             None,
         );
-        // tracing::info!("process file changes");
-        // self.process_pending_file_changes();
 
         let Some(dep_graph) = self.collect_dep_graph() else {
             // vfs is not yet ready, dep graph is not valid
