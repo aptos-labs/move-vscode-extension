@@ -226,29 +226,24 @@ impl GlobalState {
     }
 
     fn setup_client_file_watchers(&mut self) {
-        let local_content_roots = self
+        let package_folders = self
             .main_packages
             .iter()
             .flat_map(|pkg| pkg.to_folder_roots())
-            .filter(|it| it.is_local)
-            .map(|it| it.content_root);
+            .filter(|it| it.is_local);
 
         let mut watchers: Vec<FileSystemWatcher> = if self
             .config
             .did_change_watched_files_relative_pattern_support()
         {
             // When relative patterns are supported by the client, prefer using them
-            local_content_roots
-                .flat_map(|content_root| {
-                    [
-                        (content_root.clone(), "sources/**/*.move"),
-                        (content_root.clone(), "tests/**/*.move"),
-                        (content_root.clone(), "scripts/**/*.move"),
-                        (content_root.clone(), "**/Move.toml"),
-                    ]
-                    // include
-                    //     .into_iter()
-                    //     .flat_map(|base| [(base.clone(), "**/*.move"), (base.clone(), "**/Move.toml")])
+            package_folders
+                .flat_map(|package_folder_root| {
+                    package_folder_root
+                        .source_dirs()
+                        .iter()
+                        .map(|it| (it.to_owned(), "**/*.move"))
+                        .collect::<Vec<_>>()
                 })
                 .map(|(base, pat)| FileSystemWatcher {
                     glob_pattern: lsp_types::GlobPattern::Relative(lsp_types::RelativePattern {
@@ -260,20 +255,13 @@ impl GlobalState {
                 .collect()
         } else {
             // When they're not, integrate the base to make them into absolute patterns
-            local_content_roots
-                .flat_map(|content_root| {
-                    [
-                        format!("{content_root}/sources/**/*.move"),
-                        format!("{content_root}/tests/**/*.move"),
-                        format!("{content_root}/scripts/**/*.move"),
-                        format!("{content_root}/**/Move.toml"),
-                    ]
-                    // include.into_iter().flat_map(|local_root| {
-                    //     [
-                    //         format!("{local_root}/**/*.move"),
-                    //         format!("{local_root}/**/Move.toml"),
-                    //     ]
-                    // })
+            package_folders
+                .flat_map(|folder_root| {
+                    folder_root
+                        .source_dirs()
+                        .iter()
+                        .map(|base| format!("{base}**/*.move"))
+                        .collect::<Vec<_>>()
                 })
                 .map(|glob_pattern| FileSystemWatcher {
                     glob_pattern: lsp_types::GlobPattern::String(glob_pattern),

@@ -19,6 +19,16 @@ pub struct PackageFolderRoot {
     pub is_local: bool,
 }
 
+impl PackageFolderRoot {
+    pub fn source_dirs(&self) -> Vec<AbsPathBuf> {
+        vec![
+            self.content_root.join("sources"),
+            self.content_root.join("tests"),
+            self.content_root.join("scripts"),
+        ]
+    }
+}
+
 #[derive(Clone, Eq, PartialEq)]
 pub struct AptosPackage {
     content_root: AbsPathBuf,
