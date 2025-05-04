@@ -87,13 +87,11 @@ impl ProjectFolders {
 fn folder_root_to_dir_entries(folder_root: PackageFolderRoot) -> Vec<vfs::loader::Entry> {
     let mut toml_dirs = vfs::loader::Directories::default();
     toml_dirs.extensions.push("toml".into());
-    toml_dirs.include.extend(vec![folder_root.clone().content_root]);
+    toml_dirs.include.extend(vec![folder_root.content_root.clone()]);
 
     let mut move_dirs = vfs::loader::Directories::default();
     move_dirs.extensions.push("move".into());
-    move_dirs
-        .include
-        .extend(vec![folder_root.content_root.join("sources")]);
+    move_dirs.include.extend(folder_root.source_dirs());
     vec![
         vfs::loader::Entry::Directories(toml_dirs),
         vfs::loader::Entry::Directories(move_dirs),
