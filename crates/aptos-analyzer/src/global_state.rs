@@ -15,12 +15,12 @@ use crossbeam_channel::{Receiver, Sender, unbounded};
 use ide::{Analysis, AnalysisHost, Cancellable};
 use lang::builtin_files::BUILTINS_FILE;
 use lsp_types::Url;
-use lsp_types::notification::{Notification, ShowMessage};
 use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard};
 use project_model::aptos_package::AptosPackage;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
+use lsp_types::notification::Notification;
 use vfs::{AnchoredPathBuf, FileId, VfsPath};
 
 pub(crate) struct FetchPackagesRequest {
@@ -53,6 +53,7 @@ pub(crate) struct GlobalState {
     req_queue: ReqQueue,
 
     pub(crate) task_pool: Handle<TaskPool<Task>, Receiver<Task>>,
+    pub(crate) fmt_pool: Handle<TaskPool<Task>, Receiver<Task>>,
 
     pub(crate) config: Arc<Config>,
     pub(crate) config_errors: Option<ConfigErrors>,
@@ -116,6 +117,11 @@ impl GlobalState {
             let handle = TaskPool::new_with_threads(sender, num_threads);
             Handle { handle, receiver }
         };
+        let fmt_pool = {
+            let (sender, receiver) = unbounded();
+            let handle = TaskPool::new_with_threads(sender, 1);
+            Handle { handle, receiver }
+        };
 
         let (flycheck_sender, flycheck_receiver) = unbounded();
 
@@ -139,6 +145,7 @@ impl GlobalState {
             sender,
             req_queue: ReqQueue::default(),
             task_pool,
+            fmt_pool,
             config: Arc::new(config.clone()),
             analysis_host,
             diagnostics: Default::default(),
@@ -349,7 +356,7 @@ impl GlobalStateSnapshot {
 
     pub(crate) fn show_message_to_client(&self, message_type: lsp_types::MessageType, message: String) {
         let not = lsp_server::Notification::new(
-            ShowMessage::METHOD.to_owned(),
+            lsp_types::notification::ShowMessage::METHOD.to_owned(),
             lsp_types::ShowMessageParams { typ: message_type, message },
         );
         self.send(not.into());

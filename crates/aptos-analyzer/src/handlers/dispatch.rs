@@ -4,17 +4,17 @@ use std::{
     panic, thread,
 };
 
-use ide::Cancelled;
-use lsp_server::{ExtractError, ResponseError};
-use ra_salsa::Cycle;
-use serde::{Serialize, de::DeserializeOwned};
-use stdx::thread::ThreadIntent;
-
 use crate::{
     global_state::{GlobalState, GlobalStateSnapshot},
     lsp::LspError,
     main_loop::Task,
+    version::version,
 };
+use base_db::db::DbPanicContext;
+use lsp_server::{ExtractError, ResponseError};
+use salsa::Cancelled;
+use serde::{de::DeserializeOwned, Serialize};
+use stdx::thread::ThreadIntent;
 
 /// A visitor for routing a raw JSON request to an appropriate handler function.
 ///
@@ -56,7 +56,7 @@ impl RequestDispatcher<'_> {
             tracing::info_span!("request", method = ?req.method, "request_id" = ?req.id).entered();
         tracing::debug!(?params);
         let result = {
-            let _pctx = stdx::panic_context::enter(panic_context);
+            let _pctx = DbPanicContext::enter(panic_context);
             f(self.global_state, params)
         };
         if let Ok(response) = result_to_response::<R>(req.id, result) {
@@ -86,7 +86,7 @@ impl RequestDispatcher<'_> {
         let global_state_snapshot = self.global_state.snapshot();
 
         let result = panic::catch_unwind(move || {
-            let _pctx = stdx::panic_context::enter(panic_context);
+            let _pctx = DbPanicContext::enter(panic_context);
             f(global_state_snapshot, params)
         });
 
@@ -116,7 +116,7 @@ impl RequestDispatcher<'_> {
             }
             return self;
         }
-        self.on_with_thread_intent::<true, ALLOW_RETRYING, R>(
+        self.on_with_thread_intent::<false, ALLOW_RETRYING, R>(
             ThreadIntent::Worker,
             f,
             Self::content_modified_error,
@@ -144,7 +144,7 @@ impl RequestDispatcher<'_> {
             }
             return self;
         }
-        self.on_with_thread_intent::<true, false, R>(ThreadIntent::Worker, f, on_cancelled)
+        self.on_with_thread_intent::<false, false, R>(ThreadIntent::Worker, f, on_cancelled)
     }
 
     /// Dispatches a non-latency-sensitive request onto the thread pool. When the VFS is marked not
@@ -155,7 +155,7 @@ impl RequestDispatcher<'_> {
     ) -> &mut Self
     where
         R: lsp_types::request::Request<Params = Params, Result = Params> + 'static,
-        Params: Serialize + DeserializeOwned + panic::UnwindSafe + Send + fmt::Debug,
+        Params: Serialize + DeserializeOwned + panic::UnwindSafe + Send + Debug,
     {
         if !self.global_state.vfs_done {
             if let Some((request, params, _)) = self.parse::<R>() {
@@ -164,7 +164,7 @@ impl RequestDispatcher<'_> {
             }
             return self;
         }
-        self.on_with_thread_intent::<true, ALLOW_RETRYING, R>(
+        self.on_with_thread_intent::<false, ALLOW_RETRYING, R>(
             ThreadIntent::Worker,
             f,
             Self::content_modified_error,
@@ -179,7 +179,7 @@ impl RequestDispatcher<'_> {
     ) -> &mut Self
     where
         R: lsp_types::request::Request<
-                Params: DeserializeOwned + panic::UnwindSafe + Send + fmt::Debug,
+                Params: DeserializeOwned + panic::UnwindSafe + Send + Debug,
                 Result: Serialize + Default,
             > + 'static,
     {
@@ -190,7 +190,7 @@ impl RequestDispatcher<'_> {
             }
             return self;
         }
-        self.on_with_thread_intent::<true, ALLOW_RETRYING, R>(
+        self.on_with_thread_intent::<false, ALLOW_RETRYING, R>(
             ThreadIntent::LatencySensitive,
             f,
             Self::content_modified_error,
@@ -199,14 +199,14 @@ impl RequestDispatcher<'_> {
 
     /// Formatting requests should never block on waiting a for task thread to open up, editors will wait
     /// on the response and a late formatting update might mess with the document and user.
-    /// We can't run this on the main thread though as we invoke movefmt which may take arbitrary time to complete!
+    /// We can't run this on the main thread though as we invoke rustfmt which may take arbitrary time to complete!
     pub(crate) fn on_fmt_thread<R>(
         &mut self,
         f: fn(GlobalStateSnapshot, R::Params) -> anyhow::Result<R::Result>,
     ) -> &mut Self
     where
         R: lsp_types::request::Request + 'static,
-        R::Params: DeserializeOwned + panic::UnwindSafe + Send + fmt::Debug,
+        R::Params: DeserializeOwned + panic::UnwindSafe + Send + Debug,
         R::Result: Serialize,
     {
         self.on_with_thread_intent::<true, false, R>(
@@ -228,7 +228,7 @@ impl RequestDispatcher<'_> {
         }
     }
 
-    fn on_with_thread_intent<const MAIN_POOL: bool, const ALLOW_RETRYING: bool, R>(
+    fn on_with_thread_intent<const RUSTFMT: bool, const ALLOW_RETRYING: bool, R>(
         &mut self,
         intent: ThreadIntent,
         f: fn(GlobalStateSnapshot, R::Params) -> anyhow::Result<R::Result>,
@@ -236,7 +236,7 @@ impl RequestDispatcher<'_> {
     ) -> &mut Self
     where
         R: lsp_types::request::Request + 'static,
-        R::Params: DeserializeOwned + panic::UnwindSafe + Send + fmt::Debug,
+        R::Params: DeserializeOwned + panic::UnwindSafe + Send + Debug,
         R::Result: Serialize,
     {
         let (req, params, panic_context) = match self.parse::<R>() {
@@ -248,9 +248,14 @@ impl RequestDispatcher<'_> {
         tracing::debug!(?params);
 
         let world = self.global_state.snapshot();
-        self.global_state.task_pool.handle.spawn(intent, move || {
+        if RUSTFMT {
+            &mut self.global_state.fmt_pool.handle
+        } else {
+            &mut self.global_state.task_pool.handle
+        }
+        .spawn(intent, move || {
             let result = panic::catch_unwind(move || {
-                let _pctx = stdx::panic_context::enter(panic_context);
+                let _pctx = DbPanicContext::enter(panic_context);
                 f(world, params)
             });
             match thread_result_to_response::<R>(req.id.clone(), result) {
@@ -273,13 +278,14 @@ impl RequestDispatcher<'_> {
     fn parse<R>(&mut self) -> Option<(lsp_server::Request, R::Params, String)>
     where
         R: lsp_types::request::Request,
-        R::Params: DeserializeOwned + fmt::Debug,
+        R::Params: DeserializeOwned + Debug,
     {
         let req = self.req.take_if(|it| it.method == R::METHOD)?;
         let res = crate::from_json(R::METHOD, &req.params);
         match res {
             Ok(params) => {
-                let panic_context = format!("\nrequest: {} {params:#?}", R::METHOD);
+                let panic_context =
+                    format!("\nversion: {}\nrequest: {} {params:#?}", version(), R::METHOD);
                 Some((req, params, panic_context))
             }
             Err(err) => {
@@ -305,14 +311,12 @@ impl RequestDispatcher<'_> {
 
 #[derive(Debug)]
 enum HandlerCancelledError {
-    PropagatedPanic,
-    Inner(ide::Cancelled),
+    Inner(Cancelled),
 }
 
 impl std::error::Error for HandlerCancelledError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            HandlerCancelledError::PropagatedPanic => None,
             HandlerCancelledError::Inner(cancelled) => Some(cancelled),
         }
     }
@@ -345,9 +349,6 @@ where
             if let Some(panic_message) = panic_message {
                 message.push_str(": ");
                 message.push_str(panic_message)
-            } else if let Some(cycle) = panic.downcast_ref::<Cycle>() {
-                tracing::error!("Cycle propagated out of salsa! This is a bug: {cycle:?}");
-                return Err(HandlerCancelledError::PropagatedPanic);
             } else if let Ok(cancelled) = panic.downcast::<Cancelled>() {
                 tracing::error!("Cancellation propagated out of salsa! This is a bug");
                 return Err(HandlerCancelledError::Inner(*cancelled));
@@ -422,7 +423,8 @@ impl NotificationDispatcher<'_> {
 
         tracing::debug!(?params);
 
-        let _pctx = stdx::panic_context::enter(format!("\nnotification: {}", N::METHOD));
+        let _pctx =
+            DbPanicContext::enter(format!("\nversion: {}\nnotification: {}", version(), N::METHOD));
         if let Err(e) = f(self.global_state, params) {
             tracing::error!(handler = %N::METHOD, error = %e, "notification handler failed");
         }

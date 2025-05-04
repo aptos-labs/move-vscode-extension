@@ -3,7 +3,9 @@ use crate::inputs::{
 };
 use crate::package_root::{PackageRoot, PackageRootId};
 use salsa::Durability;
-use std::sync::Arc;
+use std::cell::RefCell;
+use std::panic;
+use std::sync::{Arc, Once};
 use syntax::{ast, Parse, SyntaxError};
 use vfs::FileId;
 
@@ -75,4 +77,50 @@ fn parse_errors(db: &dyn ParseDatabase, file_id: InternedFileId) -> Option<&[Syn
         }
     }
     parse_errors(db, file_id).as_ref().map(|it| &**it)
+}
+
+#[must_use]
+#[non_exhaustive]
+pub struct DbPanicContext;
+
+impl Drop for DbPanicContext {
+    fn drop(&mut self) {
+        Self::with_ctx(|ctx| assert!(ctx.pop().is_some()));
+    }
+}
+
+impl DbPanicContext {
+    pub fn enter(frame: String) -> DbPanicContext {
+        #[expect(clippy::print_stderr, reason = "already panicking anyway")]
+        fn set_hook() {
+            let default_hook = panic::take_hook();
+            panic::set_hook(Box::new(move |panic_info| {
+                default_hook(panic_info);
+                if let Some(backtrace) = salsa::Backtrace::capture() {
+                    eprintln!("{backtrace:#}");
+                }
+                DbPanicContext::with_ctx(|ctx| {
+                    if !ctx.is_empty() {
+                        eprintln!("additional context:");
+                        for (idx, frame) in ctx.iter().enumerate() {
+                            eprintln!("{idx:>4}: {frame}\n");
+                        }
+                    }
+                });
+            }));
+        }
+
+        static SET_HOOK: Once = Once::new();
+        SET_HOOK.call_once(set_hook);
+
+        Self::with_ctx(|ctx| ctx.push(frame));
+        DbPanicContext
+    }
+
+    fn with_ctx(f: impl FnOnce(&mut Vec<String>)) {
+        thread_local! {
+            static CTX: RefCell<Vec<String>> = const { RefCell::new(Vec::new()) };
+        }
+        CTX.with(|ctx| f(&mut ctx.borrow_mut()));
+    }
 }
