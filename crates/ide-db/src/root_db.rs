@@ -3,7 +3,7 @@ use base_db::inputs::{
     PackageRootInput,
 };
 use base_db::package_root::{PackageRoot, PackageRootId};
-use base_db::{ParseDatabase2, SourceDatabase2};
+use base_db::{ParseDatabase, SourceDatabase};
 use line_index::LineIndex;
 use salsa::Durability;
 use std::mem::ManuallyDrop;
@@ -13,7 +13,7 @@ use std::{fmt, iter};
 use vfs::FileId;
 
 #[salsa::db]
-pub struct RootDatabase2 {
+pub struct RootDatabase {
     // We use `ManuallyDrop` here because every codegen unit that contains a
     // `&RootDatabase -> &dyn OtherDatabase` cast will instantiate its drop glue in the vtable,
     // which duplicates `Weak::drop` and `Arc::drop` tens of thousands of times, which makes
@@ -23,20 +23,20 @@ pub struct RootDatabase2 {
     builtins_file_id: Option<InternedFileId>,
 }
 
-impl std::panic::RefUnwindSafe for RootDatabase2 {}
+impl std::panic::RefUnwindSafe for RootDatabase {}
 
 #[salsa::db]
-impl salsa::Database for RootDatabase2 {
+impl salsa::Database for RootDatabase {
     fn salsa_event(&self, _event: &dyn Fn() -> salsa::Event) {}
 }
 
-impl Drop for RootDatabase2 {
+impl Drop for RootDatabase {
     fn drop(&mut self) {
         unsafe { ManuallyDrop::drop(&mut self.storage) };
     }
 }
 
-impl Clone for RootDatabase2 {
+impl Clone for RootDatabase {
     fn clone(&self) -> Self {
         Self {
             storage: self.storage.clone(),
@@ -46,14 +46,14 @@ impl Clone for RootDatabase2 {
     }
 }
 
-impl fmt::Debug for RootDatabase2 {
+impl fmt::Debug for RootDatabase {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("RootDatabase").finish()
     }
 }
 
 #[salsa::db]
-impl SourceDatabase2 for RootDatabase2 {
+impl SourceDatabase for RootDatabase {
     fn file_text(&self, file_id: FileId) -> FileText {
         self.files.file_text(file_id)
     }
@@ -133,25 +133,26 @@ impl SourceDatabase2 for RootDatabase2 {
     }
 }
 
-impl Default for RootDatabase2 {
-    fn default() -> RootDatabase2 {
-        RootDatabase2::new()
+impl Default for RootDatabase {
+    fn default() -> RootDatabase {
+        RootDatabase::new()
     }
 }
 
-impl RootDatabase2 {
-    pub fn new() -> RootDatabase2 {
-        let db = RootDatabase2 {
+impl RootDatabase {
+    pub fn new() -> RootDatabase {
+        let db = RootDatabase {
             storage: ManuallyDrop::new(salsa::Storage::default()),
             files: Default::default(),
             builtins_file_id: None,
-            // crates_map: Default::default(),
         };
+
         // This needs to be here otherwise `CrateGraphBuilder` will panic.
         // db.set_all_crates(Arc::new(Box::new([])));
         // CrateGraphBuilder::default().set_in_db(&mut db);
         // db.set_local_roots_with_durability(Default::default(), Durability::MEDIUM);
         // db.set_library_roots_with_durability(Default::default(), Durability::MEDIUM);
+
         db
     }
 
@@ -165,11 +166,11 @@ impl RootDatabase2 {
 }
 
 #[query_group_macro::query_group]
-pub trait LineIndexDatabase2: ParseDatabase2 {
+pub trait LineIndexDatabase: ParseDatabase {
     fn line_index(&self, file_id: FileId) -> Arc<LineIndex>;
 }
 
-fn line_index(db: &dyn LineIndexDatabase2, file_id: FileId) -> Arc<LineIndex> {
+fn line_index(db: &dyn LineIndexDatabase, file_id: FileId) -> Arc<LineIndex> {
     let text = db.file_text(file_id).text(db);
     Arc::new(LineIndex::new(&text))
 }

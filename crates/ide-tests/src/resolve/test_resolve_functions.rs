@@ -1412,11 +1412,9 @@ module 0x1::main {
 fn test_resolve_script_function() {
     check_resolve(
         r#"
-address 0x1 {
-module Original {
+module 0x1::Original {
     public(script) fun call() {}
                      //X
-}
 }
 
 script {

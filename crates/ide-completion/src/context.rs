@@ -1,6 +1,7 @@
 use crate::completions::item_list::ItemListKind;
 use crate::config::CompletionConfig;
-use base_db::SourceDatabase;
+use base_db::{ParseDatabase, SourceDatabase};
+use base_db::inputs::InternFileId;
 use ide_db::RootDatabase;
 use lang::Semantics;
 use syntax::SyntaxKind::*;
@@ -74,7 +75,7 @@ impl<'a> CompletionContext<'a> {
         // to determine context, though the original_file will be used for
         // actual completion.
         let fake_file = {
-            let parse = db.parse(file_id);
+            let parse = db.parse(file_id.intern(db));
             parse.reparse(TextRange::empty(offset), COMPLETION_MARKER).tree()
         };
         let fake_offset = offset + TextSize::of(COMPLETION_MARKER);

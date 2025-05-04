@@ -1,4 +1,4 @@
-use crate::db::HirDatabase;
+use crate::HirDatabase;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::has_type_params_ext::GenericItemExt;

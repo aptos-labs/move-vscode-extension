@@ -1,4 +1,4 @@
-use crate::db::HirDatabase;
+use crate::HirDatabase;
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres::ResolveReference;
 use crate::nameres::name_resolution::{
@@ -20,20 +20,22 @@ use syntax::files::{InFile, InFileExt, OptionInFileExt};
 use syntax::{AstNode, ast};
 use vfs::FileId;
 
+#[tracing::instrument(level = "debug", skip(db, ctx, path_kind, expected_type))]
 pub fn get_path_resolve_variants_with_expected_type(
     db: &dyn HirDatabase,
     ctx: &ResolutionContext,
     path_kind: PathKind,
     expected_type: Option<Ty>,
 ) -> Vec<ScopeEntry> {
-    let mut expected_type = expected_type;
+    tracing::debug!(?path_kind);
 
+    let mut expected_type = expected_type;
     // if path qualifier is enum, then the expected type is that enum
     if let PathKind::Qualified { qualifier, kind, .. } = path_kind.clone() {
         match kind {
             QualifiedKind::ModuleItemOrEnumVariant | QualifiedKind::FQModuleItem => {
                 let _p =
-                    tracing::debug_span!("refine expected_type with maybe enum qualifier").entered();
+                    tracing::debug_span!("try refining expected_type").entered();
                 let enum_item = qualifier
                     .reference()
                     .in_file(ctx.path.file_id)
@@ -41,6 +43,7 @@ pub fn get_path_resolve_variants_with_expected_type(
                     .and_then(|it| it.cast_into::<ast::Enum>(db));
                 if let Some(enum_item) = enum_item {
                     expected_type = Some(Ty::new_ty_adt(enum_item.map_into()));
+                    tracing::debug!("refined type {:?}", expected_type);
                 }
             }
             _ => (),
@@ -96,7 +99,7 @@ pub fn get_method_resolve_variants(
     current_file_id: FileId,
     msl: bool,
 ) -> Vec<ScopeEntry> {
-    let package_id = db.file_package_root(current_file_id);
+    let package_id = db.file_package_root(current_file_id).data(db);
     let Some(InFile {
         file_id,
         value: receiver_item_module,
@@ -133,7 +136,7 @@ pub fn get_method_resolve_variants(
 
 #[tracing::instrument(
     level = "debug",
-    skip(db, path),
+    skip(db, path, expected_type),
     fields(path = ?path.syntax_text(), file_id = ?path.file_id))]
 pub fn resolve_path(
     db: &dyn HirDatabase,
@@ -148,7 +151,6 @@ pub fn resolve_path(
     let Some(path_kind) = path_kind(path.clone().value, false) else {
         return vec![];
     };
-    tracing::debug!(?path_kind);
 
     let ctx = ResolutionContext { path, is_completion: false };
     let entries = get_path_resolve_variants_with_expected_type(db, &ctx, path_kind, expected_type);
@@ -218,6 +220,6 @@ impl ResolutionContext {
     }
 
     pub fn package_root_id(&self, db: &dyn HirDatabase) -> PackageRootId {
-        db.file_package_root(self.path.file_id)
+        db.file_package_root(self.path.file_id).data(db)
     }
 }

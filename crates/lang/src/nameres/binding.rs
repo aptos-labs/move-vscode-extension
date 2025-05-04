@@ -1,4 +1,4 @@
-use crate::db::HirDatabase;
+use crate::HirDatabase;
 use crate::nameres::name_resolution::get_entries_from_walking_scopes;
 use crate::nameres::namespaces::{ENUM_VARIANTS, TYPES_N_ENUMS_N_ENUM_VARIANTS_N_MODULES};
 use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt, VecExt};

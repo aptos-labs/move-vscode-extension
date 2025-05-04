@@ -1,4 +1,4 @@
-use crate::db::HirDatabase;
+use crate::HirDatabase;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::nameres::is_visible::is_visible_in_context;
 use crate::nameres::namespaces::{Ns, NsSet, named_item_ns};

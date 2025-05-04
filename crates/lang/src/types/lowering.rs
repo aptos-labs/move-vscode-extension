@@ -1,6 +1,6 @@
 mod type_args;
 
-use crate::db::HirDatabase;
+use crate::HirDatabase;
 use crate::nameres::ResolveReference;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;

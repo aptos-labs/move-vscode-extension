@@ -2,7 +2,7 @@ pub(crate) mod ast_walker;
 pub(crate) mod combine_types;
 pub(crate) mod inference_result;
 
-use crate::db::HirDatabase;
+use crate::HirDatabase;
 use crate::nameres::binding::resolve_ident_pat_with_expected_type;
 use crate::nameres::path_resolution;
 use crate::nameres::scope::{ScopeEntry, VecExt};
@@ -24,7 +24,6 @@ use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 use vfs::FileId;
 
-#[derive(Debug)]
 pub struct InferenceCtx<'db> {
     pub db: &'db dyn HirDatabase,
     pub file_id: FileId,

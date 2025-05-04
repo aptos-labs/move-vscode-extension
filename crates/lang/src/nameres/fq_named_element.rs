@@ -1,4 +1,4 @@
-use crate::db::HirDatabase;
+use crate::HirDatabase;
 use crate::nameres::address::Address;
 use crate::node_ext::ModuleLangExt;
 use crate::node_ext::item::ModuleItemExt;

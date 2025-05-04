@@ -1,4 +1,4 @@
-use crate::db::HirDatabase;
+use crate::HirDatabase;
 use crate::loc::SyntaxLoc;
 use crate::nameres::fq_named_element::ItemFQNameOwner;
 use crate::types::ty::Ty;

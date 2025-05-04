@@ -11,6 +11,8 @@ enumset = "1.1.5"
 itertools = { workspace = true }
 ra_salsa.workspace = true
 tracing.workspace = true
+salsa.workspace = true
+query-group-macro.workspace = true
 
 stdx = { workspace = true }
 vfs = { workspace = true }
