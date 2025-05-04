@@ -2,6 +2,11 @@
 
 pub mod change;
 pub mod package_root;
+pub mod inputs;
+pub mod new_db;
+
+pub use crate::new_db::SourceDatabase2;
+pub use crate::new_db::ParseDatabase2;
 
 use crate::package_root::{PackageRoot, PackageRootId};
 use std::iter;
