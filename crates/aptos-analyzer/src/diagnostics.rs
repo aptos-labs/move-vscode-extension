@@ -8,6 +8,7 @@ use std::mem;
 use stdx::iter_eq_by;
 use stdx::itertools::Itertools;
 use vfs::FileId;
+use base_db::db::DbPanicContext;
 
 pub(crate) type DiagnosticsGeneration = usize;
 
@@ -154,7 +155,7 @@ pub(crate) fn fetch_native_diagnostics(
     kind: NativeDiagnosticsFetchKind,
 ) -> Vec<(FileId, Vec<lsp_types::Diagnostic>)> {
     let _p = tracing::info_span!("fetch_native_diagnostics").entered();
-    let _ctx = stdx::panic_context::enter("fetch_native_diagnostics".to_owned());
+    let _ctx = DbPanicContext::enter("fetch_native_diagnostics".to_owned());
 
     // the diagnostics produced may point to different files not requested by the concrete request,
     // put those into here and filter later

@@ -102,7 +102,8 @@ dependencies = [
  "paths",
  "process-wrap",
  "project-model",
- "salsa 0.0.0",
+ "salsa",
+ "salsa-macros",
  "serde",
  "serde_derive",
  "serde_json",
@@ -138,9 +139,8 @@ version = "0.1.0"
 dependencies = [
  "dashmap",
  "query-group-macro",
- "salsa 0.0.0",
- "salsa 0.21.1",
- "salsa-macros 0.21.1",
+ "salsa",
+ "salsa-macros",
  "syntax",
  "tracing",
  "vfs",
@@ -240,7 +240,7 @@ version = "4.5.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09176aae279615badda0765c0c0b3f6ed53f4709118af73cf4655d85d1530cd7"
 dependencies = [
- "heck 0.5.0",
+ "heck",
  "proc-macro2",
  "quote",
  "syn",
@@ -616,12 +616,6 @@ dependencies = [
 
 [[package]]
 name = "heck"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
-
-[[package]]
-name = "heck"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
@@ -761,14 +755,13 @@ dependencies = [
  "ide-completion",
  "ide-db",
  "ide-diagnostics",
- "itertools 0.14.0",
+ "itertools",
  "lang",
  "line-index",
  "query-group-macro",
  "regex",
- "salsa 0.0.0",
- "salsa 0.21.1",
- "salsa-macros 0.21.1",
+ "salsa",
+ "salsa-macros",
  "stdx",
  "syntax",
  "tracing",
@@ -794,13 +787,12 @@ dependencies = [
  "base-db",
  "dashmap",
  "indexmap",
- "itertools 0.14.0",
+ "itertools",
  "lang",
  "line-index",
  "query-group-macro",
- "salsa 0.0.0",
- "salsa 0.21.1",
- "salsa-macros 0.21.1",
+ "salsa",
+ "salsa-macros",
  "stdx",
  "syntax",
  "tracing",
@@ -905,15 +897,6 @@ checksum = "7943c866cc5cd64cbc25b2e01621d07fa8eb2a1a23160ee81ce38704e97b8ecf"
 
 [[package]]
 name = "itertools"
-version = "0.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba291022dbbd398a455acf126c1e341954079855bc60dfdda641363bd6922569"
-dependencies = [
- "either",
-]
-
-[[package]]
-name = "itertools"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
@@ -959,11 +942,11 @@ version = "0.1.0"
 dependencies = [
  "base-db",
  "enumset",
- "itertools 0.14.0",
+ "itertools",
  "parser",
  "query-group-macro",
- "salsa 0.0.0",
- "salsa 0.21.1",
+ "salsa",
+ "salsa-macros",
  "stdx",
  "syntax",
  "tracing",
@@ -1222,12 +1205,6 @@ name = "once_cell"
 version = "1.21.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
-
-[[package]]
-name = "oorandom"
-version = "11.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6790f58c7ff633d8771f42965289203411a5e5c68388703c06e14f24770b41e"
 
 [[package]]
 name = "option-ext"
@@ -1551,23 +1528,6 @@ checksum = "28d3b2b1366ec20994f1fd18c3c594f05c5dd4bc44d8bb0c1c632c8d6829481f"
 
 [[package]]
 name = "salsa"
-version = "0.0.0"
-source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=1f23156f51e6a064becb1103eac078c2c9d14a80#1f23156f51e6a064becb1103eac078c2c9d14a80"
-dependencies = [
- "indexmap",
- "itertools 0.12.1",
- "lock_api",
- "oorandom",
- "parking_lot",
- "rustc-hash 2.1.1",
- "salsa-macros 0.0.0",
- "smallvec",
- "tracing",
- "triomphe",
-]
-
-[[package]]
-name = "salsa"
 version = "0.21.1"
 source = "git+https://github.com/mkurnikov/salsa.git?rev=769a0812161d0e42fd5b9b6efd8eff78042451d7#769a0812161d0e42fd5b9b6efd8eff78042451d7"
 dependencies = [
@@ -1582,7 +1542,7 @@ dependencies = [
  "rayon",
  "rustc-hash 2.1.1",
  "salsa-macro-rules",
- "salsa-macros 0.21.1",
+ "salsa-macros",
  "smallvec",
  "thin-vec",
  "tracing",
@@ -1595,21 +1555,10 @@ source = "git+https://github.com/mkurnikov/salsa.git?rev=769a0812161d0e42fd5b9b6
 
 [[package]]
 name = "salsa-macros"
-version = "0.0.0"
-source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=1f23156f51e6a064becb1103eac078c2c9d14a80#1f23156f51e6a064becb1103eac078c2c9d14a80"
-dependencies = [
- "heck 0.4.1",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "salsa-macros"
 version = "0.21.1"
 source = "git+https://github.com/mkurnikov/salsa.git?rev=769a0812161d0e42fd5b9b6efd8eff78042451d7#769a0812161d0e42fd5b9b6efd8eff78042451d7"
 dependencies = [
- "heck 0.5.0",
+ "heck",
  "proc-macro2",
  "quote",
  "syn",
@@ -1732,7 +1681,7 @@ version = "0.0.0"
 source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=6568e8f12d19b53fbb5a1c2e1116dae3ae61f912#6568e8f12d19b53fbb5a1c2e1116dae3ae61f912"
 dependencies = [
  "crossbeam-channel",
- "itertools 0.14.0",
+ "itertools",
  "jod-thread",
  "libc",
  "miow",
@@ -1774,7 +1723,7 @@ version = "0.1.0"
 dependencies = [
  "datatest-stable",
  "either",
- "itertools 0.14.0",
+ "itertools",
  "parser",
  "pretty_assertions",
  "rowan",
@@ -1975,12 +1924,6 @@ dependencies = [
  "tracing-log",
  "tracing-subscriber",
 ]
-
-[[package]]
-name = "triomphe"
-version = "0.1.14"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef8f7726da4807b58ea5c96fdc122f80702030edc33b35aff9190a51148ccc85"
 
 [[package]]
 name = "ungrammar"
@@ -2503,7 +2446,7 @@ dependencies = [
  "check_keyword",
  "clap",
  "flate2",
- "itertools 0.14.0",
+ "itertools",
  "proc-macro2",
  "quote",
  "stdx",

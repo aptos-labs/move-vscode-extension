@@ -9,7 +9,6 @@ license.workspace = true
 dissimilar = "1.0.9"
 regex = "1.11.1"
 
-ra_salsa = { workspace = true }
 vfs = { workspace = true }
 line-index = { workspace = true }
 tracing = { workspace = true }

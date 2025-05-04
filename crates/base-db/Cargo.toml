@@ -7,7 +7,6 @@ license.workspace = true
 
 [dependencies]
 tracing = { workspace = true }
-ra_salsa = { workspace = true }
 
 dashmap.workspace = true
 query-group-macro.workspace = true

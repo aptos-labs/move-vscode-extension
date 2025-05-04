@@ -17,7 +17,6 @@ query-group-macro.workspace = true
 salsa.workspace = true
 salsa-macros.workspace = true
 
-ra_salsa = { workspace = true }
 vfs = { workspace = true }
 stdx.workspace = true
 

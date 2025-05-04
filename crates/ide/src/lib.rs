@@ -5,7 +5,6 @@ use base_db::{ParseDatabase, SourceDatabase};
 use ide_completion::item::CompletionItem;
 use ide_db::{LineIndexDatabase, RootDatabase};
 use line_index::{LineCol, LineIndex};
-use ra_salsa::ParallelDatabase;
 use std::sync::Arc;
 use syntax::{SourceFile, TextRange, TextSize};
 use vfs::file_set::FileSet;
@@ -31,7 +30,7 @@ pub use ide_db::assists::{Assist, AssistKind, AssistResolveStrategy};
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 use lang::builtin_files::BUILTINS_FILE;
-pub use ra_salsa::Cancelled;
+pub use salsa::Cancelled;
 use syntax::files::{FilePosition, FileRange};
 
 pub type Cancellable<T> = Result<T, Cancelled>;
