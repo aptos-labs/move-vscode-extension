@@ -20,12 +20,12 @@ pub(crate) enum InvocationStrategy {
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Eq)]
-pub(crate) struct AptosOptions {
+pub(crate) struct AptosCliOptions {
     pub(crate) extra_args: Vec<String>,
     pub(crate) extra_env: HashMap<String, String>,
 }
 
-impl AptosOptions {
+impl AptosCliOptions {
     pub(crate) fn apply_on_command(&self, cmd: &mut Command) {
         cmd.envs(&self.extra_env);
     }
@@ -33,14 +33,20 @@ impl AptosOptions {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct FlycheckConfig {
+    pub(crate) enabled: bool,
     aptos_cli: Utf8PathBuf,
     command: String,
-    options: AptosOptions,
+    options: AptosCliOptions,
 }
 
 impl FlycheckConfig {
-    pub fn new(aptos_cli: Utf8PathBuf, command: String, options: AptosOptions) -> Self {
-        FlycheckConfig { aptos_cli, command, options }
+    pub fn new(enabled: bool, aptos_cli: Utf8PathBuf, command: &str, options: AptosCliOptions) -> Self {
+        FlycheckConfig {
+            enabled,
+            aptos_cli,
+            command: command.to_string(),
+            options,
+        }
     }
 
     pub fn command(&self) -> String {
@@ -327,7 +333,12 @@ impl FlycheckActor {
     /// has specified a custom command with placeholders that we cannot fill,
     /// return None.
     fn flycheck_command(&self) -> Command {
-        let FlycheckConfig { aptos_cli, command, options } = &self.config;
+        let FlycheckConfig {
+            enabled: _,
+            aptos_cli,
+            command,
+            options,
+        } = &self.config;
 
         let mut cmd = toolchain::command(aptos_cli, &*self.root);
 

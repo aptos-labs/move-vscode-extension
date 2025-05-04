@@ -7,6 +7,7 @@ use crate::project_folders::ProjectFolders;
 use crate::{Config, lsp_ext};
 use base_db::change::{DepGraph, FileChanges};
 use lsp_types::FileSystemWatcher;
+use project_model::DiscoveredManifest;
 use project_model::aptos_package::AptosPackage;
 use std::fmt::Formatter;
 use std::sync::Arc;
@@ -15,6 +16,7 @@ use stdx::format_to;
 use stdx::itertools::Itertools;
 use stdx::thread::ThreadIntent;
 use vfs::AbsPath;
+use project_model::manifest_path::ManifestPath;
 
 #[derive(Debug)]
 pub(crate) enum FetchPackagesProgress {
@@ -106,7 +108,7 @@ impl GlobalState {
         }
         if self.fetch_workspace_error().is_err() {
             status.health |= lsp_ext::Health::Error;
-            message.push_str("Failed to load Aptos packages.");
+            message.push_str("Failed to load some of the Aptos packages.");
             message.push_str("\n\n");
         }
 
@@ -122,8 +124,20 @@ impl GlobalState {
     #[tracing::instrument(level = "info", skip(self))]
     pub(crate) fn fetch_packages(&mut self, _cause: Cause, force_reload_deps: bool) {
         let discovered_manifests = self.config.discovered_manifests();
+        {
+            let mut with_resolve = vec![];
+            let mut without_resolve = vec![];
+            for (manifest, resolve) in discovered_manifests.clone() {
+                if resolve {
+                    with_resolve.push(manifest);
+                } else {
+                    without_resolve.push(manifest);
+                }
+            }
+            tracing::info!(manifests_with_resolution = ?with_resolve);
+            tracing::info!(manifests_without_deps = ?without_resolve);
+        }
         tracing::info!("schedule to the worker thread pool");
-        tracing::info!(?discovered_manifests);
         self.task_pool
             .handle
             .spawn_with_sender(ThreadIntent::Worker, move |sender| {
@@ -133,9 +147,9 @@ impl GlobalState {
                     .unwrap();
                 let discovered_packages = discovered_manifests
                     .iter()
-                    .map(|manifest_path| {
+                    .map(|(manifest_path, resolve_deps)| {
                         tracing::debug!(path = %manifest_path, "loading workspace from manifest");
-                        AptosPackage::load(manifest_path)
+                        AptosPackage::load(manifest_path, *resolve_deps)
                     })
                     .collect::<Vec<_>>();
 
@@ -374,13 +388,18 @@ impl GlobalState {
 
     fn reload_flycheck(&mut self) {
         let _p = tracing::info_span!("GlobalState::reload_flycheck").entered();
-        let config = self.config.flycheck_config(/*None*/);
+        let config = self.config.flycheck_config();
         if config.is_none() {
             self.flycheck = Arc::from_iter([]);
             return;
         }
 
         let config = config.unwrap();
+        if !config.enabled {
+            tracing::info!("stop reloading flycheck as it's disabled in settings");
+            return;
+        }
+
         let sender = self.flycheck_sender.clone();
         self.flycheck = self
             .main_packages

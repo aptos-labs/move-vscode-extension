@@ -11,10 +11,11 @@ use std::sync::OnceLock;
 use vfs::AbsPathBuf;
 
 use crate::config::options::{DefaultConfigData, FullConfigInput};
-use crate::flycheck::{AptosOptions, FlycheckConfig};
+use crate::flycheck::{AptosCliOptions, FlycheckConfig};
 use ide_db::assist_config::AssistConfig;
 use ide_diagnostics::config::DiagnosticsConfig;
-use project_model::manifest_path::ManifestPath;
+use project_model::DiscoveredManifest;
+use project_model::manifest_path::{ManifestPath};
 use serde_derive::{Deserialize, Serialize};
 use std::sync::Arc;
 use stdx::itertools::Itertools;
@@ -24,7 +25,7 @@ pub struct Config {
     /// Projects that have a Move.toml in a
     /// parent directory, so we can discover them by walking the
     /// file system.
-    discovered_manifests_from_filesystem: Vec<ManifestPath>,
+    discovered_manifests_from_filesystem: Vec<DiscoveredManifest>,
 
     /// The workspace roots as registered by the LSP client
     package_roots: Vec<AbsPathBuf>,
@@ -128,8 +129,8 @@ impl Config {
     }
 
     pub fn rediscover_packages(&mut self) {
-        let discovered_manifests = ManifestPath::discover_all(&self.package_roots);
-        tracing::info!("discovered manifests: {:?}", discovered_manifests);
+        let discovered_manifests = DiscoveredManifest::discover_all(&self.package_roots);
+        // tracing::info!("discovered manifests: {:?}", discovered_manifests);
         if discovered_manifests.is_empty() {
             tracing::error!("failed to find any manifests in {:?}", &self.package_roots);
         }
@@ -243,11 +244,16 @@ impl Config {
 
     pub(crate) fn flycheck_config(&self) -> Option<FlycheckConfig> {
         let cli_path = self.aptos_cli_path()?;
-        let options = AptosOptions {
+        let options = AptosCliOptions {
             extra_args: self.extra_args().clone(),
-            ..AptosOptions::default()
+            ..AptosCliOptions::default()
         };
-        Some(FlycheckConfig::new(cli_path, "compile".to_string(), options))
+        Some(FlycheckConfig::new(
+            self.check_on_save(),
+            cli_path,
+            "compile",
+            options,
+        ))
     }
 
     pub fn check_on_save(&self) -> bool {
@@ -270,7 +276,7 @@ impl Config {
         })
     }
 
-    pub fn discovered_manifests(&self) -> Vec<ManifestPath> {
+    pub fn discovered_manifests(&self) -> Vec<(ManifestPath, bool)> {
         // let exclude_dirs: Vec<_> =
         //     self.files_excludeDirs().iter().map(|p| self.root_path.join(p)).collect();
         // let exclude_dirs = vec![];
@@ -280,13 +286,16 @@ impl Config {
             // if exclude_dirs.iter().any(|p| manifest_path.starts_with(p)) {
             //     continue;
             // }
-            let buf: Utf8PathBuf = manifest_from_fs.to_path_buf().into();
-            manifests.push(buf);
+            let buf: Utf8PathBuf = manifest_from_fs.file.to_path_buf().into();
+            let resolve_deps = manifest_from_fs.resolve_deps;
+            manifests.push((buf, resolve_deps));
         }
 
         manifests
             .iter()
-            .map(|manifest_buf| ManifestPath::new(self.root_path.join(manifest_buf)))
+            .map(|(manifest_buf, resolve_deps)| {
+                (ManifestPath::new(self.root_path.join(manifest_buf)), *resolve_deps)
+            })
             .collect()
     }
 

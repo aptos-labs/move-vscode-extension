@@ -27,6 +27,15 @@ impl From<ManifestPath> for AbsPathBuf {
 }
 
 impl ManifestPath {
+    pub fn new(move_toml_file: AbsPathBuf) -> ManifestPath {
+        assert_eq!(
+            move_toml_file.file_name().unwrap_or_default(),
+            "Move.toml",
+            "project root must point to a Move.toml file: {move_toml_file}"
+        );
+        Self { file: move_toml_file }
+    }
+
     // Shadow `parent` from `Deref`.
     pub fn root(&self) -> AbsPathBuf {
         self.file.parent().unwrap().to_path_buf()

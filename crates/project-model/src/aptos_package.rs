@@ -21,12 +21,23 @@ pub struct PackageFolderRoot {
 }
 
 impl PackageFolderRoot {
+    pub fn new(content_root: AbsPathBuf, local: bool) -> Self {
+        PackageFolderRoot {
+            content_root,
+            is_local: local,
+        }
+    }
+
     pub fn source_dirs(&self) -> Vec<AbsPathBuf> {
         vec![
             self.content_root.join("sources"),
             self.content_root.join("tests"),
             self.content_root.join("scripts"),
         ]
+    }
+
+    pub fn build_dir(&self) -> AbsPathBuf {
+        self.content_root.join("build")
     }
 }
 
@@ -48,27 +59,18 @@ impl fmt::Debug for AptosPackage {
 }
 
 impl AptosPackage {
-    pub fn load(root_manifest: &ManifestPath) -> anyhow::Result<AptosPackage> {
+    pub fn load(root_manifest: &ManifestPath, resolve_deps: bool) -> anyhow::Result<AptosPackage> {
         let _p =
             tracing::info_span!("load package at", "{:?}", root_manifest.canonical_root()).entered();
         let mut visited = HashSet::new();
-        AptosPackage::load_inner(root_manifest, false, &mut visited)
+        AptosPackage::load_inner(root_manifest, false, resolve_deps, &mut visited)
             .with_context(|| format!("Failed to load the project at {root_manifest}"))
-    }
-
-    fn load_dependency(
-        root_manifest: &ManifestPath,
-        is_git: bool,
-        visited: &mut HashSet<AbsPathBuf>,
-    ) -> anyhow::Result<AptosPackage> {
-        let _p =
-            tracing::info_span!("load dep package at", "{:?}", root_manifest.canonical_root()).entered();
-        AptosPackage::load_inner(root_manifest, is_git, visited)
     }
 
     fn load_inner(
         manifest_path: &ManifestPath,
         is_git: bool,
+        resolve_deps: bool,
         visited: &mut HashSet<AbsPathBuf>,
     ) -> anyhow::Result<Self> {
         let file_contents = fs::read_to_string(&manifest_path)
@@ -80,31 +82,51 @@ impl AptosPackage {
 
         let mut dep_roots = vec![];
         let mut dep_manifests = vec![];
-        for toml_dep in move_toml.dependencies.clone() {
-            if let Some(dep_root) = toml_dep.dep_root(&package_root) {
-                let move_toml_path = dep_root.join("Move.toml");
+        if resolve_deps {
+            for toml_dep in move_toml.dependencies.clone() {
+                if let Some(dep_root) = toml_dep.dep_root(&package_root) {
+                    let move_toml_path = dep_root.join("Move.toml");
 
-                if visited.contains(&move_toml_path) {
-                    // visited already
-                    continue;
-                }
-                visited.insert(move_toml_path.clone());
+                    let canonical_path = fs::canonicalize(&move_toml_path);
+                    match canonical_path {
+                        Ok(path) => {
+                            let path = AbsPathBuf::assert_utf8(path);
+                            if visited.contains(&path) {
+                                // visited already, circular dependency
+                                tracing::error!("circular dependency in {:?}", path);
+                                break;
+                            }
+                            visited.insert(path);
+                        }
+                        Err(_) => {
+                            tracing::error!(
+                                "dependency resolution error: cannot canonicalize path {:?}",
+                                move_toml_path
+                            );
+                            break;
+                        }
+                    }
 
-                if fs::exists(&move_toml_path).is_ok_and(|it| it) {
-                    let manifest_path = ManifestPath::new(move_toml_path);
-                    dep_roots.push(manifest_path.canonical_root());
-                    let is_git = matches!(toml_dep, MoveTomlDependency::Git(_));
-                    dep_manifests.push((manifest_path, is_git));
-                } else {
-                    tracing::warn!(?move_toml_path, "invalid dependency: manifest does not exist");
+                    if fs::exists(&move_toml_path).is_ok_and(|it| it) {
+                        let manifest_path = ManifestPath::new(move_toml_path);
+                        dep_roots.push(manifest_path.canonical_root());
+                        let is_git = matches!(toml_dep, MoveTomlDependency::Git(_));
+                        dep_manifests.push((manifest_path, is_git));
+                    } else {
+                        tracing::warn!(?move_toml_path, "invalid dependency: manifest does not exist");
+                    }
                 }
             }
+            tracing::info!("dep_roots = {:#?}", dep_roots);
         }
-        tracing::info!("dep_roots = {:#?}", dep_roots);
 
         let deps = dep_manifests
             .into_iter()
-            .filter_map(|(it, is_git)| AptosPackage::load_dependency(&it, is_git, visited).ok())
+            .filter_map(|(manifest, is_git)| {
+                let _p = tracing::info_span!("load dep package at", "{:?}", manifest.canonical_root())
+                    .entered();
+                AptosPackage::load_inner(&manifest, is_git, resolve_deps, visited).ok()
+            })
             .collect();
 
         Ok(AptosPackage {
