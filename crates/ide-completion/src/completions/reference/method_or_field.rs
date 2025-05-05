@@ -2,6 +2,7 @@ use crate::completions::Completions;
 use crate::context::CompletionContext;
 use crate::render::function::{FunctionKind, render_function};
 use crate::render::render_named_item;
+use lang::db::NodeInferenceExt;
 use lang::nameres::path_resolution::get_method_resolve_variants;
 use lang::types::has_type_params_ext::GenericItemExt;
 use lang::types::inference::InferenceCtx;
@@ -11,7 +12,6 @@ use lang::types::ty;
 use lang::types::ty::Ty;
 use lang::types::ty::adt::TyAdt;
 use std::cell::RefCell;
-use lang::db::NodeInferenceExt;
 use syntax::ast;
 use syntax::files::{InFile, InFileExt};
 

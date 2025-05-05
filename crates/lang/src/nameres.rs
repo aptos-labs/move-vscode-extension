@@ -145,5 +145,5 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
 
 fn get_named_field_entries(fields_owner: InFile<ast::AnyFieldsOwner>) -> Vec<ScopeEntry> {
     let InFile { file_id, value: fields_owner } = fields_owner;
-    fields_owner.named_fields().to_in_file_entries(file_id)
+    fields_owner.named_fields().to_entries(file_id)
 }

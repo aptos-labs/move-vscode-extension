@@ -26,7 +26,6 @@ use vfs::loader::LoadingProgress;
 use vfs::{FileId, VfsPath};
 
 pub fn main_loop(config: Config, connection: Connection) -> anyhow::Result<()> {
-
     // Windows scheduler implements priority boosts: if thread waits for an
     // event (like a condvar), and event fires, priority of the thread is
     // temporary bumped. This optimization backfires in our case: each time the

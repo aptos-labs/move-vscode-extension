@@ -3,12 +3,12 @@ pub(crate) mod to_proto;
 use crate::global_state::GlobalStateSnapshot;
 use crate::lsp;
 use crate::main_loop::DiagnosticsTaskKind;
+use base_db::db::DbPanicContext;
 use std::collections::{HashMap, HashSet};
 use std::mem;
 use stdx::iter_eq_by;
 use stdx::itertools::Itertools;
 use vfs::FileId;
-use base_db::db::DbPanicContext;
 
 pub(crate) type DiagnosticsGeneration = usize;
 

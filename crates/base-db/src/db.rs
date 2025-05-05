@@ -6,7 +6,7 @@ use salsa::Durability;
 use std::cell::RefCell;
 use std::panic;
 use std::sync::{Arc, Once};
-use syntax::{ast, Parse, SyntaxError};
+use syntax::{Parse, SyntaxError, ast};
 use vfs::FileId;
 
 #[salsa::db]
@@ -45,6 +45,10 @@ pub trait SourceDatabase: salsa::Database {
     fn package_deps(&self, package_id: PackageRootId) -> PackageDepsInput;
 
     fn set_package_deps(&mut self, package_id: PackageRootId, deps: Vec<PackageRootId>);
+
+    fn spec_file_sets(&self, file_id: FileId) -> FileIdSet;
+
+    fn set_spec_file_sets(&mut self, file_id: FileId, file_set: Vec<FileId>);
 
     fn source_file_ids(&self, package_root_id: PackageRootId) -> FileIdSet;
 }

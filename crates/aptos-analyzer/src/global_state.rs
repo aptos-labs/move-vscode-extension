@@ -15,12 +15,12 @@ use crossbeam_channel::{Receiver, Sender, unbounded};
 use ide::{Analysis, AnalysisHost, Cancellable};
 use lang::builtin_files::BUILTINS_FILE;
 use lsp_types::Url;
+use lsp_types::notification::Notification;
 use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard};
 use project_model::aptos_package::AptosPackage;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
-use lsp_types::notification::Notification;
 use vfs::{AnchoredPathBuf, FileId, VfsPath};
 
 pub(crate) struct FetchPackagesRequest {

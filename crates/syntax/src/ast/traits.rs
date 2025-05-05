@@ -19,6 +19,13 @@ pub trait NamedElement: AstNode {
     }
 }
 
+pub(crate) fn into_named_elements(items: Vec<impl ast::NamedElement>) -> Vec<ast::AnyNamedElement> {
+    items
+        .into_iter()
+        .map(|it| ast::AnyNamedElement::new(it))
+        .collect()
+}
+
 impl ast::Name {
     pub fn as_string(&self) -> String {
         self.ident_token().to_string()
@@ -32,6 +39,10 @@ pub trait HasStmts: AstNode {
 
     fn let_stmts(&self) -> impl Iterator<Item = ast::LetStmt> {
         self.stmts().filter_map(|it| it.let_stmt())
+    }
+
+    fn global_variables(&self) -> Vec<ast::GlobalVariableDecl> {
+        self.stmts().filter_map(|it| it.global_variable_decl()).collect()
     }
 }
 

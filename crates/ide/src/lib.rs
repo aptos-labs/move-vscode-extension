@@ -107,18 +107,19 @@ impl Analysis {
     pub fn from_single_file(text: String) -> (Analysis, FileId) {
         let mut host = AnalysisHost::default();
 
-        let file_id = FileId::from_raw(0);
+        let mut change = FileChanges::new();
+
+        let builtins_file_id = FileId::from_raw(0);
+        change.add_builtins_file(builtins_file_id, BUILTINS_FILE.to_string());
+
+        let file_id = FileId::from_raw(1);
         let mut file_set = FileSet::default();
         file_set.insert(file_id, VfsPath::new_virtual_path("/main.move".to_owned()));
 
         let package_root = PackageRoot::new_local(file_set);
 
-        let mut change = FileChanges::new();
         change.set_package_roots(vec![package_root]);
         change.change_file(file_id, Some(text));
-
-        let builtins_file_id = FileId::from_raw(1);
-        change.add_builtins_file(builtins_file_id, BUILTINS_FILE.to_string());
 
         host.apply_change(change);
 

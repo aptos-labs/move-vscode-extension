@@ -528,15 +528,15 @@ module 0x1::m {
 
 // language=Move
 #[test]
-fn test_resolve_type_to_alias() {
+fn test_resolve_type_with_alias() {
     check_resolve(
         r#"
 module 0x1::Transaction {
     struct Sender { val: u8 }
+          //X
 }
 module 0x1::m {
     use 0x1::Transaction::Sender as MySender;
-                                  //X
     fun main(n: MySender) {}
               //^
 }

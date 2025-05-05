@@ -63,7 +63,8 @@ pub(crate) fn symbol_kind(symbol_kind: SymbolKind) -> lsp_types::SymbolKind {
         // | SymbolKind::SelfParam
         // | SymbolKind::LifetimeParam
         | SymbolKind::ValueParam
-        | SymbolKind::Label => lsp_types::SymbolKind::VARIABLE,
+        | SymbolKind::Label
+        | SymbolKind::GlobalVariableDecl => lsp_types::SymbolKind::VARIABLE,
         // SymbolKind::Union => lsp_types::SymbolKind::STRUCT,
         // SymbolKind::InlineAsmRegOrRegClass => lsp_types::SymbolKind::VARIABLE,
     }
@@ -102,6 +103,7 @@ pub(crate) fn completion_item_kind(
             SymbolKind::TypeParam => lsp_types::CompletionItemKind::TYPE_PARAMETER,
             SymbolKind::ValueParam => lsp_types::CompletionItemKind::VALUE,
             SymbolKind::EnumVariant => lsp_types::CompletionItemKind::ENUM_MEMBER,
+            SymbolKind::GlobalVariableDecl => lsp_types::CompletionItemKind::VARIABLE,
         },
     }
 }
@@ -370,13 +372,10 @@ fn semantic_token_type_and_modifiers(
             SymbolKind::Method => types::METHOD,
             SymbolKind::Function => types::FUNCTION,
             SymbolKind::Const => types::CONST,
-            // SymbolKind::Static => types::STATIC,
             SymbolKind::Struct => types::STRUCT,
             SymbolKind::Enum => types::ENUM,
             SymbolKind::EnumVariant => types::ENUM_MEMBER,
-            // SymbolKind::BuiltinAttr => types::BUILTIN_ATTRIBUTE,
-            // SymbolKind::ToolModule => types::TOOL_MODULE,
-            // SymbolKind::InlineAsmRegOrRegClass => types::KEYWORD,
+            SymbolKind::GlobalVariableDecl => types::VARIABLE,
         },
         // HlTag::AttributeBracket => types::ATTRIBUTE_BRACKET,
         HlTag::BoolLiteral => types::BOOLEAN,

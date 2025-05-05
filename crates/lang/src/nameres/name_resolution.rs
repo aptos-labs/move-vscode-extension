@@ -1,23 +1,24 @@
+use crate::HirDatabase;
+use crate::db::get_modules_in_file;
+use crate::nameres::ResolveReference;
 use crate::nameres::address::Address;
 use crate::nameres::namespaces::{Ns, NsSet};
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::path_resolution::ResolutionContext;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use crate::nameres::scope_entries_owner::get_entries_in_scope;
-use crate::nameres::ResolveReference;
 use crate::node_ext::item::ModuleItemExt;
-use crate::HirDatabase;
+use base_db::inputs::InternFileId;
 use base_db::package_root::PackageRootId;
 use parser::SyntaxKind;
 use parser::SyntaxKind::MODULE_SPEC;
-use std::collections::{HashMap};
+use std::collections::HashMap;
+use std::fmt;
 use std::fmt::Formatter;
-use std::{fmt};
+use syntax::ast::ReferenceElement;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
-use syntax::ast::{HasItems, ReferenceElement};
 use syntax::files::{InFile, InFileExt, InFileVecExt};
-use syntax::{ast, AstNode, SyntaxNode};
-use crate::db::get_modules_in_file;
+use syntax::{AstNode, SyntaxNode, ast};
 
 pub struct ResolveScope {
     scope: InFile<SyntaxNode>,
@@ -50,9 +51,16 @@ pub fn get_resolve_scopes(
 
         if scope.kind() == SyntaxKind::MODULE {
             let module = ast::Module::cast(scope.clone()).unwrap().in_file(file_id);
-            scopes.extend(module_inner_spec_scopes(module, prev));
+            scopes.extend(module_inner_spec_scopes(module.clone(), prev));
+
+            let prev = Some(module.value.syntax().clone());
+            for related_module_spec in module.related_module_specs(db) {
+                scopes.push(ResolveScope {
+                    prev: prev.clone(),
+                    scope: related_module_spec.syntax(),
+                });
+            }
             break;
-            // todo: all `spec MODULE {}` specs
         }
 
         if scope.kind() == MODULE_SPEC {
@@ -80,8 +88,12 @@ pub fn get_resolve_scopes(
     scopes
 }
 
-fn module_inner_spec_scopes(module: InFile<ast::Module>, prev: Option<SyntaxNode>) -> Vec<ResolveScope> {
-    let (file_id, module) = module.unpack();
+// all `spec module {}` in item container
+fn module_inner_spec_scopes(
+    item_container: InFile<impl ast::HasItems>,
+    prev: Option<SyntaxNode>,
+) -> Vec<ResolveScope> {
+    let (file_id, module) = item_container.unpack();
     let mut inner_scopes = vec![];
     for module_item_spec in module.module_item_specs() {
         if let Some(module_item_spec_block) = module_item_spec.spec_block() {
@@ -196,11 +208,12 @@ pub fn get_qualified_path_entries(
                 scope_adjustment: None,
             });
             let module = qualifier_item.node_loc.to_ast::<ast::Module>(db)?;
-            entries.extend(module.member_entries())
+            entries.extend(module.importable_entries());
+            entries.extend(module.importable_entries_from_related(db));
         }
         SyntaxKind::ENUM => {
             let enum_ = qualifier_item.node_loc.to_ast::<ast::Enum>(db)?;
-            entries.extend(enum_.value.variants().to_in_file_entries(enum_.file_id));
+            entries.extend(enum_.value.variants().to_entries(enum_.file_id));
         }
         _ => {}
     }

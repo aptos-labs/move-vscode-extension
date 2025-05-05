@@ -1,4 +1,4 @@
-use crate::ast::{support, AstChildren, FieldsOwner, HasAttrs, Stmt};
+use crate::ast::{support, AstChildren, FieldsOwner, HasAttrs, HasStmts};
 use crate::{ast, AstNode};
 
 pub trait HasItems: AstNode {
@@ -66,6 +66,17 @@ pub trait HasItems: AstNode {
             .collect()
     }
 
+    fn global_variables(&self) -> Vec<ast::GlobalVariableDecl> {
+        self.module_item_specs()
+            .into_iter()
+            .flat_map(|it| {
+                it.spec_block()
+                    .map(|it| it.global_variables())
+                    .unwrap_or_default()
+            })
+            .collect()
+    }
+
     fn schemas(&self) -> Vec<ast::Schema> {
         self.items().into_iter().filter_map(|it| it.schema()).collect()
     }
@@ -73,7 +84,7 @@ pub trait HasItems: AstNode {
     fn tuple_structs(&self) -> Vec<ast::Struct> {
         self.structs()
             .into_iter()
-            .filter(|s| s.tuple_field_list().is_some())
+            .filter(|s| s.is_tuple_struct())
             .collect()
     }
 }

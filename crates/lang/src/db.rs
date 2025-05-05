@@ -7,8 +7,9 @@ use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::ty::Ty;
-use base_db::{ParseDatabase, SourceDatabase};
+use base_db::inputs::{FileIdSet, InternFileId};
 use base_db::package_root::PackageRootId;
+use base_db::{ParseDatabase, SourceDatabase};
 use std::fs::File;
 use std::sync::Arc;
 use syntax::ast::Module;
@@ -17,7 +18,6 @@ use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt, InFileVecExt};
 use syntax::{AstNode, ast};
 use vfs::FileId;
-use base_db::inputs::{FileIdSet, InternFileId};
 
 #[query_group_macro::query_group]
 pub trait HirDatabase: ParseDatabase {

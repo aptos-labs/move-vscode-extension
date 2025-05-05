@@ -3,7 +3,7 @@
 use std::{env, fs, path::PathBuf, process::ExitCode, sync::Arc};
 
 use anyhow::Context;
-use aptos_analyzer::{from_json, Config, ConfigChange, ConfigErrors};
+use aptos_analyzer::{Config, ConfigChange, ConfigErrors, from_json};
 use clap::Parser;
 use lsp_server::Connection;
 use paths::Utf8PathBuf;
@@ -203,8 +203,8 @@ fn run_server() -> anyhow::Result<()> {
 
         if !error_sink.is_empty() {
             use lsp_types::{
-                notification::{Notification, ShowMessage}, MessageType,
-                ShowMessageParams,
+                MessageType, ShowMessageParams,
+                notification::{Notification, ShowMessage},
             };
             let not = lsp_server::Notification::new(
                 ShowMessage::METHOD.to_owned(),

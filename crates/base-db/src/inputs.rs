@@ -54,6 +54,7 @@ pub struct Files {
     source_roots: Arc<DashMap<PackageRootId, PackageRootInput>>,
     file_source_roots: Arc<DashMap<FileId, FilePackageRootInput>>,
     package_deps: Arc<DashMap<PackageRootId, PackageDepsInput>>,
+    spec_file_sets: Arc<DashMap<FileId, FileIdSet>>,
 }
 
 impl Files {
@@ -175,6 +176,31 @@ impl Files {
             Entry::Vacant(vacant) => {
                 let deps = PackageDepsInput::builder(deps).new(db);
                 vacant.insert(deps);
+            }
+        };
+    }
+
+    pub fn spec_file_set(&self, file_id: FileId) -> FileIdSet {
+        let spec_file_set = self
+            .spec_file_sets
+            .get(&file_id)
+            .expect(&format!("Unable to fetch spec file set for {:?}", file_id));
+        *spec_file_set
+    }
+
+    pub fn set_spec_file_set(
+        &self,
+        db: &mut dyn SourceDatabase,
+        file_id: FileId,
+        spec_files: Vec<FileId>,
+    ) {
+        match self.spec_file_sets.entry(file_id) {
+            Entry::Occupied(mut occupied) => {
+                occupied.get_mut().set_data(db).to(spec_files);
+            }
+            Entry::Vacant(vacant) => {
+                let file_set = FileIdSet::new(db, vec![file_id]);
+                vacant.insert(file_set);
             }
         };
     }

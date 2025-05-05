@@ -1,5 +1,6 @@
 use crate::ast;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
+use crate::ast::traits::into_named_elements;
 use crate::ast::HasItems;
 
 impl ast::Module {
@@ -17,6 +18,31 @@ impl ast::Module {
             .into_iter()
             .filter_map(|item| item.friend())
             .collect()
+    }
+
+    pub fn named_items(&self) -> Vec<ast::AnyNamedElement> {
+        let mut items: Vec<ast::AnyNamedElement> = vec![];
+        // consts
+        items.extend(into_named_elements(self.consts()));
+
+        // types
+        items.extend(into_named_elements(self.enums()));
+        items.extend(into_named_elements(self.structs()));
+        items.extend(into_named_elements(self.schemas()));
+
+        // callables
+        items.extend(into_named_elements(self.non_test_functions()));
+
+        // spec callables
+        items.extend(into_named_elements(self.spec_functions()));
+        items.extend(into_named_elements(self.spec_inline_functions()));
+        // entries.extend(
+        //     module
+        //         .spec_inline_functions()
+        //         .wrapped_in_file(self.file_id)
+        //         .to_entries(),
+        // );
+        items
     }
 
     pub fn verifiable_items(&self) -> Vec<ast::AnyNamedElement> {

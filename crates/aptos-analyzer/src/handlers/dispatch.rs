@@ -13,7 +13,7 @@ use crate::{
 use base_db::db::DbPanicContext;
 use lsp_server::{ExtractError, ResponseError};
 use salsa::Cancelled;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use stdx::thread::ThreadIntent;
 
 /// A visitor for routing a raw JSON request to an appropriate handler function.

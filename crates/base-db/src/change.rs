@@ -61,6 +61,10 @@ impl FileChanges {
                 let durability = source_root_durability(&root);
                 for file_id in root.file_set.iter() {
                     db.set_file_package_root_with_durability(file_id, root_id, durability);
+                    db.set_spec_file_sets(
+                        file_id,
+                        find_spec_file_set(file_id, root.clone()).unwrap_or(vec![file_id]),
+                    );
                 }
                 db.set_package_root_with_durability(root_id, Arc::from(root), durability);
                 db.set_package_deps(root_id, Default::default());
@@ -71,6 +75,7 @@ impl FileChanges {
             tracing::info!(?builtins_file_id, "set builtins file");
             db.set_builtins_file_id(Some(builtins_file_id));
             db.set_file_text_with_durability(builtins_file_id, builtins_text.as_str(), Durability::HIGH);
+            db.set_spec_file_sets(builtins_file_id, vec![builtins_file_id]);
         }
 
         if let Some(package_graph) = self.package_graph {
@@ -101,6 +106,30 @@ impl FileChanges {
             db.set_file_text(file_id, text.as_str())
         }
     }
+}
+
+fn find_spec_file_set(file_id: FileId, root: PackageRoot) -> Option<Vec<FileId>> {
+    // simplification for now: only use MODULE_NAME.spec.move in the immediate vicinity
+    // todo: fix later, requires refactoring into one pass on the upper level
+    let file_path = root.file_set.path_for_file(&file_id)?;
+    let (file_name, ext) = file_path.name_and_extension()?;
+    if ext != Some("move") {
+        // shouldn't really happen
+        return None;
+    }
+    let parent_dir = file_path.parent()?;
+    let candidate = match file_name.strip_suffix(".spec") {
+        None => {
+            // MODULE_NAME.move, searching for MODULE_NAME.spec.move
+            parent_dir.join(&format!("{file_name}.spec.move"))
+        }
+        Some(truncated_file_name) => {
+            // MODULE_NAME.spec.move -> MODULE_NAME.move
+            parent_dir.join(&format!("{truncated_file_name}.move"))
+        }
+    }?;
+    let candidate_file_id = root.file_for_path(&candidate)?;
+    Some(vec![file_id, *candidate_file_id])
 }
 
 fn source_root_durability(source_root: &PackageRoot) -> Durability {

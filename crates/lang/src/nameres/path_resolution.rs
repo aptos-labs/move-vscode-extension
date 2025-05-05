@@ -34,8 +34,7 @@ pub fn get_path_resolve_variants_with_expected_type(
     if let PathKind::Qualified { qualifier, kind, .. } = path_kind.clone() {
         match kind {
             QualifiedKind::ModuleItemOrEnumVariant | QualifiedKind::FQModuleItem => {
-                let _p =
-                    tracing::debug_span!("try refining expected_type").entered();
+                let _p = tracing::debug_span!("try refining expected_type").entered();
                 let enum_item = qualifier
                     .reference()
                     .in_file(ctx.path.file_id)
@@ -107,9 +106,7 @@ pub fn get_method_resolve_variants(
     else {
         return vec![];
     };
-    let function_entries = receiver_item_module
-        .non_test_functions()
-        .to_in_file_entries(file_id);
+    let function_entries = receiver_item_module.non_test_functions().to_entries(file_id);
     let ty_lowering = TyLowering::new(db, msl);
     let mut method_entries = vec![];
     for function_entry in function_entries {

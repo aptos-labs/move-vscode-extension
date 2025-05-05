@@ -67,11 +67,11 @@ impl<T: ast::NamedElement> NamedItemsExt for Vec<InFile<T>> {
 }
 
 pub trait NamedItemsInFileExt {
-    fn to_in_file_entries(self, file_id: FileId) -> Vec<ScopeEntry>;
+    fn to_entries(self, file_id: FileId) -> Vec<ScopeEntry>;
 }
 
 impl<T: ast::NamedElement> NamedItemsInFileExt for Vec<T> {
-    fn to_in_file_entries(self, file_id: FileId) -> Vec<ScopeEntry> {
+    fn to_entries(self, file_id: FileId) -> Vec<ScopeEntry> {
         self.wrapped_in_file(file_id).to_entries()
     }
 }
