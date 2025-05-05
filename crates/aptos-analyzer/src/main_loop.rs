@@ -26,7 +26,6 @@ use vfs::loader::LoadingProgress;
 use vfs::{FileId, VfsPath};
 
 pub fn main_loop(config: Config, connection: Connection) -> anyhow::Result<()> {
-    tracing::info!("initial config: {:#?}", config);
 
     // Windows scheduler implements priority boosts: if thread waits for an
     // event (like a condvar), and event fires, priority of the thread is

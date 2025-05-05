@@ -15,7 +15,7 @@ use crate::flycheck::{AptosCliOptions, FlycheckConfig};
 use ide_db::assist_config::AssistConfig;
 use ide_diagnostics::config::DiagnosticsConfig;
 use project_model::DiscoveredManifest;
-use project_model::manifest_path::{ManifestPath};
+use project_model::manifest_path::ManifestPath;
 use serde_derive::{Deserialize, Serialize};
 use std::sync::Arc;
 use stdx::itertools::Itertools;
@@ -28,7 +28,7 @@ pub struct Config {
     discovered_manifests_from_filesystem: Vec<DiscoveredManifest>,
 
     /// The workspace roots as registered by the LSP client
-    package_roots: Vec<AbsPathBuf>,
+    client_ws_roots: Vec<AbsPathBuf>,
     caps: ClientCapabilities,
     root_path: AbsPathBuf,
 
@@ -49,10 +49,10 @@ impl fmt::Debug for Config {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Config")
             .field(
-                "discovered_projects_from_filesystem",
+                "discovered_manifests_from_filesystem",
                 &self.discovered_manifests_from_filesystem,
             )
-            .field("package_roots", &self.package_roots)
+            .field("client_ws_roots", &self.client_ws_roots)
             .field("caps", &self.caps)
             .field("root_path", &self.root_path)
             // .field("snippets", &self.snippets)
@@ -114,7 +114,7 @@ impl Config {
     pub fn new(
         root_path: AbsPathBuf,
         caps: lsp_types::ClientCapabilities,
-        package_roots: Vec<AbsPathBuf>,
+        client_ws_roots: Vec<AbsPathBuf>,
     ) -> Self {
         static DEFAULT_CONFIG_DATA: OnceLock<&'static DefaultConfigData> = OnceLock::new();
 
@@ -122,28 +122,27 @@ impl Config {
             caps: ClientCapabilities::new(caps),
             discovered_manifests_from_filesystem: Vec::new(),
             root_path,
-            package_roots,
+            client_ws_roots,
             client_config: (FullConfigInput::default(), ConfigErrors(vec![])),
             default_config: DEFAULT_CONFIG_DATA.get_or_init(|| Box::leak(Box::default())),
         }
     }
 
     pub fn rediscover_packages(&mut self) {
-        let discovered_manifests = DiscoveredManifest::discover_all(&self.package_roots);
-        // tracing::info!("discovered manifests: {:?}", discovered_manifests);
+        let discovered_manifests = DiscoveredManifest::discover_all(&self.client_ws_roots);
         if discovered_manifests.is_empty() {
-            tracing::error!("failed to find any manifests in {:?}", &self.package_roots);
+            tracing::error!("failed to find any manifests in {:?}", &self.client_ws_roots);
         }
         self.discovered_manifests_from_filesystem = discovered_manifests;
     }
 
-    pub fn add_packages(&mut self, paths: impl Iterator<Item = AbsPathBuf>) {
-        self.package_roots.extend(paths);
+    pub fn add_client_ws_root(&mut self, paths: impl Iterator<Item = AbsPathBuf>) {
+        self.client_ws_roots.extend(paths);
     }
 
-    pub fn remove_package(&mut self, path: &AbsPath) {
-        if let Some(position) = self.package_roots.iter().position(|it| it == path) {
-            self.package_roots.remove(position);
+    pub fn remove_client_ws_root(&mut self, path: &AbsPath) {
+        if let Some(position) = self.client_ws_roots.iter().position(|it| it == path) {
+            self.client_ws_roots.remove(position);
         }
     }
 
@@ -276,27 +275,24 @@ impl Config {
         })
     }
 
-    pub fn discovered_manifests(&self) -> Vec<(ManifestPath, bool)> {
-        // let exclude_dirs: Vec<_> =
-        //     self.files_excludeDirs().iter().map(|p| self.root_path.join(p)).collect();
-        // let exclude_dirs = vec![];
+    pub fn discovered_manifests(&self) -> Vec<DiscoveredManifest> {
+        let exclude_dirs = self
+            .files_excludeDirs()
+            .iter()
+            .map(|p| self.root_path.join(p))
+            .collect::<Vec<_>>();
 
         let mut manifests = vec![];
-        for manifest_from_fs in &self.discovered_manifests_from_filesystem {
-            // if exclude_dirs.iter().any(|p| manifest_path.starts_with(p)) {
-            //     continue;
-            // }
-            let buf: Utf8PathBuf = manifest_from_fs.file.to_path_buf().into();
-            let resolve_deps = manifest_from_fs.resolve_deps;
-            manifests.push((buf, resolve_deps));
+        for discovered_manifest in &self.discovered_manifests_from_filesystem {
+            if exclude_dirs
+                .iter()
+                .any(|p| discovered_manifest.move_toml_file.starts_with(p))
+            {
+                continue;
+            }
+            manifests.push(discovered_manifest.clone());
         }
-
         manifests
-            .iter()
-            .map(|(manifest_buf, resolve_deps)| {
-                (ManifestPath::new(self.root_path.join(manifest_buf)), *resolve_deps)
-            })
-            .collect()
     }
 
     pub fn publish_diagnostics(&self) -> bool {

@@ -220,17 +220,17 @@ pub(crate) fn handle_did_change_workspace_folders(
         let Ok(path) = AbsPathBuf::try_from(path) else {
             continue;
         };
-        config.remove_package(&path);
+        config.remove_client_ws_root(&path);
     }
 
-    let added = params
+    let added_ws_root = params
         .event
         .added
         .into_iter()
         .filter_map(|it| it.uri.to_file_path().ok())
         .filter_map(|it| Utf8PathBuf::from_path_buf(it).ok())
         .filter_map(|it| AbsPathBuf::try_from(it).ok());
-    config.add_packages(added);
+    config.add_client_ws_root(added_ws_root);
 
     config.rediscover_packages();
 

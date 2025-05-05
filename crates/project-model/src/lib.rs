@@ -13,7 +13,7 @@ pub mod move_toml;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct DiscoveredManifest {
-    pub file: AbsPathBuf,
+    pub move_toml_file: AbsPathBuf,
     pub resolve_deps: bool,
 }
 
@@ -52,7 +52,7 @@ fn walk_and_discover_manifests(ws_root: &AbsPathBuf) -> Vec<DiscoveredManifest> 
         let mfile_path = path.join("Move.toml");
         if mfile_path.exists() {
             let m = DiscoveredManifest {
-                file: AbsPathBuf::assert_utf8(mfile_path),
+                move_toml_file: AbsPathBuf::assert_utf8(mfile_path),
                 resolve_deps,
             };
             manifests.push(m);

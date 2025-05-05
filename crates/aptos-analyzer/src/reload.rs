@@ -9,14 +9,15 @@ use base_db::change::{DepGraph, FileChanges};
 use lsp_types::FileSystemWatcher;
 use project_model::DiscoveredManifest;
 use project_model::aptos_package::AptosPackage;
+use project_model::manifest_path::ManifestPath;
 use std::fmt::Formatter;
 use std::sync::Arc;
 use std::{fmt, mem};
+use std::time::Duration;
 use stdx::format_to;
 use stdx::itertools::Itertools;
 use stdx::thread::ThreadIntent;
 use vfs::AbsPath;
-use project_model::manifest_path::ManifestPath;
 
 #[derive(Debug)]
 pub(crate) enum FetchPackagesProgress {
@@ -127,11 +128,11 @@ impl GlobalState {
         {
             let mut with_resolve = vec![];
             let mut without_resolve = vec![];
-            for (manifest, resolve) in discovered_manifests.clone() {
-                if resolve {
-                    with_resolve.push(manifest);
+            for manifest in discovered_manifests.clone() {
+                if manifest.resolve_deps {
+                    with_resolve.push(manifest.move_toml_file.to_path_buf());
                 } else {
-                    without_resolve.push(manifest);
+                    without_resolve.push(manifest.move_toml_file.to_path_buf());
                 }
             }
             tracing::info!(manifests_with_resolution = ?with_resolve);
@@ -145,17 +146,22 @@ impl GlobalState {
                 sender
                     .send(Task::FetchPackagesProgress(FetchPackagesProgress::Begin))
                     .unwrap();
-                let discovered_packages = discovered_manifests
-                    .iter()
-                    .map(|(manifest_path, resolve_deps)| {
-                        tracing::debug!(path = %manifest_path, "loading workspace from manifest");
-                        AptosPackage::load(manifest_path, *resolve_deps)
-                    })
-                    .collect::<Vec<_>>();
-
-                // figure out if it's needed or not
-                // dedup(&mut discovered_packages);
-
+                let discovered_packages = {
+                    discovered_manifests
+                        .iter()
+                        .map(|discovered| {
+                            sender
+                                .clone()
+                                .send(Task::FetchPackagesProgress(FetchPackagesProgress::Report(
+                                    format!("Fetching {}", discovered.move_toml_file.to_path_buf()),
+                                )))
+                                .unwrap();
+                            let manifest_path =
+                                ManifestPath::new(discovered.move_toml_file.to_path_buf());
+                            AptosPackage::load(&manifest_path, discovered.resolve_deps)
+                        })
+                        .collect::<Vec<_>>()
+                };
                 sender
                     .send(Task::FetchPackagesProgress(FetchPackagesProgress::End(
                         discovered_packages,

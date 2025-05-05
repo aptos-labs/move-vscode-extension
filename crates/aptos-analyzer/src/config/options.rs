@@ -38,6 +38,11 @@ config_data! {
         /// Whether to show "Unresolved reference" diagnostic.
         diagnostics_enableUnresolvedReference: bool                = true,
 
+        /// These paths (file/directories) will be ignored by aptos-analyzer. They are
+        /// relative to the workspace root, and globs are not supported. You may
+        /// also need to add the folders to Code's `files.watcherExclude`.
+        files_excludeDirs: Vec<Utf8PathBuf> = vec![],
+
         /// Path to the `movefmt` executable.
         movefmt_path: Option<Utf8PathBuf>                         = None,
 
