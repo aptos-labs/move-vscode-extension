@@ -17,10 +17,10 @@ impl GlobalState {
         if needs_to_refresh_packages {
             let n_to_show = 10;
             if important_changes.len() < n_to_show {
-                tracing::info!(triggered_by_changes = ?important_changes);
+                tracing::info!(n_files = important_changes.len(), paths = ?important_changes);
             } else {
                 let changes = important_changes[0..n_to_show].to_vec();
-                tracing::info!("triggered_by_changes = {:?} ...", changes);
+                tracing::info!("paths = {:?} ...", changes);
             };
         }
 

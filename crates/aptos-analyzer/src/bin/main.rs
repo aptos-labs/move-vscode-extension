@@ -3,7 +3,7 @@
 use std::{env, fs, path::PathBuf, process::ExitCode, sync::Arc};
 
 use anyhow::Context;
-use aptos_analyzer::{Config, ConfigChange, ConfigErrors, from_json};
+use aptos_analyzer::{from_json, Config, ConfigChange, ConfigErrors};
 use clap::Parser;
 use lsp_server::Connection;
 use paths::Utf8PathBuf;
@@ -138,7 +138,17 @@ fn run_server() -> anyhow::Result<()> {
         }
     };
 
-    tracing::info!("InitializeParams: {}", initialize_params);
+    let hide_log_init_params = env::var("APT_LOG_HIDE_INIT_PARAMS").is_ok();
+    if hide_log_init_params {
+        tracing::info!(
+            "LSP initialization params are hidden. To show them, unset \"APT_LOG_HIDE_INIT_PARAMS\" environment variable.",
+        )
+    }
+
+    if !hide_log_init_params {
+        tracing::info!("InitializeParams: {}", initialize_params);
+    }
+
     let lsp_types::InitializeParams {
         root_uri,
         capabilities,
@@ -169,7 +179,7 @@ fn run_server() -> anyhow::Result<()> {
         );
     }
 
-    let package_roots = workspace_folders
+    let workspace_roots = workspace_folders
         .map(|workspace_folders| {
             workspace_folders
                 .into_iter()
@@ -181,9 +191,9 @@ fn run_server() -> anyhow::Result<()> {
         })
         .filter(|roots| !roots.is_empty())
         .unwrap_or_else(|| vec![root_path.clone()]);
-    tracing::info!(?package_roots);
+    tracing::info!(?workspace_roots);
 
-    let mut config = Config::new(root_path, capabilities, package_roots);
+    let mut config = Config::new(root_path, capabilities, workspace_roots);
     if let Some(json) = initialization_options {
         let mut change = ConfigChange::default();
         change.change_client_config(json);
@@ -193,8 +203,8 @@ fn run_server() -> anyhow::Result<()> {
 
         if !error_sink.is_empty() {
             use lsp_types::{
-                MessageType, ShowMessageParams,
-                notification::{Notification, ShowMessage},
+                notification::{Notification, ShowMessage}, MessageType,
+                ShowMessageParams,
             };
             let not = lsp_server::Notification::new(
                 ShowMessage::METHOD.to_owned(),
@@ -231,6 +241,10 @@ fn run_server() -> anyhow::Result<()> {
     }
 
     config.rediscover_packages();
+
+    if !hide_log_init_params {
+        tracing::info!("initial config: {:#?}", config);
+    }
 
     // If the io_threads have an error, there's usually an error on the main
     // loop too because the channels are closed. Ensure we report both errors.

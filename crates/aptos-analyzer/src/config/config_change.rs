@@ -10,8 +10,6 @@ impl Config {
     /// The return tuple's bool component signals whether the `GlobalState` should call its `update_configuration()` method.
     fn apply_change_with_sink(&self, change: ConfigChange) -> (Config, bool) {
         let mut config = self.clone();
-        // todo: flycheck
-        // config.validation_errors = ConfigErrors::default();
 
         let mut should_update = false;
 
@@ -74,6 +72,7 @@ pub struct ConfigChange {
 }
 
 impl ConfigChange {
+    #[tracing::instrument(level = "info", skip_all)]
     pub fn change_client_config(&mut self, change: serde_json::Value) {
         self.client_config_change = Some(change);
     }

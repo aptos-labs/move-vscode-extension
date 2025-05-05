@@ -12,6 +12,7 @@ use syntax::ast::syntax_factory::SyntaxFactory;
 use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, ast};
 
+#[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn can_be_replaced_with_method_call(
     acc: &mut Vec<Diagnostic>,
     ctx: &DiagnosticsContext<'_>,

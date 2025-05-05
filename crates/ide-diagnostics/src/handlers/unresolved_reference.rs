@@ -11,6 +11,7 @@ use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 
+#[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn unresolved_reference(
     acc: &mut Vec<Diagnostic>,
     ctx: &DiagnosticsContext<'_>,
