@@ -6,10 +6,10 @@ pub mod assists;
 pub mod defs;
 pub mod helpers;
 pub mod label;
+pub mod root_db;
 pub mod source_change;
 mod syntax_helpers;
 pub mod text_edit;
-pub mod root_db;
 
 use base_db::SourceDatabase;
 use lang::HirDatabase;
@@ -20,8 +20,8 @@ use std::sync::Arc;
 use syntax::{SyntaxKind, SyntaxKind::*};
 use vfs::FileId;
 
-pub use root_db::RootDatabase;
 pub use root_db::LineIndexDatabase;
+pub use root_db::RootDatabase;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum SymbolKind {
@@ -43,6 +43,7 @@ pub enum SymbolKind {
     // Schema,
     // ModuleSpec,
     // ItemSpec,
+    GlobalVariableDecl,
 }
 
 pub fn ast_kind_to_symbol_kind(kind: SyntaxKind) -> Option<SymbolKind> {
@@ -63,6 +64,7 @@ pub fn ast_kind_to_symbol_kind(kind: SyntaxKind) -> Option<SymbolKind> {
 
         // todo
         SCHEMA => Some(SymbolKind::Struct),
+        GLOBAL_VARIABLE_DECL => Some(SymbolKind::GlobalVariableDecl),
 
         _ => {
             tracing::error!("unhandled ast kind {:?}", kind);

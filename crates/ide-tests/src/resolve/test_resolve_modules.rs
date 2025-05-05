@@ -9,10 +9,9 @@ fn test_unresolved_if_alias_points_to_unresolved_item() {
         r#"
 module 0x1::m {
     use 0x1::Transaction as MyTransaction;
-                            //X
     fun main() {
         let a = MyTransaction::create();
-              //^
+              //^ unresolved
     }
 }
 "#,
@@ -311,13 +310,13 @@ module 0x1::m {
 
 // language=Move
 #[test]
-fn test_resolve_module_to_imported_module_with_alias() {
+fn test_resolve_module_with_alias() {
     check_resolve(
         r#"
 module 0x1::Transaction {}
+            //X
 module 0x1::m {
     use 0x1::Transaction as MyTransaction;
-                          //X
     fun main() {
         let a = MyTransaction::create();
               //^
@@ -593,13 +592,14 @@ module 0x1::m {
 
 // language=Move
 #[test]
-fn test_cannot_resolve_module_with_unknown_named_address() {
+fn test_resolve_module_with_unknown_named_address() {
     check_resolve(
         r#"
 module unknown_address::m1 {}
+                      //X
 module 0x1::m {
     use unknown_address::m1;
-                       //^ unresolved
+                       //^
 }        
 "#,
     )

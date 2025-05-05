@@ -7,6 +7,7 @@ mod tests;
 
 use crate::config::DiagnosticsConfig;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
+use base_db::inputs::InternFileId;
 use base_db::{ParseDatabase, SourceDatabase};
 use ide_db::RootDatabase;
 use ide_db::assists::AssistResolveStrategy;
@@ -14,7 +15,6 @@ use lang::Semantics;
 use syntax::files::{FileRange, InFileExt};
 use syntax::{AstNode, ast, match_ast};
 use vfs::FileId;
-use base_db::inputs::InternFileId;
 
 struct DiagnosticsContext<'a> {
     config: &'a DiagnosticsConfig,

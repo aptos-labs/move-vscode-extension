@@ -204,7 +204,7 @@ Stmt =
     | LetStmt
     | SchemaFieldStmt
     | SpecPredicateStmt | AbortsIfStmt
-    | SpecInlineFun
+    | SpecInlineFun | GlobalVariableDecl
 
 LetStmt =
     'let' Pat (':' Type) '=' initializer:Expr ';'
@@ -457,6 +457,9 @@ Schema =
 
 SchemaFieldStmt =
     'local'? IdentPat ':' Type ';'
+
+GlobalVariableDecl =
+    Attr* 'global' Name TypeParamList? ':' Type ('=' Expr)? ';'
 
 SpecPredicateStmt =
     ('assert' | 'assume' | 'requires' | 'ensures' | 'decreases' | 'modifies')

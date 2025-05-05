@@ -34,32 +34,25 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
     let mut entries = vec![];
 
     if let Some(has_type_params) = ast::AnyGenericElement::cast(scope.value.clone()) {
-        entries.extend(has_type_params.type_params().to_in_file_entries(file_id));
+        entries.extend(has_type_params.type_params().to_entries(file_id));
     }
 
     match scope.value.kind() {
         MODULE => {
             let module = scope.syntax_cast::<ast::Module>().unwrap();
-            entries.extend(module.member_entries());
-            entries.extend(module.value.enum_variants().to_in_file_entries(file_id));
+            entries.extend(module.importable_entries());
+            entries.extend(module.value.enum_variants().to_entries(file_id));
 
             entries.extend(builtin_functions(db).to_entries());
             entries.extend(builtin_spec_functions(db).to_entries());
             entries.extend(builtin_spec_consts(db).to_entries());
         }
         MODULE_SPEC => {
-            let (module_spec_file_id, module_spec) =
-                scope.syntax_cast::<ast::ModuleSpec>().unwrap().unpack();
-            entries.extend(
-                module_spec
-                    .spec_functions()
-                    .to_in_file_entries(module_spec_file_id),
-            );
-            entries.extend(
-                module_spec
-                    .spec_inline_functions()
-                    .to_in_file_entries(module_spec_file_id),
-            );
+            let module_spec = scope.syntax_cast::<ast::ModuleSpec>().unwrap();
+
+            let importable_entries = module_spec.flat_map(|it| it.importable_items()).to_entries();
+            entries.extend(importable_entries);
+
             entries.extend(builtin_spec_functions(db).to_entries());
         }
         ITEM_SPEC => {
@@ -70,11 +63,11 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
                     match (item.syntax()) {
                         ast::Fun(fun) => {
                             let any_fun = fun.clone().to_any_fun();
-                            entries.extend(any_fun.type_params().to_in_file_entries(fid));
-                            entries.extend(any_fun.params_as_bindings().to_in_file_entries(fid));
+                            entries.extend(any_fun.type_params().to_entries(fid));
+                            entries.extend(any_fun.params_as_bindings().to_entries(fid));
                         },
                         ast::Struct(struct_) => {
-                            entries.extend(struct_.named_fields().to_in_file_entries(fid));
+                            entries.extend(struct_.named_fields().to_entries(fid));
                         },
                         _ => ()
                     }
@@ -84,24 +77,19 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
         // todo: ITEM_SPEC should have access to params / fields of the item
         SCRIPT => {
             let script = scope.syntax_cast::<ast::Script>().unwrap();
-            entries.extend(script.value.consts().to_in_file_entries(file_id));
+            entries.extend(script.value.consts().to_entries(file_id));
         }
         FUN | SPEC_FUN | SPEC_INLINE_FUN => {
             let fun = scope.syntax_cast::<ast::AnyFun>().unwrap();
-            entries.extend(fun.value.params_as_bindings().to_in_file_entries(file_id));
+            entries.extend(fun.value.params_as_bindings().to_entries(file_id));
         }
         LAMBDA_EXPR => {
             let lambda_expr = scope.syntax_cast::<ast::LambdaExpr>().unwrap();
-            entries.extend(lambda_expr.value.param_ident_pats().to_in_file_entries(file_id));
+            entries.extend(lambda_expr.value.param_ident_pats().to_entries(file_id));
         }
         SCHEMA => {
             let schema = scope.syntax_cast::<ast::Schema>().unwrap();
-            entries.extend(
-                schema
-                    .value
-                    .schema_fields_as_bindings()
-                    .to_in_file_entries(file_id),
-            )
+            entries.extend(schema.value.schema_fields_as_bindings().to_entries(file_id))
         }
         FOR_EXPR => {
             let for_expr = scope.syntax_cast::<ast::ForExpr>().unwrap();
@@ -116,7 +104,7 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
                 owner
                     .value
                     .quant_bindings_as_ident_pats()
-                    .to_in_file_entries(owner.file_id),
+                    .to_entries(owner.file_id),
             );
         }
         _ => {}

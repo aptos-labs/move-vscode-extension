@@ -4,7 +4,7 @@ use crate::grammar::items::item_start;
 use crate::grammar::paths::type_path;
 use crate::grammar::specs::predicates::opt_predicate_property_list;
 use crate::grammar::utils::{delimited_fn, list};
-use crate::grammar::{expressions, generic_params, name_or_bump_until, patterns, types};
+use crate::grammar::{expressions, generic_params, name, name_or_bump_until, patterns, types};
 use crate::parser::Marker;
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
@@ -38,10 +38,11 @@ pub(crate) fn schema_field(p: &mut Parser) -> bool {
 
 pub(crate) fn global_variable(p: &mut Parser) -> bool {
     let m = p.start();
-    if p.at(IDENT) && p.at_contextual_kw("global") {
+    if p.at_contextual_kw_ident("global") {
         p.bump_remap(T![global]);
     }
-    patterns::ident_pat(p);
+    name(p);
+    // patterns::ident_pat(p);
     generic_params::opt_generic_param_list(p);
     if p.at(T![:]) {
         types::ascription(p);

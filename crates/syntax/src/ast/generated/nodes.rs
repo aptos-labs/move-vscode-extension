@@ -480,6 +480,28 @@ impl Fun {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct GlobalVariableDecl {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::GenericElement for GlobalVariableDecl {}
+impl ast::HasAttrs for GlobalVariableDecl {}
+impl ast::NamedElement for GlobalVariableDecl {}
+impl GlobalVariableDecl {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
+    #[inline]
+    pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
+    #[inline]
+    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
+    #[inline]
+    pub fn eq_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![=]) }
+    #[inline]
+    pub fn global_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![global]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct IdentPat {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1864,6 +1886,7 @@ pub enum QuantExpr {
 pub enum Stmt {
     AbortsIfStmt(AbortsIfStmt),
     ExprStmt(ExprStmt),
+    GlobalVariableDecl(GlobalVariableDecl),
     LetStmt(LetStmt),
     SchemaFieldStmt(SchemaFieldStmt),
     SpecInlineFun(SpecInlineFun),
@@ -1906,7 +1929,6 @@ pub struct AnyGenericElement {
 }
 impl ast::GenericElement for AnyGenericElement {}
 impl ast::HasAttrs for AnyGenericElement {}
-impl ast::HoverDocsOwner for AnyGenericElement {}
 impl ast::NamedElement for AnyGenericElement {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -2651,6 +2673,27 @@ impl AstNode for Fun {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == FUN }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for GlobalVariableDecl {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        GLOBAL_VARIABLE_DECL
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == GLOBAL_VARIABLE_DECL }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -6056,6 +6099,10 @@ impl From<ExprStmt> for Stmt {
     #[inline]
     fn from(node: ExprStmt) -> Stmt { Stmt::ExprStmt(node) }
 }
+impl From<GlobalVariableDecl> for Stmt {
+    #[inline]
+    fn from(node: GlobalVariableDecl) -> Stmt { Stmt::GlobalVariableDecl(node) }
+}
 impl From<LetStmt> for Stmt {
     #[inline]
     fn from(node: LetStmt) -> Stmt { Stmt::LetStmt(node) }
@@ -6082,6 +6129,12 @@ impl Stmt {
     pub fn expr_stmt(self) -> Option<ExprStmt> {
         match (self) {
             Stmt::ExprStmt(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn global_variable_decl(self) -> Option<GlobalVariableDecl> {
+        match (self) {
+            Stmt::GlobalVariableDecl(item) => Some(item),
             _ => None,
         }
     }
@@ -6117,6 +6170,7 @@ impl AstNode for Stmt {
             kind,
             ABORTS_IF_STMT
                 | EXPR_STMT
+                | GLOBAL_VARIABLE_DECL
                 | LET_STMT
                 | SCHEMA_FIELD_STMT
                 | SPEC_INLINE_FUN
@@ -6128,6 +6182,7 @@ impl AstNode for Stmt {
         let res = match syntax.kind() {
             ABORTS_IF_STMT => Stmt::AbortsIfStmt(AbortsIfStmt { syntax }),
             EXPR_STMT => Stmt::ExprStmt(ExprStmt { syntax }),
+            GLOBAL_VARIABLE_DECL => Stmt::GlobalVariableDecl(GlobalVariableDecl { syntax }),
             LET_STMT => Stmt::LetStmt(LetStmt { syntax }),
             SCHEMA_FIELD_STMT => Stmt::SchemaFieldStmt(SchemaFieldStmt { syntax }),
             SPEC_INLINE_FUN => Stmt::SpecInlineFun(SpecInlineFun { syntax }),
@@ -6141,6 +6196,7 @@ impl AstNode for Stmt {
         match self {
             Stmt::AbortsIfStmt(it) => &it.syntax,
             Stmt::ExprStmt(it) => &it.syntax,
+            Stmt::GlobalVariableDecl(it) => &it.syntax,
             Stmt::LetStmt(it) => &it.syntax,
             Stmt::SchemaFieldStmt(it) => &it.syntax,
             Stmt::SpecInlineFun(it) => &it.syntax,
@@ -6393,7 +6449,10 @@ impl AnyGenericElement {
 impl AstNode for AnyGenericElement {
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(kind, ENUM | FUN | SCHEMA | SPEC_FUN | SPEC_INLINE_FUN | STRUCT)
+        matches!(
+            kind,
+            ENUM | FUN | GLOBAL_VARIABLE_DECL | SCHEMA | SPEC_FUN | SPEC_INLINE_FUN | STRUCT
+        )
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
@@ -6409,6 +6468,10 @@ impl From<Enum> for AnyGenericElement {
 impl From<Fun> for AnyGenericElement {
     #[inline]
     fn from(node: Fun) -> AnyGenericElement { AnyGenericElement { syntax: node.syntax } }
+}
+impl From<GlobalVariableDecl> for AnyGenericElement {
+    #[inline]
+    fn from(node: GlobalVariableDecl) -> AnyGenericElement { AnyGenericElement { syntax: node.syntax } }
 }
 impl From<Schema> for AnyGenericElement {
     #[inline]
@@ -6449,6 +6512,7 @@ impl AstNode for AnyHasAttrs {
                 | ENUM
                 | FRIEND
                 | FUN
+                | GLOBAL_VARIABLE_DECL
                 | ITEM_SPEC
                 | MODULE
                 | MODULE_SPEC
@@ -6485,6 +6549,10 @@ impl From<Friend> for AnyHasAttrs {
 impl From<Fun> for AnyHasAttrs {
     #[inline]
     fn from(node: Fun) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<GlobalVariableDecl> for AnyHasAttrs {
+    #[inline]
+    fn from(node: GlobalVariableDecl) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
 impl From<ItemSpec> for AnyHasAttrs {
     #[inline]
@@ -6799,10 +6867,6 @@ impl From<AnyFieldsOwner> for AnyHoverDocsOwner {
     #[inline]
     fn from(node: AnyFieldsOwner) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
 }
-impl From<AnyGenericElement> for AnyHoverDocsOwner {
-    #[inline]
-    fn from(node: AnyGenericElement) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
-}
 impl From<AnyHasVisibility> for AnyHoverDocsOwner {
     #[inline]
     fn from(node: AnyHasVisibility) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
@@ -6882,6 +6946,7 @@ impl AstNode for AnyNamedElement {
             CONST
                 | ENUM
                 | FUN
+                | GLOBAL_VARIABLE_DECL
                 | IDENT_PAT
                 | MODULE
                 | NAMED_FIELD
@@ -6912,6 +6977,10 @@ impl From<Enum> for AnyNamedElement {
 impl From<Fun> for AnyNamedElement {
     #[inline]
     fn from(node: Fun) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
+}
+impl From<GlobalVariableDecl> for AnyNamedElement {
+    #[inline]
+    fn from(node: GlobalVariableDecl) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
 impl From<IdentPat> for AnyNamedElement {
     #[inline]
@@ -7293,6 +7362,11 @@ impl std::fmt::Display for Friend {
     }
 }
 impl std::fmt::Display for Fun {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for GlobalVariableDecl {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

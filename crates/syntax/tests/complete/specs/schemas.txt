@@ -85,9 +85,8 @@ SOURCE_FILE@0..386
         GLOBAL_VARIABLE_DECL@165..182
           GLOBAL_KW@165..171 "global"
           WHITESPACE@171..172 " "
-          IDENT_PAT@172..177
-            NAME@172..177
-              IDENT@172..177 "three"
+          NAME@172..177
+            IDENT@172..177 "three"
           COLON@177..178 ":"
           WHITESPACE@178..179 " "
           PATH_TYPE@179..181
@@ -100,9 +99,8 @@ SOURCE_FILE@0..386
         GLOBAL_VARIABLE_DECL@191..217
           GLOBAL_KW@191..197 "global"
           WHITESPACE@197..198 " "
-          IDENT_PAT@198..202
-            NAME@198..202
-              IDENT@198..202 "four"
+          NAME@198..202
+            IDENT@198..202 "four"
           TYPE_PARAM_LIST@202..208
             L_ANGLE@202..203 "<"
             TYPE_PARAM@203..204

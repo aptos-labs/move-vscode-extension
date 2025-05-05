@@ -110,9 +110,8 @@ SOURCE_FILE@0..1295
         GLOBAL_VARIABLE_DECL@254..273
           GLOBAL_KW@254..260 "global"
           WHITESPACE@260..261 " "
-          IDENT_PAT@261..267
-            NAME@261..267
-              IDENT@261..267 "amount"
+          NAME@261..267
+            IDENT@261..267 "amount"
           COLON@267..268 ":"
           WHITESPACE@268..269 " "
           PATH_TYPE@269..272

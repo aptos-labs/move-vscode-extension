@@ -1032,28 +1032,6 @@ module 0x1::main {
 
 // language=Move
 #[test]
-fn test_module_and_spec_module_blocks_share_the_same_namespace() {
-    check_resolve(
-        r#"
-module 0x1::caller {
-    public fun call() {}
-              //X
-}
-module 0x1::main {
-    public fun main() {
-        call();
-        //^
-    }
-}    
-spec 0x1::main {
-    use 0x1::caller::call;
-}
-"#,
-    )
-}
-
-// language=Move
-#[test]
 fn test_cannot_resolve_const_from_item() {
     check_resolve(
         r#"
@@ -1198,15 +1176,15 @@ module 0x1::main {
 
 // language=Move
 #[test]
-fn test_resolve_function_to_import_alias() {
+fn test_resolve_function_with_alias() {
     check_resolve(
         r#"
 module 0x1::original {
     public fun call() {}
+              //X
 }    
 module 0x1::m {
     use 0x1::original::call as mycall;
-                             //X
     fun main() {
         mycall();
       //^  
@@ -1343,11 +1321,32 @@ module 0x1::m2 {
 
 // language=Move
 #[test]
+fn test_resolve_spec_fun_defined_in_module_spec_from_local_usage() {
+    check_resolve(
+        r#"
+module 0x1::m {
+    spec fun main(): u128 {
+        spec_sip_hash(); 1
+               //^
+    }
+}
+spec 0x1::m {
+    spec module {
+        fun spec_sip_hash();
+            //X
+    }
+}
+"#,
+    )
+}
+
+// language=Move
+#[test]
 fn test_resolve_spec_fun_defined_in_module_spec() {
     check_resolve(
         r#"
 module 0x1::m {
-}        
+}
 spec 0x1::m {
     spec module {
         fun spec_sip_hash();

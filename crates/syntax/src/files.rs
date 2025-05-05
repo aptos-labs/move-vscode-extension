@@ -62,6 +62,10 @@ impl<T> InFile<T> {
         InFile::new(self.file_id, f(self.value))
     }
 
+    pub fn flat_map<F: Fn(T) -> Vec<U>, U>(self, f: F) -> Vec<InFile<U>> {
+        self.map(f).flatten()
+    }
+
     pub fn map_ref<F: FnOnce(&T) -> U, U>(&self, f: F) -> InFile<U> {
         InFile::new(self.file_id, f(&self.value))
     }
@@ -116,7 +120,7 @@ impl InFile<SyntaxNode> {
     }
 }
 
-impl<T: AstNode> InFile<Vec<T>> {
+impl<T> InFile<Vec<T>> {
     pub fn flatten(self) -> Vec<InFile<T>> {
         let (file_id, vec) = self.unpack();
         vec.into_iter().map(|it| it.in_file(file_id)).collect()
@@ -124,6 +128,10 @@ impl<T: AstNode> InFile<Vec<T>> {
 }
 
 impl<T: AstNode> InFile<T> {
+    pub fn syntax(&self) -> InFile<SyntaxNode> {
+        self.map_ref(|it| it.syntax().to_owned())
+    }
+
     pub fn syntax_text(&self) -> String {
         self.value.syntax().text().to_string()
     }
@@ -152,10 +160,9 @@ pub trait InFileExt {
     fn in_file(self, file_id: FileId) -> InFile<Self::Node>;
 }
 
-impl<T: AstNode> InFileExt for T {
+impl<T> InFileExt for T {
     type Node = T;
     fn in_file(self, file_id: FileId) -> InFile<T> {
-        // AstNode clone is Rc::clone()
         InFile::new(file_id, self)
     }
 }

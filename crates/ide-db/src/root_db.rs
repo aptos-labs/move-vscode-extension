@@ -6,6 +6,7 @@ use base_db::package_root::{PackageRoot, PackageRootId};
 use base_db::{ParseDatabase, SourceDatabase};
 use line_index::LineIndex;
 use salsa::Durability;
+use std::fs::File;
 use std::mem::ManuallyDrop;
 use std::ops::Deref;
 use std::sync::Arc;
@@ -112,6 +113,15 @@ impl SourceDatabase for RootDatabase {
     fn set_package_deps(&mut self, package_id: PackageRootId, deps: Vec<PackageRootId>) {
         let files = Arc::clone(&self.files);
         files.set_package_deps(self, package_id, Arc::from(deps))
+    }
+
+    fn spec_file_sets(&self, file_id: FileId) -> FileIdSet {
+        self.files.spec_file_set(file_id)
+    }
+
+    fn set_spec_file_sets(&mut self, file_id: FileId, file_set: Vec<FileId>) {
+        let files = Arc::clone(&self.files);
+        files.set_spec_file_set(self, file_id, file_set)
     }
 
     fn source_file_ids(&self, package_root_id: PackageRootId) -> FileIdSet {

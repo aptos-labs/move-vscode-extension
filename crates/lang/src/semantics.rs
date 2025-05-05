@@ -1,25 +1,25 @@
 mod source_to_def;
 
+use crate::HirDatabase;
+use crate::db::NodeInferenceExt;
+use crate::nameres::ResolveReference;
 use crate::nameres::fq_named_element::{ItemFQName, ItemFQNameOwner};
 use crate::nameres::scope::ScopeEntry;
-use crate::nameres::ResolveReference;
 use crate::node_ext::item::ModuleItemExt;
 use crate::semantics::source_to_def::SourceToDefCache;
-use crate::types::inference::inference_result::InferenceResult;
 use crate::types::inference::InferenceCtx;
+use crate::types::inference::inference_result::InferenceResult;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
-use crate::HirDatabase;
+use base_db::ParseDatabase;
 use base_db::inputs::InternFileId;
 use base_db::package_root::PackageRootId;
 use std::cell::RefCell;
 use std::sync::Arc;
 use std::{fmt, ops};
 use syntax::files::InFile;
-use syntax::{ast, AstNode, SyntaxNode, SyntaxToken};
+use syntax::{AstNode, SyntaxNode, SyntaxToken, ast};
 use vfs::FileId;
-use base_db::ParseDatabase;
-use crate::db::NodeInferenceExt;
 
 const MAX_FILE_ID: u32 = 0x7fff_ffff;
 
