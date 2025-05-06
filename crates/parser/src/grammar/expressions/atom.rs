@@ -307,7 +307,7 @@ fn while_expr(p: &mut Parser<'_>, m: Option<Marker>) -> CompletedMarker {
     m.complete(p, WHILE_EXPR)
 }
 
-fn condition(p: &mut Parser) {
+pub(crate) fn condition(p: &mut Parser) {
     let m = p.start();
     p.expect(T!['(']);
     let r = Restrictions {

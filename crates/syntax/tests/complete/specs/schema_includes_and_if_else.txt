@@ -1,0 +1,70 @@
+SOURCE_FILE@0..148
+  MODULE@0..147
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..31
+      IDENT@12..31 "schema_includes_lit"
+    WHITESPACE@31..32 " "
+    L_CURLY@32..33 "{"
+    WHITESPACE@33..38 "\n    "
+    ITEM_SPEC@38..145
+      SPEC_KW@38..42 "spec"
+      WHITESPACE@42..43 " "
+      MODULE_KW@43..49 "module"
+      WHITESPACE@49..50 " "
+      BLOCK_EXPR@50..145
+        L_CURLY@50..51 "{"
+        WHITESPACE@51..60 "\n        "
+        INCLUDE_SCHEMA@60..101
+          INCLUDE_KW@60..67 "include"
+          WHITESPACE@67..68 " "
+          IF_ELSE_INCLUDE_EXPR@68..100
+            IF_KW@68..70 "if"
+            WHITESPACE@70..71 " "
+            CONDITION@71..77
+              L_PAREN@71..72 "("
+              LITERAL@72..76
+                TRUE_KW@72..76 "true"
+              R_PAREN@76..77 ")"
+            WHITESPACE@77..78 " "
+            SCHEMA_LIT@78..86
+              PATH@78..86
+                PATH_SEGMENT@78..86
+                  NAME_REF@78..86
+                    IDENT@78..86 "MySchema"
+            WHITESPACE@86..87 " "
+            ELSE_KW@87..91 "else"
+            WHITESPACE@91..92 " "
+            SCHEMA_LIT@92..100
+              PATH@92..100
+                PATH_SEGMENT@92..100
+                  NAME_REF@92..100
+                    IDENT@92..100 "MySchema"
+          SEMICOLON@100..101 ";"
+        WHITESPACE@101..110 "\n        "
+        INCLUDE_SCHEMA@110..139
+          INCLUDE_KW@110..117 "include"
+          WHITESPACE@117..118 " "
+          AND_INCLUDE_EXPR@118..138
+            SCHEMA_LIT@118..126
+              PATH@118..126
+                PATH_SEGMENT@118..126
+                  NAME_REF@118..126
+                    IDENT@118..126 "MySchema"
+            WHITESPACE@126..127 " "
+            AMP_AMP@127..129 "&&"
+            WHITESPACE@129..130 " "
+            SCHEMA_LIT@130..138
+              PATH@130..138
+                PATH_SEGMENT@130..138
+                  NAME_REF@130..138
+                    IDENT@130..138 "MySchema"
+          SEMICOLON@138..139 ";"
+        WHITESPACE@139..144 "\n    "
+        R_CURLY@144..145 "}"
+    WHITESPACE@145..146 "\n"
+    R_CURLY@146..147 "}"
+  WHITESPACE@147..148 "\n"
