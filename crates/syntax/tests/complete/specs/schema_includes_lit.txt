@@ -21,7 +21,7 @@ SOURCE_FILE@0..228
         INCLUDE_SCHEMA@60..77
           INCLUDE_KW@60..67 "include"
           WHITESPACE@67..68 " "
-          INCLUDE_EXPR@68..76
+          SCHEMA_INCLUDE_EXPR@68..76
             SCHEMA_LIT@68..76
               PATH@68..76
                 PATH_SEGMENT@68..76
@@ -32,24 +32,26 @@ SOURCE_FILE@0..228
         INCLUDE_SCHEMA@86..113
           INCLUDE_KW@86..93 "include"
           WHITESPACE@93..94 " "
-          INCLUDE_EXPR@94..112
+          SCHEMA_INCLUDE_EXPR@94..112
             SCHEMA_LIT@94..112
               PATH@94..102
                 PATH_SEGMENT@94..102
                   NAME_REF@94..102
                     IDENT@94..102 "MySchema"
-              L_CURLY@102..103 "{"
-              WHITESPACE@103..104 " "
-              SCHEMA_LIT_FIELD@104..110
-                IDENT@104..110 "amount"
-              WHITESPACE@110..111 " "
-              R_CURLY@111..112 "}"
+              SCHEMA_LIT_FIELD_LIST@102..112
+                L_CURLY@102..103 "{"
+                WHITESPACE@103..104 " "
+                SCHEMA_LIT_FIELD@104..110
+                  NAME_REF@104..110
+                    IDENT@104..110 "amount"
+                WHITESPACE@110..111 " "
+                R_CURLY@111..112 "}"
           SEMICOLON@112..113 ";"
         WHITESPACE@113..122 "\n        "
         INCLUDE_SCHEMA@122..157
           INCLUDE_KW@122..129 "include"
           WHITESPACE@129..130 " "
-          INCLUDE_EXPR@130..156
+          SCHEMA_INCLUDE_EXPR@130..156
             SCHEMA_LIT@130..156
               PATH@130..146
                 PATH_SEGMENT@130..146
@@ -64,50 +66,54 @@ SOURCE_FILE@0..228
                             NAME_REF@139..145
                               IDENT@139..145 "MyType"
                     R_ANGLE@145..146 ">"
-              L_CURLY@146..147 "{"
-              WHITESPACE@147..148 " "
-              SCHEMA_LIT_FIELD@148..154
-                IDENT@148..154 "amount"
-              WHITESPACE@154..155 " "
-              R_CURLY@155..156 "}"
+              SCHEMA_LIT_FIELD_LIST@146..156
+                L_CURLY@146..147 "{"
+                WHITESPACE@147..148 " "
+                SCHEMA_LIT_FIELD@148..154
+                  NAME_REF@148..154
+                    IDENT@148..154 "amount"
+                WHITESPACE@154..155 " "
+                R_CURLY@155..156 "}"
           SEMICOLON@156..157 ";"
         WHITESPACE@157..166 "\n        "
         INCLUDE_SCHEMA@166..219
           INCLUDE_KW@166..173 "include"
           WHITESPACE@173..174 " "
-          INCLUDE_EXPR@174..218
+          SCHEMA_INCLUDE_EXPR@174..218
             SCHEMA_LIT@174..218
               PATH@174..182
                 PATH_SEGMENT@174..182
                   NAME_REF@174..182
                     IDENT@174..182 "MySchema"
-              L_CURLY@182..183 "{"
-              WHITESPACE@183..184 " "
-              SCHEMA_LIT_FIELD@184..216
-                IDENT@184..191 "address"
-                COLON@191..192 ":"
-                WHITESPACE@192..193 " "
-                CALL_EXPR@193..216
-                  PATH_EXPR@193..211
-                    PATH@193..211
-                      PATH@193..199
-                        PATH_SEGMENT@193..199
-                          NAME_REF@193..199
-                            IDENT@193..199 "Signer"
-                      COLON_COLON@199..201 "::"
-                      PATH_SEGMENT@201..211
-                        NAME_REF@201..211
-                          IDENT@201..211 "address_of"
-                  ARG_LIST@211..216
-                    L_PAREN@211..212 "("
-                    PATH_EXPR@212..215
-                      PATH@212..215
-                        PATH_SEGMENT@212..215
-                          NAME_REF@212..215
-                            IDENT@212..215 "acc"
-                    R_PAREN@215..216 ")"
-              WHITESPACE@216..217 " "
-              R_CURLY@217..218 "}"
+              SCHEMA_LIT_FIELD_LIST@182..218
+                L_CURLY@182..183 "{"
+                WHITESPACE@183..184 " "
+                SCHEMA_LIT_FIELD@184..216
+                  NAME_REF@184..191
+                    IDENT@184..191 "address"
+                  COLON@191..192 ":"
+                  WHITESPACE@192..193 " "
+                  CALL_EXPR@193..216
+                    PATH_EXPR@193..211
+                      PATH@193..211
+                        PATH@193..199
+                          PATH_SEGMENT@193..199
+                            NAME_REF@193..199
+                              IDENT@193..199 "Signer"
+                        COLON_COLON@199..201 "::"
+                        PATH_SEGMENT@201..211
+                          NAME_REF@201..211
+                            IDENT@201..211 "address_of"
+                    ARG_LIST@211..216
+                      L_PAREN@211..212 "("
+                      PATH_EXPR@212..215
+                        PATH@212..215
+                          PATH_SEGMENT@212..215
+                            NAME_REF@212..215
+                              IDENT@212..215 "acc"
+                      R_PAREN@215..216 ")"
+                WHITESPACE@216..217 " "
+                R_CURLY@217..218 "}"
           SEMICOLON@218..219 ";"
         WHITESPACE@219..224 "\n    "
         R_CURLY@224..225 "}"

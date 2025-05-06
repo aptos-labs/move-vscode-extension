@@ -459,7 +459,31 @@ SchemaFieldStmt =
     'local'? IdentPat ':' Type ';'
 
 IncludeSchema =
-    'include' SpecPredicatePropertyList? Expr ';'
+    'include' SpecPredicatePropertyList? IncludeExpr ';'
+
+IncludeExpr =
+    SchemaIncludeExpr | AndIncludeExpr | ImplyIncludeExpr | IfElseIncludeExpr
+
+SchemaIncludeExpr =
+    SchemaLit
+
+AndIncludeExpr =
+    SchemaLit and_op:'&&' SchemaLit
+
+ImplyIncludeExpr =
+    Expr
+
+IfElseIncludeExpr =
+    'if' Condition SchemaLit 'else' SchemaLit
+
+SchemaLit =
+    Path SchemaLitFieldList?
+
+SchemaLitFieldList =
+    '{' fields:(SchemaLitField (',' SchemaLitField)* ','?)? '}'
+
+SchemaLitField =
+    NameRef (':' Expr)?
 
 GlobalVariableDecl =
     Attr* 'global' Name TypeParamList? ':' Type ('=' Expr)? ';'

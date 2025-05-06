@@ -115,19 +115,21 @@ SOURCE_FILE@0..339
                 NAME_REF@174..198
                   IDENT@174..198 "EnsuresHasKeyRotationCap"
             WHITESPACE@198..199 " "
-            L_CURLY@199..200 "{"
-            WHITESPACE@200..201 " "
-            SCHEMA_LIT_FIELD@201..221
-              IDENT@201..208 "account"
-              COLON@208..209 ":"
-              WHITESPACE@209..210 " "
-              PATH_EXPR@210..221
-                PATH@210..221
-                  PATH_SEGMENT@210..221
-                    NAME_REF@210..221
-                      IDENT@210..221 "new_account"
-            WHITESPACE@221..222 " "
-            R_CURLY@222..223 "}"
+            SCHEMA_LIT_FIELD_LIST@199..223
+              L_CURLY@199..200 "{"
+              WHITESPACE@200..201 " "
+              SCHEMA_LIT_FIELD@201..221
+                NAME_REF@201..208
+                  IDENT@201..208 "account"
+                COLON@208..209 ":"
+                WHITESPACE@209..210 " "
+                PATH_EXPR@210..221
+                  PATH@210..221
+                    PATH_SEGMENT@210..221
+                      NAME_REF@210..221
+                        IDENT@210..221 "new_account"
+              WHITESPACE@221..222 " "
+              R_CURLY@222..223 "}"
           WHITESPACE@223..224 " "
           APPLY_TO@224..239
             TO_KW@224..226 "to"

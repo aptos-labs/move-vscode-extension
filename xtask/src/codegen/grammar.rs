@@ -35,7 +35,7 @@ pub fn generate() {
 
     let grammar = include_str!("../../../crates/syntax/move.ungram")
         .parse::<Grammar>()
-        .unwrap();
+        .expect(".ungram file has an error");
     let ast = lower(&grammar);
 
     let ast_tokens = generate_tokens(&ast);
@@ -673,6 +673,7 @@ fn lower_rule(
                 l.as_str(),
                 "lhs"
                     | "op"
+                    | "and_op"
                     | "rhs"
                     | "then_branch"
                     | "else_branch"

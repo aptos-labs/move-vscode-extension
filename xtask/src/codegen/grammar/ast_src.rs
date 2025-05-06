@@ -202,13 +202,11 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "SCHEMA_FIELD_STMT",
 
         "INCLUDE_SCHEMA",
-        "INCLUDE_EXPR",
+
+        "SCHEMA_INCLUDE_EXPR",
         "AND_INCLUDE_EXPR",
         "IMPLY_INCLUDE_EXPR",
         "IF_ELSE_INCLUDE_EXPR",
-
-        // "INCLUDE_EXPR",
-        // "SCHEMA_INCLUDE_EXPR",
 
         "APPLY_SCHEMA",
         "APPLY_TO",
@@ -216,6 +214,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "WILDCARD_PATTERN_MODIFIER",
         "WILDCARD_PATTERN",
         "SCHEMA_LIT",
+        "SCHEMA_LIT_FIELD_LIST",
         "SCHEMA_LIT_FIELD",
 
         "FORALL_EXPR",
