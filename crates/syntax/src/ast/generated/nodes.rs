@@ -101,6 +101,15 @@ impl AddressLit {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AndIncludeExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl AndIncludeExpr {
+    #[inline]
+    pub fn schema_lit(&self) -> Option<SchemaLit> { support::child(&self.syntax) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ArgList {
     pub(crate) syntax: SyntaxNode,
 }
@@ -511,6 +520,21 @@ impl ast::ReferenceElement for IdentPat {}
 impl IdentPat {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct IfElseIncludeExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl IfElseIncludeExpr {
+    #[inline]
+    pub fn condition(&self) -> Option<Condition> { support::child(&self.syntax) }
+    #[inline]
+    pub fn schema_lit(&self) -> Option<SchemaLit> { support::child(&self.syntax) }
+    #[inline]
+    pub fn else_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![else]) }
+    #[inline]
+    pub fn if_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![if]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct IfExpr {
     pub(crate) syntax: SyntaxNode,
 }
@@ -524,12 +548,21 @@ impl IfExpr {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ImplyIncludeExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ImplyIncludeExpr {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct IncludeSchema {
     pub(crate) syntax: SyntaxNode,
 }
 impl IncludeSchema {
     #[inline]
-    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    pub fn include_expr(&self) -> Option<IncludeExpr> { support::child(&self.syntax) }
     #[inline]
     pub fn spec_predicate_property_list(&self) -> Option<SpecPredicatePropertyList> {
         support::child(&self.syntax)
@@ -1196,6 +1229,52 @@ impl SchemaFieldStmt {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SchemaIncludeExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl SchemaIncludeExpr {
+    #[inline]
+    pub fn schema_lit(&self) -> Option<SchemaLit> { support::child(&self.syntax) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SchemaLit {
+    pub(crate) syntax: SyntaxNode,
+}
+impl SchemaLit {
+    #[inline]
+    pub fn path(&self) -> Option<Path> { support::child(&self.syntax) }
+    #[inline]
+    pub fn schema_lit_field_list(&self) -> Option<SchemaLitFieldList> { support::child(&self.syntax) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SchemaLitField {
+    pub(crate) syntax: SyntaxNode,
+}
+impl SchemaLitField {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
+    #[inline]
+    pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SchemaLitFieldList {
+    pub(crate) syntax: SyntaxNode,
+}
+impl SchemaLitFieldList {
+    #[inline]
+    pub fn fields(&self) -> AstChildren<SchemaLitField> { support::children(&self.syntax) }
+    #[inline]
+    pub fn l_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['{']) }
+    #[inline]
+    pub fn r_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['}']) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Script {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1825,6 +1904,14 @@ pub enum IdentPatKind {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum IncludeExpr {
+    AndIncludeExpr(AndIncludeExpr),
+    IfElseIncludeExpr(IfElseIncludeExpr),
+    ImplyIncludeExpr(ImplyIncludeExpr),
+    SchemaIncludeExpr(SchemaIncludeExpr),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum InferenceCtxOwner {
     Fun(Fun),
     ItemSpec(ItemSpec),
@@ -2145,6 +2232,27 @@ impl AstNode for AddressLit {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == ADDRESS_LIT }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for AndIncludeExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        AND_INCLUDE_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == AND_INCLUDE_EXPR }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -2744,6 +2852,27 @@ impl AstNode for IdentPat {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for IfElseIncludeExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        IF_ELSE_INCLUDE_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == IF_ELSE_INCLUDE_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for IfExpr {
     #[inline]
     fn kind() -> SyntaxKind
@@ -2754,6 +2883,27 @@ impl AstNode for IfExpr {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == IF_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for ImplyIncludeExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        IMPLY_INCLUDE_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == IMPLY_INCLUDE_EXPR }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -3783,6 +3933,90 @@ impl AstNode for SchemaFieldStmt {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == SCHEMA_FIELD_STMT }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for SchemaIncludeExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        SCHEMA_INCLUDE_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == SCHEMA_INCLUDE_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for SchemaLit {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        SCHEMA_LIT
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == SCHEMA_LIT }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for SchemaLitField {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        SCHEMA_LIT_FIELD
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == SCHEMA_LIT_FIELD }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for SchemaLitFieldList {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        SCHEMA_LIT_FIELD_LIST
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == SCHEMA_LIT_FIELD_LIST }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -5433,6 +5667,77 @@ impl AstNode for IdentPatKind {
             IdentPatKind::LetStmt(it) => &it.syntax,
             IdentPatKind::Param(it) => &it.syntax,
             IdentPatKind::SchemaFieldStmt(it) => &it.syntax,
+        }
+    }
+}
+impl From<AndIncludeExpr> for IncludeExpr {
+    #[inline]
+    fn from(node: AndIncludeExpr) -> IncludeExpr { IncludeExpr::AndIncludeExpr(node) }
+}
+impl From<IfElseIncludeExpr> for IncludeExpr {
+    #[inline]
+    fn from(node: IfElseIncludeExpr) -> IncludeExpr { IncludeExpr::IfElseIncludeExpr(node) }
+}
+impl From<ImplyIncludeExpr> for IncludeExpr {
+    #[inline]
+    fn from(node: ImplyIncludeExpr) -> IncludeExpr { IncludeExpr::ImplyIncludeExpr(node) }
+}
+impl From<SchemaIncludeExpr> for IncludeExpr {
+    #[inline]
+    fn from(node: SchemaIncludeExpr) -> IncludeExpr { IncludeExpr::SchemaIncludeExpr(node) }
+}
+impl IncludeExpr {
+    pub fn and_include_expr(self) -> Option<AndIncludeExpr> {
+        match (self) {
+            IncludeExpr::AndIncludeExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn if_else_include_expr(self) -> Option<IfElseIncludeExpr> {
+        match (self) {
+            IncludeExpr::IfElseIncludeExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn imply_include_expr(self) -> Option<ImplyIncludeExpr> {
+        match (self) {
+            IncludeExpr::ImplyIncludeExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn schema_include_expr(self) -> Option<SchemaIncludeExpr> {
+        match (self) {
+            IncludeExpr::SchemaIncludeExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+}
+impl AstNode for IncludeExpr {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(
+            kind,
+            AND_INCLUDE_EXPR | IF_ELSE_INCLUDE_EXPR | IMPLY_INCLUDE_EXPR | SCHEMA_INCLUDE_EXPR
+        )
+    }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            AND_INCLUDE_EXPR => IncludeExpr::AndIncludeExpr(AndIncludeExpr { syntax }),
+            IF_ELSE_INCLUDE_EXPR => IncludeExpr::IfElseIncludeExpr(IfElseIncludeExpr { syntax }),
+            IMPLY_INCLUDE_EXPR => IncludeExpr::ImplyIncludeExpr(ImplyIncludeExpr { syntax }),
+            SCHEMA_INCLUDE_EXPR => IncludeExpr::SchemaIncludeExpr(SchemaIncludeExpr { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            IncludeExpr::AndIncludeExpr(it) => &it.syntax,
+            IncludeExpr::IfElseIncludeExpr(it) => &it.syntax,
+            IncludeExpr::ImplyIncludeExpr(it) => &it.syntax,
+            IncludeExpr::SchemaIncludeExpr(it) => &it.syntax,
         }
     }
 }
@@ -7193,6 +7498,11 @@ impl std::fmt::Display for IdentPatKind {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for IncludeExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for InferenceCtxOwner {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -7284,6 +7594,11 @@ impl std::fmt::Display for AddressDef {
     }
 }
 impl std::fmt::Display for AddressLit {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for AndIncludeExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -7428,7 +7743,17 @@ impl std::fmt::Display for IdentPat {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for IfElseIncludeExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for IfExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for ImplyIncludeExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -7674,6 +7999,26 @@ impl std::fmt::Display for Schema {
     }
 }
 impl std::fmt::Display for SchemaFieldStmt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for SchemaIncludeExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for SchemaLit {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for SchemaLitField {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for SchemaLitFieldList {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

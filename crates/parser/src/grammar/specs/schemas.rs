@@ -1,10 +1,10 @@
 use crate::grammar::expressions::atom::{block_expr, condition, IDENT_FIRST};
-use crate::grammar::expressions::{expr, opt_initializer_expr, Restrictions};
+use crate::grammar::expressions::{expr, opt_initializer_expr};
 use crate::grammar::items::item_start;
 use crate::grammar::paths::{is_path_start, type_path};
 use crate::grammar::specs::predicates::opt_predicate_property_list;
 use crate::grammar::utils::{delimited_fn, list};
-use crate::grammar::{expressions, generic_params, name, name_or_bump_until, patterns, types};
+use crate::grammar::{generic_params, name, name_or_bump_until, name_ref, patterns, types};
 use crate::parser::{CompletedMarker, Marker};
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
@@ -85,7 +85,7 @@ pub(crate) fn include_schema(p: &mut Parser) -> bool {
             } else {
                 if p.at_ts(ts!(T![;], T!['}'])) {
                     let m = schema_lit_lhs.precede(p);
-                    m.complete(p, INCLUDE_EXPR);
+                    m.complete(p, SCHEMA_INCLUDE_EXPR);
                 } else {
                     schema_lit_lhs.abandon_with_rollback(p);
                     // try to parse imply expr next
@@ -224,7 +224,9 @@ fn wildcard_ident(p: &mut Parser) -> bool {
 fn schema_lit(p: &mut Parser) -> CompletedMarker {
     let m = p.start();
     type_path(p);
+
     if p.at(T!['{']) {
+        let m = p.start();
         list(
             p,
             T!['{'],
@@ -237,7 +239,8 @@ fn schema_lit(p: &mut Parser) -> CompletedMarker {
                     return false;
                 }
                 let m = p.start();
-                p.bump(IDENT);
+                name_ref(p);
+                // p.bump(IDENT);
                 if p.eat(T![:]) {
                     expr(p);
                 }
@@ -245,6 +248,7 @@ fn schema_lit(p: &mut Parser) -> CompletedMarker {
                 true
             },
         );
+        m.complete(p, SCHEMA_LIT_FIELD_LIST);
     }
     m.complete(p, SCHEMA_LIT)
 }
