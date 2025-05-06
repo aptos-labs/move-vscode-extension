@@ -122,8 +122,7 @@ module 0x1::main {
 #[test]
 fn test_no_warning_if_generic_is_unknown() {
     // language=Move
-    check_diagnostic_expect(expect![[
-        r#"
+    check_diagnostic_expect(expect![[r#"
 module 0x1::main {
     struct S<T> { field: T }
     fun get_field(self: &S<u8>): u8 { self.field }
@@ -132,8 +131,7 @@ module 0x1::main {
         get_field(s);
     }
 }
-"#]],
-    );
+"#]]);
 }
 
 #[test]

@@ -17,7 +17,7 @@ impl TypeAstWalker<'_, '_> {
     pub fn collect_pat_bindings(&mut self, pat: ast::Pat, ty: Ty, def_bm: BindingMode) {
         match pat {
             ast::Pat::PathPat(path_pat) => {
-                let named_item = self.ctx.resolve_path_cached(path_pat.path(), None);
+                let named_item = self.ctx.resolve_cached(path_pat.path(), None);
                 let named_item_kind = named_item.map(|it| it.kind());
                 // copied from intellij-rust, don't know what it's about
                 let pat_ty = match named_item_kind {
@@ -29,7 +29,7 @@ impl TypeAstWalker<'_, '_> {
             ast::Pat::IdentPat(ident_pat) => {
                 let named_item = self
                     .ctx
-                    .resolve_ident_pat_cached(ident_pat.clone(), Some(ty.clone()))
+                    .resolve_cached(ident_pat.clone(), Some(ty.clone()))
                     .map(|it| it.value);
                 let ident_pat_ty =
                     if matches!(named_item.map(|it| it.syntax().kind()), Some(SyntaxKind::VARIANT)) {
@@ -95,7 +95,12 @@ impl TypeAstWalker<'_, '_> {
                 let tuple_fields = fields_owner.map(|it| it.tuple_fields()).flatten();
                 let tuple_field_types = tuple_fields
                     .into_iter()
-                    .map(|f| self.ctx.ty_lowering().lower_tuple_field(f).unwrap_or(Ty::Unknown))
+                    .map(|field| {
+                        self.ctx
+                            .ty_lowering()
+                            .lower_type_owner(field.map_into())
+                            .unwrap_or(Ty::Unknown)
+                    })
                     .collect::<Vec<_>>();
                 let ty_adt_subst = expected
                     .into_ty_adt()
@@ -150,7 +155,7 @@ impl TypeAstWalker<'_, '_> {
     ) -> Option<InFile<ast::AnyFieldsOwner>> {
         let mut fields_owner = self
             .ctx
-            .resolve_path_cached(struct_pat_path, Some(expected_ty.clone()))
+            .resolve_cached(struct_pat_path, Some(expected_ty.clone()))
             .and_then(|item| item.cast_into::<ast::AnyFieldsOwner>());
         if fields_owner.is_none() {
             fields_owner = expected_ty
@@ -185,7 +190,7 @@ impl TypeAstWalker<'_, '_> {
             let field_ty = self
                 .ctx
                 .ty_lowering()
-                .lower_named_field(named_field.to_owned().in_file(item_file_id))
+                .lower_type_owner(named_field.to_owned().in_file(item_file_id).map_into())
                 .unwrap_or(Ty::Unknown);
             tys.push((named_field.to_owned().in_file(item_file_id).to_entry(), field_ty));
         }

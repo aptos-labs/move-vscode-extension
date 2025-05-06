@@ -1,7 +1,8 @@
 use crate::nameres::address::{Address, NamedAddr, ValueAddr, resolve_named_address};
 use crate::nameres::namespaces::{
     ALL_NS, ENUMS_N_MODULES, IMPORTABLE_NS, MODULES, NAMES, NAMES_N_FUNCTIONS_N_VARIANTS, NONE, Ns,
-    NsSet, TYPES_N_ENUMS, TYPES_N_ENUMS_N_ENUM_VARIANTS, TYPES_N_ENUMS_N_MODULES, TYPES_N_ENUMS_N_NAMES,
+    NsSet, SCHEMAS, TYPES_N_ENUMS, TYPES_N_ENUMS_N_ENUM_VARIANTS, TYPES_N_ENUMS_N_MODULES,
+    TYPES_N_ENUMS_N_NAMES,
 };
 use enumset::enum_set;
 use parser::T;
@@ -271,9 +272,7 @@ fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
             }
         }
 
-        // todo:
-        // parent is MvSchemaLit
-        //     || parent is MvSchemaRef -> SCHEMAS
+        SCHEMA_LIT => SCHEMAS,
 
         // todo:
         STRUCT_LIT | STRUCT_PAT | TUPLE_STRUCT_PAT | PATH_PAT => TYPES_N_ENUMS_N_ENUM_VARIANTS,

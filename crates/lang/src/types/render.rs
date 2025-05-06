@@ -4,6 +4,7 @@ use crate::nameres::fq_named_element::ItemFQNameOwner;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::range_like::TySequence;
+use crate::types::ty::schema::TySchema;
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyVar, TyVarKind};
 use crate::types::ty::type_param::TyTypeParameter;
@@ -30,6 +31,7 @@ impl<'db> TypeRenderer<'db> {
                 format!("{}<{}>", type_name, self.render(&ty_seq.item()))
             }
             Ty::Adt(ty_adt) => self.render_ty_adt(ty_adt),
+            Ty::Schema(ty_schema) => self.render_ty_schema(ty_schema),
             Ty::Callable(ty_callable) => self.render_ty_callable(ty_callable),
             Ty::Reference(ty_ref) => {
                 let prefix = if ty_ref.is_mut() { "&mut " } else { "&" };
@@ -100,6 +102,15 @@ impl<'db> TypeRenderer<'db> {
 
     fn render_ty_adt(&self, ty_adt: &TyAdt) -> String {
         let item = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(self.db).unwrap();
+        let item_fq_name = item
+            .fq_name(self.db)
+            .map(|it| it.identifier_text())
+            .unwrap_or(anonymous());
+        format!("{}{}", item_fq_name, self.render_type_args(&ty_adt.type_args))
+    }
+
+    fn render_ty_schema(&self, ty_adt: &TySchema) -> String {
+        let item = ty_adt.schema_loc.to_ast::<ast::Schema>(self.db).unwrap();
         let item_fq_name = item
             .fq_name(self.db)
             .map(|it| it.identifier_text())

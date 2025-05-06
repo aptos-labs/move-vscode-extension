@@ -1,8 +1,12 @@
+use crate::nameres::ResolveReference;
 use crate::types::expectation::Expected;
 use crate::types::inference::ast_walker::TypeAstWalker;
+use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::integer::IntegerKind;
+use crate::types::ty::schema::TySchema;
 use syntax::ast;
+use syntax::ast::{NamedElement, ReferenceElement};
 use syntax::files::InFileExt;
 
 impl<'a, 'db> TypeAstWalker<'a, 'db> {
@@ -20,6 +24,88 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             self.infer_expr_coerceable_to(&with_expr, Ty::Integer(IntegerKind::Integer));
         }
         Some(())
+    }
+
+    pub(super) fn process_include_schema(&mut self, include_schema: &ast::IncludeSchema) -> Option<()> {
+        let include_expr = include_schema.include_expr()?;
+        match include_expr {
+            ast::IncludeExpr::SchemaIncludeExpr(schema_include_expr) => {
+                let schema_lit = schema_include_expr.schema_lit()?;
+                self.process_schema_lit(&schema_lit);
+            }
+            ast::IncludeExpr::AndIncludeExpr(and_include_expr) => {
+                let left_schema_lit = and_include_expr.left_schema_lit()?;
+                self.process_schema_lit(&left_schema_lit);
+                let right_schema_lit = and_include_expr.right_schema_lit()?;
+                self.process_schema_lit(&right_schema_lit);
+            }
+            ast::IncludeExpr::IfElseIncludeExpr(if_else_include_expr) => {
+                let condition_expr = if_else_include_expr.condition()?.expr()?;
+                self.infer_expr_coerceable_to(&condition_expr, Ty::Bool);
+                let schema_lit = if_else_include_expr.schema_lit()?;
+                self.process_schema_lit(&schema_lit);
+            }
+            ast::IncludeExpr::ImplyIncludeExpr(_) => {
+                // ignore it for now
+            }
+        }
+        Some(())
+    }
+
+    pub(super) fn process_schema_lit(&mut self, schema_lit: &ast::SchemaLit) -> Option<()> {
+        let path = schema_lit.path()?;
+        let item = self
+            .ctx
+            .resolve_cached(path.clone(), None)
+            .and_then(|it| it.cast_into::<ast::Schema>());
+        let schema = match item {
+            Some(schema) => schema,
+            None => {
+                // not schema, just infer field exprs and be done
+                let field_exprs = schema_lit
+                    .fields()
+                    .into_iter()
+                    .filter_map(|it| it.expr())
+                    .collect::<Vec<_>>();
+                for field_expr in field_exprs {
+                    self.infer_expr(&field_expr, Expected::NoValue);
+                }
+                return None;
+            }
+        };
+        let ty_schema = self
+            .ctx
+            .instantiate_path(path.into(), schema.clone().map_into())
+            .into_ty_schema()?;
+        for schema_lit_field in schema_lit.fields() {
+            let expected_field_ty = self
+                .get_schema_field_ty(&ty_schema, &schema_lit_field)
+                .unwrap_or(Ty::Unknown);
+            if let Some(expr) = schema_lit_field.expr() {
+                self.infer_expr_coerceable_to(&expr, expected_field_ty);
+            }
+        }
+        Some(())
+    }
+
+    fn get_schema_field_ty(
+        &mut self,
+        ty_schema: &TySchema,
+        schema_lit_field: &ast::SchemaLitField,
+    ) -> Option<Ty> {
+        let field_name = schema_lit_field.field_name()?;
+        let schema_fields = ty_schema.schema(self.ctx.db)?.flat_map(|it| it.schema_fields());
+        let schema_field = schema_fields
+            .iter()
+            .find(|it| it.value.name().map(|n| n.as_string()) == Some(field_name.clone()))?
+            .to_owned();
+        let type_ = schema_field.and_then(|it| it.type_())?;
+        Some(
+            self.ctx
+                .ty_lowering()
+                .lower_type(type_)
+                .substitute(&ty_schema.substitution),
+        )
     }
 
     pub(super) fn infer_quant_expr(&mut self, quant_expr: &ast::QuantExpr) -> Option<Ty> {

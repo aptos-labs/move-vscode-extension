@@ -104,10 +104,7 @@ impl AddressLit {
 pub struct AndIncludeExpr {
     pub(crate) syntax: SyntaxNode,
 }
-impl AndIncludeExpr {
-    #[inline]
-    pub fn schema_lit(&self) -> Option<SchemaLit> { support::child(&self.syntax) }
-}
+impl AndIncludeExpr {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ArgList {
@@ -1212,12 +1209,13 @@ impl Schema {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct SchemaFieldStmt {
+pub struct SchemaField {
     pub(crate) syntax: SyntaxNode,
 }
-impl SchemaFieldStmt {
-    #[inline]
-    pub fn ident_pat(&self) -> Option<IdentPat> { support::child(&self.syntax) }
+impl ast::HasAttrs for SchemaField {}
+impl ast::MslOnly for SchemaField {}
+impl ast::NamedElement for SchemaField {}
+impl SchemaField {
     #[inline]
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
     #[inline]
@@ -1252,6 +1250,7 @@ impl SchemaLit {
 pub struct SchemaLitField {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::ReferenceElement for SchemaLitField {}
 impl SchemaLitField {
     #[inline]
     pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
@@ -1900,7 +1899,6 @@ pub enum IdentPatKind {
     LambdaParam(LambdaParam),
     LetStmt(LetStmt),
     Param(Param),
-    SchemaFieldStmt(SchemaFieldStmt),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1993,7 +1991,7 @@ pub enum Stmt {
     GlobalVariableDecl(GlobalVariableDecl),
     IncludeSchema(IncludeSchema),
     LetStmt(LetStmt),
-    SchemaFieldStmt(SchemaFieldStmt),
+    SchemaField(SchemaField),
     SpecInlineFun(SpecInlineFun),
     SpecPredicateStmt(SpecPredicateStmt),
 }
@@ -2018,6 +2016,15 @@ pub enum Type {
     TupleType(TupleType),
     UnitType(UnitType),
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum TypeOwner {
+    GlobalVariableDecl(GlobalVariableDecl),
+    NamedField(NamedField),
+    SchemaField(SchemaField),
+    TupleField(TupleField),
+}
+impl ast::HasAttrs for TypeOwner {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyFieldsOwner {
@@ -3923,16 +3930,16 @@ impl AstNode for Schema {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
-impl AstNode for SchemaFieldStmt {
+impl AstNode for SchemaField {
     #[inline]
     fn kind() -> SyntaxKind
     where
         Self: Sized,
     {
-        SCHEMA_FIELD_STMT
+        SCHEMA_FIELD
     }
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { kind == SCHEMA_FIELD_STMT }
+    fn can_cast(kind: SyntaxKind) -> bool { kind == SCHEMA_FIELD }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -5614,10 +5621,6 @@ impl From<Param> for IdentPatKind {
     #[inline]
     fn from(node: Param) -> IdentPatKind { IdentPatKind::Param(node) }
 }
-impl From<SchemaFieldStmt> for IdentPatKind {
-    #[inline]
-    fn from(node: SchemaFieldStmt) -> IdentPatKind { IdentPatKind::SchemaFieldStmt(node) }
-}
 impl IdentPatKind {
     pub fn lambda_param(self) -> Option<LambdaParam> {
         match (self) {
@@ -5637,25 +5640,16 @@ impl IdentPatKind {
             _ => None,
         }
     }
-    pub fn schema_field_stmt(self) -> Option<SchemaFieldStmt> {
-        match (self) {
-            IdentPatKind::SchemaFieldStmt(item) => Some(item),
-            _ => None,
-        }
-    }
 }
 impl AstNode for IdentPatKind {
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(kind, LAMBDA_PARAM | LET_STMT | PARAM | SCHEMA_FIELD_STMT)
-    }
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, LAMBDA_PARAM | LET_STMT | PARAM) }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
             LAMBDA_PARAM => IdentPatKind::LambdaParam(LambdaParam { syntax }),
             LET_STMT => IdentPatKind::LetStmt(LetStmt { syntax }),
             PARAM => IdentPatKind::Param(Param { syntax }),
-            SCHEMA_FIELD_STMT => IdentPatKind::SchemaFieldStmt(SchemaFieldStmt { syntax }),
             _ => return None,
         };
         Some(res)
@@ -5666,7 +5660,6 @@ impl AstNode for IdentPatKind {
             IdentPatKind::LambdaParam(it) => &it.syntax,
             IdentPatKind::LetStmt(it) => &it.syntax,
             IdentPatKind::Param(it) => &it.syntax,
-            IdentPatKind::SchemaFieldStmt(it) => &it.syntax,
         }
     }
 }
@@ -6455,9 +6448,9 @@ impl From<LetStmt> for Stmt {
     #[inline]
     fn from(node: LetStmt) -> Stmt { Stmt::LetStmt(node) }
 }
-impl From<SchemaFieldStmt> for Stmt {
+impl From<SchemaField> for Stmt {
     #[inline]
-    fn from(node: SchemaFieldStmt) -> Stmt { Stmt::SchemaFieldStmt(node) }
+    fn from(node: SchemaField) -> Stmt { Stmt::SchemaField(node) }
 }
 impl From<SpecInlineFun> for Stmt {
     #[inline]
@@ -6498,9 +6491,9 @@ impl Stmt {
             _ => None,
         }
     }
-    pub fn schema_field_stmt(self) -> Option<SchemaFieldStmt> {
+    pub fn schema_field(self) -> Option<SchemaField> {
         match (self) {
-            Stmt::SchemaFieldStmt(item) => Some(item),
+            Stmt::SchemaField(item) => Some(item),
             _ => None,
         }
     }
@@ -6527,7 +6520,7 @@ impl AstNode for Stmt {
                 | GLOBAL_VARIABLE_DECL
                 | INCLUDE_SCHEMA
                 | LET_STMT
-                | SCHEMA_FIELD_STMT
+                | SCHEMA_FIELD
                 | SPEC_INLINE_FUN
                 | SPEC_PREDICATE_STMT
         )
@@ -6540,7 +6533,7 @@ impl AstNode for Stmt {
             GLOBAL_VARIABLE_DECL => Stmt::GlobalVariableDecl(GlobalVariableDecl { syntax }),
             INCLUDE_SCHEMA => Stmt::IncludeSchema(IncludeSchema { syntax }),
             LET_STMT => Stmt::LetStmt(LetStmt { syntax }),
-            SCHEMA_FIELD_STMT => Stmt::SchemaFieldStmt(SchemaFieldStmt { syntax }),
+            SCHEMA_FIELD => Stmt::SchemaField(SchemaField { syntax }),
             SPEC_INLINE_FUN => Stmt::SpecInlineFun(SpecInlineFun { syntax }),
             SPEC_PREDICATE_STMT => Stmt::SpecPredicateStmt(SpecPredicateStmt { syntax }),
             _ => return None,
@@ -6555,7 +6548,7 @@ impl AstNode for Stmt {
             Stmt::GlobalVariableDecl(it) => &it.syntax,
             Stmt::IncludeSchema(it) => &it.syntax,
             Stmt::LetStmt(it) => &it.syntax,
-            Stmt::SchemaFieldStmt(it) => &it.syntax,
+            Stmt::SchemaField(it) => &it.syntax,
             Stmt::SpecInlineFun(it) => &it.syntax,
             Stmt::SpecPredicateStmt(it) => &it.syntax,
         }
@@ -6757,6 +6750,97 @@ impl AstNode for Type {
         }
     }
 }
+impl From<GlobalVariableDecl> for TypeOwner {
+    #[inline]
+    fn from(node: GlobalVariableDecl) -> TypeOwner { TypeOwner::GlobalVariableDecl(node) }
+}
+impl From<NamedField> for TypeOwner {
+    #[inline]
+    fn from(node: NamedField) -> TypeOwner { TypeOwner::NamedField(node) }
+}
+impl From<SchemaField> for TypeOwner {
+    #[inline]
+    fn from(node: SchemaField) -> TypeOwner { TypeOwner::SchemaField(node) }
+}
+impl From<TupleField> for TypeOwner {
+    #[inline]
+    fn from(node: TupleField) -> TypeOwner { TypeOwner::TupleField(node) }
+}
+impl From<TypeOwner> for AnyHasAttrs {
+    #[inline]
+    fn from(node: TypeOwner) -> AnyHasAttrs {
+        match node {
+            TypeOwner::GlobalVariableDecl(it) => it.into(),
+            TypeOwner::NamedField(it) => it.into(),
+            TypeOwner::SchemaField(it) => it.into(),
+            TypeOwner::TupleField(it) => it.into(),
+        }
+    }
+}
+impl TypeOwner {
+    pub fn global_variable_decl(self) -> Option<GlobalVariableDecl> {
+        match (self) {
+            TypeOwner::GlobalVariableDecl(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn named_field(self) -> Option<NamedField> {
+        match (self) {
+            TypeOwner::NamedField(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn schema_field(self) -> Option<SchemaField> {
+        match (self) {
+            TypeOwner::SchemaField(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn tuple_field(self) -> Option<TupleField> {
+        match (self) {
+            TypeOwner::TupleField(item) => Some(item),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn type_(&self) -> Option<Type> {
+        match self {
+            TypeOwner::GlobalVariableDecl(it) => it.type_(),
+            TypeOwner::NamedField(it) => it.type_(),
+            TypeOwner::SchemaField(it) => it.type_(),
+            TypeOwner::TupleField(it) => it.type_(),
+        }
+    }
+}
+impl AstNode for TypeOwner {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(
+            kind,
+            GLOBAL_VARIABLE_DECL | NAMED_FIELD | SCHEMA_FIELD | TUPLE_FIELD
+        )
+    }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            GLOBAL_VARIABLE_DECL => TypeOwner::GlobalVariableDecl(GlobalVariableDecl { syntax }),
+            NAMED_FIELD => TypeOwner::NamedField(NamedField { syntax }),
+            SCHEMA_FIELD => TypeOwner::SchemaField(SchemaField { syntax }),
+            TUPLE_FIELD => TypeOwner::TupleField(TupleField { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            TypeOwner::GlobalVariableDecl(it) => &it.syntax,
+            TypeOwner::NamedField(it) => &it.syntax,
+            TypeOwner::SchemaField(it) => &it.syntax,
+            TypeOwner::TupleField(it) => &it.syntax,
+        }
+    }
+}
 impl AnyFieldsOwner {
     #[inline]
     pub fn new<T: ast::FieldsOwner>(node: T) -> AnyFieldsOwner {
@@ -6875,6 +6959,7 @@ impl AstNode for AnyHasAttrs {
                 | MODULE_SPEC
                 | NAMED_FIELD
                 | SCHEMA
+                | SCHEMA_FIELD
                 | SCRIPT
                 | SPEC_FUN
                 | SPEC_INLINE_FUN
@@ -6930,6 +7015,10 @@ impl From<NamedField> for AnyHasAttrs {
 impl From<Schema> for AnyHasAttrs {
     #[inline]
     fn from(node: Schema) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<SchemaField> for AnyHasAttrs {
+    #[inline]
+    fn from(node: SchemaField) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
 impl From<Script> for AnyHasAttrs {
     #[inline]
@@ -7247,7 +7336,13 @@ impl AstNode for AnyMslOnly {
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            ITEM_SPEC | MODULE_SPEC | SCHEMA | SPEC_BLOCK_EXPR | SPEC_FUN | SPEC_INLINE_FUN
+            ITEM_SPEC
+                | MODULE_SPEC
+                | SCHEMA
+                | SCHEMA_FIELD
+                | SPEC_BLOCK_EXPR
+                | SPEC_FUN
+                | SPEC_INLINE_FUN
         )
     }
     #[inline]
@@ -7268,6 +7363,10 @@ impl From<ModuleSpec> for AnyMslOnly {
 impl From<Schema> for AnyMslOnly {
     #[inline]
     fn from(node: Schema) -> AnyMslOnly { AnyMslOnly { syntax: node.syntax } }
+}
+impl From<SchemaField> for AnyMslOnly {
+    #[inline]
+    fn from(node: SchemaField) -> AnyMslOnly { AnyMslOnly { syntax: node.syntax } }
 }
 impl From<SpecBlockExpr> for AnyMslOnly {
     #[inline]
@@ -7308,6 +7407,7 @@ impl AstNode for AnyNamedElement {
                 | MODULE
                 | NAMED_FIELD
                 | SCHEMA
+                | SCHEMA_FIELD
                 | SPEC_FUN
                 | SPEC_INLINE_FUN
                 | STRUCT
@@ -7354,6 +7454,10 @@ impl From<NamedField> for AnyNamedElement {
 impl From<Schema> for AnyNamedElement {
     #[inline]
     fn from(node: Schema) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
+}
+impl From<SchemaField> for AnyNamedElement {
+    #[inline]
+    fn from(node: SchemaField) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
 impl From<SpecFun> for AnyNamedElement {
     #[inline]
@@ -7420,6 +7524,7 @@ impl AstNode for AnyReferenceElement {
                 | LABEL
                 | METHOD_CALL_EXPR
                 | PATH
+                | SCHEMA_LIT_FIELD
                 | STRUCT_LIT_FIELD
                 | STRUCT_PAT_FIELD
         )
@@ -7454,6 +7559,10 @@ impl From<MethodCallExpr> for AnyReferenceElement {
 impl From<Path> for AnyReferenceElement {
     #[inline]
     fn from(node: Path) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
+}
+impl From<SchemaLitField> for AnyReferenceElement {
+    #[inline]
+    fn from(node: SchemaLitField) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
 }
 impl From<StructLitField> for AnyReferenceElement {
     #[inline]
@@ -7559,6 +7668,11 @@ impl std::fmt::Display for StructOrEnum {
     }
 }
 impl std::fmt::Display for Type {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for TypeOwner {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -7998,7 +8112,7 @@ impl std::fmt::Display for Schema {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
-impl std::fmt::Display for SchemaFieldStmt {
+impl std::fmt::Display for SchemaField {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

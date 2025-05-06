@@ -6,7 +6,7 @@ use std::fmt;
 use std::fmt::Formatter;
 use syntax::algo::ancestors_at_offset;
 use syntax::files::InFile;
-use syntax::{ast, AstNode, SourceFile, TextSize};
+use syntax::{AstNode, SourceFile, TextSize, ast};
 use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]

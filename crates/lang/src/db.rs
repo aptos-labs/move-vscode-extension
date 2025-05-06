@@ -1,5 +1,6 @@
 use crate::item_scope::NamedItemScope;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
+use crate::nameres;
 use crate::nameres::address::Address;
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::path_resolution;
@@ -21,7 +22,6 @@ use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt, InFileVecExt};
 use syntax::{AstNode, ast};
 use vfs::FileId;
-use crate::nameres;
 
 #[query_group_macro::query_group]
 pub trait HirDatabase: ParseDatabase {

@@ -21,7 +21,7 @@ use syntax::SyntaxKind::*;
 use syntax::ast::FieldsOwner;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, ast};
+use syntax::{AstNode, ast, match_ast};
 use vfs::FileId;
 
 pub struct InferenceCtx<'db> {
@@ -69,8 +69,22 @@ impl<'db> InferenceCtx<'db> {
         }
     }
 
+    pub fn resolve_cached(
+        &mut self,
+        reference: impl ast::ReferenceElement,
+        expected_ty: Option<Ty>,
+    ) -> Option<InFile<ast::AnyNamedElement>> {
+        match_ast! {
+            match (reference.syntax()) {
+                ast::Path(it) => self.resolve_path_cached(it, expected_ty),
+                ast::IdentPat(it) => self.resolve_ident_pat_cached(it, expected_ty),
+                _ => None
+            }
+        }
+    }
+
     #[tracing::instrument(level = "debug", skip(self, path, expected_ty), fields(ctx_file_id = ?self.file_id))]
-    pub fn resolve_path_cached(
+    fn resolve_path_cached(
         &mut self,
         path: ast::Path,
         expected_ty: Option<Ty>,
@@ -100,7 +114,7 @@ impl<'db> InferenceCtx<'db> {
             .and_then(|it| it.cast_into::<ast::AnyNamedElement>(self.db))
     }
 
-    pub fn resolve_ident_pat_cached(
+    fn resolve_ident_pat_cached(
         &mut self,
         ident_pat: ast::IdentPat,
         expected_type: Option<Ty>,
@@ -142,7 +156,7 @@ impl<'db> InferenceCtx<'db> {
             .into_iter()
             .map(|it| {
                 self.ty_lowering()
-                    .lower_tuple_field(it.in_file(adt_item_file_id))
+                    .lower_type_owner(it.in_file(adt_item_file_id).map_into())
                     .unwrap_or(Ty::Unknown)
             })
             .collect::<Vec<_>>();

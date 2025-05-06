@@ -99,6 +99,14 @@ impl<T: AstNode> ItemFQNameOwner for InFile<T> {
                         name: name.as_string(),
                     })
                 },
+                ast::Schema(it) => {
+                    let module_fq_name = it.clone().in_file(it_file_id).module(db)?.fq_name(db)?;
+                    let name = it.name()?;
+                    Some(ItemFQName::Item {
+                        module_fq_name: Box::new(module_fq_name),
+                        name: name.as_string(),
+                    })
+                },
                 _ => None
             }
         }

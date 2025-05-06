@@ -673,6 +673,8 @@ fn lower_rule(
                 l.as_str(),
                 "lhs"
                     | "op"
+                    | "left_schema_lit"
+                    | "right_schema_lit"
                     | "and_op"
                     | "rhs"
                     | "then_branch"

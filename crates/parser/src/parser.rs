@@ -485,14 +485,14 @@ impl CompletedMarker {
     }
 
     /// Abandons the syntax tree node. All its children events are dropped and position restored.
-    pub(crate) fn abandon_with_rollback(mut self, p: &mut Parser) {
+    pub(crate) fn abandon_with_rollback(self, p: &mut Parser) {
         let idx = self.pos as usize;
         if idx == p.events.len() - 1 {
             match p.events.pop() {
                 Some(Event::Start {
-                         kind: TOMBSTONE,
-                         forward_parent: None,
-                     }) => (),
+                    kind: TOMBSTONE,
+                    forward_parent: None,
+                }) => (),
                 _ => unreachable!(),
             }
         } else {

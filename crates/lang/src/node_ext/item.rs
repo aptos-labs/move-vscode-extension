@@ -35,6 +35,21 @@ impl ModuleItemExt for InFile<ast::AnyFun> {
     }
 }
 
+impl ModuleItemExt for InFile<ast::Schema> {
+    fn module(&self, db: &dyn HirDatabase) -> Option<InFile<ast::Module>> {
+        let module = self
+            .clone()
+            .and_then(|it| it.syntax().parent_of_type::<ast::Module>());
+        if module.is_some() {
+            return module;
+        }
+        let module_spec = self
+            .clone()
+            .and_then(|it| it.syntax().parent_of_type::<ast::ModuleSpec>());
+        module_spec?.module(db)
+    }
+}
+
 impl ModuleItemExt for InFile<ast::ItemSpec> {
     fn module(&self, db: &dyn HirDatabase) -> Option<InFile<ast::Module>> {
         let parent = self.value.syntax().parent()?;

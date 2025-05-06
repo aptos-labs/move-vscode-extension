@@ -42,8 +42,11 @@ SOURCE_FILE@0..228
                 L_CURLY@102..103 "{"
                 WHITESPACE@103..104 " "
                 SCHEMA_LIT_FIELD@104..110
-                  NAME_REF@104..110
-                    IDENT@104..110 "amount"
+                  PATH_EXPR@104..110
+                    PATH@104..110
+                      PATH_SEGMENT@104..110
+                        NAME_REF@104..110
+                          IDENT@104..110 "amount"
                 WHITESPACE@110..111 " "
                 R_CURLY@111..112 "}"
           SEMICOLON@112..113 ";"
@@ -70,8 +73,11 @@ SOURCE_FILE@0..228
                 L_CURLY@146..147 "{"
                 WHITESPACE@147..148 " "
                 SCHEMA_LIT_FIELD@148..154
-                  NAME_REF@148..154
-                    IDENT@148..154 "amount"
+                  PATH_EXPR@148..154
+                    PATH@148..154
+                      PATH_SEGMENT@148..154
+                        NAME_REF@148..154
+                          IDENT@148..154 "amount"
                 WHITESPACE@154..155 " "
                 R_CURLY@155..156 "}"
           SEMICOLON@156..157 ";"

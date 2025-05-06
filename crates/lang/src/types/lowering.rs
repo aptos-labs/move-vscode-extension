@@ -7,6 +7,7 @@ use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::reference::Mutability;
+use crate::types::ty::schema::TySchema;
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::type_param::TyTypeParameter;
@@ -90,6 +91,10 @@ impl<'db> TyLowering<'db> {
                 let item = named_item.clone().cast_into::<ast::StructOrEnum>().unwrap();
                 Ty::Adt(TyAdt::new(item))
             }
+            SCHEMA => {
+                let item = named_item.clone().cast_into::<ast::Schema>().unwrap();
+                Ty::Schema(TySchema::new(item))
+            }
             FUN | SPEC_FUN | SPEC_INLINE_FUN => {
                 let fun = named_item.clone().cast_into::<ast::AnyFun>().unwrap();
                 let ty_callable = self.lower_any_function(fun);
@@ -122,18 +127,10 @@ impl<'db> TyLowering<'db> {
         path_ty
     }
 
-    pub fn lower_named_field(&self, named_field: InFile<ast::NamedField>) -> Option<Ty> {
-        let (file_id, named_field) = named_field.unpack();
-        named_field
-            .type_()
-            .map(|type_| self.lower_type(type_.in_file(file_id)))
-    }
-
-    pub fn lower_tuple_field(&self, tuple_field: InFile<ast::TupleField>) -> Option<Ty> {
-        let (file_id, tuple_field) = tuple_field.unpack();
-        tuple_field
-            .type_()
-            .map(|type_| self.lower_type(type_.in_file(file_id)))
+    pub fn lower_type_owner(&self, type_owner: InFile<ast::TypeOwner>) -> Option<Ty> {
+        type_owner
+            .and_then(|it| it.type_())
+            .map(|type_| self.lower_type(type_))
     }
 
     pub fn lower_any_function(&self, any_fun: InFile<ast::AnyFun>) -> TyCallable {

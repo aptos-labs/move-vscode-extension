@@ -1,8 +1,8 @@
+use crate::HirDatabase;
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres::labels::get_loop_labels_resolve_variants;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::node_ext::item::ModuleItemExt;
-use crate::HirDatabase;
 use syntax::ast;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
@@ -89,7 +89,17 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
 
                     let field_name = struct_lit_field.field_name()?;
                     get_named_field_entries(fields_owner).filter_by_name(field_name)
-                    // .single_or_none()
+                }
+                SCHEMA_LIT_FIELD => {
+                    let schema_lit_field = ref_element.cast_into::<ast::SchemaLitField>().unwrap();
+
+                    let schema_lit_path = schema_lit_field.schema_lit()?.path()?;
+                    let schema = inference
+                        .get_resolve_method_or_path(schema_lit_path.into())?
+                        .cast_into::<ast::Schema>(db)?;
+
+                    let field_name = schema_lit_field.field_name()?;
+                    get_schema_field_entries(schema).filter_by_name(field_name)
                 }
                 DOT_EXPR => {
                     let dot_expr = ref_element.cast_into::<ast::DotExpr>().unwrap();
@@ -151,6 +161,9 @@ fn get_item_spec_entries(
 }
 
 fn get_named_field_entries(fields_owner: InFile<ast::AnyFieldsOwner>) -> Vec<ScopeEntry> {
-    let InFile { file_id, value: fields_owner } = fields_owner;
-    fields_owner.named_fields().to_entries(file_id)
+    fields_owner.flat_map(|it| it.named_fields()).to_entries()
+}
+
+fn get_schema_field_entries(schema: InFile<ast::Schema>) -> Vec<ScopeEntry> {
+    schema.flat_map(|it| it.schema_fields()).to_entries()
 }
