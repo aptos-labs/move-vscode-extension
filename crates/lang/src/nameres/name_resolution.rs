@@ -8,7 +8,6 @@ use crate::nameres::path_resolution::ResolutionContext;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use crate::nameres::scope_entries_owner::get_entries_in_scope;
 use crate::node_ext::item::ModuleItemExt;
-use base_db::inputs::InternFileId;
 use base_db::package_root::PackageRootId;
 use parser::SyntaxKind;
 use parser::SyntaxKind::MODULE_SPEC;

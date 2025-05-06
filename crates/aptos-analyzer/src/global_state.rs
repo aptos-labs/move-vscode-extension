@@ -78,7 +78,6 @@ pub(crate) struct GlobalState {
     pub(crate) vfs_config_version: u32,
     pub(crate) vfs_progress_config_version: u32,
     pub(crate) vfs_done: bool,
-    pub(crate) builtins_file_id: FileId,
     // used to track how long VFS loading takes. this can't be on `vfs::loader::Handle`,
     // as that handle's lifetime is the same as `GlobalState` itself.
     pub(crate) vfs_span: Option<tracing::span::EnteredSpan>,
@@ -166,7 +165,6 @@ impl GlobalState {
 
             loader,
             vfs,
-            builtins_file_id,
             vfs_config_version: 0,
             vfs_progress_config_version: 0,
             vfs_done: true,

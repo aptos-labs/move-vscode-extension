@@ -1,5 +1,5 @@
 use crate::diagnostics::convert_diagnostic;
-use crate::global_state::{FetchPackagesRequest, GlobalState, GlobalStateSnapshot};
+use crate::global_state::GlobalStateSnapshot;
 use crate::lsp::utils::invalid_params_error;
 use crate::lsp::{LspError, from_proto, to_proto};
 use crate::movefmt::run_movefmt;
@@ -302,13 +302,13 @@ pub(crate) fn handle_analyzer_status(
 
     let mut buf = String::new();
 
-    let mut file_id = None;
-    if let Some(tdi) = params.text_document {
-        match from_proto::file_id(&snap, &tdi.uri) {
-            Ok(it) => file_id = Some(it),
-            Err(_) => format_to!(buf, "file {} not found in vfs", tdi.uri),
-        }
-    }
+    // let mut file_id = None;
+    // if let Some(tdi) = params.text_document {
+    //     match from_proto::file_id(&snap, &tdi.uri) {
+    //         Ok(it) => file_id = Some(it),
+    //         Err(_) => format_to!(buf, "file {} not found in vfs", tdi.uri),
+    //     }
+    // }
 
     if snap.main_packages.is_empty() {
         buf.push_str("No packages\n")

@@ -21,11 +21,4 @@ impl Expected {
             Expected::ExpectType(ty) => Some(ctx.resolve_ty_vars_if_possible(ty.to_owned())),
         }
     }
-
-    pub fn map(self, f: impl FnOnce(Ty) -> Ty) -> Expected {
-        match self {
-            Expected::NoValue => Expected::NoValue,
-            Expected::ExpectType(ty) => Expected::ExpectType(f(ty)),
-        }
-    }
 }

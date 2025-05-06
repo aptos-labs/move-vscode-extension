@@ -14,7 +14,6 @@ use base_db::SourceDatabase;
 use crossbeam_channel::Receiver;
 use lsp_server::Connection;
 use lsp_types::notification::Notification;
-use std::any::Any;
 use std::fmt;
 use std::ops::Div;
 use std::panic::AssertUnwindSafe;

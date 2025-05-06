@@ -7,8 +7,8 @@ mod tests;
 
 use crate::config::DiagnosticsConfig;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
+use base_db::ParseDatabase;
 use base_db::inputs::InternFileId;
-use base_db::{ParseDatabase, SourceDatabase};
 use ide_db::RootDatabase;
 use ide_db::assists::AssistResolveStrategy;
 use lang::Semantics;
@@ -18,7 +18,7 @@ use vfs::FileId;
 
 struct DiagnosticsContext<'a> {
     config: &'a DiagnosticsConfig,
-    sema: Semantics<'a, RootDatabase>,
+    sema: Semantics<'a>,
     resolve: &'a AssistResolveStrategy,
 }
 

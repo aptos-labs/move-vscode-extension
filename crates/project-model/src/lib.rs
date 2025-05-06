@@ -1,11 +1,7 @@
-use crate::manifest_path::ManifestPath;
 use anyhow::{Context, bail};
-use paths::{AbsPath, AbsPathBuf, Utf8PathBuf};
-use std::ffi::OsStr;
-use std::fs::{ReadDir, read_dir};
-use std::path::{Component, PathBuf};
+use paths::AbsPathBuf;
+use std::fs;
 use std::process::Command;
-use std::{fs, io};
 
 pub mod aptos_package;
 pub mod manifest_path;

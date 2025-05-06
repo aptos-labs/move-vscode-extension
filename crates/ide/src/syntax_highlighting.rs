@@ -56,7 +56,7 @@ pub(crate) fn highlight(
 
 fn traverse(
     highlights: &mut Highlights,
-    sema: &Semantics<'_, RootDatabase>,
+    sema: &Semantics<'_>,
     _file_id: FileId,
     root: &SyntaxNode,
     range_to_highlight: TextRange,

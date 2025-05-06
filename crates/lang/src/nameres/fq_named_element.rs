@@ -50,17 +50,6 @@ pub trait ItemFQNameOwner {
     fn fq_name(&self, db: &dyn HirDatabase) -> Option<ItemFQName>;
 }
 
-macro_rules! module_item_fq_name {
-    ($module: expr, $it: expr) => {{
-        let module_fq_name = $module.fq_name(db)?;
-        let name = $it.name()?;
-        Some(ItemFQName::Item {
-            module_fq_name: Box::new(module_fq_name),
-            name: name.as_string(),
-        })
-    }};
-}
-
 impl<T: AstNode> ItemFQNameOwner for InFile<T> {
     fn fq_name(&self, db: &dyn HirDatabase) -> Option<ItemFQName> {
         let it_file_id = self.file_id;

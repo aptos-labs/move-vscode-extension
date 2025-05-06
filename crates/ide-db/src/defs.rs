@@ -1,4 +1,4 @@
-use crate::{RootDatabase, SymbolKind, ast_kind_to_symbol_kind};
+use crate::{SymbolKind, ast_kind_to_symbol_kind};
 use lang::Semantics;
 use lang::nameres::scope::VecExt;
 use std::collections::HashSet;
@@ -49,10 +49,7 @@ pub enum NameRefClass {
 }
 
 impl NameRefClass {
-    pub fn classify(
-        sema: &Semantics<'_, RootDatabase>,
-        name_ref: &ast::NameRef,
-    ) -> Option<NameRefClass> {
+    pub fn classify(sema: &Semantics<'_>, name_ref: &ast::NameRef) -> Option<NameRefClass> {
         let ref_parent = name_ref.syntax().parent()?;
 
         if let Some(path) = ast::PathSegment::cast(ref_parent.clone()).map(|it| it.parent_path()) {
