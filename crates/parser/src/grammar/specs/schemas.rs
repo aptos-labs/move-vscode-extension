@@ -24,7 +24,8 @@ pub(crate) fn schema_field(p: &mut Parser) -> bool {
     if p.at(IDENT) && p.at_contextual_kw("local") {
         p.bump_remap(T![local]);
     }
-    patterns::ident_pat(p);
+    name(p);
+    // patterns::ident_pat(p);
     if p.at(T![:]) {
         types::ascription(p);
     } else {
@@ -32,7 +33,7 @@ pub(crate) fn schema_field(p: &mut Parser) -> bool {
         return false;
     }
     p.expect(T![;]);
-    m.complete(p, SCHEMA_FIELD_STMT);
+    m.complete(p, SCHEMA_FIELD);
     true
 }
 
@@ -239,11 +240,16 @@ fn schema_lit(p: &mut Parser) -> CompletedMarker {
                     return false;
                 }
                 let m = p.start();
-                name_ref(p);
-                // p.bump(IDENT);
-                if p.eat(T![:]) {
-                    expr(p);
+                if p.nth_at(1, T![:]) {
+                    name_ref(p);
+                    p.expect(T![:]);
                 }
+                expr(p);
+                // name_ref(p);
+                // // p.bump(IDENT);
+                // if p.eat(T![:]) {
+                //     expr(p);
+                // }
                 m.complete(p, SCHEMA_LIT_FIELD);
                 true
             },

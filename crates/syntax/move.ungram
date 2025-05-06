@@ -44,7 +44,7 @@ InferenceCtxOwner =
     Fun | SpecFun | SpecInlineFun | ItemSpec | Schema
 
 IdentPatKind =
-    LetStmt | Param | LambdaParam | SchemaFieldStmt
+    LetStmt | Param | LambdaParam
 
 UseStmt =
     Attr* 'use' UseSpeck ';'
@@ -93,6 +93,9 @@ FieldList =
 
 NamedFieldList =
     '{' fields:(NamedField (',' NamedField)* ','?)? '}'
+
+TypeOwner =
+    NamedField | TupleField | SchemaField | GlobalVariableDecl
 
 AnyField =
     NamedField | TupleField
@@ -202,7 +205,7 @@ Stmt =
     ';'
     | ExprStmt
     | LetStmt
-    | SchemaFieldStmt | IncludeSchema
+    | SchemaField | IncludeSchema
     | SpecPredicateStmt | AbortsIfStmt
     | SpecInlineFun | GlobalVariableDecl
 
@@ -455,8 +458,8 @@ Schema =
     'spec' 'schema' Name TypeParamList?
     spec_block:BlockExpr
 
-SchemaFieldStmt =
-    'local'? IdentPat ':' Type ';'
+SchemaField =
+    Attr* 'local'? Name ':' Type ';'
 
 IncludeSchema =
     'include' SpecPredicatePropertyList? IncludeExpr ';'
@@ -468,7 +471,7 @@ SchemaIncludeExpr =
     SchemaLit
 
 AndIncludeExpr =
-    SchemaLit and_op:'&&' SchemaLit
+    left_schema_lit:SchemaLit and_op:'&&' right_schema_lit:SchemaLit
 
 ImplyIncludeExpr =
     Expr
@@ -483,7 +486,7 @@ SchemaLitFieldList =
     '{' fields:(SchemaLitField (',' SchemaLitField)* ','?)? '}'
 
 SchemaLitField =
-    NameRef (':' Expr)?
+    (NameRef ':')? Expr
 
 GlobalVariableDecl =
     Attr* 'global' Name TypeParamList? ':' Type ('=' Expr)? ';'

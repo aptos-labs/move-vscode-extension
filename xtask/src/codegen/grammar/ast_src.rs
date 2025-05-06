@@ -199,7 +199,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "GLOBAL_VARIABLE_DECL",
 
         "SCHEMA",
-        "SCHEMA_FIELD_STMT",
+        "SCHEMA_FIELD",
 
         "INCLUDE_SCHEMA",
 
@@ -328,6 +328,7 @@ pub(crate) const NON_METHOD_TRAITS: &[(&str, &[&str])] = &[
             "DotExpr",
             "StructPatField",
             "StructLitField",
+            "SchemaLitField",
             "IdentPat",
             "ItemSpecRef",
             "Label",

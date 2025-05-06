@@ -34,10 +34,9 @@ SOURCE_FILE@0..386
               INT_NUMBER@69..70 "1"
           SEMICOLON@70..71 ";"
         WHITESPACE@71..80 "\n        "
-        SCHEMA_FIELD_STMT@80..98
-          IDENT_PAT@80..83
-            NAME@80..83
-              IDENT@80..83 "one"
+        SCHEMA_FIELD@80..98
+          NAME@80..83
+            IDENT@80..83 "one"
           COLON@83..84 ":"
           WHITESPACE@84..85 " "
           PATH_TYPE@85..97
@@ -52,12 +51,11 @@ SOURCE_FILE@0..386
                   IDENT@91..97 "MyType"
           SEMICOLON@97..98 ";"
         WHITESPACE@98..107 "\n        "
-        SCHEMA_FIELD_STMT@107..121
+        SCHEMA_FIELD@107..121
           LOCAL_KW@107..112 "local"
           WHITESPACE@112..113 " "
-          IDENT_PAT@113..116
-            NAME@113..116
-              IDENT@113..116 "two"
+          NAME@113..116
+            IDENT@113..116 "two"
           COLON@116..117 ":"
           WHITESPACE@117..118 " "
           PATH_TYPE@118..120
@@ -67,12 +65,11 @@ SOURCE_FILE@0..386
                   IDENT@118..120 "u8"
           SEMICOLON@120..121 ";"
         WHITESPACE@121..130 "\n        "
-        SCHEMA_FIELD_STMT@130..156
+        SCHEMA_FIELD@130..156
           LOCAL_KW@130..135 "local"
           WHITESPACE@135..136 " "
-          IDENT_PAT@136..151
-            NAME@136..151
-              IDENT@136..151 "two_with_params"
+          NAME@136..151
+            IDENT@136..151 "two_with_params"
           COLON@151..152 ":"
           WHITESPACE@152..153 " "
           PATH_TYPE@153..155

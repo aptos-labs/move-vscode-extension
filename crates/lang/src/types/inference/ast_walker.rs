@@ -202,16 +202,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::Stmt::AbortsIfStmt(aborts_if_stmt) => {
                 self.process_aborts_if_stmt(&aborts_if_stmt);
             }
-            ast::Stmt::SchemaFieldStmt(schema_field) => {
-                let ident_pat = schema_field.ident_pat()?;
-                let ident_pat_ty = schema_field
-                    .type_()
-                    .map(|t| self.ctx.ty_lowering().lower_type(t.in_file(file_id)))
-                    .unwrap_or(Ty::Unknown);
-                self.ctx.pat_types.insert(
-                    ident_pat.into(),
-                    self.ctx.resolve_ty_vars_if_possible(ident_pat_ty),
-                );
+            ast::Stmt::IncludeSchema(include_schema) => {
+                self.process_include_schema(&include_schema);
             }
             _ => (),
         }
@@ -361,7 +353,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         use syntax::SyntaxKind::*;
 
         let expected_ty = expected.ty(self.ctx);
-        let named_element = self.ctx.resolve_path_cached(path_expr.path(), expected_ty)?;
+        let named_element = self.ctx.resolve_cached(path_expr.path(), expected_ty)?;
 
         let file_id = self.ctx.file_id;
         let ty_lowering = self.ctx.ty_lowering();
@@ -378,7 +370,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
             NAMED_FIELD => {
                 let named_field = named_element.cast_into::<ast::NamedField>()?;
-                ty_lowering.lower_named_field(named_field)
+                ty_lowering.lower_type_owner(named_field.map_into())
+            }
+            SCHEMA_FIELD => {
+                let schema_field = named_element.cast_into::<ast::SchemaField>()?;
+                ty_lowering.lower_type_owner(schema_field.map_into())
             }
             STRUCT | ENUM => {
                 // base for index expr
@@ -401,6 +397,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 let any_fun = named_element.cast_into::<ast::AnyFun>().unwrap();
                 let method_or_path: ast::MethodOrPath = path_expr.path().into();
                 Some(self.ctx.instantiate_path_for_fun(method_or_path, any_fun).into())
+            }
+            GLOBAL_VARIABLE_DECL => {
+                let global_variable_decl = named_element.cast_into::<ast::GlobalVariableDecl>()?;
+                ty_lowering.lower_type_owner(global_variable_decl.map_into())
             }
             _ => None,
         }
@@ -528,7 +528,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     fn infer_struct_lit(&mut self, struct_lit: &ast::StructLit, expected: Expected) -> Option<Ty> {
         let path = struct_lit.path();
         let expected_ty = expected.ty(self.ctx);
-        let item = self.ctx.resolve_path_cached(path.clone(), expected_ty.clone())?;
+        let item = self.ctx.resolve_cached(path.clone(), expected_ty.clone())?;
         let (item_file_id, item) = item.unpack();
 
         let fields_owner = item.cast_into::<ast::AnyFieldsOwner>();
@@ -573,92 +573,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
             let named_field = named_fields.get(&lit_field_name);
             let declared_field_ty = named_field
-                .and_then(|it| {
+                .and_then(|field| {
                     self.ctx
                         .ty_lowering()
-                        .lower_named_field(it.to_owned().in_file(item_file_id))
-                })
-                .unwrap_or(Ty::Unknown);
-            let field_ty = declared_field_ty.substitute(&ty_adt.substitution);
-
-            if let Some(lit_field_expr) = lit_field.expr() {
-                self.infer_expr_coerceable_to(&lit_field_expr, field_ty);
-            } else {
-                let binding = get_entries_from_walking_scopes(
-                    self.ctx.db,
-                    lit_field.clone().in_file(self.ctx.file_id),
-                    NAMES,
-                )
-                .filter_by_name(lit_field_name)
-                .single_or_none()
-                .and_then(|it| it.cast_into::<ast::IdentPat>(self.ctx.db));
-                let binding_ty = binding
-                    .and_then(|it| self.ctx.get_binding_type(it.value))
-                    .unwrap_or(Ty::Unknown);
-                self.ctx
-                    .coerce_types(lit_field.node_or_token(), binding_ty, field_ty);
-            }
-        }
-
-        Some(Ty::Adt(ty_adt))
-    }
-
-    fn infer_struct_lit_as_struct(
-        &mut self,
-        struct_lit: &ast::StructLit,
-        expected: Expected,
-    ) -> Option<Ty> {
-        let path = struct_lit.path();
-        let expected_ty = expected.ty(self.ctx);
-        let item = self.ctx.resolve_path_cached(path.clone(), expected_ty.clone())?;
-        let (item_file_id, item) = item.unpack();
-
-        let fields_owner = item.cast_into::<ast::AnyFieldsOwner>();
-        if fields_owner.is_none() {
-            for field in struct_lit.fields() {
-                if let Some(field_expr) = field.expr() {
-                    self.infer_expr(&field_expr, Expected::NoValue);
-                }
-            }
-            return None;
-        }
-        let fields_owner = fields_owner.unwrap();
-
-        let struct_or_enum = fields_owner.struct_or_enum();
-        let mut ty_adt = self
-            .ctx
-            .instantiate_path(path.into(), struct_or_enum.in_file(item_file_id).map_into())
-            .into_ty_adt()?;
-        if let Some(Ty::Adt(expected_ty_adt)) = expected_ty {
-            let expected_subst = expected_ty_adt.substitution;
-            for (type_param, subst_ty) in ty_adt.substitution.entries() {
-                // skip type parameters as we have no ability check
-                if matches!(subst_ty, &Ty::TypeParam(_)) {
-                    continue;
-                }
-                if let Some(expected_subst_ty) = expected_subst.get_ty(&type_param) {
-                    // unifies if `substTy` is TyVar, performs type check if `substTy` is real type
-                    let _ = self.ctx.combine_types(subst_ty.to_owned(), expected_subst_ty);
-                }
-            }
-            // resolved tyAdt inner TyVars after combining with expectedTy
-            ty_adt = self.ctx.resolve_ty_vars_if_possible(ty_adt)
-        }
-
-        let named_fields = fields_owner.named_fields_map();
-        for lit_field in struct_lit.fields() {
-            let lit_field_name = lit_field.field_name();
-            if lit_field_name.is_none() {
-                continue;
-            }
-            let lit_field_name = lit_field_name.unwrap();
-
-            let named_field = named_fields.get(&lit_field_name);
-            let declared_field_ty = named_field
-                .and_then(|it| {
-                    self.ctx
-                        .ty_lowering()
-                        .lower_named_field(it.to_owned().in_file(item_file_id))
+                        .lower_type_owner(field.to_owned().in_file(item_file_id).map_into())
                 })
                 .unwrap_or(Ty::Unknown);
             let field_ty = declared_field_ty.substitute(&ty_adt.substitution);
@@ -964,8 +882,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     fn infer_is_expr(&mut self, is_expr: &ast::IsExpr) -> Ty {
         let expr_ty = self.infer_expr(&is_expr.expr(), Expected::NoValue);
         for path_type in is_expr.path_types() {
-            self.ctx
-                .resolve_path_cached(path_type.path(), Some(expr_ty.clone()));
+            self.ctx.resolve_cached(path_type.path(), Some(expr_ty.clone()));
         }
         Ty::Bool
     }

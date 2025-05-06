@@ -1,4 +1,5 @@
 use crate::HirDatabase;
+use crate::item_scope::NamedItemScope;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::nameres::is_visible::is_visible_in_context;
 use crate::nameres::namespaces::{Ns, NsSet, named_item_ns};
@@ -7,10 +8,9 @@ use std::fmt;
 use std::fmt::Formatter;
 use stdx::itertools::Itertools;
 use syntax::ast;
-use syntax::ast::{ReferenceElement};
+use syntax::ast::ReferenceElement;
 use syntax::files::{InFile, InFileVecExt};
 use vfs::FileId;
-use crate::item_scope::NamedItemScope;
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct ScopeEntry {

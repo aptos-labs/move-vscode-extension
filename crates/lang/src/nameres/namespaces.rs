@@ -68,6 +68,7 @@ pub(crate) fn named_item_ns(named_item_kind: syntax::SyntaxKind) -> Ns {
         VARIANT => Ns::ENUM_VARIANT,
         IDENT_PAT | NAMED_FIELD | CONST | GLOBAL_VARIABLE_DECL => Ns::NAME,
         SCHEMA => Ns::SCHEMA,
+        SCHEMA_FIELD => Ns::NAME,
         _ => unreachable!(
             "named nodes should be exhaustive, unhandled {:?}",
             named_item_kind

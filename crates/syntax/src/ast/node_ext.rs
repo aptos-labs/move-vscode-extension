@@ -1,4 +1,5 @@
 mod address_ref;
+mod and_include_expr;
 mod any_fun;
 mod any_reference_element;
 mod assert_macro_expr;
@@ -38,6 +39,8 @@ mod quant_expr;
 mod range_expr;
 mod ref_type;
 mod schema;
+mod schema_lit;
+mod schema_lit_field;
 mod source_file;
 mod struct_;
 mod struct_lit;

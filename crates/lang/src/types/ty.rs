@@ -2,6 +2,7 @@ pub mod adt;
 pub(crate) mod integer;
 pub(crate) mod range_like;
 pub mod reference;
+pub(crate) mod schema;
 pub(crate) mod tuple;
 pub mod ty_callable;
 pub(crate) mod ty_var;
@@ -19,6 +20,7 @@ use crate::types::ty::adt::TyAdt;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::range_like::TySequence;
 use crate::types::ty::reference::{Mutability, TyReference};
+use crate::types::ty::schema::TySchema;
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::{TyInfer, TyVar};
@@ -48,6 +50,8 @@ pub enum Ty {
     Adt(TyAdt),
     Callable(TyCallable),
     Tuple(TyTuple),
+
+    Schema(TySchema),
 }
 
 impl Ty {
@@ -113,6 +117,13 @@ impl Ty {
     pub fn into_ty_adt(self) -> Option<TyAdt> {
         match self {
             Ty::Adt(ty_adt) => Some(ty_adt),
+            _ => None,
+        }
+    }
+
+    pub fn into_ty_schema(self) -> Option<TySchema> {
+        match self {
+            Ty::Schema(ty_schema) => Some(ty_schema),
             _ => None,
         }
     }

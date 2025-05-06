@@ -136,7 +136,6 @@ fn generate_ident_pat(
         ast::IdentPatKind::Param(_) => "parameter",
         ast::IdentPatKind::LambdaParam(_) => "parameter",
         ast::IdentPatKind::LetStmt(_) => "variable",
-        ast::IdentPatKind::SchemaFieldStmt(_) => "schema field",
     };
     write!(buffer, "{ident_kind} {}", ident_pat.name()?.as_string()).ok()?;
 
