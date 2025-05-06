@@ -1,14 +1,14 @@
-use crate::grammar::expressions::atom::{block_expr, IDENT_FIRST};
-use crate::grammar::expressions::opt_initializer_expr;
+use crate::grammar::expressions::atom::{block_expr, condition, IDENT_FIRST};
+use crate::grammar::expressions::{expr, opt_initializer_expr, Restrictions};
 use crate::grammar::items::item_start;
-use crate::grammar::paths::type_path;
+use crate::grammar::paths::{is_path_start, type_path};
 use crate::grammar::specs::predicates::opt_predicate_property_list;
 use crate::grammar::utils::{delimited_fn, list};
 use crate::grammar::{expressions, generic_params, name, name_or_bump_until, patterns, types};
-use crate::parser::Marker;
+use crate::parser::{CompletedMarker, Marker};
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
-use crate::{Parser, T};
+use crate::{ts, Parser, T};
 
 pub(crate) fn schema(p: &mut Parser, m: Marker) {
     assert!(p.at(IDENT) && p.at_contextual_kw("schema"));
@@ -63,12 +63,50 @@ pub(crate) fn include_schema(p: &mut Parser) -> bool {
     let m = p.start();
     p.bump_remap(T![include]);
     opt_predicate_property_list(p);
-    if !expressions::expr(p) {
-        p.error("expected expression");
+
+    if p.at(T![if]) {
+        let m = p.start();
+        p.bump(T![if]);
+        condition(p);
+        schema_lit(p);
+        if p.expect(T![else]) {
+            schema_lit(p);
+        }
+        m.complete(p, IF_ELSE_INCLUDE_EXPR);
+    } else {
+        if is_path_start(p) {
+            // try to parse schema lit
+            let schema_lit_lhs = schema_lit(p);
+            if p.at(T![&&]) {
+                let m = schema_lit_lhs.precede(p);
+                p.bump(T![&&]);
+                schema_lit(p);
+                m.complete(p, AND_INCLUDE_EXPR);
+            } else {
+                if p.at_ts(ts!(T![;], T!['}'])) {
+                    let m = schema_lit_lhs.precede(p);
+                    m.complete(p, INCLUDE_EXPR);
+                } else {
+                    schema_lit_lhs.abandon_with_rollback(p);
+                    // try to parse imply expr next
+                    include_imply_expr(p);
+                }
+            }
+        } else {
+            // if it's not a path, it has to be IMPLY_INCLUDE_EXPR
+            include_imply_expr(p);
+        }
     }
     p.expect(T![;]);
     m.complete(p, INCLUDE_SCHEMA);
     true
+}
+
+fn include_imply_expr(p: &mut Parser) {
+    // giving up here on correct parsing and just reading everything as expr
+    let m = p.start();
+    expr(p);
+    m.complete(p, IMPLY_INCLUDE_EXPR);
 }
 
 pub(crate) fn apply_schema(p: &mut Parser) -> bool {
@@ -183,7 +221,7 @@ fn wildcard_ident(p: &mut Parser) -> bool {
     n_tokens != 0
 }
 
-fn schema_lit(p: &mut Parser) {
+fn schema_lit(p: &mut Parser) -> CompletedMarker {
     let m = p.start();
     type_path(p);
     if p.at(T!['{']) {
@@ -200,13 +238,13 @@ fn schema_lit(p: &mut Parser) {
                 }
                 let m = p.start();
                 p.bump(IDENT);
-                if p.at(T![:]) {
-                    types::ascription(p);
+                if p.eat(T![:]) {
+                    expr(p);
                 }
                 m.complete(p, SCHEMA_LIT_FIELD);
                 true
             },
         );
     }
-    m.complete(p, SCHEMA_LIT);
+    m.complete(p, SCHEMA_LIT)
 }

@@ -7,20 +7,20 @@ use crate::nameres::scope::{ScopeEntryExt, ScopeEntryListExt, VecExt};
 use crate::node_ext::item_spec::ItemSpecExt;
 use crate::types::expectation::Expected;
 use crate::types::inference::InferenceCtx;
-use crate::types::patterns::{anonymous_pat_ty_var, BindingMode};
+use crate::types::patterns::{BindingMode, anonymous_pat_ty_var};
 use crate::types::substitution::ApplySubstitution;
+use crate::types::ty::Ty;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::range_like::TySequence;
-use crate::types::ty::reference::{autoborrow, Mutability};
+use crate::types::ty::reference::{Mutability, autoborrow};
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar};
-use crate::types::ty::Ty;
 use std::iter;
 use std::ops::Deref;
 use syntax::ast::node_ext::named_field::FilterNamedFieldsByName;
 use syntax::ast::{FieldsOwner, HasStmts};
 use syntax::files::{InFile, InFileExt};
-use syntax::{ast, AstNode, IntoNodeOrToken};
+use syntax::{AstNode, IntoNodeOrToken, ast};
 
 pub struct TypeAstWalker<'a, 'db> {
     pub ctx: &'a mut InferenceCtx<'db>,
@@ -270,9 +270,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
             ast::Expr::TupleExpr(tuple_expr) => self.infer_tuple_expr(tuple_expr, expected),
             ast::Expr::RangeExpr(range_expr) => self.infer_range_expr(range_expr, expected),
-            ast::Expr::StructLit(struct_lit) => self
-                .infer_struct_lit(struct_lit, false, expected)
-                .unwrap_or(Ty::Unknown),
+            ast::Expr::StructLit(struct_lit) => {
+                self.infer_struct_lit(struct_lit, expected).unwrap_or(Ty::Unknown)
+            }
 
             ast::Expr::DotExpr(dot_expr) => self
                 .infer_dot_expr(dot_expr, Expected::NoValue)
@@ -525,17 +525,82 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         Ty::Unit
     }
 
-    fn infer_struct_lit(
-        &mut self,
-        struct_lit: &ast::StructLit,
-        schema: bool,
-        expected: Expected,
-    ) -> Option<Ty> {
-        if schema {
-            None
-        } else {
-            self.infer_struct_lit_as_struct(struct_lit, expected)
+    fn infer_struct_lit(&mut self, struct_lit: &ast::StructLit, expected: Expected) -> Option<Ty> {
+        let path = struct_lit.path();
+        let expected_ty = expected.ty(self.ctx);
+        let item = self.ctx.resolve_path_cached(path.clone(), expected_ty.clone())?;
+        let (item_file_id, item) = item.unpack();
+
+        let fields_owner = item.cast_into::<ast::AnyFieldsOwner>();
+        if fields_owner.is_none() {
+            for field in struct_lit.fields() {
+                if let Some(field_expr) = field.expr() {
+                    self.infer_expr(&field_expr, Expected::NoValue);
+                }
+            }
+            return None;
         }
+        let fields_owner = fields_owner.unwrap();
+
+        let struct_or_enum = fields_owner.struct_or_enum();
+        let mut ty_adt = self
+            .ctx
+            .instantiate_path(path.into(), struct_or_enum.in_file(item_file_id).map_into())
+            .into_ty_adt()?;
+        if let Some(Ty::Adt(expected_ty_adt)) = expected_ty {
+            let expected_subst = expected_ty_adt.substitution;
+            for (type_param, subst_ty) in ty_adt.substitution.entries() {
+                // skip type parameters as we have no ability check
+                if matches!(subst_ty, &Ty::TypeParam(_)) {
+                    continue;
+                }
+                if let Some(expected_subst_ty) = expected_subst.get_ty(&type_param) {
+                    // unifies if `substTy` is TyVar, performs type check if `substTy` is real type
+                    let _ = self.ctx.combine_types(subst_ty.to_owned(), expected_subst_ty);
+                }
+            }
+            // resolved tyAdt inner TyVars after combining with expectedTy
+            ty_adt = self.ctx.resolve_ty_vars_if_possible(ty_adt)
+        }
+
+        let named_fields = fields_owner.named_fields_map();
+        for lit_field in struct_lit.fields() {
+            let lit_field_name = lit_field.field_name();
+            if lit_field_name.is_none() {
+                continue;
+            }
+            let lit_field_name = lit_field_name.unwrap();
+
+            let named_field = named_fields.get(&lit_field_name);
+            let declared_field_ty = named_field
+                .and_then(|it| {
+                    self.ctx
+                        .ty_lowering()
+                        .lower_named_field(it.to_owned().in_file(item_file_id))
+                })
+                .unwrap_or(Ty::Unknown);
+            let field_ty = declared_field_ty.substitute(&ty_adt.substitution);
+
+            if let Some(lit_field_expr) = lit_field.expr() {
+                self.infer_expr_coerceable_to(&lit_field_expr, field_ty);
+            } else {
+                let binding = get_entries_from_walking_scopes(
+                    self.ctx.db,
+                    lit_field.clone().in_file(self.ctx.file_id),
+                    NAMES,
+                )
+                .filter_by_name(lit_field_name)
+                .single_or_none()
+                .and_then(|it| it.cast_into::<ast::IdentPat>(self.ctx.db));
+                let binding_ty = binding
+                    .and_then(|it| self.ctx.get_binding_type(it.value))
+                    .unwrap_or(Ty::Unknown);
+                self.ctx
+                    .coerce_types(lit_field.node_or_token(), binding_ty, field_ty);
+            }
+        }
+
+        Some(Ty::Adt(ty_adt))
     }
 
     fn infer_struct_lit_as_struct(

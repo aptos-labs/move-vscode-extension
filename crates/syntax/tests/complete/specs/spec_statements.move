@@ -27,24 +27,9 @@ module 0x1::M {
         ensures exists<CoinType>(@0x1);
         ensures result == TRACE(choose x: u64 where x >= 4 && x <= 5);
 
-        include MySchema;
-        include MySchema{ amount };
-        include MySchema<MyType>{ amount };
-        include MySchema{ address: Signer::address_of(acc) };
-
-        include true ==> MySchema;
-        include vote.agree != agree ==> CheckChangeVote<TokenT, ActionT>{vote, proposer_address};
-
-        include if (true) MySchema else MySchema;
-        include MySchema && MySchema;
-
         native fun serialize<MoveValue>(v: &MoveValue): vector<u8>;
 
         update supply = 1;
-    }
-
-    spec module {
-        include true ==> MySchema;
     }
 
     fun main2() {

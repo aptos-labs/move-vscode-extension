@@ -1,0 +1,109 @@
+SOURCE_FILE@0..193
+  MODULE@0..192
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..31
+      IDENT@12..31 "schema_includes_lit"
+    WHITESPACE@31..32 " "
+    L_CURLY@32..33 "{"
+    WHITESPACE@33..38 "\n    "
+    ITEM_SPEC@38..190
+      SPEC_KW@38..42 "spec"
+      WHITESPACE@42..43 " "
+      MODULE_KW@43..49 "module"
+      WHITESPACE@49..50 " "
+      BLOCK_EXPR@50..190
+        L_CURLY@50..51 "{"
+        WHITESPACE@51..60 "\n        "
+        INCLUDE_SCHEMA@60..86
+          INCLUDE_KW@60..67 "include"
+          WHITESPACE@67..68 " "
+          IMPLY_INCLUDE_EXPR@68..85
+            BIN_EXPR@68..85
+              LITERAL@68..72
+                TRUE_KW@68..72 "true"
+              WHITESPACE@72..73 " "
+              IMPLIES@73..76 "==>"
+              WHITESPACE@76..77 " "
+              PATH_EXPR@77..85
+                PATH@77..85
+                  PATH_SEGMENT@77..85
+                    NAME_REF@77..85
+                      IDENT@77..85 "MySchema"
+          SEMICOLON@85..86 ";"
+        WHITESPACE@86..95 "\n        "
+        INCLUDE_SCHEMA@95..184
+          INCLUDE_KW@95..102 "include"
+          WHITESPACE@102..103 " "
+          IMPLY_INCLUDE_EXPR@103..183
+            BIN_EXPR@103..183
+              BIN_EXPR@103..122
+                DOT_EXPR@103..113
+                  PATH_EXPR@103..107
+                    PATH@103..107
+                      PATH_SEGMENT@103..107
+                        NAME_REF@103..107
+                          IDENT@103..107 "vote"
+                  DOT@107..108 "."
+                  FIELD_REF@108..113
+                    NAME_REF@108..113
+                      IDENT@108..113 "agree"
+                WHITESPACE@113..114 " "
+                NOT_EQ@114..116 "!="
+                WHITESPACE@116..117 " "
+                PATH_EXPR@117..122
+                  PATH@117..122
+                    PATH_SEGMENT@117..122
+                      NAME_REF@117..122
+                        IDENT@117..122 "agree"
+              WHITESPACE@122..123 " "
+              IMPLIES@123..126 "==>"
+              WHITESPACE@126..127 " "
+              STRUCT_LIT@127..183
+                PATH@127..159
+                  PATH_SEGMENT@127..159
+                    NAME_REF@127..142
+                      IDENT@127..142 "CheckChangeVote"
+                    TYPE_ARG_LIST@142..159
+                      L_ANGLE@142..143 "<"
+                      TYPE_ARG@143..149
+                        PATH_TYPE@143..149
+                          PATH@143..149
+                            PATH_SEGMENT@143..149
+                              NAME_REF@143..149
+                                IDENT@143..149 "TokenT"
+                      COMMA@149..150 ","
+                      WHITESPACE@150..151 " "
+                      TYPE_ARG@151..158
+                        PATH_TYPE@151..158
+                          PATH@151..158
+                            PATH_SEGMENT@151..158
+                              NAME_REF@151..158
+                                IDENT@151..158 "ActionT"
+                      R_ANGLE@158..159 ">"
+                STRUCT_LIT_FIELD_LIST@159..183
+                  L_CURLY@159..160 "{"
+                  STRUCT_LIT_FIELD@160..164
+                    PATH_EXPR@160..164
+                      PATH@160..164
+                        PATH_SEGMENT@160..164
+                          NAME_REF@160..164
+                            IDENT@160..164 "vote"
+                  COMMA@164..165 ","
+                  WHITESPACE@165..166 " "
+                  STRUCT_LIT_FIELD@166..182
+                    PATH_EXPR@166..182
+                      PATH@166..182
+                        PATH_SEGMENT@166..182
+                          NAME_REF@166..182
+                            IDENT@166..182 "proposer_address"
+                  R_CURLY@182..183 "}"
+          SEMICOLON@183..184 ";"
+        WHITESPACE@184..189 "\n    "
+        R_CURLY@189..190 "}"
+    WHITESPACE@190..191 "\n"
+    R_CURLY@191..192 "}"
+  WHITESPACE@192..193 "\n"

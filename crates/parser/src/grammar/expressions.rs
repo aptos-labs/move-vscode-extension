@@ -23,7 +23,7 @@ pub(crate) fn expr(p: &mut Parser) -> bool {
 }
 
 // Parses expression with binding power of at least bp.
-fn expr_bp(
+pub(crate) fn expr_bp(
     p: &mut Parser,
     m: Option<Marker>,
     mut r: Restrictions,
@@ -446,9 +446,11 @@ pub(super) fn expr_block_contents(p: &mut Parser, is_spec: bool) {
 
 #[derive(Clone, Copy, Default)]
 pub(crate) struct Restrictions {
-    forbid_structs: bool,
-    prefer_stmt: bool,
+    pub forbid_structs: bool,
+    pub prefer_stmt: bool,
 }
+
+const NOT_AN_OP: (u8, SyntaxKind) = (0, T![@]);
 
 /// Binding powers of operators for a Pratt parser.
 ///

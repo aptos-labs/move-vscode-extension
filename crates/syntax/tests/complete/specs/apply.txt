@@ -121,7 +121,7 @@ SOURCE_FILE@0..339
               IDENT@201..208 "account"
               COLON@208..209 ":"
               WHITESPACE@209..210 " "
-              PATH_TYPE@210..221
+              PATH_EXPR@210..221
                 PATH@210..221
                   PATH_SEGMENT@210..221
                     NAME_REF@210..221

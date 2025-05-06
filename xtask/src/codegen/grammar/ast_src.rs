@@ -200,13 +200,15 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
 
         "SCHEMA",
         "SCHEMA_FIELD_STMT",
+
         "INCLUDE_SCHEMA",
+        "INCLUDE_EXPR",
+        "AND_INCLUDE_EXPR",
+        "IMPLY_INCLUDE_EXPR",
+        "IF_ELSE_INCLUDE_EXPR",
 
         // "INCLUDE_EXPR",
         // "SCHEMA_INCLUDE_EXPR",
-        // "AND_INCLUDE_EXPR",
-        // "IMPLY_INCLUDE_EXPR",
-        // "IF_ELSE_INCLUDE_EXPR",
 
         "APPLY_SCHEMA",
         "APPLY_TO",
