@@ -21,10 +21,10 @@ pub(crate) fn unresolved_reference(
         return None;
     }
     // for now
-    // let msl = reference.value.syntax().is_msl_context();
-    // if msl {
-    //     return None;
-    // }
+    let msl = reference.value.syntax().is_msl_context();
+    if msl {
+        return None;
+    }
     if let Some(path) = reference.clone().cast_into::<ast::Path>() {
         unresolved_path(acc, ctx, path)?;
     }

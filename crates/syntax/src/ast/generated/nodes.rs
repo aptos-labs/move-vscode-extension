@@ -524,6 +524,23 @@ impl IfExpr {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct IncludeSchema {
+    pub(crate) syntax: SyntaxNode,
+}
+impl IncludeSchema {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn spec_predicate_property_list(&self) -> Option<SpecPredicatePropertyList> {
+        support::child(&self.syntax)
+    }
+    #[inline]
+    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
+    #[inline]
+    pub fn include_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![include]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct IndexExpr {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1887,6 +1904,7 @@ pub enum Stmt {
     AbortsIfStmt(AbortsIfStmt),
     ExprStmt(ExprStmt),
     GlobalVariableDecl(GlobalVariableDecl),
+    IncludeSchema(IncludeSchema),
     LetStmt(LetStmt),
     SchemaFieldStmt(SchemaFieldStmt),
     SpecInlineFun(SpecInlineFun),
@@ -2736,6 +2754,27 @@ impl AstNode for IfExpr {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == IF_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for IncludeSchema {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        INCLUDE_SCHEMA
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == INCLUDE_SCHEMA }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -6103,6 +6142,10 @@ impl From<GlobalVariableDecl> for Stmt {
     #[inline]
     fn from(node: GlobalVariableDecl) -> Stmt { Stmt::GlobalVariableDecl(node) }
 }
+impl From<IncludeSchema> for Stmt {
+    #[inline]
+    fn from(node: IncludeSchema) -> Stmt { Stmt::IncludeSchema(node) }
+}
 impl From<LetStmt> for Stmt {
     #[inline]
     fn from(node: LetStmt) -> Stmt { Stmt::LetStmt(node) }
@@ -6135,6 +6178,12 @@ impl Stmt {
     pub fn global_variable_decl(self) -> Option<GlobalVariableDecl> {
         match (self) {
             Stmt::GlobalVariableDecl(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn include_schema(self) -> Option<IncludeSchema> {
+        match (self) {
+            Stmt::IncludeSchema(item) => Some(item),
             _ => None,
         }
     }
@@ -6171,6 +6220,7 @@ impl AstNode for Stmt {
             ABORTS_IF_STMT
                 | EXPR_STMT
                 | GLOBAL_VARIABLE_DECL
+                | INCLUDE_SCHEMA
                 | LET_STMT
                 | SCHEMA_FIELD_STMT
                 | SPEC_INLINE_FUN
@@ -6183,6 +6233,7 @@ impl AstNode for Stmt {
             ABORTS_IF_STMT => Stmt::AbortsIfStmt(AbortsIfStmt { syntax }),
             EXPR_STMT => Stmt::ExprStmt(ExprStmt { syntax }),
             GLOBAL_VARIABLE_DECL => Stmt::GlobalVariableDecl(GlobalVariableDecl { syntax }),
+            INCLUDE_SCHEMA => Stmt::IncludeSchema(IncludeSchema { syntax }),
             LET_STMT => Stmt::LetStmt(LetStmt { syntax }),
             SCHEMA_FIELD_STMT => Stmt::SchemaFieldStmt(SchemaFieldStmt { syntax }),
             SPEC_INLINE_FUN => Stmt::SpecInlineFun(SpecInlineFun { syntax }),
@@ -6197,6 +6248,7 @@ impl AstNode for Stmt {
             Stmt::AbortsIfStmt(it) => &it.syntax,
             Stmt::ExprStmt(it) => &it.syntax,
             Stmt::GlobalVariableDecl(it) => &it.syntax,
+            Stmt::IncludeSchema(it) => &it.syntax,
             Stmt::LetStmt(it) => &it.syntax,
             Stmt::SchemaFieldStmt(it) => &it.syntax,
             Stmt::SpecInlineFun(it) => &it.syntax,
@@ -7377,6 +7429,11 @@ impl std::fmt::Display for IdentPat {
     }
 }
 impl std::fmt::Display for IfExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for IncludeSchema {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

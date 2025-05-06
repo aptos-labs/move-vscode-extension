@@ -75,24 +75,24 @@ impl<'db> InferenceCtx<'db> {
         path: ast::Path,
         expected_ty: Option<Ty>,
     ) -> Option<InFile<ast::AnyNamedElement>> {
-        let entries =
-            path_resolution::resolve_path(self.db, path.clone().in_file(self.file_id), expected_ty)
-                .into_iter()
-                .filter(|entry| {
-                    // filter out bindings which are resolvable to enum variants
-                    if let Some(ident_pat) = entry.clone().cast_into::<ast::IdentPat>(self.db) {
-                        let res = self
-                            .resolved_ident_pats
-                            .get(&ident_pat.value)
-                            .and_then(|it| it.clone());
-                        if res.map(|it| it.node_loc.kind()) == Some(VARIANT) {
-                            return false;
-                        }
-                    };
-                    true
-                })
-                .collect::<Vec<_>>();
-
+        let path_entries =
+            path_resolution::resolve_path(self.db, path.clone().in_file(self.file_id), expected_ty);
+        let entries = path_entries
+            .into_iter()
+            .filter(|entry| {
+                // filter out bindings which are resolvable to enum variants
+                if let Some(ident_pat) = entry.clone().cast_into::<ast::IdentPat>(self.db) {
+                    let res = self
+                        .resolved_ident_pats
+                        .get(&ident_pat.value)
+                        .and_then(|it| it.clone());
+                    if res.map(|it| it.node_loc.kind()) == Some(VARIANT) {
+                        return false;
+                    }
+                };
+                true
+            })
+            .collect::<Vec<_>>();
         self.resolved_paths.insert(path, entries.clone());
 
         entries
