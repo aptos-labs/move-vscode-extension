@@ -20,24 +20,21 @@ use syntax::files::{InFile, InFileExt, OptionInFileExt};
 use syntax::{AstNode, ast};
 use vfs::FileId;
 
-#[tracing::instrument(level = "debug", skip(db, ctx, path_kind, expected_type))]
-pub fn get_path_resolve_variants_with_expected_type(
+fn refine_path_expected_type(
     db: &dyn HirDatabase,
-    ctx: &ResolutionContext,
+    file_id: FileId,
     path_kind: PathKind,
     expected_type: Option<Ty>,
-) -> Vec<ScopeEntry> {
-    tracing::debug!(?path_kind);
-
+) -> Option<Ty> {
     let mut expected_type = expected_type;
     // if path qualifier is enum, then the expected type is that enum
     if let PathKind::Qualified { qualifier, kind, .. } = path_kind.clone() {
         match kind {
             QualifiedKind::ModuleItemOrEnumVariant | QualifiedKind::FQModuleItem => {
-                let _p = tracing::debug_span!("try refining expected_type").entered();
+                let _p = tracing::debug_span!("refine expected_type").entered();
                 let enum_item = qualifier
                     .reference()
-                    .in_file(ctx.path.file_id)
+                    .in_file(file_id)
                     .resolve_no_inf(db)
                     .and_then(|it| it.cast_into::<ast::Enum>(db));
                 if let Some(enum_item) = enum_item {
@@ -48,11 +45,10 @@ pub fn get_path_resolve_variants_with_expected_type(
             _ => (),
         }
     }
-
-    let path_entries = get_path_resolve_variants(db, ctx, path_kind);
-    path_entries.filter_by_expected_type(db, expected_type)
+    expected_type
 }
 
+#[tracing::instrument(level = "debug", skip_all)]
 pub fn get_path_resolve_variants(
     db: &dyn HirDatabase,
     ctx: &ResolutionContext,
@@ -148,9 +144,10 @@ pub fn resolve_path(
     let Some(path_kind) = path_kind(path.clone().value, false) else {
         return vec![];
     };
+    tracing::debug!(?path_kind);
 
     let ctx = ResolutionContext { path, is_completion: false };
-    let entries = get_path_resolve_variants_with_expected_type(db, &ctx, path_kind, expected_type);
+    let entries = get_path_resolve_variants(db, &ctx, path_kind.clone());
 
     let entries_filtered_by_name = entries.filter_by_name(path_name.clone());
     tracing::debug!(filter_by_name = ?path_name, ?entries_filtered_by_name);
@@ -158,19 +155,24 @@ pub fn resolve_path(
     let entries_by_visibility = entries_filtered_by_name.filter_by_visibility(db, &context_element);
     tracing::debug!(?entries_by_visibility);
 
+    let expected_type =
+        refine_path_expected_type(db, ctx.path.file_id, path_kind, expected_type);
+    let entries_by_expected_type =
+        entries_by_visibility.filter_by_expected_type(db, expected_type);
+
     let path_expr = ctx.parent_path_expr();
     if path_expr.is_some_and(|it| it.syntax().parent_of_type::<ast::CallExpr>().is_some()) {
-        let function_entries = entries_by_visibility.clone().filter_by_ns(FUNCTIONS);
+        let function_entries = entries_by_expected_type.clone().filter_by_ns(FUNCTIONS);
         return if !function_entries.is_empty() {
             function_entries
         } else {
-            entries_by_visibility
+            entries_by_expected_type
         };
     }
 
-    if entries_by_visibility.len() > 1 {
+    if entries_by_expected_type.len() > 1 {
         // we're not at the callable, so drop function entries and see whether we'd get to a single entry
-        let non_function_entries = entries_by_visibility
+        let non_function_entries = entries_by_expected_type
             .clone()
             .into_iter()
             .filter(|it| it.ns != FUNCTION)
@@ -180,7 +182,7 @@ pub fn resolve_path(
         }
     }
 
-    entries_by_visibility
+    entries_by_expected_type
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

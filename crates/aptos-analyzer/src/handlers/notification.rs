@@ -17,6 +17,7 @@ use std::sync::Arc;
 use stdx::itertools::Itertools;
 use vfs::VfsPath;
 
+#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_cancel(state: &mut GlobalState, params: CancelParams) -> anyhow::Result<()> {
     let id: lsp_server::RequestId = match params.id {
         lsp_types::NumberOrString::Number(id) => id.into(),
@@ -26,6 +27,7 @@ pub(crate) fn handle_cancel(state: &mut GlobalState, params: CancelParams) -> an
     Ok(())
 }
 
+#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_work_done_progress_cancel(
     state: &mut GlobalState,
     params: WorkDoneProgressCancelParams,
@@ -46,12 +48,11 @@ pub(crate) fn handle_work_done_progress_cancel(
     Ok(())
 }
 
+#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_did_open_text_document(
     state: &mut GlobalState,
     params: DidOpenTextDocumentParams,
 ) -> anyhow::Result<()> {
-    let _p = tracing::info_span!("handle_did_open_text_document").entered();
-
     if let Ok(path) = from_proto::vfs_path(&params.text_document.uri) {
         let already_exists = state
             .mem_docs
@@ -76,12 +77,11 @@ pub(crate) fn handle_did_open_text_document(
     Ok(())
 }
 
+#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_did_change_text_document(
     state: &mut GlobalState,
     params: DidChangeTextDocumentParams,
 ) -> anyhow::Result<()> {
-    let _p = tracing::info_span!("handle_did_change_text_document").entered();
-
     if let Ok(path) = from_proto::vfs_path(&params.text_document.uri) {
         let Some(DocumentData { version, data }) = state.mem_docs.get_mut(&path) else {
             tracing::error!(?path, "unexpected DidChangeTextDocument");
@@ -105,12 +105,11 @@ pub(crate) fn handle_did_change_text_document(
     Ok(())
 }
 
+#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_did_close_text_document(
     state: &mut GlobalState,
     params: DidCloseTextDocumentParams,
 ) -> anyhow::Result<()> {
-    let _p = tracing::info_span!("handle_did_close_text_document").entered();
-
     if let Ok(path) = from_proto::vfs_path(&params.text_document.uri) {
         if state.mem_docs.remove(&path).is_err() {
             tracing::error!("orphan DidCloseTextDocument: {}", path);
@@ -129,6 +128,7 @@ pub(crate) fn handle_did_close_text_document(
     Ok(())
 }
 
+#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_did_save_text_document(
     state: &mut GlobalState,
     params: DidSaveTextDocumentParams,
@@ -160,6 +160,7 @@ pub(crate) fn handle_did_save_text_document(
     Ok(())
 }
 
+#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_did_change_configuration(
     state: &mut GlobalState,
     _params: DidChangeConfigurationParams,
@@ -204,6 +205,7 @@ pub(crate) fn handle_did_change_configuration(
     Ok(())
 }
 
+#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_did_change_workspace_folders(
     state: &mut GlobalState,
     params: DidChangeWorkspaceFoldersParams,
@@ -242,6 +244,7 @@ pub(crate) fn handle_did_change_workspace_folders(
     Ok(())
 }
 
+#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_did_change_watched_files(
     state: &mut GlobalState,
     params: DidChangeWatchedFilesParams,
@@ -254,9 +257,8 @@ pub(crate) fn handle_did_change_watched_files(
     Ok(())
 }
 
+#[tracing::instrument(level = "info", skip_all)]
 fn run_flycheck(state: &mut GlobalState, vfs_path: VfsPath) -> bool {
-    let _p = tracing::info_span!("run_flycheck").entered();
-
     let file_id = state.vfs.read().0.file_id(&vfs_path);
     if let Some((saved_file_id, _)) = file_id {
         let world = state.snapshot();
@@ -307,23 +309,23 @@ fn run_flycheck(state: &mut GlobalState, vfs_path: VfsPath) -> bool {
     }
 }
 
+#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_cancel_flycheck(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
-    let _p = tracing::info_span!("handle_cancel_flycheck").entered();
     state.flycheck.iter().for_each(|flycheck| flycheck.cancel());
     Ok(())
 }
 
+#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_clear_flycheck(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
-    let _p = tracing::info_span!("handle_clear_flycheck").entered();
     state.diagnostics.clear_check_all();
     Ok(())
 }
 
+#[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn handle_run_flycheck(
     state: &mut GlobalState,
     params: RunFlycheckParams,
 ) -> anyhow::Result<()> {
-    let _p = tracing::info_span!("handle_run_flycheck").entered();
     if let Some(text_document) = params.text_document {
         if let Ok(vfs_path) = from_proto::vfs_path(&text_document.uri) {
             if run_flycheck(state, vfs_path) {

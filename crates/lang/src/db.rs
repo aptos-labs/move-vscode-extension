@@ -1,5 +1,7 @@
+use crate::item_scope::NamedItemScope;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::nameres::address::Address;
+use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::path_resolution;
 use crate::nameres::scope::{NamedItemsExt, ScopeEntry, VecExt};
 use crate::node_ext::ModuleLangExt;
@@ -10,14 +12,16 @@ use crate::types::ty::Ty;
 use base_db::inputs::{FileIdSet, InternFileId};
 use base_db::package_root::PackageRootId;
 use base_db::{ParseDatabase, SourceDatabase};
+use parser::SyntaxKind;
 use std::fs::File;
 use std::sync::Arc;
-use syntax::ast::Module;
+use syntax::algo::ancestors_at_offset;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt, InFileVecExt};
 use syntax::{AstNode, ast};
 use vfs::FileId;
+use crate::nameres;
 
 #[query_group_macro::query_group]
 pub trait HirDatabase: ParseDatabase {
@@ -26,6 +30,14 @@ pub trait HirDatabase: ParseDatabase {
     fn inference_for_ctx_owner(&self, ctx_owner_loc: SyntaxLoc, msl: bool) -> Arc<InferenceResult>;
 
     fn file_ids_by_module_address(&self, package_root_id: PackageRootId, address: Address) -> FileIdSet;
+
+    fn use_speck_entries(&self, stmts_owner_loc: SyntaxLoc) -> Vec<ScopeEntry>;
+
+    fn module_importable_entries(&self, module_loc: SyntaxLoc) -> Vec<ScopeEntry>;
+
+    fn module_importable_entries_from_related(&self, module_loc: SyntaxLoc) -> Vec<ScopeEntry>;
+
+    fn item_scope(&self, loc: SyntaxLoc) -> NamedItemScope;
 }
 
 pub(crate) fn resolve_path(db: &dyn HirDatabase, path_loc: SyntaxLoc) -> Vec<ScopeEntry> {
@@ -98,11 +110,38 @@ fn file_ids_by_module_address(
     FileIdSet::new(db, file_ids)
 }
 
+fn use_speck_entries(db: &dyn HirDatabase, stmts_owner_loc: SyntaxLoc) -> Vec<ScopeEntry> {
+    let use_stmts_owner = stmts_owner_loc.to_ast::<ast::AnyHasUseStmts>(db).unwrap();
+    let entries = nameres::use_speck_entries::use_speck_entries(db, &use_stmts_owner);
+    entries
+}
+
+fn module_importable_entries(db: &dyn HirDatabase, module_loc: SyntaxLoc) -> Vec<ScopeEntry> {
+    module_loc
+        .to_ast::<ast::Module>(db)
+        .map(|it| it.importable_entries())
+        .unwrap_or_default()
+}
+
+fn module_importable_entries_from_related(
+    db: &dyn HirDatabase,
+    module_loc: SyntaxLoc,
+) -> Vec<ScopeEntry> {
+    module_loc
+        .to_ast::<ast::Module>(db)
+        .map(|it| it.importable_entries_from_related(db))
+        .unwrap_or_default()
+}
+
+fn item_scope(db: &dyn HirDatabase, loc: SyntaxLoc) -> NamedItemScope {
+    loc.item_scope(db).unwrap_or(NamedItemScope::Main)
+}
+
 pub(crate) fn get_modules_in_file(
     db: &dyn ParseDatabase,
     file_id: FileId,
     address: Address,
-) -> Vec<Module> {
+) -> Vec<ast::Module> {
     let source_file = db.parse(file_id.intern(db)).tree();
     let modules = source_file
         .all_modules()

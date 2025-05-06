@@ -1,4 +1,4 @@
-use crate::ast;
+use syntax::SyntaxKind::*;
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
 pub enum NamedItemScope {
