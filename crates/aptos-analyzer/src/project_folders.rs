@@ -1,11 +1,7 @@
 use base_db::package_root::PackageRoot;
-use paths::AbsPathBuf;
 use project_model::aptos_package::{AptosPackage, PackageFolderRoot};
-use std::collections::HashMap;
-use std::collections::hash_map::Entry;
+use std::fmt;
 use std::fmt::Formatter;
-use std::{fmt, mem};
-use stdx::itertools::Itertools;
 use vfs::VfsPath;
 use vfs::file_set::FileSetConfig;
 

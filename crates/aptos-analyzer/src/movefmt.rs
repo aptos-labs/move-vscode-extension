@@ -1,14 +1,12 @@
 use crate::global_state::GlobalStateSnapshot;
 use crate::line_index::LineEndings;
 use crate::lsp::{LspError, from_proto, to_proto};
-use crate::{toolchain, unwrap_or_return_default};
+use crate::toolchain;
 use anyhow::Context;
-use camino::Utf8PathBuf;
 use ide_db::text_edit::TextEdit;
 use lsp_server::ErrorCode;
-use lsp_types::{MessageType, TextDocumentIdentifier};
-use std::io::Write;
-use std::process::{Command, Stdio};
+use lsp_types::TextDocumentIdentifier;
+use std::process::Stdio;
 use syntax::{TextRange, TextSize};
 
 pub(crate) fn run_movefmt(
@@ -67,7 +65,7 @@ pub(crate) fn run_movefmt(
     let output = {
         let _p = tracing::info_span!("movefmt").entered();
         tracing::info!(?command);
-        let mut movefmt = command
+        let movefmt = command
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

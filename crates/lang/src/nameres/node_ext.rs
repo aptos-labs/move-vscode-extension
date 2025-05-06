@@ -3,7 +3,6 @@ use crate::nameres::namespaces::Ns;
 use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryExt};
 use crate::node_ext::item::ModuleItemExt;
 use base_db::inputs::InternFileId;
-use base_db::{ParseDatabase, SourceDatabase};
 use syntax::ast;
 use syntax::ast::HasItems;
 use syntax::files::{InFile, InFileExt};

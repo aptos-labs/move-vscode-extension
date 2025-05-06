@@ -331,19 +331,13 @@ impl BlockLike {
     }
 }
 
-pub(super) enum StmtWithSemi {
-    Yes,
-    No,
-    Optional,
-}
-
-pub(super) fn stmt(p: &mut Parser, with_semi: StmtWithSemi, prefer_expr: bool, is_spec: bool) {
+pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
     let m = p.start();
 
     attributes::outer_attrs(p);
 
     if p.at(T![let]) {
-        let_stmt(p, m, with_semi);
+        let_stmt(p, m);
         return;
     }
     if p.at(T![use]) {
@@ -376,16 +370,7 @@ pub(super) fn stmt(p: &mut Parser, with_semi: StmtWithSemi, prefer_expr: bool, i
     if let Some((cm, _)) = stmt_expr(p, Some(m)) {
         if !(p.at(T!['}']) || (prefer_expr && p.at(EOF))) {
             let m = cm.precede(p);
-            match with_semi {
-                StmtWithSemi::No => (),
-                StmtWithSemi::Optional => {
-                    p.eat(T![;]);
-                }
-                StmtWithSemi::Yes => {
-                    p.expect(T![;]);
-                }
-            }
-
+            p.expect(T![;]);
             m.complete(p, EXPR_STMT);
         }
         return;
@@ -395,7 +380,7 @@ pub(super) fn stmt(p: &mut Parser, with_semi: StmtWithSemi, prefer_expr: bool, i
     p.error_and_bump_any(&format!("unexpected token {:?}", p.current()));
 }
 
-fn let_stmt(p: &mut Parser, m: Marker, with_semi: StmtWithSemi) {
+fn let_stmt(p: &mut Parser, m: Marker) {
     p.bump(T![let]);
     if p.at_contextual_kw_ident("post") {
         p.bump_remap(T![post]);
@@ -405,16 +390,8 @@ fn let_stmt(p: &mut Parser, m: Marker, with_semi: StmtWithSemi) {
         types::ascription(p);
     }
     opt_initializer_expr(p);
+    p.expect(T![;]);
 
-    match with_semi {
-        StmtWithSemi::No => (),
-        StmtWithSemi::Optional => {
-            p.eat(T![;]);
-        }
-        StmtWithSemi::Yes => {
-            p.expect(T![;]);
-        }
-    }
     m.complete(p, LET_STMT);
 }
 
@@ -440,7 +417,7 @@ pub(super) fn expr_block_contents(p: &mut Parser, is_spec: bool) {
             p.bump(T![;]);
             continue;
         }
-        stmt(p, StmtWithSemi::Yes, false, is_spec);
+        stmt(p, false, is_spec);
     }
 }
 
@@ -449,8 +426,6 @@ pub(crate) struct Restrictions {
     pub forbid_structs: bool,
     pub prefer_stmt: bool,
 }
-
-const NOT_AN_OP: (u8, SyntaxKind) = (0, T![@]);
 
 /// Binding powers of operators for a Pratt parser.
 ///

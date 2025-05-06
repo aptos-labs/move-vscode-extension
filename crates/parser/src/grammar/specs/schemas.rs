@@ -4,7 +4,7 @@ use crate::grammar::items::item_start;
 use crate::grammar::paths::{is_path_start, type_path};
 use crate::grammar::specs::predicates::opt_predicate_property_list;
 use crate::grammar::utils::{delimited_fn, list};
-use crate::grammar::{generic_params, name, name_or_bump_until, name_ref, patterns, types};
+use crate::grammar::{generic_params, name, name_or_bump_until, name_ref, types};
 use crate::parser::{CompletedMarker, Marker};
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;

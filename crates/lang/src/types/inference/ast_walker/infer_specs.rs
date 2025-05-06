@@ -1,4 +1,3 @@
-use crate::nameres::ResolveReference;
 use crate::types::expectation::Expected;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::substitution::ApplySubstitution;
@@ -6,7 +5,7 @@ use crate::types::ty::Ty;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::schema::TySchema;
 use syntax::ast;
-use syntax::ast::{NamedElement, ReferenceElement};
+use syntax::ast::NamedElement;
 use syntax::files::InFileExt;
 
 impl<'a, 'db> TypeAstWalker<'a, 'db> {

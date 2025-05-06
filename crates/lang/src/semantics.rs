@@ -11,7 +11,6 @@ use crate::types::inference::InferenceCtx;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
-use base_db::ParseDatabase;
 use base_db::inputs::InternFileId;
 use base_db::package_root::PackageRootId;
 use std::cell::RefCell;
@@ -24,8 +23,7 @@ use vfs::FileId;
 const MAX_FILE_ID: u32 = 0x7fff_ffff;
 
 /// Primary API to get semantic information, like types, from syntax trees.
-pub struct Semantics<'db, DB> {
-    db: &'db DB,
+pub struct Semantics<'db> {
     imp: SemanticsImpl<'db>,
 }
 
@@ -35,13 +33,13 @@ pub struct SemanticsImpl<'db> {
     s2d_cache: RefCell<SourceToDefCache>,
 }
 
-impl<DB> fmt::Debug for Semantics<'_, DB> {
+impl fmt::Debug for Semantics<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Semantics {{ ... }}")
     }
 }
 
-impl<'db, DB> ops::Deref for Semantics<'db, DB> {
+impl<'db> ops::Deref for Semantics<'db> {
     type Target = SemanticsImpl<'db>;
 
     fn deref(&self) -> &Self::Target {
@@ -49,15 +47,15 @@ impl<'db, DB> ops::Deref for Semantics<'db, DB> {
     }
 }
 
-impl<DB: HirDatabase> Semantics<'_, DB> {
-    pub fn new(db: &DB, ws_file_id: FileId) -> Semantics<'_, DB> {
+impl Semantics<'_> {
+    pub fn new(db: &dyn HirDatabase, ws_file_id: FileId) -> Semantics<'_> {
         let ws_root = db.file_package_root(ws_file_id).data(db);
         let impl_ = SemanticsImpl::new(db, ws_root);
         // add builtins file to cache
         if let Some(builtins_file_id) = db.builtins_file_id() {
             impl_.parse(builtins_file_id.data(db));
         }
-        Semantics { db, imp: impl_ }
+        Semantics { imp: impl_ }
     }
 }
 

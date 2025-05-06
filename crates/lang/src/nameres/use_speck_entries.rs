@@ -1,14 +1,13 @@
 use crate::HirDatabase;
 use crate::item_scope::NamedItemScope;
-use crate::loc::{SyntaxLocFileExt, SyntaxLocNodeExt};
+use crate::loc::SyntaxLocFileExt;
 use crate::nameres::ResolveReference;
 use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::has_item_list::HasUseStmtsInFileExt;
+use syntax::ast;
 use syntax::ast::NamedElement;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, ast};
 use vfs::FileId;
 
 pub fn use_speck_entries(

@@ -1,7 +1,7 @@
 use crate::completions::item_list::ItemListKind;
 use crate::config::CompletionConfig;
+use base_db::ParseDatabase;
 use base_db::inputs::InternFileId;
-use base_db::{ParseDatabase, SourceDatabase};
 use ide_db::RootDatabase;
 use lang::Semantics;
 use syntax::SyntaxKind::*;

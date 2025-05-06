@@ -20,13 +20,3 @@ pub(crate) fn spec_block_expr(p: &mut Parser) -> CompletedMarker {
     block_expr(p, true);
     m.complete(p, SPEC_BLOCK_EXPR)
 }
-
-pub(crate) static PREFIX_PREDICATES: &[&str] = &[
-    "assume",
-    "assert",
-    "requires",
-    "ensures",
-    "aborts_if",
-    "aborts_with",
-    "decreases",
-];

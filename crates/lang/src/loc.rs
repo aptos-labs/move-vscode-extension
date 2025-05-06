@@ -1,6 +1,6 @@
 use crate::item_scope::NamedItemScope;
+use base_db::ParseDatabase;
 use base_db::inputs::InternFileId;
-use base_db::{ParseDatabase, SourceDatabase};
 use parser::SyntaxKind;
 use std::fmt;
 use std::fmt::Formatter;

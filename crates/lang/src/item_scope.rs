@@ -1,5 +1,3 @@
-use syntax::SyntaxKind::*;
-
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
 pub enum NamedItemScope {
     Main,
@@ -13,7 +11,7 @@ impl NamedItemScope {
     }
 
     pub fn shrink_scope(self, adjustment_scope: NamedItemScope) -> NamedItemScope {
-        if (self == NamedItemScope::Main) {
+        if self == NamedItemScope::Main {
             return adjustment_scope;
         }
         self

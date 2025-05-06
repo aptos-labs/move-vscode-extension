@@ -97,7 +97,7 @@ pub(crate) fn atom_expr(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> 
         T![while] => while_expr(p, None),
         QUOTE_IDENT if p.nth(1) == T![:] => {
             let m = p.start();
-            label(p);
+            label_decl(p);
             match p.current() {
                 T![loop] => loop_expr(p, Some(m)),
                 IDENT if p.at_contextual_kw("for") => for_expr(p, Some(m)),
@@ -256,7 +256,7 @@ fn if_expr(p: &mut Parser) -> CompletedMarker {
     m.complete(p, IF_EXPR)
 }
 
-fn label(p: &mut Parser<'_>) {
+fn label_decl(p: &mut Parser<'_>) {
     assert!(p.at(QUOTE_IDENT) && p.nth(1) == T![:]);
     let m = p.start();
     p.bump(QUOTE_IDENT);
@@ -439,14 +439,6 @@ fn break_expr(p: &mut Parser<'_>) -> CompletedMarker {
         expr(p);
     }
     m.complete(p, BREAK_EXPR)
-}
-
-fn opt_label_decl(p: &mut Parser<'_>) {
-    if p.at(QUOTE_IDENT) {
-        let m = p.start();
-        p.eat(QUOTE_IDENT);
-        m.complete(p, LABEL_DECL);
-    }
 }
 
 fn opt_label(p: &mut Parser<'_>) {

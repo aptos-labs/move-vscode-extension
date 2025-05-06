@@ -6,7 +6,6 @@ use base_db::package_root::{PackageRoot, PackageRootId};
 use base_db::{ParseDatabase, SourceDatabase};
 use line_index::LineIndex;
 use salsa::Durability;
-use std::fs::File;
 use std::mem::ManuallyDrop;
 use std::ops::Deref;
 use std::sync::Arc;

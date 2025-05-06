@@ -1,11 +1,10 @@
 pub(crate) mod name_like;
 
 use crate::syntax_highlighting::tags::{Highlight, HlTag};
-use ide_db::RootDatabase;
 use lang::Semantics;
 use syntax::{AstNode, AstToken, SyntaxKind, SyntaxKind::*, SyntaxNodeOrToken, SyntaxToken, T, ast};
 
-pub(super) fn token(sema: &Semantics<'_, RootDatabase>, token: SyntaxToken) -> Option<Highlight> {
+pub(super) fn token(sema: &Semantics<'_>, token: SyntaxToken) -> Option<Highlight> {
     if let Some(_comment) = ast::Comment::cast(token.clone()) {
         let h = HlTag::Comment;
         // return Some(match comment.kind().doc {
@@ -35,11 +34,7 @@ pub(super) fn token(sema: &Semantics<'_, RootDatabase>, token: SyntaxToken) -> O
     Some(highlight)
 }
 
-fn keyword(
-    _sema: &Semantics<'_, RootDatabase>,
-    _token: SyntaxToken,
-    kind: SyntaxKind,
-) -> Option<Highlight> {
+fn keyword(_sema: &Semantics<'_>, _token: SyntaxToken, kind: SyntaxKind) -> Option<Highlight> {
     let h = Highlight::new(HlTag::Keyword);
     let h = match kind {
         T![break]

@@ -1,16 +1,15 @@
-use ide_db::RootDatabase;
 use lang::Semantics;
 use std::fmt::Write;
 use syntax::ast::NamedElement;
 use syntax::{AstNode, ast, match_ast};
 
 pub trait DocSignatureOwner {
-    fn header(&self, sema: &Semantics<'_, RootDatabase>, buffer: &mut String) -> Option<()>;
-    fn signature(&self, sema: &Semantics<'_, RootDatabase>, buffer: &mut String) -> Option<()>;
+    fn header(&self, sema: &Semantics<'_>, buffer: &mut String) -> Option<()>;
+    fn signature(&self, sema: &Semantics<'_>, buffer: &mut String) -> Option<()>;
 }
 
 impl DocSignatureOwner for ast::AnyNamedElement {
-    fn header(&self, sema: &Semantics<'_, RootDatabase>, buffer: &mut String) -> Option<()> {
+    fn header(&self, sema: &Semantics<'_>, buffer: &mut String) -> Option<()> {
         let header = match_ast! {
             match (self.syntax()) {
                 ast::Module(it) => sema.fq_name(it)?.address_identifier_text(),
@@ -33,7 +32,7 @@ impl DocSignatureOwner for ast::AnyNamedElement {
         Some(())
     }
 
-    fn signature(&self, sema: &Semantics<'_, RootDatabase>, buffer: &mut String) -> Option<()> {
+    fn signature(&self, sema: &Semantics<'_>, buffer: &mut String) -> Option<()> {
         match_ast! {
             match (self.syntax()) {
                 ast::Module(it) => generate_module(it, buffer),
@@ -128,7 +127,7 @@ fn generate_enum_variant(variant: ast::Variant, buffer: &mut String) -> Option<(
 
 fn generate_ident_pat(
     ident_pat: ast::IdentPat,
-    sema: &Semantics<'_, RootDatabase>,
+    sema: &Semantics<'_>,
     buffer: &mut String,
 ) -> Option<()> {
     let owner = ident_pat.owner()?;

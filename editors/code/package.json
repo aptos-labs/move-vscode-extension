@@ -257,6 +257,19 @@
                 }
             },
             {
+                "title": "files",
+                "properties": {
+                    "aptos-analyzer.files.excludeDirs": {
+                        "markdownDescription": "These paths (file/directories) will be ignored by aptos-analyzer. They are\nrelative to the workspace root, and globs are not supported. You may\nalso need to add the folders to Code's `files.watcherExclude`.",
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
                 "title": "movefmt",
                 "properties": {
                     "aptos-analyzer.movefmt.extraArgs": {
