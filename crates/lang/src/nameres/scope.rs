@@ -7,9 +7,10 @@ use std::fmt;
 use std::fmt::Formatter;
 use stdx::itertools::Itertools;
 use syntax::ast;
-use syntax::ast::{NamedItemScope, ReferenceElement};
+use syntax::ast::{ReferenceElement};
 use syntax::files::{InFile, InFileVecExt};
 use vfs::FileId;
+use crate::item_scope::NamedItemScope;
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct ScopeEntry {

@@ -44,6 +44,7 @@ impl ModuleResolutionExt for InFile<ast::Module> {
     }
 
     /// collects `spec MODULE {}` from all spec-related (NAME.move + NAME.spec.move) file ids
+    #[tracing::instrument(level = "debug", skip_all)]
     fn related_module_specs(&self, db: &dyn HirDatabase) -> Vec<InFile<ast::ModuleSpec>> {
         let related_file_ids = db.spec_file_sets(self.file_id).data(db);
         let mut module_specs = vec![];
@@ -59,6 +60,7 @@ impl ModuleResolutionExt for InFile<ast::Module> {
         module_specs
     }
 
+    #[tracing::instrument(level = "debug", skip_all)]
     fn importable_entries_from_related(&self, db: &dyn HirDatabase) -> Vec<ScopeEntry> {
         let mut entries = vec![];
         for related_module_spec in self.related_module_specs(db) {

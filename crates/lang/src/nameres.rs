@@ -17,7 +17,7 @@ mod is_visible;
 mod labels;
 pub mod name_resolution;
 pub mod namespaces;
-mod node_ext;
+pub mod node_ext;
 pub mod path_kind;
 pub mod path_resolution;
 pub mod scope;

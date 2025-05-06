@@ -1,23 +1,25 @@
 use crate::HirDatabase;
+use crate::item_scope::NamedItemScope;
+use crate::loc::{SyntaxLocFileExt, SyntaxLocNodeExt};
 use crate::nameres::ResolveReference;
 use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::has_item_list::HasUseStmtsInFileExt;
+use syntax::ast::NamedElement;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
-use syntax::ast::{NamedElement, NamedItemScope};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 use vfs::FileId;
 
 pub fn use_speck_entries(
     db: &dyn HirDatabase,
-    items_owner: &InFile<impl ast::HasUseStmts>,
+    use_stmts_owner: &InFile<impl ast::HasUseStmts>,
 ) -> Vec<ScopeEntry> {
-    let use_items = items_owner.use_stmt_items();
+    let use_items = use_stmts_owner.use_stmt_items(db);
 
     let mut entries = vec![];
     for use_item in use_items {
-        if let Some(entry) = resolve_use_item(db, use_item, items_owner.file_id) {
+        if let Some(entry) = resolve_use_item(db, use_item, use_stmts_owner.file_id) {
             entries.push(entry);
         }
     }
@@ -56,12 +58,11 @@ pub struct UseItem {
     scope: NamedItemScope,
 }
 
-pub fn use_stmt_items(use_stmt: ast::UseStmt) -> Option<Vec<UseItem>> {
-    let root_use_speck = use_stmt.use_speck()?;
+pub fn use_stmt_items(db: &dyn HirDatabase, use_stmt: InFile<ast::UseStmt>) -> Option<Vec<UseItem>> {
+    let root_use_speck = use_stmt.value.use_speck()?;
+    let use_stmt_scope = db.item_scope(use_stmt.loc());
 
-    let use_stmt_scope = use_stmt.syntax().item_scope();
     let mut use_items = vec![];
-
     let use_group = root_use_speck.use_group();
     if let Some(use_group) = use_group {
         for child_use_speck in use_group.use_specks() {
@@ -119,18 +120,6 @@ pub fn use_stmt_items(use_stmt: ast::UseStmt) -> Option<Vec<UseItem>> {
                         type_: UseItemType::Item,
                         scope: use_stmt_scope,
                     });
-                    // let base_path = path.base_path();
-                    // let address = match path_kind(base_path, false) {
-                    //     Some(PathKind::NamedAddress(named_address)) => {
-                    //         Some(Address::Named(named_address))
-                    //     }
-                    //     Some(PathKind::ValueAddress(value_address)) => {
-                    //         Some(Address::Value(value_address))
-                    //     }
-                    //     _ => None,
-                    // };
-                    // if let Some(address) = address {
-                    // }
                 }
             }
             _ => {}

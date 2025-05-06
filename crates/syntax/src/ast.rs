@@ -5,7 +5,6 @@ mod traits;
 
 pub mod edit;
 pub mod idents;
-pub mod item_scope;
 pub mod make;
 pub mod node_ext;
 pub mod operators;
@@ -22,7 +21,6 @@ use crate::{
 
 pub use self::{
     generated::{nodes::*, tokens::*},
-    item_scope::NamedItemScope,
     // expr_ext::{ArrayExprKind, BlockModifier, CallableExpr, ElseBranch, LiteralKind},
     node_ext::literal::LiteralKind,
     operators::{ArithOp, BinaryOp, CmpOp, LogicOp, Ordering, RangeOp, UnaryOp},

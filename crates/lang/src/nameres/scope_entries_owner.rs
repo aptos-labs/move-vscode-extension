@@ -1,4 +1,5 @@
 use crate::HirDatabase;
+use crate::loc::{SyntaxLocFileExt, SyntaxLocNodeExt};
 use crate::nameres::blocks::get_entries_in_blocks;
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
@@ -15,11 +16,12 @@ pub fn get_entries_in_scope(
     prev: Option<SyntaxNode>,
 ) -> Vec<ScopeEntry> {
     let mut entries = vec![];
-    if let Some(use_stmts_owner) = ast::AnyHasUseStmts::cast(scope.value.clone()) {
-        entries.extend(use_speck_entries(
-            db,
-            &InFile::new(scope.file_id, use_stmts_owner),
-        ));
+    if let Some(use_stmts_owner) = scope.syntax_cast::<ast::AnyHasUseStmts>() {
+        entries.extend(db.use_speck_entries(use_stmts_owner.loc()));
+        // entries.extend(use_speck_entries(
+        //     db,
+        //     &InFile::new(scope.file_id, use_stmts_owner),
+        // ));
     }
 
     entries.extend(get_entries_in_blocks(scope.clone(), prev));
@@ -40,7 +42,8 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
     match scope.value.kind() {
         MODULE => {
             let module = scope.syntax_cast::<ast::Module>().unwrap();
-            entries.extend(module.importable_entries());
+            entries.extend(db.module_importable_entries(module.loc()));
+
             entries.extend(module.value.enum_variants().to_entries(file_id));
 
             entries.extend(builtin_functions(db).to_entries());

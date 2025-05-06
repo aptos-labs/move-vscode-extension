@@ -1,4 +1,6 @@
 use crate::HirDatabase;
+use crate::item_scope::NamedItemScope;
+use crate::loc::{SyntaxLocFileExt, SyntaxLocNodeExt};
 use crate::nameres::ResolveReference;
 use crate::nameres::namespaces::{Ns, TYPES_N_ENUMS};
 use crate::nameres::scope::ScopeEntry;
@@ -6,7 +8,7 @@ use crate::node_ext::ModuleLangExt;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::visibility::{Vis, VisLevel};
-use syntax::ast::{HasAttrs, HasVisibility, NamedItemScope, ReferenceElement};
+use syntax::ast::{HasAttrs, HasVisibility, ReferenceElement};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 
@@ -40,7 +42,7 @@ pub fn is_visible_in_context(
     let item_ns = scope_entry.ns;
     let opt_visible_item = ast::AnyHasVisibility::cast(item.syntax().clone());
 
-    let context_usage_scope = context.syntax().item_scope();
+    let context_usage_scope = db.item_scope(context.loc(context_file_id));
     let context_opt_path = ast::Path::cast(context.syntax().to_owned());
     if let Some(path) = context_opt_path.clone() {
         if path.is_use_speck() {
@@ -84,9 +86,10 @@ pub fn is_visible_in_context(
         return true;
     }
 
+    let item_loc = item.clone().in_file(item_file_id).loc();
     let item_scope = match scope_entry.scope_adjustment {
-        Some(adjustment) => item.syntax().item_scope().shrink_scope(adjustment),
-        None => item.syntax().item_scope(),
+        Some(adjustment) => db.item_scope(item_loc).shrink_scope(adjustment),
+        None => db.item_scope(item_loc),
     };
     // i.e. #[test_only] items in non-test-only scope
     if item_scope != NamedItemScope::Main {

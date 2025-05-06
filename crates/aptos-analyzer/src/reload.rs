@@ -150,12 +150,6 @@ impl GlobalState {
                     discovered_manifests
                         .iter()
                         .map(|discovered| {
-                            sender
-                                .clone()
-                                .send(Task::FetchPackagesProgress(FetchPackagesProgress::Report(
-                                    format!("Fetching {}", discovered.move_toml_file.to_path_buf()),
-                                )))
-                                .unwrap();
                             let manifest_path =
                                 ManifestPath::new(discovered.move_toml_file.to_path_buf());
                             AptosPackage::load(&manifest_path, discovered.resolve_deps)

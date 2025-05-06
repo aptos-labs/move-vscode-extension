@@ -207,9 +207,11 @@ pub fn get_qualified_path_entries(
                 ns: Ns::MODULE,
                 scope_adjustment: None,
             });
-            let module = qualifier_item.node_loc.to_ast::<ast::Module>(db)?;
-            entries.extend(module.importable_entries());
-            entries.extend(module.importable_entries_from_related(db));
+
+            entries.extend(db.module_importable_entries(qualifier_item.node_loc.clone()));
+            entries.extend(db.module_importable_entries_from_related(qualifier_item.node_loc));
+            // let module = qualifier_item.node_loc.to_ast::<ast::Module>(db)?;
+            // entries.extend(module.importable_entries_from_related(db));
         }
         SyntaxKind::ENUM => {
             let enum_ = qualifier_item.node_loc.to_ast::<ast::Enum>(db)?;

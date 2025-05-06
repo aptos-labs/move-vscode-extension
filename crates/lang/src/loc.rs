@@ -1,3 +1,4 @@
+use crate::item_scope::NamedItemScope;
 use base_db::inputs::InternFileId;
 use base_db::{ParseDatabase, SourceDatabase};
 use parser::SyntaxKind;
@@ -5,7 +6,7 @@ use std::fmt;
 use std::fmt::Formatter;
 use syntax::algo::ancestors_at_offset;
 use syntax::files::InFile;
-use syntax::{AstNode, TextSize};
+use syntax::{ast, AstNode, SourceFile, TextSize};
 use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]
@@ -43,15 +44,7 @@ impl SyntaxLoc {
     }
 
     pub fn to_ast<T: AstNode>(&self, db: &dyn ParseDatabase) -> Option<InFile<T>> {
-        let file = db.parse(self.file_id.intern(db)).tree();
-        if !file.syntax().text_range().contains_inclusive(self.node_offset) {
-            tracing::error!(
-                "stale cache error: {:?} is outside of the file range {:?}",
-                self,
-                file.syntax().text_range()
-            );
-            return None;
-        }
+        let file = self.get_source_file(db)?;
         let ancestors_at_offset = ancestors_at_offset(file.syntax(), self.node_offset);
         for ancestor in ancestors_at_offset {
             if ancestor.text_range().end() == self.node_offset {
@@ -61,6 +54,28 @@ impl SyntaxLoc {
             }
         }
         None
+    }
+
+    pub fn item_scope(&self, db: &dyn ParseDatabase) -> Option<NamedItemScope> {
+        use syntax::SyntaxKind::*;
+
+        let file = self.get_source_file(db)?;
+        let ancestors = ancestors_at_offset(file.syntax(), self.node_offset);
+        for ancestor in ancestors {
+            let Some(has_attrs) = ast::AnyHasAttrs::cast(ancestor.clone()) else {
+                continue;
+            };
+            if matches!(
+                ancestor.kind(),
+                SCHEMA | ITEM_SPEC | MODULE_SPEC | SPEC_BLOCK_EXPR
+            ) {
+                return Some(NamedItemScope::Verify);
+            }
+            if let Some(ancestor_scope) = item_scope_from_attributes(has_attrs) {
+                return Some(ancestor_scope);
+            }
+        }
+        Some(NamedItemScope::Main)
     }
 
     pub fn file_id(&self) -> FileId {
@@ -73,6 +88,19 @@ impl SyntaxLoc {
 
     pub fn node_name(&self) -> Option<String> {
         self.node_name.to_owned()
+    }
+
+    fn get_source_file(&self, db: &dyn ParseDatabase) -> Option<SourceFile> {
+        let file = db.parse(self.file_id.intern(db)).tree();
+        if !file.syntax().text_range().contains_inclusive(self.node_offset) {
+            tracing::error!(
+                "stale cache error: {:?} is outside of the file range {:?}",
+                self,
+                file.syntax().text_range()
+            );
+            return None;
+        }
+        Some(file)
     }
 }
 
@@ -120,4 +148,14 @@ impl<T: AstNode> SyntaxLocNodeExt for T {
     fn loc(&self, file_id: FileId) -> SyntaxLoc {
         SyntaxLoc::from_ast_node(file_id, self)
     }
+}
+
+fn item_scope_from_attributes(has_attrs: impl ast::HasAttrs) -> Option<NamedItemScope> {
+    if has_attrs.has_atom_attr("test_only") || has_attrs.has_atom_attr("test") {
+        return Some(NamedItemScope::Test);
+    }
+    if has_attrs.has_atom_attr("verify_only") {
+        return Some(NamedItemScope::Verify);
+    }
+    None
 }
