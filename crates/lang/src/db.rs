@@ -25,7 +25,7 @@ use crate::nameres;
 
 #[query_group_macro::query_group]
 pub trait HirDatabase: ParseDatabase {
-    fn resolve_path(&self, path_loc: SyntaxLoc) -> Vec<ScopeEntry>;
+    fn resolve_path_multi(&self, path_loc: SyntaxLoc) -> Vec<ScopeEntry>;
 
     fn inference_for_ctx_owner(&self, ctx_owner_loc: SyntaxLoc, msl: bool) -> Arc<InferenceResult>;
 
@@ -40,7 +40,7 @@ pub trait HirDatabase: ParseDatabase {
     fn item_scope(&self, loc: SyntaxLoc) -> NamedItemScope;
 }
 
-pub(crate) fn resolve_path(db: &dyn HirDatabase, path_loc: SyntaxLoc) -> Vec<ScopeEntry> {
+pub(crate) fn resolve_path_multi(db: &dyn HirDatabase, path_loc: SyntaxLoc) -> Vec<ScopeEntry> {
     let path = path_loc.to_ast::<ast::Path>(db);
     match path {
         Some(path) => path_resolution::resolve_path(db, path, None),

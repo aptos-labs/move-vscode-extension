@@ -1,5 +1,7 @@
 use crate::test_utils::check_diagnostics;
-use crate::test_utils::diagnostics::{check_diagnostic_and_fix, check_diagnostic_and_fix_expect};
+use crate::test_utils::diagnostics::{
+    check_diagnostic_and_fix, check_diagnostic_and_fix_expect, check_diagnostic_expect,
+};
 use expect_test::expect;
 
 #[test]
@@ -54,21 +56,19 @@ module 0x1::main {
 #[test]
 fn test_no_warning_if_self_parameter_struct_is_from_another_module() {
     // language=Move
-    check_diagnostics(
-        r#"
+    check_diagnostic_expect(expect![[r#"
 module 0x1::m {
     struct S { field: u8 }
 }
 module 0x1::main {
     use 0x1::m::S;
     fun get_field(self: S): u8 { self.field }
-                                    //^^^^^ err: Unresolved reference `field`
+                                    //^^^^^ err: Unresolved reference `field`: cannot resolve
     fun main(s: S) {
         get_field(s);
     }
 }
-"#,
-    );
+"#]]);
 }
 
 #[test]
@@ -122,17 +122,17 @@ module 0x1::main {
 #[test]
 fn test_no_warning_if_generic_is_unknown() {
     // language=Move
-    check_diagnostics(
+    check_diagnostic_expect(expect![[
         r#"
 module 0x1::main {
     struct S<T> { field: T }
     fun get_field(self: &S<u8>): u8 { self.field }
     fun main(s: &S<u12345>) {
-                 //^^^^^^ err: Unresolved reference `u12345`
+                 //^^^^^^ err: Unresolved reference `u12345`: cannot resolve
         get_field(s);
     }
 }
-"#,
+"#]],
     );
 }
 

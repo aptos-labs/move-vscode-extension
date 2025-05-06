@@ -202,7 +202,7 @@ Stmt =
     ';'
     | ExprStmt
     | LetStmt
-    | SchemaFieldStmt
+    | SchemaFieldStmt | IncludeSchema
     | SpecPredicateStmt | AbortsIfStmt
     | SpecInlineFun | GlobalVariableDecl
 
@@ -457,6 +457,9 @@ Schema =
 
 SchemaFieldStmt =
     'local'? IdentPat ':' Type ';'
+
+IncludeSchema =
+    'include' SpecPredicatePropertyList? Expr ';'
 
 GlobalVariableDecl =
     Attr* 'global' Name TypeParamList? ':' Type ('=' Expr)? ';'

@@ -152,27 +152,31 @@ pub fn resolve_path(
     let entries_filtered_by_name = entries.filter_by_name(path_name.clone());
     tracing::debug!(filter_by_name = ?path_name, ?entries_filtered_by_name);
 
-    let entries_by_visibility = entries_filtered_by_name.filter_by_visibility(db, &context_element);
+    let expected_type = refine_path_expected_type(db, ctx.path.file_id, path_kind, expected_type);
+    let entries_by_expected_type = entries_filtered_by_name.filter_by_expected_type(db, expected_type);
+
+    let entries_by_visibility = entries_by_expected_type.filter_by_visibility(db, &context_element);
     tracing::debug!(?entries_by_visibility);
 
-    let expected_type =
-        refine_path_expected_type(db, ctx.path.file_id, path_kind, expected_type);
-    let entries_by_expected_type =
-        entries_by_visibility.filter_by_expected_type(db, expected_type);
+    filter_by_function_namespace_special_case(entries_by_visibility, &ctx)
+}
 
+fn filter_by_function_namespace_special_case(
+    entries: Vec<ScopeEntry>,
+    ctx: &ResolutionContext,
+) -> Vec<ScopeEntry> {
     let path_expr = ctx.parent_path_expr();
     if path_expr.is_some_and(|it| it.syntax().parent_of_type::<ast::CallExpr>().is_some()) {
-        let function_entries = entries_by_expected_type.clone().filter_by_ns(FUNCTIONS);
+        let function_entries = entries.clone().filter_by_ns(FUNCTIONS);
         return if !function_entries.is_empty() {
             function_entries
         } else {
-            entries_by_expected_type
+            entries
         };
     }
-
-    if entries_by_expected_type.len() > 1 {
+    if entries.len() > 1 {
         // we're not at the callable, so drop function entries and see whether we'd get to a single entry
-        let non_function_entries = entries_by_expected_type
+        let non_function_entries = entries
             .clone()
             .into_iter()
             .filter(|it| it.ns != FUNCTION)
@@ -181,8 +185,7 @@ pub fn resolve_path(
             return non_function_entries;
         }
     }
-
-    entries_by_expected_type
+    entries
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

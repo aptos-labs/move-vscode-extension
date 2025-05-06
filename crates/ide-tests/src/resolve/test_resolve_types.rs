@@ -315,15 +315,15 @@ module 0x1::main {
 
 // language=Move
 #[test]
-fn test_resolve_return_type_to_alias() {
+fn test_resolve_return_type_with_alias() {
     check_resolve(
         r#"
 module 0x1::Transaction {
     struct Sender { val: u8 }
+          //X
 }
 module 0x1::m {
     use 0x1::Transaction::Sender as MySender;
-                                  //X
     fun main(): MySender {}
               //^
 }
@@ -1282,10 +1282,10 @@ fn test_resolve_type_of_field_with_alias() {
         r#"
 module 0x1::m {
     struct S { field: u8 }
+         //X
 }
 module 0x1::main {
     use 0x1::m::S as MyS;
-                    //X
     struct R { field: MyS }
                      //^
 }        

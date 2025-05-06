@@ -1,8 +1,8 @@
-use crate::HirDatabase;
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres::labels::get_loop_labels_resolve_variants;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::node_ext::item::ModuleItemExt;
+use crate::HirDatabase;
 use syntax::ast;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
@@ -119,17 +119,13 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
         self.resolve_multi(db)?.single_or_none()
     }
 
+    /// resolve outside of the `ast::InferenceCtxOwner`
     fn resolve_no_inf_multi(&self, db: &dyn HirDatabase) -> Option<Vec<ScopeEntry>> {
-        // outside inference context
         if let Some(item_spec_ref) = self.cast_into_ref::<ast::ItemSpecRef>() {
-            let ref_name = item_spec_ref.value.name_ref()?.as_string();
-            let item_spec = item_spec_ref.map(|it| it.item_spec());
-            let module = item_spec.module(db)?;
-            let verifiable_items = module.map(|it| it.verifiable_items()).flatten().to_entries();
-            return Some(verifiable_items.filter_by_name(ref_name));
+            return get_item_spec_entries(db, item_spec_ref);
         }
         match self.cast_into_ref::<ast::Path>() {
-            Some(path) => Some(db.resolve_path(path.loc())),
+            Some(path) => Some(db.resolve_path_multi(path.loc())),
             None => {
                 let kind = self.value.syntax().kind();
                 tracing::debug!("cannot resolve {:?} without inference", kind);
@@ -141,6 +137,17 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
     fn resolve_no_inf(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
         self.resolve_no_inf_multi(db)?.single_or_none()
     }
+}
+
+fn get_item_spec_entries(
+    db: &dyn HirDatabase,
+    item_spec_ref: InFile<ast::ItemSpecRef>,
+) -> Option<Vec<ScopeEntry>> {
+    let ref_name = item_spec_ref.value.name_ref()?.as_string();
+    let item_spec = item_spec_ref.map(|it| it.item_spec());
+    let module = item_spec.module(db)?;
+    let verifiable_items = module.map(|it| it.verifiable_items()).flatten().to_entries();
+    Some(verifiable_items.filter_by_name(ref_name))
 }
 
 fn get_named_field_entries(fields_owner: InFile<ast::AnyFieldsOwner>) -> Vec<ScopeEntry> {
