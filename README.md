@@ -1,10 +1,13 @@
 # Aptos Move Analyzer 
 
-To install:
+## Installation
 
+Clone the repo, then run:
 ```
 cargo xtask install --server --client
 ```
+(it uses https://github.com/matklad/cargo-xtask which is not a separate command, but a cargo aliasing technique, 
+and code for the `cargo xtask install` command resides in `xtask` crate).
 
 It will build `aptos-analyzer.vsix` extension file and install it into your VSCode.
 Then it will run `cargo install` for the language server.
@@ -18,6 +21,13 @@ Put
 to your `settings.json` to point the extension to your locally built language server.
 
 Now, open any Move file to instantiate the extension. Disable other VSCode extensions for `.move` files if needed.
+
+### Cursor AI editor
+
+If you use https://www.cursor.com/ AI editor, you need to do a bit more work. 
+
+Run the installation command above. The result would be a `./editors/code/aptos-analyzer.vsix` vscode extension package. 
+Install it from the editor using the `"Install from VSIX..."` command.  
 
 ## Features
 

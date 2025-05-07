@@ -1,17 +1,5 @@
 [workspace]
-members = [
-    "crates/parser",
-    "crates/syntax",
-    "crates/lang",
-    "crates/aptos-analyzer",
-    "crates/base-db",
-    "crates/ide",
-    "crates/ide-completion",
-    "crates/ide-db",
-    "crates/ide-diagnostics",
-    "crates/project-model",
-    "xtask", "crates/ide-tests",
-]
+members = ["crates/*", "xtask"]
 resolver = "2"
 
 [workspace.package]

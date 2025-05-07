@@ -7,6 +7,31 @@ on:
   pull_request:
 
 jobs:
+  check_formatting:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - run: cargo fmt --check
+
+  parser_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install nextest
+        uses: taiki-e/install-action@nextest
+
+      - run: cargo nextest run --package syntax
+
   rust_tests:
     strategy:
       matrix:
