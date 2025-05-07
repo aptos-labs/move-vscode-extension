@@ -7,6 +7,18 @@ on:
   pull_request:
 
 jobs:
+  check_formatting:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build aptos-analyzer binary with xtask
+        run: cargo fmt --check
+
   rust_tests:
     strategy:
       matrix:
