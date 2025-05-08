@@ -5,7 +5,7 @@
 
 use crate::SnippetCap;
 use crate::assists::Command;
-use crate::syntax_helpers::tree_diff::diff;
+use crate::syntax_helpers::tree_diff::tree_diff;
 use crate::text_edit::{TextEdit, TextEditBuilder};
 use itertools::Itertools;
 use std::collections::HashMap;
@@ -314,7 +314,7 @@ impl SourceChangeBuilder {
             }
 
             let mut edit = TextEdit::builder();
-            diff(edit_result.old_root(), edit_result.new_root()).to_text_edit(&mut edit);
+            tree_diff(edit_result.old_root(), edit_result.new_root()).into_text_edit(&mut edit);
             let edit = edit.finish();
 
             let snippet_edit = if !snippet_edit.is_empty() {
@@ -341,7 +341,7 @@ impl SourceChangeBuilder {
         });
 
         if let Some(tm) = self.mutated_tree.take() {
-            diff(&tm.immutable, &tm.mutable_clone).to_text_edit(&mut self.edit);
+            tree_diff(&tm.immutable, &tm.mutable_clone).into_text_edit(&mut self.edit);
         }
 
         let edit = mem::take(&mut self.edit).finish();
@@ -385,7 +385,7 @@ impl SourceChangeBuilder {
         self.edit.replace(range, replace_with.into())
     }
     pub fn replace_ast<N: AstNode>(&mut self, old: N, new: N) {
-        diff(old.syntax(), new.syntax()).to_text_edit(&mut self.edit)
+        tree_diff(old.syntax(), new.syntax()).into_text_edit(&mut self.edit)
     }
     pub fn create_file(&mut self, dst: AnchoredPathBuf, content: impl Into<String>) {
         let file_system_edit = FileSystemEdit::CreateFile {
