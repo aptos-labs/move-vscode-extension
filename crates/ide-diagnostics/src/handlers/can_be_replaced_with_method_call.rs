@@ -66,6 +66,7 @@ pub(crate) fn can_be_replaced_with_method_call(
     None
 }
 
+#[tracing::instrument(level = "trace", skip_all)]
 fn fixes(
     _ctx: &DiagnosticsContext<'_>,
     call_expr: InFile<ast::CallExpr>,
