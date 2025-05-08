@@ -188,8 +188,8 @@ pub(crate) fn handle_did_change_configuration(
                         let mut change = ConfigChange::default();
                         change.change_client_config(json.take());
 
-                        let (config, e, _) = config.apply_change(change);
-                        this.config_errors = e.is_empty().not().then_some(e);
+                        let (config, errors, _) = config.apply_change(change);
+                        this.config_errors = errors.is_empty().not().then_some(errors);
 
                         // Client config changes neccesitates .update_config method to be called.
                         this.update_configuration(config);

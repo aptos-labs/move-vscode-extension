@@ -226,6 +226,16 @@
             {
                 "title": "check",
                 "properties": {
+                    "aptos-analyzer.check.command": {
+                        "markdownDescription": "Aptos command to use for `aptos move compile`.",
+                        "default": "compile",
+                        "type": "string"
+                    }
+                }
+            },
+            {
+                "title": "check",
+                "properties": {
                     "aptos-analyzer.check.extraArgs": {
                         "markdownDescription": "Extra arguments for `aptos move compile`.",
                         "default": [],

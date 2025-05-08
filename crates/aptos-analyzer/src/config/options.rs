@@ -29,6 +29,9 @@ config_data! {
         /// Run the check command for diagnostics on save.
         checkOnSave: bool                         = true,
 
+        /// Aptos command to use for `aptos move compile`.
+        check_command: String                      = "compile".to_owned(),
+
         /// Extra arguments for `aptos move compile`.
         check_extraArgs: Vec<String>             = vec![],
 

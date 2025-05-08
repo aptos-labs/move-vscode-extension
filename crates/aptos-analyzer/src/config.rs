@@ -1,5 +1,6 @@
 pub(crate) mod config_change;
 pub(crate) mod options;
+pub mod validation;
 
 use crate::lsp::capabilities::ClientCapabilities;
 use camino::Utf8PathBuf;
@@ -11,6 +12,7 @@ use std::sync::OnceLock;
 use vfs::AbsPathBuf;
 
 use crate::config::options::{DefaultConfigData, FullConfigInput};
+use crate::config::validation::ConfigErrors;
 use crate::flycheck::{AptosCliOptions, FlycheckConfig};
 use ide_db::assist_config::AssistConfig;
 use ide_diagnostics::config::DiagnosticsConfig;
@@ -36,12 +38,12 @@ pub struct Config {
     /// Config node that obtains its initial value during the server initialization and
     /// by receiving a `lsp_types::notification::DidChangeConfiguration`.
     client_config: (FullConfigInput, ConfigErrors),
-    // todo: flycheck
-    // /// Use case : It is an error to have an empty value for `check_command`.
-    // /// Since it is a `global` command at the moment, its final value can only be determined by
-    // /// traversing through `global` configs and the `client` config. However the non-null value constraint
-    // /// is config level agnostic, so this requires an independent error storage
-    // validation_errors: ConfigErrors,
+
+    /// Use case : It is an error to have an empty value for `check_command`.
+    /// Since it is a `global` command at the moment, its final value can only be determined by
+    /// traversing through `global` configs and the `client` config. However the non-null value constraint
+    /// is config level agnostic, so this requires an independent error storage
+    validation_errors: ConfigErrors,
 }
 
 impl fmt::Debug for Config {
@@ -59,7 +61,7 @@ impl fmt::Debug for Config {
             .field("client_config", &self.client_config)
             // .field("user_config", &self.user_config)
             // .field("source_root_parent_map", &self.source_root_parent_map)
-            // .field("validation_errors", &self.validation_errors)
+            .field("validation_errors", &self.validation_errors)
             .finish()
     }
 }
@@ -72,42 +74,6 @@ impl std::ops::Deref for Config {
         &self.caps
     }
 }
-
-#[derive(Debug)]
-pub enum ConfigErrorInner {
-    Json { config_key: String, error: serde_json::Error },
-    ParseError { reason: String },
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct ConfigErrors(Vec<Arc<ConfigErrorInner>>);
-
-impl ConfigErrors {
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-}
-
-impl fmt::Display for ConfigErrors {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let errors = self.0.iter().format_with("\n", |inner, f| match &**inner {
-            ConfigErrorInner::Json { config_key: key, error: e } => {
-                f(key)?;
-                f(&": ")?;
-                f(e)
-            }
-            ConfigErrorInner::ParseError { reason } => f(reason),
-        });
-        write!(
-            f,
-            "invalid config value{}:\n{}",
-            if self.0.len() == 1 { "" } else { "s" },
-            errors
-        )
-    }
-}
-
-impl std::error::Error for ConfigErrors {}
 
 impl Config {
     pub fn new(
@@ -124,6 +90,7 @@ impl Config {
             client_ws_roots,
             client_config: (FullConfigInput::default(), ConfigErrors(vec![])),
             default_config: DEFAULT_CONFIG_DATA.get_or_init(|| Box::leak(Box::default())),
+            validation_errors: Default::default(),
         }
     }
 
@@ -246,10 +213,11 @@ impl Config {
             extra_args: self.extra_args().clone(),
             ..AptosCliOptions::default()
         };
+        let command = self.check_command();
         Some(FlycheckConfig::new(
             self.check_on_save(),
             cli_path,
-            "compile",
+            command,
             options,
         ))
     }
