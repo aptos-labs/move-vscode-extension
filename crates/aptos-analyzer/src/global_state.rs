@@ -1,4 +1,5 @@
-use crate::config::{Config, ConfigErrors};
+use crate::config::Config;
+use crate::config::validation::ConfigErrors;
 use crate::diagnostics::DiagnosticCollection;
 use crate::flycheck::{FlycheckHandle, FlycheckMessage};
 use crate::line_index::{LineEndings, LineIndex};

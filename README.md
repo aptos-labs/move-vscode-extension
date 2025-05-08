@@ -64,8 +64,17 @@ To enable, specify in your `settings.json`:
 
 To provide additional arguments to the `compile` command, use `aptos-analyzer.check.extraArgs`:
 
-```
+```json5
+{   
     "aptos-analyzer.check.extraArgs": ["--dev"],
+}
+```
+
+To run `aptos move lint` instead, specify custom `aptos move` command with:
+```json5
+{
+    "aptos-analyzer.check.command": "lint",
+}
 ```
 
 ## Debugging

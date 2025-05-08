@@ -19,7 +19,7 @@ mod project_folders;
 pub mod toolchain;
 pub mod tracing;
 
-pub use config::{Config, ConfigErrors, config_change::ConfigChange};
+pub use config::{Config, config_change::ConfigChange, validation::ConfigErrors};
 pub use lsp::capabilities::server_capabilities;
 pub use lsp::ext as lsp_ext;
 pub use main_loop::main_loop;

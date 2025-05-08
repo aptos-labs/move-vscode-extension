@@ -28,14 +28,15 @@ pub(crate) struct AptosCliOptions {
 impl AptosCliOptions {
     pub(crate) fn apply_on_command(&self, cmd: &mut Command) {
         cmd.envs(&self.extra_env);
+        cmd.args(&self.extra_args);
     }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct FlycheckConfig {
     pub(crate) enabled: bool,
-    aptos_cli: Utf8PathBuf,
     command: String,
+    aptos_cli: Utf8PathBuf,
     options: AptosCliOptions,
 }
 
@@ -243,13 +244,12 @@ impl FlycheckActor {
                     let command = self.flycheck_command();
 
                     let formatted_command = format!("{command:?}");
-
-                    tracing::info!(?command, "will restart flycheck");
+                    tracing::info!("will restart flycheck");
 
                     let (sender, receiver) = unbounded();
                     match CommandHandle::spawn(command, sender) {
                         Ok(command_handle) => {
-                            tracing::info!(command = formatted_command, "did restart flycheck");
+                            tracing::info!(command = %formatted_command, "did restart flycheck");
                             self.command_handle = Some(command_handle);
                             self.command_receiver = Some(receiver);
                             self.report_progress(Progress::DidStart);
@@ -278,7 +278,7 @@ impl FlycheckActor {
                         );
                     }
                     if !self.diagnostics_received {
-                        tracing::trace!(flycheck_id = self.ws_id, "clearing diagnostics");
+                        tracing::info!(flycheck_id = self.ws_id, "clearing diagnostics");
                         // We finished without receiving any diagnostics.
                         // Clear everything for good measure
                         self.send(FlycheckMessage::ClearDiagnostics { ws_id: self.ws_id });
@@ -288,7 +288,7 @@ impl FlycheckActor {
                     self.report_progress(Progress::DidFinish(res));
                 }
                 Event::CheckEvent(Some(diagnostic)) => {
-                    tracing::trace!(
+                    tracing::info!(
                         flycheck_id = self.ws_id,
                         message = diagnostic.message,
                         "diagnostic received"
@@ -344,11 +344,15 @@ impl FlycheckActor {
 
         cmd.arg("move");
         cmd.arg(command);
+        if command == "compile" {
+            cmd.arg("--optimize=none");
+        }
+        cmd.arg("--skip-fetch-latest-git-deps");
         cmd.arg("--experiments");
         cmd.arg("compiler-message-format-json");
 
         options.apply_on_command(&mut cmd);
-        cmd.args(&options.extra_args);
+
         cmd
     }
 

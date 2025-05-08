@@ -1,7 +1,7 @@
 use crate::Config;
 use crate::config::options::FullConfigInput;
-use crate::config::{ConfigErrorInner, ConfigErrors};
-use serde::de::DeserializeOwned;
+use crate::config::validation::{ConfigErrorInner, ConfigErrors};
+use serde::de::{DeserializeOwned, Error};
 use std::iter;
 use std::sync::Arc;
 
@@ -10,6 +10,7 @@ impl Config {
     /// The return tuple's bool component signals whether the `GlobalState` should call its `update_configuration()` method.
     fn apply_change_with_sink(&self, change: ConfigChange) -> (Config, bool) {
         let mut config = self.clone();
+        config.validation_errors = ConfigErrors::default();
 
         let mut should_update = false;
 
@@ -35,13 +36,13 @@ impl Config {
             should_update = true;
         }
 
-        // todo: flycheck
-        // if config.check_command(None).is_empty() {
-        //     config.validation_errors.0.push(Arc::new(ConfigErrorInner::Json {
-        //         config_key: "/check/command".to_owned(),
-        //         error: serde_json::Error::custom("expected a non-empty string"),
-        //     }));
-        // }
+        let command = config.check_command().as_str();
+        if !matches!(command, "compile" | "lint") {
+            config.validation_errors.0.push(Arc::new(ConfigErrorInner::Json {
+                config_key: "/check/command".to_owned(),
+                error: serde_json::Error::custom("expected one of the [\"compile\", \"lint\"]"),
+            }));
+        }
 
         (config, should_update)
     }
@@ -57,8 +58,7 @@ impl Config {
                 .1
                 .0
                 .iter()
-                // todo: flycheck
-                // .chain(config.validation_errors.0.iter())
+                .chain(config.validation_errors.0.iter())
                 .cloned()
                 .collect(),
         );
