@@ -43,7 +43,7 @@ pub fn check_diagnostic_expect(expect: Expect) {
     init_tracing_for_test();
 
     let source = stdx::trim_indent(expect.data());
-    let trimmed_source = remove_expected_diagnostics(&source);
+    let trimmed_source = remove_markings(&source);
 
     let (_, _, diagnostics) = get_diagnostics(trimmed_source.as_str());
 
@@ -81,7 +81,7 @@ pub fn check_diagnostic_and_fix_expect(before: Expect, after: Expect) {
     init_tracing_for_test();
 
     let before_source = stdx::trim_indent(before.data());
-    let trimmed_before_source = remove_expected_diagnostics(&before_source);
+    let trimmed_before_source = remove_markings(&before_source);
 
     let (_, _, mut diagnostics) = get_diagnostics(trimmed_before_source.as_str());
 
@@ -149,7 +149,7 @@ fn get_expected_diagnostics(source: &str, file_id: FileId) -> Vec<(TextRange, Se
     exps
 }
 
-fn remove_expected_diagnostics(source: &str) -> String {
+pub fn remove_markings(source: &str) -> String {
     let marked_positions = get_all_marked_positions(source, "//^");
 
     let mut lines_to_remove = vec![];
@@ -201,14 +201,31 @@ pub(crate) fn assert_no_extra_diagnostics(source: &str, diags: Vec<Diagnostic>) 
 }
 
 fn apply_diagnostics_to_file(source: &str, diagnostics: &Vec<Diagnostic>) -> String {
+    let markings = diagnostics
+        .into_iter()
+        .map(|it| {
+            let text_range = it.range.range;
+            let message = format!("{} {}", it.severity.to_test_ident(), it.message.clone());
+            Marking { text_range, message }
+        })
+        .collect();
+    apply_markings(source, markings)
+}
+
+pub struct Marking {
+    pub text_range: TextRange,
+    pub message: String,
+}
+
+pub fn apply_markings(source: &str, markings: Vec<Marking>) -> String {
     let line_index = LineIndex::new(source);
 
     let mut lines = vec![];
-    for diagnostic in diagnostics {
-        let text_range = diagnostic.range.range;
+    for marking in markings {
+        let text_range = marking.text_range;
         let lc_start = line_index.line_col(text_range.start());
         let lc_end = line_index.line_col(text_range.end());
-        let line = diagnostic_line(diagnostic, lc_start, lc_end);
+        let line = marked_line(marking.message, lc_start.col, lc_end.col);
         lines.push((lc_start.line, line));
     }
 
@@ -222,15 +239,13 @@ fn apply_diagnostics_to_file(source: &str, diagnostics: &Vec<Diagnostic>) -> Str
     source_lines.join("\n")
 }
 
-fn diagnostic_line(diagnostic: &Diagnostic, start: LineCol, end: LineCol) -> String {
-    let prefix = iter::repeat_n(" ", (start.col - 2) as usize)
+fn marked_line(message: String, start_col: u32, end_col: u32) -> String {
+    let prefix = iter::repeat_n(" ", (start_col - 2) as usize)
         .collect::<Vec<_>>()
         .join("");
-    let range = iter::repeat_n("^", (end.col - start.col) as usize)
+    let range = iter::repeat_n("^", (end_col - start_col) as usize)
         .collect::<Vec<_>>()
         .join("");
-    let message = diagnostic.message.clone();
-    let severity = diagnostic.severity.to_test_ident();
-    let line = format!("{prefix}//{range} {severity} {message}");
+    let line = format!("{prefix}//{range} {message}");
     line
 }

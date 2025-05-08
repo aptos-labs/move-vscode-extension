@@ -49,7 +49,7 @@ pub(crate) fn render_function(
     match call_ty.ret_type().unwrap_all_refs() {
         Ty::Unit => (),
         ret_ty => {
-            let ret_ty_txt = ret_ty.render(ctx.db);
+            let ret_ty_txt = ret_ty.render(ctx.db, None);
             completion_item.set_detail(Some(ret_ty_txt));
         }
     }
@@ -66,7 +66,7 @@ fn render_params(db: &dyn HirDatabase, fun: ast::AnyFun, call_ty: TyCallable) ->
     let mut res = vec![];
     for (param, ty) in params_with_types.into_iter() {
         let param_name = param.ident_name();
-        let rendered_ty = ty.render(db);
+        let rendered_ty = ty.render(db, None);
         res.push(format!("{}: {}", param_name, rendered_ty));
     }
     Some(res)

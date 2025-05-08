@@ -4,10 +4,10 @@ use crate::lsp::semantic_tokens;
 use line_index::WideEncoding;
 use lsp_types::{
     CodeActionKind, CodeActionOptions, CodeActionProviderCapability, CompletionOptions,
-    CompletionOptionsCompletionItem, HoverProviderCapability, OneOf, PositionEncodingKind,
-    SelectionRangeProviderCapability, SemanticTokensFullOptions, SemanticTokensLegend,
-    SemanticTokensOptions, ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind,
-    WorkDoneProgressOptions,
+    CompletionOptionsCompletionItem, HoverProviderCapability, InlayHintOptions,
+    InlayHintServerCapabilities, OneOf, PositionEncodingKind, SelectionRangeProviderCapability,
+    SemanticTokensFullOptions, SemanticTokensLegend, SemanticTokensOptions, ServerCapabilities,
+    TextDocumentSyncCapability, TextDocumentSyncKind, WorkDoneProgressOptions,
 };
 
 pub fn server_capabilities(config: &Config) -> ServerCapabilities {
@@ -131,6 +131,7 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
             .into(),
         ),
         // moniker_provider: None,
+        inlay_hint_provider: Some(OneOf::Left(true)),
         // inlay_hint_provider: Some(OneOf::Right(InlayHintServerCapabilities::Options(
         //     InlayHintOptions {
         //         work_done_progress_options: Default::default(),
@@ -168,7 +169,7 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
 }
 
 #[derive(Debug, PartialEq, Clone, Default)]
-pub struct ClientCapabilities(lsp_types::ClientCapabilities);
+pub struct ClientCapabilities(pub lsp_types::ClientCapabilities);
 
 impl ClientCapabilities {
     pub fn new(caps: lsp_types::ClientCapabilities) -> Self {

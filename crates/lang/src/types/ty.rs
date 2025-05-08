@@ -28,6 +28,7 @@ use crate::types::ty::type_param::TyTypeParameter;
 use base_db::package_root::PackageRootId;
 use syntax::ast;
 use syntax::files::InFile;
+use vfs::FileId;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Ty {
@@ -163,8 +164,8 @@ impl Ty {
         }
     }
 
-    pub fn render(&self, db: &dyn HirDatabase) -> String {
-        TypeRenderer::new(db).render(self)
+    pub fn render(&self, db: &dyn HirDatabase, context_file_id: Option<FileId>) -> String {
+        TypeRenderer::new(db, context_file_id).render(self)
     }
 }
 

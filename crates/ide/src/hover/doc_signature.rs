@@ -1,22 +1,23 @@
+use ide_db::RootDatabase;
 use lang::Semantics;
 use std::fmt::Write;
 use syntax::ast::NamedElement;
 use syntax::{AstNode, ast, match_ast};
 
 pub trait DocSignatureOwner {
-    fn header(&self, sema: &Semantics<'_>, buffer: &mut String) -> Option<()>;
-    fn signature(&self, sema: &Semantics<'_>, buffer: &mut String) -> Option<()>;
+    fn header(&self, sema: &Semantics<'_, RootDatabase>, buffer: &mut String) -> Option<()>;
+    fn signature(&self, sema: &Semantics<'_, RootDatabase>, buffer: &mut String) -> Option<()>;
 }
 
 impl DocSignatureOwner for ast::AnyNamedElement {
-    fn header(&self, sema: &Semantics<'_>, buffer: &mut String) -> Option<()> {
+    fn header(&self, sema: &Semantics<'_, RootDatabase>, buffer: &mut String) -> Option<()> {
         let header = match_ast! {
             match (self.syntax()) {
                 ast::Module(it) => sema.fq_name(it)?.address_identifier_text(),
                 ast::Item(it) => sema.fq_name(it)?.module_identifier_text(),
                 ast::SpecInlineFun(it) => sema.fq_name(it)?.module_identifier_text(),
-                ast::NamedField(it) => sema.fq_name(it.fields_owner())?.identifier_text(),
-                ast::Variant(it) => sema.fq_name(it.enum_())?.identifier_text(),
+                ast::NamedField(it) => sema.fq_name(it.fields_owner())?.fq_identifier_text(),
+                ast::Variant(it) => sema.fq_name(it.enum_())?.fq_identifier_text(),
                 ast::Const(it) => sema.fq_name(it)?.module_identifier_text(),
                 ast::IdentPat(_) => {
                     // no header
@@ -32,7 +33,7 @@ impl DocSignatureOwner for ast::AnyNamedElement {
         Some(())
     }
 
-    fn signature(&self, sema: &Semantics<'_>, buffer: &mut String) -> Option<()> {
+    fn signature(&self, sema: &Semantics<'_, RootDatabase>, buffer: &mut String) -> Option<()> {
         match_ast! {
             match (self.syntax()) {
                 ast::Module(it) => generate_module(it, buffer),
@@ -127,7 +128,7 @@ fn generate_enum_variant(variant: ast::Variant, buffer: &mut String) -> Option<(
 
 fn generate_ident_pat(
     ident_pat: ast::IdentPat,
-    sema: &Semantics<'_>,
+    sema: &Semantics<'_, RootDatabase>,
     buffer: &mut String,
 ) -> Option<()> {
     let owner = ident_pat.owner()?;
@@ -140,7 +141,7 @@ fn generate_ident_pat(
 
     let ident_pat = sema.wrap_node_infile(ident_pat);
     if let Some(ident_pat_ty) = sema.get_ident_pat_type(&ident_pat, false) {
-        let rendered_ty = sema.render_ty(ident_pat_ty);
+        let rendered_ty = sema.render_ty(&ident_pat_ty);
         write!(buffer, ": {}", rendered_ty).ok()?;
     }
 

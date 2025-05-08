@@ -58,7 +58,7 @@ fn add_field_completion_items(
         let mut completion_item = render_named_item(ctx, named_field.clone().map_into());
 
         if let Some(field_ty) = ty_lowering.lower_type_owner(named_field.map_into()) {
-            let field_detail = field_ty.substitute(&ty_adt.substitution).render(ctx.db);
+            let field_detail = field_ty.substitute(&ty_adt.substitution).render(ctx.db, None);
             completion_item.set_detail(Some(field_detail));
         }
         acc.add(completion_item.build(ctx.db));

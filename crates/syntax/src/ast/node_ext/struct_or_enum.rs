@@ -34,3 +34,12 @@ impl ast::StructOrEnum {
         }
     }
 }
+
+impl From<ast::StructOrEnum> for ast::Item {
+    fn from(value: ast::StructOrEnum) -> Self {
+        match value {
+            ast::StructOrEnum::Struct(it) => it.into(),
+            ast::StructOrEnum::Enum(it) => it.into(),
+        }
+    }
+}

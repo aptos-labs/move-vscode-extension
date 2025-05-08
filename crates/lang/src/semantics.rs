@@ -14,6 +14,8 @@ use crate::types::ty::Ty;
 use base_db::inputs::InternFileId;
 use base_db::package_root::PackageRootId;
 use std::cell::RefCell;
+use std::convert::Infallible;
+use std::ops::ControlFlow;
 use std::sync::Arc;
 use std::{fmt, ops};
 use syntax::files::InFile;
@@ -21,9 +23,11 @@ use syntax::{AstNode, SyntaxNode, SyntaxToken, ast};
 use vfs::FileId;
 
 const MAX_FILE_ID: u32 = 0x7fff_ffff;
+const CONTINUE_NO_BREAKS: ControlFlow<Infallible, ()> = ControlFlow::Continue(());
 
 /// Primary API to get semantic information, like types, from syntax trees.
-pub struct Semantics<'db> {
+pub struct Semantics<'db, DB> {
+    pub db: &'db DB,
     imp: SemanticsImpl<'db>,
 }
 
@@ -33,13 +37,13 @@ pub struct SemanticsImpl<'db> {
     s2d_cache: RefCell<SourceToDefCache>,
 }
 
-impl fmt::Debug for Semantics<'_> {
+impl<DB> fmt::Debug for Semantics<'_, DB> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Semantics {{ ... }}")
     }
 }
 
-impl<'db> ops::Deref for Semantics<'db> {
+impl<'db, DB> ops::Deref for Semantics<'db, DB> {
     type Target = SemanticsImpl<'db>;
 
     fn deref(&self) -> &Self::Target {
@@ -47,15 +51,15 @@ impl<'db> ops::Deref for Semantics<'db> {
     }
 }
 
-impl Semantics<'_> {
-    pub fn new(db: &dyn HirDatabase, ws_file_id: FileId) -> Semantics<'_> {
+impl<DB: HirDatabase> Semantics<'_, DB> {
+    pub fn new(db: &DB, ws_file_id: FileId) -> Semantics<'_, DB> {
         let ws_root = db.file_package_root(ws_file_id).data(db);
         let impl_ = SemanticsImpl::new(db, ws_root);
         // add builtins file to cache
         if let Some(builtins_file_id) = db.builtins_file_id() {
             impl_.parse(builtins_file_id.data(db));
         }
-        Semantics { imp: impl_ }
+        Semantics { db, imp: impl_ }
     }
 }
 
@@ -108,8 +112,12 @@ impl<'db> SemanticsImpl<'db> {
         inference.get_pat_type(&ast::Pat::IdentPat(ident_pat.value.clone()))
     }
 
-    pub fn render_ty(&self, ty: Ty) -> String {
-        ty.render(self.db)
+    pub fn render_ty(&self, ty: &Ty) -> String {
+        ty.render(self.db, None)
+    }
+
+    pub fn render_ty_truncated(&self, ty: &Ty, context_file_id: FileId) -> String {
+        ty.render(self.db, Some(context_file_id))
     }
 
     pub fn fq_name(&self, item: impl AstNode) -> Option<ItemFQName> {

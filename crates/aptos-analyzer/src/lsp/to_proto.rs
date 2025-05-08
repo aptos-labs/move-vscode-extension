@@ -4,6 +4,10 @@ use crate::lsp::semantic_tokens;
 use crate::lsp_ext::SnippetTextEdit;
 use crate::{Config, lsp_ext};
 use camino::{Utf8Component, Utf8Prefix};
+use ide::inlay_hints::{
+    InlayFieldsToResolve, InlayHint, InlayHintLabel, InlayHintLabelPart, InlayHintPosition, InlayKind,
+    InlayTooltip, LazyProperty,
+};
 use ide::syntax_highlighting::tags::{Highlight, HlTag};
 use ide::{Cancellable, HlRange, NavigationTarget};
 use ide_completion::item::{CompletionItem, CompletionItemKind};
@@ -12,6 +16,8 @@ use ide_db::source_change::{FileSystemEdit, SnippetEdit, SourceChange};
 use ide_db::text_edit::{Indel, TextEdit};
 use ide_db::{Severity, SymbolKind};
 use line_index::{TextRange, TextSize};
+use serde_json::to_value;
+use std::hash::Hasher;
 use std::mem;
 use std::ops::Not;
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -1085,4 +1091,172 @@ pub(crate) fn code_action(
         }
     };
     Ok(res)
+}
+
+pub(crate) fn inlay_hint(
+    snap: &GlobalStateSnapshot,
+    fields_to_resolve: &InlayFieldsToResolve,
+    line_index: &LineIndex,
+    file_id: FileId,
+    mut inlay_hint: InlayHint,
+) -> Cancellable<lsp_types::InlayHint> {
+    let hint_needs_resolve = |hint: &InlayHint| -> Option<TextRange> {
+        hint.resolve_parent.filter(|_| {
+            hint.text_edit.as_ref().is_some_and(LazyProperty::is_lazy)
+                || hint.label.parts.iter().any(|part| {
+                    part.linked_location.as_ref().is_some_and(LazyProperty::is_lazy)
+                        || part.tooltip.as_ref().is_some_and(LazyProperty::is_lazy)
+                })
+        })
+    };
+
+    // let resolve_range_and_hash = hint_needs_resolve(&inlay_hint).map(|range| {
+    //     (
+    //         range,
+    //         std::hash::BuildHasher::hash_one(
+    //             &std::hash::BuildHasherDefault::<FxHasher>::default(),
+    //             &inlay_hint,
+    //         ),
+    //     )
+    // });
+
+    let mut something_to_resolve = false;
+    let text_edits = inlay_hint
+        .text_edit
+        .take()
+        .and_then(|it| match it {
+            LazyProperty::Computed(it) => Some(it),
+            LazyProperty::Lazy => {
+                // something_to_resolve |=
+                //     resolve_range_and_hash.is_some() && fields_to_resolve.resolve_text_edits;
+                // something_to_resolve |= snap
+                //     .config
+                //     .visual_studio_code_version()
+                //     .is_none_or(|version| VersionReq::parse(">=1.86.0").unwrap().matches(version))
+                //     && resolve_range_and_hash.is_some()
+                //     && fields_to_resolve.resolve_text_edits;
+                None
+            }
+        })
+        .map(|it| text_edit_vec(line_index, it));
+    let (label, tooltip) = inlay_hint_label(
+        snap,
+        fields_to_resolve,
+        // &mut something_to_resolve,
+        // resolve_range_and_hash.is_some(),
+        inlay_hint.label,
+    )?;
+
+    // let data = match resolve_range_and_hash {
+    //     Some((resolve_range, hash)) if something_to_resolve => Some(
+    //         to_value(lsp_ext::InlayHintResolveData {
+    //             file_id: file_id.index(),
+    //             hash: hash.to_string(),
+    //             version: snap.file_version(file_id),
+    //             resolve_range: range(line_index, resolve_range),
+    //         })
+    //         .unwrap(),
+    //     ),
+    //     _ => None,
+    // };
+
+    Ok(lsp_types::InlayHint {
+        position: match inlay_hint.position {
+            InlayHintPosition::Before => position(line_index, inlay_hint.range.start()),
+            InlayHintPosition::After => position(line_index, inlay_hint.range.end()),
+        },
+        padding_left: Some(inlay_hint.pad_left),
+        padding_right: Some(inlay_hint.pad_right),
+        kind: match inlay_hint.kind {
+            InlayKind::Parameter | InlayKind::GenericParameter => {
+                Some(lsp_types::InlayHintKind::PARAMETER)
+            }
+            InlayKind::Type | InlayKind::Chaining => Some(lsp_types::InlayHintKind::TYPE),
+            _ => None,
+        },
+        text_edits,
+        data: None,
+        tooltip,
+        label,
+    })
+}
+
+fn inlay_hint_label(
+    snap: &GlobalStateSnapshot,
+    fields_to_resolve: &InlayFieldsToResolve,
+    // something_to_resolve: &mut bool,
+    // needs_resolve: bool,
+    mut label: InlayHintLabel,
+) -> Cancellable<(lsp_types::InlayHintLabel, Option<lsp_types::InlayHintTooltip>)> {
+    let (label, tooltip) = match &*label.parts {
+        [InlayHintLabelPart { linked_location: None, .. }] => {
+            let InlayHintLabelPart { text, tooltip, .. } = label.parts.pop().unwrap();
+            let tooltip = tooltip.and_then(|it| match it {
+                LazyProperty::Computed(it) => Some(it),
+                LazyProperty::Lazy => {
+                    // *something_to_resolve |= needs_resolve && fields_to_resolve.resolve_hint_tooltip;
+                    None
+                }
+            });
+            let hint_tooltip = match tooltip {
+                Some(InlayTooltip::String(s)) => Some(lsp_types::InlayHintTooltip::String(s)),
+                Some(InlayTooltip::Markdown(s)) => Some(lsp_types::InlayHintTooltip::MarkupContent(
+                    lsp_types::MarkupContent {
+                        kind: lsp_types::MarkupKind::Markdown,
+                        value: s,
+                    },
+                )),
+                None => None,
+            };
+            (lsp_types::InlayHintLabel::String(text), hint_tooltip)
+        }
+        _ => {
+            let parts = label
+                .parts
+                .into_iter()
+                .map(|part| {
+                    let tooltip = part.tooltip.and_then(|it| match it {
+                        LazyProperty::Computed(it) => Some(it),
+                        LazyProperty::Lazy => {
+                            // *something_to_resolve |= fields_to_resolve.resolve_label_tooltip;
+                            None
+                        }
+                    });
+                    let tooltip = match tooltip {
+                        Some(InlayTooltip::String(s)) => {
+                            Some(lsp_types::InlayHintLabelPartTooltip::String(s))
+                        }
+                        Some(InlayTooltip::Markdown(s)) => {
+                            Some(lsp_types::InlayHintLabelPartTooltip::MarkupContent(
+                                lsp_types::MarkupContent {
+                                    kind: lsp_types::MarkupKind::Markdown,
+                                    value: s,
+                                },
+                            ))
+                        }
+                        None => None,
+                    };
+                    let location = part
+                        .linked_location
+                        .and_then(|it| match it {
+                            LazyProperty::Computed(it) => Some(it),
+                            LazyProperty::Lazy => {
+                                // *something_to_resolve |= fields_to_resolve.resolve_label_location;
+                                None
+                            }
+                        })
+                        .map(|range| location(snap, range))
+                        .transpose()?;
+                    Ok(lsp_types::InlayHintLabelPart {
+                        value: part.text,
+                        tooltip,
+                        location,
+                        command: None,
+                    })
+                })
+                .collect::<Cancellable<_>>()?;
+            (lsp_types::InlayHintLabel::LabelParts(parts), None)
+        }
+    };
+    Ok((label, tooltip))
 }

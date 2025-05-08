@@ -11,14 +11,17 @@ use crate::types::ty::type_param::TyTypeParameter;
 use stdx::itertools::Itertools;
 use syntax::ast;
 use syntax::ast::NamedElement;
+use syntax::files::InFile;
+use vfs::FileId;
 
 pub struct TypeRenderer<'db> {
     db: &'db dyn HirDatabase,
+    context: Option<FileId>,
 }
 
 impl<'db> TypeRenderer<'db> {
-    pub fn new(db: &'db dyn HirDatabase) -> Self {
-        TypeRenderer { db }
+    pub fn new(db: &'db dyn HirDatabase, context: Option<FileId>) -> Self {
+        TypeRenderer { db, context }
     }
 
     pub fn render(&self, ty: &Ty) -> String {
@@ -102,19 +105,21 @@ impl<'db> TypeRenderer<'db> {
 
     fn render_ty_adt(&self, ty_adt: &TyAdt) -> String {
         let item = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(self.db).unwrap();
-        let item_fq_name = item
-            .fq_name(self.db)
-            .map(|it| it.identifier_text())
-            .unwrap_or(anonymous());
+        let item_fq_name = self.render_fq_item(item.map_into()).unwrap_or(anonymous());
+        // let item_fq_name = item
+        //     .fq_name(self.db)
+        //     .map(|it| it.fq_identifier_text())
+        //     .unwrap_or(anonymous());
         format!("{}{}", item_fq_name, self.render_type_args(&ty_adt.type_args))
     }
 
     fn render_ty_schema(&self, ty_adt: &TySchema) -> String {
         let item = ty_adt.schema_loc.to_ast::<ast::Schema>(self.db).unwrap();
-        let item_fq_name = item
-            .fq_name(self.db)
-            .map(|it| it.identifier_text())
-            .unwrap_or(anonymous());
+        let item_fq_name = self.render_fq_item(item.map_into()).unwrap_or(anonymous());
+        // let item_fq_name = item
+        //     .fq_name(self.db)
+        //     .map(|it| it.fq_identifier_text())
+        //     .unwrap_or(anonymous());
         format!("{}{}", item_fq_name, self.render_type_args(&ty_adt.type_args))
     }
 
@@ -123,6 +128,22 @@ impl<'db> TypeRenderer<'db> {
             return "".to_string();
         }
         format!("<{}>", self.render_list(type_args, ", "))
+    }
+
+    fn render_fq_item(&self, item: InFile<ast::Item>) -> Option<String> {
+        let fq_name = item.fq_name(self.db)?;
+
+        let ctx_file_id = self.context;
+        if ctx_file_id.is_none() {
+            return Some(fq_name.fq_identifier_text());
+        }
+
+        let addr_name = fq_name.address().identifier_text();
+        if matches!(addr_name.as_str(), "std" | "aptos_std") {
+            return Some(fq_name.name());
+        }
+
+        Some(fq_name.module_and_item_text())
     }
 
     fn origin_loc_name(&self, origin_loc: &SyntaxLoc) -> String {

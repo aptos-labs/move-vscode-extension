@@ -4,12 +4,13 @@ use crate::lsp::utils::invalid_params_error;
 use crate::lsp::{LspError, from_proto, to_proto};
 use crate::movefmt::run_movefmt;
 use crate::{Config, lsp_ext, unwrap_or_return_default};
+use ide::Cancellable;
 use ide_db::assists::{AssistKind, AssistResolveStrategy, SingleResolve};
 use line_index::TextRange;
 use lsp_server::ErrorCode;
 use lsp_types::{
-    HoverContents, ResourceOp, ResourceOperationKind, SemanticTokensParams, SemanticTokensRangeParams,
-    SemanticTokensRangeResult, SemanticTokensResult,
+    HoverContents, InlayHint, InlayHintParams, ResourceOp, ResourceOperationKind, SemanticTokensParams,
+    SemanticTokensRangeParams, SemanticTokensRangeResult, SemanticTokensResult, TextDocumentIdentifier,
 };
 use stdx::format_to;
 use syntax::files::FileRange;
@@ -340,6 +341,41 @@ pub(crate) fn handle_analyzer_status(
     format_to!(buf, "{:#?}", snap.config);
 
     Ok(buf)
+}
+
+pub(crate) fn handle_inlay_hints(
+    snap: GlobalStateSnapshot,
+    params: InlayHintParams,
+) -> anyhow::Result<Option<Vec<InlayHint>>> {
+    let _p = tracing::info_span!("handle_inlay_hints").entered();
+    let document_uri = &params.text_document.uri;
+    let FileRange { file_id, range } = unwrap_or_return_default!(from_proto::file_range(
+        &snap,
+        &TextDocumentIdentifier::new(document_uri.to_owned()),
+        params.range,
+    )?);
+    let line_index = snap.file_line_index(file_id)?;
+    let range = TextRange::new(
+        range.start().min(line_index.index.len()),
+        range.end().min(line_index.index.len()),
+    );
+
+    let inlay_hints_config = snap.config.inlay_hints();
+    Ok(Some(
+        snap.analysis
+            .inlay_hints(&inlay_hints_config, file_id, Some(range))?
+            .into_iter()
+            .map(|it| {
+                to_proto::inlay_hint(
+                    &snap,
+                    &inlay_hints_config.fields_to_resolve,
+                    &line_index,
+                    file_id,
+                    it,
+                )
+            })
+            .collect::<Cancellable<Vec<_>>>()?,
+    ))
 }
 
 pub(crate) fn handle_code_action(

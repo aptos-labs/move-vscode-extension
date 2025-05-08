@@ -6,13 +6,14 @@ use ide_completion::item::CompletionItem;
 use ide_db::{LineIndexDatabase, RootDatabase};
 use line_index::{LineCol, LineIndex};
 use std::sync::Arc;
-use syntax::{SourceFile, TextRange, TextSize};
+use syntax::{AstNode, Direction, SourceFile, TextRange, TextSize};
 use vfs::file_set::FileSet;
 use vfs::{FileId, VfsPath};
 
 pub mod extend_selection;
 mod goto_definition;
 mod hover;
+pub mod inlay_hints;
 mod navigation_target;
 pub mod syntax_highlighting;
 pub mod test_utils;
@@ -20,6 +21,7 @@ mod type_info;
 mod view_syntax_tree;
 
 use crate::hover::HoverResult;
+use crate::inlay_hints::{InlayHint, InlayHintsConfig};
 pub use crate::navigation_target::NavigationTarget;
 pub use crate::syntax_highlighting::HlRange;
 use base_db::inputs::InternFileId;
@@ -31,6 +33,7 @@ use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 use lang::builtin_files::BUILTINS_FILE;
 pub use salsa::Cancelled;
+use syntax::algo::skip_trivia_token;
 use syntax::files::{FilePosition, FileRange};
 
 pub type Cancellable<T> = Result<T, Cancelled>;
@@ -277,15 +280,15 @@ impl Analysis {
     //     })
     // }
 
-    // /// Returns a list of the places in the file where type hints can be displayed.
-    // pub fn inlay_hints(
-    //     &self,
-    //     config: &InlayHintsConfig,
-    //     file_id: FileId,
-    //     range: Option<TextRange>,
-    // ) -> Cancellable<Vec<InlayHint>> {
-    //     self.with_db(|db| inlay_hints::inlay_hints(db, file_id, range, config))
-    // }
+    /// Returns a list of the places in the file where type hints can be displayed.
+    pub fn inlay_hints(
+        &self,
+        config: &InlayHintsConfig,
+        file_id: FileId,
+        range: Option<TextRange>,
+    ) -> Cancellable<Vec<InlayHint>> {
+        self.with_db(|db| inlay_hints::inlay_hints(db, file_id, range, config))
+    }
 
     // pub fn inlay_hints_resolve(
     //     &self,
