@@ -16,5 +16,5 @@ pub(crate) fn expr_type_info(
     let msl = expr.syntax().is_msl_context();
     let expr_ty = sema.get_expr_type(&expr.in_file(file_id), msl)?;
 
-    Some(expr_ty.render(db))
+    Some(expr_ty.render(db, None))
 }

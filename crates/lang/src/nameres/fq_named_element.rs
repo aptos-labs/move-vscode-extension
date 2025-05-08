@@ -18,30 +18,59 @@ pub enum ItemFQName {
 }
 
 impl ItemFQName {
-    pub fn identifier_text(&self) -> String {
+    pub fn address(&self) -> &Address {
+        match self {
+            ItemFQName::Module { address, .. } => address,
+            ItemFQName::Item { module_fq_name, .. } => module_fq_name.address(),
+        }
+    }
+
+    pub fn fq_identifier_text(&self) -> String {
         match self {
             ItemFQName::Module { address, name } => {
                 let address_text = address.identifier_text();
                 format!("{}::{}", address_text, name)
             }
             ItemFQName::Item { module_fq_name, name } => {
-                let module_text = module_fq_name.identifier_text();
+                let module_text = module_fq_name.fq_identifier_text();
+                format!("{}::{}", module_text, name)
+            }
+        }
+    }
+
+    pub fn module_and_item_text(&self) -> String {
+        match self {
+            ItemFQName::Module { address: _, name } => {
+                name.to_string()
+                // let address_text = address.identifier_text();
+                // format!("{}::{}", address_text, name)
+            }
+            ItemFQName::Item { module_fq_name, name } => {
+                let module_text = module_fq_name.module_and_item_text();
                 format!("{}::{}", module_text, name)
             }
         }
     }
 
     pub fn address_identifier_text(&self) -> String {
-        match self {
-            ItemFQName::Module { address, .. } => address.identifier_text(),
-            ItemFQName::Item { module_fq_name, .. } => module_fq_name.address_identifier_text(),
-        }
+        self.address().identifier_text()
+        // match self {
+        //     ItemFQName::Module { address, .. } => address.identifier_text(),
+        //     ItemFQName::Item { module_fq_name, .. } => module_fq_name.address_identifier_text(),
+        // }
     }
 
     pub fn module_identifier_text(&self) -> String {
         match self {
-            ItemFQName::Module { .. } => self.identifier_text(),
-            ItemFQName::Item { module_fq_name, .. } => module_fq_name.identifier_text(),
+            ItemFQName::Module { .. } => self.fq_identifier_text(),
+            ItemFQName::Item { module_fq_name, .. } => module_fq_name.fq_identifier_text(),
+        }
+    }
+
+    pub fn name(&self) -> String {
+        match self {
+            ItemFQName::Module { name, .. } => name.to_string(),
+            ItemFQName::Item { name, .. } => name.to_string(),
         }
     }
 }

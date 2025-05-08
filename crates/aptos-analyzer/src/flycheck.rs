@@ -278,7 +278,7 @@ impl FlycheckActor {
                         );
                     }
                     if !self.diagnostics_received {
-                        tracing::info!(flycheck_id = self.ws_id, "clearing diagnostics");
+                        tracing::debug!(flycheck_id = self.ws_id, "clearing diagnostics");
                         // We finished without receiving any diagnostics.
                         // Clear everything for good measure
                         self.send(FlycheckMessage::ClearDiagnostics { ws_id: self.ws_id });
@@ -288,7 +288,7 @@ impl FlycheckActor {
                     self.report_progress(Progress::DidFinish(res));
                 }
                 Event::CheckEvent(Some(diagnostic)) => {
-                    tracing::info!(
+                    tracing::debug!(
                         flycheck_id = self.ws_id,
                         message = diagnostic.message,
                         "diagnostic received"

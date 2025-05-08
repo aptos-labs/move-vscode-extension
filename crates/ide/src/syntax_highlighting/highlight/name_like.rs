@@ -1,11 +1,12 @@
 use crate::syntax_highlighting::Highlight;
 use crate::syntax_highlighting::tags::HlTag;
+use ide_db::RootDatabase;
 use ide_db::defs::{Definition, NameClass, NameRefClass};
 use lang::Semantics;
 use syntax::ast;
 
 pub(crate) fn name_like(
-    sema: &Semantics<'_>,
+    sema: &Semantics<'_, RootDatabase>,
     // syntactic_name_ref_highlighting: bool,
     name_like: ast::NameLike,
 ) -> Option<Highlight> {
@@ -36,7 +37,7 @@ fn highlight_name(name: ast::Name) -> Highlight {
 }
 
 fn highlight_name_ref(
-    sema: &Semantics<'_>,
+    sema: &Semantics<'_, RootDatabase>,
     // syntactic_name_ref_highlighting: bool,
     name_ref: ast::NameRef,
 ) -> Highlight {

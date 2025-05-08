@@ -18,7 +18,7 @@ use vfs::FileId;
 
 struct DiagnosticsContext<'a> {
     config: &'a DiagnosticsConfig,
-    sema: Semantics<'a>,
+    sema: Semantics<'a, RootDatabase>,
     resolve: &'a AssistResolveStrategy,
 }
 

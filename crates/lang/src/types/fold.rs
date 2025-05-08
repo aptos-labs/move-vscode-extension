@@ -172,6 +172,10 @@ impl Ty {
         let visitor = HasTyUnknownVisitor::default();
         self.visit_with(visitor)
     }
+
+    pub fn is_unknown(&self) -> bool {
+        matches!(self, Ty::Unknown)
+    }
 }
 
 #[cfg(test)]

@@ -37,6 +37,7 @@ Install it from the editor using the `"Install from VSIX..."` command.
 * go-to-definition
 * completion
 * lints and quickfixes
+* inlay type hints
 ```
 module 0x1::m {
     struct S { val: u8 }
@@ -49,6 +50,26 @@ module 0x1::m {
     }
 }
   ```
+
+### Inlay hints
+
+Type hints for the let statements and lambda parameters are supported. 
+```move
+module 0x1::m {
+    fun main() {
+        let a/*: integer*/ = 1;
+        let f: |u8| u8 = |e/*: u8*/| e;
+    }
+}
+```
+
+To disable those, use:
+
+```json5
+{
+    "aptos-analyzer.inlayHints.typeHints.enable": false,
+}
+```
 
 ### Flycheck
 
@@ -77,14 +98,6 @@ To run `aptos move lint` instead, specify custom `aptos move` command with:
 }
 ```
 
-## Debugging
-
-It's useful to enable INFO logging level, it's not very chatty and could provide with a valuable information to debug:
-
-```
-    "aptos-analyzer.server.extraEnv": { "RA_LOG": "info" },
-```
-
 ### Resolve definitions
 
 If there's any issue with missing go-to-definition, the "unresolved reference" diagnostic could be helpful:
@@ -95,5 +108,13 @@ If there's any issue with missing go-to-definition, the "unresolved reference" d
 
 It's disabled by default, as the underlying compiler frontend still incomplete. 
 
+
+## Debugging
+
+It's useful to enable INFO logging level, it's not very chatty and could provide with a valuable information to debug:
+
+```
+    "aptos-analyzer.server.extraEnv": { "RA_LOG": "info" },
+```
 
 

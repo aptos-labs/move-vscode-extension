@@ -26,6 +26,13 @@ impl Address {
         }
     }
 
+    pub fn is_0x1(&self) -> bool {
+        match self {
+            Address::Value(value_addr) => value_addr.numeric_address.short() == "0x1",
+            _ => false,
+        }
+    }
+
     pub fn identifier_text(&self) -> String {
         match self {
             Address::Named(named_addr) => named_addr.name.clone(),

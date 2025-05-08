@@ -10,6 +10,7 @@ use tracing_tree::HierarchicalLayer;
 mod completion;
 mod hover;
 mod resolve;
+mod test_inlay_hints;
 mod test_replace_with_compound_expr;
 mod test_replace_with_method_call;
 mod test_syntax_highlighting;
