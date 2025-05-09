@@ -20,7 +20,7 @@ stdx = { workspace = true }
 
 base-db = { path = "../base-db" }
 syntax = { path = "../syntax" }
-test_utils = { path = "../test_utils" }
+test-utils = { path = "../test-utils" }
 lang = { path = "../lang" }
 ide-db = { path = "../ide-db" }
 ide-completion = { path = "../ide-completion" }
