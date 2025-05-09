@@ -750,7 +750,6 @@ version = "0.1.0"
 dependencies = [
  "base-db",
  "dashmap",
- "dissimilar",
  "expect-test",
  "ide-completion",
  "ide-db",
@@ -759,7 +758,6 @@ dependencies = [
  "lang",
  "line-index",
  "query-group-macro",
- "regex",
  "salsa",
  "salsa-macros",
  "stdx",
@@ -816,7 +814,6 @@ dependencies = [
 name = "ide-tests"
 version = "0.1.0"
 dependencies = [
- "dissimilar",
  "expect-test",
  "ide",
  "ide-completion",

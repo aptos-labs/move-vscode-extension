@@ -6,7 +6,7 @@ use ide_completion::item::CompletionItem;
 use ide_db::{LineIndexDatabase, RootDatabase};
 use line_index::{LineCol, LineIndex};
 use std::sync::Arc;
-use syntax::{AstNode, Direction, SourceFile, TextRange, TextSize};
+use syntax::{SourceFile, TextRange, TextSize};
 use vfs::file_set::FileSet;
 use vfs::{FileId, VfsPath};
 
@@ -32,7 +32,6 @@ use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 use lang::builtin_files::BUILTINS_FILE;
 pub use salsa::Cancelled;
-use syntax::algo::skip_trivia_token;
 use syntax::files::{FilePosition, FileRange};
 
 pub type Cancellable<T> = Result<T, Cancelled>;

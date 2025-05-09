@@ -6,7 +6,6 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-dissimilar = "1.0.9"
 expect-test = "1.5.1"
 
 tracing.workspace = true

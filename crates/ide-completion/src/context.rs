@@ -8,11 +8,9 @@ use base_db::inputs::InternFileId;
 use ide_db::RootDatabase;
 use lang::Semantics;
 use syntax::SyntaxKind::*;
-use syntax::algo::find_node_at_offset;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
-use syntax::ast::node_ext::syntax_node::SyntaxElementExt;
-use syntax::files::{FilePosition, InFile, InFileExt};
-use syntax::{AstNode, SyntaxToken, T, TextRange, TextSize, ast};
+use syntax::files::FilePosition;
+use syntax::{AstNode, SyntaxToken, T, TextRange, ast};
 
 const COMPLETION_MARKER: &str = "raCompletionMarker";
 

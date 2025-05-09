@@ -1,9 +1,7 @@
 use crate::init_tracing_for_test;
 use expect_test::{Expect, expect};
 use ide::Analysis;
-use ide::inlay_hints::{InlayFieldsToResolve, InlayHint, InlayHintsConfig};
-use ide_diagnostics::diagnostic::Diagnostic;
-use line_index::LineIndex;
+use ide::inlay_hints::{InlayFieldsToResolve, InlayHintsConfig};
 use test_utils::{Marking, apply_markings, remove_markings};
 
 const DISABLED_CONFIG: InlayHintsConfig = InlayHintsConfig {

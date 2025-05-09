@@ -21,18 +21,17 @@ module 0x1::m {
 
 // language=Move
 #[test]
-fn test_resolve_type_imported_with_duplicate_import() {
+fn test_item_unresolved_with_duplicate_import() {
     check_resolve(
         r#"
 module aptos_std::m1 {
     struct Type { val: u8 }
-          //X
 }
 module 0x1::m {
     use aptos_std::m1::Type;
     use aptos_std::m1::Type;
     fun main(s: Type) {}
-               //^
+               //^ unresolved
 }        
 "#,
     )
@@ -838,18 +837,17 @@ module 0x1::m {
 
 // language=Move
 #[test]
-fn test_resolve_module_imported_with_duplicate_import() {
+fn test_module_unresolved_with_duplicate_import() {
     check_resolve(
         r#"
 module aptos_std::m1 {
     struct Type { val: u8 }
-          //X
 }
 module 0x1::m {
     use aptos_std::m1;
     use aptos_std::m1;
     fun main(s: m1::Type) {}
-                   //^
+                   //^ unresolved
 }        
 "#,
     )

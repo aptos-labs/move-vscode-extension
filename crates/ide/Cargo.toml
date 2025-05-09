@@ -6,9 +6,6 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-dissimilar = "1.0.9"
-regex = "1.11.1"
-
 vfs = { workspace = true }
 line-index = { workspace = true }
 tracing = { workspace = true }

@@ -20,7 +20,6 @@ use ide_db::assist_config::AssistConfig;
 use ide_diagnostics::config::DiagnosticsConfig;
 use project_model::DiscoveredManifest;
 use serde_derive::{Deserialize, Serialize};
-use std::sync::Arc;
 use stdx::itertools::Itertools;
 
 #[derive(Clone)]
