@@ -82,6 +82,20 @@ module 0x1::m {
 }
 
 #[test]
+fn test_ident_pat_in_lambda_param() {
+    // language=Move
+    check_inlay_hints(expect![[r#"
+module 0x1::m {
+    fun for_each(v: vector<u8>, f: |u8| u8) {}
+    fun main() {
+        for_each(vector[], |elem| elem);
+                          //^^^^ u8
+    }
+}
+    "#]]);
+}
+
+#[test]
 fn test_item_from_move_stdlib_is_always_local() {
     // language=Move
     check_inlay_hints(expect![[r#"
@@ -122,14 +136,20 @@ module 0x1::m {
 }
 
 #[test]
-fn test_ident_pat_in_lambda_param() {
+fn test_item_from_the_same_package_hints_only_with_name() {
     // language=Move
     check_inlay_hints(expect![[r#"
-module 0x1::m {
-    fun for_each(v: vector<u8>, f: |u8| u8) {}
+module 0x2::price_management {
+    struct Price { val: u8 }
+    public fun get_s(): Price {
+        Price { val: 1 }
+    }
+}
+module 0x2::m {
+    use 0x2::price_management;
     fun main() {
-        for_each(vector[], |elem| elem);
-                          //^^^^ u8
+        let a = price_management::get_s();
+          //^ Price
     }
 }
     "#]]);

@@ -16,12 +16,12 @@ use vfs::FileId;
 
 pub struct TypeRenderer<'db> {
     db: &'db dyn HirDatabase,
-    context: Option<FileId>,
+    context_file_id: Option<FileId>,
 }
 
 impl<'db> TypeRenderer<'db> {
     pub fn new(db: &'db dyn HirDatabase, context: Option<FileId>) -> Self {
-        TypeRenderer { db, context }
+        TypeRenderer { db, context_file_id: context }
     }
 
     pub fn render(&self, ty: &Ty) -> String {
@@ -106,10 +106,6 @@ impl<'db> TypeRenderer<'db> {
     fn render_ty_adt(&self, ty_adt: &TyAdt) -> String {
         let item = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(self.db).unwrap();
         let item_fq_name = self.render_fq_item(item.map_into()).unwrap_or(anonymous());
-        // let item_fq_name = item
-        //     .fq_name(self.db)
-        //     .map(|it| it.fq_identifier_text())
-        //     .unwrap_or(anonymous());
         format!("{}{}", item_fq_name, self.render_type_args(&ty_adt.type_args))
     }
 
@@ -133,13 +129,18 @@ impl<'db> TypeRenderer<'db> {
     fn render_fq_item(&self, item: InFile<ast::Item>) -> Option<String> {
         let fq_name = item.fq_name(self.db)?;
 
-        let ctx_file_id = self.context;
-        if ctx_file_id.is_none() {
+        let Some(ctx_file_id) = self.context_file_id else {
             return Some(fq_name.fq_identifier_text());
-        }
+        };
 
         let addr_name = fq_name.address().identifier_text();
         if matches!(addr_name.as_str(), "std" | "aptos_std") {
+            return Some(fq_name.name());
+        }
+
+        let item_package_id = self.db.file_package_root(item.file_id);
+        let context_package_id = self.db.file_package_root(ctx_file_id);
+        if item_package_id == context_package_id {
             return Some(fq_name.name());
         }
 
