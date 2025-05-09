@@ -18,6 +18,7 @@ stdx.workspace = true
 vfs.workspace = true
 
 syntax = { path = "../syntax" }
+test_utils = { path = "../test_utils" }
 lang = { path = "../lang" }
 ide = { path = "../ide" }
 ide-db = { path = "../ide-db" }

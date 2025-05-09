@@ -16,7 +16,6 @@ mod hover;
 pub mod inlay_hints;
 mod navigation_target;
 pub mod syntax_highlighting;
-pub mod test_utils;
 mod type_info;
 mod view_syntax_tree;
 
@@ -504,8 +503,9 @@ impl Analysis {
         &self,
         config: &CompletionConfig,
         position: FilePosition,
+        trigger_character: Option<char>,
     ) -> Cancellable<Option<Vec<CompletionItem>>> {
-        self.with_db(|db| ide_completion::completions(db, config, position))
+        self.with_db(|db| ide_completion::completions(db, config, position, trigger_character))
     }
 
     // /// Resolves additional completion data at the position given.

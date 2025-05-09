@@ -764,6 +764,7 @@ dependencies = [
  "salsa-macros",
  "stdx",
  "syntax",
+ "test_utils",
  "tracing",
  "vfs",
 ]
@@ -825,6 +826,7 @@ dependencies = [
  "line-index",
  "stdx",
  "syntax",
+ "test_utils",
  "tracing",
  "tracing-subscriber",
  "tracing-tree",
@@ -1730,6 +1732,19 @@ dependencies = [
  "stdx",
  "tracing",
  "vfs",
+]
+
+[[package]]
+name = "test_utils"
+version = "0.1.0"
+dependencies = [
+ "line-index",
+ "regex",
+ "stdx",
+ "syntax",
+ "tracing",
+ "tracing-subscriber",
+ "tracing-tree",
 ]
 
 [[package]]

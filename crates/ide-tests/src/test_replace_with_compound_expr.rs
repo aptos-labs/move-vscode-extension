@@ -1,10 +1,10 @@
-use crate::test_utils::diagnostics::check_diagnostic_and_fix_expect;
+use crate::test_utils::diagnostics::check_diagnostics_and_fix;
 use expect_test::expect;
 
 #[test]
 fn test_replace_variable_assignment_with_plus() {
     // language=Move
-    check_diagnostic_and_fix_expect(
+    check_diagnostics_and_fix(
         expect![[r#"
             module 0x1::m {
                 fun main() {
@@ -28,7 +28,7 @@ fn test_replace_variable_assignment_with_plus() {
 #[test]
 fn test_replace_variable_assignment_with_left_shift() {
     // language=Move
-    check_diagnostic_and_fix_expect(
+    check_diagnostics_and_fix(
         expect![[r#"
             module 0x1::m {
                 fun main() {
@@ -52,7 +52,7 @@ fn test_replace_variable_assignment_with_left_shift() {
 #[test]
 fn test_replace_deref_assignment_with_plus() {
     // language=Move
-    check_diagnostic_and_fix_expect(
+    check_diagnostics_and_fix(
         expect![[r#"
             module 0x1::m {
                 fun main(p: &u8) {

@@ -114,7 +114,7 @@ pub(super) fn opt_item(p: &mut Parser, m: Marker) -> Result<(), Marker> {
 
 fn try_items_with_no_modifiers(p: &mut Parser, m: Marker) -> Result<(), Marker> {
     match p.current() {
-        T![use] => use_item::use_(p, m),
+        T![use] => use_item::use_stmt(p, m),
         T![struct] => adt::struct_(p, m),
         T![const] => const_(p, m),
         T![friend] if !p.nth_at(1, T![fun]) => friend_decl(p, m),

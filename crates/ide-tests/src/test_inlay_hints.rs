@@ -1,10 +1,10 @@
-use crate::test_utils::diagnostics::{Marking, apply_markings};
-use crate::{init_tracing_for_test, test_utils};
+use crate::init_tracing_for_test;
 use expect_test::{Expect, expect};
 use ide::Analysis;
 use ide::inlay_hints::{InlayFieldsToResolve, InlayHint, InlayHintsConfig};
 use ide_diagnostics::diagnostic::Diagnostic;
 use line_index::LineIndex;
+use test_utils::{Marking, apply_markings, remove_markings};
 
 const DISABLED_CONFIG: InlayHintsConfig = InlayHintsConfig {
     // discriminant_hints: DiscriminantHints::Never,
@@ -52,7 +52,7 @@ pub(crate) fn check_inlay_hints(expect: Expect) {
     init_tracing_for_test();
 
     let source = stdx::trim_indent(expect.data());
-    let trimmed_source = test_utils::diagnostics::remove_markings(&source);
+    let trimmed_source = remove_markings(&source);
 
     let (analysis, file_id) = Analysis::from_single_file(trimmed_source.clone());
 

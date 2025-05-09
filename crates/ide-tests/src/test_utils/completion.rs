@@ -1,18 +1,18 @@
-mod test_completion;
-
-use crate::test_utils::get_and_replace_caret;
-use crate::{assert_eq_text, init_tracing_for_test};
+use crate::init_tracing_for_test;
+use expect_test::Expect;
 use ide::Analysis;
 use ide_completion::config::CompletionConfig;
 use ide_completion::item::CompletionItem;
 use ide_db::SnippetCap;
 use syntax::files::FilePosition;
 use syntax::{AstNode, AstToken, TextSize, ast};
+use test_utils::get_and_replace_caret;
 
-pub fn do_single_completion(before: &str, after: &str) {
-    let (source, offset) = get_and_replace_caret(before, "/*caret*/");
+pub fn do_single_completion(before: &str, after: Expect) {
+    let trimmed_before = stdx::trim_indent(before).trim().to_string();
+    let (source, offset) = get_and_replace_caret(&trimmed_before, "/*caret*/");
 
-    let completion_items = completions_at_offset(before, offset, true);
+    let completion_items = completions_at_offset(&trimmed_before, offset, true);
     assert_eq!(
         completion_items.len(),
         1,
@@ -23,8 +23,9 @@ pub fn do_single_completion(before: &str, after: &str) {
 
     let mut res = source.to_string();
     completion_item.text_edit.apply(&mut res);
+    res.push_str("\n");
 
-    assert_eq_text!(after, &res);
+    after.assert_eq(&res);
 }
 
 pub fn check_completions_with_prefix_exact(source: &str, expected_items: Vec<&str>) {
@@ -111,7 +112,7 @@ fn completions_at_offset(
         ..CompletionConfig::default()
     };
     let mut completion_items = analysis
-        .completions(&completion_config, file_position)
+        .completions(&completion_config, file_position, None)
         .unwrap()
         .unwrap_or_default();
 

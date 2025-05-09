@@ -1,8 +1,8 @@
 use crate::Analysis;
-use crate::test_utils::{get_first_marked_position, get_marked_position_offset_with_data};
 use syntax::SyntaxKind::IDENT;
 use syntax::files::FilePosition;
 use syntax::{AstNode, SyntaxKind};
+use test_utils::{get_first_marked_position, get_marked_position_offset_with_data};
 
 pub fn check_resolve(source: &str) {
     let (ref_offset, data) = get_marked_position_offset_with_data(&source, "//^");

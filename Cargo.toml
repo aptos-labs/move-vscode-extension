@@ -22,6 +22,7 @@ clap = { version = "^4.5.28", features = ["derive"] }
 indexmap = "^2.7.1"
 toml = "^0.8.20"
 walkdir = "^2.5.0"
+regex = "1.11.1"
 
 tracing = "^0.1.41"
 tracing-tree = "^0.4.0"

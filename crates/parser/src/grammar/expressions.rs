@@ -341,7 +341,7 @@ pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
         return;
     }
     if p.at(T![use]) {
-        use_item::use_(p, m);
+        use_item::use_stmt(p, m);
         return;
     }
 

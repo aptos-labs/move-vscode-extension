@@ -7,9 +7,9 @@ use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::{Layer, Registry};
 use tracing_tree::HierarchicalLayer;
 
-mod completion;
 mod hover;
 mod resolve;
+mod test_completion;
 mod test_inlay_hints;
 mod test_replace_with_compound_expr;
 mod test_replace_with_method_call;

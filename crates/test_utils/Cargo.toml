@@ -1,17 +1,17 @@
 [package]
-name = "ide-completion"
+name = "test_utils"
 version = "0.1.0"
 rust-version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
-tracing = { workspace = true }
+tracing.workspace = true
+tracing-subscriber.workspace = true
+tracing-tree.workspace = true
+line-index.workspace = true
+regex.workspace = true
 
 stdx.workspace = true
 
 syntax = { path = "../syntax" }
-base-db = { path = "../base-db" }
-ide-db = { path = "../ide-db" }
-lang = { path = "../lang" }
-

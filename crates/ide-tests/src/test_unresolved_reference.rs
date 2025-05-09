@@ -1,11 +1,10 @@
-use crate::test_utils::check_diagnostics;
-use crate::test_utils::diagnostics::check_diagnostic_expect;
+use crate::test_utils::diagnostics::check_diagnostics;
 use expect_test::expect;
 
 #[test]
 fn test_unresolved_variable() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::main {
             fun main() {
                 x;
@@ -18,7 +17,7 @@ fn test_unresolved_variable() {
 #[test]
 fn test_unresolved_function_call() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::main {
             fun main() {
                 call();
@@ -31,7 +30,7 @@ fn test_unresolved_function_call() {
 #[test]
 fn test_unresolved_module_member_with_unresolved_module() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::main {
             use 0x1::mod::call;
                    //^^^ err: Unresolved reference `mod`: cannot resolve
@@ -47,7 +46,7 @@ fn test_unresolved_module_member_with_unresolved_module() {
 #[test]
 fn test_no_unresolved_reference_for_builtin() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
 module 0x1::m {
     fun main() {
         move_from<u8>(@0x1);
@@ -59,7 +58,7 @@ module 0x1::m {
 #[test]
 fn test_no_unresolved_reference_for_primitive_type() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
 script {
     fun main(s: &signer) {
     }
@@ -70,7 +69,7 @@ script {
 #[test]
 fn test_unresolved_reference_for_variable_in_struct_lit_field() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::M {
             struct T {
                 my_field: u8
@@ -87,7 +86,7 @@ fn test_unresolved_reference_for_variable_in_struct_lit_field() {
 #[test]
 fn test_no_unresolved_reference_for_field_shorthand() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
 module 0x1::M {
     struct T {
         my_field: u8
@@ -104,7 +103,7 @@ module 0x1::M {
 #[test]
 fn test_unresolved_field_in_struct_lit() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::M {
             struct T {
                 my_field: u8
@@ -122,7 +121,7 @@ fn test_unresolved_field_in_struct_lit() {
 #[test]
 fn test_unresolved_field_in_struct_pat() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::M {
             struct T {
                 my_field: u8
@@ -140,7 +139,7 @@ fn test_unresolved_field_in_struct_pat() {
 #[test]
 fn test_unresolved_field_in_struct_pat_shorthand() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::M {
             struct T {
                 my_field: u8
@@ -157,7 +156,7 @@ fn test_unresolved_field_in_struct_pat_shorthand() {
 #[test]
 fn test_unresolved_module() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::M {
             fun main() {
                 let t = transaction::create();
@@ -170,7 +169,7 @@ fn test_unresolved_module() {
 #[test]
 fn test_unresolved_fq_module() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::M {
             fun main() {
                 let t = std::transaction::create();
@@ -183,7 +182,7 @@ fn test_unresolved_fq_module() {
 #[test]
 fn test_unresolved_reference_for_method_of_another_module() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::other {}
         module 0x1::m {
             use 0x1::other;
@@ -198,7 +197,7 @@ fn test_unresolved_reference_for_method_of_another_module() {
 #[test]
 fn test_unresolved_reference_for_type_in_generic() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::m {
             fun deposit<Token> () {}
 
@@ -213,7 +212,7 @@ fn test_unresolved_reference_for_type_in_generic() {
 #[test]
 fn test_no_error_for_wildcard_in_struct_pat() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
 module 0x1::M {
     struct Coin { value: u64 }
     fun call(): Coin { Coin { value: 1 } }
@@ -227,7 +226,7 @@ module 0x1::M {
 #[test]
 fn test_no_error_correct_destructuring() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
 module 0x1::M {
     struct Coin { value: u64 }
     fun call(): Coin { Coin { value: 1 } }
@@ -242,7 +241,7 @@ module 0x1::M {
 #[test]
 fn test_error_for_unbound_destructured_value() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::M {
             struct Coin { value: u64 }
             fun call(): Coin { Coin { value: 1 } }
@@ -257,7 +256,7 @@ fn test_error_for_unbound_destructured_value() {
 #[test]
 fn test_no_error_for_result_variable_in_spec() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
 module 0x1::M {
     fun call(): u8 { 1 }
     spec call {
@@ -270,7 +269,7 @@ module 0x1::M {
 #[test]
 fn test_unresolved_reference_for_schema_field() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::M {
             spec schema Schema {}
             spec module {
@@ -283,7 +282,7 @@ fn test_unresolved_reference_for_schema_field() {
 #[test]
 fn test_unresolved_reference_for_schema_field_shorthand() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::M {
             spec schema Schema {}
             spec module {
@@ -296,7 +295,7 @@ fn test_unresolved_reference_for_schema_field_shorthand() {
 #[test]
 fn test_no_unresolved_reference_for_schema_field_and_function_param() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
     module 0x1::M {
         spec schema Schema {
             root_account: signer;
@@ -312,7 +311,7 @@ fn test_no_unresolved_reference_for_schema_field_and_function_param() {
 #[test]
 fn test_no_error_for_tuple_result() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
     module 0x1::M {
         fun call(): (u8, u8) { (1, 1) }
         spec call {
@@ -325,7 +324,7 @@ fn test_no_error_for_tuple_result() {
 #[test]
 fn test_no_error_for_update_field_arguments() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
     module 0x1::M {
         struct S { val: u8 }
         spec module {
@@ -339,7 +338,7 @@ fn test_no_error_for_update_field_arguments() {
 #[test]
 fn test_num_type() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
     module 0x1::M {
         spec schema SS {
             val: num;
@@ -351,7 +350,7 @@ fn test_num_type() {
 #[test]
 fn test_unresolved_field_for_dot_expr() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::M {
             struct S has key {}
             fun call() acquires S {
@@ -366,7 +365,7 @@ fn test_unresolved_field_for_dot_expr() {
 #[test]
 fn test_unresolved_module_import() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::main {
             use 0x1::M1;
                    //^^ err: Unresolved reference `M1`: cannot resolve
@@ -377,7 +376,7 @@ fn test_unresolved_module_import() {
 #[test]
 fn test_unresolved_module_import_in_item_import() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::main {
             use 0x1::M1::call;
                    //^^ err: Unresolved reference `M1`: cannot resolve
@@ -388,7 +387,7 @@ fn test_unresolved_module_import_in_item_import() {
 #[test]
 fn test_unresolved_item_import() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::M1 {}
         module 0x1::Main {
             use 0x1::M1::call;
@@ -400,23 +399,20 @@ fn test_unresolved_item_import() {
 #[test]
 fn test_no_error_for_field_of_item_of_unknown_type() {
     // language=Move
-    check_diagnostics(
-        r#"
+    check_diagnostics(expect![[r#"
 module 0x1::main {
     fun main() {
         let var = (1 + false);
         var.key;
     }
 }
-"#,
-    );
+"#]]);
 }
 
 #[test]
 fn test_no_error_for_field_of_reference_of_unknown_type() {
     // language=Move
-    check_diagnostics(
-        r#"
+    check_diagnostics(expect![[r#"
 module 0x1::main {
     fun call<T>(t: T): &T { &t }
     fun main() {
@@ -424,30 +420,26 @@ module 0x1::main {
         var.key;
     }
 }
-"#,
-    );
+"#]]);
 }
 
 #[test]
 fn test_no_error_for_named_address_in_test_location() {
     // language=Move
-    check_diagnostics(
-        r#"
+    check_diagnostics(expect![[r#"
 #[test_only]
 module 0x1::string_tests {
     #[expected_failure(location = aptos_framework::coin)]
     fun test_abort() {
     }
 }
-"#,
-    );
+"#]]);
 }
 
 #[test]
 fn test_no_error_for_self_module_in_location() {
     // language=Move
-    check_diagnostics(
-        r#"
+    check_diagnostics(expect![[r#"
 #[test_only]
 module 0x1::string_tests {
     #[test]
@@ -456,14 +448,13 @@ module 0x1::string_tests {
 
     }
 }
-"#,
-    );
+"#]]);
 }
 
 #[test]
 fn test_lhs_of_dot_assignment() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::mod {
             struct S { val: u8 }
             fun main() {
@@ -477,21 +468,19 @@ fn test_lhs_of_dot_assignment() {
 #[test]
 fn test_no_error_for_attribute_item() {
     // language=Move
-    check_diagnostics(
-        r#"
+    check_diagnostics(expect![[r#"
 module 0x1::m {
     #[resource_group(scope = global)]
     /// A shared resource group for storing object resources together in storage.
     struct ObjectGroup { }
 }
-"#,
-    );
+"#]]);
 }
 
 #[test]
 fn test_spec_builtin_not_available_outside_specs() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::m {
             fun main() {
                 MAX_U128;
@@ -504,7 +493,7 @@ fn test_spec_builtin_not_available_outside_specs() {
 #[test]
 fn test_spec_builtin_const_inside_spec() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::m {
             fun main() {
                 spec {
@@ -518,35 +507,31 @@ fn test_spec_builtin_const_inside_spec() {
 #[test]
 fn test_no_unresolved_reference_in_pragma() {
     // language=Move
-    check_diagnostics(
-        r#"
+    check_diagnostics(expect![[r#"
 module 0x1::m {
     spec module {
         pragma intrinsic = map;
     }
 }
-"#,
-    );
+"#]]);
 }
 
 #[test]
 fn test_no_unresolved_for_named_address_in_use() {
     // language=Move
-    check_diagnostics(
-        r#"
+    check_diagnostics(expect![[r#"
 module std::m {
 }
 module std::main {
     use std::m;
 }
-"#,
-    );
+"#]]);
 }
 
 #[test]
 fn test_no_unresolved_for_named_address_in_fq() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module std::mymodule {
             public fun call() {}
         }
@@ -561,8 +546,7 @@ fn test_no_unresolved_for_named_address_in_fq() {
 #[test]
 fn test_no_error_for_invariant_index_variable() {
     // language=Move
-    check_diagnostics(
-        r#"
+    check_diagnostics(expect![[r#"
 module 0x1::m {
     spec module {
         let vec = vector[1, 2, 3];
@@ -570,14 +554,13 @@ module 0x1::m {
         invariant forall ind in 0..10: vec[ind] < 10;
     }
 }
-"#,
-    );
+"#]]);
 }
 
 #[test]
 fn test_unresolved_method() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::m {
             struct S { field: u8 }
             fun main(s: S) {
@@ -591,8 +574,7 @@ fn test_unresolved_method() {
 #[test]
 fn test_no_unresolved_method_error() {
     // language=Move
-    check_diagnostics(
-        r#"
+    check_diagnostics(expect![[r#"
 module 0x1::m {
     struct S { field: u8 }
     fun receiver(self: S): u8 { self.field }
@@ -600,14 +582,13 @@ module 0x1::m {
         s.receiver();
     }
 }
-"#,
-    );
+"#]]);
 }
 
 #[test]
 fn test_no_error_if_method_receiver_of_type_unknown() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::m {
             struct S { field: u8 }
             fun receiver(self: S): u8 { self.field }
@@ -622,7 +603,7 @@ fn test_no_error_if_method_receiver_of_type_unknown() {
 #[test]
 fn test_no_error_for_fields_if_destructuring_unknown_struct() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::m {
             fun main() {
                 let S { val } = 1;
@@ -637,7 +618,7 @@ fn test_no_error_for_fields_if_destructuring_unknown_struct() {
 #[test]
 fn test_no_error_for_fields_if_destructuring_unknown_struct_with_qualifier() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::m {
             enum R {}
             fun main() {
@@ -653,7 +634,7 @@ fn test_no_error_for_fields_if_destructuring_unknown_struct_with_qualifier() {
 #[test]
 fn test_no_error_path_in_attr() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::m {
             #[lint::my_lint]
             fun main() {}
@@ -664,7 +645,7 @@ fn test_no_error_path_in_attr() {
 #[test]
 fn test_no_error_for_unknown_receiver_method_of_result_of_unknown_resource_borrow() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::m {
             fun main() {
                 let perm_storage = &PermissionStorage[@0x1];
@@ -678,7 +659,7 @@ fn test_no_error_for_unknown_receiver_method_of_result_of_unknown_resource_borro
 #[test]
 fn test_no_error_for_unknown_receiver_method_of_result_of_unknown_mut_resource_borrow() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::m {
             fun main() {
                 let perm_storage = &mut PermissionStorage[@0x1];
@@ -692,7 +673,7 @@ fn test_no_error_for_unknown_receiver_method_of_result_of_unknown_mut_resource_b
 #[test]
 fn test_no_error_on_module_for_unresolved_module_if_same_name_as_address() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::m {
             fun main() {
                 aptos_std::call();
@@ -705,7 +686,7 @@ fn test_no_error_on_module_for_unresolved_module_if_same_name_as_address() {
 #[test]
 fn test_error_on_known_item_of_module_with_the_same_name_as_address() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module aptos_std::aptos_std {
         }
         module 0x1::m {
@@ -721,7 +702,7 @@ fn test_error_on_known_item_of_module_with_the_same_name_as_address() {
 #[test]
 fn test_no_error_for_const_in_spec() {
     // language=Move
-    check_diagnostic_expect(expect![[r#"
+    check_diagnostics(expect![[r#"
         module 0x1::features {
             const PERMISSIONED_SIGNER: u64 = 84;
 

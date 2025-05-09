@@ -55,7 +55,7 @@ impl<Var: Clone + Eq + Hash + Debug> UnificationTable<Var> {
         if let Some(old_value_ty) = old_value_ty {
             // if already unified, value must be the same
             if old_value_ty != ty {
-                panic!("unification error")
+                panic!("unification error, {old_value_ty:?} != {ty:?}")
             }
             return;
         }

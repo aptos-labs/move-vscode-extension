@@ -1,9 +1,9 @@
 use crate::init_tracing_for_test;
 use ide::Analysis;
-use ide::test_utils::{get_first_marked_position, get_marked_position_offset_with_data};
 use syntax::AstNode;
 use syntax::SyntaxKind::{IDENT, QUOTE_IDENT};
 use syntax::files::FilePosition;
+use test_utils::{get_first_marked_position, get_marked_position_offset_with_data};
 
 mod test_resolve_1;
 mod test_resolve_functions;

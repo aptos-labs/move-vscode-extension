@@ -12,7 +12,7 @@ impl GlobalState {
             return false;
         };
         let needs_to_refresh_packages = !important_changes.is_empty();
-        tracing::info!(?needs_to_refresh_packages);
+        tracing::debug!(?needs_to_refresh_packages);
 
         if needs_to_refresh_packages {
             let n_to_show = 10;
