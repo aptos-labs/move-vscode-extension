@@ -20,7 +20,6 @@ stdx = { workspace = true }
 
 base-db = { path = "../base-db" }
 syntax = { path = "../syntax" }
-test-utils = { path = "../test-utils" }
 lang = { path = "../lang" }
 ide-db = { path = "../ide-db" }
 ide-completion = { path = "../ide-completion" }
@@ -29,3 +28,5 @@ ide-diagnostics = { path = "../ide-diagnostics" }
 [dev-dependencies]
 itertools = { workspace = true }
 expect-test = "1.5.1"
+
+test-utils = { path = "../test-utils" }

@@ -1735,6 +1735,8 @@ dependencies = [
 name = "test-utils"
 version = "0.1.0"
 dependencies = [
+ "base-db",
+ "ide",
  "line-index",
  "regex",
  "stdx",
@@ -1742,6 +1744,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "tracing-tree",
+ "vfs",
 ]
 
 [[package]]
