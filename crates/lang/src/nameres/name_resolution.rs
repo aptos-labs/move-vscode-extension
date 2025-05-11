@@ -1,4 +1,4 @@
-use crate::HirDatabase;
+use crate::hir_db;
 use crate::hir_db::get_modules_in_file;
 use crate::nameres::ResolveReference;
 use crate::nameres::address::Address;
@@ -8,6 +8,7 @@ use crate::nameres::path_resolution::ResolutionContext;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use crate::nameres::scope_entries_owner::get_entries_in_scope;
 use crate::node_ext::item::ModuleItemExt;
+use base_db::SourceDatabase;
 use base_db::package_root::PackageId;
 use parser::SyntaxKind;
 use parser::SyntaxKind::MODULE_SPEC;
@@ -34,7 +35,7 @@ impl fmt::Debug for ResolveScope {
 }
 
 pub fn get_resolve_scopes(
-    db: &dyn HirDatabase,
+    db: &dyn SourceDatabase,
     start_at: InFile<impl ReferenceElement>,
 ) -> Vec<ResolveScope> {
     let mut scopes = vec![];
@@ -107,7 +108,7 @@ fn module_inner_spec_scopes(
 }
 
 pub fn get_entries_from_walking_scopes(
-    db: &dyn HirDatabase,
+    db: &dyn SourceDatabase,
     start_at: InFile<impl ReferenceElement>,
     ns: NsSet,
 ) -> Vec<ScopeEntry> {
@@ -148,13 +149,11 @@ pub fn get_entries_from_walking_scopes(
 
 #[tracing::instrument(level = "debug", skip(db))]
 pub fn get_modules_as_entries(
-    db: &dyn HirDatabase,
+    db: &dyn SourceDatabase,
     package_id: PackageId,
     address: Address,
 ) -> Vec<ScopeEntry> {
-    let interesting_file_ids = db
-        .file_ids_by_module_address(package_id, address.clone())
-        .data(db);
+    let interesting_file_ids = hir_db::file_ids_by_module_address(db, package_id, address.clone());
     tracing::debug!(?interesting_file_ids);
 
     let mut module_entries = vec![];
@@ -172,7 +171,7 @@ pub fn get_modules_as_entries(
     skip(db, ctx, qualifier),
     fields(qualifier = ?qualifier.syntax().text(), path = ?ctx.path.syntax_text()))]
 pub fn get_qualified_path_entries(
-    db: &dyn HirDatabase,
+    db: &dyn SourceDatabase,
     ctx: &ResolutionContext,
     qualifier: ast::Path,
 ) -> Option<Vec<ScopeEntry>> {
@@ -207,10 +206,14 @@ pub fn get_qualified_path_entries(
                 scope_adjustment: None,
             });
 
-            entries.extend(db.module_importable_entries(qualifier_item.node_loc.clone()));
-            entries.extend(db.module_importable_entries_from_related(qualifier_item.node_loc));
-            // let module = qualifier_item.node_loc.to_ast::<ast::Module>(db)?;
-            // entries.extend(module.importable_entries_from_related(db));
+            entries.extend(hir_db::module_importable_entries(
+                db,
+                qualifier_item.node_loc.clone(),
+            ));
+            entries.extend(hir_db::module_importable_entries_from_related(
+                db,
+                qualifier_item.node_loc,
+            ));
         }
         SyntaxKind::ENUM => {
             let enum_ = qualifier_item.node_loc.to_ast::<ast::Enum>(db)?;

@@ -1,4 +1,3 @@
-use crate::HirDatabase;
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres::ResolveReference;
 use crate::nameres::name_resolution::{
@@ -11,6 +10,7 @@ use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt};
 use crate::types::inference::InferenceCtx;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
+use base_db::SourceDatabase;
 use base_db::package_root::PackageId;
 use parser::SyntaxKind::CALL_EXPR;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
@@ -21,7 +21,7 @@ use syntax::{AstNode, ast};
 use vfs::FileId;
 
 fn refine_path_expected_type(
-    db: &dyn HirDatabase,
+    db: &dyn SourceDatabase,
     file_id: FileId,
     path_kind: PathKind,
     expected_type: Option<Ty>,
@@ -50,7 +50,7 @@ fn refine_path_expected_type(
 
 #[tracing::instrument(level = "debug", skip_all)]
 pub fn get_path_resolve_variants(
-    db: &dyn HirDatabase,
+    db: &dyn SourceDatabase,
     ctx: &ResolutionContext,
     path_kind: PathKind,
 ) -> Vec<ScopeEntry> {
@@ -89,7 +89,7 @@ pub fn get_path_resolve_variants(
 
 #[tracing::instrument(level = "debug", skip(db, current_file_id))]
 pub fn get_method_resolve_variants(
-    db: &dyn HirDatabase,
+    db: &dyn SourceDatabase,
     self_ty: &Ty,
     current_file_id: FileId,
     msl: bool,
@@ -132,7 +132,7 @@ pub fn get_method_resolve_variants(
     skip(db, path, expected_type),
     fields(path = ?path.syntax_text(), file_id = ?path.file_id))]
 pub fn resolve_path(
-    db: &dyn HirDatabase,
+    db: &dyn SourceDatabase,
     path: InFile<ast::Path>,
     expected_type: Option<Ty>,
 ) -> Vec<ScopeEntry> {
@@ -221,7 +221,7 @@ impl ResolutionContext {
         path_expr.is_some_and(|it| it.syntax().parent().is_kind(CALL_EXPR))
     }
 
-    pub fn package_id(&self, db: &dyn HirDatabase) -> PackageId {
+    pub fn package_id(&self, db: &dyn SourceDatabase) -> PackageId {
         db.file_package_id(self.path.file_id).data(db)
     }
 }

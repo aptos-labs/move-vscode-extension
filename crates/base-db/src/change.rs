@@ -57,7 +57,7 @@ impl FileChanges {
 
         if let Some(package_roots) = self.package_roots.clone() {
             for (idx, root) in package_roots.into_iter().enumerate() {
-                let package_id = PackageId(idx as u32);
+                let package_id = PackageId::new(db, idx as u32);
                 let durability = package_root_durability(&root);
                 for file_id in root.file_set.iter() {
                     db.set_file_package_id_with_durability(file_id, package_id, durability);

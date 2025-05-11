@@ -3,7 +3,7 @@
 use base_db::change::{DepGraph, FileChanges};
 use base_db::{SourceDatabase, source_db};
 use ide_completion::item::CompletionItem;
-use ide_db::{LineIndexDatabase, RootDatabase};
+use ide_db::{RootDatabase, root_db};
 use line_index::{LineCol, LineIndex};
 use std::sync::Arc;
 use syntax::{SourceFile, TextRange, TextSize};
@@ -151,7 +151,7 @@ impl Analysis {
     /// Gets the file's `LineIndex`: data structure to convert between absolute
     /// offsets and line/column representation.
     pub fn file_line_index(&self, file_id: FileId) -> Cancellable<Arc<LineIndex>> {
-        self.with_db(|db| db.line_index(file_id))
+        self.with_db(|db| root_db::line_index(db, file_id))
     }
 
     /// Selects the next syntactic nodes encompassing the range.
@@ -559,23 +559,9 @@ impl Analysis {
     //     self.with_db(|db| annotations::resolve_annotation(db, annotation))
     // }
     //
-    // pub fn move_item(
-    //     &self,
-    //     range: FileRange,
-    //     direction: Direction,
-    // ) -> Cancellable<Option<TextEdit>> {
-    //     self.with_db(|db| move_item::move_item(db, range, direction))
-    // }
-    //
-    // pub fn get_recursive_memory_layout(
-    //     &self,
-    //     position: FilePosition,
-    // ) -> Cancellable<Option<RecursiveMemoryLayout>> {
-    //     self.with_db(|db| view_memory_layout(db, position))
-    // }
 
     pub fn file_offset_into_position(&self, file_id: FileId, offset: usize) -> Cancellable<LineCol> {
-        self.with_db(|db| db.line_index(file_id).line_col(TextSize::new(offset as u32)))
+        self.with_db(|db| root_db::line_index(db, file_id).line_col(TextSize::new(offset as u32)))
     }
 
     /// Performs an operation on the database that may be canceled.

@@ -6,10 +6,9 @@ use base_db::inputs::{
 use base_db::package_root::{PackageId, PackageRoot};
 use line_index::LineIndex;
 use salsa::Durability;
+use std::fmt;
 use std::mem::ManuallyDrop;
-use std::ops::Deref;
 use std::sync::Arc;
-use std::{fmt, iter};
 use vfs::FileId;
 
 #[salsa_macros::db]
@@ -122,24 +121,6 @@ impl SourceDatabase for RootDatabase {
         let files = Arc::clone(&self.files);
         files.set_spec_related_files(self, file_id, file_set)
     }
-
-    fn all_source_file_ids(&self, package_id: PackageId) -> FileIdSet {
-        let dep_ids = self.dep_package_ids(package_id).data(self).deref().to_owned();
-        tracing::debug!(?dep_ids);
-
-        let file_sets = iter::once(package_id)
-            .chain(dep_ids)
-            .map(|id| self.package_root(id).data(self).file_set.clone())
-            .collect::<Vec<_>>();
-
-        let mut source_file_ids = vec![];
-        for file_set in file_sets.clone() {
-            for source_file_id in file_set.iter() {
-                source_file_ids.push(source_file_id);
-            }
-        }
-        FileIdSet::new(self, source_file_ids)
-    }
 }
 
 impl Default for RootDatabase {
@@ -174,12 +155,11 @@ impl RootDatabase {
     }
 }
 
-#[query_group_macro::query_group]
-pub trait LineIndexDatabase: SourceDatabase {
-    fn line_index(&self, file_id: FileId) -> Arc<LineIndex>;
-}
-
-fn line_index(db: &dyn LineIndexDatabase, file_id: FileId) -> Arc<LineIndex> {
-    let text = db.file_text(file_id).text(db);
-    Arc::new(LineIndex::new(&text))
+pub fn line_index(db: &dyn SourceDatabase, file_id: FileId) -> Arc<LineIndex> {
+    #[salsa_macros::tracked]
+    fn line_index(db: &dyn SourceDatabase, file_id: FileIdInput) -> Arc<LineIndex> {
+        let text = db.file_text(file_id.data(db)).text(db);
+        Arc::new(LineIndex::new(&text))
+    }
+    line_index(db, FileIdInput::new(db, file_id))
 }

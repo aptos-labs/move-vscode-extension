@@ -1,4 +1,3 @@
-use crate::HirDatabase;
 use crate::loc::SyntaxLoc;
 use crate::nameres::fq_named_element::ItemFQNameOwner;
 use crate::types::ty::Ty;
@@ -8,6 +7,7 @@ use crate::types::ty::schema::TySchema;
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyVar, TyVarKind};
 use crate::types::ty::type_param::TyTypeParameter;
+use base_db::SourceDatabase;
 use stdx::itertools::Itertools;
 use syntax::ast;
 use syntax::ast::NamedElement;
@@ -15,12 +15,12 @@ use syntax::files::InFile;
 use vfs::FileId;
 
 pub struct TypeRenderer<'db> {
-    db: &'db dyn HirDatabase,
+    db: &'db dyn SourceDatabase,
     context_file_id: Option<FileId>,
 }
 
 impl<'db> TypeRenderer<'db> {
-    pub fn new(db: &'db dyn HirDatabase, context: Option<FileId>) -> Self {
+    pub fn new(db: &'db dyn SourceDatabase, context: Option<FileId>) -> Self {
         TypeRenderer { db, context_file_id: context }
     }
 

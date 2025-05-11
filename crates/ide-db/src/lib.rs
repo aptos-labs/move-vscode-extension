@@ -13,7 +13,6 @@ pub mod text_edit;
 
 use syntax::{SyntaxKind, SyntaxKind::*};
 
-pub use root_db::LineIndexDatabase;
 pub use root_db::RootDatabase;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]

@@ -42,5 +42,4 @@ stdx = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "6568e8f1
 paths = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "6568e8f12d19b53fbb5a1c2e1116dae3ae61f912", package = "paths", features = ["serde1"] }
 vfs = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "6568e8f12d19b53fbb5a1c2e1116dae3ae61f912", package = "vfs" }
 vfs-notify = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "6568e8f12d19b53fbb5a1c2e1116dae3ae61f912", package = "vfs-notify" }
-query-group-macro = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "6568e8f12d19b53fbb5a1c2e1116dae3ae61f912", package = "query-group-macro" }
 

@@ -2,7 +2,6 @@ pub(crate) mod ast_walker;
 pub(crate) mod combine_types;
 pub(crate) mod inference_result;
 
-use crate::HirDatabase;
 use crate::nameres::binding::resolve_ident_pat_with_expected_type;
 use crate::nameres::path_resolution;
 use crate::nameres::scope::{ScopeEntry, VecExt};
@@ -15,6 +14,7 @@ use crate::types::ty::adt::TyAdt;
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
 use crate::types::unification::UnificationTable;
+use base_db::SourceDatabase;
 use std::collections::HashMap;
 use std::hash::Hash;
 use syntax::SyntaxKind::*;
@@ -25,7 +25,7 @@ use syntax::{AstNode, ast, match_ast};
 use vfs::FileId;
 
 pub struct InferenceCtx<'db> {
-    pub db: &'db dyn HirDatabase,
+    pub db: &'db dyn SourceDatabase,
     pub file_id: FileId,
     pub ty_var_counter: usize,
     pub msl: bool,
@@ -48,7 +48,7 @@ pub struct InferenceCtx<'db> {
 }
 
 impl<'db> InferenceCtx<'db> {
-    pub fn new(db: &'db dyn HirDatabase, file_id: FileId, msl: bool) -> Self {
+    pub fn new(db: &'db dyn SourceDatabase, file_id: FileId, msl: bool) -> Self {
         InferenceCtx {
             db,
             file_id,

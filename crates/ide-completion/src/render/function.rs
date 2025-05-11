@@ -1,7 +1,7 @@
 use crate::context::CompletionContext;
 use crate::item::CompletionItemBuilder;
 use crate::render::render_named_item;
-use lang::HirDatabase;
+use base_db::SourceDatabase;
 use lang::types::lowering::TyLowering;
 use lang::types::substitution::{ApplySubstitution, Substitution};
 use lang::types::ty::Ty;
@@ -57,7 +57,7 @@ pub(crate) fn render_function(
     completion_item
 }
 
-fn render_params(db: &dyn HirDatabase, fun: ast::AnyFun, call_ty: TyCallable) -> Option<Vec<String>> {
+fn render_params(db: &dyn SourceDatabase, fun: ast::AnyFun, call_ty: TyCallable) -> Option<Vec<String>> {
     let params_with_types = fun
         .params()
         .into_iter()

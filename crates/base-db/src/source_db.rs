@@ -49,8 +49,6 @@ pub trait SourceDatabase: salsa::Database {
     fn spec_related_files(&self, file_id: FileId) -> FileIdSet;
 
     fn set_spec_related_files(&mut self, file_id: FileId, file_set: Vec<FileId>);
-
-    fn all_source_file_ids(&self, package_id: PackageId) -> FileIdSet;
 }
 
 /// Parses the file into the syntax tree.

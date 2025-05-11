@@ -1,8 +1,8 @@
-use crate::loc::SyntaxLocFileExt;
+use crate::hir_db;
 use crate::nameres::labels::get_loop_labels_resolve_variants;
 use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::node_ext::item::ModuleItemExt;
-use crate::{HirDatabase, hir_db};
+use base_db::SourceDatabase;
 use syntax::ast;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
@@ -25,14 +25,14 @@ mod scope_entries_owner;
 pub mod use_speck_entries;
 
 pub trait ResolveReference {
-    fn resolve_multi(&self, db: &dyn HirDatabase) -> Option<Vec<ScopeEntry>>;
-    fn resolve(&self, db: &dyn HirDatabase) -> Option<ScopeEntry>;
-    fn resolve_no_inf_multi(&self, db: &dyn HirDatabase) -> Option<Vec<ScopeEntry>>;
-    fn resolve_no_inf(&self, db: &dyn HirDatabase) -> Option<ScopeEntry>;
+    fn resolve_multi(&self, db: &dyn SourceDatabase) -> Option<Vec<ScopeEntry>>;
+    fn resolve(&self, db: &dyn SourceDatabase) -> Option<ScopeEntry>;
+    fn resolve_no_inf_multi(&self, db: &dyn SourceDatabase) -> Option<Vec<ScopeEntry>>;
+    fn resolve_no_inf(&self, db: &dyn SourceDatabase) -> Option<ScopeEntry>;
 }
 
 impl<T: ReferenceElement> ResolveReference for InFile<T> {
-    fn resolve_multi(&self, db: &dyn HirDatabase) -> Option<Vec<ScopeEntry>> {
+    fn resolve_multi(&self, db: &dyn SourceDatabase) -> Option<Vec<ScopeEntry>> {
         use syntax::SyntaxKind::*;
 
         let InFile { file_id, value: ref_element } = self;
@@ -50,8 +50,8 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
             .ancestor_or_self::<ast::Expr>()
             .and_then(|expr| expr.inference_ctx_owner().map(|it| it.in_file(*file_id)));
         let msl = self.value.syntax().is_msl_context();
-        if let Some(inference_ctx_owner) = opt_inference_ctx_owner {
-            let inference = db.inference_for_ctx_owner(inference_ctx_owner.loc(), msl);
+        if let Some(ctx_owner) = opt_inference_ctx_owner {
+            let inference = hir_db::inference(db, ctx_owner, msl);
 
             if let Some(method_or_path) = ref_element.cast_into::<ast::MethodOrPath>() {
                 let entries = inference.get_resolve_method_or_path_entries(method_or_path.clone());
@@ -125,12 +125,12 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
         self.resolve_no_inf_multi(db)
     }
 
-    fn resolve(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
+    fn resolve(&self, db: &dyn SourceDatabase) -> Option<ScopeEntry> {
         self.resolve_multi(db)?.single_or_none()
     }
 
     /// resolve outside of the `ast::InferenceCtxOwner`
-    fn resolve_no_inf_multi(&self, db: &dyn HirDatabase) -> Option<Vec<ScopeEntry>> {
+    fn resolve_no_inf_multi(&self, db: &dyn SourceDatabase) -> Option<Vec<ScopeEntry>> {
         if let Some(item_spec_ref) = self.cast_into_ref::<ast::ItemSpecRef>() {
             return get_item_spec_entries(db, item_spec_ref);
         }
@@ -144,13 +144,13 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
         }
     }
 
-    fn resolve_no_inf(&self, db: &dyn HirDatabase) -> Option<ScopeEntry> {
+    fn resolve_no_inf(&self, db: &dyn SourceDatabase) -> Option<ScopeEntry> {
         self.resolve_no_inf_multi(db)?.single_or_none()
     }
 }
 
 fn get_item_spec_entries(
-    db: &dyn HirDatabase,
+    db: &dyn SourceDatabase,
     item_spec_ref: InFile<ast::ItemSpecRef>,
 ) -> Option<Vec<ScopeEntry>> {
     let ref_name = item_spec_ref.value.name_ref()?.as_string();

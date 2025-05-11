@@ -8,5 +8,4 @@ pub mod loc;
 pub mod node_ext;
 pub mod types;
 
-pub use crate::hir_db::HirDatabase;
 pub use semantics::{Semantics, SemanticsImpl};

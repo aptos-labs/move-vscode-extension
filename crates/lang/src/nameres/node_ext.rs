@@ -1,9 +1,8 @@
-use crate::HirDatabase;
 use crate::nameres::namespaces::Ns;
 use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryExt};
 use crate::node_ext::item::ModuleItemExt;
 use base_db::inputs::InternFileId;
-use base_db::source_db;
+use base_db::{SourceDatabase, source_db};
 use syntax::ast;
 use syntax::ast::HasItems;
 use syntax::files::{InFile, InFileExt};
@@ -11,8 +10,8 @@ use syntax::files::{InFile, InFileExt};
 pub trait ModuleResolutionExt {
     fn item_entries(&self) -> Vec<ScopeEntry>;
     fn importable_entries(&self) -> Vec<ScopeEntry>;
-    fn related_module_specs(&self, db: &dyn HirDatabase) -> Vec<InFile<ast::ModuleSpec>>;
-    fn importable_entries_from_related(&self, db: &dyn HirDatabase) -> Vec<ScopeEntry>;
+    fn related_module_specs(&self, db: &dyn SourceDatabase) -> Vec<InFile<ast::ModuleSpec>>;
+    fn importable_entries_from_related(&self, db: &dyn SourceDatabase) -> Vec<ScopeEntry>;
 }
 
 impl ModuleResolutionExt for InFile<ast::Module> {
@@ -45,7 +44,7 @@ impl ModuleResolutionExt for InFile<ast::Module> {
 
     /// collects `spec MODULE {}` from all spec-related (NAME.move + NAME.spec.move) file ids
     #[tracing::instrument(level = "debug", skip_all)]
-    fn related_module_specs(&self, db: &dyn HirDatabase) -> Vec<InFile<ast::ModuleSpec>> {
+    fn related_module_specs(&self, db: &dyn SourceDatabase) -> Vec<InFile<ast::ModuleSpec>> {
         let related_file_ids = db.spec_related_files(self.file_id).data(db);
         let mut module_specs = vec![];
         for spec_related_file_id in related_file_ids {
@@ -61,7 +60,7 @@ impl ModuleResolutionExt for InFile<ast::Module> {
     }
 
     #[tracing::instrument(level = "debug", skip_all)]
-    fn importable_entries_from_related(&self, db: &dyn HirDatabase) -> Vec<ScopeEntry> {
+    fn importable_entries_from_related(&self, db: &dyn SourceDatabase) -> Vec<ScopeEntry> {
         let mut entries = vec![];
         for related_module_spec in self.related_module_specs(db) {
             let module_spec_entries = related_module_spec

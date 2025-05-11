@@ -1,16 +1,16 @@
+use crate::hir_db;
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres::blocks::get_entries_in_blocks;
 use crate::nameres::get_schema_field_entries;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::node_ext::item_spec::ItemSpecExt;
-use crate::{HirDatabase, hir_db};
 use base_db::{SourceDatabase, source_db};
 use syntax::ast::{FieldsOwner, GenericElement, HasItems};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, SyntaxNode, ast, match_ast};
 
 pub fn get_entries_in_scope(
-    db: &dyn HirDatabase,
+    db: &dyn SourceDatabase,
     scope: InFile<SyntaxNode>,
     prev: Option<SyntaxNode>,
 ) -> Vec<ScopeEntry> {
@@ -24,7 +24,7 @@ pub fn get_entries_in_scope(
     entries
 }
 
-pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -> Vec<ScopeEntry> {
+pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: InFile<SyntaxNode>) -> Vec<ScopeEntry> {
     use syntax::SyntaxKind::*;
 
     let file_id = scope.file_id;
@@ -37,7 +37,7 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
     match scope.value.kind() {
         MODULE => {
             let module = scope.syntax_cast::<ast::Module>().unwrap();
-            entries.extend(db.module_importable_entries(module.loc()));
+            entries.extend(hir_db::module_importable_entries(db, module.loc()));
 
             entries.extend(module.value.enum_variants().to_entries(file_id));
 

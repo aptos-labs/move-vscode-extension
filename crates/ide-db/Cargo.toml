@@ -13,7 +13,6 @@ line-index = { workspace = true }
 tracing = { workspace = true }
 
 dashmap.workspace = true
-query-group-macro.workspace = true
 salsa.workspace = true
 salsa-macros.workspace = true
 

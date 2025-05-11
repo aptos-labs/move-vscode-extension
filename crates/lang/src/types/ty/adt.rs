@@ -1,9 +1,9 @@
-use crate::HirDatabase;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::has_type_params_ext::GenericItemExt;
 use crate::types::substitution::Substitution;
 use crate::types::ty::Ty;
+use base_db::SourceDatabase;
 use syntax::ast;
 use syntax::files::InFile;
 
@@ -27,11 +27,11 @@ impl TyAdt {
         }
     }
 
-    pub fn adt_item(&self, db: &dyn HirDatabase) -> Option<InFile<ast::StructOrEnum>> {
+    pub fn adt_item(&self, db: &dyn SourceDatabase) -> Option<InFile<ast::StructOrEnum>> {
         self.adt_item_loc.to_ast::<ast::StructOrEnum>(db)
     }
 
-    pub fn adt_item_module(&self, db: &dyn HirDatabase) -> Option<ast::Module> {
+    pub fn adt_item_module(&self, db: &dyn SourceDatabase) -> Option<ast::Module> {
         let adt_item = self.adt_item(db)?;
         let m = adt_item.value.module();
         Some(m)

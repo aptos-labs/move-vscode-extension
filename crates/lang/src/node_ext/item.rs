@@ -1,16 +1,16 @@
-use crate::HirDatabase;
 use crate::nameres::ResolveReference;
+use base_db::SourceDatabase;
 use syntax::ast::ReferenceElement;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast, match_ast};
 
 pub trait ModuleItemExt {
-    fn module(&self, db: &dyn HirDatabase) -> Option<InFile<ast::Module>>;
+    fn module(&self, db: &dyn SourceDatabase) -> Option<InFile<ast::Module>>;
 }
 
 impl ModuleItemExt for InFile<ast::ModuleSpec> {
-    fn module(&self, db: &dyn HirDatabase) -> Option<InFile<ast::Module>> {
+    fn module(&self, db: &dyn SourceDatabase) -> Option<InFile<ast::Module>> {
         let module_path = self.value.path()?;
         module_path
             .reference()
@@ -21,7 +21,7 @@ impl ModuleItemExt for InFile<ast::ModuleSpec> {
 }
 
 impl ModuleItemExt for InFile<ast::AnyFun> {
-    fn module(&self, db: &dyn HirDatabase) -> Option<InFile<ast::Module>> {
+    fn module(&self, db: &dyn SourceDatabase) -> Option<InFile<ast::Module>> {
         let module = self
             .clone()
             .and_then(|it| it.syntax().parent_of_type::<ast::Module>());
@@ -36,7 +36,7 @@ impl ModuleItemExt for InFile<ast::AnyFun> {
 }
 
 impl ModuleItemExt for InFile<ast::Schema> {
-    fn module(&self, db: &dyn HirDatabase) -> Option<InFile<ast::Module>> {
+    fn module(&self, db: &dyn SourceDatabase) -> Option<InFile<ast::Module>> {
         let module = self
             .clone()
             .and_then(|it| it.syntax().parent_of_type::<ast::Module>());
@@ -51,7 +51,7 @@ impl ModuleItemExt for InFile<ast::Schema> {
 }
 
 impl ModuleItemExt for InFile<ast::ItemSpec> {
-    fn module(&self, db: &dyn HirDatabase) -> Option<InFile<ast::Module>> {
+    fn module(&self, db: &dyn SourceDatabase) -> Option<InFile<ast::Module>> {
         let parent = self.value.syntax().parent()?;
         match_ast! {
             match parent {

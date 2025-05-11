@@ -1,7 +1,7 @@
-use crate::HirDatabase;
 use crate::nameres::address::Address;
 use crate::node_ext::ModuleLangExt;
 use crate::node_ext::item::ModuleItemExt;
+use base_db::SourceDatabase;
 use syntax::ast::NamedElement;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast, match_ast};
@@ -76,11 +76,11 @@ impl ItemFQName {
 }
 
 pub trait ItemFQNameOwner {
-    fn fq_name(&self, db: &dyn HirDatabase) -> Option<ItemFQName>;
+    fn fq_name(&self, db: &dyn SourceDatabase) -> Option<ItemFQName>;
 }
 
 impl<T: AstNode> ItemFQNameOwner for InFile<T> {
-    fn fq_name(&self, db: &dyn HirDatabase) -> Option<ItemFQName> {
+    fn fq_name(&self, db: &dyn SourceDatabase) -> Option<ItemFQName> {
         let it_file_id = self.file_id;
         let node = self.value.syntax();
         match_ast! {

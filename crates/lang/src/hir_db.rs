@@ -1,7 +1,6 @@
 use crate::item_scope::NamedItemScope;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt, SyntaxLocInput};
-use crate::nameres;
-use crate::nameres::address::Address;
+use crate::nameres::address::{Address, AddressInput};
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::path_resolution;
 use crate::nameres::scope::ScopeEntry;
@@ -10,28 +9,26 @@ use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::ty::Ty;
-use base_db::inputs::{FileIdSet, InternFileId};
+use crate::{hir_db, nameres};
+use base_db::inputs::InternFileId;
 use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
-use parser::SyntaxKind;
-use salsa::plumbing::AsId;
-use std::fmt;
-use std::fmt::Formatter;
+use std::iter;
+use std::ops::Deref;
 use std::sync::Arc;
-use syntax::algo::ancestors_at_offset;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, TextSize, ast};
+use syntax::{AstNode, ast};
 use vfs::FileId;
 
-pub(crate) fn resolve_path_multi(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry> {
+pub(crate) fn resolve_path_multi(db: &dyn SourceDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry> {
     resolve_path_multi_tracked(db, SyntaxLocInput::new(db, path.loc()))
 }
 
 #[salsa_macros::tracked]
 fn resolve_path_multi_tracked<'db>(
-    db: &'db dyn HirDatabase,
+    db: &'db dyn SourceDatabase,
     path_loc: SyntaxLocInput<'db>,
 ) -> Vec<ScopeEntry> {
     let path = path_loc.to_ast::<ast::Path>(db);
@@ -48,7 +45,7 @@ fn resolve_path_multi_tracked<'db>(
 }
 
 pub(crate) fn use_speck_entries(
-    db: &dyn HirDatabase,
+    db: &dyn SourceDatabase,
     stmts_owner: InFile<ast::AnyHasUseStmts>,
 ) -> Vec<ScopeEntry> {
     use_speck_entries_tracked(db, SyntaxLocInput::new(db, stmts_owner.loc()))
@@ -56,7 +53,7 @@ pub(crate) fn use_speck_entries(
 
 #[salsa_macros::tracked]
 fn use_speck_entries_tracked<'db>(
-    db: &'db dyn HirDatabase,
+    db: &'db dyn SourceDatabase,
     stmts_owner_loc: SyntaxLocInput<'db>,
 ) -> Vec<ScopeEntry> {
     let use_stmts_owner = stmts_owner_loc.to_ast::<ast::AnyHasUseStmts>(db).unwrap();
@@ -64,27 +61,25 @@ fn use_speck_entries_tracked<'db>(
     entries
 }
 
-#[query_group_macro::query_group]
-pub trait HirDatabase: SourceDatabase {
-    fn inference_for_ctx_owner(&self, ctx_owner_loc: SyntaxLoc, msl: bool) -> Arc<InferenceResult>;
-
-    fn file_ids_by_module_address(&self, package_id: PackageId, address: Address) -> FileIdSet;
-
-    fn module_importable_entries(&self, module_loc: SyntaxLoc) -> Vec<ScopeEntry>;
-
-    fn module_importable_entries_from_related(&self, module_loc: SyntaxLoc) -> Vec<ScopeEntry>;
-
-    fn item_scope(&self, loc: SyntaxLoc) -> NamedItemScope;
+pub(crate) fn inference(
+    db: &dyn SourceDatabase,
+    inference_owner: InFile<ast::InferenceCtxOwner>,
+    msl: bool,
+) -> Arc<InferenceResult> {
+    inference_tracked(db, SyntaxLocInput::new(db, inference_owner.loc()), msl)
 }
 
 #[tracing::instrument(level = "debug", skip(db))]
-fn inference_for_ctx_owner(
-    db: &dyn HirDatabase,
-    ctx_owner_loc: SyntaxLoc,
+#[salsa_macros::tracked]
+fn inference_tracked<'db>(
+    db: &'db dyn SourceDatabase,
+    ctx_owner_loc: SyntaxLocInput<'db>,
     msl: bool,
 ) -> Arc<InferenceResult> {
-    let InFile { file_id, value: ctx_owner } =
-        ctx_owner_loc.to_ast::<ast::InferenceCtxOwner>(db).unwrap();
+    let (file_id, ctx_owner) = ctx_owner_loc
+        .to_ast::<ast::InferenceCtxOwner>(db)
+        .unwrap()
+        .unpack();
     let mut ctx = InferenceCtx::new(db, file_id, msl);
 
     let return_ty = if let Some(any_fun) = ctx_owner.syntax().clone().cast::<ast::AnyFun>() {
@@ -104,25 +99,34 @@ fn inference_for_ctx_owner(
 }
 
 pub trait NodeInferenceExt {
-    fn inference(&self, db: &dyn HirDatabase, msl: bool) -> Option<Arc<InferenceResult>>;
+    fn inference(&self, db: &dyn SourceDatabase, msl: bool) -> Option<Arc<InferenceResult>>;
 }
 
 impl<T: AstNode> NodeInferenceExt for InFile<T> {
-    fn inference(&self, db: &dyn HirDatabase, msl: bool) -> Option<Arc<InferenceResult>> {
-        let (file_id, node) = self.unpack_ref();
-        let inference_owner = node.syntax().ancestor_or_self::<ast::InferenceCtxOwner>()?;
-        let inference = db.inference_for_ctx_owner(inference_owner.in_file(file_id).loc(), msl);
+    fn inference(&self, db: &dyn SourceDatabase, msl: bool) -> Option<Arc<InferenceResult>> {
+        let ctx_owner =
+            self.and_then_ref(|it| it.syntax().ancestor_or_self::<ast::InferenceCtxOwner>())?;
+        let inference = hir_db::inference(db, ctx_owner, msl);
         Some(inference)
     }
 }
 
-fn file_ids_by_module_address(
-    db: &dyn HirDatabase,
+pub(crate) fn file_ids_by_module_address(
+    db: &dyn SourceDatabase,
     package_id: PackageId,
     address: Address,
-) -> FileIdSet {
-    let source_file_ids = db.all_source_file_ids(package_id).data(db);
+) -> Vec<FileId> {
+    file_ids_by_module_address_tracked(db, package_id, AddressInput::new(db, address))
+}
 
+#[salsa_macros::tracked]
+fn file_ids_by_module_address_tracked<'db>(
+    db: &'db dyn SourceDatabase,
+    package_id: PackageId,
+    address: AddressInput<'db>,
+) -> Vec<FileId> {
+    let address = address.data(db);
+    let source_file_ids = all_package_file_ids(db, package_id);
     let mut file_ids = vec![];
     for source_file_id in source_file_ids {
         let modules = get_modules_in_file(db, source_file_id, address.clone());
@@ -130,28 +134,68 @@ fn file_ids_by_module_address(
             file_ids.push(source_file_id);
         }
     }
-    FileIdSet::new(db, file_ids)
+    file_ids
 }
 
-fn module_importable_entries(db: &dyn HirDatabase, module_loc: SyntaxLoc) -> Vec<ScopeEntry> {
-    module_loc
-        .to_ast::<ast::Module>(db)
-        .map(|it| it.importable_entries())
-        .unwrap_or_default()
+#[salsa_macros::tracked]
+fn all_package_file_ids(db: &dyn SourceDatabase, package_id: PackageId) -> Vec<FileId> {
+    let dep_ids = db.dep_package_ids(package_id).data(db).deref().to_owned();
+    tracing::debug!(?dep_ids);
+
+    let file_sets = iter::once(package_id)
+        .chain(dep_ids)
+        .map(|id| db.package_root(id).data(db).file_set.clone())
+        .collect::<Vec<_>>();
+
+    let mut source_file_ids = vec![];
+    for file_set in file_sets.clone() {
+        for source_file_id in file_set.iter() {
+            source_file_ids.push(source_file_id);
+        }
+    }
+    source_file_ids
 }
 
-fn module_importable_entries_from_related(
-    db: &dyn HirDatabase,
+pub(crate) fn module_importable_entries(
+    db: &dyn SourceDatabase,
     module_loc: SyntaxLoc,
 ) -> Vec<ScopeEntry> {
-    module_loc
-        .to_ast::<ast::Module>(db)
-        .map(|it| it.importable_entries_from_related(db))
-        .unwrap_or_default()
+    #[salsa_macros::tracked]
+    fn module_importable_entries_tracked<'db>(
+        db: &'db dyn SourceDatabase,
+        module_loc: SyntaxLocInput<'db>,
+    ) -> Vec<ScopeEntry> {
+        module_loc
+            .to_ast::<ast::Module>(db)
+            .map(|it| it.importable_entries())
+            .unwrap_or_default()
+    }
+    module_importable_entries_tracked(db, SyntaxLocInput::new(db, module_loc))
 }
 
-fn item_scope(db: &dyn HirDatabase, loc: SyntaxLoc) -> NamedItemScope {
-    loc.item_scope(db).unwrap_or(NamedItemScope::Main)
+pub(crate) fn module_importable_entries_from_related(
+    db: &dyn SourceDatabase,
+    module_loc: SyntaxLoc,
+) -> Vec<ScopeEntry> {
+    #[salsa_macros::tracked]
+    fn module_importable_entries_from_related_tracked<'db>(
+        db: &'db dyn SourceDatabase,
+        module_loc: SyntaxLocInput<'db>,
+    ) -> Vec<ScopeEntry> {
+        module_loc
+            .to_ast::<ast::Module>(db)
+            .map(|it| it.importable_entries_from_related(db))
+            .unwrap_or_default()
+    }
+    module_importable_entries_from_related_tracked(db, SyntaxLocInput::new(db, module_loc))
+}
+
+pub fn item_scope(db: &dyn SourceDatabase, syntax_loc: SyntaxLoc) -> NamedItemScope {
+    #[salsa_macros::tracked]
+    pub fn item_scope<'db>(db: &'db dyn SourceDatabase, loc: SyntaxLocInput<'db>) -> NamedItemScope {
+        loc.syntax_loc(db).item_scope(db).unwrap_or(NamedItemScope::Main)
+    }
+    item_scope(db, SyntaxLocInput::new(db, syntax_loc))
 }
 
 pub(crate) fn get_modules_in_file(
