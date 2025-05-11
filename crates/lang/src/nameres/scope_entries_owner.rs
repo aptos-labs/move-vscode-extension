@@ -1,9 +1,9 @@
-use crate::HirDatabase;
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres::blocks::get_entries_in_blocks;
 use crate::nameres::get_schema_field_entries;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::node_ext::item_spec::ItemSpecExt;
+use crate::{HirDatabase, hir_db};
 use base_db::{SourceDatabase, source_db};
 use syntax::ast::{FieldsOwner, GenericElement, HasItems};
 use syntax::files::{InFile, InFileExt};
@@ -16,11 +16,7 @@ pub fn get_entries_in_scope(
 ) -> Vec<ScopeEntry> {
     let mut entries = vec![];
     if let Some(use_stmts_owner) = scope.syntax_cast::<ast::AnyHasUseStmts>() {
-        entries.extend(db.use_speck_entries(use_stmts_owner.loc()));
-        // entries.extend(use_speck_entries(
-        //     db,
-        //     &InFile::new(scope.file_id, use_stmts_owner),
-        // ));
+        entries.extend(hir_db::use_speck_entries(db, use_stmts_owner));
     }
 
     entries.extend(get_entries_in_blocks(scope.clone(), prev));

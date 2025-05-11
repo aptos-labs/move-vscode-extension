@@ -47,13 +47,28 @@ fn resolve_path_multi_tracked<'db>(
     }
 }
 
+pub(crate) fn use_speck_entries(
+    db: &dyn HirDatabase,
+    stmts_owner: InFile<ast::AnyHasUseStmts>,
+) -> Vec<ScopeEntry> {
+    use_speck_entries_tracked(db, SyntaxLocInput::new(db, stmts_owner.loc()))
+}
+
+#[salsa_macros::tracked]
+fn use_speck_entries_tracked<'db>(
+    db: &'db dyn HirDatabase,
+    stmts_owner_loc: SyntaxLocInput<'db>,
+) -> Vec<ScopeEntry> {
+    let use_stmts_owner = stmts_owner_loc.to_ast::<ast::AnyHasUseStmts>(db).unwrap();
+    let entries = nameres::use_speck_entries::use_speck_entries(db, &use_stmts_owner);
+    entries
+}
+
 #[query_group_macro::query_group]
 pub trait HirDatabase: SourceDatabase {
     fn inference_for_ctx_owner(&self, ctx_owner_loc: SyntaxLoc, msl: bool) -> Arc<InferenceResult>;
 
     fn file_ids_by_module_address(&self, package_id: PackageId, address: Address) -> FileIdSet;
-
-    fn use_speck_entries(&self, stmts_owner_loc: SyntaxLoc) -> Vec<ScopeEntry>;
 
     fn module_importable_entries(&self, module_loc: SyntaxLoc) -> Vec<ScopeEntry>;
 
@@ -116,12 +131,6 @@ fn file_ids_by_module_address(
         }
     }
     FileIdSet::new(db, file_ids)
-}
-
-fn use_speck_entries(db: &dyn HirDatabase, stmts_owner_loc: SyntaxLoc) -> Vec<ScopeEntry> {
-    let use_stmts_owner = stmts_owner_loc.to_ast::<ast::AnyHasUseStmts>(db).unwrap();
-    let entries = nameres::use_speck_entries::use_speck_entries(db, &use_stmts_owner);
-    entries
 }
 
 fn module_importable_entries(db: &dyn HirDatabase, module_loc: SyntaxLoc) -> Vec<ScopeEntry> {
