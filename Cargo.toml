@@ -38,8 +38,8 @@ dashmap = "6.1.0"
 salsa = { git = "https://github.com/mkurnikov/salsa.git", rev = "769a0812161d0e42fd5b9b6efd8eff78042451d7" }
 salsa-macros = { git = "https://github.com/mkurnikov/salsa.git", rev = "769a0812161d0e42fd5b9b6efd8eff78042451d7" }
 
-stdx = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "6568e8f12d19b53fbb5a1c2e1116dae3ae61f912", package = "stdx" }
-paths = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "6568e8f12d19b53fbb5a1c2e1116dae3ae61f912", package = "paths", features = ["serde1"] }
-vfs = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "6568e8f12d19b53fbb5a1c2e1116dae3ae61f912", package = "vfs" }
-vfs-notify = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "6568e8f12d19b53fbb5a1c2e1116dae3ae61f912", package = "vfs-notify" }
+stdx = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-05-05", package = "stdx" }
+paths = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-05-05", package = "paths", features = ["serde1"] }
+vfs = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-05-05", package = "vfs" }
+vfs-notify = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-05-05", package = "vfs-notify" }
 

@@ -135,8 +135,7 @@ impl<T: ParseFromLine> CommandHandle<T> {
         let stderr = child.0.stderr().take().unwrap();
 
         let actor = AptosActor::<T>::new(sender, stdout, stderr);
-        let thread = stdx::thread::Builder::new(stdx::thread::ThreadIntent::Worker)
-            .name("CommandHandle".to_owned())
+        let thread = stdx::thread::Builder::new(stdx::thread::ThreadIntent::Worker, "CommandHandle")
             .spawn(move || actor.run())
             .expect("failed to spawn thread");
         Ok(CommandHandle {
