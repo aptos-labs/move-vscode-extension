@@ -3,8 +3,8 @@ mod analysis;
 use crate::completions::item_list::ItemListKind;
 use crate::config::CompletionConfig;
 use crate::context::analysis::analyze;
-use base_db::ParseDatabase;
 use base_db::inputs::InternFileId;
+use base_db::source_db;
 use ide_db::RootDatabase;
 use lang::Semantics;
 use syntax::SyntaxKind::*;
@@ -74,7 +74,7 @@ impl<'a> CompletionContext<'a> {
         // to determine context, though the original_file will be used for
         // actual completion.
         let file_with_fake_ident = {
-            let parse = db.parse(file_id.intern(db));
+            let parse = source_db::parse(db, file_id.intern(db));
             parse.reparse(TextRange::empty(offset), COMPLETION_MARKER).tree()
         };
 

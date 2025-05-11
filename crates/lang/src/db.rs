@@ -10,9 +10,9 @@ use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::ty::Ty;
-use base_db::ParseDatabase;
 use base_db::inputs::{FileIdSet, InternFileId};
 use base_db::package_root::PackageId;
+use base_db::{SourceDatabase, source_db};
 use std::sync::Arc;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
@@ -21,7 +21,7 @@ use syntax::{AstNode, ast};
 use vfs::FileId;
 
 #[query_group_macro::query_group]
-pub trait HirDatabase: ParseDatabase {
+pub trait HirDatabase: SourceDatabase {
     fn resolve_path_multi(&self, path_loc: SyntaxLoc) -> Vec<ScopeEntry>;
 
     fn inference_for_ctx_owner(&self, ctx_owner_loc: SyntaxLoc, msl: bool) -> Arc<InferenceResult>;
@@ -135,11 +135,11 @@ fn item_scope(db: &dyn HirDatabase, loc: SyntaxLoc) -> NamedItemScope {
 }
 
 pub(crate) fn get_modules_in_file(
-    db: &dyn ParseDatabase,
+    db: &dyn SourceDatabase,
     file_id: FileId,
     address: Address,
 ) -> Vec<ast::Module> {
-    let source_file = db.parse(file_id.intern(db)).tree();
+    let source_file = source_db::parse(db, file_id.intern(db)).tree();
     let modules = source_file
         .all_modules()
         .filter(|m| m.address_equals_to(address.clone(), false))

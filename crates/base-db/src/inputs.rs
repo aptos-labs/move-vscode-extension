@@ -1,5 +1,5 @@
-use crate::db::SourceDatabase;
 use crate::package_root::{PackageId, PackageRoot};
+use crate::source_db::SourceDatabase;
 use dashmap::{DashMap, Entry};
 use salsa::Durability;
 use salsa::Setter;

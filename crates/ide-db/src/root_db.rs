@@ -1,9 +1,9 @@
+use base_db::SourceDatabase;
 use base_db::inputs::{
     DepPackagesInput, FileIdSet, FilePackageIdInput, FileText, Files, InternFileId, InternedFileId,
     PackageRootInput,
 };
 use base_db::package_root::{PackageId, PackageRoot};
-use base_db::{ParseDatabase, SourceDatabase};
 use line_index::LineIndex;
 use salsa::Durability;
 use std::mem::ManuallyDrop;
@@ -175,7 +175,7 @@ impl RootDatabase {
 }
 
 #[query_group_macro::query_group]
-pub trait LineIndexDatabase: ParseDatabase {
+pub trait LineIndexDatabase: SourceDatabase {
     fn line_index(&self, file_id: FileId) -> Arc<LineIndex>;
 }
 

@@ -13,6 +13,7 @@ use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
 use base_db::inputs::InternFileId;
 use base_db::package_root::PackageId;
+use base_db::source_db;
 use std::cell::RefCell;
 use std::convert::Infallible;
 use std::ops::ControlFlow;
@@ -73,7 +74,7 @@ impl<'db> SemanticsImpl<'db> {
     }
 
     pub fn parse(&self, file_id: FileId) -> ast::SourceFile {
-        let tree = self.db.parse(file_id.intern(self.db)).tree();
+        let tree = source_db::parse(self.db, file_id.intern(self.db)).tree();
         self.cache(tree.syntax().clone(), file_id);
         tree
     }

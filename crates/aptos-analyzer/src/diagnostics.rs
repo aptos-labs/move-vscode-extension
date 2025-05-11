@@ -3,7 +3,7 @@ pub(crate) mod to_proto;
 use crate::global_state::GlobalStateSnapshot;
 use crate::lsp;
 use crate::main_loop::DiagnosticsTaskKind;
-use base_db::db::DbPanicContext;
+use base_db::source_db::DbPanicContext;
 use std::collections::{HashMap, HashSet};
 use std::mem;
 use stdx::iter_eq_by;

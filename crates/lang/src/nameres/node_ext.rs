@@ -3,6 +3,7 @@ use crate::nameres::namespaces::Ns;
 use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryExt};
 use crate::node_ext::item::ModuleItemExt;
 use base_db::inputs::InternFileId;
+use base_db::source_db;
 use syntax::ast;
 use syntax::ast::HasItems;
 use syntax::files::{InFile, InFileExt};
@@ -48,7 +49,7 @@ impl ModuleResolutionExt for InFile<ast::Module> {
         let related_file_ids = db.spec_related_files(self.file_id).data(db);
         let mut module_specs = vec![];
         for spec_related_file_id in related_file_ids {
-            let source_file = db.parse(spec_related_file_id.intern(db)).tree();
+            let source_file = source_db::parse(db, spec_related_file_id.intern(db)).tree();
             for module_spec in source_file.module_specs() {
                 let module_spec = module_spec.in_file(spec_related_file_id);
                 if module_spec.module(db).is_some_and(|item| &item == self) {

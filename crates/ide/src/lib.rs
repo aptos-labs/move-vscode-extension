@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use base_db::change::{DepGraph, FileChanges};
-use base_db::{ParseDatabase, SourceDatabase};
+use base_db::{SourceDatabase, source_db};
 use ide_completion::item::CompletionItem;
 use ide_db::{LineIndexDatabase, RootDatabase};
 use line_index::{LineCol, LineIndex};
@@ -145,7 +145,7 @@ impl Analysis {
 
     /// Gets the syntax tree of the file.
     pub fn parse(&self, file_id: FileId) -> Cancellable<SourceFile> {
-        self.with_db(|db| db.parse(file_id.intern(db)).tree())
+        self.with_db(|db| source_db::parse(db, file_id.intern(db)).tree())
     }
 
     /// Gets the file's `LineIndex`: data structure to convert between absolute

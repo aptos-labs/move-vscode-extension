@@ -1,6 +1,6 @@
 use crate::item_scope::NamedItemScope;
-use base_db::ParseDatabase;
 use base_db::inputs::InternFileId;
+use base_db::{SourceDatabase, source_db};
 use parser::SyntaxKind;
 use std::fmt;
 use std::fmt::Formatter;
@@ -43,7 +43,7 @@ impl SyntaxLoc {
         }
     }
 
-    pub fn to_ast<T: AstNode>(&self, db: &dyn ParseDatabase) -> Option<InFile<T>> {
+    pub fn to_ast<T: AstNode>(&self, db: &dyn SourceDatabase) -> Option<InFile<T>> {
         let file = self.get_source_file(db)?;
         let ancestors_at_offset = ancestors_at_offset(file.syntax(), self.node_offset);
         for ancestor in ancestors_at_offset {
@@ -56,7 +56,7 @@ impl SyntaxLoc {
         None
     }
 
-    pub fn item_scope(&self, db: &dyn ParseDatabase) -> Option<NamedItemScope> {
+    pub fn item_scope(&self, db: &dyn SourceDatabase) -> Option<NamedItemScope> {
         use syntax::SyntaxKind::*;
 
         let file = self.get_source_file(db)?;
@@ -90,8 +90,8 @@ impl SyntaxLoc {
         self.node_name.to_owned()
     }
 
-    fn get_source_file(&self, db: &dyn ParseDatabase) -> Option<SourceFile> {
-        let file = db.parse(self.file_id.intern(db)).tree();
+    fn get_source_file(&self, db: &dyn SourceDatabase) -> Option<SourceFile> {
+        let file = source_db::parse(db, self.file_id.intern(db)).tree();
         if !file.syntax().text_range().contains_inclusive(self.node_offset) {
             tracing::error!(
                 "stale cache error: {:?} is outside of the file range {:?}",
