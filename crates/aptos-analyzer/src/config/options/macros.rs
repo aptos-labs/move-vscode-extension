@@ -31,7 +31,7 @@ macro_rules! _impl_for_config_data {
             $(
                 $($doc)*
                 #[allow(non_snake_case)]
-                pub(crate) fn $field(&self, source_root: Option<SourceRootId>) -> &$ty {
+                pub(crate) fn $field(&self, source_root: Option<PackageId>) -> &$ty {
                     let mut source_root = source_root.as_ref();
                     while let Some(sr) = source_root {
                         if let Some((file, _)) = self.ratoml_file.get(&sr) {

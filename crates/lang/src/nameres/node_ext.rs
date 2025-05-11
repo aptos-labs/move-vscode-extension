@@ -45,7 +45,7 @@ impl ModuleResolutionExt for InFile<ast::Module> {
     /// collects `spec MODULE {}` from all spec-related (NAME.move + NAME.spec.move) file ids
     #[tracing::instrument(level = "debug", skip_all)]
     fn related_module_specs(&self, db: &dyn HirDatabase) -> Vec<InFile<ast::ModuleSpec>> {
-        let related_file_ids = db.spec_file_sets(self.file_id).data(db);
+        let related_file_ids = db.spec_related_files(self.file_id).data(db);
         let mut module_specs = vec![];
         for spec_related_file_id in related_file_ids {
             let source_file = db.parse(spec_related_file_id.intern(db)).tree();

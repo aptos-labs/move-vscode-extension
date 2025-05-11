@@ -138,8 +138,8 @@ impl<'db> TypeRenderer<'db> {
             return Some(fq_name.name());
         }
 
-        let item_package_id = self.db.file_package_root(item.file_id);
-        let context_package_id = self.db.file_package_root(ctx_file_id);
+        let item_package_id = self.db.file_package_id(item.file_id);
+        let context_package_id = self.db.file_package_id(ctx_file_id);
         if item_package_id == context_package_id {
             return Some(fq_name.name());
         }

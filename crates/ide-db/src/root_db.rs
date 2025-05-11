@@ -1,8 +1,8 @@
 use base_db::inputs::{
-    FileIdSet, FilePackageRootInput, FileText, Files, InternFileId, InternedFileId, PackageDepsInput,
+    DepPackagesInput, FileIdSet, FilePackageIdInput, FileText, Files, InternFileId, InternedFileId,
     PackageRootInput,
 };
-use base_db::package_root::{PackageRoot, PackageRootId};
+use base_db::package_root::{PackageId, PackageRoot};
 use base_db::{ParseDatabase, SourceDatabase};
 use line_index::LineIndex;
 use salsa::Durability;
@@ -69,32 +69,32 @@ impl SourceDatabase for RootDatabase {
     }
 
     /// Source root of the file.
-    fn package_root(&self, source_root_id: PackageRootId) -> PackageRootInput {
-        self.files.package_root(source_root_id)
+    fn package_root(&self, package_id: PackageId) -> PackageRootInput {
+        self.files.package_root(package_id)
     }
 
     fn set_package_root_with_durability(
         &mut self,
-        source_root_id: PackageRootId,
-        source_root: Arc<PackageRoot>,
+        package_id: PackageId,
+        package_root: Arc<PackageRoot>,
         durability: Durability,
     ) {
         let files = Arc::clone(&self.files);
-        files.set_package_root_with_durability(self, source_root_id, source_root, durability);
+        files.set_package_root_with_durability(self, package_id, package_root, durability);
     }
 
-    fn file_package_root(&self, id: FileId) -> FilePackageRootInput {
-        self.files.file_package_root(id)
+    fn file_package_id(&self, id: FileId) -> FilePackageIdInput {
+        self.files.file_package_id(id)
     }
 
-    fn set_file_package_root_with_durability(
+    fn set_file_package_id_with_durability(
         &mut self,
-        id: FileId,
-        source_root_id: PackageRootId,
+        file_id: FileId,
+        package_id: PackageId,
         durability: Durability,
     ) {
         let files = Arc::clone(&self.files);
-        files.set_file_package_root_with_durability(self, id, source_root_id, durability);
+        files.set_file_package_id_with_durability(self, file_id, package_id, durability);
     }
 
     fn builtins_file_id(&self) -> Option<InternedFileId> {
@@ -105,29 +105,29 @@ impl SourceDatabase for RootDatabase {
         self.builtins_file_id = file_id.map(|it| it.intern(self));
     }
 
-    fn package_deps(&self, package_id: PackageRootId) -> PackageDepsInput {
+    fn dep_package_ids(&self, package_id: PackageId) -> DepPackagesInput {
         self.files.package_deps(package_id)
     }
 
-    fn set_package_deps(&mut self, package_id: PackageRootId, deps: Vec<PackageRootId>) {
+    fn set_dep_package_ids(&mut self, package_id: PackageId, deps: Vec<PackageId>) {
         let files = Arc::clone(&self.files);
         files.set_package_deps(self, package_id, Arc::from(deps))
     }
 
-    fn spec_file_sets(&self, file_id: FileId) -> FileIdSet {
-        self.files.spec_file_set(file_id)
+    fn spec_related_files(&self, file_id: FileId) -> FileIdSet {
+        self.files.spec_related_files(file_id)
     }
 
-    fn set_spec_file_sets(&mut self, file_id: FileId, file_set: Vec<FileId>) {
+    fn set_spec_related_files(&mut self, file_id: FileId, file_set: Vec<FileId>) {
         let files = Arc::clone(&self.files);
-        files.set_spec_file_set(self, file_id, file_set)
+        files.set_spec_related_files(self, file_id, file_set)
     }
 
-    fn source_file_ids(&self, package_root_id: PackageRootId) -> FileIdSet {
-        let dep_ids = self.package_deps(package_root_id).data(self).deref().to_owned();
+    fn all_source_file_ids(&self, package_id: PackageId) -> FileIdSet {
+        let dep_ids = self.dep_package_ids(package_id).data(self).deref().to_owned();
         tracing::debug!(?dep_ids);
 
-        let file_sets = iter::once(package_root_id)
+        let file_sets = iter::once(package_id)
             .chain(dep_ids)
             .map(|id| self.package_root(id).data(self).file_set.clone())
             .collect::<Vec<_>>();

@@ -8,7 +8,7 @@ use crate::nameres::path_resolution::ResolutionContext;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use crate::nameres::scope_entries_owner::get_entries_in_scope;
 use crate::node_ext::item::ModuleItemExt;
-use base_db::package_root::PackageRootId;
+use base_db::package_root::PackageId;
 use parser::SyntaxKind;
 use parser::SyntaxKind::MODULE_SPEC;
 use std::collections::HashMap;
@@ -149,11 +149,11 @@ pub fn get_entries_from_walking_scopes(
 #[tracing::instrument(level = "debug", skip(db))]
 pub fn get_modules_as_entries(
     db: &dyn HirDatabase,
-    package_root_id: PackageRootId,
+    package_id: PackageId,
     address: Address,
 ) -> Vec<ScopeEntry> {
     let interesting_file_ids = db
-        .file_ids_by_module_address(package_root_id, address.clone())
+        .file_ids_by_module_address(package_id, address.clone())
         .data(db);
     tracing::debug!(?interesting_file_ids);
 
@@ -189,7 +189,7 @@ pub fn get_qualified_path_entries(
 
             return Some(get_modules_as_entries(
                 db,
-                ctx.package_root_id(db),
+                ctx.package_id(db),
                 Address::named(&qualifier_name),
             ));
         }

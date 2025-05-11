@@ -327,8 +327,8 @@ impl GlobalState {
         let mut change = FileChanges::new();
         {
             let vfs = &self.vfs.read().0;
-            let roots = self.package_root_config.partition_into_roots(vfs);
-            change.set_package_roots(roots);
+            let package_roots = self.package_root_config.partition_into_package_roots(vfs);
+            change.set_package_roots(package_roots);
             // depends on roots being available
             change.set_package_graph(dep_graph);
         }

@@ -1,7 +1,7 @@
 use crate::inputs::{
-    FileIdSet, FilePackageRootInput, FileText, InternedFileId, PackageDepsInput, PackageRootInput,
+    DepPackagesInput, FileIdSet, FilePackageIdInput, FileText, InternedFileId, PackageRootInput,
 };
-use crate::package_root::{PackageRoot, PackageRootId};
+use crate::package_root::{PackageId, PackageRoot};
 use salsa::Durability;
 use std::cell::RefCell;
 use std::panic;
@@ -19,22 +19,22 @@ pub trait SourceDatabase: salsa::Database {
     fn set_file_text_with_durability(&mut self, file_id: FileId, text: &str, durability: Durability);
 
     /// Contents of the source root.
-    fn package_root(&self, id: PackageRootId) -> PackageRootInput;
+    fn package_root(&self, package_id: PackageId) -> PackageRootInput;
 
     /// Source root of the file.
     fn set_package_root_with_durability(
         &mut self,
-        source_root_id: PackageRootId,
-        source_root: Arc<PackageRoot>,
+        package_id: PackageId,
+        package_root: Arc<PackageRoot>,
         durability: Durability,
     );
 
-    fn file_package_root(&self, id: FileId) -> FilePackageRootInput;
+    fn file_package_id(&self, id: FileId) -> FilePackageIdInput;
 
-    fn set_file_package_root_with_durability(
+    fn set_file_package_id_with_durability(
         &mut self,
-        id: FileId,
-        source_root_id: PackageRootId,
+        file_id: FileId,
+        package_id: PackageId,
         durability: Durability,
     );
 
@@ -42,15 +42,15 @@ pub trait SourceDatabase: salsa::Database {
 
     fn set_builtins_file_id(&mut self, id: Option<FileId>);
 
-    fn package_deps(&self, package_id: PackageRootId) -> PackageDepsInput;
+    fn dep_package_ids(&self, package_id: PackageId) -> DepPackagesInput;
 
-    fn set_package_deps(&mut self, package_id: PackageRootId, deps: Vec<PackageRootId>);
+    fn set_dep_package_ids(&mut self, package_id: PackageId, dep_ids: Vec<PackageId>);
 
-    fn spec_file_sets(&self, file_id: FileId) -> FileIdSet;
+    fn spec_related_files(&self, file_id: FileId) -> FileIdSet;
 
-    fn set_spec_file_sets(&mut self, file_id: FileId, file_set: Vec<FileId>);
+    fn set_spec_related_files(&mut self, file_id: FileId, file_set: Vec<FileId>);
 
-    fn source_file_ids(&self, package_root_id: PackageRootId) -> FileIdSet;
+    fn all_source_file_ids(&self, package_id: PackageId) -> FileIdSet;
 }
 
 #[query_group_macro::query_group]

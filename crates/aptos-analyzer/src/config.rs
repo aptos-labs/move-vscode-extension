@@ -137,7 +137,7 @@ impl Config {
         }
     }
 
-    pub fn completion(&self /*source_root: Option<SourceRootId>*/) -> CompletionConfig {
+    pub fn completion(&self) -> CompletionConfig {
         // let client_capability_fields = self.completion_resolve_support_properties();
         CompletionConfig {
             // enable_postfix_completions: self.completion_postfix_enable(source_root).to_owned(),

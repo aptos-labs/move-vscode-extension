@@ -2,7 +2,7 @@ use vfs::file_set::FileSet;
 use vfs::{AnchoredPath, FileId, VfsPath};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct PackageRootId(pub u32);
+pub struct PackageId(pub u32);
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PackageRoot {

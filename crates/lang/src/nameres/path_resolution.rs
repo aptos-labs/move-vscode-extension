@@ -11,7 +11,7 @@ use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt};
 use crate::types::inference::InferenceCtx;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
-use base_db::package_root::PackageRootId;
+use base_db::package_root::PackageId;
 use parser::SyntaxKind::CALL_EXPR;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::{OptionSyntaxNodeExt, SyntaxNodeExt};
@@ -79,7 +79,7 @@ pub fn get_path_resolve_variants(
         PathKind::Qualified {
             kind: QualifiedKind::Module { address },
             ..
-        } => get_modules_as_entries(db, ctx.package_root_id(db), address),
+        } => get_modules_as_entries(db, ctx.package_id(db), address),
 
         PathKind::Qualified { qualifier, ns, .. } => get_qualified_path_entries(db, ctx, qualifier)
             .unwrap_or_default()
@@ -94,7 +94,7 @@ pub fn get_method_resolve_variants(
     current_file_id: FileId,
     msl: bool,
 ) -> Vec<ScopeEntry> {
-    let package_id = db.file_package_root(current_file_id).data(db);
+    let package_id = db.file_package_id(current_file_id).data(db);
     let Some(InFile {
         file_id,
         value: receiver_item_module,
@@ -221,7 +221,7 @@ impl ResolutionContext {
         path_expr.is_some_and(|it| it.syntax().parent().is_kind(CALL_EXPR))
     }
 
-    pub fn package_root_id(&self, db: &dyn HirDatabase) -> PackageRootId {
-        db.file_package_root(self.path.file_id).data(db)
+    pub fn package_id(&self, db: &dyn HirDatabase) -> PackageId {
+        db.file_package_id(self.path.file_id).data(db)
     }
 }

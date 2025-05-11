@@ -12,7 +12,7 @@ pub struct PackageRootConfig {
 }
 
 impl PackageRootConfig {
-    pub fn partition_into_roots(&self, vfs: &vfs::Vfs) -> Vec<PackageRoot> {
+    pub fn partition_into_package_roots(&self, vfs: &vfs::Vfs) -> Vec<PackageRoot> {
         let package_file_sets = self.fsc.partition(vfs);
         package_file_sets
             .into_iter()

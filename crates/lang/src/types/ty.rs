@@ -25,7 +25,7 @@ use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::{TyInfer, TyVar};
 use crate::types::ty::type_param::TyTypeParameter;
-use base_db::package_root::PackageRootId;
+use base_db::package_root::PackageId;
 use syntax::ast;
 use syntax::files::InFile;
 use vfs::FileId;
@@ -83,7 +83,7 @@ impl Ty {
     pub fn adt_item_module(
         &self,
         db: &dyn HirDatabase,
-        current_package_id: PackageRootId,
+        current_package_id: PackageId,
     ) -> Option<InFile<ast::Module>> {
         let ty = self.unwrap_all_refs();
         match ty {

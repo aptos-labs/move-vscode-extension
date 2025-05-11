@@ -12,7 +12,7 @@ use crate::types::inference::inference_result::InferenceResult;
 use crate::types::ty::Ty;
 use base_db::ParseDatabase;
 use base_db::inputs::{FileIdSet, InternFileId};
-use base_db::package_root::PackageRootId;
+use base_db::package_root::PackageId;
 use std::sync::Arc;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
@@ -26,7 +26,7 @@ pub trait HirDatabase: ParseDatabase {
 
     fn inference_for_ctx_owner(&self, ctx_owner_loc: SyntaxLoc, msl: bool) -> Arc<InferenceResult>;
 
-    fn file_ids_by_module_address(&self, package_root_id: PackageRootId, address: Address) -> FileIdSet;
+    fn file_ids_by_module_address(&self, package_id: PackageId, address: Address) -> FileIdSet;
 
     fn use_speck_entries(&self, stmts_owner_loc: SyntaxLoc) -> Vec<ScopeEntry>;
 
@@ -92,10 +92,10 @@ impl<T: AstNode> NodeInferenceExt for InFile<T> {
 
 fn file_ids_by_module_address(
     db: &dyn HirDatabase,
-    package_root_id: PackageRootId,
+    package_id: PackageId,
     address: Address,
 ) -> FileIdSet {
-    let source_file_ids = db.source_file_ids(package_root_id).data(db);
+    let source_file_ids = db.all_source_file_ids(package_id).data(db);
 
     let mut file_ids = vec![];
     for source_file_id in source_file_ids {
