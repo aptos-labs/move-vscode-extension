@@ -1,6 +1,6 @@
 use base_db::SourceDatabase;
 use base_db::inputs::{
-    DepPackagesInput, FileIdSet, FilePackageIdInput, FileText, Files, InternFileId, InternedFileId,
+    DepPackagesInput, FileIdInput, FileIdSet, FilePackageIdInput, FileText, Files, InternFileId,
     PackageRootInput,
 };
 use base_db::package_root::{PackageId, PackageRoot};
@@ -20,7 +20,7 @@ pub struct RootDatabase {
     // compile times of all `ide_*` and downstream crates suffer greatly.
     storage: ManuallyDrop<salsa::Storage<Self>>,
     files: Arc<Files>,
-    builtins_file_id: Option<InternedFileId>,
+    builtins_file_id: Option<FileIdInput>,
 }
 
 impl std::panic::RefUnwindSafe for RootDatabase {}
@@ -97,7 +97,7 @@ impl SourceDatabase for RootDatabase {
         files.set_file_package_id_with_durability(self, file_id, package_id, durability);
     }
 
-    fn builtins_file_id(&self) -> Option<InternedFileId> {
+    fn builtins_file_id(&self) -> Option<FileIdInput> {
         self.builtins_file_id
     }
 

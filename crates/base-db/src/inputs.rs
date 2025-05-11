@@ -8,17 +8,17 @@ use vfs::FileId;
 
 #[salsa::interned(no_lifetime)]
 #[derive(Debug)]
-pub struct InternedFileId {
+pub struct FileIdInput {
     pub data: FileId,
 }
 
 pub trait InternFileId {
-    fn intern(self, db: &dyn SourceDatabase) -> InternedFileId;
+    fn intern(self, db: &dyn SourceDatabase) -> FileIdInput;
 }
 
 impl InternFileId for FileId {
-    fn intern(self, db: &dyn SourceDatabase) -> InternedFileId {
-        InternedFileId::new(db, self)
+    fn intern(self, db: &dyn SourceDatabase) -> FileIdInput {
+        FileIdInput::new(db, self)
     }
 }
 

@@ -1,5 +1,5 @@
 use crate::inputs::{
-    DepPackagesInput, FileIdSet, FilePackageIdInput, FileText, InternedFileId, PackageRootInput,
+    DepPackagesInput, FileIdInput, FileIdSet, FilePackageIdInput, FileText, PackageRootInput,
 };
 use crate::package_root::{PackageId, PackageRoot};
 use salsa::Durability;
@@ -38,7 +38,7 @@ pub trait SourceDatabase: salsa::Database {
         durability: Durability,
     );
 
-    fn builtins_file_id(&self) -> Option<InternedFileId>;
+    fn builtins_file_id(&self) -> Option<FileIdInput>;
 
     fn set_builtins_file_id(&mut self, id: Option<FileId>);
 
@@ -55,14 +55,14 @@ pub trait SourceDatabase: salsa::Database {
 
 /// Parses the file into the syntax tree.
 #[salsa::tracked]
-pub fn parse(db: &dyn SourceDatabase, file_id: InternedFileId) -> Parse {
+pub fn parse(db: &dyn SourceDatabase, file_id: FileIdInput) -> Parse {
     let _p = tracing::info_span!("parse", ?file_id).entered();
     let text = db.file_text(file_id.data(db)).text(db);
     ast::SourceFile::parse(&text)
 }
 
 #[salsa::tracked(return_ref)]
-pub fn parse_errors(db: &dyn SourceDatabase, file_id: InternedFileId) -> Option<Box<[SyntaxError]>> {
+pub fn parse_errors(db: &dyn SourceDatabase, file_id: FileIdInput) -> Option<Box<[SyntaxError]>> {
     let errors = parse(db, file_id).errors();
     match &*errors {
         [] => None,
