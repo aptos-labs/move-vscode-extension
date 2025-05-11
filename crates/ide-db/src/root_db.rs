@@ -12,7 +12,7 @@ use std::sync::Arc;
 use std::{fmt, iter};
 use vfs::FileId;
 
-#[salsa::db]
+#[salsa_macros::db]
 pub struct RootDatabase {
     // We use `ManuallyDrop` here because every codegen unit that contains a
     // `&RootDatabase -> &dyn OtherDatabase` cast will instantiate its drop glue in the vtable,
@@ -25,7 +25,7 @@ pub struct RootDatabase {
 
 impl std::panic::RefUnwindSafe for RootDatabase {}
 
-#[salsa::db]
+#[salsa_macros::db]
 impl salsa::Database for RootDatabase {
     fn salsa_event(&self, _event: &dyn Fn() -> salsa::Event) {}
 }
@@ -52,7 +52,7 @@ impl fmt::Debug for RootDatabase {
     }
 }
 
-#[salsa::db]
+#[salsa_macros::db]
 impl SourceDatabase for RootDatabase {
     fn file_text(&self, file_id: FileId) -> FileText {
         self.files.file_text(file_id)
