@@ -1,8 +1,8 @@
-use crate::HirDatabase;
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres::labels::get_loop_labels_resolve_variants;
 use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::node_ext::item::ModuleItemExt;
+use crate::{HirDatabase, hir_db};
 use syntax::ast;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
@@ -135,7 +135,7 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
             return get_item_spec_entries(db, item_spec_ref);
         }
         match self.cast_into_ref::<ast::Path>() {
-            Some(path) => Some(db.resolve_path_multi(path.loc())),
+            Some(path) => Some(hir_db::resolve_path_multi(db, path)),
             None => {
                 let kind = self.value.syntax().kind();
                 tracing::debug!("cannot resolve {:?} without inference", kind);

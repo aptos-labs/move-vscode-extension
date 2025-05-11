@@ -1,7 +1,7 @@
 mod source_to_def;
 
 use crate::HirDatabase;
-use crate::db::NodeInferenceExt;
+use crate::hir_db::NodeInferenceExt;
 use crate::nameres::ResolveReference;
 use crate::nameres::fq_named_element::{ItemFQName, ItemFQNameOwner};
 use crate::nameres::scope::ScopeEntry;

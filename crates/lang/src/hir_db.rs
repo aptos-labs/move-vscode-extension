@@ -1,5 +1,5 @@
 use crate::item_scope::NamedItemScope;
-use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
+use crate::loc::{SyntaxLoc, SyntaxLocFileExt, SyntaxLocInput};
 use crate::nameres;
 use crate::nameres::address::Address;
 use crate::nameres::node_ext::ModuleResolutionExt;
@@ -13,17 +13,42 @@ use crate::types::ty::Ty;
 use base_db::inputs::{FileIdSet, InternFileId};
 use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
+use parser::SyntaxKind;
+use salsa::plumbing::AsId;
+use std::fmt;
+use std::fmt::Formatter;
 use std::sync::Arc;
+use syntax::algo::ancestors_at_offset;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, ast};
+use syntax::{AstNode, TextSize, ast};
 use vfs::FileId;
+
+pub(crate) fn resolve_path_multi(db: &dyn HirDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry> {
+    resolve_path_multi_tracked(db, SyntaxLocInput::new(db, path.loc()))
+}
+
+#[salsa_macros::tracked]
+fn resolve_path_multi_tracked<'db>(
+    db: &'db dyn HirDatabase,
+    path_loc: SyntaxLocInput<'db>,
+) -> Vec<ScopeEntry> {
+    let path = path_loc.to_ast::<ast::Path>(db);
+    match path {
+        Some(path) => path_resolution::resolve_path(db, path, None),
+        None => {
+            tracing::error!(
+                path_loc = ?path_loc.syntax_loc(db),
+                "resolve_path() function should only receive loc of Path, this is a bug"
+            );
+            vec![]
+        }
+    }
+}
 
 #[query_group_macro::query_group]
 pub trait HirDatabase: SourceDatabase {
-    fn resolve_path_multi(&self, path_loc: SyntaxLoc) -> Vec<ScopeEntry>;
-
     fn inference_for_ctx_owner(&self, ctx_owner_loc: SyntaxLoc, msl: bool) -> Arc<InferenceResult>;
 
     fn file_ids_by_module_address(&self, package_id: PackageId, address: Address) -> FileIdSet;
@@ -35,20 +60,6 @@ pub trait HirDatabase: SourceDatabase {
     fn module_importable_entries_from_related(&self, module_loc: SyntaxLoc) -> Vec<ScopeEntry>;
 
     fn item_scope(&self, loc: SyntaxLoc) -> NamedItemScope;
-}
-
-pub(crate) fn resolve_path_multi(db: &dyn HirDatabase, path_loc: SyntaxLoc) -> Vec<ScopeEntry> {
-    let path = path_loc.to_ast::<ast::Path>(db);
-    match path {
-        Some(path) => path_resolution::resolve_path(db, path, None),
-        None => {
-            tracing::error!(
-                ?path_loc,
-                "resolve_path() function should only receive loc of Path, this is a bug"
-            );
-            vec![]
-        }
-    }
 }
 
 #[tracing::instrument(level = "debug", skip(db))]

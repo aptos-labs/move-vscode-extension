@@ -1,5 +1,5 @@
 use crate::HirDatabase;
-use crate::db::get_modules_in_file;
+use crate::hir_db::get_modules_in_file;
 use crate::nameres::ResolveReference;
 use crate::nameres::address::Address;
 use crate::nameres::namespaces::{Ns, NsSet};

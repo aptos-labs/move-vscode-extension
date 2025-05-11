@@ -130,6 +130,17 @@ impl fmt::Debug for SyntaxLoc {
     }
 }
 
+#[salsa_macros::interned(debug)]
+pub struct SyntaxLocInput {
+    pub syntax_loc: SyntaxLoc,
+}
+
+impl SyntaxLocInput<'_> {
+    pub fn to_ast<T: AstNode>(&self, db: &dyn SourceDatabase) -> Option<InFile<T>> {
+        self.syntax_loc(db).to_ast(db)
+    }
+}
+
 pub trait SyntaxLocFileExt {
     fn loc(&self) -> SyntaxLoc;
 }
