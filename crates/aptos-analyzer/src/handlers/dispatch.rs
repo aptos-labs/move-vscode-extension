@@ -10,7 +10,7 @@ use crate::{
     main_loop::Task,
     version::version,
 };
-use base_db::db::DbPanicContext;
+use base_db::source_db::DbPanicContext;
 use lsp_server::{ExtractError, ResponseError};
 use salsa::Cancelled;
 use serde::{Serialize, de::DeserializeOwned};

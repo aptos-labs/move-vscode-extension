@@ -1,6 +1,5 @@
 mod type_args;
 
-use crate::HirDatabase;
 use crate::nameres::ResolveReference;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
@@ -11,17 +10,18 @@ use crate::types::ty::schema::TySchema;
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::type_param::TyTypeParameter;
+use base_db::SourceDatabase;
 use syntax::ast;
 use syntax::ast::idents::INTEGER_IDENTS;
 use syntax::files::{InFile, InFileExt};
 
 pub struct TyLowering<'db> {
-    db: &'db dyn HirDatabase,
+    db: &'db dyn SourceDatabase,
     msl: bool,
 }
 
 impl<'db> TyLowering<'db> {
-    pub fn new(db: &'db dyn HirDatabase, msl: bool) -> Self {
+    pub fn new(db: &'db dyn SourceDatabase, msl: bool) -> Self {
         TyLowering { db, msl }
     }
 

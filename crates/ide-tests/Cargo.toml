@@ -6,7 +6,6 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-dissimilar = "1.0.9"
 expect-test = "1.5.1"
 
 tracing.workspace = true
@@ -18,6 +17,7 @@ stdx.workspace = true
 vfs.workspace = true
 
 syntax = { path = "../syntax" }
+test-utils = { path = "../test-utils" }
 lang = { path = "../lang" }
 ide = { path = "../ide" }
 ide-db = { path = "../ide-db" }

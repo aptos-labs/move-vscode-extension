@@ -1,4 +1,4 @@
-use ide::test_utils::resolve::check_resolve;
+use crate::resolve::check_resolve;
 
 #[test]
 fn test_resolve_variable() {

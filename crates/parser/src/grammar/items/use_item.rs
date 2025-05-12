@@ -4,13 +4,11 @@ use crate::parser::Marker;
 use crate::SyntaxKind::*;
 use crate::{Parser, T};
 
-// test use_item
-// use std::collections;
-pub(crate) fn use_(p: &mut Parser, m: Marker) {
+pub(crate) fn use_stmt(p: &mut Parser, stmt: Marker) {
     p.bump(T![use]);
     use_speck(p, true);
     p.expect(T![;]);
-    m.complete(p, USE_STMT);
+    stmt.complete(p, USE_STMT);
 }
 
 // test use_tree

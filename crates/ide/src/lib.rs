@@ -1,12 +1,12 @@
 #![allow(dead_code)]
 
 use base_db::change::{DepGraph, FileChanges};
-use base_db::{ParseDatabase, SourceDatabase};
+use base_db::{SourceDatabase, source_db};
 use ide_completion::item::CompletionItem;
-use ide_db::{LineIndexDatabase, RootDatabase};
+use ide_db::{RootDatabase, root_db};
 use line_index::{LineCol, LineIndex};
 use std::sync::Arc;
-use syntax::{AstNode, Direction, SourceFile, TextRange, TextSize};
+use syntax::{SourceFile, TextRange, TextSize};
 use vfs::file_set::FileSet;
 use vfs::{FileId, VfsPath};
 
@@ -16,7 +16,6 @@ mod hover;
 pub mod inlay_hints;
 mod navigation_target;
 pub mod syntax_highlighting;
-pub mod test_utils;
 mod type_info;
 mod view_syntax_tree;
 
@@ -25,7 +24,7 @@ use crate::inlay_hints::{InlayHint, InlayHintsConfig};
 pub use crate::navigation_target::NavigationTarget;
 pub use crate::syntax_highlighting::HlRange;
 use base_db::inputs::InternFileId;
-use base_db::package_root::{PackageRoot, PackageRootId};
+use base_db::package_root::{PackageId, PackageRoot};
 use ide_completion::config::CompletionConfig;
 use ide_db::assist_config::AssistConfig;
 pub use ide_db::assists::{Assist, AssistKind, AssistResolveStrategy};
@@ -33,7 +32,6 @@ use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 use lang::builtin_files::BUILTINS_FILE;
 pub use salsa::Cancelled;
-use syntax::algo::skip_trivia_token;
 use syntax::files::{FilePosition, FileRange};
 
 pub type Cancellable<T> = Result<T, Cancelled>;
@@ -136,23 +134,9 @@ impl Analysis {
         (host.analysis(), file_id)
     }
 
-    pub fn package_root_id(&self, file_id: FileId) -> Cancellable<PackageRootId> {
-        self.with_db(|db| db.file_package_root(file_id).data(db))
+    pub fn package_id(&self, file_id: FileId) -> Cancellable<PackageId> {
+        self.with_db(|db| db.file_package_id(file_id).data(db))
     }
-
-    // pub fn is_local_source_root(&self, source_root_id: SourceRoot) -> Cancellable<bool> {
-    //     self.with_db(|db| {
-    //         let sr = db.source_root(source_root_id);
-    //         !sr.is_library
-    //     })
-    // }
-
-    // pub fn parallel_prime_caches<F>(&self, num_worker_threads: usize, cb: F) -> Cancellable<()>
-    // where
-    //     F: Fn(ParallelPrimeCachesProgress) + Sync + std::panic::UnwindSafe,
-    // {
-    //     self.with_db(move |db| prime_caches::parallel_prime_caches(db, num_worker_threads, &cb))
-    // }
 
     /// Gets the text of the source file.
     pub fn file_text(&self, file_id: FileId) -> Cancellable<Arc<str>> {
@@ -161,18 +145,13 @@ impl Analysis {
 
     /// Gets the syntax tree of the file.
     pub fn parse(&self, file_id: FileId) -> Cancellable<SourceFile> {
-        self.with_db(|db| db.parse(file_id.intern(db)).tree())
+        self.with_db(|db| source_db::parse(db, file_id.intern(db)).tree())
     }
-
-    // /// Returns true if this file belongs to an immutable library.
-    // pub fn is_library_file(&self, file_id: FileId) -> Cancellable<bool> {
-    //     self.with_db(|db| db.source_root(db.file_source_root(file_id)).is_library)
-    // }
 
     /// Gets the file's `LineIndex`: data structure to convert between absolute
     /// offsets and line/column representation.
     pub fn file_line_index(&self, file_id: FileId) -> Cancellable<Arc<LineIndex>> {
-        self.with_db(|db| db.line_index(file_id))
+        self.with_db(|db| root_db::line_index(db, file_id))
     }
 
     /// Selects the next syntactic nodes encompassing the range.
@@ -193,63 +172,6 @@ impl Analysis {
     pub fn view_syntax_tree(&self, file_id: FileId) -> Cancellable<String> {
         self.with_db(|db| view_syntax_tree::view_syntax_tree(db, file_id))
     }
-
-    // pub fn view_lang(&self, position: FilePosition) -> Cancellable<String> {
-    //     self.with_db(|db| view_lang::view_lang(db, position))
-    // }
-
-    // pub fn interpret_function(&self, position: FilePosition) -> Cancellable<String> {
-    //     self.with_db(|db| interpret::interpret(db, position))
-    // }
-
-    // pub fn view_item_tree(&self, file_id: FileId) -> Cancellable<String> {
-    //     self.with_db(|db| view_item_tree::view_item_tree(db, file_id))
-    // }
-
-    // pub fn discover_test_roots(&self) -> Cancellable<Vec<TestItem>> {
-    //     self.with_db(test_explorer::discover_test_roots)
-    // }
-
-    // pub fn discover_tests_in_crate_by_test_id(&self, crate_id: &str) -> Cancellable<Vec<TestItem>> {
-    //     self.with_db(|db| test_explorer::discover_tests_in_crate_by_test_id(db, crate_id))
-    // }
-
-    // pub fn discover_tests_in_crate(&self, crate_id: CrateId) -> Cancellable<Vec<TestItem>> {
-    //     self.with_db(|db| test_explorer::discover_tests_in_crate(db, crate_id))
-    // }
-
-    // pub fn discover_tests_in_file(&self, file_id: FileId) -> Cancellable<Vec<TestItem>> {
-    //     self.with_db(|db| test_explorer::discover_tests_in_file(db, file_id))
-    // }
-
-    // /// Renders the crate graph to GraphViz "dot" syntax.
-    // pub fn view_crate_graph(&self, full: bool) -> Cancellable<Result<String, String>> {
-    //     self.with_db(|db| view_crate_graph::view_crate_graph(db, full))
-    // }
-
-    // pub fn fetch_crates(&self) -> Cancellable<FxIndexSet<CrateInfo>> {
-    //     self.with_db(fetch_crates::fetch_crates)
-    // }
-
-    // pub fn expand_macro(&self, position: FilePosition) -> Cancellable<Option<ExpandedMacro>> {
-    //     self.with_db(|db| expand_macro::expand_macro(db, position))
-    // }
-
-    // /// Returns an edit to remove all newlines in the range, cleaning up minor
-    // /// stuff like trailing commas.
-    // pub fn join_lines(&self, config: &JoinLinesConfig, frange: FileRange) -> Cancellable<TextEdit> {
-    //     self.with_db(|db| {
-    //         let parse = db.parse(EditionedFileId::current_edition(frange.file_id));
-    //         join_lines::join_lines(config, &parse.tree(), frange.range)
-    //     })
-    // }
-
-    // /// Returns an edit which should be applied when opening a new line, fixing
-    // /// up minor stuff like continuing the comment.
-    // /// The edit will be a snippet (with `$0`).
-    // pub fn on_enter(&self, position: FilePosition) -> Cancellable<Option<TextEdit>> {
-    //     self.with_db(|db| typing::on_enter(db, position))
-    // }
 
     // pub const SUPPORTED_TRIGGER_CHARS: &'static str = typing::TRIGGER_CHARS;
 
@@ -504,8 +426,9 @@ impl Analysis {
         &self,
         config: &CompletionConfig,
         position: FilePosition,
+        trigger_character: Option<char>,
     ) -> Cancellable<Option<Vec<CompletionItem>>> {
-        self.with_db(|db| ide_completion::completions(db, config, position))
+        self.with_db(|db| ide_completion::completions(db, config, position, trigger_character))
     }
 
     // /// Resolves additional completion data at the position given.
@@ -636,23 +559,9 @@ impl Analysis {
     //     self.with_db(|db| annotations::resolve_annotation(db, annotation))
     // }
     //
-    // pub fn move_item(
-    //     &self,
-    //     range: FileRange,
-    //     direction: Direction,
-    // ) -> Cancellable<Option<TextEdit>> {
-    //     self.with_db(|db| move_item::move_item(db, range, direction))
-    // }
-    //
-    // pub fn get_recursive_memory_layout(
-    //     &self,
-    //     position: FilePosition,
-    // ) -> Cancellable<Option<RecursiveMemoryLayout>> {
-    //     self.with_db(|db| view_memory_layout(db, position))
-    // }
 
     pub fn file_offset_into_position(&self, file_id: FileId, offset: usize) -> Cancellable<LineCol> {
-        self.with_db(|db| db.line_index(file_id).line_col(TextSize::new(offset as u32)))
+        self.with_db(|db| root_db::line_index(db, file_id).line_col(TextSize::new(offset as u32)))
     }
 
     /// Performs an operation on the database that may be canceled.

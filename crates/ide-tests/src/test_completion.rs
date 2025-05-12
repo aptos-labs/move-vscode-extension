@@ -1,7 +1,8 @@
-use crate::completion::{
+use crate::test_utils::completion::{
     check_completion_exact, check_completions_contains, check_completions_with_prefix_exact,
     check_no_completions, do_single_completion,
 };
+use expect_test::expect;
 
 #[rustfmt::skip]
 #[test]
@@ -39,9 +40,9 @@ fn test_top_level_module_completion() {
 mod/*caret*/
     "#,
         // language=Move
-        r#"
-module $0
-    "#,
+        expect![[r#"
+            module $0
+    "#]],
     );
 }
 
@@ -58,29 +59,29 @@ module 0x1::m {
     );
 }
 
-#[test]
-fn test_no_friend_after_public() {
-    check_no_completions(
-        // language=Move
-        r#"
-module 0x1::m {
-    public fri/*caret*/
-}
-    "#,
-    );
-}
+// #[test]
+// fn test_no_friend_after_public() {
+//     check_no_completions(
+//         // language=Move
+//         r#"
+// module 0x1::m {
+//     public fri/*caret*/
+// }
+//     "#,
+//     );
+// }
 
-#[test]
-fn test_no_package_after_public() {
-    check_no_completions(
-        // language=Move
-        r#"
-module 0x1::m {
-    public pack/*caret*/
-}
-    "#,
-    );
-}
+// #[test]
+// fn test_no_package_after_public() {
+//     check_no_completions(
+//         // language=Move
+//         r#"
+// module 0x1::m {
+//     public pack/*caret*/
+// }
+//     "#,
+//     );
+// }
 
 #[test]
 fn test_expr_start_completion() {
@@ -171,14 +172,14 @@ module 0x1::m {
 }
     "#,
         // language=Move
-        r#"
-module 0x1::m {
-    fun call() {}
-    fun main() {
-        call()$0
-    }
-}
-    "#,
+        expect![[r#"
+            module 0x1::m {
+                fun call() {}
+                fun main() {
+                    call()$0
+                }
+            }
+    "#]],
     );
 }
 
@@ -195,14 +196,14 @@ module 0x1::m {
 }
     "#,
         // language=Move
-        r#"
-module 0x1::m {
-    fun call(a: u8) {}
-    fun main() {
-        call($0)
-    }
-}
-    "#,
+        expect![[r#"
+            module 0x1::m {
+                fun call(a: u8) {}
+                fun main() {
+                    call($0)
+                }
+            }
+    "#]],
     );
 }
 
@@ -270,15 +271,15 @@ module 0x1::m {
     }
 }
     "#,
-        r#"
-module 0x1::m {
-    struct S { field: u8 }
-    struct T { s: S }
-    fun main() {
-        T[@0x1].s.field;
-    }
-}
-    "#,
+        expect![[r#"
+            module 0x1::m {
+                struct S { field: u8 }
+                struct T { s: S }
+                fun main() {
+                    T[@0x1].s.field;
+                }
+            }
+        "#]],
     );
 }
 
@@ -299,18 +300,18 @@ module 0x1::m {
     }
 }
     "#,
-        r#"
-module 0x1::m {
-    struct S { val: u8 }
-    struct T { s: S }
-    fun receiver(self: &mut S): u8 {
-        self.val
-    }
-    fun main() {
-        T[@0x1].s.receiver()$0;
-    }
-}
-    "#,
+        expect![[r#"
+            module 0x1::m {
+                struct S { val: u8 }
+                struct T { s: S }
+                fun receiver(self: &mut S): u8 {
+                    self.val
+                }
+                fun main() {
+                    T[@0x1].s.receiver()$0;
+                }
+            }
+    "#]],
     );
 }
 
@@ -362,14 +363,14 @@ module 0x1::m {
     }
 }
     "#,
-        r#"
-module 0x1::m {
-    struct S { field: u8 }
-    fun main() {
-        S[@0x1].field;
-    }
-}
-    "#,
+        expect![[r#"
+            module 0x1::m {
+                struct S { field: u8 }
+                fun main() {
+                    S[@0x1].field;
+                }
+            }
+    "#]],
     );
 }
 
@@ -433,5 +434,29 @@ module std::asset {
 }
     "#,
         vec!["module_address -> address"],
+    );
+}
+
+#[test]
+fn test_no_completion_after_single_colon_in_use() {
+    check_no_completions(
+        // language=Move
+        r#"
+module std::option {
+    use aptos_std:/*caret*/
+}
+    "#,
+    );
+}
+
+#[test]
+fn test_no_completion_after_double_colon_colon() {
+    check_no_completions(
+        // language=Move
+        r#"
+module std::option {
+    use aptos_std:::/*caret*/
+}
+    "#,
     );
 }

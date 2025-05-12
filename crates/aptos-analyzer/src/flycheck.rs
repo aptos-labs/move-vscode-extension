@@ -82,8 +82,7 @@ impl FlycheckHandle {
     ) -> FlycheckHandle {
         let actor = FlycheckActor::new(ws_id, sender, config, workspace_root);
         let (sender, receiver) = unbounded::<StateChange>();
-        let thread = stdx::thread::Builder::new(stdx::thread::ThreadIntent::Worker)
-            .name("Flycheck".to_owned())
+        let thread = stdx::thread::Builder::new(stdx::thread::ThreadIntent::Worker, "Flycheck")
             .spawn(move || actor.run(receiver))
             .expect("failed to spawn thread");
         FlycheckHandle {

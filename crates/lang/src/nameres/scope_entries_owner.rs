@@ -1,26 +1,22 @@
-use crate::HirDatabase;
+use crate::hir_db;
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres::blocks::get_entries_in_blocks;
 use crate::nameres::get_schema_field_entries;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::node_ext::item_spec::ItemSpecExt;
-use base_db::ParseDatabase;
+use base_db::{SourceDatabase, source_db};
 use syntax::ast::{FieldsOwner, GenericElement, HasItems};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, SyntaxNode, ast, match_ast};
 
 pub fn get_entries_in_scope(
-    db: &dyn HirDatabase,
+    db: &dyn SourceDatabase,
     scope: InFile<SyntaxNode>,
     prev: Option<SyntaxNode>,
 ) -> Vec<ScopeEntry> {
     let mut entries = vec![];
     if let Some(use_stmts_owner) = scope.syntax_cast::<ast::AnyHasUseStmts>() {
-        entries.extend(db.use_speck_entries(use_stmts_owner.loc()));
-        // entries.extend(use_speck_entries(
-        //     db,
-        //     &InFile::new(scope.file_id, use_stmts_owner),
-        // ));
+        entries.extend(hir_db::use_speck_entries(db, use_stmts_owner));
     }
 
     entries.extend(get_entries_in_blocks(scope.clone(), prev));
@@ -28,7 +24,7 @@ pub fn get_entries_in_scope(
     entries
 }
 
-pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -> Vec<ScopeEntry> {
+pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: InFile<SyntaxNode>) -> Vec<ScopeEntry> {
     use syntax::SyntaxKind::*;
 
     let file_id = scope.file_id;
@@ -41,7 +37,7 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
     match scope.value.kind() {
         MODULE => {
             let module = scope.syntax_cast::<ast::Module>().unwrap();
-            entries.extend(db.module_importable_entries(module.loc()));
+            entries.extend(hir_db::module_importable_entries(db, module.loc()));
 
             entries.extend(module.value.enum_variants().to_entries(file_id));
 
@@ -116,25 +112,25 @@ pub fn get_entries_from_owner(db: &dyn HirDatabase, scope: InFile<SyntaxNode>) -
     entries
 }
 
-fn builtin_functions(db: &dyn ParseDatabase) -> Vec<InFile<ast::Fun>> {
+fn builtin_functions(db: &dyn SourceDatabase) -> Vec<InFile<ast::Fun>> {
     builtin_module(db)
         .map(|module| module.map(|it| it.functions()).flatten())
         .unwrap_or_default()
 }
 
-fn builtin_spec_consts(db: &dyn ParseDatabase) -> Vec<InFile<ast::Const>> {
+fn builtin_spec_consts(db: &dyn SourceDatabase) -> Vec<InFile<ast::Const>> {
     builtin_module(db)
         .map(|module| module.map(|it| it.consts()).flatten())
         .unwrap_or_default()
 }
 
-fn builtin_spec_functions(db: &dyn ParseDatabase) -> Vec<InFile<ast::SpecFun>> {
+fn builtin_spec_functions(db: &dyn SourceDatabase) -> Vec<InFile<ast::SpecFun>> {
     builtin_module(db)
         .map(|module| module.map(|it| it.spec_functions()).flatten())
         .unwrap_or_default()
 }
 
-fn builtin_module(db: &dyn ParseDatabase) -> Option<InFile<ast::Module>> {
+fn builtin_module(db: &dyn SourceDatabase) -> Option<InFile<ast::Module>> {
     let file_id = match db.builtins_file_id() {
         Some(fid) => fid,
         None => {
@@ -142,8 +138,7 @@ fn builtin_module(db: &dyn ParseDatabase) -> Option<InFile<ast::Module>> {
             return None;
         }
     };
-    let builtins_module = db
-        .parse(file_id)
+    let builtins_module = source_db::parse(db, file_id)
         .tree()
         .modules()
         .collect::<Vec<_>>()

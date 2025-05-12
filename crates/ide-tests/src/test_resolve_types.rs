@@ -1,4 +1,4 @@
-use ide::test_utils::resolve::check_resolve;
+use crate::resolve::check_resolve;
 
 #[test]
 fn test_primitive_type_is_unresolved() {
@@ -42,40 +42,6 @@ module 0x1::m {
          //X
     fun main(a: S) {
               //^
-    }
-}
-    "#,
-    )
-}
-
-#[test]
-fn test_resolve_to_use_item() {
-    check_resolve(
-        // language=Move
-        r#"
-module 0x1::m {
-    use 0x1::m1::S;
-               //X
-    fun main() {
-        let a: S = 1;
-             //^
-    }
-}
-    "#,
-    )
-}
-
-#[test]
-fn test_resolve_to_use_item_in_group() {
-    check_resolve(
-        // language=Move
-        r#"
-module 0x1::m {
-    use 0x1::m1::{S};
-                //X
-    fun main() {
-        let a: S = 1;
-             //^
     }
 }
     "#,

@@ -1,5 +1,5 @@
-use crate::db::SourceDatabase;
-use crate::package_root::{PackageRoot, PackageRootId};
+use crate::package_root::{PackageId, PackageRoot};
+use crate::source_db::SourceDatabase;
 use dashmap::{DashMap, Entry};
 use salsa::Durability;
 use salsa::Setter;
@@ -8,17 +8,17 @@ use vfs::FileId;
 
 #[salsa::interned(no_lifetime)]
 #[derive(Debug)]
-pub struct InternedFileId {
+pub struct FileIdInput {
     pub data: FileId,
 }
 
 pub trait InternFileId {
-    fn intern(self, db: &dyn SourceDatabase) -> InternedFileId;
+    fn intern(self, db: &dyn SourceDatabase) -> FileIdInput;
 }
 
 impl InternFileId for FileId {
-    fn intern(self, db: &dyn SourceDatabase) -> InternedFileId {
-        InternedFileId::new(db, self)
+    fn intern(self, db: &dyn SourceDatabase) -> FileIdInput {
+        FileIdInput::new(db, self)
     }
 }
 
@@ -34,8 +34,8 @@ pub struct FileText {
 }
 
 #[salsa::input]
-pub struct FilePackageRootInput {
-    pub data: PackageRootId,
+pub struct FilePackageIdInput {
+    pub data: PackageId,
 }
 
 #[salsa::input]
@@ -44,16 +44,18 @@ pub struct PackageRootInput {
 }
 
 #[salsa::input]
-pub struct PackageDepsInput {
-    pub data: Arc<Vec<PackageRootId>>,
+pub struct DepPackagesInput {
+    pub data: Arc<Vec<PackageId>>,
 }
 
 #[derive(Default)]
 pub struct Files {
     files: Arc<DashMap<FileId, FileText>>,
-    source_roots: Arc<DashMap<PackageRootId, PackageRootInput>>,
-    file_source_roots: Arc<DashMap<FileId, FilePackageRootInput>>,
-    package_deps: Arc<DashMap<PackageRootId, PackageDepsInput>>,
+    file_package_ids: Arc<DashMap<FileId, FilePackageIdInput>>,
+
+    package_roots: Arc<DashMap<PackageId, PackageRootInput>>,
+    package_deps: Arc<DashMap<PackageId, DepPackagesInput>>,
+
     spec_file_sets: Arc<DashMap<FileId, FileIdSet>>,
 }
 
@@ -90,10 +92,10 @@ impl Files {
     }
 
     /// Source root of the file.
-    pub fn package_root(&self, package_root_id: PackageRootId) -> PackageRootInput {
+    pub fn package_root(&self, package_id: PackageId) -> PackageRootInput {
         let package_root = self
-            .source_roots
-            .get(&package_root_id)
+            .package_roots
+            .get(&package_id)
             .expect("Unable to fetch source root id; this is a bug");
 
         *package_root
@@ -102,11 +104,11 @@ impl Files {
     pub fn set_package_root_with_durability(
         &self,
         db: &mut dyn SourceDatabase,
-        package_root_id: PackageRootId,
+        package_id: PackageId,
         package_root: Arc<PackageRoot>,
         durability: Durability,
     ) {
-        match self.source_roots.entry(package_root_id) {
+        match self.package_roots.entry(package_id) {
             Entry::Occupied(mut occupied) => {
                 occupied
                     .get_mut()
@@ -115,47 +117,47 @@ impl Files {
                     .to(package_root);
             }
             Entry::Vacant(vacant) => {
-                let source_root = PackageRootInput::builder(package_root)
+                let package_root = PackageRootInput::builder(package_root)
                     .durability(durability)
                     .new(db);
-                vacant.insert(source_root);
+                vacant.insert(package_root);
             }
         };
     }
 
-    pub fn file_package_root(&self, id: FileId) -> FilePackageRootInput {
-        let file_source_root = self
-            .file_source_roots
+    pub fn file_package_id(&self, id: FileId) -> FilePackageIdInput {
+        let file_package_id = self
+            .file_package_ids
             .get(&id)
-            .expect("Unable to fetch FileSourceRootInput; this is a bug");
-        *file_source_root
+            .expect("Unable to fetch FilePackageIdInput; this is a bug");
+        *file_package_id
     }
 
-    pub fn set_file_package_root_with_durability(
+    pub fn set_file_package_id_with_durability(
         &self,
         db: &mut dyn SourceDatabase,
-        id: FileId,
-        package_root_id: PackageRootId,
+        file_id: FileId,
+        package_id: PackageId,
         durability: Durability,
     ) {
-        match self.file_source_roots.entry(id) {
+        match self.file_package_ids.entry(file_id) {
             Entry::Occupied(mut occupied) => {
                 occupied
                     .get_mut()
                     .set_data(db)
                     .with_durability(durability)
-                    .to(package_root_id);
+                    .to(package_id);
             }
             Entry::Vacant(vacant) => {
-                let file_package_root = FilePackageRootInput::builder(package_root_id)
+                let file_package_id = FilePackageIdInput::builder(package_id)
                     .durability(durability)
                     .new(db);
-                vacant.insert(file_package_root);
+                vacant.insert(file_package_id);
             }
         };
     }
 
-    pub fn package_deps(&self, package_id: PackageRootId) -> PackageDepsInput {
+    pub fn package_deps(&self, package_id: PackageId) -> DepPackagesInput {
         let package_deps = self
             .package_deps
             .get(&package_id)
@@ -166,21 +168,21 @@ impl Files {
     pub fn set_package_deps(
         &self,
         db: &mut dyn SourceDatabase,
-        package_id: PackageRootId,
-        deps: Arc<Vec<PackageRootId>>,
+        package_id: PackageId,
+        deps: Arc<Vec<PackageId>>,
     ) {
         match self.package_deps.entry(package_id) {
             Entry::Occupied(mut occupied) => {
                 occupied.get_mut().set_data(db).to(deps);
             }
             Entry::Vacant(vacant) => {
-                let deps = PackageDepsInput::builder(deps).new(db);
+                let deps = DepPackagesInput::builder(deps).new(db);
                 vacant.insert(deps);
             }
         };
     }
 
-    pub fn spec_file_set(&self, file_id: FileId) -> FileIdSet {
+    pub fn spec_related_files(&self, file_id: FileId) -> FileIdSet {
         let spec_file_set = self
             .spec_file_sets
             .get(&file_id)
@@ -188,15 +190,15 @@ impl Files {
         *spec_file_set
     }
 
-    pub fn set_spec_file_set(
+    pub fn set_spec_related_files(
         &self,
         db: &mut dyn SourceDatabase,
         file_id: FileId,
-        spec_files: Vec<FileId>,
+        spec_related_files: Vec<FileId>,
     ) {
         match self.spec_file_sets.entry(file_id) {
             Entry::Occupied(mut occupied) => {
-                occupied.get_mut().set_data(db).to(spec_files);
+                occupied.get_mut().set_data(db).to(spec_related_files);
             }
             Entry::Vacant(vacant) => {
                 let file_set = FileIdSet::new(db, vec![file_id]);

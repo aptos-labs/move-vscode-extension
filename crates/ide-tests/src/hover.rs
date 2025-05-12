@@ -1,8 +1,8 @@
 use crate::init_tracing_for_test;
 use expect_test::expect;
 use ide::Analysis;
-use ide::test_utils::get_first_marked_position;
 use syntax::files::FilePosition;
+use test_utils::get_first_marked_position;
 
 pub(crate) fn check_hover(source: &str, expect: expect_test::Expect) {
     init_tracing_for_test();

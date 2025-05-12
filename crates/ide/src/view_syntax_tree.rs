@@ -1,4 +1,4 @@
-use ide_db::{LineIndexDatabase, RootDatabase};
+use ide_db::{RootDatabase, root_db};
 use lang::Semantics;
 use line_index::{LineCol, LineIndex};
 use std::sync::Arc;
@@ -15,7 +15,7 @@ use vfs::FileId;
 // | VS Code | **Rust Syntax Tree** |
 pub(crate) fn view_syntax_tree(db: &RootDatabase, file_id: FileId) -> String {
     let sema = Semantics::new(db, file_id);
-    let line_index = db.line_index(file_id);
+    let line_index = root_db::line_index(db, file_id);
     let parse = sema.parse(file_id);
 
     let ctx = SyntaxTreeCtx { line_index };

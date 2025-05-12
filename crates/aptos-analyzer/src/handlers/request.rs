@@ -112,18 +112,17 @@ pub(crate) fn handle_completion(
         .and_then(|ctx| ctx.trigger_character)
         .and_then(|s| s.chars().next());
 
-    // let source_root = snap.analysis.source_root_id(position.file_id)?;
-    let completion_config = &snap.config.completion(/*Some(source_root)*/);
+    let completion_config = &snap.config.completion();
     // FIXME: We should fix up the position when retrying the cancelled request instead
     position.offset = position.offset.min(line_index.index.len());
-    let items = match snap.analysis.completions(
-        completion_config,
-        position,
-        // completion_trigger_character,
-    )? {
-        None => return Ok(None),
-        Some(items) => items,
-    };
+    let items =
+        match snap
+            .analysis
+            .completions(completion_config, position, completion_trigger_character)?
+        {
+            None => return Ok(None),
+            Some(items) => items,
+        };
 
     let items = to_proto::completion_items(
         &snap.config,
@@ -484,9 +483,8 @@ pub(crate) fn handle_code_action_resolve(
     let line_index = snap.file_line_index(file_id)?;
     let range = from_proto::text_range(&line_index, params.code_action_params.range)?;
     let frange = FileRange { file_id, range };
-    // let source_root = snap.analysis.source_root_id(file_id)?;
 
-    let mut assists_config = snap.config.assist(/*Some(source_root)*/);
+    let mut assists_config = snap.config.assist();
     assists_config.allowed = params
         .code_action_params
         .context
@@ -509,7 +507,7 @@ pub(crate) fn handle_code_action_resolve(
 
     let assists = snap.analysis.assists_with_fixes(
         &assists_config,
-        &snap.config.diagnostics_config(/*Some(source_root)*/),
+        &snap.config.diagnostics_config(),
         AssistResolveStrategy::Single(assist_resolve),
         frange,
     )?;

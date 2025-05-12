@@ -1,9 +1,9 @@
-use crate::HirDatabase;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::has_type_params_ext::GenericItemExt;
 use crate::types::substitution::Substitution;
 use crate::types::ty::Ty;
+use base_db::SourceDatabase;
 use syntax::ast;
 use syntax::files::InFile;
 
@@ -27,7 +27,7 @@ impl TySchema {
         }
     }
 
-    pub fn schema(&self, db: &dyn HirDatabase) -> Option<InFile<ast::Schema>> {
+    pub fn schema(&self, db: &dyn SourceDatabase) -> Option<InFile<ast::Schema>> {
         self.schema_loc.to_ast::<ast::Schema>(db)
     }
 }

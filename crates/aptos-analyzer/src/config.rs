@@ -20,7 +20,6 @@ use ide_db::assist_config::AssistConfig;
 use ide_diagnostics::config::DiagnosticsConfig;
 use project_model::DiscoveredManifest;
 use serde_derive::{Deserialize, Serialize};
-use std::sync::Arc;
 use stdx::itertools::Itertools;
 
 #[derive(Clone)]
@@ -138,7 +137,7 @@ impl Config {
         }
     }
 
-    pub fn completion(&self /*source_root: Option<SourceRootId>*/) -> CompletionConfig {
+    pub fn completion(&self) -> CompletionConfig {
         // let client_capability_fields = self.completion_resolve_support_properties();
         CompletionConfig {
             // enable_postfix_completions: self.completion_postfix_enable(source_root).to_owned(),

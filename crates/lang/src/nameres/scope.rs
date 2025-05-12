@@ -1,9 +1,9 @@
-use crate::HirDatabase;
 use crate::item_scope::NamedItemScope;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::nameres::is_visible::is_visible_in_context;
 use crate::nameres::namespaces::{Ns, NsSet, named_item_ns};
 use crate::types::ty::Ty;
+use base_db::SourceDatabase;
 use std::fmt;
 use std::fmt::Formatter;
 use stdx::itertools::Itertools;
@@ -27,7 +27,7 @@ impl ScopeEntry {
         entry
     }
 
-    pub fn cast_into<T: ast::AstNode>(self, db: &dyn HirDatabase) -> Option<InFile<T>> {
+    pub fn cast_into<T: ast::AstNode>(self, db: &dyn SourceDatabase) -> Option<InFile<T>> {
         self.node_loc.to_ast(db)
     }
 }
@@ -94,11 +94,14 @@ pub trait ScopeEntryListExt {
     fn filter_by_name(self, name: String) -> Vec<ScopeEntry>;
     fn filter_by_visibility(
         self,
-        db: &dyn HirDatabase,
+        db: &dyn SourceDatabase,
         context: &InFile<impl ReferenceElement>,
     ) -> Vec<ScopeEntry>;
-    fn filter_by_expected_type(self, db: &dyn HirDatabase, expected_type: Option<Ty>)
-    -> Vec<ScopeEntry>;
+    fn filter_by_expected_type(
+        self,
+        db: &dyn SourceDatabase,
+        expected_type: Option<Ty>,
+    ) -> Vec<ScopeEntry>;
 }
 
 impl ScopeEntryListExt for Vec<ScopeEntry> {
@@ -114,7 +117,7 @@ impl ScopeEntryListExt for Vec<ScopeEntry> {
 
     fn filter_by_visibility(
         self,
-        db: &dyn HirDatabase,
+        db: &dyn SourceDatabase,
         context: &InFile<impl ReferenceElement>,
     ) -> Vec<ScopeEntry> {
         self.into_iter()
@@ -124,7 +127,7 @@ impl ScopeEntryListExt for Vec<ScopeEntry> {
 
     fn filter_by_expected_type(
         self,
-        db: &dyn HirDatabase,
+        db: &dyn SourceDatabase,
         expected_type: Option<Ty>,
     ) -> Vec<ScopeEntry> {
         self.into_iter()

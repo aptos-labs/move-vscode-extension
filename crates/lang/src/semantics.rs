@@ -1,7 +1,6 @@
 mod source_to_def;
 
-use crate::HirDatabase;
-use crate::db::NodeInferenceExt;
+use crate::hir_db::NodeInferenceExt;
 use crate::nameres::ResolveReference;
 use crate::nameres::fq_named_element::{ItemFQName, ItemFQNameOwner};
 use crate::nameres::scope::ScopeEntry;
@@ -12,7 +11,8 @@ use crate::types::inference::inference_result::InferenceResult;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
 use base_db::inputs::InternFileId;
-use base_db::package_root::PackageRootId;
+use base_db::package_root::PackageId;
+use base_db::{SourceDatabase, source_db};
 use std::cell::RefCell;
 use std::convert::Infallible;
 use std::ops::ControlFlow;
@@ -32,8 +32,8 @@ pub struct Semantics<'db, DB> {
 }
 
 pub struct SemanticsImpl<'db> {
-    db: &'db dyn HirDatabase,
-    ws_root: PackageRootId,
+    db: &'db dyn SourceDatabase,
+    ws_root: PackageId,
     s2d_cache: RefCell<SourceToDefCache>,
 }
 
@@ -51,9 +51,9 @@ impl<'db, DB> ops::Deref for Semantics<'db, DB> {
     }
 }
 
-impl<DB: HirDatabase> Semantics<'_, DB> {
+impl<DB: SourceDatabase> Semantics<'_, DB> {
     pub fn new(db: &DB, ws_file_id: FileId) -> Semantics<'_, DB> {
-        let ws_root = db.file_package_root(ws_file_id).data(db);
+        let ws_root = db.file_package_id(ws_file_id).data(db);
         let impl_ = SemanticsImpl::new(db, ws_root);
         // add builtins file to cache
         if let Some(builtins_file_id) = db.builtins_file_id() {
@@ -64,7 +64,7 @@ impl<DB: HirDatabase> Semantics<'_, DB> {
 }
 
 impl<'db> SemanticsImpl<'db> {
-    fn new(db: &'db dyn HirDatabase, ws_root: PackageRootId) -> Self {
+    fn new(db: &'db dyn SourceDatabase, ws_root: PackageId) -> Self {
         SemanticsImpl {
             db,
             ws_root,
@@ -73,7 +73,7 @@ impl<'db> SemanticsImpl<'db> {
     }
 
     pub fn parse(&self, file_id: FileId) -> ast::SourceFile {
-        let tree = self.db.parse(file_id.intern(self.db)).tree();
+        let tree = source_db::parse(self.db, file_id.intern(self.db)).tree();
         self.cache(tree.syntax().clone(), file_id);
         tree
     }

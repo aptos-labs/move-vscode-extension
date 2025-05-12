@@ -6,16 +6,12 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
-dissimilar = "1.0.9"
-regex = "1.11.1"
-
 vfs = { workspace = true }
 line-index = { workspace = true }
 tracing = { workspace = true }
 itertools = { workspace = true }
 
 dashmap.workspace = true
-query-group-macro.workspace = true
 salsa.workspace = true
 salsa-macros.workspace = true
 
@@ -31,3 +27,5 @@ ide-diagnostics = { path = "../ide-diagnostics" }
 [dev-dependencies]
 itertools = { workspace = true }
 expect-test = "1.5.1"
+
+test-utils = { path = "../test-utils" }

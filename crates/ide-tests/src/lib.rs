@@ -7,9 +7,10 @@ use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::{Layer, Registry};
 use tracing_tree::HierarchicalLayer;
 
-mod completion;
+mod fold;
 mod hover;
 mod resolve;
+mod test_completion;
 mod test_inlay_hints;
 mod test_replace_with_compound_expr;
 mod test_replace_with_method_call;
@@ -17,6 +18,10 @@ mod test_syntax_highlighting;
 mod test_unresolved_reference;
 mod test_utils;
 mod types;
+
+mod test_resolve_items;
+mod test_resolve_types;
+mod test_syntax_errors;
 
 pub(crate) fn init_tracing_for_test() {
     let _ = Registry::default()

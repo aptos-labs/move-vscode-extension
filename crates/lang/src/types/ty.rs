@@ -8,7 +8,6 @@ pub mod ty_callable;
 pub(crate) mod ty_var;
 pub(crate) mod type_param;
 
-use crate::HirDatabase;
 use crate::loc::SyntaxLoc;
 use crate::nameres::address::Address;
 use crate::nameres::name_resolution::get_modules_as_entries;
@@ -25,7 +24,8 @@ use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::{TyInfer, TyVar};
 use crate::types::ty::type_param::TyTypeParameter;
-use base_db::package_root::PackageRootId;
+use base_db::SourceDatabase;
+use base_db::package_root::PackageId;
 use syntax::ast;
 use syntax::files::InFile;
 use vfs::FileId;
@@ -82,8 +82,8 @@ impl Ty {
 
     pub fn adt_item_module(
         &self,
-        db: &dyn HirDatabase,
-        current_package_id: PackageRootId,
+        db: &dyn SourceDatabase,
+        current_package_id: PackageId,
     ) -> Option<InFile<ast::Module>> {
         let ty = self.unwrap_all_refs();
         match ty {
@@ -164,7 +164,7 @@ impl Ty {
         }
     }
 
-    pub fn render(&self, db: &dyn HirDatabase, context_file_id: Option<FileId>) -> String {
+    pub fn render(&self, db: &dyn SourceDatabase, context_file_id: Option<FileId>) -> String {
         TypeRenderer::new(db, context_file_id).render(self)
     }
 }

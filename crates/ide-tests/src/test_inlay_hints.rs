@@ -1,10 +1,8 @@
-use crate::test_utils::diagnostics::{Marking, apply_markings};
-use crate::{init_tracing_for_test, test_utils};
+use crate::init_tracing_for_test;
 use expect_test::{Expect, expect};
 use ide::Analysis;
-use ide::inlay_hints::{InlayFieldsToResolve, InlayHint, InlayHintsConfig};
-use ide_diagnostics::diagnostic::Diagnostic;
-use line_index::LineIndex;
+use ide::inlay_hints::{InlayFieldsToResolve, InlayHintsConfig};
+use test_utils::{Marking, apply_markings, remove_markings};
 
 const DISABLED_CONFIG: InlayHintsConfig = InlayHintsConfig {
     // discriminant_hints: DiscriminantHints::Never,
@@ -52,7 +50,7 @@ pub(crate) fn check_inlay_hints(expect: Expect) {
     init_tracing_for_test();
 
     let source = stdx::trim_indent(expect.data());
-    let trimmed_source = test_utils::diagnostics::remove_markings(&source);
+    let trimmed_source = remove_markings(&source);
 
     let (analysis, file_id) = Analysis::from_single_file(trimmed_source.clone());
 
@@ -78,6 +76,20 @@ module 0x1::m {
     fun main() {
         let a = 1;
           //^ integer
+    }
+}
+    "#]]);
+}
+
+#[test]
+fn test_ident_pat_in_lambda_param() {
+    // language=Move
+    check_inlay_hints(expect![[r#"
+module 0x1::m {
+    fun for_each(v: vector<u8>, f: |u8| u8) {}
+    fun main() {
+        for_each(vector[], |elem| elem);
+                          //^^^^ u8
     }
 }
     "#]]);
@@ -124,14 +136,20 @@ module 0x1::m {
 }
 
 #[test]
-fn test_ident_pat_in_lambda_param() {
+fn test_item_from_the_same_package_hints_only_with_name() {
     // language=Move
     check_inlay_hints(expect![[r#"
-module 0x1::m {
-    fun for_each(v: vector<u8>, f: |u8| u8) {}
+module 0x2::price_management {
+    struct Price { val: u8 }
+    public fun get_s(): Price {
+        Price { val: 1 }
+    }
+}
+module 0x2::m {
+    use 0x2::price_management;
     fun main() {
-        for_each(vector[], |elem| elem);
-                          //^^^^ u8
+        let a = price_management::get_s();
+          //^ Price
     }
 }
     "#]]);

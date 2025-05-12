@@ -1,17 +1,18 @@
-use crate::HirDatabase;
+use crate::hir_db;
 use crate::item_scope::NamedItemScope;
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres::ResolveReference;
 use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::has_item_list::HasUseStmtsInFileExt;
+use base_db::SourceDatabase;
 use syntax::ast;
 use syntax::ast::NamedElement;
 use syntax::files::{InFile, InFileExt};
 use vfs::FileId;
 
 pub fn use_speck_entries(
-    db: &dyn HirDatabase,
+    db: &dyn SourceDatabase,
     use_stmts_owner: &InFile<impl ast::HasUseStmts>,
 ) -> Vec<ScopeEntry> {
     let use_items = use_stmts_owner.use_stmt_items(db);
@@ -26,7 +27,7 @@ pub fn use_speck_entries(
     entries
 }
 
-fn resolve_use_item(db: &dyn HirDatabase, use_item: UseItem, file_id: FileId) -> Option<ScopeEntry> {
+fn resolve_use_item(db: &dyn SourceDatabase, use_item: UseItem, file_id: FileId) -> Option<ScopeEntry> {
     let path = use_item.use_speck.path()?.in_file(file_id);
     let Some(scope_entry) = path.clone().resolve_no_inf(db) else {
         tracing::debug!(path = &path.syntax_text(), "cannot resolve use speck");
@@ -57,9 +58,9 @@ pub struct UseItem {
     scope: NamedItemScope,
 }
 
-pub fn use_stmt_items(db: &dyn HirDatabase, use_stmt: InFile<ast::UseStmt>) -> Option<Vec<UseItem>> {
+pub fn use_stmt_items(db: &dyn SourceDatabase, use_stmt: InFile<ast::UseStmt>) -> Option<Vec<UseItem>> {
     let root_use_speck = use_stmt.value.use_speck()?;
-    let use_stmt_scope = db.item_scope(use_stmt.loc());
+    let use_stmt_scope = hir_db::item_scope(db, use_stmt.loc());
 
     let mut use_items = vec![];
     let use_group = root_use_speck.use_group();

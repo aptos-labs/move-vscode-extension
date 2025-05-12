@@ -1,9 +1,9 @@
-use crate::HirDatabase;
 use crate::nameres::name_resolution::get_entries_from_walking_scopes;
 use crate::nameres::namespaces::{ENUM_VARIANTS, TYPES_N_ENUMS_N_ENUM_VARIANTS_N_MODULES};
 use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::nameres::{ResolveReference, get_named_field_entries};
 use crate::types::ty::Ty;
+use base_db::SourceDatabase;
 use syntax::SyntaxKind::*;
 use syntax::ast::FieldsOwner;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
@@ -11,7 +11,7 @@ use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 
 pub fn resolve_ident_pat_with_expected_type(
-    db: &dyn HirDatabase,
+    db: &dyn SourceDatabase,
     ident_pat: InFile<ast::IdentPat>,
     expected_type: Option<Ty>,
 ) -> Option<ScopeEntry> {
@@ -23,7 +23,7 @@ pub fn resolve_ident_pat_with_expected_type(
 }
 
 pub fn get_ident_pat_resolve_variants(
-    db: &dyn HirDatabase,
+    db: &dyn SourceDatabase,
     ident_pat: InFile<ast::IdentPat>,
     is_completion: bool,
 ) -> Vec<ScopeEntry> {

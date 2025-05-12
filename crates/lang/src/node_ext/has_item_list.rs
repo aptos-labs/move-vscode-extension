@@ -1,14 +1,14 @@
-use crate::HirDatabase;
 use crate::nameres::use_speck_entries::{UseItem, use_stmt_items};
+use base_db::SourceDatabase;
 use syntax::ast;
 use syntax::files::InFile;
 
 pub trait HasUseStmtsInFileExt {
-    fn use_stmt_items(&self, db: &dyn HirDatabase) -> Vec<UseItem>;
+    fn use_stmt_items(&self, db: &dyn SourceDatabase) -> Vec<UseItem>;
 }
 
 impl<T: ast::HasUseStmts> HasUseStmtsInFileExt for InFile<T> {
-    fn use_stmt_items(&self, db: &dyn HirDatabase) -> Vec<UseItem> {
+    fn use_stmt_items(&self, db: &dyn SourceDatabase) -> Vec<UseItem> {
         let stmts = self.clone().flat_map(|it| it.use_stmts().collect());
         stmts
             .into_iter()

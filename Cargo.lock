@@ -138,7 +138,6 @@ name = "base-db"
 version = "0.1.0"
 dependencies = [
  "dashmap",
- "query-group-macro",
  "salsa",
  "salsa-macros",
  "syntax",
@@ -750,7 +749,6 @@ version = "0.1.0"
 dependencies = [
  "base-db",
  "dashmap",
- "dissimilar",
  "expect-test",
  "ide-completion",
  "ide-db",
@@ -758,12 +756,11 @@ dependencies = [
  "itertools",
  "lang",
  "line-index",
- "query-group-macro",
- "regex",
  "salsa",
  "salsa-macros",
  "stdx",
  "syntax",
+ "test-utils",
  "tracing",
  "vfs",
 ]
@@ -790,7 +787,6 @@ dependencies = [
  "itertools",
  "lang",
  "line-index",
- "query-group-macro",
  "salsa",
  "salsa-macros",
  "stdx",
@@ -815,7 +811,6 @@ dependencies = [
 name = "ide-tests"
 version = "0.1.0"
 dependencies = [
- "dissimilar",
  "expect-test",
  "ide",
  "ide-completion",
@@ -825,6 +820,7 @@ dependencies = [
  "line-index",
  "stdx",
  "syntax",
+ "test-utils",
  "tracing",
  "tracing-subscriber",
  "tracing-tree",
@@ -944,7 +940,6 @@ dependencies = [
  "enumset",
  "itertools",
  "parser",
- "query-group-macro",
  "salsa",
  "salsa-macros",
  "stdx",
@@ -1253,7 +1248,7 @@ dependencies = [
 [[package]]
 name = "paths"
 version = "0.0.0"
-source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=6568e8f12d19b53fbb5a1c2e1116dae3ae61f912#6568e8f12d19b53fbb5a1c2e1116dae3ae61f912"
+source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2025-05-05#3b57c001518aeb42511e177221f98ecf42104016"
 dependencies = [
  "camino",
 ]
@@ -1369,16 +1364,6 @@ dependencies = [
  "tracing",
  "vfs",
  "walkdir",
-]
-
-[[package]]
-name = "query-group-macro"
-version = "0.0.0"
-source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=6568e8f12d19b53fbb5a1c2e1116dae3ae61f912#6568e8f12d19b53fbb5a1c2e1116dae3ae61f912"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
@@ -1678,7 +1663,7 @@ checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 [[package]]
 name = "stdx"
 version = "0.0.0"
-source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=6568e8f12d19b53fbb5a1c2e1116dae3ae61f912#6568e8f12d19b53fbb5a1c2e1116dae3ae61f912"
+source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2025-05-05#3b57c001518aeb42511e177221f98ecf42104016"
 dependencies = [
  "crossbeam-channel",
  "itertools",
@@ -1729,6 +1714,22 @@ dependencies = [
  "rowan",
  "stdx",
  "tracing",
+ "vfs",
+]
+
+[[package]]
+name = "test-utils"
+version = "0.1.0"
+dependencies = [
+ "base-db",
+ "ide",
+ "line-index",
+ "regex",
+ "stdx",
+ "syntax",
+ "tracing",
+ "tracing-subscriber",
+ "tracing-tree",
  "vfs",
 ]
 
@@ -1982,7 +1983,7 @@ checksum = "ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65"
 [[package]]
 name = "vfs"
 version = "0.0.0"
-source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=6568e8f12d19b53fbb5a1c2e1116dae3ae61f912#6568e8f12d19b53fbb5a1c2e1116dae3ae61f912"
+source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2025-05-05#3b57c001518aeb42511e177221f98ecf42104016"
 dependencies = [
  "crossbeam-channel",
  "fst",
@@ -1997,7 +1998,7 @@ dependencies = [
 [[package]]
 name = "vfs-notify"
 version = "0.0.0"
-source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=6568e8f12d19b53fbb5a1c2e1116dae3ae61f912#6568e8f12d19b53fbb5a1c2e1116dae3ae61f912"
+source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2025-05-05#3b57c001518aeb42511e177221f98ecf42104016"
 dependencies = [
  "crossbeam-channel",
  "notify",

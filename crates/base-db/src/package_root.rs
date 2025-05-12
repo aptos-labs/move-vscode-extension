@@ -1,8 +1,10 @@
 use vfs::file_set::FileSet;
-use vfs::{AnchoredPath, FileId, VfsPath};
+use vfs::{FileId, VfsPath};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct PackageRootId(pub u32);
+#[salsa_macros::input(debug)]
+pub struct PackageId {
+    idx: u32,
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PackageRoot {
@@ -29,9 +31,5 @@ impl PackageRoot {
 
     pub fn file_for_path(&self, path: &VfsPath) -> Option<&FileId> {
         self.file_set.file_for_path(path)
-    }
-
-    pub fn resolve_path(&self, path: AnchoredPath<'_>) -> Option<FileId> {
-        self.file_set.resolve_path(path)
     }
 }

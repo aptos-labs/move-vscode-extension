@@ -12,7 +12,7 @@ impl GlobalState {
             return false;
         };
         let needs_to_refresh_packages = !important_changes.is_empty();
-        tracing::info!(?needs_to_refresh_packages);
+        tracing::debug!(?needs_to_refresh_packages);
 
         if needs_to_refresh_packages {
             let n_to_show = 10;
@@ -26,7 +26,7 @@ impl GlobalState {
 
         if needs_to_refresh_packages {
             let vfs = &self.vfs.read().0;
-            let new_package_roots = self.package_root_config.partition_into_roots(vfs);
+            let new_package_roots = self.package_root_config.partition_into_package_roots(vfs);
             changes.set_package_roots(new_package_roots);
         }
 

@@ -1,18 +1,17 @@
+use base_db::SourceDatabase;
 use base_db::inputs::{
-    FileIdSet, FilePackageRootInput, FileText, Files, InternFileId, InternedFileId, PackageDepsInput,
+    DepPackagesInput, FileIdInput, FileIdSet, FilePackageIdInput, FileText, Files, InternFileId,
     PackageRootInput,
 };
-use base_db::package_root::{PackageRoot, PackageRootId};
-use base_db::{ParseDatabase, SourceDatabase};
+use base_db::package_root::{PackageId, PackageRoot};
 use line_index::LineIndex;
 use salsa::Durability;
+use std::fmt;
 use std::mem::ManuallyDrop;
-use std::ops::Deref;
 use std::sync::Arc;
-use std::{fmt, iter};
 use vfs::FileId;
 
-#[salsa::db]
+#[salsa_macros::db]
 pub struct RootDatabase {
     // We use `ManuallyDrop` here because every codegen unit that contains a
     // `&RootDatabase -> &dyn OtherDatabase` cast will instantiate its drop glue in the vtable,
@@ -20,12 +19,12 @@ pub struct RootDatabase {
     // compile times of all `ide_*` and downstream crates suffer greatly.
     storage: ManuallyDrop<salsa::Storage<Self>>,
     files: Arc<Files>,
-    builtins_file_id: Option<InternedFileId>,
+    builtins_file_id: Option<FileIdInput>,
 }
 
 impl std::panic::RefUnwindSafe for RootDatabase {}
 
-#[salsa::db]
+#[salsa_macros::db]
 impl salsa::Database for RootDatabase {
     fn salsa_event(&self, _event: &dyn Fn() -> salsa::Event) {}
 }
@@ -52,7 +51,7 @@ impl fmt::Debug for RootDatabase {
     }
 }
 
-#[salsa::db]
+#[salsa_macros::db]
 impl SourceDatabase for RootDatabase {
     fn file_text(&self, file_id: FileId) -> FileText {
         self.files.file_text(file_id)
@@ -69,35 +68,35 @@ impl SourceDatabase for RootDatabase {
     }
 
     /// Source root of the file.
-    fn package_root(&self, source_root_id: PackageRootId) -> PackageRootInput {
-        self.files.package_root(source_root_id)
+    fn package_root(&self, package_id: PackageId) -> PackageRootInput {
+        self.files.package_root(package_id)
     }
 
     fn set_package_root_with_durability(
         &mut self,
-        source_root_id: PackageRootId,
-        source_root: Arc<PackageRoot>,
+        package_id: PackageId,
+        package_root: Arc<PackageRoot>,
         durability: Durability,
     ) {
         let files = Arc::clone(&self.files);
-        files.set_package_root_with_durability(self, source_root_id, source_root, durability);
+        files.set_package_root_with_durability(self, package_id, package_root, durability);
     }
 
-    fn file_package_root(&self, id: FileId) -> FilePackageRootInput {
-        self.files.file_package_root(id)
+    fn file_package_id(&self, id: FileId) -> FilePackageIdInput {
+        self.files.file_package_id(id)
     }
 
-    fn set_file_package_root_with_durability(
+    fn set_file_package_id_with_durability(
         &mut self,
-        id: FileId,
-        source_root_id: PackageRootId,
+        file_id: FileId,
+        package_id: PackageId,
         durability: Durability,
     ) {
         let files = Arc::clone(&self.files);
-        files.set_file_package_root_with_durability(self, id, source_root_id, durability);
+        files.set_file_package_id_with_durability(self, file_id, package_id, durability);
     }
 
-    fn builtins_file_id(&self) -> Option<InternedFileId> {
+    fn builtins_file_id(&self) -> Option<FileIdInput> {
         self.builtins_file_id
     }
 
@@ -105,40 +104,22 @@ impl SourceDatabase for RootDatabase {
         self.builtins_file_id = file_id.map(|it| it.intern(self));
     }
 
-    fn package_deps(&self, package_id: PackageRootId) -> PackageDepsInput {
+    fn dep_package_ids(&self, package_id: PackageId) -> DepPackagesInput {
         self.files.package_deps(package_id)
     }
 
-    fn set_package_deps(&mut self, package_id: PackageRootId, deps: Vec<PackageRootId>) {
+    fn set_dep_package_ids(&mut self, package_id: PackageId, deps: Vec<PackageId>) {
         let files = Arc::clone(&self.files);
         files.set_package_deps(self, package_id, Arc::from(deps))
     }
 
-    fn spec_file_sets(&self, file_id: FileId) -> FileIdSet {
-        self.files.spec_file_set(file_id)
+    fn spec_related_files(&self, file_id: FileId) -> FileIdSet {
+        self.files.spec_related_files(file_id)
     }
 
-    fn set_spec_file_sets(&mut self, file_id: FileId, file_set: Vec<FileId>) {
+    fn set_spec_related_files(&mut self, file_id: FileId, file_set: Vec<FileId>) {
         let files = Arc::clone(&self.files);
-        files.set_spec_file_set(self, file_id, file_set)
-    }
-
-    fn source_file_ids(&self, package_root_id: PackageRootId) -> FileIdSet {
-        let dep_ids = self.package_deps(package_root_id).data(self).deref().to_owned();
-        tracing::debug!(?dep_ids);
-
-        let file_sets = iter::once(package_root_id)
-            .chain(dep_ids)
-            .map(|id| self.package_root(id).data(self).file_set.clone())
-            .collect::<Vec<_>>();
-
-        let mut source_file_ids = vec![];
-        for file_set in file_sets.clone() {
-            for source_file_id in file_set.iter() {
-                source_file_ids.push(source_file_id);
-            }
-        }
-        FileIdSet::new(self, source_file_ids)
+        files.set_spec_related_files(self, file_id, file_set)
     }
 }
 
@@ -174,12 +155,11 @@ impl RootDatabase {
     }
 }
 
-#[query_group_macro::query_group]
-pub trait LineIndexDatabase: ParseDatabase {
-    fn line_index(&self, file_id: FileId) -> Arc<LineIndex>;
-}
-
-fn line_index(db: &dyn LineIndexDatabase, file_id: FileId) -> Arc<LineIndex> {
-    let text = db.file_text(file_id).text(db);
-    Arc::new(LineIndex::new(&text))
+pub fn line_index(db: &dyn SourceDatabase, file_id: FileId) -> Arc<LineIndex> {
+    #[salsa_macros::tracked]
+    fn line_index(db: &dyn SourceDatabase, file_id: FileIdInput) -> Arc<LineIndex> {
+        let text = db.file_text(file_id.data(db)).text(db);
+        Arc::new(LineIndex::new(&text))
+    }
+    line_index(db, FileIdInput::new(db, file_id))
 }

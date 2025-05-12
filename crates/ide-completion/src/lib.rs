@@ -18,6 +18,7 @@ pub fn completions(
     db: &RootDatabase,
     config: &CompletionConfig,
     position: FilePosition,
+    _trigger_character: Option<char>,
 ) -> Option<Vec<CompletionItem>> {
     let (ctx, analysis) = CompletionContext::new(db, position, config)?;
 
