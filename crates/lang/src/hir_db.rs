@@ -192,10 +192,13 @@ pub(crate) fn module_importable_entries_from_related(
 
 pub fn item_scope(db: &dyn SourceDatabase, syntax_loc: SyntaxLoc) -> NamedItemScope {
     #[salsa_macros::tracked]
-    pub fn item_scope<'db>(db: &'db dyn SourceDatabase, loc: SyntaxLocInput<'db>) -> NamedItemScope {
+    pub fn item_scope_tracked<'db>(
+        db: &'db dyn SourceDatabase,
+        loc: SyntaxLocInput<'db>,
+    ) -> NamedItemScope {
         loc.syntax_loc(db).item_scope(db).unwrap_or(NamedItemScope::Main)
     }
-    item_scope(db, SyntaxLocInput::new(db, syntax_loc))
+    item_scope_tracked(db, SyntaxLocInput::new(db, syntax_loc))
 }
 
 pub(crate) fn get_modules_in_file(
