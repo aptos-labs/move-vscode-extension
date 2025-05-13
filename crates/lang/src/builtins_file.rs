@@ -1,3 +1,6 @@
+use base_db::change::FileChanges;
+use vfs::{Vfs, VfsPath};
+
 // language=Move
 pub const BUILTINS_FILE: &str = r#"
     module 0x0::builtins {
@@ -46,3 +49,16 @@ pub const BUILTINS_FILE: &str = r#"
         spec native fun bv2int(b: bv): num;
     }
 "#;
+
+pub fn add_to_vfs(vfs: &mut Vfs) -> FileChanges {
+    let builtins_file_id = {
+        let builtins_path = VfsPath::new_virtual_path("/builtins.move".to_string());
+        vfs.set_file_contents(builtins_path.clone(), Some(BUILTINS_FILE.bytes().collect()));
+        let (file_id, _) = vfs.file_id(&builtins_path).unwrap();
+        tracing::info!("load `builtins.move` file to {:?}", file_id);
+        file_id
+    };
+    let mut builtins_change = FileChanges::default();
+    builtins_change.add_builtins_file(builtins_file_id, BUILTINS_FILE.to_string());
+    builtins_change
+}

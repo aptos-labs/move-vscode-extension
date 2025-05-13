@@ -13,7 +13,8 @@ use crate::task_pool::TaskPool;
 use base_db::change::FileChanges;
 use crossbeam_channel::{Receiver, Sender, unbounded};
 use ide::{Analysis, AnalysisHost, Cancellable};
-use lang::builtin_files::BUILTINS_FILE;
+use lang::builtins_file;
+use lang::builtins_file::BUILTINS_FILE;
 use lsp_types::Url;
 use lsp_types::notification::Notification;
 use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard};
@@ -125,21 +126,14 @@ impl GlobalState {
 
         let (flycheck_sender, flycheck_receiver) = unbounded();
 
-        let vfs = Arc::new(RwLock::new((vfs::Vfs::default(), HashMap::default())));
-        let (builtins_file_id, _) = {
-            let vfs = &mut vfs.write().0;
-            let builtins_path = VfsPath::new_virtual_path("/builtins.move".to_string());
-            vfs.set_file_contents(builtins_path.clone(), Some(BUILTINS_FILE.bytes().collect()));
-            let file_id = vfs.file_id(&builtins_path).unwrap();
-            tracing::info!("load `builtins.move` file to {:?}", file_id);
-            file_id
-        };
-
-        let mut builtins_change = FileChanges::default();
-        builtins_change.add_builtins_file(builtins_file_id, BUILTINS_FILE.to_string());
-
         let mut analysis_host = AnalysisHost::new();
-        analysis_host.apply_change(builtins_change);
+
+        let vfs = Arc::new(RwLock::new((vfs::Vfs::default(), HashMap::default())));
+        {
+            let vfs = &mut vfs.write().0;
+            let change = builtins_file::add_to_vfs(vfs);
+            analysis_host.apply_change(change);
+        };
 
         let mut this = GlobalState {
             sender,
