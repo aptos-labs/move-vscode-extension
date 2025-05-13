@@ -171,27 +171,4 @@ module 0x1::m {
             )
         )
     }
-
-    #[test]
-    fn test_from_multiple_files_on_tmpfs() {
-        // language=Move
-        let global_state = from_multiple_files_on_tmpfs(
-            r#"
-//- /call.move
-module 0x1::call {
-    fun call() {}
-}
-//- /main.move
-module 0x1::m {
-    fun main() { /*caret*/ }
-}
-        "#,
-        );
-        assert_eq!(
-            global_state.packages.get(0).unwrap().content_root().file_name(),
-            Some("ws_root")
-        );
-
-        let analysis = global_state.analysis_host.analysis();
-    }
 }

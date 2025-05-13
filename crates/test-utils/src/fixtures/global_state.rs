@@ -10,7 +10,7 @@ use std::fs;
 use std::path::PathBuf;
 use vfs::{AbsPathBuf, FileId, Vfs, VfsPath};
 
-pub fn from_multiple_files_on_tmpfs(files_source: &str) -> TestGlobalState {
+pub fn from_multiple_files_on_tmpfs(test_packages: Vec<TestPackageFiles>) -> TestGlobalState {
     let tmp = tempdir::TempDir::new("aptos_analyzer_tests").unwrap();
 
     let mut vfs = Vfs::default();
@@ -18,38 +18,38 @@ pub fn from_multiple_files_on_tmpfs(files_source: &str) -> TestGlobalState {
     let ws_root = tmp.path().join("ws_root");
     fs::create_dir(&ws_root).unwrap();
 
-    let mut file_changes = FileChanges::new();
-
-    let move_toml_file = ws_root.join("Move.toml");
-    // language=TOML
-    let move_toml_contents = r#"
-[package]
-name = "WsRoot"
-version = "0.1.0"
-    "#;
-    create_new_test_file(
-        &mut vfs,
-        &mut file_changes,
-        &move_toml_file,
-        move_toml_contents.clone(),
-    );
-
-    let sources_dir = ws_root.join("sources");
-    fs::create_dir(&sources_dir).unwrap();
-
     let mut analysis_host = AnalysisHost::default();
     analysis_host.apply_change(builtins_file::add_to_vfs(&mut vfs));
 
-    let files = parse_files_from_source(files_source);
-    for (file_name, file_text) in files {
-        let fpath = sources_dir.join(file_name.trim_start_matches("/"));
-        create_new_test_file(&mut vfs, &mut file_changes, &fpath, &file_text);
-    }
-    analysis_host.apply_change(file_changes);
+    let mut manifests = vec![];
+    for test_package in test_packages {
+        let mut file_changes = FileChanges::new();
 
-    let manifest = ManifestPath::new(AbsPathBuf::assert_utf8(move_toml_file));
-    let aptos_package = AptosPackage::load(&manifest, true).unwrap();
-    let packages = vec![aptos_package];
+        let package_root = ws_root.join(test_package.root_dir);
+        fs::create_dir(&package_root).unwrap();
+
+        let move_toml_file = package_root.join("Move.toml");
+        let move_toml_contents = test_package.move_toml;
+        create_new_test_file(&mut vfs, &mut file_changes, &move_toml_file, &move_toml_contents);
+
+        let sources_dir = package_root.join("sources");
+        fs::create_dir(&sources_dir).unwrap();
+
+        let files = parse_files_from_source(&test_package.source_files);
+        for (file_name, file_text) in files {
+            let fpath = sources_dir.join(file_name.trim_start_matches("/"));
+            create_new_test_file(&mut vfs, &mut file_changes, &fpath, &file_text);
+        }
+        analysis_host.apply_change(file_changes);
+
+        let manifest = ManifestPath::new(AbsPathBuf::assert_utf8(move_toml_file));
+        manifests.push(manifest);
+    }
+
+    let packages = manifests
+        .into_iter()
+        .map(|it| AptosPackage::load(&it, true).unwrap())
+        .collect::<Vec<_>>();
 
     let folders = ProjectFolders::new(&packages);
     let dep_graph_change =
@@ -57,6 +57,37 @@ version = "0.1.0"
     analysis_host.apply_change(dep_graph_change);
 
     TestGlobalState { packages, vfs, analysis_host }
+}
+
+pub struct TestPackageFiles {
+    move_toml: String,
+    root_dir: String,
+    source_files: String,
+}
+
+impl TestPackageFiles {
+    pub fn new(root_dir: &str, move_toml: &str, source_files: &str) -> Self {
+        TestPackageFiles {
+            root_dir: root_dir.to_string(),
+            move_toml: stdx::trim_indent(move_toml),
+            source_files: source_files.to_string(),
+        }
+    }
+
+    pub fn named(name: &str, source_files: &str) -> Self {
+        // language=TOML
+        TestPackageFiles {
+            root_dir: name.to_string(),
+            move_toml: stdx::trim_indent(&format!(
+                r#"
+[package]
+name = "{name}"
+version = "0.1.0"
+        "#
+            )),
+            source_files: source_files.to_string(),
+        }
+    }
 }
 
 pub struct TestGlobalState {
@@ -83,7 +114,7 @@ impl TestGlobalState {
 }
 
 fn create_new_test_file(vfs: &mut Vfs, change: &mut FileChanges, fpath: &PathBuf, contents: &str) {
-    fs::write(&fpath, contents.clone()).unwrap();
+    fs::write(&fpath, contents).unwrap();
 
     let vfs_path = VfsPath::new_real_path(fpath.to_str().unwrap().to_string());
     vfs.set_file_contents(vfs_path.clone(), Some(contents.bytes().collect()));

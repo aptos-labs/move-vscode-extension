@@ -3,10 +3,12 @@ use ide::{Analysis, NavigationTarget};
 use syntax::AstNode;
 use syntax::SyntaxKind::{IDENT, QUOTE_IDENT};
 use syntax::files::FilePosition;
+use test_utils::fixtures::global_state::TestPackageFiles;
 use test_utils::{fixtures, get_first_marked_position, get_marked_position_offset_with_data};
 use vfs::FileId;
 
 mod test_resolve_1;
+mod test_resolve_fs;
 mod test_resolve_functions;
 mod test_resolve_loop_labels;
 mod test_resolve_modules;
@@ -70,10 +72,10 @@ pub fn check_resolve_files(files: &str) {
     assert_resolves_to_target(&analysis, nav_item, test_package.file_with_caret("//X"));
 }
 
-pub fn check_resolve_tmpfs(files: &str) {
+pub fn check_resolve_tmpfs(test_packages: Vec<TestPackageFiles>) {
     init_tracing_for_test();
 
-    let test_state = fixtures::from_multiple_files_on_tmpfs(files);
+    let test_state = fixtures::from_multiple_files_on_tmpfs(test_packages);
     let (ref_file_id, ref_file_text) = test_state.file_with_caret("//^");
     let (ref_offset, data) = get_marked_position_offset_with_data(&ref_file_text, "//^");
 
