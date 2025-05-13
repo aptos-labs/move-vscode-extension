@@ -7,7 +7,8 @@ use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 use syntax::TextRange;
 use test_utils::{
-    Marking, apply_markings, get_all_marked_positions, get_first_marked_position, remove_markings,
+    Marking, apply_markings, fixtures, get_all_marked_positions, get_first_marked_position,
+    remove_markings,
 };
 use vfs::FileId;
 
@@ -82,7 +83,7 @@ pub fn check_diagnostics_and_fix(before: Expect, after: Expect) {
 }
 
 fn get_diagnostics(source: &str) -> (Analysis, FileId, Vec<Diagnostic>) {
-    let (analysis, file_id) = Analysis::from_single_file(source.to_string());
+    let (analysis, file_id) = fixtures::from_single_file(source.to_string());
 
     let config = DiagnosticsConfig::test_sample();
     let diagnostics = analysis

@@ -1,8 +1,8 @@
 use expect_test::{Expect, expect};
-use ide::Analysis;
+use test_utils::fixtures;
 
 fn check_highlighting_for_text(source: &str, expect: Expect) {
-    let (analysis, file_id) = Analysis::from_single_file(source.to_owned());
+    let (analysis, file_id) = fixtures::from_single_file(source.to_owned());
     let html_highlights = analysis.highlight_as_html_no_style(file_id).unwrap();
     expect.assert_eq(html_highlights.trim());
 }

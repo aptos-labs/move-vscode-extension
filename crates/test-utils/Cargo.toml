@@ -17,4 +17,5 @@ vfs.workspace = true
 
 syntax = { path = "../syntax" }
 base-db = { path = "../base-db" }
+lang = { path = "../lang" }
 ide = { path = "../ide" }

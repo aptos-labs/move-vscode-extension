@@ -1,12 +1,11 @@
 use crate::init_tracing_for_test;
 use expect_test::Expect;
-use ide::Analysis;
 use ide_completion::config::CompletionConfig;
 use ide_completion::item::CompletionItem;
 use ide_db::SnippetCap;
 use syntax::files::FilePosition;
 use syntax::{AstNode, AstToken, TextSize, ast};
-use test_utils::get_and_replace_caret;
+use test_utils::{fixtures, get_and_replace_caret};
 
 pub fn do_single_completion(before: &str, after: Expect) {
     let trimmed_before = stdx::trim_indent(before).trim().to_string();
@@ -99,7 +98,7 @@ fn completions_at_offset(
     caret_offset: TextSize,
     filter_with_prefix: bool,
 ) -> Vec<CompletionItem> {
-    let (analysis, file_id) = Analysis::from_single_file(source.to_string());
+    let (analysis, file_id) = fixtures::from_single_file(source.to_string());
 
     let source_file = analysis.parse(file_id).unwrap();
 

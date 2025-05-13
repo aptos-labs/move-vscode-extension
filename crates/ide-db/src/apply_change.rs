@@ -8,8 +8,9 @@ impl RootDatabase {
         self.synthetic_write(Durability::LOW);
     }
 
+    #[tracing::instrument(level = "info", skip_all)]
     pub fn apply_change(&mut self, change: FileChanges) {
-        let _p = tracing::info_span!("RootDatabase::apply_change").entered();
+        // let _p = tracing::info_span!("RootDatabase::apply_change").entered();
         self.request_cancellation();
 
         tracing::trace!("apply_change {:?}", change);

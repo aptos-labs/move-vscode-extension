@@ -1,14 +1,13 @@
 #![allow(dead_code)]
 
-use base_db::change::{DepGraph, FileChanges};
+use base_db::change::FileChanges;
 use base_db::{SourceDatabase, source_db};
 use ide_completion::item::CompletionItem;
 use ide_db::{RootDatabase, root_db};
 use line_index::{LineCol, LineIndex};
 use std::sync::Arc;
 use syntax::{SourceFile, TextRange, TextSize};
-use vfs::file_set::FileSet;
-use vfs::{FileId, VfsPath};
+use vfs::FileId;
 
 pub mod extend_selection;
 mod goto_definition;
@@ -24,13 +23,12 @@ use crate::inlay_hints::{InlayHint, InlayHintsConfig};
 pub use crate::navigation_target::NavigationTarget;
 pub use crate::syntax_highlighting::HlRange;
 use base_db::inputs::InternFileId;
-use base_db::package_root::{PackageId, PackageRoot};
+use base_db::package_root::PackageId;
 use ide_completion::config::CompletionConfig;
 use ide_db::assist_config::AssistConfig;
 pub use ide_db::assists::{Assist, AssistKind, AssistResolveStrategy};
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
-use lang::builtin_files::BUILTINS_FILE;
 pub use salsa::Cancelled;
 use syntax::files::{FilePosition, FileRange};
 
@@ -102,38 +100,6 @@ pub struct Analysis {
 // API, the API should in theory be usable as a library, or via a different
 // protocol.
 impl Analysis {
-    // Creates an analysis instance for a single file, without any external
-    // dependencies, stdlib support or ability to apply changes. See
-    // `AnalysisHost` for creating a fully-featured analysis.
-    pub fn from_single_file(text: String) -> (Analysis, FileId) {
-        let mut host = AnalysisHost::default();
-
-        let mut change = FileChanges::new();
-
-        let builtins_file_id = FileId::from_raw(0);
-        change.add_builtins_file(builtins_file_id, BUILTINS_FILE.to_string());
-
-        let file_id = FileId::from_raw(1);
-        let mut file_set = FileSet::default();
-        file_set.insert(file_id, VfsPath::new_virtual_path("/main.move".to_owned()));
-
-        let package_root = PackageRoot::new_local(file_set);
-
-        change.set_package_roots(vec![package_root]);
-        change.change_file(file_id, Some(text));
-
-        host.apply_change(change);
-
-        let mut package_graph = DepGraph::default();
-        package_graph.insert(file_id, vec![]);
-
-        let mut change = FileChanges::new();
-        change.set_package_graph(package_graph);
-        host.apply_change(change);
-
-        (host.analysis(), file_id)
-    }
-
     pub fn package_id(&self, file_id: FileId) -> Cancellable<PackageId> {
         self.with_db(|db| db.file_package_id(file_id).data(db))
     }
