@@ -23,7 +23,10 @@ pub fn from_single_file(text: String) -> (Analysis, FileId) {
     let file_id = test_package.new_file_id();
     file_set.insert(file_id, VfsPath::new_virtual_path("/main.move".to_owned()));
 
-    changes.set_package_roots(vec![PackageRoot::new_local(file_set)]);
+    changes.set_package_roots(vec![PackageRoot::new_local(
+        file_set,
+        Some("/test_package".to_string()),
+    )]);
     changes.change_file(file_id, Some(text));
 
     test_package.apply_changes(changes);
@@ -44,7 +47,7 @@ pub fn from_multiple_files(file_source: &str) -> TestPackage {
         changes.change_file(file_id, Some(file_contents));
     }
 
-    let package_root = PackageRoot::new_local(file_set);
+    let package_root = PackageRoot::new_local(file_set, Some("/test_package".to_string()));
     changes.set_package_roots(vec![package_root]);
 
     test_package.apply_changes(changes);

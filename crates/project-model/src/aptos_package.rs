@@ -5,7 +5,8 @@ use base_db::change::ManifestFileId;
 use paths::{AbsPath, AbsPathBuf};
 use std::collections::HashSet;
 use std::fmt::Formatter;
-use std::{fmt, fs};
+use std::path::PathBuf;
+use std::{fmt, fs, path};
 use vfs::FileId;
 
 pub type FileLoader<'a> = &'a mut dyn for<'b> FnMut(&'b AbsPath) -> Option<FileId>;
@@ -13,7 +14,7 @@ pub type FileLoader<'a> = &'a mut dyn for<'b> FnMut(&'b AbsPath) -> Option<FileI
 /// `PackageFolderRoot` describes a package root folder.
 /// Which may be an external dependency, or a member of
 /// the current workspace.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct PackageFolderRoot {
     pub content_root: AbsPathBuf,
     /// Is from the local filesystem and may be edited
@@ -38,7 +39,7 @@ impl PackageFolderRoot {
 pub struct AptosPackage {
     content_root: AbsPathBuf,
     move_toml: MoveToml,
-    is_git: bool,
+    is_from_git: bool,
     deps: Vec<AptosPackage>,
 }
 
@@ -46,6 +47,8 @@ impl fmt::Debug for AptosPackage {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("AptosPackage")
             .field("content_root", &self.content_root().to_string())
+            .field("is_from_git", &self.is_from_git)
+            .field("deps", &self.deps)
             .finish()
     }
 }
@@ -78,17 +81,15 @@ impl AptosPackage {
             for toml_dep in move_toml.dependencies.clone() {
                 if let Some(dep_root) = toml_dep.dep_root(&package_root) {
                     let move_toml_path = dep_root.join("Move.toml");
-
-                    let canonical_path = fs::canonicalize(&move_toml_path);
-                    match canonical_path {
+                    let move_toml_path = match fs::canonicalize(&move_toml_path) {
                         Ok(path) => {
                             let path = AbsPathBuf::assert_utf8(path);
                             if visited.contains(&path) {
-                                // visited already, circular dependency
-                                tracing::error!("circular dependency in {:?}", path);
-                                break;
+                                tracing::info!("dep already visited {:?}", path);
+                                continue;
                             }
-                            visited.insert(path);
+                            visited.insert(path.clone());
+                            path
                         }
                         Err(_) => {
                             tracing::error!(
@@ -97,7 +98,7 @@ impl AptosPackage {
                             );
                             break;
                         }
-                    }
+                    };
 
                     if fs::exists(&move_toml_path).is_ok_and(|it| it) {
                         let manifest_path = ManifestPath::new(move_toml_path);
@@ -124,7 +125,7 @@ impl AptosPackage {
         Ok(AptosPackage {
             content_root: package_root,
             move_toml,
-            is_git,
+            is_from_git: is_git,
             deps,
         })
     }
@@ -163,7 +164,7 @@ impl AptosPackage {
     pub fn to_folder_root(&self) -> PackageFolderRoot {
         PackageFolderRoot {
             content_root: self.content_root.to_path_buf(),
-            is_local: !self.is_git,
+            is_local: !self.is_from_git,
         }
     }
 

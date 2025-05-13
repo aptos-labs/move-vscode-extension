@@ -5,6 +5,7 @@ use vfs::{FileId, VfsPath};
 #[salsa_macros::interned(no_lifetime)]
 pub struct PackageId {
     pub idx: u32,
+    pub root_dir: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -15,15 +16,24 @@ pub struct PackageRoot {
     /// Libraries are considered mostly immutable, this assumption is used to
     /// optimize salsa's query structure
     pub is_library: bool,
+    pub root_dir: Option<String>,
 }
 
 impl PackageRoot {
-    pub fn new_local(file_set: FileSet) -> PackageRoot {
-        PackageRoot { file_set, is_library: false }
+    pub fn new_local(file_set: FileSet, package_name: Option<String>) -> PackageRoot {
+        PackageRoot {
+            file_set,
+            is_library: false,
+            root_dir: package_name,
+        }
     }
 
-    pub fn new_library(file_set: FileSet) -> PackageRoot {
-        PackageRoot { file_set, is_library: true }
+    pub fn new_library(file_set: FileSet, package_name: Option<String>) -> PackageRoot {
+        PackageRoot {
+            file_set,
+            is_library: true,
+            root_dir: package_name,
+        }
     }
 
     pub fn path_for_file(&self, file: &FileId) -> Option<&VfsPath> {

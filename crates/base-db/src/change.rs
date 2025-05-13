@@ -36,8 +36,8 @@ impl FileChanges {
         FileChanges::default()
     }
 
-    pub fn set_package_roots(&mut self, packages: Vec<PackageRoot>) {
-        self.package_roots = Some(packages);
+    pub fn set_package_roots(&mut self, package_roots: Vec<PackageRoot>) {
+        self.package_roots = Some(package_roots);
     }
 
     pub fn set_package_graph(&mut self, package_graph: DepGraph) {
@@ -57,7 +57,7 @@ impl FileChanges {
 
         if let Some(package_roots) = self.package_roots.clone() {
             for (idx, root) in package_roots.into_iter().enumerate() {
-                let package_id = PackageId::new(db, idx as u32);
+                let package_id = PackageId::new(db, idx as u32, root.root_dir.clone());
                 let durability = package_root_durability(&root);
                 for file_id in root.file_set.iter() {
                     db.set_file_package_id(file_id, package_id);
@@ -87,11 +87,8 @@ impl FileChanges {
                     .map(|it| db.file_package_id(it))
                     .collect::<Vec<_>>();
                 tracing::info!(
-                    main_package_id = main_package_id.idx(db),
-                    deps_package_ids = ?deps_package_ids
-                        .iter()
-                        .map(|it| it.idx(db))
-                        .collect::<Vec<_>>()
+                    main_package = main_package_id.root_dir(db),
+                    dep_package_ids = ?package_ids_to_names(db, &deps_package_ids),
                 );
                 db.set_dep_package_ids(main_package_id, deps_package_ids);
             }
@@ -112,6 +109,10 @@ impl FileChanges {
             db.set_file_text(file_id, text.as_str())
         }
     }
+}
+
+pub fn package_ids_to_names(db: &dyn SourceDatabase, ids: &[PackageId]) -> Vec<Option<String>> {
+    ids.iter().map(|it| it.root_dir(db)).collect::<Vec<_>>()
 }
 
 fn find_spec_file_set(file_id: FileId, root: PackageRoot) -> Option<Vec<FileId>> {

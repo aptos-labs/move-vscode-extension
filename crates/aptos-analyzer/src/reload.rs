@@ -406,23 +406,6 @@ impl GlobalState {
     }
 }
 
-fn dedup(packages: &mut Vec<anyhow::Result<AptosPackage>>) {
-    let mut i = 0;
-    while i < packages.len() {
-        if let Ok(p) = &packages[i] {
-            let duplicates: Vec<_> = packages[i + 1..]
-                .iter()
-                .positions(|it| it.as_ref().is_ok_and(|pkg| pkg.eq(p)))
-                .collect();
-            // remove all duplicate packages
-            duplicates.into_iter().rev().for_each(|dup_pos| {
-                _ = packages.remove(dup_pos + i + 1);
-            });
-        }
-        i += 1;
-    }
-}
-
 pub(crate) fn should_refresh_for_file_change(
     changed_file_path: &AbsPath,
     // change_kind: ChangeKind,
