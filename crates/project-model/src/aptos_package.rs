@@ -21,13 +21,6 @@ pub struct PackageFolderRoot {
 }
 
 impl PackageFolderRoot {
-    pub fn new(content_root: AbsPathBuf, local: bool) -> Self {
-        PackageFolderRoot {
-            content_root,
-            is_local: local,
-        }
-    }
-
     pub fn source_dirs(&self) -> Vec<AbsPathBuf> {
         vec![
             self.content_root.join("sources"),
@@ -161,7 +154,7 @@ impl AptosPackage {
     /// Returns the roots for the current `AptosPackage`
     /// The return type contains the path and whether or not
     /// the root is a member of the current workspace
-    pub fn to_folder_roots(&self) -> Vec<PackageFolderRoot> {
+    pub fn package_and_deps_folder_roots(&self) -> Vec<PackageFolderRoot> {
         self.package_and_deps()
             .into_iter()
             .map(|it| it.to_folder_root())

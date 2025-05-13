@@ -45,18 +45,18 @@ pub struct ProjectFolders {
 }
 
 impl ProjectFolders {
-    pub fn new(main_packages: &[AptosPackage]) -> ProjectFolders {
+    pub fn new(ws_packages: &[AptosPackage]) -> ProjectFolders {
         let mut folders = ProjectFolders::default();
         let mut fsc = FileSetConfig::builder();
         let mut local_filesets = vec![];
 
-        let mut folder_roots = main_packages
+        let mut all_reachable_folder_roots = ws_packages
             .iter()
-            .flat_map(|pkg| pkg.to_folder_roots())
+            .flat_map(|pkg| pkg.package_and_deps_folder_roots())
             .collect::<Vec<_>>();
-        folder_roots.dedup();
+        all_reachable_folder_roots.dedup();
 
-        for package_folder_root in folder_roots {
+        for package_folder_root in all_reachable_folder_roots {
             for dir_entry in folder_root_to_dir_entries(package_folder_root.clone()) {
                 if package_folder_root.is_local {
                     folders.watch.push(folders.load.len());
