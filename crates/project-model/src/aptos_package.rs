@@ -158,37 +158,6 @@ impl AptosPackage {
         refs
     }
 
-    pub fn to_dep_graph(&self, load: FileLoader<'_>) -> Option<DepGraph> {
-        tracing::info!("reloading package at {}", self.content_root());
-
-        let mut package_graph = DepGraph::default();
-        for pkg in self.package_and_deps() {
-            let package_file_id = pkg.load_manifest_file_id(load)?;
-            let mut dep_ids = vec![];
-            self.collect_dep_ids(&mut dep_ids, pkg, load);
-            dep_ids.sort();
-            dep_ids.dedup();
-
-            package_graph.insert(package_file_id, dep_ids);
-        }
-
-        Some(package_graph)
-    }
-
-    fn collect_dep_ids(
-        &self,
-        dep_ids: &mut Vec<ManifestFileId>,
-        package_ref: &AptosPackage,
-        load: FileLoader<'_>,
-    ) {
-        for dep_package in package_ref.deps() {
-            if let Some(dep_file_id) = dep_package.load_manifest_file_id(load) {
-                dep_ids.push(dep_file_id);
-                self.collect_dep_ids(dep_ids, dep_package, load);
-            }
-        }
-    }
-
     /// Returns the roots for the current `AptosPackage`
     /// The return type contains the path and whether or not
     /// the root is a member of the current workspace
