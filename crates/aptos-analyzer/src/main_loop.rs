@@ -459,8 +459,11 @@ impl GlobalState {
                 let (state, msg) = match progress {
                     FetchPackagesProgress::Begin => (Progress::Begin, None),
                     FetchPackagesProgress::Report(msg) => (Progress::Report, Some(msg)),
-                    FetchPackagesProgress::End(packages, force_reload_deps) => {
-                        let resp = FetchPackagesResponse { packages, force_reload_deps };
+                    FetchPackagesProgress::End(discovered_packages, force_reload_deps) => {
+                        let resp = FetchPackagesResponse {
+                            discovered_packages,
+                            force_reload_deps,
+                        };
                         self.fetch_packages_queue.op_completed(resp);
                         if let Err(e) = self.fetch_workspace_error() {
                             tracing::error!("FetchWorkspaceError: {e}");

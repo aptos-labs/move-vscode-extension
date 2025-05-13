@@ -4,8 +4,10 @@ use std::fs;
 use std::process::Command;
 
 pub mod aptos_package;
+pub mod dep_graph;
 pub mod manifest_path;
 pub mod move_toml;
+pub mod project_folders;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct DiscoveredManifest {

@@ -203,12 +203,12 @@ module 0x1::main {
 fn test_module_item_cross_file() {
     check_resolve_files(
         r#"
-//- m.move
+//- /m.move
 module std::m {
     public fun call() {}
               //X
 }
-//- main.move
+//- /main.move
 module std::main {
     use std::m::call;
     public fun main() {
@@ -225,11 +225,11 @@ module std::main {
 fn test_module_item_cross_file_unresolved() {
     check_resolve_files(
         r#"
-//- m.move
+//- /m.move
 module std::m {
     public fun call() {}
 }
-//- main.move
+//- /main.move
 module std::main {
     public fun main() {
         call();

@@ -15,7 +15,6 @@ mod file_changes;
 mod flycheck;
 pub mod lsp;
 mod movefmt;
-mod project_folders;
 pub mod toolchain;
 pub mod tracing;
 

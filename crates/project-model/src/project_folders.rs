@@ -1,5 +1,5 @@
+use crate::aptos_package::{AptosPackage, PackageFolderRoot};
 use base_db::package_root::PackageRoot;
-use project_model::aptos_package::{AptosPackage, PackageFolderRoot};
 use std::fmt;
 use std::fmt::Formatter;
 use vfs::VfsPath;

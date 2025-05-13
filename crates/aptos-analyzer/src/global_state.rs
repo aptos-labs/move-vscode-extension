@@ -9,7 +9,6 @@ use crate::lsp_ext;
 use crate::main_loop::Task;
 use crate::mem_docs::MemDocs;
 use crate::op_queue::{Cause, OpQueue};
-use crate::project_folders::PackageRootConfig;
 use crate::task_pool::TaskPool;
 use base_db::change::FileChanges;
 use crossbeam_channel::{Receiver, Sender, unbounded};
@@ -19,6 +18,7 @@ use lsp_types::Url;
 use lsp_types::notification::Notification;
 use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard};
 use project_model::aptos_package::AptosPackage;
+use project_model::project_folders::PackageRootConfig;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
@@ -29,7 +29,7 @@ pub(crate) struct FetchPackagesRequest {
 }
 
 pub(crate) struct FetchPackagesResponse {
-    pub(crate) packages: Vec<anyhow::Result<AptosPackage>>,
+    pub(crate) discovered_packages: Vec<anyhow::Result<AptosPackage>>,
     pub(crate) force_reload_deps: bool,
 }
 
