@@ -1,7 +1,7 @@
 use crate::manifest_path::ManifestPath;
 use crate::move_toml::{MoveToml, MoveTomlDependency};
 use anyhow::Context;
-use base_db::change::{DepGraph, ManifestFileId};
+use base_db::change::ManifestFileId;
 use paths::{AbsPath, AbsPathBuf};
 use std::collections::HashSet;
 use std::fmt::Formatter;
@@ -21,13 +21,6 @@ pub struct PackageFolderRoot {
 }
 
 impl PackageFolderRoot {
-    pub fn new(content_root: AbsPathBuf, local: bool) -> Self {
-        PackageFolderRoot {
-            content_root,
-            is_local: local,
-        }
-    }
-
     pub fn source_dirs(&self) -> Vec<AbsPathBuf> {
         vec![
             self.content_root.join("sources"),
@@ -46,7 +39,6 @@ pub struct AptosPackage {
     content_root: AbsPathBuf,
     move_toml: MoveToml,
     is_git: bool,
-    // is_dep: bool,
     deps: Vec<AptosPackage>,
 }
 
@@ -161,7 +153,7 @@ impl AptosPackage {
     /// Returns the roots for the current `AptosPackage`
     /// The return type contains the path and whether or not
     /// the root is a member of the current workspace
-    pub fn to_folder_roots(&self) -> Vec<PackageFolderRoot> {
+    pub fn package_and_deps_folder_roots(&self) -> Vec<PackageFolderRoot> {
         self.package_and_deps()
             .into_iter()
             .map(|it| it.to_folder_root())

@@ -140,7 +140,9 @@ fn file_ids_by_module_address_tracked<'db>(
 #[salsa_macros::tracked]
 fn all_package_file_ids(db: &dyn SourceDatabase, package_id: PackageId) -> Vec<FileId> {
     let dep_ids = db.dep_package_ids(package_id).data(db).deref().to_owned();
-    tracing::debug!(?dep_ids);
+    tracing::debug!(
+        dep_ids = ?dep_ids.iter().map(|it| it.idx(db)).collect::<Vec<_>>()
+    );
 
     let file_sets = iter::once(package_id)
         .chain(dep_ids)

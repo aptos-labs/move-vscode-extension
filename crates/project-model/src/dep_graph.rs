@@ -1,5 +1,4 @@
 use crate::aptos_package::{AptosPackage, FileLoader};
-use crate::dep_graph;
 use crate::project_folders::PackageRootConfig;
 use base_db::change::{DepGraph, FileChanges, ManifestFileId};
 use paths::AbsPath;

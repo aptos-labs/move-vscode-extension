@@ -10,10 +10,9 @@ use crate::main_loop::Task;
 use crate::mem_docs::MemDocs;
 use crate::op_queue::{Cause, OpQueue};
 use crate::task_pool::TaskPool;
-use base_db::change::FileChanges;
 use crossbeam_channel::{Receiver, Sender, unbounded};
 use ide::{Analysis, AnalysisHost, Cancellable};
-use lang::builtin_files::BUILTINS_FILE;
+use lang::builtins_file;
 use lsp_types::Url;
 use lsp_types::notification::Notification;
 use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard};
@@ -84,7 +83,7 @@ pub(crate) struct GlobalState {
     pub(crate) vfs_span: Option<tracing::span::EnteredSpan>,
     pub(crate) reason_to_switch: Option<Cause>,
 
-    pub(crate) main_packages: Arc<Vec<AptosPackage>>,
+    pub(crate) ws_packages: Arc<Vec<AptosPackage>>,
     // op queues
     pub(crate) fetch_packages_queue: OpQueue<FetchPackagesRequest, FetchPackagesResponse>,
 }
@@ -95,7 +94,7 @@ pub(crate) struct GlobalStateSnapshot {
     pub(crate) analysis: Analysis,
     mem_docs: MemDocs,
     vfs: Arc<RwLock<(vfs::Vfs, HashMap<FileId, LineEndings>)>>,
-    pub(crate) main_packages: Arc<Vec<AptosPackage>>,
+    pub(crate) ws_packages: Arc<Vec<AptosPackage>>,
     pub(crate) flycheck: Arc<[FlycheckHandle]>,
     sender: Sender<lsp_server::Message>,
 }
@@ -125,21 +124,14 @@ impl GlobalState {
 
         let (flycheck_sender, flycheck_receiver) = unbounded();
 
-        let vfs = Arc::new(RwLock::new((vfs::Vfs::default(), HashMap::default())));
-        let (builtins_file_id, _) = {
-            let vfs = &mut vfs.write().0;
-            let builtins_path = VfsPath::new_virtual_path("/builtins.move".to_string());
-            vfs.set_file_contents(builtins_path.clone(), Some(BUILTINS_FILE.bytes().collect()));
-            let file_id = vfs.file_id(&builtins_path).unwrap();
-            tracing::info!("load `builtins.move` file to {:?}", file_id);
-            file_id
-        };
-
-        let mut builtins_change = FileChanges::default();
-        builtins_change.add_builtins_file(builtins_file_id, BUILTINS_FILE.to_string());
-
         let mut analysis_host = AnalysisHost::new();
-        analysis_host.apply_change(builtins_change);
+
+        let vfs = Arc::new(RwLock::new((vfs::Vfs::default(), HashMap::default())));
+        {
+            let vfs = &mut vfs.write().0;
+            let change = builtins_file::add_to_vfs(vfs);
+            analysis_host.apply_change(change);
+        };
 
         let mut this = GlobalState {
             sender,
@@ -172,7 +164,7 @@ impl GlobalState {
             vfs_span: None,
             reason_to_switch: None,
 
-            main_packages: Arc::from(Vec::new()),
+            ws_packages: Arc::from(Vec::new()),
             fetch_packages_queue: OpQueue::default(),
         };
         // Apply any required database inputs from the config.
@@ -183,7 +175,7 @@ impl GlobalState {
     pub(crate) fn snapshot(&self) -> GlobalStateSnapshot {
         GlobalStateSnapshot {
             config: Arc::clone(&self.config),
-            main_packages: Arc::clone(&self.main_packages),
+            ws_packages: Arc::clone(&self.ws_packages),
             analysis: self.analysis_host.analysis(),
             vfs: Arc::clone(&self.vfs),
             mem_docs: self.mem_docs.clone(),

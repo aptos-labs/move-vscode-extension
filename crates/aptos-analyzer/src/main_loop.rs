@@ -345,7 +345,7 @@ impl GlobalState {
                 .iter()
                 .map(|path| vfs.file_id(path).unwrap().0)
                 .filter(|&file_id| {
-                    let package_id = db.file_package_id(file_id).data(db);
+                    let package_id = db.file_package_id(file_id);
                     // Only publish diagnostics for files in the workspace, not from crates.io deps
                     // or the sysroot.
                     // While theoretically these should never have errors, we have quite a few false

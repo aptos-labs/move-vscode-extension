@@ -5,14 +5,13 @@ use crate::lsp::utils::Progress;
 use crate::main_loop::Task;
 use crate::op_queue::Cause;
 use crate::{Config, lsp_ext};
-use base_db::change::{DepGraph, FileChanges};
+use base_db::change::DepGraph;
 use lsp_types::FileSystemWatcher;
 use project_model::aptos_package::AptosPackage;
 use project_model::dep_graph;
 use project_model::manifest_path::ManifestPath;
 use project_model::project_folders::ProjectFolders;
 use std::fmt::Formatter;
-use std::ops::Deref;
 use std::sync::Arc;
 use std::{fmt, mem};
 use stdx::format_to;
@@ -174,7 +173,7 @@ impl GlobalState {
         else {
             return;
         };
-        let switching_from_empty_workspace = self.main_packages.is_empty();
+        let switching_from_empty_workspace = self.ws_packages.is_empty();
 
         tracing::info!(?force_reload_deps, %switching_from_empty_workspace);
         if self.fetch_workspace_error().is_err() && !switching_from_empty_workspace {
@@ -191,10 +190,10 @@ impl GlobalState {
             .filter_map(|res| res.as_ref().ok().cloned())
             .collect::<Vec<_>>();
 
-        let same_packages = fetched_packages.len() == self.main_packages.len()
+        let same_packages = fetched_packages.len() == self.ws_packages.len()
             && fetched_packages
                 .iter()
-                .zip(self.main_packages.iter())
+                .zip(self.ws_packages.iter())
                 .all(|(l, r)| l.eq(r));
 
         if same_packages {
@@ -210,15 +209,14 @@ impl GlobalState {
             return;
         }
 
-        self.main_packages = Arc::new(fetched_packages);
+        self.ws_packages = Arc::new(fetched_packages);
 
-        if let FilesWatcher::Client = self.config.files().watcher {
+        let files_config = self.config.files();
+        if let FilesWatcher::Client = files_config.watcher {
             self.setup_client_file_watchers();
         }
 
-        let files_config = self.config.files();
-        let project_folders = ProjectFolders::new(&self.main_packages /*&files_config.exclude*/);
-
+        let project_folders = ProjectFolders::new(&self.ws_packages);
         let watch = match files_config.watcher {
             FilesWatcher::Client => vec![],
             FilesWatcher::Server => project_folders.watch,
@@ -242,10 +240,10 @@ impl GlobalState {
     }
 
     fn setup_client_file_watchers(&mut self) {
-        let package_folders = self
-            .main_packages
+        let local_folder_roots = self
+            .ws_packages
             .iter()
-            .flat_map(|pkg| pkg.to_folder_roots())
+            .flat_map(|pkg| pkg.package_and_deps_folder_roots())
             .filter(|it| it.is_local);
 
         let mut watchers: Vec<FileSystemWatcher> = if self
@@ -253,7 +251,7 @@ impl GlobalState {
             .did_change_watched_files_relative_pattern_support()
         {
             // When relative patterns are supported by the client, prefer using them
-            package_folders
+            local_folder_roots
                 .flat_map(|package_folder_root| {
                     package_folder_root
                         .source_dirs()
@@ -271,7 +269,7 @@ impl GlobalState {
                 .collect()
         } else {
             // When they're not, integrate the base to make them into absolute patterns
-            package_folders
+            local_folder_roots
                 .flat_map(|folder_root| {
                     folder_root
                         .source_dirs()
@@ -287,7 +285,7 @@ impl GlobalState {
         };
 
         watchers.extend(
-            self.main_packages
+            self.ws_packages
                 .iter()
                 .map(|pkg| pkg.manifest_path())
                 .map(|glob_pattern| FileSystemWatcher {
@@ -322,7 +320,7 @@ impl GlobalState {
         );
         let dep_graph_change = {
             let vfs = &self.vfs.read().0;
-            dep_graph::reload_graph(vfs, self.main_packages.as_slice(), &self.package_root_config)
+            dep_graph::reload_graph(vfs, self.ws_packages.as_slice(), &self.package_root_config)
         };
         self.report_progress(progress_title, Progress::End, None, None, None);
 
@@ -346,7 +344,7 @@ impl GlobalState {
                 .map(|it| it.0)
         };
 
-        for main_package in self.main_packages.iter() {
+        for main_package in self.ws_packages.iter() {
             let dep_graph = main_package.to_dep_graph(&mut load)?;
             global_dep_graph.extend(dep_graph);
         }
@@ -396,7 +394,7 @@ impl GlobalState {
 
         let sender = self.flycheck_sender.clone();
         self.flycheck = self
-            .main_packages
+            .ws_packages
             .iter()
             .enumerate()
             .filter_map(|(id, ws)| Some((id, ws.content_root(), ws.manifest_path())))

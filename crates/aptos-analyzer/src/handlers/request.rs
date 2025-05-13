@@ -310,16 +310,16 @@ pub(crate) fn handle_analyzer_status(
     //     }
     // }
 
-    if snap.main_packages.is_empty() {
+    if snap.ws_packages.is_empty() {
         buf.push_str("No packages\n")
     } else {
         buf.push_str("Packages:\n");
-        format_to!(buf, "Loaded {:?} packages.\n", snap.main_packages.len(),);
+        format_to!(buf, "Loaded {:?} packages.\n", snap.ws_packages.len(),);
 
         format_to!(
             buf,
             "Package root folders: {:?}",
-            snap.main_packages
+            snap.ws_packages
                 .iter()
                 .map(|ws| ws.content_root())
                 .collect::<Vec<_>>()

@@ -34,11 +34,6 @@ pub struct FileText {
 }
 
 #[salsa::input]
-pub struct FilePackageIdInput {
-    pub data: PackageId,
-}
-
-#[salsa::input]
 pub struct PackageRootInput {
     pub data: Arc<PackageRoot>,
 }
@@ -51,7 +46,7 @@ pub struct DepPackagesInput {
 #[derive(Default)]
 pub struct Files {
     files: Arc<DashMap<FileId, FileText>>,
-    file_package_ids: Arc<DashMap<FileId, FilePackageIdInput>>,
+    file_package_ids: Arc<DashMap<FileId, PackageId>>,
 
     package_roots: Arc<DashMap<PackageId, PackageRootInput>>,
     package_deps: Arc<DashMap<PackageId, DepPackagesInput>>,
@@ -125,7 +120,7 @@ impl Files {
         };
     }
 
-    pub fn file_package_id(&self, id: FileId) -> FilePackageIdInput {
+    pub fn file_package_id(&self, id: FileId) -> PackageId {
         let file_package_id = self
             .file_package_ids
             .get(&id)
@@ -133,28 +128,8 @@ impl Files {
         *file_package_id
     }
 
-    pub fn set_file_package_id_with_durability(
-        &self,
-        db: &mut dyn SourceDatabase,
-        file_id: FileId,
-        package_id: PackageId,
-        durability: Durability,
-    ) {
-        match self.file_package_ids.entry(file_id) {
-            Entry::Occupied(mut occupied) => {
-                occupied
-                    .get_mut()
-                    .set_data(db)
-                    .with_durability(durability)
-                    .to(package_id);
-            }
-            Entry::Vacant(vacant) => {
-                let file_package_id = FilePackageIdInput::builder(package_id)
-                    .durability(durability)
-                    .new(db);
-                vacant.insert(file_package_id);
-            }
-        };
+    pub fn set_file_package_id(&self, file_id: FileId, package_id: PackageId) {
+        self.file_package_ids.insert(file_id, package_id);
     }
 
     pub fn package_deps(&self, package_id: PackageId) -> DepPackagesInput {

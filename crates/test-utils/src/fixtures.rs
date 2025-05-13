@@ -1,18 +1,16 @@
+pub mod global_state;
+
+pub use global_state::{TestGlobalState, from_multiple_files_on_tmpfs};
+
 use base_db::change::FileChanges;
 use base_db::package_root::PackageRoot;
 use ide::{Analysis, AnalysisHost};
-use lang::builtin_files::BUILTINS_FILE;
-use project_model::aptos_package::AptosPackage;
-use project_model::dep_graph;
-use project_model::manifest_path::ManifestPath;
-use project_model::project_folders::ProjectFolders;
+use lang::builtins_file::BUILTINS_FILE;
 use regex::Regex;
 use std::cell::Cell;
 use std::collections::HashSet;
-use std::fs;
-use std::path::PathBuf;
 use vfs::file_set::FileSet;
-use vfs::{AbsPathBuf, FileId, Vfs, VfsPath};
+use vfs::{FileId, VfsPath};
 
 const BUILTINS_FILE_ID: FileId = FileId::from_raw(0);
 
@@ -52,53 +50,6 @@ pub fn from_multiple_files(file_source: &str) -> TestPackage {
     test_package.apply_changes(changes);
 
     test_package
-}
-
-pub fn from_multiple_files_on_tmpfs(files_source: &str) -> TestGlobalState {
-    let tmp = tempdir::TempDir::new("aptos_analyzer_tests").unwrap();
-
-    let mut vfs = Vfs::default();
-
-    let ws_root = tmp.path().join("ws_root");
-    fs::create_dir(&ws_root).unwrap();
-
-    let mut file_changes = FileChanges::new();
-
-    let move_toml_file = ws_root.join("Move.toml");
-    // language=TOML
-    let move_toml_contents = r#"
-[package]
-name = "WsRoot"
-version = "0.1.0"
-    "#;
-    create_new_test_file(
-        &mut vfs,
-        &mut file_changes,
-        &move_toml_file,
-        move_toml_contents.clone(),
-    );
-
-    let sources_dir = ws_root.join("sources");
-    fs::create_dir(&sources_dir).unwrap();
-
-    let files = parse_files_from_source(files_source);
-    for (file_name, file_text) in files {
-        let fpath = sources_dir.join(file_name.trim_start_matches("/"));
-        create_new_test_file(&mut vfs, &mut file_changes, &fpath, &file_text);
-    }
-    let mut analysis_host = AnalysisHost::default();
-    analysis_host.apply_change(file_changes);
-
-    let manifest = ManifestPath::new(AbsPathBuf::assert_utf8(move_toml_file));
-    let aptos_package = AptosPackage::load(&manifest, true).unwrap();
-    let packages = vec![aptos_package];
-
-    let folders = ProjectFolders::new(&packages);
-    let dep_graph_change =
-        dep_graph::reload_graph(&vfs, &packages, &folders.package_root_config).unwrap();
-    analysis_host.apply_change(dep_graph_change);
-
-    TestGlobalState { packages, vfs, analysis_host }
 }
 
 pub struct TestPackage {
@@ -186,22 +137,6 @@ fn parse_files_from_source(files_source: &str) -> Vec<(String, String)> {
     files
 }
 
-pub struct TestGlobalState {
-    pub vfs: Vfs,
-    pub analysis_host: AnalysisHost,
-    pub packages: Vec<AptosPackage>,
-}
-
-fn create_new_test_file(vfs: &mut Vfs, change: &mut FileChanges, fpath: &PathBuf, contents: &str) {
-    fs::write(&fpath, contents.clone()).unwrap();
-
-    let vfs_path = VfsPath::new_real_path(fpath.to_str().unwrap().to_string());
-    vfs.set_file_contents(vfs_path.clone(), Some(contents.bytes().collect()));
-
-    let (file_id, _) = vfs.file_id(&vfs_path).unwrap();
-    change.files_changed.push((file_id, Some(contents.to_string())));
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -235,28 +170,5 @@ module 0x1::m {
         "#
             )
         )
-    }
-
-    #[test]
-    fn test_from_multiple_files_on_tmpfs() {
-        // language=Move
-        let global_state = from_multiple_files_on_tmpfs(
-            r#"
-//- /call.move
-module 0x1::call {
-    fun call() {}
-}
-//- /main.move
-module 0x1::m {
-    fun main() { /*caret*/ }
-}
-        "#,
-        );
-        assert_eq!(
-            global_state.packages.get(0).unwrap().content_root().file_name(),
-            Some("ws_root")
-        );
-
-        let analysis = global_state.analysis_host.analysis();
     }
 }
