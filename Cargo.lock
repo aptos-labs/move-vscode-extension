@@ -760,7 +760,6 @@ dependencies = [
  "salsa-macros",
  "stdx",
  "syntax",
- "test-utils",
  "tracing",
  "vfs",
 ]
@@ -1723,6 +1722,7 @@ version = "0.1.0"
 dependencies = [
  "base-db",
  "ide",
+ "lang",
  "line-index",
  "regex",
  "stdx",

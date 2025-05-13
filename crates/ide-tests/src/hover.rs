@@ -1,15 +1,14 @@
 use crate::init_tracing_for_test;
 use expect_test::expect;
-use ide::Analysis;
 use syntax::files::FilePosition;
-use test_utils::get_first_marked_position;
+use test_utils::{fixtures, get_first_marked_position};
 
 pub(crate) fn check_hover(source: &str, expect: expect_test::Expect) {
     init_tracing_for_test();
 
     let ref_offset = get_first_marked_position(&source, "//^").item_offset;
 
-    let (analysis, file_id) = Analysis::from_single_file(source.to_string());
+    let (analysis, file_id) = fixtures::from_single_file(source.to_string());
     let position = FilePosition { file_id, offset: ref_offset };
 
     let hover_result = analysis

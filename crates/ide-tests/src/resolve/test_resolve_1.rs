@@ -1,4 +1,4 @@
-use crate::resolve::check_resolve;
+use crate::resolve::{check_resolve, check_resolve_files};
 
 #[test]
 fn test_resolve_base_for_index_expr() {
@@ -192,6 +192,48 @@ module 0x1::main {
         let uu = UU { val: 1 };
         (self.settle_trade_f)(tt, uu).val;
                                      //^
+    }
+}
+"#,
+    )
+}
+
+// language=Move
+#[test]
+fn test_module_item_cross_file() {
+    check_resolve_files(
+        r#"
+//- m.move
+module std::m {
+    public fun call() {}
+              //X
+}
+//- main.move
+module std::main {
+    use std::m::call;
+    public fun main() {
+        call();
+       //^
+    }
+}
+"#,
+    )
+}
+
+// language=Move
+#[test]
+fn test_module_item_cross_file_unresolved() {
+    check_resolve_files(
+        r#"
+//- m.move
+module std::m {
+    public fun call() {}
+}
+//- main.move
+module std::main {
+    public fun main() {
+        call();
+       //^ unresolved
     }
 }
 "#,

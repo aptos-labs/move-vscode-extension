@@ -1,7 +1,6 @@
 use crate::init_tracing_for_test;
-use ide::Analysis;
 use syntax::files::FilePosition;
-use test_utils::get_marked_position_offset_with_data;
+use test_utils::{fixtures, get_marked_position_offset_with_data};
 
 mod test_function_values;
 mod test_lambda_param_types;
@@ -11,7 +10,7 @@ mod test_types_expression_types;
 pub fn check_expr_type(source: &str) {
     init_tracing_for_test();
 
-    let (analysis, file_id) = Analysis::from_single_file(source.to_string());
+    let (analysis, file_id) = fixtures::from_single_file(source.to_string());
 
     let (ref_offset, data) = get_marked_position_offset_with_data(&source, "//^");
     let position = FilePosition { file_id, offset: ref_offset };

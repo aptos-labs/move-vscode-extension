@@ -1,7 +1,7 @@
-use ide::Analysis;
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 use syntax::{SyntaxError, TextRange};
+use test_utils::fixtures;
 
 #[test]
 fn test_right_brace_expected() {
@@ -9,7 +9,7 @@ fn test_right_brace_expected() {
     let source = r#"
 module 0x1::m {
     "#;
-    let (analysis, file_id) = Analysis::from_single_file(source.to_string());
+    let (analysis, file_id) = fixtures::from_single_file(source.to_string());
 
     let diagnostic_config = DiagnosticsConfig::test_sample();
     let diagnostics = analysis.syntax_diagnostics(&diagnostic_config, file_id).unwrap();

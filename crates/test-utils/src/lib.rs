@@ -1,3 +1,5 @@
+pub mod fixtures;
+
 use line_index::{LineCol, LineIndex};
 use regex::Regex;
 use std::iter;
