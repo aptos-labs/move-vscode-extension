@@ -67,3 +67,31 @@ module std::m {
         ),
     ])
 }
+
+#[test]
+fn test_cross_package_resolve_with_public_package() {
+    check_resolve_tmpfs(vec![TestPackageFiles::new(
+        "main",
+        // language=TOML
+        r#"
+[package]
+name = "Main"
+        "#,
+        // language=Move
+        r#"
+//- /main.move
+module std::main {
+    use std::m::call;
+    public fun main() {
+        call();
+       //^
+    }
+}
+//- /m.move
+module std::m {
+    public(package) fun call() {}
+                       //X
+}
+"#,
+    )])
+}

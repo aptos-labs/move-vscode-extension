@@ -1,7 +1,6 @@
 use base_db::SourceDatabase;
 use base_db::inputs::{
-    DepPackagesInput, FileIdInput, FileIdSet, FilePackageIdInput, FileText, Files, InternFileId,
-    PackageRootInput,
+    DepPackagesInput, FileIdInput, FileIdSet, FileText, Files, InternFileId, PackageRootInput,
 };
 use base_db::package_root::{PackageId, PackageRoot};
 use line_index::LineIndex;
@@ -82,18 +81,13 @@ impl SourceDatabase for RootDatabase {
         files.set_package_root_with_durability(self, package_id, package_root, durability);
     }
 
-    fn file_package_id(&self, id: FileId) -> FilePackageIdInput {
+    fn file_package_id(&self, id: FileId) -> PackageId {
         self.files.file_package_id(id)
     }
 
-    fn set_file_package_id_with_durability(
-        &mut self,
-        file_id: FileId,
-        package_id: PackageId,
-        durability: Durability,
-    ) {
+    fn set_file_package_id(&mut self, file_id: FileId, package_id: PackageId) {
         let files = Arc::clone(&self.files);
-        files.set_file_package_id_with_durability(self, file_id, package_id, durability);
+        files.set_file_package_id(file_id, package_id);
     }
 
     fn builtins_file_id(&self) -> Option<FileIdInput> {

@@ -53,7 +53,7 @@ impl<'db, DB> ops::Deref for Semantics<'db, DB> {
 
 impl<DB: SourceDatabase> Semantics<'_, DB> {
     pub fn new(db: &DB, ws_file_id: FileId) -> Semantics<'_, DB> {
-        let ws_root = db.file_package_id(ws_file_id).data(db);
+        let ws_root = db.file_package_id(ws_file_id);
         let impl_ = SemanticsImpl::new(db, ws_root);
         // add builtins file to cache
         if let Some(builtins_file_id) = db.builtins_file_id() {

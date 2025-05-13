@@ -1,7 +1,7 @@
 use crate::manifest_path::ManifestPath;
 use crate::move_toml::{MoveToml, MoveTomlDependency};
 use anyhow::Context;
-use base_db::change::{DepGraph, ManifestFileId};
+use base_db::change::ManifestFileId;
 use paths::{AbsPath, AbsPathBuf};
 use std::collections::HashSet;
 use std::fmt::Formatter;
@@ -39,7 +39,6 @@ pub struct AptosPackage {
     content_root: AbsPathBuf,
     move_toml: MoveToml,
     is_git: bool,
-    // is_dep: bool,
     deps: Vec<AptosPackage>,
 }
 

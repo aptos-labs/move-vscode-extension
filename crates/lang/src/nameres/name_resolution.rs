@@ -147,7 +147,7 @@ pub fn get_entries_from_walking_scopes(
     entries
 }
 
-#[tracing::instrument(level = "debug", skip(db))]
+#[tracing::instrument(level = "debug", skip_all)]
 pub fn get_modules_as_entries(
     db: &dyn SourceDatabase,
     package_id: PackageId,

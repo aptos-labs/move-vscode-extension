@@ -60,7 +60,7 @@ impl FileChanges {
                 let package_id = PackageId::new(db, idx as u32);
                 let durability = package_root_durability(&root);
                 for file_id in root.file_set.iter() {
-                    db.set_file_package_id_with_durability(file_id, package_id, durability);
+                    db.set_file_package_id(file_id, package_id);
                     db.set_spec_related_files(
                         file_id,
                         find_spec_file_set(file_id, root.clone()).unwrap_or(vec![file_id]),
@@ -81,12 +81,18 @@ impl FileChanges {
         if let Some(package_graph) = self.package_graph {
             let _p = tracing::info_span!("set package dependencies").entered();
             for (manifest_file_id, dep_manifest_ids) in package_graph.into_iter() {
-                let main_package_id = db.file_package_id(manifest_file_id).data(db);
+                let main_package_id = db.file_package_id(manifest_file_id);
                 let deps_package_ids = dep_manifest_ids
                     .into_iter()
-                    .map(|it| db.file_package_id(it).data(db))
+                    .map(|it| db.file_package_id(it))
                     .collect::<Vec<_>>();
-                tracing::info!(?main_package_id, ?deps_package_ids);
+                tracing::info!(
+                    main_package_id = main_package_id.idx(db),
+                    deps_package_ids = ?deps_package_ids
+                        .iter()
+                        .map(|it| it.idx(db))
+                        .collect::<Vec<_>>()
+                );
                 db.set_dep_package_ids(main_package_id, deps_package_ids);
             }
         }
@@ -96,7 +102,7 @@ impl FileChanges {
             let text = text.unwrap_or_default();
             // only use durability if roots are explicitly provided
             if package_roots.is_some() {
-                let package_id = db.file_package_id(file_id).data(db);
+                let package_id = db.file_package_id(file_id);
                 let package_root = db.package_root(package_id).data(db);
                 let durability = file_text_durability(&package_root);
                 db.set_file_text_with_durability(file_id, text.as_str(), durability);

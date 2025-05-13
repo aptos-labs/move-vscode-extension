@@ -1,6 +1,4 @@
-use crate::inputs::{
-    DepPackagesInput, FileIdInput, FileIdSet, FilePackageIdInput, FileText, PackageRootInput,
-};
+use crate::inputs::{DepPackagesInput, FileIdInput, FileIdSet, FileText, PackageRootInput};
 use crate::package_root::{PackageId, PackageRoot};
 use salsa::Durability;
 use std::cell::RefCell;
@@ -29,14 +27,9 @@ pub trait SourceDatabase: salsa::Database {
         durability: Durability,
     );
 
-    fn file_package_id(&self, id: FileId) -> FilePackageIdInput;
+    fn file_package_id(&self, id: FileId) -> PackageId;
 
-    fn set_file_package_id_with_durability(
-        &mut self,
-        file_id: FileId,
-        package_id: PackageId,
-        durability: Durability,
-    );
+    fn set_file_package_id(&mut self, file_id: FileId, package_id: PackageId);
 
     fn builtins_file_id(&self) -> Option<FileIdInput>;
 

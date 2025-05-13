@@ -94,7 +94,7 @@ pub fn get_method_resolve_variants(
     current_file_id: FileId,
     msl: bool,
 ) -> Vec<ScopeEntry> {
-    let package_id = db.file_package_id(current_file_id).data(db);
+    let package_id = db.file_package_id(current_file_id);
     let Some(InFile {
         file_id,
         value: receiver_item_module,
@@ -222,6 +222,6 @@ impl ResolutionContext {
     }
 
     pub fn package_id(&self, db: &dyn SourceDatabase) -> PackageId {
-        db.file_package_id(self.path.file_id).data(db)
+        db.file_package_id(self.path.file_id)
     }
 }

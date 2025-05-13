@@ -1,9 +1,10 @@
+use crate::SourceDatabase;
 use vfs::file_set::FileSet;
 use vfs::{FileId, VfsPath};
 
-#[salsa_macros::input(debug)]
+#[salsa_macros::interned(no_lifetime)]
 pub struct PackageId {
-    idx: u32,
+    pub idx: u32,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

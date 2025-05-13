@@ -101,7 +101,7 @@ pub struct Analysis {
 // protocol.
 impl Analysis {
     pub fn package_id(&self, file_id: FileId) -> Cancellable<PackageId> {
-        self.with_db(|db| db.file_package_id(file_id).data(db))
+        self.with_db(|db| db.file_package_id(file_id))
     }
 
     /// Gets the text of the source file.
