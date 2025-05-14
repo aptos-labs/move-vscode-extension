@@ -31,57 +31,68 @@ pub fn load_from_manifest(
 
 fn load_inner(
     manifest_path: &ManifestPath,
-    sourced_from: PackageKind,
+    kind: PackageKind,
     recurse_into_deps: bool,
-    visited_manifests: &mut HashSet<AbsPathBuf>,
+    visited_manifests: &mut HashSet<ManifestPath>,
 ) -> anyhow::Result<AptosPackage> {
-    let move_toml = read_manifest_from_fs(&manifest_path)?;
-
-    let mut dep_roots = vec![];
-    let mut dep_manifests = vec![];
-    let package_root = manifest_path.root();
-
-    if recurse_into_deps {
-        for toml_dep in move_toml.dependencies.clone() {
-            if let Some(dep_root) = toml_dep.dep_root(&package_root) {
-                let Some(move_toml_path) = find_move_toml_at(dep_root) else {
-                    continue;
-                };
-
-                if visited_manifests.contains(&move_toml_path) {
-                    tracing::info!("dep already visited {:?}", move_toml_path);
-                    continue;
-                }
-                visited_manifests.insert(move_toml_path.clone());
-
-                let manifest_path = ManifestPath::new(move_toml_path);
-                dep_roots.push(manifest_path.canonical_root());
-
-                let sourced_from = match toml_dep {
-                    MoveTomlDependency::Git(_) => PackageKind::Git,
-                    MoveTomlDependency::Local(_) => PackageKind::Local,
-                };
-                dep_manifests.push((manifest_path, sourced_from));
-            }
-        }
-        tracing::info!("dep_roots = {:#?}", dep_roots);
+    if !recurse_into_deps {
+        return Ok(AptosPackage::new(manifest_path, kind, vec![]));
     }
 
-    let deps = dep_manifests
-        .into_iter()
-        .filter_map(|(manifest, sourced_from)| {
-            let _p =
-                tracing::info_span!("load dep package at", "{:?}", manifest.canonical_root()).entered();
-            load_inner(&manifest, sourced_from, recurse_into_deps, visited_manifests).ok()
-        })
-        .collect();
+    let dep_roots = read_dependencies(manifest_path, kind)?;
+    tracing::info!("dep_roots = {:#?}", dep_roots);
 
-    Ok(AptosPackage {
-        content_root: package_root,
-        move_toml,
-        sourced_from,
-        deps: deps,
-    })
+    let mut deps = vec![];
+    for (dep_manifest, dep_kind) in read_dependencies(manifest_path, kind)? {
+        if visited_manifests.contains(&dep_manifest) {
+            tracing::info!("dep already visited {:?}", dep_manifest);
+            continue;
+        }
+        visited_manifests.insert(dep_manifest.clone());
+
+        let _p =
+            tracing::info_span!("load dep package at", "{:?}", dep_manifest.canonical_root()).entered();
+        if let Some(dep_package) = load_inner(&dep_manifest, dep_kind, true, visited_manifests).ok() {
+            deps.push(dep_package);
+        }
+    }
+
+    Ok(AptosPackage::new(manifest_path, kind, deps))
+}
+
+/// goes into dependencies and loads them too
+pub(crate) fn read_dependencies(
+    manifest_path: &ManifestPath,
+    outer_kind: PackageKind,
+) -> anyhow::Result<Vec<(ManifestPath, PackageKind)>> {
+    let move_toml = read_manifest_from_fs(&manifest_path)?;
+
+    let mut dep_manifests = vec![];
+    let package_root = manifest_path.content_root();
+
+    for toml_dep in move_toml.dependencies.clone() {
+        if let Some(dep_root) = toml_dep.dep_root(&package_root) {
+            let Some(move_toml_path) = find_move_toml_at(dep_root) else {
+                continue;
+            };
+
+            let manifest_path = ManifestPath::new(move_toml_path);
+            let dep_kind = match toml_dep {
+                MoveTomlDependency::Git(_) => PackageKind::Git,
+                MoveTomlDependency::Local(_) => PackageKind::Local,
+            };
+            dep_manifests.push((
+                manifest_path,
+                if outer_kind == PackageKind::Git {
+                    outer_kind
+                } else {
+                    dep_kind
+                },
+            ));
+        }
+    }
+
+    Ok(dep_manifests)
 }
 
 fn find_move_toml_at(dep_root: AbsPathBuf) -> Option<AbsPathBuf> {

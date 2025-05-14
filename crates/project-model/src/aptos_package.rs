@@ -1,12 +1,12 @@
 use crate::manifest_path::ManifestPath;
-use crate::move_toml::MoveToml;
 use anyhow::Context;
 use paths::{AbsPath, AbsPathBuf};
+use std::fmt;
 use std::fmt::Formatter;
-use std::{fmt, fs};
 use vfs::FileId;
 
 pub mod load_from_fs;
+mod load_from_fs_2;
 
 pub type VfsLoader<'a> = &'a mut dyn for<'b> FnMut(&'b AbsPath) -> Option<FileId>;
 
@@ -34,7 +34,7 @@ impl PackageFolderRoot {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum PackageKind {
     Local,
     Git,
@@ -43,9 +43,8 @@ pub enum PackageKind {
 #[derive(Clone, Eq, PartialEq)]
 pub struct AptosPackage {
     content_root: AbsPathBuf,
-    move_toml: MoveToml,
-    sourced_from: PackageKind,
     deps: Vec<AptosPackage>,
+    sourced_from: PackageKind,
 }
 
 impl fmt::Debug for AptosPackage {
@@ -59,6 +58,18 @@ impl fmt::Debug for AptosPackage {
 }
 
 impl AptosPackage {
+    pub fn new(
+        manifest_path: &ManifestPath,
+        sourced_from: PackageKind,
+        deps: Vec<AptosPackage>,
+    ) -> Self {
+        AptosPackage {
+            content_root: manifest_path.content_root(),
+            sourced_from,
+            deps,
+        }
+    }
+
     pub fn content_root(&self) -> &AbsPath {
         self.content_root.as_path()
     }
@@ -95,20 +106,6 @@ impl AptosPackage {
             content_root: self.content_root.to_path_buf(),
             is_local: self.sourced_from == PackageKind::Local,
         }
-    }
-
-    pub fn dependency_manifests(&self) -> Vec<ManifestPath> {
-        let mut manifests = vec![];
-        for toml_dep in self.move_toml.dependencies.clone() {
-            if let Some(dep_root) = toml_dep.dep_root(&self.content_root) {
-                let move_toml_path = dep_root.join("Move.toml");
-                if fs::exists(&move_toml_path).is_ok() {
-                    let manifest_path = ManifestPath::new(move_toml_path);
-                    manifests.push(manifest_path);
-                }
-            }
-        }
-        manifests
     }
 
     pub fn contains_file(&self, file_path: &AbsPath) -> bool {
