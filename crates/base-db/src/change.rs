@@ -6,8 +6,8 @@ use std::fmt;
 use std::sync::Arc;
 use vfs::FileId;
 
-pub type ManifestFileId = FileId;
-pub type DepGraph = HashMap<ManifestFileId, Vec<ManifestFileId>>;
+pub type PackageFileId = FileId;
+pub type DepGraph = HashMap<PackageFileId, Vec<PackageFileId>>;
 
 /// Encapsulate a bunch of raw `.set` calls on the database.
 #[derive(Default)]
@@ -15,7 +15,7 @@ pub struct FileChanges {
     pub builtins_file: Option<(FileId, String)>,
     pub files_changed: Vec<(FileId, Option<String>)>,
     pub package_roots: Option<Vec<PackageRoot>>,
-    pub package_graph: Option<HashMap<ManifestFileId, Vec<ManifestFileId>>>,
+    pub package_graph: Option<HashMap<PackageFileId, Vec<PackageFileId>>>,
 }
 
 impl fmt::Debug for FileChanges {

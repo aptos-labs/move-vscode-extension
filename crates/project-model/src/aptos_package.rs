@@ -44,8 +44,8 @@ pub enum PackageKind {
 pub struct AptosPackage {
     content_root: AbsPathBuf,
     move_toml: MoveToml,
-    deps: Vec<AptosPackage>,
     sourced_from: PackageKind,
+    deps: Vec<AptosPackage>,
 }
 
 impl fmt::Debug for AptosPackage {

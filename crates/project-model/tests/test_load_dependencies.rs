@@ -13,7 +13,7 @@ fn test_circular_dependencies() {
         .join("Move.toml");
     let move_toml_path = AbsPathBuf::assert_utf8(ws_dir);
     let manifest = ManifestPath::new(move_toml_path);
-    load_from_fs::load_recursively(&manifest, true);
+    load_from_fs::load_from_manifest(&manifest, true);
 }
 
 #[test]
