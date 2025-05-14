@@ -124,7 +124,7 @@ impl Files {
         let file_package_id = self
             .file_package_ids
             .get(&id)
-            .expect("Unable to fetch FilePackageIdInput; this is a bug");
+            .expect("Unable to fetch PackageId; this is a bug");
         *file_package_id
     }
 

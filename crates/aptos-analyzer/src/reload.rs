@@ -8,6 +8,7 @@ use crate::{Config, lsp_ext};
 use base_db::change::DepGraph;
 use lsp_types::FileSystemWatcher;
 use project_model::aptos_package::AptosPackage;
+use project_model::aptos_package::load_from_fs::load_aptos_packages;
 use project_model::dep_graph;
 use project_model::manifest_path::ManifestPath;
 use project_model::project_folders::ProjectFolders;
@@ -146,15 +147,7 @@ impl GlobalState {
                 sender
                     .send(Task::FetchPackagesProgress(FetchPackagesProgress::Begin))
                     .unwrap();
-                let discovered_packages = {
-                    discovered_manifests
-                        .iter()
-                        .map(|manifest| {
-                            let manifest_path = ManifestPath::new(manifest.move_toml_file.to_path_buf());
-                            AptosPackage::load(&manifest_path, manifest.resolve_deps)
-                        })
-                        .collect::<Vec<_>>()
-                };
+                let discovered_packages = load_aptos_packages(discovered_manifests);
                 sender
                     .send(Task::FetchPackagesProgress(FetchPackagesProgress::End(
                         discovered_packages,
@@ -173,7 +166,7 @@ impl GlobalState {
         else {
             return;
         };
-        let switching_from_empty_workspace = self.ws_packages.is_empty();
+        let switching_from_empty_workspace = self.all_packages.is_empty();
 
         tracing::info!(?force_reload_deps, %switching_from_empty_workspace);
         if self.fetch_workspace_error().is_err() && !switching_from_empty_workspace {
@@ -190,10 +183,10 @@ impl GlobalState {
             .filter_map(|res| res.as_ref().ok().cloned())
             .collect::<Vec<_>>();
 
-        let same_packages = fetched_packages.len() == self.ws_packages.len()
+        let same_packages = fetched_packages.len() == self.all_packages.len()
             && fetched_packages
                 .iter()
-                .zip(self.ws_packages.iter())
+                .zip(self.all_packages.iter())
                 .all(|(l, r)| l.eq(r));
 
         if same_packages {
@@ -209,14 +202,14 @@ impl GlobalState {
             return;
         }
 
-        self.ws_packages = Arc::new(fetched_packages);
+        self.all_packages = Arc::new(fetched_packages);
 
         let files_config = self.config.files();
         if let FilesWatcher::Client = files_config.watcher {
             self.setup_client_file_watchers();
         }
 
-        let project_folders = ProjectFolders::new(&self.ws_packages);
+        let project_folders = ProjectFolders::new(&self.all_packages);
         let watch = match files_config.watcher {
             FilesWatcher::Client => vec![],
             FilesWatcher::Server => project_folders.watch,
@@ -240,11 +233,7 @@ impl GlobalState {
     }
 
     fn setup_client_file_watchers(&mut self) {
-        let local_folder_roots = self
-            .ws_packages
-            .iter()
-            .flat_map(|pkg| pkg.package_and_deps_folder_roots())
-            .filter(|it| it.is_local);
+        let local_folder_roots = self.local_packages().map(|pkg| pkg.to_folder_root());
 
         let mut watchers: Vec<FileSystemWatcher> = if self
             .config
@@ -285,7 +274,7 @@ impl GlobalState {
         };
 
         watchers.extend(
-            self.ws_packages
+            self.all_packages
                 .iter()
                 .map(|pkg| pkg.manifest_path())
                 .map(|glob_pattern| FileSystemWatcher {
@@ -320,7 +309,7 @@ impl GlobalState {
         );
         let dep_graph_change = {
             let vfs = &self.vfs.read().0;
-            dep_graph::reload_graph(vfs, self.ws_packages.as_slice(), &self.package_root_config)
+            dep_graph::reload_graph(vfs, self.all_packages.as_slice(), &self.package_root_config)
         };
         self.report_progress(progress_title, Progress::End, None, None, None);
 
@@ -344,9 +333,9 @@ impl GlobalState {
                 .map(|it| it.0)
         };
 
-        for main_package in self.ws_packages.iter() {
-            let dep_graph = main_package.to_dep_graph(&mut load)?;
-            global_dep_graph.extend(dep_graph);
+        for package in self.all_packages.iter() {
+            let (package_file_id, dep_ids) = package.dep_graph_entry(&mut load)?;
+            global_dep_graph.insert(package_file_id, dep_ids);
         }
 
         Some(global_dep_graph)
@@ -394,8 +383,7 @@ impl GlobalState {
 
         let sender = self.flycheck_sender.clone();
         self.flycheck = self
-            .ws_packages
-            .iter()
+            .ws_root_packages()
             .enumerate()
             .filter_map(|(id, ws)| Some((id, ws.content_root(), ws.manifest_path())))
             .map(|(ws_id, ws_root, _)| {
@@ -403,23 +391,6 @@ impl GlobalState {
             })
             .collect::<Vec<_>>()
             .into();
-    }
-}
-
-fn dedup(packages: &mut Vec<anyhow::Result<AptosPackage>>) {
-    let mut i = 0;
-    while i < packages.len() {
-        if let Ok(p) = &packages[i] {
-            let duplicates: Vec<_> = packages[i + 1..]
-                .iter()
-                .positions(|it| it.as_ref().is_ok_and(|pkg| pkg.eq(p)))
-                .collect();
-            // remove all duplicate packages
-            duplicates.into_iter().rev().for_each(|dup_pos| {
-                _ = packages.remove(dup_pos + i + 1);
-            });
-        }
-        i += 1;
     }
 }
 

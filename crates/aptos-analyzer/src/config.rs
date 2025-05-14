@@ -404,6 +404,12 @@ impl Config {
         &self.root_path
     }
 
+    pub fn is_under_ws_roots(&self, path: &AbsPath) -> bool {
+        self.client_ws_roots
+            .iter()
+            .any(|ws_root| path.starts_with(ws_root))
+    }
+
     pub fn caps(&self) -> &ClientCapabilities {
         &self.caps
     }

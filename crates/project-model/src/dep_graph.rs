@@ -1,7 +1,9 @@
-use crate::aptos_package::{AptosPackage, FileLoader};
+use crate::aptos_package::{AptosPackage, VfsLoader};
 use crate::project_folders::PackageRootConfig;
-use base_db::change::{DepGraph, FileChanges, ManifestFileId};
-use paths::AbsPath;
+use base_db::change::{DepGraph, FileChanges, PackageFileId};
+use paths::{AbsPath, AbsPathBuf};
+use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 use vfs::Vfs;
 
 pub fn reload_graph(
@@ -27,47 +29,44 @@ fn collect(vfs: &Vfs, aptos_packages: &[AptosPackage]) -> Option<DepGraph> {
     let mut global_dep_graph = DepGraph::default();
 
     let mut load = |path: &AbsPath| {
+        tracing::debug!(?path, "load from vfs");
         vfs.file_id(&vfs::VfsPath::from(path.to_path_buf()))
             .map(|it| it.0)
     };
 
     for package in aptos_packages.iter() {
-        let dep_graph = package.to_dep_graph(&mut load)?;
-        global_dep_graph.extend(dep_graph);
+        let (package_file_id, dep_ids) = package.dep_graph_entry(&mut load)?;
+        global_dep_graph.insert(package_file_id, dep_ids);
+        // let dep_graph = package.to_dep_graph(&mut load)?;
+        // global_dep_graph.extend(dep_graph);
     }
 
     Some(global_dep_graph)
 }
 
 impl AptosPackage {
-    pub fn to_dep_graph(&self, load: FileLoader<'_>) -> Option<DepGraph> {
+    pub fn dep_graph_entry(&self, load: VfsLoader<'_>) -> Option<(PackageFileId, Vec<PackageFileId>)> {
         tracing::info!("reloading package at {}", self.content_root());
 
-        let mut package_graph = DepGraph::default();
-        for pkg in self.package_and_deps() {
-            let package_file_id = pkg.load_manifest_file_id(load)?;
-            let mut dep_ids = vec![];
-            self.collect_dep_ids(&mut dep_ids, pkg, load);
-            dep_ids.sort();
-            dep_ids.dedup();
+        let package_file_id = load_package_file_id(self.content_root(), load)?;
 
-            package_graph.insert(package_file_id, dep_ids);
+        let mut dep_ids = vec![];
+        for (dep_root, _) in self.dep_roots() {
+            let dep_file_id = load_package_file_id(dep_root, load)?;
+            dep_ids.push(dep_file_id);
         }
 
-        Some(package_graph)
+        Some((package_file_id, dep_ids))
     }
+}
 
-    fn collect_dep_ids(
-        &self,
-        dep_ids: &mut Vec<ManifestFileId>,
-        package_ref: &AptosPackage,
-        load: FileLoader<'_>,
-    ) {
-        for dep_package in package_ref.deps() {
-            if let Some(dep_file_id) = dep_package.load_manifest_file_id(load) {
-                dep_ids.push(dep_file_id);
-                self.collect_dep_ids(dep_ids, dep_package, load);
-            }
+fn load_package_file_id(dep_root: &AbsPath, load_from_vfs: VfsLoader<'_>) -> Option<PackageFileId> {
+    let move_toml_file = dep_root.join("Move.toml");
+    match load_from_vfs(&move_toml_file) {
+        Some(file_id) => Some(file_id),
+        None => {
+            tracing::info!(?move_toml_file, "cannot load from filesystem");
+            None
         }
     }
 }

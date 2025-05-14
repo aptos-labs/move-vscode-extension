@@ -1,7 +1,7 @@
 use paths::{AbsPath, AbsPathBuf};
 use std::borrow::Borrow;
 use std::path::PathBuf;
-use std::{fmt, fs, ops};
+use std::{fmt, fs, ops, path};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct ManifestPath {
@@ -37,12 +37,12 @@ impl ManifestPath {
     }
 
     // Shadow `parent` from `Deref`.
-    pub fn root(&self) -> AbsPathBuf {
+    pub fn content_root(&self) -> AbsPathBuf {
         self.file.parent().unwrap().to_path_buf()
     }
 
     pub fn canonical_root(&self) -> PathBuf {
-        let content_root = self.root();
+        let content_root = self.content_root();
         fs::canonicalize(&content_root).ok().unwrap_or(PathBuf::new())
     }
 }

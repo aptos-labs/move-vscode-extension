@@ -10,6 +10,7 @@ use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::ty::Ty;
 use crate::{hir_db, nameres};
+use base_db::change::package_ids_to_names;
 use base_db::inputs::InternFileId;
 use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
@@ -141,7 +142,8 @@ fn file_ids_by_module_address_tracked<'db>(
 fn all_package_file_ids(db: &dyn SourceDatabase, package_id: PackageId) -> Vec<FileId> {
     let dep_ids = db.dep_package_ids(package_id).data(db).deref().to_owned();
     tracing::debug!(
-        dep_ids = ?dep_ids.iter().map(|it| it.idx(db)).collect::<Vec<_>>()
+        package_id = ?package_id.root_dir(db),
+        dep_ids = ?package_ids_to_names(db, &dep_ids)
     );
 
     let file_sets = iter::once(package_id)

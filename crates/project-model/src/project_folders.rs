@@ -2,6 +2,7 @@ use crate::aptos_package::{AptosPackage, PackageFolderRoot};
 use base_db::package_root::PackageRoot;
 use std::fmt;
 use std::fmt::Formatter;
+use std::path::PathBuf;
 use vfs::VfsPath;
 use vfs::file_set::FileSetConfig;
 
@@ -14,18 +15,29 @@ pub struct PackageRootConfig {
 impl PackageRootConfig {
     pub fn partition_into_package_roots(&self, vfs: &vfs::Vfs) -> Vec<PackageRoot> {
         let package_file_sets = self.fsc.partition(vfs);
-        package_file_sets
-            .into_iter()
-            .enumerate()
-            .map(|(idx, package_file_set)| {
-                let is_local = self.local_filesets.contains(&(idx as u64));
-                if is_local {
-                    PackageRoot::new_local(package_file_set)
-                } else {
-                    PackageRoot::new_library(package_file_set)
-                }
-            })
-            .collect()
+        let mut package_roots = vec![];
+        for (idx, package_file_set) in package_file_sets.into_iter().enumerate() {
+            let root_dir = self.package_dir(idx);
+            let is_local = self.local_filesets.contains(&(idx as u64));
+            let package_root = if is_local {
+                PackageRoot::new_local(package_file_set, root_dir)
+            } else {
+                PackageRoot::new_library(package_file_set, root_dir)
+            };
+            package_roots.push(package_root);
+        }
+        package_roots
+    }
+
+    fn package_dir(&self, idx: usize) -> Option<String> {
+        let root_bytes = self.fsc.roots().get(idx)?.0.clone();
+        let root = String::from_utf8(root_bytes)
+            .ok()?
+            .trim_start_matches("\0")
+            .to_string();
+        PathBuf::from(root)
+            .file_name()
+            .map(|it| it.to_string_lossy().to_string())
     }
 }
 
@@ -45,18 +57,21 @@ pub struct ProjectFolders {
 }
 
 impl ProjectFolders {
-    pub fn new(ws_packages: &[AptosPackage]) -> ProjectFolders {
+    pub fn new(all_packages: &[AptosPackage]) -> ProjectFolders {
         let mut folders = ProjectFolders::default();
         let mut fsc = FileSetConfig::builder();
         let mut local_filesets = vec![];
 
-        let mut all_reachable_folder_roots = ws_packages
-            .iter()
-            .flat_map(|pkg| pkg.package_and_deps_folder_roots())
+        let mut all_folder_roots = all_packages
+            .into_iter()
+            .map(|pkg| pkg.to_folder_root())
             .collect::<Vec<_>>();
-        all_reachable_folder_roots.dedup();
+        // all_reachable_folder_roots.dedup_by(|a, b| a.canonical_form().eq(&b.canonical_form()));
 
-        for package_folder_root in all_reachable_folder_roots {
+        all_folder_roots.sort();
+        all_folder_roots.dedup();
+
+        for package_folder_root in all_folder_roots {
             for dir_entry in folder_root_to_dir_entries(package_folder_root.clone()) {
                 if package_folder_root.is_local {
                     folders.watch.push(folders.load.len());

@@ -83,7 +83,7 @@ pub(crate) struct GlobalState {
     pub(crate) vfs_span: Option<tracing::span::EnteredSpan>,
     pub(crate) reason_to_switch: Option<Cause>,
 
-    pub(crate) ws_packages: Arc<Vec<AptosPackage>>,
+    pub(crate) all_packages: Arc<Vec<AptosPackage>>,
     // op queues
     pub(crate) fetch_packages_queue: OpQueue<FetchPackagesRequest, FetchPackagesResponse>,
 }
@@ -94,7 +94,7 @@ pub(crate) struct GlobalStateSnapshot {
     pub(crate) analysis: Analysis,
     mem_docs: MemDocs,
     vfs: Arc<RwLock<(vfs::Vfs, HashMap<FileId, LineEndings>)>>,
-    pub(crate) ws_packages: Arc<Vec<AptosPackage>>,
+    pub(crate) all_packages: Arc<Vec<AptosPackage>>,
     pub(crate) flycheck: Arc<[FlycheckHandle]>,
     sender: Sender<lsp_server::Message>,
 }
@@ -164,7 +164,7 @@ impl GlobalState {
             vfs_span: None,
             reason_to_switch: None,
 
-            ws_packages: Arc::from(Vec::new()),
+            all_packages: Arc::from(Vec::new()),
             fetch_packages_queue: OpQueue::default(),
         };
         // Apply any required database inputs from the config.
@@ -175,7 +175,7 @@ impl GlobalState {
     pub(crate) fn snapshot(&self) -> GlobalStateSnapshot {
         GlobalStateSnapshot {
             config: Arc::clone(&self.config),
-            ws_packages: Arc::clone(&self.ws_packages),
+            all_packages: Arc::clone(&self.all_packages),
             analysis: self.analysis_host.analysis(),
             vfs: Arc::clone(&self.vfs),
             mem_docs: self.mem_docs.clone(),
@@ -183,6 +183,15 @@ impl GlobalState {
             flycheck: self.flycheck.clone(),
             sender: self.sender.clone(),
         }
+    }
+
+    pub(crate) fn local_packages(&self) -> impl Iterator<Item = &AptosPackage> {
+        self.all_packages.iter().filter(|it| it.is_local())
+    }
+
+    pub(crate) fn ws_root_packages(&self) -> impl Iterator<Item = &AptosPackage> {
+        self.local_packages()
+            .filter(|it| self.config.is_under_ws_roots(it.content_root()))
     }
 
     pub(crate) fn send_request<R: lsp_types::request::Request>(
