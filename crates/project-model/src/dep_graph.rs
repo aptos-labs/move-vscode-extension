@@ -35,58 +35,28 @@ fn collect(vfs: &Vfs, aptos_packages: &[AptosPackage]) -> Option<DepGraph> {
     };
 
     for package in aptos_packages.iter() {
-        let dep_graph = package.to_dep_graph(&mut load)?;
-        global_dep_graph.extend(dep_graph);
+        let (package_file_id, dep_ids) = package.dep_graph_entry(&mut load)?;
+        global_dep_graph.insert(package_file_id, dep_ids);
+        // let dep_graph = package.to_dep_graph(&mut load)?;
+        // global_dep_graph.extend(dep_graph);
     }
 
     Some(global_dep_graph)
 }
 
 impl AptosPackage {
-    pub fn to_dep_graph(&self, load: VfsLoader<'_>) -> Option<DepGraph> {
-        tracing::info!("reloading package at {}", self.content_root());
-
-        let mut package_graph = DepGraph::default();
-        for pkg in self.package_and_deps() {
-            let package_file_id = load_package_file_id(pkg.content_root(), load)?;
-
-            let mut dep_ids = vec![];
-            self.collect_dep_ids(&mut dep_ids, pkg, load);
-            dep_ids.sort();
-            dep_ids.dedup();
-
-            package_graph.insert(package_file_id, dep_ids);
-        }
-
-        Some(package_graph)
-    }
-
     pub fn dep_graph_entry(&self, load: VfsLoader<'_>) -> Option<(PackageFileId, Vec<PackageFileId>)> {
         tracing::info!("reloading package at {}", self.content_root());
 
         let package_file_id = load_package_file_id(self.content_root(), load)?;
 
         let mut dep_ids = vec![];
-        for dep in self.deps() {
-            let dep_file_id = load_package_file_id(dep.content_root(), load)?;
+        for (dep_root, _) in self.dep_roots() {
+            let dep_file_id = load_package_file_id(dep_root, load)?;
             dep_ids.push(dep_file_id);
         }
 
         Some((package_file_id, dep_ids))
-    }
-
-    fn collect_dep_ids(
-        &self,
-        dep_ids: &mut Vec<PackageFileId>,
-        package_ref: &AptosPackage,
-        load_from_vfs: VfsLoader<'_>,
-    ) {
-        for dep in package_ref.deps() {
-            if let Some(dep_file_id) = load_package_file_id(dep.content_root(), load_from_vfs) {
-                dep_ids.push(dep_file_id);
-                self.collect_dep_ids(dep_ids, dep, load_from_vfs);
-            }
-        }
     }
 }
 

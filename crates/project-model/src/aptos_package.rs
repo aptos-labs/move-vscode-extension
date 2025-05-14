@@ -6,7 +6,6 @@ use std::fmt::Formatter;
 use vfs::FileId;
 
 pub mod load_from_fs;
-mod load_from_fs_2;
 
 pub type VfsLoader<'a> = &'a mut dyn for<'b> FnMut(&'b AbsPath) -> Option<FileId>;
 
@@ -43,16 +42,16 @@ pub enum PackageKind {
 #[derive(Clone, Eq, PartialEq)]
 pub struct AptosPackage {
     content_root: AbsPathBuf,
-    deps: Vec<AptosPackage>,
-    sourced_from: PackageKind,
+    kind: PackageKind,
+    transitive_dep_roots: Vec<(AbsPathBuf, PackageKind)>,
 }
 
 impl fmt::Debug for AptosPackage {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("AptosPackage")
             .field("content_root", &self.content_root().to_string())
-            .field("sourced_from", &self.sourced_from)
-            .field("deps", &self.deps)
+            .field("sourced_from", &self.kind)
+            .field("deps", &self.transitive_dep_roots)
             .finish()
     }
 }
@@ -60,13 +59,16 @@ impl fmt::Debug for AptosPackage {
 impl AptosPackage {
     pub fn new(
         manifest_path: &ManifestPath,
-        sourced_from: PackageKind,
-        deps: Vec<AptosPackage>,
+        kind: PackageKind,
+        dep_roots: Vec<(ManifestPath, PackageKind)>,
     ) -> Self {
         AptosPackage {
             content_root: manifest_path.content_root(),
-            sourced_from,
-            deps,
+            kind,
+            transitive_dep_roots: dep_roots
+                .into_iter()
+                .map(|(manifest, kind)| (manifest.content_root(), kind))
+                .collect(),
         }
     }
 
@@ -74,8 +76,8 @@ impl AptosPackage {
         self.content_root.as_path()
     }
 
-    pub fn deps(&self) -> impl Iterator<Item = &AptosPackage> {
-        self.deps.iter()
+    pub fn dep_roots(&self) -> &[(AbsPathBuf, PackageKind)] {
+        &self.transitive_dep_roots
     }
 
     pub fn manifest_path(&self) -> ManifestPath {
@@ -83,28 +85,14 @@ impl AptosPackage {
         ManifestPath { file }
     }
 
-    pub fn package_and_deps(&self) -> Vec<&AptosPackage> {
-        let mut refs = vec![self];
-        for dep in self.deps() {
-            refs.extend(dep.package_and_deps());
-        }
-        refs
-    }
-
-    /// Returns the roots for the current `AptosPackage`
-    /// The return type contains the path and whether or not
-    /// the root is a member of the current workspace
-    pub fn package_and_deps_folder_roots(&self) -> Vec<PackageFolderRoot> {
-        self.package_and_deps()
-            .into_iter()
-            .map(|it| it.to_folder_root())
-            .collect()
+    pub fn is_local(&self) -> bool {
+        self.kind == PackageKind::Local
     }
 
     pub fn to_folder_root(&self) -> PackageFolderRoot {
         PackageFolderRoot {
             content_root: self.content_root.to_path_buf(),
-            is_local: self.sourced_from == PackageKind::Local,
+            is_local: self.kind == PackageKind::Local,
         }
     }
 

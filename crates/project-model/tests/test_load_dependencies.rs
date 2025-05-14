@@ -1,7 +1,6 @@
 use paths::AbsPathBuf;
 use project_model::DiscoveredManifest;
 use project_model::aptos_package::load_from_fs;
-use project_model::manifest_path::ManifestPath;
 use std::env::current_dir;
 
 #[test]
@@ -11,9 +10,11 @@ fn test_circular_dependencies() {
         .join("tests")
         .join("circular_dependencies")
         .join("Move.toml");
-    let move_toml_path = AbsPathBuf::assert_utf8(ws_dir);
-    let manifest = ManifestPath::new(move_toml_path);
-    load_from_fs::load_from_manifest(&manifest, true);
+    let manifest = DiscoveredManifest {
+        move_toml_file: AbsPathBuf::assert_utf8(ws_dir),
+        resolve_deps: true,
+    };
+    load_from_fs::load_aptos_packages(vec![manifest]);
 }
 
 #[test]

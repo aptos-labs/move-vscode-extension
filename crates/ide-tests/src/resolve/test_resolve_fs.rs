@@ -276,11 +276,6 @@ name = "Main"
 [dependencies]
 Std = { local = "../std" }
 AptosStd = { local = "../aptos_std" }
-
-[dependencies.AptosFramework]
-git = "https://github.com/aptos-labs/aptos-core.git"
-rev = "main"
-subdir = "aptos-move/framework/aptos-framework"
         "#,
             // language=Move
             r#"

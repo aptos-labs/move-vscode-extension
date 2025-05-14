@@ -44,16 +44,21 @@ pub fn from_multiple_files_on_tmpfs(test_packages: Vec<TestPackageFiles>) -> Tes
     }
 
     let discovered_manifests = DiscoveredManifest::discover_all(&[AbsPathBuf::assert_utf8(ws_root)]);
-    let packages = load_aptos_packages(discovered_manifests)
+    let all_packages = load_aptos_packages(discovered_manifests)
         .into_iter()
         .filter_map(|it| it.ok())
         .collect::<Vec<_>>();
-    let folders = ProjectFolders::new(&packages);
+
+    let folders = ProjectFolders::new(&all_packages);
     let dep_graph_change =
-        dep_graph::reload_graph(&vfs, &packages, &folders.package_root_config).unwrap();
+        dep_graph::reload_graph(&vfs, &all_packages, &folders.package_root_config).unwrap();
     analysis_host.apply_change(dep_graph_change);
 
-    TestState { packages, vfs, analysis_host }
+    TestState {
+        packages: all_packages,
+        vfs,
+        analysis_host,
+    }
 }
 
 pub struct TestPackageFiles {
