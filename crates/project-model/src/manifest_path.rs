@@ -1,7 +1,7 @@
 use paths::{AbsPath, AbsPathBuf};
 use std::borrow::Borrow;
 use std::path::PathBuf;
-use std::{fmt, fs, ops, path};
+use std::{fmt, fs, ops};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct ManifestPath {

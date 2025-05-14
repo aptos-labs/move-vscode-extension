@@ -1,6 +1,7 @@
 use paths::AbsPathBuf;
 use project_model::DiscoveredManifest;
 use project_model::aptos_package::load_from_fs;
+use project_model::aptos_package::load_from_fs::load_aptos_packages;
 use std::env::current_dir;
 
 #[test]
@@ -22,12 +23,22 @@ fn test_if_inside_aptos_core_only_load_deps_from_aptos_move() {
     let root = current_dir().unwrap().join("tests").join("aptos-core");
     let ws_roots = vec![AbsPathBuf::assert_utf8(root)];
     let discovered_manifests = DiscoveredManifest::discover_all(&ws_roots);
-    assert_eq!(discovered_manifests.len(), 2);
-    assert_eq!(
-        discovered_manifests
-            .iter()
-            .map(|it| it.resolve_deps)
-            .collect::<Vec<_>>(),
-        vec![true, false]
-    );
+
+    let packages = load_aptos_packages(discovered_manifests)
+        .into_iter()
+        .map(|it| it.unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(packages.len(), 3);
+
+    let other_movestdlib_package = packages
+        .iter()
+        .find(|it| it.content_root().to_string().contains("other-move"))
+        .unwrap();
+    assert_eq!(other_movestdlib_package.dep_roots().len(), 0);
+
+    let aptos_stdlib = packages
+        .iter()
+        .find(|it| it.content_root().to_string().contains("aptos-stdlib"))
+        .unwrap();
+    assert_eq!(aptos_stdlib.dep_roots().len(), 1);
 }
