@@ -187,6 +187,8 @@ impl TypeFoldable<Ty> for Ty {
                 ty_ref.mutability,
             )),
             Ty::Callable(ty_callable) => Ty::Callable(ty_callable.deep_fold_with(folder)),
+            Ty::Tuple(ty_tuple) => Ty::Tuple(ty_tuple.deep_fold_with(folder)),
+            Ty::Schema(ty_schema) => Ty::Schema(ty_schema.deep_fold_with(folder)),
             _ => self,
         }
     }
@@ -197,6 +199,8 @@ impl TypeFoldable<Ty> for Ty {
             Ty::Seq(ty_seq) => ty_seq.deep_visit_with(visitor),
             Ty::Reference(ty_ref) => visitor.visit_ty(&ty_ref.referenced()),
             Ty::Callable(ty_callable) => ty_callable.deep_visit_with(visitor),
+            Ty::Tuple(ty_tuple) => ty_tuple.deep_visit_with(visitor),
+            Ty::Schema(ty_schema) => ty_schema.deep_visit_with(visitor),
             _ => false,
         }
     }

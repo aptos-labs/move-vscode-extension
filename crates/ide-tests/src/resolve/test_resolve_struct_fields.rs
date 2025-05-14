@@ -372,3 +372,32 @@ module 0x1::M {
 "#,
     )
 }
+
+// language=Move
+#[test]
+fn test_resolve_enum_fields_in_a_tuple_return_type() {
+    check_resolve(
+        r#"
+module 0x1::M {
+    enum Node<K: store, V: store> has store {
+        V1 {
+            is_leaf: bool,
+             //X
+            prev: u64,
+            next: u64,
+        }
+    }
+    struct Option<Element> has copy, drop, store {
+        vec: Element
+    }
+    fun get_node<T>(): (Option<T>, u8) {
+    }
+    fun main() {
+        let (node, _) = get_node<Node>();
+        node.vec.is_leaf
+                //^
+    }
+}
+"#,
+    )
+}
