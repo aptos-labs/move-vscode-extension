@@ -1,9 +1,7 @@
 use crate::aptos_package::{AptosPackage, VfsLoader};
 use crate::project_folders::PackageRootConfig;
 use base_db::change::{DepGraph, FileChanges, PackageFileId};
-use paths::{AbsPath, AbsPathBuf};
-use std::collections::HashMap;
-use std::collections::hash_map::Entry;
+use paths::AbsPath;
 use vfs::Vfs;
 
 pub fn reload_graph(

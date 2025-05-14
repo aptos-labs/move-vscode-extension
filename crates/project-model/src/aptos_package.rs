@@ -1,5 +1,4 @@
 use crate::manifest_path::ManifestPath;
-use anyhow::Context;
 use paths::{AbsPath, AbsPathBuf};
 use std::fmt;
 use std::fmt::Formatter;

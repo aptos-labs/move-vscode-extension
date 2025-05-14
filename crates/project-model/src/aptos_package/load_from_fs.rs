@@ -12,16 +12,29 @@ type PackageEntriesWithErrors =
 type PackageEntries = HashMap<ManifestPath, (PackageKind, Vec<(ManifestPath, PackageKind)>)>;
 
 pub fn load_aptos_packages(manifests: Vec<DiscoveredManifest>) -> Vec<anyhow::Result<AptosPackage>> {
-    manifests
-        .into_iter()
-        .flat_map(|it| {
-            let manifest_path = ManifestPath::new(it.move_toml_file.to_path_buf());
-            load_all_packages(&manifest_path)
-        })
-        .collect::<Vec<_>>()
+    let mut visited_package_roots = HashSet::new();
+    let mut dedup = vec![];
+    for manifest in manifests {
+        let manifest_path = ManifestPath::new(manifest.move_toml_file.to_path_buf());
+        let packages = load_all_packages(&manifest_path, manifest.resolve_deps);
+        for package in packages {
+            if let Ok(package) = &package {
+                if visited_package_roots.contains(&package.content_root) {
+                    continue;
+                }
+                visited_package_roots.insert(package.content_root.clone());
+            }
+            dedup.push(package);
+        }
+    }
+    dedup
+    // manifests.into_iter().flat_map(|it| {}).collect::<Vec<_>>()
 }
 
-fn load_all_packages(starting_manifest: &ManifestPath) -> Vec<anyhow::Result<AptosPackage>> {
+fn load_all_packages(
+    starting_manifest: &ManifestPath,
+    resolve_deps: bool,
+) -> Vec<anyhow::Result<AptosPackage>> {
     let mut package_entries_with_errors = HashMap::new();
     let mut visited_manifests = HashSet::new();
     load_entries(
@@ -29,6 +42,7 @@ fn load_all_packages(starting_manifest: &ManifestPath) -> Vec<anyhow::Result<Apt
         starting_manifest.clone(),
         PackageKind::Local,
         &mut visited_manifests,
+        resolve_deps,
     );
 
     let entries = package_entries_with_errors
@@ -112,44 +126,29 @@ fn load_entries(
     manifest_path: ManifestPath,
     kind: PackageKind,
     visited_manifests: &mut HashSet<ManifestPath>,
+    resolve_deps: bool,
 ) {
     if visited_manifests.contains(&manifest_path) {
         return;
     }
     visited_manifests.insert(manifest_path.clone());
 
-    match read_dependencies(&manifest_path, kind) {
-        Ok(dep_manifests) => {
-            entries.insert(manifest_path, Ok((kind, dep_manifests.clone())));
-            for (dep_manifest, dep_kind) in dep_manifests.clone() {
-                load_entries(entries, dep_manifest, dep_kind, visited_manifests);
+    if resolve_deps {
+        match read_dependencies(&manifest_path, kind) {
+            Ok(dep_manifests) => {
+                entries.insert(manifest_path, Ok((kind, dep_manifests.clone())));
+                for (dep_manifest, dep_kind) in dep_manifests.clone() {
+                    load_entries(entries, dep_manifest, dep_kind, visited_manifests, true);
+                }
+            }
+            Err(err) => {
+                entries.insert(manifest_path, Err(err));
             }
         }
-        Err(err) => {
-            entries.insert(manifest_path, Err(err));
-        }
+    } else {
+        entries.insert(manifest_path, Ok((kind, vec![])));
     }
-    // let dep_manifests = read_dependencies(&manifest_path, kind)?;
-
-    // Some(())
 }
-
-// fn read_manifest_from_fs(path: &ManifestPath) -> Option<MoveToml> {
-//     let contents = match fs::read_to_string(&path) {
-//         Ok(contents) => Some(contents),
-//         Err(err) => {
-//             tracing::error!(?path, ?err, "cannot read Move.toml file");
-//             None
-//         }
-//     }?;
-//     match MoveToml::from_str(contents.as_str()) {
-//         Ok(move_toml) => Some(move_toml),
-//         Err(err) => {
-//             tracing::error!(?path, ?err, "cannot deserialize Move.toml file");
-//             None
-//         }
-//     }
-// }
 
 /// goes into dependencies and loads them too
 fn read_dependencies(

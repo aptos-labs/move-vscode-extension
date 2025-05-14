@@ -1,4 +1,3 @@
-use crate::SourceDatabase;
 use vfs::file_set::FileSet;
 use vfs::{FileId, VfsPath};
 

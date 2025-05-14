@@ -10,13 +10,11 @@ use lsp_types::FileSystemWatcher;
 use project_model::aptos_package::AptosPackage;
 use project_model::aptos_package::load_from_fs::load_aptos_packages;
 use project_model::dep_graph;
-use project_model::manifest_path::ManifestPath;
 use project_model::project_folders::ProjectFolders;
 use std::fmt::Formatter;
 use std::sync::Arc;
 use std::{fmt, mem};
 use stdx::format_to;
-use stdx::itertools::Itertools;
 use stdx::thread::ThreadIntent;
 use vfs::AbsPath;
 
