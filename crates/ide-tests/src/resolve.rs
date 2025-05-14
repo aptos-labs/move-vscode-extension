@@ -3,7 +3,7 @@ use ide::{Analysis, NavigationTarget};
 use syntax::AstNode;
 use syntax::SyntaxKind::{IDENT, QUOTE_IDENT};
 use syntax::files::FilePosition;
-use test_utils::fixtures::global_state::TestPackageFiles;
+use test_utils::fixtures::test_state::TestPackageFiles;
 use test_utils::{fixtures, get_first_marked_position, get_marked_position_offset_with_data};
 use vfs::FileId;
 

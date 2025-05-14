@@ -3,14 +3,15 @@ use base_db::change::FileChanges;
 use ide::{Analysis, AnalysisHost};
 use lang::builtins_file;
 use project_model::aptos_package::AptosPackage;
-use project_model::dep_graph;
-use project_model::manifest_path::ManifestPath;
+use project_model::aptos_package::load_from_fs::load_aptos_packages;
 use project_model::project_folders::ProjectFolders;
+use project_model::{DiscoveredManifest, dep_graph};
 use std::fs;
 use std::path::PathBuf;
+use stdx::itertools::Itertools;
 use vfs::{AbsPathBuf, FileId, Vfs, VfsPath};
 
-pub fn from_multiple_files_on_tmpfs(test_packages: Vec<TestPackageFiles>) -> TestGlobalState {
+pub fn from_multiple_files_on_tmpfs(test_packages: Vec<TestPackageFiles>) -> TestState {
     let tmp = tempdir::TempDir::new("aptos_analyzer_tests").unwrap();
 
     let mut vfs = Vfs::default();
@@ -21,7 +22,6 @@ pub fn from_multiple_files_on_tmpfs(test_packages: Vec<TestPackageFiles>) -> Tes
     let mut analysis_host = AnalysisHost::default();
     analysis_host.apply_change(builtins_file::add_to_vfs(&mut vfs));
 
-    let mut manifests = vec![];
     for test_package in test_packages {
         let mut file_changes = FileChanges::new();
 
@@ -41,22 +41,19 @@ pub fn from_multiple_files_on_tmpfs(test_packages: Vec<TestPackageFiles>) -> Tes
             create_new_test_file(&mut vfs, &mut file_changes, &fpath, &file_text);
         }
         analysis_host.apply_change(file_changes);
-
-        let manifest = ManifestPath::new(AbsPathBuf::assert_utf8(move_toml_file));
-        manifests.push(manifest);
     }
 
-    let packages = manifests
+    let discovered_manifests = DiscoveredManifest::discover_all(&[AbsPathBuf::assert_utf8(ws_root)]);
+    let packages = load_aptos_packages(discovered_manifests)
         .into_iter()
-        .map(|it| AptosPackage::load(&it, true).unwrap())
+        .filter_map(|it| it.ok())
         .collect::<Vec<_>>();
-
     let folders = ProjectFolders::new(&packages);
     let dep_graph_change =
         dep_graph::reload_graph(&vfs, &packages, &folders.package_root_config).unwrap();
     analysis_host.apply_change(dep_graph_change);
 
-    TestGlobalState { packages, vfs, analysis_host }
+    TestState { packages, vfs, analysis_host }
 }
 
 pub struct TestPackageFiles {
@@ -90,13 +87,13 @@ version = "0.1.0"
     }
 }
 
-pub struct TestGlobalState {
+pub struct TestState {
     vfs: Vfs,
     analysis_host: AnalysisHost,
     packages: Vec<AptosPackage>,
 }
 
-impl TestGlobalState {
+impl TestState {
     pub fn analysis(&self) -> Analysis {
         self.analysis_host.analysis()
     }

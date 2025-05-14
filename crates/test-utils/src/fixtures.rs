@@ -1,6 +1,6 @@
-pub mod global_state;
+pub mod test_state;
 
-pub use global_state::{TestGlobalState, from_multiple_files_on_tmpfs};
+pub use test_state::{TestState, from_multiple_files_on_tmpfs};
 
 use base_db::change::FileChanges;
 use base_db::package_root::PackageRoot;

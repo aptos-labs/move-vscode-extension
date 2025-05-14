@@ -7,7 +7,8 @@ use crate::op_queue::Cause;
 use crate::{Config, lsp_ext};
 use base_db::change::DepGraph;
 use lsp_types::FileSystemWatcher;
-use project_model::aptos_package::AptosPackage;
+use project_model::aptos_package::load_from_fs::load_aptos_packages;
+use project_model::aptos_package::{AptosPackage, load_aptos_packages};
 use project_model::dep_graph;
 use project_model::manifest_path::ManifestPath;
 use project_model::project_folders::ProjectFolders;
@@ -146,15 +147,7 @@ impl GlobalState {
                 sender
                     .send(Task::FetchPackagesProgress(FetchPackagesProgress::Begin))
                     .unwrap();
-                let discovered_packages = {
-                    discovered_manifests
-                        .iter()
-                        .map(|manifest| {
-                            let manifest_path = ManifestPath::new(manifest.move_toml_file.to_path_buf());
-                            AptosPackage::load(&manifest_path, manifest.resolve_deps)
-                        })
-                        .collect::<Vec<_>>()
-                };
+                let discovered_packages = load_aptos_packages(discovered_manifests);
                 sender
                     .send(Task::FetchPackagesProgress(FetchPackagesProgress::End(
                         discovered_packages,

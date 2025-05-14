@@ -1,4 +1,4 @@
-use crate::aptos_package::{AptosPackage, FileLoader};
+use crate::aptos_package::{AptosPackage, VfsLoader};
 use crate::project_folders::PackageRootConfig;
 use base_db::change::{DepGraph, FileChanges, ManifestFileId};
 use paths::AbsPath;
@@ -27,6 +27,7 @@ fn collect(vfs: &Vfs, aptos_packages: &[AptosPackage]) -> Option<DepGraph> {
     let mut global_dep_graph = DepGraph::default();
 
     let mut load = |path: &AbsPath| {
+        tracing::debug!(?path, "load from vfs");
         vfs.file_id(&vfs::VfsPath::from(path.to_path_buf()))
             .map(|it| it.0)
     };
@@ -40,7 +41,7 @@ fn collect(vfs: &Vfs, aptos_packages: &[AptosPackage]) -> Option<DepGraph> {
 }
 
 impl AptosPackage {
-    pub fn to_dep_graph(&self, load: FileLoader<'_>) -> Option<DepGraph> {
+    pub fn to_dep_graph(&self, load: VfsLoader<'_>) -> Option<DepGraph> {
         tracing::info!("reloading package at {}", self.content_root());
 
         let mut package_graph = DepGraph::default();
@@ -61,12 +62,23 @@ impl AptosPackage {
         &self,
         dep_ids: &mut Vec<ManifestFileId>,
         package_ref: &AptosPackage,
-        load: FileLoader<'_>,
+        load: VfsLoader<'_>,
     ) {
         for dep_package in package_ref.deps() {
             if let Some(dep_file_id) = dep_package.load_manifest_file_id(load) {
                 dep_ids.push(dep_file_id);
                 self.collect_dep_ids(dep_ids, dep_package, load);
+            }
+        }
+    }
+
+    fn load_manifest_file_id(&self, load: VfsLoader<'_>) -> Option<ManifestFileId> {
+        let manifest_file = self.manifest_path().file;
+        match load(manifest_file.as_path()) {
+            Some(file_id) => Some(file_id),
+            None => {
+                tracing::info!("cannot load {:?} from the filesystem", manifest_file.as_path());
+                None
             }
         }
     }

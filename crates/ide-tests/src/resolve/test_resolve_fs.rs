@@ -1,5 +1,5 @@
 use crate::resolve::check_resolve_tmpfs;
-use test_utils::fixtures::global_state::TestPackageFiles;
+use test_utils::fixtures::test_state::TestPackageFiles;
 
 #[test]
 fn test_module_item_cross_tmpfs() {
@@ -276,6 +276,11 @@ name = "Main"
 [dependencies]
 Std = { local = "../std" }
 AptosStd = { local = "../aptos_std" }
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-core.git"
+rev = "main"
+subdir = "aptos-move/framework/aptos-framework"
         "#,
             // language=Move
             r#"
