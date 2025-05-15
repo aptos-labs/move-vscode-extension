@@ -1,7 +1,6 @@
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::ty::Ty;
-use crate::types::ty::adt::TyAdt;
-use itertools::fold;
+use std::iter;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TyTuple {
@@ -11,6 +10,10 @@ pub struct TyTuple {
 impl TyTuple {
     pub fn new(types: Vec<Ty>) -> Self {
         TyTuple { types }
+    }
+
+    pub fn unknown(arity: usize) -> Self {
+        TyTuple::new(iter::repeat_n(Ty::Unknown, arity).collect())
     }
 }
 

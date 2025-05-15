@@ -13,6 +13,7 @@ use crate::types::ty::Ty;
 use base_db::inputs::InternFileId;
 use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
+use itertools::{Itertools, repeat_n};
 use std::cell::RefCell;
 use std::convert::Infallible;
 use std::ops::ControlFlow;
@@ -118,6 +119,23 @@ impl<'db> SemanticsImpl<'db> {
 
     pub fn render_ty_truncated(&self, ty: &Ty, context_file_id: FileId) -> String {
         ty.render(self.db, Some(context_file_id))
+    }
+
+    pub fn render_ty_expected_form(&self, ty: &Ty) -> String {
+        match ty {
+            Ty::Tuple(ty_tuple) => {
+                let arity = ty_tuple.types.len();
+                let expected_form = repeat_n("_", arity).join(", ");
+                format!("tuple binding of length {arity}: ({expected_form})")
+            }
+            Ty::Adt(ty_adt) => {
+                format!(
+                    "struct binding of type '{}'",
+                    self.render_ty(&Ty::Adt(ty_adt.clone()))
+                )
+            }
+            _ => "a single variable".to_string(),
+        }
     }
 
     pub fn fq_name(&self, item: impl AstNode) -> Option<ItemFQName> {

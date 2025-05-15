@@ -3,6 +3,7 @@ use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use ide_db::Severity;
 use lang::hir_db::NodeInferenceExt;
 use lang::types::inference::TypeError;
+use lang::types::ty::Ty;
 use syntax::ast;
 use syntax::files::{FileRange, InFile};
 use vfs::FileId;
@@ -45,6 +46,38 @@ fn register_type_error(
             acc.push(Diagnostic::new(
                 DiagnosticCode::Lsp("type-error", Severity::Error),
                 format!("Invalid argument to {op}: expected integer type, but found {ty}"),
+                FileRange {
+                    file_id,
+                    range: loc.text_range(),
+                },
+            ))
+        }
+        TypeError::InvalidUnpacking { loc, assigned_ty } => {
+            use syntax::SyntaxKind::*;
+
+            let message = match loc.kind() {
+                STRUCT_PAT if !matches!(assigned_ty, Ty::Adt(_) | Ty::Tuple(_)) => {
+                    format!(
+                        "Assigned expr of type '{}' cannot be unpacked with struct pattern",
+                        ctx.sema.render_ty(assigned_ty)
+                    )
+                }
+                TUPLE_PAT if !matches!(assigned_ty, Ty::Adt(_) | Ty::Tuple(_)) => {
+                    format!(
+                        "Assigned expr of type '{}' cannot be unpacked with tuple pattern",
+                        ctx.sema.render_ty(assigned_ty)
+                    )
+                }
+                _ => {
+                    format!(
+                        "Invalid unpacking. Expected {}",
+                        ctx.sema.render_ty_expected_form(assigned_ty)
+                    )
+                }
+            };
+            acc.push(Diagnostic::new(
+                DiagnosticCode::Lsp("type-error", Severity::Error),
+                message,
                 FileRange {
                     file_id,
                     range: loc.text_range(),
