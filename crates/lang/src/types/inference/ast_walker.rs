@@ -38,27 +38,36 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         match ctx_owner {
             ast::InferenceCtxOwner::Fun(fun) => {
                 if let Some(fun_block_expr) = fun.body() {
-                    self.infer_block_expr(&fun_block_expr, Expected::NoValue);
+                    self.infer_block_expr(
+                        &fun_block_expr,
+                        Expected::ExpectType(self.expected_return_ty.clone()),
+                    );
                 }
             }
             ast::InferenceCtxOwner::SpecFun(spec_fun) => {
                 if let Some(spec_block_expr) = spec_fun.spec_block() {
-                    self.process_msl_block_expr(&spec_block_expr);
+                    self.process_msl_block_expr(
+                        &spec_block_expr,
+                        Expected::ExpectType(self.expected_return_ty.clone()),
+                    );
                 }
             }
             ast::InferenceCtxOwner::SpecInlineFun(spec_fun) => {
                 if let Some(spec_block_expr) = spec_fun.spec_block() {
-                    self.process_msl_block_expr(&spec_block_expr);
+                    self.process_msl_block_expr(
+                        &spec_block_expr,
+                        Expected::ExpectType(self.expected_return_ty.clone()),
+                    );
                 }
             }
             ast::InferenceCtxOwner::ItemSpec(item_spec) => {
                 if let Some(block_expr) = item_spec.spec_block() {
-                    self.process_msl_block_expr(&block_expr);
+                    self.process_msl_block_expr(&block_expr, Expected::NoValue);
                 }
             }
             ast::InferenceCtxOwner::Schema(schema) => {
                 if let Some(block_expr) = schema.spec_block() {
-                    self.process_msl_block_expr(&block_expr);
+                    self.process_msl_block_expr(&block_expr, Expected::NoValue);
                 }
             }
         }
@@ -125,20 +134,24 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         Some(())
     }
 
-    pub fn process_msl_block_expr(&mut self, block_expr: &ast::BlockExpr) -> Option<()> {
+    pub fn process_msl_block_expr(
+        &mut self,
+        block_expr: &ast::BlockExpr,
+        expected_return: Expected,
+    ) -> Option<()> {
         self.ctx.msl_scope(|ctx| {
             let mut w = TypeAstWalker::new(ctx, Ty::Unit);
-            w.infer_block_expr(&block_expr, Expected::NoValue);
+            w.infer_block_expr(&block_expr, expected_return);
         });
         Some(())
     }
 
-    pub fn infer_block_expr(&mut self, block_expr: &ast::BlockExpr, expected: Expected) -> Ty {
+    pub fn infer_block_expr(&mut self, block_expr: &ast::BlockExpr, expected_return: Expected) -> Ty {
         for stmt in block_expr.stmts() {
             self.process_stmt(stmt);
         }
         let tail_expr = block_expr.tail_expr();
-        let opt_expected_ty = expected.ty(self.ctx);
+        let opt_expected_ty = expected_return.ty(self.ctx);
         match tail_expr {
             None => {
                 if let Some(expected_ty) = opt_expected_ty {
@@ -282,9 +295,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::Expr::BreakExpr(_) => Ty::Never,
             ast::Expr::ContinueExpr(_) => Ty::Never,
             ast::Expr::ReturnExpr(return_expr) => {
-                if let Some(expr) = return_expr.expr() {
-                    let expected = Expected::ExpectType(self.expected_return_ty.clone());
-                    self.infer_expr(&expr, expected);
+                if let Some(inner_expr) = return_expr.expr() {
+                    self.infer_expr_coerceable_to(&inner_expr, self.expected_return_ty.clone());
                 }
                 Ty::Never
             }
@@ -337,7 +349,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
             ast::Expr::SpecBlockExpr(it) => {
                 if let Some(block_expr) = it.block_expr() {
-                    self.process_msl_block_expr(&block_expr);
+                    self.process_msl_block_expr(&block_expr, Expected::NoValue);
                 }
                 Ty::Unit
             }

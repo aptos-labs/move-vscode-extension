@@ -19,29 +19,31 @@ module 0x1::main {
 fn test_no_warning_if_first_parameter_has_different_type() {
     // language=Move
     check_diagnostics(expect![[r#"
-module 0x1::main {
-    struct S { field: u8 }
-    struct T { field: u8 }
-    fun get_field(self: &T): u8 { self.field }
-    fun main(s: S) {
-        get_field(&s);
-    }
-}
-"#]]);
+        module 0x1::main {
+            struct S { field: u8 }
+            struct T { field: u8 }
+            fun get_field(self: &T): u8 { self.field }
+            fun main(s: S) {
+                get_field(&s);
+                        //^^ err: Incompatible type '&0x1::main::S', expected '&0x1::main::T'
+            }
+        }
+    "#]]);
 }
 
 #[test]
 fn test_no_warning_if_references_are_incompatible() {
     // language=Move
     check_diagnostics(expect![[r#"
-module 0x1::main {
-    struct S { field: u8 }
-    fun get_field(s: &mut S): u8 { s.field }
-    fun main(s: &S) {
-        get_field(s);
-    }
-}
-"#]]);
+        module 0x1::main {
+            struct S { field: u8 }
+            fun get_field(s: &mut S): u8 { s.field }
+            fun main(s: &S) {
+                get_field(s);
+                        //^ err: Incompatible type '&0x1::main::S', expected '&mut 0x1::main::S'
+            }
+        }
+    "#]]);
 }
 
 #[test]
@@ -94,14 +96,15 @@ module 0x1::main {
 fn test_no_warning_if_generics_are_incompatible() {
     // language=Move
     check_diagnostics(expect![[r#"
-module 0x1::main {
-    struct S<T> { field: T }
-    fun get_field(self: &S<u8>): u8 { self.field }
-    fun main(s: &S<u16>) {
-        get_field(s);
-    }
-}
-"#]]);
+        module 0x1::main {
+            struct S<T> { field: T }
+            fun get_field(self: &S<u8>): u8 { self.field }
+            fun main(s: &S<u16>) {
+                get_field(s);
+                        //^ err: Incompatible type '&0x1::main::S<u16>', expected '&0x1::main::S<u8>'
+            }
+        }
+    "#]]);
 }
 
 #[test]

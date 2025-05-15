@@ -2,7 +2,7 @@
 
 pub mod config;
 pub mod diagnostic;
-mod handlers;
+pub mod handlers;
 mod tests;
 
 use crate::config::DiagnosticsConfig;
@@ -12,6 +12,7 @@ use base_db::source_db;
 use ide_db::RootDatabase;
 use ide_db::assists::AssistResolveStrategy;
 use lang::Semantics;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::files::{FileRange, InFileExt};
 use syntax::{AstNode, ast, match_ast};
 use vfs::FileId;
@@ -58,28 +59,33 @@ pub fn semantic_diagnostics(
     let _p = tracing::info_span!("semantic_diagnostics").entered();
     let sema = Semantics::new(db, file_id);
 
-    let mut res = vec![];
+    let mut acc = vec![];
 
     let file = sema.parse(file_id);
     let ctx = DiagnosticsContext { config, sema, resolve };
     for node in file.syntax().descendants() {
+        if node.is::<ast::InferenceCtxOwner>() {
+            let ctx_owner = node.clone().cast::<ast::InferenceCtxOwner>().unwrap();
+            handlers::type_check(&mut acc, &ctx, &ctx_owner.in_file(file_id));
+        }
+
         match_ast! {
             match node {
                 ast::CallExpr(it) => {
-                    handlers::can_be_replaced_with_method_call(&mut res, &ctx, it.in_file(file_id));
+                    handlers::can_be_replaced_with_method_call(&mut acc, &ctx, it.in_file(file_id));
                 },
                 ast::AnyReferenceElement(it) => {
-                    handlers::unresolved_reference(&mut res, &ctx, it.in_file(file_id));
+                    handlers::unresolved_reference(&mut acc, &ctx, it.in_file(file_id));
                 },
                 ast::BinExpr(it) => {
-                    handlers::can_be_replaced_with_compound_expr(&mut res, &ctx, it.in_file(file_id));
+                    handlers::can_be_replaced_with_compound_expr(&mut acc, &ctx, it.in_file(file_id));
                 },
                 _ => (),
             }
         }
     }
 
-    res
+    acc
 }
 
 pub fn full_diagnostics(

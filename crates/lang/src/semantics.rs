@@ -144,7 +144,7 @@ impl<'db> SemanticsImpl<'db> {
         }
     }
 
-    fn inference<T: AstNode>(&self, node: &InFile<T>, msl: bool) -> Option<Arc<InferenceResult>> {
+    pub fn inference<T: AstNode>(&self, node: &InFile<T>, msl: bool) -> Option<Arc<InferenceResult>> {
         node.inference(self.db, msl)
     }
 

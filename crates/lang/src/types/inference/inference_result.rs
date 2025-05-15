@@ -2,6 +2,7 @@ use crate::loc;
 use crate::loc::SyntaxLocNodeExt;
 use crate::nameres::scope::{ScopeEntry, VecExt};
 use crate::types::inference::InferenceCtx;
+use crate::types::inference::combine_types::TypeError;
 use crate::types::ty::Ty;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::ty_var::TyInfer;
@@ -13,6 +14,7 @@ use vfs::FileId;
 #[derive(Debug, PartialEq, Eq)]
 pub struct InferenceResult {
     file_id: FileId,
+    pub type_errors: Vec<TypeError>,
 
     pat_types: HashMap<loc::SyntaxLoc, Ty>,
     expr_types: HashMap<loc::SyntaxLoc, Ty>,
@@ -27,6 +29,13 @@ impl InferenceResult {
     pub fn from_ctx(mut ctx: InferenceCtx) -> Self {
         Self::unify_remaining_int_vars_into_integer(&mut ctx);
 
+        let type_errors = ctx
+            .type_errors
+            .clone()
+            .into_iter()
+            .map(|type_error| ctx.fully_resolve_vars(type_error))
+            .collect();
+
         let pat_types = fully_resolve_map_values(ctx.pat_types.clone(), &ctx);
         let expr_types = fully_resolve_map_values(ctx.expr_types.clone(), &ctx);
 
@@ -38,6 +47,7 @@ impl InferenceResult {
 
         InferenceResult {
             file_id: ctx.file_id,
+            type_errors,
             pat_types,
             expr_types,
             resolved_paths,
