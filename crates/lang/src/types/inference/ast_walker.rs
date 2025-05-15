@@ -788,8 +788,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             // `if (true) &s else &mut s` shouldn't show type error
             self.ctx.coerce_types(
                 tail_expr.node_or_token(),
-                actual_else_ty.clone(),
-                expected_else_ty,
+                actual_else_ty.unwrap_all_refs(),
+                expected_else_ty.unwrap_all_refs(),
             );
         }
 
