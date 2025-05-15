@@ -11,14 +11,15 @@ expect-test = "1.5.1"
 tracing.workspace = true
 tracing-subscriber.workspace = true
 tracing-tree.workspace = true
-line-index.workspace = true
 stdx.workspace = true
+paths.workspace = true
 
 vfs.workspace = true
 
 syntax = { path = "../syntax" }
 test-utils = { path = "../test-utils" }
 lang = { path = "../lang" }
+project-model = { path = "../project-model" }
 ide = { path = "../ide" }
 ide-db = { path = "../ide-db" }
 ide-completion = { path = "../ide-completion" }
