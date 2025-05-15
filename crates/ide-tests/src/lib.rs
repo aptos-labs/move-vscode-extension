@@ -19,6 +19,7 @@ mod test_unresolved_reference;
 mod test_utils;
 mod types;
 
+mod test_load_dependencies;
 mod test_resolve_items;
 mod test_resolve_types;
 mod test_syntax_errors;

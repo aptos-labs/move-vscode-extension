@@ -30,12 +30,27 @@ impl DiscoveredManifest {
 
 fn walk_and_discover_manifests(ws_root: &AbsPathBuf) -> Vec<DiscoveredManifest> {
     let candidate = ws_root.join("aptos-move").join("framework");
-    let aptos_move_dir = match fs::exists(&candidate) {
+    let aptos_core_dirs = match fs::exists(&candidate) {
         Ok(true) => {
+            let aptos_core_dirs = vec![
+                ws_root.join("aptos-move").join("framework"),
+                ws_root.join("aptos-move").join("move-examples"),
+                ws_root
+                    .join("testsuite")
+                    .join("module-publish")
+                    .join("src")
+                    .join("packages"),
+            ];
+            let dirs_to_resolve = aptos_core_dirs
+                .clone()
+                .into_iter()
+                .map(|it| it.to_string())
+                .collect::<Vec<_>>();
             tracing::error!(
-                "aptos-core repository detected, only packages in the aptos-move/framework/ directory will have their dependencies resolved"
+                "aptos-core repository detected, dependency resolution is restricted to {:#?}",
+                dirs_to_resolve,
             );
-            Some(candidate)
+            Some(aptos_core_dirs)
         }
         _ => None,
     };
@@ -46,7 +61,9 @@ fn walk_and_discover_manifests(ws_root: &AbsPathBuf) -> Vec<DiscoveredManifest> 
         .filter_map(|it| it.ok())
     {
         let path = entry.path();
-        let resolve_deps = aptos_move_dir.clone().is_none_or(|it| path.starts_with(it));
+        let resolve_deps = aptos_core_dirs
+            .clone()
+            .is_none_or(|dirs| dirs.iter().any(|dir| path.starts_with(dir)));
         let mfile_path = path.join("Move.toml");
         if mfile_path.exists() {
             let m = DiscoveredManifest {

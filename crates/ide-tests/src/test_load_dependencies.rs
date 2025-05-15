@@ -1,26 +1,32 @@
+use crate::init_tracing_for_test;
 use paths::AbsPathBuf;
 use project_model::DiscoveredManifest;
-use project_model::aptos_package::load_from_fs;
 use project_model::aptos_package::load_from_fs::load_aptos_packages;
 use std::env::current_dir;
+use std::path::PathBuf;
+
+fn load_deps_dir() -> PathBuf {
+    current_dir().unwrap().join("resources").join("load_deps")
+}
 
 #[test]
 fn test_circular_dependencies() {
-    let ws_dir = current_dir()
-        .unwrap()
-        .join("tests")
-        .join("circular_dependencies")
-        .join("Move.toml");
+    init_tracing_for_test();
+
     let manifest = DiscoveredManifest {
-        move_toml_file: AbsPathBuf::assert_utf8(ws_dir),
+        move_toml_file: AbsPathBuf::assert_utf8(
+            load_deps_dir().join("circular_dependencies").join("Move.toml"),
+        ),
         resolve_deps: true,
     };
-    load_from_fs::load_aptos_packages(vec![manifest]);
+    load_aptos_packages(vec![manifest]);
 }
 
 #[test]
 fn test_if_inside_aptos_core_only_load_deps_from_aptos_move() {
-    let root = current_dir().unwrap().join("tests").join("aptos-core");
+    init_tracing_for_test();
+
+    let root = load_deps_dir().join("aptos-core");
     let ws_roots = vec![AbsPathBuf::assert_utf8(root)];
     let discovered_manifests = DiscoveredManifest::discover_all(&ws_roots);
 
@@ -28,7 +34,7 @@ fn test_if_inside_aptos_core_only_load_deps_from_aptos_move() {
         .into_iter()
         .map(|it| it.unwrap())
         .collect::<Vec<_>>();
-    assert_eq!(packages.len(), 3);
+    assert_eq!(packages.len(), 4);
 
     let other_movestdlib_package = packages
         .iter()
@@ -41,4 +47,10 @@ fn test_if_inside_aptos_core_only_load_deps_from_aptos_move() {
         .find(|it| it.content_root().to_string().contains("aptos-stdlib"))
         .unwrap();
     assert_eq!(aptos_stdlib.dep_roots().len(), 1);
+
+    let my_package = packages
+        .iter()
+        .find(|it| it.content_root().to_string().contains("my-package"))
+        .unwrap();
+    assert_eq!(my_package.dep_roots().len(), 1);
 }

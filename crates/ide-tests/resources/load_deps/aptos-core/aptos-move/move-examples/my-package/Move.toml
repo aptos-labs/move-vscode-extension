@@ -1,0 +1,5 @@
+[package]
+name = "MyPackage"
+
+[dependencies]
+MoveStdlib = { local = "../../framework/move-stdlib" }

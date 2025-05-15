@@ -29,8 +29,8 @@ module 0x1::option {
     fun main() {
         let unknown/*: unknown*/ = unknown_variable;
         let a2 = 1;
-        unknown == some(a2);
-                   //^ integer
+        unknown == (some(a2));
+                 //^ integer
     }
 }        
 "#,
