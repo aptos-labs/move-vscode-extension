@@ -1,4 +1,4 @@
-use crate::loc::SyntaxLoc;
+use crate::loc::{SyntaxLoc, SyntaxLocFileExt, SyntaxLocNodeExt};
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::inference::InferenceCtx;
 use crate::types::ty::Ty;
@@ -264,6 +264,10 @@ pub enum TypeError {
         ty: Ty,
         op: String,
     },
+    InvalidUnpacking {
+        loc: SyntaxLoc,
+        assigned_ty: Ty,
+    },
 }
 
 impl TypeError {
@@ -281,12 +285,15 @@ impl TypeError {
     }
 
     pub fn unsupported_arith_op(expr: InFile<ast::Expr>, ty: Ty, op: ast::ArithOp) -> Self {
-        let (file_id, expr) = expr.unpack();
         TypeError::UnsupportedArithmOp {
-            loc: SyntaxLoc::from_ast_node(file_id, &expr),
+            loc: expr.loc(),
             ty,
             op: op.to_string(),
         }
+    }
+
+    pub fn invalid_unpacking(pat: InFile<ast::Pat>, assigned_ty: Ty) -> Self {
+        TypeError::InvalidUnpacking { loc: pat.loc(), assigned_ty }
     }
 }
 
@@ -302,6 +309,10 @@ impl TypeFoldable<TypeError> for TypeError {
                 loc,
                 ty: ty.fold_with(folder),
                 op,
+            },
+            TypeError::InvalidUnpacking { loc, assigned_ty } => TypeError::InvalidUnpacking {
+                loc,
+                assigned_ty: assigned_ty.fold_with(folder),
             },
         }
     }

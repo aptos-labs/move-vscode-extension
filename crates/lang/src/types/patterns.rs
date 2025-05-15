@@ -1,6 +1,6 @@
 use crate::nameres::scope::{ScopeEntry, ScopeEntryExt, VecExt};
-use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
+use crate::types::inference::{InferenceCtx, TypeError};
 use crate::types::patterns::BindingMode::{BindByReference, BindByValue};
 use crate::types::substitution::{ApplySubstitution, empty_substitution};
 use crate::types::ty::Ty;
@@ -8,14 +8,14 @@ use crate::types::ty::reference::Mutability;
 use crate::types::ty::tuple::TyTuple;
 use parser::SyntaxKind;
 use std::{cmp, iter};
-use syntax::ast::FieldsOwner;
 use syntax::ast::node_ext::struct_pat_field::PatFieldKind;
+use syntax::ast::{FieldsOwner, StructOrEnum};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 
 impl TypeAstWalker<'_, '_> {
-    pub fn collect_pat_bindings(&mut self, pat: ast::Pat, ty: Ty, def_bm: BindingMode) {
-        match pat {
+    pub fn collect_pat_bindings(&mut self, pat: ast::Pat, ty: Ty, def_bm: BindingMode) -> Option<()> {
+        match pat.clone() {
             ast::Pat::PathPat(path_pat) => {
                 let named_item = self.ctx.resolve_cached(path_pat.path(), None);
                 let named_item_kind = named_item.map(|it| it.kind());
@@ -46,8 +46,24 @@ impl TypeAstWalker<'_, '_> {
                     .insert(struct_pat.clone().into(), expected.clone());
 
                 let fields_owner = self.get_pat_fields_owner(struct_pat.path(), expected.clone());
-
-                // todo: invalid unpacking
+                if let Some(fields_owner) = &fields_owner {
+                    let (file_id, fields_owner) = fields_owner.unpack_ref();
+                    if let StructOrEnum::Struct(struct_) = fields_owner.struct_or_enum() {
+                        let pat_ty = self
+                            .ctx
+                            .instantiate_path(
+                                struct_pat.path().into(),
+                                struct_.in_file(file_id).map_into(),
+                            )
+                            .into_ty_adt()?;
+                        if !self.ctx.is_tys_compatible(expected, Ty::Adt(pat_ty)) {
+                            self.ctx.type_errors.push(TypeError::invalid_unpacking(
+                                pat.in_file(self.ctx.file_id),
+                                ty.clone(),
+                            ));
+                        }
+                    }
+                }
 
                 let pat_fields = struct_pat.fields();
                 let pat_field_tys = self.get_pat_field_tys(fields_owner, &pat_fields);
@@ -84,11 +100,9 @@ impl TypeAstWalker<'_, '_> {
                     for pat in tuple_struct_pat.fields() {
                         self.collect_pat_bindings(pat, Ty::Unknown, BindByValue);
                     }
-                    return;
+                    return None;
                 }
                 let fields_owner = fields_owner.unwrap();
-
-                // todo: invalid unpacking
 
                 let pats = tuple_struct_pat.fields().collect();
 
@@ -125,10 +139,18 @@ impl TypeAstWalker<'_, '_> {
                     // let (a,) = 1;
                     let pat = pats.single_or_none().unwrap();
                     self.collect_pat_bindings(pat, ty, BindByValue);
-                    return;
+                    return None;
                 }
 
-                // todo: invalid unpacking
+                if !self
+                    .ctx
+                    .is_tys_compatible(ty.clone(), Ty::Tuple(TyTuple::unknown(pats.len())))
+                {
+                    self.ctx.type_errors.push(TypeError::invalid_unpacking(
+                        pat.in_file(self.ctx.file_id),
+                        ty.clone(),
+                    ));
+                }
 
                 let inner_types = ty.into_ty_tuple().map(|it| it.types).unwrap_or_default();
                 #[rustfmt::skip]
@@ -145,7 +167,8 @@ impl TypeAstWalker<'_, '_> {
                 self.ctx.pat_types.insert(wildcard_pat.into(), ty);
             }
             ast::Pat::RestPat(_) => (),
-        }
+        };
+        Some(())
     }
 
     fn get_pat_fields_owner(

@@ -744,3 +744,92 @@ fn test_error_invalid_assignment_type() {
         }
     "#]]);
 }
+
+#[test]
+fn test_tuple_unpacking_with_three_elements_when_two_are_specified() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            fun tuple(): (u8, u8, u8) { (1, 1, 1) }
+            fun main() {
+                let (a, b) = tuple();
+                  //^^^^^^ err: Invalid unpacking. Expected tuple binding of length 3: (_, _, _)
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_invalid_tuple_unpacking_with_nested_error() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            struct S { val: u8 }
+            fun tuple(): (u8, u8, u8) { (1, 1, 1) }
+            fun main() {
+                let (S { val }, b) = tuple();
+                  //^^^^^^^^^^^^^^ err: Invalid unpacking. Expected tuple binding of length 3: (_, _, _)
+                   //^^^^^^^^^ err: Assigned expr of type 'u8' cannot be unpacked with struct pattern
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_tuple_unpacking_into_struct_when_tuple_pat_is_expected() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            struct S { val: u8 }
+            fun tuple(): (u8, u8, u8) { (1, 1, 1) }
+            fun main() {
+                let S { val } = tuple();
+                  //^^^^^^^^^ err: Invalid unpacking. Expected tuple binding of length 3: (_, _, _)
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_unpacking_struct_into_variable() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+    module 0x1::M {
+        struct S { val: u8 }
+        fun s(): S { S { val: 10 } }
+        fun main() {
+            let s = s();
+        }
+    }
+    "#]]);
+}
+
+#[test]
+fn test_error_unpacking_struct_into_tuple() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            struct S { val: u8 }
+            fun s(): S { S { val: 10 } }
+            fun main() {
+                let (a, b) = s();
+                  //^^^^^^ err: Invalid unpacking. Expected struct binding of type '0x1::M::S'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_error_unpacking_struct_into_tuple_when_single_var_is_expected() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            struct S { val: u8 }
+            fun s(): u8 { 1 }
+            fun main() {
+                let (a, b) = s();
+                  //^^^^^^ err: Assigned expr of type 'u8' cannot be unpacked with tuple pattern
+            }
+        }
+    "#]]);
+}
