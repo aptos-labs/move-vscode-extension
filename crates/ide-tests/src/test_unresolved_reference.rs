@@ -400,27 +400,29 @@ fn test_unresolved_item_import() {
 fn test_no_error_for_field_of_item_of_unknown_type() {
     // language=Move
     check_diagnostics(expect![[r#"
-module 0x1::main {
-    fun main() {
-        let var = (1 + false);
-        var.key;
-    }
-}
-"#]]);
+        module 0x1::main {
+            fun main() {
+                let var = (1 + false);
+                             //^^^^^ err: Invalid argument to '+': expected integer type, but found 'bool'
+                var.key;
+            }
+        }
+    "#]]);
 }
 
 #[test]
 fn test_no_error_for_field_of_reference_of_unknown_type() {
     // language=Move
     check_diagnostics(expect![[r#"
-module 0x1::main {
-    fun call<T>(t: T): &T { &t }
-    fun main() {
-        let var = &(1 + false);
-        var.key;
-    }
-}
-"#]]);
+        module 0x1::main {
+            fun call<T>(t: T): &T { &t }
+            fun main() {
+                let var = &(1 + false);
+                              //^^^^^ err: Invalid argument to '+': expected integer type, but found 'bool'
+                var.key;
+            }
+        }
+    "#]]);
 }
 
 #[test]
@@ -594,10 +596,11 @@ fn test_no_error_if_method_receiver_of_type_unknown() {
             fun receiver(self: S): u8 { self.field }
             fun main() {
                 let t = &(1 + false);
+                            //^^^^^ err: Invalid argument to '+': expected integer type, but found 'bool'
                 t.receiver();
             }
         }
-"#]]);
+    "#]]);
 }
 
 #[test]
@@ -712,6 +715,7 @@ fn test_no_error_for_const_in_spec() {
             spec fun is_permissioned_signer(): bool {
                 use 0x1::features::PERMISSIONED_SIGNER;
                 PERMISSIONED_SIGNER;
+                true
             }
         }
 "#]]);
