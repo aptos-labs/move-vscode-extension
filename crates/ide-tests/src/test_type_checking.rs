@@ -918,3 +918,113 @@ fn test_vector_lit_with_implicit_type_and_type_error() {
         }
     "#]]);
 }
+
+#[test]
+fn test_call_expr_with_incomplete_arguments_and_explicit_type() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun call<T>(a: T, b: T): T {
+                b
+            }
+            fun main() {
+                call<u8>(1u64);
+                       //^^^^ err: Incompatible type 'u64', expected 'u8'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_call_expr_with_incomplete_arguments_and_implicit_type() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun call<T>(a: T, b: T, c: T): T {
+                b
+            }
+            fun main() {
+                call(1u8, 1u64);
+                        //^^^^ err: Incompatible type 'u64', expected 'u8'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_option_none_is_compatible_with_any_option() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::option {
+            struct Option<Element: copy + drop + store> has copy, drop, store {
+                vec: vector<Element>
+            }
+            public fun none<Element: copy + drop + store>(): Option<Element> {
+                Option { vec: vector[] }
+            }
+        }
+        module 0x1::main {
+            use 0x1::option;
+            struct IterableValue<K: copy + store + drop> has store {
+                prev: option::Option<K>,
+                next: option::Option<K>,
+            }
+            public fun new() {
+                IterableValue { prev: option::none(), next: option::none() };
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_nested_boxes() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct Box<T> has copy, drop, store { x: T }
+            fun box1<T>(x: T): Box<Box<T>> {
+                Box { x: Box { x } }
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_deeply_nested_structure_type_is_unknown_due_to_memory_issues() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct Box<T> has copy, drop, store { x: T }
+            struct Box3<T> has copy, drop, store { x: Box<Box<T>> }
+            struct Box7<T> has copy, drop, store { x: Box3<Box3<T>> }
+            struct Box15<T> has copy, drop, store { x: Box7<Box7<T>> }
+            struct Box31<T> has copy, drop, store { x: Box15<Box15<T>> }
+            struct Box63<T> has copy, drop, store { x: Box31<Box31<T>> }
+
+            fun box3<T>(x: T): Box3<T> {
+                Box3 { x: Box { x: Box { x } } }
+            }
+
+            fun box7<T>(x: T): Box7<T> {
+                Box7 { x: box3(box3(x)) }
+            }
+
+            fun box15<T>(x: T): Box15<T> {
+                Box15 { x: box7(box7(x)) }
+            }
+
+            fun box31<T>(x: T): Box31<T> {
+                Box31 { x: box15(box15(x)) }
+            }
+
+            fun box63<T>(x: T): Box63<T> {
+                Box63 { x: box31(box31(x)) }
+            }
+
+            fun main() {
+                let a: Box63<u8>;
+                a;
+            }
+        }
+    "#]]);
+}

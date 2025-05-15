@@ -13,7 +13,7 @@ use crate::nameres::address::Address;
 use crate::nameres::name_resolution::get_modules_as_entries;
 use crate::nameres::scope::{ScopeEntryListExt, VecExt};
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
-use crate::types::inference::InferenceCtx;
+use crate::types::inference::TyVarIndex;
 use crate::types::render::TypeRenderer;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::integer::IntegerKind;
@@ -56,12 +56,15 @@ pub enum Ty {
 }
 
 impl Ty {
-    pub fn new_ty_var(ctx: &mut InferenceCtx) -> Ty {
-        Ty::Infer(TyInfer::Var(TyVar::new_anonymous(ctx.inc_ty_counter())))
+    pub fn new_ty_var(ty_var_index: &TyVarIndex) -> Ty {
+        Ty::Infer(TyInfer::Var(TyVar::new_anonymous(ty_var_index.inc())))
     }
 
-    pub fn new_ty_var_with_origin(tp_origin_loc: SyntaxLoc) -> Ty {
-        Ty::Infer(TyInfer::Var(TyVar::new_with_origin(tp_origin_loc)))
+    pub fn new_ty_var_with_origin(tp_origin_loc: SyntaxLoc, ty_var_index: &TyVarIndex) -> Ty {
+        Ty::Infer(TyInfer::Var(TyVar::new_with_origin(
+            tp_origin_loc,
+            ty_var_index.inc(),
+        )))
     }
 
     pub fn new_vector(item_ty: Ty) -> Ty {

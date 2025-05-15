@@ -1,6 +1,6 @@
 use crate::nameres::scope::{ScopeEntry, ScopeEntryExt, VecExt};
 use crate::types::inference::ast_walker::TypeAstWalker;
-use crate::types::inference::{InferenceCtx, TypeError};
+use crate::types::inference::{TyVarIndex, TypeError};
 use crate::types::patterns::BindingMode::{BindByReference, BindByValue};
 use crate::types::substitution::{ApplySubstitution, empty_substitution};
 use crate::types::ty::Ty;
@@ -255,11 +255,11 @@ impl TypeAstWalker<'_, '_> {
     }
 }
 
-pub fn anonymous_pat_ty_var(ctx: &mut InferenceCtx, pat: &ast::Pat) -> Ty {
+pub fn anonymous_pat_ty_var(ty_var_index: &TyVarIndex, pat: &ast::Pat) -> Ty {
     match pat {
-        ast::Pat::IdentPat(_) => Ty::new_ty_var(ctx),
+        ast::Pat::IdentPat(_) => Ty::new_ty_var(ty_var_index),
         ast::Pat::TuplePat(tuple_pat) => {
-            let pat_types = tuple_pat.pats().map(|_| Ty::new_ty_var(ctx)).collect();
+            let pat_types = tuple_pat.pats().map(|_| Ty::new_ty_var(ty_var_index)).collect();
             Ty::Tuple(TyTuple::new(pat_types))
         }
         _ => Ty::Unknown,

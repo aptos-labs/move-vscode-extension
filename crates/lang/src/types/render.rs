@@ -73,11 +73,13 @@ impl<'db> TypeRenderer<'db> {
     }
 
     fn render_ty_var(&self, ty_var: &TyVar) -> String {
-        let kind = match &ty_var.kind {
-            TyVarKind::Anonymous(index) => index.to_string(),
-            TyVarKind::WithOrigin { origin_loc } => self.origin_loc_name(origin_loc),
-        };
-        format!("?_{}", kind)
+        match &ty_var.kind {
+            TyVarKind::Anonymous(index) => format!("?_{index}"),
+            TyVarKind::WithOrigin { origin_loc, index } => {
+                let origin = self.origin_loc_name(origin_loc);
+                format!("?{origin}_{index}")
+            }
+        }
     }
 
     fn render_ty_callable(&self, ty_callable: &TyCallable) -> String {

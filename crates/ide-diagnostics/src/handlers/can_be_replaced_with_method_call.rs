@@ -5,6 +5,7 @@ use ide_db::assists::{Assist, AssistId};
 use ide_db::label::Label;
 use ide_db::source_change::SourceChangeBuilder;
 use lang::types::has_type_params_ext::GenericItemExt;
+use lang::types::inference::TyVarIndex;
 use lang::types::substitution::ApplySubstitution;
 use syntax::ast::ReferenceElement;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
@@ -42,7 +43,7 @@ pub(crate) fn can_be_replaced_with_method_call(
         return None;
     }
 
-    let fun_subst = fun.ty_vars_subst();
+    let fun_subst = fun.ty_vars_subst(&TyVarIndex::default());
     let self_ty = ctx
         .sema
         .lower_type(self_param_type.in_file(fun.file_id), msl)

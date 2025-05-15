@@ -198,7 +198,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     None => let_stmt
                         .pat()
                         .clone()
-                        .map(|it| anonymous_pat_ty_var(self.ctx, &it))
+                        .map(|it| anonymous_pat_ty_var(&self.ctx.ty_var_index, &it))
                         .unwrap_or(Ty::Unknown),
                 };
                 let pat = let_stmt.pat()?;
@@ -522,7 +522,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             .collect();
         self.coerce_call_arg_types(args, callable_ty.param_types.clone(), expected_arg_tys);
 
-        Some(callable_ty.ret_type())
+        // resolve after applying all parameters
+        let ret_ty = self.ctx.resolve_ty_vars_if_possible(callable_ty.ret_type());
+
+        Some(ret_ty)
     }
 
     fn infer_assert_macro_expr(&mut self, assert_macro_expr: &ast::AssertMacroExpr) -> Ty {
@@ -555,13 +558,15 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let fields_owner = fields_owner.unwrap();
 
         let struct_or_enum = fields_owner.struct_or_enum();
-        let mut ty_adt = self
+        let explicit_ty_adt = self
             .ctx
             .instantiate_path(path.into(), struct_or_enum.in_file(item_file_id).map_into())
             .into_ty_adt()?;
+
+        let mut ty_adt = explicit_ty_adt.clone();
         if let Some(Ty::Adt(expected_ty_adt)) = expected_ty {
             let expected_subst = expected_ty_adt.substitution;
-            for (type_param, subst_ty) in ty_adt.substitution.entries() {
+            for (type_param, subst_ty) in explicit_ty_adt.substitution.entries() {
                 // skip type parameters as we have no ability check
                 if matches!(subst_ty, &Ty::TypeParam(_)) {
                     continue;
@@ -572,7 +577,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 }
             }
             // resolved tyAdt inner TyVars after combining with expectedTy
-            ty_adt = self.ctx.resolve_ty_vars_if_possible(ty_adt)
+            ty_adt = self.ctx.resolve_ty_vars_if_possible(explicit_ty_adt);
         }
 
         let named_fields = fields_owner.named_fields_map();
@@ -612,7 +617,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
         }
 
-        Some(Ty::Adt(ty_adt))
+        // resolve after processing all fields
+        let struct_lit_ty = self.ctx.resolve_ty_vars_if_possible(Ty::Adt(ty_adt));
+
+        Some(struct_lit_ty)
     }
 
     fn infer_index_expr(&mut self, index_expr: &ast::IndexExpr) -> Ty {
@@ -663,13 +671,17 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             let file_id = self.ctx.file_id;
             let param_ty = match lambda_param.type_() {
                 Some(type_) => self.ctx.ty_lowering().lower_type(type_.in_file(file_id)),
-                None => Ty::new_ty_var(self.ctx),
+                None => Ty::new_ty_var(&self.ctx.ty_var_index),
             };
             self.ctx.pat_types.insert(ident_pat.into(), param_ty.clone());
             param_tys.push(param_ty);
         }
 
-        let lambda_call_ty = TyCallable::new(param_tys, Ty::new_ty_var(self.ctx), CallKind::Lambda);
+        let lambda_call_ty = TyCallable::new(
+            param_tys,
+            Ty::new_ty_var(&self.ctx.ty_var_index),
+            CallKind::Lambda,
+        );
         self.ctx.lambda_exprs.push(lambda_expr.clone());
         self.ctx
             .lambda_expr_types
@@ -721,7 +733,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     }
 
     fn infer_vector_lit_expr(&mut self, vector_lit_expr: &ast::VectorLitExpr, expected: Expected) -> Ty {
-        let arg_ty_var = Ty::new_ty_var(self.ctx);
+        let arg_ty_var = Ty::new_ty_var(&self.ctx.ty_var_index);
 
         let explicit_ty = vector_lit_expr.type_arg().map(|it| {
             let file_id = self.ctx.file_id;
@@ -1020,7 +1032,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 let kind = IntegerKind::from_suffixed_literal(num);
                 match kind {
                     Some(kind) => Ty::Integer(kind),
-                    None => Ty::Infer(TyInfer::IntVar(TyIntVar::new(self.ctx.inc_ty_counter()))),
+                    None => Ty::Infer(TyInfer::IntVar(TyIntVar::new(self.ctx.ty_var_index.inc()))),
                 }
             }
             ast::LiteralKind::Address(_) => Ty::Address,
