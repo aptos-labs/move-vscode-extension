@@ -6,7 +6,7 @@ use crate::nameres::path_resolution::get_method_resolve_variants;
 use crate::nameres::scope::{ScopeEntryExt, ScopeEntryListExt, VecExt};
 use crate::node_ext::item_spec::ItemSpecExt;
 use crate::types::expectation::Expected;
-use crate::types::inference::InferenceCtx;
+use crate::types::inference::{InferenceCtx, TypeError};
 use crate::types::patterns::{BindingMode, anonymous_pat_ty_var};
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
@@ -902,10 +902,12 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     fn infer_bin_expr(&mut self, bin_expr: &ast::BinExpr) -> Option<Ty> {
         let (lhs, (_, op_kind), rhs) = bin_expr.unpack()?;
         let ty = match op_kind {
-            ast::BinaryOp::ArithOp(_) => self.infer_arith_binary_expr(lhs, rhs, false),
+            ast::BinaryOp::ArithOp(arith_op) => self.infer_arith_binary_expr(lhs, rhs, arith_op, false),
 
             ast::BinaryOp::Assignment { op: None } => self.infer_assignment(lhs, rhs),
-            ast::BinaryOp::Assignment { op: Some(_) } => self.infer_arith_binary_expr(lhs, rhs, true),
+            ast::BinaryOp::Assignment { op: Some(arith_op) } => {
+                self.infer_arith_binary_expr(lhs, rhs, arith_op, true)
+            }
 
             ast::BinaryOp::LogicOp(_) => self.infer_logic_binary_expr(lhs, rhs),
 
@@ -929,18 +931,27 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         &mut self,
         lhs: ast::Expr,
         rhs: Option<ast::Expr>,
+        arith_op: ast::ArithOp,
         is_compound: bool,
     ) -> Ty {
         let mut is_error = false;
         let left_ty = self.infer_expr(&lhs, Expected::NoValue);
         if !left_ty.supports_arithm_op() {
-            // todo: report error
+            self.ctx.type_errors.push(TypeError::unsupported_arith_op(
+                lhs.in_file(self.ctx.file_id),
+                left_ty.clone(),
+                arith_op,
+            ));
             is_error = true;
         }
         if let Some(rhs) = rhs {
             let right_ty = self.infer_expr(&rhs, Expected::ExpectType(left_ty.clone()));
             if !right_ty.supports_arithm_op() {
-                // todo: report error
+                self.ctx.type_errors.push(TypeError::unsupported_arith_op(
+                    rhs.in_file(self.ctx.file_id),
+                    right_ty.clone(),
+                    arith_op,
+                ));
                 is_error = true;
             }
             if !is_error {

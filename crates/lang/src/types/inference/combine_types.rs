@@ -9,8 +9,8 @@ use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
 use std::cell::RefCell;
 use std::iter::zip;
-use syntax::SyntaxNodeOrToken;
 use syntax::files::{InFile, InFileExt};
+use syntax::{SyntaxNodeOrToken, ast};
 
 impl InferenceCtx<'_> {
     #[allow(clippy::wrong_self_convention)]
@@ -259,6 +259,11 @@ pub enum TypeError {
         expected_ty: Ty,
         actual_ty: Ty,
     },
+    UnsupportedArithmOp {
+        loc: SyntaxLoc,
+        ty: Ty,
+        op: String,
+    },
 }
 
 impl TypeError {
@@ -274,6 +279,15 @@ impl TypeError {
             actual_ty,
         }
     }
+
+    pub fn unsupported_arith_op(expr: InFile<ast::Expr>, ty: Ty, op: ast::ArithOp) -> Self {
+        let (file_id, expr) = expr.unpack();
+        TypeError::UnsupportedArithmOp {
+            loc: SyntaxLoc::from_ast_node(file_id, &expr),
+            ty,
+            op: op.to_string(),
+        }
+    }
 }
 
 impl TypeFoldable<TypeError> for TypeError {
@@ -283,6 +297,11 @@ impl TypeFoldable<TypeError> for TypeError {
                 loc,
                 expected_ty: expected_ty.fold_with(folder.clone()),
                 actual_ty: actual_ty.fold_with(folder),
+            },
+            TypeError::UnsupportedArithmOp { loc, ty, op } => TypeError::UnsupportedArithmOp {
+                loc,
+                ty: ty.fold_with(folder),
+                op,
             },
         }
     }
