@@ -271,6 +271,13 @@ pub enum TypeError {
 }
 
 impl TypeError {
+    pub fn loc(&self) -> SyntaxLoc {
+        match self {
+            TypeError::TypeMismatch { loc, .. } => loc.clone(),
+            TypeError::UnsupportedArithmOp { loc, .. } => loc.clone(),
+            TypeError::InvalidUnpacking { loc, .. } => loc.clone(),
+        }
+    }
     pub fn type_mismatch(
         node_or_token: InFile<SyntaxNodeOrToken>,
         expected_ty: Ty,

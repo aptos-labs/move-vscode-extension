@@ -768,7 +768,6 @@ fn test_invalid_tuple_unpacking_with_nested_error() {
             fun tuple(): (u8, u8, u8) { (1, 1, 1) }
             fun main() {
                 let (S { val }, b) = tuple();
-                  //^^^^^^^^^^^^^^ err: Invalid unpacking. Expected tuple binding of length 3: (_, _, _)
                    //^^^^^^^^^ err: Assigned expr of type 'u8' cannot be unpacked with struct pattern
             }
         }
