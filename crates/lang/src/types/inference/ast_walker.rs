@@ -263,9 +263,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 self.infer_path_expr(path_expr, expected).unwrap_or(Ty::Unknown)
             }
 
-            ast::Expr::CallExpr(call_expr) => self
-                .infer_call_expr(call_expr, Expected::NoValue)
-                .unwrap_or(Ty::Unknown),
+            ast::Expr::CallExpr(call_expr) => {
+                self.infer_call_expr(call_expr, expected).unwrap_or(Ty::Unknown)
+            }
 
             ast::Expr::MethodCallExpr(method_call_expr) => {
                 self.infer_method_call_expr(method_call_expr, Expected::NoValue)

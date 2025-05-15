@@ -612,9 +612,9 @@ fn test_invalid_argument_to_plus_expr() {
         module 0x1::M {
             fun add(a: bool, b: bool) {
                 a
-              //^ err: Invalid argument to +: expected integer type, but found bool
+              //^ err: Invalid argument to '+': expected integer type, but found 'bool'
                 + b
-                //^ err: Invalid argument to +: expected integer type, but found bool
+                //^ err: Invalid argument to '+': expected integer type, but found 'bool'
             }
         }
     "#]]);
@@ -627,9 +627,9 @@ fn test_invalid_argument_to_plus_expr_for_type_parameter() {
         module 0x1::M {
             fun add<T>(a: T, b: T) {
                 a
-              //^ err: Invalid argument to +: expected integer type, but found T
+              //^ err: Invalid argument to '+': expected integer type, but found 'T'
                 + b;
-                //^ err: Invalid argument to +: expected integer type, but found T
+                //^ err: Invalid argument to '+': expected integer type, but found 'T'
             }
         }
     "#]]);
@@ -709,7 +709,7 @@ fn test_error_add_bool_in_assignment_expr() {
                 let a = 1u64;
                 let b = false;
                 a = a + b;
-                      //^ err: Invalid argument to +: expected integer type, but found bool
+                      //^ err: Invalid argument to '+': expected integer type, but found 'bool'
               //^^^^^^^^^ weak: Can be replaced with compound assignment
             }
         }
@@ -725,7 +725,7 @@ fn test_error_add_bool_in_compound_assignment_expr() {
                 let a = 1u64;
                 let b = false;
                 a += b;
-                   //^ err: Invalid argument to +: expected integer type, but found bool
+                   //^ err: Invalid argument to '+': expected integer type, but found 'bool'
             }
         }
     "#]]);
@@ -828,6 +828,92 @@ fn test_error_unpacking_struct_into_tuple_when_single_var_is_expected() {
             fun main() {
                 let (a, b) = s();
                   //^^^^^^ err: Assigned expr of type 'u8' cannot be unpacked with tuple pattern
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_error_parameter_type_with_return_type_inferred() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            fun identity<T>(a: T): T { a }
+            fun main() {
+                let a: u8 = identity(1u64);
+                                   //^^^^ err: Incompatible type 'u64', expected 'u8'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_all_integers_are_nums_in_spec_block() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            spec fun spec_pow(y: u64, x: u64): u64 {
+                if (x == 0) {
+                    1
+                } else {
+                    y * spec_pow(y, x - 1)
+                }
+            }
+
+            /// Returns 10^degree.
+            public fun pow_10(degree: u8): u64 {
+                let res = 1;
+                let i = 0;
+                while ({
+                    spec {
+                        invariant res == spec_pow(10, i);
+                        invariant 0 <= i && i <= degree;
+                    };
+                    i < degree
+                }) {
+                    res *= 10;
+                    i += 1;
+                };
+                res
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_error_unpacking_struct_from_move_from() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct Container has key { val: u8 }
+            fun main() {
+                let Container { val } = move_from(@0x1);
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_vector_lit_with_explicit_type_and_type_error() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main() {
+                vector<u8>[1u64];
+                         //^^^^ err: Incompatible type 'u64', expected 'u8'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_vector_lit_with_implicit_type_and_type_error() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main() {
+                vector[1u8, 1u64];
+                          //^^^^ err: Incompatible type 'u64', expected 'u8'
             }
         }
     "#]]);
