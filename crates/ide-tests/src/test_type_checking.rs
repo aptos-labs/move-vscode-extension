@@ -289,3 +289,258 @@ fn test_error_on_code_block_if_empty_block_and_return_type() {
         }
     "#]]);
 }
+
+#[test]
+fn test_vector_push_back() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            native public fun push_back<Element>(v: &mut vector<Element>, e: Element);
+
+            fun m<E: drop>(v: &mut vector<E>, x: E): u8 {
+                push_back(v, x)
+              //^^^^^^^^^^^^^^^ err: Incompatible type '()', expected 'u8'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_if_condition_should_be_boolean() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            fun m() {
+                if (1) 1;
+                  //^ err: Incompatible type 'integer', expected 'bool'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_incompatible_types_in_if_branches() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            fun m() {
+                if (true) {1} else {true};
+                                  //^^^^ err: Incompatible type 'bool', expected 'integer'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_type_error_with_explicit_generic_in_move_to() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            struct Option<Element: store> has store {
+                element: Element
+            }
+            public fun some<SomeElement: store>(e: SomeElement): Option<SomeElement> {
+                Option { element: e }
+            }
+            struct Vault<VaultContent: store> has key {
+                content: Option<VaultContent>
+            }
+            public fun new<Content: store>(owner: &signer,  content: Content) {
+                move_to<Vault<Content>>(
+                    owner,
+                    Vault { content: some(content) }
+                )
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_type_check_incompatible_constraints() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            struct C {}
+            struct D {}
+            fun new<Content>(a: Content, b: Content): Content { a }
+            fun m() {
+                new(C {}, D {});
+                        //^^^^ err: Incompatible type '0x1::M::D', expected '0x1::M::C'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_error_if_resolved_type_requires_a_reference() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            fun index_of<Element>(v: &vector<Element>, e: &Element): (bool, u64) {
+                (false, 0)
+            }
+            fun m() {
+                let ids: vector<u64>;
+                index_of(&ids, 1u64);
+                             //^^^^ err: Incompatible type 'u64', expected '&u64'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_return_generic_tuple_from_nested_callable() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            struct MintCapability<phantom CoinType> has key, store {}
+            struct BurnCapability<phantom CoinType> has key, store {}
+
+            public fun register_native_currency<FCoinType>(): (MintCapability<FCoinType>, BurnCapability<FCoinType>) {
+                register_currency<FCoinType>()
+            }
+            public fun register_currency<FCoinType>(): (MintCapability<FCoinType>, BurnCapability<FCoinType>) {
+                return (MintCapability<FCoinType>{}, BurnCapability<FCoinType>{})
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_emit_event_requires_mutable_reference() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            struct EventHandle<phantom T: drop + store> has store {
+                counter: u64,
+                guid: vector<u8>,
+            }
+            struct Account has key {
+                handle: EventHandle<Event>
+            }
+            struct Event has store, drop {}
+            fun emit_event<T: drop + store>(handler_ref: &mut EventHandle<T>, msg: T) {}
+            fun m<Type: store + drop>() acquires Account {
+                emit_event(borrow_global_mut<Account>(@0x1).handle, Event {});
+                         //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ err: Incompatible type '0x1::M::EventHandle<0x1::M::Event>', expected '&mut 0x1::M::EventHandle<0x1::M::Event>'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_invalid_type_for_field_in_struct_literal() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            struct Deal { val: u8 }
+            fun main() {
+                Deal { val: false };
+                          //^^^^^ err: Incompatible type 'bool', expected 'u8'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_valid_type_for_field() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            struct Deal { val: u8 }
+            fun main() {
+                Deal { val: 10 };
+                Deal { val: 10u8 };
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_need_for_explicit_type_parameter_if_inferrable_from_context() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+    module 0x1::M {
+        struct Option<Element> has copy, drop, store {}
+        public fun none<NoneElement>(): Option<NoneElement> {
+            Option {}
+        }
+        struct S { field: Option<address> }
+        fun m(): S {
+            S { field: none() }
+        }
+    }
+    "#]]);
+}
+
+#[test]
+fn test_no_need_for_vector_empty_generic() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+    module 0x1::M {
+        /// Create an empty vector.
+        native public fun empty<Element>(): vector<Element>;
+        struct CapState<phantom Feature> has key {
+            delegates: vector<address>
+        }
+        fun m() {
+            CapState { delegates: empty() };
+        }
+    }
+    "#]]);
+}
+
+#[test]
+fn test_type_error_in_struct_literal_field_shorthand() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            struct S { a: u8 }
+            fun m() {
+                let a = true;
+                S { a };
+                  //^ err: Incompatible type 'bool', expected 'u8'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_do_not_crash_type_checking_invalid_number_of_type_params_or_call_params() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            struct S<R: key> { val: R }
+            fun call(a: u8) {}
+            fun m() {
+                let s = S<u8, u8>{};
+                call(1, 2, 3);
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_explicit_unit_return() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            fun m(): () {}
+        }
+    "#]]);
+}
+
+#[test]
+fn test_if_else_with_reference_no_error_if_coercable() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            struct S has drop {}
+            fun m() {
+                let s = S {};
+                let _ = if (true) &s else &mut s;
+                let _ = if (true) &mut s else &s;
+            }
+        }
+    "#]]);
+}
