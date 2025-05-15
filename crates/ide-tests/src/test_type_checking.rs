@@ -544,3 +544,63 @@ fn test_if_else_with_reference_no_error_if_coercable() {
         }
     "#]]);
 }
+
+#[test]
+fn test_incorrect_type_address_passed_where_signer_is_expected_in_spec() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            fun send(account: &signer) {}
+
+            spec send {
+                send(@0x1);
+                   //^^^^ err: Incompatible type 'address', expected '&signer'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_signer_compatibility_in_spec() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            fun address_of(account: &signer): address { @0x1 }
+            fun send(account: &signer) {}
+            spec send {
+                address_of(account);
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_vector_u8_is_compatible_with_vector_num_in_spec() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            struct S {
+                val: vector<u8>
+            }
+            spec module {
+                S { val: b"" };
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_ref_equality_for_generics_in_spec_call_expr() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            struct Token<TokenT> {}
+            fun call<TokenT>(ref: &Token<TokenT>) {
+                let token = Token<TokenT> {};
+                spec {
+                    call(token);
+                }
+            }
+        }
+    "#]]);
+}
