@@ -5,7 +5,7 @@ use crate::render::render_named_item;
 use lang::hir_db::NodeInferenceExt;
 use lang::nameres::path_resolution::get_method_resolve_variants;
 use lang::types::has_type_params_ext::GenericItemExt;
-use lang::types::inference::InferenceCtx;
+use lang::types::inference::{InferenceCtx, TyVarIndex};
 use lang::types::lowering::TyLowering;
 use lang::types::substitution::ApplySubstitution;
 use lang::types::ty;
@@ -81,7 +81,7 @@ fn add_method_completion_items(
     for method_entry in method_entries {
         let method = method_entry.cast_into::<ast::Fun>(hir_db)?;
 
-        let subst = method.ty_vars_subst();
+        let subst = method.ty_vars_subst(&TyVarIndex::default());
         let callable_ty = TyLowering::new(hir_db, ctx.msl)
             .lower_any_function(method.clone().map_into())
             .substitute(&subst);

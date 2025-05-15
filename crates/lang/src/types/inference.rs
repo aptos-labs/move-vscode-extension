@@ -15,6 +15,7 @@ use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
 use crate::types::unification::UnificationTable;
 use base_db::SourceDatabase;
+use std::cell::Cell;
 use std::collections::HashMap;
 use std::hash::Hash;
 use syntax::SyntaxKind::*;
@@ -26,10 +27,21 @@ use vfs::FileId;
 
 pub use combine_types::TypeError;
 
+#[derive(Debug, Default)]
+pub struct TyVarIndex(Cell<usize>);
+
+impl TyVarIndex {
+    pub fn inc(&self) -> usize {
+        let new_val = self.0.get() + 1;
+        self.0.set(new_val);
+        new_val
+    }
+}
+
 pub struct InferenceCtx<'db> {
     pub db: &'db dyn SourceDatabase,
     pub file_id: FileId,
-    pub ty_var_counter: usize,
+    pub ty_var_index: TyVarIndex,
     pub msl: bool,
 
     pub type_errors: Vec<TypeError>,
@@ -56,7 +68,7 @@ impl<'db> InferenceCtx<'db> {
         InferenceCtx {
             db,
             file_id,
-            ty_var_counter: 0,
+            ty_var_index: TyVarIndex::default(),
             msl,
             type_errors: vec![],
             var_table: UnificationTable::new(),
@@ -176,7 +188,7 @@ impl<'db> InferenceCtx<'db> {
         let callable_ty =
             TyCallable::new(param_types, ret_type, CallKind::Fun).substitute(&ty_adt.substitution);
 
-        let ty_vars_subst = adt_item.ty_vars_subst();
+        let ty_vars_subst = adt_item.ty_vars_subst(&self.ty_var_index);
         Some(callable_ty.substitute(&ty_vars_subst))
     }
 
@@ -207,7 +219,7 @@ impl<'db> InferenceCtx<'db> {
             generic_item.clone().map_into(),
         );
 
-        let ty_vars_subst = generic_item.ty_vars_subst();
+        let ty_vars_subst = generic_item.ty_vars_subst(&self.ty_var_index);
         path_ty = path_ty.substitute(&ty_vars_subst);
 
         path_ty
@@ -294,11 +306,6 @@ impl<'db> InferenceCtx<'db> {
         let res = self.freeze(|ctx| f(ctx));
         self.msl = false;
         res
-    }
-
-    pub fn inc_ty_counter(&mut self) -> usize {
-        self.ty_var_counter = self.ty_var_counter + 1;
-        self.ty_var_counter
     }
 
     pub fn get_binding_type(&self, ident_pat: ast::IdentPat) -> Option<Ty> {

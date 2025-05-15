@@ -7,7 +7,7 @@ use crate::nameres::namespaces::Ns::FUNCTION;
 use crate::nameres::namespaces::{FUNCTIONS, Ns};
 use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt};
-use crate::types::inference::InferenceCtx;
+use crate::types::inference::{InferenceCtx, TyVarIndex};
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
 use base_db::SourceDatabase;
@@ -116,8 +116,9 @@ pub fn get_method_resolve_variants(
         else {
             continue;
         };
-        let self_param_with_ty_vars =
-            self_param_ty.fold_ty_type_params(|ty_tp| Ty::new_ty_var_with_origin(ty_tp.origin_loc));
+        let ty_var_index = TyVarIndex::default();
+        let self_param_with_ty_vars = self_param_ty
+            .fold_ty_type_params(|ty_tp| Ty::new_ty_var_with_origin(ty_tp.origin_loc, &ty_var_index));
         let mut inference_ctx = InferenceCtx::new(db, file_id, false);
         if inference_ctx.is_tys_compatible_with_autoborrow(self_ty.clone(), self_param_with_ty_vars) {
             method_entries.push(function_entry);
