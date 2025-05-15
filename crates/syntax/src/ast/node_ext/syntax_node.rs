@@ -121,29 +121,6 @@ impl SyntaxNodeExt for SyntaxNode {
     }
 }
 
-pub trait OptionSyntaxNodeExt {
-    /// checks for the SyntaxKind, returning `false` on None
-    fn is_kind(&self, kind: SyntaxKind) -> bool;
-    /// checks for the AstNode type, returning `false` on None
-    fn is_type<Ast: AstNode>(&self) -> bool;
-}
-
-impl OptionSyntaxNodeExt for Option<SyntaxNode> {
-    fn is_kind(&self, kind: SyntaxKind) -> bool {
-        match self {
-            None => false,
-            Some(node) => node.kind() == kind,
-        }
-    }
-
-    fn is_type<Ast: AstNode>(&self) -> bool {
-        match self {
-            None => false,
-            Some(node) => Ast::can_cast(node.kind()),
-        }
-    }
-}
-
 pub trait SyntaxTokenExt {
     fn is(&self, kind: SyntaxKind) -> bool;
 }
