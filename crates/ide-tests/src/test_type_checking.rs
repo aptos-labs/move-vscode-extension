@@ -604,3 +604,143 @@ fn test_ref_equality_for_generics_in_spec_call_expr() {
         }
     "#]]);
 }
+
+#[test]
+fn test_invalid_argument_to_plus_expr() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            fun add(a: bool, b: bool) {
+                a
+              //^ err: Invalid argument to +: expected integer type, but found bool
+                + b
+                //^ err: Invalid argument to +: expected integer type, but found bool
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_invalid_argument_to_plus_expr_for_type_parameter() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            fun add<T>(a: T, b: T) {
+                a
+              //^ err: Invalid argument to +: expected integer type, but found T
+                + b;
+                //^ err: Invalid argument to +: expected integer type, but found T
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_error_if_return_nested_in_if_and_while() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            fun main(): u8 {
+                let i = 0;
+                while (true) {
+                    if (true) return i
+                };
+                i
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_error_empty_return() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            fun main() {
+                if (true) return
+                return
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_error_return_tuple_from_if_else() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            fun main(): (u8, u8) {
+                if (true) {
+                    return (1, 1)
+                } else {
+                    return (2, 2)
+                }
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_error_return_tuple_from_nested_if_else() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            fun main(): (u8, u8) {
+                if (true) {
+                    if (true) {
+                        return (1, 1)
+                    } else {
+                        return (2, 2)
+                    }
+                } else {
+                    return (3, 3)
+                }
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_error_add_bool_in_assignment_expr() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            fun main() {
+                let a = 1u64;
+                let b = false;
+                a = a + b;
+                      //^ err: Invalid argument to +: expected integer type, but found bool
+              //^^^^^^^^^ weak: Can be replaced with compound assignment
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_error_add_bool_in_compound_assignment_expr() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            fun main() {
+                let a = 1u64;
+                let b = false;
+                a += b;
+                   //^ err: Invalid argument to +: expected integer type, but found bool
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_error_invalid_assignment_type() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            fun main() {
+                let a = 1u64;
+                a = false;
+                  //^^^^^ err: Incompatible type 'bool', expected 'u64'
+            }
+        }
+    "#]]);
+}

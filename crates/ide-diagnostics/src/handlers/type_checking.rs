@@ -40,5 +40,16 @@ fn register_type_error(
                 },
             ))
         }
+        TypeError::UnsupportedArithmOp { loc, ty, op } => {
+            let ty = ctx.sema.render_ty(ty);
+            acc.push(Diagnostic::new(
+                DiagnosticCode::Lsp("type-error", Severity::Error),
+                format!("Invalid argument to {op}: expected integer type, but found {ty}"),
+                FileRange {
+                    file_id,
+                    range: loc.text_range(),
+                },
+            ))
+        }
     }
 }
