@@ -16,9 +16,22 @@ pub(crate) fn type_check(
 ) -> Option<()> {
     let inference = ctx.sema.inference(inference_ctx_owner, false)?;
     let file_id = inference_ctx_owner.file_id;
-    for type_error in &inference.type_errors {
-        register_type_error(acc, ctx, file_id, type_error);
+
+    let mut remaining_errors = inference.type_errors.clone();
+    remaining_errors.sort_by_key(|err| err.loc().text_range().start());
+    // need to reverse() to pop() correctly
+    remaining_errors.reverse();
+    'outer: while let Some(type_error) = remaining_errors.pop() {
+        // if any of the remaining errors are inside the range, then drop the error
+        let error_range = type_error.loc().text_range();
+        for remaining_error in remaining_errors.iter() {
+            if error_range.contains_range(remaining_error.loc().text_range()) {
+                continue 'outer;
+            }
+        }
+        register_type_error(acc, ctx, file_id, &type_error);
     }
+
     Some(())
 }
 
