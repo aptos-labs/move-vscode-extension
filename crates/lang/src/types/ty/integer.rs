@@ -52,12 +52,15 @@ impl Ty {
     pub fn supports_op(&self, op: ast::BinaryOp) -> bool {
         match op {
             ast::BinaryOp::ArithOp(_) => {
-                matches!(self, Ty::Integer(_) | Ty::Infer(_) | Ty::Unknown | Ty::Never)
+                matches!(
+                    self,
+                    Ty::Integer(_) | Ty::Infer(_) | Ty::Num | Ty::Unknown | Ty::Never
+                )
             }
             ast::BinaryOp::CmpOp(_) => {
                 matches!(
                     self,
-                    Ty::Integer(_) | Ty::Infer(TyInfer::IntVar(_)) | Ty::Unknown | Ty::Never
+                    Ty::Integer(_) | Ty::Infer(TyInfer::IntVar(_)) | Ty::Num | Ty::Unknown | Ty::Never
                 )
             }
             _ => false,

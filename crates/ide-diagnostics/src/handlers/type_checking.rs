@@ -4,8 +4,9 @@ use ide_db::Severity;
 use lang::hir_db::NodeInferenceExt;
 use lang::types::inference::TypeError;
 use lang::types::ty::Ty;
-use syntax::ast;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::files::{FileRange, InFile};
+use syntax::{AstNode, ast};
 use vfs::FileId;
 
 #[tracing::instrument(level = "debug", skip_all)]
@@ -14,7 +15,8 @@ pub(crate) fn type_check(
     ctx: &DiagnosticsContext<'_>,
     inference_ctx_owner: &InFile<ast::InferenceCtxOwner>,
 ) -> Option<()> {
-    let inference = ctx.sema.inference(inference_ctx_owner, false)?;
+    let msl = inference_ctx_owner.value.syntax().is_msl_context();
+    let inference = ctx.sema.inference(inference_ctx_owner, msl)?;
     let file_id = inference_ctx_owner.file_id;
 
     let mut remaining_errors = inference.type_errors.clone();
@@ -58,7 +60,7 @@ fn register_type_error(
             let ty = ctx.sema.render_ty(ty);
             acc.push(Diagnostic::new(
                 DiagnosticCode::Lsp("type-error", Severity::Error),
-                format!("Invalid argument to {op}: expected integer type, but found {ty}"),
+                format!("Invalid argument to '{op}': expected integer type, but found '{ty}'"),
                 FileRange {
                     file_id,
                     range: loc.text_range(),
