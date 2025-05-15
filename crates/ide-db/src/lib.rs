@@ -54,10 +54,11 @@ pub fn ast_kind_to_symbol_kind(kind: SyntaxKind) -> Option<SymbolKind> {
 
         NAMED_FIELD => Some(SymbolKind::Field),
 
-        // todo
         SCHEMA => Some(SymbolKind::Struct),
         SCHEMA_FIELD => Some(SymbolKind::Field),
         GLOBAL_VARIABLE_DECL => Some(SymbolKind::GlobalVariableDecl),
+
+        USE_ALIAS => Some(SymbolKind::Local),
 
         _ => {
             tracing::error!("unhandled ast kind {:?}", kind);
