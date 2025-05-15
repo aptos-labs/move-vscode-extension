@@ -716,3 +716,17 @@ fn test_no_error_for_const_in_spec() {
         }
 "#]]);
 }
+
+#[test]
+fn test_no_unresolved_reference_on_non_standard_named_address_in_friend_decl() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module publisher_address::features {
+            const PERMISSIONED_SIGNER: u64 = 84;
+
+        }
+        module 0x1::m {
+            friend publisher_address::features;
+        }
+"#]]);
+}

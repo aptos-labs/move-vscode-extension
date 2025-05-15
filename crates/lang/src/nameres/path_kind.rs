@@ -8,7 +8,8 @@ use enumset::enum_set;
 use parser::T;
 use std::fmt;
 use std::fmt::Formatter;
-use syntax::ast::node_ext::syntax_node::{OptionSyntaxNodeExt, SyntaxNodeExt};
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::{AstNode, ast};
 
 #[derive(Clone, PartialEq, Eq)]
@@ -117,7 +118,7 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
 
         // check whether it's a first element in use stmt, i.e. use [std]::module;
         if let Some(use_speck) = path.use_speck() {
-            if use_speck.syntax().parent_of_type::<ast::UseStmt>().is_some() {
+            if use_speck.syntax().parent_is::<ast::UseStmt>() {
                 return Some(PathKind::NamedAddress(NamedAddr::new(ref_name)));
             }
         }
@@ -131,6 +132,12 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
                         address: NamedAddr::new(ref_name),
                         ns,
                     });
+                }
+
+                if path.root_path().syntax().parent_is::<ast::Friend>() {
+                    // friend addr::module;
+                    //        ^ (unknown named address)
+                    return Some(PathKind::NamedAddress(NamedAddr::new(ref_name)));
                 }
             }
         }
@@ -160,7 +167,7 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
                 });
             }
             // aptos_framework::[bar]
-            (_, Some(qualifier_ref_name)) /*if aptos_project.is_some()*/ => {
+            (_, Some(qualifier_ref_name)) => {
                 let named_address = resolve_named_address(&qualifier_ref_name);
                 // use std::[main]
                 if path.use_speck().is_some() {
@@ -168,7 +175,9 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
                         path,
                         qualifier,
                         ns: MODULES,
-                        kind: QualifiedKind::Module { address: Address::Named(NamedAddr::new(qualifier_ref_name)) }
+                        kind: QualifiedKind::Module {
+                            address: Address::Named(NamedAddr::new(qualifier_ref_name)),
+                        },
                     });
                 }
                 if let Some(_) = named_address {
@@ -177,11 +186,13 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
                         path,
                         qualifier,
                         ns,
-                        kind: QualifiedKind::ModuleOrItem { address: Address::Named(NamedAddr::new(qualifier_ref_name)) }
+                        kind: QualifiedKind::ModuleOrItem {
+                            address: Address::Named(NamedAddr::new(qualifier_ref_name)),
+                        },
                     });
                 }
             }
-            _ => ()
+            _ => (),
         }
 
         // module::[name]
@@ -216,11 +227,11 @@ fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
     use syntax::SyntaxKind::*;
 
     let qualifier = path.qualifier();
-    let Some(parent) = path.syntax().parent() else {
+    let Some(path_parent) = path.syntax().parent() else {
         return NONE;
     };
 
-    match parent.kind() {
+    match path_parent.kind() {
         // mod::foo::bar
         //      ^
         PATH if qualifier.is_some() => enum_set!(Ns::MODULE | Ns::ENUM),
@@ -239,7 +250,7 @@ fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
         //               ^                     ^
         USE_SPECK => IMPORTABLE_NS,
 
-        PATH_TYPE if parent.parent().is_kind(IS_EXPR) => TYPES_N_ENUMS_N_ENUM_VARIANTS,
+        PATH_TYPE if path_parent.parent_is::<ast::IsExpr>() => TYPES_N_ENUMS_N_ENUM_VARIANTS,
 
         // a: bar
         //     ^
@@ -260,7 +271,7 @@ fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
         PATH_EXPR if path.syntax().has_ancestor_strict::<ast::AttrItem>() => ALL_NS,
 
         // TYPE | ENUM for resource indexing, NAME for vector indexing
-        PATH_EXPR if parent.parent().is_kind(INDEX_EXPR) => TYPES_N_ENUMS_N_NAMES,
+        PATH_EXPR if path_parent.parent_is::<ast::IndexExpr>() => TYPES_N_ENUMS_N_NAMES,
 
         // can be anything in completion
         PATH_EXPR => {

@@ -14,7 +14,7 @@ use base_db::SourceDatabase;
 use base_db::package_root::PackageId;
 use parser::SyntaxKind::CALL_EXPR;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
-use syntax::ast::node_ext::syntax_node::{OptionSyntaxNodeExt, SyntaxNodeExt};
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::{HasItems, ReferenceElement};
 use syntax::files::{InFile, InFileExt, OptionInFileExt};
 use syntax::{AstNode, ast};
@@ -218,7 +218,7 @@ impl ResolutionContext {
             .root_path()
             .syntax()
             .parent_of_type::<ast::PathExpr>();
-        path_expr.is_some_and(|it| it.syntax().parent().is_kind(CALL_EXPR))
+        path_expr.is_some_and(|it| it.syntax().parent_is::<ast::CallExpr>())
     }
 
     pub fn package_id(&self, db: &dyn SourceDatabase) -> PackageId {
