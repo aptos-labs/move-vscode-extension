@@ -1,3 +1,5 @@
+use crate::loc::SyntaxLoc;
+use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::inference::InferenceCtx;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
@@ -8,6 +10,7 @@ use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
 use std::cell::RefCell;
 use std::iter::zip;
 use syntax::SyntaxNodeOrToken;
+use syntax::files::{InFile, InFileExt};
 
 impl InferenceCtx<'_> {
     #[allow(clippy::wrong_self_convention)]
@@ -24,9 +27,13 @@ impl InferenceCtx<'_> {
         let combined = self.combine_types(actual.clone(), expected.clone());
         match combined {
             Ok(()) => true,
-            Err(type_error) => {
-                // todo: report type error at `node`
-                self.report_type_error(type_error, node_or_token, actual, expected);
+            Err(error_tys) => {
+                self.report_type_mismatch(
+                    error_tys,
+                    node_or_token.in_file(self.file_id),
+                    actual,
+                    expected,
+                );
                 false
             }
         }
@@ -70,7 +77,7 @@ impl InferenceCtx<'_> {
                 if kind1.is_default() || kind2.is_default() {
                     return Ok(());
                 }
-                Err(TypeError::new(left_ty, right_ty))
+                Err(MismatchErrorTypes::new(left_ty, right_ty))
             }
             (Ty::Seq(ty_seq1), Ty::Seq(ty_seq2)) => self.combine_types(ty_seq1.item(), ty_seq2.item()),
             (Ty::Reference(from_ref), Ty::Reference(to_ref)) => self.combine_ty_refs(from_ref, to_ref),
@@ -81,7 +88,7 @@ impl InferenceCtx<'_> {
             (Ty::Adt(ty_adt1), Ty::Adt(ty_adt2)) => self.combine_ty_adts(ty_adt1, ty_adt2),
             (Ty::Tuple(ty_tuple1), Ty::Tuple(ty_tuple2)) => self.combine_ty_tuples(ty_tuple1, ty_tuple2),
 
-            _ => Err(TypeError::new(left_ty, right_ty)),
+            _ => Err(MismatchErrorTypes::new(left_ty, right_ty)),
         }
     }
 
@@ -132,7 +139,9 @@ impl InferenceCtx<'_> {
             Ty::Unknown => {
                 // do nothing, unknown should not influence IntVar
             }
-            _ => return Err(TypeError::new(Ty::Infer(TyInfer::IntVar(int_var)), ty)),
+            _ => {
+                return Err(MismatchErrorTypes::new(Ty::Infer(TyInfer::IntVar(int_var)), ty));
+            }
         }
         Ok(())
     }
@@ -140,7 +149,10 @@ impl InferenceCtx<'_> {
     fn combine_ty_refs(&mut self, from_ref: &TyReference, to_ref: &TyReference) -> CombineResult {
         let is_mut_compat = from_ref.is_mut() || !to_ref.is_mut();
         if !is_mut_compat {
-            return Err(TypeError::new(
+            // combine inner types ignoring any errors, to have better type errors and later inference,
+            // incompat error will still be reported
+            let _ = self.combine_types(from_ref.referenced(), to_ref.referenced());
+            return Err(MismatchErrorTypes::new(
                 from_ref.to_owned().into(),
                 to_ref.to_owned().into(),
             ));
@@ -157,14 +169,17 @@ impl InferenceCtx<'_> {
 
     fn combine_ty_adts(&mut self, ty1: &TyAdt, ty2: &TyAdt) -> CombineResult {
         if ty1.adt_item_loc != ty2.adt_item_loc {
-            return Err(TypeError::new(Ty::Adt(ty1.to_owned()), Ty::Adt(ty2.to_owned())));
+            return Err(MismatchErrorTypes::new(
+                Ty::Adt(ty1.to_owned()),
+                Ty::Adt(ty2.to_owned()),
+            ));
         }
         self.combine_ty_pairs(ty1.clone().type_args, ty2.clone().type_args)
     }
 
     fn combine_ty_tuples(&mut self, ty1: &TyTuple, ty2: &TyTuple) -> CombineResult {
         if ty1.types.len() != ty2.types.len() {
-            return Err(TypeError::new(
+            return Err(MismatchErrorTypes::new(
                 Ty::Tuple(ty1.to_owned()),
                 Ty::Tuple(ty2.to_owned()),
             ));
@@ -211,24 +226,68 @@ impl InferenceCtx<'_> {
         }
     }
 
-    fn report_type_error(
+    fn report_type_mismatch(
         &mut self,
-        _type_error: TypeError,
-        _node_or_token: SyntaxNodeOrToken,
-        _actual: Ty,
-        _expected: Ty,
+        _mismatch_error_tys: MismatchErrorTypes,
+        node_or_token: InFile<SyntaxNodeOrToken>,
+        actual: Ty,
+        expected: Ty,
     ) {
-        // todo: report type error at `node`
+        let type_error = TypeError::type_mismatch(node_or_token, expected, actual);
+        self.type_errors.push(type_error);
     }
 }
 
-pub type CombineResult = Result<(), TypeError>;
-pub struct TypeError {
+pub type CombineResult = Result<(), MismatchErrorTypes>;
+
+#[derive(Debug)]
+pub struct MismatchErrorTypes {
     ty1: Ty,
     ty2: Ty,
 }
-impl TypeError {
+
+impl MismatchErrorTypes {
     pub fn new(ty1: Ty, ty2: Ty) -> Self {
-        TypeError { ty1, ty2 }
+        MismatchErrorTypes { ty1, ty2 }
+    }
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum TypeError {
+    TypeMismatch {
+        loc: SyntaxLoc,
+        expected_ty: Ty,
+        actual_ty: Ty,
+    },
+}
+
+impl TypeError {
+    pub fn type_mismatch(
+        node_or_token: InFile<SyntaxNodeOrToken>,
+        expected_ty: Ty,
+        actual_ty: Ty,
+    ) -> Self {
+        let (file_id, node_or_token) = node_or_token.unpack();
+        TypeError::TypeMismatch {
+            loc: SyntaxLoc::from_node_or_token(file_id, node_or_token),
+            expected_ty,
+            actual_ty,
+        }
+    }
+}
+
+impl TypeFoldable<TypeError> for TypeError {
+    fn deep_fold_with(self, folder: impl TypeFolder) -> TypeError {
+        match self {
+            TypeError::TypeMismatch { loc, expected_ty, actual_ty } => TypeError::TypeMismatch {
+                loc,
+                expected_ty: expected_ty.fold_with(folder.clone()),
+                actual_ty: actual_ty.fold_with(folder),
+            },
+        }
+    }
+
+    fn deep_visit_with(&self, _visitor: impl TypeVisitor) -> bool {
+        true
     }
 }

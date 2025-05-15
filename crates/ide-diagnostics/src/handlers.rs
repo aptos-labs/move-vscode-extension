@@ -1,9 +1,11 @@
 mod can_be_replaced_with_compound_expr;
 mod can_be_replaced_with_method_call;
+mod type_checking;
 mod unresolved_reference;
 
 pub(crate) use can_be_replaced_with_compound_expr::can_be_replaced_with_compound_expr;
 pub(crate) use can_be_replaced_with_method_call::can_be_replaced_with_method_call;
+pub(crate) use type_checking::type_check;
 pub(crate) use unresolved_reference::unresolved_reference;
 
 use ide_db::assists::{Assist, AssistId};

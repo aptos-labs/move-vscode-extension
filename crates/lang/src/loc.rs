@@ -6,13 +6,13 @@ use std::fmt;
 use std::fmt::Formatter;
 use syntax::algo::ancestors_at_offset;
 use syntax::files::InFile;
-use syntax::{AstNode, SourceFile, TextSize, ast};
+use syntax::{AstNode, NodeOrToken, SourceFile, SyntaxNodeOrToken, TextRange, TextSize, ast};
 use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct SyntaxLoc {
     file_id: FileId,
-    node_offset: TextSize,
+    text_range: TextRange,
     kind: SyntaxKind,
     // only for debugging here, might be removed in the future
     node_name: Option<String>,
@@ -20,24 +20,31 @@ pub struct SyntaxLoc {
 
 impl SyntaxLoc {
     pub fn from_ast_node<T: AstNode>(file_id: FileId, node: &T) -> Self {
-        let range_start = node.syntax().text_range().end();
-        let kind = node.syntax().kind();
+        let node_or_token = SyntaxNodeOrToken::Node(node.syntax().clone());
+        Self::from_node_or_token(file_id, node_or_token)
+    }
 
-        let node_name = node
-            .syntax()
-            .children_with_tokens()
-            .find(|child| {
-                let kind = child.kind();
-                kind == SyntaxKind::NAME
-                    || kind == SyntaxKind::NAME_REF
-                    || kind == SyntaxKind::PATH_SEGMENT
-                    || kind == SyntaxKind::QUOTE_IDENT
-            })
-            .map(|it| it.to_string());
+    pub fn from_node_or_token(file_id: FileId, node_or_token: SyntaxNodeOrToken) -> Self {
+        let text_range = node_or_token.text_range();
+        let kind = node_or_token.kind();
+
+        let mut node_name = None;
+        if let SyntaxNodeOrToken::Node(node) = node_or_token {
+            node_name = node
+                .children_with_tokens()
+                .find(|child| {
+                    let kind = child.kind();
+                    kind == SyntaxKind::NAME
+                        || kind == SyntaxKind::NAME_REF
+                        || kind == SyntaxKind::PATH_SEGMENT
+                        || kind == SyntaxKind::QUOTE_IDENT
+                })
+                .map(|it| it.to_string());
+        }
 
         SyntaxLoc {
             file_id: file_id.to_owned(),
-            node_offset: range_start,
+            text_range,
             kind,
             node_name,
         }
@@ -45,9 +52,9 @@ impl SyntaxLoc {
 
     pub fn to_ast<T: AstNode>(&self, db: &dyn SourceDatabase) -> Option<InFile<T>> {
         let file = self.get_source_file(db)?;
-        let ancestors_at_offset = ancestors_at_offset(file.syntax(), self.node_offset);
+        let ancestors_at_offset = ancestors_at_offset(file.syntax(), self.node_offset());
         for ancestor in ancestors_at_offset {
-            if ancestor.text_range().end() == self.node_offset {
+            if ancestor.text_range().end() == self.node_offset() {
                 if let Some(node) = T::cast(ancestor) {
                     return Some(InFile::new(self.file_id, node));
                 }
@@ -60,7 +67,7 @@ impl SyntaxLoc {
         use syntax::SyntaxKind::*;
 
         let file = self.get_source_file(db)?;
-        let ancestors = ancestors_at_offset(file.syntax(), self.node_offset);
+        let ancestors = ancestors_at_offset(file.syntax(), self.node_offset());
         for ancestor in ancestors {
             let Some(has_attrs) = ast::AnyHasAttrs::cast(ancestor.clone()) else {
                 continue;
@@ -86,13 +93,21 @@ impl SyntaxLoc {
         self.kind
     }
 
+    pub fn text_range(&self) -> TextRange {
+        self.text_range
+    }
+
+    pub fn node_offset(&self) -> TextSize {
+        self.text_range.end()
+    }
+
     pub fn node_name(&self) -> Option<String> {
         self.node_name.to_owned()
     }
 
     fn get_source_file(&self, db: &dyn SourceDatabase) -> Option<SourceFile> {
         let file = source_db::parse(db, self.file_id.intern(db)).tree();
-        if !file.syntax().text_range().contains_inclusive(self.node_offset) {
+        if !file.syntax().text_range().contains_inclusive(self.node_offset()) {
             tracing::error!(
                 "stale cache error: {:?} is outside of the file range {:?}",
                 self,
@@ -114,7 +129,7 @@ impl fmt::Debug for SyntaxLoc {
                     self.kind,
                     name,
                     self.file_id.index(),
-                    self.node_offset
+                    self.node_offset()
                 ))
                 .finish(),
             None => f
@@ -123,7 +138,7 @@ impl fmt::Debug for SyntaxLoc {
                     "{:?} at {}::{:?}",
                     self.kind,
                     self.file_id.index(),
-                    self.node_offset
+                    self.node_offset()
                 ))
                 .finish(),
         }

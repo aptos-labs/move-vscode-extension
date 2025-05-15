@@ -23,6 +23,7 @@ mod test_load_dependencies;
 mod test_resolve_items;
 mod test_resolve_types;
 mod test_syntax_errors;
+mod test_type_checking;
 mod test_view_syntax_tree;
 
 pub(crate) fn init_tracing_for_test() {

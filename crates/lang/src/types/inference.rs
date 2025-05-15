@@ -24,11 +24,15 @@ use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast, match_ast};
 use vfs::FileId;
 
+pub use combine_types::TypeError;
+
 pub struct InferenceCtx<'db> {
     pub db: &'db dyn SourceDatabase,
     pub file_id: FileId,
     pub ty_var_counter: usize,
     pub msl: bool,
+
+    pub type_errors: Vec<TypeError>,
 
     pub var_table: UnificationTable<TyVar>,
     pub int_table: UnificationTable<TyIntVar>,
@@ -54,6 +58,7 @@ impl<'db> InferenceCtx<'db> {
             file_id,
             ty_var_counter: 0,
             msl,
+            type_errors: vec![],
             var_table: UnificationTable::new(),
             int_table: UnificationTable::new(),
             expr_types: HashMap::new(),
@@ -256,12 +261,12 @@ impl<'db> InferenceCtx<'db> {
         ty.fold_with(self.var_resolver())
     }
 
-    pub fn fully_resolve_vars(&self, ty: Ty) -> Ty {
-        ty.fold_with(FullTyVarResolver::new(&self, Fallback::Unknown))
+    pub fn fully_resolve_vars<T: TypeFoldable<T>>(&self, foldable: T) -> T {
+        foldable.fold_with(FullTyVarResolver::new(&self, Fallback::Unknown))
     }
 
-    pub fn fully_resolve_vars_fallback_to_origin<T: TypeFoldable<T>>(&self, ty: T) -> T {
-        ty.fold_with(FullTyVarResolver::new(&self, Fallback::Origin))
+    pub fn fully_resolve_vars_fallback_to_origin<T: TypeFoldable<T>>(&self, foldable: T) -> T {
+        foldable.fold_with(FullTyVarResolver::new(&self, Fallback::Origin))
     }
 
     fn resolve_ty_infer_shallow(&self, ty: Ty) -> Ty {
