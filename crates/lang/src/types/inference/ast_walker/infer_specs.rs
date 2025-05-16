@@ -20,7 +20,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         self.infer_expr_coerceable_to(&expr, Ty::Bool);
         if let Some(aborts_with) = aborts_if_stmt.aborts_if_with() {
             let with_expr = aborts_with.expr()?;
-            self.infer_expr_coerceable_to(&with_expr, Ty::Integer(IntegerKind::Integer));
+            self.infer_expr_coerceable_to(&with_expr, Ty::Num);
         }
         Some(())
     }

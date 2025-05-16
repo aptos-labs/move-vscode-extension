@@ -206,7 +206,7 @@ Stmt =
     | ExprStmt
     | LetStmt
     | SchemaField | IncludeSchema
-    | SpecPredicateStmt | AbortsIfStmt
+    | SpecPredicateStmt | AbortsIfStmt | AbortsWithStmt
     | SpecInlineFun | GlobalVariableDecl
 
 LetStmt =
@@ -501,6 +501,9 @@ AbortsIfStmt =
 
 AbortsIfWith =
     'with' Expr
+
+AbortsWithStmt =
+    'aborts_with' SpecPredicatePropertyList? '(' exprs:(Expr (',' Expr)* ','?)? ')'
 
 SpecPredicatePropertyList =
     '[' properties:(SpecPredicateProperty (',' SpecPredicateProperty)* ','?)? ']'

@@ -71,6 +71,27 @@ impl AbortsIfWith {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AbortsWithStmt {
+    pub(crate) syntax: SyntaxNode,
+}
+impl AbortsWithStmt {
+    #[inline]
+    pub fn exprs(&self) -> AstChildren<Expr> { support::children(&self.syntax) }
+    #[inline]
+    pub fn spec_predicate_property_list(&self) -> Option<SpecPredicatePropertyList> {
+        support::child(&self.syntax)
+    }
+    #[inline]
+    pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
+    #[inline]
+    pub fn r_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![')']) }
+    #[inline]
+    pub fn aborts_with_token(&self) -> Option<SyntaxToken> {
+        support::token(&self.syntax, T![aborts_with])
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AddressDef {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1987,6 +2008,7 @@ pub enum QuantExpr {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Stmt {
     AbortsIfStmt(AbortsIfStmt),
+    AbortsWithStmt(AbortsWithStmt),
     ExprStmt(ExprStmt),
     GlobalVariableDecl(GlobalVariableDecl),
     IncludeSchema(IncludeSchema),
@@ -2197,6 +2219,27 @@ impl AstNode for AbortsIfWith {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == ABORTS_IF_WITH }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for AbortsWithStmt {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ABORTS_WITH_STMT
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == ABORTS_WITH_STMT }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -6432,6 +6475,10 @@ impl From<AbortsIfStmt> for Stmt {
     #[inline]
     fn from(node: AbortsIfStmt) -> Stmt { Stmt::AbortsIfStmt(node) }
 }
+impl From<AbortsWithStmt> for Stmt {
+    #[inline]
+    fn from(node: AbortsWithStmt) -> Stmt { Stmt::AbortsWithStmt(node) }
+}
 impl From<ExprStmt> for Stmt {
     #[inline]
     fn from(node: ExprStmt) -> Stmt { Stmt::ExprStmt(node) }
@@ -6464,6 +6511,12 @@ impl Stmt {
     pub fn aborts_if_stmt(self) -> Option<AbortsIfStmt> {
         match (self) {
             Stmt::AbortsIfStmt(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn aborts_with_stmt(self) -> Option<AbortsWithStmt> {
+        match (self) {
+            Stmt::AbortsWithStmt(item) => Some(item),
             _ => None,
         }
     }
@@ -6516,6 +6569,7 @@ impl AstNode for Stmt {
         matches!(
             kind,
             ABORTS_IF_STMT
+                | ABORTS_WITH_STMT
                 | EXPR_STMT
                 | GLOBAL_VARIABLE_DECL
                 | INCLUDE_SCHEMA
@@ -6529,6 +6583,7 @@ impl AstNode for Stmt {
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
             ABORTS_IF_STMT => Stmt::AbortsIfStmt(AbortsIfStmt { syntax }),
+            ABORTS_WITH_STMT => Stmt::AbortsWithStmt(AbortsWithStmt { syntax }),
             EXPR_STMT => Stmt::ExprStmt(ExprStmt { syntax }),
             GLOBAL_VARIABLE_DECL => Stmt::GlobalVariableDecl(GlobalVariableDecl { syntax }),
             INCLUDE_SCHEMA => Stmt::IncludeSchema(IncludeSchema { syntax }),
@@ -6544,6 +6599,7 @@ impl AstNode for Stmt {
     fn syntax(&self) -> &SyntaxNode {
         match self {
             Stmt::AbortsIfStmt(it) => &it.syntax,
+            Stmt::AbortsWithStmt(it) => &it.syntax,
             Stmt::ExprStmt(it) => &it.syntax,
             Stmt::GlobalVariableDecl(it) => &it.syntax,
             Stmt::IncludeSchema(it) => &it.syntax,
@@ -7698,6 +7754,11 @@ impl std::fmt::Display for AbortsIfStmt {
     }
 }
 impl std::fmt::Display for AbortsIfWith {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for AbortsWithStmt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

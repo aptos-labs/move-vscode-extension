@@ -227,11 +227,16 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::Stmt::SpecPredicateStmt(spec_predicate_stmt) => {
                 self.process_predicate_stmt(&spec_predicate_stmt);
             }
+            ast::Stmt::IncludeSchema(include_schema) => {
+                self.process_include_schema(&include_schema);
+            }
             ast::Stmt::AbortsIfStmt(aborts_if_stmt) => {
                 self.process_aborts_if_stmt(&aborts_if_stmt);
             }
-            ast::Stmt::IncludeSchema(include_schema) => {
-                self.process_include_schema(&include_schema);
+            ast::Stmt::AbortsWithStmt(aborts_with_stmt) => {
+                for expr in aborts_with_stmt.exprs() {
+                    self.infer_expr_coerceable_to(&expr, Ty::Num);
+                }
             }
             _ => (),
         }
@@ -343,7 +348,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::Expr::IsExpr(is_expr) => self.infer_is_expr(is_expr),
             ast::Expr::AbortExpr(abort_expr) => {
                 if let Some(inner_expr) = abort_expr.expr() {
-                    self.infer_expr(&inner_expr, Expected::NoValue);
+                    self.infer_expr_coerceable_to(&inner_expr, Ty::Integer(IntegerKind::Integer));
                 }
                 Ty::Never
             }
@@ -1014,6 +1019,16 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         arith_op: ast::ArithOp,
         is_compound: bool,
     ) -> Ty {
+        if matches!(
+            arith_op,
+            ast::ArithOp::BitAnd | ast::ArithOp::BitOr | ast::ArithOp::BitXor
+        ) {
+            return self.infer_bit_ops_binary_expr(lhs, rhs, is_compound);
+        }
+        if matches!(arith_op, ast::ArithOp::Shl | ast::ArithOp::Shr) {
+            return self.infer_bit_shifts_binary_expr(lhs, rhs, is_compound);
+        }
+
         let mut is_error = false;
         let left_ty = self.infer_expr(&lhs, Expected::NoValue);
         if !left_ty.supports_arithm_op() {
@@ -1052,6 +1067,32 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         } else {
             if is_compound { Ty::Unit } else { left_ty }
         }
+    }
+
+    fn infer_bit_ops_binary_expr(
+        &mut self,
+        lhs: ast::Expr,
+        rhs: Option<ast::Expr>,
+        is_compound: bool,
+    ) -> Ty {
+        let lhs_ty = self.infer_expr_coerceable_to(&lhs, Ty::Integer(IntegerKind::Integer));
+        if let Some(rhs) = rhs {
+            self.infer_expr_coerceable_to(&rhs, lhs_ty.clone());
+        }
+        if is_compound { Ty::Unit } else { lhs_ty }
+    }
+
+    fn infer_bit_shifts_binary_expr(
+        &mut self,
+        lhs: ast::Expr,
+        rhs: Option<ast::Expr>,
+        is_compound: bool,
+    ) -> Ty {
+        let lhs_ty = self.infer_expr_coerceable_to(&lhs, Ty::Integer(IntegerKind::Integer));
+        if let Some(rhs) = rhs {
+            self.infer_expr_coerceable_to(&rhs, Ty::Integer(IntegerKind::U8));
+        }
+        if is_compound { Ty::Unit } else { lhs_ty }
     }
 
     fn infer_logic_binary_expr(&mut self, lhs: ast::Expr, rhs: Option<ast::Expr>) -> Ty {
