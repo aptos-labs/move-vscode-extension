@@ -1739,3 +1739,101 @@ fn test_comma_separator_allows_correctly_get_call_expr_type() {
         }
     "#]]);
 }
+
+#[test]
+fn test_if_else_tail_expr_returns_incorrect_type() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                let my_vol_ref = 1u64;
+                my_vol_ref =
+                    if (true) {
+                        1 + 1;
+                        1u32
+                      //^^^^ err: Incompatible type 'u32', expected 'u64'
+                    } else {
+                        1 + 1;
+                        1u128
+                      //^^^^^ err: Incompatible type 'u128', expected 'u64'
+                    };
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_block_returns_incorrect_type_tail_expr() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                let my_vol_ref = 1u64;
+                my_vol_ref = {
+                        1 + 1;
+                        1u32
+                      //^^^^ err: Incompatible type 'u32', expected 'u64'
+                    };
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_unpack_mut_ref_with_tuple_pattern() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct Bin has store {
+                reserves_x: u64,
+                reserves_y: u64,
+                token_data_id: u64,
+            }
+            fun main(bin: &mut Bin) {
+                let (a, b) = bin;
+                  //^^^^^^ err: Assigned expr of type '&mut 0x1::m::Bin' cannot be unpacked with tuple pattern
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_cannot_reference_another_reference() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct Pool<X, Y> {}
+            fun main<X, Y>(pool: &mut Pool<X, Y>) {
+                &pool;
+               //^^^^ err: Expected a single non-reference type, but found '&mut 0x1::m::Pool<X, Y>'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_cannot_reference_tuple() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun call(): (u8, u8) { (1, 1) }
+            fun main() {
+                &call();
+               //^^^^^^ err: Expected a single non-reference type, but found '(u8, u8)'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_cannot_dereference_non_ref() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                *1;
+               //^ err: Invalid dereference. Expected '&_' but found 'integer'
+            }
+        }
+    "#]]);
+}
