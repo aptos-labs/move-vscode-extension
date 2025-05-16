@@ -14,14 +14,10 @@ pub(crate) fn delimited_items_with_recover(
         if p.at(delim) {
             // Recover if an argument is missing and only got a delimiter,
             // e.g. `(a, , b)`.
-            // Wrap the erroneous delimiter in an error node so that fixup logic gets rid of it.
             let empty_item = p.start();
-            // let m = p.start();
             p.push_error(format!("unexpected {:?}", delim));
             empty_item.complete(p, item_kind);
-            // m.complete(p, ERROR);
             p.bump(delim);
-            // empty_item.complete(p, item_kind);
             continue;
         }
         let is_item = parse_item(p);

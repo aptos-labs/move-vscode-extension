@@ -86,16 +86,16 @@ SOURCE_FILE@0..183
           WHITESPACE@135..136 " "
           EQ@136..137 "="
           WHITESPACE@137..138 " "
-          BIN_EXPR@138..148
-            LAMBDA_EXPR@138..144
-              LAMBDA_PARAM_LIST@138..141
-                PIPE@138..139 "|"
-                LAMBDA_PARAM@139..140
-                  IDENT_PAT@139..140
-                    NAME@139..140
-                      IDENT@139..140 "x"
-                PIPE@140..141 "|"
-              WHITESPACE@141..142 " "
+          LAMBDA_EXPR@138..148
+            LAMBDA_PARAM_LIST@138..141
+              PIPE@138..139 "|"
+              LAMBDA_PARAM@139..140
+                IDENT_PAT@139..140
+                  NAME@139..140
+                    IDENT@139..140 "x"
+              PIPE@140..141 "|"
+            WHITESPACE@141..142 " "
+            BIN_EXPR@142..148
               DEREF_EXPR@142..144
                 STAR@142..143 "*"
                 PATH_EXPR@143..144
@@ -103,11 +103,11 @@ SOURCE_FILE@0..183
                     PATH_SEGMENT@143..144
                       NAME_REF@143..144
                         IDENT@143..144 "x"
-            WHITESPACE@144..145 " "
-            R_ANGLE@145..146 ">"
-            WHITESPACE@146..147 " "
-            LITERAL@147..148
-              INT_NUMBER@147..148 "0"
+              WHITESPACE@144..145 " "
+              R_ANGLE@145..146 ">"
+              WHITESPACE@146..147 " "
+              LITERAL@147..148
+                INT_NUMBER@147..148 "0"
           SEMICOLON@148..149 ";"
         WHITESPACE@149..158 "\n        "
         EXPR_STMT@158..174

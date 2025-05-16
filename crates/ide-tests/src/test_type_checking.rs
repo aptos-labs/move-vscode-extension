@@ -2140,3 +2140,23 @@ fn test_compare_two_generics_from_spec_fun() {
         }
     "#]]);
 }
+
+#[test]
+fn test_for_each_vector_fold() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::vector {
+            /// Apply the function to each element in the vector, consuming it.
+            public inline fun for_each<ForEachElement>(self: vector<ForEachElement>, f: |ForEachElement|) {}
+            public inline fun fold<Accumulator, Element>(
+                self: vector<Element>,
+                init: Accumulator,
+                f: |Accumulator,Element|Accumulator
+            ): Accumulator {
+                let accu = init;
+                self.for_each(|elem| accu = f(accu, elem));
+                accu
+            }
+        }
+    "#]]);
+}

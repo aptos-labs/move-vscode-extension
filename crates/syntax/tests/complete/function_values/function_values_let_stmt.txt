@@ -54,26 +54,26 @@ SOURCE_FILE@0..111
           WHITESPACE@89..90 " "
           EQ@90..91 "="
           WHITESPACE@91..92 " "
-          BIN_EXPR@92..101
-            LAMBDA_EXPR@92..97
-              LAMBDA_PARAM_LIST@92..95
-                PIPE@92..93 "|"
-                LAMBDA_PARAM@93..94
-                  IDENT_PAT@93..94
-                    NAME@93..94
-                      IDENT@93..94 "x"
-                PIPE@94..95 "|"
-              WHITESPACE@95..96 " "
+          LAMBDA_EXPR@92..101
+            LAMBDA_PARAM_LIST@92..95
+              PIPE@92..93 "|"
+              LAMBDA_PARAM@93..94
+                IDENT_PAT@93..94
+                  NAME@93..94
+                    IDENT@93..94 "x"
+              PIPE@94..95 "|"
+            WHITESPACE@95..96 " "
+            BIN_EXPR@96..101
               PATH_EXPR@96..97
                 PATH@96..97
                   PATH_SEGMENT@96..97
                     NAME_REF@96..97
                       IDENT@96..97 "x"
-            WHITESPACE@97..98 " "
-            R_ANGLE@98..99 ">"
-            WHITESPACE@99..100 " "
-            LITERAL@100..101
-              INT_NUMBER@100..101 "0"
+              WHITESPACE@97..98 " "
+              R_ANGLE@98..99 ">"
+              WHITESPACE@99..100 " "
+              LITERAL@100..101
+                INT_NUMBER@100..101 "0"
           SEMICOLON@101..102 ";"
         WHITESPACE@102..107 "\n    "
         R_CURLY@107..108 "}"
