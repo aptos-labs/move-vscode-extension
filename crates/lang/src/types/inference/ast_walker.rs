@@ -41,6 +41,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     self.infer_block_expr(
                         &fun_block_expr,
                         Expected::ExpectType(self.expected_return_ty.clone()),
+                        true,
                     );
                 }
             }
@@ -49,6 +50,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     self.process_msl_block_expr(
                         &spec_block_expr,
                         Expected::ExpectType(self.expected_return_ty.clone()),
+                        true,
                     );
                 }
             }
@@ -57,17 +59,18 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     self.process_msl_block_expr(
                         &spec_block_expr,
                         Expected::ExpectType(self.expected_return_ty.clone()),
+                        true,
                     );
                 }
             }
             ast::InferenceCtxOwner::ItemSpec(item_spec) => {
                 if let Some(block_expr) = item_spec.spec_block() {
-                    self.process_msl_block_expr(&block_expr, Expected::NoValue);
+                    self.process_msl_block_expr(&block_expr, Expected::NoValue, false);
                 }
             }
             ast::InferenceCtxOwner::Schema(schema) => {
                 if let Some(block_expr) = schema.spec_block() {
-                    self.process_msl_block_expr(&block_expr, Expected::NoValue);
+                    self.process_msl_block_expr(&block_expr, Expected::NoValue, false);
                 }
             }
         }
@@ -138,15 +141,21 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         &mut self,
         block_expr: &ast::BlockExpr,
         expected_return: Expected,
+        check_return_type: bool,
     ) -> Option<()> {
         self.ctx.msl_scope(|ctx| {
             let mut w = TypeAstWalker::new(ctx, Ty::Unit);
-            w.infer_block_expr(&block_expr, expected_return);
+            w.infer_block_expr(&block_expr, expected_return, check_return_type);
         });
         Some(())
     }
 
-    pub fn infer_block_expr(&mut self, block_expr: &ast::BlockExpr, expected_return: Expected) -> Ty {
+    pub fn infer_block_expr(
+        &mut self,
+        block_expr: &ast::BlockExpr,
+        expected_return: Expected,
+        coerce_return_type: bool,
+    ) -> Ty {
         for stmt in block_expr.stmts() {
             self.process_stmt(stmt);
         }
@@ -159,15 +168,21 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                         .r_curly_token()
                         .map(|it| it.into())
                         .unwrap_or(block_expr.node_or_token());
-                    self.ctx.coerce_types(error_target, Ty::Unit, expected_ty);
+                    if coerce_return_type {
+                        self.ctx.coerce_types(error_target, Ty::Unit, expected_ty);
+                    } else {
+                        let _ = self.ctx.combine_types(Ty::Unit, expected_ty);
+                    }
                 }
                 Ty::Unit
             }
             Some(tail_expr) => {
-                if let Some(expected_ty) = opt_expected_ty {
-                    return self.infer_expr_coerce_to(&tail_expr, expected_ty);
+                let expected = Expected::from_ty(opt_expected_ty);
+                if coerce_return_type {
+                    self.infer_expr_coerce_to(&tail_expr, expected)
+                } else {
+                    self.infer_expr(&tail_expr, expected)
                 }
-                self.infer_expr(&tail_expr, Expected::NoValue)
             }
         }
     }
@@ -233,8 +248,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     }
 
     // returns expected
-    fn infer_expr_coerce_to(&mut self, expr: &ast::Expr, expected_ty: Ty) -> Ty {
-        let actual_ty = self.infer_expr(expr, Expected::ExpectType(expected_ty.clone()));
+    fn infer_expr_coerce_to(&mut self, expr: &ast::Expr, expected: Expected) -> Ty {
+        let actual_ty = self.infer_expr(expr, expected.clone());
+        let Some(expected_ty) = expected.ty(&self.ctx) else {
+            return actual_ty;
+        };
         let no_type_error =
             self.ctx
                 .coerce_types(expr.node_or_token(), actual_ty.clone(), expected_ty.clone());
@@ -330,7 +348,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 Ty::Never
             }
 
-            ast::Expr::BlockExpr(block_expr) => self.infer_block_expr(block_expr, expected),
+            ast::Expr::BlockExpr(block_expr) => self.infer_block_expr(block_expr, expected, true),
             ast::Expr::BinExpr(bin_expr) => self.infer_bin_expr(bin_expr).unwrap_or(Ty::Unknown),
 
             ast::Expr::BangExpr(bang_expr) => bang_expr
@@ -349,7 +367,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
             ast::Expr::SpecBlockExpr(it) => {
                 if let Some(block_expr) = it.block_expr() {
-                    self.process_msl_block_expr(&block_expr, Expected::NoValue);
+                    self.process_msl_block_expr(&block_expr, Expected::NoValue, false);
                 }
                 Ty::Unit
             }
@@ -785,31 +803,75 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
         let actual_if_ty = if_expr
             .then_branch()
-            .map(|it| self.infer_block_or_inline_expr(&it, expected.clone()));
+            .map(|it| self.infer_block_or_inline_expr(&it, expected.clone(), false));
         let Some(else_branch) = if_expr.else_branch() else {
             return Some(Ty::Unit);
         };
+        let actual_else_ty = self.infer_block_or_inline_expr(&else_branch, expected.clone(), false);
 
-        let expected_else_ty = expected
-            .ty(self.ctx)
-            .or(actual_if_ty.clone())
-            .unwrap_or(Ty::Unknown);
-        let actual_else_ty = self.infer_block_or_inline_expr(&else_branch, expected);
-
-        if let Some(tail_expr) = else_branch.tail_expr() {
-            // `if (true) &s else &mut s` shouldn't show type error
-            self.ctx.coerce_types(
-                tail_expr.node_or_token(),
+        // try comparing branch types to each other, if they are compatible, then the whole if-else expr is wrong
+        let branches_compat = self
+            .ctx
+            .combine_types(
                 actual_else_ty.unwrap_all_refs(),
-                expected_else_ty.unwrap_all_refs(),
-            );
+                actual_if_ty.clone().unwrap_or(Ty::Unknown).unwrap_all_refs(),
+            )
+            .is_ok();
+
+        let expected_ty = expected.ty(&self.ctx);
+        if !branches_compat {
+            // if not compatible to each other, then:
+            // 1. if expected type is present, check both separately against it
+            if let Some(expected_ty) = expected_ty {
+                if let Some(if_ty) = actual_if_ty {
+                    self.coerce_if_else_branch(if_expr.then_branch(), if_ty, expected_ty.clone());
+                }
+                self.coerce_if_else_branch(if_expr.else_branch(), actual_else_ty, expected_ty);
+            } else {
+                // 2. not present -> check that else is compatible with if (ignoring refs)
+                self.coerce_if_else_branch(
+                    if_expr.else_branch(),
+                    actual_else_ty.unwrap_all_refs(),
+                    actual_if_ty.unwrap_or(Ty::Unknown).unwrap_all_refs(),
+                );
+            }
+            return Some(Ty::Unknown);
         }
 
+        // special-case:
+        //      let a: &mut R = if (true) &R else &mut R;
+        // we want to highlight only else branch here
+        if branches_compat
+            && expected_ty
+                .clone()
+                .is_some_and(|it| matches!(it, Ty::Reference(_)))
+        {
+            let expected_ty = expected_ty.unwrap();
+            if let Some(if_ty) = actual_if_ty.clone() {
+                self.coerce_if_else_branch(if_expr.then_branch(), if_ty, expected_ty.clone());
+            }
+            self.coerce_if_else_branch(if_expr.else_branch(), actual_else_ty.clone(), expected_ty);
+        }
+
+        // if branches are compatible, then we need to check returning type of if-else with expected type
         let tys = vec![actual_if_ty, Some(actual_else_ty)]
             .into_iter()
             .filter_map(|it| it)
             .collect();
         Some(self.ctx.intersect_all_types(tys))
+    }
+
+    fn coerce_if_else_branch(
+        &mut self,
+        branch: Option<ast::BlockOrInlineExpr>,
+        actual_ty: Ty,
+        expected_ty: Ty,
+    ) {
+        if let Some(branch) = branch {
+            if let Some(tail_node_or_token) = branch.tail_node_or_token() {
+                self.ctx.coerce_types(tail_node_or_token, actual_ty, expected_ty);
+            }
+        }
     }
 
     fn infer_loop_expr(&mut self, loop_expr: &ast::LoopExpr) -> Ty {
@@ -842,7 +904,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
     fn infer_loop_like_body(&mut self, loop_like: ast::LoopLike) -> Ty {
         if let Some(loop_body_expr) = loop_like.loop_body_expr() {
-            self.infer_block_or_inline_expr(&loop_body_expr, Expected::ExpectType(Ty::Unit));
+            self.infer_block_or_inline_expr(&loop_body_expr, Expected::ExpectType(Ty::Unit), false);
         }
         Ty::Never
     }
@@ -864,9 +926,12 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         &mut self,
         block_or_inline_expr: &ast::BlockOrInlineExpr,
         expected: Expected,
+        check_return_type: bool,
     ) -> Ty {
         match block_or_inline_expr {
-            ast::BlockOrInlineExpr::BlockExpr(block_expr) => self.infer_block_expr(block_expr, expected),
+            ast::BlockOrInlineExpr::BlockExpr(block_expr) => {
+                self.infer_block_expr(block_expr, expected, check_return_type)
+            }
             ast::BlockOrInlineExpr::InlineExpr(inline_expr) => inline_expr
                 .expr()
                 .map(|expr| self.infer_expr(&expr, expected))

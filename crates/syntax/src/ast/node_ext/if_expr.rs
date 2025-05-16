@@ -1,5 +1,5 @@
 use crate::ast::support;
-use crate::{ast, AstNode};
+use crate::{ast, AstNode, IntoNodeOrToken, SyntaxNodeOrToken};
 
 impl ast::IfExpr {
     pub fn then_branch(&self) -> Option<ast::BlockOrInlineExpr> {
@@ -12,10 +12,15 @@ impl ast::IfExpr {
 }
 
 impl ast::BlockOrInlineExpr {
-    pub fn tail_expr(&self) -> Option<ast::Expr> {
+    pub fn tail_node_or_token(&self) -> Option<SyntaxNodeOrToken> {
         match self {
-            ast::BlockOrInlineExpr::InlineExpr(inline_expr) => inline_expr.expr(),
-            ast::BlockOrInlineExpr::BlockExpr(block_expr) => block_expr.tail_expr(),
+            ast::BlockOrInlineExpr::InlineExpr(inline_expr) => {
+                inline_expr.expr().map(|it| it.node_or_token())
+            }
+            ast::BlockOrInlineExpr::BlockExpr(block_expr) => block_expr
+                .tail_expr()
+                .map(|it| it.node_or_token())
+                .or_else(|| block_expr.r_curly_token().map(|it| it.into())),
         }
     }
 }
