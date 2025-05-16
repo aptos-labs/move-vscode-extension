@@ -924,8 +924,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::BinaryOp::LogicOp(_) => self.infer_logic_binary_expr(lhs, rhs),
 
             ast::BinaryOp::CmpOp(op) => match op {
-                ast::CmpOp::Eq { .. } => self.infer_eq_binary_expr(&lhs, &rhs),
-                ast::CmpOp::Ord { .. } => self.infer_ordering_binary_expr(&lhs, &rhs),
+                ast::CmpOp::Eq { .. } => self.infer_eq_binary_expr(bin_expr, lhs, rhs, op),
+                ast::CmpOp::Ord { .. } => self.infer_ordering_binary_expr(lhs, rhs, op),
             },
         };
         Some(ty)
@@ -949,20 +949,20 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let mut is_error = false;
         let left_ty = self.infer_expr(&lhs, Expected::NoValue);
         if !left_ty.supports_arithm_op() {
-            self.ctx.type_errors.push(TypeError::unsupported_arith_op(
+            self.ctx.type_errors.push(TypeError::unsupported_op(
                 lhs.in_file(self.ctx.file_id),
                 left_ty.clone(),
-                arith_op,
+                ast::BinaryOp::ArithOp(arith_op),
             ));
             is_error = true;
         }
         if let Some(rhs) = rhs {
             let right_ty = self.infer_expr(&rhs, Expected::ExpectType(left_ty.clone()));
             if !right_ty.supports_arithm_op() {
-                self.ctx.type_errors.push(TypeError::unsupported_arith_op(
+                self.ctx.type_errors.push(TypeError::unsupported_op(
                     rhs.in_file(self.ctx.file_id),
                     right_ty.clone(),
-                    arith_op,
+                    ast::BinaryOp::ArithOp(arith_op),
                 ));
                 is_error = true;
             }
@@ -989,33 +989,57 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         Ty::Bool
     }
 
-    fn infer_eq_binary_expr(&mut self, lhs: &ast::Expr, rhs: &Option<ast::Expr>) -> Ty {
-        let left_ty = self.infer_expr(lhs, Expected::NoValue);
+    fn infer_eq_binary_expr(
+        &mut self,
+        bin_expr: &ast::BinExpr,
+        lhs: ast::Expr,
+        rhs: Option<ast::Expr>,
+        cmp_op: ast::CmpOp,
+    ) -> Ty {
+        let left_ty = self.infer_expr(&lhs, Expected::NoValue);
         let left_ty = self.ctx.resolve_ty_vars_if_possible(left_ty);
 
         if let Some(rhs) = rhs {
-            let right_ty = self.infer_expr(rhs, Expected::NoValue);
+            let right_ty = self.infer_expr(&rhs, Expected::NoValue);
             let right_ty = self.ctx.resolve_ty_vars_if_possible(right_ty);
 
-            let combined = self.ctx.combine_types(left_ty, right_ty);
+            let combined = self.ctx.combine_types(left_ty.clone(), right_ty.clone());
             if combined.is_err() {
-                // todo: report error
+                self.ctx.type_errors.push(TypeError::wrong_arguments_to_bin_expr(
+                    bin_expr.clone().in_file(self.ctx.file_id),
+                    left_ty,
+                    right_ty,
+                    ast::BinaryOp::CmpOp(cmp_op),
+                ));
             }
         }
         Ty::Bool
     }
 
-    fn infer_ordering_binary_expr(&mut self, lhs: &ast::Expr, rhs: &Option<ast::Expr>) -> Ty {
+    fn infer_ordering_binary_expr(
+        &mut self,
+        lhs: ast::Expr,
+        rhs: Option<ast::Expr>,
+        cmp_op: ast::CmpOp,
+    ) -> Ty {
         let mut is_error = false;
-        let left_ty = self.infer_expr(lhs, Expected::NoValue);
+        let left_ty = self.infer_expr(&lhs, Expected::NoValue);
         if !left_ty.supports_ordering() {
-            // todo: report error
+            self.ctx.type_errors.push(TypeError::unsupported_op(
+                lhs.in_file(self.ctx.file_id),
+                left_ty.clone(),
+                ast::BinaryOp::CmpOp(cmp_op),
+            ));
             is_error = true;
         }
         if let Some(rhs) = rhs {
-            let right_ty = self.infer_expr(rhs, Expected::NoValue);
+            let right_ty = self.infer_expr(&rhs, Expected::NoValue);
             if !right_ty.supports_ordering() {
-                // todo: report error
+                self.ctx.type_errors.push(TypeError::unsupported_op(
+                    rhs.clone().in_file(self.ctx.file_id),
+                    right_ty.clone(),
+                    ast::BinaryOp::CmpOp(cmp_op),
+                ));
                 is_error = true;
             }
             if !is_error {
