@@ -636,6 +636,32 @@ fn test_invalid_argument_to_plus_expr_for_type_parameter() {
 }
 
 #[test]
+fn test_cannot_add_bool_and_u64() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main() {
+                false + 1u64;
+              //^^^^^ err: Invalid argument to '+': expected integer type, but found 'bool'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_cannot_add_u8_and_u64() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main() {
+                1u8 + 1u64;
+              //^^^^^^^^^^ err: Incompatible arguments to '+': 'u8' and 'u64'
+            }
+        }
+    "#]]);
+}
+
+#[test]
 fn test_no_error_if_return_nested_in_if_and_while() {
     // language=Move
     check_diagnostics(expect![[r#"
@@ -1231,6 +1257,77 @@ fn test_logic_ops_invalid_argument_type() {
               //^^^ err: Incompatible type 'u8', expected 'bool'
                      //^^^^ err: Incompatible type 'u64', expected 'bool'
             }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_if_else_with_different_generic_parameters() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct G<X, Y> {}
+            fun main<X, Y>() {
+                if (true) {
+                    G<X, Y> {}
+                } else {
+                    G<Y, X> {}
+                  //^^^^^^^^^^ err: Incompatible type '0x1::main::G<Y, X>', expected '0x1::main::G<X, Y>'
+                };
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_type_cannot_contain_itself() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct S { val: S }
+                          //^ err: Circular reference of type 'S'
+        }
+    "#]]);
+}
+
+#[test]
+fn test_type_cannot_contain_itself_in_vector() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct S { val: vector<S> }
+                                 //^ err: Circular reference of type 'S'
+        }
+    "#]]);
+}
+
+#[test]
+fn test_recursive_structs() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x42::M0 {
+            struct Foo { f: Foo }
+                          //^^^ err: Circular reference of type 'Foo'
+
+            struct Cup<T> { f: T }
+            struct Bar { f: Cup<Bar> }
+                              //^^^ err: Circular reference of type 'Bar'
+
+            struct X { y: vector<Y> }
+            struct Y { x: vector<X> }
+
+        }
+
+        module 0x42::M1 {
+            use 0x42::M0;
+
+            struct Foo { f: M0::Cup<Foo> }
+                                  //^^^ err: Circular reference of type 'Foo'
+
+            struct A { b: B }
+            struct B { c: C }
+            struct C { d: vector<D> }
+            struct D { x: M0::Cup<M0::Cup<M0::Cup<A>>> }
         }
     "#]]);
 }

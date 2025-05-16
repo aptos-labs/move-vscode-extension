@@ -914,11 +914,13 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     fn infer_bin_expr(&mut self, bin_expr: &ast::BinExpr) -> Option<Ty> {
         let (lhs, (_, op_kind), rhs) = bin_expr.unpack()?;
         let ty = match op_kind {
-            ast::BinaryOp::ArithOp(arith_op) => self.infer_arith_binary_expr(lhs, rhs, arith_op, false),
+            ast::BinaryOp::ArithOp(arith_op) => {
+                self.infer_arith_binary_expr(bin_expr, lhs, rhs, arith_op, false)
+            }
 
             ast::BinaryOp::Assignment { op: None } => self.infer_assignment(lhs, rhs),
             ast::BinaryOp::Assignment { op: Some(arith_op) } => {
-                self.infer_arith_binary_expr(lhs, rhs, arith_op, true)
+                self.infer_arith_binary_expr(bin_expr, lhs, rhs, arith_op, true)
             }
 
             ast::BinaryOp::LogicOp(_) => self.infer_logic_binary_expr(lhs, rhs),
@@ -941,6 +943,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
     fn infer_arith_binary_expr(
         &mut self,
+        bin_expr: &ast::BinExpr,
         lhs: ast::Expr,
         rhs: Option<ast::Expr>,
         arith_op: ast::ArithOp,
@@ -967,9 +970,14 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 is_error = true;
             }
             if !is_error {
-                let combined = self.ctx.combine_types(left_ty.clone(), right_ty);
+                let combined = self.ctx.combine_types(left_ty.clone(), right_ty.clone());
                 if combined.is_err() {
-                    // todo: report error
+                    self.ctx.type_errors.push(TypeError::wrong_arguments_to_bin_expr(
+                        bin_expr.clone().in_file(self.ctx.file_id),
+                        left_ty.clone(),
+                        right_ty,
+                        ast::BinaryOp::ArithOp(arith_op),
+                    ));
                     is_error = true;
                 }
             }
