@@ -90,7 +90,7 @@ impl<'db> SemanticsImpl<'db> {
 
     pub fn resolve_to_element<N: ast::NamedElement>(
         &self,
-        reference: InFile<ast::AnyReferenceElement>,
+        reference: InFile<impl ast::ReferenceElement>,
     ) -> Option<InFile<N>> {
         let scope_entry = reference.resolve(self.db);
         let element = scope_entry?.cast_into::<N>(self.db)?;

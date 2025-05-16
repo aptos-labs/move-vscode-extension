@@ -68,7 +68,6 @@ pub fn semantic_diagnostics(
             let ctx_owner = node.clone().cast::<ast::InferenceCtxOwner>().unwrap();
             handlers::type_check(&mut acc, &ctx, &ctx_owner.in_file(file_id));
         }
-
         match_ast! {
             match node {
                 ast::CallExpr(it) => {
@@ -79,6 +78,9 @@ pub fn semantic_diagnostics(
                 },
                 ast::BinExpr(it) => {
                     handlers::can_be_replaced_with_compound_expr(&mut acc, &ctx, it.in_file(file_id));
+                },
+                ast::NamedField(it) => {
+                    handlers::recursive_struct_check(&mut acc, &ctx, it.in_file(file_id));
                 },
                 _ => (),
             }

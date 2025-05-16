@@ -274,6 +274,10 @@ pub enum TypeError {
         loc: SyntaxLoc,
         assigned_ty: Ty,
     },
+    CircularType {
+        loc: SyntaxLoc,
+        type_name: String,
+    },
 }
 
 impl TypeError {
@@ -283,6 +287,7 @@ impl TypeError {
             TypeError::UnsupportedOp { loc, .. } => loc.clone(),
             TypeError::WrongArgumentsToBinExpr { loc, .. } => loc.clone(),
             TypeError::InvalidUnpacking { loc, .. } => loc.clone(),
+            TypeError::CircularType { loc, .. } => loc.clone(),
         }
     }
     pub fn type_mismatch(
@@ -323,6 +328,10 @@ impl TypeError {
     pub fn invalid_unpacking(pat: InFile<ast::Pat>, assigned_ty: Ty) -> Self {
         TypeError::InvalidUnpacking { loc: pat.loc(), assigned_ty }
     }
+
+    pub fn circular_type(path: InFile<ast::Path>, type_name: String) -> Self {
+        TypeError::CircularType { loc: path.loc(), type_name }
+    }
 }
 
 impl TypeFoldable<TypeError> for TypeError {
@@ -350,6 +359,7 @@ impl TypeFoldable<TypeError> for TypeError {
                 loc,
                 assigned_ty: assigned_ty.fold_with(folder),
             },
+            TypeError::CircularType { .. } => self,
         }
     }
 

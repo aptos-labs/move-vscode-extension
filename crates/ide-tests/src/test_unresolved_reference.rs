@@ -329,7 +329,7 @@ fn test_no_error_for_update_field_arguments() {
         struct S { val: u8 }
         spec module {
             let s = S { val: 1 };
-            ensures update_field(s, val, s.val + 1) == 1;
+            ensures update_field(s, val, s.val + 1) == S { val: 2 };
         }
     }
 "#]]);
