@@ -1554,3 +1554,174 @@ fn test_check_type_of_assigning_value_in_tuple_assignment() {
         }
     "#]]);
 }
+
+#[test]
+fn test_deref_type_error() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct S {}
+            fun main() {
+                let s = S {};
+                let mut_s = &mut s;
+                let b: bool = *mut_s;
+                            //^^^^^^ err: Incompatible type '0x1::m::S', expected 'bool'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_shift_left_with_u64() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                let a = 1u64;
+                a << 1;
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_abort_expr_requires_integer() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                abort 1;
+                abort 1u8;
+                abort 1u64;
+                abort false;
+                    //^^^^^ err: Incompatible type 'bool', expected 'integer'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_aborts_if_requires_bool() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun call() {}
+            spec call {
+                aborts_if 1 with 1;
+                        //^ err: Incompatible type 'num', expected 'bool'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_aborts_if_with_requires_integer() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun call() {}
+            spec call {
+                aborts_if true with 1;
+                aborts_if true with 1u8;
+                aborts_if true with 1u64;
+                aborts_if true with false;
+                                  //^^^^^ err: Incompatible type 'bool', expected 'num'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_aborts_with_requires_integer() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun call() {}
+            spec call {
+                aborts_with false;
+                          //^^^^^ err: Incompatible type 'bool', expected 'num'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_type_check_function_param_in_func_spec() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun call(val: bool) {}
+            spec call {
+                val + 1;
+              //^^^ err: Invalid argument to '+': expected integer type, but found 'bool'
+            }
+        }
+    "#]]);
+}
+
+// todo
+#[test]
+fn test_type_check_function_result_in_func_spec() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun call(): bool { true }
+            spec call {
+                result + 1;
+            }
+        }
+    "#]]);
+}
+
+// todo
+#[test]
+fn test_type_check_imply_expr_in_include() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            spec schema Schema {}
+            spec module {
+                include 1 ==> Schema {};
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_spec_vector_slice() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            spec module {
+                let v = vector[true, false];
+                v[0..1];
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_incompatible_integers_in_gte() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                1u8 >= 1u64;
+                     //^^^^ err: Incompatible type 'u64', expected 'u8'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_bit_shift_requires_u8() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                1 << 1000u64;
+                   //^^^^^^^ err: Incompatible type 'u64', expected 'u8'
+            }
+        }
+    "#]]);
+}
