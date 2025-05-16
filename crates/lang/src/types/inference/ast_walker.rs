@@ -949,12 +949,24 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
     fn infer_borrow_expr(&mut self, borrow_expr: &ast::BorrowExpr, expected: Expected) -> Option<Ty> {
         let inner_expr = borrow_expr.expr()?;
-        let inner_expected_ty = expected
+        let expected_inner_ty = expected
             .ty(self.ctx)
             .and_then(|ty| ty.into_ty_ref())
             .map(|ty_ref| ty_ref.referenced());
 
-        let inner_ty = self.infer_expr(&inner_expr, Expected::from_ty(inner_expected_ty));
+        let inner_ty = self.infer_expr(&inner_expr, Expected::from_ty(expected_inner_ty));
+        let inner_ty = match inner_ty {
+            Ty::Reference(_) | Ty::Tuple(_) => {
+                self.ctx
+                    .type_errors
+                    .push(TypeError::wrong_arguments_to_borrow_expr(
+                        inner_expr.in_file(self.ctx.file_id),
+                        inner_ty,
+                    ));
+                Ty::Unknown
+            }
+            _ => inner_ty,
+        };
         let mutability = Mutability::new(borrow_expr.is_mut());
 
         Some(Ty::new_reference(inner_ty, mutability))
@@ -962,11 +974,19 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
     fn infer_deref_expr(&mut self, deref_expr: &ast::DerefExpr, _expected: Expected) -> Option<Ty> {
         let inner_expr = deref_expr.expr()?;
+
         let inner_ty = self.infer_expr(&inner_expr, Expected::NoValue);
-
-        // todo: error
+        let inner_ty = match inner_ty {
+            Ty::Reference(_) => inner_ty,
+            _ => {
+                self.ctx.type_errors.push(TypeError::invalid_dereference(
+                    inner_expr.in_file(self.ctx.file_id),
+                    inner_ty,
+                ));
+                return None;
+            }
+        };
         let inner_ty_ref = inner_ty.into_ty_ref()?;
-
         Some(inner_ty_ref.referenced())
     }
 

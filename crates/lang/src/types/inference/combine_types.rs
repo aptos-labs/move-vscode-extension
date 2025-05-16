@@ -278,6 +278,14 @@ pub enum TypeError {
         loc: SyntaxLoc,
         type_name: String,
     },
+    WrongArgumentToBorrowExpr {
+        loc: SyntaxLoc,
+        actual_ty: Ty,
+    },
+    InvalidDereference {
+        loc: SyntaxLoc,
+        actual_ty: Ty,
+    },
 }
 
 impl TypeError {
@@ -288,6 +296,8 @@ impl TypeError {
             TypeError::WrongArgumentsToBinExpr { loc, .. } => loc.clone(),
             TypeError::InvalidUnpacking { loc, .. } => loc.clone(),
             TypeError::CircularType { loc, .. } => loc.clone(),
+            TypeError::WrongArgumentToBorrowExpr { loc, .. } => loc.clone(),
+            TypeError::InvalidDereference { loc, .. } => loc.clone(),
         }
     }
     pub fn type_mismatch(
@@ -322,6 +332,20 @@ impl TypeError {
             left_ty,
             right_ty,
             op: op.to_string(),
+        }
+    }
+
+    pub fn wrong_arguments_to_borrow_expr(inner_expr: InFile<ast::Expr>, actual_ty: Ty) -> Self {
+        TypeError::WrongArgumentToBorrowExpr {
+            loc: inner_expr.loc(),
+            actual_ty,
+        }
+    }
+
+    pub fn invalid_dereference(inner_expr: InFile<ast::Expr>, actual_ty: Ty) -> Self {
+        TypeError::InvalidDereference {
+            loc: inner_expr.loc(),
+            actual_ty,
         }
     }
 
@@ -360,6 +384,16 @@ impl TypeFoldable<TypeError> for TypeError {
                 assigned_ty: assigned_ty.fold_with(folder),
             },
             TypeError::CircularType { .. } => self,
+            TypeError::WrongArgumentToBorrowExpr { loc, actual_ty } => {
+                TypeError::WrongArgumentToBorrowExpr {
+                    loc,
+                    actual_ty: actual_ty.fold_with(folder),
+                }
+            }
+            TypeError::InvalidDereference { loc, actual_ty } => TypeError::InvalidDereference {
+                loc,
+                actual_ty: actual_ty.fold_with(folder),
+            },
         }
     }
 

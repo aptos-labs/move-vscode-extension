@@ -153,5 +153,27 @@ fn register_type_error(
                 range: loc.text_range(),
             },
         )),
+        TypeError::WrongArgumentToBorrowExpr { loc, actual_ty } => {
+            let ty = ctx.sema.render_ty(actual_ty);
+            acc.push(Diagnostic::new(
+                DiagnosticCode::Lsp("type-error", Severity::Error),
+                format!("Expected a single non-reference type, but found '{ty}'"),
+                FileRange {
+                    file_id,
+                    range: loc.text_range(),
+                },
+            ))
+        }
+        TypeError::InvalidDereference { loc, actual_ty } => {
+            let ty = ctx.sema.render_ty(actual_ty);
+            acc.push(Diagnostic::new(
+                DiagnosticCode::Lsp("type-error", Severity::Error),
+                format!("Invalid dereference. Expected '&_' but found '{ty}'"),
+                FileRange {
+                    file_id,
+                    range: loc.text_range(),
+                },
+            ))
+        }
     }
 }
