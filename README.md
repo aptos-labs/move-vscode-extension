@@ -98,7 +98,7 @@ To run `aptos move lint` instead, specify custom `aptos move` command with:
 }
 ```
 
-### Resolve definitions
+### Diagnostics
 
 If there's any issue with missing go-to-definition, the "unresolved reference" diagnostic could be helpful:
 
@@ -106,8 +106,13 @@ If there's any issue with missing go-to-definition, the "unresolved reference" d
     "aptos-analyzer.diagnostics.enableUnresolvedReference": true
 ```
 
-It's disabled by default, as the underlying compiler frontend still incomplete. 
+Same for type checking:
 
+```
+    "aptos-analyzer.diagnostics.enableTypeChecking": true
+```
+
+They are disabled by default, as the underlying compiler frontend is still incomplete.
 
 ## Debugging
 

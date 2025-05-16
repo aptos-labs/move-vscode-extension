@@ -17,6 +17,9 @@ pub(crate) fn recursive_struct_check(
     ctx: &DiagnosticsContext<'_>,
     named_field: InFile<ast::NamedField>,
 ) -> Option<()> {
+    if !ctx.config.type_checking_enabled {
+        return None;
+    }
     let (file_id, named_field) = named_field.unpack();
     let field_type = named_field.type_()?;
     let leaf_path_types = field_type.syntax().descendants_of_type::<ast::PathType>();
@@ -49,6 +52,9 @@ pub(crate) fn type_check(
     ctx: &DiagnosticsContext<'_>,
     inference_ctx_owner: &InFile<ast::InferenceCtxOwner>,
 ) -> Option<()> {
+    if !ctx.config.type_checking_enabled {
+        return None;
+    }
     let msl = inference_ctx_owner.value.syntax().is_msl_context();
     let inference = ctx.sema.inference(inference_ctx_owner, msl)?;
     let file_id = inference_ctx_owner.file_id;

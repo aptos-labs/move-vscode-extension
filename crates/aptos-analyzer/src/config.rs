@@ -196,15 +196,7 @@ impl Config {
         DiagnosticsConfig {
             enabled: *self.diagnostics_enable(),
             unresolved_reference_enabled: *self.diagnostics_enableUnresolvedReference(),
-            // disable_experimental: !self.diagnostics_experimental_enable(source_root),
-            // disabled: self.diagnostics_disabled.clone(),
-            // expr_fill_default: match self.assist_expressionFillDefault(source_root) {
-            //     ExprFillDefaultDef::Todo => ExprFillDefaultMode::Todo,
-            //     ExprFillDefaultDef::Default => ExprFillDefaultMode::Default,
-            // },
-            // snippet_cap: self.snippet_cap(),
-            // insert_use: self.insert_use_config(source_root),
-            // style_lints: self.diagnostics_styleLints_enable(source_root).to_owned(),
+            type_checking_enabled: *self.diagnostics_enableTypeChecking(),
         }
     }
 
