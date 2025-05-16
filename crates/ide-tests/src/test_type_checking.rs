@@ -1331,3 +1331,154 @@ fn test_recursive_structs() {
         }
     "#]]);
 }
+
+#[test]
+fn test_no_error_for_table_borrow_mut_of_unknown_type() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::table {
+            /// Type of tables
+            struct Table<phantom K: copy + drop, V: store> has store {
+                inner: V
+            }
+            public fun borrow_mut<K: copy + drop, V: store>(table: &mut Table<K, V>, key: K): &mut V {
+                &mut table.inner
+            }
+        }
+        module 0x1::pool {
+            use 0x1::table;
+            struct Pool {
+                shares: Unknown
+                      //^^^^^^^ err: Unresolved reference `Unknown`: cannot resolve
+            }
+            fun call(pool: &mut Pool) {
+                let value = table::borrow_mut(&mut pool.shares, @0x1);
+                let unref = *value;
+                1u128 - unref;
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_error_for_nested_struct_literal_and_explicit_type() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            struct Option<Element> { element: Element }
+            struct S { id: Option<u64> }
+
+            fun m() {
+                S { id: Option { element: 1u64 } };
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_if_else_incompatible_expected_type() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                let a = 1u8;
+                a = if (true) 1u16 else 1u32;
+                            //^^^^ err: Incompatible type 'u16', expected 'u8'
+                                      //^^^^ err: Incompatible type 'u32', expected 'u8'
+                a = if (true) 1u8 else 1u32;
+                                     //^^^^ err: Incompatible type 'u32', expected 'u8'
+                a = if (true) 1u16 else 1u8;
+                            //^^^^ err: Incompatible type 'u16', expected 'u8'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_if_else_incompatible_expected_type_both_incompatible_but_compat_to_each_other() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                let a = 1;
+                a = if (true) false else true;
+                  //^^^^^^^^^^^^^^^^^^^^^^^^^ err: Incompatible type 'bool', expected 'integer'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_if_else_with_expected_type_of_mut_ref_then_incompat() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct S { val: u8 }
+            fun main() {
+                let mut_s = &mut S { val: 2 };
+                let s = S { val: 1 };
+                mut_s = if (true) &mut s else &s;
+                                            //^^ err: Incompatible type '&0x1::m::S', expected '&mut 0x1::m::S'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_if_else_with_expected_type_of_mut_ref_else_incompat() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct S { val: u8 }
+            fun main() {
+                let mut_s = &mut S { val: 2 };
+                let s = S { val: 1 };
+                mut_s = if (true) &s else &mut s;
+                                //^^ err: Incompatible type '&0x1::m::S', expected '&mut 0x1::m::S'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_if_else_with_expected_type_of_ref_but_incompat_no_error() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct S { val: u8 }
+            fun main() {
+                let mut_s = &S { val: 2 };
+                let s = S { val: 1 };
+                mut_s = if (true) &s else &mut s;
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_if_branch_returns_unit() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                let a = 1;
+                a = if (true) {} else 1;
+                             //^ err: Incompatible type '()', expected 'integer'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_else_branch_returns_unit() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                let a = 1;
+                a = if (true) {} else 1;
+                             //^ err: Incompatible type '()', expected 'integer'
+            }
+        }
+    "#]]);
+}
