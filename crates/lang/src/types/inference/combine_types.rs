@@ -259,9 +259,15 @@ pub enum TypeError {
         expected_ty: Ty,
         actual_ty: Ty,
     },
-    UnsupportedArithmOp {
+    UnsupportedOp {
         loc: SyntaxLoc,
         ty: Ty,
+        op: String,
+    },
+    WrongArgumentsToBinExpr {
+        loc: SyntaxLoc,
+        left_ty: Ty,
+        right_ty: Ty,
         op: String,
     },
     InvalidUnpacking {
@@ -274,7 +280,8 @@ impl TypeError {
     pub fn loc(&self) -> SyntaxLoc {
         match self {
             TypeError::TypeMismatch { loc, .. } => loc.clone(),
-            TypeError::UnsupportedArithmOp { loc, .. } => loc.clone(),
+            TypeError::UnsupportedOp { loc, .. } => loc.clone(),
+            TypeError::WrongArgumentsToBinExpr { loc, .. } => loc.clone(),
             TypeError::InvalidUnpacking { loc, .. } => loc.clone(),
         }
     }
@@ -291,10 +298,24 @@ impl TypeError {
         }
     }
 
-    pub fn unsupported_arith_op(expr: InFile<ast::Expr>, ty: Ty, op: ast::ArithOp) -> Self {
-        TypeError::UnsupportedArithmOp {
+    pub fn unsupported_op(expr: InFile<ast::Expr>, ty: Ty, op: ast::BinaryOp) -> Self {
+        TypeError::UnsupportedOp {
             loc: expr.loc(),
             ty,
+            op: op.to_string(),
+        }
+    }
+
+    pub fn wrong_arguments_to_bin_expr(
+        expr: InFile<ast::BinExpr>,
+        left_ty: Ty,
+        right_ty: Ty,
+        op: ast::BinaryOp,
+    ) -> Self {
+        TypeError::WrongArgumentsToBinExpr {
+            loc: expr.loc(),
+            left_ty,
+            right_ty,
             op: op.to_string(),
         }
     }
@@ -312,11 +333,19 @@ impl TypeFoldable<TypeError> for TypeError {
                 expected_ty: expected_ty.fold_with(folder.clone()),
                 actual_ty: actual_ty.fold_with(folder),
             },
-            TypeError::UnsupportedArithmOp { loc, ty, op } => TypeError::UnsupportedArithmOp {
+            TypeError::UnsupportedOp { loc, ty, op } => TypeError::UnsupportedOp {
                 loc,
                 ty: ty.fold_with(folder),
                 op,
             },
+            TypeError::WrongArgumentsToBinExpr { loc, left_ty, right_ty, op } => {
+                TypeError::WrongArgumentsToBinExpr {
+                    loc,
+                    left_ty: left_ty.fold_with(folder.clone()),
+                    right_ty: right_ty.fold_with(folder),
+                    op,
+                }
+            }
             TypeError::InvalidUnpacking { loc, assigned_ty } => TypeError::InvalidUnpacking {
                 loc,
                 assigned_ty: assigned_ty.fold_with(folder),

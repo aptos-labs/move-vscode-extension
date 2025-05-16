@@ -1028,3 +1028,209 @@ fn test_deeply_nested_structure_type_is_unknown_due_to_memory_issues() {
         }
     "#]]);
 }
+
+#[test]
+fn test_no_invalid_unpacking_error_for_unresolved_name_in_tuple() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main() {
+                let (a, b) = call();
+                           //^^^^ err: Unresolved reference `call`: cannot resolve
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_invalid_unpacking_error_for_unresolved_name_in_struct() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct S { val: u8 }
+            fun main() {
+                let S { val } = call();
+                              //^^^^ err: Unresolved reference `call`: cannot resolve
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_loop_never_returns_and_not_a_type_error() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main(): u64 {
+                let a = 1;
+                if (a == 1) return a;
+                loop {}
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_integer_arguments_of_the_same_type_support_ordering() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main(a: u64, b: u64) {
+                let c = 1;
+                a < b;
+                a > b;
+                a >= b;
+                a <= b;
+                a < c;
+                b < c;
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_cannot_order_references() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main(a: &u64, b: &u64) {
+                a < b;
+              //^ err: Invalid argument to '<': expected integer type, but found '&u64'
+                  //^ err: Invalid argument to '<': expected integer type, but found '&u64'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_cannot_order_bools() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main(a: bool, b: bool) {
+                a < b;
+              //^ err: Invalid argument to '<': expected integer type, but found 'bool'
+                  //^ err: Invalid argument to '<': expected integer type, but found 'bool'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_cannot_order_type_parameters() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main<T>(a: T, b: T) {
+                a < b;
+              //^ err: Invalid argument to '<': expected integer type, but found 'T'
+                  //^ err: Invalid argument to '<': expected integer type, but found 'T'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_eq_is_supported_for_same_type_arguments() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct S { val: u8 }
+            fun main<T>(a: T, b: T) {
+                1 == 1;
+                1u8 == 1u8;
+                1u64 == 1u64;
+                false == false;
+                S { val: 10 } == S { val: 20 };
+                a == b;
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_not_eq_is_supported_for_same_type_arguments() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct S { val: u8 }
+            fun main<T>(a: T, b: T) {
+                1 != 1;
+                1u8 != 1u8;
+                1u64 != 1u64;
+                false != false;
+                S { val: 10 } != S { val: 20 };
+                a != b;
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_cannot_eq_different_types() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct S { val: u64 }
+            fun main() {
+                1 == false;
+              //^^^^^^^^^^ err: Incompatible arguments to '==': 'integer' and 'bool'
+                S { val: 10 } == false;
+              //^^^^^^^^^^^^^^^^^^^^^^ err: Incompatible arguments to '==': '0x1::main::S' and 'bool'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_cannot_eq_different_integers() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main() {
+                1u8 == 1u64;
+              //^^^^^^^^^^^ err: Incompatible arguments to '==': 'u8' and 'u64'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_cannot_not_eq_different_integers() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main() {
+                1u8 != 1u64;
+              //^^^^^^^^^^^ err: Incompatible arguments to '!=': 'u8' and 'u64'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_logic_ops_allow_bools() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main() {
+                true && true;
+                false || false;
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_logic_ops_invalid_argument_type() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main() {
+                1u8 && 1u64
+              //^^^ err: Incompatible type 'u8', expected 'bool'
+                     //^^^^ err: Incompatible type 'u64', expected 'bool'
+            }
+        }
+    "#]]);
+}

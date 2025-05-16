@@ -56,11 +56,23 @@ fn register_type_error(
                 },
             ))
         }
-        TypeError::UnsupportedArithmOp { loc, ty, op } => {
+        TypeError::UnsupportedOp { loc, ty, op } => {
             let ty = ctx.sema.render_ty(ty);
             acc.push(Diagnostic::new(
                 DiagnosticCode::Lsp("type-error", Severity::Error),
                 format!("Invalid argument to '{op}': expected integer type, but found '{ty}'"),
+                FileRange {
+                    file_id,
+                    range: loc.text_range(),
+                },
+            ))
+        }
+        TypeError::WrongArgumentsToBinExpr { loc, left_ty, right_ty, op } => {
+            let left_ty = ctx.sema.render_ty(left_ty);
+            let right_ty = ctx.sema.render_ty(right_ty);
+            acc.push(Diagnostic::new(
+                DiagnosticCode::Lsp("type-error", Severity::Error),
+                format!("Incompatible arguments to '{op}': '{left_ty}' and '{right_ty}'"),
                 FileRange {
                     file_id,
                     range: loc.text_range(),
