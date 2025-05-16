@@ -33,7 +33,7 @@ impl InferenceResult {
             .type_errors
             .clone()
             .into_iter()
-            .map(|type_error| ctx.fully_resolve_vars(type_error))
+            .map(|type_error| ctx.fully_resolve_vars_fallback_to_origin(type_error))
             .collect();
 
         let pat_types = fully_resolve_map_values(ctx.pat_types.clone(), &ctx);
