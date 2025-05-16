@@ -1837,3 +1837,306 @@ fn test_cannot_dereference_non_ref() {
         }
     "#]]);
 }
+
+#[test]
+fn test_range_expr_end_has_different_type() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                let a = 1..true;
+                         //^^^^ err: Incompatible type 'bool', expected 'integer'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_return_type_inference_for_generic_expr() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            native fun borrow<Value>(): Value;
+            fun main() {
+                borrow() + 3;
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_return_type_inference_for_deref_borrow_expr_lhs() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            native fun borrow<Value>(): &Value;
+            fun main() {
+                *borrow() + 3;
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_return_type_inference_for_deref_borrow_expr_rhs() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            native fun borrow<Value>(): &Value;
+            fun main() {
+                3 + *borrow();
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_unpacking_of_struct_ref_allowed() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct Field { id: u8 }
+            fun main() {
+                let Field { id } = &Field { id: 1 };
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_incorrect_types_for_vector_borrow_methods() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::vector {
+            native public fun borrow<Element>(v: &vector<Element>, i: u64): &Element;
+            native public fun borrow_mut<Element>(v: &mut vector<Element>, i: u64): &mut Element;
+        }
+        module 0x1::m {
+            use 0x1::vector;
+
+            fun main() {
+                let v = vector[1, 2];
+
+                vector::borrow(0, &v);
+                             //^ err: Incompatible type 'integer', expected '&vector<Element>'
+                                //^^ err: Incompatible type '&vector<integer>', expected 'u64'
+                vector::borrow(v, 0);
+                             //^ err: Incompatible type 'vector<integer>', expected '&vector<Element>'
+
+                vector::borrow_mut(0, &mut v);
+                                 //^ err: Incompatible type 'integer', expected '&mut vector<Element>'
+                                    //^^^^^^ err: Incompatible type '&mut vector<integer>', expected 'u64'
+                vector::borrow_mut(v, 0);
+                                 //^ err: Incompatible type 'vector<integer>', expected '&mut vector<Element>'
+                vector::borrow_mut(&v, 0);
+                                 //^^ err: Incompatible type '&vector<integer>', expected '&mut vector<integer>'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_circular_types_for_enum() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            enum S { One { s: S }, Two }
+                            //^ err: Circular reference of type 'S'
+        }
+    "#]]);
+}
+
+#[test]
+fn test_return_enum_value_from_function() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            enum Iterator { Empty, Some { item: u8 } }
+            fun create_iterator(): Iterator {
+                Iterator::Empty
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_return_enum_value_with_fields_from_function() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            enum Iterator { Empty, Some { item: u8 } }
+            fun create_iterator(): Iterator {
+                Iterator::Some { item: 1 }
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_return_generic_empty_enum_value_from_function() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            enum Iterator<IterT> { Empty, Some { item: IterT } }
+            fun create_iterator<FunT>(): Iterator<FunT> {
+                Iterator::Empty
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_invalid_dereference_inside_lambda() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::vector {
+            public fun enumerate_ref<Element>(self: vector<Element>, _f: |&Element|) {}
+        }
+        module 0x1::m {
+            fun main() {
+                vector[@0x1].enumerate_ref(|to| { *to; });
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_invalid_dereference_inside_lambda() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::vector {
+            public fun enumerate_ref<Element>(self: vector<Element>, _f: |Element|) {}
+        }
+        module 0x1::m {
+            fun main() {
+                vector[@0x1].enumerate_ref(|to| { *to; });
+                                                 //^^ err: Invalid dereference. Expected '&_' but found 'address'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_struct_lit_with_expected_type_of_different_generic_argument() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct S<R> { val: R }
+            fun main() {
+                let s: S<u8> = S<u16> { val: 1 };
+                             //^^^^^^^^^^^^^^^^^ err: Incompatible type '0x1::m::S<u16>', expected '0x1::m::S<u8>'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_tuple_struct_lit_with_expected_type_of_different_generic_argument() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct S<R>(R);
+            fun main() {
+                let s: S<u8> = S<u16>(1);
+                             //^^^^^^^^^ err: Incompatible type '0x1::m::S<u16>', expected '0x1::m::S<u8>'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_struct_lit_field_with_expected_type_of_different_generic_argument() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct S<R> { val: R }
+            fun main() {
+                let s: S<u8> = S { val: 1u16 };
+                                      //^^^^ err: Incompatible type 'u16', expected 'u8'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_tuple_struct_lit_field_with_expected_type_of_different_generic_argument() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct S<R>(R);
+            fun main() {
+                let s: S<u8> = S(1u16);
+                               //^^^^ err: Incompatible type 'u16', expected 'u8'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_return_only_call_expr() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            native fun call(): u16;
+            fun main() {
+                let a: u8 = call();
+                          //^^^^^^ err: Incompatible type 'u16', expected 'u8'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_num_and_u64_in_spec_block_from_outer_scope() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                let validator_index = 1;
+                spec {
+                    validator_index + 1;
+                }
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_num_and_integer_returning_spec_fun_for_spec_block() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct Aggregator<IntElement> has store, drop {
+                value: IntElement,
+                max_value: IntElement,
+            }
+            spec native fun spec_get_max_value<IntElement>(aggregator: Aggregator<IntElement>): IntElement;
+            fun main() {
+                let agg = Aggregator { value: 1, max_value: 1 };
+                spec {
+                    assert spec_get_max_value(agg) == 10;
+                }
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_compare_two_generics_from_spec_fun() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct Aggregator<IntElement> has store, drop {
+                value: IntElement,
+                max_value: IntElement,
+            }
+            spec native fun spec_get_max_value<IntElement>(aggregator: Aggregator<IntElement>): IntElement;
+            fun main() {
+                let agg = Aggregator { value: 1, max_value: 1 };
+                spec {
+                    assert spec_get_max_value(agg) < spec_get_max_value(agg);
+                }
+            }
+        }
+    "#]]);
+}
