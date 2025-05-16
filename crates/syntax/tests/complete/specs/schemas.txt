@@ -167,13 +167,14 @@ SOURCE_FILE@0..386
                                 NAME_REF@289..290
                                   IDENT@289..290 "X"
                         R_ANGLE@290..291 ">"
-                ARG_LIST@291..297
+                VALUE_ARG_LIST@291..297
                   L_PAREN@291..292 "("
-                  LITERAL@292..296
-                    ADDRESS_LIT@292..296
-                      AT@292..293 "@"
-                      VALUE_ADDRESS@293..296
-                        INT_NUMBER@293..296 "0x0"
+                  VALUE_ARG@292..296
+                    LITERAL@292..296
+                      ADDRESS_LIT@292..296
+                        AT@292..293 "@"
+                        VALUE_ADDRESS@293..296
+                          INT_NUMBER@293..296 "0x0"
                   R_PAREN@296..297 ")"
               DOT@297..298 "."
               FIELD_REF@298..299
@@ -198,13 +199,14 @@ SOURCE_FILE@0..386
                                 NAME_REF@310..311
                                   IDENT@310..311 "X"
                         R_ANGLE@311..312 ">"
-                ARG_LIST@312..318
+                VALUE_ARG_LIST@312..318
                   L_PAREN@312..313 "("
-                  LITERAL@313..317
-                    ADDRESS_LIT@313..317
-                      AT@313..314 "@"
-                      VALUE_ADDRESS@314..317
-                        INT_NUMBER@314..317 "0x1"
+                  VALUE_ARG@313..317
+                    LITERAL@313..317
+                      ADDRESS_LIT@313..317
+                        AT@313..314 "@"
+                        VALUE_ADDRESS@314..317
+                          INT_NUMBER@314..317 "0x1"
                   R_PAREN@317..318 ")"
               DOT@318..319 "."
               FIELD_REF@319..320
@@ -232,13 +234,14 @@ SOURCE_FILE@0..386
                                 NAME_REF@345..346
                                   IDENT@345..346 "X"
                         R_ANGLE@346..347 ">"
-                ARG_LIST@347..353
+                VALUE_ARG_LIST@347..353
                   L_PAREN@347..348 "("
-                  LITERAL@348..352
-                    ADDRESS_LIT@348..352
-                      AT@348..349 "@"
-                      VALUE_ADDRESS@349..352
-                        INT_NUMBER@349..352 "0x0"
+                  VALUE_ARG@348..352
+                    LITERAL@348..352
+                      ADDRESS_LIT@348..352
+                        AT@348..349 "@"
+                        VALUE_ADDRESS@349..352
+                          INT_NUMBER@349..352 "0x0"
                   R_PAREN@352..353 ")"
               DOT@353..354 "."
               FIELD_REF@354..355
@@ -263,13 +266,14 @@ SOURCE_FILE@0..386
                                 NAME_REF@366..367
                                   IDENT@366..367 "X"
                         R_ANGLE@367..368 ">"
-                ARG_LIST@368..374
+                VALUE_ARG_LIST@368..374
                   L_PAREN@368..369 "("
-                  LITERAL@369..373
-                    ADDRESS_LIT@369..373
-                      AT@369..370 "@"
-                      VALUE_ADDRESS@370..373
-                        INT_NUMBER@370..373 "0x1"
+                  VALUE_ARG@369..373
+                    LITERAL@369..373
+                      ADDRESS_LIT@369..373
+                        AT@369..370 "@"
+                        VALUE_ADDRESS@370..373
+                          INT_NUMBER@370..373 "0x1"
                   R_PAREN@373..374 ")"
               DOT@374..375 "."
               FIELD_REF@375..376

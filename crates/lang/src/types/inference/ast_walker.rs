@@ -504,7 +504,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 .instantiate_path_for_fun(method_call_expr.to_owned().into(), method.map_into()),
             None => {
                 // add 1 for `self` parameter
-                TyCallable::fake(1 + method_call_expr.args().len(), CallKind::Fun)
+                TyCallable::fake(1 + method_call_expr.arg_exprs().len(), CallKind::Fun)
             }
         };
         let method_ty = self.ctx.resolve_ty_vars_if_possible(method_ty);
@@ -513,7 +513,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let args = iter::once(CallArg::Self_ { self_ty })
             .chain(
                 method_call_expr
-                    .args()
+                    .arg_exprs()
                     .into_iter()
                     .map(|arg_expr| CallArg::Arg { expr: arg_expr }),
             )
@@ -539,7 +539,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         };
         let expected_arg_tys = self.infer_expected_call_arg_tys(&callable_ty, expected);
         let args = call_expr
-            .args()
+            .arg_exprs()
             .into_iter()
             .map(|expr| CallArg::Arg { expr })
             .collect();
@@ -554,7 +554,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     fn infer_assert_macro_expr(&mut self, assert_macro_expr: &ast::AssertMacroExpr) -> Ty {
         let declared_input_tys = vec![Ty::Bool, Ty::Integer(IntegerKind::Integer)];
         let args = assert_macro_expr
-            .args()
+            .arg_exprs()
             .into_iter()
             .map(|expr| CallArg::Arg { expr })
             .collect();
@@ -774,7 +774,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
         let lit_call_ty = TyCallable::new(declared_arg_tys.clone(), vec_ty.clone(), CallKind::Fun);
         let expected_arg_tys = self.infer_expected_call_arg_tys(&lit_call_ty, expected);
-        let args = arg_exprs.into_iter().map(|expr| CallArg::Arg { expr }).collect();
+        let args = arg_exprs
+            .into_iter()
+            .map(|expr| CallArg::Arg { expr: Some(expr) })
+            .collect();
         self.coerce_call_arg_types(args, declared_arg_tys, expected_arg_tys);
 
         self.ctx.resolve_ty_vars_if_possible(vec_ty)
@@ -1217,9 +1220,12 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     let _ = self.ctx.combine_types(actual_self_ty, expected_ty);
                 }
                 CallArg::Arg { expr } => {
-                    let arg_expr_ty = self.infer_expr(&expr, Expected::ExpectType(expected_ty.clone()));
-                    self.ctx
-                        .coerce_types(expr.node_or_token(), arg_expr_ty, expected_ty);
+                    if let Some(expr) = expr {
+                        let arg_expr_ty =
+                            self.infer_expr(&expr, Expected::ExpectType(expected_ty.clone()));
+                        self.ctx
+                            .coerce_types(expr.node_or_token(), arg_expr_ty, expected_ty);
+                    }
                 }
             }
         }
@@ -1228,5 +1234,5 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
 enum CallArg {
     Self_ { self_ty: Ty },
-    Arg { expr: ast::Expr },
+    Arg { expr: Option<ast::Expr> },
 }

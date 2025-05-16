@@ -67,36 +67,38 @@ SOURCE_FILE@0..146
                 PATH_SEGMENT@66..74
                   NAME_REF@66..74
                     IDENT@66..74 "for_each"
-            ARG_LIST@74..96
+            VALUE_ARG_LIST@74..96
               L_PAREN@74..75 "("
-              PATH_EXPR@75..76
-                PATH@75..76
-                  PATH_SEGMENT@75..76
-                    NAME_REF@75..76
-                      IDENT@75..76 "v"
+              VALUE_ARG@75..76
+                PATH_EXPR@75..76
+                  PATH@75..76
+                    PATH_SEGMENT@75..76
+                      NAME_REF@75..76
+                        IDENT@75..76 "v"
               COMMA@76..77 ","
               WHITESPACE@77..78 " "
-              LAMBDA_EXPR@78..95
-                LAMBDA_PARAM_LIST@78..92
-                  PIPE@78..79 "|"
-                  LAMBDA_PARAM@79..91
-                    IDENT_PAT@79..80
-                      NAME@79..80
-                        IDENT@79..80 "f"
-                    COLON@80..81 ":"
-                    WHITESPACE@81..82 " "
-                    REF_TYPE@82..91
-                      AMP@82..83 "&"
-                      PATH_TYPE@83..91
-                        PATH@83..91
-                          PATH_SEGMENT@83..91
-                            NAME_REF@83..91
-                              IDENT@83..91 "Function"
-                  PIPE@91..92 "|"
-                WHITESPACE@92..93 " "
-                BLOCK_EXPR@93..95
-                  L_CURLY@93..94 "{"
-                  R_CURLY@94..95 "}"
+              VALUE_ARG@78..95
+                LAMBDA_EXPR@78..95
+                  LAMBDA_PARAM_LIST@78..92
+                    PIPE@78..79 "|"
+                    LAMBDA_PARAM@79..91
+                      IDENT_PAT@79..80
+                        NAME@79..80
+                          IDENT@79..80 "f"
+                      COLON@80..81 ":"
+                      WHITESPACE@81..82 " "
+                      REF_TYPE@82..91
+                        AMP@82..83 "&"
+                        PATH_TYPE@83..91
+                          PATH@83..91
+                            PATH_SEGMENT@83..91
+                              NAME_REF@83..91
+                                IDENT@83..91 "Function"
+                    PIPE@91..92 "|"
+                  WHITESPACE@92..93 " "
+                  BLOCK_EXPR@93..95
+                    L_CURLY@93..94 "{"
+                    R_CURLY@94..95 "}"
               R_PAREN@95..96 ")"
           SEMICOLON@96..97 ";"
         WHITESPACE@97..106 "\n        "
@@ -107,47 +109,49 @@ SOURCE_FILE@0..146
                 PATH_SEGMENT@106..114
                   NAME_REF@106..114
                     IDENT@106..114 "for_each"
-            ARG_LIST@114..136
+            VALUE_ARG_LIST@114..136
               L_PAREN@114..115 "("
-              PATH_EXPR@115..116
-                PATH@115..116
-                  PATH_SEGMENT@115..116
-                    NAME_REF@115..116
-                      IDENT@115..116 "v"
+              VALUE_ARG@115..116
+                PATH_EXPR@115..116
+                  PATH@115..116
+                    PATH_SEGMENT@115..116
+                      NAME_REF@115..116
+                        IDENT@115..116 "v"
               COMMA@116..117 ","
               WHITESPACE@117..118 " "
-              LAMBDA_EXPR@118..135
-                LAMBDA_PARAM_LIST@118..132
-                  PIPE@118..119 "|"
-                  LAMBDA_PARAM@119..124
-                    IDENT_PAT@119..120
-                      NAME@119..120
-                        IDENT@119..120 "i"
-                    COLON@120..121 ":"
-                    WHITESPACE@121..122 " "
-                    PATH_TYPE@122..124
-                      PATH@122..124
-                        PATH_SEGMENT@122..124
-                          NAME_REF@122..124
-                            IDENT@122..124 "u8"
-                  COMMA@124..125 ","
-                  WHITESPACE@125..126 " "
-                  LAMBDA_PARAM@126..131
-                    IDENT_PAT@126..127
-                      NAME@126..127
-                        IDENT@126..127 "g"
-                    COLON@127..128 ":"
-                    WHITESPACE@128..129 " "
-                    PATH_TYPE@129..131
-                      PATH@129..131
-                        PATH_SEGMENT@129..131
-                          NAME_REF@129..131
-                            IDENT@129..131 "u8"
-                  PIPE@131..132 "|"
-                WHITESPACE@132..133 " "
-                BLOCK_EXPR@133..135
-                  L_CURLY@133..134 "{"
-                  R_CURLY@134..135 "}"
+              VALUE_ARG@118..135
+                LAMBDA_EXPR@118..135
+                  LAMBDA_PARAM_LIST@118..132
+                    PIPE@118..119 "|"
+                    LAMBDA_PARAM@119..124
+                      IDENT_PAT@119..120
+                        NAME@119..120
+                          IDENT@119..120 "i"
+                      COLON@120..121 ":"
+                      WHITESPACE@121..122 " "
+                      PATH_TYPE@122..124
+                        PATH@122..124
+                          PATH_SEGMENT@122..124
+                            NAME_REF@122..124
+                              IDENT@122..124 "u8"
+                    COMMA@124..125 ","
+                    WHITESPACE@125..126 " "
+                    LAMBDA_PARAM@126..131
+                      IDENT_PAT@126..127
+                        NAME@126..127
+                          IDENT@126..127 "g"
+                      COLON@127..128 ":"
+                      WHITESPACE@128..129 " "
+                      PATH_TYPE@129..131
+                        PATH@129..131
+                          PATH_SEGMENT@129..131
+                            NAME_REF@129..131
+                              IDENT@129..131 "u8"
+                    PIPE@131..132 "|"
+                  WHITESPACE@132..133 " "
+                  BLOCK_EXPR@133..135
+                    L_CURLY@133..134 "{"
+                    R_CURLY@134..135 "}"
               R_PAREN@135..136 ")"
           SEMICOLON@136..137 ";"
         WHITESPACE@137..142 "\n    "

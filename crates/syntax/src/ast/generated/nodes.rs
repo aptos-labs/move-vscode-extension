@@ -128,25 +128,12 @@ pub struct AndIncludeExpr {
 impl AndIncludeExpr {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ArgList {
-    pub(crate) syntax: SyntaxNode,
-}
-impl ArgList {
-    #[inline]
-    pub fn arg_exprs(&self) -> AstChildren<Expr> { support::children(&self.syntax) }
-    #[inline]
-    pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
-    #[inline]
-    pub fn r_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![')']) }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AssertMacroExpr {
     pub(crate) syntax: SyntaxNode,
 }
 impl AssertMacroExpr {
     #[inline]
-    pub fn arg_list(&self) -> Option<ArgList> { support::child(&self.syntax) }
+    pub fn value_arg_list(&self) -> Option<ValueArgList> { support::child(&self.syntax) }
     #[inline]
     pub fn excl_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![!]) }
     #[inline]
@@ -245,9 +232,9 @@ pub struct CallExpr {
 }
 impl CallExpr {
     #[inline]
-    pub fn arg_list(&self) -> Option<ArgList> { support::child(&self.syntax) }
-    #[inline]
     pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn value_arg_list(&self) -> Option<ValueArgList> { support::child(&self.syntax) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -876,8 +863,6 @@ pub struct MethodCallExpr {
 impl ast::ReferenceElement for MethodCallExpr {}
 impl MethodCallExpr {
     #[inline]
-    pub fn arg_list(&self) -> Option<ArgList> { support::child(&self.syntax) }
-    #[inline]
     pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
     #[inline]
     pub fn receiver_expr(&self) -> Expr {
@@ -885,6 +870,8 @@ impl MethodCallExpr {
     }
     #[inline]
     pub fn type_arg_list(&self) -> Option<TypeArgList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn value_arg_list(&self) -> Option<ValueArgList> { support::child(&self.syntax) }
     #[inline]
     pub fn dot_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![.]) }
     #[inline]
@@ -1747,6 +1734,28 @@ impl ValueAddress {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ValueArg {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ValueArg {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ValueArgList {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ValueArgList {
+    #[inline]
+    pub fn args(&self) -> AstChildren<ValueArg> { support::children(&self.syntax) }
+    #[inline]
+    pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
+    #[inline]
+    pub fn r_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![')']) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Variant {
     pub(crate) syntax: SyntaxNode,
 }
@@ -2303,27 +2312,6 @@ impl AstNode for AndIncludeExpr {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == AND_INCLUDE_EXPR }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode { &self.syntax }
-}
-impl AstNode for ArgList {
-    #[inline]
-    fn kind() -> SyntaxKind
-    where
-        Self: Sized,
-    {
-        ARG_LIST
-    }
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { kind == ARG_LIST }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -4718,6 +4706,48 @@ impl AstNode for ValueAddress {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == VALUE_ADDRESS }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for ValueArg {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        VALUE_ARG
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == VALUE_ARG }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for ValueArgList {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        VALUE_ARG_LIST
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == VALUE_ARG_LIST }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -7778,11 +7808,6 @@ impl std::fmt::Display for AndIncludeExpr {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
-impl std::fmt::Display for ArgList {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self.syntax(), f)
-    }
-}
 impl std::fmt::Display for AssertMacroExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -8349,6 +8374,16 @@ impl std::fmt::Display for UseStmt {
     }
 }
 impl std::fmt::Display for ValueAddress {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for ValueArg {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for ValueArgList {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

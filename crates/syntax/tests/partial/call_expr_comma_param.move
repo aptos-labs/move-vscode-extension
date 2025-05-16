@@ -1,0 +1,5 @@
+module 0x1::call_expr_comma_param {
+    fun main() {
+        call(,2u64);
+    }
+}

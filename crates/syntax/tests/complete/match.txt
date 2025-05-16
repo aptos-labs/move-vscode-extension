@@ -1833,13 +1833,14 @@ SOURCE_FILE@0..2739
                       PATH_SEGMENT@2569..2576
                         NAME_REF@2569..2576
                           IDENT@2569..2576 "consume"
-                  ARG_LIST@2576..2579
+                  VALUE_ARG_LIST@2576..2579
                     L_PAREN@2576..2577 "("
-                    PATH_EXPR@2577..2578
-                      PATH@2577..2578
-                        PATH_SEGMENT@2577..2578
-                          NAME_REF@2577..2578
-                            IDENT@2577..2578 "i"
+                    VALUE_ARG@2577..2578
+                      PATH_EXPR@2577..2578
+                        PATH@2577..2578
+                          PATH_SEGMENT@2577..2578
+                            NAME_REF@2577..2578
+                              IDENT@2577..2578 "i"
                     R_PAREN@2578..2579 ")"
               WHITESPACE@2579..2580 " "
               FAT_ARROW@2580..2582 "=>"
@@ -1933,10 +1934,11 @@ SOURCE_FILE@0..2739
                 PATH_SEGMENT@2721..2726
                   NAME_REF@2721..2726
                     IDENT@2721..2726 "match"
-            ARG_LIST@2726..2729
+            VALUE_ARG_LIST@2726..2729
               L_PAREN@2726..2727 "("
-              LITERAL@2727..2728
-                INT_NUMBER@2727..2728 "1"
+              VALUE_ARG@2727..2728
+                LITERAL@2727..2728
+                  INT_NUMBER@2727..2728 "1"
               R_PAREN@2728..2729 ")"
           SEMICOLON@2729..2730 ";"
         WHITESPACE@2730..2735 "\n    "

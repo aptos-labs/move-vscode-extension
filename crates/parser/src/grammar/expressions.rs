@@ -5,7 +5,7 @@ use crate::grammar::patterns::pattern;
 use crate::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt};
 use crate::grammar::specs::quants::{choose_expr, exists_expr, forall_expr, is_at_quant_kw};
 use crate::grammar::specs::schemas::{apply_schema, global_variable, include_schema, schema_field};
-use crate::grammar::utils::{list, list_with_recover};
+use crate::grammar::utils::{delimited_items_with_recover, list};
 use crate::grammar::{attributes, error_block, name_ref, patterns, type_args, types};
 use crate::parser::{CompletedMarker, Marker, Parser};
 use crate::token_set::TokenSet;
@@ -298,17 +298,19 @@ fn index_expr(p: &mut Parser<'_>, lhs: CompletedMarker) -> CompletedMarker {
 fn arg_list(p: &mut Parser<'_>) {
     assert!(p.at(T!['(']));
     let m = p.start();
-    list_with_recover(
-        p,
-        T!['('],
-        T![')'],
-        T![,],
-        || "expected expression".into(),
-        ts!(T![;], T![let], T!['}']),
-        EXPR_FIRST,
-        |p| expr(p),
-    );
-    m.complete(p, ARG_LIST);
+    p.bump(T!['(']);
+    delimited_items_with_recover(p, T![')'], T![,], ts!(T![;], T![let], T!['}']), VALUE_ARG, |p| {
+        let m = p.start();
+        let is_expr = expr(p);
+        if is_expr {
+            m.complete(p, VALUE_ARG);
+        } else {
+            m.abandon(p);
+        }
+        is_expr
+    });
+    p.expect(T![')']);
+    m.complete(p, VALUE_ARG_LIST);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

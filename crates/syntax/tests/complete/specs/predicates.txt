@@ -233,13 +233,14 @@ SOURCE_FILE@0..1295
                                 NAME_REF@425..432
                                   IDENT@425..432 "Counter"
                         R_ANGLE@432..433 ">"
-                ARG_LIST@433..436
+                VALUE_ARG_LIST@433..436
                   L_PAREN@433..434 "("
-                  PATH_EXPR@434..435
-                    PATH@434..435
-                      PATH_SEGMENT@434..435
-                        NAME_REF@434..435
-                          IDENT@434..435 "a"
+                  VALUE_ARG@434..435
+                    PATH_EXPR@434..435
+                      PATH@434..435
+                        PATH_SEGMENT@434..435
+                          NAME_REF@434..435
+                            IDENT@434..435 "a"
                   R_PAREN@435..436 ")"
               DOT@436..437 "."
               FIELD_REF@437..442
@@ -264,13 +265,14 @@ SOURCE_FILE@0..1295
                   PATH_SEGMENT@475..478
                     NAME_REF@475..478
                       IDENT@475..478 "old"
-              ARG_LIST@478..481
+              VALUE_ARG_LIST@478..481
                 L_PAREN@478..479 "("
-                PATH_EXPR@479..480
-                  PATH@479..480
-                    PATH_SEGMENT@479..480
-                      NAME_REF@479..480
-                        IDENT@479..480 "y"
+                VALUE_ARG@479..480
+                  PATH_EXPR@479..480
+                    PATH@479..480
+                      PATH_SEGMENT@479..480
+                        NAME_REF@479..480
+                          IDENT@479..480 "y"
                 R_PAREN@480..481 ")"
             WHITESPACE@481..482 " "
             L_ANGLE@482..483 "<"
@@ -312,13 +314,14 @@ SOURCE_FILE@0..1295
                       PATH_SEGMENT@552..555
                         NAME_REF@552..555
                           IDENT@552..555 "old"
-                  ARG_LIST@555..558
+                  VALUE_ARG_LIST@555..558
                     L_PAREN@555..556 "("
-                    PATH_EXPR@556..557
-                      PATH@556..557
-                        PATH_SEGMENT@556..557
-                          NAME_REF@556..557
-                            IDENT@556..557 "x"
+                    VALUE_ARG@556..557
+                      PATH_EXPR@556..557
+                        PATH@556..557
+                          PATH_SEGMENT@556..557
+                            NAME_REF@556..557
+                              IDENT@556..557 "x"
                     R_PAREN@557..558 ")"
               WHITESPACE@558..559 " "
               PLUS@559..560 "+"
@@ -624,53 +627,55 @@ SOURCE_FILE@0..1295
                 PATH_SEGMENT@987..990
                   NAME_REF@987..990
                     IDENT@987..990 "all"
-            ARG_LIST@990..1011
+            VALUE_ARG_LIST@990..1011
               L_PAREN@990..991 "("
-              PATH_EXPR@991..992
-                PATH@991..992
-                  PATH_SEGMENT@991..992
-                    NAME_REF@991..992
-                      IDENT@991..992 "x"
+              VALUE_ARG@991..992
+                PATH_EXPR@991..992
+                  PATH@991..992
+                    PATH_SEGMENT@991..992
+                      NAME_REF@991..992
+                        IDENT@991..992 "x"
               COMMA@992..993 ","
               WHITESPACE@993..994 " "
-              BIN_EXPR@994..1010
-                BIN_EXPR@994..1006
-                  LAMBDA_EXPR@994..1002
-                    LAMBDA_PARAM_LIST@994..1000
-                      PIPE@994..995 "|"
-                      LAMBDA_PARAM@995..996
-                        IDENT_PAT@995..996
-                          NAME@995..996
-                            IDENT@995..996 "y"
-                      COMMA@996..997 ","
-                      WHITESPACE@997..998 " "
-                      LAMBDA_PARAM@998..999
-                        IDENT_PAT@998..999
-                          NAME@998..999
-                            IDENT@998..999 "z"
-                      PIPE@999..1000 "|"
-                    WHITESPACE@1000..1001 " "
-                    PATH_EXPR@1001..1002
-                      PATH@1001..1002
-                        PATH_SEGMENT@1001..1002
-                          NAME_REF@1001..1002
-                            IDENT@1001..1002 "x"
-                  WHITESPACE@1002..1003 " "
-                  PLUS@1003..1004 "+"
-                  WHITESPACE@1004..1005 " "
-                  PATH_EXPR@1005..1006
-                    PATH@1005..1006
-                      PATH_SEGMENT@1005..1006
-                        NAME_REF@1005..1006
-                          IDENT@1005..1006 "y"
-                WHITESPACE@1006..1007 " "
-                PLUS@1007..1008 "+"
-                WHITESPACE@1008..1009 " "
-                PATH_EXPR@1009..1010
-                  PATH@1009..1010
-                    PATH_SEGMENT@1009..1010
-                      NAME_REF@1009..1010
-                        IDENT@1009..1010 "z"
+              VALUE_ARG@994..1010
+                BIN_EXPR@994..1010
+                  BIN_EXPR@994..1006
+                    LAMBDA_EXPR@994..1002
+                      LAMBDA_PARAM_LIST@994..1000
+                        PIPE@994..995 "|"
+                        LAMBDA_PARAM@995..996
+                          IDENT_PAT@995..996
+                            NAME@995..996
+                              IDENT@995..996 "y"
+                        COMMA@996..997 ","
+                        WHITESPACE@997..998 " "
+                        LAMBDA_PARAM@998..999
+                          IDENT_PAT@998..999
+                            NAME@998..999
+                              IDENT@998..999 "z"
+                        PIPE@999..1000 "|"
+                      WHITESPACE@1000..1001 " "
+                      PATH_EXPR@1001..1002
+                        PATH@1001..1002
+                          PATH_SEGMENT@1001..1002
+                            NAME_REF@1001..1002
+                              IDENT@1001..1002 "x"
+                    WHITESPACE@1002..1003 " "
+                    PLUS@1003..1004 "+"
+                    WHITESPACE@1004..1005 " "
+                    PATH_EXPR@1005..1006
+                      PATH@1005..1006
+                        PATH_SEGMENT@1005..1006
+                          NAME_REF@1005..1006
+                            IDENT@1005..1006 "y"
+                  WHITESPACE@1006..1007 " "
+                  PLUS@1007..1008 "+"
+                  WHITESPACE@1008..1009 " "
+                  PATH_EXPR@1009..1010
+                    PATH@1009..1010
+                      PATH_SEGMENT@1009..1010
+                        NAME_REF@1009..1010
+                          IDENT@1009..1010 "z"
               R_PAREN@1010..1011 ")"
           SEMICOLON@1011..1012 ";"
         WHITESPACE@1012..1021 "\n        "

@@ -29,7 +29,7 @@ impl SyntaxFactory {
         receiver: ast::Expr,
         name_ref: ast::NameRef,
         type_arg_list: Option<ast::TypeArgList>,
-        arg_list: ast::ArgList,
+        arg_list: ast::ValueArgList,
     ) -> ast::Expr {
         let type_arg_list = type_arg_list
             .map(|it| format!("::{it}"))

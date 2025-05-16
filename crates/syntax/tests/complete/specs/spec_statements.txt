@@ -264,27 +264,29 @@ SOURCE_FILE@0..910
                             NAME_REF@453..459
                               IDENT@453..459 "Window"
                     R_ANGLE@459..460 ">"
-            ARG_LIST@460..495
+            VALUE_ARG_LIST@460..495
               L_PAREN@460..461 "("
-              CALL_EXPR@461..494
-                PATH_EXPR@461..484
-                  PATH@461..484
-                    PATH@461..467
-                      PATH_SEGMENT@461..467
-                        NAME_REF@461..467
-                          IDENT@461..467 "Signer"
-                    COLON_COLON@467..469 "::"
-                    PATH_SEGMENT@469..484
-                      NAME_REF@469..484
-                        IDENT@469..484 "spec_address_of"
-                ARG_LIST@484..494
-                  L_PAREN@484..485 "("
-                  PATH_EXPR@485..493
-                    PATH@485..493
-                      PATH_SEGMENT@485..493
-                        NAME_REF@485..493
-                          IDENT@485..493 "to_limit"
-                  R_PAREN@493..494 ")"
+              VALUE_ARG@461..494
+                CALL_EXPR@461..494
+                  PATH_EXPR@461..484
+                    PATH@461..484
+                      PATH@461..467
+                        PATH_SEGMENT@461..467
+                          NAME_REF@461..467
+                            IDENT@461..467 "Signer"
+                      COLON_COLON@467..469 "::"
+                      PATH_SEGMENT@469..484
+                        NAME_REF@469..484
+                          IDENT@469..484 "spec_address_of"
+                  VALUE_ARG_LIST@484..494
+                    L_PAREN@484..485 "("
+                    VALUE_ARG@485..493
+                      PATH_EXPR@485..493
+                        PATH@485..493
+                          PATH_SEGMENT@485..493
+                            NAME_REF@485..493
+                              IDENT@485..493 "to_limit"
+                    R_PAREN@493..494 ")"
               R_PAREN@494..495 ")"
           SEMICOLON@495..496 ";"
         WHITESPACE@496..505 "\n        "
@@ -306,27 +308,29 @@ SOURCE_FILE@0..910
                             NAME_REF@522..528
                               IDENT@522..528 "Window"
                     R_ANGLE@528..529 ">"
-            ARG_LIST@529..564
+            VALUE_ARG_LIST@529..564
               L_PAREN@529..530 "("
-              CALL_EXPR@530..563
-                PATH_EXPR@530..553
-                  PATH@530..553
-                    PATH@530..536
-                      PATH_SEGMENT@530..536
-                        NAME_REF@530..536
-                          IDENT@530..536 "Signer"
-                    COLON_COLON@536..538 "::"
-                    PATH_SEGMENT@538..553
-                      NAME_REF@538..553
-                        IDENT@538..553 "spec_address_of"
-                ARG_LIST@553..563
-                  L_PAREN@553..554 "("
-                  PATH_EXPR@554..562
-                    PATH@554..562
-                      PATH_SEGMENT@554..562
-                        NAME_REF@554..562
-                          IDENT@554..562 "to_limit"
-                  R_PAREN@562..563 ")"
+              VALUE_ARG@530..563
+                CALL_EXPR@530..563
+                  PATH_EXPR@530..553
+                    PATH@530..553
+                      PATH@530..536
+                        PATH_SEGMENT@530..536
+                          NAME_REF@530..536
+                            IDENT@530..536 "Signer"
+                      COLON_COLON@536..538 "::"
+                      PATH_SEGMENT@538..553
+                        NAME_REF@538..553
+                          IDENT@538..553 "spec_address_of"
+                  VALUE_ARG_LIST@553..563
+                    L_PAREN@553..554 "("
+                    VALUE_ARG@554..562
+                      PATH_EXPR@554..562
+                        PATH@554..562
+                          PATH_SEGMENT@554..562
+                            NAME_REF@554..562
+                              IDENT@554..562 "to_limit"
+                    R_PAREN@562..563 ")"
               R_PAREN@563..564 ")"
           SEMICOLON@564..565 ";"
         WHITESPACE@565..575 "\n\n        "
@@ -387,13 +391,14 @@ SOURCE_FILE@0..910
                             NAME_REF@675..683
                               IDENT@675..683 "CoinType"
                     R_ANGLE@683..684 ">"
-            ARG_LIST@684..690
+            VALUE_ARG_LIST@684..690
               L_PAREN@684..685 "("
-              LITERAL@685..689
-                ADDRESS_LIT@685..689
-                  AT@685..686 "@"
-                  VALUE_ADDRESS@686..689
-                    INT_NUMBER@686..689 "0x1"
+              VALUE_ARG@685..689
+                LITERAL@685..689
+                  ADDRESS_LIT@685..689
+                    AT@685..686 "@"
+                    VALUE_ADDRESS@686..689
+                      INT_NUMBER@686..689 "0x1"
               R_PAREN@689..690 ")"
           SEMICOLON@690..691 ";"
         WHITESPACE@691..700 "\n        "
@@ -415,53 +420,54 @@ SOURCE_FILE@0..910
                   PATH_SEGMENT@718..723
                     NAME_REF@718..723
                       IDENT@718..723 "TRACE"
-              ARG_LIST@723..761
+              VALUE_ARG_LIST@723..761
                 L_PAREN@723..724 "("
-                CHOOSE_EXPR@724..760
-                  CHOOSE_KW@724..730 "choose"
-                  WHITESPACE@730..731 " "
-                  QUANT_BINDING_LIST@731..737
-                    QUANT_BINDING@731..737
-                      IDENT_PAT@731..732
-                        NAME@731..732
-                          IDENT@731..732 "x"
-                      COLON@732..733 ":"
-                      WHITESPACE@733..734 " "
-                      PATH_TYPE@734..737
-                        PATH@734..737
-                          PATH_SEGMENT@734..737
-                            NAME_REF@734..737
-                              IDENT@734..737 "u64"
-                  WHITESPACE@737..738 " "
-                  WHERE_EXPR@738..760
-                    WHERE_KW@738..743 "where"
-                    WHITESPACE@743..744 " "
-                    BIN_EXPR@744..760
-                      BIN_EXPR@744..750
-                        PATH_EXPR@744..745
-                          PATH@744..745
-                            PATH_SEGMENT@744..745
-                              NAME_REF@744..745
-                                IDENT@744..745 "x"
-                        WHITESPACE@745..746 " "
-                        GT_EQ@746..748 ">="
-                        WHITESPACE@748..749 " "
-                        LITERAL@749..750
-                          INT_NUMBER@749..750 "4"
-                      WHITESPACE@750..751 " "
-                      AMP_AMP@751..753 "&&"
-                      WHITESPACE@753..754 " "
-                      BIN_EXPR@754..760
-                        PATH_EXPR@754..755
-                          PATH@754..755
-                            PATH_SEGMENT@754..755
-                              NAME_REF@754..755
-                                IDENT@754..755 "x"
-                        WHITESPACE@755..756 " "
-                        LT_EQ@756..758 "<="
-                        WHITESPACE@758..759 " "
-                        LITERAL@759..760
-                          INT_NUMBER@759..760 "5"
+                VALUE_ARG@724..760
+                  CHOOSE_EXPR@724..760
+                    CHOOSE_KW@724..730 "choose"
+                    WHITESPACE@730..731 " "
+                    QUANT_BINDING_LIST@731..737
+                      QUANT_BINDING@731..737
+                        IDENT_PAT@731..732
+                          NAME@731..732
+                            IDENT@731..732 "x"
+                        COLON@732..733 ":"
+                        WHITESPACE@733..734 " "
+                        PATH_TYPE@734..737
+                          PATH@734..737
+                            PATH_SEGMENT@734..737
+                              NAME_REF@734..737
+                                IDENT@734..737 "u64"
+                    WHITESPACE@737..738 " "
+                    WHERE_EXPR@738..760
+                      WHERE_KW@738..743 "where"
+                      WHITESPACE@743..744 " "
+                      BIN_EXPR@744..760
+                        BIN_EXPR@744..750
+                          PATH_EXPR@744..745
+                            PATH@744..745
+                              PATH_SEGMENT@744..745
+                                NAME_REF@744..745
+                                  IDENT@744..745 "x"
+                          WHITESPACE@745..746 " "
+                          GT_EQ@746..748 ">="
+                          WHITESPACE@748..749 " "
+                          LITERAL@749..750
+                            INT_NUMBER@749..750 "4"
+                        WHITESPACE@750..751 " "
+                        AMP_AMP@751..753 "&&"
+                        WHITESPACE@753..754 " "
+                        BIN_EXPR@754..760
+                          PATH_EXPR@754..755
+                            PATH@754..755
+                              PATH_SEGMENT@754..755
+                                NAME_REF@754..755
+                                  IDENT@754..755 "x"
+                          WHITESPACE@755..756 " "
+                          LT_EQ@756..758 "<="
+                          WHITESPACE@758..759 " "
+                          LITERAL@759..760
+                            INT_NUMBER@759..760 "5"
                 R_PAREN@760..761 ")"
           SEMICOLON@761..762 ";"
         WHITESPACE@762..772 "\n\n        "

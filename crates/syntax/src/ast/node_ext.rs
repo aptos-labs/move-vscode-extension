@@ -50,6 +50,7 @@ mod struct_pat;
 pub mod struct_pat_field;
 pub mod syntax_node;
 pub mod type_;
+mod value_arg_list;
 mod vector_lit_expr;
 pub mod visibility;
 

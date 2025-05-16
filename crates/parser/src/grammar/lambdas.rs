@@ -1,4 +1,4 @@
-use crate::grammar::utils::list_with_recover_inner;
+use crate::grammar::utils::delimited_items_with_recover;
 use crate::grammar::{patterns, types};
 use crate::SyntaxKind::*;
 use crate::{ts, Parser, T};
@@ -11,24 +11,8 @@ pub(crate) fn lambda_param_list(p: &mut Parser) -> bool {
         return false;
     }
 
-    list_with_recover_inner(p, T![|], T![,], ts!(), lambda_param);
+    delimited_items_with_recover(p, T![|], T![,], ts!(), LAMBDA_PARAM, lambda_param);
 
-    // delimited(
-    //     p,
-    //     T![,],
-    //     || "expected parameter".into(),
-    //     |p| p.at(T![|]),
-    //     ts!(IDENT, T!['_']),
-    //     |p| {
-    //         let m = p.start();
-    //         patterns::pattern(p);
-    //         if p.at(T![:]) {
-    //             types::ascription(p);
-    //         }
-    //         m.complete(p, LAMBDA_PARAM);
-    //         true
-    //     },
-    // );
     if !p.eat(T![|]) {
         list_marker.abandon_with_rollback(p);
         return false;

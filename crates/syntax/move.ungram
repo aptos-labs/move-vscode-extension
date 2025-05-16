@@ -350,13 +350,13 @@ MatchGuard =
     'if' Expr
 
 CallExpr =
-    Expr ArgList
+    Expr ValueArgList
 
 MethodCallExpr =
-    receiver_expr:Expr '.' NameRef ('::' TypeArgList)? ArgList
+    receiver_expr:Expr '.' NameRef ('::' TypeArgList)? ValueArgList
 
 AssertMacroExpr =
-    'ident' '!' ArgList
+    'ident' '!' ValueArgList
 
 RangeExpr =
     start_expr:Expr '..' end_expr:Expr
@@ -370,8 +370,11 @@ TupleExpr =
 MethodOrPath =
     MethodCallExpr | Path
 
-ArgList =
-    '(' arg_exprs:(Expr (',' Expr)* ','?)? ')'
+ValueArgList =
+    '(' args:(ValueArg (',' ValueArg)* ','?)? ')'
+
+ValueArg =
+    Expr
 
 PathExpr =
     Path
