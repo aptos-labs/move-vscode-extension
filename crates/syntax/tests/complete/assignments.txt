@@ -82,7 +82,7 @@ SOURCE_FILE@0..168
                     PATH_SEGMENT@101..105
                       NAME_REF@101..105
                         IDENT@101..105 "call"
-                ARG_LIST@105..107
+                VALUE_ARG_LIST@105..107
                   L_PAREN@105..106 "("
                   R_PAREN@106..107 ")"
               DOT@107..108 "."
@@ -106,7 +106,7 @@ SOURCE_FILE@0..168
                       PATH_SEGMENT@131..135
                         NAME_REF@131..135
                           IDENT@131..135 "call"
-                  ARG_LIST@135..137
+                  VALUE_ARG_LIST@135..137
                     L_PAREN@135..136 "("
                     R_PAREN@136..137 ")"
                 DOT@137..138 "."
@@ -116,7 +116,7 @@ SOURCE_FILE@0..168
               DOT@146..147 "."
               NAME_REF@147..151
                 IDENT@147..151 "main"
-              ARG_LIST@151..153
+              VALUE_ARG_LIST@151..153
                 L_PAREN@151..152 "("
                 R_PAREN@152..153 ")"
             WHITESPACE@153..154 " "

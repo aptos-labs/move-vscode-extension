@@ -122,7 +122,7 @@ SOURCE_FILE@0..225
                 PATH_SEGMENT@210..213
                   NAME_REF@210..213
                     IDENT@210..213 "add"
-            ARG_LIST@213..215
+            VALUE_ARG_LIST@213..215
               L_PAREN@213..214 "("
               R_PAREN@214..215 ")"
           SEMICOLON@215..216 ";"

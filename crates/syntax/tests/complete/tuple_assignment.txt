@@ -59,7 +59,7 @@ SOURCE_FILE@0..89
                                 NAME_REF@61..73
                                   IDENT@61..73 "CallCoinType"
                         R_ANGLE@73..74 ">"
-                ARG_LIST@74..76
+                VALUE_ARG_LIST@74..76
                   L_PAREN@74..75 "("
                   R_PAREN@75..76 ")"
               COMMA@76..77 ","

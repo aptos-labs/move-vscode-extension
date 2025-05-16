@@ -110,13 +110,14 @@ SOURCE_FILE@0..228
                         PATH_SEGMENT@201..211
                           NAME_REF@201..211
                             IDENT@201..211 "address_of"
-                    ARG_LIST@211..216
+                    VALUE_ARG_LIST@211..216
                       L_PAREN@211..212 "("
-                      PATH_EXPR@212..215
-                        PATH@212..215
-                          PATH_SEGMENT@212..215
-                            NAME_REF@212..215
-                              IDENT@212..215 "acc"
+                      VALUE_ARG@212..215
+                        PATH_EXPR@212..215
+                          PATH@212..215
+                            PATH_SEGMENT@212..215
+                              NAME_REF@212..215
+                                IDENT@212..215 "acc"
                       R_PAREN@215..216 ")"
                 WHITESPACE@216..217 " "
                 R_CURLY@217..218 "}"

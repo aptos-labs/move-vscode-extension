@@ -30,7 +30,7 @@ pub(crate) fn can_be_replaced_with_method_call(
     let self_param = fun.value.self_param()?;
     let self_param_type = self_param.type_()?;
 
-    let first_arg_expr = call_expr.value.args().first()?.to_owned();
+    let first_arg_expr = call_expr.value.arg_exprs().first()?.to_owned()?;
     let first_arg_ty = ctx
         .sema
         .get_expr_type(&first_arg_expr.in_file(call_expr.file_id), false)?;
@@ -81,7 +81,7 @@ fn fixes(
     let make = SyntaxFactory::new();
     let mut builder = SourceChangeBuilder::new(file_id);
 
-    let mut receiver_expr = call_expr.args().first()?.to_owned();
+    let mut receiver_expr = call_expr.arg_exprs().first()?.to_owned()?;
     if receiver_expr.syntax().kind() == BORROW_EXPR {
         receiver_expr = receiver_expr.borrow_expr().unwrap().expr()?;
     }
@@ -98,7 +98,16 @@ fn fixes(
         }
     }
 
-    let method_args = call_expr.args().clone().into_iter().skip(1).collect::<Vec<_>>();
+    let method_args = call_expr
+        .arg_exprs()
+        .clone()
+        .into_iter()
+        .skip(1)
+        .collect::<Vec<_>>();
+    if method_args.iter().any(|it| it.is_none()) {
+        return None;
+    }
+    let method_args = method_args.into_iter().map(|it| it.unwrap()).collect::<Vec<_>>();
     let method_arg_list = make.arg_list(method_args);
 
     let type_arg_list = call_expr.path()?.segment().and_then(|it| it.type_arg_list());

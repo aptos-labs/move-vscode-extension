@@ -1725,3 +1725,17 @@ fn test_bit_shift_requires_u8() {
         }
     "#]]);
 }
+
+#[test]
+fn test_comma_separator_allows_correctly_get_call_expr_type() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun call(a: u64, b: u8) {}
+            fun main() {
+                call(,2u64);
+                    //^^^^ err: Incompatible type 'u64', expected 'u8'
+            }
+        }
+    "#]]);
+}

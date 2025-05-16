@@ -41,7 +41,7 @@ fn try_extend_selection(root: &SyntaxNode, frange: FileRange) -> Option<TextRang
         TYPE_ARG_LIST,
         // TYPE_BOUND_LIST,
         PARAM_LIST,
-        ARG_LIST,
+        VALUE_ARG_LIST,
         VECTOR_LIT_EXPR,
         TUPLE_EXPR,
         TUPLE_TYPE,

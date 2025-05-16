@@ -29,7 +29,7 @@ SOURCE_FILE@0..137
                 PATH_SEGMENT@53..57
                   NAME_REF@53..57
                     IDENT@53..57 "call"
-            ARG_LIST@57..59
+            VALUE_ARG_LIST@57..59
               L_PAREN@57..58 "("
               R_PAREN@58..59 ")"
           SEMICOLON@59..60 ";"
@@ -57,7 +57,7 @@ SOURCE_FILE@0..137
             DOT@87..88 "."
             NAME_REF@88..92
               IDENT@88..92 "call"
-            ARG_LIST@92..94
+            VALUE_ARG_LIST@92..94
               L_PAREN@92..93 "("
               R_PAREN@93..94 ")"
           SEMICOLON@94..95 ";"

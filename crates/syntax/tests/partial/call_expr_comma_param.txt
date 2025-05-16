@@ -1,0 +1,45 @@
+SOURCE_FILE@0..82
+  MODULE@0..81
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..33
+      IDENT@12..33 "call_expr_comma_param"
+    WHITESPACE@33..34 " "
+    L_CURLY@34..35 "{"
+    WHITESPACE@35..40 "\n    "
+    FUN@40..79
+      FUN_KW@40..43 "fun"
+      WHITESPACE@43..44 " "
+      NAME@44..48
+        IDENT@44..48 "main"
+      PARAM_LIST@48..50
+        L_PAREN@48..49 "("
+        R_PAREN@49..50 ")"
+      WHITESPACE@50..51 " "
+      BLOCK_EXPR@51..79
+        L_CURLY@51..52 "{"
+        WHITESPACE@52..61 "\n        "
+        EXPR_STMT@61..73
+          CALL_EXPR@61..72
+            PATH_EXPR@61..65
+              PATH@61..65
+                PATH_SEGMENT@61..65
+                  NAME_REF@61..65
+                    IDENT@61..65 "call"
+            VALUE_ARG_LIST@65..72
+              L_PAREN@65..66 "("
+              VALUE_ARG@66..66
+              COMMA@66..67 ","
+              VALUE_ARG@67..71
+                LITERAL@67..71
+                  INT_NUMBER@67..71 "2u64"
+              R_PAREN@71..72 ")"
+          SEMICOLON@72..73 ";"
+        WHITESPACE@73..78 "\n    "
+        R_CURLY@78..79 "}"
+    WHITESPACE@79..80 "\n"
+    R_CURLY@80..81 "}"
+  WHITESPACE@81..82 "\n"

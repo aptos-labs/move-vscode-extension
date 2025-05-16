@@ -37,20 +37,22 @@ SOURCE_FILE@0..110
                   NAME_REF@71..85
                     IDENT@71..85 "settle_trade_f"
               R_PAREN@85..86 ")"
-            ARG_LIST@86..100
+            VALUE_ARG_LIST@86..100
               L_PAREN@86..87 "("
-              PATH_EXPR@87..92
-                PATH@87..92
-                  PATH_SEGMENT@87..92
-                    NAME_REF@87..92
-                      IDENT@87..92 "taker"
+              VALUE_ARG@87..92
+                PATH_EXPR@87..92
+                  PATH@87..92
+                    PATH_SEGMENT@87..92
+                      NAME_REF@87..92
+                        IDENT@87..92 "taker"
               COMMA@92..93 ","
               WHITESPACE@93..94 " "
-              PATH_EXPR@94..99
-                PATH@94..99
-                  PATH_SEGMENT@94..99
-                    NAME_REF@94..99
-                      IDENT@94..99 "maker"
+              VALUE_ARG@94..99
+                PATH_EXPR@94..99
+                  PATH@94..99
+                    PATH_SEGMENT@94..99
+                      NAME_REF@94..99
+                        IDENT@94..99 "maker"
               R_PAREN@99..100 ")"
           SEMICOLON@100..101 ";"
         WHITESPACE@101..106 "\n    "

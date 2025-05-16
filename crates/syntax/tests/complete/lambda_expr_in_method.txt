@@ -32,36 +32,37 @@ SOURCE_FILE@0..97
             DOT@65..66 "."
             NAME_REF@66..69
               IDENT@66..69 "add"
-            ARG_LIST@69..87
+            VALUE_ARG_LIST@69..87
               L_PAREN@69..70 "("
-              LAMBDA_EXPR@70..86
-                LAMBDA_PARAM_LIST@70..76
-                  PIPE@70..71 "|"
-                  LAMBDA_PARAM@71..72
-                    IDENT_PAT@71..72
-                      NAME@71..72
-                        IDENT@71..72 "a"
-                  COMMA@72..73 ","
-                  WHITESPACE@73..74 " "
-                  LAMBDA_PARAM@74..75
-                    IDENT_PAT@74..75
-                      NAME@74..75
-                        IDENT@74..75 "b"
-                  PIPE@75..76 "|"
-                WHITESPACE@76..77 " "
-                BLOCK_EXPR@77..86
-                  L_CURLY@77..78 "{"
-                  WHITESPACE@78..79 " "
-                  BIN_EXPR@79..84
-                    LITERAL@79..80
-                      INT_NUMBER@79..80 "1"
-                    WHITESPACE@80..81 " "
-                    PLUS@81..82 "+"
-                    WHITESPACE@82..83 " "
-                    LITERAL@83..84
-                      INT_NUMBER@83..84 "1"
-                  WHITESPACE@84..85 " "
-                  R_CURLY@85..86 "}"
+              VALUE_ARG@70..86
+                LAMBDA_EXPR@70..86
+                  LAMBDA_PARAM_LIST@70..76
+                    PIPE@70..71 "|"
+                    LAMBDA_PARAM@71..72
+                      IDENT_PAT@71..72
+                        NAME@71..72
+                          IDENT@71..72 "a"
+                    COMMA@72..73 ","
+                    WHITESPACE@73..74 " "
+                    LAMBDA_PARAM@74..75
+                      IDENT_PAT@74..75
+                        NAME@74..75
+                          IDENT@74..75 "b"
+                    PIPE@75..76 "|"
+                  WHITESPACE@76..77 " "
+                  BLOCK_EXPR@77..86
+                    L_CURLY@77..78 "{"
+                    WHITESPACE@78..79 " "
+                    BIN_EXPR@79..84
+                      LITERAL@79..80
+                        INT_NUMBER@79..80 "1"
+                      WHITESPACE@80..81 " "
+                      PLUS@81..82 "+"
+                      WHITESPACE@82..83 " "
+                      LITERAL@83..84
+                        INT_NUMBER@83..84 "1"
+                    WHITESPACE@84..85 " "
+                    R_CURLY@85..86 "}"
               R_PAREN@86..87 ")"
           SEMICOLON@87..88 ";"
         WHITESPACE@88..93 "\n    "

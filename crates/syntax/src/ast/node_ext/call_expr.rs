@@ -6,9 +6,7 @@ impl ast::CallExpr {
         Some(path)
     }
 
-    pub fn args(&self) -> Vec<ast::Expr> {
-        self.arg_list()
-            .map(|it| it.arg_exprs().collect())
-            .unwrap_or_default()
+    pub fn arg_exprs(&self) -> Vec<Option<ast::Expr>> {
+        self.value_arg_list().map(|it| it.arg_exprs()).unwrap_or_default()
     }
 }

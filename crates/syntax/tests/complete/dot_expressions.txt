@@ -69,7 +69,7 @@ SOURCE_FILE@0..313
             DOT@107..108 "."
             NAME_REF@108..121
               IDENT@108..121 "receiver_func"
-            ARG_LIST@121..123
+            VALUE_ARG_LIST@121..123
               L_PAREN@121..122 "("
               R_PAREN@122..123 ")"
           SEMICOLON@123..124 ";"
@@ -89,7 +89,7 @@ SOURCE_FILE@0..313
             DOT@142..143 "."
             NAME_REF@143..147
               IDENT@143..147 "call"
-            ARG_LIST@147..149
+            VALUE_ARG_LIST@147..149
               L_PAREN@147..148 "("
               R_PAREN@148..149 ")"
           SEMICOLON@149..150 ";"
@@ -114,7 +114,7 @@ SOURCE_FILE@0..313
                       NAME_REF@171..172
                         IDENT@171..172 "T"
               R_ANGLE@172..173 ">"
-            ARG_LIST@173..175
+            VALUE_ARG_LIST@173..175
               L_PAREN@173..174 "("
               R_PAREN@174..175 ")"
           SEMICOLON@175..176 ";"
@@ -147,7 +147,7 @@ SOURCE_FILE@0..313
                       NAME_REF@199..200
                         IDENT@199..200 "U"
               R_ANGLE@200..201 ">"
-            ARG_LIST@201..203
+            VALUE_ARG_LIST@201..203
               L_PAREN@201..202 "("
               R_PAREN@202..203 ")"
           SEMICOLON@203..204 ";"
@@ -182,7 +182,7 @@ SOURCE_FILE@0..313
                       NAME_REF@236..238
                         IDENT@236..238 "u8"
               R_ANGLE@238..239 ">"
-            ARG_LIST@239..241
+            VALUE_ARG_LIST@239..241
               L_PAREN@239..240 "("
               R_PAREN@240..241 ")"
           SEMICOLON@241..242 ";"

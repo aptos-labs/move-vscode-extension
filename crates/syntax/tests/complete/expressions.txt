@@ -309,13 +309,14 @@ SOURCE_FILE@0..540
                     PATH_SEGMENT@376..379
                       NAME_REF@376..379
                         IDENT@376..379 "len"
-                ARG_LIST@379..383
+                VALUE_ARG_LIST@379..383
                   L_PAREN@379..380 "("
-                  PATH_EXPR@380..382
-                    PATH@380..382
-                      PATH_SEGMENT@380..382
-                        NAME_REF@380..382
-                          IDENT@380..382 "v2"
+                  VALUE_ARG@380..382
+                    PATH_EXPR@380..382
+                      PATH@380..382
+                        PATH_SEGMENT@380..382
+                          NAME_REF@380..382
+                            IDENT@380..382 "v2"
                   R_PAREN@382..383 ")"
             R_BRACK@383..384 "]"
           SEMICOLON@384..385 ";"

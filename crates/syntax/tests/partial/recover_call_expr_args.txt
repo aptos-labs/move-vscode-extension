@@ -29,7 +29,7 @@ SOURCE_FILE@0..124
                 PATH_SEGMENT@62..66
                   NAME_REF@62..66
                     IDENT@62..66 "call"
-            ARG_LIST@66..67
+            VALUE_ARG_LIST@66..67
               L_PAREN@66..67 "("
           SEMICOLON@67..68 ";"
         WHITESPACE@68..77 "\n        "
@@ -40,7 +40,7 @@ SOURCE_FILE@0..124
                 PATH_SEGMENT@77..81
                   NAME_REF@77..81
                     IDENT@77..81 "call"
-            ARG_LIST@81..82
+            VALUE_ARG_LIST@81..82
               L_PAREN@81..82 "("
         WHITESPACE@82..91 "\n        "
         LET_STMT@91..101
@@ -62,7 +62,7 @@ SOURCE_FILE@0..124
               PATH_SEGMENT@110..114
                 NAME_REF@110..114
                   IDENT@110..114 "call"
-          ARG_LIST@114..115
+          VALUE_ARG_LIST@114..115
             L_PAREN@114..115 "("
         WHITESPACE@115..120 "\n    "
         R_CURLY@120..121 "}"

@@ -29,7 +29,7 @@ SOURCE_FILE@0..112
                 PATH_SEGMENT@50..54
                   NAME_REF@50..54
                     IDENT@50..54 "call"
-            ARG_LIST@54..56
+            VALUE_ARG_LIST@54..56
               L_PAREN@54..55 "("
               R_PAREN@55..56 ")"
           SEMICOLON@56..57 ";"
@@ -44,7 +44,7 @@ SOURCE_FILE@0..112
             DOT@67..68 "."
             NAME_REF@68..74
               IDENT@68..74 "method"
-            ARG_LIST@74..76
+            VALUE_ARG_LIST@74..76
               L_PAREN@74..75 "("
               R_PAREN@75..76 ")"
           SEMICOLON@76..77 ";"
@@ -69,7 +69,7 @@ SOURCE_FILE@0..112
                       NAME_REF@97..99
                         IDENT@97..99 "u8"
               R_ANGLE@99..100 ">"
-            ARG_LIST@100..102
+            VALUE_ARG_LIST@100..102
               L_PAREN@100..101 "("
               R_PAREN@101..102 ")"
           SEMICOLON@102..103 ";"

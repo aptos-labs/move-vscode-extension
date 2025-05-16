@@ -212,10 +212,11 @@ SOURCE_FILE@0..445
                 PATH_SEGMENT@294..295
                   NAME_REF@294..295
                     IDENT@294..295 "S"
-            ARG_LIST@295..299
+            VALUE_ARG_LIST@295..299
               L_PAREN@295..296 "("
-              LITERAL@296..298
-                INT_NUMBER@296..298 "42"
+              VALUE_ARG@296..298
+                LITERAL@296..298
+                  INT_NUMBER@296..298 "42"
               R_PAREN@298..299 ")"
           SEMICOLON@299..300 ";"
         WHITESPACE@300..309 "\n        "
@@ -239,14 +240,16 @@ SOURCE_FILE@0..445
                 PATH_SEGMENT@320..321
                   NAME_REF@320..321
                     IDENT@320..321 "V"
-            ARG_LIST@321..331
+            VALUE_ARG_LIST@321..331
               L_PAREN@321..322 "("
-              LITERAL@322..326
-                TRUE_KW@322..326 "true"
+              VALUE_ARG@322..326
+                LITERAL@322..326
+                  TRUE_KW@322..326 "true"
               COMMA@326..327 ","
               WHITESPACE@327..328 " "
-              LITERAL@328..330
-                INT_NUMBER@328..330 "42"
+              VALUE_ARG@328..330
+                LITERAL@328..330
+                  INT_NUMBER@328..330 "42"
               R_PAREN@330..331 ")"
           SEMICOLON@331..332 ";"
         WHITESPACE@332..337 "\n    "

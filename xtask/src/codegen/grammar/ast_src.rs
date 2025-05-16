@@ -256,7 +256,8 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "TYPE_PARAM",
         "TYPE_ARG_LIST",
         "TYPE_ARG",
-        "ARG_LIST",
+        "VALUE_ARG_LIST",
+        "VALUE_ARG",
         "PARAM_LIST",
         "PARAM",
         "ACQUIRES",
@@ -299,6 +300,7 @@ pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     // ("Path", &["segment"]),  - invalid
     ("PathAddress", &["value_address"]),
     ("Name", &["ident"]),
+    // ("ValueArg", &["expr"]),  - invalid
     ("Ability", &["ident"]),
     ("NameRef", &["ident"]),
     ("NamedAddress", &["ident"]),

@@ -114,21 +114,23 @@ SOURCE_FILE@0..183
           ASSERT_MACRO_EXPR@158..173
             IDENT@158..164 "assert"
             BANG@164..165 "!"
-            ARG_LIST@165..173
+            VALUE_ARG_LIST@165..173
               L_PAREN@165..166 "("
-              CALL_EXPR@166..172
-                PATH_EXPR@166..167
-                  PATH@166..167
-                    PATH_SEGMENT@166..167
-                      NAME_REF@166..167
-                        IDENT@166..167 "f"
-                ARG_LIST@167..172
-                  L_PAREN@167..168 "("
-                  BORROW_EXPR@168..171
-                    AMP@168..169 "&"
-                    LITERAL@169..171
-                      INT_NUMBER@169..171 "22"
-                  R_PAREN@171..172 ")"
+              VALUE_ARG@166..172
+                CALL_EXPR@166..172
+                  PATH_EXPR@166..167
+                    PATH@166..167
+                      PATH_SEGMENT@166..167
+                        NAME_REF@166..167
+                          IDENT@166..167 "f"
+                  VALUE_ARG_LIST@167..172
+                    L_PAREN@167..168 "("
+                    VALUE_ARG@168..171
+                      BORROW_EXPR@168..171
+                        AMP@168..169 "&"
+                        LITERAL@169..171
+                          INT_NUMBER@169..171 "22"
+                    R_PAREN@171..172 ")"
               R_PAREN@172..173 ")"
           SEMICOLON@173..174 ";"
         WHITESPACE@174..179 "\n    "

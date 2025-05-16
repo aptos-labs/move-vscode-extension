@@ -71,13 +71,14 @@ SOURCE_FILE@0..418
                             NAME_REF@140..163
                               IDENT@140..163 "CurrentTimeMicroseconds"
                     R_ANGLE@163..164 ">"
-            ARG_LIST@164..182
+            VALUE_ARG_LIST@164..182
               L_PAREN@164..165 "("
-              LITERAL@165..181
-                ADDRESS_LIT@165..181
-                  AT@165..166 "@"
-                  NAMED_ADDRESS@166..181
-                    IDENT@166..181 "aptos_framework"
+              VALUE_ARG@165..181
+                LITERAL@165..181
+                  ADDRESS_LIT@165..181
+                    AT@165..166 "@"
+                    NAMED_ADDRESS@166..181
+                      IDENT@166..181 "aptos_framework"
               R_PAREN@181..182 ")"
           DOT@182..183 "."
           FIELD_REF@183..195
@@ -108,7 +109,7 @@ SOURCE_FILE@0..418
                   PATH_SEGMENT@259..269
                     NAME_REF@259..269
                       IDENT@259..269 "is_genesis"
-              ARG_LIST@269..271
+              VALUE_ARG_LIST@269..271
                 L_PAREN@269..270 "("
                 R_PAREN@270..271 ")"
           WHITESPACE@271..272 " "

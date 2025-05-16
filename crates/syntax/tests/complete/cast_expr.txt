@@ -106,22 +106,23 @@ SOURCE_FILE@0..150
                 PATH_SEGMENT@127..131
                   NAME_REF@127..131
                     IDENT@127..131 "call"
-            ARG_LIST@131..140
+            VALUE_ARG_LIST@131..140
               L_PAREN@131..132 "("
-              CAST_EXPR@132..139
-                PATH_EXPR@132..133
-                  PATH@132..133
-                    PATH_SEGMENT@132..133
-                      NAME_REF@132..133
-                        IDENT@132..133 "a"
-                WHITESPACE@133..134 " "
-                AS_KW@134..136 "as"
-                WHITESPACE@136..137 " "
-                PATH_TYPE@137..139
-                  PATH@137..139
-                    PATH_SEGMENT@137..139
-                      NAME_REF@137..139
-                        IDENT@137..139 "u8"
+              VALUE_ARG@132..139
+                CAST_EXPR@132..139
+                  PATH_EXPR@132..133
+                    PATH@132..133
+                      PATH_SEGMENT@132..133
+                        NAME_REF@132..133
+                          IDENT@132..133 "a"
+                  WHITESPACE@133..134 " "
+                  AS_KW@134..136 "as"
+                  WHITESPACE@136..137 " "
+                  PATH_TYPE@137..139
+                    PATH@137..139
+                      PATH_SEGMENT@137..139
+                        NAME_REF@137..139
+                          IDENT@137..139 "u8"
               R_PAREN@139..140 ")"
           SEMICOLON@140..141 ";"
         WHITESPACE@141..146 "\n    "
