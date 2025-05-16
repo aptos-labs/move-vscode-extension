@@ -200,12 +200,11 @@ fn paren_or_tuple_or_annotated_expr(p: &mut Parser) -> CompletedMarker {
     assert!(p.at(T!['(']));
     let m = p.start();
     p.bump(T!['(']);
-
+    // ();
     if p.at(T![')']) {
         p.bump(T![')']);
         return m.complete(p, UNIT_EXPR);
     }
-
     let mut outer = true;
     let mut saw_comma = false;
     let mut saw_expr = false;

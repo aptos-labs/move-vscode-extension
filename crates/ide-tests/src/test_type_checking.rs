@@ -1482,3 +1482,75 @@ fn test_else_branch_returns_unit() {
         }
     "#]]);
 }
+
+#[test]
+fn test_if_else_uninitialized_integer_with_bin_expr() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                let lt;
+                if (true) {
+                    lt = 1;
+                } else {
+                    lt = 2;
+                };
+                lt - 1;
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_invalid_unpacking_for_full_struct_pat() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct S<phantom CoinType> { amount: u8 }
+            fun call<CallCoinType>(s: S<CallCoinType>) {
+                let S { amount: my_amount } = s;
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_invalid_unpacking_for_shorthand_struct_pat() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct S<phantom CoinType> { amount: u8 }
+            fun call<CallCoinType>(s: S<CallCoinType>) {
+                let S { amount } = s;
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_invalid_unpacking_variable_in_parens() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun call() {
+                let (a) = 1;
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_check_type_of_assigning_value_in_tuple_assignment() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct Coin<CoinType> { val: u8 }
+            fun coin_zero<CoinType>(): Coin<CoinType> { Coin { val: 0 } }
+            fun call<CallCoinType>() {
+                let a = 0;
+                (a, _) = (coin_zero<CallCoinType>(), 2);
+                        //^^^^^^^^^^^^^^^^^^^^^^^^^ err: Incompatible type '0x1::m::Coin<CallCoinType>', expected 'integer'
+            }
+        }
+    "#]]);
+}

@@ -13,6 +13,7 @@ pub(super) fn is_path_start(p: &Parser) -> bool {
         INT_NUMBER if p.nth_at(1, T![::]) => true,
         IDENT /*| T![self] | T![super] | T![crate]*/ => true,
         T![::] => true,
+        T!['_'] => true,
         // T![:] if p.at(T![::]) => true,
         _ => false,
     }
@@ -68,6 +69,11 @@ fn path_segment(p: &mut Parser, mode: Mode, first: bool) {
 
     let empty = if first { !p.eat(T![::]) } else { true };
     match p.current() {
+        T!['_'] => {
+            let m = p.start();
+            p.bump_remap(IDENT);
+            m.complete(p, NAME_REF);
+        }
         IDENT => {
             name_ref(p);
             opt_path_type_arg_list(p, mode);
