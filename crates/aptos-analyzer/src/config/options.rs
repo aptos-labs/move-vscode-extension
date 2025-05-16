@@ -39,7 +39,10 @@ config_data! {
         diagnostics_enable: bool                = true,
 
         /// Whether to show "Unresolved reference" diagnostic.
-        diagnostics_enableUnresolvedReference: bool                = true,
+        diagnostics_enableUnresolvedReference: bool                = false,
+
+        /// Whether to show "Type Checking" diagnostic.
+        diagnostics_enableTypeChecking: bool                = false,
 
         /// These paths (file/directories) will be ignored by aptos-analyzer. They are
         /// relative to the workspace root, and globs are not supported. You may
