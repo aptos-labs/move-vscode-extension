@@ -25,21 +25,21 @@ pub(crate) fn expr(p: &mut Parser) -> bool {
 // Parses expression with binding power of at least bp.
 pub(crate) fn expr_bp(
     p: &mut Parser,
-    m: Option<Marker>,
+    stmt_m: Option<Marker>,
     mut r: Restrictions,
     bp: u8,
 ) -> Option<(CompletedMarker, BlockLike)> {
-    let m = m.unwrap_or_else(|| p.start());
+    let stmt_m = stmt_m.unwrap_or_else(|| p.start());
     let mut lhs = match lhs(p, r) {
         Some((lhs, blocklike)) => {
-            let lhs = lhs.extend_to(p, m);
+            let lhs = lhs.extend_to(p, stmt_m);
             if r.prefer_stmt && blocklike.is_block() {
                 return Some((lhs, BlockLike::Block));
             }
             lhs
         }
         None => {
-            m.abandon(p);
+            stmt_m.abandon(p);
             return None;
         }
     };
@@ -138,19 +138,21 @@ const LHS_FIRST: TokenSet = atom::ATOM_EXPR_FIRST.union(TokenSet::new(&[T![&], T
 pub(crate) fn lhs(p: &mut Parser, r: Restrictions) -> Option<(CompletedMarker, BlockLike)> {
     let m;
     let kind = match p.current() {
-        T![&] => {
-            m = p.start();
-            p.bump(T![&]);
-            p.eat(T![mut]);
-            BORROW_EXPR
-        }
         T![|] => {
             m = p.start();
             if !lambda_param_list(p) {
                 m.abandon(p);
                 return None;
             }
-            LAMBDA_EXPR
+            expr_bp(p, None, r, 1);
+            let cm = m.complete(p, LAMBDA_EXPR);
+            return Some((cm, BlockLike::NotBlock));
+        }
+        T![&] => {
+            m = p.start();
+            p.bump(T![&]);
+            p.eat(T![mut]);
+            BORROW_EXPR
         }
         IDENT if is_at_quant_kw(p) => {
             if let Some(cm) = forall_expr(p) {
@@ -334,23 +336,23 @@ impl BlockLike {
 }
 
 pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
-    let m = p.start();
+    let stmt_m = p.start();
 
     attributes::outer_attrs(p);
 
     if p.at(T![let]) {
-        let_stmt(p, m);
+        let_stmt(p, stmt_m);
         return;
     }
     if p.at(T![use]) {
-        use_item::use_stmt(p, m);
+        use_item::use_stmt(p, stmt_m);
         return;
     }
 
     if is_spec {
         if p.at(T![native]) && p.nth_at(1, T![fun]) || p.at(T![fun]) {
             fun::spec_inline_function(p);
-            m.abandon(p);
+            stmt_m.abandon(p);
             return;
         }
         // enable stmt level items unique to specs
@@ -364,12 +366,12 @@ pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
             spec_predicate,
         ];
         if spec_only_stmts.iter().any(|spec_stmt| spec_stmt(p)) {
-            m.abandon(p);
+            stmt_m.abandon(p);
             return;
         }
     }
 
-    if let Some((cm, _)) = stmt_expr(p, Some(m)) {
+    if let Some((cm, _)) = stmt_expr(p, Some(stmt_m)) {
         if !(p.at(T!['}']) || (prefer_expr && p.at(EOF))) {
             let m = cm.precede(p);
             p.expect(T![;]);
@@ -405,12 +407,12 @@ pub(crate) fn opt_initializer_expr(p: &mut Parser) {
     }
 }
 
-pub(super) fn stmt_expr(p: &mut Parser, m: Option<Marker>) -> Option<(CompletedMarker, BlockLike)> {
+pub(super) fn stmt_expr(p: &mut Parser, stmt_m: Option<Marker>) -> Option<(CompletedMarker, BlockLike)> {
     let r = Restrictions {
         forbid_structs: false,
         prefer_stmt: true,
     };
-    expr_bp(p, m, r, 1)
+    expr_bp(p, stmt_m, r, 1)
 }
 
 pub(super) fn expr_block_contents(p: &mut Parser, is_spec: bool) {

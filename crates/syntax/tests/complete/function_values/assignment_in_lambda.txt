@@ -1,0 +1,129 @@
+SOURCE_FILE@0..149
+  MODULE@0..148
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..32
+      IDENT@12..32 "assignment_in_lambda"
+    WHITESPACE@32..33 " "
+    L_CURLY@33..34 "{"
+    WHITESPACE@34..39 "\n    "
+    FUN@39..146
+      FUN_KW@39..42 "fun"
+      WHITESPACE@42..43 " "
+      NAME@43..47
+        IDENT@43..47 "main"
+      PARAM_LIST@47..49
+        L_PAREN@47..48 "("
+        R_PAREN@48..49 ")"
+      WHITESPACE@49..50 " "
+      BLOCK_EXPR@50..146
+        L_CURLY@50..51 "{"
+        WHITESPACE@51..60 "\n        "
+        EXPR_STMT@60..88
+          LAMBDA_EXPR@60..87
+            LAMBDA_PARAM_LIST@60..66
+              PIPE@60..61 "|"
+              LAMBDA_PARAM@61..65
+                IDENT_PAT@61..65
+                  NAME@61..65
+                    IDENT@61..65 "elem"
+              PIPE@65..66 "|"
+            WHITESPACE@66..67 " "
+            BIN_EXPR@67..87
+              PATH_EXPR@67..71
+                PATH@67..71
+                  PATH_SEGMENT@67..71
+                    NAME_REF@67..71
+                      IDENT@67..71 "accu"
+              WHITESPACE@71..72 " "
+              EQ@72..73 "="
+              WHITESPACE@73..74 " "
+              CALL_EXPR@74..87
+                PATH_EXPR@74..75
+                  PATH@74..75
+                    PATH_SEGMENT@74..75
+                      NAME_REF@74..75
+                        IDENT@74..75 "f"
+                VALUE_ARG_LIST@75..87
+                  L_PAREN@75..76 "("
+                  VALUE_ARG@76..80
+                    PATH_EXPR@76..80
+                      PATH@76..80
+                        PATH_SEGMENT@76..80
+                          NAME_REF@76..80
+                            IDENT@76..80 "accu"
+                  COMMA@80..81 ","
+                  WHITESPACE@81..82 " "
+                  VALUE_ARG@82..86
+                    PATH_EXPR@82..86
+                      PATH@82..86
+                        PATH_SEGMENT@82..86
+                          NAME_REF@82..86
+                            IDENT@82..86 "elem"
+                  R_PAREN@86..87 ")"
+          SEMICOLON@87..88 ";"
+        WHITESPACE@88..97 "\n        "
+        EXPR_STMT@97..140
+          METHOD_CALL_EXPR@97..139
+            PATH_EXPR@97..101
+              PATH@97..101
+                PATH_SEGMENT@97..101
+                  NAME_REF@97..101
+                    IDENT@97..101 "self"
+            DOT@101..102 "."
+            NAME_REF@102..110
+              IDENT@102..110 "for_each"
+            VALUE_ARG_LIST@110..139
+              L_PAREN@110..111 "("
+              VALUE_ARG@111..138
+                LAMBDA_EXPR@111..138
+                  LAMBDA_PARAM_LIST@111..117
+                    PIPE@111..112 "|"
+                    LAMBDA_PARAM@112..116
+                      IDENT_PAT@112..116
+                        NAME@112..116
+                          IDENT@112..116 "elem"
+                    PIPE@116..117 "|"
+                  WHITESPACE@117..118 " "
+                  BIN_EXPR@118..138
+                    PATH_EXPR@118..122
+                      PATH@118..122
+                        PATH_SEGMENT@118..122
+                          NAME_REF@118..122
+                            IDENT@118..122 "accu"
+                    WHITESPACE@122..123 " "
+                    EQ@123..124 "="
+                    WHITESPACE@124..125 " "
+                    CALL_EXPR@125..138
+                      PATH_EXPR@125..126
+                        PATH@125..126
+                          PATH_SEGMENT@125..126
+                            NAME_REF@125..126
+                              IDENT@125..126 "f"
+                      VALUE_ARG_LIST@126..138
+                        L_PAREN@126..127 "("
+                        VALUE_ARG@127..131
+                          PATH_EXPR@127..131
+                            PATH@127..131
+                              PATH_SEGMENT@127..131
+                                NAME_REF@127..131
+                                  IDENT@127..131 "accu"
+                        COMMA@131..132 ","
+                        WHITESPACE@132..133 " "
+                        VALUE_ARG@133..137
+                          PATH_EXPR@133..137
+                            PATH@133..137
+                              PATH_SEGMENT@133..137
+                                NAME_REF@133..137
+                                  IDENT@133..137 "elem"
+                        R_PAREN@137..138 ")"
+              R_PAREN@138..139 ")"
+          SEMICOLON@139..140 ";"
+        WHITESPACE@140..145 "\n    "
+        R_CURLY@145..146 "}"
+    WHITESPACE@146..147 "\n"
+    R_CURLY@147..148 "}"
+  WHITESPACE@148..149 "\n"
