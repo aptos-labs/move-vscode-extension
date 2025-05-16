@@ -74,7 +74,7 @@ pub fn semantic_diagnostics(
                     handlers::can_be_replaced_with_method_call(&mut acc, &ctx, it.in_file(file_id));
                 },
                 ast::AnyReferenceElement(it) => {
-                    handlers::unresolved_reference(&mut acc, &ctx, it.in_file(file_id));
+                    handlers::find_unresolved_references(&mut acc, &ctx, it.in_file(file_id));
                 },
                 ast::BinExpr(it) => {
                     handlers::can_be_replaced_with_compound_expr(&mut acc, &ctx, it.in_file(file_id));

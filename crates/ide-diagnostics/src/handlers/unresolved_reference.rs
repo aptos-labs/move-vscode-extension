@@ -12,7 +12,7 @@ use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 
 #[tracing::instrument(level = "debug", skip_all)]
-pub(crate) fn unresolved_reference(
+pub(crate) fn find_unresolved_references(
     acc: &mut Vec<Diagnostic>,
     ctx: &DiagnosticsContext<'_>,
     reference: InFile<impl AstNode>,
@@ -48,6 +48,20 @@ fn unresolved_path(
 ) -> Option<()> {
     let (_, path) = reference.clone().unpack();
     let path_name = path.reference_name()?;
+
+    // (_, _) = (1, 1);
+    if path_name == "_" {
+        for ancestor in path.syntax().ancestors() {
+            if let Some((lhs, (_, op), _)) = ancestor.cast::<ast::BinExpr>().and_then(|it| it.unpack()) {
+                // check for lhs of assignment expr
+                if matches!(op, ast::BinaryOp::Assignment { .. })
+                    && lhs.syntax().is_ancestor_of(&path.syntax())
+                {
+                    return None;
+                }
+            }
+        }
+    }
 
     if let Some(_) = path.syntax().parent_of_type::<ast::PathType>() {
         if PRIMITIVE_TYPES.contains(&path_name.as_str()) {

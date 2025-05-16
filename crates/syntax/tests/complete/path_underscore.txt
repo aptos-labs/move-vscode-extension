@@ -1,0 +1,61 @@
+SOURCE_FILE@0..97
+  MODULE@0..96
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..27
+      IDENT@12..27 "path_underscore"
+    WHITESPACE@27..28 " "
+    L_CURLY@28..29 "{"
+    WHITESPACE@29..34 "\n    "
+    FUN@34..94
+      FUN_KW@34..37 "fun"
+      WHITESPACE@37..38 " "
+      NAME@38..42
+        IDENT@38..42 "main"
+      PARAM_LIST@42..44
+        L_PAREN@42..43 "("
+        R_PAREN@43..44 ")"
+      WHITESPACE@44..45 " "
+      BLOCK_EXPR@45..94
+        L_CURLY@45..46 "{"
+        WHITESPACE@46..55 "\n        "
+        LET_STMT@55..61
+          LET_KW@55..58 "let"
+          WHITESPACE@58..59 " "
+          WILDCARD_PAT@59..60
+            UNDERSCORE@59..60 "_"
+          SEMICOLON@60..61 ";"
+        WHITESPACE@61..70 "\n        "
+        EXPR_STMT@70..72
+          PATH_EXPR@70..71
+            PATH@70..71
+              PATH_SEGMENT@70..71
+                NAME_REF@70..71
+                  IDENT@70..71 "_"
+          SEMICOLON@71..72 ";"
+        WHITESPACE@72..81 "\n        "
+        EXPR_STMT@81..88
+          TUPLE_EXPR@81..87
+            L_PAREN@81..82 "("
+            PATH_EXPR@82..83
+              PATH@82..83
+                PATH_SEGMENT@82..83
+                  NAME_REF@82..83
+                    IDENT@82..83 "a"
+            COMMA@83..84 ","
+            WHITESPACE@84..85 " "
+            PATH_EXPR@85..86
+              PATH@85..86
+                PATH_SEGMENT@85..86
+                  NAME_REF@85..86
+                    IDENT@85..86 "_"
+            R_PAREN@86..87 ")"
+          SEMICOLON@87..88 ";"
+        WHITESPACE@88..93 "\n    "
+        R_CURLY@93..94 "}"
+    WHITESPACE@94..95 "\n"
+    R_CURLY@95..96 "}"
+  WHITESPACE@96..97 "\n"
