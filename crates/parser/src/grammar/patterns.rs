@@ -25,9 +25,6 @@ pub(crate) fn pattern(p: &mut Parser) -> Option<CompletedMarker> {
 
 fn atom_pat(p: &mut Parser, recovery_set: TokenSet) -> Option<CompletedMarker> {
     let m = match p.current() {
-        // T![box] => box_pat(p),
-        // T![ref] | T![mut] => ident_pat(p, true),
-        // T![const] => const_block_pat(p),
         INT_NUMBER if p.nth_at(1, T![::]) => path_pat(p),
         IDENT => path_pat(p),
         // IDENT /*| INT_NUMBER if p.nth_at(1, T![::])*/ => match p.nth(1) {
@@ -38,9 +35,6 @@ fn atom_pat(p: &mut Parser, recovery_set: TokenSet) -> Option<CompletedMarker> {
         //     _ => ident_pat(p),
         // },
 
-        // test type_path_in_pattern
-        // fn main() { let <_>::Foo = (); }
-        // _ if paths::is_path_start(p) => path_or_macro_pat(p),
         // _ if is_literal_pat_start(p) => literal_pat(p),
         T![..] => rest_pat(p),
         // T![.] if p.at(T![..]) => rest_pat(p),

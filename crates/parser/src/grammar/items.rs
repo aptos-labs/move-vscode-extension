@@ -1,14 +1,12 @@
-mod adt;
+pub(crate) mod adt;
 pub(crate) mod fun;
+pub(crate) mod item_spec;
 pub(crate) mod use_item;
 
-use crate::grammar::expressions::atom::block_expr;
 use crate::grammar::expressions::expr;
 use crate::grammar::paths::use_path;
 use crate::grammar::specs::schemas::schema;
-use crate::grammar::{
-    attributes, error_block, generic_params, item_name, name_ref_or_bump_until, params, types,
-};
+use crate::grammar::{attributes, error_block, item_name, types};
 use crate::parser::{Marker, Parser};
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
@@ -89,7 +87,7 @@ pub(super) fn opt_item(p: &mut Parser, m: Marker) -> Result<(), Marker> {
             match p.current() {
                 T![fun] => fun::spec_function(p, m),
                 _ if p.at_ts_fn(fun::on_function_modifiers_start) => fun::spec_function(p, m),
-                _ => item_spec(p, m),
+                _ => item_spec::item_spec(p, m),
             }
         }
 
@@ -143,34 +141,6 @@ fn const_(p: &mut Parser, m: Marker) {
     }
     p.expect(T![;]);
     m.complete(p, CONST);
-}
-
-fn item_spec(p: &mut Parser, m: Marker) {
-    if p.at(T![module]) {
-        p.bump(T![module]);
-    } else {
-        let ref_exists = {
-            let ref_m = p.start();
-            let res = name_ref_or_bump_until(p, item_start);
-            if res {
-                ref_m.complete(p, ITEM_SPEC_REF);
-            } else {
-                ref_m.abandon(p);
-            }
-            res
-        };
-        if !ref_exists {
-            m.complete(p, ITEM_SPEC);
-            return;
-        }
-        generic_params::opt_generic_param_list(p);
-        if p.at(T!['(']) {
-            params::fun_param_list(p);
-            fun::opt_ret_type(p);
-        }
-    }
-    block_expr(p, true);
-    m.complete(p, ITEM_SPEC);
 }
 
 pub(crate) fn friend_decl(p: &mut Parser, m: Marker) {

@@ -136,10 +136,10 @@ SOURCE_FILE@0..418
       ITEM_SPEC_REF@315..335
         NAME_REF@315..335
           IDENT@315..335 "write_to_event_store"
-      TYPE_PARAM_LIST@335..352
+      ITEM_SPEC_TYPE_PARAM_LIST@335..352
         L_ANGLE@335..336 "<"
-        TYPE_PARAM@336..351
-          NAME@336..337
+        ITEM_SPEC_TYPE_PARAM@336..351
+          NAME_REF@336..337
             IDENT@336..337 "T"
           COLON@337..338 ":"
           WHITESPACE@338..339 " "
@@ -152,7 +152,7 @@ SOURCE_FILE@0..418
             ABILITY@346..351
               IDENT@346..351 "store"
         R_ANGLE@351..352 ">"
-      PARAM_LIST@352..354
+      ITEM_SPEC_PARAM_LIST@352..354
         L_PAREN@352..353 "("
         R_PAREN@353..354 ")"
       WHITESPACE@354..355 " "

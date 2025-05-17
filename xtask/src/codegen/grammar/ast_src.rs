@@ -88,6 +88,10 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "MODULE_SPEC",
         "ITEM_SPEC",
         "ITEM_SPEC_REF",
+        "ITEM_SPEC_TYPE_PARAM_LIST",
+        "ITEM_SPEC_TYPE_PARAM",
+        "ITEM_SPEC_PARAM_LIST",
+        "ITEM_SPEC_PARAM",
         "STRUCT",
         "FRIEND",
         "ENUM",
@@ -296,7 +300,7 @@ pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     ("ParenType", &["type"]),
     ("StructLit", &["path"]),
     // ("UseSpeck", &["path"]),  - invalid
-    // ("Param", &["ident_pat"]),  - can be wildcard_pat too
+    ("ItemSpecParam", &["ident_pat"]),
     // ("Path", &["segment"]),  - invalid
     ("PathAddress", &["value_address"]),
     ("Name", &["ident"]),

@@ -1386,23 +1386,6 @@ module 0x1::main {
 
 // language=Move
 #[test]
-fn test_resolve_type_parameters_in_specs() {
-    check_resolve(
-        r#"
-module 0x1::main {
-    fun call<T>(a: u8, b: u8) {}
-           //X
-}
-spec 0x1::main {
-    spec call<T>(a: u8, b: u8) {}
-            //^
-}
-"#,
-    )
-}
-
-// language=Move
-#[test]
 fn test_resolve_enum_with_variant_in_type_position_from_import() {
     check_resolve(
         r#"

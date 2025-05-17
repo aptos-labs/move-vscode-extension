@@ -10,7 +10,7 @@ pub trait ItemSpecExt {
 impl ItemSpecExt for InFile<ast::ItemSpec> {
     fn item(&self, db: &dyn SourceDatabase) -> Option<InFile<ast::Item>> {
         let item_spec_ref = self.and_then_ref(|it| it.item_spec_ref())?;
-        let resolved = item_spec_ref.resolve_no_inf(db)?;
+        let resolved = item_spec_ref.resolve(db)?;
         resolved.cast_into::<ast::Item>(db)
     }
 }

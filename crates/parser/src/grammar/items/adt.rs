@@ -1,6 +1,6 @@
 use crate::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::grammar::utils::list;
-use crate::grammar::{ability, error_block, generic_params, item_name, name, types};
+use crate::grammar::{ability, error_block, item_name, name, type_params, types};
 use crate::parser::Marker;
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
@@ -14,7 +14,7 @@ pub(super) fn struct_(p: &mut Parser<'_>, m: Marker) {
         m.complete(p, STRUCT);
         return;
     }
-    generic_params::opt_generic_param_list(p);
+    type_params::opt_type_param_list(p);
     opt_abilities_list(p);
     match p.current() {
         T!['{'] => {
@@ -89,7 +89,7 @@ pub(super) fn enum_(p: &mut Parser<'_>, m: Marker) {
     // }
 
     // name_r(p, ITEM_KW_RECOVERY_SET);
-    generic_params::opt_generic_param_list(p);
+    type_params::opt_type_param_list(p);
     opt_abilities_list(p);
     if p.at(T!['{']) {
         variant_list(p);

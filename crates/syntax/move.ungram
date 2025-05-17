@@ -124,9 +124,7 @@ VisibilityModifier =
         | 'friend'
 
 ParamList =
-    '('
-        (Param (',' Param)* ','?)?
-    ')'
+    '(' (Param (',' Param)* ','?)? ')'
 
 Param = (IdentPat | WildcardPat) (':' Type)?
 
@@ -439,9 +437,15 @@ ModuleSpec =
     Attr* 'spec' Path '{' UseStmt* Item* '}'
 
 ItemSpec =
-    Attr* 'spec' ('module' | ItemSpecRef) spec_block:BlockExpr
+    Attr* 'spec' ('module' | (ItemSpecRef ItemSpecParamList?)) spec_block:BlockExpr
 
 ItemSpecRef = NameRef
+
+ItemSpecParamList =
+    '(' (ItemSpecParam (',' ItemSpecParam)* ','?)? ')'
+
+ItemSpecParam =
+    IdentPat (':' Type)?
 
 SpecFun =
     Attr*

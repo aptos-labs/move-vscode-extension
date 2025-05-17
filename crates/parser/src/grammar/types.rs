@@ -1,6 +1,5 @@
-use crate::grammar::generic_params::ability_bound_list;
-use crate::grammar::paths;
 use crate::grammar::utils::delimited;
+use crate::grammar::{paths, type_params};
 use crate::parser::Parser;
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
@@ -92,7 +91,7 @@ fn lambda_type(p: &mut Parser) {
     if p.at_contextual_kw_ident("has") {
         let m = p.start();
         p.bump_remap(T![has]);
-        ability_bound_list(p);
+        type_params::ability_bound_list(p);
         m.complete(p, LAMBDA_TYPE_ABILITY_LIST);
     }
     m.complete(p, LAMBDA_TYPE);

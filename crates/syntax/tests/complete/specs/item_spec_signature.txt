@@ -1,0 +1,86 @@
+SOURCE_FILE@0..106
+  MODULE@0..105
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..31
+      IDENT@12..31 "item_spec_signature"
+    WHITESPACE@31..32 " "
+    L_CURLY@32..33 "{"
+    WHITESPACE@33..38 "\n    "
+    ITEM_SPEC@38..103
+      SPEC_KW@38..42 "spec"
+      WHITESPACE@42..43 " "
+      ITEM_SPEC_REF@43..47
+        NAME_REF@43..47
+          IDENT@43..47 "main"
+      ITEM_SPEC_TYPE_PARAM_LIST@47..67
+        L_ANGLE@47..48 "<"
+        ITEM_SPEC_TYPE_PARAM@48..49
+          NAME_REF@48..49
+            IDENT@48..49 "T"
+        COMMA@49..50 ","
+        WHITESPACE@50..51 " "
+        ITEM_SPEC_TYPE_PARAM@51..66
+          NAME_REF@51..52
+            IDENT@51..52 "U"
+          COLON@52..53 ":"
+          WHITESPACE@53..54 " "
+          ABILITY_BOUND_LIST@54..66
+            ABILITY@54..58
+              IDENT@54..58 "copy"
+            WHITESPACE@58..59 " "
+            PLUS@59..60 "+"
+            WHITESPACE@60..61 " "
+            ABILITY@61..66
+              IDENT@61..66 "store"
+        R_ANGLE@66..67 ">"
+      ITEM_SPEC_PARAM_LIST@67..86
+        L_PAREN@67..68 "("
+        ITEM_SPEC_PARAM@68..73
+          IDENT_PAT@68..69
+            NAME@68..69
+              IDENT@68..69 "a"
+          COLON@69..70 ":"
+          WHITESPACE@70..71 " "
+          PATH_TYPE@71..73
+            PATH@71..73
+              PATH_SEGMENT@71..73
+                NAME_REF@71..73
+                  IDENT@71..73 "u8"
+        COMMA@73..74 ","
+        WHITESPACE@74..75 " "
+        ITEM_SPEC_PARAM@75..85
+          IDENT_PAT@75..76
+            NAME@75..76
+              IDENT@75..76 "b"
+          COLON@76..77 ":"
+          WHITESPACE@77..78 " "
+          REF_TYPE@78..85
+            AMP@78..79 "&"
+            PATH_TYPE@79..85
+              PATH@79..85
+                PATH_SEGMENT@79..85
+                  NAME_REF@79..85
+                    IDENT@79..85 "signer"
+        R_PAREN@85..86 ")"
+      RET_TYPE@86..95
+        COLON@86..87 ":"
+        WHITESPACE@87..88 " "
+        REF_TYPE@88..95
+          AMP@88..89 "&"
+          PATH_TYPE@89..95
+            PATH@89..95
+              PATH_SEGMENT@89..95
+                NAME_REF@89..95
+                  IDENT@89..95 "signer"
+      WHITESPACE@95..96 " "
+      BLOCK_EXPR@96..103
+        L_CURLY@96..97 "{"
+        WHITESPACE@97..102 "\n    "
+        R_CURLY@102..103 "}"
+    WHITESPACE@103..104 "\n"
+    R_CURLY@104..105 "}"
+  WHITESPACE@105..106 "\n"

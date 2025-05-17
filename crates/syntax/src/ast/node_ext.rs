@@ -18,6 +18,7 @@ mod ident_pat;
 mod if_expr;
 pub mod index_expr;
 mod is_expr;
+mod item_spec;
 mod item_spec_ref;
 mod lambda_expr;
 mod lambda_type;
