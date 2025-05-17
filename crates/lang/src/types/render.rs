@@ -57,6 +57,7 @@ impl<'db> TypeRenderer<'db> {
             Ty::Address => "address".to_string(),
             Ty::Integer(kind) => kind.to_string(),
             Ty::Num => "num".to_string(),
+            Ty::Bv => "bv".to_string(),
 
             Ty::Unit => "()".to_string(),
             Ty::Unknown => unknown(),

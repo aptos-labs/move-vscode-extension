@@ -172,6 +172,7 @@ impl<'db> TyLowering<'db> {
             "u128" => Ty::Integer(IntegerKind::U128),
             "u256" => Ty::Integer(IntegerKind::U256),
             "num" => Ty::Num,
+            "bv" => Ty::Bv,
             "bool" => Ty::Bool,
             "signer" => Ty::Signer,
             "address" => Ty::Address,

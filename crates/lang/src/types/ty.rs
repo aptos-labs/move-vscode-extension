@@ -41,6 +41,7 @@ pub enum Ty {
     Address,
     Integer(IntegerKind),
     Num,
+    Bv,
 
     Seq(TySequence),
 
