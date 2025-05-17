@@ -35,6 +35,10 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
     fn resolve_multi(&self, db: &dyn SourceDatabase) -> Option<Vec<ScopeEntry>> {
         use syntax::SyntaxKind::*;
 
+        if let Some(item_spec_ref) = self.cast_into_ref::<ast::ItemSpecRef>() {
+            return get_item_spec_entries(db, item_spec_ref);
+        }
+
         let InFile { file_id, value: ref_element } = self;
 
         if let Some(loop_label) = ref_element.cast_into::<ast::Label>() {
@@ -47,8 +51,9 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
 
         let opt_inference_ctx_owner = ref_element
             .syntax()
-            .ancestor_or_self::<ast::Expr>()
-            .and_then(|expr| expr.inference_ctx_owner().map(|it| it.in_file(*file_id)));
+            .ancestor_or_self::<ast::InferenceCtxOwner>()
+            .map(|it| it.in_file(*file_id));
+
         let msl = self.value.syntax().is_msl_context();
         if let Some(ctx_owner) = opt_inference_ctx_owner {
             let inference = hir_db::inference(db, ctx_owner, msl);
@@ -131,9 +136,6 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
 
     /// resolve outside of the `ast::InferenceCtxOwner`
     fn resolve_no_inf_multi(&self, db: &dyn SourceDatabase) -> Option<Vec<ScopeEntry>> {
-        if let Some(item_spec_ref) = self.cast_into_ref::<ast::ItemSpecRef>() {
-            return get_item_spec_entries(db, item_spec_ref);
-        }
         match self.cast_into_ref::<ast::Path>() {
             Some(path) => Some(hir_db::resolve_path_multi(db, path)),
             None => {
