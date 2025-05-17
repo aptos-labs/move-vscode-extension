@@ -19,12 +19,12 @@ SOURCE_FILE@0..106
       ITEM_SPEC_TYPE_PARAM_LIST@47..67
         L_ANGLE@47..48 "<"
         ITEM_SPEC_TYPE_PARAM@48..49
-          NAME@48..49
+          NAME_REF@48..49
             IDENT@48..49 "T"
         COMMA@49..50 ","
         WHITESPACE@50..51 " "
         ITEM_SPEC_TYPE_PARAM@51..66
-          NAME@51..52
+          NAME_REF@51..52
             IDENT@51..52 "U"
           COLON@52..53 ":"
           WHITESPACE@53..54 " "

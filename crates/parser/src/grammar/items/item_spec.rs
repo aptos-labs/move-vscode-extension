@@ -2,7 +2,7 @@ use crate::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::grammar::expressions::atom::block_expr;
 use crate::grammar::items::{fun, item_start};
 use crate::grammar::utils::list;
-use crate::grammar::{name, name_ref_or_bump_until, patterns, type_params, types};
+use crate::grammar::{name, name_ref, name_ref_or_bump_until, patterns, type_params, types};
 use crate::parser::Marker;
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
@@ -62,7 +62,7 @@ fn item_spec_type_param(p: &mut Parser<'_>) -> bool {
     }
     match p.current() {
         IDENT => {
-            name(p);
+            name_ref(p);
             if p.at(T![:]) {
                 p.bump(T![:]);
                 type_params::ability_bound_list(p);

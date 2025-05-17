@@ -300,7 +300,7 @@ pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     ("ParenType", &["type"]),
     ("StructLit", &["path"]),
     // ("UseSpeck", &["path"]),  - invalid
-    // ("Param", &["ident_pat"]),  - can be wildcard_pat too
+    ("ItemSpecParam", &["ident_pat"]),
     // ("Path", &["segment"]),  - invalid
     ("PathAddress", &["value_address"]),
     ("Name", &["ident"]),

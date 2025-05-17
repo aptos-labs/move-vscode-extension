@@ -139,7 +139,7 @@ SOURCE_FILE@0..418
       ITEM_SPEC_TYPE_PARAM_LIST@335..352
         L_ANGLE@335..336 "<"
         ITEM_SPEC_TYPE_PARAM@336..351
-          NAME@336..337
+          NAME_REF@336..337
             IDENT@336..337 "T"
           COLON@337..338 ":"
           WHITESPACE@338..339 " "

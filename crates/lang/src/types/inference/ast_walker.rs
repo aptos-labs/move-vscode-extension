@@ -16,9 +16,10 @@ use crate::types::ty::reference::{Mutability, autoborrow};
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar};
 use std::iter;
+use std::iter::zip;
 use std::ops::Deref;
 use syntax::ast::node_ext::named_field::FilterNamedFieldsByName;
-use syntax::ast::{FieldsOwner, HasStmts};
+use syntax::ast::{FieldsOwner, HasStmts, NamedElement};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, IntoNodeOrToken, ast};
 
@@ -107,8 +108,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::InferenceCtxOwner::SpecInlineFun(fun) => fun.to_any_fun().params_as_bindings(),
             ast::InferenceCtxOwner::ItemSpec(item_spec) => {
                 let item = item_spec.clone().in_file(self.ctx.file_id).item(self.ctx.db)?;
+                self.collect_item_spec_signature_bindings(item_spec, item.clone());
                 binding_file_id = item.file_id;
-
                 let item = item.value;
                 match item {
                     ast::Item::Fun(fun) => fun.to_any_fun().params_as_bindings(),

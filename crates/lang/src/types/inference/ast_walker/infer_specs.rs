@@ -1,12 +1,13 @@
+use crate::nameres::scope::ScopeEntryExt;
 use crate::types::expectation::Expected;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
-use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::schema::TySchema;
+use std::iter::zip;
 use syntax::ast;
 use syntax::ast::NamedElement;
-use syntax::files::InFileExt;
+use syntax::files::{InFile, InFileExt};
 
 impl<'a, 'db> TypeAstWalker<'a, 'db> {
     pub(super) fn process_predicate_stmt(&mut self, predicate: &ast::SpecPredicateStmt) -> Option<()> {
@@ -146,5 +147,32 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::QuantExpr::ChooseExpr(_) => (),
         }
         Some(())
+    }
+
+    pub(crate) fn collect_item_spec_signature_bindings(
+        &mut self,
+        item_spec: &ast::ItemSpec,
+        item: InFile<ast::Item>,
+    ) {
+        let (file_id, item) = item.unpack();
+        match item {
+            ast::Item::Fun(fun) => {
+                let fun_params = fun.to_any_fun().params_as_bindings();
+                let param_ident_pats = item_spec.param_ident_pats();
+                for (param_ident_pat, fun_param) in zip(param_ident_pats, fun_params.clone()) {
+                    let entry = if param_ident_pat.name().is_some()
+                        && fun_param.name().is_some()
+                        && param_ident_pat.name().unwrap().as_string()
+                            == fun_param.name().unwrap().as_string()
+                    {
+                        fun_param.in_file(file_id).to_entry()
+                    } else {
+                        None
+                    };
+                    self.ctx.resolved_ident_pats.insert(param_ident_pat, entry);
+                }
+            }
+            _ => (),
+        }
     }
 }

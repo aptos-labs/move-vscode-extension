@@ -632,6 +632,8 @@ impl ast::HasAttrs for ItemSpec {}
 impl ast::MslOnly for ItemSpec {}
 impl ItemSpec {
     #[inline]
+    pub fn item_spec_param_list(&self) -> Option<ItemSpecParamList> { support::child(&self.syntax) }
+    #[inline]
     pub fn item_spec_ref(&self) -> Option<ItemSpecRef> { support::child(&self.syntax) }
     #[inline]
     pub fn spec_block(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
@@ -639,6 +641,34 @@ impl ItemSpec {
     pub fn module_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![module]) }
     #[inline]
     pub fn spec_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![spec]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ItemSpecParam {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ItemSpecParam {
+    #[inline]
+    pub fn ident_pat(&self) -> IdentPat {
+        support::child(&self.syntax).expect("ItemSpecParam.ident_pat required by the parser")
+    }
+    #[inline]
+    pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
+    #[inline]
+    pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ItemSpecParamList {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ItemSpecParamList {
+    #[inline]
+    pub fn item_spec_params(&self) -> AstChildren<ItemSpecParam> { support::children(&self.syntax) }
+    #[inline]
+    pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
+    #[inline]
+    pub fn r_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![')']) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -3068,6 +3098,48 @@ impl AstNode for ItemSpec {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == ITEM_SPEC }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for ItemSpecParam {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ITEM_SPEC_PARAM
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == ITEM_SPEC_PARAM }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for ItemSpecParamList {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ITEM_SPEC_PARAM_LIST
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == ITEM_SPEC_PARAM_LIST }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -7984,6 +8056,16 @@ impl std::fmt::Display for IsExpr {
     }
 }
 impl std::fmt::Display for ItemSpec {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for ItemSpecParam {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for ItemSpecParamList {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
