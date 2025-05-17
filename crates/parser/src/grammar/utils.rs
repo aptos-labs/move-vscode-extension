@@ -22,7 +22,6 @@ pub(crate) fn delimited_items_with_recover(
         }
         let is_item = parse_item(p);
         if !is_item {
-            // p.bump_until(|p| p.at(delim) || p.at_ts(end_at) || p.at(rbrace) || p.at(EOF));
             // invalid item encountered, stop iterating
             break;
         }

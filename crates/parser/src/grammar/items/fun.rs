@@ -3,7 +3,7 @@ use crate::grammar::items::item_start;
 use crate::grammar::paths::PATH_FIRST;
 use crate::grammar::types::path_type;
 use crate::grammar::utils::delimited;
-use crate::grammar::{generic_params, item_name, params, paths, types};
+use crate::grammar::{item_name, params, paths, type_params, types};
 use crate::parser::Marker;
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::{
@@ -157,7 +157,7 @@ fn fun_signature(p: &mut Parser, is_spec: bool, allow_acquires: bool) {
     // name_r(p, ITEM_KW_RECOVERY_SET);
     // test function_type_params
     // fn foo<T: Clone + Copy>(){}
-    generic_params::opt_generic_param_list(p);
+    type_params::opt_type_param_list(p);
 
     if p.at(T!['(']) {
         params::fun_param_list(p);

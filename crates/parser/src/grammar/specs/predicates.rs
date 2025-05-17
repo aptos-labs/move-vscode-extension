@@ -1,7 +1,7 @@
 use crate::grammar::expressions::atom::EXPR_FIRST;
 use crate::grammar::expressions::{expr, opt_initializer_expr, Restrictions};
 use crate::grammar::utils::{delimited, list};
-use crate::grammar::{expressions, generic_params};
+use crate::grammar::{expressions, type_params};
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{Parser, T};
@@ -91,7 +91,7 @@ pub(crate) fn invariant_predicate(p: &mut Parser) -> bool {
     }
     let m = p.start();
     p.bump(T![invariant]);
-    generic_params::opt_generic_param_list(p);
+    type_params::opt_type_param_list(p);
     if p.at_contextual_kw_ident("update") {
         p.bump_remap(T![update]);
     }
@@ -133,7 +133,7 @@ pub(crate) fn axiom_predicate(p: &mut Parser) -> bool {
     }
     let m = p.start();
     p.bump_remap(T![axiom]);
-    generic_params::opt_generic_param_list(p);
+    type_params::opt_type_param_list(p);
     opt_predicate_property_list(p);
     expect_expr(p);
     m.complete(p, AXIOM_STMT);

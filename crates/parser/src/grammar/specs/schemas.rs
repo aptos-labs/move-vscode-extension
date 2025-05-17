@@ -4,7 +4,7 @@ use crate::grammar::items::item_start;
 use crate::grammar::paths::{is_path_start, type_path};
 use crate::grammar::specs::predicates::opt_predicate_property_list;
 use crate::grammar::utils::{delimited_fn, list};
-use crate::grammar::{generic_params, name, name_or_bump_until, name_ref, types};
+use crate::grammar::{name, name_or_bump_until, name_ref, type_params, types};
 use crate::parser::{CompletedMarker, Marker};
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
@@ -14,7 +14,7 @@ pub(crate) fn schema(p: &mut Parser, m: Marker) {
     assert!(p.at(IDENT) && p.at_contextual_kw("schema"));
     p.bump_remap(T![schema]);
     name_or_bump_until(p, item_start);
-    generic_params::opt_generic_param_list(p);
+    type_params::opt_type_param_list(p);
     block_expr(p, true);
     m.complete(p, SCHEMA);
 }
@@ -44,7 +44,7 @@ pub(crate) fn global_variable(p: &mut Parser) -> bool {
     }
     name(p);
     // patterns::ident_pat(p);
-    generic_params::opt_generic_param_list(p);
+    type_params::opt_type_param_list(p);
     if p.at(T![:]) {
         types::ascription(p);
     } else {
@@ -162,7 +162,7 @@ fn wildcard_pattern(p: &mut Parser) -> bool {
         m.abandon_with_rollback(p);
         return false;
     }
-    generic_params::opt_generic_param_list(p);
+    type_params::opt_type_param_list(p);
     m.complete(p, WILDCARD_PATTERN);
     true
 }

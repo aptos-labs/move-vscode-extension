@@ -30,7 +30,6 @@
 
 mod attributes;
 mod expressions;
-mod generic_params;
 mod items;
 mod lambdas;
 mod params;
@@ -38,6 +37,7 @@ pub(crate) mod paths;
 mod patterns;
 pub(crate) mod specs;
 mod type_args;
+mod type_params;
 mod types;
 pub(crate) mod utils;
 
