@@ -1,6 +1,5 @@
 use crate::test_utils::completion_utils::{
-    check_completions_contains, check_completions_contains_expect, check_no_completions,
-    do_single_completion,
+    check_completions, check_completions_contains, check_no_completions, do_single_completion,
 };
 use expect_test::expect;
 
@@ -164,7 +163,7 @@ fn test_no_function_completion_in_type_position() {
 
 #[test]
 fn test_public_friend_functions_for_fq_completion() {
-    check_completions_contains_expect(
+    check_completions(
         // language=Move
         r#"
         module 0x1::m {
@@ -184,7 +183,7 @@ fn test_public_friend_functions_for_fq_completion() {
 
 #[test]
 fn test_public_and_public_script_completions_for_script() {
-    check_completions_contains_expect(
+    check_completions(
         // language=Move
         r#"
         module 0x1::m {
@@ -203,7 +202,7 @@ fn test_public_and_public_script_completions_for_script() {
 
 #[test]
 fn test_self_completion() {
-    check_completions_contains_expect(
+    check_completions(
         // language=Move
         r#"
         module 0x1::m {
@@ -218,5 +217,28 @@ fn test_self_completion() {
         }
     "#,
         expect![[r#"["create_friend()", "create_script()", "create()", "create_private()", "main()"]"#]],
+    )
+}
+
+#[test]
+fn test_fq_completion_for_use() {
+    do_single_completion(
+        // language=Move
+        r#"
+        module 0x1::m1 {
+            public fun call() {}
+        }
+        module 0x1::m2 {
+            use 0x1::m1::c/*caret*/
+        }
+    "#,
+        expect![[r#"
+            module 0x1::m1 {
+                public fun call() {}
+            }
+            module 0x1::m2 {
+                use 0x1::m1::call/*caret*/
+            }
+        "#]],
     )
 }

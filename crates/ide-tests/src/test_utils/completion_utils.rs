@@ -68,7 +68,7 @@ pub fn check_completions_contains(source: &str, contains_items: Vec<&str>) {
     // assert!(lookup_labels.is_empty(), "extra items {:?}", lookup_labels);
 }
 
-pub fn check_completions_contains_expect(source: &str, contains: Expect) {
+pub fn check_completions(source: &str, expected: Expect) {
     init_tracing_for_test();
 
     let (source, offset) = get_and_replace_caret(source, "/*caret*/");
@@ -76,7 +76,7 @@ pub fn check_completions_contains_expect(source: &str, contains: Expect) {
     let completion_items = completions_at_offset(source, offset, false);
 
     let lookup_labels_txt = format!("{:?}", lookup_labels(completion_items));
-    contains.assert_eq(&lookup_labels_txt);
+    expected.assert_eq(&lookup_labels_txt);
 }
 
 pub fn check_completion_exact(source: &str, expected_items: Vec<&str>) {

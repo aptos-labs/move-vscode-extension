@@ -41,13 +41,16 @@ pub(crate) fn render_function(
     item_builder.set_label(format!("{function_name}({params_line})"));
 
     if let Some(_) = ctx.config.allow_snippets {
-        if params.is_empty() {
-            let parens = if path_ctx.has_call_parens { "$0" } else { "()$0" };
-            item_builder.insert_snippet(format!("{function_name}{parens}"));
+        let snippet_parens = if path_ctx.has_use_stmt_parent {
+            "$0"
         } else {
-            let parens = if path_ctx.has_call_parens { "$0" } else { "($0)" };
-            item_builder.insert_snippet(format!("{function_name}{parens}"));
+            if params.is_empty() {
+                if path_ctx.has_call_parens { "$0" } else { "()$0" }
+            } else {
+                if path_ctx.has_call_parens { "$0" } else { "($0)" }
+            }
         };
+        item_builder.insert_snippet(format!("{function_name}{snippet_parens}"));
     }
 
     match call_ty.ret_type().unwrap_all_refs() {

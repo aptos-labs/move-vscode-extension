@@ -3,7 +3,7 @@ repos:
     hooks:
       - id: rustfmt
         name: rustfmt
-        description: Check if all files follow the rustfmt style
-        entry: cargo fmt --all -- --check --color always
+        description: Runs rustfmt on the staged files before commit
+        entry: bash -c 'cargo fmt --all -- --color always && git add -u'
         language: system
         pass_filenames: false

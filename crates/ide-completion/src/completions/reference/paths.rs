@@ -12,7 +12,7 @@ use syntax::files::InFile;
 use syntax::{AstNode, T, ast};
 
 /// The state of the path we are currently completing.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub(crate) struct PathCompletionCtx {
     /// If this is a call with () already there (or {} in case of record patterns)
     pub(crate) has_call_parens: bool,
@@ -28,8 +28,8 @@ pub(crate) struct PathCompletionCtx {
     // /// The path of which we are completing the segment in the original file
     // pub(crate) original_path: Option<ast::Path>,
     // pub(crate) kind: PathKind,
-    // /// Whether the qualifier comes from a use tree parent or not
-    // pub(crate) use_tree_parent: bool,
+    /// Whether the qualifier comes from a use tree parent or not
+    pub(crate) has_use_stmt_parent: bool,
 }
 
 #[tracing::instrument(level = "debug", skip_all)]
@@ -103,9 +103,16 @@ fn add_keywords(completions: &RefCell<Completions>, ctx: &CompletionContext<'_>)
 
 fn path_completion_ctx(path: &InFile<ast::Path>) -> PathCompletionCtx {
     let (_, path) = path.unpack_ref();
+
     let has_call_parens = path
         .syntax()
         .next_token_no_trivia()
         .is_some_and(|it| it.kind() == T!['(']);
-    PathCompletionCtx { has_call_parens }
+
+    let has_use_stmt_parent = path.syntax().has_ancestor_strict::<ast::UseStmt>();
+
+    PathCompletionCtx {
+        has_call_parens,
+        has_use_stmt_parent,
+    }
 }
