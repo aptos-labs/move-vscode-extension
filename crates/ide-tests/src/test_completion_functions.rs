@@ -361,3 +361,170 @@ fn test_test_only_function_completion_in_test_only_scope() {
         expect![[r#"["Self", "get_weekly()"]"#]],
     )
 }
+
+#[test]
+fn test_test_only_function_completion_in_test_only_use_stmt_scope() {
+    check_completions(
+        // language=Move
+        r#"
+        module 0x1::minter {
+            #[test_only]
+            public fun get_weekly() {}
+        }
+        module 0x1::minter_tests {
+            #[test_only]
+            use 0x1::minter::get/*caret*/
+        }
+    "#,
+        expect![[r#"["Self", "get_weekly()"]"#]],
+    )
+}
+
+// todo: type annotation
+// #[test]
+// fn test_do_not_add_angle_brackets_if_type_is_inferrable_from_context() {
+//     do_single_completion(
+//         // language=Move
+//         r#"
+//     module 0x1::Event {
+//         struct EventHandle<phantom E> {}
+//
+//         struct MyEvent {}
+//         struct EventStore {
+//             my_events: EventHandle<MyEvent>
+//         }
+//
+//         fun new_event_handle<E>(): EventHandle<E> { EventHandle<E> {} }
+//         fun call() {
+//             EventStore { my_events: new_eve/*caret*/ };
+//         }
+//     }
+//     "#,
+//         // language=Move
+//         expect![[""]],
+//     )
+// }
+
+// todo: type annotation
+// #[test]
+// fn test_add_angle_brackets_if_untyped_let_pattern() {
+//     do_single_completion(
+//         // language=Move
+//         r#"
+//     module 0x1::main {
+//         struct Coin<CoinType> {}
+//         fun withdraw<CoinType>(): Coin<CoinType> { Coin<CoinType> {} }
+//         fun main() {
+//             let a = with/*caret*/;
+//         }
+//     }
+//     "#,
+//         // language=Move
+//         expect![[""]],
+//     )
+// }
+
+// todo: type annotation
+// #[test]
+// fn test_no_angle_brackets_for_function_with_generic_vector_param() {
+//     do_single_completion(
+//         // language=Move
+//         r#"
+//         module 0x1::m {
+//             native public fun destroy_empty<Element>(v: vector<Element>);
+//             fun main() {
+//                 destroy/*caret*/
+//             }
+//         }
+//     "#,
+//         // language=Move
+//         expect![[r#"
+//         "#]],
+//     )
+// }
+
+#[test]
+fn test_complete_function_from_module_alias() {
+    do_single_completion(
+        // language=Move
+        r#"
+    module 0x1::string {
+        public fun call() {}
+    }
+    module 0x1::main {
+        use 0x1::string as mystring;
+        fun main() {
+            mystring::ca/*caret*/
+        }
+    }
+    "#,
+        // language=Move
+        expect![[r#"
+            module 0x1::string {
+                public fun call() {}
+            }
+            module 0x1::main {
+                use 0x1::string as mystring;
+                fun main() {
+                    mystring::call()/*caret*/
+                }
+            }
+        "#]],
+    )
+}
+
+#[test]
+fn test_spec_function_completion_at_lhs_of_equality_expr() {
+    do_single_completion(
+        // language=Move
+        r#"
+        module 0x1::m {
+            spec fun spec_some(a: u8): u8 { a }
+            spec module {
+                let a = 1;
+                let b = 1;
+                spec_/*caret*/ == spec_some(b);
+            }
+        }
+    "#,
+        // language=Move
+        expect![[r#"
+            module 0x1::m {
+                spec fun spec_some(a: u8): u8 { a }
+                spec module {
+                    let a = 1;
+                    let b = 1;
+                    spec_some(/*caret*/) == spec_some(b);
+                }
+            }
+        "#]],
+    )
+}
+
+#[test]
+fn test_spec_function_completion_at_rhs_of_equality_expr() {
+    do_single_completion(
+        // language=Move
+        r#"
+        module 0x1::m {
+            spec fun spec_some(a: u8): u8 { a }
+            spec module {
+                let a = 1;
+                let b = 1;
+                spec_some(a) == spec_/*caret*/;
+            }
+        }
+    "#,
+        // language=Move
+        expect![[r#"
+            module 0x1::m {
+                spec fun spec_some(a: u8): u8 { a }
+                spec module {
+                    let a = 1;
+                    let b = 1;
+                    spec_some(a) == spec_some(/*caret*/);
+                }
+            }
+        "#]],
+    )
+}
