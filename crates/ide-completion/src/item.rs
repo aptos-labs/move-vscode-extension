@@ -130,7 +130,6 @@ impl CompletionItem {
             label,
             insert_text: None,
             is_snippet: false,
-            // caret_pos: None,
             detail: None,
             lookup: None,
             kind: kind.into(),
@@ -152,7 +151,6 @@ pub(crate) struct CompletionItemBuilder {
     label: String,
     insert_text: Option<String>,
     is_snippet: bool,
-    // caret_pos: Option<usize>,
     detail: Option<String>,
     lookup: Option<String>,
     kind: CompletionItemKind,
@@ -221,8 +219,4 @@ impl CompletionItemBuilder {
         }
         self
     }
-    // pub(crate) fn set_caret_pos(&mut self, pos: usize) -> &mut CompletionItemBuilder {
-    //     self.caret_pos = Some(pos);
-    //     self
-    // }
 }
