@@ -2,7 +2,7 @@ use crate::init_tracing_for_test;
 use expect_test::Expect;
 use ide_completion::config::CompletionConfig;
 use ide_completion::item::CompletionItem;
-use ide_db::SnippetCap;
+use ide_db::AllowSnippets;
 use syntax::files::FilePosition;
 use syntax::{AstNode, AstToken, TextSize, ast};
 use test_utils::{fixtures, get_and_replace_caret};
@@ -22,6 +22,8 @@ pub fn do_single_completion(before: &str, after: Expect) {
 
     let mut res = source.to_string();
     completion_item.text_edit.apply(&mut res);
+
+    let mut res = res.replace("$0", "/*caret*/");
     res.push_str("\n");
 
     after.assert_eq(&res);
@@ -107,7 +109,7 @@ fn completions_at_offset(
         offset: caret_offset,
     };
     let completion_config = CompletionConfig {
-        snippet_cap: SnippetCap::new(true),
+        allow_snippets: AllowSnippets::new(true),
         ..CompletionConfig::default()
     };
     let mut completion_items = analysis

@@ -1,4 +1,4 @@
-use ide_db::SnippetCap;
+use ide_db::AllowSnippets;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct CompletionConfig {
@@ -11,11 +11,8 @@ pub struct CompletionConfig {
     // pub full_function_signatures: bool,
     // pub callable: Option<CallableSnippets>,
     // pub add_semicolon_to_unit: bool,
-    pub snippet_cap: Option<SnippetCap>,
+    pub allow_snippets: Option<AllowSnippets>,
     // pub insert_use: InsertUseConfig,
-    // pub prefer_no_std: bool,
-    // pub prefer_prelude: bool,
-    // pub prefer_absolute: bool,
     // pub snippets: Vec<Snippet>,
     // pub limit: Option<usize>,
     // pub fields_to_resolve: CompletionFieldsToResolve,

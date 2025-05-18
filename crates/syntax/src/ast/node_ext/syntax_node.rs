@@ -1,4 +1,4 @@
-use crate::{ast, AstNode, AstToken, SyntaxElement, SyntaxNode, SyntaxToken, TextRange, TextSize};
+use crate::{ast, AstNode, AstToken, SyntaxElement, SyntaxNode, SyntaxToken, TextSize};
 use parser::SyntaxKind;
 use rowan::{Direction, NodeOrToken, TokenAtOffset};
 use std::cmp::Ordering;
@@ -45,6 +45,18 @@ pub trait SyntaxNodeExt {
     fn descendants_of_type<Ast: AstNode>(&self) -> impl Iterator<Item = Ast>;
 
     fn next_sibling_or_token_no_trivia(&self) -> Option<SyntaxElement>;
+
+    fn next_token(&self) -> Option<SyntaxToken>;
+
+    fn next_token_no_trivia(&self) -> Option<SyntaxToken> {
+        let next_token = self.next_token();
+        if let Some(next_token) = next_token {
+            if next_token.kind().is_trivia() {
+                return next_token.next_token();
+            }
+        }
+        None
+    }
 
     fn strictly_before(&self, other: &SyntaxNode) -> bool;
 }
@@ -112,6 +124,19 @@ impl SyntaxNodeExt for SyntaxNode {
             .skip(1)
             .filter(|it| !it.kind().is_trivia())
             .next()
+    }
+
+    fn next_token(&self) -> Option<SyntaxToken> {
+        let sibling_or_token = match self.next_sibling_or_token() {
+            Some(it) => it,
+            None => {
+                return self.parent()?.next_token();
+            }
+        };
+        match sibling_or_token {
+            NodeOrToken::Token(token) => Some(token),
+            NodeOrToken::Node(node) => node.first_token(),
+        }
     }
 
     fn strictly_before(&self, other: &SyntaxNode) -> bool {

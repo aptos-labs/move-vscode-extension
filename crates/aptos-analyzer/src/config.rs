@@ -5,7 +5,7 @@ pub mod validation;
 use crate::lsp::capabilities::ClientCapabilities;
 use camino::Utf8PathBuf;
 use ide_completion::config::CompletionConfig;
-use ide_db::SnippetCap;
+use ide_db::AllowSnippets;
 use paths::AbsPath;
 use std::collections::HashSet;
 use std::fmt;
@@ -154,7 +154,7 @@ impl Config {
             //     CallableCompletionDef::None => None,
             // },
             // add_semicolon_to_unit: *self.completion_addSemicolonToUnit(source_root),
-            snippet_cap: SnippetCap::new(self.completion_snippet()),
+            allow_snippets: AllowSnippets::new(self.completion_snippet()),
             // insert_use: self.insert_use_config(source_root),
             // prefer_no_std: self.imports_preferNoStd(source_root).to_owned(),
             // prefer_prelude: self.imports_preferPrelude(source_root).to_owned(),
@@ -364,10 +364,10 @@ impl Config {
         self.experimental_bool("snippetTextEdit")
     }
 
-    pub fn snippet_cap(&self) -> Option<SnippetCap> {
+    pub fn snippet_cap(&self) -> Option<AllowSnippets> {
         // FIXME: Also detect the proposed lsp version at caps.workspace.workspaceEdit.snippetEditSupport
         // once lsp-types has it.
-        SnippetCap::new(self.snippet_text_edit())
+        AllowSnippets::new(self.snippet_text_edit())
     }
 
     pub fn main_loop_num_threads(&self) -> usize {

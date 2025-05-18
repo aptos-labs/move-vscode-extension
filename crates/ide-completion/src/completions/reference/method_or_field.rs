@@ -1,4 +1,5 @@
 use crate::completions::Completions;
+use crate::completions::reference::paths::PathCompletionCtx;
 use crate::context::CompletionContext;
 use crate::render::function::{FunctionKind, render_function};
 use crate::render::render_named_item;
@@ -96,9 +97,16 @@ fn add_method_completion_items(
         let _ = inference_ctx.combine_types(self_ty.clone(), coerced_receiver_ty);
 
         let apply_subst = inference_ctx.fully_resolve_vars_fallback_to_origin(subst);
+        let path_ctx = PathCompletionCtx { has_call_parens: false };
         acc.add(
-            render_function(ctx, method.map_into(), FunctionKind::Method, Some(apply_subst))
-                .build(ctx.db),
+            render_function(
+                ctx,
+                &path_ctx,
+                method.map_into(),
+                FunctionKind::Method,
+                Some(apply_subst),
+            )
+            .build(ctx.db),
         );
     }
 

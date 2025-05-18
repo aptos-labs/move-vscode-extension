@@ -184,7 +184,4 @@ pub struct SnippetTextEdit {
     pub new_text: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub insert_text_format: Option<lsp_types::InsertTextFormat>,
-    // /// The annotation id if this is an annotated
-    // #[serde(skip_serializing_if = "Option::is_none")]
-    // pub annotation_id: Option<lsp_types::ChangeAnnotationIdentifier>,
 }

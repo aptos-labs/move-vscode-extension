@@ -185,13 +185,6 @@ impl ClientCapabilities {
             .unwrap_or_default()
     }
 
-    // fn completions_resolve_provider(&self) -> bool {
-    //     let client_capabilities = self.completion_resolve_support_properties();
-    //     let fields_to_resolve =
-    //         CompletionFieldsToResolve::from_client_capabilities(&client_capabilities);
-    //     fields_to_resolve != CompletionFieldsToResolve::empty()
-    // }
-
     pub fn completion_label_details_support(&self) -> bool {
         (|| -> _ {
             self.0

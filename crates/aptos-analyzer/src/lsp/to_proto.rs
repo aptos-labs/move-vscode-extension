@@ -13,7 +13,7 @@ use ide::{Cancellable, HlRange, NavigationTarget};
 use ide_completion::item::{CompletionItem, CompletionItemKind};
 use ide_db::assists::{Assist, AssistKind};
 use ide_db::source_change::{FileSystemEdit, SnippetEdit, SourceChange};
-use ide_db::text_edit::{Indel, TextEdit};
+use ide_db::text_edit::{TextChange, TextEdit};
 use ide_db::{Severity, SymbolKind};
 use line_index::{TextRange, TextSize};
 use serde_json::to_value;
@@ -25,7 +25,7 @@ use stdx::itertools::Itertools;
 use syntax::files::FileRange;
 use vfs::{AbsPath, FileId};
 
-pub(crate) fn position(line_index: &LineIndex, offset: TextSize) -> lsp_types::Position {
+pub(crate) fn lsp_position(line_index: &LineIndex, offset: TextSize) -> lsp_types::Position {
     let line_col = line_index.index.line_col(offset);
     match line_index.encoding {
         PositionEncoding::Utf8 => lsp_types::Position::new(line_col.line, line_col.col),
@@ -36,9 +36,9 @@ pub(crate) fn position(line_index: &LineIndex, offset: TextSize) -> lsp_types::P
     }
 }
 
-pub(crate) fn range(line_index: &LineIndex, range: TextRange) -> lsp_types::Range {
-    let start = position(line_index, range.start());
-    let end = position(line_index, range.end());
+pub(crate) fn lsp_range(line_index: &LineIndex, range: TextRange) -> lsp_types::Range {
+    let start = lsp_position(line_index, range.start());
+    let end = lsp_position(line_index, range.end());
     lsp_types::Range::new(start, end)
 }
 
@@ -114,11 +114,11 @@ pub(crate) fn completion_item_kind(
     }
 }
 
-pub(crate) fn text_edit(line_index: &LineIndex, indel: Indel) -> lsp_types::TextEdit {
-    let range = range(line_index, indel.delete);
+pub(crate) fn lsp_text_edit(line_index: &LineIndex, change: TextChange) -> lsp_types::TextEdit {
+    let range = lsp_range(line_index, change.range);
     let new_text = match line_index.endings {
-        LineEndings::Unix => indel.insert,
-        LineEndings::Dos => indel.insert.replace('\n', "\r\n"),
+        LineEndings::Unix => change.new_text,
+        LineEndings::Dos => change.new_text.replace('\n', "\r\n"),
     };
     lsp_types::TextEdit { range, new_text }
 }
@@ -126,12 +126,12 @@ pub(crate) fn text_edit(line_index: &LineIndex, indel: Indel) -> lsp_types::Text
 pub(crate) fn snippet_text_edit(
     line_index: &LineIndex,
     is_snippet: bool,
-    indel: Indel,
+    indel: TextChange,
     // annotation: Option<ChangeAnnotationId>,
     // client_supports_annotations: bool,
 ) -> SnippetTextEdit {
     // let annotation_id = annotation.filter(|_| client_supports_annotations).map(|it| it.to_string());
-    let text_edit = text_edit(line_index, indel);
+    let text_edit = lsp_text_edit(line_index, indel);
     let insert_text_format = if is_snippet {
         Some(lsp_types::InsertTextFormat::SNIPPET)
     } else {
@@ -145,13 +145,13 @@ pub(crate) fn snippet_text_edit(
     }
 }
 
-pub(crate) fn completion_text_edit(
+pub(crate) fn lsp_completion_text_edit(
     line_index: &LineIndex,
-    insert_replace_support: Option<lsp_types::Position>,
-    indel: Indel,
+    insert_replace_at: Option<lsp_types::Position>,
+    text_change: TextChange,
 ) -> lsp_types::CompletionTextEdit {
-    let text_edit = text_edit(line_index, indel);
-    match insert_replace_support {
+    let text_edit = lsp_text_edit(line_index, text_change);
+    match insert_replace_at {
         Some(cursor_pos) => lsp_types::InsertReplaceEdit {
             new_text: text_edit.new_text,
             insert: lsp_types::Range {
@@ -168,7 +168,7 @@ pub(crate) fn completion_text_edit(
 pub(crate) fn text_edit_vec(line_index: &LineIndex, text_edit: TextEdit) -> Vec<lsp_types::TextEdit> {
     text_edit
         .into_iter()
-        .map(|indel| self::text_edit(line_index, indel))
+        .map(|indel| self::lsp_text_edit(line_index, indel))
         .collect()
 }
 
@@ -243,7 +243,7 @@ pub(crate) fn location_link(
     let origin_selection_range = match src {
         Some(src) => {
             let line_index = snap.file_line_index(src.file_id)?;
-            let range = range(&line_index, src.range);
+            let range = lsp_range(&line_index, src.range);
             Some(range)
         }
         None => None,
@@ -265,10 +265,10 @@ fn location_info(
     let line_index = snap.file_line_index(target.file_id)?;
 
     let target_uri = url(snap, target.file_id);
-    let target_range = range(&line_index, target.full_range);
+    let target_range = lsp_range(&line_index, target.full_range);
     let target_selection_range = target
         .focus_range
-        .map(|it| range(&line_index, it))
+        .map(|it| lsp_range(&line_index, it))
         .unwrap_or(target_range);
     Ok((target_uri, target_range, target_selection_range))
 }
@@ -288,7 +288,7 @@ pub(crate) fn location(
 ) -> Cancellable<lsp_types::Location> {
     let url = url(snap, frange.file_id);
     let line_index = snap.file_line_index(frange.file_id)?;
-    let range = range(&line_index, frange.range);
+    let range = lsp_range(&line_index, frange.range);
     let loc = lsp_types::Location::new(url, range);
     Ok(loc)
 }
@@ -346,7 +346,7 @@ pub(crate) fn semantic_tokens(
             if text[text_range].ends_with('\n') {
                 text_range = TextRange::new(text_range.start(), text_range.end() - TextSize::of('\n'));
             }
-            let range = range(line_index, text_range);
+            let range = lsp_range(line_index, text_range);
             builder.push(range, token_index, modifier_bitset);
         }
     }
@@ -452,128 +452,64 @@ fn semantic_token_type_and_modifiers(
 
 pub(crate) fn completion_items(
     config: &Config,
-    // fields_to_resolve: &CompletionFieldsToResolve,
     line_index: &LineIndex,
     version: Option<i32>,
-    tdpp: lsp_types::TextDocumentPositionParams,
+    params: lsp_types::TextDocumentPositionParams,
     completion_trigger_character: Option<char>,
     items: Vec<CompletionItem>,
 ) -> Vec<lsp_types::CompletionItem> {
-    // if config.completion_hide_deprecated() {
-    //     items.retain(|item| !item.deprecated);
-    // }
-
-    // let max_relevance = items.iter().map(|it| it.relevance.score()).max().unwrap_or_default();
     let mut res = Vec::with_capacity(items.len());
     for item in items {
-        completion_item(
-            &mut res, config,     // fields_to_resolve,
-            line_index, // version,
-            &tdpp,      // max_relevance,
-            // completion_trigger_character,
-            item,
-        );
+        completion_item(&mut res, config, line_index, &params, item);
     }
-
-    // if let Some(limit) = config.completion(None).limit {
-    //     res.sort_by(|item1, item2| item1.sort_text.cmp(&item2.sort_text));
-    //     res.truncate(limit);
-    // }
-
     res
 }
 
 fn completion_item(
     acc: &mut Vec<lsp_types::CompletionItem>,
     config: &Config,
-    // fields_to_resolve: &CompletionFieldsToResolve,
     line_index: &LineIndex,
-    // version: Option<i32>,
-    tdpp: &lsp_types::TextDocumentPositionParams,
-    // max_relevance: u32,
-    // completion_trigger_character: Option<char>,
+    params: &lsp_types::TextDocumentPositionParams,
     item: CompletionItem,
 ) {
-    let insert_replace_support = config.insert_replace_support().then_some(tdpp.position);
-    // let ref_match = item.ref_match();
+    let filter_text = item.lookup().to_owned();
+    let detail = item.detail.clone();
+    // let documentation = item.documentation.clone().map(documentation);
 
+    // LSP does not allow arbitrary edits in completion, so we have to do a
+    // non-trivial mapping here.
+    let insert_replace_at = config.insert_replace_support().then_some(params.position);
+    let mut text_edit = None;
     let mut additional_text_edits = Vec::new();
-    // let mut something_to_resolve = false;
-
-    let filter_text = /*if fields_to_resolve.resolve_filter_text {
-        something_to_resolve |= !item.lookup().is_empty();
-        None
-    } else*/ {
-        Some(item.lookup().to_owned())
-    };
-
-    let text_edit = /*if fields_to_resolve.resolve_text_edit {
-        something_to_resolve |= true;
-        None
-    } else*/ {
-        // LSP does not allow arbitrary edits in completion, so we have to do a
-        // non-trivial mapping here.
-        let mut text_edit = None;
-        let source_range = item.source_range;
-        for indel in &item.text_edit {
-            if indel.delete.contains_range(source_range) {
-                // Extract this indel as the main edit
-                text_edit = Some(if indel.delete == source_range {
-                    completion_text_edit(line_index, insert_replace_support, indel.clone())
-                } else {
-                    assert_eq!(source_range.end(), indel.delete.end());
-                    let range1 = TextRange::new(indel.delete.start(), source_range.start());
-                    let range2 = source_range;
-                    let indel1 = Indel::delete(range1);
-                    let indel2 = Indel::replace(range2, indel.insert.clone());
-                    additional_text_edits.push(self::text_edit(line_index, indel1));
-                    completion_text_edit(line_index, insert_replace_support, indel2)
-                })
-            } else {
-                assert!(source_range.intersect(indel.delete).is_none());
-                let text_edit = self::text_edit(line_index, indel.clone());
-                additional_text_edits.push(text_edit);
-            }
+    let ident_range = item.source_range;
+    for text_change in &item.text_edit {
+        // if text change does not affect the ident itself, put it into the `additional_text_edits`
+        if !text_change.range.contains_range(ident_range) {
+            assert!(ident_range.intersect(text_change.range).is_none());
+            let text_edit = lsp_text_edit(line_index, text_change.clone());
+            additional_text_edits.push(text_edit);
+            continue;
         }
-        Some(text_edit.unwrap())
-    };
 
+        if text_change.range == ident_range {
+            let edit = lsp_completion_text_edit(line_index, insert_replace_at, text_change.clone());
+            text_edit = Some(edit);
+            continue;
+        }
+
+        assert_eq!(ident_range.end(), text_change.range.end());
+        let range1 = TextRange::new(text_change.range.start(), ident_range.start());
+        let indel1 = TextChange::delete(range1);
+        let indel2 = TextChange::replace(ident_range, text_change.new_text.clone());
+        additional_text_edits.push(lsp_text_edit(line_index, indel1));
+        text_edit = Some(lsp_completion_text_edit(line_index, insert_replace_at, indel2));
+    }
     let insert_text_format = item.is_snippet.then_some(lsp_types::InsertTextFormat::SNIPPET);
-    // let tags = if fields_to_resolve.resolve_tags {
-    //     something_to_resolve |= item.deprecated;
-    //     None
-    // } else {
-    //     item.deprecated.then(|| vec![lsp_types::CompletionItemTag::DEPRECATED])
-    // };
-    // let command = if item.trigger_call_info && config.client_commands().trigger_parameter_hints {
-    //     if fields_to_resolve.resolve_command {
-    //         something_to_resolve |= true;
-    //         None
-    //     } else {
-    //         Some(command::trigger_parameter_hints())
-    //     }
-    // } else {
-    //     None
-    // };
-
-    let detail = /*if fields_to_resolve.resolve_detail {
-        something_to_resolve |= item.detail.is_some();
-        None
-    } else*/ {
-        item.detail.clone()
-    };
-
-    // let documentation = if fields_to_resolve.resolve_documentation {
-    //     something_to_resolve |= item.documentation.is_some();
-    //     None
-    // } else {
-    //     item.documentation.clone().map(documentation)
-    // };
 
     let mut lsp_item = lsp_types::CompletionItem {
         label: item.label.primary.to_string(),
         detail,
-        filter_text,
+        filter_text: Some(filter_text),
         kind: Some(completion_item_kind(item.kind)),
         text_edit,
         additional_text_edits: additional_text_edits
@@ -581,18 +517,12 @@ fn completion_item(
             .not()
             .then_some(additional_text_edits),
         // documentation,
-        // deprecated: item.deprecated.then_some(item.deprecated),
-        // tags,
-        // command,
         insert_text_format,
         ..Default::default()
     };
 
     if config.completion_label_details_support() {
         let has_label_details = item.label.detail_left.is_some() || item.label.detail_right.is_some();
-        /*if fields_to_resolve.resolve_label_details {
-            something_to_resolve |= has_label_details;
-        } else */
         if has_label_details {
             lsp_item.label_details = Some(lsp_types::CompletionItemLabelDetails {
                 detail: item.label.detail_left.clone(),
@@ -603,79 +533,7 @@ fn completion_item(
         lsp_item.label.push_str(label_detail.as_str());
     }
 
-    // set_score(&mut lsp_item, max_relevance, item.relevance);
-
-    // let imports =
-    //     if config.completion(None).enable_imports_on_the_fly && !item.import_to_add.is_empty() {
-    //         item.import_to_add
-    //             .clone()
-    //             .into_iter()
-    //             .map(|(import_path, import_name)| lsp_ext::CompletionImport {
-    //                 full_import_path: import_path,
-    //                 imported_name: import_name,
-    //             })
-    //             .collect()
-    //     } else {
-    //         Vec::new()
-    //     };
-    // let (ref_resolve_data, resolve_data) = if something_to_resolve || !imports.is_empty() {
-    //     let ref_resolve_data = if ref_match.is_some() {
-    //         let ref_resolve_data = lsp_ext::CompletionResolveData {
-    //             position: tdpp.clone(),
-    //             imports: Vec::new(),
-    //             version,
-    //             trigger_character: completion_trigger_character,
-    //             for_ref: true,
-    //             hash: BASE64_STANDARD.encode(completion_item_hash(&item, true)),
-    //         };
-    //         Some(to_value(ref_resolve_data).unwrap())
-    //     } else {
-    //         None
-    //     };
-    //     let resolve_data = lsp_ext::CompletionResolveData {
-    //         position: tdpp.clone(),
-    //         imports,
-    //         version,
-    //         trigger_character: completion_trigger_character,
-    //         for_ref: false,
-    //         hash: BASE64_STANDARD.encode(completion_item_hash(&item, false)),
-    //     };
-    //     (ref_resolve_data, Some(to_value(resolve_data).unwrap()))
-    // } else {
-    //     (None, None)
-    // };
-
-    // if let Some((label, indel, relevance)) = ref_match {
-    //     let mut lsp_item_with_ref =
-    //         lsp_types::CompletionItem { label, data: ref_resolve_data, ..lsp_item.clone() };
-    //     lsp_item_with_ref
-    //         .additional_text_edits
-    //         .get_or_insert_with(Default::default)
-    //         .push(self::text_edit(line_index, indel));
-    //     set_score(&mut lsp_item_with_ref, max_relevance, relevance);
-    //     acc.push(lsp_item_with_ref);
-    // };
-
-    // lsp_item.data = resolve_data;
     acc.push(lsp_item);
-
-    // fn set_score(
-    //     res: &mut lsp_types::CompletionItem,
-    //     max_relevance: u32,
-    //     relevance: CompletionRelevance,
-    // ) {
-    //     if relevance.is_relevant() && relevance.score() == max_relevance {
-    //         res.preselect = Some(true);
-    //     }
-    //     // The relevance needs to be inverted to come up with a sort score
-    //     // because the client will sort ascending.
-    //     let sort_score = relevance.score() ^ 0xFF_FF_FF_FF;
-    //     // Zero pad the string to ensure values can be properly sorted
-    //     // by the client. Hex format is used because it is easier to
-    //     // visually compare very large values, which the sort text
-    //     // tends to be since it is the opposite of the score.
-    //     res.sort_text = Some(format!("{sort_score:08x}"));
-    // }
 }
 
 pub(crate) fn markup_content(markup: String) -> lsp_types::MarkupContent {
@@ -710,13 +568,13 @@ fn merge_text_and_snippet_edits(
     for current_indel in text_edits {
         let new_range = {
             let insert_len =
-                TextSize::try_from(current_indel.insert.len()).unwrap_or(TextSize::from(u32::MAX));
-            TextRange::at(current_indel.delete.start(), insert_len)
+                TextSize::try_from(current_indel.new_text.len()).unwrap_or(TextSize::from(u32::MAX));
+            TextRange::at(current_indel.range.start(), insert_len)
         };
 
         // figure out how much this Indel will shift future ranges from the initial source
         let offset_adjustment =
-            u32::from(current_indel.delete.len()) as i32 - u32::from(new_range.len()) as i32;
+            u32::from(current_indel.range.len()) as i32 - u32::from(new_range.len()) as i32;
 
         // insert any snippets before the text edit
         for (snippet_index, snippet_range) in snippets.peeking_take_while(|(_, range)| {
@@ -740,9 +598,9 @@ fn merge_text_and_snippet_edits(
             edits.push(snippet_text_edit(
                 line_index,
                 true,
-                Indel {
-                    insert: format!("${snippet_index}"),
-                    delete: snippet_range,
+                TextChange {
+                    new_text: format!("${snippet_index}"),
+                    range: snippet_range,
                 },
                 // annotation,
                 // client_supports_annotations,
@@ -773,7 +631,7 @@ fn merge_text_and_snippet_edits(
                     )
             });
 
-            let mut new_text = current_indel.insert;
+            let mut new_text = current_indel.new_text;
 
             // find which snippet bits need to be escaped
             let escape_places = new_text
@@ -809,9 +667,9 @@ fn merge_text_and_snippet_edits(
             edits.push(snippet_text_edit(
                 line_index,
                 true,
-                Indel {
-                    insert: new_text,
-                    delete: current_indel.delete,
+                TextChange {
+                    new_text: new_text,
+                    range: current_indel.range,
                 },
                 // annotation,
                 // client_supports_annotations,
@@ -850,9 +708,9 @@ fn merge_text_and_snippet_edits(
         snippet_text_edit(
             line_index,
             true,
-            Indel {
-                insert: format!("${snippet_index}"),
-                delete: snippet_range,
+            TextChange {
+                new_text: format!("${snippet_index}"),
+                range: snippet_range,
             },
             // annotation,
             // client_supports_annotations,
@@ -1162,8 +1020,8 @@ pub(crate) fn inlay_hint(
 
     Ok(lsp_types::InlayHint {
         position: match inlay_hint.position {
-            InlayHintPosition::Before => position(line_index, inlay_hint.range.start()),
-            InlayHintPosition::After => position(line_index, inlay_hint.range.end()),
+            InlayHintPosition::Before => lsp_position(line_index, inlay_hint.range.start()),
+            InlayHintPosition::After => lsp_position(line_index, inlay_hint.range.end()),
         },
         padding_left: Some(inlay_hint.pad_left),
         padding_right: Some(inlay_hint.pad_right),

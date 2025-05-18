@@ -43,9 +43,8 @@ impl Completions {
 
     pub(crate) fn add_keyword_snippet(&mut self, ctx: &CompletionContext<'_>, kw: &str, snippet: &str) {
         let mut item = CompletionItem::new(CompletionItemKind::Keyword, ctx.source_range(), kw);
-
-        match ctx.config.snippet_cap {
-            Some(cap) => item.insert_snippet(cap, snippet),
+        match ctx.config.allow_snippets {
+            Some(_) => item.insert_snippet(snippet),
             None => item.insert_text(if snippet.contains('$') { kw } else { snippet }),
         };
         item.add_to(self, ctx.db);

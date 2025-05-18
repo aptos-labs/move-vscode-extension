@@ -7,8 +7,30 @@ use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variant
 use lang::nameres::scope::ScopeEntryListExt;
 use std::cell::RefCell;
 use syntax::SyntaxKind::*;
-use syntax::ast;
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::InFile;
+use syntax::{AstNode, T, ast};
+
+/// The state of the path we are currently completing.
+#[derive(Debug)]
+pub(crate) struct PathCompletionCtx {
+    /// If this is a call with () already there (or {} in case of record patterns)
+    pub(crate) has_call_parens: bool,
+    // /// Whether the path segment has type args or not.
+    // pub(crate) has_type_args: bool,
+    // /// The qualifier of the current path.
+    // pub(crate) qualified: Qualified,
+    // /// The parent of the path we are completing.
+    // pub(crate) parent: Option<ast::Path>,
+    // #[allow(dead_code)]
+    // /// The path of which we are completing the segment
+    // pub(crate) path: ast::Path,
+    // /// The path of which we are completing the segment in the original file
+    // pub(crate) original_path: Option<ast::Path>,
+    // pub(crate) kind: PathKind,
+    // /// Whether the qualifier comes from a use tree parent or not
+    // pub(crate) use_tree_parent: bool,
+}
 
 pub(crate) fn add_path_completions(
     completions: &RefCell<Completions>,
@@ -32,6 +54,8 @@ pub(crate) fn add_path_completions(
         .filter_by_visibility(ctx.db, &context_path);
     tracing::debug!(?entries);
 
+    let path_ctx = path_completion_ctx(&context_path);
+
     for entry in entries {
         let named_item = entry.cast_into::<ast::AnyNamedElement>(ctx.db)?;
         match named_item.kind() {
@@ -39,6 +63,7 @@ pub(crate) fn add_path_completions(
                 acc.add(
                     render_function(
                         ctx,
+                        &path_ctx,
                         named_item.cast_into::<ast::AnyFun>()?,
                         FunctionKind::Fun,
                         None,
@@ -73,4 +98,13 @@ fn add_keywords(completions: &RefCell<Completions>, ctx: &CompletionContext<'_>)
 
     add_keyword("true");
     add_keyword("false");
+}
+
+fn path_completion_ctx(path: &InFile<ast::Path>) -> PathCompletionCtx {
+    let (_, path) = path.unpack_ref();
+    let has_call_parens = path
+        .syntax()
+        .next_token_no_trivia()
+        .is_some_and(|it| it.kind() == T!['(']);
+    PathCompletionCtx { has_call_parens }
 }

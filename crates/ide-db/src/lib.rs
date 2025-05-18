@@ -68,14 +68,14 @@ pub fn ast_kind_to_symbol_kind(kind: SyntaxKind) -> Option<SymbolKind> {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct SnippetCap {
+pub struct AllowSnippets {
     _private: (),
 }
 
-impl SnippetCap {
-    pub const fn new(allow_snippets: bool) -> Option<SnippetCap> {
+impl AllowSnippets {
+    pub const fn new(allow_snippets: bool) -> Option<AllowSnippets> {
         if allow_snippets {
-            Some(SnippetCap { _private: () })
+            Some(AllowSnippets { _private: () })
         } else {
             None
         }
