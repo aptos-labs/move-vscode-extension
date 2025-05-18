@@ -1,4 +1,4 @@
-use crate::test_utils::completion::{
+use crate::test_utils::completion_utils::{
     check_completion_exact, check_completions_contains, check_completions_with_prefix_exact,
     check_no_completions, do_single_completion,
 };
@@ -41,8 +41,8 @@ mod/*caret*/
     "#,
         // language=Move
         expect![[r#"
-            module $0
-    "#]],
+            module /*caret*/
+        "#]],
     );
 }
 
@@ -176,10 +176,10 @@ module 0x1::m {
             module 0x1::m {
                 fun call() {}
                 fun main() {
-                    call()$0
+                    call()/*caret*/
                 }
             }
-    "#]],
+        "#]],
     );
 }
 
@@ -200,10 +200,10 @@ module 0x1::m {
             module 0x1::m {
                 fun call(a: u8) {}
                 fun main() {
-                    call($0)
+                    call(/*caret*/)
                 }
             }
-    "#]],
+        "#]],
     );
 }
 
@@ -308,10 +308,10 @@ module 0x1::m {
                     self.val
                 }
                 fun main() {
-                    T[@0x1].s.receiver()$0;
+                    T[@0x1].s.receiver()/*caret*/;
                 }
             }
-    "#]],
+        "#]],
     );
 }
 

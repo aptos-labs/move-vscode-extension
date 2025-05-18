@@ -1,5 +1,5 @@
 use ide_db::text_edit::TextEdit;
-use ide_db::{RootDatabase, SnippetCap, SymbolKind};
+use ide_db::{RootDatabase, SymbolKind};
 use std::fmt;
 use stdx::{impl_from, never};
 use syntax::TextRange;
@@ -64,9 +64,9 @@ impl fmt::Debug for CompletionItem {
             .field("detail_right", &self.label.detail_right)
             .field("source_range", &self.source_range);
         if self.text_edit.len() == 1 {
-            let atom = self.text_edit.iter().next().unwrap();
-            s.field("delete", &atom.delete);
-            s.field("insert", &atom.insert);
+            let text_change = self.text_edit.iter().next().unwrap();
+            s.field("range", &text_change.range);
+            s.field("new_text", &text_change.new_text);
         } else {
             s.field("text_edit", &self.text_edit);
         }
@@ -196,11 +196,7 @@ impl CompletionItemBuilder {
         self.insert_text = Some(insert_text.into());
         self
     }
-    pub(crate) fn insert_snippet(
-        &mut self,
-        _cap: SnippetCap,
-        snippet: impl Into<String>,
-    ) -> &mut CompletionItemBuilder {
+    pub(crate) fn insert_snippet(&mut self, snippet: impl Into<String>) -> &mut CompletionItemBuilder {
         self.is_snippet = true;
         self.insert_text(snippet)
     }

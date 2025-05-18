@@ -1,3 +1,4 @@
+use crate::completions::reference::paths::PathCompletionCtx;
 use crate::context::CompletionContext;
 use crate::item::CompletionItemBuilder;
 use crate::render::render_named_item;
@@ -12,11 +13,13 @@ use syntax::files::InFile;
 
 pub(crate) fn render_function(
     ctx: &CompletionContext<'_>,
+    path_ctx: &PathCompletionCtx,
+    fun_name: String,
     fun: InFile<ast::AnyFun>,
     kind: FunctionKind,
     apply_subst: Option<Substitution>,
 ) -> CompletionItemBuilder {
-    let mut completion_item = render_named_item(ctx, fun.clone().map_into());
+    let mut item_builder = render_named_item(ctx, fun_name, fun.clone().map_into());
 
     let ty_lowering = TyLowering::new(ctx.db, ctx.msl);
     let mut call_ty = ty_lowering.lower_any_function(fun.clone().map_into());
@@ -27,34 +30,38 @@ pub(crate) fn render_function(
     let (_, fun) = fun.unpack();
 
     let function_name = fun.name().unwrap().as_string();
-    completion_item.lookup_by(function_name.clone());
+    item_builder.lookup_by(function_name.clone());
 
     let params = render_params(ctx.db, fun.clone(), call_ty.clone()).unwrap_or_default();
     let params = match kind {
         FunctionKind::Fun => params,
         FunctionKind::Method => params.into_iter().skip(1).collect(),
     };
+    let params_line = params.join(", ");
+    item_builder.set_label(format!("{function_name}({params_line})"));
 
-    if let Some(cap) = ctx.config.snippet_cap {
-        let (snippet, label_suffix) = if params.is_empty() {
-            (format!("{}()$0", &function_name), "()".to_string())
+    if let Some(_) = ctx.config.allow_snippets {
+        let snippet_parens = if path_ctx.has_use_stmt_parent {
+            "$0"
         } else {
-            let params_line = params.join(", ");
-            (format!("{}($0)", &function_name), format!("({})", params_line))
+            if params.is_empty() {
+                if path_ctx.has_any_parens() { "$0" } else { "()$0" }
+            } else {
+                if path_ctx.has_any_parens() { "$0" } else { "($0)" }
+            }
         };
-        completion_item.set_label(format!("{}{}", &function_name, label_suffix));
-        completion_item.insert_snippet(cap, snippet);
+        item_builder.insert_snippet(format!("{function_name}{snippet_parens}"));
     }
 
     match call_ty.ret_type().unwrap_all_refs() {
         Ty::Unit => (),
         ret_ty => {
             let ret_ty_txt = ret_ty.render(ctx.db, None);
-            completion_item.set_detail(Some(ret_ty_txt));
+            item_builder.set_detail(Some(ret_ty_txt));
         }
     }
 
-    completion_item
+    item_builder
 }
 
 fn render_params(db: &dyn SourceDatabase, fun: ast::AnyFun, call_ty: TyCallable) -> Option<Vec<String>> {

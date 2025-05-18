@@ -1,4 +1,4 @@
-use crate::loc::{SyntaxLoc, SyntaxLocFileExt, SyntaxLocNodeExt};
+use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::inference::InferenceCtx;
 use crate::types::ty::Ty;

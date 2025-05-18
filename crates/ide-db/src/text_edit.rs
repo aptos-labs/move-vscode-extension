@@ -8,45 +8,44 @@ use itertools::Itertools;
 use std::cmp::max;
 use syntax::{TextRange, TextSize};
 
-/// `InsertDelete` -- a single "atomic" change to text
+/// `ReplaceText` -- a single "atomic" change to text
 ///
-/// Must not overlap with other `InDel`s
+/// Must not overlap with other `ReplaceText`s
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Indel {
-    pub insert: String,
+pub struct TextChange {
+    pub new_text: String,
     /// Refers to offsets in the original text
-    pub delete: TextRange,
+    pub range: TextRange,
 }
 
 #[derive(Default, Debug, Clone)]
 pub struct TextEdit {
-    /// Invariant: disjoint and sorted by `delete`.
-    indels: Vec<Indel>,
+    /// Invariant: disjoint and sorted by `range`.
+    changes: Vec<TextChange>,
 }
 
 #[derive(Debug, Default, Clone)]
 pub struct TextEditBuilder {
-    indels: Vec<Indel>,
+    text_changes: Vec<TextChange>,
 }
 
-impl Indel {
-    pub fn insert(offset: TextSize, text: String) -> Indel {
-        Indel::replace(TextRange::empty(offset), text)
+impl TextChange {
+    pub fn insert(offset: TextSize, text: String) -> TextChange {
+        TextChange::replace(TextRange::empty(offset), text)
     }
-    pub fn delete(range: TextRange) -> Indel {
-        Indel::replace(range, String::new())
+    pub fn delete(range: TextRange) -> TextChange {
+        TextChange::replace(range, String::new())
     }
-    pub fn replace(range: TextRange, replace_with: String) -> Indel {
-        Indel {
-            delete: range,
-            insert: replace_with,
+    pub fn replace(range: TextRange, replace_with: String) -> TextChange {
+        TextChange {
+            range,
+            new_text: replace_with,
         }
     }
-
     pub fn apply(&self, text: &mut String) {
-        let start: usize = self.delete.start().into();
-        let end: usize = self.delete.end().into();
-        text.replace_range(start..end, &self.insert);
+        let start: usize = self.range.start().into();
+        let end: usize = self.range.end().into();
+        text.replace_range(start..end, &self.new_text);
     }
 }
 
@@ -74,14 +73,14 @@ impl TextEdit {
     }
 
     pub fn len(&self) -> usize {
-        self.indels.len()
+        self.changes.len()
     }
 
     pub fn is_empty(&self) -> bool {
-        self.indels.is_empty()
+        self.changes.is_empty()
     }
 
-    pub fn iter(&self) -> std::slice::Iter<'_, Indel> {
+    pub fn iter(&self) -> std::slice::Iter<'_, TextChange> {
         self.into_iter()
     }
 
@@ -89,27 +88,27 @@ impl TextEdit {
         match self.len() {
             0 => return,
             1 => {
-                self.indels[0].apply(text);
+                self.changes[0].apply(text);
                 return;
             }
             _ => (),
         }
 
-        let text_size = TextSize::of(&*text);
-        let mut total_len = text_size;
-        let mut max_total_len = text_size;
-        for indel in &self.indels {
-            total_len += TextSize::of(&indel.insert);
-            total_len -= indel.delete.len();
+        // optimization
+        let original_len = TextSize::of(&*text);
+        let mut total_len = original_len;
+        let mut max_total_len = original_len;
+        for text_change in &self.changes {
+            total_len += TextSize::of(&text_change.new_text);
+            total_len -= text_change.range.len();
             max_total_len = max(max_total_len, total_len);
         }
-
-        if let Some(additional) = max_total_len.checked_sub(text_size) {
-            text.reserve(additional.into());
+        if let Some(additional_len) = max_total_len.checked_sub(original_len) {
+            text.reserve(additional_len.into());
         }
 
-        for indel in self.indels.iter().rev() {
-            indel.apply(text);
+        for text_change in self.changes.iter().rev() {
+            text_change.apply(text);
         }
 
         assert_eq!(TextSize::of(&*text), total_len);
@@ -118,14 +117,14 @@ impl TextEdit {
     pub fn union(&mut self, other: TextEdit) -> Result<(), TextEdit> {
         let iter_merge = self
             .iter()
-            .merge_by(other.iter(), |l, r| l.delete.start() <= r.delete.start());
+            .merge_by(other.iter(), |l, r| l.range.start() <= r.range.start());
         if !check_disjoint(&mut iter_merge.clone()) {
             return Err(other);
         }
 
         // Only dedup deletions and replacements, keep all insertions
-        self.indels = iter_merge
-            .dedup_by(|a, b| a == b && !a.delete.is_empty())
+        self.changes = iter_merge
+            .dedup_by(|a, b| a == b && !a.range.is_empty())
             .cloned()
             .collect();
         Ok(())
@@ -133,96 +132,96 @@ impl TextEdit {
 
     pub fn apply_to_offset(&self, offset: TextSize) -> Option<TextSize> {
         let mut res = offset;
-        for indel in &self.indels {
-            if indel.delete.start() >= offset {
+        for indel in &self.changes {
+            if indel.range.start() >= offset {
                 break;
             }
-            if offset < indel.delete.end() {
+            if offset < indel.range.end() {
                 return None;
             }
-            res += TextSize::of(&indel.insert);
-            res -= indel.delete.len();
+            res += TextSize::of(&indel.new_text);
+            res -= indel.range.len();
         }
         Some(res)
     }
 }
 
 impl IntoIterator for TextEdit {
-    type Item = Indel;
-    type IntoIter = std::vec::IntoIter<Indel>;
+    type Item = TextChange;
+    type IntoIter = std::vec::IntoIter<TextChange>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.indels.into_iter()
+        self.changes.into_iter()
     }
 }
 
 impl<'a> IntoIterator for &'a TextEdit {
-    type Item = &'a Indel;
-    type IntoIter = std::slice::Iter<'a, Indel>;
+    type Item = &'a TextChange;
+    type IntoIter = std::slice::Iter<'a, TextChange>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.indels.iter()
+        self.changes.iter()
     }
 }
 
 impl TextEditBuilder {
     pub fn is_empty(&self) -> bool {
-        self.indels.is_empty()
+        self.text_changes.is_empty()
     }
     pub fn replace(&mut self, range: TextRange, replace_with: String) {
-        self.indel(Indel::replace(range, replace_with));
+        self.add_change(TextChange::replace(range, replace_with));
     }
     pub fn delete(&mut self, range: TextRange) {
-        self.indel(Indel::delete(range));
+        self.add_change(TextChange::delete(range));
     }
     pub fn insert(&mut self, offset: TextSize, text: String) {
-        self.indel(Indel::insert(offset, text));
+        self.add_change(TextChange::insert(offset, text));
     }
     pub fn finish(self) -> TextEdit {
-        let mut indels = self.indels;
-        assert_disjoint_or_equal(&mut indels);
-        indels = coalesce_indels(indels);
-        TextEdit { indels }
+        let mut changes = self.text_changes;
+        assert_disjoint_or_equal(&mut changes);
+        changes = coalesce_text_changes(changes);
+        TextEdit { changes }
     }
     pub fn invalidates_offset(&self, offset: TextSize) -> bool {
-        self.indels
+        self.text_changes
             .iter()
-            .any(|indel| indel.delete.contains_inclusive(offset))
+            .any(|indel| indel.range.contains_inclusive(offset))
     }
-    fn indel(&mut self, indel: Indel) {
-        self.indels.push(indel);
-        if self.indels.len() <= 16 {
-            assert_disjoint_or_equal(&mut self.indels);
+    fn add_change(&mut self, change: TextChange) {
+        self.text_changes.push(change);
+        if self.text_changes.len() <= 16 {
+            assert_disjoint_or_equal(&mut self.text_changes);
         }
     }
 }
 
-fn assert_disjoint_or_equal(indels: &mut [Indel]) {
-    assert!(check_disjoint_and_sort(indels));
+fn assert_disjoint_or_equal(text_changes: &mut [TextChange]) {
+    assert!(check_disjoint_and_sort(text_changes));
 }
 
-fn check_disjoint_and_sort(indels: &mut [Indel]) -> bool {
-    indels.sort_by_key(|indel| (indel.delete.start(), indel.delete.end()));
-    check_disjoint(&mut indels.iter())
+fn check_disjoint_and_sort(text_changes: &mut [TextChange]) -> bool {
+    text_changes.sort_by_key(|change| (change.range.start(), change.range.end()));
+    check_disjoint(&mut text_changes.iter())
 }
 
-fn check_disjoint<'a, I>(indels: &mut I) -> bool
+fn check_disjoint<'a, I>(text_changes: &mut I) -> bool
 where
-    I: Iterator<Item = &'a Indel> + Clone,
+    I: Iterator<Item = &'a TextChange> + Clone,
 {
-    indels
+    text_changes
         .clone()
-        .zip(indels.skip(1))
-        .all(|(l, r)| l.delete.end() <= r.delete.start() || l == r)
+        .zip(text_changes.skip(1))
+        .all(|(l, r)| l.range.end() <= r.range.start() || l == r)
 }
 
-fn coalesce_indels(indels: Vec<Indel>) -> Vec<Indel> {
+fn coalesce_text_changes(indels: Vec<TextChange>) -> Vec<TextChange> {
     indels
         .into_iter()
         .coalesce(|mut a, b| {
-            if a.delete.end() == b.delete.start() {
-                a.insert.push_str(&b.insert);
-                a.delete = TextRange::new(a.delete.start(), b.delete.end());
+            if a.range.end() == b.range.start() {
+                a.new_text.push_str(&b.new_text);
+                a.range = TextRange::new(a.range.start(), b.range.end());
                 Ok(a)
             } else {
                 Err((a, b))
@@ -262,7 +261,7 @@ mod tests {
 
         let edit2 = builder.finish();
         assert!(edit1.union(edit2).is_ok());
-        assert_eq!(edit1.indels.len(), 3);
+        assert_eq!(edit1.changes.len(), 3);
     }
 
     #[test]
@@ -278,7 +277,7 @@ mod tests {
         let mut edit1 = builder1.finish();
         let edit2 = builder2.finish();
         assert!(edit1.union(edit2).is_ok());
-        assert_eq!(edit1.indels.len(), 3);
+        assert_eq!(edit1.changes.len(), 3);
     }
 
     #[test]
@@ -295,7 +294,7 @@ mod tests {
         builder.replace(range(5, 7), "bb".into());
         let edit = builder.finish();
 
-        assert_eq!(edit.indels.len(), 2);
+        assert_eq!(edit.changes.len(), 2);
     }
 
     #[test]
@@ -305,9 +304,9 @@ mod tests {
         builder.replace(range(3, 5), "bb".into());
 
         let edit = builder.finish();
-        assert_eq!(edit.indels.len(), 1);
-        assert_eq!(edit.indels[0].insert, "aabb");
-        assert_eq!(edit.indels[0].delete, range(1, 5));
+        assert_eq!(edit.changes.len(), 1);
+        assert_eq!(edit.changes[0].new_text, "aabb");
+        assert_eq!(edit.changes[0].range, range(1, 5));
     }
 
     #[test]
@@ -319,8 +318,8 @@ mod tests {
         builder.replace(range(8, 9), "ub".into());
 
         let edit = builder.finish();
-        assert_eq!(edit.indels.len(), 1);
-        assert_eq!(edit.indels[0].insert, "auwwwub");
-        assert_eq!(edit.indels[0].delete, range(1, 9));
+        assert_eq!(edit.changes.len(), 1);
+        assert_eq!(edit.changes[0].new_text, "auwwwub");
+        assert_eq!(edit.changes[0].range, range(1, 9));
     }
 }

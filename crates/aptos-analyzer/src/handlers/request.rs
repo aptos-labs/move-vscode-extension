@@ -126,7 +126,6 @@ pub(crate) fn handle_completion(
 
     let items = to_proto::completion_items(
         &snap.config,
-        // &completion_config.fields_to_resolve,
         &line_index,
         snap.file_version(position.file_id),
         text_document_position,
@@ -237,12 +236,12 @@ pub(crate) fn handle_selection_range(
                 }
             }
             let mut range = lsp_types::SelectionRange {
-                range: to_proto::range(&line_index, *ranges.last().unwrap()),
+                range: to_proto::lsp_range(&line_index, *ranges.last().unwrap()),
                 parent: None,
             };
             for &r in ranges.iter().rev().skip(1) {
                 range = lsp_types::SelectionRange {
-                    range: to_proto::range(&line_index, r),
+                    range: to_proto::lsp_range(&line_index, r),
                     parent: Some(Box::new(range)),
                 }
             }
@@ -266,7 +265,7 @@ pub(crate) fn handle_hover(
     };
 
     let line_index = snap.file_line_index(file_position.file_id)?;
-    let range = to_proto::range(&line_index, info.range);
+    let range = to_proto::lsp_range(&line_index, info.range);
     let hover = lsp_types::Hover {
         contents: HoverContents::Markup(to_proto::markup_content(info.info.doc_string)),
         range: Some(range),

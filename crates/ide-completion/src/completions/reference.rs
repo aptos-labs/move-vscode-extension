@@ -1,5 +1,5 @@
 mod method_or_field;
-mod paths;
+pub(crate) mod paths;
 
 use crate::completions::Completions;
 use crate::completions::reference::method_or_field::add_method_or_field_completions;

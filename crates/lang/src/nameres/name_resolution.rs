@@ -174,7 +174,7 @@ pub fn get_qualified_path_entries(
     db: &dyn SourceDatabase,
     ctx: &ResolutionContext,
     qualifier: ast::Path,
-) -> Option<Vec<ScopeEntry>> {
+) -> Vec<ScopeEntry> {
     let qualifier = ctx.wrap_in_file(qualifier);
     let qualifier_item = qualifier.clone().resolve_no_inf(db);
     if qualifier_item.is_none() {
@@ -185,14 +185,9 @@ pub fn get_qualified_path_entries(
                 qualifier_name
             )
             .entered();
-
-            return Some(get_modules_as_entries(
-                db,
-                ctx.package_id(db),
-                Address::named(&qualifier_name),
-            ));
+            return get_modules_as_entries(db, ctx.package_id(db), Address::named(&qualifier_name));
         }
-        return None;
+        return vec![];
     }
     let qualifier_item = qualifier_item.unwrap();
     let mut entries = vec![];
@@ -205,7 +200,6 @@ pub fn get_qualified_path_entries(
                 ns: Ns::MODULE,
                 scope_adjustment: None,
             });
-
             entries.extend(hir_db::module_importable_entries(
                 db,
                 qualifier_item.node_loc.clone(),
@@ -216,10 +210,12 @@ pub fn get_qualified_path_entries(
             ));
         }
         SyntaxKind::ENUM => {
-            let enum_ = qualifier_item.node_loc.to_ast::<ast::Enum>(db)?;
+            let Some(enum_) = qualifier_item.node_loc.to_ast::<ast::Enum>(db) else {
+                return vec![];
+            };
             entries.extend(enum_.value.variants().to_entries(enum_.file_id));
         }
         _ => {}
     }
-    Some(entries)
+    entries
 }

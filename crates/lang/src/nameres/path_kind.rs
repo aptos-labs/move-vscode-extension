@@ -9,7 +9,7 @@ use parser::T;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
-use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
+use syntax::ast::node_ext::syntax_node::{SyntaxNodeExt, SyntaxTokenExt};
 use syntax::{AstNode, ast};
 
 #[derive(Clone, PartialEq, Eq)]
@@ -35,12 +35,6 @@ pub enum PathKind {
         ns: NsSet,
         kind: QualifiedKind,
     },
-}
-
-impl PathKind {
-    pub fn is_unqualified(&self) -> bool {
-        matches!(self, PathKind::Unqualified { .. })
-    }
 }
 
 impl fmt::Debug for PathKind {
@@ -125,20 +119,22 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
 
         // outside use stmt
         // check whether there's a '::' after it, then try for a named address
-        if let Some(next_sibling) = path.syntax().next_sibling_or_token_no_trivia() {
-            if next_sibling.kind() == T![::] {
-                if resolve_named_address(&ref_name).is_some() {
-                    return Some(PathKind::NamedAddressOrUnqualifiedPath {
-                        address: NamedAddr::new(ref_name),
-                        ns,
-                    });
-                }
+        if path
+            .ident_token()
+            .and_then(|it| it.next_token())
+            .is_some_and(|token| token.is(T![::]))
+        {
+            if resolve_named_address(&ref_name).is_some() {
+                return Some(PathKind::NamedAddressOrUnqualifiedPath {
+                    address: NamedAddr::new(ref_name),
+                    ns,
+                });
+            }
 
-                if path.root_path().syntax().parent_is::<ast::Friend>() {
-                    // friend addr::module;
-                    //        ^ (unknown named address)
-                    return Some(PathKind::NamedAddress(NamedAddr::new(ref_name)));
-                }
+            if path.root_path().syntax().parent_is::<ast::Friend>() {
+                // friend addr::module;
+                //        ^ (unknown named address)
+                return Some(PathKind::NamedAddress(NamedAddr::new(ref_name)));
             }
         }
 
@@ -195,6 +191,10 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
             _ => (),
         }
 
+        // remove MODULE if it's added, as it cannot be a MODULE
+        let mut ns = ns;
+        ns.remove(Ns::MODULE);
+
         // module::[name]
         return Some(PathKind::Qualified {
             path,
@@ -218,7 +218,8 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
     Some(PathKind::Qualified {
         path,
         qualifier,
-        ns,
+        // remove MODULE if it's added, as it cannot be a MODULE
+        ns: ns - Ns::MODULE,
         kind: QualifiedKind::FQModuleItem,
     })
 }

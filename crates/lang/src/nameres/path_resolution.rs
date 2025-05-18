@@ -12,7 +12,6 @@ use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
 use base_db::SourceDatabase;
 use base_db::package_root::PackageId;
-use parser::SyntaxKind::CALL_EXPR;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::{HasItems, ReferenceElement};
@@ -81,9 +80,11 @@ pub fn get_path_resolve_variants(
             ..
         } => get_modules_as_entries(db, ctx.package_id(db), address),
 
-        PathKind::Qualified { qualifier, ns, .. } => get_qualified_path_entries(db, ctx, qualifier)
-            .unwrap_or_default()
-            .filter_by_ns(ns),
+        PathKind::Qualified { qualifier, ns, .. } => {
+            let qualified_path_entries = get_qualified_path_entries(db, ctx, qualifier);
+            tracing::info!(?qualified_path_entries);
+            qualified_path_entries.filter_by_ns(ns)
+        }
     }
 }
 
@@ -149,6 +150,7 @@ pub fn resolve_path(
 
     let ctx = ResolutionContext { path, is_completion: false };
     let entries = get_path_resolve_variants(db, &ctx, path_kind.clone());
+    tracing::debug!(path_resolve_variants = ?entries);
 
     let entries_filtered_by_name = entries.filter_by_name(path_name.clone());
     tracing::debug!(filter_by_name = ?path_name, ?entries_filtered_by_name);

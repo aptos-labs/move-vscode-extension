@@ -2,7 +2,7 @@ use crate::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::grammar::expressions::atom::block_expr;
 use crate::grammar::items::{fun, item_start};
 use crate::grammar::utils::list;
-use crate::grammar::{name, name_ref, name_ref_or_bump_until, patterns, type_params, types};
+use crate::grammar::{name_ref, name_ref_or_bump_until, patterns, type_params, types};
 use crate::parser::Marker;
 use crate::token_set::TokenSet;
 use crate::SyntaxKind::*;
