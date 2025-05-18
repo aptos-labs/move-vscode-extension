@@ -15,11 +15,12 @@ use syntax::files::InFile;
 pub(crate) fn render_function(
     ctx: &CompletionContext<'_>,
     path_ctx: &PathCompletionCtx,
+    fun_name: String,
     fun: InFile<ast::AnyFun>,
     kind: FunctionKind,
     apply_subst: Option<Substitution>,
 ) -> CompletionItemBuilder {
-    let mut item_builder = render_named_item(ctx, fun.clone().map_into());
+    let mut item_builder = render_named_item(ctx, fun_name, fun.clone().map_into());
 
     let ty_lowering = TyLowering::new(ctx.db, ctx.msl);
     let mut call_ty = ty_lowering.lower_any_function(fun.clone().map_into());
@@ -45,9 +46,9 @@ pub(crate) fn render_function(
             "$0"
         } else {
             if params.is_empty() {
-                if path_ctx.has_call_parens { "$0" } else { "()$0" }
+                if path_ctx.has_any_parens() { "$0" } else { "()$0" }
             } else {
-                if path_ctx.has_call_parens { "$0" } else { "($0)" }
+                if path_ctx.has_any_parens() { "$0" } else { "($0)" }
             }
         };
         item_builder.insert_snippet(format!("{function_name}{snippet_parens}"));

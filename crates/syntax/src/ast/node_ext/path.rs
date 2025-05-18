@@ -1,5 +1,6 @@
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::{ast, AstNode};
+use rowan::SyntaxToken;
 
 impl ast::Path {
     pub fn path_address(&self) -> Option<ast::PathAddress> {
@@ -43,5 +44,9 @@ impl ast::Path {
 
     pub fn is_use_speck(&self) -> bool {
         self.use_speck().is_some()
+    }
+
+    pub fn ident_token(&self) -> Option<ast::SyntaxToken> {
+        self.segment()?.name_ref().map(|it| it.ident_token())
     }
 }

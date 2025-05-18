@@ -232,6 +232,7 @@ fn test_fq_completion_for_use() {
             use 0x1::m1::c/*caret*/
         }
     "#,
+        // language=Move
         expect![[r#"
             module 0x1::m1 {
                 public fun call() {}
@@ -240,5 +241,123 @@ fn test_fq_completion_for_use() {
                 use 0x1::m1::call/*caret*/
             }
         "#]],
+    )
+}
+
+#[test]
+fn test_fq_completion_for_reference_expr() {
+    do_single_completion(
+        // language=Move
+        r#"
+        module 0x1::m1 {
+            public fun call() {}
+        }
+        module 0x1::m2 {
+            fun m() {
+                0x1::m1::c/*caret*/
+            }
+        }
+    "#,
+        // language=Move
+        expect![[r#"
+            module 0x1::m1 {
+                public fun call() {}
+            }
+            module 0x1::m2 {
+                fun m() {
+                    0x1::m1::call()/*caret*/
+                }
+            }
+        "#]],
+    )
+}
+
+// todo: type annotation
+// #[test]
+// fn test_insert_angle_brackets_for_borrow_global_mut_if_not_inferrable_from_the_context() {
+//     do_single_completion(
+//         // language=Move
+//         r#"
+//         module 0x1::m {
+//             fun m() {
+//                 let a = borrow_global_/*caret*/
+//             }
+//         }
+//     "#,
+//         // language=Move
+//         expect![[r#"
+//             module 0x1::m {
+//                 fun m() {
+//                     let a = borrow_global_mut(/*caret*/)
+//                 }
+//             }
+//         "#]],
+//     )
+// }
+
+#[test]
+fn test_do_not_insert_parens_if_angle_brackets_exist() {
+    do_single_completion(
+        // language=Move
+        r#"
+        module 0x1::m {
+            fun m() {
+                borrow_global_m/*caret*/<u8>(@0x1);
+            }
+        }
+    "#,
+        // language=Move
+        expect![[r#"
+            module 0x1::m {
+                fun m() {
+                    borrow_global_mut/*caret*/<u8>(@0x1);
+                }
+            }
+        "#]],
+    )
+}
+
+// todo: auto-import
+// #[test]
+// fn test_function_in_path_position_with_auto_import() {
+//     do_single_completion(
+//         // language=Move
+//         r#"
+//     module 0x1::signer {
+//         public fun address_of(s: &signer): address { @0x1 }
+//     }
+//     module 0x1::m {
+//         fun call() {
+//             let a = 1;
+//             address_o/*caret*/
+//         }
+//     }
+//     "#,
+//         // language=Move
+//         expect![[r#"
+//             module 0x1::m {
+//                 fun m() {
+//                     borrow_global_mut/*caret*/<u8>(@0x1);
+//                 }
+//             }
+//         "#]],
+//     )
+// }
+
+#[test]
+fn test_test_only_function_completion_in_test_only_scope() {
+    check_completions(
+        // language=Move
+        r#"
+        module 0x1::minter {
+            #[test_only]
+            public fun get_weekly() {}
+        }
+        #[test_only]
+        module 0x1::minter_tests {
+            use 0x1::minter::get/*caret*/
+        }
+    "#,
+        expect![[r#"["Self", "get_weekly()"]"#]],
     )
 }

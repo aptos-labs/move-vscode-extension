@@ -239,3 +239,18 @@ module std::main {
 "#,
     )
 }
+
+// language=Move
+#[test]
+fn test_module_unresolved_by_name_from_use_speck() {
+    check_resolve(
+        r#"
+module std::m {
+}
+module std::main {
+    use std::m::m;
+              //^ unresolved
+}
+"#,
+    )
+}

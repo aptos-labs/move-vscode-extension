@@ -1,27 +1,13 @@
+use crate::ast::node_ext::syntax_element::SyntaxElementExt;
+use crate::syntax_editor::Element;
 use crate::{ast, AstNode, AstToken, SyntaxElement, SyntaxNode, SyntaxToken, TextSize};
 use parser::SyntaxKind;
-use rowan::{Direction, NodeOrToken, TokenAtOffset};
+use rowan::TokenAtOffset;
 use std::cmp::Ordering;
-use stdx::itertools::Itertools;
 
-pub trait SyntaxElementExt {
-    fn prev_sibling_or_token_no_trivia(&self) -> Option<SyntaxElement>;
-}
-
-impl SyntaxElementExt for SyntaxElement {
-    fn prev_sibling_or_token_no_trivia(&self) -> Option<SyntaxElement> {
-        match self {
-            NodeOrToken::Node(node) => node
-                .siblings_with_tokens(Direction::Prev)
-                .dropping(1)
-                .filter(|it| !it.kind().is_trivia())
-                .next(),
-            NodeOrToken::Token(token) => token
-                .siblings_with_tokens(Direction::Prev)
-                .dropping(1)
-                .filter(|it| !it.kind().is_trivia())
-                .next(),
-        }
+impl SyntaxElementExt for SyntaxNode {
+    fn to_syntax_element(&self) -> SyntaxElement {
+        self.syntax_element()
     }
 }
 
@@ -43,20 +29,6 @@ pub trait SyntaxNodeExt {
     fn parent_of_type<Ast: AstNode>(&self) -> Option<Ast>;
 
     fn descendants_of_type<Ast: AstNode>(&self) -> impl Iterator<Item = Ast>;
-
-    fn next_sibling_or_token_no_trivia(&self) -> Option<SyntaxElement>;
-
-    fn next_token(&self) -> Option<SyntaxToken>;
-
-    fn next_token_no_trivia(&self) -> Option<SyntaxToken> {
-        let next_token = self.next_token();
-        if let Some(next_token) = next_token {
-            if next_token.kind().is_trivia() {
-                return next_token.next_token();
-            }
-        }
-        None
-    }
 
     fn strictly_before(&self, other: &SyntaxNode) -> bool;
 }
@@ -117,26 +89,6 @@ impl SyntaxNodeExt for SyntaxNode {
 
     fn descendants_of_type<Ast: AstNode>(&self) -> impl Iterator<Item = Ast> {
         self.descendants().filter_map(Ast::cast)
-    }
-
-    fn next_sibling_or_token_no_trivia(&self) -> Option<SyntaxElement> {
-        self.siblings_with_tokens(Direction::Next)
-            .skip(1)
-            .filter(|it| !it.kind().is_trivia())
-            .next()
-    }
-
-    fn next_token(&self) -> Option<SyntaxToken> {
-        let sibling_or_token = match self.next_sibling_or_token() {
-            Some(it) => it,
-            None => {
-                return self.parent()?.next_token();
-            }
-        };
-        match sibling_or_token {
-            NodeOrToken::Token(token) => Some(token),
-            NodeOrToken::Node(node) => node.first_token(),
-        }
     }
 
     fn strictly_before(&self, other: &SyntaxNode) -> bool {

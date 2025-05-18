@@ -14,6 +14,7 @@ use lang::types::ty::Ty;
 use lang::types::ty::adt::TyAdt;
 use std::cell::RefCell;
 use syntax::ast;
+use syntax::ast::NamedElement;
 use syntax::files::{InFile, InFileExt};
 
 pub(crate) fn add_method_or_field_completions(
@@ -55,8 +56,9 @@ fn add_field_completion_items(
     let named_fields = adt_item.field_ref_lookup_fields();
     let ty_lowering = TyLowering::new(ctx.db, ctx.msl);
     for named_field in named_fields {
+        let name = named_field.field_name().as_string();
         let named_field = named_field.in_file(file_id);
-        let mut completion_item = render_named_item(ctx, named_field.clone().map_into());
+        let mut completion_item = render_named_item(ctx, name, named_field.clone().map_into());
 
         if let Some(field_ty) = ty_lowering.lower_type_owner(named_field.map_into()) {
             let field_detail = field_ty.substitute(&ty_adt.substitution).render(ctx.db, None);
@@ -80,6 +82,7 @@ fn add_method_completion_items(
     let method_entries =
         get_method_resolve_variants(hir_db, &receiver_ty, ctx.position.file_id, ctx.msl);
     for method_entry in method_entries {
+        let method_name = method_entry.name.clone();
         let method = method_entry.cast_into::<ast::Fun>(hir_db)?;
 
         let subst = method.ty_vars_subst(&TyVarIndex::default());
@@ -102,6 +105,7 @@ fn add_method_completion_items(
             render_function(
                 ctx,
                 &path_ctx,
+                method_name,
                 method.map_into(),
                 FunctionKind::Method,
                 Some(apply_subst),
