@@ -195,6 +195,10 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
             _ => (),
         }
 
+        // remove MODULE if it's added, as it cannot be a MODULE
+        let mut ns = ns;
+        ns.remove(Ns::MODULE);
+
         // module::[name]
         return Some(PathKind::Qualified {
             path,
@@ -213,6 +217,10 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
             kind: QualifiedKind::FQModuleItem,
         });
     }
+
+    // remove MODULE if it's added, as it cannot be a MODULE
+    let mut ns = ns;
+    ns.remove(Ns::MODULE);
 
     // three-element path
     Some(PathKind::Qualified {

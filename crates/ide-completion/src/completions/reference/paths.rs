@@ -32,6 +32,7 @@ pub(crate) struct PathCompletionCtx {
     // pub(crate) use_tree_parent: bool,
 }
 
+#[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn add_path_completions(
     completions: &RefCell<Completions>,
     ctx: &CompletionContext<'_>,
@@ -50,13 +51,13 @@ pub(crate) fn add_path_completions(
         path: context_path.clone(),
         is_completion: true,
     };
-    let entries = get_path_resolve_variants(ctx.db, &resolution_ctx, path_kind)
+    let completion_item_entries = get_path_resolve_variants(ctx.db, &resolution_ctx, path_kind)
         .filter_by_visibility(ctx.db, &context_path);
-    tracing::debug!(?entries);
+    tracing::debug!(?completion_item_entries);
 
     let path_ctx = path_completion_ctx(&context_path);
 
-    for entry in entries {
+    for entry in completion_item_entries {
         let named_item = entry.cast_into::<ast::AnyNamedElement>(ctx.db)?;
         match named_item.kind() {
             FUN | SPEC_FUN | SPEC_INLINE_FUN => {
