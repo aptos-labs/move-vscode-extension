@@ -1,5 +1,5 @@
 use crate::test_utils::completion_utils::{
-    check_completions, check_completions_contains, check_no_completions, do_single_completion,
+    check_completions, check_no_completions, do_single_completion,
 };
 use expect_test::expect;
 

@@ -12,7 +12,6 @@ use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
 use base_db::SourceDatabase;
 use base_db::package_root::PackageId;
-use parser::SyntaxKind::CALL_EXPR;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::{HasItems, ReferenceElement};

@@ -1,7 +1,6 @@
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use ide_db::Severity;
-use lang::hir_db::NodeInferenceExt;
 use lang::types::inference::TypeError;
 use lang::types::ty::Ty;
 use syntax::ast::NamedElement;

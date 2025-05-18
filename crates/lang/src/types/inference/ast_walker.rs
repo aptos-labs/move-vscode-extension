@@ -16,10 +16,9 @@ use crate::types::ty::reference::{Mutability, autoborrow};
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar};
 use std::iter;
-use std::iter::zip;
 use std::ops::Deref;
 use syntax::ast::node_ext::named_field::FilterNamedFieldsByName;
-use syntax::ast::{FieldsOwner, HasStmts, NamedElement};
+use syntax::ast::{FieldsOwner, HasStmts};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, IntoNodeOrToken, ast};
 

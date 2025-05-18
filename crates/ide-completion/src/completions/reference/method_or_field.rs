@@ -14,7 +14,6 @@ use lang::types::ty::Ty;
 use lang::types::ty::adt::TyAdt;
 use std::cell::RefCell;
 use syntax::ast;
-use syntax::ast::NamedElement;
 use syntax::files::{InFile, InFileExt};
 
 pub(crate) fn add_method_or_field_completions(

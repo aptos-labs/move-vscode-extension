@@ -9,7 +9,6 @@ use parser::T;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
-use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::{SyntaxNodeExt, SyntaxTokenExt};
 use syntax::{AstNode, ast};
 

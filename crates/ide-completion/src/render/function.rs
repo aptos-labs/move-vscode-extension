@@ -3,7 +3,6 @@ use crate::context::CompletionContext;
 use crate::item::CompletionItemBuilder;
 use crate::render::render_named_item;
 use base_db::SourceDatabase;
-use ide_db::AllowSnippets;
 use lang::types::lowering::TyLowering;
 use lang::types::substitution::{ApplySubstitution, Substitution};
 use lang::types::ty::Ty;
