@@ -1,6 +1,6 @@
 use crate::parse::grammar::expressions::atom::{block_expr, condition, IDENT_FIRST};
 use crate::parse::grammar::expressions::{expr, opt_initializer_expr};
-use crate::parse::grammar::items::item_start;
+use crate::parse::grammar::items::at_item_start;
 use crate::parse::grammar::paths::{is_path_start, type_path};
 use crate::parse::grammar::specs::predicates::opt_predicate_property_list;
 use crate::parse::grammar::utils::{delimited_fn, list};
@@ -13,7 +13,7 @@ use crate::{ts, T};
 pub(crate) fn schema(p: &mut Parser, m: Marker) {
     assert!(p.at(IDENT) && p.at_contextual_kw("schema"));
     p.bump_remap(T![schema]);
-    name_or_recover(p, item_start);
+    name_or_recover(p, at_item_start);
     type_params::opt_type_param_list(p);
     block_expr(p, true);
     m.complete(p, SCHEMA);

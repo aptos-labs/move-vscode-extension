@@ -6,7 +6,7 @@ pub(crate) mod use_item;
 use crate::parse::grammar::expressions::expr;
 use crate::parse::grammar::paths::use_path;
 use crate::parse::grammar::specs::schemas::schema;
-use crate::parse::grammar::{attributes, error_block, item_name, types};
+use crate::parse::grammar::{attributes, error_block, item_name_or_recover, types};
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
@@ -126,7 +126,7 @@ fn const_(p: &mut Parser, m: Marker) {
     p.bump(T![const]);
     // name_or_bump_until(p, item_first);
 
-    if !item_name(p) {
+    if !item_name_or_recover(p, |p| p.at(T![;])) {
         m.complete(p, CONST);
         return;
     }
@@ -154,11 +154,11 @@ pub(crate) fn friend_decl(p: &mut Parser, m: Marker) {
 //     item_first(p)
 // }
 
-pub(crate) fn block_start(p: &Parser) -> bool {
+pub(crate) fn at_block_start(p: &Parser) -> bool {
     p.at(T!['{'])
 }
 
-pub(crate) fn item_start(p: &Parser) -> bool {
+pub(crate) fn at_item_start(p: &Parser) -> bool {
     p.at_ts(ITEM_KEYWORDS)
         || p.at(T!['}'])
         || fun::on_function_modifiers_start(p)

@@ -1,6 +1,6 @@
 use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::parse::grammar::expressions::atom::block_expr;
-use crate::parse::grammar::items::{fun, item_start};
+use crate::parse::grammar::items::{at_item_start, fun};
 use crate::parse::grammar::patterns::ident_or_wildcard_pat_or_recover;
 use crate::parse::grammar::utils::list;
 use crate::parse::grammar::{name_ref, name_ref_or_bump_until, patterns, type_params, types};
@@ -14,7 +14,7 @@ pub(crate) fn item_spec(p: &mut Parser, m: Marker) {
         p.bump(T![module]);
     } else {
         let ref_m = p.start();
-        let res = name_ref_or_bump_until(p, |p| item_start(p) || p.at(T!['{']));
+        let res = name_ref_or_bump_until(p, |p| at_item_start(p) || p.at(T!['{']));
         if res {
             ref_m.complete(p, ITEM_SPEC_REF);
         } else {

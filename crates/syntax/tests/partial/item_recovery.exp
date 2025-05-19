@@ -16,6 +16,7 @@ module 0x1::item_recovery {
      //^ expected an identifier
     struct
         //^ expected an identifier
+        //^ expected `;`, `{`, or `(`
     spec
       //^ expected identifier
       //^ expected a block

@@ -1,9 +1,9 @@
 use crate::parse::grammar::expressions::atom::block_expr;
-use crate::parse::grammar::items::item_start;
+use crate::parse::grammar::items::at_item_start;
 use crate::parse::grammar::paths::PATH_FIRST;
 use crate::parse::grammar::types::path_type;
 use crate::parse::grammar::utils::delimited;
-use crate::parse::grammar::{item_name, params, paths, type_params, types};
+use crate::parse::grammar::{item_name_or_recover, params, paths, type_params, types};
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::{
@@ -32,7 +32,7 @@ pub(crate) fn function(p: &mut Parser, m: Marker) {
         fun_signature(p, false, true);
     } else {
         // p.error("expected 'fun'");
-        p.error_and_bump_until("expected 'fun'", item_start);
+        p.error_and_bump_until("expected 'fun'", at_item_start);
     }
     m.complete(p, FUN);
 }
@@ -126,7 +126,9 @@ fn acquires(p: &mut Parser) {
     let m = p.start();
     p.bump(T![acquires]);
     if !paths::is_path_start(p) {
-        p.error_and_bump_until("expected type", |p| item_start(p) || p.at(T!['{']) || p.at(T![;]));
+        p.error_and_bump_until("expected type", |p| {
+            at_item_start(p) || p.at(T!['{']) || p.at(T![;])
+        });
     }
     delimited(
         p,
@@ -149,7 +151,7 @@ fn acquires(p: &mut Parser) {
 fn fun_signature(p: &mut Parser, is_spec: bool, allow_acquires: bool) {
     p.bump(T![fun]);
 
-    if !item_name(p) {
+    if !item_name_or_recover(p, |p| p.at(T![<]) || p.at(T!['('])) {
         return;
     }
 
@@ -163,7 +165,7 @@ fn fun_signature(p: &mut Parser, is_spec: bool, allow_acquires: bool) {
         params::fun_param_list(p);
     } else {
         p.error_and_bump_until("expected function arguments", |p| {
-            item_start(p) || p.at_ts(ts!(T![;], T!['{']))
+            at_item_start(p) || p.at_ts(ts!(T![;], T!['{']))
         });
         // p.error("expected function arguments");
     }
@@ -189,7 +191,9 @@ pub(crate) fn opt_ret_type(p: &mut Parser<'_>) {
     if p.at(T![:]) {
         let m = p.start();
         p.bump(T![:]);
-        types::type_or_recover_until(p, |p| item_start(p) || p.at_ts(ts!(T![acquires], T![;], T!['{'])));
+        types::type_or_recover_until(p, |p| {
+            at_item_start(p) || p.at_ts(ts!(T![acquires], T![;], T!['{']))
+        });
         m.complete(p, RET_TYPE);
     }
 }

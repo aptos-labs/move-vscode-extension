@@ -1,21 +1,21 @@
 use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
+use crate::parse::grammar::items::{at_block_start, at_item_start};
 use crate::parse::grammar::utils::list;
-use crate::parse::grammar::{ability, error_block, item_name, name, type_params, types};
+use crate::parse::grammar::{
+    ability, error_block, item_name_or_recover, name, name_or_recover, type_params, types,
+};
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
-use crate::T;
+use crate::{ts, T};
 
 // test struct_item
 // struct S {}
 pub(super) fn struct_(p: &mut Parser<'_>, m: Marker) {
     p.bump(T![struct]);
-    if !item_name(p) {
-        m.complete(p, STRUCT);
-        return;
-    }
+    item_name_or_recover(p, struct_enum_recover_at);
     type_params::opt_type_param_list(p);
-    opt_abilities_list(p);
+    opt_abilities_list(p, ts!(T!['{']));
     match p.current() {
         T!['{'] => {
             named_field_list(p);
@@ -26,7 +26,7 @@ pub(super) fn struct_(p: &mut Parser<'_>, m: Marker) {
         }
         T!['('] => {
             tuple_field_list(p);
-            opt_abilities_list(p);
+            opt_abilities_list(p, ts!(T![;]));
             p.expect(T![;]);
         }
         _ => p.error("expected `;`, `{`, or `(`"),
@@ -36,41 +36,46 @@ pub(super) fn struct_(p: &mut Parser<'_>, m: Marker) {
 }
 
 fn opt_abilities_list_with_semicolon(p: &mut Parser) {
-    let has_postfix_abilities = opt_abilities_list(p);
+    let has_postfix_abilities = opt_abilities_list(p, ts!(T![;]));
     if has_postfix_abilities {
         p.expect(T![;]);
     }
 }
 
-fn opt_abilities_list(p: &mut Parser) -> bool {
-    if p.at(IDENT) && p.at_contextual_kw("has") {
-        let m = p.start();
-        p.bump_remap(T![has]);
-        while !p.at(T!['{']) && !p.at(EOF) {
-            if p.at(T![,]) {
-                // Recover if an argument is missing and only got a delimiter,
-                // e.g. `(a, , b)`.
-                let m = p.start();
-                p.error("expected ability");
-                p.bump(T![,]);
-                m.complete(p, ERROR);
-                continue;
-            }
-            if !ability(p) {
-                break;
-            }
-            if !p.eat(T![,]) {
-                if p.at_ts(ABILITY_FIRST) {
-                    p.error("expected ','");
-                } else {
-                    break;
-                }
-            }
-        }
-        m.complete(p, ABILITY_LIST);
+fn opt_abilities_list(p: &mut Parser, extra_recover_set: TokenSet) -> bool {
+    if p.at_contextual_kw_ident("has") {
+        abilities_list(p, extra_recover_set);
         return true;
     }
     false
+}
+
+fn abilities_list(p: &mut Parser, extra_set: TokenSet) {
+    assert!(p.at_contextual_kw_ident("has"));
+    let m = p.start();
+    p.bump_remap(T![has]);
+    let mut is_empty = true;
+    while !p.at(EOF) && !at_next_item_start(p, extra_set) {
+        is_empty = false;
+        if p.at(IDENT) {
+            let m = p.start();
+            p.bump(IDENT);
+            m.complete(p, ABILITY);
+        } else {
+            p.error_and_bump_until("expected ability", |p| at_next_item_start(p, extra_set));
+        }
+        if !at_next_item_start(p, extra_set) {
+            p.expect(T![,]);
+        }
+    }
+    if is_empty {
+        p.error("expected ability");
+    }
+    m.complete(p, ABILITY_LIST);
+}
+
+fn at_next_item_start(p: &Parser, extra_set: TokenSet) -> bool {
+    at_item_start(p) || p.at_ts(extra_set)
 }
 
 pub(crate) const ABILITY_FIRST: TokenSet = TokenSet::new(&[IDENT]);
@@ -78,7 +83,7 @@ pub(crate) const ABILITY_FIRST: TokenSet = TokenSet::new(&[IDENT]);
 pub(super) fn enum_(p: &mut Parser<'_>, m: Marker) {
     p.bump_remap(T![enum]);
 
-    if !item_name(p) {
+    if !item_name_or_recover(p, struct_enum_recover_at) {
         m.complete(p, ENUM);
         return;
     }
@@ -90,7 +95,7 @@ pub(super) fn enum_(p: &mut Parser<'_>, m: Marker) {
 
     // name_r(p, ITEM_KW_RECOVERY_SET);
     type_params::opt_type_param_list(p);
-    opt_abilities_list(p);
+    opt_abilities_list(p, ts!(T!['{']));
     if p.at(T!['{']) {
         variant_list(p);
     } else {
@@ -182,6 +187,10 @@ pub(crate) fn named_field_list(p: &mut Parser<'_>) {
             p.error_and_bump_any("expected named field declaration");
         }
     }
+}
+
+fn struct_enum_recover_at(p: &Parser) -> bool {
+    p.at(T![<]) || p.at_contextual_kw_ident("has")
 }
 
 const TUPLE_FIELD_FIRST: TokenSet =

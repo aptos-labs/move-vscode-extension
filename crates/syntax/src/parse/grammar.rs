@@ -41,8 +41,8 @@ mod type_params;
 mod types;
 pub(crate) mod utils;
 
-use crate::parse::grammar::items::{block_start, item_start};
-use crate::parse::grammar::paths::{use_path, Mode};
+use crate::parse::grammar::items::{at_block_start, at_item_start};
+use crate::parse::grammar::paths::Mode;
 use crate::parse::parser::Marker;
 use crate::parse::token_set::TokenSet;
 use crate::{parse::Parser, ts, SyntaxKind::*, T};
@@ -202,8 +202,10 @@ fn name_ref_or_index(p: &mut Parser<'_>) {
 //     m.complete(p, NAME_REF);
 // }
 
-fn item_name(p: &mut Parser) -> bool {
-    name_or_recover(p, |p| item_start(p) || block_start(p))
+fn item_name_or_recover(p: &mut Parser, extra_recover_at: impl Fn(&Parser) -> bool) -> bool {
+    name_or_recover(p, |p| {
+        at_item_start(p) || at_block_start(p) || extra_recover_at(p)
+    })
     // if !name_or_bump_until(p, item_first) {
     //     // m.abandon(p);
     //     return;

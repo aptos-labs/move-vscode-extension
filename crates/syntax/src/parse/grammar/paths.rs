@@ -85,7 +85,7 @@ fn path_segment(p: &mut Parser, mode: Mode, first: bool, additional_recovery_set
         }
         _ => {
             p.error_and_bump_until("expected identifier", |p| {
-                items::item_start(p) || p.at_ts(additional_recovery_set)
+                items::at_item_start(p) || p.at_ts(additional_recovery_set)
             });
             if empty {
                 // test_err empty_segment
