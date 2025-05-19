@@ -1,5 +1,5 @@
-SOURCE_FILE@0..92
-  MODULE@0..91
+SOURCE_FILE@0..95
+  MODULE@0..94
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
     VALUE_ADDRESS@7..10
@@ -10,12 +10,12 @@ SOURCE_FILE@0..92
     WHITESPACE@31..32 " "
     L_CURLY@32..33 "{"
     WHITESPACE@33..38 "\n    "
-    FUN@38..89
+    FUN@38..92
       FUN_KW@38..41 "fun"
       WHITESPACE@41..42 " "
       NAME@42..46
         IDENT@42..46 "main"
-      TYPE_PARAM_LIST@46..78
+      TYPE_PARAM_LIST@46..81
         L_ANGLE@46..47 "<"
         TYPE_PARAM@47..49
           NAME@47..48
@@ -42,18 +42,22 @@ SOURCE_FILE@0..92
             PLUS@72..73 "+"
         COMMA@73..74 ","
         WHITESPACE@74..75 " "
-        TYPE_PARAM@75..77
+        TYPE_PARAM@75..80
           NAME@75..77
             IDENT@75..77 "dd"
-        R_ANGLE@77..78 ">"
-      PARAM_LIST@78..80
-        L_PAREN@78..79 "("
-        R_PAREN@79..80 ")"
-      WHITESPACE@80..81 " "
-      BLOCK_EXPR@81..89
-        L_CURLY@81..82 "{"
-        WHITESPACE@82..88 "\n\n    "
-        R_CURLY@88..89 "}"
-    WHITESPACE@89..90 "\n"
-    R_CURLY@90..91 "}"
-  WHITESPACE@91..92 "\n"
+          ABILITY_BOUND_LIST@77..80
+            COLON@77..78 ":"
+            WHITESPACE@78..79 " "
+            INT_NUMBER@79..80 "1"
+        R_ANGLE@80..81 ">"
+      PARAM_LIST@81..83
+        L_PAREN@81..82 "("
+        R_PAREN@82..83 ")"
+      WHITESPACE@83..84 " "
+      BLOCK_EXPR@84..92
+        L_CURLY@84..85 "{"
+        WHITESPACE@85..91 "\n\n    "
+        R_CURLY@91..92 "}"
+    WHITESPACE@92..93 "\n"
+    R_CURLY@93..94 "}"
+  WHITESPACE@94..95 "\n"
