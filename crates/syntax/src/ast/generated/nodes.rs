@@ -86,6 +86,8 @@ impl AbortsWithStmt {
     #[inline]
     pub fn r_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![')']) }
     #[inline]
+    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
+    #[inline]
     pub fn aborts_with_token(&self) -> Option<SyntaxToken> {
         support::token(&self.syntax, T![aborts_with])
     }
@@ -1139,6 +1141,32 @@ impl PathType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct PragmaAttrItem {
+    pub(crate) syntax: SyntaxNode,
+}
+impl PragmaAttrItem {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn eq_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![=]) }
+    #[inline]
+    pub fn ident_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![ident]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct PragmaStmt {
+    pub(crate) syntax: SyntaxNode,
+}
+impl PragmaStmt {
+    #[inline]
+    pub fn attr_items(&self) -> AstChildren<PragmaAttrItem> { support::children(&self.syntax) }
+    #[inline]
+    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
+    #[inline]
+    pub fn pragma_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![pragma]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct QuantBinding {
     pub(crate) syntax: SyntaxNode,
 }
@@ -2054,6 +2082,7 @@ pub enum Stmt {
     GlobalVariableDecl(GlobalVariableDecl),
     IncludeSchema(IncludeSchema),
     LetStmt(LetStmt),
+    PragmaStmt(PragmaStmt),
     SchemaField(SchemaField),
     SpecInlineFun(SpecInlineFun),
     SpecPredicateStmt(SpecPredicateStmt),
@@ -3835,6 +3864,48 @@ impl AstNode for PathType {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == PATH_TYPE }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for PragmaAttrItem {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        PRAGMA_ATTR_ITEM
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == PRAGMA_ATTR_ITEM }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for PragmaStmt {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        PRAGMA_STMT
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == PRAGMA_STMT }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -6599,6 +6670,10 @@ impl From<LetStmt> for Stmt {
     #[inline]
     fn from(node: LetStmt) -> Stmt { Stmt::LetStmt(node) }
 }
+impl From<PragmaStmt> for Stmt {
+    #[inline]
+    fn from(node: PragmaStmt) -> Stmt { Stmt::PragmaStmt(node) }
+}
 impl From<SchemaField> for Stmt {
     #[inline]
     fn from(node: SchemaField) -> Stmt { Stmt::SchemaField(node) }
@@ -6648,6 +6723,12 @@ impl Stmt {
             _ => None,
         }
     }
+    pub fn pragma_stmt(self) -> Option<PragmaStmt> {
+        match (self) {
+            Stmt::PragmaStmt(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn schema_field(self) -> Option<SchemaField> {
         match (self) {
             Stmt::SchemaField(item) => Some(item),
@@ -6678,6 +6759,7 @@ impl AstNode for Stmt {
                 | GLOBAL_VARIABLE_DECL
                 | INCLUDE_SCHEMA
                 | LET_STMT
+                | PRAGMA_STMT
                 | SCHEMA_FIELD
                 | SPEC_INLINE_FUN
                 | SPEC_PREDICATE_STMT
@@ -6692,6 +6774,7 @@ impl AstNode for Stmt {
             GLOBAL_VARIABLE_DECL => Stmt::GlobalVariableDecl(GlobalVariableDecl { syntax }),
             INCLUDE_SCHEMA => Stmt::IncludeSchema(IncludeSchema { syntax }),
             LET_STMT => Stmt::LetStmt(LetStmt { syntax }),
+            PRAGMA_STMT => Stmt::PragmaStmt(PragmaStmt { syntax }),
             SCHEMA_FIELD => Stmt::SchemaField(SchemaField { syntax }),
             SPEC_INLINE_FUN => Stmt::SpecInlineFun(SpecInlineFun { syntax }),
             SPEC_PREDICATE_STMT => Stmt::SpecPredicateStmt(SpecPredicateStmt { syntax }),
@@ -6708,6 +6791,7 @@ impl AstNode for Stmt {
             Stmt::GlobalVariableDecl(it) => &it.syntax,
             Stmt::IncludeSchema(it) => &it.syntax,
             Stmt::LetStmt(it) => &it.syntax,
+            Stmt::PragmaStmt(it) => &it.syntax,
             Stmt::SchemaField(it) => &it.syntax,
             Stmt::SpecInlineFun(it) => &it.syntax,
             Stmt::SpecPredicateStmt(it) => &it.syntax,
@@ -8233,6 +8317,16 @@ impl std::fmt::Display for PathSegment {
     }
 }
 impl std::fmt::Display for PathType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for PragmaAttrItem {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for PragmaStmt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
