@@ -1,4 +1,4 @@
-use crate::parse::grammar::items::item_start;
+use crate::parse::grammar::items::at_item_start;
 use crate::parse::grammar::{name, paths};
 use crate::parse::parser::{Marker, Parser};
 use crate::SyntaxKind::*;
@@ -49,7 +49,7 @@ fn use_speck(p: &mut Parser, top_level: bool) {
             m.abandon(p);
             let msg = "expected one of `*`, `::`, `{`, `self`, `super` or an identifier";
             if top_level {
-                p.error_and_bump_until(msg, item_start);
+                p.error_and_bump_until(msg, at_item_start);
             } else {
                 // if we are parsing a nested tree, we have to eat a token to
                 // main balanced `{}`

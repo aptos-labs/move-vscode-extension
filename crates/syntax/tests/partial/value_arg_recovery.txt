@@ -1,0 +1,143 @@
+SOURCE_FILE@0..138
+  MODULE@0..137
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..30
+      IDENT@12..30 "value_arg_recovery"
+    WHITESPACE@30..31 " "
+    L_CURLY@31..32 "{"
+    WHITESPACE@32..37 "\n    "
+    FUN@37..135
+      FUN_KW@37..40 "fun"
+      WHITESPACE@40..41 " "
+      NAME@41..45
+        IDENT@41..45 "main"
+      PARAM_LIST@45..47
+        L_PAREN@45..46 "("
+        R_PAREN@46..47 ")"
+      WHITESPACE@47..48 " "
+      BLOCK_EXPR@48..135
+        L_CURLY@48..49 "{"
+        WHITESPACE@49..58 "\n        "
+        EXPR_STMT@58..129
+          CALL_EXPR@58..128
+            PATH_EXPR@58..62
+              PATH@58..62
+                PATH_SEGMENT@58..62
+                  NAME_REF@58..62
+                    IDENT@58..62 "call"
+            VALUE_ARG_LIST@62..128
+              L_PAREN@62..63 "("
+              VALUE_ARG@63..64
+                LITERAL@63..64
+                  INT_NUMBER@63..64 "1"
+              COMMA@64..65 ","
+              VALUE_ARG@65..65
+              COMMA@65..66 ","
+              VALUE_ARG@66..66
+              COMMA@66..67 ","
+              WHITESPACE@67..68 " "
+              VALUE_ARG@68..70
+                BIN_EXPR@68..70
+                  LITERAL@68..69
+                    INT_NUMBER@68..69 "2"
+                  PLUS@69..70 "+"
+              COMMA@70..71 ","
+              WHITESPACE@71..72 " "
+              VALUE_ARG@72..77
+                BIN_EXPR@72..77
+                  BIN_EXPR@72..76
+                    BORROW_EXPR@72..75
+                      AMP@72..73 "&"
+                      BORROW_EXPR@73..75
+                        AMP@73..74 "&"
+                        BORROW_EXPR@74..75
+                          AMP@74..75 "&"
+                    L_ANGLE@75..76 "<"
+                  R_ANGLE@76..77 ">"
+              COMMA@77..78 ","
+              WHITESPACE@78..79 " "
+              VALUE_ARG@79..83
+                BIN_EXPR@79..83
+                  PATH_EXPR@79..82
+                    PATH@79..82
+                      PATH_SEGMENT@79..82
+                        NAME_REF@79..82
+                          IDENT@79..82 "err"
+                  L_ANGLE@82..83 "<"
+              COMMA@83..84 ","
+              WHITESPACE@84..85 " "
+              VALUE_ARG@85..90
+                INDEX_EXPR@85..90
+                  PATH_EXPR@85..89
+                    PATH@85..89
+                      PATH_SEGMENT@85..89
+                        NAME_REF@85..89
+                          IDENT@85..89 "call"
+                  L_BRACK@89..90 "["
+              COMMA@90..91 ","
+              WHITESPACE@91..92 " "
+              VALUE_ARG@92..99
+                ASSERT_MACRO_EXPR@92..99
+                  IDENT@92..98 "assert"
+                  BANG@98..99 "!"
+              COMMA@99..100 ","
+              WHITESPACE@100..101 " "
+              VALUE_ARG@101..108
+                LAMBDA_EXPR@101..108
+                  LAMBDA_PARAM_LIST@101..104
+                    PIPE@101..102 "|"
+                    LAMBDA_PARAM@102..103
+                      IDENT_PAT@102..103
+                        NAME@102..103
+                          IDENT@102..103 "a"
+                    PIPE@103..104 "|"
+                  WHITESPACE@104..105 " "
+                  BIN_EXPR@105..108
+                    PATH_EXPR@105..106
+                      PATH@105..106
+                        PATH_SEGMENT@105..106
+                          NAME_REF@105..106
+                            IDENT@105..106 "a"
+                    WHITESPACE@106..107 " "
+                    PLUS@107..108 "+"
+              COMMA@108..109 ","
+              WHITESPACE@109..110 " "
+              VALUE_ARG@110..122
+                LAMBDA_EXPR@110..122
+                  LAMBDA_PARAM_LIST@110..113
+                    PIPE@110..111 "|"
+                    LAMBDA_PARAM@111..112
+                      IDENT_PAT@111..112
+                        NAME@111..112
+                          IDENT@111..112 "b"
+                    PIPE@112..113 "|"
+                  WHITESPACE@113..114 " "
+                  BIN_EXPR@114..122
+                    CALL_EXPR@114..120
+                      PATH_EXPR@114..118
+                        PATH@114..118
+                          PATH_SEGMENT@114..118
+                            NAME_REF@114..118
+                              IDENT@114..118 "call"
+                      VALUE_ARG_LIST@118..120
+                        L_PAREN@118..119 "("
+                        R_PAREN@119..120 ")"
+                    WHITESPACE@120..121 " "
+                    PLUS@121..122 "+"
+              COMMA@122..123 ","
+              WHITESPACE@123..124 " "
+              VALUE_ARG@124..126
+                RANGE_EXPR@124..126
+                  DOT_DOT@124..126 ".."
+              COMMA@126..127 ","
+              R_PAREN@127..128 ")"
+          SEMICOLON@128..129 ";"
+        WHITESPACE@129..134 "\n    "
+        R_CURLY@134..135 "}"
+    WHITESPACE@135..136 "\n"
+    R_CURLY@136..137 "}"
+  WHITESPACE@137..138 "\n"
