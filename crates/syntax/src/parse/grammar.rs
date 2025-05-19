@@ -68,19 +68,6 @@ pub mod entry_points {
         }
         m.complete(p, SOURCE_FILE);
     }
-
-    pub fn expr(p: &mut Parser) {
-        let m = p.start();
-        expressions::expr(p);
-        if p.at(EOF) {
-            m.abandon(p);
-            return;
-        }
-        while !p.at(EOF) {
-            p.bump_any();
-        }
-        m.complete(p, ERROR);
-    }
 }
 
 // test mod_item

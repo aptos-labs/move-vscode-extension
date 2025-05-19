@@ -13,7 +13,7 @@ mod ted;
 mod token_text;
 mod validation;
 
-use crate::parse::entry_points;
+pub use crate::parse::entry_points;
 pub use crate::parse::SyntaxKind;
 pub use crate::{
     ast::{AstNode, AstToken},

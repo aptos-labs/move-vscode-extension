@@ -1,12 +1,12 @@
-use crate::parser::entry_points;
 use std::path::Path;
 use std::{env, fs};
-use syntax::{parse_with_entrypoint, AstNode, SourceFile};
+use syntax::{AstNode, SourceFile};
 
 fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<()> {
     let input = fs::read_to_string(fpath).unwrap();
-    let parse = parse_with_entrypoint(&input, entry_points::source_file);
-    let file = SourceFile::cast(parse.syntax_node()).unwrap();
+
+    let parse = SourceFile::parse(&input);
+    let file = parse.tree();
 
     let actual_output = format!("{:#?}", file.syntax());
     let output_fpath = fpath.with_extension("txt");
