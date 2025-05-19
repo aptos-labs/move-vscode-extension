@@ -105,9 +105,9 @@ SOURCE_FILE@0..371
         TYPE_PARAM@206..213
           NAME@206..207
             IDENT@206..207 "T"
-          COLON@207..208 ":"
-          WHITESPACE@208..209 " "
-          ABILITY_BOUND_LIST@209..213
+          ABILITY_BOUND_LIST@207..213
+            COLON@207..208 ":"
+            WHITESPACE@208..209 " "
             ABILITY@209..213
               IDENT@209..213 "copy"
         COMMA@213..214 ","
@@ -115,9 +115,9 @@ SOURCE_FILE@0..371
         TYPE_PARAM@215..229
           NAME@215..216
             IDENT@215..216 "U"
-          COLON@216..217 ":"
-          WHITESPACE@217..218 " "
-          ABILITY_BOUND_LIST@218..229
+          ABILITY_BOUND_LIST@216..229
+            COLON@216..217 ":"
+            WHITESPACE@217..218 " "
             ABILITY@218..222
               IDENT@218..222 "copy"
             WHITESPACE@222..223 " "

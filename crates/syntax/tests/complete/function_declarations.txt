@@ -307,9 +307,9 @@ SOURCE_FILE@0..1154
         TYPE_PARAM@413..421
           NAME@413..414
             IDENT@413..414 "T"
-          COLON@414..415 ":"
-          WHITESPACE@415..416 " "
-          ABILITY_BOUND_LIST@416..421
+          ABILITY_BOUND_LIST@414..421
+            COLON@414..415 ":"
+            WHITESPACE@415..416 " "
             ABILITY@416..421
               IDENT@416..421 "store"
         COMMA@421..422 ","
@@ -317,9 +317,9 @@ SOURCE_FILE@0..1154
         TYPE_PARAM@423..438
           NAME@423..424
             IDENT@423..424 "U"
-          COLON@424..425 ":"
-          WHITESPACE@425..426 " "
-          ABILITY_BOUND_LIST@426..438
+          ABILITY_BOUND_LIST@424..438
+            COLON@424..425 ":"
+            WHITESPACE@425..426 " "
             ABILITY@426..431
               IDENT@426..431 "store"
             WHITESPACE@431..432 " "

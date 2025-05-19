@@ -100,5 +100,7 @@ fn item_spec_param(p: &mut Parser) {
     m.complete(p, ITEM_SPEC_PARAM);
 }
 
+const TYPE_PARAM_RECOVERY_SET: TokenSet = TokenSet::new(&[T![,], T![>]]);
+
 const ITEM_SPEC_PARAM_RECOVERY_SET: TokenSet = ts!(T![')'], T![,]);
 const ITEM_SPEC_PARAM_FIRST: TokenSet = ts!(IDENT, T!['_']);

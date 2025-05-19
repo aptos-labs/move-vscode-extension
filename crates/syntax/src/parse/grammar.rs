@@ -128,7 +128,7 @@ pub(crate) fn module_name(p: &mut Parser) {
         any_address(p);
         p.bump(T![::]);
     }
-    name_or_bump_until(p, |p| p.at_ts(TOP_LEVEL_FIRST));
+    name_or_recover(p, |p| p.at_ts(TOP_LEVEL_FIRST));
 }
 
 pub(crate) fn any_address(p: &mut Parser) {
@@ -156,7 +156,7 @@ pub(crate) const TOP_LEVEL_FIRST: TokenSet =
     TokenSet::new(&[T![module], T![script], T![spec], T![address]]);
 
 fn name(p: &mut Parser) -> bool {
-    name_or_bump_until(p, |p| p.at_ts(TokenSet::EMPTY))
+    name_or_recover(p, |p| p.at_ts(TokenSet::EMPTY))
 }
 
 fn name_ref_or_bump_until(p: &mut Parser, stop: impl Fn(&Parser) -> bool) -> bool {
@@ -203,14 +203,14 @@ fn name_ref_or_index(p: &mut Parser<'_>) {
 // }
 
 fn item_name(p: &mut Parser) -> bool {
-    name_or_bump_until(p, |p| item_start(p) || block_start(p))
+    name_or_recover(p, |p| item_start(p) || block_start(p))
     // if !name_or_bump_until(p, item_first) {
     //     // m.abandon(p);
     //     return;
     // }
 }
 
-fn name_or_bump_until(p: &mut Parser, stop: impl Fn(&Parser) -> bool) -> bool {
+fn name_or_recover(p: &mut Parser, stop: impl Fn(&Parser) -> bool) -> bool {
     if !p.at(IDENT) {
         p.error_and_bump_until("expected an identifier", stop);
         return false;
