@@ -12,7 +12,7 @@ use syntax::{AstNode, SyntaxNode, ast, match_ast};
 pub fn get_entries_in_scope(
     db: &dyn SourceDatabase,
     scope: InFile<SyntaxNode>,
-    prev: Option<SyntaxNode>,
+    prev: SyntaxNode,
 ) -> Vec<ScopeEntry> {
     let mut entries = vec![];
     if let Some(use_stmts_owner) = scope.syntax_cast::<ast::AnyHasUseStmts>() {

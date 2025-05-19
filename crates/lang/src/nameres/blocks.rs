@@ -6,14 +6,12 @@ use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileVecExt};
 use syntax::{AstNode, SyntaxNode, ast};
 
-pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: Option<SyntaxNode>) -> Vec<ScopeEntry> {
+pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: SyntaxNode) -> Vec<ScopeEntry> {
     use syntax::SyntaxKind::*;
 
     match scope.value.kind() {
         BLOCK_EXPR => {
             let block_expr = scope.syntax_cast::<ast::BlockExpr>().unwrap();
-            let prev = prev.unwrap();
-
             let let_stmts = let_stmts_with_bindings(block_expr);
 
             let is_msl = scope.value.is_msl_context();
@@ -41,7 +39,7 @@ pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: Option<SyntaxNode>
         }
         MATCH_ARM => {
             // coming from rhs, use pat bindings from lhs
-            if prev.is_some_and(|node| !node.is::<ast::Pat>()) {
+            if !prev.is::<ast::Pat>() {
                 let (file_id, match_arm) = scope.map(|it| it.cast::<ast::MatchArm>().unwrap()).unpack();
                 let ident_pats = match_arm
                     .pat()
@@ -51,7 +49,6 @@ pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: Option<SyntaxNode>
                 return ident_pats.to_entries();
             }
         }
-        // todo: spec block expr
         _ => {}
     }
 
