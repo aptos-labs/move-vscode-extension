@@ -297,3 +297,20 @@ spec {
     "#,
     )
 }
+
+#[test]
+fn test_resolve_spec_function_parameter_with_invalid_pat() {
+    check_resolve(
+        // language=Move
+        r#"
+module 0x1::main {
+    fun main(a: u8, b: u8, _: u8) {}
+           //X
+}
+spec 0x1::main {
+    spec main(a: u8, b: u8, _: u8) {}
+            //^
+}
+    "#,
+    )
+}

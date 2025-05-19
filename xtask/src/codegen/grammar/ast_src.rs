@@ -279,13 +279,9 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
 };
 
 pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
-    // ("ExprStmt", &["expr"]), - invalid
-    // ("LambdaParam", &["ident_pat"]), - can be wildcard_pat or invalid pat
-    // ("QuantBinding", &["ident_pat"]),
     ("LabelDecl", &["quote_ident"]),
     ("Label", &["quote_ident"]),
-    ("LambdaTypeParam", &["type"]),
-    ("CallExpr", &["path"]),
+    ("LambdaTypeParam", &["type"]), // checked
     ("CastExpr", &["expr"]),
     ("PathExpr", &["path"]),
     ("IsExpr", &["expr"]),
@@ -297,12 +293,9 @@ pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     ("StructPat", &["path"]),
     ("TupleStructPat", &["path"]),
     ("PathType", &["path"]),
-    ("ParenType", &["type"]),
     ("StructLit", &["path"]),
-    // ("UseSpeck", &["path"]),  - invalid
-    ("ItemSpecParam", &["ident_pat"]),
-    ("PathAddress", &["value_address"]),
-    ("Name", &["ident"]),
+    ("PathAddress", &["value_address"]), // checked
+    ("Name", &["ident"]),                // checked
     // ("ValueArg", &["expr"]),  - invalid
     ("Ability", &["ident"]),
     ("NameRef", &["ident"]),

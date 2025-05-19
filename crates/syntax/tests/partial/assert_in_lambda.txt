@@ -1,5 +1,5 @@
-SOURCE_FILE@0..112
-  MODULE@0..111
+SOURCE_FILE@0..119
+  MODULE@0..118
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
     VALUE_ADDRESS@7..10
@@ -10,21 +10,21 @@ SOURCE_FILE@0..112
     WHITESPACE@28..29 " "
     L_CURLY@29..30 "{"
     WHITESPACE@30..35 "\n    "
-    FUN@35..109
+    FUN@35..116
       FUN_KW@35..38 "fun"
       WHITESPACE@38..39 " "
       NAME@39..43
         IDENT@39..43 "main"
-      PARAM_LIST@43..100
+      PARAM_LIST@43..107
         L_PAREN@43..44 "("
         WHITESPACE@44..53 "\n        "
-        PARAM@53..93
+        PARAM@53..100
           IDENT_PAT@53..54
             NAME@53..54
               IDENT@53..54 "f"
           COLON@54..55 ":"
           WHITESPACE@55..56 " "
-          LAMBDA_TYPE@56..93
+          LAMBDA_TYPE@56..100
             PIPE@56..57 "|"
             LAMBDA_TYPE_PARAM@57..64
               PATH_TYPE@57..64
@@ -54,21 +54,32 @@ SOURCE_FILE@0..112
               BANG@81..82 "!"
               L_PAREN@82..83 "("
               R_PAREN@83..84 ")"
-            PIPE@84..85 "|"
+            COMMA@84..85 ","
             WHITESPACE@85..86 " "
-            PATH_TYPE@86..93
-              PATH@86..93
-                PATH_SEGMENT@86..93
-                  NAME_REF@86..93
-                    IDENT@86..93 "Element"
-        COMMA@93..94 ","
-        WHITESPACE@94..99 "\n    "
-        R_PAREN@99..100 ")"
-      WHITESPACE@100..101 " "
-      BLOCK_EXPR@101..109
-        L_CURLY@101..102 "{"
-        WHITESPACE@102..108 "\n\n    "
-        R_CURLY@108..109 "}"
-    WHITESPACE@109..110 "\n"
-    R_CURLY@110..111 "}"
-  WHITESPACE@111..112 "\n"
+            LAMBDA_TYPE_PARAM@86..90
+              PATH_TYPE@86..90
+                PATH@86..90
+                  PATH_SEGMENT@86..90
+                    NAME_REF@86..90
+                      IDENT@86..90 "call"
+            LAMBDA_TYPE_PARAM@90..91
+              PAREN_TYPE@90..91
+                L_PAREN@90..91 "("
+            PIPE@91..92 "|"
+            WHITESPACE@92..93 " "
+            PATH_TYPE@93..100
+              PATH@93..100
+                PATH_SEGMENT@93..100
+                  NAME_REF@93..100
+                    IDENT@93..100 "Element"
+        COMMA@100..101 ","
+        WHITESPACE@101..106 "\n    "
+        R_PAREN@106..107 ")"
+      WHITESPACE@107..108 " "
+      BLOCK_EXPR@108..116
+        L_CURLY@108..109 "{"
+        WHITESPACE@109..115 "\n\n    "
+        R_CURLY@115..116 "}"
+    WHITESPACE@116..117 "\n"
+    R_CURLY@117..118 "}"
+  WHITESPACE@118..119 "\n"

@@ -26,6 +26,10 @@ impl<'db> TyLowering<'db> {
     }
 
     pub fn lower_type(&self, type_: InFile<ast::Type>) -> Ty {
+        self.lower_type_inner(type_).unwrap_or(Ty::Unknown)
+    }
+
+    fn lower_type_inner(&self, type_: InFile<ast::Type>) -> Option<Ty> {
         let (file_id, type_) = type_.unpack();
         match type_ {
             ast::Type::PathType(path_type) => {
@@ -34,13 +38,12 @@ impl<'db> TyLowering<'db> {
                 match named_item {
                     None => {
                         // can be primitive type
-                        self.lower_primitive_type(path).unwrap_or(Ty::Unknown)
+                        self.lower_primitive_type(path)
                     }
                     Some(named_item_entry) => named_item_entry
                         .node_loc
                         .to_ast::<ast::AnyNamedElement>(self.db)
-                        .map(|named_item| self.lower_path(path.map_into(), named_item.map_into()))
-                        .unwrap_or(Ty::Unknown),
+                        .map(|named_item| self.lower_path(path.map_into(), named_item.map_into())),
                 }
             }
             ast::Type::RefType(ref_type) => {
@@ -49,17 +52,19 @@ impl<'db> TyLowering<'db> {
                     .type_()
                     .map(|inner_type| self.lower_type(inner_type.in_file(file_id)))
                     .unwrap_or(Ty::Unknown);
-                Ty::new_reference(inner_ty, Mutability::new(is_mut))
+                Some(Ty::new_reference(inner_ty, Mutability::new(is_mut)))
             }
             ast::Type::TupleType(tuple_type) => {
                 let inner_tys = tuple_type
                     .types()
                     .map(|it| self.lower_type(it.in_file(file_id)))
                     .collect::<Vec<_>>();
-                Ty::Tuple(TyTuple::new(inner_tys))
+                Some(Ty::Tuple(TyTuple::new(inner_tys)))
             }
-            ast::Type::UnitType(_) => Ty::Unit,
-            ast::Type::ParenType(paren_type) => self.lower_type(paren_type.type_().in_file(file_id)),
+            ast::Type::UnitType(_) => Some(Ty::Unit),
+            ast::Type::ParenType(paren_type) => {
+                self.lower_type_inner(paren_type.type_()?.in_file(file_id))
+            }
             ast::Type::LambdaType(lambda_type) => {
                 let param_tys = lambda_type
                     .param_types()
@@ -70,7 +75,7 @@ impl<'db> TyLowering<'db> {
                     .return_type()
                     .map(|it| self.lower_type(it.in_file(file_id)))
                     .unwrap_or(Ty::Unit);
-                Ty::Callable(TyCallable::new(param_tys, ret_ty, CallKind::Lambda))
+                Some(Ty::Callable(TyCallable::new(param_tys, ret_ty, CallKind::Lambda)))
             }
         }
     }

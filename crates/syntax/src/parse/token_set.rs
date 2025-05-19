@@ -1,10 +1,18 @@
 //! A bit-set of `SyntaxKind`s.
 
 use crate::SyntaxKind;
+use std::ops::Add;
 
 /// A bit-set of `SyntaxKind`s
 #[derive(Clone, Copy)]
 pub(crate) struct TokenSet(u128);
+
+impl Add<TokenSet> for TokenSet {
+    type Output = TokenSet;
+    fn add(self, rhs: TokenSet) -> Self::Output {
+        self.union(rhs)
+    }
+}
 
 #[macro_export]
 macro_rules! ts {

@@ -12,6 +12,15 @@ pub(super) const TYPE_FIRST: TokenSet = TYPE_FIRST_NO_LAMBDA.union(ts!(T![|]));
 
 pub(super) const TYPE_RECOVERY_SET: TokenSet = TokenSet::new(&[T![')'], T![>], T![,]]);
 
+pub(super) fn ascription_or_recover(p: &mut Parser, recover_until: TokenSet) {
+    if p.at(T![:]) {
+        p.bump(T![:]);
+        type_(p);
+    } else {
+        p.error_and_bump_until_ts("missing type annotation", recover_until);
+    }
+}
+
 pub(super) fn ascription(p: &mut Parser) {
     assert!(p.at(T![:]));
     p.bump(T![:]);
