@@ -1,7 +1,7 @@
 //! A bit-set of `SyntaxKind`s.
 
 use crate::SyntaxKind;
-use std::ops::Add;
+use std::ops::{Add, BitOr};
 
 /// A bit-set of `SyntaxKind`s
 #[derive(Clone, Copy)]
