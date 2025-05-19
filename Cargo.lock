@@ -1158,7 +1158,7 @@ dependencies = [
 [[package]]
 name = "paths"
 version = "0.0.0"
-source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2025-05-05#3b57c001518aeb42511e177221f98ecf42104016"
+source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2025-05-19#e464ff8c755c6e12540a45b83274ec4de4829191"
 dependencies = [
  "camino",
 ]
@@ -1601,7 +1601,7 @@ checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 [[package]]
 name = "stdx"
 version = "0.0.0"
-source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2025-05-05#3b57c001518aeb42511e177221f98ecf42104016"
+source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2025-05-19#e464ff8c755c6e12540a45b83274ec4de4829191"
 dependencies = [
  "crossbeam-channel",
  "itertools",
@@ -1932,7 +1932,7 @@ checksum = "ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65"
 [[package]]
 name = "vfs"
 version = "0.0.0"
-source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2025-05-05#3b57c001518aeb42511e177221f98ecf42104016"
+source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2025-05-19#e464ff8c755c6e12540a45b83274ec4de4829191"
 dependencies = [
  "crossbeam-channel",
  "fst",
@@ -1947,7 +1947,7 @@ dependencies = [
 [[package]]
 name = "vfs-notify"
 version = "0.0.0"
-source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2025-05-05#3b57c001518aeb42511e177221f98ecf42104016"
+source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2025-05-19#e464ff8c755c6e12540a45b83274ec4de4829191"
 dependencies = [
  "crossbeam-channel",
  "notify",
