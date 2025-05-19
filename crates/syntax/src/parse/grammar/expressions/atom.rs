@@ -185,7 +185,12 @@ fn assert_macro_expr(p: &mut Parser) -> CompletedMarker {
     let m = p.start();
     p.bump(IDENT);
     p.bump(T![!]);
-    arg_list(p);
+    if p.at(T!['(']) {
+        arg_list(p);
+    } else {
+        // emit an error when argument list is missing
+        p.error("expected argument list");
+    }
     m.complete(p, ASSERT_MACRO_EXPR)
 }
 

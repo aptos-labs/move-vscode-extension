@@ -1,0 +1,5 @@
+module 0x1::assert_no_args {
+    fun main() {
+        assert!
+    }
+}
