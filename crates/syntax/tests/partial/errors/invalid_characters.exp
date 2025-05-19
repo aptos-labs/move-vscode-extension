@@ -1,0 +1,7 @@
+керкер
+//< unexpected token BAD_CHARACTER
+//^ unexpected token BAD_CHARACTER
+  //^ unexpected token BAD_CHARACTER
+    //^ unexpected token BAD_CHARACTER
+      //^ unexpected token BAD_CHARACTER
+        //^ unexpected token BAD_CHARACTER

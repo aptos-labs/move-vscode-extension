@@ -30,7 +30,7 @@ use ungrammar::{Grammar, Rule};
 
 pub fn generate() {
     let syntax_kinds = generate_syntax_kinds(KINDS_SRC);
-    let syntax_kinds_file = crate::project_root().join("crates/parser/src/syntax_kind/generated.rs");
+    let syntax_kinds_file = crate::project_root().join("crates/syntax/src/syntax_kind/generated.rs");
     ensure_file_contents(syntax_kinds_file.as_path(), &syntax_kinds);
 
     let grammar = include_str!("../../../crates/syntax/move.ungram")

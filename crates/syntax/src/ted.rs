@@ -4,11 +4,9 @@
 //! up elements around the edges.
 use std::{mem, ops::RangeInclusive};
 
-use parser::T;
-
 use crate::{
     ast::{self, edit::IndentLevel, make, AstNode},
-    SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken,
+    SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken, T,
 };
 
 /// Utility trait to allow calling `ted` functions with references or owned

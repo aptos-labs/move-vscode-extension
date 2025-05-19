@@ -1,0 +1,36 @@
+module 0x1
+    //^ expected an identifier
+        //^ expected `{`
+module 0x1::
+          //^ expected an identifier
+          //^ expected `{`
+module 0x1::item
+              //^ expected `{`
+
+module 0x1::item_recovery {
+    unknown
+  //^ expected an item, got IDENT
+    enum
+      //^ expected an identifier
+    fun
+     //^ expected an identifier
+    struct
+        //^ expected an identifier
+    spec
+      //^ expected identifier
+    spec {}
+      //^ expected identifier
+    spec ref
+          //^ expected `{`
+}
+unknown
+script
+    //^ expected `{`
+spec
+spec ref
+//< expected identifier
+//< expected `{`
+      //^ expected `{`
+spec 0x1::ref
+           //^ expected `{`
+

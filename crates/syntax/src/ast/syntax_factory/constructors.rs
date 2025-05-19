@@ -1,10 +1,10 @@
 use super::{ast_from_text, SyntaxFactory};
 use crate::ast::make::quote::quote;
+use crate::parse::SyntaxKind;
 use crate::{
     ast::{self, make},
     AstNode, SourceFile, SyntaxNode, SyntaxToken,
 };
-use parser::SyntaxKind;
 use stdx::itertools::Itertools;
 
 impl SyntaxFactory {

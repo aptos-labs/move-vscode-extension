@@ -22,6 +22,7 @@ impl SyntaxError {
     pub fn new(message: impl Into<String>, range: TextRange) -> Self {
         Self(message.into(), range)
     }
+
     pub fn new_at_offset(message: impl Into<String>, offset: TextSize) -> Self {
         Self(message.into(), TextRange::empty(offset))
     }

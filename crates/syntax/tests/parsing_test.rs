@@ -1,15 +1,27 @@
-use parser::entry_points;
 use std::path::Path;
 use std::{env, fs};
-use syntax::{parse_with_entrypoint, AstNode, SourceFile};
+use syntax::{AstNode, SourceFile};
+use test_utils::{apply_error_marks, ErrorMark};
 
 fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<()> {
     let input = fs::read_to_string(fpath).unwrap();
-    let parse = parse_with_entrypoint(&input, entry_points::source_file);
-    let file = SourceFile::cast(parse.syntax_node()).unwrap();
+
+    let parse = SourceFile::parse(&input);
+    let file = parse.tree();
 
     let actual_output = format!("{:#?}", file.syntax());
-    let output_fpath = fpath.with_extension("txt");
+    let output_fpath = fpath.with_extension("").with_extension("txt");
+    let errors_fpath = fpath.with_extension("").with_extension("exp");
+
+    let errors = parse.errors();
+    let marks = errors
+        .iter()
+        .map(|it| ErrorMark {
+            text_range: it.range(),
+            message: it.to_string(),
+        })
+        .collect();
+    let input_with_marks = apply_error_marks(&input, marks);
 
     let expected_output = if output_fpath.exists() {
         let existing = fs::read_to_string(&output_fpath).unwrap();
@@ -17,18 +29,28 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
     } else {
         None
     };
+
+    let expected_errors_output = fs::read_to_string(&errors_fpath).ok();
+
     if env::var("UB").is_ok() {
         // generate new files
-        fs::write(output_fpath, &actual_output).unwrap();
+        fs::write(&output_fpath, &actual_output).unwrap();
+        if allow_errors {
+            fs::write(errors_fpath, input_with_marks.clone()).unwrap();
+        }
     }
 
     pretty_assertions::assert_eq!(&expected_output.unwrap_or("".to_string()), &actual_output);
 
-    let errors = parse.errors();
-    if !allow_errors && !errors.is_empty() {
-        println!("{:#?}", errors);
-        // println!("{}", &actual_output);
-        panic!("errors are not expected")
+    if !errors.is_empty() {
+        if allow_errors {
+            pretty_assertions::assert_eq!(
+                &expected_errors_output.unwrap_or("".to_string()),
+                &input_with_marks
+            );
+        } else {
+            panic!("errors are not expected: \n {}", input_with_marks)
+        }
     }
 
     Ok(())
@@ -43,6 +65,6 @@ fn test_partial(fpath: &Path) -> datatest_stable::Result<()> {
 }
 
 datatest_stable::harness! {
-    { test = test_complete, root = "tests/complete", pattern = r"^.*\.move" },
-    { test = test_partial, root = "tests/partial", pattern = r"^.*\.move" },
+    { test = test_complete, root = "tests/complete", pattern = r"^.*\.move$" },
+    { test = test_partial, root = "tests/partial", pattern = r"^.*\.move$" },
 }

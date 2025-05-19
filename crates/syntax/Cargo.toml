@@ -8,6 +8,10 @@ name = "parsing_test"
 harness = false
 
 [dependencies]
+drop_bomb = "0.1.5"
+regex = "1.11.1"
+unicode-segmentation = "1.12.0"
+
 either = { workspace = true }
 tracing = { workspace = true }
 rowan = { workspace = true }
@@ -16,8 +20,8 @@ itertools = { workspace = true }
 stdx = { workspace = true }
 vfs = { workspace = true }
 
-parser = { path = "../parser" }
-
 [dev-dependencies]
 datatest-stable = "0.3.2"
 pretty_assertions = "1.4.1"
+
+test-utils = { path = "../test-utils" }

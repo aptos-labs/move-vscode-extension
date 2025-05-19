@@ -16,7 +16,7 @@ use std::{
 
 use rowan::TextRange;
 
-use crate::{syntax_node::Aptos, AstNode, SyntaxNode};
+use crate::{syntax_node::Aptos, AstNode, SyntaxKind, SyntaxNode};
 
 /// A "pointer" to a [`SyntaxNode`], via location in the source code.
 pub type SyntaxNodePtr = rowan::ast::SyntaxNodePtr<Aptos>;
@@ -85,7 +85,7 @@ impl<N: AstNode> AstPtr<N> {
         })
     }
 
-    pub fn kind(&self) -> parser::SyntaxKind {
+    pub fn kind(&self) -> SyntaxKind {
         self.raw.kind()
     }
 

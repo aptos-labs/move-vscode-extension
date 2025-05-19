@@ -82,7 +82,7 @@ pub fn get_path_resolve_variants(
 
         PathKind::Qualified { qualifier, ns, .. } => {
             let qualified_path_entries = get_qualified_path_entries(db, ctx, qualifier);
-            tracing::info!(?qualified_path_entries);
+            tracing::debug!(?qualified_path_entries);
             qualified_path_entries.filter_by_ns(ns)
         }
     }

@@ -7,7 +7,7 @@ use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 use syntax::TextRange;
 use test_utils::{
-    Marking, apply_markings, fixtures, get_all_marked_positions, get_first_marked_position,
+    ErrorMark, apply_error_marks, fixtures, get_all_marked_positions, get_first_marked_position,
     remove_markings,
 };
 use vfs::FileId;
@@ -145,8 +145,8 @@ fn apply_diagnostics_to_file(source: &str, diagnostics: &Vec<Diagnostic>) -> Str
         .map(|it| {
             let text_range = it.range.range;
             let message = format!("{} {}", it.severity.to_test_ident(), it.message.clone());
-            Marking { text_range, message }
+            ErrorMark { text_range, message }
         })
         .collect();
-    apply_markings(source, markings)
+    apply_error_marks(source, markings)
 }

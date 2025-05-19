@@ -2,6 +2,7 @@ pub mod fixtures;
 
 use line_index::{LineCol, LineIndex};
 use regex::Regex;
+use std::cmp::{max, min};
 use std::iter;
 use syntax::{TextRange, TextSize};
 
@@ -13,7 +14,7 @@ pub fn get_and_replace_caret(source: &str, caret_mark: &str) -> (&'static str, T
     (source_no_caret.leak(), TextSize::new(caret_offset as u32))
 }
 
-pub struct Marking {
+pub struct ErrorMark {
     pub text_range: TextRange,
     pub message: String,
 }
@@ -37,17 +38,13 @@ pub fn remove_markings(source: &str) -> String {
     trimmed_source
 }
 
-pub fn apply_markings(source: &str, markings: Vec<Marking>) -> String {
+pub fn apply_error_marks(source: &str, markings: Vec<ErrorMark>) -> String {
     let line_index = LineIndex::new(source);
 
-    let mut lines = vec![];
-    for marking in markings {
-        let text_range = marking.text_range;
-        let lc_start = line_index.line_col(text_range.start());
-        let lc_end = line_index.line_col(text_range.end());
-        let line = marked_line(marking.message, lc_start.col, lc_end.col);
-        lines.push((lc_start.line, line));
-    }
+    let lines = markings
+        .into_iter()
+        .map(|it| error_mark_line(&line_index, it))
+        .collect::<Vec<_>>();
 
     let mut source_lines = source.lines().map(|it| it.to_string()).collect::<Vec<_>>();
     let mut added = 0;
@@ -59,15 +56,31 @@ pub fn apply_markings(source: &str, markings: Vec<Marking>) -> String {
     source_lines.join("\n")
 }
 
-fn marked_line(message: String, start_col: u32, end_col: u32) -> String {
-    let prefix = iter::repeat_n(" ", (start_col - 2) as usize)
-        .collect::<Vec<_>>()
-        .join("");
-    let range = iter::repeat_n("^", (end_col - start_col) as usize)
-        .collect::<Vec<_>>()
-        .join("");
-    let line = format!("{prefix}//{range} {message}");
-    line
+fn error_mark_line(line_index: &LineIndex, mark: ErrorMark) -> (u32, String) {
+    let text_range = mark.text_range;
+    let lc_start = line_index.line_col(text_range.start());
+    let lc_end = line_index.line_col(text_range.end());
+
+    let mut start_col = lc_start.col;
+    let end_col = lc_end.col;
+    let message = mark.message;
+
+    let (prefix, mark_range) = if start_col < 2 {
+        let prefix = repeated(" ", start_col);
+        let mark_range = "<".to_string();
+        (prefix, mark_range)
+    } else {
+        let prefix = repeated(" ", start_col - 2);
+        let mark_range = repeated("^", max(1, end_col - start_col));
+        (prefix, mark_range)
+    };
+
+    let line = format!("{prefix}//{mark_range} {message}");
+    (lc_start.line, line)
+}
+
+fn repeated(s: &str, n: u32) -> String {
+    iter::repeat_n(s, n as usize).collect::<Vec<_>>().join("")
 }
 
 pub struct MarkedPos {

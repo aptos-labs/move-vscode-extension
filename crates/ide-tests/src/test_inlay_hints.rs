@@ -1,7 +1,7 @@
 use crate::init_tracing_for_test;
 use expect_test::{Expect, expect};
 use ide::inlay_hints::{InlayFieldsToResolve, InlayHintsConfig};
-use test_utils::{Marking, apply_markings, fixtures, remove_markings};
+use test_utils::{ErrorMark, apply_error_marks, fixtures, remove_markings};
 
 const DISABLED_CONFIG: InlayHintsConfig = InlayHintsConfig {
     // discriminant_hints: DiscriminantHints::Never,
@@ -60,10 +60,10 @@ pub(crate) fn check_inlay_hints(expect: Expect) {
         .map(|it| {
             let text_range = it.range;
             let message = it.label.to_string();
-            Marking { text_range, message }
+            ErrorMark { text_range, message }
         })
         .collect();
-    let res = apply_markings(trimmed_source.as_str(), markings);
+    let res = apply_error_marks(trimmed_source.as_str(), markings);
     expect.assert_eq(res.as_str());
 }
 

@@ -1,8 +1,8 @@
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres::namespaces::Ns;
 use crate::nameres::scope::ScopeEntry;
-use parser::SyntaxKind;
-use parser::SyntaxKind::*;
+use syntax::SyntaxKind;
+use syntax::SyntaxKind::*;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};

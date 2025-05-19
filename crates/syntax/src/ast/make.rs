@@ -1,8 +1,8 @@
 pub(crate) mod quote;
 
 use crate::ast::make::quote::quote;
+use crate::parse::SyntaxKind;
 use crate::{ast, AstNode, SourceFile, SyntaxToken};
-use parser::SyntaxKind;
 
 // // pub fn name(name: &str) -> ast::Name {
 // //     ast_from_text(&format!("module {name}"))

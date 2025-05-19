@@ -10,6 +10,7 @@ use rowan::{GreenNodeBuilder, Language};
 
 use crate::{AstNode, Parse, SyntaxError, SyntaxKind, TextSize};
 
+use crate::parse::ParseError;
 pub(crate) use rowan::GreenNode;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -80,7 +81,7 @@ impl SyntaxTreeBuilder {
         self.inner.finish_node();
     }
 
-    pub fn error(&mut self, error: parser::ParseError, text_pos: TextSize) {
+    pub fn error(&mut self, error: ParseError, text_pos: TextSize) {
         self.errors.push(SyntaxError::new_at_offset(*error.0, text_pos));
     }
 }
