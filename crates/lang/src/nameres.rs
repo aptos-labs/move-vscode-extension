@@ -147,6 +147,7 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
     }
 
     fn resolve_no_inf(&self, db: &dyn SourceDatabase) -> Option<ScopeEntry> {
+        dbg!(&self.value.syntax().containing_file());
         self.resolve_no_inf_multi(db)?.single_or_none()
     }
 }

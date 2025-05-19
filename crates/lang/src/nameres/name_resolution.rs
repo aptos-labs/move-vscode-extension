@@ -38,11 +38,12 @@ pub fn get_resolve_scopes(
     db: &dyn SourceDatabase,
     start_at: InFile<impl ReferenceElement>,
 ) -> Vec<ResolveScope> {
-    let mut scopes = vec![];
+    let (file_id, start_at) = start_at.unpack();
 
-    let file_id = start_at.file_id;
-    let mut opt_scope = start_at.value.syntax().parent();
-    let mut prev = None;
+    let mut scopes = vec![];
+    let mut opt_scope = start_at.syntax().parent();
+    let mut prev = Some(start_at.syntax().to_owned());
+
     while let Some(ref scope) = opt_scope {
         scopes.push(ResolveScope {
             scope: InFile::new(file_id, scope.clone()),
@@ -112,6 +113,7 @@ pub fn get_entries_from_walking_scopes(
     start_at: InFile<impl ReferenceElement>,
     ns: NsSet,
 ) -> Vec<ScopeEntry> {
+    dbg!(&start_at);
     let resolve_scopes = get_resolve_scopes(db, start_at);
 
     let mut visited_name_ns = HashMap::<String, NsSet>::new();
