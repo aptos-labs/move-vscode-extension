@@ -788,6 +788,8 @@ impl LetStmt {
     pub fn eq_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![=]) }
     #[inline]
     pub fn let_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![let]) }
+    #[inline]
+    pub fn post_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![post]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

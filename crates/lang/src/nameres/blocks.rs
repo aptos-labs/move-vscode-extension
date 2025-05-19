@@ -11,10 +11,27 @@ pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: Option<SyntaxNode>
 
     match scope.value.kind() {
         BLOCK_EXPR => {
-            let block_expr = scope.map(|s| ast::BlockExpr::cast(s).unwrap());
+            let block_expr = scope.syntax_cast::<ast::BlockExpr>().unwrap();
             let prev = prev.unwrap();
 
-            let bindings = visible_let_stmts(block_expr, prev);
+            let let_stmts = let_stmts_with_bindings(block_expr);
+
+            let is_msl = scope.value.is_msl_context();
+            let current_let_stmt = prev.clone().cast::<ast::LetStmt>();
+            let bindings = let_stmts
+                .into_iter()
+                .filter(|(let_stmt, _)| {
+                    if !is_msl {
+                        return let_stmt.syntax().strictly_before(&prev);
+                    }
+                    if let Some(current_let_stmt) = current_let_stmt.as_ref() {
+                        let is_post_visible = current_let_stmt.is_post() || !let_stmt.is_post();
+                        return is_post_visible && let_stmt.syntax().strictly_before(&prev);
+                    }
+                    true
+                })
+                .collect::<Vec<_>>();
+
             let binding_entries = bindings.into_iter().rev().flat_map(|(_, bindings)| bindings);
 
             let binding_entries_with_shadowing =
@@ -41,14 +58,10 @@ pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: Option<SyntaxNode>
     vec![]
 }
 
-fn visible_let_stmts(
-    block: InFile<ast::BlockExpr>,
-    prev: SyntaxNode,
-) -> Vec<(ast::LetStmt, Vec<ScopeEntry>)> {
+fn let_stmts_with_bindings(block: InFile<ast::BlockExpr>) -> Vec<(ast::LetStmt, Vec<ScopeEntry>)> {
     block
         .value
         .let_stmts()
-        .filter(|let_stmt| let_stmt.syntax().strictly_before(&prev))
         .map(|let_stmt| {
             let bindings = let_stmt.pat().map(|pat| pat.bindings()).unwrap_or_default();
             (let_stmt, bindings.wrapped_in_file(block.file_id).to_entries())
