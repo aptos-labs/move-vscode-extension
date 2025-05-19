@@ -32,8 +32,6 @@ pub(crate) fn item_spec(p: &mut Parser, m: Marker) {
     m.complete(p, ITEM_SPEC);
 }
 
-// test_err generic_param_list_recover
-// fn f<T: Clone,, U:, V>() {}
 fn item_spec_type_param_list(p: &mut Parser<'_>) {
     assert!(p.at(T![<]));
     let m = p.start();
@@ -79,20 +77,8 @@ pub(crate) fn item_spec_param_list(p: &mut Parser) {
         if p.at_ts(ITEM_SPEC_PARAM_FIRST) {
             item_spec_param(p);
         } else {
-            p.error_and_bump_until_ts(
-                "expected value parameter",
-                ITEM_SPEC_PARAM_FIRST.union(ts!(T![')'], T![,])),
-            );
+            p.error_and_bump_until_ts("expected value parameter", ITEM_SPEC_PARAM_RECOVERY_SET);
         }
-        // {
-        //     if !p.at_ts(ITEM_SPEC_PARAM_FIRST) {
-        //         p.error("expected value parameter");
-        //         false
-        //     } else {
-        //         item_spec_param(p);
-        //         true
-        //     }
-        // }
         if !p.at(T![')']) {
             p.expect(T![,]);
         }
