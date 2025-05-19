@@ -98,7 +98,13 @@ pub(crate) fn delimited_fn(
     at_item_first: impl Fn(&Parser) -> bool,
     mut parse: impl FnMut(&mut Parser<'_>) -> bool,
 ) {
+    let mut iteration = 0;
     while !p.at(EOF) && !is_end(p) {
+        iteration += 1;
+        if iteration > 1000 {
+            // something's wrong and we don't want to hang
+            break;
+        }
         if p.at(delim) {
             // Recover if an argument is missing and only got a delimiter,
             // e.g. `(a, , b)`.

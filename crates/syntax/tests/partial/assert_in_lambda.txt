@@ -1,0 +1,74 @@
+SOURCE_FILE@0..112
+  MODULE@0..111
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..28
+      IDENT@12..28 "assert_in_lambda"
+    WHITESPACE@28..29 " "
+    L_CURLY@29..30 "{"
+    WHITESPACE@30..35 "\n    "
+    FUN@35..109
+      FUN_KW@35..38 "fun"
+      WHITESPACE@38..39 " "
+      NAME@39..43
+        IDENT@39..43 "main"
+      PARAM_LIST@43..100
+        L_PAREN@43..44 "("
+        WHITESPACE@44..53 "\n        "
+        PARAM@53..93
+          IDENT_PAT@53..54
+            NAME@53..54
+              IDENT@53..54 "f"
+          COLON@54..55 ":"
+          WHITESPACE@55..56 " "
+          LAMBDA_TYPE@56..93
+            PIPE@56..57 "|"
+            LAMBDA_TYPE_PARAM@57..64
+              PATH_TYPE@57..64
+                PATH@57..64
+                  PATH_SEGMENT@57..64
+                    NAME_REF@57..64
+                      IDENT@57..64 "Element"
+            COMMA@64..65 ","
+            WHITESPACE@65..66 " "
+            LAMBDA_TYPE_PARAM@66..72
+              PATH_TYPE@66..72
+                PATH@66..72
+                  PATH_SEGMENT@66..72
+                    NAME_REF@66..72
+                      IDENT@66..72 "assert"
+            ERROR@72..73
+              BANG@72..73 "!"
+            COMMA@73..74 ","
+            WHITESPACE@74..75 " "
+            LAMBDA_TYPE_PARAM@75..81
+              PATH_TYPE@75..81
+                PATH@75..81
+                  PATH_SEGMENT@75..81
+                    NAME_REF@75..81
+                      IDENT@75..81 "assert"
+            ERROR@81..84
+              BANG@81..82 "!"
+              L_PAREN@82..83 "("
+              R_PAREN@83..84 ")"
+            PIPE@84..85 "|"
+            WHITESPACE@85..86 " "
+            PATH_TYPE@86..93
+              PATH@86..93
+                PATH_SEGMENT@86..93
+                  NAME_REF@86..93
+                    IDENT@86..93 "Element"
+        COMMA@93..94 ","
+        WHITESPACE@94..99 "\n    "
+        R_PAREN@99..100 ")"
+      WHITESPACE@100..101 " "
+      BLOCK_EXPR@101..109
+        L_CURLY@101..102 "{"
+        WHITESPACE@102..108 "\n\n    "
+        R_CURLY@108..109 "}"
+    WHITESPACE@109..110 "\n"
+    R_CURLY@110..111 "}"
+  WHITESPACE@111..112 "\n"

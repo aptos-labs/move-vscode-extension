@@ -1,4 +1,4 @@
-use crate::parse::grammar::utils::delimited;
+use crate::parse::grammar::utils::{delimited, delimited_fn};
 use crate::parse::grammar::{paths, type_params};
 use crate::parse::token_set::TokenSet;
 use crate::parse::Parser;
@@ -18,12 +18,12 @@ pub(super) fn ascription(p: &mut Parser) {
     type_(p);
 }
 
-pub(crate) fn type_(p: &mut Parser) {
+pub(crate) fn type_(p: &mut Parser) -> bool {
     // never recover
     type_or_recover_until(p, |_| true)
 }
 
-pub(crate) fn type_or_recover_until(p: &mut Parser, stop: impl Fn(&Parser) -> bool) {
+pub(crate) fn type_or_recover_until(p: &mut Parser, stop: impl Fn(&Parser) -> bool) -> bool {
     match p.current() {
         T!['('] => paren_or_tuple_or_unit_type(p),
         T![&] => ref_type(p),
@@ -31,10 +31,10 @@ pub(crate) fn type_or_recover_until(p: &mut Parser, stop: impl Fn(&Parser) -> bo
         _ if paths::is_path_start(p) => path_type(p),
         _ => {
             p.error_and_bump_until("expected type", stop);
-            // p.error("expected type");
-            // p.error_and_recover_until_ts("expected type", TYPE_RECOVERY_SET);
+            return false;
         }
     }
+    true
 }
 
 pub(super) fn path_type(p: &mut Parser) {
@@ -75,8 +75,12 @@ fn lambda_type(p: &mut Parser) {
         TYPE_FIRST_NO_LAMBDA,
         |p| {
             let m = p.start();
-            type_(p);
-            m.complete(p, LAMBDA_TYPE_PARAM);
+            let is_type = type_or_recover_until(p, |p| p.at_ts(ts!(T![,], T![|])));
+            if is_type {
+                m.complete(p, LAMBDA_TYPE_PARAM);
+            } else {
+                m.complete(p, ERROR);
+            }
             true
         },
     );
