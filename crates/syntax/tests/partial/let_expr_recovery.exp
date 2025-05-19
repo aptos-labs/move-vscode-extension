@@ -1,0 +1,15 @@
+module 0x1::let_expr_recovery {
+    fun main() {
+        let
+         //^ expected pattern
+         //^ expected SEMICOLON
+        spec
+          //^ expected a block
+          //^ expected SEMICOLON
+        let
+         //^ expected pattern
+         //^ expected SEMICOLON
+        spec
+          //^ expected a block
+    }
+}

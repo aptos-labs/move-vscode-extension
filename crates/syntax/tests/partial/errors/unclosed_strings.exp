@@ -1,0 +1,13 @@
+module 0x1::unclosed_strings {
+    fun main() {
+        x";
+        b";
+         //^ expected SEMICOLON
+        b"2423534;;;;
+                   //^ expected SEMICOLON
+        ";
+      //^ unexpected character
+       //^ expected expression
+       //^ unexpected token SEMICOLON
+    }
+}

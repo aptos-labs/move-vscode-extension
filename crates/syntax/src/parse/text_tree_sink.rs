@@ -22,7 +22,7 @@ pub(crate) struct TextTreeSink<'t> {
     text_pos: TextSize,
     token_pos: usize,
     state: State,
-    inner: SyntaxTreeBuilder,
+    tree_builder: SyntaxTreeBuilder,
 }
 
 enum State {
@@ -36,7 +36,7 @@ impl<'a> TextTreeSink<'a> {
     pub(crate) fn token(&mut self, kind: SyntaxKind, n_tokens: u8) {
         match mem::replace(&mut self.state, State::Normal) {
             State::PendingStart => unreachable!(),
-            State::PendingFinish => self.inner.finish_node(),
+            State::PendingFinish => self.tree_builder.finish_node(),
             State::Normal => (),
         }
         self.eat_trivias();
@@ -52,12 +52,12 @@ impl<'a> TextTreeSink<'a> {
     pub(crate) fn start_node(&mut self, kind: SyntaxKind) {
         match mem::replace(&mut self.state, State::Normal) {
             State::PendingStart => {
-                self.inner.start_node(kind);
+                self.tree_builder.start_node(kind);
                 // No need to attach trivias to previous node: there is no
                 // previous node.
                 return;
             }
-            State::PendingFinish => self.inner.finish_node(),
+            State::PendingFinish => self.tree_builder.finish_node(),
             State::Normal => (),
         }
 
@@ -66,7 +66,8 @@ impl<'a> TextTreeSink<'a> {
             .take_while(|it| it.kind.is_trivia())
             .count();
         let leading_trivias = &self.tokens[self.token_pos..self.token_pos + n_trivias];
-        let mut trivia_end = self.text_pos + leading_trivias.iter().map(|it| it.len).sum::<TextSize>();
+        let leading_trivias_len = leading_trivias.iter().map(|it| it.len).sum::<TextSize>();
+        let mut trivia_end = self.text_pos + leading_trivias_len;
 
         let n_attached_trivias = {
             let leading_trivias = leading_trivias.iter().rev().map(|it| {
@@ -78,7 +79,7 @@ impl<'a> TextTreeSink<'a> {
             n_attached_trivias(kind, leading_trivias)
         };
         self.eat_n_trivias(n_trivias - n_attached_trivias);
-        self.inner.start_node(kind);
+        self.tree_builder.start_node(kind);
         self.eat_n_trivias(n_attached_trivias);
     }
 
@@ -87,13 +88,13 @@ impl<'a> TextTreeSink<'a> {
     pub(crate) fn finish_node(&mut self) {
         match mem::replace(&mut self.state, State::PendingFinish) {
             State::PendingStart => unreachable!(),
-            State::PendingFinish => self.inner.finish_node(),
+            State::PendingFinish => self.tree_builder.finish_node(),
             State::Normal => (),
         }
     }
 
     pub(crate) fn error(&mut self, error: ParseError) {
-        self.inner.error(error, self.text_pos);
+        self.tree_builder.error(error, self.text_pos);
     }
 }
 
@@ -105,7 +106,7 @@ impl<'t> TextTreeSink<'t> {
             text_pos: 0.into(),
             token_pos: 0,
             state: State::PendingStart,
-            inner: SyntaxTreeBuilder::default(),
+            tree_builder: SyntaxTreeBuilder::default(),
         }
     }
 
@@ -113,12 +114,12 @@ impl<'t> TextTreeSink<'t> {
         match mem::replace(&mut self.state, State::Normal) {
             State::PendingFinish => {
                 self.eat_trivias();
-                self.inner.finish_node();
+                self.tree_builder.finish_node();
             }
             State::PendingStart | State::Normal => unreachable!(),
         }
 
-        self.inner.finish_raw()
+        self.tree_builder.finish_raw()
     }
 
     fn eat_trivias(&mut self) {
@@ -143,7 +144,7 @@ impl<'t> TextTreeSink<'t> {
         let text = &self.text[range];
         self.text_pos += len;
         self.token_pos += n_tokens;
-        self.inner.token(kind, text);
+        self.tree_builder.token(kind, text);
     }
 }
 

@@ -264,7 +264,6 @@ impl<'t> Parser<'t> {
 
     /// Emit error with the `message`.
     pub(crate) fn error(&mut self, message: impl Into<String>) {
-        // self.error_and_bump_until(&message.into(), |p| false);
         self.push_error(message);
     }
 
@@ -279,8 +278,8 @@ impl<'t> Parser<'t> {
         if self.eat(kind) {
             return true;
         }
+        // self.expected_kind_error(kind);
         self.push_error(format!("expected {:?}", kind));
-        // self.error(format!("expected {:?}", kind));
         false
     }
 
@@ -358,6 +357,12 @@ impl<'t> Parser<'t> {
     fn push_event(&mut self, event: Event) {
         self.events.push(event);
     }
+
+    // /// add event before the last token (used for errors)
+    // fn push_event_preceding(&mut self, event: Event) {
+    //     assert!(!self.events.is_empty());
+    //     self.events.insert(self.events.len() - 1, event);
+    // }
 }
 
 /// See [`Parser::start`].
