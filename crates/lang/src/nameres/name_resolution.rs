@@ -22,14 +22,14 @@ use syntax::{AstNode, SyntaxNode, ast};
 
 pub struct ResolveScope {
     scope: InFile<SyntaxNode>,
-    prev: Option<SyntaxNode>,
+    prev: SyntaxNode,
 }
 
 impl fmt::Debug for ResolveScope {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_set()
             .entry(&self.scope.value.kind())
-            .entry(&self.prev.clone().map(|it| it.kind()))
+            .entry(&self.prev.kind())
             .finish()
     }
 }
@@ -38,22 +38,23 @@ pub fn get_resolve_scopes(
     db: &dyn SourceDatabase,
     start_at: InFile<impl ReferenceElement>,
 ) -> Vec<ResolveScope> {
-    let mut scopes = vec![];
+    let (file_id, start_at) = start_at.unpack();
 
-    let file_id = start_at.file_id;
-    let mut opt_scope = start_at.value.syntax().parent();
-    let mut prev = None;
+    let mut scopes = vec![];
+    let mut opt_scope = start_at.syntax().parent();
+    let mut prev_scope = start_at.syntax().to_owned();
+
     while let Some(ref scope) = opt_scope {
         scopes.push(ResolveScope {
             scope: InFile::new(file_id, scope.clone()),
-            prev: prev.clone(),
+            prev: prev_scope.clone(),
         });
 
         if scope.kind() == SyntaxKind::MODULE {
             let module = ast::Module::cast(scope.clone()).unwrap().in_file(file_id);
-            scopes.extend(module_inner_spec_scopes(module.clone(), prev));
+            scopes.extend(module_inner_spec_scopes(module.clone(), prev_scope));
 
-            let prev = Some(module.value.syntax().clone());
+            let prev = module.value.syntax().clone();
             for related_module_spec in module.related_module_specs(db) {
                 scopes.push(ResolveScope {
                     prev: prev.clone(),
@@ -65,12 +66,12 @@ pub fn get_resolve_scopes(
 
         if scope.kind() == MODULE_SPEC {
             let module_spec = scope.clone().cast::<ast::ModuleSpec>().unwrap();
-            if prev == module_spec.path().map(|it| it.syntax().clone()) {
+            if module_spec.path().is_none_or(|it| it.syntax() == &prev_scope) {
                 // skip if we're resolving module path for the module spec
                 break;
             }
             if let Some(module) = module_spec.clone().in_file(file_id).module(db) {
-                let prev = Some(module_spec.syntax().clone());
+                let prev = module_spec.syntax().clone();
                 scopes.push(ResolveScope {
                     scope: module.clone().map(|it| it.syntax().clone()),
                     prev: prev.clone(),
@@ -81,7 +82,7 @@ pub fn get_resolve_scopes(
         }
 
         let parent_scope = scope.parent();
-        prev = Some(scope.clone());
+        prev_scope = scope.clone();
         opt_scope = parent_scope;
     }
 
@@ -91,7 +92,7 @@ pub fn get_resolve_scopes(
 // all `spec module {}` in item container
 fn module_inner_spec_scopes(
     item_container: InFile<impl ast::HasItems>,
-    prev: Option<SyntaxNode>,
+    prev: SyntaxNode,
 ) -> Vec<ResolveScope> {
     let (file_id, module) = item_container.unpack();
     let mut inner_scopes = vec![];

@@ -18,12 +18,14 @@ module 0x1::item_recovery {
         //^ expected an identifier
     spec
       //^ expected identifier
+      //^ expected a block
     spec {}
       //^ expected identifier
     spec ref
-          //^ expected `{`
+          //^ expected a block
 }
 unknown
+//< unexpected token IDENT
 script
     //^ expected `{`
 spec

@@ -1,0 +1,7 @@
+spec {
+   //^ expected identifier
+    spec {
+      //^ expected identifier
+
+    }
+}

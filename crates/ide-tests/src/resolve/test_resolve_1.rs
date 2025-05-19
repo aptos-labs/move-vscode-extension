@@ -1,4 +1,5 @@
 use crate::resolve::{check_resolve, check_resolve_files};
+use expect_test::expect;
 
 #[test]
 fn test_resolve_base_for_index_expr() {
@@ -252,5 +253,47 @@ module std::main {
               //^ unresolved
 }
 "#,
+    )
+}
+
+#[test]
+fn test_resolve_module_spec_without_address() {
+    check_resolve(
+        // language=Move
+        r#"
+spec main {
+   //^ unresolved
+}
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_spec_function_from_module_spec_with_no_path() {
+    check_resolve(
+        // language=Move
+        r#"
+module 0x1::main {}
+spec {
+    spec main {
+        //^ unresolved
+    }
+}
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_spec_function_from_module_spec_with_no_path_with_address() {
+    check_resolve(
+        // language=Move
+        r#"
+module 0x1::main {}
+spec {
+    spec 0x1::main {
+             //^ unresolved
+    }
+}
+    "#,
     )
 }

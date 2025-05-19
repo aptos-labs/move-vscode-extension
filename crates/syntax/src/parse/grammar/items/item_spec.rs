@@ -12,19 +12,12 @@ pub(crate) fn item_spec(p: &mut Parser, m: Marker) {
     if p.at(T![module]) {
         p.bump(T![module]);
     } else {
-        let ref_exists = {
-            let ref_m = p.start();
-            let res = name_ref_or_bump_until(p, item_start);
-            if res {
-                ref_m.complete(p, ITEM_SPEC_REF);
-            } else {
-                ref_m.abandon(p);
-            }
-            res
-        };
-        if !ref_exists {
-            m.complete(p, ITEM_SPEC);
-            return;
+        let ref_m = p.start();
+        let res = name_ref_or_bump_until(p, |p| item_start(p) || p.at(T!['{']));
+        if res {
+            ref_m.complete(p, ITEM_SPEC_REF);
+        } else {
+            ref_m.abandon(p);
         }
         if p.at(T![<]) {
             item_spec_type_param_list(p);

@@ -27,7 +27,6 @@ pub(crate) fn resolve_path_multi(db: &dyn SourceDatabase, path: InFile<ast::Path
     resolve_path_multi_tracked(db, SyntaxLocInput::new(db, path.loc()))
 }
 
-#[salsa_macros::tracked]
 fn resolve_path_multi_tracked<'db>(
     db: &'db dyn SourceDatabase,
     path_loc: SyntaxLocInput<'db>,
