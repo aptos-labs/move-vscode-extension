@@ -18,69 +18,21 @@ pub(crate) struct TextTokenSource<'t> {
     ///  (struct, 0) (Foo, 7) (;, 10)
     /// ```
     /// `[(struct, 0), (Foo, 7), (;, 10)]`
-    token_offset_pairs: Vec<(RawToken, TextSize)>,
+    raw_tokens_with_offsets: Vec<(RawToken, TextSize)>,
 
     /// Current token and position
     curr: (Token, usize),
 }
 
 impl<'t> TextTokenSource<'t> {
-    pub(crate) fn current(&self) -> Token {
-        self.curr.0
-    }
-
-    /// Lookahead n token
-    pub(crate) fn lookahead_nth(&self, n: usize) -> Token {
-        mk_token(self.curr.1 + n, &self.token_offset_pairs)
-    }
-
-    /// bump cursor to next token
-    pub(crate) fn bump(&mut self) {
-        if self.curr.0.kind == EOF {
-            return;
-        }
-
-        let pos = self.curr.1 + 1;
-        self.curr = (mk_token(pos, &self.token_offset_pairs), pos);
-    }
-
-    /// rollback to the previous token
-    pub(crate) fn rollback(&mut self) {
-        let pos = self.curr.1 - 1;
-        self.curr = (mk_token(pos, &self.token_offset_pairs), pos);
-    }
-
-    /// Is the current token a specified keyword?
-    pub(crate) fn is_keyword(&self, kw: &str) -> bool {
-        self.token_offset_pairs
-            .get(self.curr.1)
-            .map_or(false, |(token, offset)| {
-                &self.text[TextRange::at(*offset, token.len)] == kw
-            })
-    }
-}
-
-fn mk_token(pos: usize, token_offset_pairs: &[(RawToken, TextSize)]) -> Token {
-    let (kind, is_jointed_to_next) = match token_offset_pairs.get(pos) {
-        Some((token, offset)) => (
-            token.kind,
-            token_offset_pairs
-                .get(pos + 1)
-                .map_or(false, |(_, next_offset)| offset + token.len == *next_offset),
-        ),
-        None => (EOF, false),
-    };
-    Token { kind, is_jointed_to_next }
-}
-
-impl<'t> TextTokenSource<'t> {
     /// Generate input from tokens(expect comment and whitespace).
     pub(crate) fn new(text: &'t str, raw_tokens: &'t [RawToken]) -> TextTokenSource<'t> {
-        let token_offset_pairs: Vec<_> = raw_tokens
+        let raw_tokens_with_offsets: Vec<_> = raw_tokens
             .iter()
             .filter_map({
                 let mut offset = 0.into();
                 move |token| {
+                    // remove trivia from the token stream, preserving offsets
                     let token_with_offset = if token.kind.is_trivia() {
                         None
                     } else {
@@ -92,11 +44,58 @@ impl<'t> TextTokenSource<'t> {
             })
             .collect();
 
-        let first = mk_token(0, &token_offset_pairs);
+        let first_token = token_at_pos(0, &raw_tokens_with_offsets);
         TextTokenSource {
             text,
-            token_offset_pairs,
-            curr: (first, 0),
+            raw_tokens_with_offsets,
+            curr: (first_token, 0),
         }
     }
+
+    pub(crate) fn current(&self) -> Token {
+        self.curr.0
+    }
+
+    /// Lookahead n token
+    pub(crate) fn lookahead_nth(&self, n: usize) -> Token {
+        token_at_pos(self.curr.1 + n, &self.raw_tokens_with_offsets)
+    }
+
+    /// bump cursor to next token
+    pub(crate) fn bump(&mut self) {
+        if self.curr.0.kind == EOF {
+            return;
+        }
+
+        let pos = self.curr.1 + 1;
+        self.curr = (token_at_pos(pos, &self.raw_tokens_with_offsets), pos);
+    }
+
+    /// rollback to the previous token
+    pub(crate) fn rollback(&mut self) {
+        let pos = self.curr.1 - 1;
+        self.curr = (token_at_pos(pos, &self.raw_tokens_with_offsets), pos);
+    }
+
+    /// Is the current token a specified keyword?
+    pub(crate) fn is_keyword(&self, kw: &str) -> bool {
+        self.raw_tokens_with_offsets
+            .get(self.curr.1)
+            .map_or(false, |(token, offset)| {
+                &self.text[TextRange::at(*offset, token.len)] == kw
+            })
+    }
+}
+
+fn token_at_pos(pos: usize, tokens_with_offsets: &[(RawToken, TextSize)]) -> Token {
+    let (kind, is_jointed_to_next) = match tokens_with_offsets.get(pos) {
+        Some((raw_token, offset)) => (
+            raw_token.kind,
+            tokens_with_offsets
+                .get(pos + 1)
+                .map_or(false, |(_, next_offset)| offset + raw_token.len == *next_offset),
+        ),
+        None => (EOF, false),
+    };
+    Token { kind, is_jointed_to_next }
 }

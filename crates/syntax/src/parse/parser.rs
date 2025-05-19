@@ -208,7 +208,7 @@ impl<'t> Parser<'t> {
     }
 
     pub(crate) fn at_contextual_kw_ident(&self, kw: &str) -> bool {
-        self.at(SyntaxKind::IDENT) && self.at_contextual_kw(kw)
+        self.at(T![ident]) && self.at_contextual_kw(kw)
     }
 
     /// Checks if the current token is contextual keyword with text `t`.
