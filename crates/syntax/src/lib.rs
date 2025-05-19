@@ -3,15 +3,18 @@
 pub mod algo;
 pub mod ast;
 pub mod files;
-mod parsing;
+mod parse;
 mod ptr;
 pub mod syntax_editor;
 mod syntax_error;
+mod syntax_kind;
 mod syntax_node;
 mod ted;
 mod token_text;
 mod validation;
 
+use crate::parse::entry_points;
+pub use crate::parse::SyntaxKind;
 pub use crate::{
     ast::{AstNode, AstToken},
     ptr::{AstPtr, SyntaxNodePtr},
@@ -22,8 +25,6 @@ pub use crate::{
     },
     token_text::TokenText,
 };
-use parser::{entry_points, Parser};
-pub use parser::{SyntaxKind, T};
 pub use rowan::{
     Direction, GreenNode, NodeOrToken, SyntaxText, TextRange, TextSize, TokenAtOffset, WalkEvent,
 };
@@ -111,8 +112,10 @@ impl Parse {
 /// `SourceFile` represents a parse tree for a single Rust file.
 pub use crate::ast::SourceFile;
 
+use crate::parse::parser::Parser;
+
 pub fn parse_with_entrypoint(text: &str, entrypoint: fn(&mut Parser)) -> Parse {
-    let (green, errors) = parsing::parse_text(text, entrypoint);
+    let (green, errors) = parse::parse_text(text, entrypoint);
     Parse {
         green,
         errors: Arc::new(errors),
@@ -121,7 +124,7 @@ pub fn parse_with_entrypoint(text: &str, entrypoint: fn(&mut Parser)) -> Parse {
 
 impl SourceFile {
     pub fn parse(text: &str) -> Parse {
-        let (green, mut errors) = parsing::parse_text(text, entry_points::source_file);
+        let (green, mut errors) = parse::parse_text(text, entry_points::source_file);
         let root = SyntaxNode::new_root(green.clone());
 
         assert_eq!(root.kind(), SyntaxKind::SOURCE_FILE);

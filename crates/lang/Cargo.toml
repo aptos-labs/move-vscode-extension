@@ -16,6 +16,5 @@ salsa-macros.workspace = true
 stdx = { workspace = true }
 vfs = { workspace = true }
 
-parser = { path = "../parser" }
 syntax = { path = "../syntax" }
 base-db = { path = "../base-db" }

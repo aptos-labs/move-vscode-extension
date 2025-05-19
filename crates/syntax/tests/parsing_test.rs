@@ -1,4 +1,4 @@
-use parser::entry_points;
+use crate::parser::entry_points;
 use std::path::Path;
 use std::{env, fs};
 use syntax::{parse_with_entrypoint, AstNode, SourceFile};

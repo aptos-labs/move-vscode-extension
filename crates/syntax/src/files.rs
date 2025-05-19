@@ -1,5 +1,5 @@
+use crate::parse::SyntaxKind;
 use crate::{AstNode, SyntaxNode, TextRange, TextSize};
-use parser::SyntaxKind;
 use std::borrow::Borrow;
 use vfs::FileId;
 

@@ -945,7 +945,6 @@ dependencies = [
  "base-db",
  "enumset",
  "itertools",
- "parser",
  "salsa",
  "salsa-macros",
  "stdx",
@@ -1240,15 +1239,6 @@ dependencies = [
  "redox_syscall",
  "smallvec",
  "windows-targets 0.52.6",
-]
-
-[[package]]
-name = "parser"
-version = "0.1.0"
-dependencies = [
- "drop_bomb",
- "regex",
- "unicode-segmentation",
 ]
 
 [[package]]
@@ -1759,13 +1749,15 @@ name = "syntax"
 version = "0.1.0"
 dependencies = [
  "datatest-stable",
+ "drop_bomb",
  "either",
  "itertools",
- "parser",
  "pretty_assertions",
+ "regex",
  "rowan",
  "stdx",
  "tracing",
+ "unicode-segmentation",
  "vfs",
 ]
 

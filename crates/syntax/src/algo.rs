@@ -1,7 +1,7 @@
+use crate::parse::SyntaxKind;
+use crate::parse::SyntaxKind::SOURCE_FILE;
 use crate::{AstNode, SourceFile, SyntaxElement, SyntaxNode, SyntaxToken, TextRange, TextSize};
 use itertools::Itertools;
-use parser::SyntaxKind;
-use parser::SyntaxKind::SOURCE_FILE;
 use rowan::{Direction, NodeOrToken};
 
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]

@@ -1,5 +1,5 @@
+use crate::parse::SyntaxKind;
 use crate::{ast, AstNode};
-use parser::SyntaxKind;
 
 impl ast::AnyFieldsOwner {
     pub fn struct_or_enum(&self) -> ast::StructOrEnum {

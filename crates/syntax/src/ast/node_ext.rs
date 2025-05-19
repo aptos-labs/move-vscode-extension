@@ -57,9 +57,9 @@ mod value_arg_list;
 mod vector_lit_expr;
 pub mod visibility;
 
+use crate::parse::SyntaxKind;
 use crate::token_text::TokenText;
 use crate::{ast, AstNode, AstToken, SyntaxNode};
-use parser::SyntaxKind;
 use rowan::{GreenNodeData, GreenTokenData, NodeOrToken};
 use std::borrow::Cow;
 

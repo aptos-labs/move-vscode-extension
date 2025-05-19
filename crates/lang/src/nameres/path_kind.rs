@@ -5,12 +5,11 @@ use crate::nameres::namespaces::{
     TYPES_N_ENUMS_N_NAMES,
 };
 use enumset::enum_set;
-use parser::T;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::{SyntaxNodeExt, SyntaxTokenExt};
-use syntax::{AstNode, ast};
+use syntax::{AstNode, T, ast};
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum PathKind {

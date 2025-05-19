@@ -1,7 +1,7 @@
 use crate::ast::node_ext::syntax_element::SyntaxElementExt;
+use crate::parse::SyntaxKind;
 use crate::syntax_editor::Element;
 use crate::{ast, AstNode, AstToken, SyntaxElement, SyntaxNode, SyntaxToken, TextSize};
-use parser::SyntaxKind;
 use rowan::TokenAtOffset;
 use std::cmp::Ordering;
 
