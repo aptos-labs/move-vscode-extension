@@ -208,7 +208,7 @@ Stmt =
     | SpecInlineFun | GlobalVariableDecl
 
 LetStmt =
-    'let' Pat (':' Type) '=' initializer:Expr ';'
+    'let' 'post'? Pat (':' Type) '=' initializer:Expr ';'
 
 ExprStmt =
     Expr ';'?

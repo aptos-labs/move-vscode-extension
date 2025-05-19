@@ -17,6 +17,7 @@ use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar};
 use std::iter;
 use std::ops::Deref;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::named_field::FilterNamedFieldsByName;
 use syntax::ast::{FieldsOwner, HasStmts};
 use syntax::files::{InFile, InFileExt};
@@ -156,7 +157,15 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         expected_return: Expected,
         coerce_return_type: bool,
     ) -> Ty {
-        for stmt in block_expr.stmts() {
+        let mut stmts = block_expr.stmts().collect::<Vec<_>>();
+        // process let stmts first for msl
+        if self.ctx.msl {
+            let let_stmts = stmts.extract_if(.., |it| it.syntax().is::<ast::LetStmt>());
+            for let_stmt in let_stmts {
+                self.process_stmt(let_stmt);
+            }
+        }
+        for stmt in stmts {
             self.process_stmt(stmt);
         }
         let tail_expr = block_expr.tail_expr();

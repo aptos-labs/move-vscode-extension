@@ -22,6 +22,7 @@ mod item_spec;
 mod item_spec_ref;
 mod lambda_expr;
 mod lambda_type;
+mod let_stmt;
 pub mod literal;
 mod loop_label;
 mod match_expr;
