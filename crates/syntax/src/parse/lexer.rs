@@ -1,11 +1,12 @@
-use crate::parse::move_model_lexer::Tok;
+use crate::parse::lexer::move_model::Tok;
 use crate::parse::SyntaxKind::*;
-use crate::parse::{lexer, move_model_lexer, SyntaxKind};
-use crate::{SyntaxError, TextRange, TextSize, T};
+use crate::{SyntaxError, SyntaxKind, TextRange, TextSize, T};
+
+mod move_model;
 
 /// A token of Rust source.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct LexerToken {
+pub struct RawToken {
     /// The kind of token.
     pub kind: SyntaxKind,
     /// The length of the token.
@@ -15,7 +16,7 @@ pub struct LexerToken {
 /// Break a string up into its component tokens.
 /// Beware that it checks for shebang first and its length contributes to resulting
 /// tokens offsets.
-pub fn tokenize(text: &str) -> (Vec<LexerToken>, Vec<SyntaxError>) {
+pub fn tokenize(text: &str) -> (Vec<RawToken>, Vec<SyntaxError>) {
     // non-empty string is a precondition of `rustc_lexer::strip_shebang()`.
     if text.is_empty() {
         return Default::default();
@@ -24,7 +25,7 @@ pub fn tokenize(text: &str) -> (Vec<LexerToken>, Vec<SyntaxError>) {
     let mut tokens = Vec::new();
     let mut errors = Vec::new();
 
-    let mut lex_tokens = move_model_lexer::Lexer::new(text);
+    let mut lex_tokens = move_model::Lexer::new(text);
     loop {
         lex_tokens.advance();
         if lex_tokens.peek() == Tok::EOF {
@@ -32,7 +33,7 @@ pub fn tokenize(text: &str) -> (Vec<LexerToken>, Vec<SyntaxError>) {
         }
 
         let syntax_kind = aptos_token_kind_to_syntax_kind(lex_tokens.peek(), lex_tokens.content());
-        tokens.push(LexerToken {
+        tokens.push(RawToken {
             kind: syntax_kind,
             len: TextSize::new(lex_tokens.content().len() as u32),
         });

@@ -8,7 +8,7 @@ use std::sync::LazyLock;
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Tok {
+pub(super) enum Tok {
     EOF,
     Whitespace,
     LineComment,
@@ -192,7 +192,7 @@ impl fmt::Display for Tok {
     }
 }
 
-pub struct Lexer<'input> {
+pub(super) struct Lexer<'input> {
     text: &'input str,
     cur_start: usize,
     cur_end: usize,
@@ -200,7 +200,7 @@ pub struct Lexer<'input> {
 }
 
 impl<'input> Lexer<'input> {
-    pub fn new(text: &'input str) -> Lexer<'input> {
+    pub(super) fn new(text: &'input str) -> Lexer<'input> {
         Lexer {
             text,
             cur_start: 0,
@@ -209,15 +209,15 @@ impl<'input> Lexer<'input> {
         }
     }
 
-    pub fn peek(&self) -> Tok {
+    pub(super) fn peek(&self) -> Tok {
         self.token
     }
 
-    pub fn content(&self) -> &'input str {
+    pub(super) fn content(&self) -> &'input str {
         &self.text[self.cur_start..self.cur_end]
     }
 
-    pub fn advance(&mut self) {
+    pub(super) fn advance(&mut self) {
         let text = &self.text[self.cur_end..];
         self.cur_start = self.text.len() - text.len();
         let (token, len) = find_token(text);

@@ -1,8 +1,8 @@
 //! See `TextTokenSource` docs.
 
-use crate::parse::{lexer, Token};
+use crate::parse::Token;
 
-use crate::parse::lexer::LexerToken;
+use crate::parse::lexer::RawToken;
 use crate::{SyntaxKind::EOF, TextRange, TextSize};
 
 /// Implementation of `parser::TokenSource` that takes tokens from source code text.
@@ -18,7 +18,7 @@ pub(crate) struct TextTokenSource<'t> {
     ///  (struct, 0) (Foo, 7) (;, 10)
     /// ```
     /// `[(struct, 0), (Foo, 7), (;, 10)]`
-    token_offset_pairs: Vec<(LexerToken, TextSize)>,
+    token_offset_pairs: Vec<(RawToken, TextSize)>,
 
     /// Current token and position
     curr: (Token, usize),
@@ -60,7 +60,7 @@ impl<'t> TextTokenSource<'t> {
     }
 }
 
-fn mk_token(pos: usize, token_offset_pairs: &[(LexerToken, TextSize)]) -> Token {
+fn mk_token(pos: usize, token_offset_pairs: &[(RawToken, TextSize)]) -> Token {
     let (kind, is_jointed_to_next) = match token_offset_pairs.get(pos) {
         Some((token, offset)) => (
             token.kind,
@@ -75,7 +75,7 @@ fn mk_token(pos: usize, token_offset_pairs: &[(LexerToken, TextSize)]) -> Token 
 
 impl<'t> TextTokenSource<'t> {
     /// Generate input from tokens(expect comment and whitespace).
-    pub(crate) fn new(text: &'t str, raw_tokens: &'t [LexerToken]) -> TextTokenSource<'t> {
+    pub(crate) fn new(text: &'t str, raw_tokens: &'t [RawToken]) -> TextTokenSource<'t> {
         let token_offset_pairs: Vec<_> = raw_tokens
             .iter()
             .filter_map({

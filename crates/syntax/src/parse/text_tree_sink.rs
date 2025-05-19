@@ -4,7 +4,7 @@ use std::mem;
 
 use crate::parse::ParseError;
 
-use crate::parse::lexer::LexerToken;
+use crate::parse::lexer::RawToken;
 use crate::{
     ast,
     syntax_node::GreenNode,
@@ -18,7 +18,7 @@ use crate::{
 /// `TextTreeSink` also handles attachment of trivia (whitespace) to nodes.
 pub(crate) struct TextTreeSink<'t> {
     text: &'t str,
-    tokens: &'t [LexerToken],
+    tokens: &'t [RawToken],
     text_pos: TextSize,
     token_pos: usize,
     state: State,
@@ -98,7 +98,7 @@ impl<'a> TextTreeSink<'a> {
 }
 
 impl<'t> TextTreeSink<'t> {
-    pub(super) fn new(text: &'t str, tokens: &'t [LexerToken]) -> Self {
+    pub(super) fn new(text: &'t str, tokens: &'t [RawToken]) -> Self {
         Self {
             text,
             tokens,

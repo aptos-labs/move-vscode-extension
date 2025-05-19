@@ -4,7 +4,6 @@ pub(crate) mod parser;
 mod token_set;
 
 mod lexer;
-pub mod move_model_lexer;
 mod text_token_source;
 mod text_tree_sink;
 
@@ -32,15 +31,15 @@ pub struct Token {
 }
 
 pub(crate) fn parse_text(text: &str, entry_point: fn(&mut Parser)) -> (GreenNode, Vec<SyntaxError>) {
-    let (tokens, lexer_errors) = tokenize(text);
+    let (raw_tokens, lexer_errors) = tokenize(text);
 
-    let mut token_source = TextTokenSource::new(text, &tokens);
+    let mut token_source = TextTokenSource::new(text, &raw_tokens);
 
     let mut p = Parser::new(&mut token_source);
     entry_point(&mut p);
     let events = p.finish();
 
-    let mut tree_sink = TextTreeSink::new(text, &tokens);
+    let mut tree_sink = TextTreeSink::new(text, &raw_tokens);
     event::process(&mut tree_sink, events);
 
     let (tree, mut parser_errors) = tree_sink.finish();
