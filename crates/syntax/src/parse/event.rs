@@ -7,7 +7,8 @@
 //! tree builder: the parser produces a stream of events like
 //! `start node`, `finish node`, and `FileBuilder` converts
 //! this stream to a real tree.
-use crate::parse::{ParseError, TreeSink};
+use crate::parse::text_tree_sink::TextTreeSink;
+use crate::parse::ParseError;
 use crate::SyntaxKind::{self, *};
 use std::mem;
 
@@ -87,7 +88,7 @@ impl Event {
 }
 
 /// Generate the syntax tree with the control of events.
-pub(super) fn process(sink: &mut dyn TreeSink, mut events: Vec<Event>) {
+pub(super) fn process(sink: &mut TextTreeSink, mut events: Vec<Event>) {
     let mut forward_parents = Vec::new();
 
     for i in 0..events.len() {

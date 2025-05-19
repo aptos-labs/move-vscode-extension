@@ -3,8 +3,9 @@
 use drop_bomb::DropBomb;
 
 use crate::parse::event::Event;
+use crate::parse::text_token_source::TextTokenSource;
 use crate::parse::token_set::TokenSet;
-use crate::parse::{ParseError, TokenSource};
+use crate::parse::ParseError;
 use crate::{
     SyntaxKind::{self, EOF, ERROR, TOMBSTONE},
     T,
@@ -20,20 +21,15 @@ use crate::{
 /// "start expression, consume number literal,
 /// finish expression". See `Event` docs for more.
 pub struct Parser<'t> {
-    token_source: &'t mut dyn TokenSource,
+    token_source: &'t mut TextTokenSource<'t>,
     events: Vec<Event>,
-    // steps: Cell<u32>,
-    // stop_recovery: Option<Box<dyn Fn(/*&Parser*/) -> bool>>,
 }
 
-// static PARSER_STEP_LIMIT: Limit = Limit::new(15_000_000);
-
 impl<'t> Parser<'t> {
-    pub(super) fn new(token_source: &'t mut dyn TokenSource) -> Parser<'t> {
+    pub(super) fn new(token_source: &'t mut TextTokenSource<'t>) -> Parser<'t> {
         Parser {
             token_source,
-            events: Vec::new(), /*steps: Cell::new(0)*/
-                                // stop_recovery: None,
+            events: Vec::new(),
         }
     }
 

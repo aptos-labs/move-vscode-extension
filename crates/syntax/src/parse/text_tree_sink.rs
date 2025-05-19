@@ -2,7 +2,7 @@
 
 use std::mem;
 
-use crate::parse::{ParseError, TreeSink};
+use crate::parse::ParseError;
 
 use crate::parse::lexer::LexerToken;
 use crate::{
@@ -16,9 +16,9 @@ use crate::{
 /// Bridges the parser with our specific syntax tree representation.
 ///
 /// `TextTreeSink` also handles attachment of trivia (whitespace) to nodes.
-pub(crate) struct TextTreeSink<'a> {
-    text: &'a str,
-    tokens: &'a [LexerToken],
+pub(crate) struct TextTreeSink<'t> {
+    text: &'t str,
+    tokens: &'t [LexerToken],
     text_pos: TextSize,
     token_pos: usize,
     state: State,
@@ -31,8 +31,9 @@ enum State {
     PendingFinish,
 }
 
-impl<'a> TreeSink for TextTreeSink<'a> {
-    fn token(&mut self, kind: SyntaxKind, n_tokens: u8) {
+impl<'a> TextTreeSink<'a> {
+    /// Adds new token to the current branch.
+    pub(crate) fn token(&mut self, kind: SyntaxKind, n_tokens: u8) {
         match mem::replace(&mut self.state, State::Normal) {
             State::PendingStart => unreachable!(),
             State::PendingFinish => self.inner.finish_node(),
@@ -47,7 +48,8 @@ impl<'a> TreeSink for TextTreeSink<'a> {
         self.do_token(kind, len, n_tokens);
     }
 
-    fn start_node(&mut self, kind: SyntaxKind) {
+    /// Start new branch and make it current.
+    pub(crate) fn start_node(&mut self, kind: SyntaxKind) {
         match mem::replace(&mut self.state, State::Normal) {
             State::PendingStart => {
                 self.inner.start_node(kind);
@@ -80,7 +82,9 @@ impl<'a> TreeSink for TextTreeSink<'a> {
         self.eat_n_trivias(n_attached_trivias);
     }
 
-    fn finish_node(&mut self) {
+    /// Finish current branch and restore previous
+    /// branch as current.
+    pub(crate) fn finish_node(&mut self) {
         match mem::replace(&mut self.state, State::PendingFinish) {
             State::PendingStart => unreachable!(),
             State::PendingFinish => self.inner.finish_node(),
@@ -88,13 +92,13 @@ impl<'a> TreeSink for TextTreeSink<'a> {
         }
     }
 
-    fn error(&mut self, error: ParseError) {
+    pub(crate) fn error(&mut self, error: ParseError) {
         self.inner.error(error, self.text_pos);
     }
 }
 
-impl<'a> TextTreeSink<'a> {
-    pub(super) fn new(text: &'a str, tokens: &'a [LexerToken]) -> Self {
+impl<'t> TextTreeSink<'t> {
+    pub(super) fn new(text: &'t str, tokens: &'t [LexerToken]) -> Self {
         Self {
             text,
             tokens,
