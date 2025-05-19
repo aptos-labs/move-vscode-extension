@@ -133,10 +133,7 @@ pub(crate) fn module_name(p: &mut Parser) {
 
 pub(crate) fn any_address(p: &mut Parser) {
     if p.at(INT_NUMBER) {
-        // value address
-        let m = p.start();
-        p.bump(INT_NUMBER);
-        m.complete(p, VALUE_ADDRESS);
+        value_address(p);
     } else if p.at(IDENT) {
         // named address
         let m = p.start();
@@ -146,6 +143,13 @@ pub(crate) fn any_address(p: &mut Parser) {
         p.error("expected address reference");
         // p.error_and_bump_any("expected address reference");
     }
+}
+
+pub(crate) fn value_address(p: &mut Parser) {
+    assert!(p.at(INT_NUMBER));
+    let m = p.start();
+    p.bump(INT_NUMBER);
+    m.complete(p, VALUE_ADDRESS);
 }
 
 pub(crate) const TOP_LEVEL_FIRST: TokenSet =

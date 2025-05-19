@@ -1,5 +1,5 @@
 use crate::parse::grammar::type_args::opt_path_type_arg_list;
-use crate::parse::grammar::{any_address, items, name_ref};
+use crate::parse::grammar::{any_address, items, name_ref, value_address};
 use crate::parse::parser::{CompletedMarker, Parser};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
@@ -80,7 +80,7 @@ fn path_segment(p: &mut Parser, mode: Mode, first: bool, additional_recovery_set
         }
         INT_NUMBER if first => {
             let m = p.start();
-            any_address(p);
+            value_address(p);
             m.complete(p, PATH_ADDRESS);
         }
         _ => {

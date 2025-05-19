@@ -160,16 +160,18 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 let fun_params = fun.to_any_fun().params_as_bindings();
                 let param_ident_pats = item_spec.param_ident_pats();
                 for (param_ident_pat, fun_param) in zip(param_ident_pats, fun_params.clone()) {
-                    let entry = if param_ident_pat.name().is_some()
-                        && fun_param.name().is_some()
-                        && param_ident_pat.name().unwrap().as_string()
-                            == fun_param.name().unwrap().as_string()
-                    {
-                        fun_param.in_file(file_id).to_entry()
-                    } else {
-                        None
-                    };
-                    self.ctx.resolved_ident_pats.insert(param_ident_pat, entry);
+                    if let Some(param_ident_pat) = param_ident_pat {
+                        let entry = if param_ident_pat.name().is_some()
+                            && fun_param.name().is_some()
+                            && param_ident_pat.name().unwrap().as_string()
+                                == fun_param.name().unwrap().as_string()
+                        {
+                            fun_param.in_file(file_id).to_entry()
+                        } else {
+                            None
+                        };
+                        self.ctx.resolved_ident_pats.insert(param_ident_pat, entry);
+                    }
                 }
             }
             _ => (),

@@ -7,7 +7,7 @@ impl ast::ItemSpec {
             .unwrap_or_default()
     }
 
-    pub fn param_ident_pats(&self) -> Vec<ast::IdentPat> {
+    pub fn param_ident_pats(&self) -> Vec<Option<ast::IdentPat>> {
         self.item_spec_params()
             .into_iter()
             .map(|it| it.ident_pat())

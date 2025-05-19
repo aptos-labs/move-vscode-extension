@@ -1,6 +1,7 @@
 use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::parse::grammar::expressions::atom::block_expr;
 use crate::parse::grammar::items::{fun, item_start};
+use crate::parse::grammar::patterns::ident_or_wildcard_pat_or_recover;
 use crate::parse::grammar::utils::list;
 use crate::parse::grammar::{name_ref, name_ref_or_bump_until, patterns, type_params, types};
 use crate::parse::parser::{Marker, Parser};
@@ -75,15 +76,23 @@ pub(crate) fn item_spec_param_list(p: &mut Parser) {
     let list_marker = p.start();
     p.bump(T!['(']);
     while !p.at(EOF) && !p.at(T![')']) {
-        if !p.at(IDENT) {
-            p.error("expected value parameter");
-            break;
+        if p.at_ts(ITEM_SPEC_PARAM_FIRST) {
+            item_spec_param(p);
+        } else {
+            p.error_and_bump_until_ts(
+                "expected value parameter",
+                ITEM_SPEC_PARAM_FIRST.union(ts!(T![')'], T![,])),
+            );
         }
-        // if !p.at_ts(ITEM_SPEC_PARAM_FIRST) {
-        //     p.error("expected value parameter");
-        //     break;
+        // {
+        //     if !p.at_ts(ITEM_SPEC_PARAM_FIRST) {
+        //         p.error("expected value parameter");
+        //         false
+        //     } else {
+        //         item_spec_param(p);
+        //         true
+        //     }
         // }
-        item_spec_param(p);
         if !p.at(T![')']) {
             p.expect(T![,]);
         }
@@ -94,13 +103,16 @@ pub(crate) fn item_spec_param_list(p: &mut Parser) {
 
 fn item_spec_param(p: &mut Parser) {
     let m = p.start();
-    patterns::pattern(p);
+    ident_or_wildcard_pat_or_recover(p, ITEM_SPEC_PARAM_RECOVERY_SET);
+
     if p.at(T![:]) {
         types::ascription(p);
     } else {
-        p.error("missing type for parameter");
+        p.error_and_bump_until_ts("missing type for parameter", ITEM_SPEC_PARAM_RECOVERY_SET);
     }
+
     m.complete(p, ITEM_SPEC_PARAM);
 }
 
-const ITEM_SPEC_PARAM_FIRST: TokenSet = ts!(IDENT);
+const ITEM_SPEC_PARAM_RECOVERY_SET: TokenSet = ts!(T![')'], T![,]);
+const ITEM_SPEC_PARAM_FIRST: TokenSet = ts!(IDENT, T!['_']);

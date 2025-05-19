@@ -23,7 +23,10 @@ pub(crate) fn pattern(p: &mut Parser) -> Option<CompletedMarker> {
     completed
 }
 
-pub(crate) fn ident_or_wildcard_pat(p: &mut Parser, recovery_set: TokenSet) -> Option<CompletedMarker> {
+pub(crate) fn ident_or_wildcard_pat_or_recover(
+    p: &mut Parser,
+    recovery_set: TokenSet,
+) -> Option<CompletedMarker> {
     let m = match p.current() {
         T![ident] => ident_pat(p),
         T!['_'] => wildcard_pat(p),

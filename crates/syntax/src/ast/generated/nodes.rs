@@ -651,9 +651,7 @@ pub struct ItemSpecParam {
 }
 impl ItemSpecParam {
     #[inline]
-    pub fn ident_pat(&self) -> IdentPat {
-        support::child(&self.syntax).expect("ItemSpecParam.ident_pat required by the parser")
-    }
+    pub fn ident_pat(&self) -> Option<IdentPat> { support::child(&self.syntax) }
     #[inline]
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
     #[inline]
@@ -1060,9 +1058,7 @@ pub struct ParenType {
 }
 impl ParenType {
     #[inline]
-    pub fn type_(&self) -> Type {
-        support::child(&self.syntax).expect("ParenType.type_ required by the parser")
-    }
+    pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
     #[inline]
     pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
     #[inline]
