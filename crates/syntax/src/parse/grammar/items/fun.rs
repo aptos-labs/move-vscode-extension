@@ -115,7 +115,7 @@ fn opt_inner_public_modifier(p: &mut Parser) {
                 p.bump(T![script]);
             }
             _ => {
-                p.error_and_bump_until_at_ts("expected public modifier", TokenSet::new(&[T![')']]));
+                p.error_and_bump_until_ts("expected public modifier", TokenSet::new(&[T![')']]));
             }
         }
         p.expect(T![')']);

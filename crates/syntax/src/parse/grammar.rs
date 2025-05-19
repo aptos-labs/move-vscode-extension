@@ -78,7 +78,7 @@ pub(crate) fn module(p: &mut Parser<'_>, m: Marker) {
     if p.at(T!['{']) {
         items::item_list(p);
     } else {
-        p.error_and_bump_until_at_ts("expected `{`", TOP_LEVEL_FIRST);
+        p.error_and_bump_until_ts("expected `{`", TOP_LEVEL_FIRST);
     }
     m.complete(p, MODULE);
 }
@@ -94,7 +94,7 @@ pub(crate) fn address_def(p: &mut Parser<'_>, m: Marker) {
         }
         p.expect(T!['}']);
     } else {
-        p.error_and_bump_until_at_ts("expected `{`", TOP_LEVEL_FIRST);
+        p.error_and_bump_until_ts("expected `{`", TOP_LEVEL_FIRST);
     }
     m.complete(p, ADDRESS_DEF);
 }
@@ -108,7 +108,7 @@ pub(crate) fn module_spec(p: &mut Parser, m: Marker) {
         // mod b { }
         items::item_list(p);
     } else {
-        p.error_and_bump_until_at_ts("expected `{`", TOP_LEVEL_FIRST);
+        p.error_and_bump_until_ts("expected `{`", TOP_LEVEL_FIRST);
     }
     m.complete(p, MODULE_SPEC);
 }
@@ -120,7 +120,7 @@ pub(crate) fn script(p: &mut Parser, m: Marker) {
         // mod b { }
         items::item_list(p);
     } else {
-        p.error_and_bump_until_at_ts("expected `{`", TOP_LEVEL_FIRST);
+        p.error_and_bump_until_ts("expected `{`", TOP_LEVEL_FIRST);
     }
     m.complete(p, SCRIPT);
 }

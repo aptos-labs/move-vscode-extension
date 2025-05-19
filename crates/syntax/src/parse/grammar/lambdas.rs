@@ -1,3 +1,4 @@
+use crate::parse::grammar::patterns::PAT_RECOVERY_SET;
 use crate::parse::grammar::utils::delimited_items_with_recover;
 use crate::parse::grammar::{patterns, types};
 use crate::parse::parser::Parser;
@@ -25,18 +26,7 @@ pub(crate) fn lambda_param_list(p: &mut Parser) -> bool {
 
 fn lambda_param(p: &mut Parser<'_>) -> bool {
     let m = p.start();
-    let completed = patterns::pattern(p);
-    match completed.map(|it| it.kind()) {
-        Some(IDENT_PAT) | Some(WILDCARD_PAT) => (),
-        _ => {
-            p.push_error("expected ident or wildcard pattern");
-            // false
-        }
-    }
-    // if !is_completed {
-    //     m.abandon(p);
-    //     return false;
-    // }
+    patterns::ident_or_wildcard_pat(p, PAT_RECOVERY_SET.union(ts!(T![|])));
     if p.at(T![:]) {
         types::ascription(p);
     }

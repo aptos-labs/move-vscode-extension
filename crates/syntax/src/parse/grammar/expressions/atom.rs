@@ -162,7 +162,7 @@ fn vector_lit_expr(p: &mut Parser) -> CompletedMarker {
             |p| expr(p),
         );
     } else {
-        p.error_and_bump_until_at_ts("expected '['", STMT_FIRST);
+        p.error_and_bump_until_ts("expected '['", STMT_FIRST);
     }
     m.complete(p, VECTOR_LIT_EXPR)
 }
@@ -289,7 +289,7 @@ fn for_condition(p: &mut Parser) {
         p.bump_remap(T![in]);
         expr(p);
     } else {
-        p.error_and_bump_until_at_ts("expected 'in'", EXPR_FIRST.union(ts!(T![')'])));
+        p.error_and_bump_until_ts("expected 'in'", EXPR_FIRST.union(ts!(T![')'])));
     }
     opt_spec_block_expr(p);
     p.expect(T![')']);

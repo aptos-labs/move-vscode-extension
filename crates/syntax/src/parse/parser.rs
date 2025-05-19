@@ -289,7 +289,7 @@ impl<'t> Parser<'t> {
     // }
 
     /// Create an error node and consume the next token.
-    pub(crate) fn error_and_bump_until_at_ts(&mut self, message: &str, stop_at_ts: TokenSet) {
+    pub(crate) fn error_and_bump_until_ts(&mut self, message: &str, stop_at_ts: TokenSet) {
         self.error_and_bump_until(message, |p| p.at_ts(stop_at_ts));
         // match self.current() {
         //     T!['{'] | T!['}'] => {

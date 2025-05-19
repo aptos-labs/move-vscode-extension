@@ -36,14 +36,14 @@ SOURCE_FILE@0..95
                   UNDERSCORE@74..75 "_"
               COMMA@75..76 ","
               WHITESPACE@76..77 " "
-              LAMBDA_PARAM@77..79
-                INT_NUMBER@77..79 "22"
-              COMMA@79..80 ","
-              WHITESPACE@80..81 " "
-              LAMBDA_PARAM@81..82
-                IDENT_PAT@81..82
-                  NAME@81..82
-                    IDENT@81..82 "d"
+              LAMBDA_PARAM@77..78
+                IDENT_PAT@77..78
+                  NAME@77..78
+                    IDENT@77..78 "d"
+              COMMA@78..79 ","
+              WHITESPACE@79..80 " "
+              LAMBDA_PARAM@80..82
+                INT_NUMBER@80..82 "22"
               PIPE@82..83 "|"
             WHITESPACE@83..84 " "
             LITERAL@84..85

@@ -23,6 +23,18 @@ pub(crate) fn pattern(p: &mut Parser) -> Option<CompletedMarker> {
     completed
 }
 
+pub(crate) fn ident_or_wildcard_pat(p: &mut Parser, recovery_set: TokenSet) -> Option<CompletedMarker> {
+    let m = match p.current() {
+        T![ident] => ident_pat(p),
+        T!['_'] => wildcard_pat(p),
+        _ => {
+            p.error_and_bump_until_ts("expected ident or '_' pattern", recovery_set);
+            return None;
+        }
+    };
+    Some(m)
+}
+
 fn atom_pat(p: &mut Parser, recovery_set: TokenSet) -> Option<CompletedMarker> {
     let m = match p.current() {
         INT_NUMBER if p.nth_at(1, T![::]) => path_pat(p),
@@ -43,7 +55,7 @@ fn atom_pat(p: &mut Parser, recovery_set: TokenSet) -> Option<CompletedMarker> {
         T!['('] => tuple_pat(p),
         // T!['['] => slice_pat(p),
         _ => {
-            p.error_and_bump_until_at_ts("expected pattern", recovery_set);
+            p.error_and_bump_until_ts("expected pattern", recovery_set);
             return None;
         }
     };
@@ -307,7 +319,7 @@ pub(crate) fn ident_pat(p: &mut Parser) -> CompletedMarker {
     m.complete(p, IDENT_PAT)
 }
 
-const PAT_RECOVERY_SET: TokenSet = TokenSet::new(&[
+pub(crate) const PAT_RECOVERY_SET: TokenSet = TokenSet::new(&[
     T![let],
     T![spec],
     T![if],
