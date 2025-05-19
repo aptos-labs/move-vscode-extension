@@ -247,6 +247,13 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     self.infer_expr_coerceable_to(&expr, Ty::Num);
                 }
             }
+            ast::Stmt::PragmaStmt(pragma_stmt) => {
+                for attr_item in pragma_stmt.attr_items() {
+                    if let Some(expr) = attr_item.expr() {
+                        self.infer_expr(&expr, Expected::NoValue);
+                    }
+                }
+            }
             _ => (),
         }
 

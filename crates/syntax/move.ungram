@@ -204,7 +204,7 @@ Stmt =
     | ExprStmt
     | LetStmt
     | SchemaField | IncludeSchema
-    | SpecPredicateStmt | AbortsIfStmt | AbortsWithStmt
+    | SpecPredicateStmt | AbortsIfStmt | AbortsWithStmt | PragmaStmt
     | SpecInlineFun | GlobalVariableDecl
 
 LetStmt =
@@ -510,7 +510,13 @@ AbortsIfWith =
     'with' Expr
 
 AbortsWithStmt =
-    'aborts_with' SpecPredicatePropertyList? '(' exprs:(Expr (',' Expr)* ','?)? ')'
+    'aborts_with' SpecPredicatePropertyList? '(' exprs:(Expr (',' Expr)* ','?)? ')' ';'
+
+PragmaStmt =
+    'pragma' attr_items:(PragmaAttrItem (',' PragmaAttrItem)* ','?)? ';'
+
+PragmaAttrItem =
+    'ident' ('=' Expr)?
 
 SpecPredicatePropertyList =
     '[' properties:(SpecPredicateProperty (',' SpecPredicateProperty)* ','?)? ']'
