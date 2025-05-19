@@ -3,7 +3,7 @@ use crate::parse::grammar::{any_address, items, name_ref};
 use crate::parse::parser::{CompletedMarker, Parser};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
-use crate::T;
+use crate::{ts, T};
 
 pub(super) const PATH_FIRST: TokenSet = TokenSet::new(&[IDENT, INT_NUMBER]);
 
@@ -20,15 +20,15 @@ pub(super) fn is_path_start(p: &Parser) -> bool {
 }
 
 pub(super) fn use_path(p: &mut Parser) {
-    path(p, Mode::Use);
+    path(p, Mode::Use, ts!());
 }
 
 pub(crate) fn type_path(p: &mut Parser) {
-    path(p, Mode::Type);
+    path(p, Mode::Type, ts!());
 }
 
 pub(super) fn expr_path(p: &mut Parser) {
-    path(p, Mode::Expr);
+    path(p, Mode::Expr, ts!());
 }
 
 pub(crate) fn type_path_for_qualifier(p: &mut Parser, qual: CompletedMarker) -> CompletedMarker {
@@ -42,9 +42,9 @@ pub(crate) enum Mode {
     Expr,
 }
 
-fn path(p: &mut Parser, mode: Mode) {
+pub(crate) fn path(p: &mut Parser, mode: Mode, additional_recovery_set: TokenSet) {
     let path = p.start();
-    path_segment(p, mode, true);
+    path_segment(p, mode, true, additional_recovery_set);
     let qual = path.complete(p, PATH);
     path_for_qualifier(p, mode, qual);
 }
@@ -55,7 +55,7 @@ fn path_for_qualifier(p: &mut Parser, mode: Mode, mut qual: CompletedMarker) -> 
         if p.at(T![::]) && !use_tree {
             let path = qual.precede(p);
             p.bump(T![::]);
-            path_segment(p, mode, false);
+            path_segment(p, mode, false, ts!());
             let path = path.complete(p, PATH);
             qual = path;
         } else {
@@ -64,7 +64,7 @@ fn path_for_qualifier(p: &mut Parser, mode: Mode, mut qual: CompletedMarker) -> 
     }
 }
 
-fn path_segment(p: &mut Parser, mode: Mode, first: bool) {
+fn path_segment(p: &mut Parser, mode: Mode, first: bool, additional_recovery_set: TokenSet) {
     let m = p.start();
 
     let empty = if first { !p.eat(T![::]) } else { true };
@@ -84,7 +84,9 @@ fn path_segment(p: &mut Parser, mode: Mode, first: bool) {
             m.complete(p, PATH_ADDRESS);
         }
         _ => {
-            p.error_and_bump_until("expected identifier", items::item_start);
+            p.error_and_bump_until("expected identifier", |p| {
+                items::item_start(p) || p.at_ts(additional_recovery_set)
+            });
             if empty {
                 // test_err empty_segment
                 // use crate::;

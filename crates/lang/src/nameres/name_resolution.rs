@@ -42,17 +42,17 @@ pub fn get_resolve_scopes(
 
     let mut scopes = vec![];
     let mut opt_scope = start_at.syntax().parent();
-    let mut prev = start_at.syntax().to_owned();
+    let mut prev_scope = start_at.syntax().to_owned();
 
     while let Some(ref scope) = opt_scope {
         scopes.push(ResolveScope {
             scope: InFile::new(file_id, scope.clone()),
-            prev: prev.clone(),
+            prev: prev_scope.clone(),
         });
 
         if scope.kind() == SyntaxKind::MODULE {
             let module = ast::Module::cast(scope.clone()).unwrap().in_file(file_id);
-            scopes.extend(module_inner_spec_scopes(module.clone(), prev));
+            scopes.extend(module_inner_spec_scopes(module.clone(), prev_scope));
 
             let prev = module.value.syntax().clone();
             for related_module_spec in module.related_module_specs(db) {
@@ -66,7 +66,7 @@ pub fn get_resolve_scopes(
 
         if scope.kind() == MODULE_SPEC {
             let module_spec = scope.clone().cast::<ast::ModuleSpec>().unwrap();
-            if Some(prev) == module_spec.path().map(|it| it.syntax().clone()) {
+            if module_spec.path().is_none_or(|it| it.syntax() == &prev_scope) {
                 // skip if we're resolving module path for the module spec
                 break;
             }
@@ -82,7 +82,7 @@ pub fn get_resolve_scopes(
         }
 
         let parent_scope = scope.parent();
-        prev = scope.clone();
+        prev_scope = scope.clone();
         opt_scope = parent_scope;
     }
 
@@ -113,7 +113,6 @@ pub fn get_entries_from_walking_scopes(
     start_at: InFile<impl ReferenceElement>,
     ns: NsSet,
 ) -> Vec<ScopeEntry> {
-    dbg!(&start_at);
     let resolve_scopes = get_resolve_scopes(db, start_at);
 
     let mut visited_name_ns = HashMap::<String, NsSet>::new();

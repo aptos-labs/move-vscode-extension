@@ -301,7 +301,6 @@ pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     ("StructLit", &["path"]),
     // ("UseSpeck", &["path"]),  - invalid
     ("ItemSpecParam", &["ident_pat"]),
-    // ("Path", &["segment"]),  - invalid
     ("PathAddress", &["value_address"]),
     ("Name", &["ident"]),
     // ("ValueArg", &["expr"]),  - invalid

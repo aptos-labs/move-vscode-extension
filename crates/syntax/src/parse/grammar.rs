@@ -42,10 +42,10 @@ mod types;
 pub(crate) mod utils;
 
 use crate::parse::grammar::items::{block_start, item_start};
-use crate::parse::grammar::paths::use_path;
+use crate::parse::grammar::paths::{use_path, Mode};
 use crate::parse::parser::Marker;
 use crate::parse::token_set::TokenSet;
-use crate::{parse::Parser, SyntaxKind::*, T};
+use crate::{parse::Parser, ts, SyntaxKind::*, T};
 
 pub mod entry_points {
     use super::*;
@@ -101,11 +101,8 @@ pub(crate) fn address_def(p: &mut Parser<'_>, m: Marker) {
 
 pub(crate) fn module_spec(p: &mut Parser, m: Marker) {
     p.bump(T![spec]);
-    use_path(p);
-    // module_name(p);
+    paths::path(p, Mode::Use, ts!(T!['{']));
     if p.at(T!['{']) {
-        // test mod_item_curly
-        // mod b { }
         items::item_list(p);
     } else {
         p.error_and_bump_until_ts("expected `{`", TOP_LEVEL_FIRST);

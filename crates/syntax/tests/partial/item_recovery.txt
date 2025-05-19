@@ -20,7 +20,7 @@ SOURCE_FILE@0..191
     NAME@36..40
       IDENT@36..40 "item"
   WHITESPACE@40..42 "\n\n"
-  MODULE@42..130
+  MODULE@42..145
     MODULE_KW@42..48 "module"
     WHITESPACE@48..49 " "
     VALUE_ADDRESS@49..52
@@ -46,22 +46,23 @@ SOURCE_FILE@0..191
     ITEM_SPEC@114..118
       SPEC_KW@114..118 "spec"
     WHITESPACE@118..123 "\n    "
-    ITEM_SPEC@123..129
+    ITEM_SPEC@123..130
       SPEC_KW@123..127 "spec"
       WHITESPACE@127..128 " "
-      L_CURLY@128..129 "{"
-    R_CURLY@129..130 "}"
-  WHITESPACE@130..135 "\n    "
-  MODULE_SPEC@135..153
-    SPEC_KW@135..139 "spec"
-    WHITESPACE@139..140 " "
-    PATH@140..143
-      PATH_SEGMENT@140..143
+      BLOCK_EXPR@128..130
+        L_CURLY@128..129 "{"
+        R_CURLY@129..130 "}"
+    WHITESPACE@130..135 "\n    "
+    ITEM_SPEC@135..143
+      SPEC_KW@135..139 "spec"
+      WHITESPACE@139..140 " "
+      ITEM_SPEC_REF@140..143
         NAME_REF@140..143
           IDENT@140..143 "ref"
     WHITESPACE@143..144 "\n"
     R_CURLY@144..145 "}"
-    WHITESPACE@145..146 "\n"
+  WHITESPACE@145..146 "\n"
+  ERROR@146..153
     IDENT@146..153 "unknown"
   WHITESPACE@153..154 "\n"
   SCRIPT@154..160
