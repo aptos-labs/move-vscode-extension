@@ -4,7 +4,7 @@ use crate::parse::grammar::items::item_start;
 use crate::parse::grammar::paths::{is_path_start, type_path};
 use crate::parse::grammar::specs::predicates::opt_predicate_property_list;
 use crate::parse::grammar::utils::{delimited_fn, list};
-use crate::parse::grammar::{name, name_or_bump_until, name_ref, type_params, types};
+use crate::parse::grammar::{name, name_or_recover, name_ref, type_params, types};
 use crate::parse::parser::{CompletedMarker, Marker, Parser};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
@@ -13,7 +13,7 @@ use crate::{ts, T};
 pub(crate) fn schema(p: &mut Parser, m: Marker) {
     assert!(p.at(IDENT) && p.at_contextual_kw("schema"));
     p.bump_remap(T![schema]);
-    name_or_bump_until(p, item_start);
+    name_or_recover(p, item_start);
     type_params::opt_type_param_list(p);
     block_expr(p, true);
     m.complete(p, SCHEMA);

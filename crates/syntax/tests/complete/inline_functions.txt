@@ -181,9 +181,9 @@ SOURCE_FILE@0..687
         TYPE_PARAM@256..269
           NAME@256..263
             IDENT@256..263 "Element"
-          COLON@263..264 ":"
-          WHITESPACE@264..265 " "
-          ABILITY_BOUND_LIST@265..269
+          ABILITY_BOUND_LIST@263..269
+            COLON@263..264 ":"
+            WHITESPACE@264..265 " "
             ABILITY@265..269
               IDENT@265..269 "drop"
         R_ANGLE@269..270 ">"
