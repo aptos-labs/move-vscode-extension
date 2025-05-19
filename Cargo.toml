@@ -11,7 +11,7 @@ license = "MIT"
 either = "1.13.0"
 rowan = "=0.15.15"
 itertools = "0.14.0"
-lsp-types = { version = "0.97", features = ["proposed"] }
+lsp-types = { version = "0.95.1", features = ["proposed"] }
 line-index = "^0.1.2"
 crossbeam-channel = "^0.5.15"
 serde = "^1.0.217"
