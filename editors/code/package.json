@@ -261,7 +261,7 @@
                 "properties": {
                     "aptos-analyzer.diagnostics.enableTypeChecking": {
                         "markdownDescription": "Whether to show \"Type Checking\" diagnostic.",
-                        "default": false,
+                        "default": true,
                         "type": "boolean"
                     }
                 }
@@ -271,7 +271,7 @@
                 "properties": {
                     "aptos-analyzer.diagnostics.enableUnresolvedReference": {
                         "markdownDescription": "Whether to show \"Unresolved reference\" diagnostic.",
-                        "default": false,
+                        "default": true,
                         "type": "boolean"
                     }
                 }
