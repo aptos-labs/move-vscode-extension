@@ -23,6 +23,8 @@ fn item_to_kind(kind: SyntaxKind) -> CompletionItemKind {
         MODULE => CompletionItemKind::SymbolKind(SymbolKind::Module),
         ATTR => CompletionItemKind::SymbolKind(SymbolKind::Attribute),
         FUN => CompletionItemKind::SymbolKind(SymbolKind::Function),
+        SPEC_FUN => CompletionItemKind::SymbolKind(SymbolKind::Function),
+        SPEC_INLINE_FUN => CompletionItemKind::SymbolKind(SymbolKind::Function),
         CONST => CompletionItemKind::SymbolKind(SymbolKind::Const),
         STRUCT => CompletionItemKind::SymbolKind(SymbolKind::Struct),
         ENUM => CompletionItemKind::SymbolKind(SymbolKind::Enum),
