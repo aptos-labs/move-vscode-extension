@@ -334,9 +334,7 @@ pub struct DotExpr {
 impl ast::ReferenceElement for DotExpr {}
 impl DotExpr {
     #[inline]
-    pub fn field_ref(&self) -> FieldRef {
-        support::child(&self.syntax).expect("DotExpr.field_ref required by the parser")
-    }
+    pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
     #[inline]
     pub fn receiver_expr(&self) -> Expr {
         support::child(&self.syntax).expect("DotExpr.receiver_expr required by the parser")
@@ -389,17 +387,6 @@ impl ExprStmt {
     pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
     #[inline]
     pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct FieldRef {
-    pub(crate) syntax: SyntaxNode,
-}
-impl FieldRef {
-    #[inline]
-    pub fn index_ref(&self) -> Option<IndexRef> { support::child(&self.syntax) }
-    #[inline]
-    pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -589,17 +576,6 @@ impl IndexExpr {
     pub fn l_brack_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['[']) }
     #[inline]
     pub fn r_brack_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![']']) }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct IndexRef {
-    pub(crate) syntax: SyntaxNode,
-}
-impl IndexRef {
-    #[inline]
-    pub fn int_number_token(&self) -> Option<SyntaxToken> {
-        support::token(&self.syntax, T![int_number])
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -968,8 +944,10 @@ pub struct NameRef {
 }
 impl NameRef {
     #[inline]
-    pub fn ident_token(&self) -> SyntaxToken {
-        support::token(&self.syntax, T![ident]).expect("NameRef.ident_token required by the parser")
+    pub fn ident_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![ident]) }
+    #[inline]
+    pub fn int_number_token(&self) -> Option<SyntaxToken> {
+        support::token(&self.syntax, T![int_number])
     }
 }
 
@@ -2779,27 +2757,6 @@ impl AstNode for ExprStmt {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
-impl AstNode for FieldRef {
-    #[inline]
-    fn kind() -> SyntaxKind
-    where
-        Self: Sized,
-    {
-        FIELD_REF
-    }
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { kind == FIELD_REF }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode { &self.syntax }
-}
 impl AstNode for ForCondition {
     #[inline]
     fn kind() -> SyntaxKind
@@ -3041,27 +2998,6 @@ impl AstNode for IndexExpr {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == INDEX_EXPR }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode { &self.syntax }
-}
-impl AstNode for IndexRef {
-    #[inline]
-    fn kind() -> SyntaxKind
-    where
-        Self: Sized,
-    {
-        INDEX_REF
-    }
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { kind == INDEX_REF }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -6281,6 +6217,13 @@ impl MethodOrDotExpr {
             MethodOrDotExpr::MethodCallExpr(it) => it.receiver_expr(),
         }
     }
+    #[inline]
+    pub fn name_ref(&self) -> Option<NameRef> {
+        match self {
+            MethodOrDotExpr::DotExpr(it) => it.name_ref(),
+            MethodOrDotExpr::MethodCallExpr(it) => it.name_ref(),
+        }
+    }
 }
 impl AstNode for MethodOrDotExpr {
     #[inline]
@@ -8057,11 +8000,6 @@ impl std::fmt::Display for ExprStmt {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
-impl std::fmt::Display for FieldRef {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self.syntax(), f)
-    }
-}
 impl std::fmt::Display for ForCondition {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -8118,11 +8056,6 @@ impl std::fmt::Display for IncludeSchema {
     }
 }
 impl std::fmt::Display for IndexExpr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self.syntax(), f)
-    }
-}
-impl std::fmt::Display for IndexRef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

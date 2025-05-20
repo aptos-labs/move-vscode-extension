@@ -298,7 +298,7 @@ pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     ("Name", &["ident"]),                // checked
     // ("ValueArg", &["expr"]),  - invalid
     ("Ability", &["ident"]),
-    ("NameRef", &["ident"]),
+    // ("NameRef", &["ident"]),
     ("NamedAddress", &["ident"]),
     ("ValueAddress", &["int_number"]),
 ];

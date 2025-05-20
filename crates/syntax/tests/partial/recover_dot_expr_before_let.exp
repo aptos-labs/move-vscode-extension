@@ -1,8 +1,8 @@
 module 0x1::recover_dot_expr_before_let {
     fun main() {
         self.
+           //^ expected field name or number
+           //^ expected SEMICOLON
         let a = 1;
-      //^ expected field name or number
-      //^ expected SEMICOLON
     }
 }

@@ -41,9 +41,8 @@ SOURCE_FILE@0..168
                     NAME_REF@50..56
                       IDENT@50..56 "record"
               DOT@56..57 "."
-              FIELD_REF@57..60
-                NAME_REF@57..60
-                  IDENT@57..60 "val"
+              NAME_REF@57..60
+                IDENT@57..60 "val"
             WHITESPACE@60..61 " "
             EQ@61..62 "="
             WHITESPACE@62..63 " "
@@ -62,9 +61,8 @@ SOURCE_FILE@0..168
                       NAME_REF@75..81
                         IDENT@75..81 "record"
                 DOT@81..82 "."
-                FIELD_REF@82..85
-                  NAME_REF@82..85
-                    IDENT@82..85 "val"
+                NAME_REF@82..85
+                  IDENT@82..85 "val"
               WHITESPACE@85..86 " "
               EQ@86..87 "="
               WHITESPACE@87..88 " "
@@ -86,9 +84,8 @@ SOURCE_FILE@0..168
                   L_PAREN@105..106 "("
                   R_PAREN@106..107 ")"
               DOT@107..108 "."
-              FIELD_REF@108..116
-                NAME_REF@108..116
-                  IDENT@108..116 "operator"
+              NAME_REF@108..116
+                IDENT@108..116 "operator"
             WHITESPACE@116..117 " "
             EQ@117..118 "="
             WHITESPACE@118..119 " "
@@ -110,9 +107,8 @@ SOURCE_FILE@0..168
                     L_PAREN@135..136 "("
                     R_PAREN@136..137 ")"
                 DOT@137..138 "."
-                FIELD_REF@138..146
-                  NAME_REF@138..146
-                    IDENT@138..146 "operator"
+                NAME_REF@138..146
+                  IDENT@138..146 "operator"
               DOT@146..147 "."
               NAME_REF@147..151
                 IDENT@147..151 "main"

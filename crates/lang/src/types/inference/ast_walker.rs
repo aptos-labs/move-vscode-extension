@@ -463,13 +463,15 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
         let ty_adt = self_ty.unwrap_all_refs().into_ty_adt()?;
 
-        let field_ref = dot_expr.field_ref();
-        if !self.ctx.msl && field_ref.containing_module() != ty_adt.adt_item_module(self.ctx.db) {
+        let field_name_ref = dot_expr.name_ref()?;
+        if !self.ctx.msl
+            && field_name_ref.syntax().containing_module() != ty_adt.adt_item_module(self.ctx.db)
+        {
             return None;
         }
 
         let adt_item = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(self.ctx.db)?;
-        let field_reference_name = dot_expr.field_ref().name_ref()?.as_string();
+        let field_reference_name = field_name_ref.as_string();
 
         // todo: tuple index fields
 
@@ -483,10 +485,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             .single_or_none()
             .map(|it| it.in_file(adt_item_file_id));
 
-        self.ctx.resolved_fields.insert(
-            dot_expr.field_ref(),
-            named_field.clone().and_then(|it| it.to_entry()),
-        );
+        self.ctx
+            .resolved_fields
+            .insert(field_name_ref, named_field.clone().and_then(|it| it.to_entry()));
 
         let ty_lowering = self.ctx.ty_lowering();
         let named_field_type = named_field?.and_then(|it| it.type_())?;

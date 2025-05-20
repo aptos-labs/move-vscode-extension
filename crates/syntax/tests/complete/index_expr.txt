@@ -143,9 +143,8 @@ SOURCE_FILE@0..1079
                   INT_NUMBER@209..210 "0"
                 R_BRACK@210..211 "]"
               DOT@211..212 "."
-              FIELD_REF@212..217
-                NAME_REF@212..217
-                  IDENT@212..217 "value"
+              NAME_REF@212..217
+                IDENT@212..217 "value"
             WHITESPACE@217..218 " "
             EQ_EQ@218..220 "=="
             WHITESPACE@220..221 " "
@@ -216,13 +215,11 @@ SOURCE_FILE@0..1079
                       R_BRACK@315..316 "]"
                   R_PAREN@316..317 ")"
                 DOT@317..318 "."
-                FIELD_REF@318..323
-                  NAME_REF@318..323
-                    IDENT@318..323 "field"
+                NAME_REF@318..323
+                  IDENT@318..323 "field"
               DOT@323..324 "."
-              FIELD_REF@324..329
-                NAME_REF@324..329
-                  IDENT@324..329 "value"
+              NAME_REF@324..329
+                IDENT@324..329 "value"
             WHITESPACE@329..330 " "
             EQ@330..331 "="
             WHITESPACE@331..332 " "
@@ -252,13 +249,11 @@ SOURCE_FILE@0..1079
                       R_BRACK@356..357 "]"
                   R_PAREN@357..358 ")"
                 DOT@358..359 "."
-                FIELD_REF@359..364
-                  NAME_REF@359..364
-                    IDENT@359..364 "field"
+                NAME_REF@359..364
+                  IDENT@359..364 "field"
               DOT@364..365 "."
-              FIELD_REF@365..370
-                NAME_REF@365..370
-                  IDENT@365..370 "value"
+              NAME_REF@365..370
+                IDENT@365..370 "value"
             WHITESPACE@370..371 " "
             EQ@371..372 "="
             WHITESPACE@372..373 " "
@@ -286,13 +281,11 @@ SOURCE_FILE@0..1079
                       R_BRACK@392..393 "]"
                   R_PAREN@393..394 ")"
                 DOT@394..395 "."
-                FIELD_REF@395..400
-                  NAME_REF@395..400
-                    IDENT@395..400 "field"
+                NAME_REF@395..400
+                  IDENT@395..400 "field"
               DOT@400..401 "."
-              FIELD_REF@401..406
-                NAME_REF@401..406
-                  IDENT@401..406 "value"
+              NAME_REF@401..406
+                IDENT@401..406 "value"
             WHITESPACE@406..407 " "
             EQ_EQ@407..409 "=="
             WHITESPACE@409..410 " "
@@ -320,13 +313,11 @@ SOURCE_FILE@0..1079
                       R_BRACK@430..431 "]"
                   R_PAREN@431..432 ")"
                 DOT@432..433 "."
-                FIELD_REF@433..438
-                  NAME_REF@433..438
-                    IDENT@433..438 "field"
+                NAME_REF@433..438
+                  IDENT@433..438 "field"
               DOT@438..439 "."
-              FIELD_REF@439..444
-                NAME_REF@439..444
-                  IDENT@439..444 "value"
+              NAME_REF@439..444
+                IDENT@439..444 "value"
             WHITESPACE@444..445 " "
             EQ_EQ@445..447 "=="
             WHITESPACE@447..448 " "
@@ -409,13 +400,11 @@ SOURCE_FILE@0..1079
                       R_BRACK@543..544 "]"
                   R_PAREN@544..545 ")"
                 DOT@545..546 "."
-                FIELD_REF@546..551
-                  NAME_REF@546..551
-                    IDENT@546..551 "field"
+                NAME_REF@546..551
+                  IDENT@546..551 "field"
               DOT@551..552 "."
-              FIELD_REF@552..557
-                NAME_REF@552..557
-                  IDENT@552..557 "value"
+              NAME_REF@552..557
+                IDENT@552..557 "value"
             WHITESPACE@557..558 " "
             EQ_EQ@558..560 "=="
             WHITESPACE@560..561 " "
@@ -521,13 +510,11 @@ SOURCE_FILE@0..1079
                       NAME_REF@687..688
                         IDENT@687..688 "y"
                 DOT@688..689 "."
-                FIELD_REF@689..694
-                  NAME_REF@689..694
-                    IDENT@689..694 "field"
+                NAME_REF@689..694
+                  IDENT@689..694 "field"
               DOT@694..695 "."
-              FIELD_REF@695..700
-                NAME_REF@695..700
-                  IDENT@695..700 "value"
+              NAME_REF@695..700
+                IDENT@695..700 "value"
             WHITESPACE@700..701 " "
             EQ@701..702 "="
             WHITESPACE@702..703 " "
@@ -580,13 +567,11 @@ SOURCE_FILE@0..1079
                                 IDENT@755..759 "addr"
                         R_BRACK@759..760 "]"
                       DOT@760..761 "."
-                      FIELD_REF@761..766
-                        NAME_REF@761..766
-                          IDENT@761..766 "field"
+                      NAME_REF@761..766
+                        IDENT@761..766 "field"
                     DOT@766..767 "."
-                    FIELD_REF@767..772
-                      NAME_REF@767..772
-                        IDENT@767..772 "value"
+                    NAME_REF@767..772
+                      IDENT@767..772 "value"
                   WHITESPACE@772..773 " "
                   EQ_EQ@773..775 "=="
                   WHITESPACE@775..776 " "
@@ -638,13 +623,11 @@ SOURCE_FILE@0..1079
                       R_BRACK@819..820 "]"
                   R_PAREN@820..821 ")"
                 DOT@821..822 "."
-                FIELD_REF@822..827
-                  NAME_REF@822..827
-                    IDENT@822..827 "field"
+                NAME_REF@822..827
+                  IDENT@822..827 "field"
               DOT@827..828 "."
-              FIELD_REF@828..833
-                NAME_REF@828..833
-                  IDENT@828..833 "value"
+              NAME_REF@828..833
+                IDENT@828..833 "value"
             WHITESPACE@833..834 " "
             EQ_EQ@834..836 "=="
             WHITESPACE@836..837 " "
@@ -750,13 +733,11 @@ SOURCE_FILE@0..1079
                       NAME_REF@964..965
                         IDENT@964..965 "y"
                 DOT@965..966 "."
-                FIELD_REF@966..971
-                  NAME_REF@966..971
-                    IDENT@966..971 "field"
+                NAME_REF@966..971
+                  IDENT@966..971 "field"
               DOT@971..972 "."
-              FIELD_REF@972..977
-                NAME_REF@972..977
-                  IDENT@972..977 "value"
+              NAME_REF@972..977
+                IDENT@972..977 "value"
             WHITESPACE@977..978 " "
             EQ@978..979 "="
             WHITESPACE@979..980 " "
@@ -816,13 +797,11 @@ SOURCE_FILE@0..1079
                       NAME_REF@1038..1048
                         IDENT@1038..1048 "y_resource"
                 DOT@1048..1049 "."
-                FIELD_REF@1049..1054
-                  NAME_REF@1049..1054
-                    IDENT@1049..1054 "field"
+                NAME_REF@1049..1054
+                  IDENT@1049..1054 "field"
               DOT@1054..1055 "."
-              FIELD_REF@1055..1060
-                NAME_REF@1055..1060
-                  IDENT@1055..1060 "value"
+              NAME_REF@1055..1060
+                IDENT@1055..1060 "value"
             WHITESPACE@1060..1061 " "
             EQ_EQ@1061..1063 "=="
             WHITESPACE@1063..1064 " "

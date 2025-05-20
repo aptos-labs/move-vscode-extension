@@ -258,13 +258,10 @@ BinExpr =
     rhs:Expr
 
 DotExpr =
-    receiver_expr:Expr '.' FieldRef
+    receiver_expr:Expr '.' NameRef
 
 MethodOrDotExpr =
     MethodCallExpr | DotExpr
-
-FieldRef =
-    NameRef | IndexRef
 
 IndexExpr =
     base_expr:Expr '[' arg_expr:Expr ']'
@@ -421,10 +418,7 @@ ValueAddress =
     'int_number'
 
 NameRef =
-    'ident'
-
-IndexRef =
-    'int_number'
+    'ident' | 'int_number'
 
 Literal =
     'int_number' | 'byte_string' | 'hex_string' | 'true' | 'false' | AddressLit

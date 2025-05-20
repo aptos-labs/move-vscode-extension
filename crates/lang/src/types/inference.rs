@@ -56,7 +56,7 @@ pub struct InferenceCtx<'db> {
 
     pub resolved_paths: HashMap<ast::Path, Vec<ScopeEntry>>,
     pub resolved_method_calls: HashMap<ast::MethodCallExpr, Option<ScopeEntry>>,
-    pub resolved_fields: HashMap<ast::FieldRef, Option<ScopeEntry>>,
+    pub resolved_fields: HashMap<ast::NameRef, Option<ScopeEntry>>,
     pub resolved_ident_pats: HashMap<ast::IdentPat, Option<ScopeEntry>>,
 
     pub lambda_exprs: Vec<ast::LambdaExpr>,

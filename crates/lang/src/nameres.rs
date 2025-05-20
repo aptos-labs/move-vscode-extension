@@ -108,9 +108,9 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
                 }
                 DOT_EXPR => {
                     let dot_expr = ref_element.cast_into::<ast::DotExpr>().unwrap();
-                    let field_ref = dot_expr.field_ref();
+                    let field_name_ref = dot_expr.name_ref()?;
                     inference
-                        .get_resolved_field(&field_ref)
+                        .get_resolved_field(&field_name_ref)
                         .map(|it| vec![it])
                         .unwrap_or_default()
                 }

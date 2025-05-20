@@ -275,17 +275,15 @@ fn dot_expr(p: &mut Parser<'_>, lhs: CompletedMarker) -> Result<CompletedMarker,
     {
         let m = p.start();
         if p.at(IDENT) {
-            let m = p.start();
             p.bump(IDENT);
             m.complete(p, NAME_REF);
         } else if p.at(INT_NUMBER) {
-            let m = p.start();
             p.bump(INT_NUMBER);
-            m.complete(p, INDEX_REF);
+            m.complete(p, NAME_REF);
         } else {
             p.error("expected field name or number");
+            m.abandon(p);
         }
-        m.complete(p, FIELD_REF);
     }
     Ok(m.complete(p, DOT_EXPR))
 }

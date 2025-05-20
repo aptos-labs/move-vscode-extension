@@ -103,8 +103,8 @@ impl InferenceResult {
             .single_or_none()
     }
 
-    pub fn get_resolved_field(&self, field_ref: &ast::FieldRef) -> Option<ScopeEntry> {
-        let loc = field_ref.loc(self.file_id);
+    pub fn get_resolved_field(&self, field_name_ref: &ast::NameRef) -> Option<ScopeEntry> {
+        let loc = field_name_ref.loc(self.file_id);
         self.resolved_fields.get(&loc).and_then(|field| field.to_owned())
     }
 

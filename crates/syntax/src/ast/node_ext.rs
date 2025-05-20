@@ -11,7 +11,6 @@ mod call_expr;
 mod const_;
 mod enum_;
 mod expr;
-mod field_ref;
 mod fields_owner;
 pub mod fun;
 mod ident_pat;

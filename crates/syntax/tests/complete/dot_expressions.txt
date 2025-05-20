@@ -31,13 +31,11 @@ SOURCE_FILE@0..313
                     NAME_REF@54..57
                       IDENT@54..57 "bin"
               DOT@57..58 "."
-              FIELD_REF@58..64
-                NAME_REF@58..64
-                  IDENT@58..64 "field1"
+              NAME_REF@58..64
+                IDENT@58..64 "field1"
             DOT@64..65 "."
-            FIELD_REF@65..71
-              NAME_REF@65..71
-                IDENT@65..71 "field2"
+            NAME_REF@65..71
+              IDENT@65..71 "field2"
           SEMICOLON@71..72 ";"
         WHITESPACE@72..81 "\n        "
         EXPR_STMT@81..95
@@ -49,9 +47,8 @@ SOURCE_FILE@0..313
                     NAME_REF@81..84
                       IDENT@81..84 "bin"
               DOT@84..85 "."
-              FIELD_REF@85..90
-                NAME_REF@85..90
-                  IDENT@85..90 "field"
+              NAME_REF@85..90
+                IDENT@85..90 "field"
             WHITESPACE@90..91 " "
             L_ANGLE@91..92 "<"
             WHITESPACE@92..93 " "
@@ -83,9 +80,8 @@ SOURCE_FILE@0..313
                     NAME_REF@133..136
                       IDENT@133..136 "bin"
               DOT@136..137 "."
-              FIELD_REF@137..142
-                NAME_REF@137..142
-                  IDENT@137..142 "field"
+              NAME_REF@137..142
+                IDENT@137..142 "field"
             DOT@142..143 "."
             NAME_REF@143..147
               IDENT@143..147 "call"
@@ -208,9 +204,8 @@ SOURCE_FILE@0..313
                     NAME_REF@272..275
                       IDENT@272..275 "bin"
               DOT@275..276 "."
-              FIELD_REF@276..281
-                NAME_REF@276..281
-                  IDENT@276..281 "field"
+              NAME_REF@276..281
+                IDENT@276..281 "field"
             L_BRACK@281..282 "["
             LITERAL@282..283
               INT_NUMBER@282..283 "1"
@@ -225,9 +220,8 @@ SOURCE_FILE@0..313
                   NAME_REF@294..298
                     IDENT@294..298 "self"
             DOT@298..299 "."
-            FIELD_REF@299..300
-              NAME_REF@299..300
-                IDENT@299..300 "x"
+            NAME_REF@299..300
+              IDENT@299..300 "x"
           WHITESPACE@300..301 " "
           PLUS@301..302 "+"
           WHITESPACE@302..303 " "

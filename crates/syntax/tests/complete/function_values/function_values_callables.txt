@@ -33,9 +33,8 @@ SOURCE_FILE@0..110
                       NAME_REF@66..70
                         IDENT@66..70 "self"
                 DOT@70..71 "."
-                FIELD_REF@71..85
-                  NAME_REF@71..85
-                    IDENT@71..85 "settle_trade_f"
+                NAME_REF@71..85
+                  IDENT@71..85 "settle_trade_f"
               R_PAREN@85..86 ")"
             VALUE_ARG_LIST@86..100
               L_PAREN@86..87 "("

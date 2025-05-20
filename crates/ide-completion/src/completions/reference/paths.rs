@@ -116,7 +116,7 @@ fn path_completion_ctx(path: &InFile<ast::Path>) -> PathCompletionCtx {
     let ident_token = path
         .segment()
         .and_then(|it| it.name_ref())
-        .map(|it| it.ident_token());
+        .and_then(|it| it.ident_token());
 
     let has_type_args = ident_token
         .clone()

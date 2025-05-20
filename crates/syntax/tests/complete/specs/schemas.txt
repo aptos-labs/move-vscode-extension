@@ -177,9 +177,8 @@ SOURCE_FILE@0..386
                           INT_NUMBER@293..296 "0x0"
                   R_PAREN@296..297 ")"
               DOT@297..298 "."
-              FIELD_REF@298..299
-                NAME_REF@298..299
-                  IDENT@298..299 "f"
+              NAME_REF@298..299
+                IDENT@298..299 "f"
             WHITESPACE@299..300 " "
             EQ_EQ@300..302 "=="
             WHITESPACE@302..303 " "
@@ -209,9 +208,8 @@ SOURCE_FILE@0..386
                           INT_NUMBER@314..317 "0x1"
                   R_PAREN@317..318 ")"
               DOT@318..319 "."
-              FIELD_REF@319..320
-                NAME_REF@319..320
-                  IDENT@319..320 "f"
+              NAME_REF@319..320
+                IDENT@319..320 "f"
           SEMICOLON@320..321 ";"
         WHITESPACE@321..330 "\n        "
         SPEC_PREDICATE_STMT@330..377
@@ -244,9 +242,8 @@ SOURCE_FILE@0..386
                           INT_NUMBER@349..352 "0x0"
                   R_PAREN@352..353 ")"
               DOT@353..354 "."
-              FIELD_REF@354..355
-                NAME_REF@354..355
-                  IDENT@354..355 "f"
+              NAME_REF@354..355
+                IDENT@354..355 "f"
             WHITESPACE@355..356 " "
             EQ_EQ@356..358 "=="
             WHITESPACE@358..359 " "
@@ -276,9 +273,8 @@ SOURCE_FILE@0..386
                           INT_NUMBER@370..373 "0x1"
                   R_PAREN@373..374 ")"
               DOT@374..375 "."
-              FIELD_REF@375..376
-                NAME_REF@375..376
-                  IDENT@375..376 "f"
+              NAME_REF@375..376
+                IDENT@375..376 "f"
           SEMICOLON@376..377 ";"
         WHITESPACE@377..382 "\n    "
         R_CURLY@382..383 "}"

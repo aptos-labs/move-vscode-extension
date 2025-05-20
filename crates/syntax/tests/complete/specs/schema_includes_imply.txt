@@ -48,9 +48,8 @@ SOURCE_FILE@0..193
                         NAME_REF@103..107
                           IDENT@103..107 "vote"
                   DOT@107..108 "."
-                  FIELD_REF@108..113
-                    NAME_REF@108..113
-                      IDENT@108..113 "agree"
+                  NAME_REF@108..113
+                    IDENT@108..113 "agree"
                 WHITESPACE@113..114 " "
                 NOT_EQ@114..116 "!="
                 WHITESPACE@116..117 " "

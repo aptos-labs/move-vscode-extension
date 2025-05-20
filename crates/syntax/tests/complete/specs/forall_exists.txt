@@ -611,9 +611,8 @@ SOURCE_FILE@0..1087
                                   IDENT@806..807 "a"
                         R_PAREN@807..808 ")"
                     DOT@808..809 "."
-                    FIELD_REF@809..814
-                      NAME_REF@809..814
-                        IDENT@809..814 "value"
+                    NAME_REF@809..814
+                      IDENT@809..814 "value"
                   WHITESPACE@814..815 " "
                   R_ANGLE@815..816 ">"
                   WHITESPACE@816..817 " "
@@ -748,9 +747,8 @@ SOURCE_FILE@0..1087
                             IDENT@942..943 "i"
                     R_BRACK@943..944 "]"
                   DOT@944..945 "."
-                  FIELD_REF@945..947
-                    NAME_REF@945..947
-                      IDENT@945..947 "id"
+                  NAME_REF@945..947
+                    IDENT@945..947 "id"
                 WHITESPACE@947..948 " "
                 EQ_EQ@948..950 "=="
                 WHITESPACE@950..951 " "
@@ -837,9 +835,8 @@ SOURCE_FILE@0..1087
                           IDENT@1067..1068 "i"
                   R_BRACK@1068..1069 "]"
                 DOT@1069..1070 "."
-                FIELD_REF@1070..1072
-                  NAME_REF@1070..1072
-                    IDENT@1070..1072 "id"
+                NAME_REF@1070..1072
+                  IDENT@1070..1072 "id"
               WHITESPACE@1072..1073 " "
               EQ_EQ@1073..1075 "=="
               WHITESPACE@1075..1076 " "
