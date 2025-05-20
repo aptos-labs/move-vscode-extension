@@ -104,6 +104,18 @@ impl NavigationTarget {
                 SymbolKind::Label,
             ));
         }
+        if let Some(tuple_field) = scope_entry.node_loc.to_ast::<ast::TupleField>(db) {
+            let tuple_field = tuple_field.value;
+            let node_range = tuple_field.syntax().text_range();
+            return Some(NavigationTarget::from_syntax(
+                file_id,
+                entry_name.into(),
+                Some(node_range.clone()),
+                node_range,
+                SymbolKind::Field,
+            ));
+        }
+
         let named_item = scope_entry.node_loc.to_ast::<ast::AnyNamedElement>(db)?.value;
         let name_range = named_item.name().map(|name| name.ident_token().text_range());
         let node_range = named_item.syntax().text_range();
