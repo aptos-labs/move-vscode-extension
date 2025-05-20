@@ -9,7 +9,7 @@ pub(crate) fn install(client: bool, server: bool) -> anyhow::Result<()> {
         fix_path_for_mac(&sh).context("Fix path for mac")?;
     }
     if client {
-        install_client(&sh).context("install client")?;
+        install_client(&sh).context("cannot find VSCode editor")?;
     }
     if server {
         install_server(&sh).context("install server")?;
@@ -50,7 +50,9 @@ fn install_client(sh: &Shell) -> anyhow::Result<()> {
         })
         .ok_or_else(|| {
             format_err!(
-                "Can't execute `{} --version`. Perhaps it is not in $PATH?",
+                "Can't execute `{} --version`. Perhaps it is not in $PATH?\n\
+                NOTE:\nTo install the extension for the other editors (ie. Cursor IDE),\n\
+                use \"Install from VSIX...\" command with the `./editors/code/aptos-analyzer.vsix` extension file",
                 candidates[0]
             )
         })?;

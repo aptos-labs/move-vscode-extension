@@ -4,13 +4,12 @@
 
 Clone the repo, then run:
 ```
-cargo xtask install --server --client
+cargo run -p xtask -- install --server --client
 ```
-(it uses https://github.com/matklad/cargo-xtask which is not a separate command, but a cargo aliasing technique, 
-and code for the `cargo xtask install` command resides in `xtask` crate).
+(or just `cargo xtask install --server --client`, see https://github.com/matklad/cargo-xtask) 
 
-It will build `aptos-analyzer.vsix` extension file and install it into your VSCode.
-Then it will run `cargo install` for the language server.
+The command builds `aptos-analyzer.vsix` extension file and installs it into your VSCode. 
+Then it runs `cargo install` to build and install language server.
 
 Put
 
@@ -27,7 +26,7 @@ Now, open any Move file to instantiate the extension. Disable other VSCode exten
 If you use https://www.cursor.com/ AI editor, you need to do a bit more work. 
 
 Run the installation command above. The result would be a `./editors/code/aptos-analyzer.vsix` vscode extension package. 
-Install it from the editor using the `"Install from VSIX..."` command.  
+Then install it from the editor using the `"Install from VSIX..."` command.  
 
 ## Features
 
