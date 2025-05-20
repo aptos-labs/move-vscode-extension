@@ -2,7 +2,7 @@ use super::*;
 use crate::T;
 
 pub(crate) fn fun_param_list(p: &mut Parser) {
-    let list_marker = p.start();
+    let m = p.start();
     p.bump(T!['(']);
     while !p.at(EOF) && !p.at(T![')']) {
         if p.at_ts(PARAM_FIRST) {
@@ -15,7 +15,7 @@ pub(crate) fn fun_param_list(p: &mut Parser) {
         }
     }
     p.expect(T![')']);
-    list_marker.complete(p, PARAM_LIST);
+    m.complete(p, PARAM_LIST);
 }
 
 fn param(p: &mut Parser) {

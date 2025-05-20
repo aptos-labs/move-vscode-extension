@@ -11,27 +11,12 @@ pub(crate) fn opt_path_type_arg_list(p: &mut Parser<'_>, mode: Mode) {
 }
 
 pub(crate) fn opt_type_arg_list_for_type(p: &mut Parser<'_>) {
-    // test typepathfn_with_coloncolon
-    // type F = Start::(Middle) -> (Middle)::End;
-    // type GenericArg = S<Start(Middle)::End>;
-    // let m;
-    // if p.at(T![::]) && matches!(p.nth(2), T![<] | T!['(']) {
-    //     m = p.start();
-    //     p.bump(T![::]);
-    // } else if (p.current() == T![<] && p.nth(1) != T![=]) || p.current() == T!['('] {
-    //     m = p.start();
-    // } else {
-    //     return;
-    // }
     let m = p.start();
     let current = p.current();
     if current != T![<] {
         m.abandon(p);
         return;
     }
-    // test_err generic_arg_list_recover
-    // type T = T<0, ,T>;
-    // type T = T::<0, ,T>;
     list(
         p,
         T![<],
@@ -56,7 +41,7 @@ pub(super) fn opt_type_arg_list_for_expr(p: &mut Parser<'_>, colon_colon_require
     }
     p.bump(T![<]);
 
-    let at_end = |p: &mut Parser| p.at(T![>]) || p.at(T!['(']) || p.at(T!['{']);
+    let at_end = |p: &Parser| p.at_ts(ts!(T![>], T!['('], T!['{']));
     while !p.at(EOF) && !at_end(p) {
         if !type_arg(p) {
             break;
