@@ -25,7 +25,11 @@ pub(crate) fn highlight_as_html_no_style(db: &RootDatabase, file_id: FileId) -> 
     buf
 }
 
-pub(crate) fn highlight_as_html(db: &RootDatabase, file_id: FileId) -> String {
+pub(crate) fn highlight_as_html(
+    db: &RootDatabase,
+    file_id: FileId,
+    skip_classes: Vec<String>,
+) -> String {
     let sema = Semantics::new(db, file_id);
     let file = sema.parse(file_id);
     let file = file.syntax();
@@ -42,6 +46,10 @@ pub(crate) fn highlight_as_html(db: &RootDatabase, file_id: FileId) -> String {
             continue;
         }
         let class = r.highlight.to_string().replace('.', " ");
+        if skip_classes.contains(&class) {
+            format_to!(buf, "{}", chunk);
+            continue;
+        }
         format_to!(buf, "<span class=\"{}\">{}</span>", class, chunk);
     }
     buf.push_str("</code></pre>");

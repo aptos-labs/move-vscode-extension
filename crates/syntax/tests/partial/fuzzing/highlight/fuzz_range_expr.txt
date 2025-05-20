@@ -1,0 +1,74 @@
+SOURCE_FILE@0..94
+  MODULE@0..91
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..27
+      IDENT@12..27 "dot_dot_pattern"
+    WHITESPACE@27..28 " "
+    L_CURLY@28..29 "{"
+    WHITESPACE@29..34 "\n    "
+    FUN@34..80
+      FUN_KW@34..37 "fun"
+      WHITESPACE@37..38 " "
+      NAME@38..42
+        IDENT@38..42 "main"
+      PARAM_LIST@42..44
+        L_PAREN@42..43 "("
+        R_PAREN@43..44 ")"
+      WHITESPACE@44..45 " "
+      BLOCK_EXPR@45..80
+        L_CURLY@45..46 "{"
+        WHITESPACE@46..55 "\n        "
+        LET_STMT@55..61
+          LET_KW@55..58 "let"
+          WHITESPACE@58..59 " "
+          IDENT_PAT@59..61
+            NAME@59..61
+              IDENT@59..61 "S4"
+        WHITESPACE@61..63 "  "
+        EXPR_STMT@63..64
+          PATH_EXPR@63..64
+            PATH@63..64
+              PATH_SEGMENT@63..64
+                NAME_REF@63..64
+                  IDENT@63..64 "y"
+        ERROR@64..65
+          COLON@64..65 ":"
+        WHITESPACE@65..66 " "
+        EXPR_STMT@66..75
+          STRUCT_LIT@66..75
+            PATH@66..68
+              PATH_SEGMENT@66..68
+                NAME_REF@66..68
+                  IDENT@66..68 "S3"
+            WHITESPACE@68..69 " "
+            STRUCT_LIT_FIELD_LIST@69..75
+              L_CURLY@69..70 "{"
+              WHITESPACE@70..71 " "
+              ERROR@71..73
+                DOT_DOT@71..73 ".."
+              WHITESPACE@73..74 " "
+              R_CURLY@74..75 "}"
+        ERROR@75..76
+          COMMA@75..76 ","
+        RANGE_EXPR@76..78
+          DOT_DOT@76..78 ".."
+        WHITESPACE@78..79 " "
+        R_CURLY@79..80 "}"
+    WHITESPACE@80..81 " "
+    ERROR@81..82
+      EQ@81..82 "="
+    WHITESPACE@82..83 " "
+    ERROR@83..84
+      IDENT@83..84 "x"
+    ERROR@84..85
+      SEMICOLON@84..85 ";"
+    WHITESPACE@85..90 "\n    "
+    R_CURLY@90..91 "}"
+  WHITESPACE@91..92 "\n"
+  ERROR@92..93
+    R_CURLY@92..93 "}"
+  WHITESPACE@93..94 "\n"

@@ -1651,9 +1651,7 @@ pub struct TypeArg {
 }
 impl TypeArg {
     #[inline]
-    pub fn type_(&self) -> Type {
-        support::child(&self.syntax).expect("TypeArg.type_ required by the parser")
-    }
+    pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

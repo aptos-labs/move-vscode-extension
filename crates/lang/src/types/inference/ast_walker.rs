@@ -313,7 +313,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 self.infer_vector_lit_expr(vector_lit_expr, expected)
             }
             ast::Expr::TupleExpr(tuple_expr) => self.infer_tuple_expr(tuple_expr, expected),
-            ast::Expr::RangeExpr(range_expr) => self.infer_range_expr(range_expr, expected),
+            ast::Expr::RangeExpr(range_expr) => {
+                self.infer_range_expr(range_expr, expected).unwrap_or(Ty::Unknown)
+            }
             ast::Expr::StructLit(struct_lit) => {
                 self.infer_struct_lit(struct_lit, expected).unwrap_or(Ty::Unknown)
             }
@@ -769,22 +771,22 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         self.ctx.intersect_all_types(arm_tys)
     }
 
-    fn infer_range_expr(&mut self, range_expr: &ast::RangeExpr, _expected: Expected) -> Ty {
-        let start_ty = self.infer_expr(&range_expr.start_expr(), Expected::NoValue);
+    fn infer_range_expr(&mut self, range_expr: &ast::RangeExpr, _expected: Expected) -> Option<Ty> {
+        let start_expr = range_expr.start_expr()?;
+        let start_ty = self.infer_expr(&start_expr, Expected::NoValue);
         if let Some(end_expr) = range_expr.end_expr() {
             self.infer_expr_coerceable_to(&end_expr, start_ty.clone());
         }
-        Ty::Seq(TySequence::Range(Box::new(start_ty)))
+        Some(Ty::Seq(TySequence::Range(Box::new(start_ty))))
     }
 
     fn infer_vector_lit_expr(&mut self, vector_lit_expr: &ast::VectorLitExpr, expected: Expected) -> Ty {
         let arg_ty_var = Ty::new_ty_var(&self.ctx.ty_var_index);
 
-        let explicit_ty = vector_lit_expr.type_arg().map(|it| {
+        let explicit_type = vector_lit_expr.type_arg().and_then(|it| it.type_());
+        if let Some(explicit_type) = explicit_type {
             let file_id = self.ctx.file_id;
-            self.ctx.ty_lowering().lower_type(it.type_().in_file(file_id))
-        });
-        if let Some(explicit_ty) = explicit_ty {
+            let explicit_ty = self.ctx.ty_lowering().lower_type(explicit_type.in_file(file_id));
             let _ = self.ctx.combine_types(arg_ty_var.clone(), explicit_ty);
         }
 

@@ -378,8 +378,8 @@ impl Analysis {
     }
 
     /// Computes syntax highlighting for the given file.
-    pub fn highlight_as_html(&self, file_id: FileId) -> Cancellable<String> {
-        self.with_db(|db| syntax_highlighting::highlight_as_html(db, file_id))
+    pub fn highlight_as_html(&self, file_id: FileId, skip_classes: Vec<String>) -> Cancellable<String> {
+        self.with_db(|db| syntax_highlighting::highlight_as_html(db, file_id, skip_classes))
     }
 
     /// Computes syntax highlighting for the given file without `style {}` prefix.

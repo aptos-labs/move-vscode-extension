@@ -65,9 +65,9 @@ fn psi_type_args_subst(
         .into_iter();
     let mut subst = HashMap::new();
     for type_param in type_params {
-        let type_arg = type_args.next();
+        let type_arg = type_args.next().and_then(|it| it.type_());
         let psi_type_arg = match type_arg {
-            Some(type_arg) => PsiTypeArg::Present(type_arg.type_()),
+            Some(type_arg) => PsiTypeArg::Present(type_arg),
             None => PsiTypeArg::RequiredAbsent,
         };
         subst.insert(type_param, psi_type_arg);
