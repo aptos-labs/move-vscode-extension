@@ -14,6 +14,9 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
         let mut modified_input = input.clone();
         while !modified_input.is_empty() {
             modified_input.pop();
+            // if !modified_input.is_empty() && modified_input.is_char_boundary(0) {
+            //     modified_input.remove(0);
+            // }
             let res = panic::catch_unwind(|| SourceFile::parse(&modified_input));
             match res {
                 Ok(_) => (),
@@ -23,18 +26,6 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
                     panic!("{:?}", err);
                 }
             }
-            // let thread_input = modified_input.clone();
-            // let handle = thread::spawn(move || {
-            //     SourceFile::parse(&thread_input);
-            // });
-            // let res = handle.join();
-            // match res {
-            //     Ok(_) => continue,
-            //     Err(err) => {
-            //         println!("modified_input:\n{}", &modified_input);
-            //         panic!("{:?}", err);
-            //     }
-            // }
         }
     }
 
