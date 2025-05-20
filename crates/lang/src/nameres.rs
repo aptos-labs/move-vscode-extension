@@ -1,5 +1,6 @@
 use crate::hir_db;
 use crate::nameres::labels::get_loop_labels_resolve_variants;
+use crate::nameres::path_resolution::remove_variant_ident_pats;
 use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::node_ext::item::ModuleItemExt;
 use base_db::SourceDatabase;
@@ -65,7 +66,8 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
                     let method_or_path = method_or_path.cast_into::<ast::Path>()?;
                     let entries =
                         path_resolution::resolve_path(db, method_or_path.in_file(self.file_id), None);
-                    return Some(entries);
+                    let filtered_entries = remove_variant_ident_pats(db, entries, |it| it.resolve(db));
+                    return Some(filtered_entries);
                 }
                 return Some(entries);
             }

@@ -875,18 +875,38 @@ module 0x1::m {
 
 // language=Move
 #[test]
-fn test_enum_variant_cannot_be_resolved_on_the_right_side_of_match_arm() {
+fn test_resolve_enum_variant_from_match_arm_pattern() {
     check_resolve(
         r#"
 module 0x1::m {
     enum Inner { Inner1, Inner2 }
                 //X
     enum Outer { One { inner: Inner } }
-    
+
     public fun non_exhaustive(o: &Outer) {
         match (o) {
             One { inner: Inner1 } => Inner1
-                                     //^ unresolved
+                         //^
+        }
+    }
+}
+"#,
+    )
+}
+
+// language=Move
+#[test]
+fn test_enum_variant_cannot_be_resolved_on_the_right_side_of_match_arm() {
+    check_resolve(
+        r#"
+module 0x1::m {
+    enum Inner { Inner1, Inner2 }
+    enum Outer { One { inner: Inner } }
+
+    public fun non_exhaustive(o: &Outer) {
+        match (o) {
+            One { inner: Inner1 } => Inner1,
+                                       //^ unresolved
         }
     }
 }        
