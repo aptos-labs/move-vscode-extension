@@ -498,6 +498,11 @@ fn get_block_comment_len(text: &str) -> usize {
     let mut pos = 0;
     let mut nested_counter = 0;
 
+    if chars.peek().is_none() {
+        // `/*` without any content
+        return text.len();
+    }
+
     while let Some(curr) = chars.next() {
         let Some(&next) = chars.peek() else {
             return text.len();
@@ -521,6 +526,7 @@ fn get_block_comment_len(text: &str) -> usize {
         }
         pos += 1;
     }
+
     unreachable!()
 }
 
