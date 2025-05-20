@@ -25,7 +25,9 @@ use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast, match_ast};
 use vfs::FileId;
 
+use crate::nameres::path_resolution::remove_variant_ident_pats;
 pub use combine_types::TypeError;
+use syntax::ast::node_ext::struct_pat_field::PatFieldKind;
 
 #[derive(Debug, Default)]
 pub struct TyVarIndex(Cell<usize>);
@@ -100,7 +102,8 @@ impl<'db> InferenceCtx<'db> {
         }
     }
 
-    #[tracing::instrument(level = "debug", skip(self, path, expected_ty), fields(ctx_file_id = ?self.file_id))]
+    #[tracing::instrument(level = "debug", skip(self, path, expected_ty), fields(ctx_file_id = ?self.file_id
+    ))]
     fn resolve_path_cached(
         &mut self,
         path: ast::Path,
@@ -108,22 +111,11 @@ impl<'db> InferenceCtx<'db> {
     ) -> Option<InFile<ast::AnyNamedElement>> {
         let path_entries =
             path_resolution::resolve_path(self.db, path.clone().in_file(self.file_id), expected_ty);
-        let entries = path_entries
-            .into_iter()
-            .filter(|entry| {
-                // filter out bindings which are resolvable to enum variants
-                if let Some(ident_pat) = entry.clone().cast_into::<ast::IdentPat>(self.db) {
-                    let res = self
-                        .resolved_ident_pats
-                        .get(&ident_pat.value)
-                        .and_then(|it| it.clone());
-                    if res.map(|it| it.node_loc.kind()) == Some(VARIANT) {
-                        return false;
-                    }
-                };
-                true
-            })
-            .collect::<Vec<_>>();
+        let entries = remove_variant_ident_pats(self.db, path_entries, |ident_pat| {
+            self.resolved_ident_pats
+                .get(&ident_pat.value)
+                .and_then(|it| it.clone())
+        });
         self.resolved_paths.insert(path, entries.clone());
 
         entries
@@ -310,7 +302,9 @@ impl<'db> InferenceCtx<'db> {
 
     pub fn get_binding_type(&self, ident_pat: ast::IdentPat) -> Option<Ty> {
         if let Some(pat_field) = ident_pat.syntax().parent_of_type::<ast::StructPatField>() {
-            return self.pat_field_types.get(&pat_field).map(|it| it.to_owned());
+            if matches!(pat_field.kind(), PatFieldKind::Shorthand { .. }) {
+                return self.pat_field_types.get(&pat_field).map(|it| it.to_owned());
+            }
         }
         self.pat_types.get(&ident_pat.into()).cloned()
     }

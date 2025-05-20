@@ -12,6 +12,7 @@ use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
 use base_db::SourceDatabase;
 use base_db::package_root::PackageId;
+use syntax::SyntaxKind::VARIANT;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::{HasItems, ReferenceElement};
@@ -189,6 +190,26 @@ fn filter_by_function_namespace_special_case(
         }
     }
     entries
+}
+
+pub(crate) fn remove_variant_ident_pats(
+    db: &dyn SourceDatabase,
+    entries: Vec<ScopeEntry>,
+    resolve_ident_pat: impl Fn(InFile<ast::IdentPat>) -> Option<ScopeEntry>,
+) -> Vec<ScopeEntry> {
+    entries
+        .into_iter()
+        .filter(|entry| {
+            // filter out bindings which are itself resolved to enum variants
+            if let Some(ident_pat) = entry.clone().cast_into::<ast::IdentPat>(db) {
+                let resolved_to = resolve_ident_pat(ident_pat);
+                if resolved_to.is_some_and(|it| it.node_loc.kind() == VARIANT) {
+                    return false;
+                }
+            };
+            true
+        })
+        .collect()
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

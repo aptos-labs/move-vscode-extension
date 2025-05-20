@@ -31,9 +31,8 @@ module 0x1::m {
 
     public fun non_exhaustive(o: &Outer) {
         match (o) {
-            One { inner: Inner { field: myfield } }
-                => myfield
-                    //^ u8
+            One { inner: Inner { field: myfield } } => myfield
+                                                      //^ &u8
         }
     }
 }
