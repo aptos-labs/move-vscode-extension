@@ -1,0 +1,8 @@
+// line
+script {
+      //^ expected R_CURLY
+/* block */
+/**
+multiline
+*/
+/** /* nest */

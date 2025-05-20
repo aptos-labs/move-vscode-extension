@@ -13,8 +13,11 @@ use crate::{ts, SyntaxKind, T};
 use std::collections::HashSet;
 
 pub(crate) fn spec_function(p: &mut Parser, m: Marker) {
-    // p.bump(T![spec]);
     opt_modifiers(p);
+    if !p.at(T![fun]) {
+        m.abandon(p);
+        return;
+    }
     fun_signature(p, true, false);
     m.complete(p, SPEC_FUN);
 }
@@ -22,6 +25,10 @@ pub(crate) fn spec_function(p: &mut Parser, m: Marker) {
 pub(crate) fn spec_inline_function(p: &mut Parser) {
     let m = p.start();
     p.eat(T![native]);
+    if !p.at(T![fun]) {
+        m.abandon(p);
+        return;
+    }
     fun_signature(p, true, false);
     m.complete(p, SPEC_INLINE_FUN);
 }

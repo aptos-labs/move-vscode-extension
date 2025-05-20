@@ -1,0 +1,21 @@
+SOURCE_FILE@0..55
+  MODULE@0..54
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..31
+      IDENT@12..31 "fuzz_spec_native_fu"
+    WHITESPACE@31..32 " "
+    L_CURLY@32..33 "{"
+    WHITESPACE@33..38 "\n    "
+    SPEC_KW@38..42 "spec"
+    WHITESPACE@42..43 " "
+    NATIVE_KW@43..49 "native"
+    WHITESPACE@49..50 " "
+    ERROR@50..52
+      IDENT@50..52 "fu"
+    WHITESPACE@52..53 "\n"
+    R_CURLY@53..54 "}"
+  WHITESPACE@54..55 "\n"

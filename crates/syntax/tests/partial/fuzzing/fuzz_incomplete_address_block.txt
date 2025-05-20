@@ -1,0 +1,31 @@
+SOURCE_FILE@0..49
+  ADDRESS_DEF@0..28
+    ADDRESS_KW@0..7 "address"
+    WHITESPACE@7..8 " "
+    VALUE_ADDRESS@8..11
+      INT_NUMBER@8..11 "0x1"
+    WHITESPACE@11..12 " "
+    L_CURLY@12..13 "{"
+    WHITESPACE@13..14 "\n"
+    MODULE@14..26
+      MODULE_KW@14..20 "module"
+      WHITESPACE@20..21 " "
+      NAME@21..22
+        IDENT@21..22 "m"
+      WHITESPACE@22..23 " "
+      L_CURLY@23..24 "{"
+      WHITESPACE@24..25 "\n"
+      R_CURLY@25..26 "}"
+    WHITESPACE@26..27 "\n"
+    R_CURLY@27..28 "}"
+  WHITESPACE@28..29 "\n"
+  ADDRESS_DEF@29..48
+    ADDRESS_KW@29..36 "address"
+    WHITESPACE@36..37 " "
+    VALUE_ADDRESS@37..40
+      INT_NUMBER@37..40 "0x2"
+    WHITESPACE@40..41 " "
+    L_CURLY@41..42 "{"
+    WHITESPACE@42..43 "\n"
+    IDENT@43..48 "modul"
+  WHITESPACE@48..49 "\n"

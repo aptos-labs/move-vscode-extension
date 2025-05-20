@@ -1,0 +1,5 @@
+module 0x1::fuzz_spec_incomplete_emits {
+    spec module {
+        emits msg t
+    }
+}

@@ -1,0 +1,13 @@
+SOURCE_FILE@0..60
+  COMMENT@0..7 "// line"
+  WHITESPACE@7..8 "\n"
+  SCRIPT@8..16
+    SCRIPT_KW@8..14 "script"
+    WHITESPACE@14..15 " "
+    L_CURLY@15..16 "{"
+  WHITESPACE@16..17 "\n"
+  COMMENT@17..28 "/* block */"
+  WHITESPACE@28..29 "\n"
+  COMMENT@29..45 "/**\nmultiline\n*/"
+  WHITESPACE@45..46 "\n"
+  COMMENT@46..60 "/** /* nest */"
