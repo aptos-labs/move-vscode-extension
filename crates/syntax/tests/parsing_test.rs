@@ -1,5 +1,5 @@
 use std::path::Path;
-use std::{env, fs};
+use std::{env, fs, panic};
 use syntax::{AstNode, SourceFile};
 use test_utils::{apply_error_marks, ErrorMark};
 
@@ -8,6 +8,21 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
 
     let parse = SourceFile::parse(&input);
     let file = parse.tree();
+
+    if env::var("FUZZ").is_ok() {
+        let mut modified_input = input.clone();
+        while !modified_input.is_empty() {
+            modified_input.pop();
+            let res = panic::catch_unwind(|| SourceFile::parse(&modified_input));
+            match res {
+                Ok(_) => continue,
+                Err(err) => {
+                    println!("modified_input:\n{}", &modified_input);
+                    panic!("{:?}", err);
+                }
+            }
+        }
+    }
 
     let actual_output = format!("{:#?}", file.syntax());
     let output_fpath = fpath.with_extension("").with_extension("txt");

@@ -89,8 +89,12 @@ pub(crate) fn address_def(p: &mut Parser<'_>, m: Marker) {
     if p.at(T!['{']) {
         p.bump(T!['{']);
         while !p.at(EOF) && !p.at(T!['}']) {
-            let m = p.start();
-            module(p, m);
+            if p.at(T![module]) {
+                let m = p.start();
+                module(p, m);
+            } else {
+                p.error_and_bump_until_ts("expected module", ts!(T![module], T!['}']));
+            }
         }
         p.expect(T!['}']);
     } else {
