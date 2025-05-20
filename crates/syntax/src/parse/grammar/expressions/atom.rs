@@ -346,7 +346,12 @@ fn match_arm(p: &mut Parser) {
     if p.at(T![if]) {
         match_guard(p);
     }
-    p.expect(T![=>]);
+    let has_fat_arrow = p.expect(T![=>]);
+    if !has_fat_arrow {
+        p.bump_until(|p| p.at(T!['}']));
+        m.complete(p, MATCH_ARM);
+        return;
+    }
     let blocklike = match stmt_expr(p, None) {
         Some((_, blocklike)) => blocklike,
         None => BlockLike::NotBlock,

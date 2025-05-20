@@ -2,6 +2,7 @@
 // Copyright (c) The Move Contributors
 // SPDX-License-Identifier: Apache-2.0
 
+use itertools::Itertools;
 use regex::Regex;
 use std::fmt;
 use std::sync::LazyLock;
@@ -498,10 +499,10 @@ fn get_block_comment_len(text: &str) -> usize {
     let mut pos = 0;
     let mut nested_counter = 0;
 
-    if chars.peek().is_none() {
-        // `/*` without any content
-        return text.len();
-    }
+    // if chars.peek().is_none() {
+    //     // `/*` without any content
+    //     return text.len();
+    // }
 
     while let Some(curr) = chars.next() {
         let Some(&next) = chars.peek() else {
@@ -527,7 +528,10 @@ fn get_block_comment_len(text: &str) -> usize {
         pos += 1;
     }
 
-    unreachable!()
+    2 + pos
+    // return 2 + pos + 2;
+
+    // unreachable!("invalid text: {:?}\n{:?}", chars.clone(), chars.join(""));
 }
 
 fn get_name_token(name: &str) -> Tok {

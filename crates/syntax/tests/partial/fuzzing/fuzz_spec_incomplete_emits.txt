@@ -1,0 +1,39 @@
+SOURCE_FILE@0..87
+  MODULE@0..86
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..38
+      IDENT@12..38 "fuzz_spec_incomplete_ ..."
+    WHITESPACE@38..39 " "
+    L_CURLY@39..40 "{"
+    WHITESPACE@40..45 "\n    "
+    ITEM_SPEC@45..84
+      SPEC_KW@45..49 "spec"
+      WHITESPACE@49..50 " "
+      MODULE_KW@50..56 "module"
+      WHITESPACE@56..57 " "
+      BLOCK_EXPR@57..84
+        L_CURLY@57..58 "{"
+        WHITESPACE@58..67 "\n        "
+        EMITS_STMT@67..76
+          EMITS_KW@67..72 "emits"
+          WHITESPACE@72..73 " "
+          PATH_EXPR@73..76
+            PATH@73..76
+              PATH_SEGMENT@73..76
+                NAME_REF@73..76
+                  IDENT@73..76 "msg"
+        WHITESPACE@76..77 " "
+        PATH_EXPR@77..78
+          PATH@77..78
+            PATH_SEGMENT@77..78
+              NAME_REF@77..78
+                IDENT@77..78 "t"
+        WHITESPACE@78..83 "\n    "
+        R_CURLY@83..84 "}"
+    WHITESPACE@84..85 "\n"
+    R_CURLY@85..86 "}"
+  WHITESPACE@86..87 "\n"

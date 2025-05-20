@@ -1,0 +1,3 @@
+module 0x1::fuzz_spec_native_fu {
+    spec native fu
+}

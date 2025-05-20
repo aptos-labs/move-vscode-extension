@@ -1,5 +1,6 @@
+use std::io::Write;
 use std::path::Path;
-use std::{env, fs, panic};
+use std::{env, fs, io, panic, thread};
 use syntax::{AstNode, SourceFile};
 use test_utils::{apply_error_marks, ErrorMark};
 
@@ -15,12 +16,25 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
             modified_input.pop();
             let res = panic::catch_unwind(|| SourceFile::parse(&modified_input));
             match res {
-                Ok(_) => continue,
+                Ok(_) => (),
                 Err(err) => {
                     println!("modified_input:\n{}", &modified_input);
+                    println!("==========");
                     panic!("{:?}", err);
                 }
             }
+            // let thread_input = modified_input.clone();
+            // let handle = thread::spawn(move || {
+            //     SourceFile::parse(&thread_input);
+            // });
+            // let res = handle.join();
+            // match res {
+            //     Ok(_) => continue,
+            //     Err(err) => {
+            //         println!("modified_input:\n{}", &modified_input);
+            //         panic!("{:?}", err);
+            //     }
+            // }
         }
     }
 

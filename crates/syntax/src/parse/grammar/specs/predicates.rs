@@ -68,6 +68,7 @@ pub(crate) fn emits_predicate(p: &mut Parser) -> bool {
         p.bump_remap(T![to]);
     } else {
         p.error("expected 'to'");
+        m.complete(p, EMITS_STMT);
         return true;
     }
     expr(p);
