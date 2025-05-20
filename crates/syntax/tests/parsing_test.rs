@@ -1,8 +1,9 @@
+use std::cmp::{max, min};
 use std::io::Write;
 use std::path::Path;
 use std::{env, fs, io, panic, thread};
 use syntax::{AstNode, SourceFile};
-use test_utils::{apply_error_marks, ErrorMark};
+use test_utils::{apply_error_marks, fixtures, ErrorMark};
 
 fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<()> {
     let input = fs::read_to_string(fpath).unwrap();
@@ -13,25 +14,14 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
     if env::var("FUZZ").is_ok() {
         let mut modified_input = input.clone();
         while !modified_input.is_empty() {
-            modified_input.pop();
-            // if !modified_input.is_empty() && modified_input.is_char_boundary(0) {
-            //     modified_input.remove(0);
-            // }
-            let res = panic::catch_unwind(|| SourceFile::parse(&modified_input));
-            match res {
-                Ok(_) => (),
-                Err(err) => {
-                    println!("modified_input:\n{}", &modified_input);
-                    println!("==========");
-                    panic!("{:?}", err);
-                }
-            }
+            run_fuzzer_once(&mut modified_input);
         }
     }
 
     let actual_output = format!("{:#?}", file.syntax());
     let output_fpath = fpath.with_extension("").with_extension("txt");
     let errors_fpath = fpath.with_extension("").with_extension("exp");
+    // let html_fpath = fpath.with_extension("").with_extension("html");
 
     let errors = parse.errors();
     let marks = errors
@@ -41,7 +31,7 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
             message: it.to_string(),
         })
         .collect();
-    let input_with_marks = apply_error_marks(&input, marks);
+    let error_output = apply_error_marks(&input, marks);
 
     let expected_output = if output_fpath.exists() {
         let existing = fs::read_to_string(&output_fpath).unwrap();
@@ -51,29 +41,67 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
     };
 
     let expected_errors_output = fs::read_to_string(&errors_fpath).ok();
+    // let expected_html_output = fs::read_to_string(&html_fpath).ok();
 
     if env::var("UB").is_ok() {
         // generate new files
         fs::write(&output_fpath, &actual_output).unwrap();
         if allow_errors {
-            fs::write(errors_fpath, input_with_marks.clone()).unwrap();
+            fs::write(errors_fpath, error_output.clone()).unwrap();
         }
+        // fs::write(&html_fpath, &html_output).unwrap();
     }
 
+    // check whether it can be highlighted without crashes
+    highlight_file(input.clone());
+
     pretty_assertions::assert_eq!(&expected_output.unwrap_or("".to_string()), &actual_output);
+
+    // pretty_assertions::assert_eq!(&expected_html_output.unwrap_or("".to_string()), &html_output);
 
     if !errors.is_empty() {
         if allow_errors {
             pretty_assertions::assert_eq!(
                 &expected_errors_output.unwrap_or("".to_string()),
-                &input_with_marks
+                &error_output
             );
         } else {
-            panic!("errors are not expected: \n {}", input_with_marks)
+            panic!("errors are not expected: \n {}", error_output)
         }
     }
 
     Ok(())
+}
+
+fn run_fuzzer_once(modified_input: &mut String) {
+    // modified_input.pop();
+    // if !modified_input.is_empty() && modified_input.is_char_boundary(0) {
+    //     modified_input.remove(0);
+    // }
+    let rand_idx = rand::random_range(0..modified_input.len());
+    if modified_input.is_char_boundary(rand_idx) {
+        modified_input.remove(rand_idx);
+    }
+    let parsed = panic::catch_unwind(|| SourceFile::parse(&modified_input));
+    if let Err(err) = parsed {
+        println!("modified_input:\n{}", &modified_input);
+        println!("==========");
+        panic!("parse error \n{:?}", err);
+    }
+    let highlighted = panic::catch_unwind(|| highlight_file(modified_input.clone()));
+    if let Err(err) = highlighted {
+        println!("modified_input:\n{}", &modified_input);
+        println!("==========");
+        panic!("highlight error \n{:?}", err);
+    }
+}
+
+fn highlight_file(input: String) -> String {
+    let (analysis, file_id) = fixtures::from_single_file(input.clone());
+    let html_output = analysis
+        .highlight_as_html(file_id, vec!["unresolved_reference".to_string()])
+        .unwrap();
+    html_output
 }
 
 fn test_complete(fpath: &Path) -> datatest_stable::Result<()> {

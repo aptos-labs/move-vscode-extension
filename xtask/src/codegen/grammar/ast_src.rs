@@ -288,8 +288,8 @@ pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     ("PathPat", &["path"]),
     ("IndexExpr", &["base_expr"]),
     ("MethodCallExpr", &["receiver_expr"]),
-    ("DotExpr", &["receiver_expr", "field_ref"]),
-    ("TypeArg", &["type"]),
+    ("DotExpr", &["receiver_expr"]),
+    // ("TypeArg", &["type"]),  - invalid
     ("StructPat", &["path"]),
     ("TupleStructPat", &["path"]),
     ("PathType", &["path"]),
