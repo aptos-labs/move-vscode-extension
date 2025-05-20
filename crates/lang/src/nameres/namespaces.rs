@@ -66,7 +66,7 @@ pub(crate) fn named_item_ns(named_item_kind: syntax::SyntaxKind) -> Ns {
         TYPE_PARAM | STRUCT => Ns::TYPE,
         ENUM => Ns::ENUM,
         VARIANT => Ns::ENUM_VARIANT,
-        IDENT_PAT | NAMED_FIELD | CONST | GLOBAL_VARIABLE_DECL => Ns::NAME,
+        IDENT_PAT | TUPLE_FIELD | NAMED_FIELD | CONST | GLOBAL_VARIABLE_DECL => Ns::NAME,
         SCHEMA => Ns::SCHEMA,
         SCHEMA_FIELD => Ns::NAME,
         _ => unreachable!(

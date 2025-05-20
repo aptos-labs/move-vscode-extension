@@ -47,6 +47,6 @@ impl ast::Path {
     }
 
     pub fn ident_token(&self) -> Option<ast::SyntaxToken> {
-        self.segment()?.name_ref().map(|it| it.ident_token())
+        self.segment()?.name_ref().and_then(|it| it.ident_token())
     }
 }

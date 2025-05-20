@@ -210,9 +210,8 @@ SOURCE_FILE@0..550
                         NAME_REF@235..236
                           IDENT@235..236 "a"
                   DOT@236..237 "."
-                  FIELD_REF@237..238
-                    NAME_REF@237..238
-                      IDENT@237..238 "b"
+                  NAME_REF@237..238
+                    IDENT@237..238 "b"
               COMMA@238..239 ","
               WHITESPACE@239..240 " "
               VALUE_ARG@240..242

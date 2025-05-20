@@ -4,6 +4,7 @@ use crate::nameres::name_resolution::get_entries_from_walking_scopes;
 use crate::nameres::namespaces::NAMES;
 use crate::nameres::path_resolution::get_method_resolve_variants;
 use crate::nameres::scope::{ScopeEntryExt, ScopeEntryListExt, VecExt};
+use crate::node_ext::any_field_ext;
 use crate::node_ext::item_spec::ItemSpecExt;
 use crate::types::expectation::Expected;
 use crate::types::inference::{InferenceCtx, TypeError};
@@ -18,7 +19,6 @@ use crate::types::ty::ty_var::{TyInfer, TyIntVar};
 use std::iter;
 use std::ops::Deref;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
-use syntax::ast::node_ext::named_field::FilterNamedFieldsByName;
 use syntax::ast::{FieldsOwner, HasStmts};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, IntoNodeOrToken, ast};
@@ -463,35 +463,41 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
         let ty_adt = self_ty.unwrap_all_refs().into_ty_adt()?;
 
-        let field_ref = dot_expr.field_ref();
-        if !self.ctx.msl && field_ref.containing_module() != ty_adt.adt_item_module(self.ctx.db) {
+        let field_name_ref = dot_expr.name_ref()?;
+        if !self.ctx.msl
+            && field_name_ref.syntax().containing_module() != ty_adt.adt_item_module(self.ctx.db)
+        {
             return None;
         }
 
         let adt_item = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(self.ctx.db)?;
-        let field_reference_name = dot_expr.field_ref().name_ref()?.as_string();
+        let field_reference_name = field_name_ref.as_string();
 
         // todo: tuple index fields
 
         let InFile {
-            file_id: adt_item_file_id,
+            file_id: item_file_id,
             value: adt_item,
         } = adt_item;
-        let named_field = adt_item
-            .field_ref_lookup_fields()
-            .filter_fields_by_name(&field_reference_name)
-            .single_or_none()
-            .map(|it| it.in_file(adt_item_file_id));
+
+        let matching_field = adt_item
+            .fields()
+            .into_iter()
+            .filter(|(name, field)| name == &field_reference_name)
+            .collect::<Vec<_>>()
+            .single_or_none();
 
         self.ctx.resolved_fields.insert(
-            dot_expr.field_ref(),
-            named_field.clone().and_then(|it| it.to_entry()),
+            field_name_ref,
+            matching_field.clone().and_then(|(name, any_field)| {
+                any_field_ext::to_scope_entry(name, item_file_id, any_field)
+            }),
         );
 
         let ty_lowering = self.ctx.ty_lowering();
-        let named_field_type = named_field?.and_then(|it| it.type_())?;
+        let field_type = matching_field?.1.type_()?.in_file(item_file_id);
         let field_ty = ty_lowering
-            .lower_type(named_field_type)
+            .lower_type(field_type)
             .substitute(&ty_adt.substitution);
         Some(field_ty)
     }

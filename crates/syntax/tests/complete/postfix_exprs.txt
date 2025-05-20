@@ -42,9 +42,8 @@ SOURCE_FILE@0..137
                   NAME_REF@69..70
                     IDENT@69..70 "a"
             DOT@70..71 "."
-            FIELD_REF@71..76
-              NAME_REF@71..76
-                IDENT@71..76 "field"
+            NAME_REF@71..76
+              IDENT@71..76 "field"
           SEMICOLON@76..77 ";"
         WHITESPACE@77..86 "\n        "
         EXPR_STMT@86..95

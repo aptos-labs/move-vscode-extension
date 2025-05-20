@@ -22,16 +22,15 @@ SOURCE_FILE@0..101
       BLOCK_EXPR@57..97
         L_CURLY@57..58 "{"
         WHITESPACE@58..67 "\n        "
-        EXPR_STMT@67..81
-          DOT_EXPR@67..81
+        EXPR_STMT@67..72
+          DOT_EXPR@67..72
             PATH_EXPR@67..71
               PATH@67..71
                 PATH_SEGMENT@67..71
                   NAME_REF@67..71
                     IDENT@67..71 "self"
             DOT@71..72 "."
-            WHITESPACE@72..81 "\n        "
-            FIELD_REF@81..81
+        WHITESPACE@72..81 "\n        "
         LET_STMT@81..91
           LET_KW@81..84 "let"
           WHITESPACE@84..85 " "

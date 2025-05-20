@@ -52,7 +52,7 @@ fn add_field_completion_items(
     }
 
     let (file_id, adt_item) = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(ctx.db)?.unpack();
-    let named_fields = adt_item.field_ref_lookup_fields();
+    let named_fields = adt_item.named_fields();
     let ty_lowering = TyLowering::new(ctx.db, ctx.msl);
     for named_field in named_fields {
         let name = named_field.field_name().as_string();

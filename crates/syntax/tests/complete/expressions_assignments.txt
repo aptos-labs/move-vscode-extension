@@ -89,9 +89,8 @@ SOURCE_FILE@0..185
                       NAME_REF@101..102
                         IDENT@101..102 "a"
                 DOT@102..103 "."
-                FIELD_REF@103..104
-                  NAME_REF@103..104
-                    IDENT@103..104 "b"
+                NAME_REF@103..104
+                  IDENT@103..104 "b"
             WHITESPACE@104..105 " "
             EQ@105..106 "="
             WHITESPACE@106..107 " "

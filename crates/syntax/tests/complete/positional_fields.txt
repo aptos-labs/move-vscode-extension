@@ -299,9 +299,8 @@ SOURCE_FILE@0..445
                   NAME_REF@379..380
                     IDENT@379..380 "x"
             DOT@380..381 "."
-            FIELD_REF@381..382
-              INDEX_REF@381..382
-                INT_NUMBER@381..382 "0"
+            NAME_REF@381..382
+              INT_NUMBER@381..382 "0"
           SEMICOLON@382..383 ";"
         WHITESPACE@383..392 "\n        "
         LET_STMT@392..406

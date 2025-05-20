@@ -81,9 +81,8 @@ SOURCE_FILE@0..418
                       IDENT@166..181 "aptos_framework"
               R_PAREN@181..182 ")"
           DOT@182..183 "."
-          FIELD_REF@183..195
-            NAME_REF@183..195
-              IDENT@183..195 "microseconds"
+          NAME_REF@183..195
+            IDENT@183..195 "microseconds"
         WHITESPACE@195..200 "\n    "
         R_CURLY@200..201 "}"
     WHITESPACE@201..207 "\n\n    "

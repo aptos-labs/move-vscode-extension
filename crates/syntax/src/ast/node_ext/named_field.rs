@@ -20,16 +20,3 @@ impl ast::NamedField {
             .expect("`name` is required to be present for ast::NamedField")
     }
 }
-
-pub trait FilterNamedFieldsByName {
-    fn filter_fields_by_name(&self, name: &str) -> Vec<ast::NamedField>;
-}
-
-impl FilterNamedFieldsByName for Vec<ast::NamedField> {
-    fn filter_fields_by_name(&self, name: &str) -> Vec<ast::NamedField> {
-        self.iter()
-            .filter(|it| it.field_name().as_string() == name)
-            .map(|it| it.to_owned())
-            .collect()
-    }
-}

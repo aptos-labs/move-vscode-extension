@@ -243,9 +243,8 @@ SOURCE_FILE@0..1295
                             IDENT@434..435 "a"
                   R_PAREN@435..436 ")"
               DOT@436..437 "."
-              FIELD_REF@437..442
-                NAME_REF@437..442
-                  IDENT@437..442 "value"
+              NAME_REF@437..442
+                IDENT@437..442 "value"
             WHITESPACE@442..443 " "
             L_ANGLE@443..444 "<"
             WHITESPACE@444..445 " "
