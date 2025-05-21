@@ -6,7 +6,7 @@ use lang::nameres::scope::VecExt;
 use lang::types::ty::Ty;
 use syntax::ast::ReferenceElement;
 use syntax::ast::idents::PRIMITIVE_TYPES;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};

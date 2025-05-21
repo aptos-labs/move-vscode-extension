@@ -909,6 +909,7 @@ dependencies = [
  "base-db",
  "enumset",
  "itertools",
+ "regex",
  "salsa",
  "salsa-macros",
  "stdx",

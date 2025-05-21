@@ -2,7 +2,7 @@ use crate::completions::item_list::ItemListKind;
 use crate::context::{COMPLETION_MARKER, CompletionAnalysis, ReferenceKind};
 use syntax::SyntaxKind::{DOT_EXPR, FUN, MODULE, PATH, SOURCE_FILE, VISIBILITY_MODIFIER};
 use syntax::algo::find_node_at_offset;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::{AstNode, SyntaxNode, SyntaxToken, TextSize, ast};
 

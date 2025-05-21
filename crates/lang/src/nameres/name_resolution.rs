@@ -16,7 +16,7 @@ use std::fmt::Formatter;
 use syntax::SyntaxKind;
 use syntax::SyntaxKind::MODULE_SPEC;
 use syntax::ast::ReferenceElement;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{InFile, InFileExt, InFileVecExt};
 use syntax::{AstNode, SyntaxNode, ast};
 

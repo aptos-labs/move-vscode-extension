@@ -5,7 +5,7 @@ use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryListExt, VecExt
 use crate::node_ext::item::ModuleItemExt;
 use base_db::SourceDatabase;
 use syntax::ast;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::{FieldsOwner, ReferenceElement};
 use syntax::files::{InFile, InFileExt};

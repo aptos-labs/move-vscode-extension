@@ -12,7 +12,7 @@ use base_db::source_db;
 use ide_db::RootDatabase;
 use ide_db::assists::AssistResolveStrategy;
 use lang::Semantics;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{FileRange, InFileExt};
 use syntax::{AstNode, ast, match_ast};
 use vfs::FileId;

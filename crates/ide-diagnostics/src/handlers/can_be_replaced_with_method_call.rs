@@ -8,7 +8,7 @@ use lang::types::has_type_params_ext::GenericItemExt;
 use lang::types::inference::TyVarIndex;
 use lang::types::substitution::ApplySubstitution;
 use syntax::ast::ReferenceElement;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::syntax_factory::SyntaxFactory;
 use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, ast};
