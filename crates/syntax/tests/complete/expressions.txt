@@ -164,29 +164,29 @@ SOURCE_FILE@0..540
         EXPR_STMT@264..279
           PAREN_EXPR@264..278
             L_PAREN@264..265 "("
-            BIN_EXPR@265..277
-              PATH_EXPR@265..266
-                PATH@265..266
-                  PATH_SEGMENT@265..266
-                    NAME_REF@265..266
-                      IDENT@265..266 "a"
-              WHITESPACE@266..267 " "
-              STAR@267..268 "*"
-              WHITESPACE@268..269 " "
-              CAST_EXPR@269..277
+            CAST_EXPR@265..277
+              BIN_EXPR@265..270
+                PATH_EXPR@265..266
+                  PATH@265..266
+                    PATH_SEGMENT@265..266
+                      NAME_REF@265..266
+                        IDENT@265..266 "a"
+                WHITESPACE@266..267 " "
+                STAR@267..268 "*"
+                WHITESPACE@268..269 " "
                 PATH_EXPR@269..270
                   PATH@269..270
                     PATH_SEGMENT@269..270
                       NAME_REF@269..270
                         IDENT@269..270 "b"
-                WHITESPACE@270..271 " "
-                AS_KW@271..273 "as"
-                WHITESPACE@273..274 " "
-                PATH_TYPE@274..277
-                  PATH@274..277
-                    PATH_SEGMENT@274..277
-                      NAME_REF@274..277
-                        IDENT@274..277 "u64"
+              WHITESPACE@270..271 " "
+              AS_KW@271..273 "as"
+              WHITESPACE@273..274 " "
+              PATH_TYPE@274..277
+                PATH@274..277
+                  PATH_SEGMENT@274..277
+                    NAME_REF@274..277
+                      IDENT@274..277 "u64"
             R_PAREN@277..278 ")"
           SEMICOLON@278..279 ";"
         WHITESPACE@279..289 "\n\n        "
