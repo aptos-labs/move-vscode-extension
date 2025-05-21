@@ -5,7 +5,7 @@ use crate::lsp::utils::Progress;
 use crate::main_loop::Task;
 use crate::op_queue::Cause;
 use crate::{Config, lsp_ext};
-use base_db::change::DepGraph;
+use base_db::change::PackageGraph;
 use lsp_types::FileSystemWatcher;
 use project_model::aptos_package::AptosPackage;
 use project_model::aptos_package::load_from_fs::load_aptos_packages;
@@ -319,24 +319,6 @@ impl GlobalState {
 
         self.process_pending_file_changes();
         self.reload_flycheck();
-    }
-
-    #[tracing::instrument(level = "info", skip(self))]
-    fn collect_dep_graph(&mut self) -> Option<DepGraph> {
-        let mut global_dep_graph = DepGraph::default();
-
-        let vfs = &self.vfs.read().0;
-        let mut load = |path: &AbsPath| {
-            vfs.file_id(&vfs::VfsPath::from(path.to_path_buf()))
-                .map(|it| it.0)
-        };
-
-        for package in self.all_packages.iter() {
-            let (package_file_id, dep_ids) = package.dep_graph_entry(&mut load)?;
-            global_dep_graph.insert(package_file_id, dep_ids);
-        }
-
-        Some(global_dep_graph)
     }
 
     pub(super) fn fetch_workspace_error(&self) -> Result<(), String> {

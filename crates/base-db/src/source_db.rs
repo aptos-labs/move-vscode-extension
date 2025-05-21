@@ -1,4 +1,4 @@
-use crate::inputs::{DepPackagesInput, FileIdInput, FileIdSet, FileText, PackageRootInput};
+use crate::inputs::{FileIdInput, FileIdSet, FileText, PackageData, PackageIdSet, PackageRootInput};
 use crate::package_root::{PackageId, PackageRoot};
 use salsa::Durability;
 use std::cell::RefCell;
@@ -35,13 +35,15 @@ pub trait SourceDatabase: salsa::Database {
 
     fn set_builtins_file_id(&mut self, id: Option<FileId>);
 
-    fn dep_package_ids(&self, package_id: PackageId) -> DepPackagesInput;
+    fn dep_package_ids(&self, package_id: PackageId) -> PackageData;
 
     fn set_dep_package_ids(&mut self, package_id: PackageId, dep_ids: Vec<PackageId>);
 
     fn spec_related_files(&self, file_id: FileId) -> FileIdSet;
 
     fn set_spec_related_files(&mut self, file_id: FileId, file_set: Vec<FileId>);
+
+    fn all_package_ids(&self) -> PackageIdSet;
 }
 
 /// Parses the file into the syntax tree.

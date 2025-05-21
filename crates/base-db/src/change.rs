@@ -7,7 +7,7 @@ use std::sync::Arc;
 use vfs::FileId;
 
 pub type PackageFileId = FileId;
-pub type DepGraph = HashMap<PackageFileId, Vec<PackageFileId>>;
+pub type PackageGraph = HashMap<PackageFileId, Vec<PackageFileId>>;
 
 /// Encapsulate a bunch of raw `.set` calls on the database.
 #[derive(Default)]
@@ -40,7 +40,7 @@ impl FileChanges {
         self.package_roots = Some(package_roots);
     }
 
-    pub fn set_package_graph(&mut self, package_graph: DepGraph) {
+    pub fn set_package_graph(&mut self, package_graph: PackageGraph) {
         self.package_graph = Some(package_graph);
     }
 

@@ -28,6 +28,11 @@ pub struct FileIdSet {
 }
 
 #[salsa::input]
+pub struct PackageIdSet {
+    pub data: Vec<PackageId>,
+}
+
+#[salsa::input]
 pub struct FileText {
     pub text: Arc<str>,
     pub file_id: FileId,
@@ -39,8 +44,9 @@ pub struct PackageRootInput {
 }
 
 #[salsa::input]
-pub struct DepPackagesInput {
-    pub data: Arc<Vec<PackageId>>,
+pub struct PackageData {
+    // todo: add package name
+    pub deps: Arc<Vec<PackageId>>,
 }
 
 #[derive(Default)]
@@ -49,7 +55,7 @@ pub struct Files {
     file_package_ids: Arc<DashMap<FileId, PackageId>>,
 
     package_roots: Arc<DashMap<PackageId, PackageRootInput>>,
-    package_deps: Arc<DashMap<PackageId, DepPackagesInput>>,
+    package_deps: Arc<DashMap<PackageId, PackageData>>,
 
     spec_file_sets: Arc<DashMap<FileId, FileIdSet>>,
 }
@@ -132,7 +138,7 @@ impl Files {
         self.file_package_ids.insert(file_id, package_id);
     }
 
-    pub fn package_deps(&self, package_id: PackageId) -> DepPackagesInput {
+    pub fn package_deps(&self, package_id: PackageId) -> PackageData {
         let package_deps = self
             .package_deps
             .get(&package_id)
@@ -148,10 +154,10 @@ impl Files {
     ) {
         match self.package_deps.entry(package_id) {
             Entry::Occupied(mut occupied) => {
-                occupied.get_mut().set_data(db).to(deps);
+                occupied.get_mut().set_deps(db).to(deps);
             }
             Entry::Vacant(vacant) => {
-                let deps = DepPackagesInput::builder(deps).new(db);
+                let deps = PackageData::builder(deps).new(db);
                 vacant.insert(deps);
             }
         };
@@ -180,5 +186,14 @@ impl Files {
                 vacant.insert(file_set);
             }
         };
+    }
+
+    pub fn package_ids(&self, db: &dyn SourceDatabase) -> PackageIdSet {
+        let package_ids = self
+            .package_roots
+            .iter()
+            .map(|it| it.key().clone())
+            .collect::<Vec<_>>();
+        PackageIdSet::new(db, package_ids)
     }
 }

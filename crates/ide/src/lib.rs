@@ -58,6 +58,10 @@ impl AnalysisHost {
         AnalysisHost { db: RootDatabase::new() }
     }
 
+    pub fn with_database(db: RootDatabase) -> AnalysisHost {
+        AnalysisHost { db }
+    }
+
     /// Returns a snapshot of the current state, which you can query for
     /// semantic information.
     pub fn analysis(&self) -> Analysis {
@@ -75,6 +79,9 @@ impl AnalysisHost {
     }
     pub fn raw_database(&self) -> &RootDatabase {
         &self.db
+    }
+    pub fn raw_database_mut(&mut self) -> &mut RootDatabase {
+        &mut self.db
     }
 }
 
