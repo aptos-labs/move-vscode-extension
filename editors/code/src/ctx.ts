@@ -181,6 +181,7 @@ export class Ctx {
             const newEnv = Object.assign({}, process.env, this.config.serverExtraEnv);
             const run: lc.Executable = {
                 command: this._serverPath,
+                args: ["lsp-server"],
                 options: { env: newEnv },
             };
             const serverOptions: lc.ServerOptions = {

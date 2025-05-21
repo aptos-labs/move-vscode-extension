@@ -416,7 +416,7 @@
         "test": "vscode-test"
     },
     "dependencies": {
-        "@vscode/vsce": "^3.3.2",
+        "@vscode/vsce": "=3.3.2",
         "command-exists": "^1.2.9",
         "vscode-languageclient": "^9.0.1"
     },

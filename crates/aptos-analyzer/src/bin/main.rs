@@ -3,6 +3,7 @@
 use std::{env, fs, path::PathBuf, process::ExitCode, sync::Arc};
 
 use anyhow::Context;
+use aptos_analyzer::cli::{AptosAnalyzerCmd, CliArgs};
 use aptos_analyzer::{Config, ConfigChange, ConfigErrors, from_json};
 use clap::Parser;
 use lsp_server::Connection;
@@ -10,38 +11,39 @@ use paths::Utf8PathBuf;
 use tracing_subscriber::fmt::writer::BoxMakeWriter;
 use vfs::AbsPathBuf;
 
-#[derive(Parser)]
-struct Cli {
-    #[arg(long)]
-    pub version: bool,
-
-    /// Log to the specified file instead of stderr.
-    #[arg(long)]
-    pub log_file: Option<PathBuf>,
-}
-
 fn main() -> anyhow::Result<ExitCode> {
-    let args = Cli::parse();
+    let args = CliArgs::parse();
 
     if let Err(e) = setup_logging(args.log_file.clone()) {
         eprintln!("Failed to setup logging: {e:#}");
     }
 
-    'lsp_server: {
-        if args.version {
-            println!("aptos-analyzer {}", aptos_analyzer::version());
-            break 'lsp_server;
+    match args.subcommand {
+        None => {
+            if args.version {
+                println!("aptos-analyzer {}", aptos_analyzer::version());
+            }
         }
+        Some(AptosAnalyzerCmd::LspServer) => 'lsp_server: {
+            if args.version {
+                println!("aptos-analyzer {}", aptos_analyzer::version());
+                break 'lsp_server;
+            }
 
-        // rust-analyzer’s “main thread” is actually
-        // a secondary latency-sensitive thread with an increased stack size.
-        // We use this thread intent because any delay in the main loop
-        // will make actions like hitting enter in the editor slow.
-        with_extra_thread(
-            "LspServer",
-            stdx::thread::ThreadIntent::LatencySensitive,
-            run_server,
-        )?;
+            // rust-analyzer’s “main thread” is actually
+            // a secondary latency-sensitive thread with an increased stack size.
+            // We use this thread intent because any delay in the main loop
+            // will make actions like hitting enter in the editor slow.
+            with_extra_thread(
+                "LspServer",
+                stdx::thread::ThreadIntent::LatencySensitive,
+                run_server,
+            )?;
+        }
+        Some(AptosAnalyzerCmd::Diagnostics(cmd)) => {
+            let exit_code = cmd.run()?;
+            return Ok(exit_code);
+        }
     }
 
     Ok(ExitCode::SUCCESS)

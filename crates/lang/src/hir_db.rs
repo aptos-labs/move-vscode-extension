@@ -138,7 +138,7 @@ fn file_ids_by_module_address_tracked<'db>(
 
 #[salsa_macros::tracked]
 fn all_package_file_ids(db: &dyn SourceDatabase, package_id: PackageId) -> Vec<FileId> {
-    let dep_ids = db.dep_package_ids(package_id).data(db).deref().to_owned();
+    let dep_ids = db.dep_package_ids(package_id).deps(db).deref().to_owned();
     tracing::debug!(
         package_id = ?package_id.root_dir(db),
         dep_ids = ?package_ids_to_names(db, &dep_ids)

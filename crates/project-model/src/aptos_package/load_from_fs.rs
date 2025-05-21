@@ -7,16 +7,24 @@ use paths::AbsPathBuf;
 use std::collections::{HashMap, HashSet};
 use std::fs;
 
-type PackageEntriesWithErrors =
-    HashMap<ManifestPath, anyhow::Result<(PackageKind, Vec<(ManifestPath, PackageKind)>)>>;
-type PackageEntries = HashMap<ManifestPath, (PackageKind, Vec<(ManifestPath, PackageKind)>)>;
+// #[derive(Debug, Clone)]
+// pub struct PackageEntry(pub PackageKind, pub Vec<(ManifestPath, PackageKind)>);
+
+#[derive(Debug, Clone)]
+pub struct PackageEntry {
+    kind: PackageKind,
+    deps: Vec<(ManifestPath, PackageKind)>,
+}
+
+type PackageEntriesWithErrors = HashMap<ManifestPath, anyhow::Result<PackageEntry>>;
+type PackageEntries = HashMap<ManifestPath, PackageEntry>;
 
 pub fn load_aptos_packages(manifests: Vec<DiscoveredManifest>) -> Vec<anyhow::Result<AptosPackage>> {
     let mut visited_package_roots = HashSet::new();
     let mut dedup = vec![];
     for manifest in manifests {
         let manifest_path = ManifestPath::new(manifest.move_toml_file.to_path_buf());
-        let packages = load_all_packages(&manifest_path, manifest.resolve_deps);
+        let packages = load_reachable_aptos_packages(&manifest_path, manifest.resolve_deps);
         for package in packages {
             if let Ok(package) = &package {
                 if visited_package_roots.contains(&package.content_root) {
@@ -28,16 +36,15 @@ pub fn load_aptos_packages(manifests: Vec<DiscoveredManifest>) -> Vec<anyhow::Re
         }
     }
     dedup
-    // manifests.into_iter().flat_map(|it| {}).collect::<Vec<_>>()
 }
 
-fn load_all_packages(
+fn load_reachable_aptos_packages(
     starting_manifest: &ManifestPath,
     resolve_deps: bool,
 ) -> Vec<anyhow::Result<AptosPackage>> {
     let mut package_entries_with_errors = HashMap::new();
     let mut visited_manifests = HashSet::new();
-    load_entries(
+    load_package_entries(
         &mut package_entries_with_errors,
         starting_manifest.clone(),
         PackageKind::Local,
@@ -47,12 +54,12 @@ fn load_all_packages(
 
     let entries = package_entries_with_errors
         .iter()
-        .filter_map(|(k, v)| {
-            if !v.is_ok() {
+        .filter_map(|(k, entry)| {
+            if !entry.is_ok() {
                 return None;
             }
-            let value = v.as_ref().unwrap().to_owned();
-            Some((k.clone(), value))
+            let package_entry = entry.as_ref().cloned().unwrap();
+            Some((k.clone(), package_entry))
         })
         .collect::<HashMap<_, _>>();
 
@@ -62,7 +69,7 @@ fn load_all_packages(
             Err(err) => {
                 packages.push(Err(err));
             }
-            Ok((kind, deps)) => {
+            Ok(PackageEntry { kind, deps }) => {
                 let mut transitive_deps = vec![];
                 let mut visited_manifests = HashSet::new();
                 visited_manifests.insert(manifest.clone());
@@ -87,7 +94,7 @@ fn load_all_packages(
 fn collect_transitive_deps(
     current_dep: (ManifestPath, PackageKind),
     transitive_deps: &mut Vec<(ManifestPath, PackageKind)>,
-    package_entries: &PackageEntries,
+    package_entries: &HashMap<ManifestPath, PackageEntry>,
     visited_manifests: &mut HashSet<ManifestPath>,
 ) {
     if visited_manifests.contains(&current_dep.0) {
@@ -96,32 +103,17 @@ fn collect_transitive_deps(
     visited_manifests.insert(current_dep.0.clone());
 
     transitive_deps.push(current_dep.clone());
-    let Some((_, deps)) = package_entries.get(&current_dep.0) else {
+    let Some(PackageEntry { deps, .. }) = package_entries.get(&current_dep.0) else {
         tracing::error!("cannot collect deps due to aptos package loading error");
         return;
     };
     for dep in deps {
         collect_transitive_deps(dep.clone(), transitive_deps, package_entries, visited_manifests);
     }
-    // match res {
-    //     Ok((_, deps)) => {
-    //         for dep in deps {
-    //             collect_transitive_deps(
-    //                 dep.clone(),
-    //                 transitive_deps,
-    //                 package_entries,
-    //                 visited_manifests,
-    //             );
-    //         }
-    //     }
-    //     Err(_) => {
-    //         tracing::error!("cannot collect deps due to aptos package loading error");
-    //     }
-    // }
 }
 
 /// reads package and dependencies, collect all (Root, Vec<Root>, SourcedFrom) for all the reachable packages
-fn load_entries(
+fn load_package_entries(
     entries: &mut PackageEntriesWithErrors,
     manifest_path: ManifestPath,
     kind: PackageKind,
@@ -136,9 +128,15 @@ fn load_entries(
     if resolve_deps {
         match read_dependencies(&manifest_path, kind) {
             Ok(dep_manifests) => {
-                entries.insert(manifest_path, Ok((kind, dep_manifests.clone())));
+                entries.insert(
+                    manifest_path,
+                    Ok(PackageEntry {
+                        kind,
+                        deps: dep_manifests.clone(),
+                    }),
+                );
                 for (dep_manifest, dep_kind) in dep_manifests.clone() {
-                    load_entries(entries, dep_manifest, dep_kind, visited_manifests, true);
+                    load_package_entries(entries, dep_manifest, dep_kind, visited_manifests, true);
                 }
             }
             Err(err) => {
@@ -146,7 +144,7 @@ fn load_entries(
             }
         }
     } else {
-        entries.insert(manifest_path, Ok((kind, vec![])));
+        entries.insert(manifest_path, Ok(PackageEntry { kind, deps: vec![] }));
     }
 }
 

@@ -1,6 +1,6 @@
 use base_db::SourceDatabase;
 use base_db::inputs::{
-    DepPackagesInput, FileIdInput, FileIdSet, FileText, Files, InternFileId, PackageRootInput,
+    FileIdInput, FileIdSet, FileText, Files, InternFileId, PackageData, PackageIdSet, PackageRootInput,
 };
 use base_db::package_root::{PackageId, PackageRoot};
 use line_index::LineIndex;
@@ -98,7 +98,7 @@ impl SourceDatabase for RootDatabase {
         self.builtins_file_id = file_id.map(|it| it.intern(self));
     }
 
-    fn dep_package_ids(&self, package_id: PackageId) -> DepPackagesInput {
+    fn dep_package_ids(&self, package_id: PackageId) -> PackageData {
         self.files.package_deps(package_id)
     }
 
@@ -114,6 +114,10 @@ impl SourceDatabase for RootDatabase {
     fn set_spec_related_files(&mut self, file_id: FileId, file_set: Vec<FileId>) {
         let files = Arc::clone(&self.files);
         files.set_spec_related_files(self, file_id, file_set)
+    }
+
+    fn all_package_ids(&self) -> PackageIdSet {
+        self.files.package_ids(self)
     }
 }
 
