@@ -4,8 +4,8 @@ use crate::nameres::name_resolution::get_entries_from_walking_scopes;
 use crate::nameres::namespaces::NAMES;
 use crate::nameres::path_resolution::get_method_resolve_variants;
 use crate::nameres::scope::{ScopeEntryExt, ScopeEntryListExt, VecExt};
-use crate::node_ext::any_field_ext;
 use crate::node_ext::item_spec::ItemSpecExt;
+use crate::node_ext::{any_field_ext, item_spec};
 use crate::types::expectation::Expected;
 use crate::types::inference::{InferenceCtx, TypeError};
 use crate::types::patterns::{BindingMode, anonymous_pat_ty_var};
@@ -16,9 +16,11 @@ use crate::types::ty::range_like::TySequence;
 use crate::types::ty::reference::{Mutability, autoborrow};
 use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar};
+use regex::Regex;
 use std::iter;
 use std::ops::Deref;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
+use std::sync::LazyLock;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::{FieldsOwner, HasStmts};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, IntoNodeOrToken, ast};
@@ -404,6 +406,12 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
     fn infer_path_expr(&mut self, path_expr: &ast::PathExpr, expected: Expected) -> Option<Ty> {
         use syntax::SyntaxKind::*;
+
+        if self.ctx.msl && path_expr.syntax().text().to_string().starts_with("result") {
+            if let Some(result_ty) = self.infer_path_expr_for_msl_result(&path_expr) {
+                return Some(result_ty);
+            }
+        }
 
         let expected_ty = expected.ty(self.ctx);
         let named_element = self.ctx.resolve_cached(path_expr.path(), expected_ty)?;
@@ -1274,7 +1282,34 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
         }
     }
+
+    fn infer_path_expr_for_msl_result(&mut self, path_expr: &ast::PathExpr) -> Option<Ty> {
+        // check if the parent is item spec of function, then retrieve it's return type
+        let item_spec_fun =
+            item_spec::get_item_spec_function(self.ctx.db, path_expr.in_file(self.ctx.file_id))?;
+        let result_ty = item_spec_fun
+            .and_then(|it| it.return_type())
+            .map(|t| self.ctx.ty_lowering().lower_type(t))
+            .unwrap_or(Ty::Unit);
+        let path_expr_text = path_expr.syntax().text().to_string();
+        if path_expr_text == "result" {
+            self.ctx
+                .expr_types
+                .insert(path_expr.clone().into(), result_ty.clone());
+            return Some(result_ty);
+        }
+
+        let (_, [index]) = TUPLE_RESULT_REGEX.captures(&path_expr_text)?.extract();
+        let tuple_index = index.parse::<usize>().unwrap();
+        let member_ty = result_ty
+            .into_ty_tuple()
+            .and_then(|ty_tuple| ty_tuple.types.get(tuple_index - 1).cloned());
+
+        Some(member_ty.unwrap_or(Ty::Unknown))
+    }
 }
+
+static TUPLE_RESULT_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^result_([1-9])$").unwrap());
 
 enum CallArg {
     Self_ { self_ty: Ty },

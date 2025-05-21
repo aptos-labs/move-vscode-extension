@@ -1,7 +1,8 @@
 use crate::nameres::ResolveReference;
 use base_db::SourceDatabase;
-use syntax::ast;
-use syntax::files::InFile;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::files::{InFile, InFileExt};
+use syntax::{AstNode, ast};
 
 pub trait ItemSpecExt {
     fn item(&self, db: &dyn SourceDatabase) -> Option<InFile<ast::Item>>;
@@ -13,4 +14,18 @@ impl ItemSpecExt for InFile<ast::ItemSpec> {
         let resolved = item_spec_ref.resolve(db)?;
         resolved.cast_into::<ast::Item>(db)
     }
+}
+
+pub(crate) fn get_item_spec_function(
+    db: &dyn SourceDatabase,
+    result_path_expr: InFile<&ast::PathExpr>,
+) -> Option<InFile<ast::Fun>> {
+    let (file_id, path_expr) = result_path_expr.unpack();
+    let item_spec = path_expr
+        .syntax()
+        .inference_ctx_owner()
+        .and_then(|it| it.syntax().cast::<ast::ItemSpec>())?;
+
+    let item = item_spec.in_file(file_id).item(db)?;
+    item.cast_into::<ast::Fun>()
 }

@@ -1,6 +1,6 @@
 use ide_db::RootDatabase;
 use lang::Semantics;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{FilePosition, InFileExt};
 use syntax::{AstNode, algo, ast};
 

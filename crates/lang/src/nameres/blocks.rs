@@ -1,7 +1,7 @@
 use crate::nameres::scope::{NamedItemsExt, ScopeEntry};
 use stdx::itertools::Itertools;
 use syntax::ast::HasStmts;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileVecExt};
 use syntax::{AstNode, SyntaxNode, ast};

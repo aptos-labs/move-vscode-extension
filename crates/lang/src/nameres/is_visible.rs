@@ -6,7 +6,7 @@ use crate::nameres::namespaces::{Ns, TYPES_N_ENUMS};
 use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::ModuleLangExt;
 use base_db::SourceDatabase;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::visibility::{Vis, VisLevel};
 use syntax::ast::{HasAttrs, HasVisibility, ReferenceElement};

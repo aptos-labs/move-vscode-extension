@@ -1659,7 +1659,6 @@ fn test_type_check_function_param_in_func_spec() {
     "#]]);
 }
 
-// todo
 #[test]
 fn test_type_check_function_result_in_func_spec() {
     // language=Move
@@ -1668,6 +1667,7 @@ fn test_type_check_function_result_in_func_spec() {
             fun call(): bool { true }
             spec call {
                 result + 1;
+              //^^^^^^ err: Invalid argument to '+': expected integer type, but found 'bool'
             }
         }
     "#]]);

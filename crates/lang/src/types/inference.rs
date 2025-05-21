@@ -217,7 +217,7 @@ impl<'db> InferenceCtx<'db> {
         path_ty
     }
 
-    pub fn ty_lowering(&mut self) -> TyLowering<'db> {
+    pub fn ty_lowering(&self) -> TyLowering<'db> {
         TyLowering::new(self.db, self.msl)
     }
 

@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::io::Read;
 
-use crate::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
+use crate::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 pub use docs::HoverDocsOwner;
 pub use has_item_list::HasItems;
 pub use has_use_stmts::HasUseStmts;

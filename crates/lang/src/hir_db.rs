@@ -17,7 +17,7 @@ use base_db::{SourceDatabase, source_db};
 use std::iter;
 use std::ops::Deref;
 use std::sync::Arc;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
@@ -104,9 +104,8 @@ pub trait NodeInferenceExt {
 
 impl<T: AstNode> NodeInferenceExt for InFile<T> {
     fn inference(&self, db: &dyn SourceDatabase, msl: bool) -> Option<Arc<InferenceResult>> {
-        let ctx_owner =
-            self.and_then_ref(|it| it.syntax().ancestor_or_self::<ast::InferenceCtxOwner>())?;
-        let inference = hir_db::inference(db, ctx_owner, msl);
+        let ctx_owner = self.and_then_ref(|it| it.syntax().inference_ctx_owner())?;
+        let inference = inference(db, ctx_owner, msl);
         Some(inference)
     }
 }

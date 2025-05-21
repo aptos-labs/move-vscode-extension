@@ -8,7 +8,7 @@ use base_db::source_db;
 use ide_db::RootDatabase;
 use lang::Semantics;
 use syntax::SyntaxKind::*;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxNodeExt;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::FilePosition;
 use syntax::{AstNode, SyntaxToken, T, TextRange, ast};
 
