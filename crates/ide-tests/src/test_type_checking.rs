@@ -2160,3 +2160,15 @@ fn test_for_each_vector_fold() {
         }
     "#]]);
 }
+
+#[test]
+fn test_no_error_for_cast_expr_precedence() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                (1u8 + 2u8 as u16);
+            }
+        }
+    "#]]);
+}

@@ -1,0 +1,71 @@
+SOURCE_FILE@0..104
+  MODULE@0..103
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..32
+      IDENT@12..32 "cast_expr_precedence"
+    WHITESPACE@32..33 " "
+    L_CURLY@33..34 "{"
+    WHITESPACE@34..39 "\n    "
+    FUN@39..101
+      FUN_KW@39..42 "fun"
+      WHITESPACE@42..43 " "
+      NAME@43..47
+        IDENT@43..47 "main"
+      PARAM_LIST@47..49
+        L_PAREN@47..48 "("
+        R_PAREN@48..49 ")"
+      WHITESPACE@49..50 " "
+      BLOCK_EXPR@50..101
+        L_CURLY@50..51 "{"
+        WHITESPACE@51..60 "\n        "
+        EXPR_STMT@60..72
+          CAST_EXPR@60..71
+            BIN_EXPR@60..65
+              LITERAL@60..61
+                INT_NUMBER@60..61 "1"
+              WHITESPACE@61..62 " "
+              SLASH@62..63 "/"
+              WHITESPACE@63..64 " "
+              LITERAL@64..65
+                INT_NUMBER@64..65 "2"
+            WHITESPACE@65..66 " "
+            AS_KW@66..68 "as"
+            WHITESPACE@68..69 " "
+            PATH_TYPE@69..71
+              PATH@69..71
+                PATH_SEGMENT@69..71
+                  NAME_REF@69..71
+                    IDENT@69..71 "u8"
+          SEMICOLON@71..72 ";"
+        WHITESPACE@72..81 "\n        "
+        EXPR_STMT@81..95
+          PAREN_EXPR@81..94
+            L_PAREN@81..82 "("
+            CAST_EXPR@82..93
+              BIN_EXPR@82..87
+                LITERAL@82..83
+                  INT_NUMBER@82..83 "1"
+                WHITESPACE@83..84 " "
+                SLASH@84..85 "/"
+                WHITESPACE@85..86 " "
+                LITERAL@86..87
+                  INT_NUMBER@86..87 "2"
+              WHITESPACE@87..88 " "
+              AS_KW@88..90 "as"
+              WHITESPACE@90..91 " "
+              PATH_TYPE@91..93
+                PATH@91..93
+                  PATH_SEGMENT@91..93
+                    NAME_REF@91..93
+                      IDENT@91..93 "u8"
+            R_PAREN@93..94 ")"
+          SEMICOLON@94..95 ";"
+        WHITESPACE@95..100 "\n    "
+        R_CURLY@100..101 "}"
+    WHITESPACE@101..102 "\n"
+    R_CURLY@102..103 "}"
+  WHITESPACE@103..104 "\n"

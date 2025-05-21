@@ -54,23 +54,23 @@ SOURCE_FILE@0..150
           SEMICOLON@73..74 ";"
         WHITESPACE@74..83 "\n        "
         EXPR_STMT@83..95
-          BIN_EXPR@83..94
-            LITERAL@83..84
-              INT_NUMBER@83..84 "1"
-            WHITESPACE@84..85 " "
-            PLUS@85..86 "+"
-            WHITESPACE@86..87 " "
-            CAST_EXPR@87..94
+          CAST_EXPR@83..94
+            BIN_EXPR@83..88
+              LITERAL@83..84
+                INT_NUMBER@83..84 "1"
+              WHITESPACE@84..85 " "
+              PLUS@85..86 "+"
+              WHITESPACE@86..87 " "
               LITERAL@87..88
                 INT_NUMBER@87..88 "1"
-              WHITESPACE@88..89 " "
-              AS_KW@89..91 "as"
-              WHITESPACE@91..92 " "
-              PATH_TYPE@92..94
-                PATH@92..94
-                  PATH_SEGMENT@92..94
-                    NAME_REF@92..94
-                      IDENT@92..94 "u8"
+            WHITESPACE@88..89 " "
+            AS_KW@89..91 "as"
+            WHITESPACE@91..92 " "
+            PATH_TYPE@92..94
+              PATH@92..94
+                PATH_SEGMENT@92..94
+                  NAME_REF@92..94
+                    IDENT@92..94 "u8"
           SEMICOLON@94..95 ";"
         WHITESPACE@95..104 "\n        "
         EXPR_STMT@104..118
