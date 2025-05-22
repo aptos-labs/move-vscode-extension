@@ -5,20 +5,18 @@ use crate::lsp::utils::Progress;
 use crate::main_loop::Task;
 use crate::op_queue::Cause;
 use crate::{Config, lsp_ext};
-use base_db::change::{FileChanges, PackageGraph};
+use base_db::change::FileChanges;
 use lsp_types::FileSystemWatcher;
-use project_model::aptos_package::{AptosPackage, VfsLoader, load_from_fs};
-use project_model::dep_graph;
+use project_model::aptos_package::{AptosPackage, load_from_fs};
 use project_model::dep_graph::collect;
 use project_model::project_folders::ProjectFolders;
 use std::fmt::Formatter;
 use std::sync::Arc;
-use std::time::Duration;
-use std::{fmt, mem, thread};
+use std::{fmt, mem};
 use stdx::format_to;
 use stdx::thread::ThreadIntent;
 use vfs::AbsPath;
-use vfs::loader::{Handle, LoadingProgress};
+use vfs::loader::Handle;
 
 #[derive(Debug)]
 pub(crate) enum FetchPackagesProgress {

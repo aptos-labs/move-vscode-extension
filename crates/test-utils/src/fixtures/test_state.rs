@@ -2,14 +2,14 @@ use crate::fixtures::parse_files_from_source;
 use base_db::change::FileChanges;
 use ide::{Analysis, AnalysisHost};
 use lang::builtins_file;
+use project_model::DiscoveredManifest;
 use project_model::aptos_package::AptosPackage;
 use project_model::aptos_package::load_from_fs::load_aptos_packages;
 use project_model::dep_graph::collect;
 use project_model::project_folders::ProjectFolders;
-use project_model::{DiscoveredManifest, dep_graph};
 use std::fs;
 use std::path::PathBuf;
-use stdx::itertools::{Itertools, fold};
+use stdx::itertools::Itertools;
 use vfs::{AbsPath, AbsPathBuf, FileId, Vfs, VfsPath};
 
 pub fn from_multiple_files_on_tmpfs(test_packages: Vec<TestPackageFiles>) -> TestState {

@@ -1,13 +1,12 @@
-use crate::Config;
-use crate::global_state::GlobalState;
-use camino::Utf8PathBuf;
-use lsp_server::{Connection, RequestId};
-use lsp_types::WindowClientCapabilities;
-use lsp_types::request::Request;
-use paths::AbsPathBuf;
-
 #[test]
 fn test_run_main_loop() -> anyhow::Result<()> {
+    use crate::Config;
+    use crate::global_state::GlobalState;
+    use camino::Utf8PathBuf;
+    use lsp_server::Connection;
+    use lsp_types::WindowClientCapabilities;
+    use paths::AbsPathBuf;
+
     test_utils::tracing::init_tracing_for_test();
 
     let (connection, io_threads) = Connection::stdio();
@@ -25,7 +24,7 @@ fn test_run_main_loop() -> anyhow::Result<()> {
     let mut config = Config::new(package_root.clone(), capabilities, vec![package_root]);
     config.rediscover_packages();
 
-    let mut global_state = GlobalState::new(connection.sender.clone(), config);
+    let global_state = GlobalState::new(connection.sender.clone(), config);
     {
         let vfs = &global_state.vfs.read().0;
         dbg!(vfs.iter().collect::<Vec<_>>());
