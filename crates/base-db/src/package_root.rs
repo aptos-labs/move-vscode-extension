@@ -1,7 +1,7 @@
 use vfs::file_set::FileSet;
 use vfs::{FileId, VfsPath};
 
-#[salsa_macros::interned(no_lifetime)]
+#[salsa_macros::interned(no_lifetime, debug)]
 pub struct PackageId {
     pub idx: u32,
     pub root_dir: Option<String>,

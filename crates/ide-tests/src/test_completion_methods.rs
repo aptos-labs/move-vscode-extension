@@ -1,4 +1,4 @@
-use crate::test_utils::completion_utils::do_single_completion;
+use crate::ide_test_utils::completion_utils::do_single_completion;
 use expect_test::expect;
 
 #[test]

@@ -35,7 +35,7 @@ impl GlobalState {
 
         if needs_to_refresh_packages {
             let _p = tracing::info_span!("GlobalState::process_changes/ws_structure_change").entered();
-            self.fetch_packages_queue.request_op(
+            self.fetch_packages_from_fs_queue.request_op(
                 "workspace vfs file change".to_string(),
                 FetchPackagesRequest { force_reload_deps: true },
             );

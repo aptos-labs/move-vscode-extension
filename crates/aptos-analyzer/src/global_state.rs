@@ -28,7 +28,7 @@ pub(crate) struct FetchPackagesRequest {
 }
 
 pub(crate) struct FetchPackagesResponse {
-    pub(crate) discovered_packages: Vec<anyhow::Result<AptosPackage>>,
+    pub(crate) packages_from_fs: Vec<anyhow::Result<AptosPackage>>,
     pub(crate) force_reload_deps: bool,
 }
 
@@ -73,7 +73,7 @@ pub(crate) struct GlobalState {
     pub(crate) last_flycheck_error: Option<String>,
 
     // VFS
-    pub(crate) loader: Handle<Box<dyn vfs::loader::Handle>, Receiver<vfs::loader::Message>>,
+    pub(crate) vfs_loader: Handle<Box<vfs_notify::NotifyHandle>, Receiver<vfs::loader::Message>>,
     pub(crate) vfs: Arc<RwLock<(vfs::Vfs, HashMap<FileId, LineEndings>)>>,
     pub(crate) vfs_config_version: u32,
     pub(crate) vfs_progress_config_version: u32,
@@ -81,11 +81,11 @@ pub(crate) struct GlobalState {
     // used to track how long VFS loading takes. this can't be on `vfs::loader::Handle`,
     // as that handle's lifetime is the same as `GlobalState` itself.
     pub(crate) vfs_span: Option<tracing::span::EnteredSpan>,
-    pub(crate) reason_to_switch: Option<Cause>,
+    pub(crate) reason_to_refresh: Option<Cause>,
 
     pub(crate) all_packages: Arc<Vec<AptosPackage>>,
     // op queues
-    pub(crate) fetch_packages_queue: OpQueue<FetchPackagesRequest, FetchPackagesResponse>,
+    pub(crate) fetch_packages_from_fs_queue: OpQueue<FetchPackagesRequest, FetchPackagesResponse>,
 }
 
 /// An immutable snapshot of the world's state at a point in time.
@@ -103,11 +103,13 @@ impl std::panic::UnwindSafe for GlobalStateSnapshot {}
 
 impl GlobalState {
     pub(crate) fn new(sender: Sender<lsp_server::Message>, config: Config) -> GlobalState {
-        let loader = {
+        let vfs_loader = {
             let (sender, receiver) = unbounded::<vfs::loader::Message>();
-            let handle: vfs_notify::NotifyHandle = vfs::loader::Handle::spawn(sender);
-            let handle = Box::new(handle) as Box<dyn vfs::loader::Handle>;
-            Handle { handle, receiver }
+            let handle = vfs::loader::Handle::spawn(sender);
+            Handle {
+                handle: Box::new(handle),
+                receiver,
+            }
         };
 
         let num_threads = config.main_loop_num_threads();
@@ -156,16 +158,16 @@ impl GlobalState {
             flycheck_receiver,
             last_flycheck_error: None,
 
-            loader,
+            vfs_loader,
             vfs,
             vfs_config_version: 0,
             vfs_progress_config_version: 0,
             vfs_done: true,
             vfs_span: None,
-            reason_to_switch: None,
+            reason_to_refresh: None,
 
             all_packages: Arc::from(Vec::new()),
-            fetch_packages_queue: OpQueue::default(),
+            fetch_packages_from_fs_queue: OpQueue::default(),
         };
         // Apply any required database inputs from the config.
         this.update_configuration(config);

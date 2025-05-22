@@ -14,6 +14,7 @@ use base_db::SourceDatabase;
 use crossbeam_channel::Receiver;
 use lsp_server::Connection;
 use lsp_types::notification::Notification;
+use paths::AbsPathBuf;
 use std::fmt;
 use std::ops::Div;
 use std::panic::AssertUnwindSafe;
@@ -132,20 +133,19 @@ impl fmt::Display for Task {
 }
 
 impl GlobalState {
-    fn run(mut self, inbox: Receiver<lsp_server::Message>) -> anyhow::Result<()> {
+    pub(crate) fn run(mut self, inbox: Receiver<lsp_server::Message>) -> anyhow::Result<()> {
         tracing::info!("starting GlobalState");
 
         self.update_status_or_notify();
 
-        // todo: we might not need this first fetch_packages()
-        self.fetch_packages_queue.request_op(
+        self.fetch_packages_from_fs_queue.request_op(
             "on startup".to_owned(),
             FetchPackagesRequest { force_reload_deps: false },
         );
         if let Some((cause, FetchPackagesRequest { force_reload_deps })) =
-            self.fetch_packages_queue.should_start_op()
+            self.fetch_packages_from_fs_queue.should_start_op()
         {
-            self.fetch_packages(cause, force_reload_deps);
+            self.fetch_packages_from_fs(cause, force_reload_deps);
         }
 
         while let Ok(event) = self.next_event(&inbox) {
@@ -157,6 +157,7 @@ impl GlobalState {
                 Event::Lsp(lsp_server::Message::Notification(lsp_server::Notification { method, .. }))
                 if method == lsp_types::notification::Exit::METHOD
             ) {
+                tracing::info!("received exit notification");
                 return Ok(());
             }
             self.handle_event(event);
@@ -186,7 +187,7 @@ impl GlobalState {
             recv(self.fmt_pool.receiver) -> task =>
                 task.map(Event::Task),
 
-            recv(self.loader.receiver) -> task =>
+            recv(self.vfs_loader.receiver) -> task =>
                 task.map(Event::Vfs),
 
             recv(self.flycheck_receiver) -> task =>
@@ -197,10 +198,10 @@ impl GlobalState {
 
     fn handle_event(&mut self, event: Event) {
         let loop_start = Instant::now();
-        let _p = tracing::info_span!("GlobalState::handle_event", event = %event).entered();
+        let _p = tracing::info_span!("GlobalState::handle_event", %event).entered();
 
         let event_dbg_msg = format!("{event:?}");
-        tracing::debug!(/*?loop_start, */ ?event, "handle_event");
+        // tracing::debug!(?event, "handle_event");
         if tracing::enabled!(Level::DEBUG) {
             let task_queue_len = self.task_pool.handle.len();
             if task_queue_len > 0 {
@@ -227,7 +228,7 @@ impl GlobalState {
                 let _p = tracing::info_span!("GlobalState::handle_event/vfs").entered();
                 self.handle_vfs_msg(message);
                 // Coalesce many VFS event into a single loop turn
-                while let Ok(message) = self.loader.receiver.try_recv() {
+                while let Ok(message) = self.vfs_loader.receiver.try_recv() {
                     self.handle_vfs_msg(message);
                 }
             }
@@ -243,8 +244,8 @@ impl GlobalState {
         let event_handling_duration = loop_start.elapsed();
 
         let (state_changed, memdocs_added_or_removed) = if self.vfs_done {
-            if let Some(cause) = self.reason_to_switch.take() {
-                self.switch_workspaces(cause);
+            if let Some(cause) = self.reason_to_refresh.take() {
+                self.switch_packages(cause);
             }
             (self.process_pending_file_changes(), self.mem_docs.take_changes())
         } else {
@@ -317,9 +318,9 @@ impl GlobalState {
                 FetchPackagesRequest {
                     force_reload_deps: force_crate_graph_reload,
                 },
-            )) = self.fetch_packages_queue.should_start_op()
+            )) = self.fetch_packages_from_fs_queue.should_start_op()
             {
-                self.fetch_packages(cause, force_crate_graph_reload);
+                self.fetch_packages_from_fs(cause, force_crate_graph_reload);
             }
         }
 
@@ -380,7 +381,7 @@ impl GlobalState {
                     // Do not fetch semantic diagnostics (and populate query results) if we haven't even
                     // loaded the initial workspace yet.
                     let fetch_semantic =
-                        self.vfs_done && self.fetch_packages_queue.last_op_result().is_some();
+                        self.vfs_done && self.fetch_packages_from_fs_queue.last_op_result().is_some();
                     move |sender| {
                         // We aren't observing the semantics token cache here
                         let snapshot = AssertUnwindSafe(&snapshot);
@@ -432,7 +433,7 @@ impl GlobalState {
                 (status.health, &status.message)
             {
                 let open_log_button =
-                    tracing::enabled!(Level::ERROR) && self.fetch_workspace_error().is_err();
+                    tracing::enabled!(Level::ERROR) && self.fetch_packages_error().is_err();
                 self.show_message(
                     match health {
                         lsp_ext::Health::Ok => lsp_types::MessageType::INFO,
@@ -447,6 +448,7 @@ impl GlobalState {
     }
 
     fn handle_task(&mut self, task: Task) {
+        let _p = tracing::info_span!("GlobalState::handle_task", task = %task).entered();
         match task {
             Task::Response(response) => self.respond(response),
             // Only retry requests that haven't been cancelled. Otherwise we do unnecessary work.
@@ -459,16 +461,16 @@ impl GlobalState {
                 let (state, msg) = match progress {
                     FetchPackagesProgress::Begin => (Progress::Begin, None),
                     FetchPackagesProgress::Report(msg) => (Progress::Report, Some(msg)),
-                    FetchPackagesProgress::End(discovered_packages, force_reload_deps) => {
-                        let resp = FetchPackagesResponse {
-                            discovered_packages,
-                            force_reload_deps,
-                        };
-                        self.fetch_packages_queue.op_completed(resp);
-                        if let Err(e) = self.fetch_workspace_error() {
-                            tracing::error!("FetchWorkspaceError: {e}");
+                    FetchPackagesProgress::End(packages_from_fs, force_reload_deps) => {
+                        self.fetch_packages_from_fs_queue
+                            .op_completed(FetchPackagesResponse {
+                                packages_from_fs,
+                                force_reload_deps,
+                            });
+                        if let Err(fetch_err) = self.fetch_packages_error() {
+                            tracing::error!("FetchWorkspaceError: {fetch_err}");
                         }
-                        self.reason_to_switch = Some("fetched packages".to_owned());
+                        self.reason_to_refresh = Some("fetched packages from fs".to_owned());
                         self.diagnostics.clear_check_all();
                         (Progress::End, None)
                     }
@@ -481,19 +483,14 @@ impl GlobalState {
 
     fn handle_vfs_msg(&mut self, message: vfs::loader::Message) {
         let _p = tracing::info_span!("GlobalState::handle_vfs_msg").entered();
-        let is_changed = matches!(message, vfs::loader::Message::Changed { .. });
         match message {
-            vfs::loader::Message::Changed { files } | vfs::loader::Message::Loaded { files } => {
-                let _p = tracing::info_span!("GlobalState::handle_vfs_msg{changed/load}").entered();
-                let vfs = &mut self.vfs.write().0;
-                for (path, contents) in files {
-                    let path = VfsPath::from(path);
-                    // if the file is in mem docs, it's managed by the client via notifications
-                    // so only set it if its not in there
-                    if !self.mem_docs.contains(&path) && (is_changed || vfs.file_id(&path).is_none()) {
-                        vfs.set_file_contents(path, contents);
-                    }
-                }
+            vfs::loader::Message::Loaded { files } => {
+                let _p = tracing::info_span!("GlobalState::handle_vfs_msg{loaded}").entered();
+                self.load_files_into_vfs(files, false);
+            }
+            vfs::loader::Message::Changed { files } => {
+                let _p = tracing::info_span!("GlobalState::handle_vfs_msg{changed}").entered();
+                self.load_files_into_vfs(files, true);
             }
             vfs::loader::Message::Progress {
                 n_total,
@@ -537,6 +534,19 @@ impl GlobalState {
                     Some(Progress::fraction(n_done, n_total)),
                     None,
                 );
+            }
+        }
+    }
+
+    fn load_files_into_vfs(&mut self, files: Vec<(AbsPathBuf, Option<Vec<u8>>)>, is_changed: bool) {
+        tracing::info!("load files into vfs, n_files = {}", files.len());
+        let vfs = &mut self.vfs.write().0;
+        for (path, contents) in files {
+            let path = VfsPath::from(path);
+            // if the file is in mem docs, it's managed by the client via notifications
+            // so only set it if its not in there
+            if !self.mem_docs.contains(&path) && (is_changed || vfs.file_id(&path).is_none()) {
+                vfs.set_file_contents(path, contents);
             }
         }
     }

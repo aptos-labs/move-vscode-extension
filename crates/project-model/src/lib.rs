@@ -1,6 +1,7 @@
 use anyhow::{Context, bail};
 use paths::AbsPathBuf;
 use std::fs;
+use std::path::Display;
 use std::process::Command;
 
 pub mod aptos_package;
@@ -25,6 +26,13 @@ impl DiscoveredManifest {
         all_manifests.sort();
         all_manifests.dedup();
         all_manifests
+    }
+
+    pub fn display_root(&self) -> String {
+        self.move_toml_file
+            .parent()
+            .map(|it| it.to_string())
+            .expect("Move.toml file should have a parent")
     }
 }
 

@@ -4,12 +4,13 @@ use ide::{Analysis, AnalysisHost};
 use lang::builtins_file;
 use project_model::aptos_package::AptosPackage;
 use project_model::aptos_package::load_from_fs::load_aptos_packages;
+use project_model::dep_graph::collect;
 use project_model::project_folders::ProjectFolders;
 use project_model::{DiscoveredManifest, dep_graph};
 use std::fs;
 use std::path::PathBuf;
-use stdx::itertools::Itertools;
-use vfs::{AbsPathBuf, FileId, Vfs, VfsPath};
+use stdx::itertools::{Itertools, fold};
+use vfs::{AbsPath, AbsPathBuf, FileId, Vfs, VfsPath};
 
 pub fn from_multiple_files_on_tmpfs(test_packages: Vec<TestPackageFiles>) -> TestState {
     let tmp = tempdir::TempDir::new("aptos_analyzer_tests").unwrap();
@@ -50,9 +51,28 @@ pub fn from_multiple_files_on_tmpfs(test_packages: Vec<TestPackageFiles>) -> Tes
         .collect::<Vec<_>>();
 
     let folders = ProjectFolders::new(&all_packages);
-    let dep_graph_change =
-        dep_graph::reload_graph(&vfs, &all_packages, &folders.package_root_config).unwrap();
-    analysis_host.apply_change(dep_graph_change);
+
+    let mut load = |path: &AbsPath| {
+        tracing::debug!(?path, "load from vfs");
+        vfs.file_id(&vfs::VfsPath::from(path.to_path_buf()))
+            .map(|it| it.0)
+    };
+    let package_graph = collect(&all_packages, &mut load).unwrap();
+
+    let mut change = FileChanges::new();
+    {
+        let package_roots = folders.package_root_config.partition_into_package_roots(&vfs);
+        change.set_package_roots(package_roots);
+        // depends on roots being available
+        change.set_package_graph(package_graph);
+    }
+    analysis_host.apply_change(change);
+
+    // let dep_graph_change = change
+    // Some(change)
+
+    // let dep_graph_change =
+    //     dep_graph::reload_graph(&vfs, &all_packages, &folders.package_root_config, &mut load).unwrap();
 
     TestState {
         packages: all_packages,

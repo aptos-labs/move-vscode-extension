@@ -1,4 +1,4 @@
-use crate::test_utils::diagnostics::{check_diagnostics, check_diagnostics_and_fix};
+use crate::ide_test_utils::diagnostics::{check_diagnostics, check_diagnostics_and_fix};
 use expect_test::expect;
 
 #[test]

@@ -16,6 +16,7 @@ use std::ops::Not;
 use std::sync::Arc;
 use stdx::itertools::Itertools;
 use vfs::VfsPath;
+use vfs::loader::Handle;
 
 #[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_cancel(state: &mut GlobalState, params: CancelParams) -> anyhow::Result<()> {
@@ -122,7 +123,7 @@ pub(crate) fn handle_did_close_text_document(
         // state.semantic_tokens_cache.lock().remove(&params.text_document.uri);
 
         if let Some(path) = path.as_path() {
-            state.loader.handle.invalidate(path.to_path_buf());
+            state.vfs_loader.handle.invalidate(path.to_path_buf());
         }
     }
     Ok(())
@@ -141,7 +142,7 @@ pub(crate) fn handle_did_save_text_document(
             if reload::should_refresh_for_file_change(
                 path, /*, ChangeKind::Modify, additional_files*/
             ) {
-                state.fetch_packages_queue.request_op(
+                state.fetch_packages_from_fs_queue.request_op(
                     format!("workspace vfs file change saved {path}"),
                     FetchPackagesRequest { force_reload_deps: false },
                 );
@@ -238,7 +239,7 @@ pub(crate) fn handle_did_change_workspace_folders(
 
     let req = FetchPackagesRequest { force_reload_deps: false };
     state
-        .fetch_packages_queue
+        .fetch_packages_from_fs_queue
         .request_op("client workspaces changed".to_owned(), req);
 
     Ok(())
@@ -251,7 +252,7 @@ pub(crate) fn handle_did_change_watched_files(
 ) -> anyhow::Result<()> {
     for change in params.changes.iter().unique_by(|&it| &it.uri) {
         if let Ok(path) = from_proto::abs_path(&change.uri) {
-            state.loader.handle.invalidate(path);
+            state.vfs_loader.handle.invalidate(path);
         }
     }
     Ok(())

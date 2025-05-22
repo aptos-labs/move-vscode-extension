@@ -47,8 +47,11 @@ lang = { path = "../lang" }
 ide = { path = "../ide" }
 project-model = { path = "../project-model" }
 
+test-utils = { path = "../test-utils" }
+
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = [
     "Win32_System_Diagnostics_Debug",
     "Win32_System_Threading",
 ] }
+

@@ -1,8 +1,8 @@
 use crate::aptos_package::{AptosPackage, PackageFolderRoot};
 use base_db::package_root::PackageRoot;
+use paths::Utf8PathBuf;
 use std::fmt;
 use std::fmt::Formatter;
-use std::path::PathBuf;
 use vfs::VfsPath;
 use vfs::file_set::FileSetConfig;
 
@@ -17,7 +17,7 @@ impl PackageRootConfig {
         let package_file_sets = self.fsc.partition(vfs);
         let mut package_roots = vec![];
         for (idx, package_file_set) in package_file_sets.into_iter().enumerate() {
-            let root_dir = self.package_dir(idx);
+            let root_dir = self.root_dir_name(idx);
             let is_local = self.local_filesets.contains(&(idx as u64));
             let package_root = if is_local {
                 PackageRoot::new_local(package_file_set, root_dir)
@@ -29,22 +29,29 @@ impl PackageRootConfig {
         package_roots
     }
 
-    fn package_dir(&self, idx: usize) -> Option<String> {
-        let root_bytes = self.fsc.roots().get(idx)?.0.clone();
-        let root = String::from_utf8(root_bytes)
-            .ok()?
-            .trim_start_matches("\0")
-            .to_string();
-        PathBuf::from(root)
-            .file_name()
-            .map(|it| it.to_string_lossy().to_string())
+    fn roots(&self) -> Vec<String> {
+        self.fsc
+            .roots()
+            .iter()
+            .map(|(root_bytes, _)| {
+                String::from_utf8(root_bytes.to_owned())
+                    .unwrap()
+                    .trim_start_matches("\0")
+                    .to_string()
+            })
+            .collect()
+    }
+
+    fn root_dir_name(&self, idx: usize) -> Option<String> {
+        let root = self.roots().get(idx)?.clone();
+        Utf8PathBuf::from(root).file_name().map(|it| it.to_string())
     }
 }
 
 impl fmt::Debug for PackageRootConfig {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("PackageRootConfig")
-            .field("fsc", &self.fsc)
+            .field("roots", &self.roots())
             .finish()
     }
 }

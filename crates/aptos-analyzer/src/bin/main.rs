@@ -127,6 +127,32 @@ fn with_extra_thread(
 fn run_server() -> anyhow::Result<()> {
     tracing::info!("server version {} will start", aptos_analyzer::version());
 
+    let (connection, io_threads, mut config) = initialization_handshake()?;
+
+    config.rediscover_packages();
+
+    if !hide_init_params() {
+        tracing::info!("initial config: {:#?}", config);
+    }
+
+    // blocks
+    let main_loop_result = aptos_analyzer::main_loop(config, connection);
+
+    let io_threads_result = io_threads.join();
+    // If the io_threads have an error, there's usually an error on the main
+    // loop too because the channels are closed. Ensure we report both errors.
+    match (main_loop_result, io_threads_result) {
+        (Err(loop_e), Err(join_e)) => anyhow::bail!("{loop_e}\n{join_e}"),
+        (Ok(_), Err(join_e)) => anyhow::bail!("{join_e}"),
+        (Err(loop_e), Ok(_)) => anyhow::bail!("{loop_e}"),
+        (Ok(_), Ok(_)) => {}
+    }
+
+    tracing::info!("server did shut down");
+    Ok(())
+}
+
+fn initialization_handshake() -> anyhow::Result<(Connection, lsp_server::IoThreads, Config)> {
     let (connection, io_threads) = Connection::stdio();
 
     let (initialize_id, initialize_params) = match connection.initialize_start() {
@@ -145,11 +171,12 @@ fn run_server() -> anyhow::Result<()> {
             "LSP initialization params are hidden. To show them, unset \"APT_LOG_HIDE_INIT_PARAMS\" environment variable.",
         )
     }
-
     if !hide_log_init_params {
         tracing::info!("InitializeParams: {}", initialize_params);
     }
 
+    let initialize_params =
+        from_json::<lsp_types::InitializeParams>("InitializeParams", &initialize_params)?;
     let lsp_types::InitializeParams {
         root_uri,
         capabilities,
@@ -157,7 +184,15 @@ fn run_server() -> anyhow::Result<()> {
         initialization_options,
         client_info,
         ..
-    } = from_json::<lsp_types::InitializeParams>("InitializeParams", &initialize_params)?;
+    } = initialize_params;
+
+    if let Some(client_info) = &client_info {
+        tracing::info!(
+            "Client '{}' {}",
+            client_info.name,
+            client_info.version.as_deref().unwrap_or_default()
+        );
+    }
 
     let root_path = match root_uri
         .and_then(|it| it.to_file_path().ok())
@@ -171,14 +206,6 @@ fn run_server() -> anyhow::Result<()> {
             AbsPathBuf::assert_utf8(cwd)
         }
     };
-
-    if let Some(client_info) = &client_info {
-        tracing::info!(
-            "Client '{}' {}",
-            client_info.name,
-            client_info.version.as_deref().unwrap_or_default()
-        );
-    }
 
     let workspace_roots = workspace_folders
         .map(|workspace_folders| {
@@ -241,23 +268,11 @@ fn run_server() -> anyhow::Result<()> {
         return Err(e.into());
     }
 
-    config.rediscover_packages();
+    Ok((connection, io_threads, config))
+}
 
-    if !hide_log_init_params {
-        tracing::info!("initial config: {:#?}", config);
-    }
-
-    // If the io_threads have an error, there's usually an error on the main
-    // loop too because the channels are closed. Ensure we report both errors.
-    match (aptos_analyzer::main_loop(config, connection), io_threads.join()) {
-        (Err(loop_e), Err(join_e)) => anyhow::bail!("{loop_e}\n{join_e}"),
-        (Ok(_), Err(join_e)) => anyhow::bail!("{join_e}"),
-        (Err(loop_e), Ok(_)) => anyhow::bail!("{loop_e}"),
-        (Ok(_), Ok(_)) => {}
-    }
-
-    tracing::info!("server did shut down");
-    Ok(())
+fn hide_init_params() -> bool {
+    env::var("APT_LOG_HIDE_INIT_PARAMS").is_ok()
 }
 
 fn patch_path_prefix(path: PathBuf) -> PathBuf {
