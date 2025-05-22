@@ -1,7 +1,5 @@
-use std::cmp::{max, min};
-use std::io::Write;
 use std::path::Path;
-use std::{env, fs, io, panic, thread};
+use std::{env, fs, panic};
 use syntax::{AstNode, SourceFile};
 use test_utils::{apply_error_marks, fixtures, ErrorMark};
 

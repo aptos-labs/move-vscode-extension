@@ -1,7 +1,7 @@
 mod diagnostics;
 
 use crate::cli::diagnostics::Diagnostics;
-use clap::{Args, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
 #[derive(Debug, Parser)]

@@ -3,7 +3,7 @@ pub mod tracing;
 
 use line_index::{LineCol, LineIndex};
 use regex::Regex;
-use std::cmp::{max, min};
+use std::cmp::max;
 use std::iter;
 use syntax::{TextRange, TextSize};
 
@@ -62,7 +62,7 @@ fn error_mark_line(line_index: &LineIndex, mark: ErrorMark) -> (u32, String) {
     let lc_start = line_index.line_col(text_range.start());
     let lc_end = line_index.line_col(text_range.end());
 
-    let mut start_col = lc_start.col;
+    let start_col = lc_start.col;
     let end_col = lc_end.col;
     let message = mark.message;
 

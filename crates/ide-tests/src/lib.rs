@@ -1,9 +1,5 @@
 #![cfg(test)]
 
-use tracing_subscriber::Layer;
-use tracing_subscriber::layer::SubscriberExt;
-use tracing_subscriber::util::SubscriberInitExt;
-
 mod fold;
 mod hover;
 mod ide_test_utils;

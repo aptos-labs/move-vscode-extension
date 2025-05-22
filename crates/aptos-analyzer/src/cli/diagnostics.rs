@@ -1,6 +1,6 @@
 use base_db::SourceDatabase;
 use base_db::change::FileChanges;
-use clap::{Args, Parser};
+use clap::Args;
 use crossbeam_channel::unbounded;
 use ide::AnalysisHost;
 use ide_db::assists::AssistResolveStrategy;
@@ -46,7 +46,7 @@ impl Diagnostics {
             .filter_map(|it| it.ok())
             .collect::<Vec<_>>();
 
-        let (db, mut vfs) = load_packages_into_vfs(&all_packages)?;
+        let (db, vfs) = load_packages_into_vfs(&all_packages)?;
 
         let host = AnalysisHost::with_database(db);
         let db = host.raw_database();

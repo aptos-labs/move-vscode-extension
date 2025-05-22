@@ -1,7 +1,6 @@
 use anyhow::{Context, bail};
 use paths::AbsPathBuf;
 use std::fs;
-use std::path::Display;
 use std::process::Command;
 
 pub mod aptos_package;

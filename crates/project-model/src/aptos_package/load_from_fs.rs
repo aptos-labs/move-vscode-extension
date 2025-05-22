@@ -17,7 +17,6 @@ pub struct PackageEntry {
 }
 
 type PackageEntriesWithErrors = HashMap<ManifestPath, anyhow::Result<PackageEntry>>;
-type PackageEntries = HashMap<ManifestPath, PackageEntry>;
 
 pub fn load_aptos_packages(manifests: Vec<DiscoveredManifest>) -> Vec<anyhow::Result<AptosPackage>> {
     let mut visited_package_roots = HashSet::new();

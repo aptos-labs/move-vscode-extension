@@ -18,7 +18,6 @@ use base_db::SourceDatabase;
 use std::cell::Cell;
 use std::collections::HashMap;
 use std::hash::Hash;
-use syntax::SyntaxKind::*;
 use syntax::ast::FieldsOwner;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
