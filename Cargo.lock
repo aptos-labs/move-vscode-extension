@@ -110,6 +110,7 @@ dependencies = [
  "shellexpand",
  "stdx",
  "syntax",
+ "test-utils",
  "tracing",
  "tracing-subscriber",
  "tracing-tree",

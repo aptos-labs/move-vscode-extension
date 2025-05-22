@@ -9,6 +9,7 @@ mod reload;
 mod task_pool;
 mod version;
 
+mod _tests;
 pub mod cli;
 mod command;
 pub mod diagnostics;

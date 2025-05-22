@@ -1,19 +1,20 @@
 use crate::aptos_package::{AptosPackage, VfsLoader};
 use crate::project_folders::PackageRootConfig;
-use base_db::change::{FileChanges, PackageFileId, PackageGraph};
+use base_db::change::{FileChanges, MoveTomlFileId, PackageGraph};
 use paths::AbsPath;
 
 pub fn reload_graph(
     vfs: &vfs::Vfs,
     aptos_packages: &[AptosPackage],
     package_root_config: &PackageRootConfig,
+    load: VfsLoader<'_>,
 ) -> Option<FileChanges> {
-    let mut load = |path: &AbsPath| {
-        tracing::debug!(?path, "load from vfs");
-        vfs.file_id(&vfs::VfsPath::from(path.to_path_buf()))
-            .map(|it| it.0)
-    };
-    let package_graph = collect(aptos_packages, &mut load)?;
+    // let mut load = |path: &AbsPath| {
+    //     tracing::debug!(?path, "load from vfs");
+    //     vfs.file_id(&vfs::VfsPath::from(path.to_path_buf()))
+    //         .map(|it| it.0)
+    // };
+    let package_graph = collect(aptos_packages, load)?;
 
     let mut change = FileChanges::new();
     {
@@ -39,7 +40,7 @@ pub fn collect(aptos_packages: &[AptosPackage], load: VfsLoader<'_>) -> Option<P
 }
 
 impl AptosPackage {
-    pub fn dep_graph_entry(&self, load: VfsLoader<'_>) -> Option<(PackageFileId, Vec<PackageFileId>)> {
+    pub fn dep_graph_entry(&self, load: VfsLoader<'_>) -> Option<(MoveTomlFileId, Vec<MoveTomlFileId>)> {
         tracing::info!("reloading package at {}", self.content_root());
 
         let package_file_id = load_package_file_id(self.content_root(), load)?;
@@ -54,7 +55,7 @@ impl AptosPackage {
     }
 }
 
-fn load_package_file_id(dep_root: &AbsPath, load_from_vfs: VfsLoader<'_>) -> Option<PackageFileId> {
+fn load_package_file_id(dep_root: &AbsPath, load_from_vfs: VfsLoader<'_>) -> Option<MoveTomlFileId> {
     let move_toml_file = dep_root.join("Move.toml");
     match load_from_vfs(&move_toml_file) {
         Some(file_id) => Some(file_id),

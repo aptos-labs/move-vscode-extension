@@ -134,13 +134,13 @@ fn print_diagnostic(db: &RootDatabase, diagnostic: Diagnostic) {
 fn load_packages_into_vfs(packages: &[AptosPackage]) -> anyhow::Result<(RootDatabase, vfs::Vfs)> {
     let (sender, receiver) = unbounded();
     let mut vfs = vfs::Vfs::default();
-    let mut loader = {
+    let mut vfs_loader = {
         let loader = vfs_notify::NotifyHandle::spawn(sender);
         Box::new(loader)
     };
 
     let package_graph = dep_graph::collect(&packages, &mut |path: &AbsPath| {
-        let contents = loader.load_sync(path);
+        let contents = vfs_loader.load_sync(path);
         let path = vfs::VfsPath::from(path.to_path_buf());
         vfs.set_file_contents(path.clone(), contents);
         vfs.file_id(&path)
@@ -148,7 +148,8 @@ fn load_packages_into_vfs(packages: &[AptosPackage]) -> anyhow::Result<(RootData
     });
 
     let project_folders = ProjectFolders::new(&packages);
-    loader.set_config(vfs::loader::Config {
+    // sends `vfs::loader::message::Loaded { files }` events for project folders
+    vfs_loader.set_config(vfs::loader::Config {
         load: project_folders.load,
         watch: vec![],
         version: 0,

@@ -75,6 +75,10 @@ impl AptosPackage {
         self.content_root.as_path()
     }
 
+    pub fn display_root(&self) -> String {
+        self.content_root.to_string()
+    }
+
     pub fn dep_roots(&self) -> &[(AbsPathBuf, PackageKind)] {
         &self.transitive_dep_roots
     }
