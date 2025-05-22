@@ -197,7 +197,12 @@ impl InferenceCtx<'_> {
     }
 
     pub fn intersect_all_types(&mut self, types: Vec<Ty>) -> Ty {
-        types
+        // needs to handle TyUnknown properly in the combine_types() later
+        let resolved_types = types
+            .into_iter()
+            .map(|it| self.resolve_ty_vars_if_possible(it))
+            .collect::<Vec<_>>();
+        resolved_types
             .into_iter()
             .reduce(|acc, ty| self.intersect_types(acc, ty))
             .unwrap_or(Ty::Unknown)
@@ -209,9 +214,9 @@ impl InferenceCtx<'_> {
             (_, Ty::Never) => left_ty,
             (Ty::Unknown, _) => right_ty, // even if Ty::Unknown too
             _ => {
-                let is_ok = self.combine_types(left_ty.clone(), right_ty.clone()).is_ok()
+                let is_combinable = self.combine_types(left_ty.clone(), right_ty.clone()).is_ok()
                     || self.combine_types(right_ty.clone(), left_ty.clone()).is_ok();
-                if is_ok {
+                if is_combinable {
                     match (left_ty.clone(), right_ty) {
                         (Ty::Reference(left_ty_ref), Ty::Reference(right_ty_ref)) => {
                             let min_mut = left_ty_ref.mutability.intersect(right_ty_ref.mutability);
