@@ -70,11 +70,42 @@ To disable those, use:
 }
 ```
 
-### Flycheck
+### Diagnostics
+
+If there's any issue with missing go-to-definition, the "unresolved reference" diagnostic could be helpful:
+
+```
+    "aptos-analyzer.diagnostics.enableUnresolvedReference": true
+```
+
+Same for type checking:
+
+```
+    "aptos-analyzer.diagnostics.enableTypeChecking": true
+```
+
+### Formatting
+
+Specify a path to the `movefmt` executable and extra args (like a `--config-path`) if necessary:
+```json5
+{
+    "aptos-analyzer.movefmt.path": "~/code/movefmt/target/release/movefmt",
+    "aptos-analyzer.movefmt.extraArgs": [],
+}
+```
+
+Formatting on Save can be enabled in VSCode with 
+```json5
+{
+    "editor.formatOnSave": true,
+}
+```
+
+### Aptos Compiler check on Save
 
 Checks code in the editor after saving the document by running `aptos move compile`.
 
-To enable, specify in your `settings.json`: 
+To enable, specify in your `settings.json`:
 ```json5
 {
     "aptos-analyzer.checkOnSave": true,
@@ -96,22 +127,6 @@ To run `aptos move lint` instead, specify custom `aptos move` command with:
     "aptos-analyzer.check.command": "lint",
 }
 ```
-
-### Diagnostics
-
-If there's any issue with missing go-to-definition, the "unresolved reference" diagnostic could be helpful:
-
-```
-    "aptos-analyzer.diagnostics.enableUnresolvedReference": true
-```
-
-Same for type checking:
-
-```
-    "aptos-analyzer.diagnostics.enableTypeChecking": true
-```
-
-They are disabled by default, as the underlying compiler frontend is still incomplete.
 
 ## Debugging
 
