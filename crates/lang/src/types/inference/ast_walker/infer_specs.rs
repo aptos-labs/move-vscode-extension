@@ -7,12 +7,25 @@ use crate::types::ty::schema::TySchema;
 use std::iter::zip;
 use syntax::ast;
 use syntax::ast::NamedElement;
+use syntax::ast::node_ext::spec_predicate_stmt::SpecPredicateKind;
 use syntax::files::{InFile, InFileExt};
 
 impl<'a, 'db> TypeAstWalker<'a, 'db> {
     pub(super) fn process_predicate_stmt(&mut self, predicate: &ast::SpecPredicateStmt) -> Option<()> {
         let expr = predicate.expr()?;
-        self.infer_expr_coerceable_to(&expr, Ty::Bool);
+        let kind = predicate.kind()?;
+        match kind {
+            SpecPredicateKind::Assume
+            | SpecPredicateKind::Assert
+            | SpecPredicateKind::Requires
+            | SpecPredicateKind::Ensures
+            | SpecPredicateKind::Decreases => {
+                self.infer_expr_coerceable_to(&expr, Ty::Bool);
+            }
+            SpecPredicateKind::Modifies => {
+                self.infer_expr(&expr, Expected::NoValue);
+            }
+        }
         Some(())
     }
 
