@@ -6,6 +6,7 @@ use anyhow::Context;
 use ide_db::text_edit::TextEdit;
 use lsp_server::ErrorCode;
 use lsp_types::TextDocumentIdentifier;
+use std::io::Write;
 use std::process::Stdio;
 use syntax::{TextRange, TextSize};
 
@@ -19,8 +20,6 @@ pub(crate) fn run_movefmt(
     let line_index = snap.file_line_index(file_id)?;
 
     // try to chdir to the file so we can respect `movefmt.toml`
-    // FIXME: use `rustfmt --config-path` once
-    // https://github.com/rust-lang/rustfmt/issues/4660 gets fixed
     let mut file_path = None;
     let current_dir = match text_document.uri.to_file_path() {
         Ok(mut path) => {
@@ -53,26 +52,25 @@ pub(crate) fn run_movefmt(
     };
 
     let mut command = toolchain::command(&movefmt_config.path, current_dir);
-    command.env("MOVEFMT_LOG", "error");
     command.arg("--quiet");
+    command.arg("--stdin");
     command.args(vec!["--emit", "stdout"]);
-    // if let Some(file_path) = file_path {
-    //     command.args(vec!["--file-path", file_path.to_str().unwrap()]);
-    // }
+
     command.args(movefmt_config.extra_args);
 
     let command_line = format!("{:?}", &command);
     let output = {
         let _p = tracing::info_span!("movefmt").entered();
         tracing::info!(?command);
-        let movefmt = command
+
+        let mut movefmt = command
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn()
             .context(format!("Failed to spawn {command:?}"))?;
 
-        // movefmt.stdin.as_mut().unwrap().write_all(file.as_bytes())?;
+        movefmt.stdin.as_mut().unwrap().write_all(file_text.as_bytes())?;
 
         movefmt.wait_with_output()?
     };
@@ -81,39 +79,25 @@ pub(crate) fn run_movefmt(
     let captured_stderr = String::from_utf8(output.stderr).unwrap_or_default();
 
     if !output.status.success() {
-        // let movefmt_not_installed =
-        //     captured_stderr.contains("not installed") || captured_stderr.contains("not available");
+        let stdout = strip_ansi_escapes::strip_str(&captured_stdout);
+        let stderr = strip_ansi_escapes::strip_str(&captured_stderr);
 
         return match output.status.code() {
-            // Some(1) /*if !movefmt_not_installed*/ => {
-            //     // While `rustfmt` doesn't have a specific exit code for parse errors this is the
-            //     // likely cause exiting with 1. Most Language Servers swallow parse errors on
-            //     // formatting because otherwise an error is surfaced to the user on top of the
-            //     // syntax error diagnostics they're already receiving. This is especially jarring
-            //     // if they have format on save enabled.
-            //     tracing::warn!(
-            //         ?command,
-            //         %captured_stderr,
-            //         "movefmt exited with status 1"
-            //     );
-            //     Ok(None)
-            // }
-            // rustfmt panicked at lexing/parsing the file
-            // Some(101)
-            //     if !movefmt_not_installed
-            //         && (captured_stderr.starts_with("error[")
-            //             || captured_stderr.starts_with("error:")) =>
-            // {
-            //     Ok(None)
-            // }
+            Some(1) if stdout.contains("a valid move code") => {
+                snap.show_message_to_client(
+                    lsp_types::MessageType::ERROR,
+                    "movefmt error: invalid syntax".to_string(),
+                );
+                Ok(None)
+            }
             _ => {
                 // Something else happened - e.g. `movefmt` is missing or caught a signal
                 let error_message = format!(
                     r#"movefmt exited with:
                            Status: {}
                            command: {command_line}
-                           stdout: {captured_stdout}
-                           stderr: {captured_stderr}"#,
+                           stdout: {stdout}
+                           stderr: {stderr}"#,
                     output.status,
                 );
                 Err(LspError::new(-32900, error_message).into())
@@ -131,19 +115,4 @@ pub(crate) fn run_movefmt(
             TextEdit::replace(TextRange::up_to(TextSize::of(&*file_text)), new_text),
         )))
     }
-    //
-    // if line_index.endings != new_line_endings {
-    //     // If line endings are different, send the entire file.
-    //     // Diffing would not work here, as the line endings might be the only
-    //     // difference.
-    //     Ok(Some(to_proto::text_edit_vec(
-    //         &line_index,
-    //         TextEdit::replace(TextRange::up_to(TextSize::of(&*file)), new_text),
-    //     )))
-    // } else if *file == new_text {
-    //     // The document is already formatted correctly -- no edits needed.
-    //     Ok(None)
-    // } else {
-    //     Ok(Some(to_proto::text_edit_vec(&line_index, diff(&file, &new_text))))
-    // }
 }
