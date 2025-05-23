@@ -2172,3 +2172,16 @@ fn test_no_error_for_cast_expr_precedence() {
         }
     "#]]);
 }
+
+#[test]
+fn test_modifies_expects_struct() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct Features has key { val: u8 }
+            spec module {
+                modifies global<Features>(@0x1);
+            }
+        }
+    "#]]);
+}
