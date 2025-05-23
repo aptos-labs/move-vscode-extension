@@ -1,0 +1,54 @@
+SOURCE_FILE@0..81
+  MODULE@0..80
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..32
+      IDENT@12..32 "cast_expr_assignment"
+    WHITESPACE@32..33 " "
+    L_CURLY@33..34 "{"
+    WHITESPACE@34..39 "\n    "
+    FUN@39..78
+      FUN_KW@39..42 "fun"
+      WHITESPACE@42..43 " "
+      NAME@43..47
+        IDENT@43..47 "main"
+      PARAM_LIST@47..49
+        L_PAREN@47..48 "("
+        R_PAREN@48..49 ")"
+      WHITESPACE@49..50 " "
+      BLOCK_EXPR@50..78
+        L_CURLY@50..51 "{"
+        WHITESPACE@51..60 "\n        "
+        EXPR_STMT@60..72
+          BIN_EXPR@60..71
+            PATH_EXPR@60..61
+              PATH@60..61
+                PATH_SEGMENT@60..61
+                  NAME_REF@60..61
+                    IDENT@60..61 "a"
+            WHITESPACE@61..62 " "
+            EQ@62..63 "="
+            WHITESPACE@63..64 " "
+            CAST_EXPR@64..71
+              PATH_EXPR@64..65
+                PATH@64..65
+                  PATH_SEGMENT@64..65
+                    NAME_REF@64..65
+                      IDENT@64..65 "a"
+              WHITESPACE@65..66 " "
+              AS_KW@66..68 "as"
+              WHITESPACE@68..69 " "
+              PATH_TYPE@69..71
+                PATH@69..71
+                  PATH_SEGMENT@69..71
+                    NAME_REF@69..71
+                      IDENT@69..71 "u8"
+          SEMICOLON@71..72 ";"
+        WHITESPACE@72..77 "\n    "
+        R_CURLY@77..78 "}"
+    WHITESPACE@78..79 "\n"
+    R_CURLY@79..80 "}"
+  WHITESPACE@80..81 "\n"

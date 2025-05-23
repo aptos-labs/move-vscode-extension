@@ -2185,3 +2185,16 @@ fn test_modifies_expects_struct() {
         }
     "#]]);
 }
+
+#[test]
+fn test_cast_happens_before_assignment() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                let a: u8 = 1;
+                a = 1u16 as u8;
+            }
+        }
+    "#]]);
+}
