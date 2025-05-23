@@ -146,6 +146,7 @@ fn print_diagnostic(db: &RootDatabase, file_path: &AbsPath, diagnostic: Diagnost
 
     let diagnostic = codespan_reporting::diagnostic::Diagnostic::new(severity)
         .with_label(Label::new(LabelStyle::Primary, file_id, range.range))
+        .with_code(code.as_str())
         .with_message(message);
 
     let term_config = term::Config::default();
