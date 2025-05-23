@@ -7,7 +7,7 @@ use codespan_reporting::term;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
 use crossbeam_channel::unbounded;
 use ide::{Analysis, AnalysisHost};
-use ide_db::assists::AssistResolveStrategy;
+use ide_db::assists::{Assist, AssistResolveStrategy};
 use ide_db::{RootDatabase, Severity, root_db};
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
@@ -17,12 +17,13 @@ use project_model::aptos_package::{AptosPackage, load_from_fs};
 use project_model::project_folders::ProjectFolders;
 use project_model::{DiscoveredManifest, dep_graph};
 use std::collections::HashSet;
+use std::fs;
 use std::io::stdout;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use stdx::itertools::Itertools;
-use vfs::FileId;
 use vfs::loader::{Handle, LoadingProgress};
+use vfs::{FileId, VfsPath};
 
 #[derive(Debug, Args)]
 pub struct Diagnostics {
@@ -34,6 +35,9 @@ pub struct Diagnostics {
 
     #[clap(long)]
     pub verbose: bool,
+
+    #[clap(long)]
+    pub fix: bool,
 }
 
 impl Diagnostics {
@@ -91,18 +95,14 @@ impl Diagnostics {
             .into_iter()
             .filter_map(|it| it.ok())
             .collect::<Vec<_>>();
-        let (db, vfs) = load_packages_into_vfs(&all_packages)?;
-
-        let host = AnalysisHost::with_database(db);
-        let db = host.raw_database();
-        let analysis = host.analysis();
+        let (mut db, mut vfs) = load_packages_into_vfs(&all_packages)?;
 
         let mut found_error = false;
         let mut visited_files: HashSet<FileId> = HashSet::default();
 
         let mut local_package_roots = vec![];
-        for package_id in db.all_package_ids().data(db) {
-            let package_root = db.package_root(package_id).data(db);
+        for package_id in db.all_package_ids().data(&db) {
+            let package_root = db.package_root(package_id).data(&db);
             let root_dir = package_root.root_dir.clone();
             if root_dir.is_some_and(|it| it.starts_with(&ws_root)) && !package_root.is_library {
                 local_package_roots.push(package_root);
@@ -130,7 +130,7 @@ impl Diagnostics {
             let file_ids = local_package_root.file_set.iter().collect::<Vec<_>>();
             for file_id in file_ids {
                 let package_name = local_package_root.root_dir_name().clone().unwrap_or("<error>");
-                let file_path = vfs.file_path(file_id);
+                let file_path = vfs.file_path(file_id).clone();
                 if !file_path
                     .name_and_extension()
                     .is_some_and(|(name, ext)| ext == Some("move"))
@@ -156,14 +156,47 @@ impl Diagnostics {
                             vfs.file_path(file_id)
                         );
                     }
-                    let file_path = vfs.file_path(file_id).as_path().unwrap();
+                    let abs_file_path = vfs.file_path(file_id).as_path().unwrap().to_path_buf();
 
-                    let diagnostics = find_diagnostics_for_a_file(&analysis, file_id, &diag_kinds);
-                    for diagnostic in diagnostics {
-                        if diagnostic.severity == Severity::Error {
-                            found_error = true;
+                    let diagnostics = find_diagnostics_for_a_file(&db, file_id, &diag_kinds);
+                    let file_text = db.file_text(file_id).text(&db);
+                    if !self.fix {
+                        for diagnostic in diagnostics.clone() {
+                            if diagnostic.severity == Severity::Error {
+                                found_error = true;
+                            }
+                            print_diagnostic(&file_text, &abs_file_path, diagnostic, false);
                         }
-                        print_diagnostic(db, file_path, diagnostic);
+                    }
+
+                    let mut diagnostics_with_fixes = diagnostics
+                        .into_iter()
+                        .filter(|diag| diag.fixes.as_ref().is_some_and(|it| !it.is_empty()))
+                        .collect::<Vec<_>>();
+                    if self.fix && !diagnostics_with_fixes.is_empty() {
+                        let mut file_text = file_text.to_string();
+                        loop {
+                            match apply_first_fix(
+                                &file_text,
+                                abs_file_path.as_path(),
+                                diagnostics_with_fixes,
+                            ) {
+                                Some(new_file_text) => {
+                                    db.set_file_text(file_id, &new_file_text);
+                                    vfs.set_file_contents(
+                                        file_path.to_owned(),
+                                        Some(new_file_text.clone().into_bytes()),
+                                    );
+                                    file_text = new_file_text;
+                                }
+                                None => {
+                                    fs::write(&abs_file_path, file_text)?;
+                                    break;
+                                }
+                            }
+                            diagnostics_with_fixes =
+                                find_diagnostics_for_a_file(&db, file_id, &diag_kinds);
+                        }
                     }
                 }
 
@@ -188,10 +221,11 @@ impl Diagnostics {
 }
 
 fn find_diagnostics_for_a_file(
-    analysis: &Analysis,
+    db: &RootDatabase,
     file_id: FileId,
     diag_kinds: &Option<Vec<Severity>>,
 ) -> Vec<Diagnostic> {
+    let analysis = Analysis::new(db.snapshot());
     let mut diagnostics = analysis
         .full_diagnostics(
             &DiagnosticsConfig::test_sample(),
@@ -208,12 +242,44 @@ fn find_diagnostics_for_a_file(
     diagnostics
 }
 
-fn print_diagnostic(db: &RootDatabase, file_path: &AbsPath, diagnostic: Diagnostic) {
+fn apply_first_fix(
+    file_text: &str,
+    file_path: &AbsPath,
+    diagnostics: Vec<Diagnostic>,
+) -> Option<String> {
+    for diagnostic in diagnostics {
+        let fixes = diagnostic.fixes.clone().unwrap_or_default();
+        if !fixes.is_empty() {
+            print_diagnostic(file_text, file_path, diagnostic, true);
+            let fix = fixes.first().unwrap();
+            let new_file_text = apply_fix(fix, file_text.as_ref());
+            return Some(new_file_text);
+        }
+    }
+    None
+}
+
+fn apply_fix(fix: &Assist, before: &str) -> String {
+    let source_change = fix.source_change.as_ref().unwrap();
+    let mut after = before.to_string();
+
+    for (edit, snippet_edit) in source_change.source_file_edits.values() {
+        edit.apply(&mut after);
+        if let Some(snippet_edit) = snippet_edit {
+            snippet_edit.apply(&mut after);
+        }
+    }
+
+    after
+}
+
+fn print_diagnostic(file_text: &str, file_path: &AbsPath, diagnostic: Diagnostic, show_fix: bool) {
     let Diagnostic {
         code,
         message,
         range,
         severity,
+        fixes,
         ..
     } = diagnostic;
 
@@ -225,19 +291,29 @@ fn print_diagnostic(db: &RootDatabase, file_path: &AbsPath, diagnostic: Diagnost
             return;
         }
     };
-    let file_text = db.file_text(range.file_id).text(db);
 
     let mut files = codespan_reporting::files::SimpleFiles::new();
-    let file_id = files.add(file_path.to_string(), file_text);
+    let file_id = files.add(file_path.to_string(), file_text.to_string());
 
-    let diagnostic = codespan_reporting::diagnostic::Diagnostic::new(severity)
+    let mut codespan_diagnostic = codespan_reporting::diagnostic::Diagnostic::new(severity)
         .with_label(Label::new(LabelStyle::Primary, file_id, range.range))
         .with_code(code.as_str())
         .with_message(message);
 
+    if show_fix {
+        let fixes = fixes.unwrap_or_default();
+        if let Some(fix) = fixes.first() {
+            let new_file_text = apply_fix(fix, &file_text);
+            let file_id = files.add(file_path.to_string(), new_file_text);
+            codespan_diagnostic = codespan_diagnostic.with_label(
+                Label::new(LabelStyle::Secondary, file_id, range.range).with_message("after fix"),
+            )
+        }
+    }
+
     let term_config = term::Config::default();
     let mut stderr = StandardStream::stderr(ColorChoice::Auto);
-    term::emit(&mut stderr, &term_config, &files, &diagnostic).unwrap();
+    term::emit(&mut stderr, &term_config, &files, &codespan_diagnostic).unwrap();
 }
 
 fn load_packages_into_vfs(packages: &[AptosPackage]) -> anyhow::Result<(RootDatabase, vfs::Vfs)> {

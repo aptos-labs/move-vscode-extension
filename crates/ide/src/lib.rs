@@ -107,6 +107,10 @@ pub struct Analysis {
 // API, the API should in theory be usable as a library, or via a different
 // protocol.
 impl Analysis {
+    pub fn new(db_snapshot: RootDatabase) -> Self {
+        Analysis { db: db_snapshot }
+    }
+
     pub fn package_id(&self, file_id: FileId) -> Cancellable<PackageId> {
         self.with_db(|db| db.file_package_id(file_id))
     }
