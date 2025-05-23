@@ -6,7 +6,7 @@ use codespan_reporting::diagnostic::{Label, LabelStyle};
 use codespan_reporting::term;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
 use crossbeam_channel::unbounded;
-use ide::AnalysisHost;
+use ide::{Analysis, AnalysisHost};
 use ide_db::assists::AssistResolveStrategy;
 use ide_db::{RootDatabase, Severity, root_db};
 use ide_diagnostics::config::DiagnosticsConfig;
@@ -157,20 +157,10 @@ impl Diagnostics {
                         );
                     }
                     let file_path = vfs.file_path(file_id).as_path().unwrap();
-                    for diagnostic in analysis
-                        .full_diagnostics(
-                            &DiagnosticsConfig::test_sample(),
-                            AssistResolveStrategy::None,
-                            file_id,
-                        )
-                        .unwrap()
-                    {
-                        if let Some(sevs) = diag_kinds.as_ref() {
-                            if !sevs.contains(&diagnostic.severity) {
-                                continue;
-                            }
-                        }
-                        if matches!(diagnostic.severity, Severity::Error) {
+
+                    let diagnostics = find_diagnostics_for_a_file(&analysis, file_id, &diag_kinds);
+                    for diagnostic in diagnostics {
+                        if diagnostic.severity == Severity::Error {
                             found_error = true;
                         }
                         print_diagnostic(db, file_path, diagnostic);
@@ -195,6 +185,27 @@ impl Diagnostics {
 
         Ok(exit_code)
     }
+}
+
+fn find_diagnostics_for_a_file(
+    analysis: &Analysis,
+    file_id: FileId,
+    diag_kinds: &Option<Vec<Severity>>,
+) -> Vec<Diagnostic> {
+    let mut diagnostics = analysis
+        .full_diagnostics(
+            &DiagnosticsConfig::test_sample(),
+            AssistResolveStrategy::None,
+            file_id,
+        )
+        .unwrap();
+    if let Some(sevs) = diag_kinds {
+        diagnostics = diagnostics
+            .into_iter()
+            .filter(|it| sevs.contains(&it.severity))
+            .collect();
+    }
+    diagnostics
 }
 
 fn print_diagnostic(db: &RootDatabase, file_path: &AbsPath, diagnostic: Diagnostic) {
