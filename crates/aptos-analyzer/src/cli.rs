@@ -1,6 +1,6 @@
-mod diagnostics;
+mod check;
 
-use crate::cli::diagnostics::Diagnostics;
+use crate::cli::check::Check;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -20,5 +20,5 @@ pub struct CliArgs {
 #[derive(Debug, Subcommand)]
 pub enum AptosAnalyzerCmd {
     LspServer,
-    Diagnostics(Diagnostics),
+    Check(Check),
 }

@@ -27,7 +27,7 @@ use vfs::loader::{Handle, LoadingProgress};
 use vfs::{FileId, VfsPath};
 
 #[derive(Debug, Args)]
-pub struct Diagnostics {
+pub struct Check {
     pub path: PathBuf,
 
     /// Only show diagnostics of kinds (comma separated)
@@ -41,7 +41,7 @@ pub struct Diagnostics {
     pub fix: bool,
 }
 
-impl Diagnostics {
+impl Check {
     pub fn run(self) -> anyhow::Result<ExitCode> {
         const STACK_SIZE: usize = 1024 * 1024 * 8;
 
