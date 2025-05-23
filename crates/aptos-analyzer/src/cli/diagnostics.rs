@@ -1,6 +1,9 @@
 use base_db::SourceDatabase;
 use base_db::change::FileChanges;
 use clap::Args;
+use codespan_reporting::diagnostic::{Label, LabelStyle};
+use codespan_reporting::term;
+use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
 use crossbeam_channel::unbounded;
 use ide::AnalysisHost;
 use ide_db::assists::AssistResolveStrategy;
@@ -13,6 +16,7 @@ use project_model::aptos_package::{AptosPackage, load_from_fs};
 use project_model::project_folders::ProjectFolders;
 use project_model::{DiscoveredManifest, dep_graph};
 use std::collections::HashSet;
+use std::io::stdout;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use stdx::itertools::Itertools;
@@ -84,6 +88,7 @@ impl Diagnostics {
                         "processing package '{package_name}', file: {}",
                         vfs.file_path(file_id)
                     );
+                    let file_path = vfs.file_path(file_id).as_path().unwrap();
                     for diagnostic in analysis
                         .full_diagnostics(
                             &DiagnosticsConfig::test_sample(),
@@ -95,7 +100,7 @@ impl Diagnostics {
                         if matches!(diagnostic.severity, Severity::Error) {
                             found_error = true;
                         }
-                        print_diagnostic(db, diagnostic);
+                        print_diagnostic(db, file_path, diagnostic);
                     }
                 }
 
@@ -117,7 +122,7 @@ impl Diagnostics {
     }
 }
 
-fn print_diagnostic(db: &RootDatabase, diagnostic: Diagnostic) {
+fn print_diagnostic(db: &RootDatabase, file_path: &AbsPath, diagnostic: Diagnostic) {
     let Diagnostic {
         code,
         message,
@@ -125,10 +130,28 @@ fn print_diagnostic(db: &RootDatabase, diagnostic: Diagnostic) {
         severity,
         ..
     } = diagnostic;
-    let line_index = root_db::line_index(db, range.file_id);
-    let start = line_index.line_col(range.range.start());
-    let end = line_index.line_col(range.range.end());
-    println!("{severity:?} {code:?} from {start:?} to {end:?}: {message}");
+
+    let severity = match severity {
+        Severity::Error => codespan_reporting::diagnostic::Severity::Error,
+        Severity::Warning => codespan_reporting::diagnostic::Severity::Warning,
+        Severity::WeakWarning => codespan_reporting::diagnostic::Severity::Help,
+        _ => {
+            return;
+        }
+    };
+    let file_text = db.file_text(range.file_id).text(db);
+
+    let mut files = codespan_reporting::files::SimpleFiles::new();
+    let file_id = files.add(file_path.to_string(), file_text);
+
+    let diagnostic = codespan_reporting::diagnostic::Diagnostic::new(severity)
+        .with_label(Label::new(LabelStyle::Primary, file_id, range.range))
+        .with_code(code.as_str())
+        .with_message(message);
+
+    let term_config = term::Config::default();
+    let mut stderr = StandardStream::stderr(ColorChoice::Auto);
+    term::emit(&mut stderr, &term_config, &files, &diagnostic).unwrap();
 }
 
 fn load_packages_into_vfs(packages: &[AptosPackage]) -> anyhow::Result<(RootDatabase, vfs::Vfs)> {
