@@ -25,7 +25,7 @@ pub fn from_single_file(text: String) -> (Analysis, FileId) {
 
     changes.set_package_roots(vec![PackageRoot::new_local(
         file_set,
-        Some("/test_package".to_string()),
+        Some("/test_package".into()),
     )]);
     changes.change_file(file_id, Some(text));
 
@@ -47,7 +47,7 @@ pub fn from_multiple_files(file_source: &str) -> TestPackage {
         changes.change_file(file_id, Some(file_contents));
     }
 
-    let package_root = PackageRoot::new_local(file_set, Some("/test_package".to_string()));
+    let package_root = PackageRoot::new_local(file_set, Some("/test_package".into()));
     changes.set_package_roots(vec![package_root]);
 
     test_package.apply_changes(changes);

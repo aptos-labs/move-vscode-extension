@@ -1,3 +1,4 @@
+use camino::Utf8PathBuf;
 use vfs::file_set::FileSet;
 use vfs::{FileId, VfsPath};
 
@@ -15,24 +16,28 @@ pub struct PackageRoot {
     /// Libraries are considered mostly immutable, this assumption is used to
     /// optimize salsa's query structure
     pub is_library: bool,
-    pub root_dir: Option<String>,
+    pub root_dir: Option<Utf8PathBuf>,
 }
 
 impl PackageRoot {
-    pub fn new_local(file_set: FileSet, package_name: Option<String>) -> PackageRoot {
+    pub fn new_local(file_set: FileSet, root_dir: Option<Utf8PathBuf>) -> PackageRoot {
         PackageRoot {
             file_set,
             is_library: false,
-            root_dir: package_name,
+            root_dir,
         }
     }
 
-    pub fn new_library(file_set: FileSet, package_name: Option<String>) -> PackageRoot {
+    pub fn new_library(file_set: FileSet, root_dir: Option<Utf8PathBuf>) -> PackageRoot {
         PackageRoot {
             file_set,
             is_library: true,
-            root_dir: package_name,
+            root_dir,
         }
+    }
+
+    pub fn root_dir_name(&self) -> Option<&str> {
+        self.root_dir.as_ref().and_then(|it| it.file_name())
     }
 
     pub fn path_for_file(&self, file: &FileId) -> Option<&VfsPath> {

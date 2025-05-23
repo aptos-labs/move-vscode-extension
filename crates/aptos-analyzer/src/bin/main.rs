@@ -40,7 +40,7 @@ fn main() -> anyhow::Result<ExitCode> {
                 run_server,
             )?;
         }
-        Some(AptosAnalyzerCmd::Diagnostics(cmd)) => {
+        Some(AptosAnalyzerCmd::Check(cmd)) => {
             let exit_code = cmd.run()?;
             return Ok(exit_code);
         }

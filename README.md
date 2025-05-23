@@ -136,4 +136,37 @@ It's useful to enable INFO logging level, it's not very chatty and could provide
     "aptos-analyzer.server.extraEnv": { "RA_LOG": "info" },
 ```
 
+## Additional commands
 
+### `aptos-analyzer check --fix`
+
+Run server diagnostics on the file (or package directory). If `--fix` is provided, automatically applies available autofixes:   
+
+```shell
+  $ aptos-analyzer check --fix ./aptos-stdlib/sources/cryptography/keyless.move 
+processing package 'aptos-stdlib', file: /home/mkurnikov/code/aptos-core/aptos-move/framework/aptos-stdlib/sources/cryptography/keyless.move
+note[replace-with-method-call]: Can be replaced with method call
+   ┌─ /home/mkurnikov/code/aptos-core/aptos-move/framework/aptos-stdlib/sources/cryptography/keyless.move:67:17
+   │
+67 │         assert!(string::bytes(&iss).length() <= MAX_ISSUER_UTF8_BYTES_LENGTH, error::invalid_argument(E_INVALID_ISSUER_UTF8_BYTES_LENGTH));
+   │                 ^^^^^^^^^^^^^^^^^^^
+   │
+   ┌─ /home/mkurnikov/code/aptos-core/aptos-move/framework/aptos-stdlib/sources/cryptography/keyless.move:67:17
+   │
+67 │         assert!(iss.bytes().length() <= MAX_ISSUER_UTF8_BYTES_LENGTH, error::invalid_argument(E_INVALID_ISSUER_UTF8_BYTES_LENGTH));
+   │                 ^^^^^^^^^^^ after fix
+
+
+```
+
+Available diagnostics with fixes:
+
+* change to receiver style function
+```move
+vector::push_back(v, 1); -> v.push_back(1); 
+```
+
+* change to compound assignment
+```move
+a = a + 1; -> a += 1;
+```

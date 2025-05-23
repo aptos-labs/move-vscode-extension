@@ -24,7 +24,7 @@ memchr = "2.7.4"
 lsp-server = "0.7.8"
 num_cpus = "1.16.0"
 parking_lot = "0.12.1"
-camino = { version =  "1.1.9", features = ["serde1"] }
+camino.workspace = true
 process-wrap = { version = "8.2.0", features = ["std"] }
 serde_derive = "1.0.217"
 shellexpand = "3.1.1"
