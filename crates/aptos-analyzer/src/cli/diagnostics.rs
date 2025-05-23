@@ -26,6 +26,13 @@ use vfs::loader::{Handle, LoadingProgress};
 #[derive(Debug, Args)]
 pub struct Diagnostics {
     pub path: PathBuf,
+
+    /// Only show diagnostics of kinds (comma separated)
+    #[clap(long, value_parser = ["error", "warn", "note"], value_delimiter = ',', num_args=1..)]
+    pub kinds: Option<Vec<String>>,
+
+    #[clap(long)]
+    pub verbose: bool,
 }
 
 impl Diagnostics {
@@ -42,8 +49,27 @@ impl Diagnostics {
     }
 
     fn run_(self) -> anyhow::Result<ExitCode> {
+        let severities = self.kinds.map(|it| {
+            it.iter()
+                .map(|severity| match severity.as_str() {
+                    "error" => Severity::Error,
+                    "warn" => Severity::Warning,
+                    "note" => Severity::WeakWarning,
+                    _ => unreachable!(),
+                })
+                .collect::<Vec<_>>()
+        });
         let ws_root = AbsPathBuf::assert_utf8(std::env::current_dir()?.join(&self.path));
         let manifests = DiscoveredManifest::discover_all(&[ws_root.to_path_buf()]);
+        if manifests.is_empty() {
+            eprintln!("Could not find any Aptos packages.");
+            return Ok(ExitCode::FAILURE);
+        }
+        let manifest_roots = manifests
+            .clone()
+            .into_iter()
+            .map(|it| it.move_toml_file.parent().unwrap().to_owned())
+            .collect::<Vec<_>>();
 
         let all_packages = load_from_fs::load_aptos_packages(manifests)
             .into_iter()
@@ -68,26 +94,33 @@ impl Diagnostics {
         }
 
         for local_package_root in local_package_roots {
+            if let Some(root_dir) = &local_package_root.root_dir {
+                if !root_dir.starts_with(&ws_root) {
+                    continue;
+                }
+                println!("processing {root_dir}");
+            }
             let file_ids = local_package_root.file_set.iter().collect::<Vec<_>>();
             for file_id in file_ids {
-                let package_name = local_package_root
-                    .root_dir
-                    .clone()
-                    .unwrap_or("<error>".to_string());
+                let package_name = local_package_root.root_dir_name().clone().unwrap_or("<error>");
                 let file_path = vfs.file_path(file_id);
                 if !file_path
                     .name_and_extension()
                     .is_some_and(|(name, ext)| ext == Some("move"))
                 {
-                    println!("skip file {}", file_path);
+                    if self.verbose {
+                        println!("skip file {}", file_path);
+                    }
                     visited_files.insert(file_id);
                     continue;
                 }
                 if !visited_files.contains(&file_id) {
-                    println!(
-                        "processing package '{package_name}', file: {}",
-                        vfs.file_path(file_id)
-                    );
+                    if self.verbose {
+                        println!(
+                            "processing package '{package_name}', file: {}",
+                            vfs.file_path(file_id)
+                        );
+                    }
                     let file_path = vfs.file_path(file_id).as_path().unwrap();
                     for diagnostic in analysis
                         .full_diagnostics(
@@ -97,6 +130,11 @@ impl Diagnostics {
                         )
                         .unwrap()
                     {
+                        if let Some(sevs) = severities.as_ref() {
+                            if !sevs.contains(&diagnostic.severity) {
+                                continue;
+                            }
+                        }
                         if matches!(diagnostic.severity, Severity::Error) {
                             found_error = true;
                         }
@@ -108,8 +146,10 @@ impl Diagnostics {
             }
         }
 
-        println!();
-        println!("diagnostic scan complete");
+        if self.verbose {
+            println!();
+            println!("diagnostic scan complete");
+        }
 
         let mut exit_code = ExitCode::SUCCESS;
         if found_error {
@@ -134,7 +174,7 @@ fn print_diagnostic(db: &RootDatabase, file_path: &AbsPath, diagnostic: Diagnost
     let severity = match severity {
         Severity::Error => codespan_reporting::diagnostic::Severity::Error,
         Severity::Warning => codespan_reporting::diagnostic::Severity::Warning,
-        Severity::WeakWarning => codespan_reporting::diagnostic::Severity::Help,
+        Severity::WeakWarning => codespan_reporting::diagnostic::Severity::Note,
         _ => {
             return;
         }

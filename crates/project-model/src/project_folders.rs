@@ -17,7 +17,8 @@ impl PackageRootConfig {
         let package_file_sets = self.fsc.partition(vfs);
         let mut package_roots = vec![];
         for (idx, package_file_set) in package_file_sets.into_iter().enumerate() {
-            let root_dir = self.root_dir_name(idx);
+            let root_dir = self.root_dir(idx);
+            // let root_dir_name = self.root_dir(idx).and_then(|it| it.file_name());
             let is_local = self.local_filesets.contains(&(idx as u64));
             let package_root = if is_local {
                 PackageRoot::new_local(package_file_set, root_dir)
@@ -42,10 +43,15 @@ impl PackageRootConfig {
             .collect()
     }
 
-    fn root_dir_name(&self, idx: usize) -> Option<String> {
+    fn root_dir(&self, idx: usize) -> Option<Utf8PathBuf> {
         let root = self.roots().get(idx)?.clone();
-        Utf8PathBuf::from(root).file_name().map(|it| it.to_string())
+        Some(Utf8PathBuf::from(root))
     }
+
+    // fn root_dir_name(&self, idx: usize) -> Option<String> {
+    //     let root = self.roots().get(idx)?.clone();
+    //     Utf8PathBuf::from(root).file_name().map(|it| it.to_string())
+    // }
 }
 
 impl fmt::Debug for PackageRootConfig {
