@@ -1,5 +1,6 @@
 use base_db::SourceDatabase;
 use base_db::change::FileChanges;
+use camino::Utf8PathBuf;
 use clap::Args;
 use codespan_reporting::diagnostic::{Label, LabelStyle};
 use codespan_reporting::term;
@@ -49,33 +50,47 @@ impl Diagnostics {
     }
 
     fn run_(self) -> anyhow::Result<ExitCode> {
-        let severities = self.kinds.map(|it| {
-            it.iter()
-                .map(|severity| match severity.as_str() {
-                    "error" => Severity::Error,
-                    "warn" => Severity::Warning,
-                    "note" => Severity::WeakWarning,
-                    _ => unreachable!(),
+        let provided_path =
+            Utf8PathBuf::from_path_buf(std::env::current_dir()?.join(&self.path)).unwrap();
+
+        let mut specific_fpath = None;
+        let mut ws_root = None;
+        let manifests = if provided_path.is_file() && provided_path.extension() == Some("move") {
+            let abs_path = AbsPathBuf::assert(provided_path);
+            let manifest = DiscoveredManifest::discover_for_file(&abs_path);
+            specific_fpath = Some(abs_path);
+            manifest
+                .map(|it| {
+                    ws_root = Some(it.content_root());
+                    vec![it]
                 })
-                .collect::<Vec<_>>()
-        });
-        let ws_root = AbsPathBuf::assert_utf8(std::env::current_dir()?.join(&self.path));
-        let manifests = DiscoveredManifest::discover_all(&[ws_root.to_path_buf()]);
+                .unwrap_or_default()
+        } else {
+            let provided_ws_root = AbsPathBuf::assert(provided_path);
+            let manifests = DiscoveredManifest::discover_all(&[provided_ws_root.clone()]);
+            ws_root = Some(provided_ws_root);
+            manifests
+        };
+
         if manifests.is_empty() {
             eprintln!("Could not find any Aptos packages.");
             return Ok(ExitCode::FAILURE);
         }
-        let manifest_roots = manifests
-            .clone()
-            .into_iter()
-            .map(|it| it.move_toml_file.parent().unwrap().to_owned())
-            .collect::<Vec<_>>();
+        let ws_root = ws_root.unwrap();
 
-        let all_packages = load_from_fs::load_aptos_packages(manifests)
+        self.run_diagnostics(manifests, ws_root, specific_fpath)
+    }
+
+    fn run_diagnostics(
+        &self,
+        ws_manifests: Vec<DiscoveredManifest>,
+        ws_root: AbsPathBuf,
+        specific_fpath: Option<AbsPathBuf>,
+    ) -> anyhow::Result<ExitCode> {
+        let all_packages = load_from_fs::load_aptos_packages(ws_manifests)
             .into_iter()
             .filter_map(|it| it.ok())
             .collect::<Vec<_>>();
-
         let (db, vfs) = load_packages_into_vfs(&all_packages)?;
 
         let host = AnalysisHost::with_database(db);
@@ -88,18 +103,30 @@ impl Diagnostics {
         let mut local_package_roots = vec![];
         for package_id in db.all_package_ids().data(db) {
             let package_root = db.package_root(package_id).data(db);
-            if !package_root.is_library {
+            let root_dir = package_root.root_dir.clone();
+            if root_dir.is_some_and(|it| it.starts_with(&ws_root)) && !package_root.is_library {
                 local_package_roots.push(package_root);
             }
         }
 
+        let diag_kinds = self.kinds.clone().map(|it| {
+            it.iter()
+                .map(|severity| match severity.as_str() {
+                    "error" => Severity::Error,
+                    "warn" => Severity::Warning,
+                    "note" => Severity::WeakWarning,
+                    _ => unreachable!(),
+                })
+                .collect::<Vec<_>>()
+        });
+
         for local_package_root in local_package_roots {
-            if let Some(root_dir) = &local_package_root.root_dir {
-                if !root_dir.starts_with(&ws_root) {
-                    continue;
-                }
-                println!("processing {root_dir}");
+            let package_root_dir = local_package_root.root_dir.as_ref().unwrap();
+
+            if specific_fpath.is_none() {
+                println!("processing {package_root_dir}");
             }
+
             let file_ids = local_package_root.file_set.iter().collect::<Vec<_>>();
             for file_id in file_ids {
                 let package_name = local_package_root.root_dir_name().clone().unwrap_or("<error>");
@@ -114,8 +141,16 @@ impl Diagnostics {
                     visited_files.insert(file_id);
                     continue;
                 }
+
+                // skipping all files except for `specific_fpath` if set
+                if let Some(specific_fpath) = specific_fpath.as_ref() {
+                    if file_path.as_path().unwrap().to_path_buf() != specific_fpath {
+                        continue;
+                    }
+                }
+
                 if !visited_files.contains(&file_id) {
-                    if self.verbose {
+                    if specific_fpath.is_some() || self.verbose {
                         println!(
                             "processing package '{package_name}', file: {}",
                             vfs.file_path(file_id)
@@ -130,7 +165,7 @@ impl Diagnostics {
                         )
                         .unwrap()
                     {
-                        if let Some(sevs) = severities.as_ref() {
+                        if let Some(sevs) = diag_kinds.as_ref() {
                             if !sevs.contains(&diagnostic.severity) {
                                 continue;
                             }
