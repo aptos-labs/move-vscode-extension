@@ -42,6 +42,14 @@ impl TextChange {
             new_text: replace_with,
         }
     }
+
+    pub fn new_range(&self) -> TextRange {
+        TextRange::new(
+            self.range.start(),
+            self.range.start() + TextSize::of(&self.new_text),
+        )
+    }
+
     pub fn apply(&self, text: &mut String) {
         let start: usize = self.range.start().into();
         let end: usize = self.range.end().into();

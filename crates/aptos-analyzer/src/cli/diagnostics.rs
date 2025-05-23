@@ -22,6 +22,7 @@ use std::io::stdout;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use stdx::itertools::Itertools;
+use syntax::TextRange;
 use vfs::loader::{Handle, LoadingProgress};
 use vfs::{FileId, VfsPath};
 
@@ -252,25 +253,26 @@ fn apply_first_fix(
         if !fixes.is_empty() {
             print_diagnostic(file_text, file_path, diagnostic, true);
             let fix = fixes.first().unwrap();
-            let new_file_text = apply_fix(fix, file_text.as_ref());
+            let (new_file_text, _) = apply_fix(fix, file_text.as_ref());
             return Some(new_file_text);
         }
     }
     None
 }
 
-fn apply_fix(fix: &Assist, before: &str) -> String {
+fn apply_fix(fix: &Assist, before: &str) -> (String, Vec<TextRange>) {
     let source_change = fix.source_change.as_ref().unwrap();
     let mut after = before.to_string();
-
-    for (edit, snippet_edit) in source_change.source_file_edits.values() {
-        edit.apply(&mut after);
+    let mut new_text_ranges = vec![];
+    for (text_edit, snippet_edit) in source_change.source_file_edits.values() {
+        new_text_ranges.extend(text_edit.iter().map(|it| it.new_range()));
+        text_edit.apply(&mut after);
         if let Some(snippet_edit) = snippet_edit {
             snippet_edit.apply(&mut after);
         }
     }
 
-    after
+    (after, new_text_ranges)
 }
 
 fn print_diagnostic(file_text: &str, file_path: &AbsPath, diagnostic: Diagnostic, show_fix: bool) {
@@ -303,11 +305,13 @@ fn print_diagnostic(file_text: &str, file_path: &AbsPath, diagnostic: Diagnostic
     if show_fix {
         let fixes = fixes.unwrap_or_default();
         if let Some(fix) = fixes.first() {
-            let new_file_text = apply_fix(fix, &file_text);
+            let (new_file_text, new_file_ranges) = apply_fix(fix, &file_text);
             let file_id = files.add(file_path.to_string(), new_file_text);
-            codespan_diagnostic = codespan_diagnostic.with_label(
-                Label::new(LabelStyle::Secondary, file_id, range.range).with_message("after fix"),
-            )
+            for new_file_range in new_file_ranges {
+                codespan_diagnostic = codespan_diagnostic.with_label(
+                    Label::new(LabelStyle::Primary, file_id, new_file_range).with_message("after fix"),
+                )
+            }
         }
     }
 
