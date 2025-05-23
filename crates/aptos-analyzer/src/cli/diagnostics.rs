@@ -187,10 +187,10 @@ impl Diagnostics {
                                         file_path.to_owned(),
                                         Some(new_file_text.clone().into_bytes()),
                                     );
+                                    fs::write(&abs_file_path, new_file_text.clone())?;
                                     file_text = new_file_text;
                                 }
                                 None => {
-                                    fs::write(&abs_file_path, file_text)?;
                                     break;
                                 }
                             }
