@@ -21,6 +21,7 @@ use std::iter;
 use std::ops::Deref;
 use std::sync::LazyLock;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::{FieldsOwner, HasStmts};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, IntoNodeOrToken, ast};

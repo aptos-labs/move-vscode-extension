@@ -287,6 +287,7 @@ fn test_unresolved_reference_for_schema_field_shorthand() {
             spec schema Schema {}
             spec module {
                 include Schema { addr };
+                               //^^^^ err: Unresolved reference `addr`: cannot resolve
             }
         }
     "#]]);

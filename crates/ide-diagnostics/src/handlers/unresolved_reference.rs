@@ -1,8 +1,10 @@
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
+use base_db::SourceDatabase;
 use ide_db::Severity;
 use lang::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use lang::nameres::scope::VecExt;
+use lang::node_ext::item_spec;
 use lang::types::ty::Ty;
 use syntax::ast::ReferenceElement;
 use syntax::ast::idents::PRIMITIVE_TYPES;
@@ -18,11 +20,6 @@ pub(crate) fn find_unresolved_references(
     reference: InFile<impl AstNode>,
 ) -> Option<()> {
     if !ctx.config.unresolved_reference_enabled {
-        return None;
-    }
-    // for now
-    let msl = reference.value.syntax().is_msl_context();
-    if msl {
         return None;
     }
     if let Some(path) = reference.clone().cast_into::<ast::Path>() {
@@ -46,6 +43,11 @@ fn unresolved_path(
     ctx: &DiagnosticsContext<'_>,
     reference: InFile<ast::Path>,
 ) -> Option<()> {
+    let msl = reference.value.syntax().is_msl_context();
+    if msl && is_special_msl_path(ctx.sema.db, reference.as_ref()).is_some() {
+        return None;
+    }
+
     let (_, path) = reference.clone().unpack();
     let path_name = path.reference_name()?;
 
@@ -68,10 +70,6 @@ fn unresolved_path(
             return None;
         }
     }
-
-    // if msl && path_name.to_string().starts_with("result") {
-    //     return None;
-    // }
 
     if path.syntax().ancestor_of_type::<ast::AttrItem>(true).is_some() {
         return None;
@@ -102,6 +100,34 @@ fn unresolved_path(
         }
     }
     Some(())
+}
+
+fn is_special_msl_path(db: &dyn SourceDatabase, path: InFile<&ast::Path>) -> Option<()> {
+    if path.value.syntax().has_ancestor_strict::<ast::ImplyIncludeExpr>() {
+        return Some(());
+    }
+
+    let update_field_call_expr = path.value.syntax().ancestors().find(|it| {
+        it.cast::<ast::CallExpr>()
+            .is_some_and(|call_expr| call_expr.syntax().text().to_string().starts_with("update_field"))
+    });
+    if update_field_call_expr.is_some() {
+        return Some(());
+    }
+
+    let pragma_stmt = path.value.syntax().ancestor_of_type::<ast::PragmaStmt>(true);
+    if pragma_stmt.is_some() {
+        return Some(());
+    }
+
+    let path_expr = path.and_then(|it| it.path_expr())?;
+    if item_spec::get_item_spec_function(db, path_expr.as_ref()).is_some()
+        && path_expr.syntax_text().starts_with("result")
+    {
+        return Some(());
+    }
+
+    None
 }
 
 fn unresolved_method_or_dot_expr(
