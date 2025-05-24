@@ -2,28 +2,17 @@ use crate::aptos_package::{AptosPackage, VfsLoader};
 use crate::project_folders::PackageRootConfig;
 use base_db::change::{FileChanges, MoveTomlFileId, PackageGraph};
 use paths::AbsPath;
+use vfs::Vfs;
 
-pub fn reload_graph(
-    vfs: &vfs::Vfs,
-    aptos_packages: &[AptosPackage],
-    package_root_config: &PackageRootConfig,
-    load: VfsLoader<'_>,
-) -> Option<FileChanges> {
-    // let mut load = |path: &AbsPath| {
-    //     tracing::debug!(?path, "load from vfs");
-    //     vfs.file_id(&vfs::VfsPath::from(path.to_path_buf()))
-    //         .map(|it| it.0)
-    // };
-    let package_graph = collect(aptos_packages, load)?;
-
-    let mut change = FileChanges::new();
-    {
-        let package_roots = package_root_config.partition_into_package_roots(vfs);
-        change.set_package_roots(package_roots);
-        // depends on roots being available
-        change.set_package_graph(package_graph);
-    }
-    Some(change)
+pub fn collect_initial(packages: &[AptosPackage], vfs: &mut Vfs) -> Option<PackageGraph> {
+    let mut load = |path: &AbsPath| {
+        let contents = std::fs::read(path).ok();
+        let path = vfs::VfsPath::from(path.to_path_buf());
+        vfs.set_file_contents(path.clone(), contents);
+        vfs.file_id(&path)
+            .and_then(|(file_id, excluded)| (excluded == vfs::FileExcluded::No).then_some(file_id))
+    };
+    collect(packages, &mut load)
 }
 
 pub fn collect(aptos_packages: &[AptosPackage], load: VfsLoader<'_>) -> Option<PackageGraph> {
@@ -40,7 +29,7 @@ pub fn collect(aptos_packages: &[AptosPackage], load: VfsLoader<'_>) -> Option<P
 }
 
 impl AptosPackage {
-    pub fn dep_graph_entry(&self, load: VfsLoader<'_>) -> Option<(MoveTomlFileId, Vec<MoveTomlFileId>)> {
+    fn dep_graph_entry(&self, load: VfsLoader<'_>) -> Option<(MoveTomlFileId, Vec<MoveTomlFileId>)> {
         let package_file_id = load_package_file_id(self.content_root(), load)?;
 
         let mut dep_ids = vec![];
