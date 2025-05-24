@@ -10,6 +10,7 @@ use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::ty::Ty;
+use base_db::change::ManifestFileId;
 use base_db::inputs::InternFileId;
 use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
@@ -136,15 +137,7 @@ fn file_ids_by_module_address_tracked<'db>(
 
 #[salsa_macros::tracked]
 fn all_package_file_ids(db: &dyn SourceDatabase, package_id: PackageId) -> Vec<FileId> {
-    let dep_ids = db.dep_package_ids(package_id).deps(db).deref().to_owned();
-    // {
-    //     let package_root_dir = db.package_root(package_id).data(db).root_dir_name();
-    //     tracing::debug!(
-    //         package_id = ?package_root_dir,
-    //         dep_ids = ?package_ids_to_names(db, &dep_ids)
-    //     );
-    // }
-
+    let dep_ids = dep_package_ids(db, package_id);
     let file_sets = iter::once(package_id)
         .chain(dep_ids)
         .map(|id| db.package_root(id).data(db).file_set.clone())
@@ -157,6 +150,18 @@ fn all_package_file_ids(db: &dyn SourceDatabase, package_id: PackageId) -> Vec<F
         }
     }
     source_file_ids
+}
+
+#[salsa_macros::tracked]
+fn dep_package_ids(db: &dyn SourceDatabase, package_id: PackageId) -> Vec<PackageId> {
+    let Some(package_manifest_id) = db.package_root(package_id).data(db).manifest_file_id else {
+        return vec![];
+    };
+    let dep_manifest_ids = db.dep_package_ids(package_manifest_id).dep_manifests(db);
+    dep_manifest_ids
+        .iter()
+        .map(|it| db.file_package_id(*it))
+        .collect()
 }
 
 pub(crate) fn module_importable_entries(

@@ -5,7 +5,7 @@ use crate::lsp::utils::Progress;
 use crate::main_loop::Task;
 use crate::op_queue::Cause;
 use crate::{Config, lsp_ext};
-use base_db::change::FileChanges;
+use base_db::change::{FileChanges, PackageGraph};
 use lsp_types::FileSystemWatcher;
 use project_model::aptos_package::{AptosPackage, load_from_fs};
 use project_model::dep_graph;
@@ -16,8 +16,8 @@ use std::sync::Arc;
 use std::{fmt, mem};
 use stdx::format_to;
 use stdx::thread::ThreadIntent;
-use vfs::AbsPath;
 use vfs::loader::Handle;
+use vfs::{AbsPath, Vfs};
 
 #[derive(Debug)]
 pub(crate) enum FetchPackagesProgress {
@@ -346,18 +346,13 @@ impl GlobalState {
 
         {
             let vfs = &self.vfs.read().0;
-            dep_graph::log_dependencies(&package_graph, vfs);
+            trace_dependencies(&package_graph, vfs);
         }
 
-        let mut change = FileChanges::new();
-        change.set_package_roots(
-            self.package_root_config
-                .partition_into_package_roots(&self.vfs.read().0),
-        );
-        // depends on roots being available
-        change.set_package_graph(package_graph);
+        let mut set_graph = FileChanges::new();
+        set_graph.set_package_graph(package_graph);
 
-        self.analysis_host.apply_change(change);
+        self.analysis_host.apply_change(set_graph);
 
         self.process_pending_file_changes();
         self.reload_flycheck();
@@ -476,4 +471,17 @@ pub(crate) fn should_refresh_for_file_change(
     //     }
     // }
     false
+}
+
+fn trace_dependencies(dep_graph: &PackageGraph, vfs: &Vfs) {
+    for (package_file_id, dep_ids) in dep_graph {
+        let main_package_name = vfs
+            .file_path(*package_file_id)
+            .as_path()
+            .and_then(|it| it.file_name());
+        let dep_names = dep_ids
+            .iter()
+            .map(|it| vfs.file_path(*it).as_path().and_then(|p| p.file_name()));
+        tracing::debug!(?main_package_name, ?dep_names);
+    }
 }
