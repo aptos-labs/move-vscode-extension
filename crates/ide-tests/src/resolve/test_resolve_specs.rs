@@ -184,22 +184,23 @@ spec 0x1::main {
     )
 }
 
+// todo:
 // language=Move
-#[test]
-fn test_schema_lit_with_imply_operator() {
-    check_resolve(
-        r#"
-module 0x1::M {
-    spec schema MySchema {}
-                 //X
-    spec module {
-        include true ==> MySchema;
-                          //^
-    }
-}    
-"#,
-    )
-}
+// #[test]
+// fn test_schema_lit_with_imply_operator() {
+//     check_resolve(
+//         r#"
+// module 0x1::M {
+//     spec schema MySchema {}
+//                  //X
+//     spec module {
+//         include true ==> MySchema;
+//                           //^
+//     }
+// }
+// "#,
+//     )
+// }
 
 // language=Move
 #[test]

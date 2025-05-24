@@ -1,6 +1,5 @@
+use crate::ast;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
-use crate::{ast, AstNode};
-use rowan::SyntaxToken;
 
 impl ast::Path {
     pub fn path_address(&self) -> Option<ast::PathAddress> {
@@ -16,6 +15,10 @@ impl ast::Path {
             .and_then(|it| it.type_arg_list())
             .map(|it| it.type_arguments().collect())
             .unwrap_or_default()
+    }
+
+    pub fn path_expr(&self) -> Option<ast::PathExpr> {
+        self.root_path().syntax.parent_of_type::<ast::PathExpr>()
     }
 
     /** For `Foo::bar::baz::quux` path returns `Foo` */
