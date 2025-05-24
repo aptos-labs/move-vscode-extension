@@ -1,5 +1,5 @@
 use crate::SourceDatabase;
-use crate::package_root::{PackageId, PackageRoot};
+use crate::package_root::{PackageId, PackageKind, PackageRoot};
 use salsa::Durability;
 use std::collections::HashMap;
 use std::fmt;
@@ -57,8 +57,7 @@ impl FileChanges {
 
         if let Some(package_roots) = self.package_roots.clone() {
             for (idx, root) in package_roots.into_iter().enumerate() {
-                let package_id =
-                    PackageId::new(db, idx as u32, root.root_dir_name().map(|it| it.to_string()));
+                let package_id = PackageId::new(db, idx as u32);
                 let durability = package_root_durability(&root);
                 for file_id in root.file_set.iter() {
                     db.set_file_package_id(file_id, package_id);
@@ -87,10 +86,6 @@ impl FileChanges {
                     .into_iter()
                     .map(|it| db.file_package_id(it))
                     .collect::<Vec<_>>();
-                tracing::info!(
-                    main_package = main_package_id.root_dir(db),
-                    dep_package_ids = ?package_ids_to_names(db, &deps_package_ids),
-                );
                 db.set_dep_package_ids(main_package_id, deps_package_ids);
             }
         }
@@ -110,10 +105,6 @@ impl FileChanges {
             db.set_file_text(file_id, text.as_str())
         }
     }
-}
-
-pub fn package_ids_to_names(db: &dyn SourceDatabase, ids: &[PackageId]) -> Vec<Option<String>> {
-    ids.iter().map(|it| it.root_dir(db)).collect::<Vec<_>>()
 }
 
 fn find_spec_file_set(file_id: FileId, root: PackageRoot) -> Option<Vec<FileId>> {
@@ -141,17 +132,15 @@ fn find_spec_file_set(file_id: FileId, root: PackageRoot) -> Option<Vec<FileId>>
 }
 
 fn package_root_durability(package_root: &PackageRoot) -> Durability {
-    if package_root.is_library {
-        Durability::MEDIUM
-    } else {
-        Durability::LOW
+    match package_root.kind {
+        PackageKind::Local => Durability::LOW,
+        PackageKind::Library => Durability::MEDIUM,
     }
 }
 
 fn file_text_durability(package_root: &PackageRoot) -> Durability {
-    if package_root.is_library {
-        Durability::HIGH
-    } else {
-        Durability::LOW
+    match package_root.kind {
+        PackageKind::Local => Durability::LOW,
+        PackageKind::Library => Durability::HIGH,
     }
 }

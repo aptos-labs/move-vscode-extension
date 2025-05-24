@@ -42,6 +42,19 @@ impl AptosPackage {
     }
 }
 
+pub fn log_dependencies(dep_graph: &PackageGraph, vfs: &Vfs) {
+    for (package_file_id, dep_ids) in dep_graph {
+        let main_package_name = vfs
+            .file_path(*package_file_id)
+            .as_path()
+            .and_then(|it| it.file_name());
+        let dep_names = dep_ids
+            .iter()
+            .map(|it| vfs.file_path(*it).as_path().and_then(|p| p.file_name()));
+        tracing::debug!(?main_package_name, ?dep_names);
+    }
+}
+
 fn load_package_file_id(dep_root: &AbsPath, load_from_vfs: VfsLoader<'_>) -> Option<MoveTomlFileId> {
     let move_toml_file = dep_root.join("Move.toml");
     match load_from_vfs(&move_toml_file) {

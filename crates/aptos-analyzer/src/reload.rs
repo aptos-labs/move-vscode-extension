@@ -8,6 +8,7 @@ use crate::{Config, lsp_ext};
 use base_db::change::FileChanges;
 use lsp_types::FileSystemWatcher;
 use project_model::aptos_package::{AptosPackage, load_from_fs};
+use project_model::dep_graph;
 use project_model::dep_graph::{collect, collect_initial};
 use project_model::project_folders::ProjectFolders;
 use std::fmt::Formatter;
@@ -342,6 +343,11 @@ impl GlobalState {
             tracing::info!("cannot reload package dep graph, vfs is not ready yet");
             return;
         };
+
+        {
+            let vfs = &self.vfs.read().0;
+            dep_graph::log_dependencies(&package_graph, vfs);
+        }
 
         let mut change = FileChanges::new();
         change.set_package_roots(

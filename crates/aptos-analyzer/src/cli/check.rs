@@ -1,30 +1,27 @@
 use base_db::SourceDatabase;
 use base_db::change::FileChanges;
+use base_db::package_root::PackageKind;
 use camino::Utf8PathBuf;
 use clap::Args;
 use codespan_reporting::diagnostic::{Label, LabelStyle};
 use codespan_reporting::term;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
-use crossbeam_channel::unbounded;
-use ide::{Analysis, AnalysisHost};
+use ide::Analysis;
 use ide_db::assists::{Assist, AssistResolveStrategy};
-use ide_db::{RootDatabase, Severity, root_db};
+use ide_db::{RootDatabase, Severity};
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
-use lang::builtins_file;
 use paths::{AbsPath, AbsPathBuf};
-use project_model::aptos_package::{AptosPackage, load_from_fs};
-use project_model::project_folders::ProjectFolders;
-use project_model::{DiscoveredManifest, dep_graph};
+use project_model::DiscoveredManifest;
+use project_model::aptos_package::load_from_fs;
 use std::collections::HashSet;
 use std::fs;
-use std::io::stdout;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use stdx::itertools::Itertools;
 use syntax::TextRange;
-use vfs::loader::{Handle, LoadingProgress};
-use vfs::{FileId, VfsPath};
+use vfs::FileId;
+use vfs::loader::Handle;
 
 #[derive(Debug, Args)]
 pub struct Check {
@@ -104,8 +101,8 @@ impl Check {
         let mut local_package_roots = vec![];
         for package_id in db.all_package_ids().data(&db) {
             let package_root = db.package_root(package_id).data(&db);
-            let root_dir = package_root.root_dir.clone();
-            if root_dir.is_some_and(|it| it.starts_with(&ws_root)) && !package_root.is_library {
+            let root_dir = package_root.root_dir(&vfs).clone();
+            if root_dir.is_some_and(|it| it.starts_with(&ws_root)) && !package_root.is_library() {
                 local_package_roots.push(package_root);
             }
         }
@@ -122,7 +119,7 @@ impl Check {
         });
 
         for local_package_root in local_package_roots {
-            let package_root_dir = local_package_root.root_dir.as_ref().unwrap();
+            let package_root_dir = local_package_root.root_dir(&vfs).unwrap();
 
             if specific_fpath.is_none() {
                 println!("processing {package_root_dir}");
@@ -130,7 +127,6 @@ impl Check {
 
             let file_ids = local_package_root.file_set.iter().collect::<Vec<_>>();
             for file_id in file_ids {
-                let package_name = local_package_root.root_dir_name().clone().unwrap_or("<error>");
                 let file_path = vfs.file_path(file_id).clone();
                 if !file_path
                     .name_and_extension()
@@ -149,8 +145,10 @@ impl Check {
                         continue;
                     }
                 }
-
                 if !visited_files.contains(&file_id) {
+                    let package_name = local_package_root
+                        .root_dir_name(&vfs)
+                        .unwrap_or("<error>".to_string());
                     if specific_fpath.is_some() || self.verbose {
                         println!(
                             "processing package '{package_name}', file: {}",

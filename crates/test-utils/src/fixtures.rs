@@ -3,7 +3,7 @@ pub mod test_state;
 pub use test_state::{TestState, from_multiple_files_on_tmpfs};
 
 use base_db::change::FileChanges;
-use base_db::package_root::PackageRoot;
+use base_db::package_root::{PackageKind, PackageRoot};
 use ide::{Analysis, AnalysisHost};
 use lang::builtins_file::BUILTINS_FILE;
 use regex::Regex;
@@ -23,36 +23,12 @@ pub fn from_single_file(text: String) -> (Analysis, FileId) {
     let file_id = test_package.new_file_id();
     file_set.insert(file_id, VfsPath::new_virtual_path("/main.move".to_owned()));
 
-    changes.set_package_roots(vec![PackageRoot::new_local(
-        file_set,
-        Some("/test_package".into()),
-    )]);
+    changes.set_package_roots(vec![PackageRoot::new(file_set, PackageKind::Local, None)]);
     changes.change_file(file_id, Some(text));
 
     test_package.apply_changes(changes);
 
     (test_package.analysis(), file_id)
-}
-
-pub fn from_multiple_files(file_source: &str) -> TestPackage {
-    let files = parse_files_from_source(file_source);
-
-    let mut test_package = TestPackage::new();
-
-    let mut file_set = FileSet::default();
-    let mut changes = FileChanges::new();
-    for (file_name, file_contents) in files {
-        let file_id = test_package.new_file_id();
-        file_set.insert(file_id, VfsPath::new_virtual_path(file_name));
-        changes.change_file(file_id, Some(file_contents));
-    }
-
-    let package_root = PackageRoot::new_local(file_set, Some("/test_package".into()));
-    changes.set_package_roots(vec![package_root]);
-
-    test_package.apply_changes(changes);
-
-    test_package
 }
 
 pub struct TestPackage {
@@ -138,40 +114,4 @@ fn parse_files_from_source(files_source: &str) -> Vec<(String, String)> {
     }
 
     files
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_from_multiple_files() {
-        // language=Move
-        let test_package = from_multiple_files(
-            r#"
-//- /call.move
-module 0x1::call {
-    fun call() {}
-}
-//- /main.move
-module 0x1::m {
-    fun main() { /*caret*/ }
-}
-        "#,
-        );
-        assert_eq!(test_package.files.len(), 3);
-
-        let (_, file_with_caret) = test_package.file_with_caret("/*caret*/");
-        assert_eq!(
-            file_with_caret,
-            // language=Move
-            stdx::trim_indent(
-                r#"
-module 0x1::m {
-    fun main() { /*caret*/ }
-}
-        "#
-            )
-        )
-    }
 }
