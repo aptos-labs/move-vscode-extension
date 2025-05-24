@@ -2187,13 +2187,15 @@ fn test_modifies_expects_struct() {
 }
 
 #[test]
-fn test_cast_happens_before_assignment() {
+fn test_infer_variables_before_integer_type_checking() {
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::m {
+            struct Option<T> { val: T }
+            public native fun borrow<Element>(self: &Option<Element>): &Element;
+            public native fun get_option<T>(x: T): Option<T>;
             fun main() {
-                let a: u8 = 1;
-                a = 1u16 as u8;
+                1 < *get_option(1u64).borrow();
             }
         }
     "#]]);
