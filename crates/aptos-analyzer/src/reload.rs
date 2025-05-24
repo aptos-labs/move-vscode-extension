@@ -5,7 +5,7 @@ use crate::lsp::utils::Progress;
 use crate::main_loop::Task;
 use crate::op_queue::Cause;
 use crate::{Config, lsp_ext};
-use base_db::change::{FileChanges, PackageGraph};
+use base_db::change::{FileChanges, ManifestFileId, PackageGraph};
 use lsp_types::FileSystemWatcher;
 use project_model::aptos_package::{AptosPackage, load_from_fs};
 use project_model::dep_graph;
@@ -17,7 +17,7 @@ use std::{fmt, mem};
 use stdx::format_to;
 use stdx::thread::ThreadIntent;
 use vfs::loader::Handle;
-use vfs::{AbsPath, Vfs};
+use vfs::{AbsPath, FileId, Vfs};
 
 #[derive(Debug)]
 pub(crate) enum FetchPackagesProgress {
@@ -475,13 +475,17 @@ pub(crate) fn should_refresh_for_file_change(
 
 fn trace_dependencies(dep_graph: &PackageGraph, vfs: &Vfs) {
     for (package_file_id, dep_ids) in dep_graph {
-        let main_package_name = vfs
-            .file_path(*package_file_id)
-            .as_path()
-            .and_then(|it| it.file_name());
+        let main_package = dir_file_name(vfs, *package_file_id).unwrap_or("<empty>".to_string());
         let dep_names = dep_ids
             .iter()
-            .map(|it| vfs.file_path(*it).as_path().and_then(|p| p.file_name()));
-        tracing::debug!(?main_package_name, ?dep_names);
+            .map(|it| dir_file_name(vfs, *it).unwrap_or("<empty>".to_string()))
+            .collect::<Vec<_>>();
+        tracing::info!(?main_package, ?dep_names);
     }
+}
+
+fn dir_file_name(vfs: &Vfs, file_id: ManifestFileId) -> Option<String> {
+    let manifest_path = vfs.file_path(file_id);
+    let root_path = manifest_path.as_path()?.to_path_buf().parent()?.to_path_buf();
+    root_path.file_name().map(|it| it.to_string())
 }
