@@ -8,7 +8,7 @@ use crate::{Config, lsp_ext};
 use base_db::change::FileChanges;
 use lsp_types::FileSystemWatcher;
 use project_model::aptos_package::{AptosPackage, load_from_fs};
-use project_model::dep_graph::collect;
+use project_model::dep_graph::{collect, collect_initial};
 use project_model::project_folders::ProjectFolders;
 use std::fmt::Formatter;
 use std::sync::Arc;
@@ -312,6 +312,7 @@ impl GlobalState {
     #[tracing::instrument(level = "info", skip(self))]
     fn recreate_package_graph(&mut self, cause: String, initial_build: bool) {
         let progress_title = "Reloading Aptos packages";
+
         self.report_progress(
             progress_title,
             Progress::Begin,
@@ -320,18 +321,11 @@ impl GlobalState {
             None,
         );
         let package_graph = {
+            let packages = self.all_packages.as_slice();
             if initial_build {
                 // with initial build, vfs might not be ready, so we need to load files manually
                 let vfs = &mut self.vfs.write().0;
-                let mut load = |path: &AbsPath| {
-                    let contents = self.vfs_loader.handle.load_sync(path);
-                    let path = vfs::VfsPath::from(path.to_path_buf());
-                    vfs.set_file_contents(path.clone(), contents);
-                    vfs.file_id(&path).and_then(|(file_id, excluded)| {
-                        (excluded == vfs::FileExcluded::No).then_some(file_id)
-                    })
-                };
-                collect(self.all_packages.as_slice(), &mut load)
+                collect_initial(packages, vfs)
             } else {
                 let vfs = &self.vfs.read().0;
                 let mut load = |path: &AbsPath| {
@@ -339,11 +333,11 @@ impl GlobalState {
                     vfs.file_id(&vfs::VfsPath::from(path.to_path_buf()))
                         .map(|it| it.0)
                 };
-                collect(self.all_packages.as_slice(), &mut load)
+                collect(packages, &mut load)
             }
         };
-
         self.report_progress(progress_title, Progress::End, None, None, None);
+
         let Some(package_graph) = package_graph else {
             tracing::info!("cannot reload package dep graph, vfs is not ready yet");
             return;

@@ -4,6 +4,7 @@ use crossbeam_channel::unbounded;
 use lang::builtins_file;
 use project_model::aptos_package::AptosPackage;
 use project_model::dep_graph;
+use project_model::dep_graph::collect_initial;
 use project_model::project_folders::ProjectFolders;
 use vfs::AbsPath;
 use vfs::loader::{Handle, LoadingProgress};
@@ -16,13 +17,7 @@ pub fn load_db(packages: &[AptosPackage]) -> anyhow::Result<(RootDatabase, vfs::
         Box::new(loader)
     };
 
-    let package_graph = dep_graph::collect(&packages, &mut |path: &AbsPath| {
-        let contents = vfs_loader.load_sync(path);
-        let path = vfs::VfsPath::from(path.to_path_buf());
-        vfs.set_file_contents(path.clone(), contents);
-        vfs.file_id(&path)
-            .and_then(|(file_id, excluded)| (excluded == vfs::FileExcluded::No).then_some(file_id))
-    });
+    let package_graph = collect_initial(&packages, &mut vfs);
 
     let project_folders = ProjectFolders::new(&packages);
     // sends `vfs::loader::message::Loaded { files }` events for project folders
