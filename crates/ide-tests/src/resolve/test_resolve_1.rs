@@ -1,4 +1,5 @@
-use crate::resolve::{check_resolve, check_resolve_files};
+use crate::resolve::{check_resolve, check_resolve_tmpfs};
+use test_utils::fixtures::test_state::named;
 
 #[test]
 fn test_resolve_base_for_index_expr() {
@@ -198,10 +199,11 @@ module 0x1::main {
     )
 }
 
-// language=Move
 #[test]
 fn test_module_item_cross_file() {
-    check_resolve_files(
+    check_resolve_tmpfs(vec![named(
+        "Main",
+        // language=Move
         r#"
 //- /m.move
 module std::m {
@@ -211,19 +213,21 @@ module std::m {
 //- /main.move
 module std::main {
     use std::m::call;
-    public fun main() {
+
+public fun main() {
         call();
        //^
     }
 }
 "#,
-    )
+    )])
 }
 
-// language=Move
 #[test]
 fn test_module_item_cross_file_unresolved() {
-    check_resolve_files(
+    check_resolve_tmpfs(vec![named(
+        "Main",
+        // language=Move
         r#"
 //- /m.move
 module std::m {
@@ -237,7 +241,7 @@ module std::main {
     }
 }
 "#,
-    )
+    )])
 }
 
 // language=Move

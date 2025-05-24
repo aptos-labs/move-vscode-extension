@@ -1,43 +1,54 @@
 use camino::Utf8PathBuf;
 use vfs::file_set::FileSet;
-use vfs::{FileId, VfsPath};
+use vfs::{AbsPathBuf, FileId, Vfs, VfsPath};
 
 #[salsa_macros::interned(no_lifetime, debug)]
 pub struct PackageId {
     pub idx: u32,
-    pub root_dir: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PackageKind {
+    Local,
+    /// Sysroot or crates.io library.
+    ///
+    /// Libraries are considered mostly immutable, this assumption is used to
+    /// optimize salsa's query structure
+    Library,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PackageRoot {
     pub file_set: FileSet,
-    /// Sysroot or crates.io library.
-    ///
-    /// Libraries are considered mostly immutable, this assumption is used to
-    /// optimize salsa's query structure
-    pub is_library: bool,
-    pub root_dir: Option<Utf8PathBuf>,
+    pub kind: PackageKind,
+    pub manifest_file_id: Option<FileId>,
 }
 
 impl PackageRoot {
-    pub fn new_local(file_set: FileSet, root_dir: Option<Utf8PathBuf>) -> PackageRoot {
+    pub fn new(file_set: FileSet, kind: PackageKind, manifest_file_id: Option<FileId>) -> Self {
         PackageRoot {
             file_set,
-            is_library: false,
-            root_dir,
+            kind,
+            manifest_file_id,
         }
     }
 
-    pub fn new_library(file_set: FileSet, root_dir: Option<Utf8PathBuf>) -> PackageRoot {
-        PackageRoot {
-            file_set,
-            is_library: true,
-            root_dir,
-        }
+    pub fn is_library(&self) -> bool {
+        self.kind == PackageKind::Library
     }
 
-    pub fn root_dir_name(&self) -> Option<&str> {
-        self.root_dir.as_ref().and_then(|it| it.file_name())
+    pub fn root_dir(&self, vfs: &Vfs) -> Option<AbsPathBuf> {
+        let manifest_file_id = self.manifest_file_id?;
+        if !vfs.exists(manifest_file_id) {
+            return None;
+        }
+        let root_dir = vfs.file_path(manifest_file_id).parent()?;
+        root_dir.as_path().map(|it| it.to_path_buf())
+    }
+
+    pub fn root_dir_name(&self, vfs: &Vfs) -> Option<String> {
+        self.root_dir(vfs)
+            .and_then(|it| it.file_name().map(|n| n.to_string()))
     }
 
     pub fn path_for_file(&self, file: &FileId) -> Option<&VfsPath> {

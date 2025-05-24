@@ -10,7 +10,6 @@ use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::ty::Ty;
-use base_db::change::package_ids_to_names;
 use base_db::inputs::InternFileId;
 use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
@@ -138,10 +137,13 @@ fn file_ids_by_module_address_tracked<'db>(
 #[salsa_macros::tracked]
 fn all_package_file_ids(db: &dyn SourceDatabase, package_id: PackageId) -> Vec<FileId> {
     let dep_ids = db.dep_package_ids(package_id).deps(db).deref().to_owned();
-    tracing::debug!(
-        package_id = ?package_id.root_dir(db),
-        dep_ids = ?package_ids_to_names(db, &dep_ids)
-    );
+    // {
+    //     let package_root_dir = db.package_root(package_id).data(db).root_dir_name();
+    //     tracing::debug!(
+    //         package_id = ?package_root_dir,
+    //         dep_ids = ?package_ids_to_names(db, &dep_ids)
+    //     );
+    // }
 
     let file_sets = iter::once(package_id)
         .chain(dep_ids)

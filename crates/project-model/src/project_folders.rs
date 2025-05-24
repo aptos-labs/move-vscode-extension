@@ -1,6 +1,6 @@
 use crate::aptos_package::{AptosPackage, PackageFolderRoot};
-use base_db::package_root::PackageRoot;
-use paths::Utf8PathBuf;
+use base_db::package_root::{PackageKind, PackageRoot};
+use paths::{AbsPathBuf, Utf8PathBuf};
 use std::fmt;
 use std::fmt::Formatter;
 use vfs::VfsPath;
@@ -18,14 +18,23 @@ impl PackageRootConfig {
         let mut package_roots = vec![];
         for (idx, package_file_set) in package_file_sets.into_iter().enumerate() {
             let root_dir = self.root_dir(idx);
-            // let root_dir_name = self.root_dir(idx).and_then(|it| it.file_name());
             let is_local = self.local_filesets.contains(&(idx as u64));
-            let package_root = if is_local {
-                PackageRoot::new_local(package_file_set, root_dir)
+            let kind = if is_local {
+                PackageKind::Local
             } else {
-                PackageRoot::new_library(package_file_set, root_dir)
+                PackageKind::Library
             };
-            package_roots.push(package_root);
+            match root_dir {
+                None => {
+                    // builtins package root
+                    package_roots.push(PackageRoot::new(package_file_set, kind, None));
+                }
+                Some(root_dir) => {
+                    let manifest_path = VfsPath::from(AbsPathBuf::assert(root_dir.join("Move.toml")));
+                    let manifest_file_id = vfs.file_id(&manifest_path).map(|it| it.0);
+                    package_roots.push(PackageRoot::new(package_file_set, kind, manifest_file_id))
+                }
+            }
         }
         package_roots
     }

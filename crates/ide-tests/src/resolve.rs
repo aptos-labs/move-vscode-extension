@@ -43,35 +43,6 @@ pub fn check_resolve(source: &str) {
     assert_resolves_to_target(&analysis, nav_item, (file_id, source.to_string()));
 }
 
-pub fn check_resolve_files(files: &str) {
-    init_tracing_for_test();
-
-    let test_package = fixtures::from_multiple_files(files);
-    let (ref_file_id, ref_file_text) = test_package.file_with_caret("//^");
-    let (ref_offset, data) = get_marked_position_offset_with_data(&ref_file_text, "//^");
-
-    let analysis = test_package.analysis();
-    let position = FilePosition {
-        file_id: ref_file_id,
-        offset: ref_offset,
-    };
-    let item = analysis
-        .goto_definition(position)
-        .unwrap()
-        .map(|range_info| range_info.info);
-    if data == "unresolved" {
-        assert!(
-            item.is_none(),
-            "Should be unresolved, but instead resolved to {:?}",
-            item.unwrap()
-        );
-        return;
-    }
-    let nav_item = item.expect("item is unresolved");
-
-    assert_resolves_to_target(&analysis, nav_item, test_package.file_with_caret("//X"));
-}
-
 pub fn check_resolve_tmpfs(test_packages: Vec<TestPackageFiles>) {
     init_tracing_for_test();
 

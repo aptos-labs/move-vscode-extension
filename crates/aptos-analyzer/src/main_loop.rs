@@ -352,7 +352,7 @@ impl GlobalState {
                     // While theoretically these should never have errors, we have quite a few false
                     // positives particularly in the stdlib, and those diagnostics would stay around
                     // forever if we emitted them here.
-                    !db.package_root(package_id).data(db).is_library
+                    !db.package_root(package_id).data(db).is_library()
                 })
                 .collect::<std::sync::Arc<_>>()
         };
