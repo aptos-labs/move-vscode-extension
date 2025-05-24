@@ -198,24 +198,24 @@ impl GlobalState {
                 .collect::<Vec<_>>()
         );
 
-        let same_packages = packages_from_fs.len() == self.all_packages.len()
-            && packages_from_fs
-                .iter()
-                .zip(self.all_packages.iter())
-                .all(|(l, r)| l.eq(r));
+        // let same_packages = packages_from_fs.len() == self.all_packages.len()
+        //     && packages_from_fs
+        //         .iter()
+        //         .zip(self.all_packages.iter())
+        //         .all(|(l, r)| l.eq(r));
 
-        if same_packages {
-            if switching_from_empty_workspace {
-                // Switching from empty to empty is a no-op
-                return;
-            }
-            tracing::info!(?force_reload_deps, "packages are unchanged");
-            if *force_reload_deps {
-                self.recreate_package_graph(cause, switching_from_empty_workspace);
-            }
-            // Unchanged workspaces, nothing to do here
-            return;
-        }
+        // if same_packages {
+        //     if switching_from_empty_workspace {
+        //         // Switching from empty to empty is a no-op
+        //         return;
+        //     }
+        //     tracing::info!(?force_reload_deps, "packages are unchanged");
+        //     if *force_reload_deps {
+        //         self.recreate_package_graph(cause, switching_from_empty_workspace);
+        //     }
+        //     // Unchanged workspaces, nothing to do here
+        //     return;
+        // }
 
         let project_folders = ProjectFolders::new(&packages_from_fs);
         let watch = match self.config.files().watcher {
