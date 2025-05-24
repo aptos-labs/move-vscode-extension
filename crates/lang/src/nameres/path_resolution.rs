@@ -6,7 +6,7 @@ use crate::nameres::name_resolution::{
 use crate::nameres::namespaces::Ns::FUNCTION;
 use crate::nameres::namespaces::{FUNCTIONS, Ns};
 use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
-use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryListExt};
+use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryExt, ScopeEntryListExt};
 use crate::types::inference::{InferenceCtx, TyVarIndex};
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
@@ -15,7 +15,7 @@ use base_db::package_root::PackageId;
 use syntax::SyntaxKind::VARIANT;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
-use syntax::ast::{HasItems, ReferenceElement};
+use syntax::ast::{HasItems, NamedElement, ReferenceElement};
 use syntax::files::{InFile, InFileExt, OptionInFileExt};
 use syntax::{AstNode, ast};
 use vfs::FileId;
@@ -104,14 +104,12 @@ pub fn get_method_resolve_variants(
     else {
         return vec![];
     };
-    let function_entries = receiver_item_module.non_test_functions().to_entries(file_id);
-    let ty_lowering = TyLowering::new(db, msl);
+
     let mut method_entries = vec![];
-    for function_entry in function_entries {
-        let Some(InFile { file_id, value: f }) = function_entry.node_loc.to_ast::<ast::Fun>(db) else {
-            continue;
-        };
-        let Some(self_param_ty) = f
+    let ty_lowering = TyLowering::new(db, msl);
+
+    for function in receiver_item_module.non_test_functions() {
+        let Some(self_param_ty) = function
             .self_param()
             .and_then(|self_param| self_param.type_())
             .map(|self_param_type| ty_lowering.lower_type(self_param_type.in_file(file_id)))
@@ -121,11 +119,15 @@ pub fn get_method_resolve_variants(
         let ty_var_index = TyVarIndex::default();
         let self_param_with_ty_vars = self_param_ty
             .fold_ty_type_params(|ty_tp| Ty::new_ty_var_with_origin(ty_tp.origin_loc, &ty_var_index));
+
         let mut inference_ctx = InferenceCtx::new(db, file_id, false);
         if inference_ctx.is_tys_compatible_with_autoborrow(self_ty.clone(), self_param_with_ty_vars) {
-            method_entries.push(function_entry);
+            if let Some(method_entry) = function.in_file(file_id).to_entry() {
+                method_entries.push(method_entry);
+            }
         }
     }
+
     tracing::debug!(?method_entries);
     method_entries
 }

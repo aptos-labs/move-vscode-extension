@@ -34,7 +34,7 @@ impl InferenceResult {
             .clone()
             .into_iter()
             .map(|type_error| ctx.fully_resolve_vars_fallback_to_origin(type_error))
-            .collect();
+            .collect::<Vec<_>>();
 
         let pat_types = fully_resolve_map_values(ctx.pat_types.clone(), &ctx);
         let expr_types = fully_resolve_map_values(ctx.expr_types.clone(), &ctx);
