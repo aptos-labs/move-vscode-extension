@@ -1,9 +1,9 @@
 use crate::resolve::check_resolve_tmpfs;
-use test_utils::fixtures::test_state::TestPackageFiles;
+use test_utils::fixtures::test_state::{named, named_with_deps};
 
 #[test]
 fn test_module_item_cross_tmpfs() {
-    check_resolve_tmpfs(vec![TestPackageFiles::named(
+    check_resolve_tmpfs(vec![named(
         "WsRoot",
         // language=Move
         r#"
@@ -26,13 +26,8 @@ module std::main {
 
 #[test]
 fn test_cross_package_resolve_with_public_package() {
-    check_resolve_tmpfs(vec![TestPackageFiles::new(
+    check_resolve_tmpfs(vec![named(
         "main",
-        // language=TOML
-        r#"
-[package]
-name = "Main"
-        "#,
         // language=Move
         r#"
 //- /main.move
@@ -55,13 +50,10 @@ module std::m {
 #[test]
 fn test_cross_package_resolve() {
     check_resolve_tmpfs(vec![
-        TestPackageFiles::new(
+        named_with_deps(
             "main",
             // language=TOML
             r#"
-[package]
-name = "Main"
-
 [dependencies]
 M = { local = "../m"}
         "#,
@@ -77,13 +69,8 @@ module std::main {
 }
 "#,
         ),
-        TestPackageFiles::new(
+        named(
             "m",
-            // language=TOML
-            r#"
-[package]
-name = "M"
-        "#,
             // language=Move
             r#"
 //- /m.move
@@ -99,13 +86,10 @@ module std::m {
 #[test]
 fn test_transitive_dependency() {
     check_resolve_tmpfs(vec![
-        TestPackageFiles::new(
+        named_with_deps(
             "main",
             // language=TOML
             r#"
-[package]
-name = "Main"
-
 [dependencies]
 AptosStd = { local = "../aptos_std" }
         "#,
@@ -120,26 +104,18 @@ module std::main {
 }
 "#,
         ),
-        TestPackageFiles::new(
+        named_with_deps(
             "aptos_std",
             // language=TOML
             r#"
-[package]
-name = "AptosStd"
-
 [dependencies]
 Std = { local = "../std" }
         "#,
             // language=Move
             r#""#,
         ),
-        TestPackageFiles::new(
+        named(
             "std",
-            // language=TOML
-            r#"
-[package]
-name = "Std"
-        "#,
             // language=Move
             r#"
 //- /table.move
@@ -155,13 +131,10 @@ module std::table {
 #[test]
 fn test_resolve_to_item_which_occurs_in_dep_tree_twice() {
     check_resolve_tmpfs(vec![
-        TestPackageFiles::new(
+        named_with_deps(
             "main",
             // language=TOML
             r#"
-[package]
-name = "Main"
-
 [dependencies]
 AptosStd = { local = "../aptos_std" }
 Std = { local = "../std" }
@@ -177,26 +150,18 @@ module std::main {
 }
 "#,
         ),
-        TestPackageFiles::new(
+        named_with_deps(
             "aptos_std",
             // language=TOML
             r#"
-[package]
-name = "AptosStd"
-
 [dependencies]
 Std = { local = "../std" }
         "#,
             // language=Move
             r#""#,
         ),
-        TestPackageFiles::new(
+        named(
             "std",
-            // language=TOML
-            r#"
-[package]
-name = "Std"
-        "#,
             // language=Move
             r#"
 //- /table.move
@@ -212,13 +177,10 @@ module std::table {
 #[test]
 fn test_cannot_resolve_dependency_if_no_toml_declaration() {
     check_resolve_tmpfs(vec![
-        TestPackageFiles::new(
+        named_with_deps(
             "main",
             // language=TOML
             r#"
-[package]
-name = "Main"
-
 [dependencies]
         "#,
             // language=Move
@@ -232,26 +194,18 @@ module std::main {
 }
 "#,
         ),
-        TestPackageFiles::new(
+        named_with_deps(
             "aptos_std",
             // language=TOML
             r#"
-[package]
-name = "AptosStd"
-
 [dependencies]
 Std = { local = "../std" }
         "#,
             // language=Move
             r#""#,
         ),
-        TestPackageFiles::new(
+        named(
             "std",
-            // language=TOML
-            r#"
-[package]
-name = "Std"
-        "#,
             // language=Move
             r#"
 //- /table.move
@@ -266,28 +220,18 @@ module std::table {
 #[test]
 fn test_resolve_to_item_in_dep_after_circular() {
     check_resolve_tmpfs(vec![
-        TestPackageFiles::new(
+        named_with_deps(
             "main",
-            // language=TOML
             r#"
-[package]
-name = "Main"
-
 [dependencies]
 Std = { local = "../std" }
 AptosStd = { local = "../aptos_std" }
         "#,
-            // language=Move
-            r#"
-"#,
+            r#""#,
         ),
-        TestPackageFiles::new(
+        named_with_deps(
             "aptos_std",
-            // language=TOML
             r#"
-[package]
-name = "AptosStd"
-
 [dependencies]
 Std = { local = "../std" }
 Std2 = { local = "../std2" }
@@ -303,13 +247,8 @@ module std::main {
 }
 "#,
         ),
-        TestPackageFiles::new(
+        named(
             "std",
-            // language=TOML
-            r#"
-[package]
-name = "Std"
-        "#,
             // language=Move
             r#"
 //- /table.move
@@ -319,16 +258,37 @@ module std::table {
 }
 "#,
         ),
-        TestPackageFiles::new(
-            "std2",
-            // language=TOML
-            r#"
-[package]
-name = "Std2"
-        "#,
-            // language=Move
-            r#"
-"#,
-        ),
+        named("std2", r#""#),
     ])
+}
+
+#[test]
+fn test_resolve_spec_fun_from_related_module_spec() {
+    let test_packages = vec![named(
+        "AptosStd",
+        // language=Move
+        r#"
+//- /any.move
+module std::any {
+    fun main() {
+        spec {
+            use std::from_bcs;
+            from_bcs::deserializable();
+                     //^
+        }
+    }
+}
+//- /from_bcs.move
+module std::from_bcs {}
+
+//- /from_bcs.spec.move
+spec std::from_bcs {
+    spec module {
+        fun deserializable(bytes: vector<u8>): bool;
+            //X
+    }
+}
+        "#,
+    )];
+    check_resolve_tmpfs(test_packages);
 }

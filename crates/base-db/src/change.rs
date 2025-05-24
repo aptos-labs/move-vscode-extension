@@ -64,7 +64,7 @@ impl FileChanges {
                     db.set_file_package_id(file_id, package_id);
                     db.set_spec_related_files(
                         file_id,
-                        find_spec_file_set(file_id, root.clone()).unwrap_or(vec![file_id]),
+                        find_spec_file_set(file_id, root.clone()).unwrap_or(vec![]),
                     );
                 }
                 db.set_package_root_with_durability(package_id, Arc::from(root), durability);
@@ -76,7 +76,7 @@ impl FileChanges {
             tracing::info!(?builtins_file_id, "set builtins file");
             db.set_builtins_file_id(Some(builtins_file_id));
             db.set_file_text_with_durability(builtins_file_id, builtins_text.as_str(), Durability::HIGH);
-            db.set_spec_related_files(builtins_file_id, vec![builtins_file_id]);
+            db.set_spec_related_files(builtins_file_id, vec![]);
         }
 
         if let Some(package_graph) = self.package_graph {
@@ -137,7 +137,7 @@ fn find_spec_file_set(file_id: FileId, root: PackageRoot) -> Option<Vec<FileId>>
         }
     }?;
     let candidate_file_id = root.file_for_path(&candidate)?;
-    Some(vec![file_id, *candidate_file_id])
+    Some(vec![*candidate_file_id])
 }
 
 fn package_root_durability(package_root: &PackageRoot) -> Durability {

@@ -76,6 +76,7 @@ pub fn check_resolve_tmpfs(test_packages: Vec<TestPackageFiles>) {
     init_tracing_for_test();
 
     let test_state = fixtures::from_multiple_files_on_tmpfs(test_packages);
+
     let (ref_file_id, ref_file_text) = test_state.file_with_caret("//^");
     let (ref_offset, data) = get_marked_position_offset_with_data(&ref_file_text, "//^");
 

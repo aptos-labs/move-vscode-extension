@@ -3,6 +3,7 @@ use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryExt};
 use crate::node_ext::item::ModuleItemExt;
 use base_db::inputs::InternFileId;
 use base_db::{SourceDatabase, source_db};
+use std::iter;
 use syntax::ast;
 use syntax::ast::HasItems;
 use syntax::files::{InFile, InFileExt};
@@ -45,7 +46,8 @@ impl ModuleResolutionExt for InFile<ast::Module> {
     /// collects `spec MODULE {}` from all spec-related (NAME.move + NAME.spec.move) file ids
     #[tracing::instrument(level = "debug", skip_all)]
     fn related_module_specs(&self, db: &dyn SourceDatabase) -> Vec<InFile<ast::ModuleSpec>> {
-        let related_file_ids = db.spec_related_files(self.file_id).data(db);
+        let related_file_ids =
+            iter::once(self.file_id).chain(db.spec_related_files(self.file_id).data(db));
         let mut module_specs = vec![];
         for spec_related_file_id in related_file_ids {
             let source_file = source_db::parse(db, spec_related_file_id.intern(db)).tree();

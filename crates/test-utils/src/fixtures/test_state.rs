@@ -52,28 +52,35 @@ pub struct TestPackageFiles {
     source_files: String,
 }
 
-impl TestPackageFiles {
-    pub fn new(root_dir: &str, move_toml: &str, source_files: &str) -> Self {
-        TestPackageFiles {
-            root_dir: root_dir.to_string(),
-            move_toml: stdx::trim_indent(move_toml),
-            source_files: source_files.to_string(),
-        }
-    }
-
-    pub fn named(name: &str, source_files: &str) -> Self {
-        // language=TOML
-        TestPackageFiles {
-            root_dir: name.to_string(),
-            move_toml: stdx::trim_indent(&format!(
-                r#"
+pub fn named(name: &str, source_files: &str) -> TestPackageFiles {
+    // language=TOML
+    TestPackageFiles {
+        root_dir: name.to_string(),
+        move_toml: stdx::trim_indent(&format!(
+            r#"
 [package]
 name = "{name}"
 version = "0.1.0"
         "#
-            )),
-            source_files: source_files.to_string(),
-        }
+        )),
+        source_files: source_files.to_string(),
+    }
+}
+
+pub fn named_with_deps(name: &str, deps: &str, source_files: &str) -> TestPackageFiles {
+    // language=TOML
+    TestPackageFiles {
+        root_dir: name.to_string(),
+        move_toml: stdx::trim_indent(&format!(
+            r#"
+[package]
+name = "{name}"
+version = "0.1.0"
+
+{deps}
+        "#
+        )),
+        source_files: source_files.to_string(),
     }
 }
 
