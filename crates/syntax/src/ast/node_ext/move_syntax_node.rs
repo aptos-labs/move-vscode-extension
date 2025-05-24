@@ -25,9 +25,16 @@ pub trait MoveSyntaxElementExt {
         self.is::<ast::AnyMslOnly>()
     }
 
+    fn is_msl_only_scope(&self) -> bool {
+        matches!(
+            self.node().kind(),
+            SPEC_FUN | SPEC_INLINE_FUN | ITEM_SPEC | SPEC_BLOCK_EXPR
+        )
+    }
+
     fn is_msl_context(&self) -> bool {
         for ancestor in self.node().ancestors() {
-            if ancestor.kind() == MODULE || ancestor.kind() == FUN || ancestor.kind() == STRUCT {
+            if matches!(ancestor.kind(), MODULE | FUN | STRUCT | ENUM) {
                 return false;
             }
             if ancestor.is_msl_only_item() {

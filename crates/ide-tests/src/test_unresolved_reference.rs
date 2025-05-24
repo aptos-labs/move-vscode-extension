@@ -735,3 +735,20 @@ fn test_no_unresolved_reference_on_non_standard_named_address_in_friend_decl() {
         }
 "#]]);
 }
+
+#[test]
+fn test_special_spec_constants_ignore_consts_with_the_same_names_from_the_module_scope() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            const MAX_U64: u128 = 18446744073709551615;
+            fun main() {
+            }
+        }
+        spec 0x1::m {
+            spec main {
+                MAX_U64;
+            }
+        }
+"#]]);
+}

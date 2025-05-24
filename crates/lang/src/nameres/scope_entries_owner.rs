@@ -5,6 +5,7 @@ use crate::nameres::get_schema_field_entries;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::node_ext::item_spec::ItemSpecExt;
 use base_db::{SourceDatabase, source_db};
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::{FieldsOwner, GenericElement, HasItems};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, SyntaxNode, ast, match_ast};
@@ -29,8 +30,13 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: InFile<SyntaxNode>
     let file_id = scope.file_id;
     let mut entries = vec![];
 
-    if let Some(has_type_params) = ast::AnyGenericElement::cast(scope.value.clone()) {
-        entries.extend(has_type_params.type_params().to_entries(file_id));
+    if let Some(generic_element) = ast::AnyGenericElement::cast(scope.value.clone()) {
+        entries.extend(generic_element.type_params().to_entries(file_id));
+    }
+
+    if scope.value.is_msl_only_scope() {
+        entries.extend(builtin_spec_functions(db).to_entries());
+        entries.extend(builtin_spec_consts(db).to_entries());
     }
 
     match scope.value.kind() {
@@ -41,16 +47,12 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: InFile<SyntaxNode>
             entries.extend(module.value.enum_variants().to_entries(file_id));
 
             entries.extend(builtin_functions(db).to_entries());
-            entries.extend(builtin_spec_functions(db).to_entries());
-            entries.extend(builtin_spec_consts(db).to_entries());
         }
         MODULE_SPEC => {
             let module_spec = scope.syntax_cast::<ast::ModuleSpec>().unwrap();
 
             let importable_entries = module_spec.flat_map(|it| it.importable_items()).to_entries();
             entries.extend(importable_entries);
-
-            entries.extend(builtin_spec_functions(db).to_entries());
         }
         ITEM_SPEC => {
             let item_spec = scope.syntax_cast::<ast::ItemSpec>().unwrap();
@@ -71,7 +73,6 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: InFile<SyntaxNode>
                 }
             }
         }
-        // todo: ITEM_SPEC should have access to params / fields of the item
         SCRIPT => {
             let script = scope.syntax_cast::<ast::Script>().unwrap();
             entries.extend(script.value.consts().to_entries(file_id));
