@@ -218,11 +218,6 @@ impl GlobalState {
         }
 
         let project_folders = ProjectFolders::new(&packages_from_fs);
-        tracing::info!(
-            "project_folders.package_root_config = {:#?}",
-            project_folders.package_root_config
-        );
-
         let watch = match self.config.files().watcher {
             FilesWatcher::Server => project_folders.watch,
             FilesWatcher::Client => {

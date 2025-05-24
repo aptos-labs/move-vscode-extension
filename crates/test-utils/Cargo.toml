@@ -21,4 +21,5 @@ syntax = { path = "../syntax" }
 base-db = { path = "../base-db" }
 lang = { path = "../lang" }
 ide = { path = "../ide" }
+ide-db = { path = "../ide-db" }
 project-model = { path = "../project-model" }
