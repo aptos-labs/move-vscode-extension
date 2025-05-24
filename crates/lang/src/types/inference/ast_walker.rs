@@ -1087,7 +1087,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
         let mut is_error = false;
         let left_ty = self.infer_expr(&lhs, Expected::NoValue);
-        if !left_ty.supports_arithm_op() {
+        if !self
+            .ctx
+            .resolve_ty_vars_if_possible(left_ty.clone())
+            .supports_arithm_op()
+        {
             self.ctx.type_errors.push(TypeError::unsupported_op(
                 lhs.in_file(self.ctx.file_id),
                 left_ty.clone(),
@@ -1097,7 +1101,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         }
         if let Some(rhs) = rhs {
             let right_ty = self.infer_expr(&rhs, Expected::ExpectType(left_ty.clone()));
-            if !right_ty.supports_arithm_op() {
+            if !self
+                .ctx
+                .resolve_ty_vars_if_possible(right_ty.clone())
+                .supports_arithm_op()
+            {
                 self.ctx.type_errors.push(TypeError::unsupported_op(
                     rhs.in_file(self.ctx.file_id),
                     right_ty.clone(),
@@ -1194,7 +1202,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     ) -> Ty {
         let mut is_error = false;
         let left_ty = self.infer_expr(&lhs, Expected::NoValue);
-        if !left_ty.supports_ordering() {
+        if !self
+            .ctx
+            .resolve_ty_vars_if_possible(left_ty.clone())
+            .supports_ordering()
+        {
             self.ctx.type_errors.push(TypeError::unsupported_op(
                 lhs.in_file(self.ctx.file_id),
                 left_ty.clone(),
@@ -1204,7 +1216,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         }
         if let Some(rhs) = rhs {
             let right_ty = self.infer_expr(&rhs, Expected::NoValue);
-            if !right_ty.supports_ordering() {
+            if !self
+                .ctx
+                .resolve_ty_vars_if_possible(right_ty.clone())
+                .supports_ordering()
+            {
                 self.ctx.type_errors.push(TypeError::unsupported_op(
                     rhs.clone().in_file(self.ctx.file_id),
                     right_ty.clone(),
