@@ -6,6 +6,7 @@ pub mod assists;
 pub mod defs;
 pub mod helpers;
 pub mod label;
+pub mod load;
 pub mod root_db;
 pub mod source_change;
 mod syntax_helpers;

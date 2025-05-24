@@ -41,8 +41,6 @@ pub fn collect(aptos_packages: &[AptosPackage], load: VfsLoader<'_>) -> Option<P
 
 impl AptosPackage {
     pub fn dep_graph_entry(&self, load: VfsLoader<'_>) -> Option<(MoveTomlFileId, Vec<MoveTomlFileId>)> {
-        tracing::info!("reloading package at {}", self.content_root());
-
         let package_file_id = load_package_file_id(self.content_root(), load)?;
 
         let mut dep_ids = vec![];

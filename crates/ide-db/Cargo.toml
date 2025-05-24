@@ -7,6 +7,8 @@ license.workspace = true
 
 [dependencies]
 indexmap.workspace = true
+anyhow.workspace = true
+crossbeam-channel.workspace = true
 
 itertools = { workspace = true }
 line-index = { workspace = true }
@@ -17,8 +19,10 @@ salsa.workspace = true
 salsa-macros.workspace = true
 
 vfs = { workspace = true }
+vfs-notify = { workspace = true }
 stdx.workspace = true
 
 base-db = { path = "../base-db" }
 lang = { path = "../lang" }
 syntax = { path = "../syntax" }
+project-model = { path = "../project-model" }

@@ -776,18 +776,22 @@ dependencies = [
 name = "ide-db"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "base-db",
+ "crossbeam-channel",
  "dashmap",
  "indexmap",
  "itertools",
  "lang",
  "line-index",
+ "project-model",
  "salsa",
  "salsa-macros",
  "stdx",
  "syntax",
  "tracing",
  "vfs",
+ "vfs-notify",
 ]
 
 [[package]]
@@ -1776,6 +1780,7 @@ version = "0.1.0"
 dependencies = [
  "base-db",
  "ide",
+ "ide-db",
  "lang",
  "line-index",
  "project-model",
