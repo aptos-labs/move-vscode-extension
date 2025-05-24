@@ -17,7 +17,12 @@ pub fn load_db(packages: &[AptosPackage]) -> anyhow::Result<(RootDatabase, vfs::
         Box::new(loader)
     };
 
+    let mut db = RootDatabase::new();
+
     let package_graph = collect_initial(&packages, &mut vfs);
+    let mut set_graph = FileChanges::new();
+    set_graph.set_package_graph(package_graph.unwrap_or_default());
+    db.apply_change(set_graph);
 
     let project_folders = ProjectFolders::new(&packages);
     // sends `vfs::loader::message::Loaded { files }` events for project folders
@@ -27,7 +32,6 @@ pub fn load_db(packages: &[AptosPackage]) -> anyhow::Result<(RootDatabase, vfs::
         version: 0,
     });
 
-    let mut db = RootDatabase::new();
     let mut analysis_change = FileChanges::new();
 
     // wait until Vfs has loaded all roots
@@ -60,8 +64,6 @@ pub fn load_db(packages: &[AptosPackage]) -> anyhow::Result<(RootDatabase, vfs::
     let package_root_config = project_folders.package_root_config;
     let package_roots = package_root_config.partition_into_package_roots(&vfs);
     analysis_change.set_package_roots(package_roots);
-
-    analysis_change.set_package_graph(package_graph.unwrap_or_default());
 
     db.apply_change(analysis_change);
 

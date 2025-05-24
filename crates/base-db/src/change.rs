@@ -6,8 +6,8 @@ use std::fmt;
 use std::sync::Arc;
 use vfs::FileId;
 
-pub type MoveTomlFileId = FileId;
-pub type PackageGraph = HashMap<MoveTomlFileId, Vec<MoveTomlFileId>>;
+pub type ManifestFileId = FileId;
+pub type PackageGraph = HashMap<ManifestFileId, Vec<ManifestFileId>>;
 
 /// Encapsulate a bunch of raw `.set` calls on the database.
 #[derive(Default)]
@@ -67,7 +67,7 @@ impl FileChanges {
                     );
                 }
                 db.set_package_root_with_durability(package_id, Arc::from(root), durability);
-                db.set_dep_package_ids(package_id, Default::default());
+                // db.set_dep_package_ids(package_id, Default::default());
             }
         }
 
@@ -81,12 +81,7 @@ impl FileChanges {
         if let Some(package_graph) = self.package_graph {
             let _p = tracing::info_span!("set package dependencies").entered();
             for (manifest_file_id, dep_manifest_ids) in package_graph.into_iter() {
-                let main_package_id = db.file_package_id(manifest_file_id);
-                let deps_package_ids = dep_manifest_ids
-                    .into_iter()
-                    .map(|it| db.file_package_id(it))
-                    .collect::<Vec<_>>();
-                db.set_dep_package_ids(main_package_id, deps_package_ids);
+                db.set_dep_package_ids(manifest_file_id, dep_manifest_ids);
             }
         }
 

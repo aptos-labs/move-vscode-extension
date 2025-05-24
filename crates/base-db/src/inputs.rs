@@ -1,3 +1,4 @@
+use crate::change::ManifestFileId;
 use crate::package_root::{PackageId, PackageRoot};
 use crate::source_db::SourceDatabase;
 use dashmap::{DashMap, Entry};
@@ -46,7 +47,7 @@ pub struct PackageRootInput {
 #[salsa::input]
 pub struct PackageData {
     // todo: add package name
-    pub deps: Arc<Vec<PackageId>>,
+    pub dep_manifests: Arc<Vec<ManifestFileId>>,
 }
 
 #[derive(Default)]
@@ -55,7 +56,7 @@ pub struct Files {
     file_package_ids: Arc<DashMap<FileId, PackageId>>,
 
     package_roots: Arc<DashMap<PackageId, PackageRootInput>>,
-    package_deps: Arc<DashMap<PackageId, PackageData>>,
+    package_deps: Arc<DashMap<ManifestFileId, PackageData>>,
 
     spec_file_sets: Arc<DashMap<FileId, FileIdSet>>,
 }
@@ -138,7 +139,7 @@ impl Files {
         self.file_package_ids.insert(file_id, package_id);
     }
 
-    pub fn package_deps(&self, package_id: PackageId) -> PackageData {
+    pub fn package_deps(&self, package_id: ManifestFileId) -> PackageData {
         let package_deps = self
             .package_deps
             .get(&package_id)
@@ -149,16 +150,16 @@ impl Files {
     pub fn set_package_deps(
         &self,
         db: &mut dyn SourceDatabase,
-        package_id: PackageId,
-        deps: Arc<Vec<PackageId>>,
+        package_id: ManifestFileId,
+        dep_ids: Arc<Vec<ManifestFileId>>,
     ) {
         match self.package_deps.entry(package_id) {
             Entry::Occupied(mut occupied) => {
-                occupied.get_mut().set_deps(db).to(deps);
+                occupied.get_mut().set_dep_manifests(db).to(dep_ids);
             }
             Entry::Vacant(vacant) => {
-                let deps = PackageData::builder(deps).new(db);
-                vacant.insert(deps);
+                let package_data = PackageData::builder(dep_ids).new(db);
+                vacant.insert(package_data);
             }
         };
     }
