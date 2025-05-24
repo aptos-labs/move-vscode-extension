@@ -182,7 +182,7 @@ impl Files {
                 occupied.get_mut().set_data(db).to(spec_related_files);
             }
             Entry::Vacant(vacant) => {
-                let file_set = FileIdSet::new(db, vec![file_id]);
+                let file_set = FileIdSet::new(db, spec_related_files);
                 vacant.insert(file_set);
             }
         };

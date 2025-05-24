@@ -17,11 +17,17 @@ use syntax::{AstNode, ast};
 pub(crate) fn find_unresolved_references(
     acc: &mut Vec<Diagnostic>,
     ctx: &DiagnosticsContext<'_>,
-    reference: InFile<impl AstNode>,
+    reference: InFile<impl ReferenceElement>,
 ) -> Option<()> {
     if !ctx.config.unresolved_reference_enabled {
         return None;
     }
+
+    let msl = reference.value.syntax().is_msl_context();
+    if msl && is_special_msl_path(ctx.sema.db, reference.as_ref()).is_some() {
+        return None;
+    }
+
     if let Some(path) = reference.clone().cast_into::<ast::Path>() {
         unresolved_path(acc, ctx, path)?;
     }
@@ -43,11 +49,6 @@ fn unresolved_path(
     ctx: &DiagnosticsContext<'_>,
     reference: InFile<ast::Path>,
 ) -> Option<()> {
-    let msl = reference.value.syntax().is_msl_context();
-    if msl && is_special_msl_path(ctx.sema.db, reference.as_ref()).is_some() {
-        return None;
-    }
-
     let (_, path) = reference.clone().unpack();
     let path_name = path.reference_name()?;
 
@@ -102,12 +103,19 @@ fn unresolved_path(
     Some(())
 }
 
-fn is_special_msl_path(db: &dyn SourceDatabase, path: InFile<&ast::Path>) -> Option<()> {
-    if path.value.syntax().has_ancestor_strict::<ast::ImplyIncludeExpr>() {
+fn is_special_msl_path(
+    db: &dyn SourceDatabase,
+    reference: InFile<&impl ReferenceElement>,
+) -> Option<()> {
+    if reference
+        .value
+        .syntax()
+        .has_ancestor_strict::<ast::ImplyIncludeExpr>()
+    {
         return Some(());
     }
 
-    let update_field_call_expr = path.value.syntax().ancestors().find(|it| {
+    let update_field_call_expr = reference.value.syntax().ancestors().find(|it| {
         it.cast::<ast::CallExpr>()
             .is_some_and(|call_expr| call_expr.syntax().text().to_string().starts_with("update_field"))
     });
@@ -115,12 +123,14 @@ fn is_special_msl_path(db: &dyn SourceDatabase, path: InFile<&ast::Path>) -> Opt
         return Some(());
     }
 
-    let pragma_stmt = path.value.syntax().ancestor_of_type::<ast::PragmaStmt>(true);
+    let pragma_stmt = reference.value.syntax().ancestor_of_type::<ast::PragmaStmt>(true);
     if pragma_stmt.is_some() {
         return Some(());
     }
 
-    let path_expr = path.and_then(|it| it.path_expr())?;
+    let (file_id, reference) = reference.unpack();
+
+    let path_expr = reference.cast_into::<ast::Path>()?.path_expr()?.in_file(file_id);
     if item_spec::get_item_spec_function(db, path_expr.as_ref()).is_some()
         && path_expr.syntax_text().starts_with("result")
     {

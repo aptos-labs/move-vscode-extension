@@ -28,7 +28,7 @@ pub trait MoveSyntaxElementExt {
     fn is_msl_only_scope(&self) -> bool {
         matches!(
             self.node().kind(),
-            SPEC_FUN | SPEC_INLINE_FUN | ITEM_SPEC | SPEC_BLOCK_EXPR
+            SPEC_FUN | SPEC_INLINE_FUN | ITEM_SPEC | SPEC_BLOCK_EXPR | SCHEMA
         )
     }
 
