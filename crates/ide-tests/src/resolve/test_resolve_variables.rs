@@ -133,23 +133,6 @@ module 0x1::m {
 
 // language=Move
 #[test]
-fn test_resolve_test_attribute_to_test_function_parameter() {
-    check_resolve(
-        r#"
-module 0x1::M {
-    #[test(acc = @0x1)]
-          //^
-    fun test_add(acc: signer) {
-                //X
-    
-    }
-}    
-"#,
-    )
-}
-
-// language=Move
-#[test]
 fn test_locals() {
     check_resolve(
         r#"
@@ -491,22 +474,6 @@ module 0x1::string_tests {
 
 // language=Move
 #[test]
-fn test_no_test_attribute_resolution_if_not_on_function() {
-    check_resolve(
-        r#"
-module 0x1::M {
-    fun test_add(acc: signer) {
-        #[test(acc = @0x1)]
-              //^ unresolved
-        use 0x1::M;            
-    }
-}    
-"#,
-    )
-}
-
-// language=Move
-#[test]
 fn test_test_only_function_in_test_function() {
     check_resolve(
         r#"
@@ -766,32 +733,15 @@ module 0x1::m {
 
 // language=Move
 #[test]
-fn test_no_attr_item_signer_reference_for_not_direct_children_of_test() {
+fn test_no_path_resolution_for_attr_items() {
     check_resolve(
         r#"
 module 0x1::m {
-    #[test(unknown_attr(my_signer = @0x1))]
-                         //^ unresolved
+    #[test(my_signer = @0x1)]
+               //^ unresolved
     fun test_main(my_signer: signer) {
     }
 }        
-"#,
-    )
-}
-
-// language=Move
-#[test]
-fn test_no_attribute_resolution_if_not_a_test_attribute() {
-    check_resolve(
-        r#"
-module 0x1::M {
-    #[test]
-    #[expected_failure(abort_code = 1)]
-                         //^ unresolved
-    fun call(abort_code: signer) {
-        
-    }
-}    
 "#,
     )
 }
