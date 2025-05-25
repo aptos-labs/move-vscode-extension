@@ -153,6 +153,7 @@ fn test_unresolved_field_in_struct_pat_shorthand() {
     "#]]);
 }
 
+// todo: should be unresolved with named addresses info present
 #[test]
 fn test_unresolved_module() {
     // language=Move
@@ -160,7 +161,6 @@ fn test_unresolved_module() {
         module 0x1::M {
             fun main() {
                 let t = transaction::create();
-                      //^^^^^^^^^^^ err: Unresolved reference `transaction`: cannot resolve
             }
         }
     "#]]);
@@ -760,4 +760,19 @@ fn test_no_unresolved_address_for_spec_module() {
 module aptos_experimental::mod {}
 spec aptos_experimental::mod {}
 "#]]);
+}
+
+#[test]
+fn test_no_unresolved_address_for_fq_item_on_non_standard_address() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module aptos_experimental::mod {
+            public fun call() {}
+        }
+        module 0x1::m {
+            fun main() {
+                aptos_experimental::mod::call();
+            }
+        }
+    "#]]);
 }

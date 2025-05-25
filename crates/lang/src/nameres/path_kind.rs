@@ -9,6 +9,7 @@ use std::fmt;
 use std::fmt::Formatter;
 use syntax::SyntaxKind::*;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::{SyntaxNodeExt, SyntaxTokenExt};
 use syntax::{AstNode, T, ast};
 
@@ -18,7 +19,7 @@ pub enum PathKind {
     NamedAddress(NamedAddr),
     // 0x1::
     ValueAddress(ValueAddr),
-    // // aptos_std:: where aptos_std is a existing named address in a project
+    // aptos_std:: where aptos_std is a existing named address in a project
     NamedAddressOrUnqualifiedPath {
         address: NamedAddr,
         ns: NsSet,
@@ -45,14 +46,8 @@ impl fmt::Debug for PathKind {
             PathKind::NamedAddressOrUnqualifiedPath { ns, .. } => f
                 .debug_struct("NamedAddressOrUnqualifiedPath")
                 .field("ns", &ns)
-                // .field("ns", &ns.into_iter().join(" | "))
                 .finish(),
-            PathKind::Unqualified { ns } => {
-                f.debug_struct("Unqualified")
-                    .field("ns", &ns)
-                    // .field("ns", &ns.into_iter().join(" | "))
-                    .finish()
-            }
+            PathKind::Unqualified { ns } => f.debug_struct("Unqualified").field("ns", &ns).finish(),
             PathKind::Qualified { path, qualifier, ns, kind } => f
                 .debug_struct("Qualified")
                 .field("kind", &kind)
@@ -97,6 +92,10 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
     // [0x1::foo]::bar
     //     ^ qualifier
     let qualifier = path.qualifier();
+    let has_trailing_colon_colon = path
+        .ident_token()
+        .and_then(|it| it.next_token())
+        .is_some_and(|token| token.is(T![::]));
     let ns = path_namespaces(path.clone(), is_completion);
 
     // one-element path
@@ -119,18 +118,7 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
 
         // outside use stmt
         // check whether there's a '::' after it, then try for a named address
-        if path
-            .ident_token()
-            .and_then(|it| it.next_token())
-            .is_some_and(|token| token.is(T![::]))
-        {
-            if resolve_named_address(&ref_name).is_some() {
-                return Some(PathKind::NamedAddressOrUnqualifiedPath {
-                    address: NamedAddr::new(ref_name),
-                    ns,
-                });
-            }
-
+        if has_trailing_colon_colon {
             if path
                 .root_parent_kind()
                 .is_some_and(|it| matches!(it, FRIEND | MODULE_SPEC))
@@ -139,6 +127,14 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
                 //        ^ (unknown named address)
                 return Some(PathKind::NamedAddress(NamedAddr::new(ref_name)));
             }
+
+            // todo: add resolve back when we have named addresses parsed, it improves unresolved reference a lot
+            // if resolve_named_address(&ref_name).is_some() {
+            return Some(PathKind::NamedAddressOrUnqualifiedPath {
+                address: NamedAddr::new(ref_name),
+                ns,
+            });
+            // }
         }
 
         return Some(PathKind::Unqualified { ns });
@@ -150,51 +146,63 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
     // two-element paths
     if qualifier_of_qualifier.is_none() {
         let qualifier_path_address = qualifier.path_address();
-        let qualifier_ref_name = qualifier.reference_name();
+        if let Some(qualifier_path_address) = qualifier_path_address {
+            let value_address = Address::Value(ValueAddr::new(
+                qualifier_path_address.value_address().address_text(),
+            ));
+            return Some(PathKind::Qualified {
+                path,
+                qualifier,
+                ns: MODULES,
+                kind: QualifiedKind::Module { address: value_address },
+            });
+        }
 
-        match (qualifier_path_address, qualifier_ref_name) {
-            // 0x1::[bar]
-            (Some(qualifier_path_address), _) => {
-                let value_address = Address::Value(ValueAddr::new(
-                    qualifier_path_address.value_address().address_text(),
-                ));
-                return Some(PathKind::Qualified {
-                    path,
-                    qualifier,
-                    ns: MODULES,
-                    kind: QualifiedKind::Module { address: value_address },
-                });
-            }
-            // aptos_framework::[bar]
-            (_, Some(qualifier_ref_name)) => {
-                let named_address = resolve_named_address(&qualifier_ref_name);
-                // use std::[main] | friend std::[main];
-                if path
-                    .root_parent_kind()
-                    .is_some_and(|it| matches!(it, USE_SPECK | FRIEND | MODULE_SPEC))
-                {
-                    return Some(PathKind::Qualified {
-                        path,
-                        qualifier,
-                        ns: MODULES,
-                        kind: QualifiedKind::Module {
-                            address: Address::Named(NamedAddr::new(qualifier_ref_name)),
-                        },
-                    });
-                }
-                if let Some(_) = named_address {
-                    // known named address, can be module path, or module item path too
-                    return Some(PathKind::Qualified {
-                        path,
-                        qualifier,
-                        ns,
-                        kind: QualifiedKind::ModuleOrItem {
-                            address: Address::Named(NamedAddr::new(qualifier_ref_name)),
-                        },
-                    });
-                }
-            }
-            _ => (),
+        let Some(qualifier_ref_name) = qualifier.reference_name() else {
+            // should be either address or reference name, cannot be none
+            return None;
+        };
+
+        // use std::[main] | friend std::[main]; | spec std::[main] {}
+        if path
+            .root_parent_kind()
+            .is_some_and(|it| matches!(it, USE_SPECK | FRIEND | MODULE_SPEC))
+        {
+            return Some(PathKind::Qualified {
+                path,
+                qualifier,
+                ns: MODULES,
+                kind: QualifiedKind::Module {
+                    address: Address::Named(NamedAddr::new(qualifier_ref_name)),
+                },
+            });
+        }
+
+        let named_address = resolve_named_address(&qualifier_ref_name);
+        if let Some(_) = named_address {
+            // known named address, can be module path, or module item path too
+            return Some(PathKind::Qualified {
+                path,
+                qualifier,
+                ns,
+                kind: QualifiedKind::ModuleOrItem {
+                    address: Address::Named(NamedAddr::new(qualifier_ref_name)),
+                },
+            });
+        }
+
+        // item1::[item2]::
+        // ^ qualifier_ref_name
+        //            ^ path
+        if has_trailing_colon_colon {
+            return Some(PathKind::Qualified {
+                path,
+                qualifier,
+                ns,
+                kind: QualifiedKind::ModuleOrItem {
+                    address: Address::Named(NamedAddr::new(qualifier_ref_name)),
+                },
+            });
         }
 
         // remove MODULE if it's added, as it cannot be a MODULE
@@ -274,7 +282,6 @@ fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
 
         CALL_EXPR => NAMES_N_FUNCTIONS_N_VARIANTS,
 
-        // todo: change into AttrItemInitializer
         PATH_EXPR if path.syntax().has_ancestor_strict::<ast::AttrItem>() => ALL_NS,
 
         // TYPE | ENUM for resource indexing, NAME for vector indexing
