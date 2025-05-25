@@ -16,7 +16,7 @@ use crate::codegen::grammar::ast_src::{
     AstNodeSrc, AstSrc, Cardinality, Field, KINDS_SRC, KindsSrc, NON_METHOD_TRAITS, TRAITS,
     get_required_fields,
 };
-use crate::codegen::grammar::lower_enum::{generate_field_method_for_enum, lower_enum};
+use crate::codegen::grammar::lower_enum::{AstEnumSrc, generate_field_method_for_enum, lower_enum};
 use crate::codegen::{add_preamble, ensure_file_contents, reformat};
 use check_keyword::CheckKeyword;
 use itertools::{Either, Itertools};
@@ -150,115 +150,7 @@ fn generate_nodes(kinds: KindsSrc, grammar: &AstSrc) -> String {
     let (enum_defs, enum_boilerplate_impls): (Vec<_>, Vec<_>) = grammar
         .enums
         .iter()
-        .map(|enum_src| {
-            let variants: Vec<_> = enum_src
-                .variants
-                .iter()
-                .map(|var| format_ident!("{}", var))
-                .sorted()
-                .collect();
-            let name = format_ident!("{}", enum_src.name);
-            let kinds: Vec<_> = variants
-                .iter()
-                .map(|name| format_ident!("{}", to_upper_snake_case(&name.to_string())))
-                .collect();
-            let traits = enum_src.traits.iter().sorted().map(|trait_name| {
-                let trait_name = format_ident!("{}", trait_name);
-                quote!(impl ast::#trait_name for #name {})
-            });
-
-            let converters = variants.iter().map(|variant| {
-                let variant_name = variant.to_owned();
-                let mut lower_name = to_lower_snake_case(&variant_name.to_string());
-                if lower_name.is_keyword() {
-                    lower_name = format!("{}_", lower_name);
-                }
-                let lower_name = format_ident!("{}", lower_name);
-                quote! {
-                    pub fn #lower_name(self) -> Option<#variant_name> {
-                        match (self) {
-                            #name::#variant_name(item) => Some(item),
-                            _ => None
-                        }
-                    }
-                }
-            });
-
-            let common_fields = enum_src
-                .common_fields
-                .iter()
-                .map(|common_field| generate_field_method_for_enum(enum_src, common_field))
-                .collect::<Vec<_>>();
-
-            let trait_froms = enum_src.traits.iter().map(|t| {
-                let any_trait_name = format_ident!("Any{}", t);
-                quote! {
-                    impl From<#name> for #any_trait_name {
-                        #[inline]
-                        fn from(node: #name) -> #any_trait_name {
-                            match node {
-                                #(#name::#variants(it) => it.into()),*
-                            }
-                        }
-                    }
-                }
-            });
-
-            let ast_node = quote! {
-                impl #name {
-                    #(#converters)*
-                    #(#common_fields)*
-                }
-                impl AstNode for #name {
-                    #[inline]
-                    fn can_cast(kind: SyntaxKind) -> bool {
-                        matches!(kind, #(#kinds)|*)
-                    }
-                    #[inline]
-                    fn cast(syntax: SyntaxNode) -> Option<Self> {
-                        let res = match syntax.kind() {
-                            #(
-                            #kinds => #name::#variants(#variants { syntax }),
-                            )*
-                            _ => return None,
-                        };
-                        Some(res)
-                    }
-                    #[inline]
-                    fn syntax(&self) -> &SyntaxNode {
-                        match self {
-                            #(
-                            #name::#variants(it) => &it.syntax,
-                            )*
-                        }
-                    }
-                }
-            };
-
-            (
-                quote! {
-                    #[pretty_doc_comment_placeholder_workaround]
-                    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-                    pub enum #name {
-                        #(#variants(#variants),)*
-                    }
-
-                    #(#traits)*
-                },
-                quote! {
-                    #(
-                        impl From<#variants> for #name {
-                            #[inline]
-                            fn from(node: #variants) -> #name {
-                                #name::#variants(node)
-                            }
-                        }
-                    )*
-                    #(#trait_froms)*
-                    #ast_node
-                },
-            )
-        })
+        .map(|enum_src| generate_enum(grammar, enum_src))
         .unzip();
 
     let mut any_node_def_srcs = grammar
@@ -356,6 +248,119 @@ fn generate_nodes(kinds: KindsSrc, grammar: &AstSrc) -> String {
 
     let res = add_preamble("codegen", reformat(res));
     res.replace("#[derive", "\n#[derive")
+}
+
+fn generate_enum(
+    grammar: &AstSrc,
+    enum_src: &AstEnumSrc,
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
+    let variants: Vec<_> = enum_src
+        .variants
+        .iter()
+        .map(|var| format_ident!("{}", var))
+        .sorted()
+        .collect();
+    let name = format_ident!("{}", enum_src.name);
+    let kinds: Vec<_> = variants
+        .iter()
+        .map(|name| format_ident!("{}", to_upper_snake_case(&name.to_string())))
+        .collect();
+    let traits = enum_src.traits.iter().sorted().map(|trait_name| {
+        let trait_name = format_ident!("{}", trait_name);
+        quote!(impl ast::#trait_name for #name {})
+    });
+
+    let converters = variants.iter().map(|variant| {
+        let variant_name = variant.to_owned();
+        let mut lower_name = to_lower_snake_case(&variant_name.to_string());
+        if lower_name.is_keyword() {
+            lower_name = format!("{}_", lower_name);
+        }
+        let lower_name = format_ident!("{}", lower_name);
+        quote! {
+            pub fn #lower_name(self) -> Option<#variant_name> {
+                match (self) {
+                    #name::#variant_name(item) => Some(item),
+                    _ => None
+                }
+            }
+        }
+    });
+
+    let common_fields = enum_src
+        .common_fields
+        .iter()
+        .map(|common_field| generate_field_method_for_enum(enum_src, common_field))
+        .collect::<Vec<_>>();
+
+    let trait_froms = enum_src.traits.iter().map(|t| {
+        let any_trait_name = format_ident!("Any{}", t);
+        quote! {
+            impl From<#name> for #any_trait_name {
+                #[inline]
+                fn from(node: #name) -> #any_trait_name {
+                    match node {
+                        #(#name::#variants(it) => it.into()),*
+                    }
+                }
+            }
+        }
+    });
+
+    let ast_node = quote! {
+        impl #name {
+            #(#converters)*
+            #(#common_fields)*
+        }
+        impl AstNode for #name {
+            #[inline]
+            fn can_cast(kind: SyntaxKind) -> bool {
+                matches!(kind, #(#kinds)|*)
+            }
+            #[inline]
+            fn cast(syntax: SyntaxNode) -> Option<Self> {
+                let res = match syntax.kind() {
+                    #(
+                    #kinds => #name::#variants(#variants { syntax }),
+                    )*
+                    _ => return None,
+                };
+                Some(res)
+            }
+            #[inline]
+            fn syntax(&self) -> &SyntaxNode {
+                match self {
+                    #(
+                    #name::#variants(it) => &it.syntax,
+                    )*
+                }
+            }
+        }
+    };
+
+    (
+        quote! {
+            #[pretty_doc_comment_placeholder_workaround]
+            #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+            pub enum #name {
+                #(#variants(#variants),)*
+            }
+
+            #(#traits)*
+        },
+        quote! {
+            #(
+                impl From<#variants> for #name {
+                    #[inline]
+                    fn from(node: #variants) -> #name {
+                        #name::#variants(node)
+                    }
+                }
+            )*
+            #(#trait_froms)*
+            #ast_node
+        },
+    )
 }
 
 fn generate_field_method(node_name: String, field: &Field) -> proc_macro2::TokenStream {
