@@ -1,6 +1,5 @@
-use crate::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
-use crate::{ast, AstNode, SyntaxNode};
+use crate::{ast, AstNode, SyntaxKind};
 
 impl ast::Path {
     pub fn path_address(&self) -> Option<ast::PathAddress> {
@@ -26,6 +25,10 @@ impl ast::Path {
         self.root_path().syntax.parent_of_type::<T>()
     }
 
+    pub fn root_parent_kind(&self) -> Option<SyntaxKind> {
+        self.root_path().syntax().parent().map(|it| it.kind())
+    }
+
     /** For `Foo::bar::baz::quux` path returns `Foo` */
     pub fn base_path(&self) -> ast::Path {
         let qualifier = self.qualifier();
@@ -44,14 +47,6 @@ impl ast::Path {
         } else {
             self.clone()
         }
-    }
-
-    pub fn use_speck(&self) -> Option<ast::UseSpeck> {
-        self.root_path().syntax.parent_of_type::<ast::UseSpeck>()
-    }
-
-    pub fn is_use_speck(&self) -> bool {
-        self.use_speck().is_some()
     }
 
     pub fn ident_token(&self) -> Option<ast::SyntaxToken> {
