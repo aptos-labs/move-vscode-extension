@@ -130,6 +130,53 @@ pub struct AndIncludeExpr {
 impl AndIncludeExpr {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ApplyExcept {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ApplyExcept {
+    #[inline]
+    pub fn wildcards(&self) -> AstChildren<WildcardPattern> { support::children(&self.syntax) }
+    #[inline]
+    pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
+    #[inline]
+    pub fn r_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![')']) }
+    #[inline]
+    pub fn except_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![except]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ApplySchema {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ApplySchema {
+    #[inline]
+    pub fn apply_except(&self) -> Option<ApplyExcept> { support::child(&self.syntax) }
+    #[inline]
+    pub fn apply_to(&self) -> Option<ApplyTo> { support::child(&self.syntax) }
+    #[inline]
+    pub fn schema_lit(&self) -> Option<SchemaLit> { support::child(&self.syntax) }
+    #[inline]
+    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
+    #[inline]
+    pub fn apply_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![apply]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ApplyTo {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ApplyTo {
+    #[inline]
+    pub fn wildcards(&self) -> AstChildren<WildcardPattern> { support::children(&self.syntax) }
+    #[inline]
+    pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
+    #[inline]
+    pub fn r_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![')']) }
+    #[inline]
+    pub fn to_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![to]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AssertMacroExpr {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1922,6 +1969,34 @@ impl WildcardPat {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct WildcardPattern {
+    pub(crate) syntax: SyntaxNode,
+}
+impl WildcardPattern {
+    #[inline]
+    pub fn spec_type_param_list(&self) -> Option<TypeParamList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn wildcard_pattern_modifier(&self) -> Option<WildcardPatternModifier> {
+        support::child(&self.syntax)
+    }
+    #[inline]
+    pub fn wildcard_ident_token(&self) -> Option<SyntaxToken> {
+        support::token(&self.syntax, T![wildcard_ident])
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct WildcardPatternModifier {
+    pub(crate) syntax: SyntaxNode,
+}
+impl WildcardPatternModifier {
+    #[inline]
+    pub fn internal_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![internal]) }
+    #[inline]
+    pub fn public_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![public]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AddressRef {
     NamedAddress(NamedAddress),
     ValueAddress(ValueAddress),
@@ -2096,6 +2171,7 @@ pub enum QuantExpr {
 pub enum Stmt {
     AbortsIfStmt(AbortsIfStmt),
     AbortsWithStmt(AbortsWithStmt),
+    ApplySchema(ApplySchema),
     ExprStmt(ExprStmt),
     GenericSpecStmt(GenericSpecStmt),
     GlobalVariableDecl(GlobalVariableDecl),
@@ -2392,6 +2468,69 @@ impl AstNode for AndIncludeExpr {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == AND_INCLUDE_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for ApplyExcept {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        APPLY_EXCEPT
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == APPLY_EXCEPT }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for ApplySchema {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        APPLY_SCHEMA
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == APPLY_SCHEMA }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for ApplyTo {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        APPLY_TO
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == APPLY_TO }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -5070,6 +5209,48 @@ impl AstNode for WildcardPat {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for WildcardPattern {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        WILDCARD_PATTERN
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == WILDCARD_PATTERN }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for WildcardPatternModifier {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        WILDCARD_PATTERN_MODIFIER
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == WILDCARD_PATTERN_MODIFIER }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl From<NamedAddress> for AddressRef {
     #[inline]
     fn from(node: NamedAddress) -> AddressRef { AddressRef::NamedAddress(node) }
@@ -6743,6 +6924,10 @@ impl From<AbortsWithStmt> for Stmt {
     #[inline]
     fn from(node: AbortsWithStmt) -> Stmt { Stmt::AbortsWithStmt(node) }
 }
+impl From<ApplySchema> for Stmt {
+    #[inline]
+    fn from(node: ApplySchema) -> Stmt { Stmt::ApplySchema(node) }
+}
 impl From<ExprStmt> for Stmt {
     #[inline]
     fn from(node: ExprStmt) -> Stmt { Stmt::ExprStmt(node) }
@@ -6789,6 +6974,12 @@ impl Stmt {
     pub fn aborts_with_stmt(self) -> Option<AbortsWithStmt> {
         match (self) {
             Stmt::AbortsWithStmt(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn apply_schema(self) -> Option<ApplySchema> {
+        match (self) {
+            Stmt::ApplySchema(item) => Some(item),
             _ => None,
         }
     }
@@ -6854,6 +7045,7 @@ impl AstNode for Stmt {
             kind,
             ABORTS_IF_STMT
                 | ABORTS_WITH_STMT
+                | APPLY_SCHEMA
                 | EXPR_STMT
                 | AXIOM_STMT
                 | INVARIANT_STMT
@@ -6871,6 +7063,7 @@ impl AstNode for Stmt {
         let res = match syntax.kind() {
             ABORTS_IF_STMT => Stmt::AbortsIfStmt(AbortsIfStmt { syntax }),
             ABORTS_WITH_STMT => Stmt::AbortsWithStmt(AbortsWithStmt { syntax }),
+            APPLY_SCHEMA => Stmt::ApplySchema(ApplySchema { syntax }),
             EXPR_STMT => Stmt::ExprStmt(ExprStmt { syntax }),
             AXIOM_STMT => Stmt::GenericSpecStmt(GenericSpecStmt::AxiomStmt(AxiomStmt { syntax })),
             INVARIANT_STMT => {
@@ -6892,6 +7085,7 @@ impl AstNode for Stmt {
         match self {
             Stmt::AbortsIfStmt(it) => &it.syntax(),
             Stmt::AbortsWithStmt(it) => &it.syntax(),
+            Stmt::ApplySchema(it) => &it.syntax(),
             Stmt::ExprStmt(it) => &it.syntax(),
             Stmt::GenericSpecStmt(it) => &it.syntax(),
             Stmt::GlobalVariableDecl(it) => &it.syntax(),
@@ -8077,6 +8271,21 @@ impl std::fmt::Display for AndIncludeExpr {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for ApplyExcept {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for ApplySchema {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for ApplyTo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for AssertMacroExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -8708,6 +8917,16 @@ impl std::fmt::Display for WhileExpr {
     }
 }
 impl std::fmt::Display for WildcardPat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for WildcardPattern {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for WildcardPatternModifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

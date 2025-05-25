@@ -2,6 +2,7 @@ mod address_ref;
 mod and_include_expr;
 mod any_fun;
 mod any_reference_element;
+mod apply_schema;
 mod assert_macro_expr;
 pub mod attr;
 mod axiom_stmt;
@@ -60,6 +61,7 @@ pub mod type_;
 mod value_arg_list;
 mod vector_lit_expr;
 pub mod visibility;
+mod wildcard_pattern;
 
 use crate::parse::SyntaxKind;
 use crate::token_text::TokenText;

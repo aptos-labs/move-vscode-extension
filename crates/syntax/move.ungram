@@ -203,7 +203,7 @@ Stmt =
     ';'
     | ExprStmt
     | LetStmt
-    | SchemaField | IncludeSchema
+    | SchemaField | IncludeSchema | ApplySchema
     | SpecPredicateStmt | AbortsIfStmt | AbortsWithStmt | PragmaStmt
     | GenericSpecStmt
     | SpecInlineFun | GlobalVariableDecl
@@ -550,3 +550,18 @@ WhereExpr =
 
 AxiomStmt =
     'axiom' spec_type_param_list:TypeParamList? SpecPredicatePropertyList? Expr ';'
+
+ApplySchema =
+    'apply' SchemaLit ApplyTo ApplyExcept? ';'
+
+ApplyTo =
+    'to' '(' wildcards:(WildcardPattern (',' WildcardPattern)* ','?)? ')'
+
+ApplyExcept =
+    'except' '(' wildcards:(WildcardPattern (',' WildcardPattern)* ','?)? ')'
+
+WildcardPattern =
+    WildcardPatternModifier? 'wildcard_ident' spec_type_param_list:TypeParamList?
+
+WildcardPatternModifier =
+    'public' | 'internal'

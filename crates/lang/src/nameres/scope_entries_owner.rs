@@ -110,6 +110,12 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: InFile<SyntaxNode>
             let generic_stmt = scope.syntax_cast::<ast::GenericSpecStmt>().unwrap();
             entries.extend(generic_stmt.value.type_params().to_entries(generic_stmt.file_id))
         }
+        APPLY_SCHEMA => {
+            let (file_id, apply_schema) = scope.syntax_cast::<ast::ApplySchema>().unwrap().unpack();
+            for wildcard in apply_schema.apply_to_patterns() {
+                entries.extend(wildcard.type_params().to_entries(file_id));
+            }
+        }
         _ => {}
     }
 
