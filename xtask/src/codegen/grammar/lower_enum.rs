@@ -56,8 +56,8 @@ pub(super) fn lower_enum(grammar: &Grammar, node_name: &str, rule: &Rule) -> Opt
                                     required_fields,
                                 );
                             }
-                            Rule::Labeled { label, rule } => {
-                                if let Rule::Node(_) = rule.deref() {
+                            Rule::Labeled { label, rule } => match rule.deref() {
+                                Rule::Node(_) => {
                                     lower_rule(
                                         &mut variant_fields,
                                         grammar,
@@ -66,7 +66,17 @@ pub(super) fn lower_enum(grammar: &Grammar, node_name: &str, rule: &Rule) -> Opt
                                         required_fields,
                                     );
                                 }
-                            }
+                                Rule::Opt(rule) => {
+                                    lower_rule(
+                                        &mut variant_fields,
+                                        grammar,
+                                        Some(label),
+                                        rule,
+                                        required_fields,
+                                    );
+                                }
+                                _ => (),
+                            },
                             _ => (),
                         }
                     }

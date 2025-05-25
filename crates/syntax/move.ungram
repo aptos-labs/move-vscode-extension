@@ -205,8 +205,10 @@ Stmt =
     | LetStmt
     | SchemaField | IncludeSchema
     | SpecPredicateStmt | AbortsIfStmt | AbortsWithStmt | PragmaStmt
-    | InvariantStmt | AxiomStmt
+    | GenericSpecStmt
     | SpecInlineFun | GlobalVariableDecl
+
+GenericSpecStmt = InvariantStmt | AxiomStmt
 
 LetStmt =
     'let' 'post'? Pat (':' Type) '=' initializer:Expr ';'

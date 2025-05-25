@@ -14,6 +14,7 @@ mod enum_;
 mod expr;
 mod fields_owner;
 pub mod fun;
+mod generic_spec_stmt;
 mod ident_pat;
 mod if_expr;
 pub mod index_expr;

@@ -257,13 +257,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     }
                 }
             }
-            ast::Stmt::AxiomStmt(axiom_stmt) => {
-                if let Some(expr) = axiom_stmt.expr() {
-                    self.infer_expr_coerceable_to(&expr, Ty::Bool);
-                }
-            }
-            ast::Stmt::InvariantStmt(invariant_stmt) => {
-                if let Some(expr) = invariant_stmt.expr() {
+            ast::Stmt::GenericSpecStmt(generic_spec_stmt) => {
+                if let Some(expr) = generic_spec_stmt.expr() {
                     self.infer_expr_coerceable_to(&expr, Ty::Bool);
                 }
             }

@@ -1997,6 +1997,12 @@ pub enum FieldList {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum GenericSpecStmt {
+    AxiomStmt(AxiomStmt),
+    InvariantStmt(InvariantStmt),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum IdentPatKind {
     LambdaParam(LambdaParam),
     LetStmt(LetStmt),
@@ -2090,11 +2096,10 @@ pub enum QuantExpr {
 pub enum Stmt {
     AbortsIfStmt(AbortsIfStmt),
     AbortsWithStmt(AbortsWithStmt),
-    AxiomStmt(AxiomStmt),
     ExprStmt(ExprStmt),
+    GenericSpecStmt(GenericSpecStmt),
     GlobalVariableDecl(GlobalVariableDecl),
     IncludeSchema(IncludeSchema),
-    InvariantStmt(InvariantStmt),
     LetStmt(LetStmt),
     PragmaStmt(PragmaStmt),
     SchemaField(SchemaField),
@@ -5841,6 +5846,69 @@ impl AstNode for FieldList {
         }
     }
 }
+impl From<AxiomStmt> for GenericSpecStmt {
+    #[inline]
+    fn from(node: AxiomStmt) -> GenericSpecStmt { GenericSpecStmt::AxiomStmt(node) }
+}
+impl From<InvariantStmt> for GenericSpecStmt {
+    #[inline]
+    fn from(node: InvariantStmt) -> GenericSpecStmt { GenericSpecStmt::InvariantStmt(node) }
+}
+impl GenericSpecStmt {
+    pub fn axiom_stmt(self) -> Option<AxiomStmt> {
+        match (self) {
+            GenericSpecStmt::AxiomStmt(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn invariant_stmt(self) -> Option<InvariantStmt> {
+        match (self) {
+            GenericSpecStmt::InvariantStmt(item) => Some(item),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn spec_type_param_list(&self) -> Option<TypeParamList> {
+        match self {
+            GenericSpecStmt::AxiomStmt(it) => it.spec_type_param_list(),
+            GenericSpecStmt::InvariantStmt(it) => it.spec_type_param_list(),
+        }
+    }
+    #[inline]
+    pub fn spec_predicate_property_list(&self) -> Option<SpecPredicatePropertyList> {
+        match self {
+            GenericSpecStmt::AxiomStmt(it) => it.spec_predicate_property_list(),
+            GenericSpecStmt::InvariantStmt(it) => it.spec_predicate_property_list(),
+        }
+    }
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> {
+        match self {
+            GenericSpecStmt::AxiomStmt(it) => it.expr(),
+            GenericSpecStmt::InvariantStmt(it) => it.expr(),
+        }
+    }
+}
+impl AstNode for GenericSpecStmt {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, AXIOM_STMT | INVARIANT_STMT) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            AXIOM_STMT => GenericSpecStmt::AxiomStmt(AxiomStmt { syntax }),
+            INVARIANT_STMT => GenericSpecStmt::InvariantStmt(InvariantStmt { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            GenericSpecStmt::AxiomStmt(it) => &it.syntax(),
+            GenericSpecStmt::InvariantStmt(it) => &it.syntax(),
+        }
+    }
+}
 impl From<LambdaParam> for IdentPatKind {
     #[inline]
     fn from(node: LambdaParam) -> IdentPatKind { IdentPatKind::LambdaParam(node) }
@@ -6675,13 +6743,13 @@ impl From<AbortsWithStmt> for Stmt {
     #[inline]
     fn from(node: AbortsWithStmt) -> Stmt { Stmt::AbortsWithStmt(node) }
 }
-impl From<AxiomStmt> for Stmt {
-    #[inline]
-    fn from(node: AxiomStmt) -> Stmt { Stmt::AxiomStmt(node) }
-}
 impl From<ExprStmt> for Stmt {
     #[inline]
     fn from(node: ExprStmt) -> Stmt { Stmt::ExprStmt(node) }
+}
+impl From<GenericSpecStmt> for Stmt {
+    #[inline]
+    fn from(node: GenericSpecStmt) -> Stmt { Stmt::GenericSpecStmt(node) }
 }
 impl From<GlobalVariableDecl> for Stmt {
     #[inline]
@@ -6690,10 +6758,6 @@ impl From<GlobalVariableDecl> for Stmt {
 impl From<IncludeSchema> for Stmt {
     #[inline]
     fn from(node: IncludeSchema) -> Stmt { Stmt::IncludeSchema(node) }
-}
-impl From<InvariantStmt> for Stmt {
-    #[inline]
-    fn from(node: InvariantStmt) -> Stmt { Stmt::InvariantStmt(node) }
 }
 impl From<LetStmt> for Stmt {
     #[inline]
@@ -6728,15 +6792,15 @@ impl Stmt {
             _ => None,
         }
     }
-    pub fn axiom_stmt(self) -> Option<AxiomStmt> {
-        match (self) {
-            Stmt::AxiomStmt(item) => Some(item),
-            _ => None,
-        }
-    }
     pub fn expr_stmt(self) -> Option<ExprStmt> {
         match (self) {
             Stmt::ExprStmt(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn generic_spec_stmt(self) -> Option<GenericSpecStmt> {
+        match (self) {
+            Stmt::GenericSpecStmt(item) => Some(item),
             _ => None,
         }
     }
@@ -6749,12 +6813,6 @@ impl Stmt {
     pub fn include_schema(self) -> Option<IncludeSchema> {
         match (self) {
             Stmt::IncludeSchema(item) => Some(item),
-            _ => None,
-        }
-    }
-    pub fn invariant_stmt(self) -> Option<InvariantStmt> {
-        match (self) {
-            Stmt::InvariantStmt(item) => Some(item),
             _ => None,
         }
     }
@@ -6796,11 +6854,11 @@ impl AstNode for Stmt {
             kind,
             ABORTS_IF_STMT
                 | ABORTS_WITH_STMT
-                | AXIOM_STMT
                 | EXPR_STMT
+                | AXIOM_STMT
+                | INVARIANT_STMT
                 | GLOBAL_VARIABLE_DECL
                 | INCLUDE_SCHEMA
-                | INVARIANT_STMT
                 | LET_STMT
                 | PRAGMA_STMT
                 | SCHEMA_FIELD
@@ -6813,11 +6871,13 @@ impl AstNode for Stmt {
         let res = match syntax.kind() {
             ABORTS_IF_STMT => Stmt::AbortsIfStmt(AbortsIfStmt { syntax }),
             ABORTS_WITH_STMT => Stmt::AbortsWithStmt(AbortsWithStmt { syntax }),
-            AXIOM_STMT => Stmt::AxiomStmt(AxiomStmt { syntax }),
             EXPR_STMT => Stmt::ExprStmt(ExprStmt { syntax }),
+            AXIOM_STMT => Stmt::GenericSpecStmt(GenericSpecStmt::AxiomStmt(AxiomStmt { syntax })),
+            INVARIANT_STMT => {
+                Stmt::GenericSpecStmt(GenericSpecStmt::InvariantStmt(InvariantStmt { syntax }))
+            }
             GLOBAL_VARIABLE_DECL => Stmt::GlobalVariableDecl(GlobalVariableDecl { syntax }),
             INCLUDE_SCHEMA => Stmt::IncludeSchema(IncludeSchema { syntax }),
-            INVARIANT_STMT => Stmt::InvariantStmt(InvariantStmt { syntax }),
             LET_STMT => Stmt::LetStmt(LetStmt { syntax }),
             PRAGMA_STMT => Stmt::PragmaStmt(PragmaStmt { syntax }),
             SCHEMA_FIELD => Stmt::SchemaField(SchemaField { syntax }),
@@ -6832,11 +6892,10 @@ impl AstNode for Stmt {
         match self {
             Stmt::AbortsIfStmt(it) => &it.syntax(),
             Stmt::AbortsWithStmt(it) => &it.syntax(),
-            Stmt::AxiomStmt(it) => &it.syntax(),
             Stmt::ExprStmt(it) => &it.syntax(),
+            Stmt::GenericSpecStmt(it) => &it.syntax(),
             Stmt::GlobalVariableDecl(it) => &it.syntax(),
             Stmt::IncludeSchema(it) => &it.syntax(),
-            Stmt::InvariantStmt(it) => &it.syntax(),
             Stmt::LetStmt(it) => &it.syntax(),
             Stmt::PragmaStmt(it) => &it.syntax(),
             Stmt::SchemaField(it) => &it.syntax(),
@@ -7889,6 +7948,11 @@ impl std::fmt::Display for Expr {
     }
 }
 impl std::fmt::Display for FieldList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for GenericSpecStmt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

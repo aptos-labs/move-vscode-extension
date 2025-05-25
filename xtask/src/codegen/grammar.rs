@@ -254,20 +254,34 @@ fn generate_enum(
     grammar: &AstSrc,
     enum_src: &AstEnumSrc,
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
-    let variants: Vec<_> = enum_src
-        .variants
-        .iter()
-        .map(|var| format_ident!("{}", var))
-        .sorted()
-        .collect();
-    let name = format_ident!("{}", enum_src.name);
-    let kinds: Vec<_> = variants
-        .iter()
-        .map(|name| format_ident!("{}", to_upper_snake_case(&name.to_string())))
-        .collect();
+    let enum_name = format_ident!("{}", enum_src.name);
+    let variant_names = enum_src.variants.iter().sorted().collect::<Vec<_>>();
+
+    let mut variants = vec![];
+    let mut kinds = vec![];
+    let mut variant_kinds = vec![];
+    let mut variant_kind_contructors = vec![];
+    for variant_name in variant_names {
+        let variant = format_ident!("{}", variant_name);
+        variants.push(variant.clone());
+        if let Some(inner_enum) = grammar.enums.iter().find(|it| &it.name == variant_name) {
+            for inner_variant_name in inner_enum.variants.iter() {
+                variant_kinds.push(variant.clone());
+                let inner_variant = format_ident!("{}", inner_variant_name);
+                variant_kind_contructors
+                    .push(quote! { #variant::#inner_variant(#inner_variant { syntax }) });
+                kinds.push(format_ident!("{}", to_upper_snake_case(&inner_variant_name)));
+            }
+        } else {
+            variant_kinds.push(variant.clone());
+            variant_kind_contructors.push(quote! { #variant { syntax } });
+            kinds.push(format_ident!("{}", to_upper_snake_case(&variant_name)));
+        }
+    }
+
     let traits = enum_src.traits.iter().sorted().map(|trait_name| {
         let trait_name = format_ident!("{}", trait_name);
-        quote!(impl ast::#trait_name for #name {})
+        quote!(impl ast::#trait_name for #enum_name {})
     });
 
     let converters = variants.iter().map(|variant| {
@@ -280,7 +294,7 @@ fn generate_enum(
         quote! {
             pub fn #lower_name(self) -> Option<#variant_name> {
                 match (self) {
-                    #name::#variant_name(item) => Some(item),
+                    #enum_name::#variant_name(item) => Some(item),
                     _ => None
                 }
             }
@@ -296,11 +310,11 @@ fn generate_enum(
     let trait_froms = enum_src.traits.iter().map(|t| {
         let any_trait_name = format_ident!("Any{}", t);
         quote! {
-            impl From<#name> for #any_trait_name {
+            impl From<#enum_name> for #any_trait_name {
                 #[inline]
-                fn from(node: #name) -> #any_trait_name {
+                fn from(node: #enum_name) -> #any_trait_name {
                     match node {
-                        #(#name::#variants(it) => it.into()),*
+                        #(#enum_name::#variants(it) => it.into()),*
                     }
                 }
             }
@@ -308,11 +322,11 @@ fn generate_enum(
     });
 
     let ast_node = quote! {
-        impl #name {
+        impl #enum_name {
             #(#converters)*
             #(#common_fields)*
         }
-        impl AstNode for #name {
+        impl AstNode for #enum_name {
             #[inline]
             fn can_cast(kind: SyntaxKind) -> bool {
                 matches!(kind, #(#kinds)|*)
@@ -321,7 +335,7 @@ fn generate_enum(
             fn cast(syntax: SyntaxNode) -> Option<Self> {
                 let res = match syntax.kind() {
                     #(
-                    #kinds => #name::#variants(#variants { syntax }),
+                    #kinds => #enum_name::#variant_kinds(#variant_kind_contructors),
                     )*
                     _ => return None,
                 };
@@ -331,7 +345,7 @@ fn generate_enum(
             fn syntax(&self) -> &SyntaxNode {
                 match self {
                     #(
-                    #name::#variants(it) => &it.syntax(),
+                    #enum_name::#variants(it) => &it.syntax(),
                     )*
                 }
             }
@@ -342,7 +356,7 @@ fn generate_enum(
         quote! {
             #[pretty_doc_comment_placeholder_workaround]
             #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-            pub enum #name {
+            pub enum #enum_name {
                 #(#variants(#variants),)*
             }
 
@@ -350,10 +364,10 @@ fn generate_enum(
         },
         quote! {
             #(
-                impl From<#variants> for #name {
+                impl From<#variants> for #enum_name {
                     #[inline]
-                    fn from(node: #variants) -> #name {
-                        #name::#variants(node)
+                    fn from(node: #variants) -> #enum_name {
+                        #enum_name::#variants(node)
                     }
                 }
             )*
@@ -851,7 +865,7 @@ fn extract_enum_traits(ast: &mut AstSrc) {
         let nodes = enum_
             .variants
             .iter()
-            .map(|variant| nodes.iter().find(|it| &it.name == variant).unwrap())
+            .filter_map(|variant| nodes.iter().find(|it| &it.name == variant))
             .collect::<Vec<_>>();
 
         let enum_traits = find_common_traits(nodes);
