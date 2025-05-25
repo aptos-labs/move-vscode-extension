@@ -71,7 +71,7 @@ jobs:
         run: aptos-analyzer check --kinds error -- ./aptos-core/aptos-move/framework/aptos-token-objects
 
   build_vsix:
-    name: TypeScript
+    name: Build .vsix extension
     strategy:
       matrix:
         platform: [ ubuntu-latest, windows-latest ]
