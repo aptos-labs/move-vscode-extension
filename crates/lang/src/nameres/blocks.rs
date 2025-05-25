@@ -9,12 +9,19 @@ use syntax::{AstNode, SyntaxNode, ast};
 pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: SyntaxNode) -> Vec<ScopeEntry> {
     use syntax::SyntaxKind::*;
 
+    let mut entries = vec![];
+
     match scope.value.kind() {
         BLOCK_EXPR => {
             let block_expr = scope.syntax_cast::<ast::BlockExpr>().unwrap();
-            let let_stmts = let_stmts_with_bindings(block_expr);
 
             let is_msl = scope.value.is_msl_context();
+            if is_msl {
+                let spec_inline_funs = block_expr.map_ref(|it| it.spec_inline_functions()).flatten();
+                entries.extend(spec_inline_funs.to_entries());
+            }
+
+            let let_stmts = let_stmts_with_bindings(block_expr);
             let current_let_stmt = prev.clone().cast::<ast::LetStmt>();
             let bindings = let_stmts
                 .into_iter()
@@ -35,7 +42,7 @@ pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: SyntaxNode) -> Vec
             let binding_entries_with_shadowing =
                 binding_entries.unique_by(|e| e.name.clone()).collect::<Vec<_>>();
 
-            return binding_entries_with_shadowing;
+            entries.extend(binding_entries_with_shadowing);
         }
         MATCH_ARM => {
             // coming from rhs, use pat bindings from lhs
@@ -46,13 +53,13 @@ pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: SyntaxNode) -> Vec
                     .map(|it| it.bindings())
                     .unwrap_or_default()
                     .wrapped_in_file(file_id);
-                return ident_pats.to_entries();
+                entries.extend(ident_pats.to_entries());
             }
         }
         _ => {}
     }
 
-    vec![]
+    entries
 }
 
 fn let_stmts_with_bindings(block: InFile<ast::BlockExpr>) -> Vec<(ast::LetStmt, Vec<ScopeEntry>)> {
