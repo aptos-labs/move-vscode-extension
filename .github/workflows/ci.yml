@@ -32,7 +32,7 @@ jobs:
 
       - run: cargo nextest run --package syntax
 
-  rust_tests:
+  check_diagnostics:
     strategy:
       matrix:
         platform: [ ubuntu-latest, macos-latest ]
@@ -70,7 +70,7 @@ jobs:
       - name: Check diagnostics on aptos-core:aptos-token-objects
         run: aptos-analyzer check --kinds error -- ./aptos-core/aptos-move/framework/aptos-token-objects
 
-  typescript:
+  build_vsix:
     name: TypeScript
     strategy:
       matrix:
