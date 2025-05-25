@@ -204,7 +204,8 @@ Stmt =
     | ExprStmt
     | LetStmt
     | SchemaField | IncludeSchema
-    | SpecPredicateStmt | AbortsIfStmt | AbortsWithStmt | PragmaStmt | AxiomStmt
+    | SpecPredicateStmt | AbortsIfStmt | AbortsWithStmt | PragmaStmt
+    | InvariantStmt | AxiomStmt
     | SpecInlineFun | GlobalVariableDecl
 
 LetStmt =
@@ -497,6 +498,9 @@ SpecPredicateStmt =
     SpecPredicatePropertyList?
     Expr ';'
 
+InvariantStmt =
+    'invariant' spec_type_param_list:TypeParamList? 'update'? SpecPredicatePropertyList? Expr ';'
+
 AbortsIfStmt =
     'aborts_if' SpecPredicatePropertyList? Expr AbortsIfWith? ';'
 
@@ -543,4 +547,4 @@ WhereExpr =
     'where' Expr
 
 AxiomStmt =
-    'axiom' axiom_type_param_list:TypeParamList? SpecPredicatePropertyList? Expr ';'
+    'axiom' spec_type_param_list:TypeParamList? SpecPredicatePropertyList? Expr ';'

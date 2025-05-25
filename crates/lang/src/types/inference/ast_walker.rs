@@ -262,6 +262,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     self.infer_expr_coerceable_to(&expr, Ty::Bool);
                 }
             }
+            ast::Stmt::InvariantStmt(invariant_stmt) => {
+                if let Some(expr) = invariant_stmt.expr() {
+                    self.infer_expr_coerceable_to(&expr, Ty::Bool);
+                }
+            }
             _ => (),
         }
 

@@ -1,7 +1,7 @@
 use crate::ast;
 use crate::ast::TypeParam;
 
-impl ast::AxiomStmt {
+impl ast::InvariantStmt {
     pub fn type_params(&self) -> Vec<TypeParam> {
         self.spec_type_param_list()
             .map(|it| it.type_parameters().collect())
