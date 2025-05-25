@@ -1997,6 +1997,12 @@ pub enum FieldList {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum GenericSpecStmt {
+    AxiomStmt(AxiomStmt),
+    InvariantStmt(InvariantStmt),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum IdentPatKind {
     LambdaParam(LambdaParam),
     LetStmt(LetStmt),
@@ -2090,11 +2096,10 @@ pub enum QuantExpr {
 pub enum Stmt {
     AbortsIfStmt(AbortsIfStmt),
     AbortsWithStmt(AbortsWithStmt),
-    AxiomStmt(AxiomStmt),
     ExprStmt(ExprStmt),
+    GenericSpecStmt(GenericSpecStmt),
     GlobalVariableDecl(GlobalVariableDecl),
     IncludeSchema(IncludeSchema),
-    InvariantStmt(InvariantStmt),
     LetStmt(LetStmt),
     PragmaStmt(PragmaStmt),
     SchemaField(SchemaField),
@@ -5102,8 +5107,8 @@ impl AstNode for AddressRef {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            AddressRef::NamedAddress(it) => &it.syntax,
-            AddressRef::ValueAddress(it) => &it.syntax,
+            AddressRef::NamedAddress(it) => &it.syntax(),
+            AddressRef::ValueAddress(it) => &it.syntax(),
         }
     }
 }
@@ -5160,8 +5165,8 @@ impl AstNode for AnyField {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            AnyField::NamedField(it) => &it.syntax,
-            AnyField::TupleField(it) => &it.syntax,
+            AnyField::NamedField(it) => &it.syntax(),
+            AnyField::TupleField(it) => &it.syntax(),
         }
     }
 }
@@ -5287,9 +5292,9 @@ impl AstNode for AnyFun {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            AnyFun::Fun(it) => &it.syntax,
-            AnyFun::SpecFun(it) => &it.syntax,
-            AnyFun::SpecInlineFun(it) => &it.syntax,
+            AnyFun::Fun(it) => &it.syntax(),
+            AnyFun::SpecFun(it) => &it.syntax(),
+            AnyFun::SpecInlineFun(it) => &it.syntax(),
         }
     }
 }
@@ -5330,8 +5335,8 @@ impl AstNode for BlockOrInlineExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            BlockOrInlineExpr::BlockExpr(it) => &it.syntax,
-            BlockOrInlineExpr::InlineExpr(it) => &it.syntax,
+            BlockOrInlineExpr::BlockExpr(it) => &it.syntax(),
+            BlockOrInlineExpr::InlineExpr(it) => &it.syntax(),
         }
     }
 }
@@ -5762,40 +5767,40 @@ impl AstNode for Expr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            Expr::AbortExpr(it) => &it.syntax,
-            Expr::AssertMacroExpr(it) => &it.syntax,
-            Expr::BangExpr(it) => &it.syntax,
-            Expr::BinExpr(it) => &it.syntax,
-            Expr::BlockExpr(it) => &it.syntax,
-            Expr::BorrowExpr(it) => &it.syntax,
-            Expr::BreakExpr(it) => &it.syntax,
-            Expr::CallExpr(it) => &it.syntax,
-            Expr::CastExpr(it) => &it.syntax,
-            Expr::ChooseExpr(it) => &it.syntax,
-            Expr::ContinueExpr(it) => &it.syntax,
-            Expr::DerefExpr(it) => &it.syntax,
-            Expr::DotExpr(it) => &it.syntax,
-            Expr::ExistsExpr(it) => &it.syntax,
-            Expr::ForExpr(it) => &it.syntax,
-            Expr::ForallExpr(it) => &it.syntax,
-            Expr::IfExpr(it) => &it.syntax,
-            Expr::IndexExpr(it) => &it.syntax,
-            Expr::IsExpr(it) => &it.syntax,
-            Expr::LambdaExpr(it) => &it.syntax,
-            Expr::Literal(it) => &it.syntax,
-            Expr::LoopExpr(it) => &it.syntax,
-            Expr::MatchExpr(it) => &it.syntax,
-            Expr::MethodCallExpr(it) => &it.syntax,
-            Expr::ParenExpr(it) => &it.syntax,
-            Expr::PathExpr(it) => &it.syntax,
-            Expr::RangeExpr(it) => &it.syntax,
-            Expr::ResourceExpr(it) => &it.syntax,
-            Expr::ReturnExpr(it) => &it.syntax,
-            Expr::SpecBlockExpr(it) => &it.syntax,
-            Expr::StructLit(it) => &it.syntax,
-            Expr::TupleExpr(it) => &it.syntax,
-            Expr::VectorLitExpr(it) => &it.syntax,
-            Expr::WhileExpr(it) => &it.syntax,
+            Expr::AbortExpr(it) => &it.syntax(),
+            Expr::AssertMacroExpr(it) => &it.syntax(),
+            Expr::BangExpr(it) => &it.syntax(),
+            Expr::BinExpr(it) => &it.syntax(),
+            Expr::BlockExpr(it) => &it.syntax(),
+            Expr::BorrowExpr(it) => &it.syntax(),
+            Expr::BreakExpr(it) => &it.syntax(),
+            Expr::CallExpr(it) => &it.syntax(),
+            Expr::CastExpr(it) => &it.syntax(),
+            Expr::ChooseExpr(it) => &it.syntax(),
+            Expr::ContinueExpr(it) => &it.syntax(),
+            Expr::DerefExpr(it) => &it.syntax(),
+            Expr::DotExpr(it) => &it.syntax(),
+            Expr::ExistsExpr(it) => &it.syntax(),
+            Expr::ForExpr(it) => &it.syntax(),
+            Expr::ForallExpr(it) => &it.syntax(),
+            Expr::IfExpr(it) => &it.syntax(),
+            Expr::IndexExpr(it) => &it.syntax(),
+            Expr::IsExpr(it) => &it.syntax(),
+            Expr::LambdaExpr(it) => &it.syntax(),
+            Expr::Literal(it) => &it.syntax(),
+            Expr::LoopExpr(it) => &it.syntax(),
+            Expr::MatchExpr(it) => &it.syntax(),
+            Expr::MethodCallExpr(it) => &it.syntax(),
+            Expr::ParenExpr(it) => &it.syntax(),
+            Expr::PathExpr(it) => &it.syntax(),
+            Expr::RangeExpr(it) => &it.syntax(),
+            Expr::ResourceExpr(it) => &it.syntax(),
+            Expr::ReturnExpr(it) => &it.syntax(),
+            Expr::SpecBlockExpr(it) => &it.syntax(),
+            Expr::StructLit(it) => &it.syntax(),
+            Expr::TupleExpr(it) => &it.syntax(),
+            Expr::VectorLitExpr(it) => &it.syntax(),
+            Expr::WhileExpr(it) => &it.syntax(),
         }
     }
 }
@@ -5836,8 +5841,71 @@ impl AstNode for FieldList {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            FieldList::NamedFieldList(it) => &it.syntax,
-            FieldList::TupleFieldList(it) => &it.syntax,
+            FieldList::NamedFieldList(it) => &it.syntax(),
+            FieldList::TupleFieldList(it) => &it.syntax(),
+        }
+    }
+}
+impl From<AxiomStmt> for GenericSpecStmt {
+    #[inline]
+    fn from(node: AxiomStmt) -> GenericSpecStmt { GenericSpecStmt::AxiomStmt(node) }
+}
+impl From<InvariantStmt> for GenericSpecStmt {
+    #[inline]
+    fn from(node: InvariantStmt) -> GenericSpecStmt { GenericSpecStmt::InvariantStmt(node) }
+}
+impl GenericSpecStmt {
+    pub fn axiom_stmt(self) -> Option<AxiomStmt> {
+        match (self) {
+            GenericSpecStmt::AxiomStmt(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn invariant_stmt(self) -> Option<InvariantStmt> {
+        match (self) {
+            GenericSpecStmt::InvariantStmt(item) => Some(item),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn spec_type_param_list(&self) -> Option<TypeParamList> {
+        match self {
+            GenericSpecStmt::AxiomStmt(it) => it.spec_type_param_list(),
+            GenericSpecStmt::InvariantStmt(it) => it.spec_type_param_list(),
+        }
+    }
+    #[inline]
+    pub fn spec_predicate_property_list(&self) -> Option<SpecPredicatePropertyList> {
+        match self {
+            GenericSpecStmt::AxiomStmt(it) => it.spec_predicate_property_list(),
+            GenericSpecStmt::InvariantStmt(it) => it.spec_predicate_property_list(),
+        }
+    }
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> {
+        match self {
+            GenericSpecStmt::AxiomStmt(it) => it.expr(),
+            GenericSpecStmt::InvariantStmt(it) => it.expr(),
+        }
+    }
+}
+impl AstNode for GenericSpecStmt {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, AXIOM_STMT | INVARIANT_STMT) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            AXIOM_STMT => GenericSpecStmt::AxiomStmt(AxiomStmt { syntax }),
+            INVARIANT_STMT => GenericSpecStmt::InvariantStmt(InvariantStmt { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            GenericSpecStmt::AxiomStmt(it) => &it.syntax(),
+            GenericSpecStmt::InvariantStmt(it) => &it.syntax(),
         }
     }
 }
@@ -5889,9 +5957,9 @@ impl AstNode for IdentPatKind {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            IdentPatKind::LambdaParam(it) => &it.syntax,
-            IdentPatKind::LetStmt(it) => &it.syntax,
-            IdentPatKind::Param(it) => &it.syntax,
+            IdentPatKind::LambdaParam(it) => &it.syntax(),
+            IdentPatKind::LetStmt(it) => &it.syntax(),
+            IdentPatKind::Param(it) => &it.syntax(),
         }
     }
 }
@@ -5959,10 +6027,10 @@ impl AstNode for IncludeExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            IncludeExpr::AndIncludeExpr(it) => &it.syntax,
-            IncludeExpr::IfElseIncludeExpr(it) => &it.syntax,
-            IncludeExpr::ImplyIncludeExpr(it) => &it.syntax,
-            IncludeExpr::SchemaIncludeExpr(it) => &it.syntax,
+            IncludeExpr::AndIncludeExpr(it) => &it.syntax(),
+            IncludeExpr::IfElseIncludeExpr(it) => &it.syntax(),
+            IncludeExpr::ImplyIncludeExpr(it) => &it.syntax(),
+            IncludeExpr::SchemaIncludeExpr(it) => &it.syntax(),
         }
     }
 }
@@ -6050,11 +6118,11 @@ impl AstNode for InferenceCtxOwner {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            InferenceCtxOwner::Fun(it) => &it.syntax,
-            InferenceCtxOwner::ItemSpec(it) => &it.syntax,
-            InferenceCtxOwner::Schema(it) => &it.syntax,
-            InferenceCtxOwner::SpecFun(it) => &it.syntax,
-            InferenceCtxOwner::SpecInlineFun(it) => &it.syntax,
+            InferenceCtxOwner::Fun(it) => &it.syntax(),
+            InferenceCtxOwner::ItemSpec(it) => &it.syntax(),
+            InferenceCtxOwner::Schema(it) => &it.syntax(),
+            InferenceCtxOwner::SpecFun(it) => &it.syntax(),
+            InferenceCtxOwner::SpecInlineFun(it) => &it.syntax(),
         }
     }
 }
@@ -6181,14 +6249,14 @@ impl AstNode for Item {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            Item::Const(it) => &it.syntax,
-            Item::Enum(it) => &it.syntax,
-            Item::Friend(it) => &it.syntax,
-            Item::Fun(it) => &it.syntax,
-            Item::ItemSpec(it) => &it.syntax,
-            Item::Schema(it) => &it.syntax,
-            Item::SpecFun(it) => &it.syntax,
-            Item::Struct(it) => &it.syntax,
+            Item::Const(it) => &it.syntax(),
+            Item::Enum(it) => &it.syntax(),
+            Item::Friend(it) => &it.syntax(),
+            Item::Fun(it) => &it.syntax(),
+            Item::ItemSpec(it) => &it.syntax(),
+            Item::Schema(it) => &it.syntax(),
+            Item::SpecFun(it) => &it.syntax(),
+            Item::Struct(it) => &it.syntax(),
         }
     }
 }
@@ -6256,9 +6324,9 @@ impl AstNode for LoopLike {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            LoopLike::ForExpr(it) => &it.syntax,
-            LoopLike::LoopExpr(it) => &it.syntax,
-            LoopLike::WhileExpr(it) => &it.syntax,
+            LoopLike::ForExpr(it) => &it.syntax(),
+            LoopLike::LoopExpr(it) => &it.syntax(),
+            LoopLike::WhileExpr(it) => &it.syntax(),
         }
     }
 }
@@ -6322,8 +6390,8 @@ impl AstNode for MethodOrDotExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            MethodOrDotExpr::DotExpr(it) => &it.syntax,
-            MethodOrDotExpr::MethodCallExpr(it) => &it.syntax,
+            MethodOrDotExpr::DotExpr(it) => &it.syntax(),
+            MethodOrDotExpr::MethodCallExpr(it) => &it.syntax(),
         }
     }
 }
@@ -6373,8 +6441,8 @@ impl AstNode for MethodOrPath {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            MethodOrPath::MethodCallExpr(it) => &it.syntax,
-            MethodOrPath::Path(it) => &it.syntax,
+            MethodOrPath::MethodCallExpr(it) => &it.syntax(),
+            MethodOrPath::Path(it) => &it.syntax(),
         }
     }
 }
@@ -6415,8 +6483,8 @@ impl AstNode for NameLike {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            NameLike::Name(it) => &it.syntax,
-            NameLike::NameRef(it) => &it.syntax,
+            NameLike::Name(it) => &it.syntax(),
+            NameLike::NameRef(it) => &it.syntax(),
         }
     }
 }
@@ -6517,13 +6585,13 @@ impl AstNode for Pat {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            Pat::IdentPat(it) => &it.syntax,
-            Pat::PathPat(it) => &it.syntax,
-            Pat::RestPat(it) => &it.syntax,
-            Pat::StructPat(it) => &it.syntax,
-            Pat::TuplePat(it) => &it.syntax,
-            Pat::TupleStructPat(it) => &it.syntax,
-            Pat::WildcardPat(it) => &it.syntax,
+            Pat::IdentPat(it) => &it.syntax(),
+            Pat::PathPat(it) => &it.syntax(),
+            Pat::RestPat(it) => &it.syntax(),
+            Pat::StructPat(it) => &it.syntax(),
+            Pat::TuplePat(it) => &it.syntax(),
+            Pat::TupleStructPat(it) => &it.syntax(),
+            Pat::WildcardPat(it) => &it.syntax(),
         }
     }
 }
@@ -6591,9 +6659,9 @@ impl AstNode for QuantBindingsOwner {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            QuantBindingsOwner::ChooseExpr(it) => &it.syntax,
-            QuantBindingsOwner::ExistsExpr(it) => &it.syntax,
-            QuantBindingsOwner::ForallExpr(it) => &it.syntax,
+            QuantBindingsOwner::ChooseExpr(it) => &it.syntax(),
+            QuantBindingsOwner::ExistsExpr(it) => &it.syntax(),
+            QuantBindingsOwner::ForallExpr(it) => &it.syntax(),
         }
     }
 }
@@ -6661,9 +6729,9 @@ impl AstNode for QuantExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            QuantExpr::ChooseExpr(it) => &it.syntax,
-            QuantExpr::ExistsExpr(it) => &it.syntax,
-            QuantExpr::ForallExpr(it) => &it.syntax,
+            QuantExpr::ChooseExpr(it) => &it.syntax(),
+            QuantExpr::ExistsExpr(it) => &it.syntax(),
+            QuantExpr::ForallExpr(it) => &it.syntax(),
         }
     }
 }
@@ -6675,13 +6743,13 @@ impl From<AbortsWithStmt> for Stmt {
     #[inline]
     fn from(node: AbortsWithStmt) -> Stmt { Stmt::AbortsWithStmt(node) }
 }
-impl From<AxiomStmt> for Stmt {
-    #[inline]
-    fn from(node: AxiomStmt) -> Stmt { Stmt::AxiomStmt(node) }
-}
 impl From<ExprStmt> for Stmt {
     #[inline]
     fn from(node: ExprStmt) -> Stmt { Stmt::ExprStmt(node) }
+}
+impl From<GenericSpecStmt> for Stmt {
+    #[inline]
+    fn from(node: GenericSpecStmt) -> Stmt { Stmt::GenericSpecStmt(node) }
 }
 impl From<GlobalVariableDecl> for Stmt {
     #[inline]
@@ -6690,10 +6758,6 @@ impl From<GlobalVariableDecl> for Stmt {
 impl From<IncludeSchema> for Stmt {
     #[inline]
     fn from(node: IncludeSchema) -> Stmt { Stmt::IncludeSchema(node) }
-}
-impl From<InvariantStmt> for Stmt {
-    #[inline]
-    fn from(node: InvariantStmt) -> Stmt { Stmt::InvariantStmt(node) }
 }
 impl From<LetStmt> for Stmt {
     #[inline]
@@ -6728,15 +6792,15 @@ impl Stmt {
             _ => None,
         }
     }
-    pub fn axiom_stmt(self) -> Option<AxiomStmt> {
-        match (self) {
-            Stmt::AxiomStmt(item) => Some(item),
-            _ => None,
-        }
-    }
     pub fn expr_stmt(self) -> Option<ExprStmt> {
         match (self) {
             Stmt::ExprStmt(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn generic_spec_stmt(self) -> Option<GenericSpecStmt> {
+        match (self) {
+            Stmt::GenericSpecStmt(item) => Some(item),
             _ => None,
         }
     }
@@ -6749,12 +6813,6 @@ impl Stmt {
     pub fn include_schema(self) -> Option<IncludeSchema> {
         match (self) {
             Stmt::IncludeSchema(item) => Some(item),
-            _ => None,
-        }
-    }
-    pub fn invariant_stmt(self) -> Option<InvariantStmt> {
-        match (self) {
-            Stmt::InvariantStmt(item) => Some(item),
             _ => None,
         }
     }
@@ -6796,11 +6854,11 @@ impl AstNode for Stmt {
             kind,
             ABORTS_IF_STMT
                 | ABORTS_WITH_STMT
-                | AXIOM_STMT
                 | EXPR_STMT
+                | AXIOM_STMT
+                | INVARIANT_STMT
                 | GLOBAL_VARIABLE_DECL
                 | INCLUDE_SCHEMA
-                | INVARIANT_STMT
                 | LET_STMT
                 | PRAGMA_STMT
                 | SCHEMA_FIELD
@@ -6813,11 +6871,13 @@ impl AstNode for Stmt {
         let res = match syntax.kind() {
             ABORTS_IF_STMT => Stmt::AbortsIfStmt(AbortsIfStmt { syntax }),
             ABORTS_WITH_STMT => Stmt::AbortsWithStmt(AbortsWithStmt { syntax }),
-            AXIOM_STMT => Stmt::AxiomStmt(AxiomStmt { syntax }),
             EXPR_STMT => Stmt::ExprStmt(ExprStmt { syntax }),
+            AXIOM_STMT => Stmt::GenericSpecStmt(GenericSpecStmt::AxiomStmt(AxiomStmt { syntax })),
+            INVARIANT_STMT => {
+                Stmt::GenericSpecStmt(GenericSpecStmt::InvariantStmt(InvariantStmt { syntax }))
+            }
             GLOBAL_VARIABLE_DECL => Stmt::GlobalVariableDecl(GlobalVariableDecl { syntax }),
             INCLUDE_SCHEMA => Stmt::IncludeSchema(IncludeSchema { syntax }),
-            INVARIANT_STMT => Stmt::InvariantStmt(InvariantStmt { syntax }),
             LET_STMT => Stmt::LetStmt(LetStmt { syntax }),
             PRAGMA_STMT => Stmt::PragmaStmt(PragmaStmt { syntax }),
             SCHEMA_FIELD => Stmt::SchemaField(SchemaField { syntax }),
@@ -6830,18 +6890,17 @@ impl AstNode for Stmt {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            Stmt::AbortsIfStmt(it) => &it.syntax,
-            Stmt::AbortsWithStmt(it) => &it.syntax,
-            Stmt::AxiomStmt(it) => &it.syntax,
-            Stmt::ExprStmt(it) => &it.syntax,
-            Stmt::GlobalVariableDecl(it) => &it.syntax,
-            Stmt::IncludeSchema(it) => &it.syntax,
-            Stmt::InvariantStmt(it) => &it.syntax,
-            Stmt::LetStmt(it) => &it.syntax,
-            Stmt::PragmaStmt(it) => &it.syntax,
-            Stmt::SchemaField(it) => &it.syntax,
-            Stmt::SpecInlineFun(it) => &it.syntax,
-            Stmt::SpecPredicateStmt(it) => &it.syntax,
+            Stmt::AbortsIfStmt(it) => &it.syntax(),
+            Stmt::AbortsWithStmt(it) => &it.syntax(),
+            Stmt::ExprStmt(it) => &it.syntax(),
+            Stmt::GenericSpecStmt(it) => &it.syntax(),
+            Stmt::GlobalVariableDecl(it) => &it.syntax(),
+            Stmt::IncludeSchema(it) => &it.syntax(),
+            Stmt::LetStmt(it) => &it.syntax(),
+            Stmt::PragmaStmt(it) => &it.syntax(),
+            Stmt::SchemaField(it) => &it.syntax(),
+            Stmt::SpecInlineFun(it) => &it.syntax(),
+            Stmt::SpecPredicateStmt(it) => &it.syntax(),
         }
     }
 }
@@ -6941,8 +7000,8 @@ impl AstNode for StructOrEnum {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            StructOrEnum::Enum(it) => &it.syntax,
-            StructOrEnum::Struct(it) => &it.syntax,
+            StructOrEnum::Enum(it) => &it.syntax(),
+            StructOrEnum::Struct(it) => &it.syntax(),
         }
     }
 }
@@ -7032,12 +7091,12 @@ impl AstNode for Type {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            Type::LambdaType(it) => &it.syntax,
-            Type::ParenType(it) => &it.syntax,
-            Type::PathType(it) => &it.syntax,
-            Type::RefType(it) => &it.syntax,
-            Type::TupleType(it) => &it.syntax,
-            Type::UnitType(it) => &it.syntax,
+            Type::LambdaType(it) => &it.syntax(),
+            Type::ParenType(it) => &it.syntax(),
+            Type::PathType(it) => &it.syntax(),
+            Type::RefType(it) => &it.syntax(),
+            Type::TupleType(it) => &it.syntax(),
+            Type::UnitType(it) => &it.syntax(),
         }
     }
 }
@@ -7125,10 +7184,10 @@ impl AstNode for TypeOwner {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            TypeOwner::GlobalVariableDecl(it) => &it.syntax,
-            TypeOwner::NamedField(it) => &it.syntax,
-            TypeOwner::SchemaField(it) => &it.syntax,
-            TypeOwner::TupleField(it) => &it.syntax,
+            TypeOwner::GlobalVariableDecl(it) => &it.syntax(),
+            TypeOwner::NamedField(it) => &it.syntax(),
+            TypeOwner::SchemaField(it) => &it.syntax(),
+            TypeOwner::TupleField(it) => &it.syntax(),
         }
     }
 }
@@ -7889,6 +7948,11 @@ impl std::fmt::Display for Expr {
     }
 }
 impl std::fmt::Display for FieldList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for GenericSpecStmt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

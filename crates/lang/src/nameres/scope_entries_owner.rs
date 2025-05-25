@@ -106,13 +106,9 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: InFile<SyntaxNode>
                     .to_entries(owner.file_id),
             );
         }
-        AXIOM_STMT => {
-            let axiom = scope.syntax_cast::<ast::AxiomStmt>().unwrap();
-            entries.extend(axiom.value.type_params().to_entries(axiom.file_id))
-        }
-        INVARIANT_STMT => {
-            let invariant = scope.syntax_cast::<ast::InvariantStmt>().unwrap();
-            entries.extend(invariant.value.type_params().to_entries(invariant.file_id))
+        AXIOM_STMT | INVARIANT_STMT => {
+            let generic_stmt = scope.syntax_cast::<ast::GenericSpecStmt>().unwrap();
+            entries.extend(generic_stmt.value.type_params().to_entries(generic_stmt.file_id))
         }
         _ => {}
     }
