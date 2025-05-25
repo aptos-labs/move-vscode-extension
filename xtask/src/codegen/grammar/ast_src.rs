@@ -329,6 +329,7 @@ pub(crate) const NON_METHOD_TRAITS: &[(&str, &[&str])] = &[
             "SchemaLitField",
             "IdentPat",
             "ItemSpecRef",
+            "ItemSpecTypeParam",
             "Label",
         ],
     ),

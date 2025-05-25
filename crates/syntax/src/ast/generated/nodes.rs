@@ -701,6 +701,10 @@ impl ItemSpec {
     #[inline]
     pub fn item_spec_ref(&self) -> Option<ItemSpecRef> { support::child(&self.syntax) }
     #[inline]
+    pub fn item_spec_type_param_list(&self) -> Option<ItemSpecTypeParamList> {
+        support::child(&self.syntax)
+    }
+    #[inline]
     pub fn spec_block(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
     #[inline]
     pub fn module_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![module]) }
@@ -742,6 +746,31 @@ impl ast::ReferenceElement for ItemSpecRef {}
 impl ItemSpecRef {
     #[inline]
     pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ItemSpecTypeParam {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::ReferenceElement for ItemSpecTypeParam {}
+impl ItemSpecTypeParam {
+    #[inline]
+    pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ItemSpecTypeParamList {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ItemSpecTypeParamList {
+    #[inline]
+    pub fn item_spec_type_params(&self) -> AstChildren<ItemSpecTypeParam> {
+        support::children(&self.syntax)
+    }
+    #[inline]
+    pub fn l_angle_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![<]) }
+    #[inline]
+    pub fn r_angle_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![>]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -3350,6 +3379,48 @@ impl AstNode for ItemSpecRef {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == ITEM_SPEC_REF }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for ItemSpecTypeParam {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ITEM_SPEC_TYPE_PARAM
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == ITEM_SPEC_TYPE_PARAM }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for ItemSpecTypeParamList {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ITEM_SPEC_TYPE_PARAM_LIST
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == ITEM_SPEC_TYPE_PARAM_LIST }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -8065,6 +8136,7 @@ impl AstNode for AnyReferenceElement {
             DOT_EXPR
                 | IDENT_PAT
                 | ITEM_SPEC_REF
+                | ITEM_SPEC_TYPE_PARAM
                 | LABEL
                 | METHOD_CALL_EXPR
                 | PATH
@@ -8091,6 +8163,12 @@ impl From<IdentPat> for AnyReferenceElement {
 impl From<ItemSpecRef> for AnyReferenceElement {
     #[inline]
     fn from(node: ItemSpecRef) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
+}
+impl From<ItemSpecTypeParam> for AnyReferenceElement {
+    #[inline]
+    fn from(node: ItemSpecTypeParam) -> AnyReferenceElement {
+        AnyReferenceElement { syntax: node.syntax }
+    }
 }
 impl From<Label> for AnyReferenceElement {
     #[inline]
@@ -8477,6 +8555,16 @@ impl std::fmt::Display for ItemSpecParamList {
     }
 }
 impl std::fmt::Display for ItemSpecRef {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for ItemSpecTypeParam {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for ItemSpecTypeParamList {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
