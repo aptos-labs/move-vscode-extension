@@ -567,6 +567,7 @@ fn generate_syntax_kinds(grammar: KindsSrc<'_>) -> String {
             #([#punctuation_values] => { $crate::SyntaxKind::#punctuation };)*
             #([#all_keywords_idents] => { $crate::SyntaxKind::#all_keywords };)*
             [quote_ident] => { $crate::SyntaxKind::QUOTE_IDENT };
+            [wildcard_ident] => { $crate::SyntaxKind::WILDCARD_IDENT };
             [ident] => { $crate::SyntaxKind::IDENT };
             [int_number] => { $crate::SyntaxKind::INT_NUMBER };
             [hex_string] => { $crate::SyntaxKind::HEX_STRING };
