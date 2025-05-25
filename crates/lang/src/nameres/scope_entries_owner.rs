@@ -106,6 +106,10 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: InFile<SyntaxNode>
                     .to_entries(owner.file_id),
             );
         }
+        AXIOM_STMT => {
+            let axiom = scope.syntax_cast::<ast::AxiomStmt>().unwrap();
+            entries.extend(axiom.value.type_params().to_entries(axiom.file_id));
+        }
         _ => {}
     }
 

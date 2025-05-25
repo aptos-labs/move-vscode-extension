@@ -257,6 +257,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     }
                 }
             }
+            ast::Stmt::AxiomStmt(axiom_stmt) => {
+                if let Some(expr) = axiom_stmt.expr() {
+                    self.infer_expr_coerceable_to(&expr, Ty::Bool);
+                }
+            }
             _ => (),
         }
 
