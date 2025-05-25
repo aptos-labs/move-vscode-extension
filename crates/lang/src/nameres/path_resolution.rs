@@ -6,7 +6,7 @@ use crate::nameres::name_resolution::{
 use crate::nameres::namespaces::Ns::FUNCTION;
 use crate::nameres::namespaces::{FUNCTIONS, Ns};
 use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
-use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryExt, ScopeEntryListExt};
+use crate::nameres::scope::{ScopeEntry, ScopeEntryExt, ScopeEntryListExt};
 use crate::types::inference::{InferenceCtx, TyVarIndex};
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
@@ -15,7 +15,7 @@ use base_db::package_root::PackageId;
 use syntax::SyntaxKind::VARIANT;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
-use syntax::ast::{HasItems, NamedElement, ReferenceElement};
+use syntax::ast::{HasItems, ReferenceElement};
 use syntax::files::{InFile, InFileExt, OptionInFileExt};
 use syntax::{AstNode, ast};
 use vfs::FileId;

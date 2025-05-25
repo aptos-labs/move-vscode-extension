@@ -1,15 +1,10 @@
 use crate::init_tracing_for_test;
 use expect_test::Expect;
 use ide::Analysis;
-use ide_db::Severity;
 use ide_db::assists::{Assist, AssistResolveStrategy};
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
-use syntax::TextRange;
-use test_utils::{
-    ErrorMark, apply_error_marks, fixtures, get_all_marked_positions, get_first_marked_position,
-    remove_markings,
-};
+use test_utils::{ErrorMark, apply_error_marks, fixtures, get_first_marked_position, remove_markings};
 use vfs::FileId;
 
 pub fn check_diagnostics(expect: Expect) {
@@ -25,30 +20,6 @@ pub fn check_diagnostics(expect: Expect) {
 
     expect.assert_eq(stdx::trim_indent(&actual).as_str());
 }
-//
-// pub fn check_diagnostic_and_fix(before: &str, after: &str) {
-//     let (_, file_id, mut diagnostic) = get_diagnostics(before);
-//     let diag = diagnostic.pop().expect("diagnostics expected, but none returned");
-//
-//     let (exp_range, exp_severity, exp_message) = get_expected_diagnostics(before, file_id)
-//         .pop()
-//         .expect("missing diagnostic mark");
-//     assert_eq!(diag.range.range, exp_range);
-//     assert_eq!(diag.severity, exp_severity);
-//     assert_eq!(diag.message, exp_message);
-//
-//     let fix = &diag
-//         .fixes
-//         .unwrap_or_else(|| panic!("{:?} diagnostic misses fixes", diag.code))[0];
-//
-//     let line_idx = get_first_marked_position(before, "//^").mark_line_col.line;
-//     let mut lines = before.lines().collect::<Vec<_>>();
-//     lines.remove(line_idx as usize);
-//     let before_no_error_line = lines.join("\n");
-//
-//     let actual_after = apply_fix(fix, &before_no_error_line);
-//     assert_eq_text!(&actual_after, after);
-// }
 
 pub fn check_diagnostics_and_fix(before: Expect, after: Expect) {
     init_tracing_for_test();
@@ -91,23 +62,6 @@ fn get_diagnostics(source: &str) -> (Analysis, FileId, Vec<Diagnostic>) {
         .unwrap();
 
     (analysis, file_id, diagnostics)
-}
-
-fn get_expected_diagnostics(source: &str) -> Vec<(TextRange, Severity, String)> {
-    let marked_positions = get_all_marked_positions(source, "//^");
-
-    let mut exps = vec![];
-    for marked in marked_positions {
-        let mut parts = marked.line.splitn(3, " ");
-        let prefix = parts.next().unwrap();
-        let severity = parts.next().unwrap();
-        let len = prefix.trim_start_matches("//").len();
-        let exp_range = TextRange::at(marked.item_offset, (len as u32).into());
-        let expected_severity = Severity::from_test_ident(severity);
-        let expected_message = parts.next().unwrap();
-        exps.push((exp_range, expected_severity, expected_message.to_string()));
-    }
-    exps
 }
 
 fn apply_fix(fix: &Assist, before: &str) -> String {

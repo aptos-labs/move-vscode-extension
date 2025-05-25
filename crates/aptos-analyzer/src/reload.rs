@@ -8,7 +8,6 @@ use crate::{Config, lsp_ext};
 use base_db::change::{FileChanges, ManifestFileId, PackageGraph};
 use lsp_types::FileSystemWatcher;
 use project_model::aptos_package::{AptosPackage, load_from_fs};
-use project_model::dep_graph;
 use project_model::dep_graph::{collect, collect_initial};
 use project_model::project_folders::ProjectFolders;
 use std::fmt::Formatter;
@@ -17,11 +16,12 @@ use std::{fmt, mem};
 use stdx::format_to;
 use stdx::thread::ThreadIntent;
 use vfs::loader::Handle;
-use vfs::{AbsPath, FileId, Vfs};
+use vfs::{AbsPath, Vfs};
 
 #[derive(Debug)]
 pub(crate) enum FetchPackagesProgress {
     Begin,
+    #[allow(unused)]
     Report(String),
     End(Vec<anyhow::Result<AptosPackage>>, bool),
 }

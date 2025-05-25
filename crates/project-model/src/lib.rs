@@ -1,10 +1,7 @@
 use crate::aptos_package::PackageFolderRoot;
-use crate::project_folders::ProjectFolders;
-use anyhow::{Context, bail};
-use paths::{AbsPathBuf, Utf8PathBuf};
+use paths::AbsPathBuf;
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::path::Path;
 
 pub mod aptos_package;
 pub mod dep_graph;
@@ -116,20 +113,6 @@ fn find_move_toml(path: impl AsRef<Path>) -> Option<AbsPathBuf> {
         return Some(AbsPathBuf::assert_utf8(move_toml_file));
     }
     None
-}
-
-fn utf8_stdout(cmd: &mut Command) -> anyhow::Result<String> {
-    let output = cmd.output().with_context(|| format!("{cmd:?} failed"))?;
-    if !output.status.success() {
-        match String::from_utf8(output.stderr) {
-            Ok(stderr) if !stderr.is_empty() => {
-                bail!("{:?} failed, {}\nstderr:\n{}", cmd, output.status, stderr)
-            }
-            _ => bail!("{:?} failed, {}", cmd, output.status),
-        }
-    }
-    let stdout = String::from_utf8(output.stdout)?;
-    Ok(stdout.trim().to_owned())
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]

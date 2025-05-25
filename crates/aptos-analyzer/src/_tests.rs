@@ -1,3 +1,4 @@
+#[allow(unused)]
 #[test]
 fn test_run_main_loop() -> anyhow::Result<()> {
     use crate::Config;

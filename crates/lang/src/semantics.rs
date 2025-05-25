@@ -15,8 +15,6 @@ use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
 use itertools::{Itertools, repeat_n};
 use std::cell::RefCell;
-use std::convert::Infallible;
-use std::ops::ControlFlow;
 use std::sync::Arc;
 use std::{fmt, ops};
 use syntax::files::InFile;
@@ -24,7 +22,6 @@ use syntax::{AstNode, SyntaxNode, SyntaxToken, ast};
 use vfs::FileId;
 
 const MAX_FILE_ID: u32 = 0x7fff_ffff;
-const CONTINUE_NO_BREAKS: ControlFlow<Infallible, ()> = ControlFlow::Continue(());
 
 /// Primary API to get semantic information, like types, from syntax trees.
 pub struct Semantics<'db, DB> {
@@ -177,6 +174,7 @@ impl<'db> SemanticsImpl<'db> {
         cache.root_to_file_cache.get(root_node).copied()
     }
 
+    #[allow(unused)]
     fn wrap_token_infile(&self, token: SyntaxToken) -> InFile<SyntaxToken> {
         let (file_id, _) = self.find_file(&token.parent().unwrap()).unpack();
         InFile::new(file_id, token)

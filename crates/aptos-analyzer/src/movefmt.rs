@@ -20,10 +20,8 @@ pub(crate) fn run_movefmt(
     let line_index = snap.file_line_index(file_id)?;
 
     // try to chdir to the file so we can respect `movefmt.toml`
-    let mut file_path = None;
     let current_dir = match text_document.uri.to_file_path() {
         Ok(mut path) => {
-            file_path = Some(path.clone());
             // pop off file name
             if path.pop() && path.is_dir() {
                 path

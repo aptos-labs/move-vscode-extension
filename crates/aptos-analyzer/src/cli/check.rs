@@ -1,6 +1,5 @@
 use base_db::SourceDatabase;
 use base_db::change::FileChanges;
-use base_db::package_root::PackageKind;
 use camino::Utf8PathBuf;
 use clap::Args;
 use codespan_reporting::diagnostic::{Label, LabelStyle};
@@ -18,10 +17,8 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::PathBuf;
 use std::process::ExitCode;
-use stdx::itertools::Itertools;
 use syntax::TextRange;
 use vfs::FileId;
-use vfs::loader::Handle;
 
 #[derive(Debug, Args)]
 pub struct Check {
@@ -130,7 +127,7 @@ impl Check {
                 let file_path = vfs.file_path(file_id).clone();
                 if !file_path
                     .name_and_extension()
-                    .is_some_and(|(name, ext)| ext == Some("move"))
+                    .is_some_and(|(_, ext)| ext == Some("move"))
                 {
                     if self.verbose {
                         println!("skip file {}", file_path);

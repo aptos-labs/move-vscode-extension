@@ -1,9 +1,8 @@
 use crate::fixtures::parse_files_from_source;
 use ide::{Analysis, AnalysisHost};
 use project_model::DiscoveredManifest;
-use project_model::aptos_package::{AptosPackage, load_from_fs};
+use project_model::aptos_package::load_from_fs;
 use std::fs;
-use stdx::itertools::Itertools;
 use vfs::{AbsPathBuf, FileId, Vfs};
 
 pub fn from_multiple_files_on_tmpfs(test_packages: Vec<TestPackageFiles>) -> TestState {
@@ -39,11 +38,7 @@ pub fn from_multiple_files_on_tmpfs(test_packages: Vec<TestPackageFiles>) -> Tes
     let (db, vfs) = ide_db::load::load_db(all_packages.as_slice()).unwrap();
 
     let analysis_host = AnalysisHost::with_database(db);
-    TestState {
-        packages: all_packages,
-        vfs,
-        analysis_host,
-    }
+    TestState { vfs, analysis_host }
 }
 
 pub struct TestPackageFiles {
@@ -87,7 +82,6 @@ version = "0.1.0"
 pub struct TestState {
     vfs: Vfs,
     analysis_host: AnalysisHost,
-    packages: Vec<AptosPackage>,
 }
 
 impl TestState {

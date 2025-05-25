@@ -1,4 +1,3 @@
-use camino::Utf8PathBuf;
 use vfs::file_set::FileSet;
 use vfs::{AbsPathBuf, FileId, Vfs, VfsPath};
 

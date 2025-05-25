@@ -14,6 +14,7 @@ pub use crate::flycheck::compiler_diagnostic::AptosDiagnostic;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub(crate) enum InvocationStrategy {
+    #[allow(unused)]
     Once,
     #[default]
     PerWorkspace,
