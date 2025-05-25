@@ -47,6 +47,15 @@ jobs:
       - name: Build aptos-analyzer binary with xtask
         run: cargo xtask install --server
 
+      - name: Fetch aptos-core repository
+        uses: actions/checkout@v4
+        with:
+          repository: aptos-labs/aptos-core
+          path: aptos-core
+
+      - name: aptos-analyzer check framework/move-stdlib
+        run: aptos-analyzer check --kinds error -- ./aptos-core/aptos-move/framework/move-stdlib
+
   typescript:
     name: TypeScript
     strategy:
