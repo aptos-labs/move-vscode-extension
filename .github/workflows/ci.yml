@@ -18,8 +18,8 @@ jobs:
 
       - run: cargo fmt --check
 
-  parser_tests:
-    runs-on: ubuntu-latest
+  rust_tests:
+    runs-on: macos-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,7 +30,7 @@ jobs:
       - name: Install nextest
         uses: taiki-e/install-action@nextest
 
-      - run: cargo nextest run --package syntax
+      - run: cargo nextest run --hide-progress-bar --no-fail-fast
 
   check_diagnostics:
     strategy:
