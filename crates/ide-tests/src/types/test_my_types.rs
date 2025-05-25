@@ -72,3 +72,27 @@ module std::m {
     "#,
     );
 }
+
+#[test]
+fn test_tuple_enum_field_type_of_reference() {
+    // language=Move
+    check_expr_type(
+        r#"
+module std::m {
+    enum StoredPermission has store, copy, drop {
+        Unlimited,
+        Capacity(u256),
+    }
+    fun consume_capacity(perm: &mut StoredPermission, threshold: u256): bool {
+        match (perm) {
+            StoredPermission::Capacity(current_capacity) => {
+                current_capacity;
+                //^ &mut u256
+            }
+            StoredPermission::Unlimited => true
+        }
+    }
+}
+    "#,
+    );
+}
