@@ -7,6 +7,7 @@ use crate::nameres::namespaces::{
 use enumset::enum_set;
 use std::fmt;
 use std::fmt::Formatter;
+use syntax::SyntaxKind::*;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::{SyntaxNodeExt, SyntaxTokenExt};
 use syntax::{AstNode, T, ast};
@@ -110,7 +111,7 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
         let ref_name = path.reference_name().expect("as `path_address` is None");
 
         // check whether it's a first element in use stmt, i.e. use [std]::module;
-        if let Some(use_speck) = path.use_speck() {
+        if let Some(use_speck) = path.root_parent_of_type::<ast::UseSpeck>() {
             if use_speck.syntax().parent_is::<ast::UseStmt>() {
                 return Some(PathKind::NamedAddress(NamedAddr::new(ref_name)));
             }
@@ -130,7 +131,10 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
                 });
             }
 
-            if path.root_path().syntax().parent_is::<ast::Friend>() {
+            if path
+                .root_parent_kind()
+                .is_some_and(|it| matches!(it, FRIEND | MODULE_SPEC))
+            {
                 // friend addr::module;
                 //        ^ (unknown named address)
                 return Some(PathKind::NamedAddress(NamedAddr::new(ref_name)));
@@ -164,8 +168,11 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
             // aptos_framework::[bar]
             (_, Some(qualifier_ref_name)) => {
                 let named_address = resolve_named_address(&qualifier_ref_name);
-                // use std::[main]
-                if path.use_speck().is_some() {
+                // use std::[main] | friend std::[main];
+                if path
+                    .root_parent_kind()
+                    .is_some_and(|it| matches!(it, USE_SPECK | FRIEND | MODULE_SPEC))
+                {
                     return Some(PathKind::Qualified {
                         path,
                         qualifier,
@@ -203,7 +210,7 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
         });
     }
 
-    if path.is_use_speck() {
+    if path.root_parent_of_type::<ast::UseSpeck>().is_some() {
         // MODULES are for `use 0x1::m::Self;`
         return Some(PathKind::Qualified {
             path,

@@ -46,7 +46,7 @@ pub fn is_visible_in_context(
     let context_usage_scope = hir_db::item_scope(db, context.loc(context_file_id));
     let context_opt_path = ast::Path::cast(context.syntax().to_owned());
     if let Some(path) = context_opt_path.clone() {
-        if path.is_use_speck() {
+        if path.root_parent_of_type::<ast::UseSpeck>().is_some() {
             // those are always public in use specks
             if matches!(item_kind, MODULE | STRUCT | ENUM) {
                 return true;
@@ -150,7 +150,6 @@ pub fn is_visible_in_context(
             }
             VisLevel::Package => {
                 // check for the same source root
-                // todo: change later to package_id
                 db.file_package_id(context_file_id) == db.file_package_id(item_file_id)
             }
         },

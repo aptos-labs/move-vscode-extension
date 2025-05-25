@@ -752,3 +752,12 @@ fn test_special_spec_constants_ignore_consts_with_the_same_names_from_the_module
         }
 "#]]);
 }
+
+#[test]
+fn test_no_unresolved_address_for_spec_module() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+module aptos_experimental::mod {}
+spec aptos_experimental::mod {}
+"#]]);
+}

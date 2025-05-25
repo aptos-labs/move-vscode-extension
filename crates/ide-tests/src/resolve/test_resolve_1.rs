@@ -317,3 +317,24 @@ spec 0x1::main {
     "#,
     )
 }
+
+#[test]
+fn test_resolve_friend_function_with_non_standard_named_address() {
+    check_resolve(
+        // language=Move
+        r#"
+module aptos_token_objects::collection {
+    friend aptos_token_objects::token;
+    friend fun decrement_supply() {}
+                //X
+}
+module aptos_token_objects::token {
+    use aptos_token_objects::collection;
+    fun main() {
+        collection::decrement_supply();
+                     //^
+    }
+}
+    "#,
+    )
+}
