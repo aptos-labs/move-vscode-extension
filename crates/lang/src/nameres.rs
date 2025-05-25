@@ -55,6 +55,13 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
             .ancestor_or_self::<ast::InferenceCtxOwner>()
             .map(|it| it.in_file(*file_id));
 
+        // skip path in AttrItem = Path '=' Expr
+        if let Some(path) = ref_element.cast_into::<ast::Path>() {
+            if path.root_parent_of_type::<ast::AttrItem>().is_some() {
+                return None;
+            }
+        }
+
         let msl = self.value.syntax().is_msl_context();
         if let Some(ctx_owner) = opt_inference_ctx_owner {
             let inference = hir_db::inference(db, ctx_owner, msl);

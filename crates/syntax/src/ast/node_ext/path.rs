@@ -1,5 +1,6 @@
-use crate::ast;
+use crate::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
+use crate::{ast, AstNode, SyntaxNode};
 
 impl ast::Path {
     pub fn path_address(&self) -> Option<ast::PathAddress> {
@@ -18,7 +19,11 @@ impl ast::Path {
     }
 
     pub fn path_expr(&self) -> Option<ast::PathExpr> {
-        self.root_path().syntax.parent_of_type::<ast::PathExpr>()
+        self.root_parent_of_type::<ast::PathExpr>()
+    }
+
+    pub fn root_parent_of_type<T: AstNode>(&self) -> Option<T> {
+        self.root_path().syntax.parent_of_type::<T>()
     }
 
     /** For `Foo::bar::baz::quux` path returns `Foo` */
