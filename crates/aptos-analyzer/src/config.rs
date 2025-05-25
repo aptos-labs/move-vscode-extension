@@ -426,7 +426,7 @@ pub enum FilesWatcher {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "snake_case")]
-enum FilesWatcherDef {
+pub(crate) enum FilesWatcherDef {
     Client,
     Notify,
     Server,

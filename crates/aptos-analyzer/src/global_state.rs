@@ -320,6 +320,7 @@ impl GlobalStateSnapshot {
         file_id_to_url(&self.vfs_read(), id)
     }
 
+    #[allow(unused)]
     pub(crate) fn vfs_path_to_file_id(&self, vfs_path: &VfsPath) -> anyhow::Result<FileId> {
         vfs_path_to_file_id(&self.vfs_read(), vfs_path)
     }
@@ -367,10 +368,6 @@ impl GlobalStateSnapshot {
     #[track_caller]
     fn send(&self, message: lsp_server::Message) {
         self.sender.send(message).unwrap();
-    }
-
-    pub(crate) fn file_exists(&self, file_id: FileId) -> bool {
-        self.vfs.read().0.exists(file_id)
     }
 }
 

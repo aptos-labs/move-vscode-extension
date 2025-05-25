@@ -1,6 +1,5 @@
 use crate::aptos_package::{AptosPackage, VfsLoader};
-use crate::project_folders::PackageRootConfig;
-use base_db::change::{FileChanges, ManifestFileId, PackageGraph};
+use base_db::change::{ManifestFileId, PackageGraph};
 use paths::AbsPath;
 use vfs::Vfs;
 

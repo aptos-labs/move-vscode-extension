@@ -21,7 +21,6 @@ use std::iter;
 use std::ops::Deref;
 use std::sync::LazyLock;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
-use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::{FieldsOwner, HasStmts};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, IntoNodeOrToken, ast};
@@ -499,7 +498,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let matching_field = adt_item
             .fields()
             .into_iter()
-            .filter(|(name, field)| name == &field_reference_name)
+            .filter(|(name, _)| name == &field_reference_name)
             .collect::<Vec<_>>()
             .single_or_none();
 

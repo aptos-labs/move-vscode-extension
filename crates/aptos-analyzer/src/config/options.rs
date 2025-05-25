@@ -153,6 +153,7 @@ impl FullConfigInput {
     }
 
     #[cfg(test)]
+    #[allow(unused)]
     pub(crate) fn manual() -> String {
         manual(&Self::schema_fields())
     }
@@ -311,6 +312,7 @@ fn field_props(field: &str, ty: &str, doc: &[&str], default: &str) -> serde_json
 }
 
 #[cfg(test)]
+#[allow(unused)]
 fn manual(fields: &[SchemaField]) -> String {
     fields
         .iter()

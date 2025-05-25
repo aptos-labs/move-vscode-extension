@@ -78,6 +78,7 @@ impl ConfigChange {
     }
 }
 
+#[allow(unused)]
 fn get_field_json<T: DeserializeOwned>(
     json: &mut serde_json::Value,
     error_sink: &mut Vec<(String, serde_json::Error)>,

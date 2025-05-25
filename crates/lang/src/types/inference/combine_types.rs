@@ -247,13 +247,13 @@ pub type CombineResult = Result<(), MismatchErrorTypes>;
 
 #[derive(Debug)]
 pub struct MismatchErrorTypes {
-    ty1: Ty,
-    ty2: Ty,
+    _ty1: Ty,
+    _ty2: Ty,
 }
 
 impl MismatchErrorTypes {
     pub fn new(ty1: Ty, ty2: Ty) -> Self {
-        MismatchErrorTypes { ty1, ty2 }
+        MismatchErrorTypes { _ty1: ty1, _ty2: ty2 }
     }
 }
 

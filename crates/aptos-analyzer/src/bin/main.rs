@@ -177,6 +177,7 @@ fn initialization_handshake() -> anyhow::Result<(Connection, lsp_server::IoThrea
 
     let initialize_params =
         from_json::<lsp_types::InitializeParams>("InitializeParams", &initialize_params)?;
+    #[allow(deprecated)]
     let lsp_types::InitializeParams {
         root_uri,
         capabilities,

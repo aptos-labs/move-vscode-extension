@@ -295,7 +295,7 @@ pub(crate) fn handle_formatting(
 
 pub(crate) fn handle_analyzer_status(
     snap: GlobalStateSnapshot,
-    params: lsp_ext::AnalyzerStatusParams,
+    _params: lsp_ext::AnalyzerStatusParams,
 ) -> anyhow::Result<String> {
     let _p = tracing::info_span!("handle_analyzer_status").entered();
 

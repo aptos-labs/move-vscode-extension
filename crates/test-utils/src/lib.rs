@@ -31,7 +31,7 @@ pub fn remove_markings(source: &str) -> String {
     let trimmed_source = source
         .lines()
         .enumerate()
-        .filter(|(i, line)| !lines_to_remove.contains(i))
+        .filter(|(i, _)| !lines_to_remove.contains(i))
         .map(|it| it.1)
         .collect::<Vec<_>>()
         .join("\n");
