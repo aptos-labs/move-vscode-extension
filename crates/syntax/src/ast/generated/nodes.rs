@@ -5102,8 +5102,8 @@ impl AstNode for AddressRef {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            AddressRef::NamedAddress(it) => &it.syntax,
-            AddressRef::ValueAddress(it) => &it.syntax,
+            AddressRef::NamedAddress(it) => &it.syntax(),
+            AddressRef::ValueAddress(it) => &it.syntax(),
         }
     }
 }
@@ -5160,8 +5160,8 @@ impl AstNode for AnyField {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            AnyField::NamedField(it) => &it.syntax,
-            AnyField::TupleField(it) => &it.syntax,
+            AnyField::NamedField(it) => &it.syntax(),
+            AnyField::TupleField(it) => &it.syntax(),
         }
     }
 }
@@ -5287,9 +5287,9 @@ impl AstNode for AnyFun {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            AnyFun::Fun(it) => &it.syntax,
-            AnyFun::SpecFun(it) => &it.syntax,
-            AnyFun::SpecInlineFun(it) => &it.syntax,
+            AnyFun::Fun(it) => &it.syntax(),
+            AnyFun::SpecFun(it) => &it.syntax(),
+            AnyFun::SpecInlineFun(it) => &it.syntax(),
         }
     }
 }
@@ -5330,8 +5330,8 @@ impl AstNode for BlockOrInlineExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            BlockOrInlineExpr::BlockExpr(it) => &it.syntax,
-            BlockOrInlineExpr::InlineExpr(it) => &it.syntax,
+            BlockOrInlineExpr::BlockExpr(it) => &it.syntax(),
+            BlockOrInlineExpr::InlineExpr(it) => &it.syntax(),
         }
     }
 }
@@ -5762,40 +5762,40 @@ impl AstNode for Expr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            Expr::AbortExpr(it) => &it.syntax,
-            Expr::AssertMacroExpr(it) => &it.syntax,
-            Expr::BangExpr(it) => &it.syntax,
-            Expr::BinExpr(it) => &it.syntax,
-            Expr::BlockExpr(it) => &it.syntax,
-            Expr::BorrowExpr(it) => &it.syntax,
-            Expr::BreakExpr(it) => &it.syntax,
-            Expr::CallExpr(it) => &it.syntax,
-            Expr::CastExpr(it) => &it.syntax,
-            Expr::ChooseExpr(it) => &it.syntax,
-            Expr::ContinueExpr(it) => &it.syntax,
-            Expr::DerefExpr(it) => &it.syntax,
-            Expr::DotExpr(it) => &it.syntax,
-            Expr::ExistsExpr(it) => &it.syntax,
-            Expr::ForExpr(it) => &it.syntax,
-            Expr::ForallExpr(it) => &it.syntax,
-            Expr::IfExpr(it) => &it.syntax,
-            Expr::IndexExpr(it) => &it.syntax,
-            Expr::IsExpr(it) => &it.syntax,
-            Expr::LambdaExpr(it) => &it.syntax,
-            Expr::Literal(it) => &it.syntax,
-            Expr::LoopExpr(it) => &it.syntax,
-            Expr::MatchExpr(it) => &it.syntax,
-            Expr::MethodCallExpr(it) => &it.syntax,
-            Expr::ParenExpr(it) => &it.syntax,
-            Expr::PathExpr(it) => &it.syntax,
-            Expr::RangeExpr(it) => &it.syntax,
-            Expr::ResourceExpr(it) => &it.syntax,
-            Expr::ReturnExpr(it) => &it.syntax,
-            Expr::SpecBlockExpr(it) => &it.syntax,
-            Expr::StructLit(it) => &it.syntax,
-            Expr::TupleExpr(it) => &it.syntax,
-            Expr::VectorLitExpr(it) => &it.syntax,
-            Expr::WhileExpr(it) => &it.syntax,
+            Expr::AbortExpr(it) => &it.syntax(),
+            Expr::AssertMacroExpr(it) => &it.syntax(),
+            Expr::BangExpr(it) => &it.syntax(),
+            Expr::BinExpr(it) => &it.syntax(),
+            Expr::BlockExpr(it) => &it.syntax(),
+            Expr::BorrowExpr(it) => &it.syntax(),
+            Expr::BreakExpr(it) => &it.syntax(),
+            Expr::CallExpr(it) => &it.syntax(),
+            Expr::CastExpr(it) => &it.syntax(),
+            Expr::ChooseExpr(it) => &it.syntax(),
+            Expr::ContinueExpr(it) => &it.syntax(),
+            Expr::DerefExpr(it) => &it.syntax(),
+            Expr::DotExpr(it) => &it.syntax(),
+            Expr::ExistsExpr(it) => &it.syntax(),
+            Expr::ForExpr(it) => &it.syntax(),
+            Expr::ForallExpr(it) => &it.syntax(),
+            Expr::IfExpr(it) => &it.syntax(),
+            Expr::IndexExpr(it) => &it.syntax(),
+            Expr::IsExpr(it) => &it.syntax(),
+            Expr::LambdaExpr(it) => &it.syntax(),
+            Expr::Literal(it) => &it.syntax(),
+            Expr::LoopExpr(it) => &it.syntax(),
+            Expr::MatchExpr(it) => &it.syntax(),
+            Expr::MethodCallExpr(it) => &it.syntax(),
+            Expr::ParenExpr(it) => &it.syntax(),
+            Expr::PathExpr(it) => &it.syntax(),
+            Expr::RangeExpr(it) => &it.syntax(),
+            Expr::ResourceExpr(it) => &it.syntax(),
+            Expr::ReturnExpr(it) => &it.syntax(),
+            Expr::SpecBlockExpr(it) => &it.syntax(),
+            Expr::StructLit(it) => &it.syntax(),
+            Expr::TupleExpr(it) => &it.syntax(),
+            Expr::VectorLitExpr(it) => &it.syntax(),
+            Expr::WhileExpr(it) => &it.syntax(),
         }
     }
 }
@@ -5836,8 +5836,8 @@ impl AstNode for FieldList {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            FieldList::NamedFieldList(it) => &it.syntax,
-            FieldList::TupleFieldList(it) => &it.syntax,
+            FieldList::NamedFieldList(it) => &it.syntax(),
+            FieldList::TupleFieldList(it) => &it.syntax(),
         }
     }
 }
@@ -5889,9 +5889,9 @@ impl AstNode for IdentPatKind {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            IdentPatKind::LambdaParam(it) => &it.syntax,
-            IdentPatKind::LetStmt(it) => &it.syntax,
-            IdentPatKind::Param(it) => &it.syntax,
+            IdentPatKind::LambdaParam(it) => &it.syntax(),
+            IdentPatKind::LetStmt(it) => &it.syntax(),
+            IdentPatKind::Param(it) => &it.syntax(),
         }
     }
 }
@@ -5959,10 +5959,10 @@ impl AstNode for IncludeExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            IncludeExpr::AndIncludeExpr(it) => &it.syntax,
-            IncludeExpr::IfElseIncludeExpr(it) => &it.syntax,
-            IncludeExpr::ImplyIncludeExpr(it) => &it.syntax,
-            IncludeExpr::SchemaIncludeExpr(it) => &it.syntax,
+            IncludeExpr::AndIncludeExpr(it) => &it.syntax(),
+            IncludeExpr::IfElseIncludeExpr(it) => &it.syntax(),
+            IncludeExpr::ImplyIncludeExpr(it) => &it.syntax(),
+            IncludeExpr::SchemaIncludeExpr(it) => &it.syntax(),
         }
     }
 }
@@ -6050,11 +6050,11 @@ impl AstNode for InferenceCtxOwner {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            InferenceCtxOwner::Fun(it) => &it.syntax,
-            InferenceCtxOwner::ItemSpec(it) => &it.syntax,
-            InferenceCtxOwner::Schema(it) => &it.syntax,
-            InferenceCtxOwner::SpecFun(it) => &it.syntax,
-            InferenceCtxOwner::SpecInlineFun(it) => &it.syntax,
+            InferenceCtxOwner::Fun(it) => &it.syntax(),
+            InferenceCtxOwner::ItemSpec(it) => &it.syntax(),
+            InferenceCtxOwner::Schema(it) => &it.syntax(),
+            InferenceCtxOwner::SpecFun(it) => &it.syntax(),
+            InferenceCtxOwner::SpecInlineFun(it) => &it.syntax(),
         }
     }
 }
@@ -6181,14 +6181,14 @@ impl AstNode for Item {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            Item::Const(it) => &it.syntax,
-            Item::Enum(it) => &it.syntax,
-            Item::Friend(it) => &it.syntax,
-            Item::Fun(it) => &it.syntax,
-            Item::ItemSpec(it) => &it.syntax,
-            Item::Schema(it) => &it.syntax,
-            Item::SpecFun(it) => &it.syntax,
-            Item::Struct(it) => &it.syntax,
+            Item::Const(it) => &it.syntax(),
+            Item::Enum(it) => &it.syntax(),
+            Item::Friend(it) => &it.syntax(),
+            Item::Fun(it) => &it.syntax(),
+            Item::ItemSpec(it) => &it.syntax(),
+            Item::Schema(it) => &it.syntax(),
+            Item::SpecFun(it) => &it.syntax(),
+            Item::Struct(it) => &it.syntax(),
         }
     }
 }
@@ -6256,9 +6256,9 @@ impl AstNode for LoopLike {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            LoopLike::ForExpr(it) => &it.syntax,
-            LoopLike::LoopExpr(it) => &it.syntax,
-            LoopLike::WhileExpr(it) => &it.syntax,
+            LoopLike::ForExpr(it) => &it.syntax(),
+            LoopLike::LoopExpr(it) => &it.syntax(),
+            LoopLike::WhileExpr(it) => &it.syntax(),
         }
     }
 }
@@ -6322,8 +6322,8 @@ impl AstNode for MethodOrDotExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            MethodOrDotExpr::DotExpr(it) => &it.syntax,
-            MethodOrDotExpr::MethodCallExpr(it) => &it.syntax,
+            MethodOrDotExpr::DotExpr(it) => &it.syntax(),
+            MethodOrDotExpr::MethodCallExpr(it) => &it.syntax(),
         }
     }
 }
@@ -6373,8 +6373,8 @@ impl AstNode for MethodOrPath {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            MethodOrPath::MethodCallExpr(it) => &it.syntax,
-            MethodOrPath::Path(it) => &it.syntax,
+            MethodOrPath::MethodCallExpr(it) => &it.syntax(),
+            MethodOrPath::Path(it) => &it.syntax(),
         }
     }
 }
@@ -6415,8 +6415,8 @@ impl AstNode for NameLike {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            NameLike::Name(it) => &it.syntax,
-            NameLike::NameRef(it) => &it.syntax,
+            NameLike::Name(it) => &it.syntax(),
+            NameLike::NameRef(it) => &it.syntax(),
         }
     }
 }
@@ -6517,13 +6517,13 @@ impl AstNode for Pat {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            Pat::IdentPat(it) => &it.syntax,
-            Pat::PathPat(it) => &it.syntax,
-            Pat::RestPat(it) => &it.syntax,
-            Pat::StructPat(it) => &it.syntax,
-            Pat::TuplePat(it) => &it.syntax,
-            Pat::TupleStructPat(it) => &it.syntax,
-            Pat::WildcardPat(it) => &it.syntax,
+            Pat::IdentPat(it) => &it.syntax(),
+            Pat::PathPat(it) => &it.syntax(),
+            Pat::RestPat(it) => &it.syntax(),
+            Pat::StructPat(it) => &it.syntax(),
+            Pat::TuplePat(it) => &it.syntax(),
+            Pat::TupleStructPat(it) => &it.syntax(),
+            Pat::WildcardPat(it) => &it.syntax(),
         }
     }
 }
@@ -6591,9 +6591,9 @@ impl AstNode for QuantBindingsOwner {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            QuantBindingsOwner::ChooseExpr(it) => &it.syntax,
-            QuantBindingsOwner::ExistsExpr(it) => &it.syntax,
-            QuantBindingsOwner::ForallExpr(it) => &it.syntax,
+            QuantBindingsOwner::ChooseExpr(it) => &it.syntax(),
+            QuantBindingsOwner::ExistsExpr(it) => &it.syntax(),
+            QuantBindingsOwner::ForallExpr(it) => &it.syntax(),
         }
     }
 }
@@ -6661,9 +6661,9 @@ impl AstNode for QuantExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            QuantExpr::ChooseExpr(it) => &it.syntax,
-            QuantExpr::ExistsExpr(it) => &it.syntax,
-            QuantExpr::ForallExpr(it) => &it.syntax,
+            QuantExpr::ChooseExpr(it) => &it.syntax(),
+            QuantExpr::ExistsExpr(it) => &it.syntax(),
+            QuantExpr::ForallExpr(it) => &it.syntax(),
         }
     }
 }
@@ -6830,18 +6830,18 @@ impl AstNode for Stmt {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            Stmt::AbortsIfStmt(it) => &it.syntax,
-            Stmt::AbortsWithStmt(it) => &it.syntax,
-            Stmt::AxiomStmt(it) => &it.syntax,
-            Stmt::ExprStmt(it) => &it.syntax,
-            Stmt::GlobalVariableDecl(it) => &it.syntax,
-            Stmt::IncludeSchema(it) => &it.syntax,
-            Stmt::InvariantStmt(it) => &it.syntax,
-            Stmt::LetStmt(it) => &it.syntax,
-            Stmt::PragmaStmt(it) => &it.syntax,
-            Stmt::SchemaField(it) => &it.syntax,
-            Stmt::SpecInlineFun(it) => &it.syntax,
-            Stmt::SpecPredicateStmt(it) => &it.syntax,
+            Stmt::AbortsIfStmt(it) => &it.syntax(),
+            Stmt::AbortsWithStmt(it) => &it.syntax(),
+            Stmt::AxiomStmt(it) => &it.syntax(),
+            Stmt::ExprStmt(it) => &it.syntax(),
+            Stmt::GlobalVariableDecl(it) => &it.syntax(),
+            Stmt::IncludeSchema(it) => &it.syntax(),
+            Stmt::InvariantStmt(it) => &it.syntax(),
+            Stmt::LetStmt(it) => &it.syntax(),
+            Stmt::PragmaStmt(it) => &it.syntax(),
+            Stmt::SchemaField(it) => &it.syntax(),
+            Stmt::SpecInlineFun(it) => &it.syntax(),
+            Stmt::SpecPredicateStmt(it) => &it.syntax(),
         }
     }
 }
@@ -6941,8 +6941,8 @@ impl AstNode for StructOrEnum {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            StructOrEnum::Enum(it) => &it.syntax,
-            StructOrEnum::Struct(it) => &it.syntax,
+            StructOrEnum::Enum(it) => &it.syntax(),
+            StructOrEnum::Struct(it) => &it.syntax(),
         }
     }
 }
@@ -7032,12 +7032,12 @@ impl AstNode for Type {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            Type::LambdaType(it) => &it.syntax,
-            Type::ParenType(it) => &it.syntax,
-            Type::PathType(it) => &it.syntax,
-            Type::RefType(it) => &it.syntax,
-            Type::TupleType(it) => &it.syntax,
-            Type::UnitType(it) => &it.syntax,
+            Type::LambdaType(it) => &it.syntax(),
+            Type::ParenType(it) => &it.syntax(),
+            Type::PathType(it) => &it.syntax(),
+            Type::RefType(it) => &it.syntax(),
+            Type::TupleType(it) => &it.syntax(),
+            Type::UnitType(it) => &it.syntax(),
         }
     }
 }
@@ -7125,10 +7125,10 @@ impl AstNode for TypeOwner {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            TypeOwner::GlobalVariableDecl(it) => &it.syntax,
-            TypeOwner::NamedField(it) => &it.syntax,
-            TypeOwner::SchemaField(it) => &it.syntax,
-            TypeOwner::TupleField(it) => &it.syntax,
+            TypeOwner::GlobalVariableDecl(it) => &it.syntax(),
+            TypeOwner::NamedField(it) => &it.syntax(),
+            TypeOwner::SchemaField(it) => &it.syntax(),
+            TypeOwner::TupleField(it) => &it.syntax(),
         }
     }
 }

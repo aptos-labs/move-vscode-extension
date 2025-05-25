@@ -331,7 +331,7 @@ fn generate_enum(
             fn syntax(&self) -> &SyntaxNode {
                 match self {
                     #(
-                    #name::#variants(it) => &it.syntax,
+                    #name::#variants(it) => &it.syntax(),
                     )*
                 }
             }
