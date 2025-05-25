@@ -17,6 +17,7 @@ pub mod fun;
 mod ident_pat;
 mod if_expr;
 pub mod index_expr;
+mod invariant_stmt;
 mod is_expr;
 mod item_spec;
 mod item_spec_ref;

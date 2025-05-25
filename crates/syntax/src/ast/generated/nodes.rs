@@ -178,13 +178,13 @@ pub struct AxiomStmt {
 }
 impl AxiomStmt {
     #[inline]
-    pub fn axiom_type_param_list(&self) -> Option<TypeParamList> { support::child(&self.syntax) }
-    #[inline]
     pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
     #[inline]
     pub fn spec_predicate_property_list(&self) -> Option<SpecPredicatePropertyList> {
         support::child(&self.syntax)
     }
+    #[inline]
+    pub fn spec_type_param_list(&self) -> Option<TypeParamList> { support::child(&self.syntax) }
     #[inline]
     pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
     #[inline]
@@ -604,6 +604,27 @@ pub struct InlineExpr {
 impl InlineExpr {
     #[inline]
     pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct InvariantStmt {
+    pub(crate) syntax: SyntaxNode,
+}
+impl InvariantStmt {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn spec_predicate_property_list(&self) -> Option<SpecPredicatePropertyList> {
+        support::child(&self.syntax)
+    }
+    #[inline]
+    pub fn spec_type_param_list(&self) -> Option<TypeParamList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
+    #[inline]
+    pub fn invariant_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![invariant]) }
+    #[inline]
+    pub fn update_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![update]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -2073,6 +2094,7 @@ pub enum Stmt {
     ExprStmt(ExprStmt),
     GlobalVariableDecl(GlobalVariableDecl),
     IncludeSchema(IncludeSchema),
+    InvariantStmt(InvariantStmt),
     LetStmt(LetStmt),
     PragmaStmt(PragmaStmt),
     SchemaField(SchemaField),
@@ -3058,6 +3080,27 @@ impl AstNode for InlineExpr {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == INLINE_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for InvariantStmt {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        INVARIANT_STMT
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == INVARIANT_STMT }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -6648,6 +6691,10 @@ impl From<IncludeSchema> for Stmt {
     #[inline]
     fn from(node: IncludeSchema) -> Stmt { Stmt::IncludeSchema(node) }
 }
+impl From<InvariantStmt> for Stmt {
+    #[inline]
+    fn from(node: InvariantStmt) -> Stmt { Stmt::InvariantStmt(node) }
+}
 impl From<LetStmt> for Stmt {
     #[inline]
     fn from(node: LetStmt) -> Stmt { Stmt::LetStmt(node) }
@@ -6705,6 +6752,12 @@ impl Stmt {
             _ => None,
         }
     }
+    pub fn invariant_stmt(self) -> Option<InvariantStmt> {
+        match (self) {
+            Stmt::InvariantStmt(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn let_stmt(self) -> Option<LetStmt> {
         match (self) {
             Stmt::LetStmt(item) => Some(item),
@@ -6747,6 +6800,7 @@ impl AstNode for Stmt {
                 | EXPR_STMT
                 | GLOBAL_VARIABLE_DECL
                 | INCLUDE_SCHEMA
+                | INVARIANT_STMT
                 | LET_STMT
                 | PRAGMA_STMT
                 | SCHEMA_FIELD
@@ -6763,6 +6817,7 @@ impl AstNode for Stmt {
             EXPR_STMT => Stmt::ExprStmt(ExprStmt { syntax }),
             GLOBAL_VARIABLE_DECL => Stmt::GlobalVariableDecl(GlobalVariableDecl { syntax }),
             INCLUDE_SCHEMA => Stmt::IncludeSchema(IncludeSchema { syntax }),
+            INVARIANT_STMT => Stmt::InvariantStmt(InvariantStmt { syntax }),
             LET_STMT => Stmt::LetStmt(LetStmt { syntax }),
             PRAGMA_STMT => Stmt::PragmaStmt(PragmaStmt { syntax }),
             SCHEMA_FIELD => Stmt::SchemaField(SchemaField { syntax }),
@@ -6781,6 +6836,7 @@ impl AstNode for Stmt {
             Stmt::ExprStmt(it) => &it.syntax,
             Stmt::GlobalVariableDecl(it) => &it.syntax,
             Stmt::IncludeSchema(it) => &it.syntax,
+            Stmt::InvariantStmt(it) => &it.syntax,
             Stmt::LetStmt(it) => &it.syntax,
             Stmt::PragmaStmt(it) => &it.syntax,
             Stmt::SchemaField(it) => &it.syntax,
@@ -8118,6 +8174,11 @@ impl std::fmt::Display for IndexExpr {
     }
 }
 impl std::fmt::Display for InlineExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for InvariantStmt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
