@@ -434,12 +434,18 @@ ModuleSpec =
     Attr* 'spec' Path '{' UseStmt* Item* '}'
 
 ItemSpec =
-    Attr* 'spec' ('module' | (ItemSpecRef ItemSpecParamList?)) spec_block:BlockExpr
+    Attr* 'spec' ('module' | (ItemSpecRef ItemSpecTypeParamList? ItemSpecParamList?)) spec_block:BlockExpr
 
 ItemSpecRef = NameRef
 
+ItemSpecTypeParamList =
+    '<' (ItemSpecTypeParam (',' ItemSpecTypeParam)* ','?)? '>'
+
 ItemSpecParamList =
     '(' (ItemSpecParam (',' ItemSpecParam)* ','?)? ')'
+
+ItemSpecTypeParam =
+    NameRef
 
 ItemSpecParam =
     IdentPat (':' Type)?

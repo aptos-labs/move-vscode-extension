@@ -23,6 +23,7 @@ mod invariant_stmt;
 mod is_expr;
 mod item_spec;
 mod item_spec_ref;
+mod item_spec_type_param;
 mod lambda_expr;
 mod lambda_type;
 mod let_stmt;

@@ -3,11 +3,12 @@ use crate::nameres::labels::get_loop_labels_resolve_variants;
 use crate::nameres::path_resolution::remove_variant_ident_pats;
 use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::node_ext::item::ModuleItemExt;
+use crate::node_ext::item_spec::ItemSpecExt;
 use base_db::SourceDatabase;
 use syntax::ast;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
-use syntax::ast::{FieldsOwner, ReferenceElement};
+use syntax::ast::{FieldsOwner, GenericElement, ReferenceElement};
 use syntax::files::{InFile, InFileExt};
 
 pub mod address;
@@ -129,6 +130,16 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
                         .get_resolved_ident_pat(&ident_pat)
                         .map(|it| vec![it])
                         .unwrap_or_default()
+                }
+                ITEM_SPEC_TYPE_PARAM => {
+                    let item_spec_type_param =
+                        ref_element.cast_into::<ast::ItemSpecTypeParam>().unwrap();
+                    let item_spec_fun = item_spec_type_param
+                        .item_spec()
+                        .in_file(*file_id)
+                        .item(db)?
+                        .cast_into::<ast::Fun>()?;
+                    item_spec_fun.flat_map(|it| it.type_params()).to_entries()
                 }
                 _ => return None,
             };
