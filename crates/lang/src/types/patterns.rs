@@ -90,7 +90,7 @@ impl TypeAstWalker<'_, '_> {
                 }
             }
             ast::Pat::TupleStructPat(tuple_struct_pat) => {
-                let (expected, _) = strip_references(ty.clone(), def_bm);
+                let (expected, pat_bm) = strip_references(ty.clone(), def_bm);
                 self.ctx
                     .pat_types
                     .insert(tuple_struct_pat.clone().into(), expected.clone());
@@ -125,7 +125,7 @@ impl TypeAstWalker<'_, '_> {
                 self.infer_tuple_pat_fields(
                     pats,
                     tuple_field_types.len(),
-                    BindByValue,
+                    pat_bm,
                     |indx| {
                         let field_type = tuple_field_types.get(indx).cloned().unwrap_or(Ty::Unknown);
                         field_type.substitute(&ty_adt_subst)
