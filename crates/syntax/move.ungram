@@ -204,7 +204,7 @@ Stmt =
     | ExprStmt
     | LetStmt
     | SchemaField | IncludeSchema
-    | SpecPredicateStmt | AbortsIfStmt | AbortsWithStmt | PragmaStmt
+    | SpecPredicateStmt | AbortsIfStmt | AbortsWithStmt | PragmaStmt | AxiomStmt
     | SpecInlineFun | GlobalVariableDecl
 
 LetStmt =
@@ -541,3 +541,6 @@ QuantBinding =
 
 WhereExpr =
     'where' Expr
+
+AxiomStmt =
+    'axiom' axiom_type_param_list:TypeParamList? SpecPredicatePropertyList? Expr ';'

@@ -173,6 +173,25 @@ impl AttrItem {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AxiomStmt {
+    pub(crate) syntax: SyntaxNode,
+}
+impl AxiomStmt {
+    #[inline]
+    pub fn axiom_type_param_list(&self) -> Option<TypeParamList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn spec_predicate_property_list(&self) -> Option<SpecPredicatePropertyList> {
+        support::child(&self.syntax)
+    }
+    #[inline]
+    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
+    #[inline]
+    pub fn axiom_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![axiom]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct BangExpr {
     pub(crate) syntax: SyntaxNode,
 }
@@ -2050,6 +2069,7 @@ pub enum QuantExpr {
 pub enum Stmt {
     AbortsIfStmt(AbortsIfStmt),
     AbortsWithStmt(AbortsWithStmt),
+    AxiomStmt(AxiomStmt),
     ExprStmt(ExprStmt),
     GlobalVariableDecl(GlobalVariableDecl),
     IncludeSchema(IncludeSchema),
@@ -2408,6 +2428,27 @@ impl AstNode for AttrItem {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == ATTR_ITEM }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for AxiomStmt {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        AXIOM_STMT
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == AXIOM_STMT }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -6591,6 +6632,10 @@ impl From<AbortsWithStmt> for Stmt {
     #[inline]
     fn from(node: AbortsWithStmt) -> Stmt { Stmt::AbortsWithStmt(node) }
 }
+impl From<AxiomStmt> for Stmt {
+    #[inline]
+    fn from(node: AxiomStmt) -> Stmt { Stmt::AxiomStmt(node) }
+}
 impl From<ExprStmt> for Stmt {
     #[inline]
     fn from(node: ExprStmt) -> Stmt { Stmt::ExprStmt(node) }
@@ -6633,6 +6678,12 @@ impl Stmt {
     pub fn aborts_with_stmt(self) -> Option<AbortsWithStmt> {
         match (self) {
             Stmt::AbortsWithStmt(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn axiom_stmt(self) -> Option<AxiomStmt> {
+        match (self) {
+            Stmt::AxiomStmt(item) => Some(item),
             _ => None,
         }
     }
@@ -6692,6 +6743,7 @@ impl AstNode for Stmt {
             kind,
             ABORTS_IF_STMT
                 | ABORTS_WITH_STMT
+                | AXIOM_STMT
                 | EXPR_STMT
                 | GLOBAL_VARIABLE_DECL
                 | INCLUDE_SCHEMA
@@ -6707,6 +6759,7 @@ impl AstNode for Stmt {
         let res = match syntax.kind() {
             ABORTS_IF_STMT => Stmt::AbortsIfStmt(AbortsIfStmt { syntax }),
             ABORTS_WITH_STMT => Stmt::AbortsWithStmt(AbortsWithStmt { syntax }),
+            AXIOM_STMT => Stmt::AxiomStmt(AxiomStmt { syntax }),
             EXPR_STMT => Stmt::ExprStmt(ExprStmt { syntax }),
             GLOBAL_VARIABLE_DECL => Stmt::GlobalVariableDecl(GlobalVariableDecl { syntax }),
             INCLUDE_SCHEMA => Stmt::IncludeSchema(IncludeSchema { syntax }),
@@ -6724,6 +6777,7 @@ impl AstNode for Stmt {
         match self {
             Stmt::AbortsIfStmt(it) => &it.syntax,
             Stmt::AbortsWithStmt(it) => &it.syntax,
+            Stmt::AxiomStmt(it) => &it.syntax,
             Stmt::ExprStmt(it) => &it.syntax,
             Stmt::GlobalVariableDecl(it) => &it.syntax,
             Stmt::IncludeSchema(it) => &it.syntax,
@@ -7914,6 +7968,11 @@ impl std::fmt::Display for Attr {
     }
 }
 impl std::fmt::Display for AttrItem {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for AxiomStmt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
