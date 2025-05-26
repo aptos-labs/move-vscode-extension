@@ -1,4 +1,5 @@
 use ide_db::Severity;
+use ide_db::assist_context::Assists;
 use ide_db::assists::Assist;
 use syntax::files::FileRange;
 use vfs::FileId;
@@ -49,8 +50,8 @@ impl Diagnostic {
         )
     }
 
-    pub(crate) fn with_fixes(mut self, fixes: Option<Vec<Assist>>) -> Diagnostic {
-        self.fixes = fixes;
+    pub(crate) fn with_fixes(mut self, fixes: Option<Assists>) -> Diagnostic {
+        self.fixes = fixes.map(|it| it.assists());
         self
     }
 

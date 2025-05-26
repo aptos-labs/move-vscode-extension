@@ -216,12 +216,12 @@ impl ClientCapabilities {
                     // Ideally we would base this off of the client capabilities
                     // but the client is supposed to fall back gracefully for unknown values.
                     code_action_kinds: Some(vec![
-                        CodeActionKind::EMPTY,
+                        // CodeActionKind::EMPTY,
                         CodeActionKind::QUICKFIX,
-                        CodeActionKind::REFACTOR,
-                        CodeActionKind::REFACTOR_EXTRACT,
-                        CodeActionKind::REFACTOR_INLINE,
-                        CodeActionKind::REFACTOR_REWRITE,
+                        // CodeActionKind::REFACTOR,
+                        // CodeActionKind::REFACTOR_EXTRACT,
+                        // CodeActionKind::REFACTOR_INLINE,
+                        // CodeActionKind::REFACTOR_REWRITE,
                     ]),
                     resolve_provider: Some(true),
                     work_done_progress_options: Default::default(),

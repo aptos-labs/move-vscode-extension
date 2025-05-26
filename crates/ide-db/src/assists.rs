@@ -15,7 +15,7 @@ pub struct Assist {
     pub id: AssistId,
     /// Short description of the assist, as shown in the UI.
     pub label: Label,
-    pub group: Option<GroupLabel>,
+    // pub group: Option<GroupLabel>,
     /// Target ranges are used to sort assists: the smaller the target range,
     /// the more specific assist is, and so it should be sorted first.
     pub target: TextRange,
@@ -109,7 +109,7 @@ impl AssistId {
 
 /// A way to control how many assist to resolve during the assist resolution.
 /// When an assist is resolved, its edits are calculated that might be costly to always do by default.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum AssistResolveStrategy {
     /// No assists should be resolved.
     None,
@@ -122,7 +122,7 @@ pub enum AssistResolveStrategy {
 /// Hold the [`AssistId`] data of a certain assist to resolve.
 /// The original id object cannot be used due to a `'static` lifetime
 /// and the requirement to construct this struct dynamically during the resolve handling.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SingleResolve {
     /// The id of the assist.
     pub assist_id: String,

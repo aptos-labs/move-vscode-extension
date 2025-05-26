@@ -18,7 +18,7 @@ fn fix(id: &'static str, label: &str, source_change: SourceChange, target: TextR
     Assist {
         id: AssistId::quick_fix(id),
         label: Label::new(label.to_owned()),
-        group: None,
+        // group: None,
         target,
         source_change: Some(source_change),
         command: None,

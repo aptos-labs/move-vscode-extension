@@ -471,11 +471,9 @@ impl Analysis {
             } else {
                 Vec::new()
             };
-            // let ssr_assists = ssr::ssr_assists(db, &resolve, frange);
             // let assists = ide_assists::assists(db, assist_config, resolve, frange);
 
             let res = diagnostic_assists;
-            // res.extend(ssr_assists);
             // res.extend(assists);
 
             res

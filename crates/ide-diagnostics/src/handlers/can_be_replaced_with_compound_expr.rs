@@ -1,9 +1,9 @@
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use ide_db::Severity;
-use ide_db::assists::{Assist, AssistId};
+use ide_db::assist_context::Assists;
+use ide_db::assists::AssistId;
 use ide_db::label::Label;
-use ide_db::source_change::SourceChangeBuilder;
 use syntax::ast::syntax_factory::SyntaxFactory;
 use syntax::files::{FileRange, InFile};
 use syntax::{AstNode, ast};
@@ -38,12 +38,7 @@ fn fixes(
     ctx: &DiagnosticsContext<'_>,
     bin_expr: InFile<ast::BinExpr>,
     diagnostic_range: FileRange,
-) -> Option<Vec<Assist>> {
-    let assist_id = AssistId::quick_fix("replace-with-compound-expr");
-    if !ctx.resolve.should_resolve(&assist_id) {
-        return None;
-    }
-
+) -> Option<Assists> {
     let (file_id, bin_expr) = bin_expr.unpack();
     let (lhs_expr, _, rhs_expr) = bin_expr.clone().unpack()?;
     let initializer_expr = rhs_expr?.bin_expr()?;
@@ -51,30 +46,25 @@ fn fixes(
     let (_, (_, rhs_op), rhs_expr) = initializer_expr.unpack()?;
     let rhs_expr = rhs_expr?;
 
-    let mut assists = vec![];
+    let mut assists = Assists::new(file_id, ctx.resolve.clone());
     if let ast::BinaryOp::ArithOp(arith_op) = rhs_op {
         let compound_op = ast::BinaryOp::Assignment { op: Some(arith_op) };
 
-        let make = SyntaxFactory::new();
-        let mut builder = SourceChangeBuilder::new(file_id);
-
         let expr_parent = bin_expr.syntax().parent()?;
-        let mut editor = builder.make_editor(&expr_parent);
+        assists.add(
+            AssistId::quick_fix("replace-with-compound-expr"),
+            Label::new("Replace with compound assignment expr".to_string()),
+            diagnostic_range.range,
+            |builder| {
+                let make = SyntaxFactory::new();
+                let mut editor = builder.make_editor(&expr_parent);
 
-        let new_bin_expr = make.expr_bin(lhs_expr, compound_op, rhs_expr);
-        editor.replace(bin_expr.syntax(), new_bin_expr.syntax());
+                let new_bin_expr = make.expr_bin(lhs_expr, compound_op, rhs_expr);
+                editor.replace(bin_expr.syntax(), new_bin_expr.syntax());
 
-        builder.add_file_edits(file_id, editor);
-
-        let source_change = builder.finish();
-        assists.push(Assist {
-            id: assist_id,
-            label: Label::new("Replace with compound assignment expr".to_string()),
-            group: None,
-            target: diagnostic_range.range,
-            source_change: Some(source_change),
-            command: None,
-        });
+                builder.add_file_edits(file_id, editor);
+            },
+        );
     }
 
     Some(assists)
