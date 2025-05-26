@@ -136,12 +136,9 @@ function createCommands(): Record<string, CommandFactory> {
         toggleLSPLogs: { enabled: commands.toggleLSPLogs },
         // openWalkthrough: { enabled: commands.openWalkthrough },
         // // Internal commands which are invoked by the server.
-        applyActionGroup: { enabled: commands.applyActionGroup },
-        applySnippetWorkspaceEdit: { enabled: commands.applySnippetWorkspaceEditCommand },
         // debugSingle: { enabled: commands.debugSingle },
         // gotoLocation: { enabled: commands.gotoLocation },
         // hoverRefCommandProxy: { enabled: commands.hoverRefCommandProxy },
-        resolveCodeAction: { enabled: commands.resolveCodeAction },
         // runSingle: { enabled: commands.runSingle },
         // showReferences: { enabled: commands.showReferences },
         // triggerParameterHints: { enabled: commands.triggerParameterHints },
