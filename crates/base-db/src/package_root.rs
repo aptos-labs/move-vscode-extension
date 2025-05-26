@@ -1,7 +1,7 @@
 use vfs::file_set::FileSet;
 use vfs::{AbsPathBuf, FileId, Vfs, VfsPath};
 
-#[salsa_macros::interned(no_lifetime, debug)]
+#[salsa_macros::input(debug)]
 pub struct PackageId {
     pub idx: u32,
 }
