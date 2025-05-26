@@ -228,7 +228,7 @@ fn find_diagnostics_for_a_file(
     let mut diagnostics = analysis
         .full_diagnostics(
             &DiagnosticsConfig::test_sample(),
-            AssistResolveStrategy::None,
+            AssistResolveStrategy::All,
             file_id,
         )
         .unwrap();

@@ -35,10 +35,15 @@ pub(crate) fn can_be_replaced_with_compound_expr(
 }
 
 fn fixes(
-    _ctx: &DiagnosticsContext<'_>,
+    ctx: &DiagnosticsContext<'_>,
     bin_expr: InFile<ast::BinExpr>,
     diagnostic_range: FileRange,
 ) -> Option<Vec<Assist>> {
+    let assist_id = AssistId::quick_fix("replace-with-compound-expr");
+    if !ctx.resolve.should_resolve(&assist_id) {
+        return None;
+    }
+
     let (file_id, bin_expr) = bin_expr.unpack();
     let (lhs_expr, _, rhs_expr) = bin_expr.clone().unpack()?;
     let initializer_expr = rhs_expr?.bin_expr()?;
@@ -63,7 +68,7 @@ fn fixes(
 
         let source_change = builder.finish();
         assists.push(Assist {
-            id: AssistId::quick_fix("replace-with-compound-expr"),
+            id: assist_id,
             label: Label::new("Replace with compound assignment expr".to_string()),
             group: None,
             target: diagnostic_range.range,

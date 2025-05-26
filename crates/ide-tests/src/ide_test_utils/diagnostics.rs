@@ -58,7 +58,7 @@ fn get_diagnostics(source: &str) -> (Analysis, FileId, Vec<Diagnostic>) {
 
     let config = DiagnosticsConfig::test_sample();
     let diagnostics = analysis
-        .semantic_diagnostics(&config, AssistResolveStrategy::None, file_id)
+        .semantic_diagnostics(&config, AssistResolveStrategy::All, file_id)
         .unwrap();
 
     (analysis, file_id, diagnostics)

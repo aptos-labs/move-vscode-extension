@@ -1,4 +1,4 @@
-use crate::diagnostics::convert_diagnostic;
+use crate::diagnostics::to_proto_diagnostic;
 use crate::global_state::GlobalStateSnapshot;
 use crate::lsp::utils::invalid_params_error;
 use crate::lsp::{LspError, from_proto, to_proto};
@@ -141,16 +141,14 @@ pub(crate) fn handle_document_diagnostics(
     snap: GlobalStateSnapshot,
     params: lsp_types::DocumentDiagnosticParams,
 ) -> anyhow::Result<lsp_types::DocumentDiagnosticReportResult> {
+    let _p = tracing::info_span!("handle_document_diagnostics").entered();
     let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
     let config = snap.config.diagnostics_config();
     if !config.enabled {
         return Ok(empty_diagnostic_report());
     }
     let line_index = snap.file_line_index(file_id)?;
-    // let supports_related = false;
-    // let supports_related = snap.config.text_document_diagnostic_related_document_support();
 
-    // let mut related_documents = FxHashMap::default();
     let diagnostics = snap
         .analysis
         .full_diagnostics(&config, AssistResolveStrategy::None, file_id)?
@@ -158,16 +156,9 @@ pub(crate) fn handle_document_diagnostics(
         .filter_map(|d| {
             let file = d.range.file_id;
             if file == file_id {
-                let diagnostic = convert_diagnostic(&line_index, d);
+                let diagnostic = to_proto_diagnostic(&line_index, d);
                 return Some(diagnostic);
             }
-            // if supports_related {
-            //     let (diagnostics, line_index) = related_documents
-            //         .entry(file)
-            //         .or_insert_with(|| (Vec::new(), snap.file_line_index(file).ok()));
-            //     let diagnostic = convert_diagnostic(line_index.as_mut()?, d);
-            //     diagnostics.push(diagnostic);
-            // }
             None
         });
     Ok(lsp_types::DocumentDiagnosticReportResult::Report(
@@ -177,22 +168,6 @@ pub(crate) fn handle_document_diagnostics(
                 items: diagnostics.collect(),
             },
             related_documents: None,
-            // related_documents: related_documents.is_empty().not().then(|| {
-            //     related_documents
-            //         .into_iter()
-            //         .map(|(id, (items, _))| {
-            //             (
-            //                 to_proto::url(&snap, id),
-            //                 lsp_types::DocumentDiagnosticReportKind::Full(
-            //                     lsp_types::FullDocumentDiagnosticReport {
-            //                         result_id: Some("aptos-analyzer".to_owned()),
-            //                         items,
-            //                     },
-            //                 ),
-            //             )
-            //         })
-            //         .collect()
-            // }),
         }),
     ))
 }
@@ -406,11 +381,12 @@ pub(crate) fn handle_code_action(
     let mut res: Vec<lsp_ext::CodeAction> = Vec::new();
 
     let code_action_resolve_cap = snap.config.code_action_resolve();
-    let resolve = if code_action_resolve_cap {
-        AssistResolveStrategy::None
-    } else {
-        AssistResolveStrategy::All
-    };
+    // let resolve = if code_action_resolve_cap {
+    //     AssistResolveStrategy::None
+    // } else {
+    //     AssistResolveStrategy::All
+    // };
+    let resolve = AssistResolveStrategy::All;
     let assists = snap.analysis.assists_with_fixes(
         &assists_config,
         &snap.config.diagnostics_config(),
@@ -440,27 +416,6 @@ pub(crate) fn handle_code_action(
 
         res.push(code_action)
     }
-
-    // Fixes from `cargo check`.
-    // for fix in snap
-    //     .check_fixes
-    //     .iter()
-    //     .flat_map(|it| it.values())
-    //     .filter_map(|it| it.get(&frange.file_id))
-    //     .flatten()
-    // {
-    //     // FIXME: this mapping is awkward and shouldn't exist. Refactor
-    //     // `snap.check_fixes` to not convert to LSP prematurely.
-    //     let intersect_fix_range = fix
-    //         .ranges
-    //         .iter()
-    //         .copied()
-    //         .filter_map(|range| from_proto::text_range(&line_index, range).ok())
-    //         .any(|fix_range| fix_range.intersect(frange.range).is_some());
-    //     if intersect_fix_range {
-    //         res.push(fix.action.clone());
-    //     }
-    // }
 
     Ok(Some(res))
 }

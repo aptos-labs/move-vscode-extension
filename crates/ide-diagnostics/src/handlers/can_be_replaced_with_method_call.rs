@@ -69,11 +69,16 @@ pub(crate) fn can_be_replaced_with_method_call(
 
 #[tracing::instrument(level = "trace", skip_all)]
 fn fixes(
-    _ctx: &DiagnosticsContext<'_>,
+    ctx: &DiagnosticsContext<'_>,
     call_expr: InFile<ast::CallExpr>,
     diagnostic_range: FileRange,
 ) -> Option<Vec<Assist>> {
     use syntax::SyntaxKind::*;
+
+    let assist_id = AssistId::quick_fix("replace-with-method-call");
+    if !ctx.resolve.should_resolve(&assist_id) {
+        return None;
+    }
 
     let (file_id, call_expr) = call_expr.unpack();
 
