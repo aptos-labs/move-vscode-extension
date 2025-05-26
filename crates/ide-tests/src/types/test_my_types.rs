@@ -96,3 +96,21 @@ module std::m {
     "#,
     );
 }
+
+#[test]
+fn test_resolve_field_for_uninitialized_variable_that_inferred_later() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::m {
+            public native fun borrow_mut<Element>(self: Element): &mut Element;
+            fun main() {
+                let a;
+                a = borrow_mut(1u8);
+                a;
+              //^ &mut u8
+            }
+        }
+    "#,
+    );
+}

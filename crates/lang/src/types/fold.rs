@@ -79,24 +79,24 @@ impl<'a> FullTyVarResolver<'a> {
 
 impl TypeFolder for FullTyVarResolver<'_> {
     fn fold_ty(&self, t: Ty) -> Ty {
-        match t {
-            Ty::Infer(ty_infer) => {
-                let resolved_ty = self.ctx.resolve_ty_infer(&ty_infer);
-                match resolved_ty {
-                    Ty::Infer(TyInfer::Var(ty_var)) => match (self.fallback, &ty_var) {
-                        (
-                            Fallback::Origin,
-                            TyVar {
-                                kind: TyVarKind::WithOrigin { origin_loc, .. },
-                            },
-                        ) => Ty::TypeParam(TyTypeParameter::from_loc(origin_loc.to_owned())),
-                        _ => Ty::Unknown,
-                    },
-                    _ => resolved_ty,
-                }
-            }
-            _ => t.deep_fold_with(self.to_owned()),
+        let mut res_ty = t.clone();
+        // shallow resolve with fallback
+        if let Ty::Infer(ty_infer) = t {
+            let resolved_ty = self.ctx.resolve_ty_infer(&ty_infer);
+            res_ty = match resolved_ty {
+                Ty::Infer(TyInfer::Var(ty_var)) => match (self.fallback, &ty_var) {
+                    (
+                        Fallback::Origin,
+                        TyVar {
+                            kind: TyVarKind::WithOrigin { origin_loc, .. },
+                        },
+                    ) => Ty::TypeParam(TyTypeParameter::from_loc(origin_loc.to_owned())),
+                    _ => Ty::Unknown,
+                },
+                _ => resolved_ty,
+            };
         }
+        res_ty.deep_fold_with(self.to_owned())
     }
 }
 
