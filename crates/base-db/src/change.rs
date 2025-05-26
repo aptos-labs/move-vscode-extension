@@ -67,7 +67,6 @@ impl FileChanges {
                     );
                 }
                 db.set_package_root_with_durability(package_id, Arc::from(root), durability);
-                // db.set_dep_package_ids(package_id, Default::default());
             }
         }
 
