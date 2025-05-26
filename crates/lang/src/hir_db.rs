@@ -58,6 +58,7 @@ fn use_speck_entries_tracked<'db>(
     entries
 }
 
+#[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn inference(
     db: &dyn SourceDatabase,
     inference_owner: InFile<ast::InferenceCtxOwner>,

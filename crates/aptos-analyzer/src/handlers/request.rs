@@ -1,4 +1,4 @@
-use crate::diagnostics::convert_diagnostic;
+use crate::diagnostics::to_proto_diagnostic;
 use crate::global_state::GlobalStateSnapshot;
 use crate::lsp::utils::invalid_params_error;
 use crate::lsp::{LspError, from_proto, to_proto};
@@ -9,8 +9,9 @@ use ide_db::assists::{AssistKind, AssistResolveStrategy, SingleResolve};
 use line_index::TextRange;
 use lsp_server::ErrorCode;
 use lsp_types::{
-    HoverContents, InlayHint, InlayHintParams, ResourceOp, ResourceOperationKind, SemanticTokensParams,
-    SemanticTokensRangeParams, SemanticTokensRangeResult, SemanticTokensResult, TextDocumentIdentifier,
+    CodeActionOrCommand, HoverContents, InlayHint, InlayHintParams, ResourceOp, ResourceOperationKind,
+    SemanticTokensParams, SemanticTokensRangeParams, SemanticTokensRangeResult, SemanticTokensResult,
+    TextDocumentIdentifier,
 };
 use stdx::format_to;
 use syntax::files::FileRange;
@@ -141,16 +142,14 @@ pub(crate) fn handle_document_diagnostics(
     snap: GlobalStateSnapshot,
     params: lsp_types::DocumentDiagnosticParams,
 ) -> anyhow::Result<lsp_types::DocumentDiagnosticReportResult> {
+    let _p = tracing::info_span!("handle_document_diagnostics").entered();
     let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
     let config = snap.config.diagnostics_config();
     if !config.enabled {
         return Ok(empty_diagnostic_report());
     }
     let line_index = snap.file_line_index(file_id)?;
-    // let supports_related = false;
-    // let supports_related = snap.config.text_document_diagnostic_related_document_support();
 
-    // let mut related_documents = FxHashMap::default();
     let diagnostics = snap
         .analysis
         .full_diagnostics(&config, AssistResolveStrategy::None, file_id)?
@@ -158,16 +157,9 @@ pub(crate) fn handle_document_diagnostics(
         .filter_map(|d| {
             let file = d.range.file_id;
             if file == file_id {
-                let diagnostic = convert_diagnostic(&line_index, d);
+                let diagnostic = to_proto_diagnostic(&line_index, d);
                 return Some(diagnostic);
             }
-            // if supports_related {
-            //     let (diagnostics, line_index) = related_documents
-            //         .entry(file)
-            //         .or_insert_with(|| (Vec::new(), snap.file_line_index(file).ok()));
-            //     let diagnostic = convert_diagnostic(line_index.as_mut()?, d);
-            //     diagnostics.push(diagnostic);
-            // }
             None
         });
     Ok(lsp_types::DocumentDiagnosticReportResult::Report(
@@ -177,22 +169,6 @@ pub(crate) fn handle_document_diagnostics(
                 items: diagnostics.collect(),
             },
             related_documents: None,
-            // related_documents: related_documents.is_empty().not().then(|| {
-            //     related_documents
-            //         .into_iter()
-            //         .map(|(id, (items, _))| {
-            //             (
-            //                 to_proto::url(&snap, id),
-            //                 lsp_types::DocumentDiagnosticReportKind::Full(
-            //                     lsp_types::FullDocumentDiagnosticReport {
-            //                         result_id: Some("aptos-analyzer".to_owned()),
-            //                         items,
-            //                     },
-            //                 ),
-            //             )
-            //         })
-            //         .collect()
-            // }),
         }),
     ))
 }
@@ -379,7 +355,7 @@ pub(crate) fn handle_inlay_hints(
 pub(crate) fn handle_code_action(
     snap: GlobalStateSnapshot,
     params: lsp_types::CodeActionParams,
-) -> anyhow::Result<Option<Vec<lsp_ext::CodeAction>>> {
+) -> anyhow::Result<Option<lsp_types::CodeActionResponse>> {
     let _p = tracing::info_span!("handle_code_action").entered();
 
     if !snap.config.code_action_literals() {
@@ -403,7 +379,7 @@ pub(crate) fn handle_code_action(
         .clone()
         .map(|it| it.into_iter().filter_map(from_proto::assist_kind).collect());
 
-    let mut res: Vec<lsp_ext::CodeAction> = Vec::new();
+    let mut res = vec![];
 
     let code_action_resolve_cap = snap.config.code_action_resolve();
     let resolve = if code_action_resolve_cap {
@@ -430,47 +406,29 @@ pub(crate) fn handle_code_action(
             .edit
             .as_ref()
             .and_then(|it| it.document_changes.as_ref());
-        if let Some(changes) = changes {
-            for change in changes {
-                if let lsp_ext::SnippetDocumentChangeOperation::Op(res_op) = change {
-                    resource_ops_supported(&snap.config, resolve_resource_op(res_op))?
+        if let Some(lsp_types::DocumentChanges::Operations(ops)) = changes {
+            for change_op in ops {
+                if let lsp_types::DocumentChangeOperation::Op(res_op) = change_op {
+                    resource_ops_supported(&snap.config, resolve_resource_op(&res_op))?
                 }
             }
         }
-
-        res.push(code_action)
+        res.push(CodeActionOrCommand::CodeAction(code_action));
     }
-
-    // Fixes from `cargo check`.
-    // for fix in snap
-    //     .check_fixes
-    //     .iter()
-    //     .flat_map(|it| it.values())
-    //     .filter_map(|it| it.get(&frange.file_id))
-    //     .flatten()
-    // {
-    //     // FIXME: this mapping is awkward and shouldn't exist. Refactor
-    //     // `snap.check_fixes` to not convert to LSP prematurely.
-    //     let intersect_fix_range = fix
-    //         .ranges
-    //         .iter()
-    //         .copied()
-    //         .filter_map(|range| from_proto::text_range(&line_index, range).ok())
-    //         .any(|fix_range| fix_range.intersect(frange.range).is_some());
-    //     if intersect_fix_range {
-    //         res.push(fix.action.clone());
-    //     }
-    // }
 
     Ok(Some(res))
 }
 
 pub(crate) fn handle_code_action_resolve(
     snap: GlobalStateSnapshot,
-    mut code_action: lsp_ext::CodeAction,
-) -> anyhow::Result<lsp_ext::CodeAction> {
+    mut code_action: lsp_types::CodeAction,
+) -> anyhow::Result<lsp_types::CodeAction> {
     let _p = tracing::info_span!("handle_code_action_resolve").entered();
-    let Some(params) = code_action.data.take() else {
+    let Some(params) = code_action
+        .data
+        .take()
+        .and_then(|it| serde_json::from_value::<lsp_ext::CodeActionData>(it).ok())
+    else {
         return Ok(code_action);
     };
 
@@ -531,10 +489,10 @@ pub(crate) fn handle_code_action_resolve(
     code_action.command = ca.command;
 
     if let Some(edit) = code_action.edit.as_ref() {
-        if let Some(changes) = edit.document_changes.as_ref() {
-            for change in changes {
-                if let lsp_ext::SnippetDocumentChangeOperation::Op(res_op) = change {
-                    resource_ops_supported(&snap.config, resolve_resource_op(res_op))?
+        if let Some(lsp_types::DocumentChanges::Operations(ops)) = edit.document_changes.as_ref() {
+            for change_op in ops {
+                if let lsp_types::DocumentChangeOperation::Op(res_op) = change_op {
+                    resource_ops_supported(&snap.config, resolve_resource_op(&res_op))?
                 }
             }
         }

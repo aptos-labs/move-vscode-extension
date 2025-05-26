@@ -180,7 +180,7 @@ pub(crate) fn fetch_native_diagnostics(
                 .into_iter()
                 .filter_map(|d| {
                     if d.range.file_id == file_id {
-                        Some(convert_diagnostic(&line_index, d))
+                        Some(to_proto_diagnostic(&line_index, d))
                     } else {
                         odd_ones.push(d);
                         None
@@ -208,13 +208,13 @@ pub(crate) fn fetch_native_diagnostics(
             break;
         };
         for diagnostic in group {
-            diagnostics.push(convert_diagnostic(&line_index, diagnostic));
+            diagnostics.push(to_proto_diagnostic(&line_index, diagnostic));
         }
     }
     diagnostics
 }
 
-pub(crate) fn convert_diagnostic(
+pub(crate) fn to_proto_diagnostic(
     line_index: &crate::line_index::LineIndex,
     d: ide_diagnostics::diagnostic::Diagnostic,
 ) -> lsp_types::Diagnostic {
