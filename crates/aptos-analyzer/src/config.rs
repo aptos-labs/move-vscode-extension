@@ -197,6 +197,7 @@ impl Config {
             enabled: *self.diagnostics_enable(),
             unresolved_reference_enabled: *self.diagnostics_enableUnresolvedReference(),
             type_checking_enabled: *self.diagnostics_enableTypeChecking(),
+            assists_only: false,
         }
     }
 

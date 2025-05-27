@@ -463,7 +463,7 @@ impl Analysis {
         };
         self.with_db(|db| {
             let diagnostic_assists = if diagnostics_config.enabled && include_fixes {
-                ide_diagnostics::full_diagnostics(db, diagnostics_config, &resolve, frange.file_id)
+                ide_diagnostics::semantic_diagnostics(db, diagnostics_config, &resolve, frange.file_id)
                     .into_iter()
                     .flat_map(|it| it.fixes.unwrap_or_default())
                     .filter(|it| it.target.intersect(frange.range).is_some())

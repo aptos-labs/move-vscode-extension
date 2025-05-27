@@ -4,6 +4,7 @@ pub struct DiagnosticsConfig {
     pub enabled: bool,
     pub unresolved_reference_enabled: bool,
     pub type_checking_enabled: bool,
+    pub assists_only: bool,
 }
 
 impl DiagnosticsConfig {
@@ -12,6 +13,12 @@ impl DiagnosticsConfig {
             enabled: true,
             unresolved_reference_enabled: true,
             type_checking_enabled: true,
+            assists_only: false,
         }
+    }
+
+    pub fn for_assists(mut self) -> Self {
+        self.assists_only = true;
+        self
     }
 }
