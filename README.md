@@ -84,7 +84,7 @@ Same for type checking:
     "aptos-analyzer.diagnostics.enableTypeChecking": true
 ```
 
-### Formatting
+### Formatting (for `movefmt` >= 1.2.1)
 
 Specify a path to the `movefmt` executable and extra args (like a `--config-path`) if necessary:
 ```json5
