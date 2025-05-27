@@ -14,7 +14,6 @@ pub struct SyntaxEditor {
     root: SyntaxNode,
     changes: Vec<Change>,
     mappings: SyntaxMapping,
-    annotations: Vec<(SyntaxElement, SyntaxAnnotation)>,
 }
 
 impl SyntaxEditor {
@@ -24,12 +23,7 @@ impl SyntaxEditor {
             root,
             changes: vec![],
             mappings: SyntaxMapping::new(),
-            annotations: vec![],
         }
-    }
-
-    pub fn add_annotation(&mut self, element: impl Element, annotation: SyntaxAnnotation) {
-        self.annotations.push((element.syntax_element(), annotation))
     }
 
     pub fn merge(&mut self, mut other: SyntaxEditor) {
@@ -42,7 +36,6 @@ impl SyntaxEditor {
 
         self.changes.append(&mut other.changes);
         self.mappings.merge(other.mappings);
-        self.annotations.append(&mut other.annotations);
     }
 
     pub fn insert(&mut self, position: Position, element: impl Element) {
@@ -108,7 +101,6 @@ pub struct SyntaxEdit {
     old_root: SyntaxNode,
     new_root: SyntaxNode,
     changed_elements: Vec<SyntaxElement>,
-    annotations: HashMap<SyntaxAnnotation, Vec<SyntaxElement>>,
 }
 
 impl SyntaxEdit {
@@ -129,41 +121,6 @@ impl SyntaxEdit {
     /// changes is included, not any child elements that may have been modified.
     pub fn changed_elements(&self) -> &[SyntaxElement] {
         self.changed_elements.as_slice()
-    }
-
-    /// Finds which syntax elements have been annotated with the given
-    /// annotation.
-    ///
-    /// Note that an annotation might not appear in the modified syntax tree if
-    /// the syntax elements that were annotated did not make it into the final
-    /// syntax tree.
-    pub fn find_annotation(&self, annotation: SyntaxAnnotation) -> &[SyntaxElement] {
-        self.annotations
-            .get(&annotation)
-            .as_ref()
-            .map_or(&[], |it| it.as_slice())
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[repr(transparent)]
-pub struct SyntaxAnnotation(NonZeroU32);
-
-impl SyntaxAnnotation {
-    /// Creates a unique syntax annotation to attach data to.
-    pub fn new() -> Self {
-        static COUNTER: AtomicU32 = AtomicU32::new(1);
-
-        // Only consistency within a thread matters, as SyntaxElements are !Send
-        let id = COUNTER.fetch_add(1, Ordering::Relaxed);
-
-        Self(NonZeroU32::new(id).expect("syntax annotation id overflow"))
-    }
-}
-
-impl Default for SyntaxAnnotation {
-    fn default() -> Self {
-        Self::new()
     }
 }
 

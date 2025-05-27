@@ -29,12 +29,7 @@ pub(super) fn apply_edits(editor: SyntaxEditor) -> SyntaxEdit {
     //   - changed nodes become part of the changed node set (useful for the formatter to only change those parts)
     // - Propagate annotations
 
-    let SyntaxEditor {
-        root,
-        mut changes,
-        mappings,
-        annotations,
-    } = editor;
+    let SyntaxEditor { root, mut changes, mappings } = editor;
 
     let mut node_depths = HashMap::<SyntaxNode, usize>::default();
     let mut get_node_depth = |node: SyntaxNode| {
@@ -90,7 +85,6 @@ pub(super) fn apply_edits(editor: SyntaxEditor) -> SyntaxEdit {
         return SyntaxEdit {
             old_root: root.clone(),
             new_root: root,
-            annotations: Default::default(),
             changed_elements: vec![],
         };
     }
@@ -273,32 +267,10 @@ pub(super) fn apply_edits(editor: SyntaxEditor) -> SyntaxEdit {
         }
     }
 
-    // Propagate annotations
-    let annotations = annotations.into_iter().filter_map(|(element, annotation)| {
-        match mappings.upmap_element(&element, &root) {
-            // Needed to follow the new tree to find the resulting element
-            Some(Ok(mapped)) => Some((mapped, annotation)),
-            // Element did not need to be mapped
-            None => Some((element, annotation)),
-            // Element did not make it to the final tree
-            Some(Err(_)) => None,
-        }
-    });
-
-    let mut annotation_groups = HashMap::default();
-
-    for (element, annotation) in annotations {
-        annotation_groups
-            .entry(annotation)
-            .or_insert(vec![])
-            .push(element);
-    }
-
     SyntaxEdit {
         old_root: tree_mutator.immutable,
         new_root: root,
         changed_elements,
-        annotations: annotation_groups,
     }
 }
 

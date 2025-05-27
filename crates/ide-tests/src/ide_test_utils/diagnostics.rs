@@ -68,11 +68,8 @@ fn apply_fix(fix: &Assist, before: &str) -> String {
     let source_change = fix.source_change.as_ref().unwrap();
     let mut after = before.to_string();
 
-    for (edit, snippet_edit) in source_change.source_file_edits.values() {
+    for edit in source_change.source_file_edits.values() {
         edit.apply(&mut after);
-        if let Some(snippet_edit) = snippet_edit {
-            snippet_edit.apply(&mut after);
-        }
     }
 
     after

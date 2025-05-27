@@ -262,12 +262,9 @@ fn apply_fix(fix: &Assist, before: &str) -> (String, Vec<TextRange>) {
     let source_change = fix.source_change.as_ref().unwrap();
     let mut after = before.to_string();
     let mut new_text_ranges = vec![];
-    for (text_edit, snippet_edit) in source_change.source_file_edits.values() {
+    for text_edit in source_change.source_file_edits.values() {
         new_text_ranges.extend(text_edit.iter().map(|it| it.new_range()));
         text_edit.apply(&mut after);
-        if let Some(snippet_edit) = snippet_edit {
-            snippet_edit.apply(&mut after);
-        }
     }
 
     (after, new_text_ranges)
