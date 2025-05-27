@@ -31,11 +31,11 @@
 //!    2.13ms    2      leaf
 //! ```
 
+use duration_string::DurationString;
 use std::{
     env, fmt, mem,
     time::{Duration, Instant},
 };
-
 use tracing::{
     Event, Id, Subscriber, debug,
     field::{Field, Visit},
@@ -148,16 +148,19 @@ impl Node {
         self.go(0)
     }
     fn go(&self, level: usize) {
-        // let bold = "\u{001b}[1m";
-        // let reset = "\u{001b}[0m";
-        let bold = "";
-        let reset = "";
-
         // filter out everything less than 1ms
-        let skip_ns = env::var("APT_PROFILER_SKIP_NS").ok().is_some();
-        if skip_ns {
-            if self.duration.as_millis() == 0 {
-                return;
+        if let Ok(min_duration) = env::var("APT_PROFILER_MIN_DURATION") {
+            let min_duration: duration_string::Result<Duration> =
+                DurationString::from_string(min_duration).map(|it| it.into());
+            match min_duration {
+                Ok(min_duration) => {
+                    if self.duration < min_duration {
+                        return;
+                    }
+                }
+                Err(err) => {
+                    tracing::error!("invalid value for APT_PROFILER_MIN_DURATION: {}", err);
+                }
             }
         }
 
@@ -168,13 +171,11 @@ impl Node {
             String::new()
         };
         eprintln!(
-            "{:width$}  {:<9} {:<6} {bold}{}{reset}",
+            "{:width$}  {:<9} {:<6} {}",
             "",
             duration,
             count,
             self.name,
-            bold = bold,
-            reset = reset,
             width = level * 2
         );
         for child in &self.children {
