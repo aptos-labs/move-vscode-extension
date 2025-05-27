@@ -1,7 +1,6 @@
 use crate::global_state::GlobalStateSnapshot;
 use crate::line_index::{LineEndings, LineIndex, PositionEncoding};
 use crate::lsp::semantic_tokens;
-use crate::lsp_ext::SnippetTextEdit;
 use crate::{Config, lsp_ext};
 use camino::{Utf8Component, Utf8Prefix};
 use ide::inlay_hints::{
@@ -12,7 +11,7 @@ use ide::syntax_highlighting::tags::{Highlight, HlTag};
 use ide::{Cancellable, HlRange, NavigationTarget};
 use ide_completion::item::{CompletionItem, CompletionItemKind};
 use ide_db::assists::{Assist, AssistKind};
-use ide_db::source_change::{FileSystemEdit, SnippetEdit, SourceChange};
+use ide_db::source_change::{FileSystemEdit, SourceChange};
 use ide_db::text_edit::{TextChange, TextEdit};
 use ide_db::{Severity, SymbolKind};
 use line_index::{TextRange, TextSize};
@@ -634,7 +633,7 @@ pub(crate) fn workspace_edit(
             document_changes.extend_from_slice(&ops);
         }
     }
-    for (file_id, (edit, snippet_edit)) in source_change.source_file_edits {
+    for (file_id, edit) in source_change.source_file_edits {
         let edit = text_document_edit(snap, file_id, edit)?;
         document_changes.push(lsp_types::DocumentChangeOperation::Edit(edit));
     }

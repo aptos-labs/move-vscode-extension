@@ -130,11 +130,7 @@ impl Config {
     }
 
     pub fn assist(&self) -> AssistConfig {
-        AssistConfig {
-            snippet_cap: self.snippet_cap(),
-            allowed: None,
-            code_action_grouping: self.code_action_group(),
-        }
+        AssistConfig { allowed: None }
     }
 
     pub fn completion(&self) -> CompletionConfig {
