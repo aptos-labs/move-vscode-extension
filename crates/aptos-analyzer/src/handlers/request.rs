@@ -389,7 +389,7 @@ pub(crate) fn handle_code_action(
     };
     let assists = snap.analysis.assists_with_fixes(
         &assists_config,
-        &snap.config.diagnostics_config(),
+        &snap.config.diagnostics_config().for_assists(),
         resolve,
         frange,
     )?;
@@ -464,7 +464,7 @@ pub(crate) fn handle_code_action_resolve(
 
     let assists = snap.analysis.assists_with_fixes(
         &assists_config,
-        &snap.config.diagnostics_config(),
+        &snap.config.diagnostics_config().for_assists(),
         AssistResolveStrategy::Single(assist_resolve),
         frange,
     )?;

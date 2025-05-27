@@ -22,7 +22,10 @@ pub(crate) fn find_unresolved_references(
     if !ctx.config.unresolved_reference_enabled {
         return None;
     }
-
+    if ctx.config.assists_only {
+        // short-circuit
+        return None;
+    }
     let msl = reference.value.syntax().is_msl_context();
     if msl && is_special_msl_path(ctx.sema.db, reference.as_ref()).is_some() {
         return None;

@@ -19,6 +19,9 @@ pub(crate) fn recursive_struct_check(
     if !ctx.config.type_checking_enabled {
         return None;
     }
+    if ctx.config.assists_only {
+        return None;
+    }
     let (file_id, named_field) = named_field.unpack();
     let field_type = named_field.type_()?;
     let leaf_path_types = field_type.syntax().descendants_of_type::<ast::PathType>();
@@ -52,6 +55,10 @@ pub(crate) fn type_check(
     inference_ctx_owner: &InFile<ast::InferenceCtxOwner>,
 ) -> Option<()> {
     if !ctx.config.type_checking_enabled {
+        return None;
+    }
+    if ctx.config.assists_only {
+        // no assists for type checking
         return None;
     }
     let msl = inference_ctx_owner.value.syntax().is_msl_context();
