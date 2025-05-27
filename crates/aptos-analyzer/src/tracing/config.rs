@@ -2,89 +2,32 @@
 //! filter syntax and `tracing_appender` for non blocking output.
 
 use crate::tracing::hprof;
-use anyhow::Context;
 use std::env;
-use tracing_subscriber::{Layer, Registry, filter::Targets, fmt::MakeWriter, layer::SubscriberExt};
+use tracing_subscriber::{EnvFilter, Layer, Registry, fmt::MakeWriter, layer::SubscriberExt};
 use tracing_tree::HierarchicalLayer;
 
 #[derive(Debug)]
-pub struct Config<T> {
+pub struct LoggingConfig<T> {
     pub writer: T,
-    pub filter: String,
-
-    /// Filtering syntax, set in a shell:
-    /// ```text
-    /// env RA_PROFILE_JSON=foo|bar|baz
-    /// ```
-    pub json_profile_filter: Option<String>,
+    pub default_level: tracing::Level,
 }
 
-impl<T> Config<T>
+impl<T> LoggingConfig<T>
 where
     T: for<'writer> MakeWriter<'writer> + Send + Sync + 'static,
 {
-    pub fn init(self) -> anyhow::Result<()> {
-        let targets_filter: Targets = self
-            .filter
-            .parse()
-            .with_context(|| format!("invalid log filter: `{}`", self.filter))?;
+    pub fn try_init(self) -> anyhow::Result<()> {
+        let LoggingConfig { writer, default_level } = self;
 
-        let writer = self.writer;
-
-        // let ra_fmt_layer = tracing_subscriber::fmt::layer()
-        //     .with_target(false)
-        //     .with_ansi(false)
-        //     .with_writer(writer)
-        //     .with_filter(targets_filter);
-
-        // let ra_fmt_layer = match time::OffsetTime::local_rfc_3339() {
-        //     Ok(timer) => {
-        //         // If we can get the time offset, format logs with the timezone.
-        //         ra_fmt_layer.with_timer(timer).boxed()
-        //     }
-        //     Err(_) => {
-        //         // Use system time if we can't get the time offset. This should
-        //         // never happen on Linux, but can happen on e.g. OpenBSD.
-        //         ra_fmt_layer.boxed()
-        //     }
-        // }
-
-        // let chalk_layer = match self.chalk_filter {
-        //     Some(chalk_filter) => {
-        //         let level: LevelFilter =
-        //             chalk_filter.parse().with_context(|| "invalid chalk log filter")?;
-        //
-        //         let chalk_filter = Targets::new()
-        //             .with_target("chalk_solve", level)
-        //             .with_target("chalk_ir", level)
-        //             .with_target("chalk_recursive", level);
-        //         // TODO: remove `.with_filter(LevelFilter::OFF)` on the `None` branch.
-        //         HierarchicalLayer::default()
-        //             .with_indent_lines(true)
-        //             .with_ansi(false)
-        //             .with_indent_amount(2)
-        //             .with_writer(io::stderr)
-        //             .with_filter(chalk_filter)
-        //             .boxed()
-        //     }
-        //     None => None::<HierarchicalLayer>.with_filter(LevelFilter::OFF).boxed(),
-        // };
-
-        // let json_profiler_layer = match self.json_profile_filter {
-        //     Some(spec) => {
-        //         let filter = json::JsonFilter::from_spec(&spec);
-        //         let filter = filter_fn(move |metadata| {
-        //             let allowed = match &filter.allowed_names {
-        //                 Some(names) => names.contains(metadata.name()),
-        //                 None => true,
-        //             };
-        //
-        //             allowed && metadata.is_span()
-        //         });
-        //         Some(json::TimingLayer::new(std::io::stderr).with_filter(filter))
-        //     }
-        //     None => None,
-        // };
+        let default_filter = EnvFilter::builder()
+            .with_env_var("RA_LOG")
+            .with_default_directive(default_level.into())
+            .from_env()
+            .unwrap_or_else(|err| {
+                tracing::error!("invalid directives in RA_LOG: {}", err);
+                Default::default()
+            })
+            .add_directive("salsa::=error".parse()?);
 
         let profiler = env::var("APT_PROFILER").ok().is_some();
         if profiler {
@@ -98,10 +41,8 @@ where
                 .with_indent_lines(true)
                 .with_deferred_spans(true)
                 .with_writer(writer)
-                .with_filter(targets_filter),
+                .with_filter(default_filter),
         );
-        // .with(ra_fmt_layer);
-        // .with(json_profiler_layer);
 
         tracing::subscriber::set_global_default(subscriber)?;
 

@@ -8,6 +8,7 @@ use aptos_analyzer::{Config, ConfigChange, ConfigErrors, from_json};
 use clap::Parser;
 use lsp_server::Connection;
 use paths::Utf8PathBuf;
+use tracing::Level;
 use tracing_subscriber::fmt::writer::BoxMakeWriter;
 use vfs::AbsPathBuf;
 
@@ -87,20 +88,18 @@ fn setup_logging(log_file_option: Option<PathBuf>) -> anyhow::Result<()> {
         }
         None => None,
     };
-
     let writer = match log_file {
         Some(file) => BoxMakeWriter::new(Arc::new(file)),
         None => BoxMakeWriter::new(std::io::stderr),
     };
 
-    aptos_analyzer::tracing::Config {
+    aptos_analyzer::tracing::LoggingConfig {
         writer,
         // Deliberately enable all `error` logs if the user has not set RA_LOG, as there is usually
         // useful information in there for debugging.
-        filter: env::var("RA_LOG").ok().unwrap_or_else(|| "error".to_owned()),
-        json_profile_filter: std::env::var("RA_PROFILE_JSON").ok(),
+        default_level: Level::ERROR,
     }
-    .init()?;
+    .try_init()?;
 
     Ok(())
 }

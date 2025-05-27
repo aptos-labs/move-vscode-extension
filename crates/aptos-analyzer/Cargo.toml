@@ -29,6 +29,7 @@ process-wrap = { version = "8.2.0", features = ["std"] }
 serde_derive = "1.0.217"
 shellexpand = "3.1.1"
 strip-ansi-escapes = "0.2.1"
+duration-string = "0.5.2"
 
 codespan = "0.12.0"
 codespan-reporting = "0.12.0"
@@ -50,8 +51,6 @@ ide-diagnostics = { path = "../ide-diagnostics" }
 lang = { path = "../lang" }
 ide = { path = "../ide" }
 project-model = { path = "../project-model" }
-
-test-utils = { path = "../test-utils" }
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = [

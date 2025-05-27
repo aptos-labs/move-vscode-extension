@@ -41,10 +41,11 @@ tracing-subscriber = { version = "^0.3.18", default-features = false, features =
     "std",
     "time",
     "tracing-log",
+    "env-filter"
 ] }
 dashmap = "6.1.0"
-salsa = { git = "https://github.com/mkurnikov/salsa.git", rev = "769a0812161d0e42fd5b9b6efd8eff78042451d7" }
-salsa-macros = { git = "https://github.com/mkurnikov/salsa.git", rev = "769a0812161d0e42fd5b9b6efd8eff78042451d7" }
+salsa = "0.22.0"
+salsa-macros = "0.22.0"
 
 stdx = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-05-19", package = "stdx" }
 paths = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-05-19", package = "paths", features = ["serde1"] }

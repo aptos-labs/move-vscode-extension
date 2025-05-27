@@ -55,7 +55,7 @@ pub fn parse(db: &dyn SourceDatabase, file_id: FileIdInput) -> Parse {
     ast::SourceFile::parse(&text)
 }
 
-#[salsa::tracked(return_ref)]
+#[salsa::tracked(returns(ref))]
 pub fn parse_errors(db: &dyn SourceDatabase, file_id: FileIdInput) -> Option<Box<[SyntaxError]>> {
     let errors = parse(db, file_id).errors();
     match &*errors {
