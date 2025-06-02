@@ -2,7 +2,7 @@ use crate::config::Config;
 use crate::diagnostics::{DiagnosticsGeneration, NativeDiagnosticsFetchKind, fetch_native_diagnostics};
 use crate::flycheck::FlycheckMessage;
 use crate::global_state::{
-    FetchPackagesRequest, FetchPackagesResponse, GlobalState, file_id_to_url, url_to_file_id,
+    GlobalState, LoadPackagesRequest, LoadPackagesResponse, file_id_to_url, url_to_file_id,
 };
 use crate::handlers::dispatch::{NotificationDispatcher, RequestDispatcher};
 use crate::handlers::request;
@@ -138,14 +138,16 @@ impl GlobalState {
 
         self.update_status_or_notify();
 
-        self.fetch_packages_from_fs_queue.request_op(
+        self.load_aptos_packages_queue.request_op(
             "on startup".to_owned(),
-            FetchPackagesRequest { force_reload_deps: false },
+            LoadPackagesRequest {
+                force_reload_package_deps: false,
+            },
         );
-        if let Some((cause, FetchPackagesRequest { force_reload_deps })) =
-            self.fetch_packages_from_fs_queue.should_start_op()
+        if let Some((cause, LoadPackagesRequest { force_reload_package_deps })) =
+            self.load_aptos_packages_queue.should_start_op()
         {
-            self.fetch_packages_from_fs(cause, force_reload_deps);
+            self.load_aptos_packages_from_fs(cause, force_reload_package_deps);
         }
 
         while let Ok(event) = self.next_event(&inbox) {
@@ -201,7 +203,6 @@ impl GlobalState {
         let _p = tracing::info_span!("GlobalState::handle_event", %event).entered();
 
         let event_dbg_msg = format!("{event:?}");
-        // tracing::debug!(?event, "handle_event");
         if tracing::enabled!(Level::DEBUG) {
             let task_queue_len = self.task_pool.handle.len();
             if task_queue_len > 0 {
@@ -209,7 +210,8 @@ impl GlobalState {
             }
         }
 
-        let was_quiescent = self.is_quiescent();
+        let was_fully_loaded = self.is_projects_fully_loaded();
+        tracing::info!(?was_fully_loaded);
         match event {
             Event::Lsp(msg) => match msg {
                 lsp_server::Message::Request(req) => self.on_new_request(loop_start, req),
@@ -243,18 +245,18 @@ impl GlobalState {
         }
         let event_handling_duration = loop_start.elapsed();
 
-        let (state_changed, memdocs_added_or_removed) = if self.vfs_done {
-            if let Some(cause) = self.reason_to_refresh.take() {
-                self.switch_packages(cause);
+        let (any_file_changed, memdocs_added_or_removed) = if self.vfs_done {
+            if let Some(refresh_cause) = self.reason_to_state_refresh.take() {
+                self.switch_packages(refresh_cause);
             }
             (self.process_pending_file_changes(), self.mem_docs.take_changes())
         } else {
             (false, false)
         };
 
-        if self.is_quiescent() {
-            let became_quiescent = !was_quiescent;
-            if became_quiescent {
+        if self.is_projects_fully_loaded() {
+            let became_fully_loaded = !was_fully_loaded;
+            if became_fully_loaded {
                 if self.config.check_on_save() {
                     // Project has loaded properly, kick off initial flycheck
                     self.flycheck
@@ -263,23 +265,23 @@ impl GlobalState {
                 }
             }
 
-            let client_refresh = became_quiescent || state_changed;
+            let client_refresh = became_fully_loaded || any_file_changed;
             if client_refresh {
                 // Refresh semantic tokens if the client supports it.
-                // if self.config.semantic_tokens_refresh() {
-                //     self.semantic_tokens_cache.lock().clear();
-                //     self.send_request::<lsp_types::request::SemanticTokensRefresh>((), |_, _| ());
-                // }
+                if self.config.semantic_tokens_refresh() {
+                    // self.semantic_tokens_cache.lock().clear();
+                    self.send_request::<lsp_types::request::SemanticTokensRefresh>((), |_, _| ());
+                }
 
                 // Refresh code lens if the client supports it.
-                // if self.config.code_lens_refresh() {
-                //     self.send_request::<lsp_types::request::CodeLensRefresh>((), |_, _| ());
-                // }
+                if self.config.code_lens_refresh() {
+                    self.send_request::<lsp_types::request::CodeLensRefresh>((), |_, _| ());
+                }
 
                 // Refresh inlay hints if the client supports it.
-                // if self.config.inlay_hints_refresh() {
-                //     self.send_request::<lsp_types::request::InlayHintRefreshRequest>((), |_, _| ());
-                // }
+                if self.config.inlay_hints_refresh() {
+                    self.send_request::<lsp_types::request::InlayHintRefreshRequest>((), |_, _| ());
+                }
 
                 if self.config.diagnostics_refresh() {
                     self.send_request::<lsp_types::request::WorkspaceDiagnosticRefresh>((), |_, _| ());
@@ -287,10 +289,11 @@ impl GlobalState {
             }
 
             let project_or_mem_docs_changed =
-                became_quiescent || state_changed || memdocs_added_or_removed;
+                became_fully_loaded || any_file_changed || memdocs_added_or_removed;
             if project_or_mem_docs_changed
-                && !self.config.text_document_diagnostic()
-                && self.config.publish_diagnostics()
+                // && self.config.text_document_diagnostic_pull_enabled()
+                && !self.config.text_document_diagnostic_pull_enabled()
+                && self.config.diagnostics_enabled()
             {
                 self.update_diagnostics();
             }
@@ -312,22 +315,18 @@ impl GlobalState {
             }
         }
 
-        if self.config.cargo_autoreload_config() {
-            if let Some((
-                cause,
-                FetchPackagesRequest {
-                    force_reload_deps: force_crate_graph_reload,
-                },
-            )) = self.fetch_packages_from_fs_queue.should_start_op()
+        if self.config.autorefresh_on_move_toml_changes() {
+            if let Some((cause, LoadPackagesRequest { force_reload_package_deps })) =
+                self.load_aptos_packages_queue.should_start_op()
             {
-                self.fetch_packages_from_fs(cause, force_crate_graph_reload);
+                self.load_aptos_packages_from_fs(cause, force_reload_package_deps);
             }
         }
 
         self.update_status_or_notify();
 
         let loop_duration = loop_start.elapsed();
-        if loop_duration > Duration::from_millis(100) && was_quiescent {
+        if loop_duration > Duration::from_millis(100) && was_fully_loaded {
             tracing::warn!(
                 "overly long loop turn took {loop_duration:?} (event handling took {event_handling_duration:?}): {event_dbg_msg}"
             );
@@ -381,7 +380,7 @@ impl GlobalState {
                     // Do not fetch semantic diagnostics (and populate query results) if we haven't even
                     // loaded the initial workspace yet.
                     let fetch_semantic =
-                        self.vfs_done && self.fetch_packages_from_fs_queue.last_op_result().is_some();
+                        self.vfs_done && self.load_aptos_packages_queue.last_op_result().is_some();
                     move |sender| {
                         // We aren't observing the semantics token cache here
                         let snapshot = AssertUnwindSafe(&snapshot);
@@ -433,7 +432,7 @@ impl GlobalState {
                 (status.health, &status.message)
             {
                 let open_log_button =
-                    tracing::enabled!(Level::ERROR) && self.fetch_packages_error().is_err();
+                    tracing::enabled!(Level::ERROR) && self.load_packages_error().is_err();
                 self.show_message(
                     match health {
                         lsp_ext::Health::Ok => lsp_types::MessageType::INFO,
@@ -461,16 +460,15 @@ impl GlobalState {
                 let (state, msg) = match progress {
                     FetchPackagesProgress::Begin => (Progress::Begin, None),
                     FetchPackagesProgress::Report(msg) => (Progress::Report, Some(msg)),
-                    FetchPackagesProgress::End(packages_from_fs, force_reload_deps) => {
-                        self.fetch_packages_from_fs_queue
-                            .op_completed(FetchPackagesResponse {
-                                packages_from_fs,
-                                force_reload_deps,
-                            });
-                        if let Err(fetch_err) = self.fetch_packages_error() {
+                    FetchPackagesProgress::End(packages_from_fs, force_reload_package_deps) => {
+                        self.load_aptos_packages_queue.op_completed(LoadPackagesResponse {
+                            packages_from_fs,
+                            force_reload_package_deps,
+                        });
+                        if let Err(fetch_err) = self.load_packages_error() {
                             tracing::error!("FetchWorkspaceError: {fetch_err}");
                         }
-                        self.reason_to_refresh = Some("fetched packages from fs".to_owned());
+                        self.reason_to_state_refresh = Some("loaded aptos packages from fs".to_owned());
                         self.diagnostics.clear_check_all();
                         (Progress::End, None)
                     }
@@ -539,7 +537,7 @@ impl GlobalState {
     }
 
     fn load_files_into_vfs(&mut self, files: Vec<(AbsPathBuf, Option<Vec<u8>>)>, is_changed: bool) {
-        tracing::info!("load files into vfs, n_files = {}", files.len());
+        tracing::debug!("load files into vfs, n_files = {}", files.len());
         let vfs = &mut self.vfs.write().0;
         for (path, contents) in files {
             let path = VfsPath::from(path);
@@ -693,7 +691,7 @@ impl GlobalState {
             .on_latency_sensitive::<NO_RETRY, lsp_request::SemanticTokensRangeRequest>(handlers::handle_semantic_tokens_range)
             // FIXME: Some of these NO_RETRY could be retries if the file they are interested didn't change.
             // All other request handlers
-            .on_with_vfs_default::<lsp_request::DocumentDiagnosticRequest>(
+            .on_with_fully_loaded::<lsp_request::DocumentDiagnosticRequest>(
                 handlers::handle_document_diagnostics, || lsp_types::DocumentDiagnosticReportResult::Report(
                     lsp_types::DocumentDiagnosticReport::Full(
                         lsp_types::RelatedFullDocumentDiagnosticReport {

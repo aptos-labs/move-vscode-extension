@@ -35,11 +35,12 @@ where
             return Ok(());
         }
 
+        let deferred_spans = !env::var("APT_LOG_SHOW_EMPTY_SPANS").ok().is_some();
         let subscriber = Registry::default().with(
             HierarchicalLayer::new(2)
                 .with_ansi(false)
                 .with_indent_lines(true)
-                .with_deferred_spans(true)
+                .with_deferred_spans(deferred_spans)
                 .with_writer(writer)
                 .with_filter(default_filter),
         );

@@ -1,15 +1,14 @@
 use crate::fixtures::parse_files_from_source;
+use crate::testdir;
 use ide::{Analysis, AnalysisHost};
+use paths::Utf8Path;
 use project_model::DiscoveredManifest;
 use project_model::aptos_package::load_from_fs;
 use std::fs;
 use vfs::{AbsPathBuf, FileId, Vfs};
 
-pub fn from_multiple_files_on_tmpfs(test_packages: Vec<TestPackageFiles>) -> TestState {
-    let tmp = tempdir::TempDir::new("aptos_analyzer_tests").unwrap();
-
-    let ws_root = tmp.path().join("ws_root");
-    fs::create_dir(&ws_root).unwrap();
+pub fn prepare_directories(ws_root: &Utf8Path, test_packages: Vec<TestPackageFiles>) {
+    let _ = fs::create_dir(ws_root);
 
     for test_package in test_packages {
         let package_root = ws_root.join(test_package.root_dir);
@@ -28,8 +27,15 @@ pub fn from_multiple_files_on_tmpfs(test_packages: Vec<TestPackageFiles>) -> Tes
             fs::write(&fpath, file_text).unwrap();
         }
     }
+}
 
-    let discovered_manifests = DiscoveredManifest::discover_all(&[AbsPathBuf::assert_utf8(ws_root)]);
+pub fn from_multiple_files_on_tmpfs(test_packages: Vec<TestPackageFiles>) -> TestState {
+    let tmp = testdir::TestDir::new();
+
+    let ws_root = tmp.path().to_path_buf();
+    prepare_directories(&ws_root, test_packages);
+
+    let discovered_manifests = DiscoveredManifest::discover_all(&[AbsPathBuf::assert(ws_root)]);
     let all_packages = load_from_fs::load_aptos_packages(discovered_manifests)
         .into_iter()
         .filter_map(|it| it.ok())

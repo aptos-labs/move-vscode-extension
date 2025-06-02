@@ -231,7 +231,7 @@ impl Analysis {
         self.with_db(|db| goto_definition::goto_definition(db, position))
     }
 
-    /// Returns the definitions from the symbol at `position`.
+    /// Returns the possibly multiple definitions from the symbol at `position`.
     pub fn goto_definition_multi(
         &self,
         position: FilePosition,

@@ -125,7 +125,7 @@ impl Config {
         }
     }
 
-    pub fn cargo_autoreload_config(&self) -> bool {
+    pub fn autorefresh_on_move_toml_changes(&self) -> bool {
         self.aptos_autoreload().to_owned()
     }
 
@@ -353,7 +353,7 @@ impl Config {
         manifests
     }
 
-    pub fn publish_diagnostics(&self) -> bool {
+    pub fn diagnostics_enabled(&self) -> bool {
         self.diagnostics_enable().to_owned()
     }
 
