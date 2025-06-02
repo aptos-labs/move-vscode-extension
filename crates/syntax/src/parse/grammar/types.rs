@@ -98,7 +98,7 @@ fn lambda_type(p: &mut Parser) {
         return;
     }
     // return type
-    if p.at_ts(TYPE_FIRST) {
+    if !p.at_contextual_kw_ident("has") && p.at_ts(TYPE_FIRST) {
         type_(p);
     }
     if p.at_contextual_kw_ident("has") {
