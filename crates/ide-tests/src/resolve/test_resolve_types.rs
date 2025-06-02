@@ -31,7 +31,7 @@ module 0x1::m {
     use aptos_std::m1::Type;
     use aptos_std::m1::Type;
     fun main(s: Type) {}
-               //^ unresolved
+               //^ multi
 }        
 "#,
     )

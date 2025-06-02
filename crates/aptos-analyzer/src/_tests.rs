@@ -1,16 +1,15 @@
-use crate::tracing::LoggingConfig;
-use tracing::Level;
-use tracing_subscriber::fmt::writer::BoxMakeWriter;
-
 #[allow(unused)]
 #[test]
 fn test_run_main_loop() -> anyhow::Result<()> {
     use crate::Config;
     use crate::global_state::GlobalState;
+    use crate::tracing::LoggingConfig;
     use camino::Utf8PathBuf;
     use lsp_server::Connection;
     use lsp_types::WindowClientCapabilities;
     use paths::AbsPathBuf;
+    use tracing::Level;
+    use tracing_subscriber::fmt::writer::BoxMakeWriter;
 
     LoggingConfig {
         writer: BoxMakeWriter::new(std::io::stdout),
@@ -37,7 +36,7 @@ fn test_run_main_loop() -> anyhow::Result<()> {
     let global_state = GlobalState::new(connection.sender.clone(), config);
     {
         let vfs = &global_state.vfs.read().0;
-        dbg!(vfs.iter().collect::<Vec<_>>());
+        // dbg!(vfs.iter().collect::<Vec<_>>());
     }
 
     // connection

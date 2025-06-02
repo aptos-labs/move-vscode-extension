@@ -294,7 +294,7 @@ fn test_resolve_spec_function_from_module_spec_with_no_path_with_address() {
 module 0x1::main {}
 spec {
     spec 0x1::main {
-             //^ unresolved
+             //^ no reference
     }
 }
     "#,
@@ -333,6 +333,31 @@ module aptos_token_objects::token {
     fun main() {
         collection::decrement_supply();
                      //^
+    }
+}
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_to_variable_in_presence_of_global_var_with_same_name() {
+    check_resolve(
+        // language=Move
+        r#"
+spec std::m {
+    spec module {
+        global supply<CoinType>: num;
+    }
+}
+module std::m {
+    fun supply(): u8 { 1 }
+    fun main() {
+        let supply = 1;
+           //X
+        spec {
+            supply;
+            //^
+        }
     }
 }
     "#,

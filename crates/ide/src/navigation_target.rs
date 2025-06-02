@@ -1,5 +1,6 @@
 use base_db::SourceDatabase;
 use ide_db::{RootDatabase, SymbolKind, ast_kind_to_symbol_kind};
+use lang::Semantics;
 use lang::nameres::scope::ScopeEntry;
 use std::fmt;
 use syntax::ast::NamedElement;
@@ -83,16 +84,20 @@ impl NavigationTarget {
     }
 
     /// Allows `NavigationTarget` to be created from a `NameOwner`
-    pub(crate) fn from_scope_entry(
-        db: &RootDatabase,
+    pub(crate) fn from_scope_entry<'db>(
+        sema: &'db Semantics<'db, RootDatabase>,
         scope_entry: ScopeEntry,
     ) -> Option<NavigationTarget> {
         let entry_name = scope_entry.name;
         let file_id = scope_entry.node_loc.file_id();
-        if db.builtins_file_id().is_some_and(|fid| fid.data(db) == file_id) {
+        if sema
+            .db
+            .builtins_file_id()
+            .is_some_and(|fid| fid.data(sema.db) == file_id)
+        {
             return None;
         }
-        if let Some(label_decl) = scope_entry.node_loc.to_ast::<ast::LabelDecl>(db) {
+        if let Some(label_decl) = scope_entry.node_loc.to_ast::<ast::LabelDecl>(sema.db) {
             let label = label_decl.value;
             let name_range = label.quote_ident_token().text_range();
             let node_range = label.syntax().text_range();
@@ -104,7 +109,7 @@ impl NavigationTarget {
                 SymbolKind::Label,
             ));
         }
-        if let Some(tuple_field) = scope_entry.node_loc.to_ast::<ast::TupleField>(db) {
+        if let Some(tuple_field) = scope_entry.node_loc.to_ast::<ast::TupleField>(sema.db) {
             let tuple_field = tuple_field.value;
             let node_range = tuple_field.syntax().text_range();
             return Some(NavigationTarget::from_syntax(
@@ -116,7 +121,10 @@ impl NavigationTarget {
             ));
         }
 
-        let named_item = scope_entry.node_loc.to_ast::<ast::AnyNamedElement>(db)?.value;
+        let named_item = scope_entry
+            .node_loc
+            .to_ast::<ast::AnyNamedElement>(sema.db)?
+            .value;
         let name_range = named_item.name().map(|name| name.ident_token().text_range());
         let node_range = named_item.syntax().text_range();
 

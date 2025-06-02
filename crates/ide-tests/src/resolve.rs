@@ -1,5 +1,6 @@
 use crate::init_tracing_for_test;
 use ide::{Analysis, NavigationTarget};
+use lang::nameres::scope::VecExt;
 use syntax::AstNode;
 use syntax::SyntaxKind::{IDENT, QUOTE_IDENT};
 use syntax::files::FilePosition;
@@ -26,21 +27,34 @@ pub fn check_resolve(source: &str) {
     let (analysis, file_id) = fixtures::from_single_file(source.to_string());
     let position = FilePosition { file_id, offset: ref_offset };
 
-    let item = analysis
-        .goto_definition(position)
+    let nav_items = analysis
+        .goto_definition_multi(position)
         .unwrap()
         .map(|range_info| range_info.info);
-    if data == "unresolved" {
-        assert!(
-            item.is_none(),
-            "Should be unresolved, but instead resolved to {:?}",
-            item.unwrap()
-        );
+    let Some(nav_items) = nav_items else {
+        assert!(data == "no reference", "Cannot find a reference at `//^` mark.");
         return;
-    }
-    let nav_item = item.expect("item is unresolved");
+    };
 
-    assert_resolves_to_target(&analysis, nav_item, (file_id, source.to_string()));
+    match nav_items.len() {
+        0 => {
+            assert!(data == "unresolved", "Item is unresolved");
+        }
+        1 => {
+            if data == "unresolved" {
+                panic!("Should be unresolved, but instead resolved to {:?}", nav_items);
+            }
+            let nav_item = nav_items.single_or_none().unwrap();
+            assert_resolves_to_target(&analysis, nav_item, (file_id, source.to_string()));
+        }
+        _ => {
+            assert!(
+                data == "multi",
+                "Item is resolved to multiple entries {:#?}",
+                nav_items
+            );
+        }
+    }
 }
 
 pub fn check_resolve_tmpfs(test_packages: Vec<TestPackageFiles>) {

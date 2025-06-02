@@ -233,7 +233,7 @@ module 0x1::m {
     public fun royalty() {}
     public fun main() {
         royalty();
-        //^ unresolved
+        //^ multi
     }
 }        
 "#,

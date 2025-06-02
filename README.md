@@ -21,6 +21,17 @@ to your `settings.json` to point the extension to your locally built language se
 
 Now, open any Move file to instantiate the extension. Disable other VSCode extensions for `.move` files if needed.
 
+### VSCode configuration
+
+Add the following to settings.json to mark Move library sources as read-only:
+
+```json5
+    "files.readonlyInclude": {
+        "**/build/*/sources/**/*.move": true,
+        "**/.move/**/*.move": true,
+    }
+```
+
 ### Cursor AI editor
 
 If you use https://www.cursor.com/ AI editor, you need to do a bit more work. 
@@ -185,5 +196,6 @@ Next features planned are (roughly in the expected order of implementation):
 * Find references.
 * Unused local variable lint (with quickfix to prefix name with `_`).
 * Rename refactoring.
+* Add "item is private" clarification to the "unresolved reference" diagnostic.
 * Unused imports (with quickfix).
 * Auto-import.

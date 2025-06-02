@@ -115,10 +115,10 @@ pub fn get_entries_from_walking_scopes(
 ) -> Vec<ScopeEntry> {
     let resolve_scopes = get_resolve_scopes(db, start_at);
 
-    let mut visited_name_ns = HashMap::<String, NsSet>::new();
+    let mut visited_names = HashMap::<String, NsSet>::new();
     let mut entries = vec![];
     for ResolveScope { scope, prev } in resolve_scopes {
-        let scope_entries = get_entries_in_scope(db, scope, prev);
+        let scope_entries = get_entries_in_scope(db, scope.clone(), prev);
         if scope_entries.is_empty() {
             continue;
         }
@@ -131,19 +131,23 @@ pub fn get_entries_from_walking_scopes(
                 continue;
             }
 
-            if let Some(visited_ns) = visited_name_ns.get(&entry_name) {
+            if let Some(visited_ns) = visited_names.get(&entry_name) {
                 if visited_ns.contains(entry_ns) {
                     // this (name, ns) is already visited in the previous scope
                     continue;
                 }
             }
 
-            let old_ns = visited_names_in_scope.entry(entry_name).or_insert(NsSet::empty());
-            *old_ns = *old_ns | NsSet::from(entry_ns);
+            let combined_ns = visited_names
+                .get(&entry_name)
+                .cloned()
+                .unwrap_or_default()
+                .union(NsSet::from(entry_ns));
+            visited_names_in_scope.insert(entry_name, combined_ns);
 
             entries.push(scope_entry);
         }
-        visited_name_ns.extend(visited_names_in_scope);
+        visited_names.extend(visited_names_in_scope);
     }
     entries
 }
