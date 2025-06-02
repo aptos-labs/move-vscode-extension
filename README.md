@@ -170,3 +170,20 @@ vector::push_back(v, 1); -> v.push_back(1);
 ```move
 a = a + 1; -> a += 1;
 ```
+
+## Roadmap
+
+The end goal is to be at a feature parity with the Intellij-Move plugin. 
+
+Next features planned are (roughly in the expected order of implementation):
+
+* Improve completion engine to work in more places.
+* More error highlighting: 
+  - Not enough type params / params / missing fields.
+  - Replace `vector::borrow` with `v[]`.
+  - `aptos move lint` lints with quickfixes.
+* Find references.
+* Unused local variable lint (with quickfix to prefix name with `_`).
+* Rename refactoring.
+* Unused imports (with quickfix).
+* Auto-import.
