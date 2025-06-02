@@ -1,0 +1,61 @@
+SOURCE_FILE@0..139
+  MODULE@0..138
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..54
+      IDENT@12..54 "function_values_lambd ..."
+    WHITESPACE@54..55 " "
+    L_CURLY@55..56 "{"
+    WHITESPACE@56..61 "\n    "
+    STRUCT@61..136
+      STRUCT_KW@61..67 "struct"
+      WHITESPACE@67..68 " "
+      NAME@68..69
+        IDENT@68..69 "S"
+      WHITESPACE@69..70 " "
+      NAMED_FIELD_LIST@70..136
+        L_CURLY@70..71 "{"
+        WHITESPACE@71..80 "\n        "
+        NAMED_FIELD@80..129
+          NAME@80..99
+            IDENT@80..99 "place_maker_order_f"
+          COLON@99..100 ":"
+          WHITESPACE@100..101 " "
+          LAMBDA_TYPE@101..129
+            PIPE@101..102 "|"
+            LAMBDA_TYPE_PARAM@102..109
+              PATH_TYPE@102..109
+                PATH@102..109
+                  PATH_SEGMENT@102..109
+                    NAME_REF@102..109
+                      IDENT@102..109 "address"
+            COMMA@109..110 ","
+            WHITESPACE@110..111 " "
+            LAMBDA_TYPE_PARAM@111..112
+              PATH_TYPE@111..112
+                PATH@111..112
+                  PATH_SEGMENT@111..112
+                    NAME_REF@111..112
+                      IDENT@111..112 "M"
+            PIPE@112..113 "|"
+            WHITESPACE@113..114 " "
+            LAMBDA_TYPE_ABILITY_LIST@114..129
+              HAS_KW@114..117 "has"
+              WHITESPACE@117..118 " "
+              ABILITY_BOUND_LIST@118..129
+                ABILITY@118..122
+                  IDENT@118..122 "drop"
+                WHITESPACE@122..123 " "
+                PLUS@123..124 "+"
+                WHITESPACE@124..125 " "
+                ABILITY@125..129
+                  IDENT@125..129 "copy"
+        COMMA@129..130 ","
+        WHITESPACE@130..135 "\n    "
+        R_CURLY@135..136 "}"
+    WHITESPACE@136..137 "\n"
+    R_CURLY@137..138 "}"
+  WHITESPACE@138..139 "\n"
