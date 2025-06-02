@@ -1,3 +1,7 @@
+use crate::tracing::LoggingConfig;
+use tracing::Level;
+use tracing_subscriber::fmt::writer::BoxMakeWriter;
+
 #[allow(unused)]
 #[test]
 fn test_run_main_loop() -> anyhow::Result<()> {
@@ -8,7 +12,12 @@ fn test_run_main_loop() -> anyhow::Result<()> {
     use lsp_types::WindowClientCapabilities;
     use paths::AbsPathBuf;
 
-    test_utils::tracing::init_tracing_for_test();
+    LoggingConfig {
+        writer: BoxMakeWriter::new(std::io::stdout),
+        default_level: Level::DEBUG,
+    }
+    .try_init()
+    .unwrap();
 
     let (connection, io_threads) = Connection::stdio();
 
