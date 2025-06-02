@@ -843,7 +843,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     }
 
     fn infer_if_expr(&mut self, if_expr: &ast::IfExpr, expected: Expected) -> Option<Ty> {
-        let condition_expr = if_expr.condition()?.expr()?;
+        let condition_expr = if_expr.condition_expr()?;
         self.infer_expr_coerceable_to(&condition_expr, Ty::Bool);
 
         let actual_if_ty = if_expr
