@@ -1,6 +1,5 @@
 use tracing::Level;
 use tracing_subscriber::fmt::writer::BoxMakeWriter;
-use tracing_subscriber::util::SubscriberInitExt;
 
 pub fn init_tracing_for_test() {
     let config = aptos_analyzer::tracing::LoggingConfig {
