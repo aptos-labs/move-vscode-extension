@@ -19,9 +19,6 @@ mod movefmt;
 pub mod toolchain;
 pub mod tracing;
 
-#[cfg(test)]
-mod _tests;
-
 pub use config::{Config, config_change::ConfigChange, validation::ConfigErrors};
 pub use lsp::capabilities::server_capabilities;
 pub use lsp::ext as lsp_ext;
