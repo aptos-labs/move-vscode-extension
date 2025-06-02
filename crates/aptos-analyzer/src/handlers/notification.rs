@@ -1,5 +1,5 @@
 use crate::config::config_change::ConfigChange;
-use crate::global_state::{FetchPackagesRequest, GlobalState};
+use crate::global_state::{GlobalState, LoadPackagesRequest};
 use crate::lsp::from_proto;
 use crate::lsp::utils::apply_document_changes;
 use crate::lsp_ext::RunFlycheckParams;
@@ -136,15 +136,13 @@ pub(crate) fn handle_did_save_text_document(
 ) -> anyhow::Result<()> {
     if let Ok(vfs_path) = from_proto::vfs_path(&params.text_document.uri) {
         // Re-fetch workspaces if a workspace related file has changed
-        if let Some(path) = vfs_path.as_path() {
-            // FIXME: We should move this check into a QueuedTask and do semantic resolution of
-            // the files. There is only so much we can tell syntactically from the path.
-            if reload::should_refresh_for_file_change(
-                path, /*, ChangeKind::Modify, additional_files*/
-            ) {
-                state.fetch_packages_from_fs_queue.request_op(
-                    format!("workspace vfs file change saved {path}"),
-                    FetchPackagesRequest { force_reload_deps: false },
+        if let Some(saved_path) = vfs_path.as_path() {
+            if reload::is_manifest_file(saved_path) {
+                state.load_aptos_packages_queue.request_op(
+                    format!("manifest file change saved {saved_path}"),
+                    LoadPackagesRequest {
+                        force_reload_package_deps: false,
+                    },
                 );
             }
         }
@@ -237,9 +235,11 @@ pub(crate) fn handle_did_change_workspace_folders(
 
     config.rediscover_packages();
 
-    let req = FetchPackagesRequest { force_reload_deps: false };
+    let req = LoadPackagesRequest {
+        force_reload_package_deps: false,
+    };
     state
-        .fetch_packages_from_fs_queue
+        .load_aptos_packages_queue
         .request_op("client workspaces changed".to_owned(), req);
 
     Ok(())

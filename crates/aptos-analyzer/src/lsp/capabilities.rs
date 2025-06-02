@@ -180,6 +180,28 @@ impl ClientCapabilities {
         (|| -> _ { self.0.text_document.as_ref()?.definition?.link_support })().unwrap_or_default()
     }
 
+    pub fn semantic_tokens_refresh(&self) -> bool {
+        (|| -> _ {
+            self.0
+                .workspace
+                .as_ref()?
+                .semantic_tokens
+                .as_ref()?
+                .refresh_support
+        })()
+        .unwrap_or_default()
+    }
+
+    pub fn code_lens_refresh(&self) -> bool {
+        (|| -> _ { self.0.workspace.as_ref()?.code_lens.as_ref()?.refresh_support })()
+            .unwrap_or_default()
+    }
+
+    pub fn inlay_hints_refresh(&self) -> bool {
+        (|| -> _ { self.0.workspace.as_ref()?.inlay_hint.as_ref()?.refresh_support })()
+            .unwrap_or_default()
+    }
+
     pub fn diagnostics_refresh(&self) -> bool {
         (|| -> _ { self.0.workspace.as_ref()?.diagnostic.as_ref()?.refresh_support })()
             .unwrap_or_default()
@@ -385,7 +407,7 @@ impl ClientCapabilities {
         .unwrap_or_default()
     }
 
-    pub fn text_document_diagnostic(&self) -> bool {
+    pub fn text_document_diagnostic_pull_enabled(&self) -> bool {
         (|| -> _ { self.0.text_document.as_ref()?.diagnostic.as_ref() })().is_some()
     }
 

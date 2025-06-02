@@ -23,13 +23,13 @@ use std::sync::Arc;
 use std::time::Instant;
 use vfs::{AnchoredPathBuf, FileId, VfsPath};
 
-pub(crate) struct FetchPackagesRequest {
-    pub(crate) force_reload_deps: bool,
+pub(crate) struct LoadPackagesRequest {
+    pub(crate) force_reload_package_deps: bool,
 }
 
-pub(crate) struct FetchPackagesResponse {
+pub(crate) struct LoadPackagesResponse {
     pub(crate) packages_from_fs: Vec<anyhow::Result<AptosPackage>>,
-    pub(crate) force_reload_deps: bool,
+    pub(crate) force_reload_package_deps: bool,
 }
 
 // Enforces drop order
@@ -78,14 +78,15 @@ pub(crate) struct GlobalState {
     pub(crate) vfs_config_version: u32,
     pub(crate) vfs_progress_config_version: u32,
     pub(crate) vfs_done: bool,
+    pub(crate) package_graph_initialized: bool,
     // used to track how long VFS loading takes. this can't be on `vfs::loader::Handle`,
     // as that handle's lifetime is the same as `GlobalState` itself.
     pub(crate) vfs_span: Option<tracing::span::EnteredSpan>,
-    pub(crate) reason_to_refresh: Option<Cause>,
+    pub(crate) reason_to_state_refresh: Option<Cause>,
 
     pub(crate) all_packages: Arc<Vec<AptosPackage>>,
     // op queues
-    pub(crate) fetch_packages_from_fs_queue: OpQueue<FetchPackagesRequest, FetchPackagesResponse>,
+    pub(crate) load_aptos_packages_queue: OpQueue<LoadPackagesRequest, LoadPackagesResponse>,
 }
 
 /// An immutable snapshot of the world's state at a point in time.
@@ -163,11 +164,12 @@ impl GlobalState {
             vfs_config_version: 0,
             vfs_progress_config_version: 0,
             vfs_done: true,
+            package_graph_initialized: false,
             vfs_span: None,
-            reason_to_refresh: None,
+            reason_to_state_refresh: None,
 
             all_packages: Arc::from(Vec::new()),
-            fetch_packages_from_fs_queue: OpQueue::default(),
+            load_aptos_packages_queue: OpQueue::default(),
         };
         // Apply any required database inputs from the config.
         this.update_configuration(config);

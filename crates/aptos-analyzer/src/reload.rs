@@ -1,6 +1,6 @@
 use crate::config::FilesWatcher;
 use crate::flycheck::FlycheckHandle;
-use crate::global_state::{FetchPackagesRequest, FetchPackagesResponse, GlobalState};
+use crate::global_state::{GlobalState, LoadPackagesRequest, LoadPackagesResponse};
 use crate::lsp::utils::Progress;
 use crate::main_loop::Task;
 use crate::op_queue::Cause;
@@ -48,28 +48,21 @@ impl GlobalState {
     ///
     /// This indicates that we've fully loaded the projects and
     /// are ready to do semantic work.
-    pub(crate) fn is_quiescent(&self) -> bool {
+    pub(crate) fn is_projects_fully_loaded(&self) -> bool {
         self.vfs_done
-            && !self.fetch_packages_from_fs_queue.op_in_progress()
+            && !self.load_aptos_packages_queue.op_in_progress()
             && self.vfs_progress_config_version >= self.vfs_config_version
     }
-
-    // /// Is the server ready to respond to analysis dependent LSP requests?
-    // ///
-    // /// Unlike `is_quiescent`, this returns false when we're indexing
-    // /// the project, because we're holding the salsa lock and cannot
-    // /// respond to LSP requests that depend on salsa data.
-    // fn is_fully_ready(&self) -> bool {
-    //     self.is_quiescent() /* && !self.prime_caches_queue.op_in_progress()*/
-    // }
 
     pub(crate) fn update_configuration(&mut self, config: Config) {
         let _p = tracing::info_span!("GlobalState::update_configuration").entered();
         let old_config = mem::replace(&mut self.config, Arc::new(config));
 
         if self.config.discovered_manifests() != old_config.discovered_manifests() {
-            let req = FetchPackagesRequest { force_reload_deps: false };
-            self.fetch_packages_from_fs_queue
+            let req = LoadPackagesRequest {
+                force_reload_package_deps: false,
+            };
+            self.load_aptos_packages_queue
                 .request_op("discovered projects changed".to_owned(), req)
         } else if self.config.flycheck_config() != old_config.flycheck_config() {
             self.reload_flycheck();
@@ -79,14 +72,14 @@ impl GlobalState {
     pub(crate) fn current_status(&self) -> lsp_ext::ServerStatusParams {
         let mut status = lsp_ext::ServerStatusParams {
             health: lsp_ext::Health::Ok,
-            quiescent: self.is_quiescent(),
+            quiescent: self.is_projects_fully_loaded(),
             message: None,
         };
         let mut message = String::new();
 
-        if !self.config.cargo_autoreload_config()
-            && self.is_quiescent()
-            && self.fetch_packages_from_fs_queue.op_requested()
+        if !self.config.autorefresh_on_move_toml_changes()
+            && self.is_projects_fully_loaded()
+            && self.load_aptos_packages_queue.op_requested()
         {
             status.health |= lsp_ext::Health::Warning;
             message.push_str("Auto-reloading is disabled and the workspace has changed, a manual workspace reload is required.\n\n");
@@ -107,7 +100,7 @@ impl GlobalState {
             status.health |= lsp_ext::Health::Warning;
             message.push_str("Failed to discover Aptos packages in the current folder.");
         }
-        if self.fetch_packages_error().is_err() {
+        if self.load_packages_error().is_err() {
             status.health |= lsp_ext::Health::Error;
             message.push_str("Failed to load some of the Aptos packages.");
             message.push_str("\n\n");
@@ -123,7 +116,11 @@ impl GlobalState {
     }
 
     #[tracing::instrument(level = "info", skip(self))]
-    pub(crate) fn fetch_packages_from_fs(&mut self, _cause: Cause, force_reload_deps: bool) {
+    pub(crate) fn load_aptos_packages_from_fs(
+        &mut self,
+        _cause: Cause,
+        force_reload_package_deps: bool,
+    ) {
         let discovered_manifests = self.config.discovered_manifests();
         tracing::info!(
             "discovered packages: {:#?}",
@@ -149,12 +146,12 @@ impl GlobalState {
                     .send(Task::FetchPackagesProgress(FetchPackagesProgress::Begin))
                     .unwrap();
                 tracing::info!("load {} packages", discovered_manifests.len());
-                // hits the filesystem directly
+                // ACTUAL WORK: hits the filesystem directly
                 let fetched_packages = load_from_fs::load_aptos_packages(discovered_manifests);
                 sender
                     .send(Task::FetchPackagesProgress(FetchPackagesProgress::End(
                         fetched_packages,
-                        force_reload_deps,
+                        force_reload_package_deps,
                     )))
                     .unwrap();
             });
@@ -162,22 +159,22 @@ impl GlobalState {
 
     #[tracing::instrument(level = "info", skip(self))]
     pub(crate) fn switch_packages(&mut self, cause: Cause) {
-        let Some(FetchPackagesResponse {
+        let Some(LoadPackagesResponse {
             packages_from_fs,
-            force_reload_deps,
-        }) = self.fetch_packages_from_fs_queue.last_op_result()
+            force_reload_package_deps,
+        }) = self.load_aptos_packages_queue.last_op_result()
         else {
             return;
         };
 
         let switching_from_empty_workspace = self.all_packages.is_empty();
-        tracing::info!(%switching_from_empty_workspace, %force_reload_deps);
+        tracing::info!(%switching_from_empty_workspace, %force_reload_package_deps);
 
-        if let Err(fetch_packages_error) = self.fetch_packages_error() {
-            tracing::info!(%fetch_packages_error);
+        if let Err(load_packages_error) = self.load_packages_error() {
+            tracing::info!(%load_packages_error);
             // already have a workspace, let's keep it instead of loading invalid state
             if !switching_from_empty_workspace {
-                if *force_reload_deps {
+                if *force_reload_package_deps {
                     self.recreate_package_graph(
                         format!("fetch packages error while handling {:?}", cause),
                         switching_from_empty_workspace,
@@ -204,7 +201,7 @@ impl GlobalState {
         //         .iter()
         //         .zip(self.all_packages.iter())
         //         .all(|(l, r)| l.eq(r));
-
+        //
         // if same_packages {
         //     if switching_from_empty_workspace {
         //         // Switching from empty to empty is a no-op
@@ -325,8 +322,19 @@ impl GlobalState {
             let packages = self.all_packages.as_slice();
             if initial_build {
                 // with initial build, vfs might not be ready, so we need to load files manually
-                let vfs = &mut self.vfs.write().0;
-                collect_initial(packages, vfs)
+                let dep_graph = {
+                    let vfs = &mut self.vfs.write().0;
+                    collect_initial(packages, vfs)
+                };
+                // apply Move.toml changes bypassing the packages refresh
+                if let Some((changes, _)) = self.fetch_pending_file_changes() {
+                    tracing::info!(
+                        ?changes,
+                        "initial_build=true: apply changes for Move.toml files from the sync vfs access"
+                    );
+                    self.analysis_host.apply_change(changes);
+                }
+                dep_graph
             } else {
                 let vfs = &self.vfs.read().0;
                 let mut load = |path: &AbsPath| {
@@ -351,18 +359,19 @@ impl GlobalState {
 
         let mut set_graph = FileChanges::new();
         set_graph.set_package_graph(package_graph);
-
         self.analysis_host.apply_change(set_graph);
+
+        self.package_graph_initialized = true;
 
         self.process_pending_file_changes();
         self.reload_flycheck();
     }
 
-    pub(super) fn fetch_packages_error(&self) -> Result<(), String> {
+    pub(super) fn load_packages_error(&self) -> Result<(), String> {
         let mut buf = String::new();
 
-        let Some(FetchPackagesResponse { packages_from_fs, .. }) =
-            self.fetch_packages_from_fs_queue.last_op_result()
+        let Some(LoadPackagesResponse { packages_from_fs, .. }) =
+            self.load_aptos_packages_queue.last_op_result()
         else {
             return Ok(());
         };
@@ -410,67 +419,12 @@ impl GlobalState {
     }
 }
 
-pub(crate) fn should_refresh_for_file_change(
-    changed_file_path: &AbsPath,
-    // change_kind: ChangeKind,
-    // additional_paths: &[&str],
-) -> bool {
-    // const IMPLICIT_TARGET_FILES: &[&str] = &["build.rs", "src/main.rs", "src/lib.rs"];
-    // const IMPLICIT_TARGET_DIRS: &[&str] = &["src/bin", "examples", "tests", "benches"];
-
+pub(crate) fn is_manifest_file(changed_file_path: &AbsPath) -> bool {
     let changed_file_name = match changed_file_path.file_name() {
         Some(it) => it,
         None => return false,
     };
-
-    if let "Move.toml" /*| "Cargo.lock"*/ = changed_file_name {
-        return true;
-    }
-
-    // if additional_paths.contains(&file_name) {
-    //     return true;
-    // }
-
-    // if change_kind == ChangeKind::Modify {
-    //     return false;
-    // }
-
-    // .cargo/config{.toml}
-    // if path.extension().unwrap_or_default() != "move" {
-    //     let is_cargo_config = matches!(file_name, "config.toml" | "config")
-    //         && path
-    //             .parent()
-    //             .map(|parent| parent.as_str().ends_with(".cargo"))
-    //             .unwrap_or(false);
-    //     return is_cargo_config;
-    // }
-
-    // if IMPLICIT_TARGET_FILES.iter().any(|it| changed_file_path.as_str().ends_with(it)) {
-    //     return true;
-    // }
-    // let changed_file_parent = match changed_file_path.parent() {
-    //     Some(it) => it,
-    //     None => return false,
-    // };
-    // if IMPLICIT_TARGET_DIRS
-    //     .iter()
-    //     .any(|it| changed_file_parent.as_str().ends_with(it))
-    // {
-    //     return true;
-    // }
-    // if changed_file_name == "main.rs" {
-    //     let grand_parent = match changed_file_parent.parent() {
-    //         Some(it) => it,
-    //         None => return false,
-    //     };
-    //     if IMPLICIT_TARGET_DIRS
-    //         .iter()
-    //         .any(|it| grand_parent.as_str().ends_with(it))
-    //     {
-    //         return true;
-    //     }
-    // }
-    false
+    changed_file_name == "Move.toml"
 }
 
 fn trace_dependencies(dep_graph: &PackageGraph, vfs: &Vfs) {

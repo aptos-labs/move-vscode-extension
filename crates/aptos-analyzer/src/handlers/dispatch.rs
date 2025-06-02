@@ -125,7 +125,7 @@ impl RequestDispatcher<'_> {
 
     /// Dispatches a non-latency-sensitive request onto the thread pool. When the VFS is marked not
     /// ready this will return a `default` constructed [`R::Result`].
-    pub(crate) fn on_with_vfs_default<R>(
+    pub(crate) fn on_with_fully_loaded<R>(
         &mut self,
         f: fn(GlobalStateSnapshot, R::Params) -> anyhow::Result<R::Result>,
         default: impl FnOnce() -> R::Result,
@@ -137,7 +137,7 @@ impl RequestDispatcher<'_> {
                 Result: Serialize,
             > + 'static,
     {
-        if !self.global_state.vfs_done {
+        if !self.global_state.vfs_done || !self.global_state.package_graph_initialized {
             if let Some(lsp_server::Request { id, .. }) = self.req.take_if(|it| it.method == R::METHOD) {
                 self.global_state
                     .respond(lsp_server::Response::new_ok(id, default()));

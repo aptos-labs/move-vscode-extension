@@ -1,6 +1,6 @@
 pub mod test_state;
 
-pub use test_state::{TestState, from_multiple_files_on_tmpfs};
+pub use test_state::{TestState, from_multiple_files_on_tmpfs, prepare_directories};
 
 use base_db::change::FileChanges;
 use base_db::package_root::{PackageKind, PackageRoot};

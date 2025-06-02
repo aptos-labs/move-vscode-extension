@@ -1,4 +1,5 @@
 pub mod fixtures;
+pub mod testdir;
 pub mod tracing;
 
 use line_index::{LineCol, LineIndex};
