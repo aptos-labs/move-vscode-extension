@@ -9,7 +9,6 @@ mod reload;
 mod task_pool;
 mod version;
 
-mod _tests;
 pub mod cli;
 mod command;
 pub mod diagnostics;
@@ -19,6 +18,9 @@ pub mod lsp;
 mod movefmt;
 pub mod toolchain;
 pub mod tracing;
+
+#[cfg(test)]
+mod _tests;
 
 pub use config::{Config, config_change::ConfigChange, validation::ConfigErrors};
 pub use lsp::capabilities::server_capabilities;
