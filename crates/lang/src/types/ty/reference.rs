@@ -1,3 +1,4 @@
+use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::inference::InferenceCtx;
 use crate::types::ty::Ty;
 use std::ops::Deref;
@@ -28,6 +29,16 @@ impl TyReference {
 
     pub fn is_mut(&self) -> bool {
         self.mutability.is_mut()
+    }
+}
+
+impl TypeFoldable<TyReference> for TyReference {
+    fn deep_fold_with(self, folder: impl TypeFolder) -> TyReference {
+        TyReference::new(folder.fold_ty(self.referenced()), self.mutability)
+    }
+
+    fn deep_visit_with(&self, visitor: impl TypeVisitor) -> bool {
+        visitor.visit_ty(&self.referenced())
     }
 }
 
