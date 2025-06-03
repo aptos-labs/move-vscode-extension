@@ -5,6 +5,9 @@ rust-version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+[package.metadata.cargo-machete]
+ignored = ["salsa"]
+
 [dependencies]
 enumset = "1.1.5"
 

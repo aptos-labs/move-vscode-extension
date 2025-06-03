@@ -11,9 +11,7 @@ line-index = { workspace = true }
 tracing = { workspace = true }
 itertools = { workspace = true }
 
-dashmap.workspace = true
 salsa.workspace = true
-salsa-macros.workspace = true
 
 stdx = { workspace = true }
 
@@ -26,4 +24,3 @@ ide-diagnostics = { path = "../ide-diagnostics" }
 
 [dev-dependencies]
 itertools = { workspace = true }
-expect-test = "1.5.1"
