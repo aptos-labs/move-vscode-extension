@@ -56,10 +56,11 @@ impl<'a> TyVarResolver<'a> {
 
 impl TypeFolder for TyVarResolver<'_> {
     fn fold_ty(&self, t: Ty) -> Ty {
-        match t {
-            Ty::Infer(ty_infer) => self.ctx.resolve_ty_infer(&ty_infer),
-            _ => t.deep_fold_with(self.to_owned()),
+        let mut res_ty = t.clone();
+        if let Ty::Infer(ty_infer) = t {
+            res_ty = self.ctx.resolve_ty_infer(&ty_infer);
         }
+        res_ty.deep_fold_with(self.to_owned())
     }
 }
 
@@ -171,11 +172,6 @@ impl Ty {
         let visitor = TyInferVisitor::new(visitor);
         self.visit_with(visitor)
     }
-
-    // pub fn has_ty_unknown(&self) -> bool {
-    //     let visitor = HasTyUnknownVisitor::default();
-    //     self.visit_with(visitor)
-    // }
 
     pub fn is_unknown(&self) -> bool {
         matches!(self, Ty::Unknown)

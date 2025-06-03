@@ -583,7 +583,6 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
         // resolve after applying all parameters
         let ret_ty = self.ctx.resolve_ty_vars_if_possible(callable_ty.ret_type());
-
         Some(ret_ty)
     }
 
