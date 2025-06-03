@@ -87,22 +87,45 @@ impl TestPackage {
     }
 }
 
-fn parse_files_from_source(files_source: &str) -> Vec<(String, String)> {
+#[derive(Debug, Default)]
+pub(crate) struct SourceFiles {
+    sources: Vec<(String, String)>,
+    tests: Vec<(String, String)>,
+}
+
+impl SourceFiles {
+    pub(crate) fn add_file(&mut self, fpath: String, contents: String) {
+        if fpath.starts_with("/sources/") {
+            self.sources
+                .push((fpath.trim_start_matches("/sources/").to_string(), contents));
+            return;
+        }
+        if fpath.starts_with("/tests/") {
+            self.tests
+                .push((fpath.trim_start_matches("/tests/").to_string(), contents));
+            return;
+        }
+        self.sources
+            .push((fpath.trim_start_matches("/").to_string(), contents));
+    }
+}
+
+fn parse_files_from_source(files_source: &str) -> SourceFiles {
     let files_source = stdx::trim_indent(files_source);
 
     let file_sep = Regex::new(r#"^\s*//- (\S+)\s*$"#).unwrap();
 
-    let mut files: Vec<(String, String)> = vec![];
+    let mut files = SourceFiles::default();
     let mut file_contents = vec![];
     let mut current_file_name: Option<String> = None;
     for line in files_source.lines() {
         let re = file_sep.captures(line);
-        if let Some(re) = re {
+        if let Some(groups) = re {
             if current_file_name.is_some() {
-                files.push((current_file_name.unwrap().clone(), file_contents.join("\n")));
+                files.add_file(current_file_name.unwrap().clone(), file_contents.join("\n"));
                 file_contents = vec![];
             }
-            current_file_name = re.get(1).map(|it| it.as_str().to_string());
+            current_file_name = groups.get(1).map(|it| it.as_str().to_string());
             continue;
         }
         if current_file_name.is_some() {
@@ -110,7 +133,7 @@ fn parse_files_from_source(files_source: &str) -> Vec<(String, String)> {
         }
     }
     if current_file_name.is_some() {
-        files.push((current_file_name.unwrap().clone(), file_contents.join("\n")));
+        files.add_file(current_file_name.unwrap().clone(), file_contents.join("\n"))
     }
 
     files

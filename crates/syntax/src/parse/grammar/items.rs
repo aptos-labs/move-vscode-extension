@@ -36,7 +36,6 @@ pub(crate) fn item_list(p: &mut Parser<'_>) {
 pub(super) fn item(p: &mut Parser) {
     let m = p.start();
     attributes::outer_attrs(p);
-
     let m = match opt_item(p, m) {
         Ok(()) => {
             if p.at(T![;]) {

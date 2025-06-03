@@ -1,4 +1,4 @@
-use crate::fixtures::parse_files_from_source;
+use crate::fixtures::{SourceFiles, parse_files_from_source};
 use crate::testdir;
 use ide::{Analysis, AnalysisHost};
 use paths::Utf8Path;
@@ -20,10 +20,16 @@ pub fn prepare_directories(ws_root: &Utf8Path, test_packages: Vec<TestPackageFil
 
         let sources_dir = package_root.join("sources");
         fs::create_dir(&sources_dir).unwrap();
+        let tests_dir = package_root.join("tests");
+        fs::create_dir(&tests_dir).unwrap();
 
-        let files = parse_files_from_source(&test_package.source_files);
-        for (file_name, file_text) in files {
-            let fpath = sources_dir.join(file_name.trim_start_matches("/"));
+        let SourceFiles { sources, tests } = parse_files_from_source(&test_package.source_files);
+        for (fpath, file_text) in sources {
+            let fpath = sources_dir.join(fpath);
+            fs::write(&fpath, file_text).unwrap();
+        }
+        for (fpath, file_text) in tests {
+            let fpath = tests_dir.join(fpath);
             fs::write(&fpath, file_text).unwrap();
         }
     }

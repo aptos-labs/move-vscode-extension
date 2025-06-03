@@ -292,3 +292,34 @@ spec std::from_bcs {
     )];
     check_resolve_tmpfs(test_packages);
 }
+
+#[test]
+fn test_friend_module_item_from_tests_directory_of_the_dependency() {
+    let test_packages = vec![named(
+        "Std",
+        // language=Move
+        r#"
+//- /sources/main.move
+module std::main {
+    #[test_only]
+    friend std::mem_tests;
+
+    friend fun test_call() {
+              //X
+    }
+}
+//- /tests/mem_tests.move
+#[test_only]
+module std::mem_tests {
+    use std::main;
+
+    #[test]
+    fun test_main() {
+        main::test_call();
+                   //^
+    }
+}
+        "#,
+    )];
+    check_resolve_tmpfs(test_packages);
+}
