@@ -2302,3 +2302,16 @@ fn test_can_provide_lambda_where_predicate_is_expected() {
         }
     "#]])
 }
+
+#[test]
+fn test_equality_should_allow_for_different_ref_mutability() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct S { val: u8 }
+            fun main() {
+                &mut 1 == &1;
+            }
+        }
+    "#]])
+}

@@ -1179,11 +1179,17 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         cmp_op: ast::CmpOp,
     ) -> Ty {
         let left_ty = self.infer_expr(&lhs, Expected::NoValue);
-        let left_ty = self.ctx.resolve_ty_vars_if_possible(left_ty);
+        let mut left_ty = self.ctx.resolve_ty_vars_if_possible(left_ty);
 
         if let Some(rhs) = rhs {
             let right_ty = self.infer_expr(&rhs, Expected::NoValue);
-            let right_ty = self.ctx.resolve_ty_vars_if_possible(right_ty);
+            let mut right_ty = self.ctx.resolve_ty_vars_if_possible(right_ty);
+
+            // equality should ignore references
+            if let (Ty::Reference(left_ref_ty), Ty::Reference(right_ref_ty)) = (&left_ty, &right_ty) {
+                left_ty = left_ref_ty.referenced();
+                right_ty = right_ref_ty.referenced();
+            }
 
             let combined = self.ctx.combine_types(left_ty.clone(), right_ty.clone());
             if combined.is_err() {
