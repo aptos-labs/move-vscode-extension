@@ -26,6 +26,7 @@ use vfs::FileId;
 
 use crate::nameres::path_resolution::remove_variant_ident_pats;
 pub use combine_types::TypeError;
+use syntax::SyntaxKind::{STRUCT, VARIANT};
 use syntax::ast::node_ext::struct_pat_field::PatFieldKind;
 
 #[derive(Debug, Default)]
@@ -145,16 +146,22 @@ impl<'db> InferenceCtx<'db> {
         let adt_item = ty_adt.adt_item(self.db)?;
         let (adt_item_file_id, adt_item_value) = adt_item.clone().unpack();
 
+        let resolved_to = self.resolved_paths.get(&path)?.clone().single_or_none()?;
+        // if it's resolved to anything other than struct or enum variant, then it could only be a wrapped lambda
+        if !matches!(resolved_to.kind(), STRUCT | VARIANT) {
+            let wrapped_lambda_type = adt_item.and_then(|it| it.struct_()?.wrapped_lambda_type())?;
+            let lambda_ty = self
+                .ty_lowering()
+                .lower_type(wrapped_lambda_type.map_into())
+                .into_ty_callable()?;
+            return Some(lambda_ty);
+        }
+
         let fields_owner: ast::AnyFieldsOwner = match adt_item_value {
             ast::StructOrEnum::Struct(s) => s.into(),
             ast::StructOrEnum::Enum(_) => {
                 // fetch variant
-                let variant = self
-                    .resolved_paths
-                    .get(&path)?
-                    .clone()
-                    .single_or_none()?
-                    .cast_into::<ast::Variant>(self.db)?;
+                let variant = resolved_to.cast_into::<ast::Variant>(self.db)?;
                 variant.value.into()
             }
         };
@@ -168,13 +175,6 @@ impl<'db> InferenceCtx<'db> {
                     .unwrap_or(Ty::Unknown)
             })
             .collect::<Vec<_>>();
-        if param_types.len() == 1 {
-            // check if it's a single lambda type
-            let maybe_lambda_ty = param_types.clone().pop().unwrap();
-            if let Ty::Callable(lambda_ty) = maybe_lambda_ty {
-                return Some(lambda_ty);
-            }
-        }
         let ret_type = Ty::new_ty_adt(adt_item.clone());
         let callable_ty =
             TyCallable::new(param_types, ret_type, CallKind::Fun).substitute(&ty_adt.substitution);

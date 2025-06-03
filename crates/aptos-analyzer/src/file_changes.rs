@@ -8,18 +8,18 @@ use paths::AbsPathBuf;
 impl GlobalState {
     #[tracing::instrument(level = "info", skip(self))]
     pub(crate) fn process_pending_file_changes(&mut self) -> bool {
-        let Some((mut changes, notable_changes)) = self.fetch_pending_file_changes() else {
+        let Some((mut changes, structure_changes)) = self.fetch_pending_file_changes() else {
             return false;
         };
-        let needs_to_refresh_package_roots = !notable_changes.is_empty();
-        tracing::debug!(?needs_to_refresh_package_roots);
+        let needs_to_refresh_packages = !structure_changes.is_empty();
+        tracing::debug!(?needs_to_refresh_packages);
 
-        if needs_to_refresh_package_roots {
+        if needs_to_refresh_packages {
             let n_to_show = 10;
-            if notable_changes.len() < n_to_show {
-                tracing::info!(n_files = notable_changes.len(), changed_paths = ?notable_changes, "refreshing package roots");
+            if structure_changes.len() < n_to_show {
+                tracing::info!(n_files = structure_changes.len(), changed_paths = ?structure_changes, "refreshing package roots");
             } else {
-                let changed_paths = notable_changes[0..n_to_show].to_vec();
+                let changed_paths = structure_changes[0..n_to_show].to_vec();
                 tracing::info!(
                     "refreshing package roots: changed_paths = {:?} ...",
                     changed_paths
@@ -34,10 +34,7 @@ impl GlobalState {
         let _p = tracing::info_span!("GlobalState::process_changes/apply_change").entered();
         self.analysis_host.apply_change(changes);
 
-        let has_manifests_changes = notable_changes.iter().any(|it| reload::is_manifest_file(it));
-        tracing::info!(?has_manifests_changes);
-
-        if has_manifests_changes {
+        if needs_to_refresh_packages {
             let _p = tracing::info_span!("GlobalState::process_changes/ws_structure_change").entered();
             self.load_aptos_packages_queue.request_op(
                 "manifest vfs file change".to_string(),

@@ -54,6 +54,11 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: InFile<SyntaxNode>
             let importable_entries = module_spec.flat_map(|it| it.importable_items()).to_entries();
             entries.extend(importable_entries);
         }
+        SCRIPT => {
+            let script = scope.syntax_cast::<ast::Script>().unwrap();
+            let consts = script.flat_map(|it| it.consts()).to_entries();
+            entries.extend(consts);
+        }
         ITEM_SPEC => {
             let item_spec = scope.syntax_cast::<ast::ItemSpec>().unwrap();
             if let Some(item) = item_spec.item(db) {
@@ -72,10 +77,6 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: InFile<SyntaxNode>
                     }
                 }
             }
-        }
-        SCRIPT => {
-            let script = scope.syntax_cast::<ast::Script>().unwrap();
-            entries.extend(script.value.consts().to_entries(file_id));
         }
         FUN | SPEC_FUN | SPEC_INLINE_FUN => {
             let fun = scope.syntax_cast::<ast::AnyFun>().unwrap();

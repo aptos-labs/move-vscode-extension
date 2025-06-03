@@ -340,7 +340,7 @@ pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
     attributes::outer_attrs(p);
 
     if p.at(T![let]) {
-        let_stmt(p, stmt_m);
+        let_stmt(p, stmt_m, is_spec);
         return;
     }
     if p.at(T![use]) {
@@ -379,13 +379,12 @@ pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
         return;
     }
 
-    // p.error(&format!("unexpected token {:?}", p.current()));
     p.error_and_bump_any(&format!("unexpected token {:?}", p.current()));
 }
 
-fn let_stmt(p: &mut Parser, m: Marker) {
+fn let_stmt(p: &mut Parser, m: Marker, is_spec: bool) {
     p.bump(T![let]);
-    if p.at_contextual_kw_ident("post") {
+    if is_spec && p.at_contextual_kw_ident("post") {
         p.bump_remap(T![post]);
     }
     pattern(p);

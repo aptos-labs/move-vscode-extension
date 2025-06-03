@@ -1,6 +1,7 @@
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::inference::InferenceCtx;
+use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::reference::TyReference;
@@ -24,7 +25,7 @@ impl InferenceCtx<'_> {
         if actual == expected {
             return true;
         }
-        let combined = self.combine_types(actual.clone(), expected.clone());
+        let combined = self.combine_types(expected.clone(), actual.clone());
         match combined {
             Ok(()) => true,
             Err(error_tys) => {
@@ -39,56 +40,69 @@ impl InferenceCtx<'_> {
         }
     }
 
-    pub fn combine_types(&mut self, left_ty: Ty, right_ty: Ty) -> CombineResult {
-        let left_ty = left_ty.refine_for_specs(self.msl);
-        let right_ty = right_ty.refine_for_specs(self.msl);
+    pub fn combine_types(&mut self, expected_ty: Ty, actual_ty: Ty) -> CombineResult {
+        let expected_ty = expected_ty.refine_for_specs(self.msl);
+        let actual_ty = actual_ty.refine_for_specs(self.msl);
 
-        let left_ty = self.resolve_ty_infer_shallow(left_ty);
-        let right_ty = self.resolve_ty_infer_shallow(right_ty);
+        let expected_ty = self.resolve_ty_infer_shallow(expected_ty);
+        let actual_ty = self.resolve_ty_infer_shallow(actual_ty);
 
-        match (left_ty, right_ty) {
+        match (expected_ty, actual_ty) {
             (Ty::Infer(TyInfer::Var(ty_var)), right_ty) => self.unify_ty_var(&ty_var, right_ty),
             (left_ty, Ty::Infer(TyInfer::Var(ty_var))) => self.unify_ty_var(&ty_var, left_ty),
 
             (Ty::Infer(TyInfer::IntVar(int_var)), right_ty) => self.unify_int_var(int_var, right_ty),
             (left_ty, Ty::Infer(TyInfer::IntVar(int_var))) => self.unify_int_var(int_var, left_ty),
 
-            (left_ty, right_ty) => self.combine_no_vars(left_ty, right_ty),
+            (expected_ty, actual_ty) => self.combine_no_vars(expected_ty, actual_ty),
         }
     }
 
-    fn combine_no_vars(&mut self, left_ty: Ty, right_ty: Ty) -> CombineResult {
+    fn combine_no_vars(&mut self, expected_ty: Ty, actual_ty: Ty) -> CombineResult {
         // assign Ty::Unknown to all inner `TyVar`s if other type is unknown
-        if matches!(left_ty, Ty::Unknown) || matches!(right_ty, Ty::Unknown) {
-            self.unify_ty_vars_with_unknown(vec![left_ty, right_ty]);
+        if matches!(expected_ty, Ty::Unknown) || matches!(actual_ty, Ty::Unknown) {
+            self.unify_ty_vars_with_unknown(vec![expected_ty, actual_ty]);
             return Ok(());
         }
         // if never type is involved, do not perform comparison
-        if matches!(left_ty, Ty::Never) || matches!(right_ty, Ty::Never) {
+        if matches!(expected_ty, Ty::Never) || matches!(actual_ty, Ty::Never) {
             return Ok(());
         }
         // if type are exactly equal, then they're compatible
-        if left_ty == right_ty {
+        if expected_ty == actual_ty {
             return Ok(());
         }
 
-        match (&left_ty, &right_ty) {
-            (Ty::Integer(kind1), Ty::Integer(kind2)) => {
-                if kind1.is_default() || kind2.is_default() {
+        match (&expected_ty, &actual_ty) {
+            (Ty::Integer(expected_kind), Ty::Integer(actual_kind)) => {
+                if expected_kind.is_default() || actual_kind.is_default() {
                     return Ok(());
                 }
-                Err(MismatchErrorTypes::new(left_ty, right_ty))
+                Err(MismatchErrorTypes::new(expected_ty, actual_ty))
             }
-            (Ty::Seq(ty_seq1), Ty::Seq(ty_seq2)) => self.combine_types(ty_seq1.item(), ty_seq2.item()),
-            (Ty::Reference(from_ref), Ty::Reference(to_ref)) => self.combine_ty_refs(from_ref, to_ref),
-            (Ty::Callable(ty_call1), Ty::Callable(ty_call2)) => {
-                self.combine_ty_callables(ty_call1, ty_call2)
+            (Ty::Seq(expected_seq_ty), Ty::Seq(actual_seq_ty)) => {
+                self.combine_types(expected_seq_ty.item(), actual_seq_ty.item())
+            }
+            (Ty::Reference(expected_ref), Ty::Reference(actual_ref)) => {
+                self.combine_ty_refs(expected_ref, actual_ref)
+            }
+            // new type struct
+            (Ty::Adt(expected_ty_adt), Ty::Callable(actual_callable_ty)) => {
+                if let Some(combine_result) =
+                    self.combine_new_type_struct_with_lambda(expected_ty_adt, actual_callable_ty)
+                {
+                    return combine_result;
+                }
+                Err(MismatchErrorTypes::new(expected_ty, actual_ty))
+            }
+            (Ty::Callable(expected_call_ty), Ty::Callable(actual_call_ty)) => {
+                self.combine_ty_callables(expected_call_ty, actual_call_ty)
             }
 
             (Ty::Adt(ty_adt1), Ty::Adt(ty_adt2)) => self.combine_ty_adts(ty_adt1, ty_adt2),
             (Ty::Tuple(ty_tuple1), Ty::Tuple(ty_tuple2)) => self.combine_ty_tuples(ty_tuple1, ty_tuple2),
 
-            _ => Err(MismatchErrorTypes::new(left_ty, right_ty)),
+            _ => Err(MismatchErrorTypes::new(expected_ty, actual_ty)),
         }
     }
 
@@ -146,25 +160,55 @@ impl InferenceCtx<'_> {
         Ok(())
     }
 
-    fn combine_ty_refs(&mut self, from_ref: &TyReference, to_ref: &TyReference) -> CombineResult {
-        let is_mut_compat = from_ref.is_mut() || !to_ref.is_mut();
+    fn combine_ty_refs(
+        &mut self,
+        expected_ref: &TyReference,
+        actual_ref: &TyReference,
+    ) -> CombineResult {
+        let is_mut_compat = !expected_ref.is_mut() || actual_ref.is_mut();
         if !is_mut_compat {
             // combine inner types ignoring any errors, to have better type errors and later inference,
             // incompat error will still be reported
-            let _ = self.combine_types(from_ref.referenced(), to_ref.referenced());
+            let _ = self.combine_types(expected_ref.referenced(), actual_ref.referenced());
             return Err(MismatchErrorTypes::new(
-                from_ref.to_owned().into(),
-                to_ref.to_owned().into(),
+                expected_ref.to_owned().into(),
+                actual_ref.to_owned().into(),
             ));
         }
-        self.combine_types(from_ref.referenced(), to_ref.referenced())
+        self.combine_types(expected_ref.referenced(), actual_ref.referenced())
     }
 
-    fn combine_ty_callables(&mut self, ty1: &TyCallable, ty2: &TyCallable) -> CombineResult {
+    fn combine_ty_callables(
+        &mut self,
+        expected_call_ty: &TyCallable,
+        actual_call_ty: &TyCallable,
+    ) -> CombineResult {
         // todo: check param types size
-        self.combine_ty_pairs(ty1.clone().param_types, ty2.clone().param_types)?;
+        self.combine_ty_pairs(
+            expected_call_ty.clone().param_types,
+            actual_call_ty.clone().param_types,
+        )?;
         // todo: resolve variables?
-        self.combine_types(ty1.ret_type().unwrap_all_refs(), ty2.ret_type().unwrap_all_refs())
+        self.combine_types(
+            expected_call_ty.ret_type().unwrap_all_refs(),
+            actual_call_ty.ret_type().unwrap_all_refs(),
+        )
+    }
+
+    fn combine_new_type_struct_with_lambda(
+        &mut self,
+        expected_ty_adt: &TyAdt,
+        actual_callable_ty: &TyCallable,
+    ) -> Option<CombineResult> {
+        let struct_inner_lambda_type = expected_ty_adt
+            .adt_item(self.db)?
+            .and_then(|item| item.struct_()?.wrapped_lambda_type())?;
+        let expected_lambda_ty = self
+            .ty_lowering()
+            .lower_type(struct_inner_lambda_type.map_into())
+            .into_ty_callable()?
+            .substitute(&expected_ty_adt.substitution);
+        Some(self.combine_ty_callables(&expected_lambda_ty, actual_callable_ty))
     }
 
     fn combine_ty_adts(&mut self, ty1: &TyAdt, ty2: &TyAdt) -> CombineResult {
@@ -402,7 +446,19 @@ impl TypeFoldable<TypeError> for TypeError {
         }
     }
 
-    fn deep_visit_with(&self, _visitor: impl TypeVisitor) -> bool {
-        true
+    fn deep_visit_with(&self, visitor: impl TypeVisitor) -> bool {
+        match self {
+            TypeError::TypeMismatch { expected_ty, actual_ty, .. } => {
+                visitor.visit_ty(expected_ty) || visitor.visit_ty(actual_ty)
+            }
+            TypeError::UnsupportedOp { ty, .. } => visitor.visit_ty(ty),
+            TypeError::WrongArgumentsToBinExpr { left_ty, right_ty, .. } => {
+                visitor.visit_ty(left_ty) || visitor.visit_ty(right_ty)
+            }
+            TypeError::InvalidUnpacking { assigned_ty, .. } => visitor.visit_ty(assigned_ty),
+            TypeError::CircularType { .. } => false,
+            TypeError::WrongArgumentToBorrowExpr { actual_ty, .. } => visitor.visit_ty(actual_ty),
+            TypeError::InvalidDereference { actual_ty, .. } => visitor.visit_ty(actual_ty),
+        }
     }
 }

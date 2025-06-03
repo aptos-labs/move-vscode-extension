@@ -112,6 +112,17 @@ pub fn is_visible_in_context(
         return true;
     }
 
+    // local items in script
+    if let Some(context_script) = context.syntax().containing_script() {
+        if item
+            .syntax()
+            .containing_script()
+            .is_some_and(|it| context_script == it)
+        {
+            return true;
+        }
+    }
+
     // item is type, check whether it's allowed in the context
     if TYPES_N_ENUMS.contains(item_ns) {
         let opt_path_parent = context_opt_path

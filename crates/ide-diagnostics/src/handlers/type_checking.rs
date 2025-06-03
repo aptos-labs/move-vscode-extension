@@ -1,6 +1,7 @@
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use ide_db::Severity;
+use lang::types::fold::TypeFoldable;
 use lang::types::inference::TypeError;
 use lang::types::ty::Ty;
 use syntax::ast::NamedElement;
@@ -66,6 +67,9 @@ pub(crate) fn type_check(
     let file_id = inference_ctx_owner.file_id;
 
     let mut remaining_errors = inference.type_errors.clone();
+    // drop all type errors with ty unknown inside to prevent false positives
+    remaining_errors.retain(|type_error| !type_error.has_ty_unknown());
+
     remaining_errors.sort_by_key(|err| err.loc().text_range().start());
     // need to reverse() to pop() correctly
     remaining_errors.reverse();

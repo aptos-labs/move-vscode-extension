@@ -17,6 +17,10 @@ pub trait TypeFoldable<T> {
 
     fn deep_fold_with(self, folder: impl TypeFolder) -> T;
     fn deep_visit_with(&self, visitor: impl TypeVisitor) -> bool;
+
+    fn has_ty_unknown(&self) -> bool {
+        self.visit_with(HasTyUnknownVisitor::default())
+    }
 }
 
 pub trait TypeFolder: Clone {
@@ -168,10 +172,10 @@ impl Ty {
         self.visit_with(visitor)
     }
 
-    pub fn has_ty_unknown(&self) -> bool {
-        let visitor = HasTyUnknownVisitor::default();
-        self.visit_with(visitor)
-    }
+    // pub fn has_ty_unknown(&self) -> bool {
+    //     let visitor = HasTyUnknownVisitor::default();
+    //     self.visit_with(visitor)
+    // }
 
     pub fn is_unknown(&self) -> bool {
         matches!(self, Ty::Unknown)

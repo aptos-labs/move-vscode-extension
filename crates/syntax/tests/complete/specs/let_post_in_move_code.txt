@@ -1,0 +1,41 @@
+SOURCE_FILE@0..83
+  MODULE@0..82
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..33
+      IDENT@12..33 "let_post_in_move_code"
+    WHITESPACE@33..34 " "
+    L_CURLY@34..35 "{"
+    WHITESPACE@35..40 "\n    "
+    FUN@40..80
+      FUN_KW@40..43 "fun"
+      WHITESPACE@43..44 " "
+      NAME@44..48
+        IDENT@44..48 "main"
+      PARAM_LIST@48..50
+        L_PAREN@48..49 "("
+        R_PAREN@49..50 ")"
+      WHITESPACE@50..51 " "
+      BLOCK_EXPR@51..80
+        L_CURLY@51..52 "{"
+        WHITESPACE@52..61 "\n        "
+        LET_STMT@61..74
+          LET_KW@61..64 "let"
+          WHITESPACE@64..65 " "
+          IDENT_PAT@65..69
+            NAME@65..69
+              IDENT@65..69 "post"
+          WHITESPACE@69..70 " "
+          EQ@70..71 "="
+          WHITESPACE@71..72 " "
+          LITERAL@72..73
+            INT_NUMBER@72..73 "1"
+          SEMICOLON@73..74 ";"
+        WHITESPACE@74..79 "\n    "
+        R_CURLY@79..80 "}"
+    WHITESPACE@80..81 "\n"
+    R_CURLY@81..82 "}"
+  WHITESPACE@82..83 "\n"

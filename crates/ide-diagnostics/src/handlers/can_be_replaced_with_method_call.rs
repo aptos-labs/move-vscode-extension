@@ -4,6 +4,7 @@ use ide_db::Severity;
 use ide_db::assist_context::Assists;
 use ide_db::assists::AssistId;
 use ide_db::label::Label;
+use lang::types::fold::TypeFoldable;
 use lang::types::has_type_params_ext::GenericItemExt;
 use lang::types::inference::TyVarIndex;
 use lang::types::substitution::ApplySubstitution;
