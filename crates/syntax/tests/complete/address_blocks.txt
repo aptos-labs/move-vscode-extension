@@ -1,4 +1,4 @@
-SOURCE_FILE@0..57
+SOURCE_FILE@0..87
   ADDRESS_DEF@0..28
     ADDRESS_KW@0..7 "address"
     WHITESPACE@7..8 " "
@@ -19,7 +19,7 @@ SOURCE_FILE@0..57
     WHITESPACE@26..27 "\n"
     R_CURLY@27..28 "}"
   WHITESPACE@28..29 "\n"
-  ADDRESS_DEF@29..57
+  ADDRESS_DEF@29..87
     ADDRESS_KW@29..36 "address"
     WHITESPACE@36..37 " "
     VALUE_ADDRESS@37..40
@@ -37,4 +37,24 @@ SOURCE_FILE@0..57
       WHITESPACE@53..54 "\n"
       R_CURLY@54..55 "}"
     WHITESPACE@55..56 "\n"
-    R_CURLY@56..57 "}"
+    MODULE@56..85
+      ATTR@56..68
+        POUND@56..57 "#"
+        L_BRACK@57..58 "["
+        ATTR_ITEM@58..67
+          PATH@58..67
+            PATH_SEGMENT@58..67
+              NAME_REF@58..67
+                IDENT@58..67 "test_only"
+        R_BRACK@67..68 "]"
+      WHITESPACE@68..69 "\n"
+      MODULE_KW@69..75 "module"
+      WHITESPACE@75..76 " "
+      NAME@76..81
+        IDENT@76..81 "tests"
+      WHITESPACE@81..82 " "
+      L_CURLY@82..83 "{"
+      WHITESPACE@83..84 "\n"
+      R_CURLY@84..85 "}"
+    WHITESPACE@85..86 "\n"
+    R_CURLY@86..87 "}"

@@ -7,9 +7,9 @@ use base_db::SourceDatabase;
 use std::fmt;
 use std::fmt::Formatter;
 use stdx::itertools::Itertools;
-use syntax::ast;
 use syntax::ast::ReferenceElement;
 use syntax::files::{InFile, InFileVecExt};
+use syntax::{SyntaxKind, ast};
 use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]
@@ -25,6 +25,10 @@ impl ScopeEntry {
         let mut entry = self.clone();
         entry.ns = ns;
         entry
+    }
+
+    pub fn kind(&self) -> SyntaxKind {
+        self.node_loc.kind()
     }
 
     pub fn cast_into<T: ast::AstNode>(self, db: &dyn SourceDatabase) -> Option<InFile<T>> {

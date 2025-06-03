@@ -290,7 +290,6 @@ impl Server {
     pub(crate) fn wait_until_workspace_is_loaded(self) -> Server {
         self.wait_for_message_cond(1, &|msg: &Message| match msg {
             Message::Notification(n) if n.method == "experimental/serverStatus" => {
-                dbg!(&n);
                 let status = n
                     .clone()
                     .extract::<lsp::ext::ServerStatusParams>("experimental/serverStatus")
@@ -303,10 +302,7 @@ impl Server {
                 }
                 status.quiescent
             }
-            _ => {
-                dbg!(msg);
-                false
-            }
+            _ => false,
         })
         .unwrap_or_else(|_timeout| panic!("timeout while waiting for ws to load"));
         self

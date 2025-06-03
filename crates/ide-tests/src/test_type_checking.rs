@@ -2200,3 +2200,105 @@ fn test_infer_variables_before_integer_type_checking() {
         }
     "#]]);
 }
+
+#[test]
+fn test_enum_variant_with_function_value_as_field() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            enum State {
+                WaitForNumber(|u64|u64)
+            }
+            fun call(x: u64): u64 { x }
+            fun main() {
+                State::WaitForNumber(call);
+                State::WaitForNumber(|y| call(y));
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_invalid_dereference_for_lambda_with_unknown_type() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                |_k, v| *v += 1;
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_instantiate_tuple_struct_with_lambda() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct Predicate<T>(|&u64|bool) has copy;
+            fun main() {
+                let predicate = Predicate(|x| *x > 0);
+            }
+        }
+    "#]])
+}
+
+#[test]
+fn test_instantiate_tuple_struct_with_lambda_with_generic() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct Predicate<T>(|&T|bool) has copy;
+            fun call(pred: Predicate<u64>) {
+            }
+            fun main() {
+                let predicate = Predicate(|x| *x > 0);
+                call(predicate);
+            }
+        }
+    "#]])
+}
+
+#[test]
+fn test_instantiate_tuple_struct_with_lambda_with_explicit_generic() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct Predicate<T>(|&T|bool) has copy;
+            fun main() {
+                let predicate = Predicate::<u64>(|x| *x > 0);
+            }
+        }
+    "#]])
+}
+
+#[test]
+fn test_cannot_provide_predicate_where_lambda_is_expected() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct Predicate<T>(|&T|bool) has copy;
+            fun call1(predicate: |&u64|bool) {}
+            fun main() {
+                let predicate = Predicate(|x| *x > 0);
+                                            //^^ err: Invalid argument to '>': expected integer type, but found 'T'
+                call1(predicate);
+                    //^^^^^^^^^ err: Incompatible type '0x1::main::Predicate<T>', expected '|&u64| -> bool'
+            }
+        }
+    "#]])
+}
+
+#[test]
+fn test_can_provide_lambda_where_predicate_is_expected() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct Predicate<T>(|&T|bool) has copy;
+            fun call2(predicate: Predicate<u64>) {}
+            fun main() {
+                call2(|x| *x > 0);
+            }
+        }
+    "#]])
+}

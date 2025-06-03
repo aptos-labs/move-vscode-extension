@@ -5,4 +5,7 @@ module m {
 address 0x2 {
 module m {
 }
+#[test_only]
+module tests {
+}
 }

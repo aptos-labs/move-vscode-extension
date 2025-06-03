@@ -443,9 +443,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 ty_lowering.lower_type_owner(schema_field.map_into())
             }
             STRUCT | ENUM => {
-                // base for index expr
                 let path = path_expr.path().in_file(file_id);
-                let index_base_ty = ty_lowering.lower_path(path.map_into(), named_element.map_into());
+                let index_base_ty = ty_lowering.lower_path(path.map_into(), named_element);
                 Some(index_base_ty)
             }
             VARIANT => {
@@ -1013,6 +1012,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let inner_expr = deref_expr.expr()?;
 
         let inner_ty = self.infer_expr(&inner_expr, Expected::NoValue);
+        let inner_ty = self.ctx.resolve_ty_vars_if_possible(inner_ty);
         let inner_ty = match inner_ty {
             Ty::Reference(_) => inner_ty,
             _ => {

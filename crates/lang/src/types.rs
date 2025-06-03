@@ -7,6 +7,6 @@ pub mod ty;
 pub(crate) mod render;
 
 mod expectation;
-mod fold;
+pub mod fold;
 mod patterns;
 mod unification;

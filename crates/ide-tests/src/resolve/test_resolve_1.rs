@@ -363,3 +363,20 @@ module std::m {
     "#,
     )
 }
+
+#[test]
+fn test_resolve_const_in_script() {
+    check_resolve(
+        // language=Move
+        r#"
+script {
+    const MY_CONST: u64 = 1;
+          //X
+    fun main() {
+        MY_CONST;
+         //^
+    }
+}
+    "#,
+    )
+}

@@ -25,9 +25,42 @@ fn test_function_value_named_wrapper() {
 module 0x1::main {
     struct Predicate<T>(|&T|bool) has copy;
     fun main() {
-        let a = Predicate(&22);
-        a;
+        let a: Predicate<u64> = |x| *x > 0;
+        (a(&22));
       //^ bool
+    }
+}
+"#,
+    )
+}
+
+// language=Move
+#[test]
+fn test_function_value_named_wrapper_infer_lambda_type_let_stmt() {
+    check_expr_type(
+        r#"
+module 0x1::main {
+    struct Predicate<T>(|&T|bool) has copy;
+    fun main() {
+        let a: Predicate<u64> = |x| *x > 0;
+                                   //^ &u64
+    }
+}
+"#,
+    )
+}
+
+// language=Move
+#[test]
+fn test_function_value_named_wrapper_infer_lambda_type_call_expr_type() {
+    check_expr_type(
+        r#"
+module 0x1::main {
+    struct Predicate<T>(|&T|bool) has copy;
+    fun call(predicate: Predicate<u64>) {}
+    fun main() {
+        call(|x| *x > 0);
+                //^ &u64
     }
 }
 "#,

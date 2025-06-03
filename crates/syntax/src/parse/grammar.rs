@@ -41,6 +41,7 @@ mod type_params;
 mod types;
 pub(crate) mod utils;
 
+use crate::parse::grammar::attributes::outer_attrs;
 use crate::parse::grammar::items::{at_block_start, at_item_start};
 use crate::parse::grammar::paths::Mode;
 use crate::parse::parser::Marker;
@@ -54,7 +55,7 @@ pub mod entry_points {
         let m = p.start();
         while !p.at(EOF) {
             let m = p.start();
-            attributes::outer_attrs(p);
+            outer_attrs(p);
             match p.current() {
                 T![module] => module(p, m),
                 T![spec] => module_spec(p, m),
@@ -89,10 +90,12 @@ pub(crate) fn address_def(p: &mut Parser<'_>, m: Marker) {
     if p.at(T!['{']) {
         p.bump(T!['{']);
         while !p.at(EOF) && !p.at(T!['}']) {
+            let m = p.start();
+            outer_attrs(p);
             if p.at(T![module]) {
-                let m = p.start();
                 module(p, m);
             } else {
+                m.abandon(p);
                 p.error_and_bump_until_ts("expected module", ts!(T![module], T!['}']));
             }
         }
