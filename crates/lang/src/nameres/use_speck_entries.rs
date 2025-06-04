@@ -1,10 +1,9 @@
-use crate::hir_db;
 use crate::item_scope::NamedItemScope;
 use crate::loc::SyntaxLocFileExt;
-use crate::nameres::ResolveReference;
 use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::has_item_list::HasUseStmtsInFileExt;
+use crate::{hir_db, nameres};
 use base_db::SourceDatabase;
 use syntax::ast;
 use syntax::ast::NamedElement;
@@ -29,7 +28,7 @@ pub fn use_speck_entries(
 
 fn resolve_use_item(db: &dyn SourceDatabase, use_item: UseItem, file_id: FileId) -> Option<ScopeEntry> {
     let path = use_item.use_speck.path()?.in_file(file_id);
-    let Some(scope_entry) = path.map_ref(|it| it.reference()).resolve_no_inf(db) else {
+    let Some(scope_entry) = nameres::resolve_no_inf(db, path.clone()) else {
         tracing::debug!(path = &path.syntax_text(), "cannot resolve use speck");
         return None;
     };

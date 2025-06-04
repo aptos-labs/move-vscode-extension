@@ -1,16 +1,15 @@
-use crate::hir_db;
 use crate::item_scope::NamedItemScope;
 use crate::loc::{SyntaxLocFileExt, SyntaxLocNodeExt};
-use crate::nameres::ResolveReference;
 use crate::nameres::namespaces::{Ns, TYPES_N_ENUMS};
 use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::ModuleLangExt;
+use crate::{hir_db, nameres};
 use base_db::SourceDatabase;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::visibility::{Vis, VisLevel};
 use syntax::ast::{HasAttrs, HasVisibility};
-use syntax::files::{InFile, InFileExt};
+use syntax::files::{InFile, InFileExt, OptionInFileExt};
 use syntax::{AstNode, ast};
 
 pub fn is_visible_in_context(
@@ -145,10 +144,9 @@ pub fn is_visible_in_context(
                 if let (Some(item_module), Some(context_module)) = (item_module, context_module) {
                     let friend_decls = item_module.friend_decls();
                     for friend_decl in friend_decls {
-                        let Some(friend_module) = friend_decl
-                            .path()
-                            .and_then(|path| path.reference().in_file(item_file_id).resolve_no_inf(db))
-                            .and_then(|friend_entry| friend_entry.node_loc.to_ast::<ast::Module>(db))
+                        let friend_path = friend_decl.path().opt_in_file(item_file_id);
+                        let Some(friend_module) = friend_path
+                            .and_then(|path| nameres::resolve_no_inf_cast::<ast::Module>(db, path))
                         else {
                             continue;
                         };

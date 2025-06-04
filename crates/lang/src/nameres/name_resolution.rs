@@ -1,6 +1,4 @@
-use crate::hir_db;
 use crate::hir_db::get_modules_in_file;
-use crate::nameres::ResolveReference;
 use crate::nameres::address::Address;
 use crate::nameres::namespaces::{Ns, NsSet};
 use crate::nameres::node_ext::ModuleResolutionExt;
@@ -8,6 +6,7 @@ use crate::nameres::path_resolution::ResolutionContext;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use crate::nameres::scope_entries_owner::get_entries_in_scope;
 use crate::node_ext::item::ModuleItemExt;
+use crate::{hir_db, nameres};
 use base_db::SourceDatabase;
 use base_db::package_root::PackageId;
 use std::collections::HashMap;
@@ -180,7 +179,7 @@ pub fn get_qualified_path_entries(
     qualifier: ast::Path,
 ) -> Vec<ScopeEntry> {
     let qualifier = ctx.wrap_in_file(qualifier);
-    let qualifier_item = qualifier.map_ref(|it| it.reference()).resolve_no_inf(db);
+    let qualifier_item = nameres::resolve_no_inf(db, qualifier.clone());
     if qualifier_item.is_none() {
         if let Some(qualifier_name) = qualifier.value.reference_name() {
             let _p = tracing::debug_span!(

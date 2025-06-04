@@ -1,4 +1,4 @@
-use crate::nameres::ResolveReference;
+use crate::nameres;
 use base_db::SourceDatabase;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
@@ -10,11 +10,9 @@ pub trait ItemSpecExt {
 
 impl ItemSpecExt for InFile<ast::ItemSpec> {
     fn item(&self, db: &dyn SourceDatabase) -> Option<InFile<ast::Item>> {
-        let item_spec_ref = self
-            .and_then_ref(|it| it.item_spec_ref())?
-            .map(|it| it.reference());
-        let resolved = item_spec_ref.resolve(db)?;
-        resolved.cast_into::<ast::Item>(db)
+        let item_spec_ref = self.and_then_ref(|it| it.item_spec_ref())?;
+        let entry = nameres::resolve(db, item_spec_ref)?;
+        entry.cast_into::<ast::Item>(db)
     }
 }
 

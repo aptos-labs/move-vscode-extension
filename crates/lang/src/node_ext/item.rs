@@ -1,4 +1,4 @@
-use crate::nameres::ResolveReference;
+use crate::nameres;
 use base_db::SourceDatabase;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
@@ -10,12 +10,8 @@ pub trait ModuleItemExt {
 
 impl ModuleItemExt for InFile<ast::ModuleSpec> {
     fn module(&self, db: &dyn SourceDatabase) -> Option<InFile<ast::Module>> {
-        let module_path = self.value.path()?;
-        module_path
-            .reference()
-            .in_file(self.file_id)
-            .resolve_no_inf(db)
-            .and_then(|it| it.cast_into::<ast::Module>(db))
+        let module_path = self.and_then_ref(|it| it.path())?;
+        nameres::resolve_no_inf_cast::<ast::Module>(db, module_path)
     }
 }
 

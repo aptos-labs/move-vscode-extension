@@ -1,5 +1,5 @@
 use crate::loc::SyntaxLocFileExt;
-use crate::nameres::ResolveReference;
+use crate::nameres;
 use crate::nameres::name_resolution::{
     get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
@@ -32,11 +32,8 @@ fn refine_path_expected_type(
         match kind {
             QualifiedKind::ModuleItemOrEnumVariant | QualifiedKind::FQModuleItem => {
                 let _p = tracing::debug_span!("refine expected_type").entered();
-                let enum_item = qualifier
-                    .reference()
-                    .in_file(file_id)
-                    .resolve_no_inf(db)
-                    .and_then(|it| it.cast_into::<ast::Enum>(db));
+                let enum_item =
+                    nameres::resolve_no_inf_cast::<ast::Enum>(db, qualifier.in_file(file_id));
                 if let Some(enum_item) = enum_item {
                     expected_type = Some(Ty::new_ty_adt(enum_item.map_into()));
                     tracing::debug!("refined type {:?}", expected_type);

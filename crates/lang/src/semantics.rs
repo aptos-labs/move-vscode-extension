@@ -2,7 +2,7 @@ mod source_to_def;
 
 use crate::hir_db::inference_loc;
 use crate::loc::{SyntaxLocFileExt, SyntaxLocInput};
-use crate::nameres::ResolveReference;
+use crate::nameres;
 use crate::nameres::fq_named_element::{ItemFQName, ItemFQNameOwner};
 use crate::nameres::scope::{ScopeEntry, VecExt};
 use crate::node_ext::item::ModuleItemExt;
@@ -87,14 +87,14 @@ impl<'db> SemanticsImpl<'db> {
     }
 
     pub fn resolve_in_file(&self, reference: InFile<ast::ReferenceElement>) -> Vec<ScopeEntry> {
-        reference.resolve_multi(self.db).unwrap_or_default()
+        nameres::resolve_multi(self.db, reference).unwrap_or_default()
     }
 
     pub fn resolve_to_element<N: ast::NamedElement>(
         &self,
         reference: InFile<ast::ReferenceElement>,
     ) -> Option<InFile<N>> {
-        let scope_entry = reference.resolve_multi(self.db)?.single_or_none();
+        let scope_entry = nameres::resolve_multi(self.db, reference)?.single_or_none();
         let element = scope_entry?.cast_into::<N>(self.db)?;
         // cache file_id
         self.parse(element.file_id);
