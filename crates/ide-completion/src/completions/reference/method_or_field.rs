@@ -3,7 +3,6 @@ use crate::completions::reference::paths::PathCompletionCtx;
 use crate::context::CompletionContext;
 use crate::render::function::{FunctionKind, render_function};
 use crate::render::render_named_item;
-use lang::hir_db::NodeInferenceExt;
 use lang::nameres::path_resolution::get_method_resolve_variants;
 use lang::types::has_type_params_ext::GenericItemExt;
 use lang::types::inference::{InferenceCtx, TyVarIndex};
@@ -21,7 +20,8 @@ pub(crate) fn add_method_or_field_completions(
     ctx: &CompletionContext<'_>,
     receiver_expr: InFile<ast::Expr>,
 ) -> Option<()> {
-    let inference = receiver_expr.inference(ctx.db, false)?;
+    let inference = ctx.sema.inference(&receiver_expr, ctx.msl)?;
+
     let (_, receiver_expr) = receiver_expr.unpack();
 
     let receiver_ty = inference.get_expr_type(&receiver_expr)?;

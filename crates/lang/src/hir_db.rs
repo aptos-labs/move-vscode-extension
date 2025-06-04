@@ -68,6 +68,15 @@ pub(crate) fn inference(
     inference_tracked(db, SyntaxLocInput::new(db, inference_owner.loc()), msl)
 }
 
+#[tracing::instrument(level = "debug", skip_all)]
+pub(crate) fn inference_loc(
+    db: &dyn SourceDatabase,
+    owner_loc: SyntaxLocInput,
+    msl: bool,
+) -> Arc<InferenceResult> {
+    inference_tracked(db, owner_loc, msl)
+}
+
 #[tracing::instrument(level = "debug", skip(db))]
 #[salsa_macros::tracked]
 fn inference_tracked<'db>(
@@ -95,18 +104,6 @@ fn inference_tracked<'db>(
     type_walker.walk(ctx_owner);
 
     Arc::new(InferenceResult::from_ctx(ctx))
-}
-
-pub trait NodeInferenceExt {
-    fn inference(&self, db: &dyn SourceDatabase, msl: bool) -> Option<Arc<InferenceResult>>;
-}
-
-impl<T: AstNode> NodeInferenceExt for InFile<T> {
-    fn inference(&self, db: &dyn SourceDatabase, msl: bool) -> Option<Arc<InferenceResult>> {
-        let ctx_owner = self.and_then_ref(|it| it.syntax().inference_ctx_owner())?;
-        let inference = inference(db, ctx_owner, msl);
-        Some(inference)
-    }
 }
 
 pub(crate) fn file_ids_by_module_address(

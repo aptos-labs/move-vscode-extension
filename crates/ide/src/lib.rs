@@ -115,6 +115,13 @@ impl Analysis {
         self.with_db(|db| db.file_package_id(file_id))
     }
 
+    pub fn is_local_package(&self, package_id: PackageId) -> Cancellable<bool> {
+        self.with_db(|db| {
+            let sr = db.package_root(package_id).data(db);
+            !sr.is_library()
+        })
+    }
+
     /// Gets the text of the source file.
     pub fn file_text(&self, file_id: FileId) -> Cancellable<Arc<str>> {
         self.with_db(|db| SourceDatabase::file_text(db, file_id).text(db))

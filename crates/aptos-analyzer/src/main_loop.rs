@@ -211,7 +211,6 @@ impl GlobalState {
         }
 
         let was_fully_loaded = self.is_projects_fully_loaded();
-        tracing::info!(?was_fully_loaded);
         match event {
             Event::Lsp(msg) => match msg {
                 lsp_server::Message::Request(req) => self.on_new_request(loop_start, req),

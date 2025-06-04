@@ -70,6 +70,7 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
             if let Some(method_or_path) = ref_element.cast_into::<ast::MethodOrPath>() {
                 let entries = inference.get_resolve_method_or_path_entries(method_or_path.clone());
                 if entries.is_empty() {
+                    let _p = tracing::debug_span!("fallback_after_no_entries_found").entered();
                     // to support qualifier paths, as they're not cached
                     let method_or_path = method_or_path.cast_into::<ast::Path>()?;
                     let entries =
