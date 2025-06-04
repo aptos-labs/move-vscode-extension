@@ -81,18 +81,18 @@ impl<'db> SemanticsImpl<'db> {
         tree
     }
 
-    pub fn resolve(&self, reference: ast::AnyReferenceElement) -> Vec<ScopeEntry> {
+    pub fn resolve(&self, reference: ast::ReferenceElement) -> Vec<ScopeEntry> {
         let reference = self.wrap_node_infile(reference);
         self.resolve_in_file(reference)
     }
 
-    pub fn resolve_in_file(&self, reference: InFile<ast::AnyReferenceElement>) -> Vec<ScopeEntry> {
+    pub fn resolve_in_file(&self, reference: InFile<ast::ReferenceElement>) -> Vec<ScopeEntry> {
         reference.resolve_multi(self.db).unwrap_or_default()
     }
 
     pub fn resolve_to_element<N: ast::NamedElement>(
         &self,
-        reference: InFile<impl ast::ReferenceElement>,
+        reference: InFile<ast::ReferenceElement>,
     ) -> Option<InFile<N>> {
         let scope_entry = reference.resolve_multi(self.db)?.single_or_none();
         let element = scope_entry?.cast_into::<N>(self.db)?;

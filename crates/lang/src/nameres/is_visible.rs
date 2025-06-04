@@ -9,14 +9,14 @@ use base_db::SourceDatabase;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::visibility::{Vis, VisLevel};
-use syntax::ast::{HasAttrs, HasVisibility, ReferenceElement};
+use syntax::ast::{HasAttrs, HasVisibility};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 
 pub fn is_visible_in_context(
     db: &dyn SourceDatabase,
     scope_entry: &ScopeEntry,
-    context: &InFile<impl ReferenceElement>,
+    context: &InFile<ast::ReferenceElement>,
 ) -> bool {
     use syntax::SyntaxKind::*;
 
@@ -147,7 +147,7 @@ pub fn is_visible_in_context(
                     for friend_decl in friend_decls {
                         let Some(friend_module) = friend_decl
                             .path()
-                            .and_then(|path| path.in_file(item_file_id).resolve_no_inf(db))
+                            .and_then(|path| path.reference().in_file(item_file_id).resolve_no_inf(db))
                             .and_then(|friend_entry| friend_entry.node_loc.to_ast::<ast::Module>(db))
                         else {
                             continue;

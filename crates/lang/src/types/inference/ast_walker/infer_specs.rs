@@ -69,7 +69,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let path = schema_lit.path()?;
         let item = self
             .ctx
-            .resolve_cached(path.clone(), None)
+            .resolve_path_cached(path.clone(), None)
             .and_then(|it| it.cast_into::<ast::Schema>());
         let schema = match item {
             Some(schema) => schema,

@@ -14,8 +14,7 @@ pub(crate) fn analyze(
 ) -> Option<CompletionAnalysis> {
     let fake_offset = offset + TextSize::of(COMPLETION_MARKER);
 
-    if let Some(fake_ref) =
-        find_node_at_offset::<ast::AnyReferenceElement>(&speculative_file, fake_offset)
+    if let Some(fake_ref) = find_node_at_offset::<ast::ReferenceElement>(&speculative_file, fake_offset)
     {
         let reference_kind = match fake_ref.syntax().kind() {
             PATH => {

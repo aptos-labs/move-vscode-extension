@@ -34,6 +34,7 @@ pub fn get_ident_pat_resolve_variants(
         let struct_pat = struct_pat_field.struct_pat();
         let fields_owner = struct_pat
             .path()
+            .reference()
             .in_file(file_id)
             .resolve_no_inf(db)
             .and_then(|it| it.cast_into::<ast::AnyFieldsOwner>(db));
@@ -52,7 +53,7 @@ pub fn get_ident_pat_resolve_variants(
         ENUM_VARIANTS
     };
 
-    let binding_entries = get_entries_from_walking_scopes(db, ident_pat.in_file(file_id), ns);
+    let binding_entries = get_entries_from_walking_scopes(db, ident_pat.in_file(file_id).map_into(), ns);
     for binding_entry in binding_entries {
         if let Some(named_item) = binding_entry.clone().cast_into::<ast::AnyNamedElement>(db) {
             let is_constant_like = is_constant_like(&named_item);

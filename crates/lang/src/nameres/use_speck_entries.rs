@@ -29,7 +29,7 @@ pub fn use_speck_entries(
 
 fn resolve_use_item(db: &dyn SourceDatabase, use_item: UseItem, file_id: FileId) -> Option<ScopeEntry> {
     let path = use_item.use_speck.path()?.in_file(file_id);
-    let Some(scope_entry) = path.clone().resolve_no_inf(db) else {
+    let Some(scope_entry) = path.map_ref(|it| it.reference()).resolve_no_inf(db) else {
         tracing::debug!(path = &path.syntax_text(), "cannot resolve use speck");
         return None;
     };

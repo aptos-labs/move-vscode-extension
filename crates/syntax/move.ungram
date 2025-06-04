@@ -40,6 +40,18 @@ Item =
     | Schema
     | ItemSpec
 
+ReferenceElement =
+    Path
+    | MethodCallExpr
+    | DotExpr
+    | StructPatField
+    | StructLitField
+    | SchemaLitField
+    | IdentPat
+    | ItemSpecRef
+    | ItemSpecTypeParam
+    | Label
+
 InferenceCtxOwner =
     Fun | SpecFun | SpecInlineFun | ItemSpec | Schema
 

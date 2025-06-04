@@ -13,9 +13,9 @@ use crate::types::ty::Ty;
 use base_db::SourceDatabase;
 use base_db::package_root::PackageId;
 use syntax::SyntaxKind::VARIANT;
+use syntax::ast::HasItems;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
-use syntax::ast::{HasItems, ReferenceElement};
 use syntax::files::{InFile, InFileExt, OptionInFileExt};
 use syntax::{AstNode, ast};
 use vfs::FileId;
@@ -72,7 +72,11 @@ pub fn get_path_resolve_variants(
                     })
                 }
             }
-            entries.extend(get_entries_from_walking_scopes(db, ctx.path.clone(), ns));
+            entries.extend(get_entries_from_walking_scopes(
+                db,
+                ctx.path.map_ref(|it| it.reference()),
+                ns,
+            ));
             entries
         }
 
@@ -161,7 +165,8 @@ pub fn resolve_path(
     let expected_type = refine_path_expected_type(db, ctx.path.file_id, path_kind, expected_type);
     let entries_by_expected_type = entries_filtered_by_name.filter_by_expected_type(db, expected_type);
 
-    let entries_by_visibility = entries_by_expected_type.filter_by_visibility(db, &context_element);
+    let entries_by_visibility =
+        entries_by_expected_type.filter_by_visibility(db, &context_element.map_into());
     tracing::debug!(?entries_by_visibility);
 
     filter_by_function_namespace_special_case(entries_by_visibility, &ctx)

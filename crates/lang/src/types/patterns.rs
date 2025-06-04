@@ -17,7 +17,7 @@ impl TypeAstWalker<'_, '_> {
     pub fn collect_pat_bindings(&mut self, pat: ast::Pat, ty: Ty, def_bm: BindingMode) -> Option<()> {
         match pat.clone() {
             ast::Pat::PathPat(path_pat) => {
-                let named_item = self.ctx.resolve_cached(path_pat.path(), None);
+                let named_item = self.ctx.resolve_path_cached(path_pat.path(), None);
                 let named_item_kind = named_item.map(|it| it.kind());
                 // copied from intellij-rust, don't know what it's about
                 let pat_ty = match named_item_kind {
@@ -29,7 +29,7 @@ impl TypeAstWalker<'_, '_> {
             ast::Pat::IdentPat(ident_pat) => {
                 let named_item = self
                     .ctx
-                    .resolve_cached(ident_pat.clone(), Some(ty.clone()))
+                    .resolve_ident_pat_cached(ident_pat.clone(), Some(ty.clone()))
                     .map(|it| it.value);
                 let ident_pat_ty =
                     if matches!(named_item.map(|it| it.syntax().kind()), Some(SyntaxKind::VARIANT)) {
@@ -178,7 +178,7 @@ impl TypeAstWalker<'_, '_> {
     ) -> Option<InFile<ast::AnyFieldsOwner>> {
         let mut fields_owner = self
             .ctx
-            .resolve_cached(struct_pat_path, Some(expected_ty.clone()))
+            .resolve_path_cached(struct_pat_path, Some(expected_ty.clone()))
             .and_then(|item| item.cast_into::<ast::AnyFieldsOwner>());
         if fields_owner.is_none() {
             fields_owner = expected_ty

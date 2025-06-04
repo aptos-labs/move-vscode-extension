@@ -7,7 +7,6 @@ use base_db::SourceDatabase;
 use std::fmt;
 use std::fmt::Formatter;
 use stdx::itertools::Itertools;
-use syntax::ast::ReferenceElement;
 use syntax::files::{InFile, InFileVecExt};
 use syntax::{SyntaxKind, ast};
 use vfs::FileId;
@@ -103,7 +102,7 @@ pub trait ScopeEntryListExt {
     fn filter_by_visibility(
         self,
         db: &dyn SourceDatabase,
-        context: &InFile<impl ReferenceElement>,
+        context: &InFile<ast::ReferenceElement>,
     ) -> Vec<ScopeEntry>;
     fn filter_by_expected_type(
         self,
@@ -126,7 +125,7 @@ impl ScopeEntryListExt for Vec<ScopeEntry> {
     fn filter_by_visibility(
         self,
         db: &dyn SourceDatabase,
-        context: &InFile<impl ReferenceElement>,
+        context: &InFile<ast::ReferenceElement>,
     ) -> Vec<ScopeEntry> {
         self.into_iter()
             .filter(|entry| is_visible_in_context(db, entry, context))

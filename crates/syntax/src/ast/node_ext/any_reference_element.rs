@@ -1,6 +1,14 @@
 use crate::{ast, match_ast, AstNode, SyntaxNode};
 
-impl ast::AnyReferenceElement {
+impl ast::ReferenceElement {
+    // pub fn method_or_path(&self) -> Option<ast::MethodOrPath> {
+    //     match self {
+    //         ast::ReferenceElement::MethodCallExpr(method_call) => method_call.clone().into(),
+    //         ast::ReferenceElement::Path(path) => path.clone().into(),
+    //         _ => None,
+    //     }
+    // }
+
     pub fn reference_node(&self) -> Option<SyntaxNode> {
         match_ast! {
             match (self.syntax()) {

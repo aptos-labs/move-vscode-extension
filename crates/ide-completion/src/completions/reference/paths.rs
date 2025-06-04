@@ -32,7 +32,7 @@ pub(crate) fn add_path_completions(
         is_completion: true,
     };
     let entries = get_path_resolve_variants(ctx.db, &resolution_ctx, path_kind.clone())
-        .filter_by_visibility(ctx.db, &context_path);
+        .filter_by_visibility(ctx.db, &context_path.clone().map_into());
     tracing::debug!(completion_item_entries = ?entries);
 
     let path_ctx = path_completion_ctx(&context_path);
