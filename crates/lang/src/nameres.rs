@@ -31,12 +31,13 @@ pub fn resolve(
     db: &dyn SourceDatabase,
     ref_element: InFile<impl Into<ast::ReferenceElement>>,
 ) -> Option<ScopeEntry> {
-    resolve_multi(db, ref_element)?.single_or_none()
+    resolve_multi(db, ref_element, None)?.single_or_none()
 }
 
 pub fn resolve_multi(
     db: &dyn SourceDatabase,
     ref_element: InFile<impl Into<ast::ReferenceElement>>,
+    cached_inference: Option<Arc<InferenceResult>>,
 ) -> Option<Vec<ScopeEntry>> {
     let ref_element = ref_element.map(|it| it.into());
 
@@ -74,11 +75,14 @@ pub fn resolve_multi(
         }
     }
 
-    let msl = ref_element.value.syntax().is_msl_context();
-    let inference = ref_element
-        .syntax()
-        .and_then(|it| it.inference_ctx_owner())
-        .map(|ctx_owner| hir_db::inference(db, ctx_owner, msl));
+    let mut inference = cached_inference;
+    if inference.is_none() {
+        let msl = ref_element.value.syntax().is_msl_context();
+        inference = ref_element
+            .syntax()
+            .and_then(|it| it.inference_ctx_owner())
+            .map(|ctx_owner| hir_db::inference(db, ctx_owner, msl));
+    }
 
     match inference {
         Some(inference) => resolve_multi_with_inf(db, inference, ref_element),
