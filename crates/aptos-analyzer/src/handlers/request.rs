@@ -144,6 +144,12 @@ pub(crate) fn handle_document_diagnostics(
 ) -> anyhow::Result<lsp_types::DocumentDiagnosticReportResult> {
     let _p = tracing::info_span!("handle_document_diagnostics").entered();
     let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
+
+    let package_id = snap.analysis.package_id(file_id)?;
+    if !snap.analysis.is_local_package(package_id)? {
+        return Ok(empty_diagnostic_report());
+    }
+
     let config = snap.config.diagnostics_config();
     if !config.enabled {
         return Ok(empty_diagnostic_report());

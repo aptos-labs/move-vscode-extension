@@ -32,9 +32,10 @@ pub enum ReferenceKind {
 /// `CompletionContext` is created early during completion to figure out, where
 /// exactly is the cursor, syntax-wise.
 #[derive(Debug)]
-pub(crate) struct CompletionContext<'a> {
-    pub(crate) db: &'a RootDatabase,
-    pub(crate) config: &'a CompletionConfig,
+pub(crate) struct CompletionContext<'db> {
+    pub(crate) sema: Semantics<'db, RootDatabase>,
+    pub(crate) db: &'db RootDatabase,
+    pub(crate) config: &'db CompletionConfig,
     pub(crate) position: FilePosition,
     pub(crate) msl: bool,
 
@@ -103,6 +104,7 @@ impl<'a> CompletionContext<'a> {
 
         let msl = original_token.parent().is_some_and(|it| it.is_msl_context());
         let ctx = CompletionContext {
+            sema,
             db,
             config,
             position,

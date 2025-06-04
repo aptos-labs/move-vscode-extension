@@ -1,9 +1,10 @@
 mod source_to_def;
 
-use crate::hir_db::NodeInferenceExt;
+use crate::hir_db::inference_loc;
+use crate::loc::{SyntaxLocFileExt, SyntaxLocInput};
 use crate::nameres::ResolveReference;
 use crate::nameres::fq_named_element::{ItemFQName, ItemFQNameOwner};
-use crate::nameres::scope::ScopeEntry;
+use crate::nameres::scope::{ScopeEntry, VecExt};
 use crate::node_ext::item::ModuleItemExt;
 use crate::semantics::source_to_def::SourceToDefCache;
 use crate::types::inference::InferenceCtx;
@@ -15,8 +16,10 @@ use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
 use itertools::{Itertools, repeat_n};
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::{fmt, ops};
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::InFile;
 use syntax::{AstNode, SyntaxNode, SyntaxToken, ast};
 use vfs::FileId;
@@ -33,6 +36,7 @@ pub struct SemanticsImpl<'db> {
     db: &'db dyn SourceDatabase,
     ws_root: PackageId,
     s2d_cache: RefCell<SourceToDefCache>,
+    inference_cache: RefCell<HashMap<(SyntaxLocInput<'db>, bool), Arc<InferenceResult>>>,
 }
 
 impl<DB> fmt::Debug for Semantics<'_, DB> {
@@ -67,6 +71,7 @@ impl<'db> SemanticsImpl<'db> {
             db,
             ws_root,
             s2d_cache: Default::default(),
+            inference_cache: Default::default(),
         }
     }
 
@@ -89,7 +94,7 @@ impl<'db> SemanticsImpl<'db> {
         &self,
         reference: InFile<impl ast::ReferenceElement>,
     ) -> Option<InFile<N>> {
-        let scope_entry = reference.resolve(self.db);
+        let scope_entry = reference.resolve_multi(self.db)?.single_or_none();
         let element = scope_entry?.cast_into::<N>(self.db)?;
         // cache file_id
         self.parse(element.file_id);
@@ -160,7 +165,20 @@ impl<'db> SemanticsImpl<'db> {
     }
 
     pub fn inference<T: AstNode>(&self, node: &InFile<T>, msl: bool) -> Option<Arc<InferenceResult>> {
-        node.inference(self.db, msl)
+        let ctx_owner = node.and_then_ref(|it| it.syntax().inference_ctx_owner())?;
+
+        let owner_loc = SyntaxLocInput::new(self.db, ctx_owner.loc());
+        let cache_key = (owner_loc, msl);
+
+        let mut cache = self.inference_cache.borrow_mut();
+        if cache.contains_key(&cache_key) {
+            return Some(Arc::clone(cache.get(&cache_key).unwrap()));
+        }
+
+        let inf = inference_loc(self.db, owner_loc, msl);
+        cache.insert(cache_key, Arc::clone(&inf));
+
+        Some(inf)
     }
 
     pub fn wrap_node_infile<N: AstNode>(&self, node: N) -> InFile<N> {
