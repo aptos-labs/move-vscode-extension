@@ -6,6 +6,10 @@ impl ast::Path {
         self.segment()?.path_address()
     }
 
+    pub fn reference(&self) -> ast::ReferenceElement {
+        self.clone().into()
+    }
+
     pub fn reference_name(&self) -> Option<String> {
         self.segment()?.name_ref().map(|it| it.as_string())
     }

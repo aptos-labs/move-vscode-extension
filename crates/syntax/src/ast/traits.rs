@@ -109,19 +109,19 @@ pub trait FieldsOwner: NamedElement {
     }
 }
 
-pub trait ReferenceElement: AstNode + fmt::Debug {
-    #[inline]
-    fn cast_into<T: ReferenceElement>(&self) -> Option<T> {
-        T::cast(self.syntax().to_owned())
-    }
-
-    fn reference(&self) -> ast::AnyReferenceElement {
-        self.syntax()
-            .to_owned()
-            .cast::<ast::AnyReferenceElement>()
-            .unwrap()
-    }
-}
+// pub trait ReferenceElement: AstNode + fmt::Debug {
+//     #[inline]
+//     fn cast_into<T: ReferenceElement>(&self) -> Option<T> {
+//         T::cast(self.syntax().to_owned())
+//     }
+//
+//     fn reference(&self) -> ast::AnyReferenceElement {
+//         self.syntax()
+//             .to_owned()
+//             .cast::<ast::AnyReferenceElement>()
+//             .unwrap()
+//     }
+// }
 
 pub trait MslOnly: AstNode {}
 

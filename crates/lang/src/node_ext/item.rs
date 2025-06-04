@@ -1,6 +1,5 @@
 use crate::nameres::ResolveReference;
 use base_db::SourceDatabase;
-use syntax::ast::ReferenceElement;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast, match_ast};

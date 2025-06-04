@@ -15,7 +15,6 @@ use std::fmt;
 use std::fmt::Formatter;
 use syntax::SyntaxKind;
 use syntax::SyntaxKind::MODULE_SPEC;
-use syntax::ast::ReferenceElement;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{InFile, InFileExt, InFileVecExt};
 use syntax::{AstNode, SyntaxNode, ast};
@@ -36,7 +35,7 @@ impl fmt::Debug for ResolveScope {
 
 pub fn get_resolve_scopes(
     db: &dyn SourceDatabase,
-    start_at: InFile<impl ReferenceElement>,
+    start_at: InFile<ast::ReferenceElement>,
 ) -> Vec<ResolveScope> {
     let (file_id, start_at) = start_at.unpack();
 
@@ -110,7 +109,7 @@ fn module_inner_spec_scopes(
 
 pub fn get_entries_from_walking_scopes(
     db: &dyn SourceDatabase,
-    start_at: InFile<impl ReferenceElement>,
+    start_at: InFile<ast::ReferenceElement>,
     ns: NsSet,
 ) -> Vec<ScopeEntry> {
     let resolve_scopes = get_resolve_scopes(db, start_at);
@@ -181,7 +180,7 @@ pub fn get_qualified_path_entries(
     qualifier: ast::Path,
 ) -> Vec<ScopeEntry> {
     let qualifier = ctx.wrap_in_file(qualifier);
-    let qualifier_item = qualifier.clone().resolve_no_inf(db);
+    let qualifier_item = qualifier.map_ref(|it| it.reference()).resolve_no_inf(db);
     if qualifier_item.is_none() {
         if let Some(qualifier_name) = qualifier.value.reference_name() {
             let _p = tracing::debug_span!(

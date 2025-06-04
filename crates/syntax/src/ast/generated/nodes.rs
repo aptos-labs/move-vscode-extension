@@ -397,7 +397,6 @@ impl DerefExpr {
 pub struct DotExpr {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::ReferenceElement for DotExpr {}
 impl DotExpr {
     #[inline]
     pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
@@ -576,7 +575,6 @@ pub struct IdentPat {
 }
 impl ast::HoverDocsOwner for IdentPat {}
 impl ast::NamedElement for IdentPat {}
-impl ast::ReferenceElement for IdentPat {}
 impl IdentPat {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -742,7 +740,6 @@ impl ItemSpecParamList {
 pub struct ItemSpecRef {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::ReferenceElement for ItemSpecRef {}
 impl ItemSpecRef {
     #[inline]
     pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
@@ -752,7 +749,6 @@ impl ItemSpecRef {
 pub struct ItemSpecTypeParam {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::ReferenceElement for ItemSpecTypeParam {}
 impl ItemSpecTypeParam {
     #[inline]
     pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
@@ -777,7 +773,6 @@ impl ItemSpecTypeParamList {
 pub struct Label {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::ReferenceElement for Label {}
 impl Label {
     #[inline]
     pub fn quote_ident_token(&self) -> SyntaxToken {
@@ -984,7 +979,6 @@ impl MatchGuard {
 pub struct MethodCallExpr {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::ReferenceElement for MethodCallExpr {}
 impl MethodCallExpr {
     #[inline]
     pub fn name_ref(&self) -> Option<NameRef> { support::child(&self.syntax) }
@@ -1163,7 +1157,6 @@ impl ParenType {
 pub struct Path {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::ReferenceElement for Path {}
 impl Path {
     #[inline]
     pub fn qualifier(&self) -> Option<Path> { support::child(&self.syntax) }
@@ -1408,7 +1401,6 @@ impl SchemaLit {
 pub struct SchemaLitField {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::ReferenceElement for SchemaLitField {}
 impl SchemaLitField {
     #[inline]
     pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
@@ -1613,7 +1605,6 @@ impl StructLit {
 pub struct StructLitField {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::ReferenceElement for StructLitField {}
 impl StructLitField {
     #[inline]
     pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
@@ -1653,7 +1644,6 @@ impl StructPat {
 pub struct StructPatField {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::ReferenceElement for StructPatField {}
 impl StructPatField {
     #[inline]
     pub fn ident_pat(&self) -> Option<IdentPat> { support::child(&self.syntax) }
@@ -2156,14 +2146,12 @@ pub enum MethodOrDotExpr {
     DotExpr(DotExpr),
     MethodCallExpr(MethodCallExpr),
 }
-impl ast::ReferenceElement for MethodOrDotExpr {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MethodOrPath {
     MethodCallExpr(MethodCallExpr),
     Path(Path),
 }
-impl ast::ReferenceElement for MethodOrPath {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum NameLike {
@@ -2194,6 +2182,20 @@ pub enum QuantExpr {
     ChooseExpr(ChooseExpr),
     ExistsExpr(ExistsExpr),
     ForallExpr(ForallExpr),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum ReferenceElement {
+    DotExpr(DotExpr),
+    IdentPat(IdentPat),
+    ItemSpecRef(ItemSpecRef),
+    ItemSpecTypeParam(ItemSpecTypeParam),
+    Label(Label),
+    MethodCallExpr(MethodCallExpr),
+    Path(Path),
+    SchemaLitField(SchemaLitField),
+    StructLitField(StructLitField),
+    StructPatField(StructPatField),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -2313,12 +2315,6 @@ pub struct AnyNamedElement {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::NamedElement for AnyNamedElement {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct AnyReferenceElement {
-    pub(crate) syntax: SyntaxNode,
-}
-impl ast::ReferenceElement for AnyReferenceElement {}
 impl AstNode for Ability {
     #[inline]
     fn kind() -> SyntaxKind
@@ -6590,15 +6586,6 @@ impl From<MethodCallExpr> for MethodOrDotExpr {
     #[inline]
     fn from(node: MethodCallExpr) -> MethodOrDotExpr { MethodOrDotExpr::MethodCallExpr(node) }
 }
-impl From<MethodOrDotExpr> for AnyReferenceElement {
-    #[inline]
-    fn from(node: MethodOrDotExpr) -> AnyReferenceElement {
-        match node {
-            MethodOrDotExpr::DotExpr(it) => it.into(),
-            MethodOrDotExpr::MethodCallExpr(it) => it.into(),
-        }
-    }
-}
 impl MethodOrDotExpr {
     pub fn dot_expr(self) -> Option<DotExpr> {
         match (self) {
@@ -6654,15 +6641,6 @@ impl From<MethodCallExpr> for MethodOrPath {
 impl From<Path> for MethodOrPath {
     #[inline]
     fn from(node: Path) -> MethodOrPath { MethodOrPath::Path(node) }
-}
-impl From<MethodOrPath> for AnyReferenceElement {
-    #[inline]
-    fn from(node: MethodOrPath) -> AnyReferenceElement {
-        match node {
-            MethodOrPath::MethodCallExpr(it) => it.into(),
-            MethodOrPath::Path(it) => it.into(),
-        }
-    }
 }
 impl MethodOrPath {
     pub fn method_call_expr(self) -> Option<MethodCallExpr> {
@@ -6984,6 +6962,158 @@ impl AstNode for QuantExpr {
             QuantExpr::ChooseExpr(it) => &it.syntax(),
             QuantExpr::ExistsExpr(it) => &it.syntax(),
             QuantExpr::ForallExpr(it) => &it.syntax(),
+        }
+    }
+}
+impl From<DotExpr> for ReferenceElement {
+    #[inline]
+    fn from(node: DotExpr) -> ReferenceElement { ReferenceElement::DotExpr(node) }
+}
+impl From<IdentPat> for ReferenceElement {
+    #[inline]
+    fn from(node: IdentPat) -> ReferenceElement { ReferenceElement::IdentPat(node) }
+}
+impl From<ItemSpecRef> for ReferenceElement {
+    #[inline]
+    fn from(node: ItemSpecRef) -> ReferenceElement { ReferenceElement::ItemSpecRef(node) }
+}
+impl From<ItemSpecTypeParam> for ReferenceElement {
+    #[inline]
+    fn from(node: ItemSpecTypeParam) -> ReferenceElement { ReferenceElement::ItemSpecTypeParam(node) }
+}
+impl From<Label> for ReferenceElement {
+    #[inline]
+    fn from(node: Label) -> ReferenceElement { ReferenceElement::Label(node) }
+}
+impl From<MethodCallExpr> for ReferenceElement {
+    #[inline]
+    fn from(node: MethodCallExpr) -> ReferenceElement { ReferenceElement::MethodCallExpr(node) }
+}
+impl From<Path> for ReferenceElement {
+    #[inline]
+    fn from(node: Path) -> ReferenceElement { ReferenceElement::Path(node) }
+}
+impl From<SchemaLitField> for ReferenceElement {
+    #[inline]
+    fn from(node: SchemaLitField) -> ReferenceElement { ReferenceElement::SchemaLitField(node) }
+}
+impl From<StructLitField> for ReferenceElement {
+    #[inline]
+    fn from(node: StructLitField) -> ReferenceElement { ReferenceElement::StructLitField(node) }
+}
+impl From<StructPatField> for ReferenceElement {
+    #[inline]
+    fn from(node: StructPatField) -> ReferenceElement { ReferenceElement::StructPatField(node) }
+}
+impl ReferenceElement {
+    pub fn dot_expr(self) -> Option<DotExpr> {
+        match (self) {
+            ReferenceElement::DotExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn ident_pat(self) -> Option<IdentPat> {
+        match (self) {
+            ReferenceElement::IdentPat(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn item_spec_ref(self) -> Option<ItemSpecRef> {
+        match (self) {
+            ReferenceElement::ItemSpecRef(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn item_spec_type_param(self) -> Option<ItemSpecTypeParam> {
+        match (self) {
+            ReferenceElement::ItemSpecTypeParam(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn label(self) -> Option<Label> {
+        match (self) {
+            ReferenceElement::Label(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn method_call_expr(self) -> Option<MethodCallExpr> {
+        match (self) {
+            ReferenceElement::MethodCallExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn path(self) -> Option<Path> {
+        match (self) {
+            ReferenceElement::Path(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn schema_lit_field(self) -> Option<SchemaLitField> {
+        match (self) {
+            ReferenceElement::SchemaLitField(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn struct_lit_field(self) -> Option<StructLitField> {
+        match (self) {
+            ReferenceElement::StructLitField(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn struct_pat_field(self) -> Option<StructPatField> {
+        match (self) {
+            ReferenceElement::StructPatField(item) => Some(item),
+            _ => None,
+        }
+    }
+}
+impl AstNode for ReferenceElement {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(
+            kind,
+            DOT_EXPR
+                | IDENT_PAT
+                | ITEM_SPEC_REF
+                | ITEM_SPEC_TYPE_PARAM
+                | LABEL
+                | METHOD_CALL_EXPR
+                | PATH
+                | SCHEMA_LIT_FIELD
+                | STRUCT_LIT_FIELD
+                | STRUCT_PAT_FIELD
+        )
+    }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            DOT_EXPR => ReferenceElement::DotExpr(DotExpr { syntax }),
+            IDENT_PAT => ReferenceElement::IdentPat(IdentPat { syntax }),
+            ITEM_SPEC_REF => ReferenceElement::ItemSpecRef(ItemSpecRef { syntax }),
+            ITEM_SPEC_TYPE_PARAM => ReferenceElement::ItemSpecTypeParam(ItemSpecTypeParam { syntax }),
+            LABEL => ReferenceElement::Label(Label { syntax }),
+            METHOD_CALL_EXPR => ReferenceElement::MethodCallExpr(MethodCallExpr { syntax }),
+            PATH => ReferenceElement::Path(Path { syntax }),
+            SCHEMA_LIT_FIELD => ReferenceElement::SchemaLitField(SchemaLitField { syntax }),
+            STRUCT_LIT_FIELD => ReferenceElement::StructLitField(StructLitField { syntax }),
+            STRUCT_PAT_FIELD => ReferenceElement::StructPatField(StructPatField { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            ReferenceElement::DotExpr(it) => &it.syntax(),
+            ReferenceElement::IdentPat(it) => &it.syntax(),
+            ReferenceElement::ItemSpecRef(it) => &it.syntax(),
+            ReferenceElement::ItemSpecTypeParam(it) => &it.syntax(),
+            ReferenceElement::Label(it) => &it.syntax(),
+            ReferenceElement::MethodCallExpr(it) => &it.syntax(),
+            ReferenceElement::Path(it) => &it.syntax(),
+            ReferenceElement::SchemaLitField(it) => &it.syntax(),
+            ReferenceElement::StructLitField(it) => &it.syntax(),
+            ReferenceElement::StructPatField(it) => &it.syntax(),
         }
     }
 }
@@ -8114,86 +8244,6 @@ impl From<AnyHoverDocsOwner> for AnyNamedElement {
     #[inline]
     fn from(node: AnyHoverDocsOwner) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
 }
-impl AnyReferenceElement {
-    #[inline]
-    pub fn new<T: ast::ReferenceElement>(node: T) -> AnyReferenceElement {
-        AnyReferenceElement {
-            syntax: node.syntax().clone(),
-        }
-    }
-    #[inline]
-    pub fn cast_from<T: ast::ReferenceElement>(t: T) -> AnyReferenceElement {
-        AnyReferenceElement::cast(t.syntax().to_owned()).expect("required by code generator")
-    }
-    #[inline]
-    pub fn cast_into<T: ast::ReferenceElement>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
-}
-impl AstNode for AnyReferenceElement {
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(
-            kind,
-            DOT_EXPR
-                | IDENT_PAT
-                | ITEM_SPEC_REF
-                | ITEM_SPEC_TYPE_PARAM
-                | LABEL
-                | METHOD_CALL_EXPR
-                | PATH
-                | SCHEMA_LIT_FIELD
-                | STRUCT_LIT_FIELD
-                | STRUCT_PAT_FIELD
-        )
-    }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        Self::can_cast(syntax.kind()).then_some(AnyReferenceElement { syntax })
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode { &self.syntax }
-}
-impl From<DotExpr> for AnyReferenceElement {
-    #[inline]
-    fn from(node: DotExpr) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
-}
-impl From<IdentPat> for AnyReferenceElement {
-    #[inline]
-    fn from(node: IdentPat) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
-}
-impl From<ItemSpecRef> for AnyReferenceElement {
-    #[inline]
-    fn from(node: ItemSpecRef) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
-}
-impl From<ItemSpecTypeParam> for AnyReferenceElement {
-    #[inline]
-    fn from(node: ItemSpecTypeParam) -> AnyReferenceElement {
-        AnyReferenceElement { syntax: node.syntax }
-    }
-}
-impl From<Label> for AnyReferenceElement {
-    #[inline]
-    fn from(node: Label) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
-}
-impl From<MethodCallExpr> for AnyReferenceElement {
-    #[inline]
-    fn from(node: MethodCallExpr) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
-}
-impl From<Path> for AnyReferenceElement {
-    #[inline]
-    fn from(node: Path) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
-}
-impl From<SchemaLitField> for AnyReferenceElement {
-    #[inline]
-    fn from(node: SchemaLitField) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
-}
-impl From<StructLitField> for AnyReferenceElement {
-    #[inline]
-    fn from(node: StructLitField) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
-}
-impl From<StructPatField> for AnyReferenceElement {
-    #[inline]
-    fn from(node: StructPatField) -> AnyReferenceElement { AnyReferenceElement { syntax: node.syntax } }
-}
 impl std::fmt::Display for AddressRef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -8280,6 +8330,11 @@ impl std::fmt::Display for QuantBindingsOwner {
     }
 }
 impl std::fmt::Display for QuantExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for ReferenceElement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

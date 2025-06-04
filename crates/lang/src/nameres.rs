@@ -5,11 +5,10 @@ use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryListExt, VecExt
 use crate::node_ext::item::ModuleItemExt;
 use crate::node_ext::item_spec::ItemSpecExt;
 use base_db::SourceDatabase;
-use syntax::ast;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
-use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
-use syntax::ast::{FieldsOwner, GenericElement, ReferenceElement};
+use syntax::ast::{FieldsOwner, GenericElement};
 use syntax::files::{InFile, InFileExt};
+use syntax::{AstNode, ast};
 
 pub mod address;
 pub mod binding;
@@ -33,59 +32,67 @@ pub trait ResolveReference {
     fn resolve_no_inf(&self, db: &dyn SourceDatabase) -> Option<ScopeEntry>;
 }
 
-impl<T: ReferenceElement> ResolveReference for InFile<T> {
+impl ResolveReference for InFile<ast::ReferenceElement> {
     fn resolve_multi(&self, db: &dyn SourceDatabase) -> Option<Vec<ScopeEntry>> {
-        use syntax::SyntaxKind::*;
+        let (file_id, ref_element) = self.clone().unpack();
 
-        if let Some(item_spec_ref) = self.cast_into_ref::<ast::ItemSpecRef>() {
-            return get_item_spec_entries(db, item_spec_ref);
+        match ref_element.clone() {
+            ast::ReferenceElement::ItemSpecRef(item_spec_ref) => {
+                return get_item_spec_entries(db, item_spec_ref.in_file(file_id));
+            }
+            ast::ReferenceElement::Label(loop_label) => {
+                let label = loop_label.in_file(file_id);
+                let label_name = label.value.name_as_string();
+                let loop_label_entries =
+                    get_loop_labels_resolve_variants(label).filter_by_name(label_name);
+                tracing::debug!(?loop_label_entries);
+                return Some(loop_label_entries);
+            }
+            ast::ReferenceElement::ItemSpecTypeParam(item_spec_type_param) => {
+                let item_spec_fun = item_spec_type_param
+                    .item_spec()
+                    .in_file(file_id)
+                    .item(db)?
+                    .cast_into::<ast::Fun>()?;
+                let entries = item_spec_fun.flat_map(|it| it.type_params()).to_entries();
+                return Some(entries);
+            }
+            _ => (),
         }
-
-        let InFile { file_id, value: ref_element } = self;
-
-        if let Some(loop_label) = ref_element.cast_into::<ast::Label>() {
-            let label = loop_label.in_file(*file_id);
-            let label_name = label.value.name_as_string();
-            let filtered_entries = get_loop_labels_resolve_variants(label).filter_by_name(label_name);
-            tracing::debug!(?filtered_entries);
-            return Some(filtered_entries);
-        }
-
-        let opt_inference_ctx_owner = ref_element
-            .syntax()
-            .ancestor_or_self::<ast::InferenceCtxOwner>()
-            .map(|it| it.in_file(*file_id));
 
         // skip path in AttrItem = Path '=' Expr
-        if let Some(path) = ref_element.cast_into::<ast::Path>() {
+        if let ast::ReferenceElement::Path(path) = &ref_element {
             if path.root_parent_of_type::<ast::AttrItem>().is_some() {
                 return None;
             }
         }
 
+        let ctx_owner = ref_element.syntax().inference_ctx_owner();
         let msl = self.value.syntax().is_msl_context();
-        if let Some(ctx_owner) = opt_inference_ctx_owner {
-            let inference = hir_db::inference(db, ctx_owner, msl);
 
-            if let Some(method_or_path) = ref_element.cast_into::<ast::MethodOrPath>() {
-                let entries = inference.get_resolve_method_or_path_entries(method_or_path.clone());
-                if entries.is_empty() {
-                    let _p = tracing::debug_span!("fallback_after_no_entries_found").entered();
-                    // to support qualifier paths, as they're not cached
-                    let method_or_path = method_or_path.cast_into::<ast::Path>()?;
-                    let entries =
-                        path_resolution::resolve_path(db, method_or_path.in_file(self.file_id), None);
-                    let filtered_entries = remove_variant_ident_pats(db, entries, |it| it.resolve(db));
-                    return Some(filtered_entries);
+        if let Some(ctx_owner) = ctx_owner {
+            let inference = hir_db::inference(db, ctx_owner.in_file(file_id), msl);
+
+            let entries = match ref_element {
+                ast::ReferenceElement::MethodCallExpr(method_call) => {
+                    let entries = inference.get_resolve_method_or_path_entries(method_call.into());
+                    entries
                 }
-                return Some(entries);
-            }
-
-            let kind = ref_element.syntax().kind();
-            let entries = match kind {
-                STRUCT_PAT_FIELD => {
-                    let struct_pat_field = ref_element.cast_into::<ast::StructPatField>().unwrap();
-
+                ast::ReferenceElement::Path(path) => {
+                    let entries = inference.get_resolve_method_or_path_entries(path.clone().into());
+                    if entries.is_empty() {
+                        let _p = tracing::debug_span!("fallback_resolve_multi_for_path").entered();
+                        // to support qualifier paths, as they're not cached
+                        let entries =
+                            path_resolution::resolve_path(db, path.in_file(self.file_id), None);
+                        let filtered_entries = remove_variant_ident_pats(db, entries, |it| {
+                            it.map(|it| it.reference()).resolve(db)
+                        });
+                        return Some(filtered_entries);
+                    }
+                    entries
+                }
+                ast::ReferenceElement::StructPatField(struct_pat_field) => {
                     let struct_path = struct_pat_field.struct_pat().path();
                     let fields_owner = inference
                         .get_resolve_method_or_path(struct_path.into())?
@@ -93,11 +100,8 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
 
                     let field_name = struct_pat_field.field_name()?;
                     get_named_field_entries(fields_owner).filter_by_name(field_name)
-                    // .single_or_none()
                 }
-                STRUCT_LIT_FIELD => {
-                    let struct_lit_field = ref_element.cast_into::<ast::StructLitField>().unwrap();
-
+                ast::ReferenceElement::StructLitField(struct_lit_field) => {
                     let struct_path = struct_lit_field.struct_lit().path();
                     let fields_owner = inference
                         .get_resolve_method_or_path(struct_path.into())?
@@ -106,9 +110,7 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
                     let field_name = struct_lit_field.field_name()?;
                     get_named_field_entries(fields_owner).filter_by_name(field_name)
                 }
-                SCHEMA_LIT_FIELD => {
-                    let schema_lit_field = ref_element.cast_into::<ast::SchemaLitField>().unwrap();
-
+                ast::ReferenceElement::SchemaLitField(schema_lit_field) => {
                     let schema_lit_path = schema_lit_field.schema_lit()?.path()?;
                     let schema = inference
                         .get_resolve_method_or_path(schema_lit_path.into())?
@@ -117,32 +119,18 @@ impl<T: ReferenceElement> ResolveReference for InFile<T> {
                     let field_name = schema_lit_field.field_name()?;
                     get_schema_field_entries(schema).filter_by_name(field_name)
                 }
-                DOT_EXPR => {
-                    let dot_expr = ref_element.cast_into::<ast::DotExpr>().unwrap();
+                ast::ReferenceElement::DotExpr(dot_expr) => {
                     let field_name_ref = dot_expr.name_ref()?;
                     inference
                         .get_resolved_field(&field_name_ref)
                         .map(|it| vec![it])
                         .unwrap_or_default()
                 }
-                IDENT_PAT => {
-                    let ident_pat = ref_element.cast_into::<ast::IdentPat>().unwrap();
-                    inference
-                        .get_resolved_ident_pat(&ident_pat)
-                        .map(|it| vec![it])
-                        .unwrap_or_default()
-                }
-                ITEM_SPEC_TYPE_PARAM => {
-                    let item_spec_type_param =
-                        ref_element.cast_into::<ast::ItemSpecTypeParam>().unwrap();
-                    let item_spec_fun = item_spec_type_param
-                        .item_spec()
-                        .in_file(*file_id)
-                        .item(db)?
-                        .cast_into::<ast::Fun>()?;
-                    item_spec_fun.flat_map(|it| it.type_params()).to_entries()
-                }
-                _ => return None,
+                ast::ReferenceElement::IdentPat(ident_pat) => inference
+                    .get_resolved_ident_pat(&ident_pat)
+                    .map(|it| vec![it])
+                    .unwrap_or_default(),
+                _ => vec![],
             };
             return Some(entries);
         }

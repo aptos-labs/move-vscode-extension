@@ -37,7 +37,7 @@ pub(crate) fn hover(
 
     let hover_docs_owner = match name_like {
         ast::NameLike::NameRef(name_ref) => {
-            let ref_element = name_ref.syntax().ancestor_strict::<ast::AnyReferenceElement>()?;
+            let ref_element = name_ref.syntax().ancestor_strict::<ast::ReferenceElement>()?;
             let doc_comments_owner =
                 sema.resolve_to_element::<ast::AnyHoverDocsOwner>(ref_element.in_file(file_id))?;
             doc_comments_owner.value

@@ -33,7 +33,7 @@ pub(crate) fn recursive_struct_check(
         let leaf_path = leaf_path_type.path().in_file(file_id);
         let item = ctx
             .sema
-            .resolve_to_element::<ast::StructOrEnum>(leaf_path.clone());
+            .resolve_to_element::<ast::StructOrEnum>(leaf_path.clone().map_into());
         if let Some(item) = item {
             if item == owner_item {
                 register_type_error(

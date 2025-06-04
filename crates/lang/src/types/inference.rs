@@ -21,7 +21,7 @@ use std::hash::Hash;
 use syntax::ast::FieldsOwner;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, ast, match_ast};
+use syntax::{AstNode, ast};
 use vfs::FileId;
 
 use crate::nameres::path_resolution::remove_variant_ident_pats;
@@ -88,23 +88,22 @@ impl<'db> InferenceCtx<'db> {
         }
     }
 
-    pub fn resolve_cached(
-        &mut self,
-        reference: impl ast::ReferenceElement,
-        expected_ty: Option<Ty>,
-    ) -> Option<InFile<ast::AnyNamedElement>> {
-        match_ast! {
-            match (reference.syntax()) {
-                ast::Path(it) => self.resolve_path_cached(it, expected_ty),
-                ast::IdentPat(it) => self.resolve_ident_pat_cached(it, expected_ty),
-                _ => None
-            }
-        }
-    }
+    // pub fn resolve_cached(
+    //     &mut self,
+    //     reference: ast::ReferenceElement,
+    //     expected_ty: Option<Ty>,
+    // ) -> Option<InFile<ast::AnyNamedElement>> {
+    //     match_ast! {
+    //         match (reference.syntax()) {
+    //             ast::Path(it) => self.resolve_path_cached(it, expected_ty),
+    //             ast::IdentPat(it) => self.resolve_ident_pat_cached(it, expected_ty),
+    //             _ => None
+    //         }
+    //     }
+    // }
 
-    #[tracing::instrument(level = "debug", skip(self, path, expected_ty), fields(ctx_file_id = ?self.file_id
-    ))]
-    fn resolve_path_cached(
+    #[tracing::instrument(level = "debug", skip_all, fields(ctx_file_id = ?self.file_id))]
+    pub fn resolve_path_cached(
         &mut self,
         path: ast::Path,
         expected_ty: Option<Ty>,
@@ -123,7 +122,7 @@ impl<'db> InferenceCtx<'db> {
             .and_then(|it| it.cast_into::<ast::AnyNamedElement>(self.db))
     }
 
-    fn resolve_ident_pat_cached(
+    pub fn resolve_ident_pat_cached(
         &mut self,
         ident_pat: ast::IdentPat,
         expected_type: Option<Ty>,

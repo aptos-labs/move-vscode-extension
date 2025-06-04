@@ -29,7 +29,7 @@ pub(crate) fn goto_definition_multi(
 
     let file = sema.parse(file_id);
 
-    let reference = algo::find_node_at_offset::<ast::AnyReferenceElement>(file.syntax(), offset)?;
+    let reference = algo::find_node_at_offset::<ast::ReferenceElement>(file.syntax(), offset)?;
     let original_token = pick_best_token(file.syntax().token_at_offset(offset), |kind| match kind {
         IDENT | QUOTE_IDENT | INT_NUMBER | COMMENT => 4,
         // index and prefix ops

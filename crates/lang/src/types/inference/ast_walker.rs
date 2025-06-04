@@ -419,7 +419,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         }
 
         let expected_ty = expected.ty(self.ctx);
-        let named_element = self.ctx.resolve_cached(path_expr.path(), expected_ty)?;
+        let named_element = self.ctx.resolve_path_cached(path_expr.path(), expected_ty)?;
 
         let file_id = self.ctx.file_id;
         let ty_lowering = self.ctx.ty_lowering();
@@ -527,7 +527,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let method_entry =
             get_method_resolve_variants(self.ctx.db, &self_ty, self.ctx.file_id, self.ctx.msl)
                 .filter_by_name(method_call_expr.reference_name())
-                .filter_by_visibility(self.ctx.db, &method_call_expr.clone().in_file(self.ctx.file_id))
+                .filter_by_visibility(
+                    self.ctx.db,
+                    &method_call_expr.clone().in_file(self.ctx.file_id).map_into(),
+                )
                 .single_or_none();
         self.ctx
             .resolved_method_calls
@@ -601,7 +604,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     fn infer_struct_lit(&mut self, struct_lit: &ast::StructLit, expected: Expected) -> Option<Ty> {
         let path = struct_lit.path();
         let expected_ty = expected.ty(self.ctx);
-        let item = self.ctx.resolve_cached(path.clone(), expected_ty.clone())?;
+        let item = self.ctx.resolve_path_cached(path.clone(), expected_ty.clone())?;
         let (item_file_id, item) = item.unpack();
 
         let fields_owner = item.cast_into::<ast::AnyFieldsOwner>();
@@ -661,7 +664,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             } else {
                 let binding = get_entries_from_walking_scopes(
                     self.ctx.db,
-                    lit_field.clone().in_file(self.ctx.file_id),
+                    lit_field.clone().in_file(self.ctx.file_id).map_into(),
                     NAMES,
                 )
                 .filter_by_name(lit_field_name)
@@ -1035,7 +1038,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     fn infer_is_expr(&mut self, is_expr: &ast::IsExpr) -> Ty {
         let expr_ty = self.infer_expr(&is_expr.expr(), Expected::NoValue);
         for path_type in is_expr.path_types() {
-            self.ctx.resolve_cached(path_type.path(), Some(expr_ty.clone()));
+            self.ctx
+                .resolve_path_cached(path_type.path(), Some(expr_ty.clone()));
         }
         Ty::Bool
     }

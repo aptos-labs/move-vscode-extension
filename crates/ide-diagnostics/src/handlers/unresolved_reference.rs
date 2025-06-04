@@ -6,7 +6,6 @@ use lang::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use lang::nameres::scope::VecExt;
 use lang::node_ext::item_spec;
 use lang::types::ty::Ty;
-use syntax::ast::ReferenceElement;
 use syntax::ast::idents::PRIMITIVE_TYPES;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
@@ -17,7 +16,7 @@ use syntax::{AstNode, ast};
 pub(crate) fn find_unresolved_references(
     acc: &mut Vec<Diagnostic>,
     ctx: &DiagnosticsContext<'_>,
-    reference: InFile<impl ReferenceElement>,
+    reference: InFile<ast::ReferenceElement>,
 ) -> Option<()> {
     if !ctx.config.unresolved_reference_enabled {
         return None;
@@ -108,7 +107,7 @@ fn unresolved_path(
 
 fn is_special_msl_path(
     db: &dyn SourceDatabase,
-    reference: InFile<&impl ReferenceElement>,
+    reference: InFile<&ast::ReferenceElement>,
 ) -> Option<()> {
     if reference
         .value
@@ -133,7 +132,7 @@ fn is_special_msl_path(
 
     let (file_id, reference) = reference.unpack();
 
-    let path_expr = reference.cast_into::<ast::Path>()?.path_expr()?.in_file(file_id);
+    let path_expr = reference.clone().path()?.path_expr()?.in_file(file_id);
     if item_spec::get_item_spec_function(db, path_expr.as_ref()).is_some()
         && path_expr.syntax_text().starts_with("result")
     {
@@ -146,33 +145,28 @@ fn is_special_msl_path(
 fn unresolved_method_or_dot_expr(
     acc: &mut Vec<Diagnostic>,
     ctx: &DiagnosticsContext<'_>,
-    reference: InFile<ast::MethodOrDotExpr>,
+    method_or_dot_expr: InFile<ast::MethodOrDotExpr>,
 ) -> Option<()> {
-    let msl = reference.value.syntax().is_msl_context();
-    let receiver_expr = reference.map_ref(|it| it.receiver_expr());
+    let msl = method_or_dot_expr.value.syntax().is_msl_context();
+    let receiver_expr = method_or_dot_expr.map_ref(|it| it.receiver_expr());
     let receiver_ty = ctx.sema.get_expr_type(&receiver_expr, msl)?.unwrap_all_refs();
     if matches!(receiver_ty, Ty::Unknown) {
         // no error if receiver item is unknown (won't proceed if unknown is nested)
         return None;
     }
-    let (file_id, reference) = reference.unpack();
-    match reference {
-        ast::MethodOrDotExpr::MethodCallExpr(method_call_expr) => {
-            let method_ref = method_call_expr.reference().in_file(file_id);
-            try_check_resolve(acc, ctx, method_ref);
-        }
-        ast::MethodOrDotExpr::DotExpr(dot_expr) => {
-            let dot_ref = dot_expr.reference().in_file(file_id);
-            try_check_resolve(acc, ctx, dot_ref);
-        }
-    }
+    let (file_id, method_or_dot_expr) = method_or_dot_expr.unpack();
+    let reference: ast::ReferenceElement = match method_or_dot_expr {
+        ast::MethodOrDotExpr::MethodCallExpr(method_call_expr) => method_call_expr.into(),
+        ast::MethodOrDotExpr::DotExpr(dot_expr) => dot_expr.into(),
+    };
+    try_check_resolve(acc, ctx, reference.in_file(file_id));
     Some(())
 }
 
 fn try_check_resolve(
     acc: &mut Vec<Diagnostic>,
     ctx: &DiagnosticsContext<'_>,
-    reference: InFile<ast::AnyReferenceElement>,
+    reference: InFile<ast::ReferenceElement>,
 ) -> Option<()> {
     let entries = ctx.sema.resolve_in_file(reference.clone().map_into());
     let reference_node = reference.and_then_ref(|it| it.reference_node())?;

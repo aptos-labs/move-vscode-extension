@@ -27,7 +27,7 @@ pub use self::{
     token_ext::{CommentKind, CommentPlacement, CommentShape, IsString, QuoteOffsets},
     traits::{
         FieldsOwner, GenericElement, HasAttrs, HasItems, HasStmts, HasUseStmts, HoverDocsOwner, MslOnly,
-        NamedElement, ReferenceElement,
+        NamedElement,
     },
     visibility::HasVisibility,
 };
