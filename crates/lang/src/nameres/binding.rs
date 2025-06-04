@@ -1,7 +1,8 @@
+use crate::nameres;
+use crate::nameres::get_named_field_entries;
 use crate::nameres::name_resolution::get_entries_from_walking_scopes;
 use crate::nameres::namespaces::{ENUM_VARIANTS, TYPES_N_ENUMS_N_ENUM_VARIANTS_N_MODULES};
 use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt, VecExt};
-use crate::nameres::{ResolveReference, get_named_field_entries};
 use crate::types::ty::Ty;
 use base_db::SourceDatabase;
 use syntax::SyntaxKind::*;
@@ -31,13 +32,8 @@ pub fn get_ident_pat_resolve_variants(
 
     let mut entries = vec![];
     if let Some(struct_pat_field) = ident_pat.syntax().parent_of_type::<ast::StructPatField>() {
-        let struct_pat = struct_pat_field.struct_pat();
-        let fields_owner = struct_pat
-            .path()
-            .reference()
-            .in_file(file_id)
-            .resolve_no_inf(db)
-            .and_then(|it| it.cast_into::<ast::AnyFieldsOwner>(db));
+        let pat_path = struct_pat_field.struct_pat().path().in_file(file_id);
+        let fields_owner = nameres::resolve_no_inf_cast::<ast::AnyFieldsOwner>(db, pat_path);
         // can be null if unresolved
         if let Some(fields_owner) = fields_owner {
             entries.extend(get_named_field_entries(fields_owner));

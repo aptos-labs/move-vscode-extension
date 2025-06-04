@@ -25,138 +25,147 @@ pub mod scope;
 mod scope_entries_owner;
 pub mod use_speck_entries;
 
-pub trait ResolveReference {
-    fn resolve_multi(&self, db: &dyn SourceDatabase) -> Option<Vec<ScopeEntry>>;
-    fn resolve(&self, db: &dyn SourceDatabase) -> Option<ScopeEntry>;
-    fn resolve_no_inf_multi(&self, db: &dyn SourceDatabase) -> Option<Vec<ScopeEntry>>;
-    fn resolve_no_inf(&self, db: &dyn SourceDatabase) -> Option<ScopeEntry>;
+pub fn resolve(
+    db: &dyn SourceDatabase,
+    ref_element: InFile<impl Into<ast::ReferenceElement>>,
+) -> Option<ScopeEntry> {
+    resolve_multi(db, ref_element)?.single_or_none()
 }
 
-impl ResolveReference for InFile<ast::ReferenceElement> {
-    fn resolve_multi(&self, db: &dyn SourceDatabase) -> Option<Vec<ScopeEntry>> {
-        let (file_id, ref_element) = self.clone().unpack();
+pub fn resolve_multi(
+    db: &dyn SourceDatabase,
+    ref_element: InFile<impl Into<ast::ReferenceElement>>,
+) -> Option<Vec<ScopeEntry>> {
+    let (file_id, ref_element) = ref_element.map(|it| it.into()).unpack();
 
-        match ref_element.clone() {
-            ast::ReferenceElement::ItemSpecRef(item_spec_ref) => {
-                return get_item_spec_entries(db, item_spec_ref.in_file(file_id));
-            }
-            ast::ReferenceElement::Label(loop_label) => {
-                let label = loop_label.in_file(file_id);
-                let label_name = label.value.name_as_string();
-                let loop_label_entries =
-                    get_loop_labels_resolve_variants(label).filter_by_name(label_name);
-                tracing::debug!(?loop_label_entries);
-                return Some(loop_label_entries);
-            }
-            ast::ReferenceElement::ItemSpecTypeParam(item_spec_type_param) => {
-                let item_spec_fun = item_spec_type_param
-                    .item_spec()
-                    .in_file(file_id)
-                    .item(db)?
-                    .cast_into::<ast::Fun>()?;
-                let entries = item_spec_fun.flat_map(|it| it.type_params()).to_entries();
-                return Some(entries);
-            }
-            _ => (),
+    match ref_element.clone() {
+        ast::ReferenceElement::ItemSpecRef(item_spec_ref) => {
+            return get_item_spec_entries(db, item_spec_ref.in_file(file_id));
         }
-
-        // skip path in AttrItem = Path '=' Expr
-        if let ast::ReferenceElement::Path(path) = &ref_element {
-            if path.root_parent_of_type::<ast::AttrItem>().is_some() {
-                return None;
-            }
+        ast::ReferenceElement::Label(loop_label) => {
+            let label = loop_label.in_file(file_id);
+            let label_name = label.value.name_as_string();
+            let loop_label_entries = get_loop_labels_resolve_variants(label).filter_by_name(label_name);
+            tracing::debug!(?loop_label_entries);
+            return Some(loop_label_entries);
         }
-
-        let ctx_owner = ref_element.syntax().inference_ctx_owner();
-        let msl = self.value.syntax().is_msl_context();
-
-        if let Some(ctx_owner) = ctx_owner {
-            let inference = hir_db::inference(db, ctx_owner.in_file(file_id), msl);
-
-            let entries = match ref_element {
-                ast::ReferenceElement::MethodCallExpr(method_call) => {
-                    let entries = inference.get_resolve_method_or_path_entries(method_call.into());
-                    entries
-                }
-                ast::ReferenceElement::Path(path) => {
-                    let entries = inference.get_resolve_method_or_path_entries(path.clone().into());
-                    if entries.is_empty() {
-                        let _p = tracing::debug_span!("fallback_resolve_multi_for_path").entered();
-                        // to support qualifier paths, as they're not cached
-                        let entries =
-                            path_resolution::resolve_path(db, path.in_file(self.file_id), None);
-                        let filtered_entries = remove_variant_ident_pats(db, entries, |it| {
-                            it.map(|it| it.reference()).resolve(db)
-                        });
-                        return Some(filtered_entries);
-                    }
-                    entries
-                }
-                ast::ReferenceElement::StructPatField(struct_pat_field) => {
-                    let struct_path = struct_pat_field.struct_pat().path();
-                    let fields_owner = inference
-                        .get_resolve_method_or_path(struct_path.into())?
-                        .cast_into::<ast::AnyFieldsOwner>(db)?;
-
-                    let field_name = struct_pat_field.field_name()?;
-                    get_named_field_entries(fields_owner).filter_by_name(field_name)
-                }
-                ast::ReferenceElement::StructLitField(struct_lit_field) => {
-                    let struct_path = struct_lit_field.struct_lit().path();
-                    let fields_owner = inference
-                        .get_resolve_method_or_path(struct_path.into())?
-                        .cast_into::<ast::AnyFieldsOwner>(db)?;
-
-                    let field_name = struct_lit_field.field_name()?;
-                    get_named_field_entries(fields_owner).filter_by_name(field_name)
-                }
-                ast::ReferenceElement::SchemaLitField(schema_lit_field) => {
-                    let schema_lit_path = schema_lit_field.schema_lit()?.path()?;
-                    let schema = inference
-                        .get_resolve_method_or_path(schema_lit_path.into())?
-                        .cast_into::<ast::Schema>(db)?;
-
-                    let field_name = schema_lit_field.field_name()?;
-                    get_schema_field_entries(schema).filter_by_name(field_name)
-                }
-                ast::ReferenceElement::DotExpr(dot_expr) => {
-                    let field_name_ref = dot_expr.name_ref()?;
-                    inference
-                        .get_resolved_field(&field_name_ref)
-                        .map(|it| vec![it])
-                        .unwrap_or_default()
-                }
-                ast::ReferenceElement::IdentPat(ident_pat) => inference
-                    .get_resolved_ident_pat(&ident_pat)
-                    .map(|it| vec![it])
-                    .unwrap_or_default(),
-                _ => vec![],
-            };
+        ast::ReferenceElement::ItemSpecTypeParam(item_spec_type_param) => {
+            let item_spec_fun = item_spec_type_param
+                .item_spec()
+                .in_file(file_id)
+                .item(db)?
+                .cast_into::<ast::Fun>()?;
+            let entries = item_spec_fun.flat_map(|it| it.type_params()).to_entries();
             return Some(entries);
         }
-
-        // outside inference context
-        self.resolve_no_inf_multi(db)
+        _ => (),
     }
 
-    fn resolve(&self, db: &dyn SourceDatabase) -> Option<ScopeEntry> {
-        self.resolve_multi(db)?.single_or_none()
-    }
-
-    /// resolve outside of the `ast::InferenceCtxOwner`
-    fn resolve_no_inf_multi(&self, db: &dyn SourceDatabase) -> Option<Vec<ScopeEntry>> {
-        match self.cast_into_ref::<ast::Path>() {
-            Some(path) => Some(hir_db::resolve_path_multi(db, path)),
-            None => {
-                let kind = self.value.syntax().kind();
-                tracing::debug!("cannot resolve {:?} without inference", kind);
-                None
-            }
+    // skip path in AttrItem = Path '=' Expr
+    if let ast::ReferenceElement::Path(path) = &ref_element {
+        if path.root_parent_of_type::<ast::AttrItem>().is_some() {
+            return None;
         }
     }
 
-    fn resolve_no_inf(&self, db: &dyn SourceDatabase) -> Option<ScopeEntry> {
-        self.resolve_no_inf_multi(db)?.single_or_none()
+    let ctx_owner = ref_element.syntax().inference_ctx_owner();
+    let msl = ref_element.syntax().is_msl_context();
+
+    if let Some(ctx_owner) = ctx_owner {
+        let inference = hir_db::inference(db, ctx_owner.in_file(file_id), msl);
+
+        let entries = match ref_element {
+            ast::ReferenceElement::MethodCallExpr(method_call) => {
+                let entries = inference.get_resolve_method_or_path_entries(method_call.into());
+                entries
+            }
+            ast::ReferenceElement::Path(path) => {
+                let entries = inference.get_resolve_method_or_path_entries(path.clone().into());
+                if entries.is_empty() {
+                    let _p = tracing::debug_span!("fallback_resolve_multi_for_path").entered();
+                    // to support qualifier paths, as they're not cached
+                    let entries = path_resolution::resolve_path(db, path.in_file(file_id), None);
+                    let filtered_entries =
+                        remove_variant_ident_pats(db, entries, |ident_pat| resolve(db, ident_pat));
+                    return Some(filtered_entries);
+                }
+                entries
+            }
+            ast::ReferenceElement::StructPatField(struct_pat_field) => {
+                let struct_path = struct_pat_field.struct_pat().path();
+                let fields_owner = inference
+                    .get_resolve_method_or_path(struct_path.into())?
+                    .cast_into::<ast::AnyFieldsOwner>(db)?;
+
+                let field_name = struct_pat_field.field_name()?;
+                get_named_field_entries(fields_owner).filter_by_name(field_name)
+            }
+            ast::ReferenceElement::StructLitField(struct_lit_field) => {
+                let struct_path = struct_lit_field.struct_lit().path();
+                let fields_owner = inference
+                    .get_resolve_method_or_path(struct_path.into())?
+                    .cast_into::<ast::AnyFieldsOwner>(db)?;
+
+                let field_name = struct_lit_field.field_name()?;
+                get_named_field_entries(fields_owner).filter_by_name(field_name)
+            }
+            ast::ReferenceElement::SchemaLitField(schema_lit_field) => {
+                let schema_lit_path = schema_lit_field.schema_lit()?.path()?;
+                let schema = inference
+                    .get_resolve_method_or_path(schema_lit_path.into())?
+                    .cast_into::<ast::Schema>(db)?;
+
+                let field_name = schema_lit_field.field_name()?;
+                get_schema_field_entries(schema).filter_by_name(field_name)
+            }
+            ast::ReferenceElement::DotExpr(dot_expr) => {
+                let field_name_ref = dot_expr.name_ref()?;
+                inference
+                    .get_resolved_field(&field_name_ref)
+                    .map(|it| vec![it])
+                    .unwrap_or_default()
+            }
+            ast::ReferenceElement::IdentPat(ident_pat) => inference
+                .get_resolved_ident_pat(&ident_pat)
+                .map(|it| vec![it])
+                .unwrap_or_default(),
+            _ => vec![],
+        };
+        return Some(entries);
+    }
+
+    // outside inference context
+    resolve_no_inf_multi(db, ref_element.in_file(file_id))
+}
+
+pub fn resolve_no_inf_cast<Named: ast::NamedElement>(
+    db: &dyn SourceDatabase,
+    ref_element: InFile<impl Into<ast::ReferenceElement>>,
+) -> Option<InFile<Named>> {
+    resolve_no_inf_multi(db, ref_element)?
+        .single_or_none()?
+        .cast_into::<Named>(db)
+}
+
+pub fn resolve_no_inf(
+    db: &dyn SourceDatabase,
+    ref_element: InFile<impl Into<ast::ReferenceElement>>,
+) -> Option<ScopeEntry> {
+    resolve_no_inf_multi(db, ref_element)?.single_or_none()
+}
+
+/// resolve outside of the `ast::InferenceCtxOwner`
+fn resolve_no_inf_multi(
+    db: &dyn SourceDatabase,
+    ref_element: InFile<impl Into<ast::ReferenceElement>>,
+) -> Option<Vec<ScopeEntry>> {
+    let ref_element = ref_element.map(|it| it.into());
+    match ref_element.cast_into_ref::<ast::Path>() {
+        Some(path) => Some(hir_db::resolve_path_multi(db, path)),
+        None => {
+            tracing::debug!("cannot resolve {:?} without inference", ref_element.kind());
+            None
+        }
     }
 }
 
