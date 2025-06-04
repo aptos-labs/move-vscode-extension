@@ -55,6 +55,7 @@ impl<'db, DB> ops::Deref for Semantics<'db, DB> {
 
 impl<DB: SourceDatabase> Semantics<'_, DB> {
     pub fn new(db: &DB, ws_file_id: FileId) -> Semantics<'_, DB> {
+        tracing::info!("db_revision = {:?}", salsa::plumbing::current_revision(db));
         let ws_root = db.file_package_id(ws_file_id);
         let impl_ = SemanticsImpl::new(db, ws_root);
         // add builtins file to cache
@@ -81,24 +82,28 @@ impl<'db> SemanticsImpl<'db> {
         tree
     }
 
+    pub fn resolve_to_element<Named: ast::NamedElement>(
+        &self,
+        reference: InFile<ast::ReferenceElement>,
+    ) -> Option<InFile<Named>> {
+        let element = self
+            .resolve_in_file(reference)
+            .single_or_none()?
+            .cast_into::<Named>(self.db)?;
+        // cache file_id
+        self.parse(element.file_id);
+        Some(element)
+    }
+
     pub fn resolve(&self, reference: ast::ReferenceElement) -> Vec<ScopeEntry> {
         let reference = self.wrap_node_infile(reference);
         self.resolve_in_file(reference)
     }
 
     pub fn resolve_in_file(&self, reference: InFile<ast::ReferenceElement>) -> Vec<ScopeEntry> {
-        nameres::resolve_multi(self.db, reference).unwrap_or_default()
-    }
-
-    pub fn resolve_to_element<N: ast::NamedElement>(
-        &self,
-        reference: InFile<ast::ReferenceElement>,
-    ) -> Option<InFile<N>> {
-        let scope_entry = nameres::resolve_multi(self.db, reference)?.single_or_none();
-        let element = scope_entry?.cast_into::<N>(self.db)?;
-        // cache file_id
-        self.parse(element.file_id);
-        Some(element)
+        let msl = reference.syntax().value.is_msl_context();
+        let inference = self.inference(&reference, msl);
+        nameres::resolve_multi(self.db, reference, inference).unwrap_or_default()
     }
 
     pub fn fun_module(&self, fun: InFile<ast::AnyFun>) -> Option<InFile<ast::Module>> {
