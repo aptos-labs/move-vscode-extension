@@ -30,14 +30,14 @@ pub(crate) struct DiagnosticCollection {
 }
 
 impl DiagnosticCollection {
-    pub(crate) fn clear_check(&mut self, flycheck_id: usize) {
+    pub(crate) fn clear_flycheck(&mut self, flycheck_id: usize) {
         if let Some(check) = self.flycheck.get_mut(&flycheck_id) {
             let drained_keys = check.drain().map(|(k, _)| k.to_owned());
             self.changes.extend(drained_keys)
         }
     }
 
-    pub(crate) fn clear_check_all(&mut self) {
+    pub(crate) fn clear_flycheck_all(&mut self) {
         for files_diags in self.flycheck.values_mut() {
             let drained_keys = files_diags.drain().map(|(k, _)| k.to_owned());
             self.changes.extend(drained_keys);
@@ -50,12 +50,11 @@ impl DiagnosticCollection {
         self.changes.insert(file_id);
     }
 
-    pub(crate) fn add_check_diagnostic(
+    pub(crate) fn add_flycheck_diagnostic(
         &mut self,
         flycheck_id: usize,
         file_id: FileId,
         diagnostic: lsp_types::Diagnostic,
-        // fix: Option<Box<Fix>>,
     ) {
         let existing_diagnostics = self
             .flycheck
@@ -113,14 +112,17 @@ impl DiagnosticCollection {
         file_id: FileId,
     ) -> impl Iterator<Item = &lsp_types::Diagnostic> {
         let native_syntax = self.native_syntax.get(&file_id).into_iter().flat_map(|(_, d)| d);
-        // let native_semantic = self.native_semantic.get(&file_id).into_iter().flat_map(|(_, d)| d);
+        let native_semantic = self
+            .native_semantic
+            .get(&file_id)
+            .into_iter()
+            .flat_map(|(_, d)| d);
         let check = self
             .flycheck
             .values()
             .filter_map(move |it| it.get(&file_id))
             .flatten();
-        native_syntax /*.chain(native_semantic)*/
-            .chain(check)
+        native_syntax.chain(native_semantic).chain(check)
     }
 
     pub(crate) fn take_changes(&mut self) -> Option<HashSet<FileId>> {

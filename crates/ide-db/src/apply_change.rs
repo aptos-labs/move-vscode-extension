@@ -32,7 +32,7 @@ impl RootDatabase {
 
         change.apply(self);
 
-        tracing::info!(
+        tracing::debug!(
             "db_revision = {:?} -> {:?}",
             db_revision_before,
             salsa::plumbing::current_revision(self)

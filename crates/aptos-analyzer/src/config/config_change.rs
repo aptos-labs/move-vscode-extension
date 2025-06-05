@@ -36,8 +36,8 @@ impl Config {
             should_update = true;
         }
 
-        let command = config.check_command().as_str();
-        if !matches!(command, "compile" | "lint") {
+        let flycheck_command = config.check_command().as_str();
+        if !matches!(flycheck_command, "compile" | "lint") {
             config.validation_errors.0.push(Arc::new(ConfigErrorInner::Json {
                 config_key: "/check/command".to_owned(),
                 error: serde_json::Error::custom("expected one of the [\"compile\", \"lint\"]"),
@@ -72,7 +72,6 @@ pub struct ConfigChange {
 }
 
 impl ConfigChange {
-    #[tracing::instrument(level = "info", skip_all)]
     pub fn change_client_config(&mut self, change: serde_json::Value) {
         self.client_config_change = Some(change);
     }

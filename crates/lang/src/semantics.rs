@@ -55,7 +55,7 @@ impl<'db, DB> ops::Deref for Semantics<'db, DB> {
 
 impl<DB: SourceDatabase> Semantics<'_, DB> {
     pub fn new(db: &DB, ws_file_id: FileId) -> Semantics<'_, DB> {
-        tracing::info!("db_revision = {:?}", salsa::plumbing::current_revision(db));
+        tracing::debug!("db_revision = {:?}", salsa::plumbing::current_revision(db));
         let ws_root = db.file_package_id(ws_file_id);
         let impl_ = SemanticsImpl::new(db, ws_root);
         // add builtins file to cache

@@ -22,7 +22,7 @@ use crate::hover::HoverResult;
 use crate::inlay_hints::{InlayHint, InlayHintsConfig};
 pub use crate::navigation_target::NavigationTarget;
 pub use crate::syntax_highlighting::HlRange;
-use base_db::inputs::InternFileId;
+use base_db::inputs::{InternFileId, PackageMetadata};
 use base_db::package_root::PackageId;
 use ide_completion::config::CompletionConfig;
 use ide_db::assist_config::AssistConfig;
@@ -115,10 +115,21 @@ impl Analysis {
         self.with_db(|db| db.file_package_id(file_id))
     }
 
-    pub fn is_local_package(&self, package_id: PackageId) -> Cancellable<bool> {
+    pub fn package_metadata(&self, file_id: FileId) -> Cancellable<Option<PackageMetadata>> {
         self.with_db(|db| {
-            let sr = db.package_root(package_id).data(db);
-            !sr.is_library()
+            let package_id = db.file_package_id(file_id);
+            db.package_root(package_id)
+                .data(db)
+                .manifest_file_id
+                .map(|file_id| db.package_metadata(file_id).metadata(db))
+        })
+    }
+
+    pub fn is_local_package(&self, file_id: FileId) -> Cancellable<bool> {
+        self.with_db(|db| {
+            let package_id = db.file_package_id(file_id);
+            let root = db.package_root(package_id).data(db);
+            !root.is_library()
         })
     }
 

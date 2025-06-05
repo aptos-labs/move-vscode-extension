@@ -36,7 +36,7 @@ pub(crate) fn handle_work_done_progress_cancel(
     if let lsp_types::NumberOrString::String(s) = &params.token {
         if let Some(id) = s.strip_prefix("aptos-analyzer/flycheck/") {
             if let Ok(id) = id.parse::<u32>() {
-                if let Some(flycheck) = state.flycheck.get(id as usize) {
+                if let Some(flycheck) = state.flycheck_jobs.get(id as usize) {
                     flycheck.cancel();
                 }
             }
@@ -151,8 +151,8 @@ pub(crate) fn handle_did_save_text_document(
         }
     } else if state.config.check_on_save() {
         // No specific flycheck was triggered, so let's trigger all of them.
-        for flycheck in state.flycheck.iter() {
-            flycheck.restart_workspace();
+        for flycheck_job in state.flycheck_jobs.iter() {
+            flycheck_job.restart();
         }
     }
 
@@ -279,19 +279,19 @@ fn run_flycheck(state: &mut GlobalState, vfs_path: VfsPath) -> bool {
                 .filter(|(_, ws)| ws.contains_file(saved_file_path.as_path()));
 
             // Find and trigger corresponding flychecks
-            'flychecks: for flycheck in world.flycheck.iter() {
+            'flychecks: for flycheck_job in world.flycheck_jobs.iter() {
                 for (ws_id, _) in workspace_ids.clone() {
-                    if ws_id == flycheck.ws_id() {
+                    if ws_id == flycheck_job.ws_id() {
                         updated = true;
-                        flycheck.restart_workspace();
+                        flycheck_job.restart();
                         continue 'flychecks;
                     }
                 }
             }
             // No specific flycheck was triggered, so let's trigger all of them.
             if !updated {
-                for flycheck in world.flycheck.iter() {
-                    flycheck.restart_workspace();
+                for flycheck_job in world.flycheck_jobs.iter() {
+                    flycheck_job.restart();
                 }
             }
             Ok(())
@@ -312,13 +312,13 @@ fn run_flycheck(state: &mut GlobalState, vfs_path: VfsPath) -> bool {
 
 #[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_cancel_flycheck(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
-    state.flycheck.iter().for_each(|flycheck| flycheck.cancel());
+    state.flycheck_jobs.iter().for_each(|flycheck| flycheck.cancel());
     Ok(())
 }
 
 #[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_clear_flycheck(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
-    state.diagnostics.clear_check_all();
+    state.diagnostics.clear_flycheck_all();
     Ok(())
 }
 
@@ -335,8 +335,8 @@ pub(crate) fn handle_run_flycheck(
         }
     }
     // No specific flycheck was triggered, so let's trigger all of them.
-    for ws_flycheck in state.flycheck.iter() {
-        ws_flycheck.restart_workspace();
+    for ws_flycheck_job in state.flycheck_jobs.iter() {
+        ws_flycheck_job.restart();
     }
     Ok(())
 }

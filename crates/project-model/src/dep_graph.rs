@@ -1,6 +1,8 @@
 use crate::aptos_package::{AptosPackage, VfsLoader};
 use base_db::change::{ManifestFileId, PackageGraph};
+use base_db::inputs::PackageMetadata;
 use paths::AbsPath;
+use std::sync::Arc;
 use vfs::Vfs;
 
 pub fn collect_initial(packages: &[AptosPackage], vfs: &mut Vfs) -> Option<PackageGraph> {
@@ -19,9 +21,15 @@ pub fn collect(aptos_packages: &[AptosPackage], load: VfsLoader<'_>) -> Option<P
 
     let mut global_dep_graph = PackageGraph::default();
 
-    for package in aptos_packages.iter() {
-        let (package_file_id, dep_ids) = package.dep_graph_entry(load)?;
-        global_dep_graph.insert(package_file_id, dep_ids);
+    for aptos_package in aptos_packages.iter() {
+        let (package_file_id, dep_ids) = aptos_package.dep_graph_entry(load)?;
+        global_dep_graph.insert(
+            package_file_id,
+            PackageMetadata {
+                dep_manifest_ids: Arc::new(dep_ids),
+                resolve_deps: aptos_package.resolve_deps,
+            },
+        );
     }
 
     Some(global_dep_graph)

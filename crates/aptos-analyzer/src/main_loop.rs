@@ -258,14 +258,16 @@ impl GlobalState {
             if became_fully_loaded {
                 if self.config.check_on_save() {
                     // Project has loaded properly, kick off initial flycheck
-                    self.flycheck
-                        .iter()
-                        .for_each(|flycheck| flycheck.restart_workspace());
+                    self.flycheck_jobs.iter().for_each(|flycheck| flycheck.restart());
                 }
             }
 
-            let client_refresh = became_fully_loaded || any_file_changed;
-            if client_refresh {
+            let ask_for_client_refresh = became_fully_loaded || any_file_changed;
+            if ask_for_client_refresh {
+                tracing::info!(?ask_for_client_refresh);
+            }
+
+            if ask_for_client_refresh {
                 // Refresh semantic tokens if the client supports it.
                 if self.config.semantic_tokens_refresh() {
                     // self.semantic_tokens_cache.lock().clear();
@@ -290,7 +292,6 @@ impl GlobalState {
             let project_or_mem_docs_changed =
                 became_fully_loaded || any_file_changed || memdocs_added_or_removed;
             if project_or_mem_docs_changed
-                // && self.config.text_document_diagnostic_pull_enabled()
                 && !self.config.text_document_diagnostic_pull_enabled()
                 && self.config.diagnostics_enabled()
             {
@@ -468,7 +469,7 @@ impl GlobalState {
                             tracing::error!("FetchWorkspaceError: {fetch_err}");
                         }
                         self.reason_to_state_refresh = Some("loaded aptos packages from fs".to_owned());
-                        self.diagnostics.clear_check_all();
+                        self.diagnostics.clear_flycheck_all();
                         (Progress::End, None)
                     }
                 };
@@ -509,9 +510,18 @@ impl GlobalState {
                         (n_total, Progress::End)
                     }
                 };
-
                 self.vfs_progress_config_version = config_version;
-                self.vfs_done = state == Progress::End;
+
+                let is_vfs_load_ended = state == Progress::End;
+
+                if !self.vfs_initialized && is_vfs_load_ended {
+                    self.vfs_initialized = true;
+                }
+                self.vfs_done = is_vfs_load_ended;
+
+                if is_vfs_load_ended {
+                    self.recreate_package_graph("after vfs_refresh".to_string() /*, false*/);
+                }
 
                 let mut message = format!("{n_done}/{n_total}");
                 if let Some(dir) = dir {
@@ -559,7 +569,7 @@ impl GlobalState {
                     Ok(diag) => match url_to_file_id(&self.vfs.read().0, &diag.url) {
                         Ok(file_id) => {
                             self.diagnostics
-                                .add_check_diagnostic(ws_id, file_id, diag.diagnostic)
+                                .add_flycheck_diagnostic(ws_id, file_id, diag.diagnostic)
                         }
                         Err(err) => {
                             tracing::error!(
@@ -577,7 +587,7 @@ impl GlobalState {
                 }
             }
 
-            FlycheckMessage::ClearDiagnostics { ws_id } => self.diagnostics.clear_check(ws_id),
+            FlycheckMessage::ClearDiagnostics { ws_id } => self.diagnostics.clear_flycheck(ws_id),
 
             FlycheckMessage::Progress { ws_id: id, progress } => {
                 let (state, message) = match progress {
@@ -602,7 +612,7 @@ impl GlobalState {
 
                 // When we're running multiple flychecks, we have to include a disambiguator in
                 // the title, or the editor complains. Note that this is a user-facing string.
-                let title = if self.flycheck.len() == 1 {
+                let title = if self.flycheck_jobs.len() == 1 {
                     format!("{}", flycheck_config)
                 } else {
                     format!("{} (#{})", flycheck_config, id + 1)
@@ -690,7 +700,7 @@ impl GlobalState {
             .on_latency_sensitive::<NO_RETRY, lsp_request::SemanticTokensRangeRequest>(handlers::handle_semantic_tokens_range)
             // FIXME: Some of these NO_RETRY could be retries if the file they are interested didn't change.
             // All other request handlers
-            .on_with_fully_loaded::<lsp_request::DocumentDiagnosticRequest>(
+            .on_with_vfs_default::<lsp_request::DocumentDiagnosticRequest>(
                 handlers::handle_document_diagnostics, || lsp_types::DocumentDiagnosticReportResult::Report(
                     lsp_types::DocumentDiagnosticReport::Full(
                         lsp_types::RelatedFullDocumentDiagnosticReport {

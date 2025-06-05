@@ -288,6 +288,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     }
 
     fn infer_expr(&mut self, expr: &ast::Expr, expected: Expected) -> Ty {
+        self.ctx.db.unwind_if_revision_cancelled();
+
         if self.ctx.expr_types.contains_key(expr) {
             unreachable!("trying to infer expr twice");
         }

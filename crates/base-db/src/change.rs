@@ -1,4 +1,5 @@
 use crate::SourceDatabase;
+use crate::inputs::PackageMetadata;
 use crate::package_root::{PackageId, PackageKind, PackageRoot};
 use salsa::Durability;
 use std::collections::HashMap;
@@ -7,7 +8,7 @@ use std::sync::Arc;
 use vfs::FileId;
 
 pub type ManifestFileId = FileId;
-pub type PackageGraph = HashMap<ManifestFileId, Vec<ManifestFileId>>;
+pub type PackageGraph = HashMap<ManifestFileId, PackageMetadata>;
 
 /// Encapsulate a bunch of raw `.set` calls on the database.
 #[derive(Default)]
@@ -79,8 +80,8 @@ impl FileChanges {
 
         if let Some(package_graph) = self.package_graph {
             let _p = tracing::info_span!("set package dependencies").entered();
-            for (manifest_file_id, dep_manifest_ids) in package_graph.into_iter() {
-                db.set_dep_package_ids(manifest_file_id, dep_manifest_ids);
+            for (package_manifest_id, package_metadata) in package_graph.into_iter() {
+                db.set_package_metadata(package_manifest_id, package_metadata);
             }
         }
 

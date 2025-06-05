@@ -82,7 +82,12 @@ fn load_reachable_aptos_packages(
                         &mut visited_transitive_manifests,
                     );
                 }
-                packages.push(Ok(AptosPackage::new(&manifest, kind, transitive_deps)));
+                packages.push(Ok(AptosPackage::new(
+                    &manifest,
+                    kind,
+                    transitive_deps,
+                    resolve_deps,
+                )));
             }
         }
     }
