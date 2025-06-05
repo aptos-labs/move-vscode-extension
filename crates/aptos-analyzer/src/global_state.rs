@@ -67,7 +67,7 @@ pub(crate) struct GlobalState {
     pub(crate) last_reported_status: lsp_ext::ServerStatusParams,
 
     // Flycheck
-    pub(crate) flycheck: Arc<[FlycheckHandle]>,
+    pub(crate) flycheck_jobs: Arc<[FlycheckHandle]>,
     pub(crate) flycheck_sender: Sender<FlycheckMessage>,
     pub(crate) flycheck_receiver: Receiver<FlycheckMessage>,
     pub(crate) last_flycheck_error: Option<String>,
@@ -78,7 +78,7 @@ pub(crate) struct GlobalState {
     pub(crate) vfs_config_version: u32,
     pub(crate) vfs_progress_config_version: u32,
     pub(crate) vfs_done: bool,
-    pub(crate) package_graph_initialized: bool,
+    pub(crate) vfs_initialized: bool,
     // used to track how long VFS loading takes. this can't be on `vfs::loader::Handle`,
     // as that handle's lifetime is the same as `GlobalState` itself.
     pub(crate) vfs_span: Option<tracing::span::EnteredSpan>,
@@ -96,7 +96,7 @@ pub(crate) struct GlobalStateSnapshot {
     mem_docs: MemDocs,
     vfs: Arc<RwLock<(vfs::Vfs, HashMap<FileId, LineEndings>)>>,
     pub(crate) all_packages: Arc<Vec<AptosPackage>>,
-    pub(crate) flycheck: Arc<[FlycheckHandle]>,
+    pub(crate) flycheck_jobs: Arc<[FlycheckHandle]>,
     sender: Sender<lsp_server::Message>,
 }
 
@@ -154,7 +154,7 @@ impl GlobalState {
             package_root_config: PackageRootConfig::default(),
             config_errors: Default::default(),
 
-            flycheck: Arc::from_iter([]),
+            flycheck_jobs: Arc::from_iter([]),
             flycheck_sender,
             flycheck_receiver,
             last_flycheck_error: None,
@@ -164,7 +164,7 @@ impl GlobalState {
             vfs_config_version: 0,
             vfs_progress_config_version: 0,
             vfs_done: true,
-            package_graph_initialized: false,
+            vfs_initialized: false,
             vfs_span: None,
             reason_to_state_refresh: None,
 
@@ -176,6 +176,10 @@ impl GlobalState {
         this
     }
 
+    pub fn vfs_initialized_and_loaded(&self) -> bool {
+        self.vfs_initialized && self.vfs_done
+    }
+
     pub(crate) fn snapshot(&self) -> GlobalStateSnapshot {
         GlobalStateSnapshot {
             config: Arc::clone(&self.config),
@@ -184,7 +188,7 @@ impl GlobalState {
             vfs: Arc::clone(&self.vfs),
             mem_docs: self.mem_docs.clone(),
             // semantic_tokens_cache: Arc::clone(&self.semantic_tokens_cache),
-            flycheck: self.flycheck.clone(),
+            flycheck_jobs: self.flycheck_jobs.clone(),
             sender: self.sender.clone(),
         }
     }

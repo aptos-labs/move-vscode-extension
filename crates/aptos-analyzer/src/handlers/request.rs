@@ -143,19 +143,24 @@ pub(crate) fn handle_document_diagnostics(
     params: lsp_types::DocumentDiagnosticParams,
 ) -> anyhow::Result<lsp_types::DocumentDiagnosticReportResult> {
     let _p = tracing::info_span!("handle_document_diagnostics").entered();
+
     let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
 
-    let package_id = snap.analysis.package_id(file_id)?;
-    if !snap.analysis.is_local_package(package_id)? {
-        return Ok(empty_diagnostic_report());
-    }
-
-    let config = snap.config.diagnostics_config();
+    let mut config = snap.config.diagnostics_config();
     if !config.enabled {
         return Ok(empty_diagnostic_report());
     }
-    let line_index = snap.file_line_index(file_id)?;
 
+    if !snap.analysis.is_local_package(file_id)? {
+        return Ok(empty_diagnostic_report());
+    }
+    let package_metadata = snap.analysis.package_metadata(file_id)?;
+    if package_metadata.is_none_or(|it| !it.resolve_deps) {
+        config = config.for_assists();
+        tracing::info!("only show assist diagnostics because of `resolve_deps = false`");
+    }
+
+    let line_index = snap.file_line_index(file_id)?;
     let diagnostics = snap
         .analysis
         .full_diagnostics(&config, AssistResolveStrategy::None, file_id)?
@@ -372,6 +377,7 @@ pub(crate) fn handle_code_action(
     }
 
     let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
+
     let frange = unwrap_or_return_default!(from_proto::file_range(
         &snap,
         &params.text_document,

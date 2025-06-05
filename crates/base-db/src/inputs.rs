@@ -44,10 +44,17 @@ pub struct PackageRootInput {
     pub data: Arc<PackageRoot>,
 }
 
-#[salsa::input]
-pub struct PackageData {
+#[derive(Clone, Eq, PartialEq)]
+pub struct PackageMetadata {
     // todo: add package name
-    pub dep_manifests: Arc<Vec<ManifestFileId>>,
+    pub dep_manifest_ids: Arc<Vec<ManifestFileId>>,
+    pub resolve_deps: bool,
+}
+
+#[salsa::input]
+pub struct PackageMetadataInput {
+    // todo: add package name
+    pub metadata: PackageMetadata,
 }
 
 #[derive(Default)]
@@ -56,7 +63,7 @@ pub struct Files {
     file_package_ids: Arc<DashMap<FileId, PackageId>>,
 
     package_roots: Arc<DashMap<PackageId, PackageRootInput>>,
-    package_deps: Arc<DashMap<ManifestFileId, PackageData>>,
+    package_metadata: Arc<DashMap<ManifestFileId, PackageMetadataInput>>,
 
     spec_file_sets: Arc<DashMap<FileId, FileIdSet>>,
 }
@@ -139,27 +146,34 @@ impl Files {
         self.file_package_ids.insert(file_id, package_id);
     }
 
-    pub fn package_deps(&self, package_id: ManifestFileId) -> PackageData {
-        let package_deps = self
-            .package_deps
+    pub fn package_metadata(&self, package_id: ManifestFileId) -> PackageMetadataInput {
+        let metadata = self
+            .package_metadata
             .get(&package_id)
             .expect("Unable to fetch package dependencies");
-        *package_deps
+        *metadata
     }
 
-    pub fn set_package_deps(
+    // NOTE: Durability::HIGH is critical here, it needs to be bigger than resolution data
+    pub fn set_package_metadata(
         &self,
         db: &mut dyn SourceDatabase,
         package_id: ManifestFileId,
-        dep_ids: Arc<Vec<ManifestFileId>>,
+        metadata: PackageMetadata,
     ) {
-        match self.package_deps.entry(package_id) {
+        match self.package_metadata.entry(package_id) {
             Entry::Occupied(mut occupied) => {
-                occupied.get_mut().set_dep_manifests(db).to(dep_ids);
+                occupied
+                    .get_mut()
+                    .set_metadata(db)
+                    .with_durability(Durability::MEDIUM)
+                    .to(metadata);
             }
             Entry::Vacant(vacant) => {
-                let package_data = PackageData::builder(dep_ids).new(db);
-                vacant.insert(package_data);
+                let input = PackageMetadataInput::builder(metadata)
+                    .durability(Durability::MEDIUM)
+                    .new(db);
+                vacant.insert(input);
             }
         };
     }

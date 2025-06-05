@@ -8,7 +8,7 @@ use crate::{Config, lsp_ext};
 use base_db::change::{FileChanges, ManifestFileId, PackageGraph};
 use lsp_types::FileSystemWatcher;
 use project_model::aptos_package::{AptosPackage, load_from_fs};
-use project_model::dep_graph::{collect, collect_initial};
+use project_model::dep_graph::collect;
 use project_model::project_folders::ProjectFolders;
 use std::fmt::Formatter;
 use std::sync::Arc;
@@ -65,7 +65,7 @@ impl GlobalState {
             self.load_aptos_packages_queue
                 .request_op("discovered projects changed".to_owned(), req)
         } else if self.config.flycheck_config() != old_config.flycheck_config() {
-            self.reload_flycheck();
+            self.respawn_flycheck();
         }
     }
 
@@ -177,7 +177,7 @@ impl GlobalState {
                 if *force_reload_package_deps {
                     self.recreate_package_graph(
                         format!("fetch packages error while handling {:?}", cause),
-                        switching_from_empty_workspace,
+                        // switching_from_empty_workspace,
                     );
                 }
                 return;
@@ -230,13 +230,10 @@ impl GlobalState {
             watch,
             version: self.vfs_config_version,
         });
-
-        self.all_packages = Arc::new(packages_from_fs);
         self.package_root_config = project_folders.package_root_config;
+        self.all_packages = Arc::new(packages_from_fs);
 
-        self.recreate_package_graph(cause, switching_from_empty_workspace);
-
-        tracing::info!("did switch workspaces");
+        tracing::info!("vfs_refresh scheduled");
     }
 
     fn setup_client_file_watchers(&mut self, packages: &[AptosPackage]) {
@@ -308,42 +305,41 @@ impl GlobalState {
     }
 
     #[tracing::instrument(level = "info", skip(self))]
-    fn recreate_package_graph(&mut self, cause: String, initial_build: bool) {
+    pub(crate) fn recreate_package_graph(&mut self, cause: String /*, initial_build: bool*/) {
         let progress_title = "Reloading Aptos packages";
-
         self.report_progress(
             progress_title,
             Progress::Begin,
-            Some(format!("after {:?}", cause)),
+            Some(format!("after '{:?}'", cause)),
             None,
             None,
         );
         let package_graph = {
             let packages = self.all_packages.as_slice();
-            if initial_build {
-                // with initial build, vfs might not be ready, so we need to load files manually
-                let dep_graph = {
-                    let vfs = &mut self.vfs.write().0;
-                    collect_initial(packages, vfs)
-                };
-                // apply Move.toml changes bypassing the packages refresh
-                if let Some((changes, _)) = self.fetch_pending_file_changes() {
-                    tracing::info!(
-                        ?changes,
-                        "initial_build=true: apply changes for Move.toml files from the sync vfs access"
-                    );
-                    self.analysis_host.apply_change(changes);
-                }
-                dep_graph
-            } else {
-                let vfs = &self.vfs.read().0;
-                let mut load = |path: &AbsPath| {
-                    tracing::debug!(?path, "load from vfs");
-                    vfs.file_id(&vfs::VfsPath::from(path.to_path_buf()))
-                        .map(|it| it.0)
-                };
-                collect(packages, &mut load)
-            }
+            // if initial_build {
+            //     // with initial build, vfs might not be ready, so we need to load files manually
+            //     let dep_graph = {
+            //         let vfs = &mut self.vfs.write().0;
+            //         collect_initial(packages, vfs)
+            //     };
+            //     // apply Move.toml changes bypassing the packages refresh
+            //     if let Some((changes, _)) = self.fetch_pending_file_changes() {
+            //         tracing::info!(
+            //             ?changes,
+            //             "initial_build=true: apply changes for Move.toml files from the sync vfs access"
+            //         );
+            //         self.analysis_host.apply_change(changes);
+            //     }
+            //     dep_graph
+            // } else {
+            let vfs = &self.vfs.read().0;
+            let mut load = |path: &AbsPath| {
+                tracing::debug!(?path, "load from vfs");
+                vfs.file_id(&vfs::VfsPath::from(path.to_path_buf()))
+                    .map(|it| it.0)
+            };
+            collect(packages, &mut load)
+            // }
         };
         self.report_progress(progress_title, Progress::End, None, None, None);
 
@@ -357,14 +353,12 @@ impl GlobalState {
             trace_dependencies(&package_graph, vfs);
         }
 
-        let mut set_graph = FileChanges::new();
-        set_graph.set_package_graph(package_graph);
-        self.analysis_host.apply_change(set_graph);
+        let mut changes = FileChanges::new();
+        changes.set_package_graph(package_graph);
+        self.analysis_host.apply_change(changes);
 
-        self.package_graph_initialized = true;
-
-        self.process_pending_file_changes();
-        self.reload_flycheck();
+        // self.process_pending_file_changes();
+        self.respawn_flycheck();
     }
 
     pub(super) fn load_packages_error(&self) -> Result<(), String> {
@@ -392,11 +386,11 @@ impl GlobalState {
         Err(buf)
     }
 
-    fn reload_flycheck(&mut self) {
+    fn respawn_flycheck(&mut self) {
         let _p = tracing::info_span!("GlobalState::reload_flycheck").entered();
         let config = self.config.flycheck_config();
         if config.is_none() {
-            self.flycheck = Arc::from_iter([]);
+            self.flycheck_jobs = Arc::from_iter([]);
             return;
         }
 
@@ -407,7 +401,7 @@ impl GlobalState {
         }
 
         let sender = self.flycheck_sender.clone();
-        self.flycheck = self
+        self.flycheck_jobs = self
             .ws_root_packages()
             .enumerate()
             .filter_map(|(id, ws)| Some((id, ws.content_root(), ws.manifest_path())))
@@ -427,14 +421,19 @@ pub(crate) fn is_manifest_file(changed_file_path: &AbsPath) -> bool {
     changed_file_name == "Move.toml"
 }
 
-fn trace_dependencies(dep_graph: &PackageGraph, vfs: &Vfs) {
-    for (package_file_id, dep_ids) in dep_graph {
-        let main_package = dir_file_name(vfs, *package_file_id).unwrap_or("<empty>".to_string());
-        let dep_names = dep_ids
+fn trace_dependencies(package_entries: &PackageGraph, vfs: &Vfs) {
+    for (package_manifest_id, package_metadata) in package_entries {
+        let main_package = dir_file_name(vfs, *package_manifest_id).unwrap_or("<empty>".to_string());
+        let dep_names = package_metadata
+            .dep_manifest_ids
             .iter()
             .map(|it| dir_file_name(vfs, *it).unwrap_or("<empty>".to_string()))
             .collect::<Vec<_>>();
-        tracing::info!(?main_package, ?dep_names);
+        if package_metadata.resolve_deps {
+            tracing::info!(?main_package, ?dep_names);
+        } else {
+            tracing::info!(?main_package, ?dep_names, resolve_deps = false);
+        }
     }
 }
 

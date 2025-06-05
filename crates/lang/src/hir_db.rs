@@ -154,7 +154,10 @@ fn dep_package_ids(db: &dyn SourceDatabase, package_id: PackageId) -> Vec<Packag
     let Some(package_manifest_id) = db.package_root(package_id).data(db).manifest_file_id else {
         return vec![];
     };
-    let dep_manifest_ids = db.dep_package_ids(package_manifest_id).dep_manifests(db);
+    let dep_manifest_ids = db
+        .package_metadata(package_manifest_id)
+        .metadata(db)
+        .dep_manifest_ids;
     dep_manifest_ids
         .iter()
         .map(|it| db.file_package_id(*it))

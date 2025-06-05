@@ -12,14 +12,6 @@ use std::{fmt, io};
 pub(crate) mod compiler_diagnostic;
 pub use crate::flycheck::compiler_diagnostic::AptosDiagnostic;
 
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub(crate) enum InvocationStrategy {
-    #[allow(unused)]
-    Once,
-    #[default]
-    PerWorkspace,
-}
-
 #[derive(Default, Clone, Debug, PartialEq, Eq)]
 pub(crate) struct AptosCliOptions {
     pub(crate) extra_args: Vec<String>,
@@ -63,7 +55,7 @@ impl fmt::Display for FlycheckConfig {
 }
 
 /// Flycheck wraps the shared state and communication machinery used for
-/// running `cargo check` (or other compatible command) and providing
+/// running `aptos move compile` (or other compatible command) and providing
 /// diagnostics based on the output.
 /// The spawned thread is shut down when this struct is dropped.
 #[derive(Debug)]
@@ -93,13 +85,11 @@ impl FlycheckHandle {
         }
     }
 
-    /// Schedule a re-start of the cargo check worker to do a workspace wide check.
-    pub(crate) fn restart_workspace(&self) {
-        // --workspace
+    pub(crate) fn restart(&self) {
         self.sender.send(StateChange::Restart).unwrap();
     }
 
-    /// Stop this cargo check worker.
+    /// Stop this `aptos move compile` worker.
     pub(crate) fn cancel(&self) {
         self.sender.send(StateChange::Cancel).unwrap();
     }

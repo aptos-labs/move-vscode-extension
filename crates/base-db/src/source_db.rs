@@ -1,5 +1,8 @@
 use crate::change::ManifestFileId;
-use crate::inputs::{FileIdInput, FileIdSet, FileText, PackageData, PackageIdSet, PackageRootInput};
+use crate::inputs::{
+    FileIdInput, FileIdSet, FileText, PackageIdSet, PackageMetadata, PackageMetadataInput,
+    PackageRootInput,
+};
 use crate::package_root::{PackageId, PackageRoot};
 use salsa::Durability;
 use std::cell::RefCell;
@@ -36,9 +39,13 @@ pub trait SourceDatabase: salsa::Database {
 
     fn set_builtins_file_id(&mut self, id: Option<FileId>);
 
-    fn dep_package_ids(&self, package_file_id: ManifestFileId) -> PackageData;
+    fn package_metadata(&self, package_file_id: ManifestFileId) -> PackageMetadataInput;
 
-    fn set_dep_package_ids(&mut self, package_file_id: ManifestFileId, dep_ids: Vec<ManifestFileId>);
+    fn set_package_metadata(
+        &mut self,
+        package_file_id: ManifestFileId,
+        package_metadata: PackageMetadata,
+    );
 
     fn spec_related_files(&self, file_id: FileId) -> FileIdSet;
 

@@ -43,6 +43,7 @@ pub struct AptosPackage {
     content_root: AbsPathBuf,
     kind: PackageKind,
     transitive_dep_roots: Vec<(AbsPathBuf, PackageKind)>,
+    pub resolve_deps: bool,
 }
 
 impl fmt::Debug for AptosPackage {
@@ -51,6 +52,7 @@ impl fmt::Debug for AptosPackage {
             .field("content_root", &self.content_root().to_string())
             .field("sourced_from", &self.kind)
             .field("deps", &self.transitive_dep_roots)
+            .field("resolve_deps", &self.resolve_deps)
             .finish()
     }
 }
@@ -60,6 +62,7 @@ impl AptosPackage {
         manifest_path: &ManifestPath,
         kind: PackageKind,
         dep_roots: Vec<(ManifestPath, PackageKind)>,
+        resolve_deps: bool,
     ) -> Self {
         AptosPackage {
             content_root: manifest_path.content_root(),
@@ -68,6 +71,7 @@ impl AptosPackage {
                 .into_iter()
                 .map(|(manifest, kind)| (manifest.content_root(), kind))
                 .collect(),
+            resolve_deps,
         }
     }
 

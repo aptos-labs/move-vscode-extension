@@ -1,7 +1,8 @@
 use base_db::SourceDatabase;
 use base_db::change::ManifestFileId;
 use base_db::inputs::{
-    FileIdInput, FileIdSet, FileText, Files, InternFileId, PackageData, PackageIdSet, PackageRootInput,
+    FileIdInput, FileIdSet, FileText, Files, InternFileId, PackageIdSet, PackageMetadata,
+    PackageMetadataInput, PackageRootInput,
 };
 use base_db::package_root::{PackageId, PackageRoot};
 use line_index::LineIndex;
@@ -97,13 +98,13 @@ impl SourceDatabase for RootDatabase {
         self.builtins_file_id = file_id.map(|it| it.intern(self));
     }
 
-    fn dep_package_ids(&self, package_id: ManifestFileId) -> PackageData {
-        self.files.package_deps(package_id)
+    fn package_metadata(&self, package_id: ManifestFileId) -> PackageMetadataInput {
+        self.files.package_metadata(package_id)
     }
 
-    fn set_dep_package_ids(&mut self, package_id: ManifestFileId, dep_manifests: Vec<ManifestFileId>) {
+    fn set_package_metadata(&mut self, package_id: ManifestFileId, package_metadata: PackageMetadata) {
         let files = Arc::clone(&self.files);
-        files.set_package_deps(self, package_id, Arc::from(dep_manifests))
+        files.set_package_metadata(self, package_id, package_metadata)
     }
 
     fn spec_related_files(&self, file_id: FileId) -> FileIdSet {
