@@ -8,13 +8,14 @@ mod tests;
 use crate::config::DiagnosticsConfig;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use base_db::inputs::InternFileId;
-use base_db::source_db;
-use ide_db::RootDatabase;
+use base_db::{SourceDatabase, source_db};
 use ide_db::assists::AssistResolveStrategy;
+use ide_db::{RootDatabase, root_db};
 use lang::Semantics;
+use std::ops::Deref;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{FileRange, InFileExt};
-use syntax::{AstNode, ast, match_ast};
+use syntax::{AstNode, TextRange, TextSize, ast, match_ast};
 use vfs::FileId;
 
 struct DiagnosticsContext<'a> {
@@ -54,9 +55,11 @@ pub fn semantic_diagnostics(
     db: &RootDatabase,
     config: &DiagnosticsConfig,
     resolve: &AssistResolveStrategy,
-    file_id: FileId,
+    frange: FileRange,
 ) -> Vec<Diagnostic> {
     let _p = tracing::info_span!("semantic_diagnostics").entered();
+
+    let FileRange { file_id, range: diag_range } = frange;
     let sema = Semantics::new(db, file_id);
 
     let mut acc = vec![];
@@ -64,6 +67,10 @@ pub fn semantic_diagnostics(
     let file = sema.parse(file_id);
     let ctx = DiagnosticsContext { config, sema, resolve };
     for node in file.syntax().descendants() {
+        // do not overlap
+        if node.text_range().intersect(diag_range).is_none() {
+            continue;
+        }
         if node.is::<ast::InferenceCtxOwner>() {
             let ctx_owner = node.clone().cast::<ast::InferenceCtxOwner>().unwrap();
             handlers::type_check(&mut acc, &ctx, &ctx_owner.in_file(file_id));
@@ -94,9 +101,10 @@ pub fn full_diagnostics(
     db: &RootDatabase,
     config: &DiagnosticsConfig,
     resolve: &AssistResolveStrategy,
-    file_id: FileId,
+    file_range: FileRange,
 ) -> Vec<Diagnostic> {
-    let mut res = syntax_diagnostics(db, config, file_id);
-    res.extend(semantic_diagnostics(db, config, resolve, file_id));
+    let mut res = vec![];
+    res.extend(syntax_diagnostics(db, config, file_range.file_id));
+    res.extend(semantic_diagnostics(db, config, resolve, file_range));
     res
 }

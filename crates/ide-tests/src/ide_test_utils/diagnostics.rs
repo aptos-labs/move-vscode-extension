@@ -57,8 +57,9 @@ fn get_diagnostics(source: &str) -> (Analysis, FileId, Vec<Diagnostic>) {
     let (analysis, file_id) = fixtures::from_single_file(source.to_string());
 
     let config = DiagnosticsConfig::test_sample();
+    let frange = analysis.full_file_range(file_id).unwrap();
     let diagnostics = analysis
-        .semantic_diagnostics(&config, AssistResolveStrategy::All, file_id)
+        .semantic_diagnostics(&config, AssistResolveStrategy::All, frange)
         .unwrap();
 
     (analysis, file_id, diagnostics)
