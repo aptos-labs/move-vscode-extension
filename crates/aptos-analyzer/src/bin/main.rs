@@ -227,7 +227,7 @@ fn initialization_handshake() -> anyhow::Result<(Connection, lsp_server::IoThrea
         change.change_client_config(json);
 
         let error_sink: ConfigErrors;
-        (config, error_sink, _) = config.apply_change(change);
+        (config, error_sink) = config.apply_change(change);
 
         if !error_sink.is_empty() {
             use lsp_types::{
