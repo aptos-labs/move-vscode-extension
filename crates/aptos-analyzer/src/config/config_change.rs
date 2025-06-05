@@ -8,32 +8,39 @@ use std::sync::Arc;
 impl Config {
     /// Changes made to client and global configurations will partially not be reflected even after `.apply_change()` was called.
     /// The return tuple's bool component signals whether the `GlobalState` should call its `update_configuration()` method.
-    fn apply_change_with_sink(&self, change: ConfigChange) -> (Config, bool) {
+    fn apply_change_with_sink(&self, change: ConfigChange) -> Config {
         let mut config = self.clone();
         config.validation_errors = ConfigErrors::default();
 
-        let mut should_update = false;
+        // let mut should_update = false;
 
         if let Some(json) = change.client_config_change {
-            tracing::info!("updating config from JSON: {:#}", json);
+            // tracing::info!("updating config from JSON: {:#}", json);
 
             if !(json.is_null() || json.as_object().is_some_and(|it| it.is_empty())) {
                 // note: can be copied and uncommented to support config migrations
                 // patch_old_style::patch_json_for_outdated_configs(&mut json);
 
                 let mut json_errors = vec![];
-                config.client_config = (
-                    FullConfigInput::from_json(json, &mut json_errors),
-                    ConfigErrors(
-                        json_errors
-                            .into_iter()
-                            .map(|(a, b)| ConfigErrorInner::Json { config_key: a, error: b })
-                            .map(Arc::new)
-                            .collect(),
-                    ),
+                let full_config_input = FullConfigInput::from_json(json.clone(), &mut json_errors);
+                if config.client_config.0 != full_config_input {
+                    tracing::info!("updating config from JSON: {:#}", json);
+                }
+
+                let config_errors = ConfigErrors(
+                    json_errors
+                        .into_iter()
+                        .map(|(a, b)| ConfigErrorInner::Json { config_key: a, error: b })
+                        .map(Arc::new)
+                        .collect(),
                 );
+                if !config_errors.is_empty() {
+                    tracing::info!("config errors: {:?}", config_errors);
+                }
+
+                config.client_config = (full_config_input, config_errors);
             }
-            should_update = true;
+            // should_update = true;
         }
 
         let flycheck_command = config.check_command().as_str();
@@ -44,15 +51,15 @@ impl Config {
             }));
         }
 
-        (config, should_update)
+        config
     }
 
     /// Given `change` this generates a new `Config`, thereby collecting errors of type `ConfigError`.
     /// If there are changes that have global/client level effect, the last component of the return type
     /// will be set to `true`, which should be used by the `GlobalState` to update itself.
-    pub fn apply_change(&self, change: ConfigChange) -> (Config, ConfigErrors, bool) {
-        let (config, should_update) = self.apply_change_with_sink(change);
-        let e = ConfigErrors(
+    pub fn apply_change(&self, change: ConfigChange) -> (Config, ConfigErrors) {
+        let config = self.apply_change_with_sink(change);
+        let errors = ConfigErrors(
             config
                 .client_config
                 .1
@@ -62,7 +69,7 @@ impl Config {
                 .cloned()
                 .collect(),
         );
-        (config, e, should_update)
+        (config, errors)
     }
 }
 

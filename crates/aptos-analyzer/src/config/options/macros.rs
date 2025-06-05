@@ -123,7 +123,7 @@ macro_rules! _config_data {
     }) => {
         /// Default config values for this grouping.
         #[allow(non_snake_case)]
-        #[derive(Debug, Clone )]
+        #[derive(Debug, Clone, PartialEq)]
         struct $name { $($field: $ty,)* }
 
         impl_for_config_data!{
@@ -135,7 +135,7 @@ macro_rules! _config_data {
 
         /// All fields `Option<T>`, `None` representing fields not set in a particular JSON/TOML blob.
         #[allow(non_snake_case)]
-        #[derive(Clone, Default)]
+        #[derive(Clone, Default, PartialEq)]
         struct $input { $(
             $field: Option<$ty>,
         )* }
