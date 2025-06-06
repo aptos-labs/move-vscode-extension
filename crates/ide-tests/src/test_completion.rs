@@ -11,7 +11,7 @@ fn test_module_item_list_completion() {
         // language=Move
         r#"
 module 0x1::m {
-    fu/*caret*/
+    /*caret*/
 }
     "#,
         vec![
@@ -26,7 +26,7 @@ fn test_top_level_completion_items() {
     check_completion_exact(
         // language=Move
         r#"
-mod/*caret*/
+/*caret*/
     "#,
         vec!["module", "script", "spec"],
     );

@@ -358,7 +358,7 @@ fn test_test_only_function_completion_in_test_only_scope() {
             use 0x1::minter::get/*caret*/
         }
     "#,
-        expect![[r#"["Self", "get_weekly()"]"#]],
+        expect![[r#"["get_weekly()"]"#]],
     )
 }
 
@@ -376,7 +376,7 @@ fn test_test_only_function_completion_in_test_only_use_stmt_scope() {
             use 0x1::minter::get/*caret*/
         }
     "#,
-        expect![[r#"["Self", "get_weekly()"]"#]],
+        expect![[r#"["get_weekly()"]"#]],
     )
 }
 

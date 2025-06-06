@@ -8,8 +8,6 @@ use std::collections::{HashMap, HashSet};
 use std::mem;
 use stdx::iter_eq_by;
 use stdx::itertools::Itertools;
-use syntax::files::FileRange;
-use syntax::{TextRange, TextSize};
 use vfs::FileId;
 
 pub(crate) type DiagnosticsGeneration = usize;

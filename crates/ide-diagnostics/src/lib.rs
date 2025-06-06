@@ -8,14 +8,13 @@ mod tests;
 use crate::config::DiagnosticsConfig;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use base_db::inputs::InternFileId;
-use base_db::{SourceDatabase, source_db};
+use base_db::source_db;
+use ide_db::RootDatabase;
 use ide_db::assists::AssistResolveStrategy;
-use ide_db::{RootDatabase, root_db};
 use lang::Semantics;
-use std::ops::Deref;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{FileRange, InFileExt};
-use syntax::{AstNode, TextRange, TextSize, ast, match_ast};
+use syntax::{AstNode, ast, match_ast};
 use vfs::FileId;
 
 struct DiagnosticsContext<'a> {

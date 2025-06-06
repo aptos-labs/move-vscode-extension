@@ -1,28 +1,49 @@
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres::namespaces::Ns;
 use crate::nameres::scope::ScopeEntry;
-use syntax::SyntaxKind;
 use syntax::SyntaxKind::*;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
+use syntax::{SyntaxElement, SyntaxKind};
 
-#[tracing::instrument(level = "debug", skip(label))]
-pub(crate) fn get_loop_labels_resolve_variants(label: InFile<ast::Label>) -> Vec<ScopeEntry> {
-    let (file_id, label) = label.unpack();
-    let mut entries = vec![];
-    for scope in label.syntax().ancestors() {
+pub fn loop_ancestors(element: &SyntaxElement) -> Vec<ast::LoopLike> {
+    let mut loops = vec![];
+    for scope in element.ancestors() {
         if is_label_barrier(scope.kind()) {
             break;
         }
-        let opt_label_decl = scope.cast::<ast::LoopLike>().and_then(|it| it.label_decl());
-        if let Some(label_decl) = opt_label_decl {
-            let entry = label_decl_to_entry(label_decl.in_file(file_id));
-            entries.push(entry);
+        if let Some(loop_ans) = scope.cast::<ast::LoopLike>() {
+            loops.push(loop_ans);
         }
     }
-    tracing::debug!(?entries);
-    entries
+    loops
+}
+
+#[tracing::instrument(level = "debug", skip(label))]
+pub fn get_loop_labels_resolve_variants(label: InFile<ast::Label>) -> Vec<ScopeEntry> {
+    let (file_id, label) = label.unpack();
+
+    let mut label_entries = vec![];
+    for loop_like in loop_ancestors(&label.syntax().clone().into()) {
+        if let Some(label_decl) = loop_like.label_decl() {
+            let entry = label_decl_to_entry(label_decl.in_file(file_id));
+            label_entries.push(entry);
+        }
+    }
+
+    // for scope in label.syntax().ancestors() {
+    //     if is_label_barrier(scope.kind()) {
+    //         break;
+    //     }
+    //     let opt_label_decl = scope.cast::<ast::LoopLike>().and_then(|it| it.label_decl());
+    //     if let Some(label_decl) = opt_label_decl {
+    //         let entry = label_decl_to_entry(label_decl.in_file(file_id));
+    //         label_entries.push(entry);
+    //     }
+    // }
+    tracing::debug!(?label_entries);
+    label_entries
 }
 
 fn label_decl_to_entry(label_decl: InFile<ast::LabelDecl>) -> ScopeEntry {
