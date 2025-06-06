@@ -138,6 +138,16 @@ impl Analysis {
         self.with_db(|db| SourceDatabase::file_text(db, file_id).text(db))
     }
 
+    /// Gets the text of the source file.
+    pub fn full_file_range(&self, file_id: FileId) -> Cancellable<FileRange> {
+        let file_text = self.file_text(file_id)?;
+        let frange = FileRange {
+            file_id,
+            range: TextRange::up_to(TextSize::of(&*file_text)),
+        };
+        Ok(frange)
+    }
+
     /// Gets the syntax tree of the file.
     pub fn parse(&self, file_id: FileId) -> Cancellable<SourceFile> {
         self.with_db(|db| source_db::parse(db, file_id.intern(db)).tree())
@@ -460,9 +470,9 @@ impl Analysis {
         &self,
         config: &DiagnosticsConfig,
         resolve: AssistResolveStrategy,
-        file_id: FileId,
+        file_range: FileRange,
     ) -> Cancellable<Vec<Diagnostic>> {
-        self.with_db(|db| ide_diagnostics::semantic_diagnostics(db, config, &resolve, file_id))
+        self.with_db(|db| ide_diagnostics::semantic_diagnostics(db, config, &resolve, file_range))
     }
 
     /// Computes the set of both syntax and semantic diagnostics for the given file.
@@ -472,7 +482,8 @@ impl Analysis {
         resolve: AssistResolveStrategy,
         file_id: FileId,
     ) -> Cancellable<Vec<Diagnostic>> {
-        self.with_db(|db| ide_diagnostics::full_diagnostics(db, config, &resolve, file_id))
+        let frange = self.full_file_range(file_id)?;
+        self.with_db(|db| ide_diagnostics::full_diagnostics(db, config, &resolve, frange))
     }
 
     /// Convenience function to return assists + quick fixes for diagnostics
@@ -489,7 +500,7 @@ impl Analysis {
         };
         self.with_db(|db| {
             let diagnostic_assists = if diagnostics_config.enabled && include_fixes {
-                ide_diagnostics::semantic_diagnostics(db, diagnostics_config, &resolve, frange.file_id)
+                ide_diagnostics::semantic_diagnostics(db, diagnostics_config, &resolve, frange)
                     .into_iter()
                     .flat_map(|it| it.fixes.unwrap_or_default())
                     .filter(|it| it.target.intersect(frange.range).is_some())

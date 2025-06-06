@@ -12,9 +12,9 @@ impl GlobalState {
             return false;
         };
         let needs_to_refresh_packages = structure_changes.has_changes();
-        tracing::info!(?needs_to_refresh_packages);
 
         if needs_to_refresh_packages {
+            tracing::info!(?needs_to_refresh_packages);
             // let n_to_show = 10;
             // if structure_changes.len() < n_to_show {
             //     tracing::info!(n_files = structure_changes.len(), changed_paths = ?structure_changes, "refreshing package roots");

@@ -8,6 +8,8 @@ use std::collections::{HashMap, HashSet};
 use std::mem;
 use stdx::iter_eq_by;
 use stdx::itertools::Itertools;
+use syntax::files::FileRange;
+use syntax::{TextRange, TextSize};
 use vfs::FileId;
 
 pub(crate) type DiagnosticsGeneration = usize;
@@ -168,13 +170,14 @@ pub(crate) fn fetch_native_diagnostics(
         .filter_map(|file_id| {
             let line_index = snapshot.file_line_index(file_id).ok()?;
             let config = &snapshot.config.diagnostics_config();
+            let frange = snapshot.full_range(file_id).ok()?;
             let diagnostics = match kind {
                 NativeDiagnosticsFetchKind::Syntax => {
                     snapshot.analysis.syntax_diagnostics(config, file_id).ok()?
                 }
                 NativeDiagnosticsFetchKind::Semantic if config.enabled => snapshot
                     .analysis
-                    .semantic_diagnostics(config, ide::AssistResolveStrategy::None, file_id)
+                    .semantic_diagnostics(config, ide::AssistResolveStrategy::None, frange)
                     .ok()?,
                 NativeDiagnosticsFetchKind::Semantic => return None,
             };

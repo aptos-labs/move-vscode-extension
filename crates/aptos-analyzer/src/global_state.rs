@@ -19,8 +19,11 @@ use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard};
 use project_model::aptos_package::AptosPackage;
 use project_model::project_folders::PackageRootConfig;
 use std::collections::HashMap;
+use std::ops::Deref;
 use std::sync::Arc;
 use std::time::Instant;
+use syntax::files::FileRange;
+use syntax::{TextRange, TextSize};
 use vfs::{AnchoredPathBuf, FileId, VfsPath};
 
 pub(crate) struct LoadPackagesRequest {
@@ -329,6 +332,14 @@ impl GlobalStateSnapshot {
     #[allow(unused)]
     pub(crate) fn vfs_path_to_file_id(&self, vfs_path: &VfsPath) -> anyhow::Result<FileId> {
         vfs_path_to_file_id(&self.vfs_read(), vfs_path)
+    }
+
+    pub(crate) fn full_range(&self, file_id: FileId) -> Cancellable<FileRange> {
+        let file_text = self.analysis.file_text(file_id)?;
+        Ok(FileRange {
+            file_id,
+            range: TextRange::up_to(TextSize::of(&*file_text.deref())),
+        })
     }
 
     pub(crate) fn file_line_index(&self, file_id: FileId) -> Cancellable<LineIndex> {

@@ -12,7 +12,7 @@ use crate::{
 };
 use base_db::source_db::DbPanicContext;
 use lsp_server::{ExtractError, ResponseError};
-use salsa::Cancelled;
+use salsa::{Cancelled, UnexpectedCycle};
 use serde::{Serialize, de::DeserializeOwned};
 use stdx::thread::ThreadIntent;
 
@@ -348,11 +348,14 @@ where
             let mut message = "request handler panicked".to_owned();
             if let Some(panic_message) = panic_message {
                 message.push_str(": ");
-                message.push_str(panic_message)
+                message.push_str(panic_message);
+            } else if let Some(cycle) = panic.downcast_ref::<UnexpectedCycle>() {
+                tracing::error!("{cycle}");
+                message.push_str(": unexpected cycle");
             } else if let Ok(cancelled) = panic.downcast::<Cancelled>() {
                 tracing::error!("Cancellation propagated out of salsa! This is a bug");
                 return Err(HandlerCancelledError::Inner(*cancelled));
-            }
+            };
 
             Ok(lsp_server::Response::new_err(
                 id,

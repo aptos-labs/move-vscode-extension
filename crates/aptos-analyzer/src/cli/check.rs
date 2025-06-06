@@ -10,7 +10,7 @@ use ide_db::assists::{Assist, AssistResolveStrategy};
 use ide_db::{RootDatabase, Severity};
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
-use paths::{AbsPath, AbsPathBuf};
+use paths::{AbsPath, AbsPathBuf, RelPathBuf};
 use project_model::DiscoveredManifest;
 use project_model::aptos_package::load_from_fs;
 use std::collections::HashSet;
@@ -115,14 +115,30 @@ impl Check {
                 .collect::<Vec<_>>()
         });
 
-        for local_package_root in local_package_roots {
-            let package_root_dir = local_package_root.root_dir(&vfs).unwrap();
+        for package_root in local_package_roots {
+            let manifest_file_id = package_root.manifest_file_id.unwrap();
+            let metadata = db.package_metadata(manifest_file_id).metadata(&db);
 
-            if specific_fpath.is_none() {
-                println!("processing {package_root_dir}");
+            let forbidden_suffixes = &["move-examples/scripts/too_large"];
+
+            let package_root_dir = package_root.root_dir(&vfs).unwrap();
+            if forbidden_suffixes.iter().any(|suffix| {
+                let suffix = RelPathBuf::try_from(*suffix).unwrap();
+                package_root_dir.ends_with(suffix.as_path())
+            }) {
+                println!("skip {package_root_dir} [forbidden]");
+                continue;
             }
 
-            let file_ids = local_package_root.file_set.iter().collect::<Vec<_>>();
+            if specific_fpath.is_none() {
+                print!("processing {package_root_dir}");
+                if !metadata.resolve_deps {
+                    print!(" [no_deps]");
+                }
+                println!()
+            }
+
+            let file_ids = package_root.file_set.iter().collect::<Vec<_>>();
             for file_id in file_ids {
                 let file_path = vfs.file_path(file_id).clone();
                 if !file_path
@@ -143,9 +159,7 @@ impl Check {
                     }
                 }
                 if !visited_files.contains(&file_id) {
-                    let package_name = local_package_root
-                        .root_dir_name(&vfs)
-                        .unwrap_or("<error>".to_string());
+                    let package_name = package_root.root_dir_name(&vfs).unwrap_or("<error>".to_string());
                     if specific_fpath.is_some() || self.verbose {
                         println!(
                             "processing package '{package_name}', file: {}",
@@ -154,7 +168,12 @@ impl Check {
                     }
                     let abs_file_path = vfs.file_path(file_id).as_path().unwrap().to_path_buf();
 
-                    let diagnostics = find_diagnostics_for_a_file(&db, file_id, &diag_kinds);
+                    let mut diagnostics_config = DiagnosticsConfig::test_sample();
+                    if self.fix || !metadata.resolve_deps {
+                        diagnostics_config = diagnostics_config.for_assists();
+                    }
+                    let diagnostics =
+                        find_diagnostics_for_a_file(&db, file_id, &diag_kinds, &diagnostics_config);
                     let file_text = db.file_text(file_id).text(&db);
                     if !self.fix {
                         for diagnostic in diagnostics.clone() {
@@ -193,8 +212,12 @@ impl Check {
                                     break;
                                 }
                             }
-                            diagnostics_with_fixes =
-                                find_diagnostics_for_a_file(&db, file_id, &diag_kinds);
+                            diagnostics_with_fixes = find_diagnostics_for_a_file(
+                                &db,
+                                file_id,
+                                &diag_kinds,
+                                &diagnostics_config,
+                            );
                         }
                     }
                 }
@@ -223,14 +246,11 @@ fn find_diagnostics_for_a_file(
     db: &RootDatabase,
     file_id: FileId,
     diag_kinds: &Option<Vec<Severity>>,
+    config: &DiagnosticsConfig,
 ) -> Vec<Diagnostic> {
     let analysis = Analysis::new(db.snapshot());
     let mut diagnostics = analysis
-        .full_diagnostics(
-            &DiagnosticsConfig::test_sample(),
-            AssistResolveStrategy::All,
-            file_id,
-        )
+        .full_diagnostics(config, AssistResolveStrategy::All, file_id)
         .unwrap();
     if let Some(sevs) = diag_kinds {
         diagnostics = diagnostics
