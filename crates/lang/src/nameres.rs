@@ -17,7 +17,7 @@ pub mod binding;
 mod blocks;
 pub mod fq_named_element;
 mod is_visible;
-mod labels;
+pub mod labels;
 pub mod name_resolution;
 pub mod namespaces;
 pub mod node_ext;
@@ -52,7 +52,6 @@ pub fn resolve_multi(
                 let label_name = label.value.name_as_string();
                 let loop_label_entries =
                     get_loop_labels_resolve_variants(label).filter_by_name(label_name);
-                tracing::debug!(?loop_label_entries);
                 return Some(loop_label_entries);
             }
             ast::ReferenceElement::ItemSpecTypeParam(item_spec_type_param) => {

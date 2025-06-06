@@ -45,7 +45,7 @@ pub struct CompletionItem {
     pub detail: Option<String>,
 }
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct CompletionItemLabel {
     /// The primary label for the completion item.
     pub primary: String,
@@ -120,7 +120,7 @@ impl CompletionItemKind {
 
 impl CompletionItem {
     pub(crate) fn new(
-        kind: impl Into<CompletionItemKind>,
+        kind: CompletionItemKind,
         source_range: TextRange,
         label: impl Into<String>,
     ) -> CompletionItemBuilder {

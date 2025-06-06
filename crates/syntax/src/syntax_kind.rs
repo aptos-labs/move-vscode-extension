@@ -35,6 +35,6 @@ impl SyntaxKind {
     /// Returns true if this is an identifier or a keyword.
     #[inline]
     pub fn is_any_identifier(self) -> bool {
-        self == SyntaxKind::IDENT || self.is_keyword()
+        matches!(self, SyntaxKind::IDENT | SyntaxKind::QUOTE_IDENT)
     }
 }

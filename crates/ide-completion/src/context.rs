@@ -23,10 +23,17 @@ pub(crate) enum CompletionAnalysis {
 
 #[derive(Debug)]
 pub enum ReferenceKind {
-    Path(ast::Path),
-    FieldRef { receiver_expr: ast::Expr },
-    // Path(InFile<ast::Path>),
-    // FieldRef { receiver_expr: InFile<ast::Expr> },
+    Path {
+        original_path: Option<ast::Path>,
+        fake_path: ast::Path,
+    },
+    FieldRef {
+        receiver_expr: ast::Expr,
+    },
+    Label {
+        fake_label: ast::Label,
+        source_range: TextRange,
+    },
 }
 
 /// `CompletionContext` is created early during completion to figure out, where
@@ -47,11 +54,10 @@ impl CompletionContext<'_> {
     /// The range of the identifier that is being completed.
     pub(crate) fn source_range(&self) -> TextRange {
         let kind = self.original_token.kind();
-        match kind {
-            UNDERSCORE | INT_NUMBER => self.original_token.text_range(),
-            // We want to consider all keywords in all editions.
-            _ if kind.is_any_identifier() => self.original_token.text_range(),
-            _ => TextRange::empty(self.position.offset),
+        if matches!(kind, UNDERSCORE | INT_NUMBER | IDENT | QUOTE_IDENT) || kind.is_keyword() {
+            self.original_token.text_range()
+        } else {
+            TextRange::empty(self.position.offset)
         }
     }
 
@@ -93,8 +99,6 @@ impl<'a> CompletionContext<'a> {
             }
         }
 
-        // let fake_offset = offset + TextSize::of(COMPLETION_MARKER);
-
         let analysis = analyze(
             original_file.syntax().clone(),
             file_with_fake_ident.syntax().clone(),
@@ -113,59 +117,5 @@ impl<'a> CompletionContext<'a> {
         };
 
         Some((ctx, analysis))
-        //
-        // if let Some(fake_ref) =
-        //     find_node_at_offset::<ast::AnyReferenceElement>(&file_with_fake_ident.syntax(), fake_offset)
-        // {
-        //     let reference_kind = match fake_ref.syntax().kind() {
-        //         PATH => {
-        //             let original_path =
-        //                 find_node_at_offset::<ast::Path>(&original_file.syntax(), offset)?;
-        //             Some(ReferenceKind::Path(original_path.in_file(file_id)))
-        //         }
-        //         DOT_EXPR => {
-        //             let original_receiver_expr =
-        //                 find_node_at_offset::<ast::DotExpr>(&original_file.syntax(), offset)?
-        //                     .receiver_expr();
-        //             Some(ReferenceKind::FieldRef {
-        //                 receiver_expr: original_receiver_expr.in_file(file_id),
-        //             })
-        //         }
-        //         _ => None,
-        //     };
-        //     return reference_kind.and_then(|kind| {
-        //         let analysis = CompletionAnalysis::Reference(kind);
-        //         Some((ctx, analysis))
-        //     });
-        // }
-        //
-        // let ident = ctx.original_token.clone();
-        // let mut ident_parent = ident.parent().unwrap();
-        // if ident_parent.kind().is_error() {
-        //     ident_parent = ident_parent.parent().unwrap();
-        // }
-        //
-        // let ident_in_parent = ident_parent.child_or_token_at_range(ident.text_range()).unwrap();
-        // let ident_prev_sibling = ident_in_parent
-        //     .prev_sibling_or_token_no_trivia()
-        //     .map(|it| it.kind());
-        //
-        // let item_list_kind = match ident_parent.kind() {
-        //     SOURCE_FILE => ItemListKind::SourceFile,
-        //     MODULE => ItemListKind::Module,
-        //     FUN if ident_prev_sibling == Some(VISIBILITY_MODIFIER) => {
-        //         let fun = ident_parent.cast::<ast::Fun>().unwrap();
-        //         ItemListKind::Function {
-        //             existing_modifiers: fun.modifiers_as_strings(),
-        //         }
-        //     }
-        //     _ => {
-        //         // not an item list
-        //         return None;
-        //     }
-        // };
-        //
-        // let analysis = CompletionAnalysis::Item(item_list_kind);
-        // Some((ctx, analysis))
     }
 }

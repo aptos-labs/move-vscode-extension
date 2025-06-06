@@ -11,14 +11,21 @@ pub fn do_single_completion(before: &str, after: Expect) {
     let trimmed_before = stdx::trim_indent(before).trim().to_string();
     let (source, offset) = get_and_replace_caret(&trimmed_before, "/*caret*/");
 
-    let completion_items = completions_at_offset(&trimmed_before, offset, true);
-    assert_eq!(
-        completion_items.len(),
-        1,
-        "multiple completions returned {:?}",
-        lookup_labels(completion_items)
-    );
-    let completion_item = completion_items.first().unwrap();
+    let mut completion_items = completions_at_offset(&trimmed_before, offset, true);
+    match completion_items.len() {
+        0 => {
+            panic!("no completions returned")
+        }
+        1 => (),
+        _ => {
+            panic!(
+                "multiple completions returned {:?}",
+                lookup_labels(completion_items)
+            );
+        }
+    }
+
+    let completion_item = completion_items.pop().unwrap();
 
     let mut res = source.to_string();
     completion_item.text_edit.apply(&mut res);
@@ -73,7 +80,7 @@ pub fn check_completions(source: &str, expected: Expect) {
 
     let (source, offset) = get_and_replace_caret(source, "/*caret*/");
 
-    let completion_items = completions_at_offset(source, offset, false);
+    let completion_items = completions_at_offset(source, offset, true);
 
     let lookup_labels_txt = format!("{:?}", lookup_labels(completion_items));
     expected.assert_eq(&lookup_labels_txt);
@@ -103,7 +110,7 @@ pub fn check_no_completions(source: &str) {
 
 fn completions_at_caret(source: &str) -> Vec<CompletionItem> {
     let (source, caret_offset) = get_and_replace_caret(source, "/*caret*/");
-    completions_at_offset(source, caret_offset, false)
+    completions_at_offset(source, caret_offset, true)
 }
 
 fn completions_at_offset(

@@ -2,7 +2,8 @@ use crate::completions::Completions;
 use crate::context::CompletionContext;
 use crate::render::function::{FunctionKind, render_function};
 use crate::render::render_named_item;
-use lang::nameres::path_kind::{PathKind, path_kind};
+use lang::nameres::labels;
+use lang::nameres::path_kind::path_kind;
 use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variants};
 use lang::nameres::scope::ScopeEntryListExt;
 use std::cell::RefCell;
@@ -21,9 +22,9 @@ pub(crate) fn add_path_completions(
     let path_kind = path_kind(context_path.clone().value, true)?;
     tracing::debug!(?path_kind);
 
-    if matches!(path_kind, PathKind::Unqualified { .. }) {
-        add_keywords(completions, ctx);
-    }
+    // if matches!(path_kind, PathKind::Unqualified { .. }) {
+    //     add_expr_keywords(completions, ctx);
+    // }
 
     let acc = &mut completions.borrow_mut();
 
@@ -64,23 +65,27 @@ pub(crate) fn add_path_completions(
     Some(())
 }
 
-fn add_keywords(completions: &RefCell<Completions>, ctx: &CompletionContext<'_>) {
-    let add_keyword = |kw| completions.borrow_mut().add_keyword(ctx, kw);
-    let add_keyword_with_shift = |kw| {
-        completions
-            .borrow_mut()
-            .add_keyword_snippet(ctx, kw, &format!("{} $0", kw))
+pub(crate) fn add_expr_keywords(completions: &RefCell<Completions>, ctx: &CompletionContext<'_>) {
+    let add_keyword = |kw, right_shift| {
+        let mut comps = completions.borrow_mut();
+        let shift = if right_shift { " " } else { "" };
+        comps.add_keyword_snippet(ctx, kw, &format!("{kw}{shift}$0"));
     };
-    add_keyword_with_shift("if");
-    add_keyword_with_shift("match");
-    add_keyword_with_shift("loop");
-    add_keyword_with_shift("while");
-    add_keyword_with_shift("for");
 
-    add_keyword_with_shift("let");
+    add_keyword("if", true);
+    add_keyword("match", true);
+    add_keyword("loop", true);
+    add_keyword("while", true);
+    add_keyword("for", true);
+    add_keyword("let", true);
 
-    add_keyword("true");
-    add_keyword("false");
+    add_keyword("true", false);
+    add_keyword("false", false);
+
+    if !labels::loop_ancestors(&ctx.original_token.clone().into()).is_empty() {
+        add_keyword("continue", false);
+        add_keyword("break", false);
+    }
 }
 
 /// The state of the path we are currently completing.
