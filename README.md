@@ -188,7 +188,6 @@ The end goal is to be at a feature parity with the Intellij-Move plugin.
 
 Next features planned are (roughly in the expected order of implementation):
 
-* Improve completion engine to work in more places.
 * More error highlighting: 
   - Not enough type params / params / missing fields.
   - Replace `vector::borrow` with `v[]`.
