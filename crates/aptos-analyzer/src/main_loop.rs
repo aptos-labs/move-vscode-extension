@@ -264,10 +264,6 @@ impl GlobalState {
 
             let ask_for_client_refresh = became_fully_loaded || any_file_changed;
             if ask_for_client_refresh {
-                tracing::info!(?ask_for_client_refresh);
-            }
-
-            if ask_for_client_refresh {
                 // Refresh semantic tokens if the client supports it.
                 if self.config.semantic_tokens_refresh() {
                     // self.semantic_tokens_cache.lock().clear();

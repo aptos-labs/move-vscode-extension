@@ -9,9 +9,10 @@ use std::cell::LazyCell;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::{iter, mem};
-use syntax::ast::NamedElement;
-use syntax::files::{FileRange, InFile};
-use syntax::{AstNode, SyntaxElement, SyntaxNode, TextRange, TextSize, ast};
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::{IdentPatKind, NamedElement};
+use syntax::files::{FileRange, InFile, InFileExt};
+use syntax::{AstNode, SyntaxElement, SyntaxNode, TextRange, TextSize, ast, match_ast};
 use vfs::FileId;
 
 #[derive(Debug, Default, Clone)]
@@ -102,21 +103,32 @@ pub fn item_search_scope(db: &RootDatabase, named_item: &InFile<ast::AnyNamedEle
     let (file_id, _named_item) = named_item.unpack_ref();
     let package_id = db.file_package_id(file_id);
 
+    if let Some(ident_pat) = named_item.cast_into_ref::<ast::IdentPat>() {
+        if let Some(search_scope) = ident_pat_search_scope(db, ident_pat) {
+            return search_scope;
+        }
+    }
+
     SearchScope::reverse_dependencies(db, package_id)
-    // if let Some(_) = named_item.cast_into::<ast::Module>() {
-    //     return SearchScope::reverse_dependencies(db, package_id);
-    // }
+}
 
-    // if let Some(item) = named_item.syntax().cast::<ast::Item>() {
-    //     match item {
-    //         ast::Item::Fun(fun) => SearchScope::empty(),
-    //         _ => SearchScope::empty(),
-    //     }
-    // }
-
-    // SearchScope::empty()
-
-    // local variables
+fn ident_pat_search_scope(db: &RootDatabase, ident_pat: InFile<ast::IdentPat>) -> Option<SearchScope> {
+    let module = ident_pat.and_then_ref(|it| it.syntax().containing_module())?;
+    let owner_kind = ident_pat.value.owner()?;
+    match owner_kind {
+        IdentPatKind::Param(_) => Some(SearchScope::module_and_module_spec(db, module)),
+        IdentPatKind::LambdaParam(lambda_param) => {
+            let lambda_expr = lambda_param.lambda_expr();
+            Some(SearchScope::file_range(FileRange {
+                file_id: ident_pat.file_id,
+                range: lambda_expr.syntax().text_range(),
+            }))
+        }
+        IdentPatKind::LetStmt(_) => {
+            let fun = ident_pat.and_then(|it| it.syntax().containing_function())?;
+            Some(SearchScope::file_range(fun.syntax().file_range()))
+        }
+    }
 }
 
 pub fn item_usages<'a>(
@@ -181,9 +193,9 @@ impl SearchScope {
             (file_id, Some(item.text_range()))
         }
 
-        let mut entries = vec![node_search_scope(module.syntax())];
+        let mut entries = vec![(module.file_id, None)];
         for module_spec in module.related_module_specs(db) {
-            entries.push(node_search_scope(module_spec.syntax()));
+            entries.push((module_spec.file_id, None));
         }
 
         SearchScope::new(entries.into_iter().collect())
@@ -389,12 +401,22 @@ impl<'a> FindUsages<'a> {
         }
     }
 
-    fn found_name(
-        &self,
-        name: &ast::Name,
-        _sink: &mut dyn FnMut(FileId, FileReference) -> bool,
-    ) -> bool {
+    fn found_name(&self, name: &ast::Name, sink: &mut dyn FnMut(FileId, FileReference) -> bool) -> bool {
         match NameClass::classify(self.sema, name.clone()) {
+            Some(NameClass::ItemSpecFunctionParam {
+                spec_ident_pat:
+                    InFile {
+                        file_id,
+                        value: spec_ident_pat,
+                    },
+                fun_param_ident_pat,
+            }) if self.named_item == fun_param_ident_pat.clone().map_into() => {
+                let reference = FileReference {
+                    range: spec_ident_pat.syntax().text_range(),
+                    name: FileReferenceNode::Name(name.clone()),
+                };
+                sink(file_id, reference)
+            }
             _ => false,
         }
     }

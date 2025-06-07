@@ -31,10 +31,12 @@ pub fn check_resolve(source: &str) {
         .goto_definition_multi(position)
         .unwrap()
         .map(|range_info| range_info.info);
-    let Some(nav_items) = nav_items else {
+    let Some(mut nav_items) = nav_items else {
         assert!(data == "no reference", "Cannot find a reference at `//^` mark.");
         return;
     };
+
+    nav_items.retain(|it| it.focus_range.is_some_and(|range| !range.contains(ref_offset)));
 
     match nav_items.len() {
         0 => {
