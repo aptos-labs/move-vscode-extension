@@ -1,7 +1,7 @@
 use crate::syntax_highlighting::Highlight;
 use crate::syntax_highlighting::tags::HlTag;
-use ide_db::RootDatabase;
 use ide_db::defs::{Definition, NameClass, NameRefClass};
+use ide_db::{RootDatabase, SymbolKind};
 use lang::Semantics;
 use syntax::ast;
 
@@ -23,12 +23,9 @@ fn highlight_name(sema: &Semantics<'_, RootDatabase>, name: ast::Name) -> Highli
             let h = highlight_def(def) /*| HlMod::Definition*/;
             h
         }
-        // Some(NameClass::PatFieldShorthand { field_ref, .. }) => {
-        //     let mut h = HlTag::Symbol(SymbolKind::Field).into();
-        //     h
-        // }
+        Some(NameClass::PatFieldShorthand { .. }) => HlTag::Symbol(SymbolKind::Field).into(),
         // None => highlight_name_by_syntax(name) | HlMod::Definition,
-        None => HlTag::None.into(),
+        _ => HlTag::None.into(),
     }
 }
 

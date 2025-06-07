@@ -13,8 +13,6 @@ use crate::types::ty::Ty;
 use base_db::inputs::InternFileId;
 use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
-use std::collections::{HashMap, HashSet};
-use std::iter;
 use std::sync::Arc;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{InFile, InFileExt};

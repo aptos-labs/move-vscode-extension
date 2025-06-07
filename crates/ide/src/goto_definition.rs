@@ -1,8 +1,8 @@
 use crate::RangeInfo;
 use crate::navigation_target::NavigationTarget;
-use ide_db::RootDatabase;
 use ide_db::defs::{Definition, IdentClass, NameClass};
 use ide_db::helpers::pick_best_token;
+use ide_db::{RootDatabase, SymbolKind};
 use lang::Semantics;
 use lang::nameres::scope::VecExt;
 use syntax::files::FilePosition;
@@ -40,17 +40,21 @@ pub(crate) fn goto_definition_multi(
         _ => 1,
     })?;
 
-    if let Some(IdentClass::NameClass(name_class)) = IdentClass::classify_token(&sema, &original_token) {
-        return match name_class {
-            NameClass::Definition(Definition::NamedItem(_, named_item)) => {
-                let nav_target = NavigationTarget::from_named_item(&sema, named_item);
-                Some(RangeInfo::new(
-                    original_token.text_range(),
-                    nav_target.into_iter().collect(),
-                ))
-            }
-            _ => None,
-        };
+    if let Some(IdentClass::NameClass(NameClass::Definition(defn))) =
+        IdentClass::classify_token(&sema, &original_token)
+    {
+        if !matches!(defn, Definition::NamedItem(SymbolKind::Local, _)) {
+            return match defn {
+                Definition::NamedItem(_, named_item) => {
+                    let nav_target = NavigationTarget::from_named_item(&sema, named_item);
+                    Some(RangeInfo::new(
+                        original_token.text_range(),
+                        nav_target.into_iter().collect(),
+                    ))
+                }
+                _ => None,
+            };
+        }
     }
 
     let reference = algo::find_node_at_offset::<ast::ReferenceElement>(file.syntax(), offset)?;

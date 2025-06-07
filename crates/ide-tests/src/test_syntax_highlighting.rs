@@ -30,13 +30,17 @@ fn test_highlight_type_param() {
         // language=Move
         r#"
 module 0x1::m {
-    native fun main<Element>(a: Element);
+    native fun main<Element>(
+        a: Element
+    );
 }
     "#,
         // language=HTML
         expect![[r#"
             <span class="keyword">module</span> <span class="numeric_literal">0x1</span>::<span class="module">m</span> {
-                <span class="keyword">native</span> <span class="keyword">fun</span> <span class="function">main</span>&lt;<span class="type_param">Element</span>&gt;(<span class="variable">a</span>: <span class="type_param">Element</span>);
+                <span class="keyword">native</span> <span class="keyword">fun</span> <span class="function">main</span>&lt;<span class="type_param">Element</span>&gt;(
+                    <span class="variable">a</span>: <span class="type_param">Element</span>
+                );
             }"#]],
     );
 }

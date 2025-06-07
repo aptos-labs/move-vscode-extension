@@ -10,7 +10,6 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::{iter, mem};
 use syntax::ast::NamedElement;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{FileRange, InFile};
 use syntax::{AstNode, SyntaxElement, SyntaxNode, TextRange, TextSize, ast};
 use vfs::FileId;
@@ -91,8 +90,8 @@ impl FileReferenceNode {
     }
     pub fn text(&self) -> syntax::TokenText<'_> {
         match self {
-            FileReferenceNode::NameRef(name_ref) => name_ref.text(),
             FileReferenceNode::Name(name) => name.text(),
+            FileReferenceNode::NameRef(name_ref) => name_ref.text(),
         }
     }
 }
@@ -100,7 +99,7 @@ impl FileReferenceNode {
 pub fn item_search_scope(db: &RootDatabase, named_item: &InFile<ast::AnyNamedElement>) -> SearchScope {
     let _p = tracing::info_span!("item_search_scope").entered();
 
-    let (file_id, named_item) = named_item.unpack_ref();
+    let (file_id, _named_item) = named_item.unpack_ref();
     let package_id = db.file_package_id(file_id);
 
     SearchScope::reverse_dependencies(db, package_id)
@@ -197,12 +196,12 @@ impl SearchScope {
 
     /// Build a empty search scope spanning the given file.
     pub fn single_file(file: FileId) -> SearchScope {
-        SearchScope::new(std::iter::once((file, None)).collect())
+        SearchScope::new(iter::once((file, None)).collect())
     }
 
     /// Build a empty search scope spanning the text range of the given file.
     pub fn file_range(range: FileRange) -> SearchScope {
-        SearchScope::new(std::iter::once((range.file_id, Some(range.range))).collect())
+        SearchScope::new(iter::once((range.file_id, Some(range.range))).collect())
     }
 
     /// Build a empty search scope spanning the given files.
@@ -390,7 +389,11 @@ impl<'a> FindUsages<'a> {
         }
     }
 
-    fn found_name(&self, name: &ast::Name, sink: &mut dyn FnMut(FileId, FileReference) -> bool) -> bool {
+    fn found_name(
+        &self,
+        name: &ast::Name,
+        _sink: &mut dyn FnMut(FileId, FileReference) -> bool,
+    ) -> bool {
         match NameClass::classify(self.sema, name.clone()) {
             _ => false,
         }
