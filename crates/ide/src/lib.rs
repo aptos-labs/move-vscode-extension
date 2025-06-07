@@ -14,6 +14,7 @@ mod goto_definition;
 mod hover;
 pub mod inlay_hints;
 mod navigation_target;
+mod references;
 pub mod syntax_highlighting;
 mod type_info;
 mod view_syntax_tree;
@@ -21,14 +22,17 @@ mod view_syntax_tree;
 use crate::hover::HoverResult;
 use crate::inlay_hints::{InlayHint, InlayHintsConfig};
 pub use crate::navigation_target::NavigationTarget;
+use crate::references::ReferenceSearchResult;
 pub use crate::syntax_highlighting::HlRange;
 use base_db::inputs::{InternFileId, PackageMetadata};
 use base_db::package_root::PackageId;
 use ide_completion::config::CompletionConfig;
 use ide_db::assist_config::AssistConfig;
 pub use ide_db::assists::{Assist, AssistKind, AssistResolveStrategy};
+use ide_db::search::SearchScope;
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
+use lang::Semantics;
 pub use salsa::Cancelled;
 use syntax::files::{FilePosition, FileRange};
 
@@ -291,14 +295,14 @@ impl Analysis {
     //     self.with_db(|db| goto_type_definition::goto_type_definition(db, position))
     // }
 
-    // /// Finds all usages of the reference at point.
-    // pub fn find_all_refs(
-    //     &self,
-    //     position: FilePosition,
-    //     search_scope: Option<SearchScope>,
-    // ) -> Cancellable<Option<Vec<ReferenceSearchResult>>> {
-    //     self.with_db(|db| references::find_all_refs(&Semantics::new(db), position, search_scope))
-    // }
+    /// Finds all usages of the reference at point.
+    pub fn find_all_refs(
+        &self,
+        position: FilePosition,
+        search_scope: Option<SearchScope>,
+    ) -> Cancellable<Option<ReferenceSearchResult>> {
+        self.with_db(|db| references::find_all_refs(db, position, search_scope))
+    }
 
     /// Returns a short text describing element at position.
     pub fn hover(&self, pos: FilePosition) -> Cancellable<Option<RangeInfo<HoverResult>>> {

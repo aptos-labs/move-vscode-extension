@@ -769,6 +769,7 @@ dependencies = [
  "itertools",
  "lang",
  "line-index",
+ "memchr",
  "project-model",
  "salsa",
  "salsa-macros",

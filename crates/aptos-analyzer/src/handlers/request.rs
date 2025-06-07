@@ -9,11 +9,12 @@ use ide_db::assists::{AssistKind, AssistResolveStrategy, SingleResolve};
 use line_index::TextRange;
 use lsp_server::ErrorCode;
 use lsp_types::{
-    CodeActionOrCommand, HoverContents, InlayHint, InlayHintParams, ResourceOp, ResourceOperationKind,
-    SemanticTokensParams, SemanticTokensRangeParams, SemanticTokensRangeResult, SemanticTokensResult,
-    TextDocumentIdentifier,
+    CodeActionOrCommand, HoverContents, InlayHint, InlayHintParams, Location, ResourceOp,
+    ResourceOperationKind, SemanticTokensParams, SemanticTokensRangeParams, SemanticTokensRangeResult,
+    SemanticTokensResult, TextDocumentIdentifier,
 };
 use stdx::format_to;
+use stdx::itertools::Itertools;
 use syntax::files::FileRange;
 // pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
 //     let req = FetchPackagesRequest { force_reload_deps: false };
@@ -269,6 +270,44 @@ pub(crate) fn handle_view_syntax_tree(
     let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
     let syn = snap.analysis.view_syntax_tree(file_id)?;
     Ok(syn)
+}
+
+pub(crate) fn handle_references(
+    snap: GlobalStateSnapshot,
+    params: lsp_types::ReferenceParams,
+) -> anyhow::Result<Option<Vec<Location>>> {
+    let _p = tracing::info_span!("handle_references").entered();
+
+    let position =
+        unwrap_or_return_default!(from_proto::file_position(&snap, params.text_document_position).ok());
+    let Some(refs) = snap.analysis.find_all_refs(position, None)? else {
+        return Ok(None);
+    };
+
+    let include_declaration = params.context.include_declaration;
+
+    let decl = if include_declaration {
+        refs.declaration.map(|decl| FileRange {
+            file_id: decl.file_id,
+            range: decl.focus_or_full_range(),
+        })
+    } else {
+        None
+    };
+
+    let locations = refs
+        .references
+        .into_iter()
+        .flat_map(|(file_id, refs)| {
+            refs.into_iter()
+                .map(move |text_range| FileRange { file_id, range: text_range })
+        })
+        .chain(decl)
+        .unique()
+        .filter_map(|frange| to_proto::location(&snap, frange).ok())
+        .collect();
+
+    Ok(Some(locations))
 }
 
 pub(crate) fn handle_formatting(

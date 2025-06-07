@@ -13,6 +13,7 @@ use crate::types::ty::Ty;
 use base_db::inputs::InternFileId;
 use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
+use std::collections::{HashMap, HashSet};
 use std::iter;
 use std::sync::Arc;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
@@ -121,47 +122,90 @@ fn file_ids_by_module_address_tracked<'db>(
     address: AddressInput<'db>,
 ) -> Vec<FileId> {
     let address = address.data(db);
-    let source_file_ids = all_package_file_ids(db, package_id);
-    let mut file_ids = vec![];
-    for source_file_id in source_file_ids {
-        let modules = get_modules_in_file(db, source_file_id, address.clone());
-        if !modules.is_empty() {
-            file_ids.push(source_file_id);
+
+    let mut files_with_modules = vec![];
+    let dep_package_ids = transitive_dep_package_ids(db, package_id);
+    for dep_package_id in dep_package_ids {
+        let source_file_ids = source_file_ids_in_package(db, *dep_package_id);
+        for source_file_id in source_file_ids {
+            let modules = get_modules_in_file(db, *source_file_id, address.clone());
+            if !modules.is_empty() {
+                files_with_modules.push(*source_file_id);
+            }
         }
     }
-    file_ids
+    files_with_modules
+    // let source_file_ids = all_package_file_ids(db, package_id);
+    // let mut file_ids = vec![];
+    // for source_file_id in source_file_ids {
+    //     let modules = get_modules_in_file(db, *source_file_id, address.clone());
+    //     if !modules.is_empty() {
+    //         file_ids.push(source_file_id);
+    //     }
+    // }
+    // file_ids
 }
 
-#[salsa_macros::tracked]
-fn all_package_file_ids(db: &dyn SourceDatabase, package_id: PackageId) -> Vec<FileId> {
-    let dep_ids = dep_package_ids(db, package_id);
-    let file_sets = iter::once(package_id)
-        .chain(dep_ids)
-        .map(|id| db.package_root(id).data(db).file_set.clone())
-        .collect::<Vec<_>>();
+// #[salsa_macros::tracked(returns(ref))]
+// pub fn all_package_file_ids(db: &dyn SourceDatabase, package_id: PackageId) -> Vec<FileId> {
+//     let dep_package_ids = transitive_dep_package_ids(db, package_id);
+//     let file_ids = vec![];
+//     let file_sets = dep_package_ids
+//         .iter()
+//         .map(|it| db.package_root(*it).data(db).file_set.clone())
+//         .collect();
+//     // let file_sets = iter::once(package_id)
+//     //     .chain(dep_package_idsids)
+//     //     .map(|id| db.package_root(id).data(db).file_set.clone())
+//     //     .collect::<Vec<_>>();
+//
+//     let mut source_file_ids = vec![];
+//     for file_set in file_sets.clone() {
+//         for source_file_id in file_set.iter() {
+//             source_file_ids.push(source_file_id);
+//         }
+//     }
+//     source_file_ids
+// }
 
-    let mut source_file_ids = vec![];
-    for file_set in file_sets.clone() {
-        for source_file_id in file_set.iter() {
-            source_file_ids.push(source_file_id);
+#[salsa_macros::tracked(returns(ref))]
+pub fn source_file_ids_in_package(db: &dyn SourceDatabase, package_id: PackageId) -> Vec<FileId> {
+    let file_set = &db.package_root(package_id).data(db).file_set;
+    file_set.iter().collect()
+}
+
+/// returns packages dependencies, including package itself
+#[salsa_macros::tracked(returns(ref))]
+fn transitive_dep_package_ids(db: &dyn SourceDatabase, package_id: PackageId) -> Vec<PackageId> {
+    let metadata = source_db::metadata_for_package_id(db, package_id);
+    match metadata {
+        None => vec![package_id],
+        Some(metadata) => {
+            let mut entries = vec![package_id];
+            let dep_manifest_ids = metadata.dep_manifest_ids;
+            entries.extend(
+                dep_manifest_ids
+                    .iter()
+                    .map(|file_id| db.file_package_id(*file_id)),
+            );
+            entries
         }
     }
-    source_file_ids
 }
 
+/// returns reverse package dependencies, including package itself
 #[salsa_macros::tracked]
-fn dep_package_ids(db: &dyn SourceDatabase, package_id: PackageId) -> Vec<PackageId> {
-    let Some(package_manifest_id) = db.package_root(package_id).data(db).manifest_file_id else {
-        return vec![];
-    };
-    let dep_manifest_ids = db
-        .package_metadata(package_manifest_id)
-        .metadata(db)
-        .dep_manifest_ids;
-    dep_manifest_ids
-        .iter()
-        .map(|it| db.file_package_id(*it))
-        .collect()
+pub fn reverse_transitive_dep_package_ids(db: &dyn SourceDatabase, of: PackageId) -> Vec<PackageId> {
+    // todo: can be sped up, for now just do dumb version
+    let mut rev_deps = vec![];
+    rev_deps.push(of);
+    for dep_id in db.all_package_ids().data(db) {
+        let transitive_deps = transitive_dep_package_ids(db, dep_id);
+        if transitive_deps.contains(&of) {
+            rev_deps.push(dep_id);
+        }
+    }
+    rev_deps
 }
 
 pub(crate) fn module_importable_entries(

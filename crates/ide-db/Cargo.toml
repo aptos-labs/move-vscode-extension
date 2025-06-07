@@ -6,6 +6,8 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+memchr = "2.7.4"
+
 indexmap.workspace = true
 anyhow.workspace = true
 crossbeam-channel.workspace = true

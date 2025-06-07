@@ -732,7 +732,7 @@ impl GlobalState {
             // .on_identity::<NO_RETRY, lsp_request::CodeLensResolve, _>(handlers::handle_code_lens_resolve)
             // .on::<NO_RETRY, lsp_request::PrepareRenameRequest>(handlers::handle_prepare_rename)
             // .on::<NO_RETRY, lsp_request::Rename>(handlers::handle_rename)
-            // .on::<NO_RETRY, lsp_request::References>(handlers::handle_references)
+            .on::<NO_RETRY, lsp_request::References>(handlers::handle_references)
             // .on::<NO_RETRY, lsp_request::DocumentHighlightRequest>(handlers::handle_document_highlight)
             // .on::<NO_RETRY, lsp_request::CallHierarchyPrepare>(handlers::handle_call_hierarchy_prepare)
             // .on::<NO_RETRY, lsp_request::CallHierarchyIncomingCalls>(handlers::handle_call_hierarchy_incoming)

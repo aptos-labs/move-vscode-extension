@@ -6,6 +6,7 @@ use crate::inputs::{
 use crate::package_root::{PackageId, PackageRoot};
 use salsa::Durability;
 use std::cell::RefCell;
+use std::fs::metadata;
 use std::panic;
 use std::sync::{Arc, Once};
 use syntax::{Parse, SyntaxError, ast};
@@ -69,6 +70,16 @@ pub fn parse_errors(db: &dyn SourceDatabase, file_id: FileIdInput) -> Option<Box
         [] => None,
         [..] => Some(errors.into()),
     }
+}
+
+#[salsa_macros::tracked]
+pub fn metadata_for_package_id(
+    db: &dyn SourceDatabase,
+    package_id: PackageId,
+) -> Option<PackageMetadata> {
+    let manifest_file_id = db.package_root(package_id).data(db).manifest_file_id?;
+    let metadata = db.package_metadata(manifest_file_id).metadata(db);
+    Some(metadata)
 }
 
 #[must_use]
