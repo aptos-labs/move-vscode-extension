@@ -342,7 +342,7 @@ pub(crate) fn match_arm_list(p: &mut Parser) {
 
 fn match_arm(p: &mut Parser) {
     let m = p.start();
-    pattern(p);
+    pat(p);
     if p.at(T![if]) {
         match_guard(p);
     }

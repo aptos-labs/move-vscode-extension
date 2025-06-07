@@ -1,7 +1,7 @@
 use crate::parse::grammar::expressions::atom::{call_expr, EXPR_FIRST};
 use crate::parse::grammar::items::{fun, use_item};
 use crate::parse::grammar::lambdas::lambda_param_list;
-use crate::parse::grammar::patterns::pattern;
+use crate::parse::grammar::patterns::pat;
 use crate::parse::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt};
 use crate::parse::grammar::specs::quants::{choose_expr, exists_expr, forall_expr, is_at_quant_kw};
 use crate::parse::grammar::specs::schemas::{
@@ -387,7 +387,7 @@ fn let_stmt(p: &mut Parser, m: Marker, is_spec: bool) {
     if is_spec && p.at_contextual_kw_ident("post") {
         p.bump_remap(T![post]);
     }
-    pattern(p);
+    pat(p);
     if p.at(T![:]) {
         types::ascription(p);
     }

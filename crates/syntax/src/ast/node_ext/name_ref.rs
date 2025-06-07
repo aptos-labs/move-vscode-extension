@@ -1,6 +1,13 @@
-use crate::ast;
+use crate::ast::node_ext::text_of_first_token;
+use crate::{ast, AstNode, TokenText};
+use rowan::{GreenNodeData, GreenTokenData, NodeOrToken};
+use std::borrow::Cow;
 
 impl ast::NameRef {
+    pub fn text(&self) -> TokenText<'_> {
+        text_of_first_token(self.syntax())
+    }
+
     // pub fn as_tuple_field(&self) -> Option<usize> {
     //     self.index_string().and_then(|it| it.parse().ok())
     // }
