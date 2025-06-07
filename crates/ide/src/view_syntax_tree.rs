@@ -20,10 +20,11 @@ pub(crate) fn view_syntax_tree(db: &RootDatabase, file_id: FileId) -> String {
 
     let ctx = SyntaxTreeCtx { line_index };
 
-    syntax_node_to_json(parse.syntax(), &ctx)
+    syntax_node_to_json_syntax_tree(parse.syntax(), &ctx)
 }
 
-fn syntax_node_to_json(root_node: &SyntaxNode, ctx: &SyntaxTreeCtx) -> String {
+fn syntax_node_to_json_syntax_tree(root_node: &SyntaxNode, ctx: &SyntaxTreeCtx) -> String {
+    let _p = tracing::info_span!("syntax_node_to_json_syntax_tree").entered();
     let mut result = String::new();
     for event in root_node.preorder_with_tokens() {
         match event {

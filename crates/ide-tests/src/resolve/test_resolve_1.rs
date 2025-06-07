@@ -380,3 +380,17 @@ script {
     "#,
     )
 }
+
+#[test]
+fn test_resolve_to_definition_when_run_on_definition() {
+    check_resolve(
+        // language=Move
+        r#"
+script {
+    const MY_CONST: u64 = 1;
+          //^ //X
+    }
+}
+    "#,
+    )
+}

@@ -1,6 +1,7 @@
 use crate::RangeInfo;
 use crate::navigation_target::NavigationTarget;
 use ide_db::RootDatabase;
+use ide_db::defs::{Definition, IdentClass, NameClass};
 use ide_db::helpers::pick_best_token;
 use lang::Semantics;
 use lang::nameres::scope::VecExt;
@@ -29,7 +30,6 @@ pub(crate) fn goto_definition_multi(
 
     let file = sema.parse(file_id);
 
-    let reference = algo::find_node_at_offset::<ast::ReferenceElement>(file.syntax(), offset)?;
     let original_token = pick_best_token(file.syntax().token_at_offset(offset), |kind| match kind {
         IDENT | QUOTE_IDENT | INT_NUMBER | COMMENT => 4,
         // index and prefix ops
@@ -40,6 +40,20 @@ pub(crate) fn goto_definition_multi(
         _ => 1,
     })?;
 
+    if let Some(IdentClass::NameClass(name_class)) = IdentClass::classify_token(&sema, &original_token) {
+        return match name_class {
+            NameClass::Definition(Definition::NamedItem(_, named_item)) => {
+                let nav_target = NavigationTarget::from_named_item(&sema, named_item);
+                Some(RangeInfo::new(
+                    original_token.text_range(),
+                    nav_target.into_iter().collect(),
+                ))
+            }
+            _ => None,
+        };
+    }
+
+    let reference = algo::find_node_at_offset::<ast::ReferenceElement>(file.syntax(), offset)?;
     let scope_entries = sema.resolve(reference);
 
     let nav_targets = scope_entries

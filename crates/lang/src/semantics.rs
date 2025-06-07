@@ -20,7 +20,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::{fmt, ops};
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
-use syntax::files::InFile;
+use syntax::files::{FileRange, InFile};
 use syntax::{AstNode, SyntaxNode, SyntaxToken, ast};
 use vfs::FileId;
 
@@ -201,6 +201,17 @@ impl<'db> SemanticsImpl<'db> {
     fn wrap_token_infile(&self, token: SyntaxToken) -> InFile<SyntaxToken> {
         let (file_id, _) = self.find_file(&token.parent().unwrap()).unpack();
         InFile::new(file_id, token)
+    }
+
+    /// Attempts to map the node out of macro expanded files returning the original file range.
+    /// If upmapping is not possible, this will fall back to the range of the macro call of the
+    /// macro file the node resides in.
+    pub fn file_range(&self, node: &SyntaxNode) -> FileRange {
+        let (file_id, node) = self.find_file(node).unpack();
+        FileRange {
+            file_id,
+            range: node.text_range(),
+        }
     }
 
     /// Wraps the node in a [`InFile`] with the file id it belongs to.

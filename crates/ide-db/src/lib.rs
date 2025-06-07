@@ -9,6 +9,7 @@ pub mod helpers;
 pub mod label;
 pub mod load;
 pub mod root_db;
+pub mod search;
 pub mod source_change;
 mod syntax_helpers;
 pub mod text_edit;

@@ -15,6 +15,7 @@ mod types;
 mod test_completion_functions;
 mod test_completion_loops;
 mod test_completion_methods;
+mod test_find_usages;
 mod test_load_dependencies;
 mod test_resolve_items;
 mod test_resolve_types;

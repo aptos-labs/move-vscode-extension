@@ -3,7 +3,9 @@ use lang::Semantics;
 use lang::nameres::scope::VecExt;
 use std::collections::HashSet;
 use std::sync::LazyLock;
-use syntax::{AstNode, ast};
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
+use syntax::files::InFile;
+use syntax::{AstNode, SyntaxNode, SyntaxToken, ast, match_ast};
 
 static INTEGER_TYPE_IDENTS: LazyLock<HashSet<&str>> =
     LazyLock::new(|| HashSet::from(["u8", "u16", "u32", "u64", "u128", "u256"]));
@@ -16,10 +18,37 @@ static BUILTIN_TYPE_IDENTS: LazyLock<HashSet<&str>> = LazyLock::new(|| {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Definition {
-    NamedItem(SymbolKind),
+    NamedItem(SymbolKind, InFile<ast::AnyNamedElement>),
     BuiltinType,
 }
 
+#[derive(Debug)]
+pub enum IdentClass {
+    NameClass(NameClass),
+    NameRefClass(NameRefClass),
+}
+
+impl IdentClass {
+    pub fn classify_node(sema: &Semantics<'_, RootDatabase>, node: &SyntaxNode) -> Option<IdentClass> {
+        match_ast! {
+            match node {
+                ast::Name(name) => NameClass::classify(sema, name).map(IdentClass::NameClass),
+                ast::NameRef(name_ref) => NameRefClass::classify(sema, &name_ref).map(IdentClass::NameRefClass),
+                _ => None,
+            }
+        }
+    }
+
+    pub fn classify_token(
+        sema: &Semantics<'_, RootDatabase>,
+        token: &SyntaxToken,
+    ) -> Option<IdentClass> {
+        let parent = token.parent()?;
+        Self::classify_node(sema, &parent)
+    }
+}
+
+#[derive(Debug)]
 pub enum NameClass {
     Definition(Definition),
     // /// `field` in `if let Foo { field } = foo`. Here, `ast::Name` both introduces
@@ -32,10 +61,14 @@ pub enum NameClass {
 }
 
 impl NameClass {
-    pub fn classify(name: &ast::Name) -> Option<NameClass> {
-        let parent = name.syntax().parent()?;
-        let symbol_kind = ast_kind_to_symbol_kind(parent.kind())?;
-        Some(NameClass::Definition(Definition::NamedItem(symbol_kind)))
+    pub fn classify(sema: &Semantics<'_, RootDatabase>, name: ast::Name) -> Option<NameClass> {
+        let name = sema.wrap_node_infile(name);
+        let named_item = name.and_then(|it| it.syntax().parent_of_type::<ast::AnyNamedElement>())?;
+        let symbol_kind = ast_kind_to_symbol_kind(named_item.kind())?;
+        Some(NameClass::Definition(Definition::NamedItem(
+            symbol_kind,
+            named_item,
+        )))
     }
 }
 
@@ -59,8 +92,12 @@ impl NameRefClass {
             let res = sema.resolve(path.into()).single_or_none();
             return match res {
                 Some(entry) => {
-                    let symbol_kind = ast_kind_to_symbol_kind(entry.node_loc.kind())?;
-                    Some(NameRefClass::Definition(Definition::NamedItem(symbol_kind)))
+                    let named_item = entry.node_loc.to_ast::<ast::AnyNamedElement>(sema.db)?;
+                    let symbol_kind = ast_kind_to_symbol_kind(named_item.kind())?;
+                    Some(NameRefClass::Definition(Definition::NamedItem(
+                        symbol_kind,
+                        named_item,
+                    )))
                 }
                 None => {
                     let ref_name = name_ref.as_string();
