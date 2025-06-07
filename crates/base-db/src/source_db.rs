@@ -6,7 +6,6 @@ use crate::inputs::{
 use crate::package_root::{PackageId, PackageRoot};
 use salsa::Durability;
 use std::cell::RefCell;
-use std::fs::metadata;
 use std::panic;
 use std::sync::{Arc, Once};
 use syntax::{Parse, SyntaxError, ast};

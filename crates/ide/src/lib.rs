@@ -32,7 +32,6 @@ pub use ide_db::assists::{Assist, AssistKind, AssistResolveStrategy};
 use ide_db::search::SearchScope;
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
-use lang::Semantics;
 pub use salsa::Cancelled;
 use syntax::files::{FilePosition, FileRange};
 

@@ -48,8 +48,6 @@ pub(crate) fn find_all_refs<'a>(
     let usages = search::item_usages(&sema, named_item.clone())
         .set_scope(search_scope)
         .all();
-    tracing::info!(?usages);
-
     let references: HashMap<FileId, Vec<TextRange>> = usages
         .into_iter()
         .map(|(file_id, refs)| {
@@ -88,11 +86,7 @@ pub(crate) fn find_def(
         }
         ast::NameLike::Name(name) => match NameClass::classify(sema, name)? {
             NameClass::Definition(Definition::NamedItem(_, named_item)) => Some(named_item),
-            // NameClass::PatFieldShorthand {
-            //     local_def,
-            //     field_ref: _,
-            //     adt_subst: _,
-            // } => Definition::Local(local_def),
+            NameClass::PatFieldShorthand { ident_pat, .. } => Some(ident_pat.map_into()),
             _ => None,
         },
     }

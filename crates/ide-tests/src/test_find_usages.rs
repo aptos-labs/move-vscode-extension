@@ -1,11 +1,7 @@
-use ide::Analysis;
 use std::iter;
-use stdx::TupleExt;
 use stdx::itertools::Itertools;
 use syntax::files::FilePosition;
-use test_utils::{
-    fixtures, get_all_marked_positions, get_first_marked_position, get_marked_position_offset_with_data,
-};
+use test_utils::{fixtures, get_all_marked_positions, get_marked_position_offset_with_data};
 
 #[test]
 fn test_find_function_usages() {
