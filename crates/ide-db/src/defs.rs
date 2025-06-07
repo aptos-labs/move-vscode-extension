@@ -3,6 +3,7 @@ use lang::Semantics;
 use lang::nameres::scope::VecExt;
 use std::collections::HashSet;
 use std::sync::LazyLock;
+use syntax::SyntaxKind::*;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::InFile;
@@ -67,7 +68,11 @@ pub enum NameClass {
     /// a definition into a local scope, and refers to an existing definition.
     PatFieldShorthand {
         ident_pat: InFile<ast::IdentPat>,
-        field_ref: InFile<ast::NamedField>,
+        named_field: InFile<ast::NamedField>,
+    },
+    ItemSpecFunctionParam {
+        spec_ident_pat: InFile<ast::IdentPat>,
+        fun_param_ident_pat: InFile<ast::IdentPat>,
     },
 }
 
@@ -97,19 +102,26 @@ impl NameClass {
         if let Some(resolved_ident_pat) =
             sema.resolve_to_element::<ast::AnyNamedElement>(ident_pat.clone().map_into())
         {
-            if resolved_ident_pat.cast_into_ref::<ast::Item>().is_some() {
+            if matches!(resolved_ident_pat.kind(), CONST | VARIANT) {
                 let defn = Definition::from_named_item(resolved_ident_pat)?;
                 return Some(NameClass::ConstReference(defn));
+            }
+
+            // item spec function param
+            if let Some(fun_ident_pat) = resolved_ident_pat.cast_into_ref::<ast::IdentPat>() {
+                if fun_ident_pat.value.syntax().parent_is::<ast::Param>() {
+                    return Some(NameClass::ItemSpecFunctionParam {
+                        spec_ident_pat: ident_pat,
+                        fun_param_ident_pat: fun_ident_pat,
+                    });
+                }
             }
 
             let pat_parent = ident_pat.value.syntax().parent();
             if let Some(struct_pat_field) = pat_parent.and_then(|it| it.cast::<ast::StructPatField>()) {
                 if struct_pat_field.name_ref().is_none() {
                     if let Some(named_field) = resolved_ident_pat.cast_into_ref::<ast::NamedField>() {
-                        return Some(NameClass::PatFieldShorthand {
-                            ident_pat,
-                            field_ref: named_field,
-                        });
+                        return Some(NameClass::PatFieldShorthand { ident_pat, named_field });
                     }
                 }
             }

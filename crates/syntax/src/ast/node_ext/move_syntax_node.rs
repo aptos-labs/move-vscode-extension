@@ -9,6 +9,10 @@ pub trait MoveSyntaxElementExt {
         self.node().ancestor_strict::<ast::Module>()
     }
 
+    fn containing_function(&self) -> Option<ast::Fun> {
+        self.node().ancestor_strict::<ast::Fun>()
+    }
+
     fn containing_script(&self) -> Option<ast::Script> {
         self.node().ancestor_strict::<ast::Script>()
     }
