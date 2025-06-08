@@ -1,21 +1,31 @@
-use std::iter;
+use lang::nameres::scope::VecExt;
 use stdx::itertools::Itertools;
 use syntax::files::FilePosition;
-use test_utils::{fixtures, get_all_marked_positions, get_marked_position_offset_with_data};
+use test_utils::{
+    ErrorMark, apply_error_marks, fixtures, get_all_marked_positions,
+    get_marked_position_offset_with_data,
+};
 
 fn check_find_usages(source: &str) {
     let (analysis, file_id) = fixtures::from_single_file(source.to_string());
     let (ref_offset, _) = get_marked_position_offset_with_data(&source, "//^");
 
     let ref_position = FilePosition { file_id, offset: ref_offset };
-    let target = analysis
-        .goto_definition(ref_position)
+    let targets = analysis
+        .goto_definition_multi(ref_position)
         .unwrap()
-        .expect("item should resolve to itself");
-    assert!(target.range.contains(ref_offset), "item should resolve to itself");
+        .expect("item is unresolved");
+    let target = targets
+        .info
+        .single_or_none()
+        .expect("item should resolve only to itself");
+    assert!(
+        target.focus_range.is_some_and(|it| it.contains(ref_offset)),
+        "item should resolve to itself"
+    );
 
     let refs = analysis.find_all_refs(ref_position, None).unwrap();
-    let actual_ref_ranges = refs
+    let mut actual_ref_ranges = refs
         .expect("no declaration at //^")
         .references
         .get(&file_id)
@@ -32,15 +42,36 @@ fn check_find_usages(source: &str) {
         .sorted()
         .collect::<Vec<_>>();
 
-    assert_eq!(
-        actual_ref_ranges.len(),
-        target_offsets.len(),
-        "not all references are found"
-    );
-
-    for (actual_ref_range, expected_offset) in iter::zip(actual_ref_ranges, target_offsets) {
-        assert!(actual_ref_range.contains(expected_offset))
+    let mut missing_target_offsets = vec![];
+    for target_offset in target_offsets {
+        let ref_range_pos = actual_ref_ranges.iter().position(|it| it.contains(target_offset));
+        match ref_range_pos {
+            Some(pos) => {
+                actual_ref_ranges.remove(pos);
+            }
+            None => {
+                missing_target_offsets.push(target_offset);
+            }
+        }
     }
+    assert!(
+        missing_target_offsets.is_empty(),
+        "not all references are found: \n{}",
+        {
+            let missing_marks = missing_target_offsets
+                .into_iter()
+                .map(|offset| ErrorMark::at_offset(offset, "missing reference"))
+                .collect();
+            apply_error_marks(&source, missing_marks)
+        }
+    );
+    assert!(actual_ref_ranges.is_empty(), "extra references found: \n{}", {
+        let extra_marks = actual_ref_ranges
+            .into_iter()
+            .map(|range| ErrorMark::at_range(range, "extra reference"))
+            .collect();
+        apply_error_marks(&source, extra_marks)
+    });
 }
 
 #[test]
@@ -131,6 +162,7 @@ fn test_let_variable_usages() {
     // language=Move
     let source = r#"
 module 0x1::m {
+    struct Struct { a: u8 }
     fun main() {
         a;
         let a = 1;
@@ -139,6 +171,32 @@ module 0x1::m {
       //X
         call(a);
            //X
+        Struct { a }
+               //X
+    }
+}
+    "#;
+    check_find_usages(source)
+}
+
+#[test]
+fn test_struct_field_usages() {
+    // language=Move
+    let source = r#"
+module 0x1::m {
+    struct S { val: u8 }
+              //^
+    fun main(s: S) {
+        s.val;
+         //X
+        let S { val } = s;
+               //X
+        let S { val: myval } = s;
+               //X
+        S { val: 1 };
+            //X
+        S { val };
+            //X
     }
 }
     "#;

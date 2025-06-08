@@ -7,6 +7,7 @@ use base_db::SourceDatabase;
 use std::fmt;
 use std::fmt::Formatter;
 use stdx::itertools::Itertools;
+use syntax::SyntaxKind::{IDENT_PAT, NAMED_FIELD};
 use syntax::files::{InFile, InFileVecExt};
 use syntax::{SyntaxKind, ast};
 use vfs::FileId;
@@ -152,4 +153,20 @@ impl ScopeEntryListExt for Vec<ScopeEntry> {
             })
             .collect()
     }
+}
+
+pub fn into_field_shorthand_items(
+    db: &dyn SourceDatabase,
+    mut entries: Vec<ScopeEntry>,
+) -> Option<(InFile<ast::NamedField>, InFile<ast::IdentPat>)> {
+    if entries.len() != 2 {
+        return None;
+    }
+    let named_field = entries
+        .remove(entries.iter().position(|it| it.kind() == NAMED_FIELD)?)
+        .cast_into::<ast::NamedField>(db)?;
+    let ident_pat = entries
+        .remove(entries.iter().position(|it| it.kind() == IDENT_PAT)?)
+        .cast_into::<ast::IdentPat>(db)?;
+    Some((named_field, ident_pat))
 }

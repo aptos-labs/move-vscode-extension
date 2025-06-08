@@ -1,6 +1,6 @@
 use crate::{RootDatabase, SymbolKind, ast_kind_to_symbol_kind};
 use lang::Semantics;
-use lang::nameres::scope::VecExt;
+use lang::nameres::scope::{VecExt, into_field_shorthand_items};
 use std::collections::HashSet;
 use std::sync::LazyLock;
 use syntax::SyntaxKind::*;
@@ -135,10 +135,10 @@ impl NameClass {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum NameRefClass {
     Definition(Definition),
-    // FieldShorthand {
-    //     local_ref: ast::IdentPat,
-    //     field_ref: ast::StructField,
-    // },
+    FieldShorthand {
+        ident_pat: InFile<ast::IdentPat>,
+        named_field: InFile<ast::NamedField>,
+    },
 }
 
 impl NameRefClass {
@@ -148,7 +148,27 @@ impl NameRefClass {
     ) -> Option<NameRefClass> {
         let ref_parent = name_ref.syntax().parent()?;
 
-        if let Some(path) = ast::PathSegment::cast(ref_parent.clone()).map(|it| it.parent_path()) {
+        if let Some(struct_lit_field) = ast::StructLitField::for_field_name(name_ref) {
+            // if shorthand, then it should contain two elements
+            let is_shorthand = struct_lit_field.name_ref().is_none();
+            if !is_shorthand {
+                // NameRef :: Expr
+                let named_field = sema.resolve_to_element::<ast::NamedField>(
+                    sema.wrap_node_infile(struct_lit_field.into()),
+                )?;
+                return Some(NameRefClass::Definition(Definition::NamedItem(
+                    SymbolKind::Field,
+                    named_field.map_into(),
+                )));
+            } else {
+                let path = struct_lit_field.shorthand_path()?;
+                let entries = sema.resolve(path.into());
+                let (named_field, ident_pat) = into_field_shorthand_items(sema.db, entries)?;
+                return Some(NameRefClass::FieldShorthand { ident_pat, named_field });
+            }
+        }
+
+        if let Some(path) = ref_parent.cast::<ast::PathSegment>().map(|it| it.parent_path()) {
             let res = sema.resolve(path.into()).single_or_none();
             return match res {
                 Some(entry) => {
@@ -166,6 +186,13 @@ impl NameRefClass {
             };
         }
 
-        None
+        let reference = ref_parent.cast::<ast::ReferenceElement>()?;
+        let named_item = sema
+            .resolve(reference)
+            .single_or_none()?
+            .node_loc
+            .to_ast::<ast::AnyNamedElement>(sema.db)?;
+
+        Some(NameRefClass::Definition(Definition::from_named_item(named_item)?))
     }
 }

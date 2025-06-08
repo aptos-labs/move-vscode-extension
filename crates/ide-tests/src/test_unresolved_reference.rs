@@ -776,3 +776,20 @@ fn test_no_unresolved_address_for_fq_item_on_non_standard_address() {
         }
     "#]]);
 }
+
+// language=Move
+#[test]
+fn test_no_unresolved_reference_for_multi_resolve() {
+    check_diagnostics(expect![[r#"
+module 0x1::M {
+    struct T {
+        my_field: u8
+    }
+
+    fun main() {
+        let my_field = 1;
+        T { my_field };
+    }
+}
+"#]])
+}

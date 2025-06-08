@@ -11,8 +11,8 @@ use std::sync::Arc;
 use std::{iter, mem};
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::{IdentPatKind, NamedElement};
-use syntax::files::{FileRange, InFile, InFileExt};
-use syntax::{AstNode, SyntaxElement, SyntaxNode, TextRange, TextSize, ast, match_ast};
+use syntax::files::{FileRange, InFile};
+use syntax::{AstNode, SyntaxElement, SyntaxNode, TextRange, TextSize, ast};
 use vfs::FileId;
 
 #[derive(Debug, Default, Clone)]
@@ -106,6 +106,13 @@ pub fn item_search_scope(db: &RootDatabase, named_item: &InFile<ast::AnyNamedEle
     if let Some(ident_pat) = named_item.cast_into_ref::<ast::IdentPat>() {
         if let Some(search_scope) = ident_pat_search_scope(db, ident_pat) {
             return search_scope;
+        }
+    }
+
+    // accessible only in the module it was defined in (and in specs)
+    if let Some(named_field) = named_item.cast_into_ref::<ast::NamedField>() {
+        if let Some(containing_module) = named_field.and_then(|it| it.syntax().containing_module()) {
+            return SearchScope::module_and_module_spec(db, containing_module);
         }
     }
 
@@ -286,7 +293,7 @@ impl<'a> FindUsages<'a> {
         found
     }
 
-    pub fn all(self) -> UsageSearchResult {
+    pub fn fetch_all(self) -> UsageSearchResult {
         let mut res = UsageSearchResult::default();
         self.search(&mut |file_id, reference| {
             res.references.entry(file_id).or_default().push(reference);
@@ -307,7 +314,7 @@ impl<'a> FindUsages<'a> {
         })
     }
 
-    fn match_indices<'b>(
+    fn match_offsets<'b>(
         text: &'b str,
         finder: &'b Finder<'b>,
         search_range: TextRange,
@@ -368,8 +375,9 @@ impl<'a> FindUsages<'a> {
         for (text, file_id, search_range) in Self::scope_files(sema.db, &search_scope) {
             let tree = LazyCell::new(move || sema.parse(file_id).syntax().clone());
 
-            for offset in Self::match_indices(&text, finder, search_range) {
-                for name_like in Self::find_nodes(&name, &tree, offset).filter_map(ast::NameLike::cast) {
+            for offset in Self::match_offsets(&text, finder, search_range) {
+                let nodes_at_offset = Self::find_nodes(&name, &tree, offset);
+                for name_like in nodes_at_offset.filter_map(ast::NameLike::cast) {
                     if match name_like {
                         ast::NameLike::NameRef(name_ref) => self.found_name_ref(&name_ref, sink),
                         ast::NameLike::Name(name) => self.found_name(&name, sink),
@@ -386,9 +394,21 @@ impl<'a> FindUsages<'a> {
         name_ref: &ast::NameRef,
         sink: &mut dyn FnMut(FileId, FileReference) -> bool,
     ) -> bool {
-        match NameRefClass::classify(self.sema, name_ref) {
+        let name_ref_class = NameRefClass::classify(self.sema, name_ref);
+        match name_ref_class {
             Some(NameRefClass::Definition(Definition::NamedItem(_, named_item)))
                 if self.named_item == named_item =>
+            {
+                let FileRange { file_id, range } = self.sema.file_range(name_ref.syntax());
+                let reference = FileReference {
+                    range,
+                    name: FileReferenceNode::NameRef(name_ref.clone()),
+                };
+                sink(file_id, reference)
+            }
+            Some(NameRefClass::FieldShorthand { ident_pat, named_field })
+                if self.named_item == ident_pat.clone().map_into()
+                    || self.named_item == named_field.clone().map_into() =>
             {
                 let FileRange { file_id, range } = self.sema.file_range(name_ref.syntax());
                 let reference = FileReference {
@@ -404,18 +424,23 @@ impl<'a> FindUsages<'a> {
     fn found_name(&self, name: &ast::Name, sink: &mut dyn FnMut(FileId, FileReference) -> bool) -> bool {
         match NameClass::classify(self.sema, name.clone()) {
             Some(NameClass::ItemSpecFunctionParam {
-                spec_ident_pat:
-                    InFile {
-                        file_id,
-                        value: spec_ident_pat,
-                    },
+                spec_ident_pat,
                 fun_param_ident_pat,
             }) if self.named_item == fun_param_ident_pat.clone().map_into() => {
                 let reference = FileReference {
-                    range: spec_ident_pat.syntax().text_range(),
+                    range: name.syntax().text_range(),
                     name: FileReferenceNode::Name(name.clone()),
                 };
-                sink(file_id, reference)
+                sink(spec_ident_pat.file_id, reference)
+            }
+            Some(NameClass::PatFieldShorthand { ident_pat, named_field })
+                if self.named_item == named_field.clone().map_into() =>
+            {
+                let reference = FileReference {
+                    range: name.syntax().text_range(),
+                    name: FileReferenceNode::Name(name.clone()),
+                };
+                sink(ident_pat.file_id, reference)
             }
             _ => false,
         }

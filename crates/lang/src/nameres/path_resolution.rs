@@ -4,7 +4,7 @@ use crate::nameres::name_resolution::{
     get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
 use crate::nameres::namespaces::Ns::FUNCTION;
-use crate::nameres::namespaces::{FUNCTIONS, Ns};
+use crate::nameres::namespaces::{FUNCTIONS, NAMES, Ns};
 use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use crate::nameres::scope::{ScopeEntry, ScopeEntryExt, ScopeEntryListExt};
 use crate::types::inference::{InferenceCtx, TyVarIndex};
@@ -56,6 +56,20 @@ pub fn get_path_resolve_variants(
             // no path resolution for named / value addresses
             vec![]
         }
+
+        PathKind::FieldShorthand { struct_lit_field } => {
+            let mut entries = vec![];
+            entries.extend(get_entries_from_walking_scopes(
+                db,
+                ctx.path.map_ref(|it| it.reference()),
+                NAMES,
+            ));
+            let lit_field = ctx.wrap_in_file(struct_lit_field);
+            let lit_field_entries = nameres::resolve_multi_no_inf(db, lit_field).unwrap_or_default();
+            entries.extend(lit_field_entries);
+            entries
+        }
+
         PathKind::NamedAddressOrUnqualifiedPath { ns, .. } | PathKind::Unqualified { ns } => {
             let mut entries = vec![];
             if ns.contains(Ns::MODULE) {

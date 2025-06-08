@@ -36,6 +36,7 @@ fn highlight_name_ref(sema: &Semantics<'_, RootDatabase>, name_ref: ast::NameRef
     };
     let h = match name_ref_class {
         NameRefClass::Definition(def) => highlight_def(def),
+        _ => Highlight::new(HlTag::None),
     };
 
     h

@@ -87,7 +87,7 @@ pub(crate) fn handle_goto_definition(
 ) -> anyhow::Result<Option<lsp_types::GotoDefinitionResponse>> {
     let _p = tracing::info_span!("handle_goto_definition").entered();
     let position = from_proto::file_position(&snap, params.text_document_position_params)?;
-    let nav_info = match snap.analysis.goto_definition(position)? {
+    let nav_info = match snap.analysis.goto_definition_multi(position)? {
         None => return Ok(None),
         Some(it) => it,
     };
@@ -95,7 +95,7 @@ pub(crate) fn handle_goto_definition(
         file_id: position.file_id,
         range: nav_info.range,
     };
-    let res = to_proto::goto_definition_response(&snap, Some(src), vec![nav_info.info])?;
+    let res = to_proto::goto_definition_response(&snap, Some(src), nav_info.info)?;
     Ok(Some(res))
 }
 

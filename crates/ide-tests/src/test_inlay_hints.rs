@@ -1,7 +1,7 @@
 use crate::init_tracing_for_test;
 use expect_test::{Expect, expect};
 use ide::inlay_hints::{InlayFieldsToResolve, InlayHintsConfig};
-use test_utils::{ErrorMark, apply_error_marks, fixtures, remove_markings};
+use test_utils::{ErrorMark, apply_error_marks, fixtures, remove_marks};
 
 const DISABLED_CONFIG: InlayHintsConfig = InlayHintsConfig {
     // discriminant_hints: DiscriminantHints::Never,
@@ -49,7 +49,7 @@ pub(crate) fn check_inlay_hints(expect: Expect) {
     init_tracing_for_test();
 
     let source = stdx::trim_indent(expect.data());
-    let trimmed_source = remove_markings(&source);
+    let trimmed_source = remove_marks(&source, "//^");
 
     let (analysis, file_id) = fixtures::from_single_file(trimmed_source.clone());
 
@@ -60,7 +60,11 @@ pub(crate) fn check_inlay_hints(expect: Expect) {
         .map(|it| {
             let text_range = it.range;
             let message = it.label.to_string();
-            ErrorMark { text_range, message }
+            ErrorMark {
+                text_range,
+                message,
+                custom_symbol: None,
+            }
         })
         .collect();
     let res = apply_error_marks(trimmed_source.as_str(), markings);

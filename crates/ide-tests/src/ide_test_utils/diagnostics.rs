@@ -4,14 +4,14 @@ use ide::Analysis;
 use ide_db::assists::{Assist, AssistResolveStrategy};
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
-use test_utils::{ErrorMark, apply_error_marks, fixtures, get_first_marked_position, remove_markings};
+use test_utils::{ErrorMark, apply_error_marks, fixtures, get_first_marked_position, remove_marks};
 use vfs::FileId;
 
 pub fn check_diagnostics(expect: Expect) {
     init_tracing_for_test();
 
     let source = stdx::trim_indent(expect.data());
-    let trimmed_source = remove_markings(&source);
+    let trimmed_source = remove_marks(&source, "//^");
 
     let (_, _, diagnostics) = get_diagnostics(trimmed_source.as_str());
 
@@ -25,7 +25,7 @@ pub fn check_diagnostics_and_fix(before: Expect, after: Expect) {
     init_tracing_for_test();
 
     let before_source = stdx::trim_indent(before.data());
-    let trimmed_before_source = remove_markings(&before_source);
+    let trimmed_before_source = remove_marks(&before_source, "//^");
 
     let (_, _, mut diagnostics) = get_diagnostics(trimmed_before_source.as_str());
 
@@ -97,7 +97,11 @@ fn apply_diagnostics_to_file(source: &str, diagnostics: &Vec<Diagnostic>) -> Str
         .map(|it| {
             let text_range = it.range.range;
             let message = format!("{} {}", it.severity.to_test_ident(), it.message.clone());
-            ErrorMark { text_range, message }
+            ErrorMark {
+                text_range,
+                message,
+                custom_symbol: None,
+            }
         })
         .collect();
     apply_error_marks(source, markings)

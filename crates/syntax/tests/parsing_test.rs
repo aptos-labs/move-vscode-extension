@@ -27,6 +27,7 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
         .map(|it| ErrorMark {
             text_range: it.range(),
             message: it.to_string(),
+            custom_symbol: None,
         })
         .collect();
     let error_output = apply_error_marks(&input, marks);

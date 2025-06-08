@@ -88,28 +88,25 @@ impl<'db> InferenceCtx<'db> {
         }
     }
 
-    // pub fn resolve_cached(
-    //     &mut self,
-    //     reference: ast::ReferenceElement,
-    //     expected_ty: Option<Ty>,
-    // ) -> Option<InFile<ast::AnyNamedElement>> {
-    //     match_ast! {
-    //         match (reference.syntax()) {
-    //             ast::Path(it) => self.resolve_path_cached(it, expected_ty),
-    //             ast::IdentPat(it) => self.resolve_ident_pat_cached(it, expected_ty),
-    //             _ => None
-    //         }
-    //     }
-    // }
-
-    #[tracing::instrument(level = "debug", skip_all, fields(ctx_file_id = ?self.file_id))]
     pub fn resolve_path_cached(
         &mut self,
         path: ast::Path,
         expected_ty: Option<Ty>,
     ) -> Option<InFile<ast::AnyNamedElement>> {
+        self.resolve_path_cached_multi(path, expected_ty)
+            .single_or_none()
+            .and_then(|it| it.cast_into::<ast::AnyNamedElement>(self.db))
+    }
+
+    #[tracing::instrument(level = "debug", skip_all, fields(ctx_file_id = ?self.file_id))]
+    pub fn resolve_path_cached_multi(
+        &mut self,
+        path: ast::Path,
+        expected_ty: Option<Ty>,
+    ) -> Vec<ScopeEntry> {
         let path_entries =
             path_resolution::resolve_path(self.db, path.clone().in_file(self.file_id), expected_ty);
+
         let entries = remove_variant_ident_pats(self.db, path_entries, |ident_pat| {
             self.resolved_ident_pats
                 .get(&ident_pat.value)
@@ -118,8 +115,6 @@ impl<'db> InferenceCtx<'db> {
         self.resolved_paths.insert(path, entries.clone());
 
         entries
-            .single_or_none()
-            .and_then(|it| it.cast_into::<ast::AnyNamedElement>(self.db))
     }
 
     pub fn resolve_ident_pat_cached(
