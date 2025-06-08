@@ -3,7 +3,7 @@ mod infer_specs;
 use crate::nameres::name_resolution::get_entries_from_walking_scopes;
 use crate::nameres::namespaces::NAMES;
 use crate::nameres::path_resolution::get_method_resolve_variants;
-use crate::nameres::scope::{ScopeEntryListExt, VecExt};
+use crate::nameres::scope::{ScopeEntryListExt, VecExt, into_field_shorthand_items};
 use crate::node_ext::item_spec::ItemSpecExt;
 use crate::node_ext::{any_field_ext, item_spec};
 use crate::types::expectation::Expected;
@@ -421,7 +421,16 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         }
 
         let expected_ty = expected.ty(self.ctx);
-        let named_element = self.ctx.resolve_path_cached(path_expr.path(), expected_ty)?;
+        let named_elements = self.ctx.resolve_path_cached_multi(path_expr.path(), expected_ty);
+        let named_element = if named_elements.len() == 2 {
+            // if it's field and ident pat, fetch type of ident_pat
+            let (_, ident_pat) = into_field_shorthand_items(self.ctx.db, named_elements.clone())?;
+            ident_pat.map_into()
+        } else {
+            named_elements
+                .single_or_none()?
+                .cast_into::<ast::AnyNamedElement>(self.ctx.db)?
+        };
 
         let file_id = self.ctx.file_id;
         let ty_lowering = self.ctx.ty_lowering();
@@ -649,7 +658,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             if lit_field_name.is_none() {
                 continue;
             }
-            let lit_field_name = lit_field_name.unwrap();
+            let lit_field_name = lit_field_name.unwrap().as_string();
 
             let named_field = named_fields.get(&lit_field_name);
             let declared_field_ty = named_field

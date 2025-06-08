@@ -10,7 +10,7 @@ impl RootDatabase {
 
     #[tracing::instrument(level = "info", skip_all)]
     pub fn apply_change(&mut self, change: FileChanges) {
-        let db_revision_before = salsa::plumbing::current_revision(self);
+        // let db_revision_before = salsa::plumbing::current_revision(self);
         self.request_cancellation();
 
         tracing::trace!("apply_change {:?}", change);
@@ -32,10 +32,10 @@ impl RootDatabase {
 
         change.apply(self);
 
-        tracing::debug!(
-            "db_revision = {:?} -> {:?}",
-            db_revision_before,
-            salsa::plumbing::current_revision(self)
-        );
+        // tracing::debug!(
+        //     "db_revision = {:?} -> {:?}",
+        //     db_revision_before,
+        //     salsa::plumbing::current_revision(self)
+        // );
     }
 }

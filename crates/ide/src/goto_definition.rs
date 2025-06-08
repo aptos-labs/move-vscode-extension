@@ -1,8 +1,8 @@
 use crate::RangeInfo;
 use crate::navigation_target::NavigationTarget;
+use ide_db::RootDatabase;
 use ide_db::defs::{Definition, IdentClass, NameClass};
 use ide_db::helpers::pick_best_token;
-use ide_db::{RootDatabase, SymbolKind};
 use lang::Semantics;
 use lang::nameres::scope::VecExt;
 use syntax::files::FilePosition;
@@ -54,8 +54,6 @@ pub(crate) fn goto_definition_multi(
             }
             _ => None,
         };
-        // if !matches!(defn, Definition::NamedItem(SymbolKind::Local, _)) {
-        // }
     }
 
     let reference = algo::find_node_at_offset::<ast::ReferenceElement>(file.syntax(), offset)?;

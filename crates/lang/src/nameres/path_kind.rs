@@ -23,6 +23,11 @@ pub enum PathKind {
         address: NamedAddr,
         ns: NsSet,
     },
+    // MyStruct { foo }
+    //            ^^^
+    FieldShorthand {
+        struct_lit_field: ast::StructLitField,
+    },
     // foo
     Unqualified {
         ns: NsSet,
@@ -46,6 +51,7 @@ impl fmt::Debug for PathKind {
                 .debug_struct("NamedAddressOrUnqualifiedPath")
                 .field("ns", &ns)
                 .finish(),
+            PathKind::FieldShorthand { .. } => f.debug_struct("FieldShorthand").finish(),
             PathKind::Unqualified { ns } => f.debug_struct("Unqualified").field("ns", &ns).finish(),
             PathKind::Qualified { path, qualifier, ns, kind } => f
                 .debug_struct("Qualified")
@@ -134,6 +140,10 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
                 ns,
             });
             // }
+        }
+
+        if let Some(struct_lit_field) = ast::StructLitField::for_shorthand_path(&path) {
+            return Some(PathKind::FieldShorthand { struct_lit_field });
         }
 
         return Some(PathKind::Unqualified { ns });

@@ -278,6 +278,28 @@ module 0x1::M {
 
 // language=Move
 #[test]
+fn test_resolve_reference_to_field_from_lit_shorthand() {
+    check_resolve(
+        r#"
+module 0x1::M {
+    struct T {
+        my_field: u8
+      //X
+    }
+
+    fun main() {
+        let my_field = 1;
+             //X
+        T { my_field };
+           //^
+    }
+}
+"#,
+    )
+}
+
+// language=Move
+#[test]
 fn test_resolve_field_inside_incomplete_equal_expr() {
     check_resolve(
         r#"

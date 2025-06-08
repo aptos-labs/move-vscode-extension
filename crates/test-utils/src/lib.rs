@@ -19,10 +19,34 @@ pub fn get_and_replace_caret(source: &str, caret_mark: &str) -> (&'static str, T
 pub struct ErrorMark {
     pub text_range: TextRange,
     pub message: String,
+    pub custom_symbol: Option<String>,
 }
 
-pub fn remove_markings(source: &str) -> String {
-    let marked_positions = get_all_marked_positions(source, "//^");
+impl ErrorMark {
+    pub fn at_offset(offset: TextSize, message: impl ToString) -> ErrorMark {
+        ErrorMark {
+            text_range: TextRange::empty(offset),
+            message: message.to_string(),
+            custom_symbol: None,
+        }
+    }
+
+    pub fn at_range(range: TextRange, message: impl ToString) -> ErrorMark {
+        ErrorMark {
+            text_range: range,
+            message: message.to_string(),
+            custom_symbol: None,
+        }
+    }
+
+    pub fn with_custom_symbol(mut self, symbol: char) -> Self {
+        self.custom_symbol = Some(symbol.to_string());
+        self
+    }
+}
+
+pub fn remove_marks(source: &str, mark: &str) -> String {
+    let marked_positions = get_all_marked_positions(source, mark);
 
     let mut lines_to_remove = vec![];
     for marked in marked_positions {
@@ -40,17 +64,17 @@ pub fn remove_markings(source: &str) -> String {
     trimmed_source
 }
 
-pub fn apply_error_marks(source: &str, markings: Vec<ErrorMark>) -> String {
+pub fn apply_error_marks(source: &str, marks: Vec<ErrorMark>) -> String {
     let line_index = LineIndex::new(source);
 
-    let lines = markings
+    let lines_with_marks = marks
         .into_iter()
-        .map(|it| error_mark_line(&line_index, it))
+        .map(|it| line_with_mark(&line_index, it))
         .collect::<Vec<_>>();
 
     let mut source_lines = source.lines().map(|it| it.to_string()).collect::<Vec<_>>();
     let mut added = 0;
-    for (line, line_text) in lines {
+    for (line, line_text) in lines_with_marks {
         let line = line + 1 + added;
         source_lines.insert(line as usize, line_text.clone());
         added += 1;
@@ -58,7 +82,7 @@ pub fn apply_error_marks(source: &str, markings: Vec<ErrorMark>) -> String {
     source_lines.join("\n")
 }
 
-fn error_mark_line(line_index: &LineIndex, mark: ErrorMark) -> (u32, String) {
+fn line_with_mark(line_index: &LineIndex, mark: ErrorMark) -> (u32, String) {
     let text_range = mark.text_range;
     let lc_start = line_index.line_col(text_range.start());
     let lc_end = line_index.line_col(text_range.end());
@@ -67,13 +91,14 @@ fn error_mark_line(line_index: &LineIndex, mark: ErrorMark) -> (u32, String) {
     let end_col = lc_end.col;
     let message = mark.message;
 
+    let symbol = mark.custom_symbol.unwrap_or("^".into());
     let (prefix, mark_range) = if start_col < 2 {
         let prefix = repeated(" ", start_col);
         let mark_range = "<".to_string();
         (prefix, mark_range)
     } else {
         let prefix = repeated(" ", start_col - 2);
-        let mark_range = repeated("^", max(1, end_col - start_col));
+        let mark_range = repeated(&symbol, max(1, end_col - start_col));
         (prefix, mark_range)
     };
 
@@ -92,6 +117,12 @@ pub struct MarkedPos {
     pub item_line_col: LineCol,
     pub line: String,
     pub data: String,
+}
+
+impl PartialEq for MarkedPos {
+    fn eq(&self, other: &Self) -> bool {
+        self.item_offset.eq(&other.item_offset)
+    }
 }
 
 pub fn get_all_marked_positions(source: &str, mark: &str) -> Vec<MarkedPos> {

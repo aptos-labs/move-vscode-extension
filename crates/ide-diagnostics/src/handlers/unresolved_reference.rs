@@ -3,7 +3,7 @@ use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use base_db::SourceDatabase;
 use ide_db::Severity;
 use lang::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
-use lang::nameres::scope::VecExt;
+use lang::nameres::scope::{VecExt, into_field_shorthand_items};
 use lang::node_ext::item_spec;
 use lang::types::ty::Ty;
 use syntax::ast::idents::PRIMITIVE_TYPES;
@@ -83,7 +83,7 @@ fn unresolved_path(
         PathKind::NamedAddress(_)
         | PathKind::NamedAddressOrUnqualifiedPath { .. }
         | PathKind::ValueAddress(_) => (),
-        PathKind::Unqualified { .. } => {
+        PathKind::FieldShorthand { .. } | PathKind::Unqualified { .. } => {
             try_check_resolve(acc, ctx, reference.map_into());
         }
         PathKind::Qualified { qualifier, kind, .. } => {
@@ -181,6 +181,9 @@ fn try_check_resolve(
         }
         1 => (),
         _ => {
+            if into_field_shorthand_items(ctx.sema.db, entries).is_some() {
+                return None;
+            }
             acc.push(Diagnostic::new(
                 DiagnosticCode::Lsp("unresolved-reference", Severity::Error),
                 format!(
@@ -188,7 +191,7 @@ fn try_check_resolve(
                     reference_name
                 ),
                 reference_node.file_range(),
-            ));
+            ))
         }
     }
     Some(())

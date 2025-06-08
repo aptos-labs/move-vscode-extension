@@ -47,7 +47,7 @@ pub(crate) fn find_all_refs<'a>(
 
     let usages = search::item_usages(&sema, named_item.clone())
         .set_scope(search_scope)
-        .all();
+        .fetch_all();
     let references: HashMap<FileId, Vec<TextRange>> = usages
         .into_iter()
         .map(|(file_id, refs)| {

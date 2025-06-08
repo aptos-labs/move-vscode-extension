@@ -40,7 +40,6 @@ pub fn resolve_multi(
     cached_inference: Option<Arc<InferenceResult>>,
 ) -> Option<Vec<ScopeEntry>> {
     let ref_element = ref_element.map(|it| it.into());
-
     {
         let (file_id, ref_element) = ref_element.clone().unpack();
         match ref_element.clone() {
@@ -113,6 +112,13 @@ fn resolve_multi_no_inf(
     let (file_id, ref_element) = ref_element.map(|it| it.into()).unpack();
     match ref_element {
         ast::ReferenceElement::Path(path) => Some(hir_db::resolve_path_multi(db, path.in_file(file_id))),
+        ast::ReferenceElement::StructLitField(struct_lit_field) => {
+            let struct_path = struct_lit_field.struct_lit().path();
+            let fields_owner =
+                resolve_no_inf_cast::<ast::AnyFieldsOwner>(db, struct_path.in_file(file_id))?;
+            let field_name = struct_lit_field.field_name()?.as_string();
+            Some(get_named_field_entries(fields_owner).filter_by_name(field_name))
+        }
         _ => {
             tracing::debug!(
                 "cannot resolve {:?} without inference",
@@ -157,7 +163,7 @@ fn resolve_multi_with_inf(
                 .get_resolve_method_or_path(struct_path.into())?
                 .cast_into::<ast::AnyFieldsOwner>(db)?;
 
-            let field_name = struct_lit_field.field_name()?;
+            let field_name = struct_lit_field.field_name()?.as_string();
             get_named_field_entries(fields_owner).filter_by_name(field_name)
         }
         ast::ReferenceElement::SchemaLitField(schema_lit_field) => {

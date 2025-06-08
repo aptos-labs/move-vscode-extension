@@ -1,11 +1,13 @@
 use crate::init_tracing_for_test;
 use ide::{Analysis, NavigationTarget};
-use lang::nameres::scope::VecExt;
+use stdx::itertools::Itertools;
 use syntax::AstNode;
 use syntax::SyntaxKind::{IDENT, QUOTE_IDENT};
 use syntax::files::FilePosition;
 use test_utils::fixtures::test_state::TestPackageFiles;
-use test_utils::{fixtures, get_first_marked_position, get_marked_position_offset_with_data};
+use test_utils::{
+    fixtures, get_all_marked_positions, get_first_marked_position, get_marked_position_offset_with_data,
+};
 use vfs::FileId;
 
 mod test_resolve_1;
@@ -19,6 +21,7 @@ mod test_resolve_struct_fields;
 mod test_resolve_types;
 mod test_resolve_variables;
 
+#[track_caller]
 pub fn check_resolve(source: &str) {
     init_tracing_for_test();
 
@@ -42,23 +45,16 @@ pub fn check_resolve(source: &str) {
         0 => {
             assert!(data == "unresolved", "Item is unresolved");
         }
-        1 => {
+        _ => {
             if data == "unresolved" {
                 panic!("Should be unresolved, but instead resolved to {:?}", nav_items);
             }
-            let nav_item = nav_items.single_or_none().unwrap();
-            assert_resolves_to_target(&analysis, nav_item, (file_id, source.to_string()));
-        }
-        _ => {
-            assert!(
-                data == "multi",
-                "Item is resolved to multiple entries {:#?}",
-                nav_items
-            );
+            assert_resolves_to_multiple_targets(&analysis, nav_items, (file_id, source.to_string()));
         }
     }
 }
 
+#[track_caller]
 pub fn check_resolve_tmpfs(test_packages: Vec<TestPackageFiles>) {
     init_tracing_for_test();
 
@@ -107,4 +103,52 @@ fn assert_resolves_to_target(
         .expect("no ident token on mark");
     let ident_text_range = marked_ident_token.text_range();
     assert_eq!(nav_item.focus_range.unwrap(), ident_text_range);
+}
+
+#[track_caller]
+fn assert_resolves_to_multiple_targets(
+    analysis: &Analysis,
+    nav_items: Vec<NavigationTarget>,
+    target_file: (FileId, String),
+) {
+    let (target_file_id, target_file_text) = target_file;
+
+    let target_file = analysis.parse(target_file_id).unwrap();
+    let target_marks = get_all_marked_positions(&target_file_text, "//X")
+        .into_iter()
+        .map(|it| it.item_offset)
+        .sorted();
+
+    let target_idents = target_marks
+        .map(|offset| {
+            target_file
+                .syntax()
+                .token_at_offset(offset)
+                .find(|token| matches!(token.kind(), IDENT | QUOTE_IDENT))
+                .expect("no ident token at mark")
+        })
+        .collect::<Vec<_>>();
+    let mut nav_items = nav_items
+        .iter()
+        .sorted_by_key(|item| item.full_range.start())
+        .collect::<Vec<_>>();
+
+    let mut missing_targets = vec![];
+    for target_ident in target_idents {
+        let pos = nav_items.iter().position(|item| {
+            item.focus_range
+                .is_some_and(|range| range.contains_range(target_ident.text_range()))
+        });
+        match pos {
+            Some(pos) => {
+                nav_items.remove(pos);
+            }
+            None => {
+                missing_targets.push(target_ident);
+            }
+        }
+    }
+    if !missing_targets.is_empty() {
+        panic!("Missing resolution targets: {:?}", missing_targets);
+    }
 }
