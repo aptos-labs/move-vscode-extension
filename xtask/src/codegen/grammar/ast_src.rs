@@ -305,9 +305,9 @@ pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
 
 pub(crate) const TRAITS: &[(&str, &[&str])] = &[
     ("HasAttrs", &["attrs"]),
-    ("NamedElement", &["name"]),
-    ("FieldsOwner", &["named_field_list", "tuple_field_list"]),
-    ("GenericElement", &["type_param_list"]),
+    // ("NamedElement", &["name"]),
+    // ("FieldsOwner", &["named_field_list", "tuple_field_list"]),
+    // ("GenericElement", &["type_param_list"]),
     // ("HasGenericArgs", &["generic_arg_list"]),
     // ("HasTypeBounds", &["type_bound_list", "colon_token"]),
     ("HasUseStmts", &["use_stmts"]),
@@ -392,7 +392,7 @@ pub(crate) struct AstNodeSrc {
     pub(crate) fields: Vec<Field>,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub(crate) enum Field {
     Token {
         name: String,
@@ -405,7 +405,7 @@ pub(crate) enum Field {
     },
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub(crate) enum Cardinality {
     Required,
     Optional,

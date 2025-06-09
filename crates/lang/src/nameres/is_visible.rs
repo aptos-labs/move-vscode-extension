@@ -34,7 +34,7 @@ pub fn is_visible_in_context(
     let Some(InFile {
         file_id: item_file_id,
         value: item,
-    }) = scope_entry.node_loc.to_ast::<ast::AnyNamedElement>(db)
+    }) = scope_entry.node_loc.to_ast::<ast::NamedElement>(db)
     else {
         return false;
     };

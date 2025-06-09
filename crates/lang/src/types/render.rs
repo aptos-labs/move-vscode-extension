@@ -10,7 +10,6 @@ use crate::types::ty::type_param::TyTypeParameter;
 use base_db::SourceDatabase;
 use stdx::itertools::Itertools;
 use syntax::ast;
-use syntax::ast::NamedElement;
 use syntax::files::InFile;
 use vfs::FileId;
 

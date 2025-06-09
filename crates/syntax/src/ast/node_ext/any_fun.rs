@@ -18,8 +18,8 @@ impl ast::AnyFun {
         self.ret_type()?.type_()
     }
 
-    pub fn into_generic_element(self) -> ast::AnyGenericElement {
-        match self {
+    pub fn to_generic_element(&self) -> ast::GenericElement {
+        match self.clone() {
             ast::AnyFun::Fun(it) => it.into(),
             ast::AnyFun::SpecFun(it) => it.into(),
             ast::AnyFun::SpecInlineFun(it) => it.into(),

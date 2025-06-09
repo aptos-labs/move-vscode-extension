@@ -9,7 +9,7 @@ use std::fmt::Formatter;
 use stdx::itertools::Itertools;
 use syntax::SyntaxKind::{IDENT_PAT, NAMED_FIELD};
 use syntax::files::{InFile, InFileVecExt};
-use syntax::{SyntaxKind, ast};
+use syntax::{AstNode, SyntaxKind, ast};
 use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]
@@ -31,7 +31,7 @@ impl ScopeEntry {
         self.node_loc.kind()
     }
 
-    pub fn cast_into<T: ast::AstNode>(self, db: &dyn SourceDatabase) -> Option<InFile<T>> {
+    pub fn cast_into<T: AstNode>(self, db: &dyn SourceDatabase) -> Option<InFile<T>> {
         self.node_loc.to_ast(db)
     }
 }
@@ -47,13 +47,15 @@ impl fmt::Debug for ScopeEntry {
 }
 
 pub trait ScopeEntryExt {
-    fn to_entry(self) -> Option<ScopeEntry>;
-}
+    fn named_element(self) -> InFile<ast::NamedElement>;
 
-impl<T: ast::NamedElement> ScopeEntryExt for InFile<T> {
-    fn to_entry(self) -> Option<ScopeEntry> {
-        let name = self.value.name()?.as_string();
-        let item_loc = self.loc();
+    fn to_entry(self) -> Option<ScopeEntry>
+    where
+        Self: Sized,
+    {
+        let named_element = self.named_element();
+        let name = named_element.value.name()?.as_string();
+        let item_loc = named_element.loc();
         let item_ns = named_item_ns(item_loc.kind());
         let entry = ScopeEntry {
             name,
@@ -65,11 +67,30 @@ impl<T: ast::NamedElement> ScopeEntryExt for InFile<T> {
     }
 }
 
+impl<Named: Into<ast::NamedElement>> ScopeEntryExt for InFile<Named> {
+    fn named_element(self) -> InFile<ast::NamedElement> {
+        self.map(|it| it.into())
+    }
+    // fn to_entry(self) -> Option<ScopeEntry> {
+    //     let named_element = self.value;
+    //     let name = self.value.into().name()?.as_string();
+    //     let item_loc = self.loc();
+    //     let item_ns = named_item_ns(item_loc.kind());
+    //     let entry = ScopeEntry {
+    //         name,
+    //         node_loc: item_loc,
+    //         ns: item_ns,
+    //         scope_adjustment: None,
+    //     };
+    //     Some(entry)
+    // }
+}
+
 pub trait NamedItemsExt {
     fn to_entries(self) -> Vec<ScopeEntry>;
 }
 
-impl<T: ast::NamedElement> NamedItemsExt for Vec<InFile<T>> {
+impl<Named: Into<ast::NamedElement>> NamedItemsExt for Vec<InFile<Named>> {
     fn to_entries(self) -> Vec<ScopeEntry> {
         self.into_iter().filter_map(|item| item.to_entry()).collect()
     }
@@ -79,9 +100,10 @@ pub trait NamedItemsInFileExt {
     fn to_entries(self, file_id: FileId) -> Vec<ScopeEntry>;
 }
 
-impl<T: ast::NamedElement> NamedItemsInFileExt for Vec<T> {
+impl<Named: Into<ast::NamedElement>> NamedItemsInFileExt for Vec<Named> {
     fn to_entries(self, file_id: FileId) -> Vec<ScopeEntry> {
-        self.wrapped_in_file(file_id).to_entries()
+        let items = self.into_iter().map(|it| it.into()).collect::<Vec<_>>();
+        items.wrapped_in_file(file_id).to_entries()
     }
 }
 
@@ -140,7 +162,7 @@ impl ScopeEntryListExt for Vec<ScopeEntry> {
     ) -> Vec<ScopeEntry> {
         self.into_iter()
             .filter_map(|entry| {
-                let item = entry.clone().cast_into::<ast::AnyNamedElement>(db)?;
+                let item = entry.clone().cast_into::<ast::NamedElement>(db)?;
                 let Some(variant_item) = item.cast_into::<ast::Variant>() else {
                     return Some(entry);
                 };

@@ -20,8 +20,8 @@ use regex::Regex;
 use std::iter;
 use std::ops::Deref;
 use std::sync::LazyLock;
+use syntax::ast::HasStmts;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
-use syntax::ast::{FieldsOwner, HasStmts};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, IntoNodeOrToken, ast};
 
@@ -429,7 +429,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         } else {
             named_elements
                 .single_or_none()?
-                .cast_into::<ast::AnyNamedElement>(self.ctx.db)?
+                .cast_into::<ast::NamedElement>(self.ctx.db)?
         };
 
         let file_id = self.ctx.file_id;
@@ -464,7 +464,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 let enum_path = path_expr.path().qualifier().unwrap_or(path_expr.path());
                 let variant_ty = self
                     .ctx
-                    .instantiate_path(enum_path.into(), variant.map(|it| it.enum_()).map_into());
+                    .instantiate_path(enum_path.into(), variant.map(|it| it.enum_()));
                 let variant_ty_adt = variant_ty.into_ty_adt()?;
                 Some(Ty::Adt(variant_ty_adt))
             }
@@ -618,7 +618,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let item = self.ctx.resolve_path_cached(path.clone(), expected_ty.clone())?;
         let (item_file_id, item) = item.unpack();
 
-        let fields_owner = item.cast_into::<ast::AnyFieldsOwner>();
+        let fields_owner = item.syntax().cast::<ast::FieldsOwner>();
         if fields_owner.is_none() {
             for field in struct_lit.fields() {
                 if let Some(field_expr) = field.expr() {
@@ -632,7 +632,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let struct_or_enum = fields_owner.struct_or_enum();
         let explicit_ty_adt = self
             .ctx
-            .instantiate_path(path.into(), struct_or_enum.in_file(item_file_id).map_into())
+            .instantiate_path(path.into(), struct_or_enum.in_file(item_file_id))
             .into_ty_adt()?;
 
         let mut ty_adt = explicit_ty_adt.clone();

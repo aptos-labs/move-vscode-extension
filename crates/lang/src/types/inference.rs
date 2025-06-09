@@ -18,7 +18,6 @@ use base_db::SourceDatabase;
 use std::cell::Cell;
 use std::collections::HashMap;
 use std::hash::Hash;
-use syntax::ast::FieldsOwner;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
@@ -92,10 +91,10 @@ impl<'db> InferenceCtx<'db> {
         &mut self,
         path: ast::Path,
         expected_ty: Option<Ty>,
-    ) -> Option<InFile<ast::AnyNamedElement>> {
+    ) -> Option<InFile<ast::NamedElement>> {
         self.resolve_path_cached_multi(path, expected_ty)
             .single_or_none()
-            .and_then(|it| it.cast_into::<ast::AnyNamedElement>(self.db))
+            .and_then(|it| it.cast_into::<ast::NamedElement>(self.db))
     }
 
     #[tracing::instrument(level = "debug", skip_all, fields(ctx_file_id = ?self.file_id))]
@@ -121,7 +120,7 @@ impl<'db> InferenceCtx<'db> {
         &mut self,
         ident_pat: ast::IdentPat,
         expected_type: Option<Ty>,
-    ) -> Option<InFile<ast::AnyNamedElement>> {
+    ) -> Option<InFile<ast::NamedElement>> {
         let entry = resolve_ident_pat_with_expected_type(
             self.db,
             ident_pat.clone().in_file(self.file_id),
@@ -129,7 +128,7 @@ impl<'db> InferenceCtx<'db> {
         );
         self.resolved_ident_pats.insert(ident_pat, entry.clone());
 
-        entry.and_then(|it| it.cast_into::<ast::AnyNamedElement>(self.db))
+        entry.and_then(|it| it.cast_into::<ast::NamedElement>(self.db))
     }
 
     fn instantiate_adt_item_as_callable(
@@ -151,7 +150,7 @@ impl<'db> InferenceCtx<'db> {
             return Some(lambda_ty);
         }
 
-        let fields_owner: ast::AnyFieldsOwner = match adt_item_value {
+        let fields_owner: ast::FieldsOwner = match adt_item_value {
             ast::StructOrEnum::Struct(s) => s.into(),
             ast::StructOrEnum::Enum(_) => {
                 // fetch variant
@@ -182,7 +181,7 @@ impl<'db> InferenceCtx<'db> {
         method_or_path: ast::MethodOrPath,
         any_fun: InFile<ast::AnyFun>,
     ) -> TyCallable {
-        let ty = self.instantiate_path(method_or_path, any_fun.map_into());
+        let ty = self.instantiate_path(method_or_path, any_fun);
         match ty {
             Ty::Callable(ty_callable) => ty_callable,
             _ => unreachable!(
@@ -195,14 +194,14 @@ impl<'db> InferenceCtx<'db> {
     pub fn instantiate_path(
         &mut self,
         method_or_path: ast::MethodOrPath,
-        generic_item: InFile<ast::AnyGenericElement>,
+        generic_item: InFile<impl Into<ast::GenericElement>>,
     ) -> Ty {
         let ctx_file_id = self.file_id;
+        let generic_item = generic_item.map(|it| it.into());
 
-        let mut path_ty = self.ty_lowering().lower_path(
-            method_or_path.in_file(ctx_file_id),
-            generic_item.clone().map_into(),
-        );
+        let mut path_ty = self
+            .ty_lowering()
+            .lower_path(method_or_path.in_file(ctx_file_id), generic_item.clone());
 
         let ty_vars_subst = generic_item.ty_vars_subst(&self.ty_var_index);
         path_ty = path_ty.substitute(&ty_vars_subst);

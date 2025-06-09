@@ -8,8 +8,8 @@ use crate::types::ty::reference::Mutability;
 use crate::types::ty::tuple::TyTuple;
 use std::{cmp, iter};
 use syntax::SyntaxKind;
+use syntax::ast::StructOrEnum;
 use syntax::ast::node_ext::struct_pat_field::PatFieldKind;
-use syntax::ast::{FieldsOwner, StructOrEnum};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 
@@ -51,10 +51,7 @@ impl TypeAstWalker<'_, '_> {
                     if let StructOrEnum::Struct(struct_) = fields_owner.struct_or_enum() {
                         let pat_ty = self
                             .ctx
-                            .instantiate_path(
-                                struct_pat.path().into(),
-                                struct_.in_file(file_id).map_into(),
-                            )
+                            .instantiate_path(struct_pat.path().into(), struct_.in_file(file_id))
                             .into_ty_adt()?;
                         if !self.ctx.is_tys_compatible(expected, Ty::Adt(pat_ty)) {
                             self.ctx.type_errors.push(TypeError::invalid_unpacking(
@@ -175,11 +172,11 @@ impl TypeAstWalker<'_, '_> {
         &mut self,
         struct_pat_path: ast::Path,
         expected_ty: Ty,
-    ) -> Option<InFile<ast::AnyFieldsOwner>> {
+    ) -> Option<InFile<ast::FieldsOwner>> {
         let mut fields_owner = self
             .ctx
             .resolve_path_cached(struct_pat_path, Some(expected_ty.clone()))
-            .and_then(|item| item.cast_into::<ast::AnyFieldsOwner>());
+            .and_then(|item| item.cast_into::<ast::FieldsOwner>());
         if fields_owner.is_none() {
             fields_owner = expected_ty
                 .into_ty_adt()?
@@ -192,7 +189,7 @@ impl TypeAstWalker<'_, '_> {
 
     fn get_pat_field_tys(
         &mut self,
-        fields_owner: Option<InFile<ast::AnyFieldsOwner>>,
+        fields_owner: Option<InFile<ast::FieldsOwner>>,
         pat_fields: &Vec<ast::StructPatField>,
     ) -> Vec<(Option<ScopeEntry>, Ty)> {
         if fields_owner.is_none() {

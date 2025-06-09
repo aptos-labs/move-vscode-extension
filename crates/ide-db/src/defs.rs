@@ -20,13 +20,13 @@ static BUILTIN_TYPE_IDENTS: LazyLock<HashSet<&str>> = LazyLock::new(|| {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Definition {
-    NamedItem(SymbolKind, InFile<ast::AnyNamedElement>),
+    NamedItem(SymbolKind, InFile<ast::NamedElement>),
     BuiltinType,
 }
 
 impl Definition {
-    pub fn from_named_item(named_item: InFile<impl Into<ast::AnyNamedElement>>) -> Option<Definition> {
-        let named_item: InFile<ast::AnyNamedElement> = named_item.map(|it| it.into());
+    pub fn from_named_item(named_item: InFile<impl Into<ast::NamedElement>>) -> Option<Definition> {
+        let named_item: InFile<ast::NamedElement> = named_item.map(|it| it.into());
         let symbol_kind = ast_kind_to_symbol_kind(named_item.kind())?;
         Some(Definition::NamedItem(symbol_kind, named_item))
     }
@@ -80,13 +80,13 @@ impl NameClass {
     pub fn classify(sema: &Semantics<'_, RootDatabase>, name: ast::Name) -> Option<NameClass> {
         let _p = tracing::info_span!("NameClass::classify").entered();
 
-        let named_item = name.syntax().parent_of_type::<ast::AnyNamedElement>()?;
+        let named_item = name.syntax().parent_of_type::<ast::NamedElement>()?;
         match_ast! {
             match (named_item.syntax()) {
                 ast::IdentPat(ident_pat) => Self::classify_ident_pat(sema, ident_pat),
                 _ => {
                     let name = sema.wrap_node_infile(name);
-                    let named_item = name.and_then(|it| it.syntax().parent_of_type::<ast::AnyNamedElement>())?;
+                    let named_item = name.and_then(|it| it.syntax().parent_of_type::<ast::NamedElement>())?;
                     let defn = Definition::from_named_item(named_item)?;
                     Some(NameClass::Definition(defn))
                 },
@@ -100,7 +100,7 @@ impl NameClass {
     ) -> Option<NameClass> {
         let ident_pat = sema.wrap_node_infile(ident_pat);
         if let Some(resolved_ident_pat) =
-            sema.resolve_to_element::<ast::AnyNamedElement>(ident_pat.clone().map_into())
+            sema.resolve_to_element::<ast::NamedElement>(ident_pat.clone().map_into())
         {
             if matches!(resolved_ident_pat.kind(), CONST | VARIANT) {
                 let defn = Definition::from_named_item(resolved_ident_pat)?;
@@ -172,7 +172,7 @@ impl NameRefClass {
             let res = sema.resolve(path.into()).single_or_none();
             return match res {
                 Some(entry) => {
-                    let named_item = entry.node_loc.to_ast::<ast::AnyNamedElement>(sema.db)?;
+                    let named_item = entry.node_loc.to_ast::<ast::NamedElement>(sema.db)?;
                     let defn = Definition::from_named_item(named_item)?;
                     Some(NameRefClass::Definition(defn))
                 }
@@ -191,7 +191,7 @@ impl NameRefClass {
             .resolve(reference)
             .single_or_none()?
             .node_loc
-            .to_ast::<ast::AnyNamedElement>(sema.db)?;
+            .to_ast::<ast::NamedElement>(sema.db)?;
 
         Some(NameRefClass::Definition(Definition::from_named_item(named_item)?))
     }

@@ -2,7 +2,6 @@ use crate::nameres::address::Address;
 use crate::node_ext::ModuleLangExt;
 use crate::node_ext::item::ModuleItemExt;
 use base_db::SourceDatabase;
-use syntax::ast::NamedElement;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast, match_ast};
 

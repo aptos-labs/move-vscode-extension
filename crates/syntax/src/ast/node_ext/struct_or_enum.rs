@@ -1,5 +1,5 @@
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
-use crate::ast::{FieldsOwner, NamedElement};
+use crate::ast::NamedElement;
 use crate::files::InFile;
 use crate::{ast, AstNode};
 use std::collections::HashSet;
@@ -74,11 +74,11 @@ impl ast::StructOrEnum {
     }
 }
 
-impl From<ast::StructOrEnum> for ast::Item {
-    fn from(value: ast::StructOrEnum) -> Self {
-        match value {
-            ast::StructOrEnum::Struct(it) => it.into(),
-            ast::StructOrEnum::Enum(it) => it.into(),
-        }
-    }
-}
+// impl From<ast::StructOrEnum> for ast::Item {
+//     fn from(value: ast::StructOrEnum) -> Self {
+//         match value {
+//             ast::StructOrEnum::Struct(it) => it.into(),
+//             ast::StructOrEnum::Enum(it) => it.into(),
+//         }
+//     }
+// }

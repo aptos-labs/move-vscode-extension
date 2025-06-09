@@ -5,8 +5,8 @@ use crate::nameres::get_schema_field_entries;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::node_ext::item_spec::ItemSpecExt;
 use base_db::{SourceDatabase, source_db};
+use syntax::ast::HasItems;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
-use syntax::ast::{FieldsOwner, GenericElement, HasItems};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, SyntaxNode, ast, match_ast};
 
@@ -30,7 +30,7 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: InFile<SyntaxNode>
     let file_id = scope.file_id;
     let mut entries = vec![];
 
-    if let Some(generic_element) = ast::AnyGenericElement::cast(scope.value.clone()) {
+    if let Some(generic_element) = ast::GenericElement::cast(scope.value.clone()) {
         entries.extend(generic_element.type_params().to_entries(file_id));
     }
 
@@ -67,7 +67,7 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: InFile<SyntaxNode>
                     match (item.syntax()) {
                         ast::Fun(fun) => {
                             let any_fun = fun.clone().to_any_fun();
-                            entries.extend(any_fun.type_params().to_entries(fid));
+                            entries.extend(any_fun.to_generic_element().type_params().to_entries(fid));
                             entries.extend(any_fun.params_as_bindings().to_entries(fid));
                         },
                         ast::Struct(struct_) => {

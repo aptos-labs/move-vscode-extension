@@ -355,10 +355,11 @@ pub struct Const {
 impl ast::HasAttrs for Const {}
 impl ast::HasVisibility for Const {}
 impl ast::HoverDocsOwner for Const {}
-impl ast::NamedElement for Const {}
 impl Const {
     #[inline]
     pub fn body(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
     #[inline]
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
     #[inline]
@@ -412,14 +413,16 @@ impl DotExpr {
 pub struct Enum {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::GenericElement for Enum {}
 impl ast::HasAttrs for Enum {}
 impl ast::HasVisibility for Enum {}
 impl ast::HoverDocsOwner for Enum {}
-impl ast::NamedElement for Enum {}
 impl Enum {
     #[inline]
     pub fn ability_list(&self) -> Option<AbilityList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
+    #[inline]
+    pub fn type_param_list(&self) -> Option<TypeParamList> { support::child(&self.syntax) }
     #[inline]
     pub fn variant_list(&self) -> Option<VariantList> { support::child(&self.syntax) }
     #[inline]
@@ -521,18 +524,20 @@ impl Friend {
 pub struct Fun {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::GenericElement for Fun {}
 impl ast::HasAttrs for Fun {}
 impl ast::HasVisibility for Fun {}
 impl ast::HoverDocsOwner for Fun {}
-impl ast::NamedElement for Fun {}
 impl Fun {
     #[inline]
     pub fn body(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
     #[inline]
+    pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
+    #[inline]
     pub fn param_list(&self) -> Option<ParamList> { support::child(&self.syntax) }
     #[inline]
     pub fn ret_type(&self) -> Option<RetType> { support::child(&self.syntax) }
+    #[inline]
+    pub fn type_param_list(&self) -> Option<TypeParamList> { support::child(&self.syntax) }
     #[inline]
     pub fn visibility_modifier(&self) -> Option<VisibilityModifier> { support::child(&self.syntax) }
     #[inline]
@@ -551,14 +556,16 @@ impl Fun {
 pub struct GlobalVariableDecl {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::GenericElement for GlobalVariableDecl {}
 impl ast::HasAttrs for GlobalVariableDecl {}
-impl ast::NamedElement for GlobalVariableDecl {}
 impl GlobalVariableDecl {
     #[inline]
     pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
     #[inline]
+    pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
+    #[inline]
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
+    #[inline]
+    pub fn type_param_list(&self) -> Option<TypeParamList> { support::child(&self.syntax) }
     #[inline]
     pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
     #[inline]
@@ -574,8 +581,10 @@ pub struct IdentPat {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HoverDocsOwner for IdentPat {}
-impl ast::NamedElement for IdentPat {}
-impl IdentPat {}
+impl IdentPat {
+    #[inline]
+    pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct IfElseIncludeExpr {
@@ -1004,10 +1013,11 @@ impl ast::HasAttrs for Module {}
 impl ast::HasItems for Module {}
 impl ast::HasUseStmts for Module {}
 impl ast::HoverDocsOwner for Module {}
-impl ast::NamedElement for Module {}
 impl Module {
     #[inline]
     pub fn address_ref(&self) -> Option<AddressRef> { support::child(&self.syntax) }
+    #[inline]
+    pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
     #[inline]
     pub fn l_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['{']) }
     #[inline]
@@ -1078,8 +1088,9 @@ pub struct NamedField {
 }
 impl ast::HasAttrs for NamedField {}
 impl ast::HoverDocsOwner for NamedField {}
-impl ast::NamedElement for NamedField {}
 impl NamedField {
+    #[inline]
+    pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
     #[inline]
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
     #[inline]
@@ -1345,14 +1356,16 @@ impl ReturnExpr {
 pub struct Schema {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::GenericElement for Schema {}
 impl ast::HasAttrs for Schema {}
 impl ast::HoverDocsOwner for Schema {}
 impl ast::MslOnly for Schema {}
-impl ast::NamedElement for Schema {}
 impl Schema {
     #[inline]
+    pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
+    #[inline]
     pub fn spec_block(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn type_param_list(&self) -> Option<TypeParamList> { support::child(&self.syntax) }
     #[inline]
     pub fn schema_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![schema]) }
     #[inline]
@@ -1365,8 +1378,9 @@ pub struct SchemaField {
 }
 impl ast::HasAttrs for SchemaField {}
 impl ast::MslOnly for SchemaField {}
-impl ast::NamedElement for SchemaField {}
 impl SchemaField {
+    #[inline]
+    pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
     #[inline]
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
     #[inline]
@@ -1470,19 +1484,21 @@ impl SpecBlockExpr {
 pub struct SpecFun {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::GenericElement for SpecFun {}
 impl ast::HasAttrs for SpecFun {}
 impl ast::HasVisibility for SpecFun {}
 impl ast::HoverDocsOwner for SpecFun {}
 impl ast::MslOnly for SpecFun {}
-impl ast::NamedElement for SpecFun {}
 impl SpecFun {
+    #[inline]
+    pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
     #[inline]
     pub fn param_list(&self) -> Option<ParamList> { support::child(&self.syntax) }
     #[inline]
     pub fn ret_type(&self) -> Option<RetType> { support::child(&self.syntax) }
     #[inline]
     pub fn spec_block(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn type_param_list(&self) -> Option<TypeParamList> { support::child(&self.syntax) }
     #[inline]
     pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
     #[inline]
@@ -1497,19 +1513,21 @@ impl SpecFun {
 pub struct SpecInlineFun {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::GenericElement for SpecInlineFun {}
 impl ast::HasAttrs for SpecInlineFun {}
 impl ast::HasVisibility for SpecInlineFun {}
 impl ast::HoverDocsOwner for SpecInlineFun {}
 impl ast::MslOnly for SpecInlineFun {}
-impl ast::NamedElement for SpecInlineFun {}
 impl SpecInlineFun {
+    #[inline]
+    pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
     #[inline]
     pub fn param_list(&self) -> Option<ParamList> { support::child(&self.syntax) }
     #[inline]
     pub fn ret_type(&self) -> Option<RetType> { support::child(&self.syntax) }
     #[inline]
     pub fn spec_block(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn type_param_list(&self) -> Option<TypeParamList> { support::child(&self.syntax) }
     #[inline]
     pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
     #[inline]
@@ -1575,15 +1593,18 @@ impl SpecPredicateStmt {
 pub struct Struct {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::FieldsOwner for Struct {}
-impl ast::GenericElement for Struct {}
 impl ast::HasAttrs for Struct {}
 impl ast::HasVisibility for Struct {}
 impl ast::HoverDocsOwner for Struct {}
-impl ast::NamedElement for Struct {}
 impl Struct {
     #[inline]
     pub fn ability_list(&self) -> Option<AbilityList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn field_list(&self) -> Option<FieldList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
+    #[inline]
+    pub fn type_param_list(&self) -> Option<TypeParamList> { support::child(&self.syntax) }
     #[inline]
     pub fn struct_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![struct]) }
 }
@@ -1777,8 +1798,9 @@ impl TypeArgList {
 pub struct TypeParam {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::NamedElement for TypeParam {}
 impl TypeParam {
+    #[inline]
+    pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
     #[inline]
     pub fn phantom_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![phantom]) }
 }
@@ -1811,8 +1833,9 @@ impl UnitType {
 pub struct UseAlias {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::NamedElement for UseAlias {}
 impl UseAlias {
+    #[inline]
+    pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
     #[inline]
     pub fn as_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![as]) }
 }
@@ -1897,11 +1920,14 @@ impl ValueArgList {
 pub struct Variant {
     pub(crate) syntax: SyntaxNode,
 }
-impl ast::FieldsOwner for Variant {}
 impl ast::HasAttrs for Variant {}
 impl ast::HoverDocsOwner for Variant {}
-impl ast::NamedElement for Variant {}
-impl Variant {}
+impl Variant {
+    #[inline]
+    pub fn field_list(&self) -> Option<FieldList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct VariantList {
@@ -2034,11 +2060,9 @@ pub enum AnyFun {
     SpecFun(SpecFun),
     SpecInlineFun(SpecInlineFun),
 }
-impl ast::GenericElement for AnyFun {}
 impl ast::HasAttrs for AnyFun {}
 impl ast::HasVisibility for AnyFun {}
 impl ast::HoverDocsOwner for AnyFun {}
-impl ast::NamedElement for AnyFun {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum BlockOrInlineExpr {
@@ -2089,6 +2113,26 @@ pub enum FieldList {
     NamedFieldList(NamedFieldList),
     TupleFieldList(TupleFieldList),
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum FieldsOwner {
+    Struct(Struct),
+    Variant(Variant),
+}
+impl ast::HasAttrs for FieldsOwner {}
+impl ast::HoverDocsOwner for FieldsOwner {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum GenericElement {
+    Enum(Enum),
+    Fun(Fun),
+    GlobalVariableDecl(GlobalVariableDecl),
+    Schema(Schema),
+    SpecFun(SpecFun),
+    SpecInlineFun(SpecInlineFun),
+    Struct(Struct),
+}
+impl ast::HasAttrs for GenericElement {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum GenericSpecStmt {
@@ -2160,6 +2204,25 @@ pub enum NameLike {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum NamedElement {
+    Const(Const),
+    Enum(Enum),
+    Fun(Fun),
+    GlobalVariableDecl(GlobalVariableDecl),
+    IdentPat(IdentPat),
+    Module(Module),
+    NamedField(NamedField),
+    Schema(Schema),
+    SchemaField(SchemaField),
+    SpecFun(SpecFun),
+    SpecInlineFun(SpecInlineFun),
+    Struct(Struct),
+    TypeParam(TypeParam),
+    UseAlias(UseAlias),
+    Variant(Variant),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Pat {
     IdentPat(IdentPat),
     PathPat(PathPat),
@@ -2219,11 +2282,9 @@ pub enum StructOrEnum {
     Enum(Enum),
     Struct(Struct),
 }
-impl ast::GenericElement for StructOrEnum {}
 impl ast::HasAttrs for StructOrEnum {}
 impl ast::HasVisibility for StructOrEnum {}
 impl ast::HoverDocsOwner for StructOrEnum {}
-impl ast::NamedElement for StructOrEnum {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Type {
@@ -2243,23 +2304,6 @@ pub enum TypeOwner {
     TupleField(TupleField),
 }
 impl ast::HasAttrs for TypeOwner {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct AnyFieldsOwner {
-    pub(crate) syntax: SyntaxNode,
-}
-impl ast::FieldsOwner for AnyFieldsOwner {}
-impl ast::HasAttrs for AnyFieldsOwner {}
-impl ast::HoverDocsOwner for AnyFieldsOwner {}
-impl ast::NamedElement for AnyFieldsOwner {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct AnyGenericElement {
-    pub(crate) syntax: SyntaxNode,
-}
-impl ast::GenericElement for AnyGenericElement {}
-impl ast::HasAttrs for AnyGenericElement {}
-impl ast::NamedElement for AnyGenericElement {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyHasAttrs {
@@ -2295,26 +2339,18 @@ pub struct AnyHasVisibility {
 impl ast::HasVisibility for AnyHasVisibility {}
 impl ast::HasAttrs for AnyHasVisibility {}
 impl ast::HoverDocsOwner for AnyHasVisibility {}
-impl ast::NamedElement for AnyHasVisibility {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyHoverDocsOwner {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HoverDocsOwner for AnyHoverDocsOwner {}
-impl ast::NamedElement for AnyHoverDocsOwner {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyMslOnly {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::MslOnly for AnyMslOnly {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct AnyNamedElement {
-    pub(crate) syntax: SyntaxNode,
-}
-impl ast::NamedElement for AnyNamedElement {}
 impl AstNode for Ability {
     #[inline]
     fn kind() -> SyntaxKind
@@ -5377,6 +5413,15 @@ impl From<AnyField> for AnyHasAttrs {
         }
     }
 }
+impl From<AnyField> for TypeOwner {
+    #[inline]
+    fn from(node: AnyField) -> TypeOwner {
+        match node {
+            AnyField::NamedField(it) => it.into(),
+            AnyField::TupleField(it) => it.into(),
+        }
+    }
+}
 impl AnyField {
     pub fn named_field(self) -> Option<NamedField> {
         match (self) {
@@ -5430,16 +5475,6 @@ impl From<SpecInlineFun> for AnyFun {
     #[inline]
     fn from(node: SpecInlineFun) -> AnyFun { AnyFun::SpecInlineFun(node) }
 }
-impl From<AnyFun> for AnyGenericElement {
-    #[inline]
-    fn from(node: AnyFun) -> AnyGenericElement {
-        match node {
-            AnyFun::Fun(it) => it.into(),
-            AnyFun::SpecFun(it) => it.into(),
-            AnyFun::SpecInlineFun(it) => it.into(),
-        }
-    }
-}
 impl From<AnyFun> for AnyHasAttrs {
     #[inline]
     fn from(node: AnyFun) -> AnyHasAttrs {
@@ -5470,9 +5505,29 @@ impl From<AnyFun> for AnyHoverDocsOwner {
         }
     }
 }
-impl From<AnyFun> for AnyNamedElement {
+impl From<AnyFun> for GenericElement {
     #[inline]
-    fn from(node: AnyFun) -> AnyNamedElement {
+    fn from(node: AnyFun) -> GenericElement {
+        match node {
+            AnyFun::Fun(it) => it.into(),
+            AnyFun::SpecFun(it) => it.into(),
+            AnyFun::SpecInlineFun(it) => it.into(),
+        }
+    }
+}
+impl From<AnyFun> for InferenceCtxOwner {
+    #[inline]
+    fn from(node: AnyFun) -> InferenceCtxOwner {
+        match node {
+            AnyFun::Fun(it) => it.into(),
+            AnyFun::SpecFun(it) => it.into(),
+            AnyFun::SpecInlineFun(it) => it.into(),
+        }
+    }
+}
+impl From<AnyFun> for NamedElement {
+    #[inline]
+    fn from(node: AnyFun) -> NamedElement {
         match node {
             AnyFun::Fun(it) => it.into(),
             AnyFun::SpecFun(it) => it.into(),
@@ -5500,11 +5555,19 @@ impl AnyFun {
         }
     }
     #[inline]
+    pub fn name(&self) -> Option<Name> {
+        match self {
+            AnyFun::Fun(it) => it.name(),
+            AnyFun::SpecFun(it) => it.name(),
+            AnyFun::SpecInlineFun(it) => it.name(),
+        }
+    }
+    #[inline]
     pub fn type_param_list(&self) -> Option<TypeParamList> {
         match self {
-            AnyFun::Fun(it) => ast::GenericElement::type_param_list(it),
-            AnyFun::SpecFun(it) => ast::GenericElement::type_param_list(it),
-            AnyFun::SpecInlineFun(it) => ast::GenericElement::type_param_list(it),
+            AnyFun::Fun(it) => it.type_param_list(),
+            AnyFun::SpecFun(it) => it.type_param_list(),
+            AnyFun::SpecInlineFun(it) => it.type_param_list(),
         }
     }
     #[inline]
@@ -6094,6 +6157,248 @@ impl AstNode for FieldList {
         }
     }
 }
+impl From<Struct> for FieldsOwner {
+    #[inline]
+    fn from(node: Struct) -> FieldsOwner { FieldsOwner::Struct(node) }
+}
+impl From<Variant> for FieldsOwner {
+    #[inline]
+    fn from(node: Variant) -> FieldsOwner { FieldsOwner::Variant(node) }
+}
+impl From<FieldsOwner> for AnyHasAttrs {
+    #[inline]
+    fn from(node: FieldsOwner) -> AnyHasAttrs {
+        match node {
+            FieldsOwner::Struct(it) => it.into(),
+            FieldsOwner::Variant(it) => it.into(),
+        }
+    }
+}
+impl From<FieldsOwner> for AnyHoverDocsOwner {
+    #[inline]
+    fn from(node: FieldsOwner) -> AnyHoverDocsOwner {
+        match node {
+            FieldsOwner::Struct(it) => it.into(),
+            FieldsOwner::Variant(it) => it.into(),
+        }
+    }
+}
+impl From<FieldsOwner> for NamedElement {
+    #[inline]
+    fn from(node: FieldsOwner) -> NamedElement {
+        match node {
+            FieldsOwner::Struct(it) => it.into(),
+            FieldsOwner::Variant(it) => it.into(),
+        }
+    }
+}
+impl FieldsOwner {
+    pub fn struct_(self) -> Option<Struct> {
+        match (self) {
+            FieldsOwner::Struct(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn variant(self) -> Option<Variant> {
+        match (self) {
+            FieldsOwner::Variant(item) => Some(item),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn name(&self) -> Option<Name> {
+        match self {
+            FieldsOwner::Struct(it) => it.name(),
+            FieldsOwner::Variant(it) => it.name(),
+        }
+    }
+    #[inline]
+    pub fn field_list(&self) -> Option<FieldList> {
+        match self {
+            FieldsOwner::Struct(it) => it.field_list(),
+            FieldsOwner::Variant(it) => it.field_list(),
+        }
+    }
+}
+impl AstNode for FieldsOwner {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, STRUCT | VARIANT) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            STRUCT => FieldsOwner::Struct(Struct { syntax }),
+            VARIANT => FieldsOwner::Variant(Variant { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            FieldsOwner::Struct(it) => &it.syntax(),
+            FieldsOwner::Variant(it) => &it.syntax(),
+        }
+    }
+}
+impl From<Enum> for GenericElement {
+    #[inline]
+    fn from(node: Enum) -> GenericElement { GenericElement::Enum(node) }
+}
+impl From<Fun> for GenericElement {
+    #[inline]
+    fn from(node: Fun) -> GenericElement { GenericElement::Fun(node) }
+}
+impl From<GlobalVariableDecl> for GenericElement {
+    #[inline]
+    fn from(node: GlobalVariableDecl) -> GenericElement { GenericElement::GlobalVariableDecl(node) }
+}
+impl From<Schema> for GenericElement {
+    #[inline]
+    fn from(node: Schema) -> GenericElement { GenericElement::Schema(node) }
+}
+impl From<SpecFun> for GenericElement {
+    #[inline]
+    fn from(node: SpecFun) -> GenericElement { GenericElement::SpecFun(node) }
+}
+impl From<SpecInlineFun> for GenericElement {
+    #[inline]
+    fn from(node: SpecInlineFun) -> GenericElement { GenericElement::SpecInlineFun(node) }
+}
+impl From<Struct> for GenericElement {
+    #[inline]
+    fn from(node: Struct) -> GenericElement { GenericElement::Struct(node) }
+}
+impl From<GenericElement> for AnyHasAttrs {
+    #[inline]
+    fn from(node: GenericElement) -> AnyHasAttrs {
+        match node {
+            GenericElement::Enum(it) => it.into(),
+            GenericElement::Fun(it) => it.into(),
+            GenericElement::GlobalVariableDecl(it) => it.into(),
+            GenericElement::Schema(it) => it.into(),
+            GenericElement::SpecFun(it) => it.into(),
+            GenericElement::SpecInlineFun(it) => it.into(),
+            GenericElement::Struct(it) => it.into(),
+        }
+    }
+}
+impl From<GenericElement> for NamedElement {
+    #[inline]
+    fn from(node: GenericElement) -> NamedElement {
+        match node {
+            GenericElement::Enum(it) => it.into(),
+            GenericElement::Fun(it) => it.into(),
+            GenericElement::GlobalVariableDecl(it) => it.into(),
+            GenericElement::Schema(it) => it.into(),
+            GenericElement::SpecFun(it) => it.into(),
+            GenericElement::SpecInlineFun(it) => it.into(),
+            GenericElement::Struct(it) => it.into(),
+        }
+    }
+}
+impl GenericElement {
+    pub fn enum_(self) -> Option<Enum> {
+        match (self) {
+            GenericElement::Enum(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn fun(self) -> Option<Fun> {
+        match (self) {
+            GenericElement::Fun(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn global_variable_decl(self) -> Option<GlobalVariableDecl> {
+        match (self) {
+            GenericElement::GlobalVariableDecl(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn schema(self) -> Option<Schema> {
+        match (self) {
+            GenericElement::Schema(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn spec_fun(self) -> Option<SpecFun> {
+        match (self) {
+            GenericElement::SpecFun(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn spec_inline_fun(self) -> Option<SpecInlineFun> {
+        match (self) {
+            GenericElement::SpecInlineFun(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn struct_(self) -> Option<Struct> {
+        match (self) {
+            GenericElement::Struct(item) => Some(item),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn name(&self) -> Option<Name> {
+        match self {
+            GenericElement::Enum(it) => it.name(),
+            GenericElement::Fun(it) => it.name(),
+            GenericElement::GlobalVariableDecl(it) => it.name(),
+            GenericElement::Schema(it) => it.name(),
+            GenericElement::SpecFun(it) => it.name(),
+            GenericElement::SpecInlineFun(it) => it.name(),
+            GenericElement::Struct(it) => it.name(),
+        }
+    }
+    #[inline]
+    pub fn type_param_list(&self) -> Option<TypeParamList> {
+        match self {
+            GenericElement::Enum(it) => it.type_param_list(),
+            GenericElement::Fun(it) => it.type_param_list(),
+            GenericElement::GlobalVariableDecl(it) => it.type_param_list(),
+            GenericElement::Schema(it) => it.type_param_list(),
+            GenericElement::SpecFun(it) => it.type_param_list(),
+            GenericElement::SpecInlineFun(it) => it.type_param_list(),
+            GenericElement::Struct(it) => it.type_param_list(),
+        }
+    }
+}
+impl AstNode for GenericElement {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(
+            kind,
+            ENUM | FUN | GLOBAL_VARIABLE_DECL | SCHEMA | SPEC_FUN | SPEC_INLINE_FUN | STRUCT
+        )
+    }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            ENUM => GenericElement::Enum(Enum { syntax }),
+            FUN => GenericElement::Fun(Fun { syntax }),
+            GLOBAL_VARIABLE_DECL => GenericElement::GlobalVariableDecl(GlobalVariableDecl { syntax }),
+            SCHEMA => GenericElement::Schema(Schema { syntax }),
+            SPEC_FUN => GenericElement::SpecFun(SpecFun { syntax }),
+            SPEC_INLINE_FUN => GenericElement::SpecInlineFun(SpecInlineFun { syntax }),
+            STRUCT => GenericElement::Struct(Struct { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            GenericElement::Enum(it) => &it.syntax(),
+            GenericElement::Fun(it) => &it.syntax(),
+            GenericElement::GlobalVariableDecl(it) => &it.syntax(),
+            GenericElement::Schema(it) => &it.syntax(),
+            GenericElement::SpecFun(it) => &it.syntax(),
+            GenericElement::SpecInlineFun(it) => &it.syntax(),
+            GenericElement::Struct(it) => &it.syntax(),
+        }
+    }
+}
 impl From<AxiomStmt> for GenericSpecStmt {
     #[inline]
     fn from(node: AxiomStmt) -> GenericSpecStmt { GenericSpecStmt::AxiomStmt(node) }
@@ -6520,6 +6825,16 @@ impl From<WhileExpr> for LoopLike {
     #[inline]
     fn from(node: WhileExpr) -> LoopLike { LoopLike::WhileExpr(node) }
 }
+impl From<LoopLike> for Expr {
+    #[inline]
+    fn from(node: LoopLike) -> Expr {
+        match node {
+            LoopLike::ForExpr(it) => it.into(),
+            LoopLike::LoopExpr(it) => it.into(),
+            LoopLike::WhileExpr(it) => it.into(),
+        }
+    }
+}
 impl LoopLike {
     pub fn for_expr(self) -> Option<ForExpr> {
         match (self) {
@@ -6586,6 +6901,24 @@ impl From<MethodCallExpr> for MethodOrDotExpr {
     #[inline]
     fn from(node: MethodCallExpr) -> MethodOrDotExpr { MethodOrDotExpr::MethodCallExpr(node) }
 }
+impl From<MethodOrDotExpr> for Expr {
+    #[inline]
+    fn from(node: MethodOrDotExpr) -> Expr {
+        match node {
+            MethodOrDotExpr::DotExpr(it) => it.into(),
+            MethodOrDotExpr::MethodCallExpr(it) => it.into(),
+        }
+    }
+}
+impl From<MethodOrDotExpr> for ReferenceElement {
+    #[inline]
+    fn from(node: MethodOrDotExpr) -> ReferenceElement {
+        match node {
+            MethodOrDotExpr::DotExpr(it) => it.into(),
+            MethodOrDotExpr::MethodCallExpr(it) => it.into(),
+        }
+    }
+}
 impl MethodOrDotExpr {
     pub fn dot_expr(self) -> Option<DotExpr> {
         match (self) {
@@ -6641,6 +6974,15 @@ impl From<MethodCallExpr> for MethodOrPath {
 impl From<Path> for MethodOrPath {
     #[inline]
     fn from(node: Path) -> MethodOrPath { MethodOrPath::Path(node) }
+}
+impl From<MethodOrPath> for ReferenceElement {
+    #[inline]
+    fn from(node: MethodOrPath) -> ReferenceElement {
+        match node {
+            MethodOrPath::MethodCallExpr(it) => it.into(),
+            MethodOrPath::Path(it) => it.into(),
+        }
+    }
 }
 impl MethodOrPath {
     pub fn method_call_expr(self) -> Option<MethodCallExpr> {
@@ -6715,6 +7057,243 @@ impl AstNode for NameLike {
         match self {
             NameLike::Name(it) => &it.syntax(),
             NameLike::NameRef(it) => &it.syntax(),
+        }
+    }
+}
+impl From<Const> for NamedElement {
+    #[inline]
+    fn from(node: Const) -> NamedElement { NamedElement::Const(node) }
+}
+impl From<Enum> for NamedElement {
+    #[inline]
+    fn from(node: Enum) -> NamedElement { NamedElement::Enum(node) }
+}
+impl From<Fun> for NamedElement {
+    #[inline]
+    fn from(node: Fun) -> NamedElement { NamedElement::Fun(node) }
+}
+impl From<GlobalVariableDecl> for NamedElement {
+    #[inline]
+    fn from(node: GlobalVariableDecl) -> NamedElement { NamedElement::GlobalVariableDecl(node) }
+}
+impl From<IdentPat> for NamedElement {
+    #[inline]
+    fn from(node: IdentPat) -> NamedElement { NamedElement::IdentPat(node) }
+}
+impl From<Module> for NamedElement {
+    #[inline]
+    fn from(node: Module) -> NamedElement { NamedElement::Module(node) }
+}
+impl From<NamedField> for NamedElement {
+    #[inline]
+    fn from(node: NamedField) -> NamedElement { NamedElement::NamedField(node) }
+}
+impl From<Schema> for NamedElement {
+    #[inline]
+    fn from(node: Schema) -> NamedElement { NamedElement::Schema(node) }
+}
+impl From<SchemaField> for NamedElement {
+    #[inline]
+    fn from(node: SchemaField) -> NamedElement { NamedElement::SchemaField(node) }
+}
+impl From<SpecFun> for NamedElement {
+    #[inline]
+    fn from(node: SpecFun) -> NamedElement { NamedElement::SpecFun(node) }
+}
+impl From<SpecInlineFun> for NamedElement {
+    #[inline]
+    fn from(node: SpecInlineFun) -> NamedElement { NamedElement::SpecInlineFun(node) }
+}
+impl From<Struct> for NamedElement {
+    #[inline]
+    fn from(node: Struct) -> NamedElement { NamedElement::Struct(node) }
+}
+impl From<TypeParam> for NamedElement {
+    #[inline]
+    fn from(node: TypeParam) -> NamedElement { NamedElement::TypeParam(node) }
+}
+impl From<UseAlias> for NamedElement {
+    #[inline]
+    fn from(node: UseAlias) -> NamedElement { NamedElement::UseAlias(node) }
+}
+impl From<Variant> for NamedElement {
+    #[inline]
+    fn from(node: Variant) -> NamedElement { NamedElement::Variant(node) }
+}
+impl NamedElement {
+    pub fn const_(self) -> Option<Const> {
+        match (self) {
+            NamedElement::Const(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn enum_(self) -> Option<Enum> {
+        match (self) {
+            NamedElement::Enum(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn fun(self) -> Option<Fun> {
+        match (self) {
+            NamedElement::Fun(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn global_variable_decl(self) -> Option<GlobalVariableDecl> {
+        match (self) {
+            NamedElement::GlobalVariableDecl(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn ident_pat(self) -> Option<IdentPat> {
+        match (self) {
+            NamedElement::IdentPat(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn module(self) -> Option<Module> {
+        match (self) {
+            NamedElement::Module(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn named_field(self) -> Option<NamedField> {
+        match (self) {
+            NamedElement::NamedField(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn schema(self) -> Option<Schema> {
+        match (self) {
+            NamedElement::Schema(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn schema_field(self) -> Option<SchemaField> {
+        match (self) {
+            NamedElement::SchemaField(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn spec_fun(self) -> Option<SpecFun> {
+        match (self) {
+            NamedElement::SpecFun(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn spec_inline_fun(self) -> Option<SpecInlineFun> {
+        match (self) {
+            NamedElement::SpecInlineFun(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn struct_(self) -> Option<Struct> {
+        match (self) {
+            NamedElement::Struct(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn type_param(self) -> Option<TypeParam> {
+        match (self) {
+            NamedElement::TypeParam(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn use_alias(self) -> Option<UseAlias> {
+        match (self) {
+            NamedElement::UseAlias(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn variant(self) -> Option<Variant> {
+        match (self) {
+            NamedElement::Variant(item) => Some(item),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn name(&self) -> Option<Name> {
+        match self {
+            NamedElement::Const(it) => it.name(),
+            NamedElement::Enum(it) => it.name(),
+            NamedElement::Fun(it) => it.name(),
+            NamedElement::GlobalVariableDecl(it) => it.name(),
+            NamedElement::IdentPat(it) => it.name(),
+            NamedElement::Module(it) => it.name(),
+            NamedElement::NamedField(it) => it.name(),
+            NamedElement::Schema(it) => it.name(),
+            NamedElement::SchemaField(it) => it.name(),
+            NamedElement::SpecFun(it) => it.name(),
+            NamedElement::SpecInlineFun(it) => it.name(),
+            NamedElement::Struct(it) => it.name(),
+            NamedElement::TypeParam(it) => it.name(),
+            NamedElement::UseAlias(it) => it.name(),
+            NamedElement::Variant(it) => it.name(),
+        }
+    }
+}
+impl AstNode for NamedElement {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(
+            kind,
+            CONST
+                | ENUM
+                | FUN
+                | GLOBAL_VARIABLE_DECL
+                | IDENT_PAT
+                | MODULE
+                | NAMED_FIELD
+                | SCHEMA
+                | SCHEMA_FIELD
+                | SPEC_FUN
+                | SPEC_INLINE_FUN
+                | STRUCT
+                | TYPE_PARAM
+                | USE_ALIAS
+                | VARIANT
+        )
+    }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            CONST => NamedElement::Const(Const { syntax }),
+            ENUM => NamedElement::Enum(Enum { syntax }),
+            FUN => NamedElement::Fun(Fun { syntax }),
+            GLOBAL_VARIABLE_DECL => NamedElement::GlobalVariableDecl(GlobalVariableDecl { syntax }),
+            IDENT_PAT => NamedElement::IdentPat(IdentPat { syntax }),
+            MODULE => NamedElement::Module(Module { syntax }),
+            NAMED_FIELD => NamedElement::NamedField(NamedField { syntax }),
+            SCHEMA => NamedElement::Schema(Schema { syntax }),
+            SCHEMA_FIELD => NamedElement::SchemaField(SchemaField { syntax }),
+            SPEC_FUN => NamedElement::SpecFun(SpecFun { syntax }),
+            SPEC_INLINE_FUN => NamedElement::SpecInlineFun(SpecInlineFun { syntax }),
+            STRUCT => NamedElement::Struct(Struct { syntax }),
+            TYPE_PARAM => NamedElement::TypeParam(TypeParam { syntax }),
+            USE_ALIAS => NamedElement::UseAlias(UseAlias { syntax }),
+            VARIANT => NamedElement::Variant(Variant { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            NamedElement::Const(it) => &it.syntax(),
+            NamedElement::Enum(it) => &it.syntax(),
+            NamedElement::Fun(it) => &it.syntax(),
+            NamedElement::GlobalVariableDecl(it) => &it.syntax(),
+            NamedElement::IdentPat(it) => &it.syntax(),
+            NamedElement::Module(it) => &it.syntax(),
+            NamedElement::NamedField(it) => &it.syntax(),
+            NamedElement::Schema(it) => &it.syntax(),
+            NamedElement::SchemaField(it) => &it.syntax(),
+            NamedElement::SpecFun(it) => &it.syntax(),
+            NamedElement::SpecInlineFun(it) => &it.syntax(),
+            NamedElement::Struct(it) => &it.syntax(),
+            NamedElement::TypeParam(it) => &it.syntax(),
+            NamedElement::UseAlias(it) => &it.syntax(),
+            NamedElement::Variant(it) => &it.syntax(),
         }
     }
 }
@@ -6837,6 +7416,26 @@ impl From<ForallExpr> for QuantBindingsOwner {
     #[inline]
     fn from(node: ForallExpr) -> QuantBindingsOwner { QuantBindingsOwner::ForallExpr(node) }
 }
+impl From<QuantBindingsOwner> for Expr {
+    #[inline]
+    fn from(node: QuantBindingsOwner) -> Expr {
+        match node {
+            QuantBindingsOwner::ChooseExpr(it) => it.into(),
+            QuantBindingsOwner::ExistsExpr(it) => it.into(),
+            QuantBindingsOwner::ForallExpr(it) => it.into(),
+        }
+    }
+}
+impl From<QuantBindingsOwner> for QuantExpr {
+    #[inline]
+    fn from(node: QuantBindingsOwner) -> QuantExpr {
+        match node {
+            QuantBindingsOwner::ChooseExpr(it) => it.into(),
+            QuantBindingsOwner::ExistsExpr(it) => it.into(),
+            QuantBindingsOwner::ForallExpr(it) => it.into(),
+        }
+    }
+}
 impl QuantBindingsOwner {
     pub fn choose_expr(self) -> Option<ChooseExpr> {
         match (self) {
@@ -6906,6 +7505,26 @@ impl From<ExistsExpr> for QuantExpr {
 impl From<ForallExpr> for QuantExpr {
     #[inline]
     fn from(node: ForallExpr) -> QuantExpr { QuantExpr::ForallExpr(node) }
+}
+impl From<QuantExpr> for Expr {
+    #[inline]
+    fn from(node: QuantExpr) -> Expr {
+        match node {
+            QuantExpr::ChooseExpr(it) => it.into(),
+            QuantExpr::ExistsExpr(it) => it.into(),
+            QuantExpr::ForallExpr(it) => it.into(),
+        }
+    }
+}
+impl From<QuantExpr> for QuantBindingsOwner {
+    #[inline]
+    fn from(node: QuantExpr) -> QuantBindingsOwner {
+        match node {
+            QuantExpr::ChooseExpr(it) => it.into(),
+            QuantExpr::ExistsExpr(it) => it.into(),
+            QuantExpr::ForallExpr(it) => it.into(),
+        }
+    }
 }
 impl QuantExpr {
     pub fn choose_expr(self) -> Option<ChooseExpr> {
@@ -7307,15 +7926,6 @@ impl From<Struct> for StructOrEnum {
     #[inline]
     fn from(node: Struct) -> StructOrEnum { StructOrEnum::Struct(node) }
 }
-impl From<StructOrEnum> for AnyGenericElement {
-    #[inline]
-    fn from(node: StructOrEnum) -> AnyGenericElement {
-        match node {
-            StructOrEnum::Enum(it) => it.into(),
-            StructOrEnum::Struct(it) => it.into(),
-        }
-    }
-}
 impl From<StructOrEnum> for AnyHasAttrs {
     #[inline]
     fn from(node: StructOrEnum) -> AnyHasAttrs {
@@ -7343,9 +7953,27 @@ impl From<StructOrEnum> for AnyHoverDocsOwner {
         }
     }
 }
-impl From<StructOrEnum> for AnyNamedElement {
+impl From<StructOrEnum> for GenericElement {
     #[inline]
-    fn from(node: StructOrEnum) -> AnyNamedElement {
+    fn from(node: StructOrEnum) -> GenericElement {
+        match node {
+            StructOrEnum::Enum(it) => it.into(),
+            StructOrEnum::Struct(it) => it.into(),
+        }
+    }
+}
+impl From<StructOrEnum> for Item {
+    #[inline]
+    fn from(node: StructOrEnum) -> Item {
+        match node {
+            StructOrEnum::Enum(it) => it.into(),
+            StructOrEnum::Struct(it) => it.into(),
+        }
+    }
+}
+impl From<StructOrEnum> for NamedElement {
+    #[inline]
+    fn from(node: StructOrEnum) -> NamedElement {
         match node {
             StructOrEnum::Enum(it) => it.into(),
             StructOrEnum::Struct(it) => it.into(),
@@ -7366,10 +7994,17 @@ impl StructOrEnum {
         }
     }
     #[inline]
+    pub fn name(&self) -> Option<Name> {
+        match self {
+            StructOrEnum::Enum(it) => it.name(),
+            StructOrEnum::Struct(it) => it.name(),
+        }
+    }
+    #[inline]
     pub fn type_param_list(&self) -> Option<TypeParamList> {
         match self {
-            StructOrEnum::Enum(it) => ast::GenericElement::type_param_list(it),
-            StructOrEnum::Struct(it) => ast::GenericElement::type_param_list(it),
+            StructOrEnum::Enum(it) => it.type_param_list(),
+            StructOrEnum::Struct(it) => it.type_param_list(),
         }
     }
     #[inline]
@@ -7586,95 +8221,6 @@ impl AstNode for TypeOwner {
         }
     }
 }
-impl AnyFieldsOwner {
-    #[inline]
-    pub fn new<T: ast::FieldsOwner>(node: T) -> AnyFieldsOwner {
-        AnyFieldsOwner {
-            syntax: node.syntax().clone(),
-        }
-    }
-    #[inline]
-    pub fn cast_from<T: ast::FieldsOwner>(t: T) -> AnyFieldsOwner {
-        AnyFieldsOwner::cast(t.syntax().to_owned()).expect("required by code generator")
-    }
-    #[inline]
-    pub fn cast_into<T: ast::FieldsOwner>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
-}
-impl AstNode for AnyFieldsOwner {
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, STRUCT | VARIANT) }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        Self::can_cast(syntax.kind()).then_some(AnyFieldsOwner { syntax })
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode { &self.syntax }
-}
-impl From<Struct> for AnyFieldsOwner {
-    #[inline]
-    fn from(node: Struct) -> AnyFieldsOwner { AnyFieldsOwner { syntax: node.syntax } }
-}
-impl From<Variant> for AnyFieldsOwner {
-    #[inline]
-    fn from(node: Variant) -> AnyFieldsOwner { AnyFieldsOwner { syntax: node.syntax } }
-}
-impl AnyGenericElement {
-    #[inline]
-    pub fn new<T: ast::GenericElement>(node: T) -> AnyGenericElement {
-        AnyGenericElement {
-            syntax: node.syntax().clone(),
-        }
-    }
-    #[inline]
-    pub fn cast_from<T: ast::GenericElement>(t: T) -> AnyGenericElement {
-        AnyGenericElement::cast(t.syntax().to_owned()).expect("required by code generator")
-    }
-    #[inline]
-    pub fn cast_into<T: ast::GenericElement>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
-}
-impl AstNode for AnyGenericElement {
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(
-            kind,
-            ENUM | FUN | GLOBAL_VARIABLE_DECL | SCHEMA | SPEC_FUN | SPEC_INLINE_FUN | STRUCT
-        )
-    }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        Self::can_cast(syntax.kind()).then_some(AnyGenericElement { syntax })
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode { &self.syntax }
-}
-impl From<Enum> for AnyGenericElement {
-    #[inline]
-    fn from(node: Enum) -> AnyGenericElement { AnyGenericElement { syntax: node.syntax } }
-}
-impl From<Fun> for AnyGenericElement {
-    #[inline]
-    fn from(node: Fun) -> AnyGenericElement { AnyGenericElement { syntax: node.syntax } }
-}
-impl From<GlobalVariableDecl> for AnyGenericElement {
-    #[inline]
-    fn from(node: GlobalVariableDecl) -> AnyGenericElement { AnyGenericElement { syntax: node.syntax } }
-}
-impl From<Schema> for AnyGenericElement {
-    #[inline]
-    fn from(node: Schema) -> AnyGenericElement { AnyGenericElement { syntax: node.syntax } }
-}
-impl From<SpecFun> for AnyGenericElement {
-    #[inline]
-    fn from(node: SpecFun) -> AnyGenericElement { AnyGenericElement { syntax: node.syntax } }
-}
-impl From<SpecInlineFun> for AnyGenericElement {
-    #[inline]
-    fn from(node: SpecInlineFun) -> AnyGenericElement { AnyGenericElement { syntax: node.syntax } }
-}
-impl From<Struct> for AnyGenericElement {
-    #[inline]
-    fn from(node: Struct) -> AnyGenericElement { AnyGenericElement { syntax: node.syntax } }
-}
 impl AnyHasAttrs {
     #[inline]
     pub fn new<T: ast::HasAttrs>(node: T) -> AnyHasAttrs {
@@ -7792,14 +8338,6 @@ impl From<UseStmt> for AnyHasAttrs {
 impl From<Variant> for AnyHasAttrs {
     #[inline]
     fn from(node: Variant) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
-}
-impl From<AnyFieldsOwner> for AnyHasAttrs {
-    #[inline]
-    fn from(node: AnyFieldsOwner) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
-}
-impl From<AnyGenericElement> for AnyHasAttrs {
-    #[inline]
-    fn from(node: AnyGenericElement) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
 impl From<AnyHasItems> for AnyHasAttrs {
     #[inline]
@@ -8054,10 +8592,6 @@ impl From<Variant> for AnyHoverDocsOwner {
     #[inline]
     fn from(node: Variant) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
 }
-impl From<AnyFieldsOwner> for AnyHoverDocsOwner {
-    #[inline]
-    fn from(node: AnyFieldsOwner) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
-}
 impl From<AnyHasVisibility> for AnyHoverDocsOwner {
     #[inline]
     fn from(node: AnyHasVisibility) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
@@ -8125,125 +8659,6 @@ impl From<SpecInlineFun> for AnyMslOnly {
     #[inline]
     fn from(node: SpecInlineFun) -> AnyMslOnly { AnyMslOnly { syntax: node.syntax } }
 }
-impl AnyNamedElement {
-    #[inline]
-    pub fn new<T: ast::NamedElement>(node: T) -> AnyNamedElement {
-        AnyNamedElement {
-            syntax: node.syntax().clone(),
-        }
-    }
-    #[inline]
-    pub fn cast_from<T: ast::NamedElement>(t: T) -> AnyNamedElement {
-        AnyNamedElement::cast(t.syntax().to_owned()).expect("required by code generator")
-    }
-    #[inline]
-    pub fn cast_into<T: ast::NamedElement>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
-}
-impl AstNode for AnyNamedElement {
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(
-            kind,
-            CONST
-                | ENUM
-                | FUN
-                | GLOBAL_VARIABLE_DECL
-                | IDENT_PAT
-                | MODULE
-                | NAMED_FIELD
-                | SCHEMA
-                | SCHEMA_FIELD
-                | SPEC_FUN
-                | SPEC_INLINE_FUN
-                | STRUCT
-                | TYPE_PARAM
-                | USE_ALIAS
-                | VARIANT
-        )
-    }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        Self::can_cast(syntax.kind()).then_some(AnyNamedElement { syntax })
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode { &self.syntax }
-}
-impl From<Const> for AnyNamedElement {
-    #[inline]
-    fn from(node: Const) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
-impl From<Enum> for AnyNamedElement {
-    #[inline]
-    fn from(node: Enum) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
-impl From<Fun> for AnyNamedElement {
-    #[inline]
-    fn from(node: Fun) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
-impl From<GlobalVariableDecl> for AnyNamedElement {
-    #[inline]
-    fn from(node: GlobalVariableDecl) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
-impl From<IdentPat> for AnyNamedElement {
-    #[inline]
-    fn from(node: IdentPat) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
-impl From<Module> for AnyNamedElement {
-    #[inline]
-    fn from(node: Module) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
-impl From<NamedField> for AnyNamedElement {
-    #[inline]
-    fn from(node: NamedField) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
-impl From<Schema> for AnyNamedElement {
-    #[inline]
-    fn from(node: Schema) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
-impl From<SchemaField> for AnyNamedElement {
-    #[inline]
-    fn from(node: SchemaField) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
-impl From<SpecFun> for AnyNamedElement {
-    #[inline]
-    fn from(node: SpecFun) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
-impl From<SpecInlineFun> for AnyNamedElement {
-    #[inline]
-    fn from(node: SpecInlineFun) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
-impl From<Struct> for AnyNamedElement {
-    #[inline]
-    fn from(node: Struct) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
-impl From<TypeParam> for AnyNamedElement {
-    #[inline]
-    fn from(node: TypeParam) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
-impl From<UseAlias> for AnyNamedElement {
-    #[inline]
-    fn from(node: UseAlias) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
-impl From<Variant> for AnyNamedElement {
-    #[inline]
-    fn from(node: Variant) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
-impl From<AnyFieldsOwner> for AnyNamedElement {
-    #[inline]
-    fn from(node: AnyFieldsOwner) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
-impl From<AnyGenericElement> for AnyNamedElement {
-    #[inline]
-    fn from(node: AnyGenericElement) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
-impl From<AnyHasVisibility> for AnyNamedElement {
-    #[inline]
-    fn from(node: AnyHasVisibility) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
-impl From<AnyHoverDocsOwner> for AnyNamedElement {
-    #[inline]
-    fn from(node: AnyHoverDocsOwner) -> AnyNamedElement { AnyNamedElement { syntax: node.syntax } }
-}
 impl std::fmt::Display for AddressRef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -8270,6 +8685,16 @@ impl std::fmt::Display for Expr {
     }
 }
 impl std::fmt::Display for FieldList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for FieldsOwner {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for GenericElement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -8315,6 +8740,11 @@ impl std::fmt::Display for MethodOrPath {
     }
 }
 impl std::fmt::Display for NameLike {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for NamedElement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

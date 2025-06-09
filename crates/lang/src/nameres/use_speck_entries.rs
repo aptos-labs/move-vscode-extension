@@ -6,7 +6,6 @@ use crate::node_ext::has_item_list::HasUseStmtsInFileExt;
 use crate::{hir_db, nameres};
 use base_db::SourceDatabase;
 use syntax::ast;
-use syntax::ast::NamedElement;
 use syntax::files::{InFile, InFileExt};
 use vfs::FileId;
 

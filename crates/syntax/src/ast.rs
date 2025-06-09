@@ -25,10 +25,7 @@ pub use self::{
     node_ext::literal::LiteralKind,
     operators::{ArithOp, BinaryOp, CmpOp, LogicOp, Ordering, RangeOp, UnaryOp},
     token_ext::{CommentKind, CommentPlacement, CommentShape, IsString, QuoteOffsets},
-    traits::{
-        FieldsOwner, GenericElement, HasAttrs, HasItems, HasStmts, HasUseStmts, HoverDocsOwner, MslOnly,
-        NamedElement,
-    },
+    traits::{HasAttrs, HasItems, HasStmts, HasUseStmts, HoverDocsOwner, MslOnly},
     visibility::HasVisibility,
 };
 

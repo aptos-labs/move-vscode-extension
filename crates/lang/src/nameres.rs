@@ -8,7 +8,6 @@ use crate::types::inference::inference_result::InferenceResult;
 use base_db::SourceDatabase;
 use std::sync::Arc;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
-use syntax::ast::{FieldsOwner, GenericElement};
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 
@@ -59,7 +58,9 @@ pub fn resolve_multi(
                     .in_file(file_id)
                     .item(db)?
                     .cast_into::<ast::Fun>()?;
-                let entries = item_spec_fun.flat_map(|it| it.type_params()).to_entries();
+                let entries = item_spec_fun
+                    .flat_map(|it| it.to_any_fun().to_generic_element().type_params())
+                    .to_entries();
                 return Some(entries);
             }
             _ => (),
@@ -88,13 +89,13 @@ pub fn resolve_multi(
     }
 }
 
-pub fn resolve_no_inf_cast<Named: ast::NamedElement>(
+pub fn resolve_no_inf_cast<N: Into<ast::NamedElement> + AstNode>(
     db: &dyn SourceDatabase,
     ref_element: InFile<impl Into<ast::ReferenceElement>>,
-) -> Option<InFile<Named>> {
+) -> Option<InFile<N>> {
     resolve_multi_no_inf(db, ref_element)?
         .single_or_none()?
-        .cast_into::<Named>(db)
+        .cast_into(db)
 }
 
 pub fn resolve_no_inf(
@@ -115,7 +116,7 @@ fn resolve_multi_no_inf(
         ast::ReferenceElement::StructLitField(struct_lit_field) => {
             let struct_path = struct_lit_field.struct_lit().path();
             let fields_owner =
-                resolve_no_inf_cast::<ast::AnyFieldsOwner>(db, struct_path.in_file(file_id))?;
+                resolve_no_inf_cast::<ast::FieldsOwner>(db, struct_path.in_file(file_id))?;
             let field_name = struct_lit_field.field_name()?.as_string();
             Some(get_named_field_entries(fields_owner).filter_by_name(field_name))
         }
@@ -152,7 +153,7 @@ fn resolve_multi_with_inf(
             let struct_path = struct_pat_field.struct_pat().path();
             let fields_owner = inference
                 .get_resolve_method_or_path(struct_path.into())?
-                .cast_into::<ast::AnyFieldsOwner>(db)?;
+                .cast_into::<ast::FieldsOwner>(db)?;
 
             let field_name = struct_pat_field.field_name()?;
             get_named_field_entries(fields_owner).filter_by_name(field_name)
@@ -161,7 +162,7 @@ fn resolve_multi_with_inf(
             let struct_path = struct_lit_field.struct_lit().path();
             let fields_owner = inference
                 .get_resolve_method_or_path(struct_path.into())?
-                .cast_into::<ast::AnyFieldsOwner>(db)?;
+                .cast_into::<ast::FieldsOwner>(db)?;
 
             let field_name = struct_lit_field.field_name()?.as_string();
             get_named_field_entries(fields_owner).filter_by_name(field_name)
@@ -211,7 +212,7 @@ fn get_item_spec_entries(
     Some(verifiable_items.filter_by_name(ref_name))
 }
 
-fn get_named_field_entries(fields_owner: InFile<ast::AnyFieldsOwner>) -> Vec<ScopeEntry> {
+fn get_named_field_entries(fields_owner: InFile<ast::FieldsOwner>) -> Vec<ScopeEntry> {
     fields_owner.flat_map(|it| it.named_fields()).to_entries()
 }
 
