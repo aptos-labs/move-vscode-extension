@@ -8,7 +8,6 @@ use lang::types::substitution::{ApplySubstitution, Substitution};
 use lang::types::ty::Ty;
 use lang::types::ty::ty_callable::TyCallable;
 use syntax::ast;
-use syntax::ast::NamedElement;
 use syntax::files::InFile;
 
 pub(crate) fn render_function(

@@ -11,6 +11,14 @@ impl ast::Enum {
 }
 
 impl ast::Variant {
+    pub fn named_fields(&self) -> Vec<ast::NamedField> {
+        self.field_list().map(|it| it.named_fields()).unwrap_or_default()
+    }
+
+    pub fn tuple_fields(&self) -> Vec<ast::TupleField> {
+        self.field_list().map(|it| it.tuple_fields()).unwrap_or_default()
+    }
+
     pub fn enum_(&self) -> ast::Enum {
         let variant_list = self.syntax.parent().unwrap();
         let enum_ = variant_list.parent().unwrap();

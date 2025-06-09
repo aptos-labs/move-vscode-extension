@@ -40,7 +40,7 @@ pub(crate) fn add_path_completions(
 
     for entry in entries {
         let name = entry.name.clone();
-        let named_item = entry.cast_into::<ast::AnyNamedElement>(ctx.db)?;
+        let named_item = entry.cast_into::<ast::NamedElement>(ctx.db)?;
         match named_item.kind() {
             FUN | SPEC_FUN | SPEC_INLINE_FUN => {
                 acc.add(

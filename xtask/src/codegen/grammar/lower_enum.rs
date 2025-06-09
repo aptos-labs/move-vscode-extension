@@ -6,20 +6,17 @@ use std::env::var;
 use std::ops::Deref;
 use ungrammar::{Grammar, Rule};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub(crate) struct AstEnumSrc {
     pub(crate) doc: Vec<String>,
     pub(crate) name: String,
     pub(crate) traits: Vec<String>,
     pub(crate) variants: Vec<String>,
+    pub(crate) common_enums: Vec<String>,
     pub(crate) common_fields: Vec<Field>,
 }
 
-pub(super) fn lower_enum(grammar: &Grammar, node_name: &str, rule: &Rule) -> Option<AstEnumSrc> {
-    // exclude FieldRef as it should be a struct
-    if node_name == "FieldRef" {
-        return None;
-    }
+pub(super) fn lower_enum(grammar: &Grammar, enum_name: &str, rule: &Rule) -> Option<AstEnumSrc> {
     let alternatives = match rule {
         Rule::Alt(it) => it,
         _ => return None,
@@ -33,11 +30,32 @@ pub(super) fn lower_enum(grammar: &Grammar, node_name: &str, rule: &Rule) -> Opt
                 let variant_name = node_data.name.clone();
                 let required_fields = get_required_fields(&variant_name);
                 let mut variant_fields = vec![];
-                if let Rule::Seq(rules) = &node_data.rule {
-                    for child_rule in rules {
-                        match child_rule {
-                            Rule::Opt(rule) => {
-                                if let Rule::Node(_) = rule.deref() {
+
+                match &node_data.rule {
+                    Rule::Node(_) => {
+                        lower_rule(
+                            &mut variant_fields,
+                            grammar,
+                            None,
+                            &node_data.rule,
+                            required_fields,
+                        );
+                    }
+                    Rule::Seq(rules) => {
+                        for child_rule in rules {
+                            match child_rule {
+                                Rule::Opt(rule) => {
+                                    if let Rule::Node(_) = rule.deref() {
+                                        lower_rule(
+                                            &mut variant_fields,
+                                            grammar,
+                                            None,
+                                            child_rule,
+                                            required_fields,
+                                        );
+                                    }
+                                }
+                                Rule::Node(node) => {
                                     lower_rule(
                                         &mut variant_fields,
                                         grammar,
@@ -46,40 +64,32 @@ pub(super) fn lower_enum(grammar: &Grammar, node_name: &str, rule: &Rule) -> Opt
                                         required_fields,
                                     );
                                 }
-                            }
-                            Rule::Node(node) => {
-                                lower_rule(
-                                    &mut variant_fields,
-                                    grammar,
-                                    None,
-                                    child_rule,
-                                    required_fields,
-                                );
-                            }
-                            Rule::Labeled { label, rule } => match rule.deref() {
-                                Rule::Node(_) => {
-                                    lower_rule(
-                                        &mut variant_fields,
-                                        grammar,
-                                        Some(label),
-                                        rule,
-                                        required_fields,
-                                    );
-                                }
-                                Rule::Opt(rule) => {
-                                    lower_rule(
-                                        &mut variant_fields,
-                                        grammar,
-                                        Some(label),
-                                        rule,
-                                        required_fields,
-                                    );
-                                }
+                                Rule::Labeled { label, rule } => match rule.deref() {
+                                    Rule::Node(_) => {
+                                        lower_rule(
+                                            &mut variant_fields,
+                                            grammar,
+                                            Some(label),
+                                            rule,
+                                            required_fields,
+                                        );
+                                    }
+                                    Rule::Opt(rule) => {
+                                        lower_rule(
+                                            &mut variant_fields,
+                                            grammar,
+                                            Some(label),
+                                            rule,
+                                            required_fields,
+                                        );
+                                    }
+                                    _ => (),
+                                },
                                 _ => (),
-                            },
-                            _ => (),
+                            }
                         }
                     }
+                    _ => (),
                 }
 
                 match common_fields {
@@ -107,10 +117,11 @@ pub(super) fn lower_enum(grammar: &Grammar, node_name: &str, rule: &Rule) -> Opt
 
     let enum_src = AstEnumSrc {
         doc: vec![],
-        name: node_name.to_string(),
+        name: enum_name.to_string(),
         traits: vec![],
         variants,
         common_fields,
+        common_enums: vec![],
     };
     Some(enum_src)
 }
@@ -119,17 +130,17 @@ pub(super) fn generate_field_method_for_enum(
     enum_src: &AstEnumSrc,
     field: &Field,
 ) -> proc_macro2::TokenStream {
-    if field.method_name() == "name" {
-        return quote! {};
-    }
+    // if field.method_name() == "name" {
+    //     return quote! {};
+    // }
     let method_name = format_ident!("{}", field.method_name());
     let method_body = match field.method_name().as_str() {
-        "name" => {
-            quote! { ast::NamedElement::name(it) }
-        }
-        "type_param_list" => {
-            quote! { ast::GenericElement::type_param_list(it) }
-        }
+        // "name" => {
+        //     quote! { ast::NamedElement::name(it) }
+        // }
+        // "type_param_list" => {
+        //     quote! { ast::GenericElement::type_param_list(it) }
+        // }
         _ => {
             quote! { it.#method_name() }
         }

@@ -6,7 +6,6 @@ use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::types::ty::Ty;
 use base_db::SourceDatabase;
 use syntax::SyntaxKind::*;
-use syntax::ast::FieldsOwner;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
@@ -33,7 +32,7 @@ pub fn get_ident_pat_resolve_variants(
     let mut entries = vec![];
     if let Some(struct_pat_field) = ident_pat.syntax().parent_of_type::<ast::StructPatField>() {
         let pat_path = struct_pat_field.struct_pat().path().in_file(file_id);
-        let fields_owner = nameres::resolve_no_inf_cast::<ast::AnyFieldsOwner>(db, pat_path);
+        let fields_owner = nameres::resolve_no_inf_cast::<ast::FieldsOwner>(db, pat_path);
         // can be null if unresolved
         if let Some(fields_owner) = fields_owner {
             entries.extend(get_named_field_entries(fields_owner));
@@ -51,7 +50,7 @@ pub fn get_ident_pat_resolve_variants(
 
     let binding_entries = get_entries_from_walking_scopes(db, ident_pat.in_file(file_id).map_into(), ns);
     for binding_entry in binding_entries {
-        if let Some(named_item) = binding_entry.clone().cast_into::<ast::AnyNamedElement>(db) {
+        if let Some(named_item) = binding_entry.clone().cast_into::<ast::NamedElement>(db) {
             let is_constant_like = is_constant_like(&named_item);
             let is_path_or_destructuble = matches!(named_item.kind(), ENUM | VARIANT | STRUCT);
             if is_constant_like || (is_completion && is_path_or_destructuble) {
@@ -76,11 +75,11 @@ pub fn get_ident_pat_resolve_variants(
  *
  * Constant-like element can be: real constant, static variable, and enum variant without fields.
  */
-fn is_constant_like(named_item: &InFile<ast::AnyNamedElement>) -> bool {
+fn is_constant_like(named_item: &InFile<ast::NamedElement>) -> bool {
     if named_item.kind() == CONST {
         return true;
     }
-    if let Some(fields_owner) = named_item.cast_into_ref::<ast::AnyFieldsOwner>() {
+    if let Some(fields_owner) = named_item.cast_into_ref::<ast::FieldsOwner>() {
         if fields_owner.value.is_fieldless() {
             return true;
         }

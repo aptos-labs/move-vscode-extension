@@ -66,7 +66,7 @@ pub(crate) fn find_def(
     sema: &Semantics<'_, RootDatabase>,
     syntax: &SyntaxNode,
     offset: TextSize,
-) -> Option<InFile<ast::AnyNamedElement>> {
+) -> Option<InFile<ast::NamedElement>> {
     let token = syntax
         .token_at_offset(offset)
         .find(|t| matches!(t.kind(), IDENT | INT_NUMBER | QUOTE_IDENT))?;

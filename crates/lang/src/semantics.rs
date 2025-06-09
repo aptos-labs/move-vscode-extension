@@ -82,7 +82,7 @@ impl<'db> SemanticsImpl<'db> {
         tree
     }
 
-    pub fn resolve_to_element<Named: ast::NamedElement>(
+    pub fn resolve_to_element<Named: AstNode>(
         &self,
         reference: InFile<ast::ReferenceElement>,
     ) -> Option<InFile<Named>> {

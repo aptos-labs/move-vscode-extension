@@ -9,7 +9,7 @@ pub(crate) mod function;
 pub(crate) fn render_named_item(
     ctx: &CompletionContext<'_>,
     name: String,
-    named_item: InFile<ast::AnyNamedElement>,
+    named_item: InFile<ast::NamedElement>,
 ) -> CompletionItemBuilder {
     let (_, named_item) = named_item.unpack();
     // let item_name = named_item.name().expect("handled on upper level").as_string();

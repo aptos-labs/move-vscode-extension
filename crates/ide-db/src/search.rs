@@ -9,8 +9,8 @@ use std::cell::LazyCell;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::{iter, mem};
+use syntax::ast::IdentPatKind;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
-use syntax::ast::{IdentPatKind, NamedElement};
 use syntax::files::{FileRange, InFile};
 use syntax::{AstNode, SyntaxElement, SyntaxNode, TextRange, TextSize, ast};
 use vfs::FileId;
@@ -97,7 +97,7 @@ impl FileReferenceNode {
     }
 }
 
-pub fn item_search_scope(db: &RootDatabase, named_item: &InFile<ast::AnyNamedElement>) -> SearchScope {
+pub fn item_search_scope(db: &RootDatabase, named_item: &InFile<ast::NamedElement>) -> SearchScope {
     let _p = tracing::info_span!("item_search_scope").entered();
 
     let (file_id, _named_item) = named_item.unpack_ref();
@@ -140,7 +140,7 @@ fn ident_pat_search_scope(db: &RootDatabase, ident_pat: InFile<ast::IdentPat>) -
 
 pub fn item_usages<'a>(
     sema: &'a Semantics<'a, RootDatabase>,
-    named_item: InFile<ast::AnyNamedElement>,
+    named_item: InFile<ast::NamedElement>,
 ) -> FindUsages<'a> {
     FindUsages {
         named_item,
@@ -265,7 +265,7 @@ impl IntoIterator for SearchScope {
 
 #[derive(Clone)]
 pub struct FindUsages<'a> {
-    named_item: InFile<ast::AnyNamedElement>,
+    named_item: InFile<ast::NamedElement>,
     // rename: Option<&'a Rename>, - alias
     sema: &'a Semantics<'a, RootDatabase>,
     scope: Option<SearchScope>,

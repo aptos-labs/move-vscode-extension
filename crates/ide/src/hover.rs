@@ -7,8 +7,9 @@ use lang::Semantics;
 use std::fmt::Write;
 use stdx::itertools::Itertools;
 use syntax::algo::find_node_at_offset;
+use syntax::ast::HoverDocsOwner;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
-use syntax::ast::{HoverDocsOwner, NamedElement};
 use syntax::files::{FilePosition, InFileExt};
 use syntax::{AstNode, ast};
 
@@ -48,10 +49,10 @@ pub(crate) fn hover(
         }
     };
 
-    let ident_token = hover_docs_owner.name()?.ident_token();
-    let doc_comments = hover_docs_owner.outer_doc_comments(ident_token);
+    let named_element = hover_docs_owner.syntax().cast::<ast::NamedElement>()?;
 
-    let named_element = ast::AnyNamedElement::cast_from(hover_docs_owner);
+    let ident_token = named_element.name()?.ident_token();
+    let doc_comments = hover_docs_owner.outer_doc_comments(ident_token);
 
     let mut doc_string = String::new();
 

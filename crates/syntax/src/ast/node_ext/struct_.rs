@@ -2,8 +2,16 @@ use crate::ast;
 use crate::ast::FieldsOwner;
 
 impl ast::Struct {
+    pub fn named_fields(&self) -> Vec<ast::NamedField> {
+        self.field_list().map(|it| it.named_fields()).unwrap_or_default()
+    }
+
+    pub fn tuple_fields(&self) -> Vec<ast::TupleField> {
+        self.field_list().map(|it| it.tuple_fields()).unwrap_or_default()
+    }
+
     pub fn is_tuple_struct(&self) -> bool {
-        self.tuple_field_list().is_some()
+        self.field_list().and_then(|it| it.tuple_field_list()).is_some()
     }
 
     pub fn wrapped_lambda_type(&self) -> Option<ast::LambdaType> {

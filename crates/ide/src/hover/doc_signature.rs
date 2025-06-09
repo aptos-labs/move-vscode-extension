@@ -1,7 +1,6 @@
 use ide_db::RootDatabase;
 use lang::Semantics;
 use std::fmt::Write;
-use syntax::ast::NamedElement;
 use syntax::{AstNode, ast, match_ast};
 
 pub trait DocSignatureOwner {
@@ -9,7 +8,7 @@ pub trait DocSignatureOwner {
     fn signature(&self, sema: &Semantics<'_, RootDatabase>, buffer: &mut String) -> Option<()>;
 }
 
-impl DocSignatureOwner for ast::AnyNamedElement {
+impl DocSignatureOwner for ast::NamedElement {
     fn header(&self, sema: &Semantics<'_, RootDatabase>, buffer: &mut String) -> Option<()> {
         let header = match_ast! {
             match (self.syntax()) {

@@ -23,6 +23,7 @@ use itertools::{Either, Itertools};
 use proc_macro2::{Punct, Spacing};
 use quote::{format_ident, quote};
 use std::collections::{BTreeSet, HashSet};
+use std::env::var;
 use std::fmt::Write;
 use std::ops::Index;
 use stdx::panic_context;
@@ -307,6 +308,20 @@ fn generate_enum(
         .map(|common_field| generate_field_method_for_enum(enum_src, common_field))
         .collect::<Vec<_>>();
 
+    let common_enum_froms = enum_src.common_enums.iter().map(|common_enum_name| {
+        let common_enum_name = format_ident!("{}", common_enum_name);
+        quote! {
+            impl From<#enum_name> for #common_enum_name {
+                #[inline]
+                fn from(node: #enum_name) -> #common_enum_name {
+                    match node {
+                        #(#enum_name::#variants(it) => it.into()),*
+                    }
+                }
+            }
+        }
+    });
+
     let trait_froms = enum_src.traits.iter().map(|t| {
         let any_trait_name = format_ident!("Any{}", t);
         quote! {
@@ -372,6 +387,7 @@ fn generate_enum(
                 }
             )*
             #(#trait_froms)*
+            #(#common_enum_froms)*
             #ast_node
         },
     )
@@ -609,6 +625,35 @@ fn lower(grammar: &Grammar) -> AstSrc {
                     traits: Vec::new(),
                     fields,
                 });
+            }
+        }
+    }
+
+    fn get_enums_for_node(node_name: &String, enums: &Vec<AstEnumSrc>) -> HashSet<String> {
+        let mut res = HashSet::new();
+        for e in enums.iter() {
+            if e.variants.contains(node_name) {
+                res.insert(e.name.clone());
+            }
+        }
+        res
+    }
+
+    let enums = res.enums.clone();
+    for enum_src in res.enums.iter_mut() {
+        let first_variant = enum_src.variants.first();
+        match first_variant {
+            None => break,
+            Some(first_variant) => {
+                let mut common_enums = get_enums_for_node(first_variant, &enums);
+
+                for variant in enum_src.variants.iter() {
+                    let variant_enums = get_enums_for_node(variant, &enums);
+                    common_enums = common_enums.intersection(&variant_enums).cloned().collect();
+                }
+
+                common_enums.remove(&enum_src.name.clone());
+                enum_src.common_enums = common_enums.into_iter().sorted().collect();
             }
         }
     }

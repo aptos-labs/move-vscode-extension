@@ -5,7 +5,6 @@ pub mod item_spec;
 
 use crate::nameres::address::{Address, NamedAddr, ValueAddr};
 use syntax::ast;
-use syntax::ast::NamedElement;
 
 pub trait ModuleLangExt {
     fn address(&self) -> Option<Address>;

@@ -40,6 +40,23 @@ Item =
     | Schema
     | ItemSpec
 
+NamedElement =
+    Module
+    | TypeParam
+    | Struct
+    | Enum
+    | Variant
+    | NamedField
+    | Const
+    | Fun
+    | SpecFun
+    | SpecInlineFun
+    | IdentPat
+    | UseAlias
+    | Schema
+    | SchemaField
+    | GlobalVariableDecl
+
 ReferenceElement =
     Path
     | MethodCallExpr
@@ -77,11 +94,14 @@ Friend =
 StructOrEnum =
     Struct | Enum
 
+FieldsOwner =
+    Struct | Variant
+
 Struct =
     Attr*
     'struct' Name TypeParamList?
     AbilityList?
-    (NamedFieldList | TupleFieldList)
+    FieldList
 
 Enum =
     Attr*
@@ -93,7 +113,7 @@ VariantList =
     '{' (Variant (',' Variant)* ','?)? '}'
 
 Variant =
-    Attr* Name (NamedFieldList | TupleFieldList)?
+    Attr* Name FieldList?
 
 AbilityList =
     'has' (Ability (',' Ability)* ','?)?
@@ -397,6 +417,15 @@ PathSegment =
 
 PathAddress =
     ValueAddress
+
+GenericElement =
+    Fun
+    | SpecFun
+    | SpecInlineFun
+    | Struct
+    | Enum
+    | Schema
+    | GlobalVariableDecl
 
 TypeParamList =
     '<' type_parameters:(TypeParam (',' TypeParam)* ','?)? '>'

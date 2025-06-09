@@ -6,7 +6,6 @@ use crate::types::ty::Ty;
 use crate::types::ty::schema::TySchema;
 use std::iter::zip;
 use syntax::ast;
-use syntax::ast::NamedElement;
 use syntax::ast::node_ext::spec_predicate_stmt::SpecPredicateKind;
 use syntax::files::{InFile, InFileExt};
 
@@ -88,7 +87,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         };
         let ty_schema = self
             .ctx
-            .instantiate_path(path.into(), schema.clone().map_into())
+            .instantiate_path(path.into(), schema.clone())
             .into_ty_schema()?;
         for schema_lit_field in schema_lit.fields() {
             let expected_field_ty = self

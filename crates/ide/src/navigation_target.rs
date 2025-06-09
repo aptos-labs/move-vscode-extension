@@ -3,7 +3,6 @@ use ide_db::{RootDatabase, SymbolKind, ast_kind_to_symbol_kind};
 use lang::Semantics;
 use lang::nameres::scope::ScopeEntry;
 use std::fmt;
-use syntax::ast::NamedElement;
 use syntax::files::InFile;
 use syntax::{AstNode, TextRange, ast};
 use vfs::FileId;
@@ -122,10 +121,7 @@ impl NavigationTarget {
             ));
         }
 
-        let named_item = scope_entry
-            .node_loc
-            .to_ast::<ast::AnyNamedElement>(sema.db)?
-            .value;
+        let named_item = scope_entry.node_loc.to_ast::<ast::NamedElement>(sema.db)?.value;
         let name_range = named_item.name().map(|name| name.ident_token().text_range());
         let node_range = named_item.syntax().text_range();
 
@@ -142,7 +138,7 @@ impl NavigationTarget {
     /// Allows `NavigationTarget` to be created from a `NameOwner`
     pub(crate) fn from_named_item<'db>(
         _sema: &'db Semantics<'db, RootDatabase>,
-        named_item: InFile<ast::AnyNamedElement>,
+        named_item: InFile<ast::NamedElement>,
     ) -> Option<NavigationTarget> {
         let (file_id, named_item) = named_item.unpack();
 

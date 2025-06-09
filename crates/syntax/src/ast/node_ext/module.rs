@@ -20,8 +20,8 @@ impl ast::Module {
             .collect()
     }
 
-    pub fn named_items(&self) -> Vec<ast::AnyNamedElement> {
-        let mut items: Vec<ast::AnyNamedElement> = vec![];
+    pub fn named_items(&self) -> Vec<ast::NamedElement> {
+        let mut items: Vec<ast::NamedElement> = vec![];
         // consts
         items.extend(into_named_elements(self.consts()));
 
@@ -45,8 +45,8 @@ impl ast::Module {
         items
     }
 
-    pub fn verifiable_items(&self) -> Vec<ast::AnyNamedElement> {
-        let mut items: Vec<ast::AnyNamedElement> = vec![];
+    pub fn verifiable_items(&self) -> Vec<ast::NamedElement> {
+        let mut items: Vec<ast::NamedElement> = vec![];
         items.extend(self.non_test_functions().into_iter().map(|it| it.into()));
         items.extend(self.structs().into_iter().map(|it| it.into()));
         items.extend(self.enums().into_iter().map(|it| it.into()));
