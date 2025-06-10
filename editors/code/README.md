@@ -1,3 +1,3 @@
-# aptos-analyzer
+# Move on Aptos Language Extension.
 
-Language Server for Move on Aptos language.
+Official VSCode-compatible extension for the Move on Aptos smart-contract language. 
