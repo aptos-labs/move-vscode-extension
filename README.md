@@ -53,6 +53,8 @@ Then install it from the editor using the `"Install from VSIX..."` command.
 * go-to-definition
 * completion
 * lints and quickfixes
+* find references
+* rename refactoring
 * inlay type hints
 ```
 module 0x1::m {
@@ -198,9 +200,7 @@ Next features planned are (roughly in the expected order of implementation):
   - Not enough type params / params / missing fields.
   - Replace `vector::borrow` with `v[]`.
   - `aptos move lint` lints with quickfixes.
-* Find references.
 * Unused local variable lint (with quickfix to prefix name with `_`).
-* Rename refactoring.
 * Add "item is private" clarification to the "unresolved reference" diagnostic.
 * Unused imports (with quickfix).
 * Auto-import.
