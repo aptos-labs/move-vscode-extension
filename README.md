@@ -4,7 +4,8 @@
 
 We publish nightly pre-compiled VSCode extensions for Linux, MacOS (x86 and arm) and Windows. 
 Download a `.vsix` bundle for your platform from https://github.com/aptos-labs/aptos-move-analyzer/releases/tag/nightly, 
-then install it in your editor with `"Install from VSIX..."` command.
+then install it in your editor with 
+`"Install from VSIX..."`([reference](https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_install-from-a-vsix)) command.
 
 ### Build from sources
 
@@ -27,7 +28,14 @@ to your `settings.json` to point the extension to your locally built language se
 
 Now, open any Move file to instantiate the extension. Disable other VSCode extensions for `.move` files if needed.
 
-### VSCode configuration
+### Cursor AI editor
+
+If you use https://www.cursor.com/ AI editor, you need to do a bit more work.
+
+Run the installation command above. The result would be a `./editors/code/aptos-analyzer.vsix` vscode extension package.
+Then install it from the editor using the `"Install from VSIX..."` command.
+
+## Recommended configuration for the Move package directories
 
 Add the following to settings.json to mark Move library sources as read-only:
 
@@ -38,12 +46,6 @@ Add the following to settings.json to mark Move library sources as read-only:
     }
 ```
 
-### Cursor AI editor
-
-If you use https://www.cursor.com/ AI editor, you need to do a bit more work. 
-
-Run the installation command above. The result would be a `./editors/code/aptos-analyzer.vsix` vscode extension package. 
-Then install it from the editor using the `"Install from VSIX..."` command.  
 
 ## Features
 
