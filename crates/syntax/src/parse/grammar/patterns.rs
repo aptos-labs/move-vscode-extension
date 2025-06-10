@@ -9,14 +9,6 @@ pub(crate) fn pat(p: &mut Parser) -> Option<CompletedMarker> {
         // 0x1 '::'
         INT_NUMBER if p.nth_at(1, T![::]) => path_pat(p),
         IDENT => path_pat(p),
-        // IDENT /*| INT_NUMBER if p.nth_at(1, T![::])*/ => match p.nth(1) {
-        //     // Checks the token after an IDENT to see if a pattern is a path (Struct { .. }) or macro
-        //     // (T![x]).
-        //     T!['('] | T!['{'] | T![::] | T![<] => path_pat(p),
-        //     // T![:] if p.nth_at(1, T![::]) => path_or_macro_pat(p),
-        //     _ => ident_pat(p),
-        // },
-
         // _ if is_literal_pat_start(p) => literal_pat(p),
         T![..] => rest_pat(p),
         T!['_'] => wildcard_pat(p),
@@ -73,8 +65,7 @@ pub(crate) fn ident_or_wildcard_pat_or_recover(
 
 fn path_pat(p: &mut Parser) -> CompletedMarker {
     match p.nth(1) {
-        // Checks the token after an IDENT to see if a pattern is a path (Struct { .. }) or macro
-        // (T![x]).
+        // Checks the token after an IDENT to see if a pattern is a path (Struct { .. }).
         T!['('] | T!['{'] | T![::] | T![<] => {
             assert!(paths::is_path_start(p));
             let m = p.start();
@@ -148,24 +139,14 @@ fn struct_pat_field(p: &mut Parser) {
             p.bump(T![:]);
             pat(p);
         }
+        IDENT => {
+            ident_pat(p);
+        }
         T!['_'] => {
             wildcard_pat(p);
         }
-        // IDENT | INT_NUMBER if p.nth(1) == T![:] => {
-        //     name_ref_or_index(p);
-        //     p.bump(T![:]);
-        //     pattern(p);
-        // }
-        // T![..] => p.bump(T![..]),
-        // T![.] => {
-        //     if p.at(T![..]) {
-        //         p.bump(T![..]);
-        //     } else {
-        //         ident_pat(p, false);
-        //     }
-        // }
         _ => {
-            ident_pat(p);
+            p.error_and_bump_until_ts("expected identifier", PAT_RECOVERY_SET);
         }
     }
 }
