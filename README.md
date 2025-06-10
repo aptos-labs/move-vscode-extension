@@ -2,7 +2,7 @@
 
 ## Installation
 
-We publish nightly pre-compiled VSCode extensions for Linux, MacOS and Windows. 
+We publish nightly pre-compiled VSCode extensions for Linux, MacOS (x86 and arm) and Windows. 
 Download a `.vsix` bundle for your platform from https://github.com/aptos-labs/aptos-move-analyzer/releases/tag/nightly, 
 then install it in your editor with `"Install from VSIX..."` command.
 
