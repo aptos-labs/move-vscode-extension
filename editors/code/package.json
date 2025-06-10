@@ -141,9 +141,13 @@
                 "title": "server",
                 "properties": {
                     "aptos-analyzer.server.path": {
-                        "type": "string",
-                        "default": "~/.cargo/bin/aptos-analyzer",
-                        "markdownDescription": "Path and filename of the aptos-analyzer executable, e.g. `/usr/bin/aptos-analyzer`."
+                        "type": [
+                            "null",
+                            "string"
+                        ],
+                        "scope": "machine-overridable",
+                        "default": null,
+                        "markdownDescription": "Path to aptos-analyzer executable (points to bundled binary by default)."
                     },
                     "aptos-analyzer.server.extraEnv": {
                         "type": [
