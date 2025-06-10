@@ -1,17 +1,18 @@
 {
     "name": "aptos-analyzer",
-    "displayName": "aptos-analyzer",
+    "displayName": "Move on Aptos (pre-release)",
     "description": "Move on Aptos Language Extension",
-    "publisher": "aptos",
+    "publisher": "aptos-labs",
     "version": "0.1.0-dev",
+    "icon": "aptos_black.png",
     "releaseTag": null,
-    "homepage": "https://github.com/aptos-labs/aptos-analyzer",
+    "homepage": "https://github.com/aptos-labs/aptos-move-analyzer",
     "repository": {
-        "url": "https://github.com/aptos-labs/aptos-analyzer.git",
+        "url": "https://github.com/aptos-labs/aptos-move-analyzer.git",
         "type": "git"
     },
     "bugs": {
-        "url": "https://github.com/aptos-labs/aptos-analyzer/issues"
+        "url": "https://github.com/aptos-labs/aptos-move-analyzer/issues"
     },
     "engines": {
         "vscode": "^1.96.0"
