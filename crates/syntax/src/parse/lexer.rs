@@ -42,6 +42,14 @@ pub fn tokenize(text: &str) -> (Vec<RawToken>, Vec<SyntaxError>) {
     (tokens, errors)
 }
 
+pub fn parse_single_token(text: &str) -> Option<RawToken> {
+    let (mut tokens, _) = tokenize(text);
+    if tokens.len() == 1 {
+        return tokens.pop();
+    }
+    None
+}
+
 fn aptos_token_kind_to_syntax_kind(aptos_token_kind: Tok, token_text: &str) -> SyntaxKind {
     match aptos_token_kind {
         Tok::Whitespace => WHITESPACE,

@@ -1,6 +1,7 @@
 use crate::global_state::GlobalStateSnapshot;
 use crate::line_index::{LineEndings, LineIndex, PositionEncoding};
-use crate::lsp::semantic_tokens;
+use crate::lsp::utils::invalid_params_error;
+use crate::lsp::{LspError, semantic_tokens};
 use crate::{Config, lsp_ext};
 use camino::{Utf8Component, Utf8Prefix};
 use ide::inlay_hints::{
@@ -11,6 +12,7 @@ use ide::syntax_highlighting::tags::{Highlight, HlTag};
 use ide::{Cancellable, HlRange, NavigationTarget};
 use ide_completion::item::{CompletionItem, CompletionItemKind};
 use ide_db::assists::{Assist, AssistKind};
+use ide_db::rename::RenameError;
 use ide_db::source_change::{FileSystemEdit, SourceChange};
 use ide_db::text_edit::{TextChange, TextEdit};
 use ide_db::{Severity, SymbolKind};
@@ -890,4 +892,10 @@ fn inlay_hint_label(
         }
     };
     Ok((label, tooltip))
+}
+
+pub(crate) fn rename_error(err: RenameError) -> LspError {
+    // This is wrong, but we don't have a better alternative I suppose?
+    // https://github.com/microsoft/language-server-protocol/issues/1341
+    invalid_params_error(err.to_string())
 }

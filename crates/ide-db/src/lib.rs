@@ -8,13 +8,14 @@ pub mod defs;
 pub mod helpers;
 pub mod label;
 pub mod load;
+pub mod rename;
 pub mod root_db;
 pub mod search;
 pub mod source_change;
 mod syntax_helpers;
 pub mod text_edit;
 
-use syntax::{SyntaxKind, SyntaxKind::*};
+use syntax::ast;
 
 pub use root_db::RootDatabase;
 
@@ -41,32 +42,30 @@ pub enum SymbolKind {
     GlobalVariableDecl,
 }
 
-pub fn ast_kind_to_symbol_kind(kind: SyntaxKind) -> Option<SymbolKind> {
-    match kind {
-        MODULE => Some(SymbolKind::Module),
+pub fn ast_kind_to_symbol_kind(named_item: &ast::NamedElement) -> SymbolKind {
+    match named_item {
+        ast::NamedElement::Module(_) => SymbolKind::Module,
 
-        FUN | SPEC_FUN | SPEC_INLINE_FUN => Some(SymbolKind::Function),
+        ast::NamedElement::Fun(_)
+        | ast::NamedElement::SpecFun(_)
+        | ast::NamedElement::SpecInlineFun(_) => SymbolKind::Function,
 
-        CONST => Some(SymbolKind::Const),
-        STRUCT => Some(SymbolKind::Struct),
-        ENUM => Some(SymbolKind::Enum),
+        ast::NamedElement::Const(_) => SymbolKind::Const,
 
-        TYPE_PARAM => Some(SymbolKind::TypeParam),
-        IDENT_PAT => Some(SymbolKind::Local),
-        VARIANT => Some(SymbolKind::EnumVariant),
+        ast::NamedElement::Struct(_) => SymbolKind::Struct,
+        ast::NamedElement::Enum(_) => SymbolKind::Enum,
 
-        NAMED_FIELD => Some(SymbolKind::Field),
+        ast::NamedElement::TypeParam(_) => SymbolKind::TypeParam,
+        ast::NamedElement::IdentPat(_) => SymbolKind::Local,
+        ast::NamedElement::Variant(_) => SymbolKind::EnumVariant,
 
-        SCHEMA => Some(SymbolKind::Struct),
-        SCHEMA_FIELD => Some(SymbolKind::Field),
-        GLOBAL_VARIABLE_DECL => Some(SymbolKind::GlobalVariableDecl),
+        ast::NamedElement::NamedField(_) => SymbolKind::Field,
 
-        USE_ALIAS => Some(SymbolKind::Local),
+        ast::NamedElement::Schema(_) => SymbolKind::Struct,
+        ast::NamedElement::SchemaField(_) => SymbolKind::Field,
+        ast::NamedElement::GlobalVariableDecl(_) => SymbolKind::GlobalVariableDecl,
 
-        _ => {
-            tracing::error!("unhandled ast kind {:?}", kind);
-            None
-        }
+        ast::NamedElement::UseAlias(_) => SymbolKind::Local,
     }
 }
 

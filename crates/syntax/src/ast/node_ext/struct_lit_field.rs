@@ -30,6 +30,11 @@ impl ast::StructLitField {
         path_expr.syntax.parent_of_type::<ast::StructLitField>()
     }
 
+    pub fn shorthand_path_expr(&self) -> Option<ast::PathExpr> {
+        let path_expr = self.expr()?.path_expr()?;
+        Some(path_expr)
+    }
+
     pub fn shorthand_path(&self) -> Option<ast::Path> {
         let path_expr = self.expr()?.path_expr()?;
         Some(path_expr.path())

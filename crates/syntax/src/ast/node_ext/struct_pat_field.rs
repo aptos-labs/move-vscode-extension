@@ -22,10 +22,20 @@ impl ast::StructPatField {
         PatFieldKind::Invalid
     }
 
+    pub fn for_field_name_ref(field_name: &ast::NameRef) -> Option<ast::StructPatField> {
+        field_name.syntax().parent_of_type::<ast::StructPatField>()
+    }
+
+    pub fn for_field_name(field_name: &ast::Name) -> Option<ast::StructPatField> {
+        let ident_pat = field_name.syntax.parent_of_type::<ast::IdentPat>()?;
+        let pat_field = ident_pat.syntax.parent_of_type::<ast::StructPatField>()?;
+        Some(pat_field)
+    }
+
     pub fn field_name(&self) -> Option<String> {
         match self.kind() {
             PatFieldKind::Full { name_ref, .. } => Some(name_ref.as_string()),
-            PatFieldKind::Shorthand { ident_pat } => Some(ident_pat.as_string()),
+            PatFieldKind::Shorthand { ident_pat } => Some(ident_pat.name()?.as_string()),
             _ => None,
         }
     }

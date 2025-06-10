@@ -10,8 +10,4 @@ impl ast::IdentPat {
     pub fn owner(&self) -> Option<ast::IdentPatKind> {
         self.syntax().ancestor_strict::<ast::IdentPatKind>()
     }
-
-    pub fn as_string(&self) -> String {
-        self.name().expect("IdentPat.Name is required").as_string()
-    }
 }
