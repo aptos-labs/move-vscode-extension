@@ -1,8 +1,8 @@
 {
     "name": "aptos-analyzer",
-    "displayName": "Move on Aptos (pre-release)",
+    "displayName": "Move on Aptos (beta)",
     "description": "Move on Aptos Language Extension",
-    "publisher": "aptos-labs",
+    "publisher": "aptos",
     "version": "0.1.0-dev",
     "icon": "aptos_black.png",
     "releaseTag": null,
