@@ -9,9 +9,9 @@ use ide_db::assists::{AssistKind, AssistResolveStrategy, SingleResolve};
 use line_index::TextRange;
 use lsp_server::ErrorCode;
 use lsp_types::{
-    CodeActionOrCommand, HoverContents, InlayHint, InlayHintParams, Location, ResourceOp,
-    ResourceOperationKind, SemanticTokensParams, SemanticTokensRangeParams, SemanticTokensRangeResult,
-    SemanticTokensResult, TextDocumentIdentifier,
+    CodeActionOrCommand, HoverContents, InlayHint, InlayHintParams, Location, PrepareRenameResponse,
+    RenameParams, ResourceOp, ResourceOperationKind, SemanticTokensParams, SemanticTokensRangeParams,
+    SemanticTokensRangeResult, SemanticTokensResult, TextDocumentIdentifier, WorkspaceEdit,
 };
 use stdx::format_to;
 use stdx::itertools::Itertools;
@@ -260,6 +260,59 @@ pub(crate) fn handle_hover(
     };
 
     Ok(Some(hover))
+}
+
+pub(crate) fn handle_prepare_rename(
+    snap: GlobalStateSnapshot,
+    params: lsp_types::TextDocumentPositionParams,
+) -> anyhow::Result<Option<PrepareRenameResponse>> {
+    let _p = tracing::info_span!("handle_prepare_rename").entered();
+
+    let position = from_proto::file_position(&snap, params)?;
+
+    let change = snap
+        .analysis
+        .prepare_rename(position)?
+        .map_err(to_proto::rename_error)?;
+
+    let line_index = snap.file_line_index(position.file_id)?;
+    let range = to_proto::lsp_range(&line_index, change.range);
+    Ok(Some(PrepareRenameResponse::Range(range)))
+}
+
+pub(crate) fn handle_rename(
+    snap: GlobalStateSnapshot,
+    params: RenameParams,
+) -> anyhow::Result<Option<WorkspaceEdit>> {
+    let _p = tracing::info_span!("handle_rename").entered();
+    let position = from_proto::file_position(&snap, params.text_document_position)?;
+
+    let mut change = snap
+        .analysis
+        .rename(position, &params.new_name)?
+        .map_err(to_proto::rename_error)?;
+
+    // this is kind of a hack to prevent double edits from happening when moving files
+    // When a module gets renamed by renaming the mod declaration this causes the file to move
+    // which in turn will trigger a WillRenameFiles request to the server for which we reply with a
+    // a second identical set of renames, the client will then apply both edits causing incorrect edits
+    // with this we only emit source_file_edits in the WillRenameFiles response which will do the rename instead
+    // See https://github.com/microsoft/vscode-languageserver-node/issues/752 for more info
+    if !change.file_system_edits.is_empty() && snap.config.will_rename() {
+        change.source_file_edits.clear();
+    }
+
+    let workspace_edit = to_proto::workspace_edit(&snap, change)?;
+
+    if let Some(lsp_types::DocumentChanges::Operations(ops)) = workspace_edit.document_changes.as_ref() {
+        for op in ops {
+            if let lsp_types::DocumentChangeOperation::Op(doc_change_op) = op {
+                resource_ops_supported(&snap.config, resolve_resource_op(doc_change_op))?
+            }
+        }
+    }
+
+    Ok(Some(workspace_edit))
 }
 
 pub(crate) fn handle_view_syntax_tree(

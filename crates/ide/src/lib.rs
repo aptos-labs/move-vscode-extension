@@ -15,6 +15,7 @@ mod hover;
 pub mod inlay_hints;
 mod navigation_target;
 mod references;
+mod rename;
 pub mod syntax_highlighting;
 mod type_info;
 mod view_syntax_tree;
@@ -29,7 +30,9 @@ use base_db::package_root::PackageId;
 use ide_completion::config::CompletionConfig;
 use ide_db::assist_config::AssistConfig;
 pub use ide_db::assists::{Assist, AssistKind, AssistResolveStrategy};
+use ide_db::rename::RenameError;
 use ide_db::search::SearchScope;
+use ide_db::source_change::SourceChange;
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 pub use salsa::Cancelled;
@@ -520,23 +523,23 @@ impl Analysis {
         })
     }
 
-    // /// Returns the edit required to rename reference at the position to the new
-    // /// name.
-    // pub fn rename(
-    //     &self,
-    //     position: FilePosition,
-    //     new_name: &str,
-    // ) -> Cancellable<Result<SourceChange, RenameError>> {
-    //     self.with_db(|db| rename::rename(db, position, new_name))
-    // }
-    //
-    // pub fn prepare_rename(
-    //     &self,
-    //     position: FilePosition,
-    // ) -> Cancellable<Result<RangeInfo<()>, RenameError>> {
-    //     self.with_db(|db| rename::prepare_rename(db, position))
-    // }
-    //
+    /// Returns the edit required to rename reference at the position to the new
+    /// name.
+    pub fn rename(
+        &self,
+        position: FilePosition,
+        new_name: &str,
+    ) -> Cancellable<Result<SourceChange, RenameError>> {
+        self.with_db(|db| rename::rename(db, position, new_name))
+    }
+
+    pub fn prepare_rename(
+        &self,
+        position: FilePosition,
+    ) -> Cancellable<Result<RangeInfo<()>, RenameError>> {
+        self.with_db(|db| rename::prepare_rename(db, position))
+    }
+
     // pub fn will_rename_file(
     //     &self,
     //     file_id: FileId,

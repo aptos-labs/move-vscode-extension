@@ -3,7 +3,7 @@ mod grammar;
 pub(crate) mod parser;
 mod token_set;
 
-mod lexer;
+pub mod lexer;
 mod text_token_source;
 mod text_tree_sink;
 

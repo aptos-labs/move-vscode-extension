@@ -25,10 +25,17 @@ pub enum Definition {
 }
 
 impl Definition {
-    pub fn from_named_item(named_item: InFile<impl Into<ast::NamedElement>>) -> Option<Definition> {
+    pub fn named_item(named_item: InFile<impl Into<ast::NamedElement>>) -> Self {
         let named_item: InFile<ast::NamedElement> = named_item.map(|it| it.into());
-        let symbol_kind = ast_kind_to_symbol_kind(named_item.kind())?;
-        Some(Definition::NamedItem(symbol_kind, named_item))
+        let symbol_kind = ast_kind_to_symbol_kind(&named_item.value);
+        Definition::NamedItem(symbol_kind, named_item)
+    }
+
+    pub fn name(&self) -> Option<ast::Name> {
+        match self {
+            Definition::BuiltinType => None,
+            Definition::NamedItem(_, named_item) => named_item.value.name(),
+        }
     }
 }
 
@@ -87,7 +94,7 @@ impl NameClass {
                 _ => {
                     let name = sema.wrap_node_infile(name);
                     let named_item = name.and_then(|it| it.syntax().parent_of_type::<ast::NamedElement>())?;
-                    let defn = Definition::from_named_item(named_item)?;
+                    let defn = Definition::named_item(named_item);
                     Some(NameClass::Definition(defn))
                 },
             }
@@ -103,7 +110,7 @@ impl NameClass {
             sema.resolve_to_element::<ast::NamedElement>(ident_pat.clone().map_into())
         {
             if matches!(resolved_ident_pat.kind(), CONST | VARIANT) {
-                let defn = Definition::from_named_item(resolved_ident_pat)?;
+                let defn = Definition::named_item(resolved_ident_pat);
                 return Some(NameClass::ConstReference(defn));
             }
 
@@ -127,7 +134,7 @@ impl NameClass {
             }
         }
 
-        let local_def = Definition::from_named_item(ident_pat)?;
+        let local_def = Definition::named_item(ident_pat);
         Some(NameClass::Definition(local_def))
     }
 }
@@ -151,21 +158,21 @@ impl NameRefClass {
         if let Some(struct_lit_field) = ast::StructLitField::for_field_name(name_ref) {
             // if shorthand, then it should contain two elements
             let is_shorthand = struct_lit_field.name_ref().is_none();
-            if !is_shorthand {
+            return if !is_shorthand {
                 // NameRef :: Expr
                 let named_field = sema.resolve_to_element::<ast::NamedField>(
                     sema.wrap_node_infile(struct_lit_field.into()),
                 )?;
-                return Some(NameRefClass::Definition(Definition::NamedItem(
+                Some(NameRefClass::Definition(Definition::NamedItem(
                     SymbolKind::Field,
                     named_field.map_into(),
-                )));
+                )))
             } else {
                 let path = struct_lit_field.shorthand_path()?;
                 let entries = sema.resolve(path.into());
                 let (named_field, ident_pat) = into_field_shorthand_items(sema.db, entries)?;
-                return Some(NameRefClass::FieldShorthand { ident_pat, named_field });
-            }
+                Some(NameRefClass::FieldShorthand { ident_pat, named_field })
+            };
         }
 
         if let Some(path) = ref_parent.cast::<ast::PathSegment>().map(|it| it.parent_path()) {
@@ -173,7 +180,7 @@ impl NameRefClass {
             return match res {
                 Some(entry) => {
                     let named_item = entry.node_loc.to_ast::<ast::NamedElement>(sema.db)?;
-                    let defn = Definition::from_named_item(named_item)?;
+                    let defn = Definition::named_item(named_item);
                     Some(NameRefClass::Definition(defn))
                 }
                 None => {
@@ -193,6 +200,6 @@ impl NameRefClass {
             .node_loc
             .to_ast::<ast::NamedElement>(sema.db)?;
 
-        Some(NameRefClass::Definition(Definition::from_named_item(named_item)?))
+        Some(NameRefClass::Definition(Definition::named_item(named_item)))
     }
 }

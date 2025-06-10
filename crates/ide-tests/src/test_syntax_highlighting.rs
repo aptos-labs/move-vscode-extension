@@ -14,12 +14,24 @@ fn test_highlight_const_with_builtin_type() {
         r#"
 module 0x1::m {
     const ERR: u8 = 1;
+    const ERR_1: u8 = 1;
+
+    fun main() {
+        ERR;
+        ERR_1;
+    }
 }
     "#,
         // language=HTML
         expect![[r#"
             <span class="keyword">module</span> <span class="numeric_literal">0x1</span>::<span class="module">m</span> {
                 <span class="keyword">const</span> <span class="constant">ERR</span>: <span class="builtin_type">u8</span> = <span class="numeric_literal">1</span>;
+                <span class="keyword">const</span> <span class="constant">ERR_1</span>: <span class="builtin_type">u8</span> = <span class="numeric_literal">1</span>;
+
+                <span class="keyword">fun</span> <span class="function">main</span>() {
+                    <span class="constant">ERR</span>;
+                    <span class="constant">ERR_1</span>;
+                }
             }"#]],
     );
 }

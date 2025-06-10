@@ -5,9 +5,10 @@ use line_index::WideEncoding;
 use lsp_types::{
     CodeActionKind, CodeActionOptions, CodeActionProviderCapability, CompletionOptions,
     CompletionOptionsCompletionItem, HoverProviderCapability, InlayHintOptions,
-    InlayHintServerCapabilities, OneOf, PositionEncodingKind, SelectionRangeProviderCapability,
-    SemanticTokensFullOptions, SemanticTokensLegend, SemanticTokensOptions, ServerCapabilities,
-    TextDocumentSyncCapability, TextDocumentSyncKind, WorkDoneProgressOptions,
+    InlayHintServerCapabilities, OneOf, PositionEncodingKind, RenameOptions,
+    SelectionRangeProviderCapability, SemanticTokensFullOptions, SemanticTokensLegend,
+    SemanticTokensOptions, ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind,
+    WorkDoneProgressOptions,
 };
 
 pub fn server_capabilities(config: &Config) -> ServerCapabilities {
@@ -72,10 +73,10 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
         // }),
         selection_range_provider: Some(SelectionRangeProviderCapability::Simple(true)),
         // folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
-        // rename_provider: Some(OneOf::Right(RenameOptions {
-        //     prepare_provider: Some(true),
-        //     work_done_progress_options: WorkDoneProgressOptions { work_done_progress: None },
-        // })),
+        rename_provider: Some(OneOf::Right(RenameOptions {
+            prepare_provider: Some(true),
+            work_done_progress_options: WorkDoneProgressOptions { work_done_progress: None },
+        })),
         // linked_editing_range_provider: None,
         // document_link_provider: None,
         // color_provider: None,

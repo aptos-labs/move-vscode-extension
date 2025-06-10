@@ -14,6 +14,7 @@ mod token_text;
 mod validation;
 
 pub use crate::parse::entry_points;
+pub use crate::parse::lexer::parse_single_token;
 pub use crate::parse::SyntaxKind;
 pub use crate::{
     ast::{AstNode, AstToken},

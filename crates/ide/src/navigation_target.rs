@@ -125,7 +125,7 @@ impl NavigationTarget {
         let name_range = named_item.name().map(|name| name.ident_token().text_range());
         let node_range = named_item.syntax().text_range();
 
-        let kind = ast_kind_to_symbol_kind(named_item.syntax().kind())?;
+        let kind = ast_kind_to_symbol_kind(&named_item);
         Some(NavigationTarget::from_syntax(
             file_id,
             entry_name.into(),
@@ -148,7 +148,7 @@ impl NavigationTarget {
         let name_range = name.ident_token().text_range();
         let node_range = named_item.syntax().text_range();
 
-        let kind = ast_kind_to_symbol_kind(named_item.syntax().kind())?;
+        let kind = ast_kind_to_symbol_kind(&named_item);
         Some(NavigationTarget::from_syntax(
             file_id,
             name_s,

@@ -21,7 +21,7 @@ use std::sync::Arc;
 use std::{fmt, ops};
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{FileRange, InFile};
-use syntax::{AstNode, SyntaxNode, SyntaxToken, ast};
+use syntax::{AstNode, SyntaxNode, SyntaxToken, TextSize, ast};
 use vfs::FileId;
 
 const MAX_FILE_ID: u32 = 0x7fff_ffff;
@@ -80,6 +80,23 @@ impl<'db> SemanticsImpl<'db> {
         let tree = source_db::parse(self.db, file_id.intern(self.db)).tree();
         self.cache(tree.syntax().clone(), file_id);
         tree
+    }
+
+    pub fn find_namelike_at_offset(&self, node: &SyntaxNode, offset: TextSize) -> Option<ast::NameLike> {
+        node.token_at_offset(offset)
+            .filter_map(|token| token.parent())
+            .find_map(ast::NameLike::cast)
+    }
+
+    pub fn is_library(&self, package_id: PackageId) -> bool {
+        let package_root = self.db.package_root(package_id);
+        package_root.data(self.db).is_library()
+    }
+
+    pub fn is_builtins_file(&self, file_id: FileId) -> bool {
+        self.db
+            .builtins_file_id()
+            .is_some_and(|it| it.data(self.db) == file_id)
     }
 
     pub fn resolve_to_element<Named: AstNode>(
