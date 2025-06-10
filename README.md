@@ -2,6 +2,12 @@
 
 ## Installation
 
+We publish nightly pre-compiled VSCode extensions for Linux, MacOS and Windows. Check out https://github.com/aptos-labs/aptos-move-analyzer/releases/tag/nightly. 
+
+Download the `.vsix` file for your platform, then install it inside your editor with `"Install from VSIX..."` command. 
+
+### Build from sources
+
 Clone the repo, then run:
 ```
 cargo run -p xtask -- install --server --client
