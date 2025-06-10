@@ -41,7 +41,7 @@ async function runOnce() {
     await octokit.rest.repos.deleteRelease({ owner, repo, release_id });
   }
 
-  // We also need to update the `dev` tag while we're at it on the `dev` branch.
+  // We also need to update the `nightly` tag while we're at it on the `nightly` branch.
   if (name == 'nightly') {
     try {
       core.info(`updating nightly tag`);
