@@ -1,0 +1,81 @@
+SOURCE_FILE@0..249
+  MODULE@0..248
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..33
+      IDENT@12..33 "let_invalid_ident_pat"
+    WHITESPACE@33..34 " "
+    L_CURLY@34..35 "{"
+    WHITESPACE@35..40 "\n    "
+    FUN@40..246
+      FUN_KW@40..43 "fun"
+      WHITESPACE@43..44 " "
+      NAME@44..48
+        IDENT@44..48 "main"
+      PARAM_LIST@48..50
+        L_PAREN@48..49 "("
+        R_PAREN@49..50 ")"
+      WHITESPACE@50..51 " "
+      BLOCK_EXPR@51..246
+        L_CURLY@51..52 "{"
+        WHITESPACE@52..61 "\n        "
+        LET_STMT@61..240
+          LET_KW@61..64 "let"
+          WHITESPACE@64..65 " "
+          TUPLE_STRUCT_PAT@65..240
+            PATH@65..77
+              PATH@65..71
+                PATH_SEGMENT@65..71
+                  NAME_REF@65..71
+                    IDENT@65..71 "option"
+              COLON_COLON@71..73 "::"
+              PATH_SEGMENT@73..77
+                NAME_REF@73..77
+                  IDENT@73..77 "some"
+            L_PAREN@77..78 "("
+            WHITESPACE@78..91 "\n            "
+            TUPLE_STRUCT_PAT@91..240
+              PATH@91..103
+                PATH@91..97
+                  PATH_SEGMENT@91..97
+                    NAME_REF@91..97
+                      IDENT@91..97 "option"
+                COLON_COLON@97..99 "::"
+                PATH_SEGMENT@99..103
+                  NAME_REF@99..103
+                    IDENT@99..103 "some"
+              L_PAREN@103..104 "("
+              WHITESPACE@104..121 "\n                "
+              STRUCT_PAT@121..226
+                PATH@121..139
+                  PATH_SEGMENT@121..139
+                    NAME_REF@121..139
+                      IDENT@121..139 "WithdrawCapability"
+                WHITESPACE@139..140 " "
+                STRUCT_PAT_FIELD_LIST@140..226
+                  L_CURLY@140..141 "{"
+                  WHITESPACE@141..162 "\n                    "
+                  STRUCT_PAT_FIELD@162..192
+                    NAME_REF@162..176
+                      IDENT@162..176 "expiration_sec"
+                    COLON@176..177 ":"
+                    WHITESPACE@177..178 " "
+                    IDENT_PAT@178..192
+                      NAME@178..192
+                        IDENT@178..192 "withdraw_proof"
+                  STRUCT_PAT_FIELD@192..207
+                    DOT@192..193 "."
+                    IDENT@193..207 "expiration_sec"
+                  COMMA@207..208 ","
+                  WHITESPACE@208..225 "\n                "
+                  R_CURLY@225..226 "}"
+              WHITESPACE@226..239 "\n            "
+              R_PAREN@239..240 ")"
+        WHITESPACE@240..245 "\n    "
+        R_CURLY@245..246 "}"
+    WHITESPACE@246..247 "\n"
+    R_CURLY@247..248 "}"
+  WHITESPACE@248..249 "\n"
