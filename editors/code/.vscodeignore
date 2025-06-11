@@ -1,6 +1,5 @@
 **
-!aptos_white.png
-!aptos_black.png
+!icons
 !language-configuration.json
 !LICENSE
 !README.md
@@ -8,5 +7,4 @@
 !package-lock.json
 !package.json
 !server
-!walkthrough-setup-tips.md
 

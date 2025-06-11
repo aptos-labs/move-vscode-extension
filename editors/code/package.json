@@ -5,7 +5,7 @@
     "private": true,
     "publisher": "aptos",
     "version": "0.1.0-dev",
-    "icon": "aptos_black.png",
+    "icon": "./icons/aptos_black.png",
     "releaseTag": null,
     "homepage": "https://github.com/aptos-labs/aptos-move-analyzer",
     "repository": {
@@ -27,7 +27,8 @@
         "Formatters"
     ],
     "keywords": [
-        "move", "aptos"
+        "move",
+        "aptos"
     ],
     "main": "./out/extension.js",
     "contributes": {
@@ -360,14 +361,18 @@
         "languages": [
             {
                 "id": "move",
+                "extensions": [
+                    ".move"
+                ],
                 "aliases": [
                     "Move",
                     "move"
                 ],
-                "extensions": [
-                    ".move"
-                ],
-                "configuration": "./language-configuration.json"
+                "configuration": "./language-configuration.json",
+                "icon": {
+                    "light": "./icons/move_logo.svg",
+                    "dark": "./icons/move_logo.svg"
+                }
             }
         ],
         "menus": {
