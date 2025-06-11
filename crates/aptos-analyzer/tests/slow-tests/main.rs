@@ -2,20 +2,24 @@ use lsp_types::notification::DidOpenTextDocument;
 use lsp_types::request::DocumentDiagnosticRequest;
 use lsp_types::{DidOpenTextDocumentParams, DocumentDiagnosticParams, TextDocumentItem};
 use std::fs;
+use std::path::Path;
 use test_utils::fixtures::test_state::{named, named_with_deps};
 
 mod support;
 
 #[test]
 fn test_get_diagnostics_for_a_file() {
+    let dep_path = Path::new("..").join("MyDep").to_string_lossy().to_string();
     let server = support::project(vec![
         named_with_deps(
             "MyPackage",
             // language=TOML
-            r#"
+            &format!(
+                r#"
 [dependencies]
-MyDep = { local = "../MyDep"}
-            "#,
+MyDep = {{ local = "{dep_path}"}}
+            "#
+            ),
             // language=Move
             r#"
 //- /main.move
@@ -38,7 +42,12 @@ module std::table {
     "#,
         ),
     ]);
-    let main_document = server.doc_id("MyPackage/sources/main.move");
+    let rel_main_document = Path::new("MyPackage")
+        .join("sources")
+        .join("main.move")
+        .to_string_lossy()
+        .to_string();
+    let main_document = server.doc_id(&rel_main_document);
     let main_document_contents = fs::read_to_string(main_document.uri.path()).unwrap();
     server.notification::<DidOpenTextDocument>(DidOpenTextDocumentParams {
         text_document: TextDocumentItem::new(

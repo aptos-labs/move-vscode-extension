@@ -520,7 +520,7 @@ mod tests {
             }
         }
 
-        let package_json_path = project_root().join("editors/code/package.json");
+        let package_json_path = project_root().join("editors").join("code").join("package.json");
         let mut package_json = fs::read_to_string(&package_json_path).unwrap();
 
         let start_marker =
