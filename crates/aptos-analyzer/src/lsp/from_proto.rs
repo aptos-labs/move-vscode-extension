@@ -1,10 +1,10 @@
 use crate::global_state::GlobalStateSnapshot;
-use crate::line_index::{LineIndex, PositionEncoding};
 use anyhow::format_err;
 use camino::Utf8PathBuf;
 use ide_db::assists::AssistKind;
 use line_index::{LineCol, TextRange, TextSize, WideLineCol};
 use syntax::files::{FilePosition, FileRange};
+use syntax::line_index::{LineIndex, PositionEncoding};
 use vfs::{AbsPathBuf, FileId};
 
 pub(crate) fn abs_path(url: &lsp_types::Url) -> anyhow::Result<AbsPathBuf> {

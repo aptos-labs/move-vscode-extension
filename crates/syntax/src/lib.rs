@@ -3,6 +3,7 @@
 pub mod algo;
 pub mod ast;
 pub mod files;
+pub mod line_index;
 mod parse;
 mod ptr;
 pub mod syntax_editor;

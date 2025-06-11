@@ -1,9 +1,9 @@
 use crate::global_state::{GlobalState, LoadPackagesRequest};
-use crate::line_index::LineEndings;
 use crate::reload;
 use base_db::change::FileChanges;
 use parking_lot::{RwLockUpgradableReadGuard, RwLockWriteGuard};
 use paths::AbsPathBuf;
+use syntax::line_index::LineEndings;
 
 impl GlobalState {
     #[tracing::instrument(level = "info", skip(self))]

@@ -1,5 +1,4 @@
 use crate::global_state::GlobalStateSnapshot;
-use crate::line_index::LineEndings;
 use crate::lsp::{LspError, from_proto, to_proto};
 use crate::toolchain;
 use anyhow::Context;
@@ -8,6 +7,7 @@ use lsp_server::ErrorCode;
 use lsp_types::TextDocumentIdentifier;
 use std::io::Write;
 use std::process::Stdio;
+use syntax::line_index::LineEndings;
 use syntax::{TextRange, TextSize};
 
 pub(crate) fn run_movefmt(

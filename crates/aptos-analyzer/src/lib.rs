@@ -1,7 +1,6 @@
 mod config;
 mod global_state;
 mod handlers;
-mod line_index;
 mod main_loop;
 mod mem_docs;
 mod op_queue;

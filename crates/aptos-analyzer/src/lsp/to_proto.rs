@@ -1,5 +1,4 @@
 use crate::global_state::GlobalStateSnapshot;
-use crate::line_index::{LineEndings, LineIndex, PositionEncoding};
 use crate::lsp::utils::invalid_params_error;
 use crate::lsp::{LspError, semantic_tokens};
 use crate::{Config, lsp_ext};
@@ -24,6 +23,7 @@ use std::ops::Not;
 use std::sync::atomic::{AtomicU32, Ordering};
 use stdx::itertools::Itertools;
 use syntax::files::FileRange;
+use syntax::line_index::{LineEndings, LineIndex, PositionEncoding};
 use vfs::{AbsPath, FileId};
 
 pub(crate) fn lsp_position(line_index: &LineIndex, offset: TextSize) -> lsp_types::Position {

@@ -11,7 +11,9 @@ harness = false
 drop_bomb = "0.1.5"
 regex = "1.11.1"
 unicode-segmentation = "1.12.0"
+memchr = "2.7.5"
 
+line-index.workspace = true
 either = { workspace = true }
 tracing = { workspace = true }
 rowan = { workspace = true }

@@ -1,5 +1,4 @@
 use crate::config::Config;
-use crate::line_index::PositionEncoding;
 use crate::lsp::semantic_tokens;
 use line_index::WideEncoding;
 use lsp_types::{
@@ -10,6 +9,7 @@ use lsp_types::{
     SemanticTokensOptions, ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind,
     WorkDoneProgressOptions,
 };
+use syntax::line_index::PositionEncoding;
 
 pub fn server_capabilities(config: &Config) -> ServerCapabilities {
     ServerCapabilities {

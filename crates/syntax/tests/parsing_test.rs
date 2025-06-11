@@ -1,10 +1,11 @@
 use std::path::Path;
 use std::{env, fs, panic};
+use syntax::line_index::LineEndings;
 use syntax::{AstNode, SourceFile};
 use test_utils::{apply_error_marks, fixtures, ErrorMark};
 
 fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<()> {
-    let input = fs::read_to_string(fpath).unwrap();
+    let input = fs_read_file(fpath).unwrap();
 
     let parse = SourceFile::parse(&input);
     let file = parse.tree();
@@ -19,7 +20,6 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
     let actual_output = format!("{:#?}", file.syntax());
     let output_fpath = fpath.with_extension("").with_extension("txt");
     let errors_fpath = fpath.with_extension("").with_extension("exp");
-    // let html_fpath = fpath.with_extension("").with_extension("html");
 
     let errors = parse.errors();
     let marks = errors
@@ -32,15 +32,10 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
         .collect();
     let error_output = apply_error_marks(&input, marks);
 
-    let expected_output = if output_fpath.exists() {
-        let existing = fs::read_to_string(&output_fpath).unwrap();
-        Some(existing)
-    } else {
-        None
-    };
-
-    let expected_errors_output = fs::read_to_string(&errors_fpath).ok();
-    // let expected_html_output = fs::read_to_string(&html_fpath).ok();
+    let expected_output = output_fpath
+        .exists()
+        .then_some(fs_read_file(&output_fpath).unwrap());
+    let expected_errors_output = fs_read_file(&errors_fpath);
 
     if env::var("UB").is_ok() {
         // generate new files
@@ -93,6 +88,12 @@ fn run_fuzzer_once(modified_input: &mut String) {
         println!("==========");
         panic!("highlight error \n{:?}", err);
     }
+}
+
+fn fs_read_file(path: impl AsRef<Path>) -> Option<String> {
+    let text = fs::read_to_string(path).ok()?;
+    let (normalized_text, _) = LineEndings::normalize(text);
+    Some(normalized_text)
 }
 
 fn highlight_file(input: String) -> String {

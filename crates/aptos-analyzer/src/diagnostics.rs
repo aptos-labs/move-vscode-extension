@@ -218,7 +218,7 @@ pub(crate) fn fetch_native_diagnostics(
 }
 
 pub(crate) fn to_proto_diagnostic(
-    line_index: &crate::line_index::LineIndex,
+    line_index: &syntax::line_index::LineIndex,
     d: ide_diagnostics::diagnostic::Diagnostic,
 ) -> lsp_types::Diagnostic {
     lsp_types::Diagnostic {

@@ -2,7 +2,6 @@ use crate::config::Config;
 use crate::config::validation::ConfigErrors;
 use crate::diagnostics::DiagnosticCollection;
 use crate::flycheck::{FlycheckHandle, FlycheckMessage};
-use crate::line_index::{LineEndings, LineIndex};
 use crate::lsp::from_proto;
 use crate::lsp::to_proto::url_from_abs_path;
 use crate::lsp_ext;
@@ -23,6 +22,7 @@ use std::ops::Deref;
 use std::sync::Arc;
 use std::time::Instant;
 use syntax::files::FileRange;
+use syntax::line_index::{LineEndings, LineIndex};
 use syntax::{TextRange, TextSize};
 use vfs::{AnchoredPathBuf, FileId, VfsPath};
 
