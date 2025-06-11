@@ -1,13 +1,13 @@
 use crate::aptos_package::{AptosPackage, PackageFolderRoot};
 use base_db::package_root::{PackageKind, PackageRoot};
-use paths::{AbsPathBuf, Utf8PathBuf};
 use std::fmt;
 use std::fmt::Formatter;
-use vfs::VfsPath;
 use vfs::file_set::FileSetConfig;
+use vfs::{FileId, VfsPath};
 
 #[derive(Default)]
 pub struct PackageRootConfig {
+    pub file_set_roots: Vec<VfsPath>,
     pub fsc: FileSetConfig,
     pub local_filesets: Vec<u64>,
 }
@@ -17,56 +17,31 @@ impl PackageRootConfig {
         let package_file_sets = self.fsc.partition(vfs);
         let mut package_roots = vec![];
         for (idx, package_file_set) in package_file_sets.into_iter().enumerate() {
-            let root_dir = self.root_dir(idx);
             let is_local = self.local_filesets.contains(&(idx as u64));
             let kind = if is_local {
                 PackageKind::Local
             } else {
                 PackageKind::Library
             };
-            match root_dir {
-                None => {
-                    // builtins package root
-                    package_roots.push(PackageRoot::new(package_file_set, kind, None));
-                }
-                Some(root_dir) => {
-                    let manifest_path = VfsPath::from(AbsPathBuf::assert(root_dir.join("Move.toml")));
-                    let manifest_file_id = vfs.file_id(&manifest_path).map(|it| it.0);
-                    package_roots.push(PackageRoot::new(package_file_set, kind, manifest_file_id))
+            let mut package_manifest_file_id: Option<FileId> = None;
+            for candidate_root in self.file_set_roots.iter() {
+                let candidate_manifest = candidate_root.join("Move.toml");
+                if let Some(manifest_file_id) =
+                    candidate_manifest.and_then(|it| package_file_set.file_for_path(&it))
+                {
+                    package_manifest_file_id = Some(*manifest_file_id);
                 }
             }
+            package_roots.push(PackageRoot::new(package_file_set, kind, package_manifest_file_id))
         }
         package_roots
     }
-
-    fn roots(&self) -> Vec<String> {
-        self.fsc
-            .roots()
-            .iter()
-            .map(|(root_bytes, _)| {
-                String::from_utf8(root_bytes.to_owned())
-                    .unwrap()
-                    .trim_start_matches("\0")
-                    .to_string()
-            })
-            .collect()
-    }
-
-    fn root_dir(&self, idx: usize) -> Option<Utf8PathBuf> {
-        let root = self.roots().get(idx)?.clone();
-        Some(Utf8PathBuf::from(root))
-    }
-
-    // fn root_dir_name(&self, idx: usize) -> Option<String> {
-    //     let root = self.roots().get(idx)?.clone();
-    //     Utf8PathBuf::from(root).file_name().map(|it| it.to_string())
-    // }
 }
 
 impl fmt::Debug for PackageRootConfig {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("PackageRootConfig")
-            .field("roots", &self.roots())
+            .field("root_dirs", &self.file_set_roots)
             .finish()
     }
 }
@@ -93,6 +68,7 @@ impl ProjectFolders {
         all_folder_roots.sort();
         all_folder_roots.dedup();
 
+        let mut file_set_roots = vec![];
         for package_folder_root in all_folder_roots {
             for dir_entry in folder_root_to_dir_entries(package_folder_root.clone()) {
                 if package_folder_root.is_local {
@@ -104,12 +80,19 @@ impl ProjectFolders {
             if package_folder_root.is_local {
                 local_filesets.push(fsc.len() as u64);
             }
+
             let file_set_root = VfsPath::from(package_folder_root.content_root.clone());
+            file_set_roots.push(file_set_root.clone());
+
             fsc.add_file_set(vec![file_set_root])
         }
 
         let fsc = fsc.build();
-        folders.package_root_config = PackageRootConfig { fsc, local_filesets };
+        folders.package_root_config = PackageRootConfig {
+            file_set_roots,
+            fsc,
+            local_filesets,
+        };
 
         folders
     }
