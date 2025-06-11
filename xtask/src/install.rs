@@ -8,11 +8,11 @@ pub(crate) fn install(client: bool, server: bool) -> anyhow::Result<()> {
     if cfg!(target_os = "macos") {
         fix_path_for_mac(&sh).context("Fix path for mac")?;
     }
-    if client {
-        install_client(&sh).context("cannot find VSCode editor")?;
-    }
     if server {
         install_server(&sh).context("install server")?;
+    }
+    if client {
+        install_client(&sh).context("cannot find VSCode editor")?;
     }
     Ok(())
 }
