@@ -34,6 +34,7 @@ pub enum SymbolKind {
     ValueParam,
     Label,
     Local,
+    Vector,
     // SpecFunction,
     // SpecInlineFunction,
     // Schema,
