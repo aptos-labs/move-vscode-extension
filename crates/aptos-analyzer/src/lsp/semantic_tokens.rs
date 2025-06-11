@@ -53,6 +53,7 @@ define_semantic_token_types![
         STRUCT,
         TYPE_PARAMETER,
         VARIABLE,
+        MACRO,
     }
 
     custom {

@@ -87,3 +87,36 @@ spec aptos_framework::m {
             }"#]],
     );
 }
+
+#[test]
+fn test_highlight_literals() {
+    check_highlighting_for_text(
+        // language=Move
+        r#"
+module aptos_framework::m {
+    fun main() {
+        1;
+        @0x1;
+        true;
+        false;
+        x"f1f1f1f1";
+        b"f1f1f1f1";
+        vector[1, 2, 3];
+    }
+}
+    "#,
+        // language=HTML
+        expect![[r#"
+            <span class="keyword">module</span> aptos_framework::<span class="module">m</span> {
+                <span class="keyword">fun</span> <span class="function">main</span>() {
+                    <span class="numeric_literal">1</span>;
+                    <span class="numeric_literal">@</span><span class="numeric_literal">0x1</span>;
+                    <span class="bool_literal">true</span>;
+                    <span class="bool_literal">false</span>;
+                    <span class="string_literal">x"f1f1f1f1"</span>;
+                    <span class="string_literal">b"f1f1f1f1"</span>;
+                    <span class="vector">vector</span>[<span class="numeric_literal">1</span>, <span class="numeric_literal">2</span>, <span class="numeric_literal">3</span>];
+                }
+            }"#]],
+    );
+}

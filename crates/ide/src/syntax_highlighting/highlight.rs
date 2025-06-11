@@ -1,7 +1,7 @@
 pub(crate) mod name_like;
 
 use crate::syntax_highlighting::tags::{Highlight, HlTag};
-use ide_db::RootDatabase;
+use ide_db::{RootDatabase, SymbolKind};
 use lang::Semantics;
 use syntax::{AstNode, AstToken, SyntaxKind, SyntaxKind::*, SyntaxNodeOrToken, SyntaxToken, T, ast};
 
@@ -17,17 +17,14 @@ pub(super) fn token(sema: &Semantics<'_, RootDatabase>, token: SyntaxToken) -> O
 
     let highlight: Highlight = match token.kind() {
         BYTE_STRING => HlTag::StringLiteral.into(),
+        HEX_STRING => HlTag::StringLiteral.into(),
         // INT_NUMBER if token.parent_ancestors().nth(1).map(|it| it.kind()) == Some(FIELD_EXPR) => {
         //     SymbolKind::Field.into()
         // }
         INT_NUMBER => HlTag::NumericLiteral.into(),
-        // BYTE => HlTag::ByteLiteral.into(),
-        // CHAR => HlTag::CharLiteral.into(),
-        // IDENT if token.parent().and_then(ast::TokenTree::cast).is_some() => {
-        //     // from this point on we are inside a token tree, this only happens for identifiers
-        //     // that were not mapped down into macro invocations
-        //     HlTag::None.into()
-        // }
+        IDENT if token.parent().is_some_and(|it| it.kind() == VECTOR_LIT_EXPR) => {
+            Highlight::new(HlTag::Symbol(SymbolKind::Vector))
+        }
         // p if p.is_punct() => punctuation(sema, token, p),
         k if k.is_keyword() => keyword(sema, token, k)?,
         _ => return None,

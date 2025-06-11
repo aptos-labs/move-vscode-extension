@@ -65,6 +65,7 @@ impl HlTag {
                 SymbolKind::ValueParam => "value_param",
                 SymbolKind::EnumVariant => "enum_variant",
                 SymbolKind::GlobalVariableDecl => "global",
+                SymbolKind::Vector => "vector",
             },
             // HlTag::AttributeBracket => "attribute_bracket",
             HlTag::BoolLiteral => "bool_literal",

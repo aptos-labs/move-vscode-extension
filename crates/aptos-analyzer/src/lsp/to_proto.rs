@@ -50,30 +50,16 @@ pub(crate) fn symbol_kind(symbol_kind: SymbolKind) -> lsp_types::SymbolKind {
         SymbolKind::Struct => lsp_types::SymbolKind::STRUCT,
         SymbolKind::Enum => lsp_types::SymbolKind::ENUM,
         SymbolKind::EnumVariant => lsp_types::SymbolKind::ENUM_MEMBER,
-        // SymbolKind::Trait | SymbolKind::TraitAlias => lsp_types::SymbolKind::INTERFACE,
-        /*SymbolKind::Macro
-        | SymbolKind::ProcMacro
-        | SymbolKind::BuiltinAttr*/
-        SymbolKind::Attribute
-        /*| SymbolKind::Derive
-        | SymbolKind::DeriveHelper*/ => lsp_types::SymbolKind::FUNCTION,
-        SymbolKind::Module/* | SymbolKind::ToolModule*/ => lsp_types::SymbolKind::MODULE,
-        /*SymbolKind::TypeAlias |*/ SymbolKind::TypeParam /*| SymbolKind::SelfType*/ => {
-            lsp_types::SymbolKind::TYPE_PARAMETER
-        }
+        SymbolKind::Attribute => lsp_types::SymbolKind::FUNCTION,
+        SymbolKind::Module => lsp_types::SymbolKind::MODULE,
+        SymbolKind::TypeParam => lsp_types::SymbolKind::TYPE_PARAMETER,
         SymbolKind::Field => lsp_types::SymbolKind::FIELD,
-        // SymbolKind::Static => lsp_types::SymbolKind::CONSTANT,
         SymbolKind::Const => lsp_types::SymbolKind::CONSTANT,
-        // SymbolKind::ConstParam => lsp_types::SymbolKind::CONSTANT,
-        // SymbolKind::Impl => lsp_types::SymbolKind::OBJECT,
         SymbolKind::Local
-        // | SymbolKind::SelfParam
-        // | SymbolKind::LifetimeParam
         | SymbolKind::ValueParam
         | SymbolKind::Label
         | SymbolKind::GlobalVariableDecl => lsp_types::SymbolKind::VARIABLE,
-        // SymbolKind::Union => lsp_types::SymbolKind::STRUCT,
-        // SymbolKind::InlineAsmRegOrRegClass => lsp_types::SymbolKind::VARIABLE,
+        SymbolKind::Vector => lsp_types::SymbolKind::ARRAY,
     }
 }
 
@@ -111,6 +97,7 @@ pub(crate) fn completion_item_kind(
             SymbolKind::ValueParam => lsp_types::CompletionItemKind::VALUE,
             SymbolKind::EnumVariant => lsp_types::CompletionItemKind::ENUM_MEMBER,
             SymbolKind::GlobalVariableDecl => lsp_types::CompletionItemKind::VARIABLE,
+            SymbolKind::Vector => lsp_types::CompletionItemKind::VALUE,
         },
     }
 }
@@ -341,18 +328,11 @@ fn semantic_token_type_and_modifiers(
     let ty = match highlight.tag {
         HlTag::Symbol(symbol) => match symbol {
             SymbolKind::Attribute => types::DECORATOR,
-            // SymbolKind::Derive => types::DERIVE,
-            // SymbolKind::DeriveHelper => types::DERIVE_HELPER,
             SymbolKind::Module => types::NAMESPACE,
-            // SymbolKind::Impl => types::TYPE_ALIAS,
             SymbolKind::Field => types::PROPERTY,
             SymbolKind::TypeParam => types::TYPE_PARAMETER,
-            // SymbolKind::ConstParam => types::CONST_PARAMETER,
-            // SymbolKind::LifetimeParam => types::LIFETIME,
             SymbolKind::Label => types::LABEL,
             SymbolKind::ValueParam => types::PARAMETER,
-            // SymbolKind::SelfParam => types::SELF_KEYWORD,
-            // SymbolKind::SelfType => types::SELF_TYPE_KEYWORD,
             SymbolKind::Local => types::VARIABLE,
             SymbolKind::Method => types::METHOD,
             SymbolKind::Function => types::FUNCTION,
@@ -361,6 +341,7 @@ fn semantic_token_type_and_modifiers(
             SymbolKind::Enum => types::ENUM,
             SymbolKind::EnumVariant => types::ENUM_MEMBER,
             SymbolKind::GlobalVariableDecl => types::VARIABLE,
+            SymbolKind::Vector => types::MACRO,
         },
         // HlTag::AttributeBracket => types::ATTRIBUTE_BRACKET,
         HlTag::BoolLiteral => types::BOOLEAN,

@@ -108,6 +108,7 @@ impl CompletionItemKind {
                 SymbolKind::ValueParam => "vp",
                 SymbolKind::EnumVariant => "ev",
                 SymbolKind::GlobalVariableDecl => "gv",
+                SymbolKind::Vector => "vc",
             },
             CompletionItemKind::Binding => "bn",
             CompletionItemKind::BuiltinType => "bt",
