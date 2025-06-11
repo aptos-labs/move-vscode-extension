@@ -40,7 +40,7 @@ async function getServer(
     } = context.extension.packageJSON;
 
     // check if the server path is configured explicitly
-    const explicitPath = process.env["__RA_LSP_SERVER_DEBUG"] ?? config.serverPath;
+    const explicitPath = /*process.env["__RA_LSP_SERVER_DEBUG"] ?? */config.serverPath;
     if (explicitPath) {
         if (explicitPath.startsWith("~/")) {
             return os.homedir() + explicitPath.slice("~".length);
@@ -48,6 +48,7 @@ async function getServer(
         return explicitPath;
     }
 
+    // if there's no releaseTag, then it runs the `aptos-analyzer` from $PATH
     if (packageJson.releaseTag === null) return "aptos-analyzer";
 
     // finally, use the bundled one
@@ -72,6 +73,7 @@ async function fileExists(uri: vscode.Uri) {
         () => false,
     );
 }
+
 
 export async function isValidExecutable(path: string, extraEnv: Env): Promise<boolean> {
     log.debug("Checking availability of a binary at", path);
