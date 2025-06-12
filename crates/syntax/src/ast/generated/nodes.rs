@@ -1380,7 +1380,7 @@ impl ast::HasAttrs for SchemaField {}
 impl ast::MslOnly for SchemaField {}
 impl SchemaField {
     #[inline]
-    pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
+    pub fn ident_pat(&self) -> Option<IdentPat> { support::child(&self.syntax) }
     #[inline]
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
     #[inline]
@@ -2213,7 +2213,6 @@ pub enum NamedElement {
     Module(Module),
     NamedField(NamedField),
     Schema(Schema),
-    SchemaField(SchemaField),
     SpecFun(SpecFun),
     SpecInlineFun(SpecInlineFun),
     Struct(Struct),
@@ -7092,10 +7091,6 @@ impl From<Schema> for NamedElement {
     #[inline]
     fn from(node: Schema) -> NamedElement { NamedElement::Schema(node) }
 }
-impl From<SchemaField> for NamedElement {
-    #[inline]
-    fn from(node: SchemaField) -> NamedElement { NamedElement::SchemaField(node) }
-}
 impl From<SpecFun> for NamedElement {
     #[inline]
     fn from(node: SpecFun) -> NamedElement { NamedElement::SpecFun(node) }
@@ -7169,12 +7164,6 @@ impl NamedElement {
             _ => None,
         }
     }
-    pub fn schema_field(self) -> Option<SchemaField> {
-        match (self) {
-            NamedElement::SchemaField(item) => Some(item),
-            _ => None,
-        }
-    }
     pub fn spec_fun(self) -> Option<SpecFun> {
         match (self) {
             NamedElement::SpecFun(item) => Some(item),
@@ -7222,7 +7211,6 @@ impl NamedElement {
             NamedElement::Module(it) => it.name(),
             NamedElement::NamedField(it) => it.name(),
             NamedElement::Schema(it) => it.name(),
-            NamedElement::SchemaField(it) => it.name(),
             NamedElement::SpecFun(it) => it.name(),
             NamedElement::SpecInlineFun(it) => it.name(),
             NamedElement::Struct(it) => it.name(),
@@ -7245,7 +7233,6 @@ impl AstNode for NamedElement {
                 | MODULE
                 | NAMED_FIELD
                 | SCHEMA
-                | SCHEMA_FIELD
                 | SPEC_FUN
                 | SPEC_INLINE_FUN
                 | STRUCT
@@ -7265,7 +7252,6 @@ impl AstNode for NamedElement {
             MODULE => NamedElement::Module(Module { syntax }),
             NAMED_FIELD => NamedElement::NamedField(NamedField { syntax }),
             SCHEMA => NamedElement::Schema(Schema { syntax }),
-            SCHEMA_FIELD => NamedElement::SchemaField(SchemaField { syntax }),
             SPEC_FUN => NamedElement::SpecFun(SpecFun { syntax }),
             SPEC_INLINE_FUN => NamedElement::SpecInlineFun(SpecInlineFun { syntax }),
             STRUCT => NamedElement::Struct(Struct { syntax }),
@@ -7287,7 +7273,6 @@ impl AstNode for NamedElement {
             NamedElement::Module(it) => &it.syntax(),
             NamedElement::NamedField(it) => &it.syntax(),
             NamedElement::Schema(it) => &it.syntax(),
-            NamedElement::SchemaField(it) => &it.syntax(),
             NamedElement::SpecFun(it) => &it.syntax(),
             NamedElement::SpecInlineFun(it) => &it.syntax(),
             NamedElement::Struct(it) => &it.syntax(),

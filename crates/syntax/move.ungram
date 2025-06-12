@@ -54,7 +54,6 @@ NamedElement =
     | IdentPat
     | UseAlias
     | Schema
-    | SchemaField
     | GlobalVariableDecl
 
 ReferenceElement =
@@ -510,7 +509,7 @@ Schema =
     spec_block:BlockExpr
 
 SchemaField =
-    Attr* 'local'? Name ':' Type ';'
+    Attr* 'local'? IdentPat ':' Type ';'
 
 IncludeSchema =
     'include' SpecPredicatePropertyList? IncludeExpr ';'

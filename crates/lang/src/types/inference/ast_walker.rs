@@ -261,6 +261,16 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     self.infer_expr_coerceable_to(&expr, Ty::Bool);
                 }
             }
+            ast::Stmt::SchemaField(schema_field) => {
+                if let Some(ident_pat) = schema_field.ident_pat() {
+                    let ty = self
+                        .ctx
+                        .ty_lowering()
+                        .lower_type_owner(schema_field.in_file(self.ctx.file_id).map_into())
+                        .unwrap_or(Ty::Unknown);
+                    self.collect_pat_bindings(ident_pat.into(), ty, BindingMode::BindByValue);
+                }
+            }
             _ => (),
         }
 
@@ -434,6 +444,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
         let file_id = self.ctx.file_id;
         let ty_lowering = self.ctx.ty_lowering();
+
         match named_element.kind() {
             IDENT_PAT => {
                 let ident_pat = named_element.cast_into::<ast::IdentPat>()?.value;
@@ -448,10 +459,6 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             NAMED_FIELD => {
                 let named_field = named_element.cast_into::<ast::NamedField>()?;
                 ty_lowering.lower_type_owner(named_field.map_into())
-            }
-            SCHEMA_FIELD => {
-                let schema_field = named_element.cast_into::<ast::SchemaField>()?;
-                ty_lowering.lower_type_owner(schema_field.map_into())
             }
             STRUCT | ENUM => {
                 let path = path_expr.path().in_file(file_id);

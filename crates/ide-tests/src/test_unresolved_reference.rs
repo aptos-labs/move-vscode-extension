@@ -793,3 +793,17 @@ module 0x1::M {
 }
 "#]])
 }
+
+#[test]
+fn test_shorthand_with_struct_lit_field_and_schema_field() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct S { val: u8 }
+            spec schema SS {
+                val: u8;
+                S { val }
+            }
+        }
+    "#]])
+}

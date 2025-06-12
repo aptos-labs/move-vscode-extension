@@ -2,6 +2,7 @@ use crate::parse::grammar::expressions::atom::{block_expr, condition, IDENT_FIRS
 use crate::parse::grammar::expressions::{expr, opt_initializer_expr};
 use crate::parse::grammar::items::at_item_start;
 use crate::parse::grammar::paths::{is_path_start, type_path};
+use crate::parse::grammar::patterns::ident_pat;
 use crate::parse::grammar::specs::predicates::opt_predicate_property_list;
 use crate::parse::grammar::utils::{delimited_fn, list};
 use crate::parse::grammar::{name, name_or_recover, name_ref, type_params, types};
@@ -24,7 +25,7 @@ pub(crate) fn schema_field(p: &mut Parser) -> bool {
     if p.at(IDENT) && p.at_contextual_kw("local") {
         p.bump_remap(T![local]);
     }
-    name(p);
+    ident_pat(p);
     // patterns::ident_pat(p);
     if p.at(T![:]) {
         types::ascription(p);

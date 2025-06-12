@@ -50,6 +50,7 @@ mod quant_expr;
 mod range_expr;
 mod ref_type;
 mod schema;
+mod schema_field;
 mod schema_lit;
 mod schema_lit_field;
 mod source_file;

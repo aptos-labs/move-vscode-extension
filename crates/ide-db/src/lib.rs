@@ -15,7 +15,7 @@ pub mod source_change;
 mod syntax_helpers;
 pub mod text_edit;
 
-use syntax::ast;
+use syntax::{AstNode, SyntaxKind, ast};
 
 pub use root_db::RootDatabase;
 
@@ -45,6 +45,7 @@ pub enum SymbolKind {
 }
 
 pub fn ast_kind_to_symbol_kind(named_item: &ast::NamedElement) -> SymbolKind {
+    let item_parent = named_item.syntax().parent().map(|it| it.kind());
     match named_item {
         ast::NamedElement::Module(_) => SymbolKind::Module,
 
@@ -58,15 +59,17 @@ pub fn ast_kind_to_symbol_kind(named_item: &ast::NamedElement) -> SymbolKind {
         ast::NamedElement::Enum(_) => SymbolKind::Enum,
 
         ast::NamedElement::TypeParam(_) => SymbolKind::TypeParam,
-        ast::NamedElement::IdentPat(_) => SymbolKind::Local,
         ast::NamedElement::Variant(_) => SymbolKind::EnumVariant,
 
         ast::NamedElement::NamedField(_) => SymbolKind::Field,
 
         ast::NamedElement::Schema(_) => SymbolKind::Struct,
-        ast::NamedElement::SchemaField(_) => SymbolKind::Field,
         ast::NamedElement::GlobalVariableDecl(_) => SymbolKind::GlobalVariableDecl,
+        ast::NamedElement::IdentPat(_) if matches!(item_parent, Some(SyntaxKind::SCHEMA_FIELD)) => {
+            SymbolKind::Field
+        }
 
+        ast::NamedElement::IdentPat(_) => SymbolKind::Local,
         ast::NamedElement::UseAlias(_) => SymbolKind::Local,
     }
 }
