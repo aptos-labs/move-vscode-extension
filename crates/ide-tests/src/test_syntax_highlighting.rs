@@ -8,7 +8,7 @@ fn check_highlighting_for_text(source: &str, expect: Expect) {
 }
 
 #[test]
-fn test_highlight_const_with_builtin_type() {
+fn test_highlight_items() {
     check_highlighting_for_text(
         // language=Move
         r#"
@@ -19,20 +19,22 @@ module 0x1::m {
     fun main() {
         ERR;
         ERR_1;
+        assert!();
     }
 }
     "#,
         // language=HTML
         expect![[r#"
-            <span class="keyword">module</span> <span class="numeric_literal">0x1</span>::<span class="module">m</span> {
-                <span class="keyword">const</span> <span class="constant">ERR</span>: <span class="builtin_type">u8</span> = <span class="numeric_literal">1</span>;
-                <span class="keyword">const</span> <span class="constant">ERR_1</span>: <span class="builtin_type">u8</span> = <span class="numeric_literal">1</span>;
+            <keyword>module</keyword> <numeric_literal>0x1</numeric_literal><operator>::</operator><module>m</module> <brace>{</brace>
+                <keyword>const</keyword> <constant>ERR</constant><colon>:</colon> <builtin_type>u8</builtin_type> <operator>=</operator> <numeric_literal>1</numeric_literal><semicolon>;</semicolon>
+                <keyword>const</keyword> <constant>ERR_1</constant><colon>:</colon> <builtin_type>u8</builtin_type> <operator>=</operator> <numeric_literal>1</numeric_literal><semicolon>;</semicolon>
 
-                <span class="keyword">fun</span> <span class="function">main</span>() {
-                    <span class="constant">ERR</span>;
-                    <span class="constant">ERR_1</span>;
-                }
-            }"#]],
+                <keyword>fun</keyword> <function>main</function><parenthesis>(</parenthesis><parenthesis>)</parenthesis> <brace>{</brace>
+                    <constant>ERR</constant><semicolon>;</semicolon>
+                    <constant>ERR_1</constant><semicolon>;</semicolon>
+                    <assert>assert</assert><macro_bang>!</macro_bang><parenthesis>(</parenthesis><parenthesis>)</parenthesis><semicolon>;</semicolon>
+                <brace>}</brace>
+            <brace>}</brace>"#]],
     );
 }
 
@@ -49,11 +51,11 @@ module 0x1::m {
     "#,
         // language=HTML
         expect![[r#"
-            <span class="keyword">module</span> <span class="numeric_literal">0x1</span>::<span class="module">m</span> {
-                <span class="keyword">native</span> <span class="keyword">fun</span> <span class="function">main</span>&lt;<span class="type_param">Element</span>&gt;(
-                    <span class="variable">a</span>: <span class="type_param">Element</span>
-                );
-            }"#]],
+            <keyword>module</keyword> <numeric_literal>0x1</numeric_literal><operator>::</operator><module>m</module> <brace>{</brace>
+                <keyword>native</keyword> <keyword>fun</keyword> <function>main</function><angle>&lt;</angle><type_param>Element</type_param><angle>&gt;</angle><parenthesis>(</parenthesis>
+                    <variable>a</variable><colon>:</colon> <type_param>Element</type_param>
+                <parenthesis>)</parenthesis><semicolon>;</semicolon>
+            <brace>}</brace>"#]],
     );
 }
 
@@ -75,16 +77,16 @@ spec aptos_framework::m {
     "#,
         // language=HTML
         expect![[r#"
-            <span class="keyword">module</span> aptos_framework::<span class="module">m</span> {
-                <span class="keyword">fun</span> <span class="function">main</span>() {
-                    <span class="function">main</span>();
-                }
-            }
-            <span class="keyword">spec</span> <span class="unresolved_reference">aptos_framework</span>::<span class="module">m</span> {
-                <span class="keyword">spec</span> <span class="keyword">fun</span> <span class="function">main</span>(): <span class="builtin_type">u8</span> {
-                    <span class="function">main</span>(); <span class="numeric_literal">1</span>
-                }
-            }"#]],
+            <keyword>module</keyword> aptos_framework<operator>::</operator><module>m</module> <brace>{</brace>
+                <keyword>fun</keyword> <function>main</function><parenthesis>(</parenthesis><parenthesis>)</parenthesis> <brace>{</brace>
+                    <function>main</function><parenthesis>(</parenthesis><parenthesis>)</parenthesis><semicolon>;</semicolon>
+                <brace>}</brace>
+            <brace>}</brace>
+            <keyword>spec</keyword> <unresolved_reference>aptos_framework</unresolved_reference><operator>::</operator><module>m</module> <brace>{</brace>
+                <keyword>spec</keyword> <keyword>fun</keyword> <function>main</function><parenthesis>(</parenthesis><parenthesis>)</parenthesis><colon>:</colon> <builtin_type>u8</builtin_type> <brace>{</brace>
+                    <function>main</function><parenthesis>(</parenthesis><parenthesis>)</parenthesis><semicolon>;</semicolon> <numeric_literal>1</numeric_literal>
+                <brace>}</brace>
+            <brace>}</brace>"#]],
     );
 }
 
@@ -107,16 +109,53 @@ module aptos_framework::m {
     "#,
         // language=HTML
         expect![[r#"
-            <span class="keyword">module</span> aptos_framework::<span class="module">m</span> {
-                <span class="keyword">fun</span> <span class="function">main</span>() {
-                    <span class="numeric_literal">1</span>;
-                    <span class="numeric_literal">@</span><span class="numeric_literal">0x1</span>;
-                    <span class="bool_literal">true</span>;
-                    <span class="bool_literal">false</span>;
-                    <span class="string_literal">x"f1f1f1f1"</span>;
-                    <span class="string_literal">b"f1f1f1f1"</span>;
-                    <span class="vector">vector</span>[<span class="numeric_literal">1</span>, <span class="numeric_literal">2</span>, <span class="numeric_literal">3</span>];
-                }
-            }"#]],
+            <keyword>module</keyword> aptos_framework<operator>::</operator><module>m</module> <brace>{</brace>
+                <keyword>fun</keyword> <function>main</function><parenthesis>(</parenthesis><parenthesis>)</parenthesis> <brace>{</brace>
+                    <numeric_literal>1</numeric_literal><semicolon>;</semicolon>
+                    <operator>@</operator><numeric_literal>0x1</numeric_literal><semicolon>;</semicolon>
+                    <bool_literal>true</bool_literal><semicolon>;</semicolon>
+                    <bool_literal>false</bool_literal><semicolon>;</semicolon>
+                    <string_literal>x"f1f1f1f1"</string_literal><semicolon>;</semicolon>
+                    <string_literal>b"f1f1f1f1"</string_literal><semicolon>;</semicolon>
+                    <vector>vector</vector><bracket>[</bracket><numeric_literal>1</numeric_literal><comma>,</comma> <numeric_literal>2</numeric_literal><comma>,</comma> <numeric_literal>3</numeric_literal><bracket>]</bracket><semicolon>;</semicolon>
+                <brace>}</brace>
+            <brace>}</brace>"#]],
+    );
+}
+
+#[test]
+fn test_highlight_operators() {
+    check_highlighting_for_text(
+        // language=Move
+        r#"
+module aptos_framework::m {
+    fun main() {
+        1 <= 1;
+        1 != 1;
+        1 == 1;
+        1 >= 1;
+        1 >> 1;
+        1 << 1;
+        1 ==> 1;
+        1 <==> 1;
+        match (x) { 1 => 2 }
+    }
+}
+    "#,
+        // language=HTML
+        expect![[r#"
+            <keyword>module</keyword> aptos_framework<operator>::</operator><module>m</module> <brace>{</brace>
+                <keyword>fun</keyword> <function>main</function><parenthesis>(</parenthesis><parenthesis>)</parenthesis> <brace>{</brace>
+                    <numeric_literal>1</numeric_literal> <comparison>&lt;=</comparison> <numeric_literal>1</numeric_literal><semicolon>;</semicolon>
+                    <numeric_literal>1</numeric_literal> <comparison>!=</comparison> <numeric_literal>1</numeric_literal><semicolon>;</semicolon>
+                    <numeric_literal>1</numeric_literal> <comparison>==</comparison> <numeric_literal>1</numeric_literal><semicolon>;</semicolon>
+                    <numeric_literal>1</numeric_literal> <comparison>&gt;=</comparison> <numeric_literal>1</numeric_literal><semicolon>;</semicolon>
+                    <numeric_literal>1</numeric_literal> <bitwise>&gt;&gt;</bitwise> <numeric_literal>1</numeric_literal><semicolon>;</semicolon>
+                    <numeric_literal>1</numeric_literal> <bitwise>&lt;&lt;</bitwise> <numeric_literal>1</numeric_literal><semicolon>;</semicolon>
+                    <numeric_literal>1</numeric_literal> <logical>==&gt;</logical> <numeric_literal>1</numeric_literal><semicolon>;</semicolon>
+                    <numeric_literal>1</numeric_literal> <logical>&lt;==&gt;</logical> <numeric_literal>1</numeric_literal><semicolon>;</semicolon>
+                    <keyword>match</keyword> <parenthesis>(</parenthesis><unresolved_reference>x</unresolved_reference><parenthesis>)</parenthesis> <brace>{</brace> <numeric_literal>1</numeric_literal> <operator>=&gt;</operator> <numeric_literal>2</numeric_literal> <brace>}</brace>
+                <brace>}</brace>
+            <brace>}</brace>"#]],
     );
 }

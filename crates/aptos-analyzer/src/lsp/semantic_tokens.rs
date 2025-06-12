@@ -46,7 +46,7 @@ define_semantic_token_types![
         METHOD,
         NAMESPACE,
         NUMBER,
-        // OPERATOR,
+        OPERATOR,
         PARAMETER,
         PROPERTY,
         STRING,
@@ -57,36 +57,27 @@ define_semantic_token_types![
     }
 
     custom {
-    //     (ANGLE, "angle"),
-    //     (ARITHMETIC, "arithmetic") => OPERATOR,
-    //     (ATTRIBUTE_BRACKET, "attributeBracket") => DECORATOR,
-    //     (ATTRIBUTE, "attribute") => DECORATOR,
-    //     (BITWISE, "bitwise") => OPERATOR,
+        (ANGLE, "angle"),
+        (ARITHMETIC, "arithmetic") => OPERATOR,
+        (ATTRIBUTE, "attribute") => DECORATOR,
+        (ATTRIBUTE_BRACKET, "attributeBracket") => DECORATOR,
+        (BITWISE, "bitwise") => OPERATOR,
         (BOOLEAN, "boolean"),
-    //     (BRACE, "brace"),
-    //     (BRACKET, "bracket"),
-    //     (BUILTIN_ATTRIBUTE, "builtinAttribute") => DECORATOR,
+        (BRACE, "brace"),
+        (BRACKET, "bracket"),
         (BUILTIN_TYPE, "builtinType") => TYPE,
-    //     (CHAR, "character") => STRING,
-    //     (COLON, "colon"),
-    //     (COMMA, "comma"),
-    //     (COMPARISON, "comparison") => OPERATOR,
-    //     (CONST_PARAMETER, "constParameter"),
+        (COLON, "colon"),
+        (COMMA, "comma"),
+        (COMPARISON, "comparison") => OPERATOR,
         (CONST, "const") => VARIABLE,
-    //     (DOT, "dot"),
-    //     (ESCAPE_SEQUENCE, "escapeSequence") => STRING,
+        (DOT, "dot"),
         (GENERIC, "generic") => TYPE_PARAMETER,
-    //     (INVALID_ESCAPE_SEQUENCE, "invalidEscapeSequence") => STRING,
         (LABEL, "label"),
-    //     (LOGICAL, "logical") => OPERATOR,
-    //     (MACRO_BANG, "macroBang") => MACRO,
-    //     (PARENTHESIS, "parenthesis"),
-    //     (PUNCTUATION, "punctuation"),
-    //     (SELF_KEYWORD, "selfKeyword") => KEYWORD,
-    //     (SELF_TYPE_KEYWORD, "selfTypeKeyword") => KEYWORD,
-    //     (SEMICOLON, "semicolon"),
-    //     (TOOL_MODULE, "toolModule") => DECORATOR,
-    //     (TYPE_ALIAS, "typeAlias") => TYPE,
+        (LOGICAL, "logical") => OPERATOR,
+        (MACRO_BANG, "macroBang") => MACRO,
+        (PARENTHESIS, "parenthesis"),
+        (PUNCTUATION, "punctuation"),
+        (SEMICOLON, "semicolon"),
         (UNRESOLVED_REFERENCE, "unresolvedReference"),
     }
 ];
@@ -163,7 +154,7 @@ impl SemanticTokensBuilder {
     }
 
     /// Push a new token onto the builder
-    pub(crate) fn push(&mut self, range: Range, token_index: u32, modifier_bitset: u32) {
+    pub(crate) fn push(&mut self, range: Range, token_index: u32) {
         let mut push_line = range.start.line;
         let mut push_char = range.start.character;
 
@@ -182,7 +173,7 @@ impl SemanticTokensBuilder {
             delta_start: push_char,
             length: token_len,
             token_type: token_index,
-            token_modifiers_bitset: modifier_bitset,
+            token_modifiers_bitset: ModifierSet::default().0,
         };
 
         self.data.push(token);

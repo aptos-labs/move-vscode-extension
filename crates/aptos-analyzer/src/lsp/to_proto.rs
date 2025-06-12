@@ -8,7 +8,7 @@ use ide::inlay_hints::{
     InlayFieldsToResolve, InlayHint, InlayHintLabel, InlayHintLabelPart, InlayHintPosition, InlayKind,
     InlayTooltip, LazyProperty,
 };
-use ide::syntax_highlighting::tags::{Highlight, HlTag};
+use ide::syntax_highlighting::tags::{Highlight, HlOperator, HlPunct, HlTag};
 use ide::{Cancellable, HlRange, NavigationTarget};
 use ide_completion::item::{CompletionItem, CompletionItemKind};
 use ide_db::assists::{Assist, AssistKind};
@@ -59,7 +59,8 @@ pub(crate) fn symbol_kind(symbol_kind: SymbolKind) -> lsp_types::SymbolKind {
         | SymbolKind::ValueParam
         | SymbolKind::Label
         | SymbolKind::GlobalVariableDecl => lsp_types::SymbolKind::VARIABLE,
-        SymbolKind::Vector => lsp_types::SymbolKind::ARRAY,
+        SymbolKind::Vector => lsp_types::SymbolKind::FUNCTION,
+        SymbolKind::Assert => lsp_types::SymbolKind::FUNCTION,
     }
 }
 
@@ -97,7 +98,8 @@ pub(crate) fn completion_item_kind(
             SymbolKind::ValueParam => lsp_types::CompletionItemKind::VALUE,
             SymbolKind::EnumVariant => lsp_types::CompletionItemKind::ENUM_MEMBER,
             SymbolKind::GlobalVariableDecl => lsp_types::CompletionItemKind::VARIABLE,
-            SymbolKind::Vector => lsp_types::CompletionItemKind::VALUE,
+            SymbolKind::Vector => lsp_types::CompletionItemKind::FUNCTION,
+            SymbolKind::Assert => lsp_types::CompletionItemKind::FUNCTION,
         },
     }
 }
@@ -296,7 +298,7 @@ pub(crate) fn semantic_tokens(
         //     }
         // }
 
-        let (ty, mods) = semantic_token_type_and_modifiers(highlight_range.highlight);
+        let ty = semantic_token_type(highlight_range.highlight);
 
         // if !non_standard_tokens {
         //     ty = match standard_fallback_type(ty) {
@@ -306,26 +308,23 @@ pub(crate) fn semantic_tokens(
         //     mods.standard_fallback();
         // }
         let token_index = semantic_tokens::type_index(ty);
-        let modifier_bitset = mods.0;
 
         for mut text_range in line_index.index.lines(highlight_range.range) {
             if text[text_range].ends_with('\n') {
                 text_range = TextRange::new(text_range.start(), text_range.end() - TextSize::of('\n'));
             }
             let range = lsp_range(line_index, text_range);
-            builder.push(range, token_index, modifier_bitset);
+            builder.push(range, token_index);
         }
     }
 
     builder.build()
 }
 
-fn semantic_token_type_and_modifiers(
-    highlight: Highlight,
-) -> (lsp_types::SemanticTokenType, semantic_tokens::ModifierSet) {
-    use semantic_tokens::{/*modifiers as mods, */ types};
+fn semantic_token_type(highlight: Highlight) -> lsp_types::SemanticTokenType {
+    use semantic_tokens::types;
 
-    let ty = match highlight.tag {
+    match highlight.tag {
         HlTag::Symbol(symbol) => match symbol {
             SymbolKind::Attribute => types::DECORATOR,
             SymbolKind::Module => types::NAMESPACE,
@@ -342,72 +341,37 @@ fn semantic_token_type_and_modifiers(
             SymbolKind::EnumVariant => types::ENUM_MEMBER,
             SymbolKind::GlobalVariableDecl => types::VARIABLE,
             SymbolKind::Vector => types::MACRO,
+            SymbolKind::Assert => types::MACRO,
         },
-        // HlTag::AttributeBracket => types::ATTRIBUTE_BRACKET,
+        HlTag::AttributeBracket => types::ATTRIBUTE_BRACKET,
         HlTag::BoolLiteral => types::BOOLEAN,
         HlTag::BuiltinType => types::BUILTIN_TYPE,
-        /*HlTag::ByteLiteral |*/
         HlTag::NumericLiteral => types::NUMBER,
-        // HlTag::CharLiteral => types::CHAR,
         HlTag::Comment => types::COMMENT,
-        // HlTag::EscapeSequence => types::ESCAPE_SEQUENCE,
-        // HlTag::InvalidEscapeSequence => types::INVALID_ESCAPE_SEQUENCE,
-        // HlTag::FormatSpecifier => types::FORMAT_SPECIFIER,
         HlTag::Keyword => types::KEYWORD,
         HlTag::None => types::GENERIC,
-        // HlTag::Operator(op) => match op {
-        //     HlOperator::Bitwise => types::BITWISE,
-        //     HlOperator::Arithmetic => types::ARITHMETIC,
-        //     HlOperator::Logical => types::LOGICAL,
-        //     HlOperator::Comparison => types::COMPARISON,
-        //     HlOperator::Other => types::OPERATOR,
-        // },
+        HlTag::Operator(op) => match op {
+            HlOperator::Bitwise => types::BITWISE,
+            HlOperator::Arithmetic => types::ARITHMETIC,
+            HlOperator::Logical => types::LOGICAL,
+            HlOperator::Comparison => types::COMPARISON,
+            HlOperator::Other => types::OPERATOR,
+        },
         HlTag::StringLiteral => types::STRING,
         HlTag::UnresolvedReference => types::UNRESOLVED_REFERENCE,
-        // HlTag::Punctuation(punct) => match punct {
-        //     HlPunct::Bracket => types::BRACKET,
-        //     HlPunct::Brace => types::BRACE,
-        //     HlPunct::Parenthesis => types::PARENTHESIS,
-        //     HlPunct::Angle => types::ANGLE,
-        //     HlPunct::Comma => types::COMMA,
-        //     HlPunct::Dot => types::DOT,
-        //     HlPunct::Colon => types::COLON,
-        //     HlPunct::Semi => types::SEMICOLON,
-        //     HlPunct::Other => types::PUNCTUATION,
-        //     HlPunct::MacroBang => types::MACRO_BANG,
-        // },
-    };
-
-    let mods = semantic_tokens::ModifierSet::default();
-    // for modifier in highlight.mods.iter() {
-    //     let modifier = match modifier {
-    //         HlMod::Associated => mods::ASSOCIATED,
-    //         HlMod::Async => mods::ASYNC,
-    //         HlMod::Attribute => mods::ATTRIBUTE_MODIFIER,
-    //         HlMod::Callable => mods::CALLABLE,
-    //         HlMod::Const => mods::CONSTANT,
-    //         HlMod::Consuming => mods::CONSUMING,
-    //         HlMod::ControlFlow => mods::CONTROL_FLOW,
-    //         HlMod::CrateRoot => mods::CRATE_ROOT,
-    //         HlMod::DefaultLibrary => mods::DEFAULT_LIBRARY,
-    //         HlMod::Definition => mods::DECLARATION,
-    //         HlMod::Documentation => mods::DOCUMENTATION,
-    //         HlMod::Injected => mods::INJECTED,
-    //         HlMod::IntraDocLink => mods::INTRA_DOC_LINK,
-    //         HlMod::Library => mods::LIBRARY,
-    //         HlMod::Macro => mods::MACRO_MODIFIER,
-    //         HlMod::ProcMacro => mods::PROC_MACRO_MODIFIER,
-    //         HlMod::Mutable => mods::MUTABLE,
-    //         HlMod::Public => mods::PUBLIC,
-    //         HlMod::Reference => mods::REFERENCE,
-    //         HlMod::Static => mods::STATIC,
-    //         HlMod::Trait => mods::TRAIT_MODIFIER,
-    //         HlMod::Unsafe => mods::UNSAFE,
-    //     };
-    //     mods |= modifier;
-    // }
-
-    (ty, mods)
+        HlTag::Punctuation(punct) => match punct {
+            HlPunct::Bracket => types::BRACKET,
+            HlPunct::Brace => types::BRACE,
+            HlPunct::Parenthesis => types::PARENTHESIS,
+            HlPunct::Angle => types::ANGLE,
+            HlPunct::Comma => types::COMMA,
+            HlPunct::Dot => types::DOT,
+            HlPunct::Colon => types::COLON,
+            HlPunct::Semi => types::SEMICOLON,
+            HlPunct::Other => types::PUNCTUATION,
+            HlPunct::MacroBang => types::MACRO_BANG,
+        },
+    }
 }
 
 pub(crate) fn completion_items(
