@@ -2,7 +2,7 @@ use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::parse::grammar::items::{at_block_start, at_item_start};
 use crate::parse::grammar::utils::list;
 use crate::parse::grammar::{
-    ability, error_block, item_name_or_recover, name, name_or_recover, type_params, types,
+    ability, attributes, error_block, item_name_or_recover, name, name_or_recover, type_params, types,
 };
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::token_set::TokenSet;
@@ -129,7 +129,7 @@ pub(crate) fn variant_list(p: &mut Parser<'_>) {
     fn variant(p: &mut Parser<'_>) -> bool {
         let mut curly_braces = false;
         let m = p.start();
-        // attributes::outer_attrs(p);
+        attributes::outer_attrs(p);
         if p.at(IDENT) {
             name(p);
             match p.current() {
@@ -140,12 +140,6 @@ pub(crate) fn variant_list(p: &mut Parser<'_>) {
                 T!['('] => tuple_field_list(p),
                 _ => (),
             }
-
-            // test variant_discriminant
-            // enum E { X(i32) = 10 }
-            // if p.eat(T![=]) {
-            //     expressions::expr(p);
-            // }
             m.complete(p, VARIANT);
         } else {
             m.abandon(p);
