@@ -375,6 +375,114 @@
                 }
             }
         ],
+        "semanticTokenTypes": [
+            {
+                "id": "angle",
+                "description": "Style for < or >",
+                "superType": "punctuation"
+            },
+            {
+                "id": "arithmetic",
+                "description": "Style for arithmetic operators",
+                "superType": "operator"
+            },
+            {
+                "id": "attribute",
+                "description": "Style for attributes"
+            },
+            {
+                "id": "attributeBracket",
+                "description": "Style for attribute invocation brackets, that is the `#[` and `]` tokens",
+                "superType": "punctuation"
+            },
+            {
+                "id": "bitwise",
+                "description": "Style for bitwise operators",
+                "superType": "operator"
+            },
+            {
+                "id": "boolean",
+                "description": "Style for boolean literals",
+                "superType": "keyword"
+            },
+            {
+                "id": "brace",
+                "description": "Style for { or }",
+                "superType": "punctuation"
+            },
+            {
+                "id": "bracket",
+                "description": "Style for [ or ]",
+                "superType": "punctuation"
+            },
+            {
+                "id": "builtinType",
+                "description": "Style for builtin types",
+                "superType": "type"
+            },
+            {
+                "id": "colon",
+                "description": "Style for :",
+                "superType": "punctuation"
+            },
+            {
+                "id": "comma",
+                "description": "Style for ,",
+                "superType": "punctuation"
+            },
+            {
+                "id": "comparison",
+                "description": "Style for comparison operators",
+                "superType": "operator"
+            },
+            {
+                "id": "const",
+                "description": "Style for consts",
+                "superType": "variable"
+            },
+            {
+                "id": "dot",
+                "description": "Style for .",
+                "superType": "punctuation"
+            },
+            {
+                "id": "label",
+                "description": "Style for labels"
+            },
+            {
+                "id": "logical",
+                "description": "Style for logic operators",
+                "superType": "operator"
+            },
+            {
+                "id": "macroBang",
+                "description": "Style for the ! token of macro calls",
+                "superType": "punctuation"
+            },
+            {
+                "id": "parenthesis",
+                "description": "Style for ( or )",
+                "superType": "punctuation"
+            },
+            {
+                "id": "punctuation",
+                "description": "Style for generic punctuation"
+            },
+            {
+                "id": "operator",
+                "description": "Style for operators",
+                "superType": "punctuation"
+            },
+            {
+                "id": "semicolon",
+                "description": "Style for ;",
+                "superType": "punctuation"
+            },
+            {
+                "id": "unresolvedReference",
+                "description": "Style for names which can not be resolved due to compilation errors"
+            }
+        ],
         "menus": {
             "commandPalette": [
                 {

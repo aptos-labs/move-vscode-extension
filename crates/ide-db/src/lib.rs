@@ -35,6 +35,7 @@ pub enum SymbolKind {
     Label,
     Local,
     Vector,
+    Assert,
     // SpecFunction,
     // SpecInlineFunction,
     // Schema,

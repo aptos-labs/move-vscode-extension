@@ -1,20 +1,17 @@
 pub(crate) mod name_like;
 
-use crate::syntax_highlighting::tags::{Highlight, HlTag};
-use ide_db::{RootDatabase, SymbolKind};
-use lang::Semantics;
-use syntax::{AstNode, AstToken, SyntaxKind, SyntaxKind::*, SyntaxNodeOrToken, SyntaxToken, T, ast};
+use crate::syntax_highlighting::tags::{Highlight, HlOperator, HlPunct, HlTag};
+use ide_db::SymbolKind;
+use syntax::{
+    AstNode, AstToken, SyntaxKind, SyntaxKind::*, SyntaxNode, SyntaxNodeOrToken, SyntaxToken, T, ast,
+};
 
-pub(super) fn token(sema: &Semantics<'_, RootDatabase>, token: SyntaxToken) -> Option<Highlight> {
+pub(super) fn token(token: SyntaxToken) -> Option<Highlight> {
     if let Some(_comment) = ast::Comment::cast(token.clone()) {
-        let h = HlTag::Comment;
-        // return Some(match comment.kind().doc {
-        //     Some(_) => h | HlMod::Documentation,
-        //     None => h.into(),
-        // });
-        return Some(h.into());
+        return Some(HlTag::Comment.into());
     }
 
+    let token_parent = token.parent().map(|it| it.kind());
     let highlight: Highlight = match token.kind() {
         BYTE_STRING => HlTag::StringLiteral.into(),
         HEX_STRING => HlTag::StringLiteral.into(),
@@ -22,60 +19,25 @@ pub(super) fn token(sema: &Semantics<'_, RootDatabase>, token: SyntaxToken) -> O
         //     SymbolKind::Field.into()
         // }
         INT_NUMBER => HlTag::NumericLiteral.into(),
-        IDENT if token.parent().is_some_and(|it| it.kind() == VECTOR_LIT_EXPR) => {
+        IDENT if matches!(token_parent, Some(VECTOR_LIT_EXPR)) => {
             Highlight::new(HlTag::Symbol(SymbolKind::Vector))
         }
-        // p if p.is_punct() => punctuation(sema, token, p),
-        k if k.is_keyword() => keyword(sema, token, k)?,
+        IDENT if matches!(token_parent, Some(ASSERT_MACRO_EXPR)) => {
+            Highlight::new(HlTag::Symbol(SymbolKind::Assert))
+        }
+        p if p.is_punct() => punctuation(token, p),
+        k if k.is_keyword() => keyword(k)?,
         _ => return None,
     };
     Some(highlight)
 }
 
-fn keyword(
-    _sema: &Semantics<'_, RootDatabase>,
-    _token: SyntaxToken,
-    kind: SyntaxKind,
-) -> Option<Highlight> {
-    let h = Highlight::new(HlTag::Keyword);
-    let h = match kind {
-        T![break]
-        | T![continue]
-        | T![else]
-        | T![if]
-        | T![in]
-        | T![loop]
-        | T![match]
-        | T![return]
-        | T![while]
-        | T![for] => h, /*| HlMod::ControlFlow,*/
-        // T![for] /*if parent_matches::<ast::ForExpr>(&token)*/ => h, /*| HlMod::ControlFlow,*/
-        // T![const] if token.parent().is_some_and(|it| {
-        //     matches!(
-        //             it.kind(),
-        //             SyntaxKind::CONST
-        //                 | SyntaxKind::FUN
-        //                 // | SyntaxKind::IMPL
-        //                 | SyntaxKind::BLOCK_EXPR
-        //                 // | SyntaxKind::CLOSURE_EXPR
-        //                 // | SyntaxKind::FN_PTR_TYPE
-        //                 // | SyntaxKind::TYPE_BOUND
-        //                 // | SyntaxKind::CONST_BLOCK_PAT
-        //         )
-        // }) =>
-        //     {
-        //         h /*| HlMod::Const*/
-        //     }
+fn keyword(kind: SyntaxKind) -> Option<Highlight> {
+    let tag = match kind {
         T![true] | T![false] => HlTag::BoolLiteral.into(),
-        // self, crate, super and `Self` are handled as either a Name or NameRef already, unless they
-        // are inside unmapped token trees
-        // T![Self] if parent_matches::<ast::NameRef>(&token) => {
-        //     return None
-        // }
-        // T![self] if parent_matches::<ast::Name>(&token) => return None,
-        _ => h,
+        _ => HlTag::Keyword,
     };
-    Some(h)
+    Some(Highlight::new(tag))
 }
 
 /// Returns true if the parent nodes of `node` all match the `SyntaxKind`s in `kinds` exactly.
@@ -95,4 +57,42 @@ fn parents_match(mut node: SyntaxNodeOrToken, mut kinds: &[SyntaxKind]) -> bool 
 
 fn parent_matches<N: AstNode>(token: &SyntaxToken) -> bool {
     token.parent().is_some_and(|it| N::can_cast(it.kind()))
+}
+
+fn punctuation(token: SyntaxToken, kind: SyntaxKind) -> Highlight {
+    let operator_parent = token.parent();
+    let parent_kind = operator_parent.as_ref().map_or(EOF, SyntaxNode::kind);
+
+    match (kind, parent_kind) {
+        (T![&], BIN_EXPR) => HlOperator::Bitwise.into(),
+        (T![&], BORROW_EXPR) => HlTag::Operator(HlOperator::Other).into(),
+        (T![..], _) => HlOperator::Other.into(),
+        (T![::] | T![=>] | T![=] | T![@] | T![.], _) => HlOperator::Other.into(),
+        (T![!], ASSERT_MACRO_EXPR) => HlPunct::MacroBang.into(),
+        (T![!], BANG_EXPR) => HlOperator::Logical.into(),
+        (T![*], DEREF_EXPR) => HlTag::Operator(HlOperator::Other).into(),
+        (
+            T![+] | T![-] | T![*] | T![/] | T![%] | T![+=] | T![-=] | T![*=] | T![/=] | T![%=],
+            BIN_EXPR,
+        ) => HlOperator::Arithmetic.into(),
+        (
+            T![|] | T![&] | T![^] | T![>>] | T![<<] | T![|=] | T![&=] | T![^=] | T![>>=] | T![<<=],
+            BIN_EXPR,
+        ) => HlOperator::Bitwise.into(),
+        (T![&&] | T![||] | T![==>] | T![<==>], BIN_EXPR) => HlOperator::Logical.into(),
+        (T![>] | T![<] | T![==] | T![>=] | T![<=] | T![!=], BIN_EXPR) => HlOperator::Comparison.into(),
+        (_, ATTR) => HlTag::AttributeBracket.into(),
+        (kind, _) => match kind {
+            T!['['] | T![']'] => HlPunct::Bracket,
+            T!['{'] | T!['}'] => HlPunct::Brace,
+            T!['('] | T![')'] => HlPunct::Parenthesis,
+            T![<] | T![>] => HlPunct::Angle,
+            T![,] => HlPunct::Comma,
+            T![:] => HlPunct::Colon,
+            T![;] => HlPunct::Semi,
+            T![.] => HlPunct::Dot,
+            _ => HlPunct::Other,
+        }
+        .into(),
+    }
 }

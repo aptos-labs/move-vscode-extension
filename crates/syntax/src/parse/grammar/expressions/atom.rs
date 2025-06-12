@@ -182,6 +182,7 @@ fn match_expr(p: &mut Parser) -> Option<CompletedMarker> {
 }
 
 fn assert_macro_expr(p: &mut Parser) -> CompletedMarker {
+    assert!(p.at_contextual_kw_ident("assert"));
     let m = p.start();
     p.bump(IDENT);
     p.bump(T![!]);

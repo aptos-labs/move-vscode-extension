@@ -91,7 +91,7 @@ fn traverse(
                     }
                 }
             }
-            NodeOrToken::Token(t) => highlight::token(sema, t),
+            NodeOrToken::Token(t) => highlight::token(t),
         };
 
         if let Some(highlight) = highlight {

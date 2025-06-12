@@ -20,7 +20,7 @@ pub(crate) fn highlight_as_html_no_style(db: &RootDatabase, file_id: FileId) -> 
             continue;
         }
         let class = r.highlight.to_string().replace('.', " ");
-        format_to!(buf, "<span class=\"{}\">{}</span>", class, chunk);
+        format_to!(buf, "<{class}>{chunk}</{class}>");
     }
     buf
 }
