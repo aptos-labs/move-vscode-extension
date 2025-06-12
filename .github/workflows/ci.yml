@@ -56,22 +56,8 @@ jobs:
           repository: aptos-labs/aptos-core
           path: aptos-core
 
-      - name: Check diagnostics on aptos-core:move-stdlib
-        run: aptos-analyzer check --kinds error -- ./aptos-core/aptos-move/framework/move-stdlib
-
-      - name: Check diagnostics on aptos-core:aptos-stdlib
-        run: aptos-analyzer check --kinds error -- ./aptos-core/aptos-move/framework/aptos-stdlib
-
-      # todo: aptos-framework
-
-      - name: Check diagnostics on aptos-core:aptos-experimental
-        run: aptos-analyzer check --kinds error -- ./aptos-core/aptos-move/framework/aptos-experimental
-
-      - name: Check diagnostics on aptos-core:aptos-token
-        run: aptos-analyzer check --kinds error -- ./aptos-core/aptos-move/framework/aptos-token
-
-      - name: Check diagnostics on aptos-core:aptos-token-objects
-        run: aptos-analyzer check --kinds error -- ./aptos-core/aptos-move/framework/aptos-token-objects
+      - name: Check diagnostics on aptos-core:framework
+        run: aptos-analyzer check --kinds error -- ./aptos-core/aptos-move/framework
 
   build_vsix:
     name: Build .vsix extension
