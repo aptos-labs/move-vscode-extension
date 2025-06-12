@@ -217,5 +217,5 @@ fn get_named_field_entries(fields_owner: InFile<ast::FieldsOwner>) -> Vec<ScopeE
 }
 
 fn get_schema_field_entries(schema: InFile<ast::Schema>) -> Vec<ScopeEntry> {
-    schema.flat_map(|it| it.schema_fields()).to_entries()
+    schema.flat_map(|it| it.schema_fields_as_bindings()).to_entries()
 }

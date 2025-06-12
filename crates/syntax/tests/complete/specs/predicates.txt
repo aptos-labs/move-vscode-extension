@@ -63,8 +63,9 @@ SOURCE_FILE@0..1295
         L_CURLY@165..166 "{"
         WHITESPACE@166..175 "\n        "
         SCHEMA_FIELD@175..196
-          NAME@175..182
-            IDENT@175..182 "sending"
+          IDENT_PAT@175..182
+            NAME@175..182
+              IDENT@175..182 "sending"
           COLON@182..183 ":"
           WHITESPACE@183..184 " "
           REF_TYPE@184..195
@@ -79,8 +80,9 @@ SOURCE_FILE@0..1295
           SEMICOLON@195..196 ";"
         WHITESPACE@196..206 "\n\n        "
         SCHEMA_FIELD@206..218
-          NAME@206..212
-            IDENT@206..212 "amount"
+          IDENT_PAT@206..212
+            NAME@206..212
+              IDENT@206..212 "amount"
           COLON@212..213 ":"
           WHITESPACE@213..214 " "
           PATH_TYPE@214..217
@@ -93,8 +95,9 @@ SOURCE_FILE@0..1295
         SCHEMA_FIELD@227..245
           LOCAL_KW@227..232 "local"
           WHITESPACE@232..233 " "
-          NAME@233..239
-            IDENT@233..239 "amount"
+          IDENT_PAT@233..239
+            NAME@233..239
+              IDENT@233..239 "amount"
           COLON@239..240 ":"
           WHITESPACE@240..241 " "
           PATH_TYPE@241..244
