@@ -1,7 +1,7 @@
 use expect_test::{Expect, expect};
 use ide_db::text_edit::TextEdit;
 use syntax::files::FilePosition;
-use test_utils::{fixtures, get_marked_position, get_marked_position_offset_with_data, remove_marks};
+use test_utils::{fixtures, get_marked_position_offset_with_data};
 
 fn check_rename(before: &str, rename_to: &str, after: Expect) {
     let before = before.to_string();
