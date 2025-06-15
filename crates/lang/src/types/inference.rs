@@ -53,6 +53,7 @@ pub struct InferenceCtx<'db> {
     pub pat_types: HashMap<ast::Pat, Ty>,
     pub pat_field_types: HashMap<ast::StructPatField, Ty>,
     pub expr_types: HashMap<ast::Expr, Ty>,
+    pub call_expr_types: HashMap<ast::AnyCallExpr, Ty>,
     pub expected_expr_types: HashMap<ast::Expr, Ty>,
 
     pub resolved_paths: HashMap<ast::Path, Vec<ScopeEntry>>,
@@ -75,6 +76,7 @@ impl<'db> InferenceCtx<'db> {
             var_table: UnificationTable::new(),
             int_table: UnificationTable::new(),
             expr_types: HashMap::new(),
+            call_expr_types: HashMap::new(),
             expected_expr_types: HashMap::new(),
             pat_types: HashMap::new(),
             pat_field_types: HashMap::new(),

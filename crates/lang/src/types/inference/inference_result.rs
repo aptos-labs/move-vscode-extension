@@ -18,6 +18,7 @@ pub struct InferenceResult {
 
     pat_types: HashMap<loc::SyntaxLoc, Ty>,
     expr_types: HashMap<loc::SyntaxLoc, Ty>,
+    call_expr_types: HashMap<loc::SyntaxLoc, Ty>,
 
     resolved_paths: HashMap<loc::SyntaxLoc, Vec<ScopeEntry>>,
     resolved_method_calls: HashMap<loc::SyntaxLoc, Option<ScopeEntry>>,
@@ -38,6 +39,7 @@ impl InferenceResult {
 
         let pat_types = fully_resolve_map_values(ctx.pat_types.clone(), &ctx);
         let expr_types = fully_resolve_map_values(ctx.expr_types.clone(), &ctx);
+        let call_expr_types = fully_resolve_map_values(ctx.call_expr_types.clone(), &ctx);
 
         let file_id = ctx.file_id;
         let resolved_paths = keys_into_syntax_loc(ctx.resolved_paths, file_id);
@@ -50,6 +52,7 @@ impl InferenceResult {
             type_errors,
             pat_types,
             expr_types,
+            call_expr_types,
             resolved_paths,
             resolved_method_calls,
             resolved_fields,
@@ -83,6 +86,11 @@ impl InferenceResult {
     pub fn get_expr_type(&self, expr: &ast::Expr) -> Option<Ty> {
         let expr_loc = expr.loc(self.file_id);
         self.expr_types.get(&expr_loc).map(|it| it.to_owned())
+    }
+
+    pub fn get_call_expr_type(&self, expr: &ast::AnyCallExpr) -> Option<Ty> {
+        let expr_loc = expr.loc(self.file_id);
+        self.call_expr_types.get(&expr_loc).map(|it| it.to_owned())
     }
 
     pub fn get_resolve_method_or_path_entries(

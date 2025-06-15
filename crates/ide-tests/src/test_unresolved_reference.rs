@@ -578,14 +578,14 @@ fn test_unresolved_method() {
 fn test_no_unresolved_method_error() {
     // language=Move
     check_diagnostics(expect![[r#"
-module 0x1::m {
-    struct S { field: u8 }
-    fun receiver(self: S): u8 { self.field }
-    fun main(s: S) {
-        s.receiver();
-    }
-}
-"#]]);
+        module 0x1::m {
+            struct S { field: u8 }
+            fun receiver(self: S): u8 { self.field }
+            fun main(s: S) {
+                s.receiver();
+            }
+        }
+    "#]]);
 }
 
 #[test]

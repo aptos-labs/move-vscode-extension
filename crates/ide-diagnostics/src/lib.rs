@@ -76,6 +76,9 @@ pub fn semantic_diagnostics(
         if let Some(reference_element) = node.clone().cast::<ast::ReferenceElement>() {
             handlers::find_unresolved_references(&mut acc, &ctx, reference_element.in_file(file_id));
         }
+        if let Some(any_call_expr) = node.clone().cast::<ast::AnyCallExpr>() {
+            handlers::call_params::check_value_arguments(&mut acc, &ctx, any_call_expr.in_file(file_id));
+        }
         match_ast! {
             match node {
                 ast::CallExpr(it) => {

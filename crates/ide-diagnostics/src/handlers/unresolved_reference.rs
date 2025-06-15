@@ -147,9 +147,8 @@ fn unresolved_method_or_dot_expr(
     ctx: &DiagnosticsContext<'_>,
     method_or_dot_expr: InFile<ast::MethodOrDotExpr>,
 ) -> Option<()> {
-    let msl = method_or_dot_expr.value.syntax().is_msl_context();
     let receiver_expr = method_or_dot_expr.map_ref(|it| it.receiver_expr());
-    let receiver_ty = ctx.sema.get_expr_type(&receiver_expr, msl)?.unwrap_all_refs();
+    let receiver_ty = ctx.sema.get_expr_type(&receiver_expr)?.unwrap_all_refs();
     if matches!(receiver_ty, Ty::Unknown) {
         // no error if receiver item is unknown (won't proceed if unknown is nested)
         return None;

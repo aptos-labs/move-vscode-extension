@@ -1,3 +1,4 @@
+pub(crate) mod call_params;
 mod can_be_replaced_with_compound_expr;
 mod can_be_replaced_with_method_call;
 mod type_checking;

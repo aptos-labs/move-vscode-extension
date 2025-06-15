@@ -11,6 +11,7 @@ use crate::types::inference::InferenceCtx;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
+use crate::types::ty::ty_callable::TyCallable;
 use base_db::inputs::InternFileId;
 use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
@@ -135,9 +136,16 @@ impl<'db> SemanticsImpl<'db> {
         fun.module(self.db)
     }
 
-    pub fn get_expr_type(&self, expr: &InFile<ast::Expr>, msl: bool) -> Option<Ty> {
+    pub fn get_expr_type(&self, expr: &InFile<ast::Expr>) -> Option<Ty> {
+        let msl = expr.value.syntax().is_msl_context();
         let inference = self.inference(expr, msl)?;
         inference.get_expr_type(&expr.value)
+    }
+
+    pub fn get_call_expr_type(&self, expr: &InFile<ast::AnyCallExpr>) -> Option<TyCallable> {
+        let msl = expr.value.syntax().is_msl_context();
+        let inference = self.inference(expr, msl)?;
+        inference.get_call_expr_type(&expr.value)?.into_ty_callable()
     }
 
     pub fn get_ident_pat_type(&self, ident_pat: &InFile<ast::IdentPat>, msl: bool) -> Option<Ty> {
