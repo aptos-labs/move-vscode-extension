@@ -12,6 +12,7 @@ pub(crate) struct AstEnumSrc {
     pub(crate) name: String,
     pub(crate) traits: Vec<String>,
     pub(crate) variants: Vec<String>,
+    pub(crate) transitive_variants: Vec<(String, String)>,
     pub(crate) common_enums: Vec<String>,
     pub(crate) common_fields: Vec<Field>,
 }
@@ -120,6 +121,7 @@ pub(super) fn lower_enum(grammar: &Grammar, enum_name: &str, rule: &Rule) -> Opt
         name: enum_name.to_string(),
         traits: vec![],
         variants,
+        transitive_variants: vec![],
         common_fields,
         common_enums: vec![],
     };
