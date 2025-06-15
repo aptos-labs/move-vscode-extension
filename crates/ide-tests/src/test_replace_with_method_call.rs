@@ -68,28 +68,30 @@ module 0x1::main {
 fn test_no_warning_if_self_parameter_is_not_provided() {
     // language=Move
     check_diagnostics(expect![[r#"
-module 0x1::main {
-    struct S { field: u8 }
-    fun get_field(s: S): u8 { s.field }
-    fun main(_s: S) {
-        get_field();
-    }
-}
-"#]]);
+        module 0x1::main {
+            struct S { field: u8 }
+            fun get_field(s: S): u8 { s.field }
+            fun main(_s: S) {
+                get_field();
+                        //^ warn: This function takes 1 parameters, but 0 parameters were supplied
+            }
+        }
+    "#]]);
 }
 
 #[test]
 fn test_no_warning_if_not_enough_parameters() {
     // language=Move
     check_diagnostics(expect![[r#"
-module 0x1::main {
-    struct S { field: u8 }
-    fun get_field(s: S, _a: u8, _b: u8): u8 { s.field }
-    fun main(s: S) {
-        get_field(s, 1);
-    }
-}
-"#]]);
+        module 0x1::main {
+            struct S { field: u8 }
+            fun get_field(s: S, _a: u8, _b: u8): u8 { s.field }
+            fun main(s: S) {
+                get_field(s, 1);
+                            //^ warn: This function takes 3 parameters, but 2 parameters were supplied
+            }
+        }
+    "#]]);
 }
 
 #[test]

@@ -34,7 +34,7 @@ pub(crate) fn can_be_replaced_with_method_call(
     let first_arg_expr = call_expr.value.arg_exprs().first()?.to_owned()?;
     let first_arg_ty = ctx
         .sema
-        .get_expr_type(&first_arg_expr.in_file(call_expr.file_id), false)?;
+        .get_expr_type(&first_arg_expr.in_file(call_expr.file_id))?;
 
     // if function module is different to the first argument expr module,
     // then it's not a method even if `self` argument is present

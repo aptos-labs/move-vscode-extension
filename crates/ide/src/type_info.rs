@@ -13,8 +13,7 @@ pub(crate) fn expr_type_info(
     let file = sema.parse(file_id);
 
     let expr = algo::find_node_at_offset::<ast::Expr>(file.syntax(), offset)?;
-    let msl = expr.syntax().is_msl_context();
-    let expr_ty = sema.get_expr_type(&expr.in_file(file_id), msl)?;
+    let expr_ty = sema.get_expr_type(&expr.in_file(file_id))?;
 
     Some(expr_ty.render(db, None))
 }

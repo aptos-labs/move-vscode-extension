@@ -577,6 +577,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             .collect();
         self.coerce_call_arg_types(args, method_ty.param_types.clone(), expected_arg_tys);
 
+        self.ctx
+            .call_expr_types
+            .insert(method_call_expr.clone().into(), method_ty.clone().into());
+
         method_ty.ret_type()
     }
 
@@ -601,6 +605,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             .map(|expr| CallArg::Arg { expr })
             .collect();
         self.coerce_call_arg_types(args, callable_ty.param_types.clone(), expected_arg_tys);
+
+        self.ctx
+            .call_expr_types
+            .insert(call_expr.clone().into(), callable_ty.clone().into());
 
         // resolve after applying all parameters
         let ret_ty = self.ctx.resolve_ty_vars_if_possible(callable_ty.ret_type());
