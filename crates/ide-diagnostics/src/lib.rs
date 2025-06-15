@@ -70,17 +70,19 @@ pub fn semantic_diagnostics(
         if node.text_range().intersect(diag_range).is_none() {
             continue;
         }
-        if node.is::<ast::InferenceCtxOwner>() {
-            let ctx_owner = node.clone().cast::<ast::InferenceCtxOwner>().unwrap();
+        if let Some(ctx_owner) = node.clone().cast::<ast::InferenceCtxOwner>() {
             handlers::type_check(&mut acc, &ctx, &ctx_owner.in_file(file_id));
+        }
+        if let Some(reference_element) = node.clone().cast::<ast::ReferenceElement>() {
+            handlers::find_unresolved_references(&mut acc, &ctx, reference_element.in_file(file_id));
         }
         match_ast! {
             match node {
                 ast::CallExpr(it) => {
                     handlers::can_be_replaced_with_method_call(&mut acc, &ctx, it.in_file(file_id));
                 },
-                ast::ReferenceElement(it) => {
-                    handlers::find_unresolved_references(&mut acc, &ctx, it.in_file(file_id));
+                ast::IdentPat(it) => {
+                    handlers::unused_variables::check_unused_ident_pat(&mut acc, &ctx, it.in_file(file_id));
                 },
                 ast::BinExpr(it) => {
                     handlers::can_be_replaced_with_compound_expr(&mut acc, &ctx, it.in_file(file_id));

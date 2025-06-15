@@ -112,7 +112,7 @@ impl Severity {
     pub fn to_test_ident(&self) -> &str {
         match self {
             Severity::Error => "err:",
-            Severity::Warning => "warn",
+            Severity::Warning => "warn:",
             Severity::WeakWarning => "weak:",
             Severity::Allow => "allow:",
         }

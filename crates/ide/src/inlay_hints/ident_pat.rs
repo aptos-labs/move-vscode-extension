@@ -24,9 +24,9 @@ pub(super) fn hints(
     let (file_id, pat) = pat.unpack_ref();
     // let pat = &pat.value;
 
-    let parent = pat.syntax().parent()?.cast::<ast::IdentPatKind>()?;
+    let parent = pat.syntax().parent()?.cast::<ast::IdentPatOwner>()?;
     let type_ascriptable = match parent {
-        ast::IdentPatKind::LambdaParam(lambda_param) => {
+        ast::IdentPatOwner::LambdaParam(lambda_param) => {
             if lambda_param.type_().is_some() {
                 return None;
             }
@@ -35,7 +35,7 @@ pub(super) fn hints(
             }
             Some(lambda_param.colon_token())
         }
-        ast::IdentPatKind::LetStmt(let_stmt) => {
+        ast::IdentPatOwner::LetStmt(let_stmt) => {
             if let_stmt.type_().is_some() {
                 return None;
             }

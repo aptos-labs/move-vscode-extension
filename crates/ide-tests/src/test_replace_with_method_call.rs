@@ -71,7 +71,7 @@ fn test_no_warning_if_self_parameter_is_not_provided() {
 module 0x1::main {
     struct S { field: u8 }
     fun get_field(s: S): u8 { s.field }
-    fun main(s: S) {
+    fun main(_s: S) {
         get_field();
     }
 }
@@ -84,7 +84,7 @@ fn test_no_warning_if_not_enough_parameters() {
     check_diagnostics(expect![[r#"
 module 0x1::main {
     struct S { field: u8 }
-    fun get_field(s: S, a: u8, b: u8): u8 { s.field }
+    fun get_field(s: S, _a: u8, _b: u8): u8 { s.field }
     fun main(s: S) {
         get_field(s, 1);
     }
@@ -159,7 +159,7 @@ fn test_method_with_parameters_with_fix() {
         expect![[r#"
             module 0x1::m {
                 struct S { val: u8 }
-                fun method(self: S, a: u8, b: u8): u8 {
+                fun method(self: S, _a: u8, _b: u8): u8 {
                     self.val
                 }
                 fun main(s: S) {
@@ -171,7 +171,7 @@ fn test_method_with_parameters_with_fix() {
         expect![[r#"
             module 0x1::m {
                 struct S { val: u8 }
-                fun method(self: S, a: u8, b: u8): u8 {
+                fun method(self: S, _a: u8, _b: u8): u8 {
                     self.val
                 }
                 fun main(s: S) {

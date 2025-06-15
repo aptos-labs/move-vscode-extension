@@ -6,7 +6,7 @@ fn test_incorrect_type_address_passed_when_signer_is_expected() {
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::m {
-            fun send(account: &signer) {}
+            fun send(_account: &signer) {}
             fun main(addr: address) {
                 send(addr);
                    //^^^^ err: Incompatible type 'address', expected '&signer'
@@ -20,7 +20,7 @@ fn test_incorrect_type_u8_passed_where_signer_is_expected() {
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::m {
-            fun send(account: &signer) {}
+            fun send(_account: &signer) {}
             fun main(addr: u8) {
                 send(addr)
                    //^^^^ err: Incompatible type 'u8', expected '&signer'
@@ -34,7 +34,7 @@ fn test_no_errors_if_the_same_type() {
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::m {
-            fun send(account: &signer) {}
+            fun send(_account: &signer) {}
             fun main(acc: &signer) {
                 send(acc)
             }
@@ -50,7 +50,7 @@ fn test_mutable_reference_compatible_with_immutable_one() {
             struct Option<Element> {
                 vec: vector<Element>
             }
-            fun is_none<Element>(t: &Option<Element>): bool {
+            fun is_none<Element>(_t: &Option<Element>): bool {
                 true
             }
             fun main<Element>(opt: &mut Option<Element>) {
@@ -66,7 +66,7 @@ fn test_same_struct_but_different_generic_types() {
     check_diagnostics(expect![[r#"
         module 0x1::M {
             struct Option<Element> {}
-            fun is_none<Elem>(t: Option<u64>): bool {
+            fun is_none<Elem>(_t: Option<u64>): bool {
                 true
             }
             fun main() {
@@ -84,7 +84,7 @@ fn test_different_generic_types_for_references() {
     check_diagnostics(expect![[r#"
         module 0x1::M {
             struct Option<Element> {}
-            fun is_none<Elem>(t: &Option<u64>): bool {
+            fun is_none<Elem>(_t: &Option<u64>): bool {
                 true
             }
             fun main() {
@@ -104,7 +104,7 @@ fn test_immutable_reference_not_compatible_with_mutable_reference() {
             struct Option<OptElement> {
                 vec: vector<OptElement>
             }
-            fun is_none<NoneElement>(t: &mut Option<NoneElement>): bool {
+            fun is_none<NoneElement>(_t: &mut Option<NoneElement>): bool {
                 true
             }
             fun main<Element>(opt: &Option<Element>) {
@@ -123,7 +123,7 @@ fn test_incorrect_type_of_argument_with_struct_literal() {
             struct A {}
             struct B {}
 
-            fun use_a(a: A) {}
+            fun use_a(_a: A) {}
             fun main() {
                 use_a(B {});
                     //^^^^ err: Incompatible type '0x1::M::B', expected '0x1::M::A'
@@ -140,7 +140,7 @@ fn test_incorrect_type_of_argument_with_call_expr() {
             struct A {}
             struct B {}
 
-            fun use_a(a: A) {}
+            fun use_a(_a: A) {}
             fun get_b(): B { B {} }
 
             fun main() {
@@ -163,7 +163,7 @@ fn test_incorrect_type_of_argument_with_call_expr_from_different_module() {
             use 0x1::Other::get_b;
 
             struct A {}
-            fun use_a(a: A) {}
+            fun use_a(_a: A) {}
 
             fun main() {
                 use_a(get_b())
@@ -178,7 +178,7 @@ fn test_bytearray_is_vector_u8() {
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::M {
-            fun send(a: vector<u8>) {}
+            fun send(_a: vector<u8>) {}
             fun main() {
                 let a = b"deadbeef";
                 send(a)
@@ -197,7 +197,7 @@ fn test_no_error_for_compatible_generic_with_explicit_parameter() {
                 coin: Diem<Token>
             }
 
-            fun value<CoinType: store>(coin: &Diem<CoinType>) {}
+            fun value<CoinType: store>(_coin: &Diem<CoinType>) {}
 
             fun main<Token: store>() {
                 let balance: Balance<Token>;
@@ -218,7 +218,7 @@ fn test_no_error_for_compatible_generic_with_inferred_parameter() {
                 coin: Diem<Token>
             }
 
-            fun value<CoinType: store>(coin: &Diem<CoinType>) {}
+            fun value<CoinType: store>(_coin: &Diem<CoinType>) {}
 
             fun main<Token: store>() {
                 let balance: Balance<Token>;
@@ -362,7 +362,7 @@ fn test_type_check_incompatible_constraints() {
         module 0x1::M {
             struct C {}
             struct D {}
-            fun new<Content>(a: Content, b: Content): Content { a }
+            native fun new<Content>(a: Content, b: Content): Content;
             fun m() {
                 new(C {}, D {});
                         //^^^^ err: Incompatible type '0x1::M::D', expected '0x1::M::C'
@@ -376,9 +376,7 @@ fn test_error_if_resolved_type_requires_a_reference() {
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::M {
-            fun index_of<Element>(v: &vector<Element>, e: &Element): (bool, u64) {
-                (false, 0)
-            }
+            native fun index_of<Element>(v: &vector<Element>, e: &Element): (bool, u64);
             fun m() {
                 let ids: vector<u64>;
                 index_of(&ids, 1u64);
@@ -419,7 +417,7 @@ fn test_emit_event_requires_mutable_reference() {
                 handle: EventHandle<Event>
             }
             struct Event has store, drop {}
-            fun emit_event<T: drop + store>(handler_ref: &mut EventHandle<T>, msg: T) {}
+            fun emit_event<T: drop + store>(_handler_ref: &mut EventHandle<T>, _msg: T) {}
             fun m<Type: store + drop>() acquires Account {
                 emit_event(borrow_global_mut<Account>(@0x1).handle, Event {});
                          //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ err: Incompatible type '0x1::M::EventHandle<0x1::M::Event>', expected '&mut 0x1::M::EventHandle<0x1::M::Event>'
@@ -511,9 +509,9 @@ fn test_do_not_crash_type_checking_invalid_number_of_type_params_or_call_params(
     check_diagnostics(expect![[r#"
         module 0x1::M {
             struct S<R: key> { val: R }
-            fun call(a: u8) {}
+            fun call(_a: u8) {}
             fun m() {
-                let s = S<u8, u8>{};
+                let _s = S<u8, u8>{};
                 call(1, 2, 3);
             }
         }
@@ -551,6 +549,7 @@ fn test_incorrect_type_address_passed_where_signer_is_expected_in_spec() {
     check_diagnostics(expect![[r#"
         module 0x1::M {
             fun send(account: &signer) {}
+                   //^^^^^^^ warn: Unused parameter 'account'
 
             spec send {
                 send(@0x1);
@@ -565,7 +564,7 @@ fn test_signer_compatibility_in_spec() {
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::M {
-            fun address_of(account: &signer): address { @0x1 }
+            fun address_of(_account: &signer): address { @0x1 }
             fun send(account: &signer) {}
             spec send {
                 address_of(account);
@@ -595,7 +594,7 @@ fn test_ref_equality_for_generics_in_spec_call_expr() {
     check_diagnostics(expect![[r#"
         module 0x1::M {
             struct Token<TokenT> {}
-            fun call<TokenT>(ref: &Token<TokenT>) {
+            fun call<TokenT>(_ref: &Token<TokenT>) {
                 let token = Token<TokenT> {};
                 spec {
                     call(token);
@@ -778,7 +777,7 @@ fn test_tuple_unpacking_with_three_elements_when_two_are_specified() {
         module 0x1::M {
             fun tuple(): (u8, u8, u8) { (1, 1, 1) }
             fun main() {
-                let (a, b) = tuple();
+                let (_, _) = tuple();
                   //^^^^^^ err: Invalid unpacking. Expected tuple binding of length 3: (_, _, _)
             }
         }
@@ -793,8 +792,9 @@ fn test_invalid_tuple_unpacking_with_nested_error() {
             struct S { val: u8 }
             fun tuple(): (u8, u8, u8) { (1, 1, 1) }
             fun main() {
-                let (S { val }, b) = tuple();
+                let (S { val }, _b) = tuple();
                    //^^^^^^^^^ err: Assigned expr of type 'u8' cannot be unpacked with struct pattern
+                val;
             }
         }
     "#]]);
@@ -810,6 +810,7 @@ fn test_tuple_unpacking_into_struct_when_tuple_pat_is_expected() {
             fun main() {
                 let S { val } = tuple();
                   //^^^^^^^^^ err: Invalid unpacking. Expected tuple binding of length 3: (_, _, _)
+                val;
             }
         }
     "#]]);
@@ -823,7 +824,7 @@ fn test_unpacking_struct_into_variable() {
         struct S { val: u8 }
         fun s(): S { S { val: 10 } }
         fun main() {
-            let s = s();
+            let _s = s();
         }
     }
     "#]]);
@@ -837,8 +838,8 @@ fn test_error_unpacking_struct_into_tuple() {
             struct S { val: u8 }
             fun s(): S { S { val: 10 } }
             fun main() {
-                let (a, b) = s();
-                  //^^^^^^ err: Invalid unpacking. Expected struct binding of type '0x1::M::S'
+                let (_a, _b) = s();
+                  //^^^^^^^^ err: Invalid unpacking. Expected struct binding of type '0x1::M::S'
             }
         }
     "#]]);
@@ -852,8 +853,8 @@ fn test_error_unpacking_struct_into_tuple_when_single_var_is_expected() {
             struct S { val: u8 }
             fun s(): u8 { 1 }
             fun main() {
-                let (a, b) = s();
-                  //^^^^^^ err: Assigned expr of type 'u8' cannot be unpacked with tuple pattern
+                let (_a, _b) = s();
+                  //^^^^^^^^ err: Assigned expr of type 'u8' cannot be unpacked with tuple pattern
             }
         }
     "#]]);
@@ -866,8 +867,8 @@ fn test_error_parameter_type_with_return_type_inferred() {
         module 0x1::M {
             fun identity<T>(a: T): T { a }
             fun main() {
-                let a: u8 = identity(1u64);
-                                   //^^^^ err: Incompatible type 'u64', expected 'u8'
+                let _a: u8 = identity(1u64);
+                                    //^^^^ err: Incompatible type 'u64', expected 'u8'
             }
         }
     "#]]);
@@ -913,7 +914,7 @@ fn test_no_error_unpacking_struct_from_move_from() {
         module 0x1::main {
             struct Container has key { val: u8 }
             fun main() {
-                let Container { val } = move_from(@0x1);
+                let Container { val: _ } = move_from(@0x1);
             }
         }
     "#]]);
@@ -950,9 +951,7 @@ fn test_call_expr_with_incomplete_arguments_and_explicit_type() {
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::main {
-            fun call<T>(a: T, b: T): T {
-                b
-            }
+            native fun call<T>(a: T, b: T): T;
             fun main() {
                 call<u8>(1u64);
                        //^^^^ err: Incompatible type 'u64', expected 'u8'
@@ -966,9 +965,7 @@ fn test_call_expr_with_incomplete_arguments_and_implicit_type() {
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::main {
-            fun call<T>(a: T, b: T, c: T): T {
-                b
-            }
+            native fun call<T>(a: T, b: T, c: T): T;
             fun main() {
                 call(1u8, 1u64);
                         //^^^^ err: Incompatible type 'u64', expected 'u8'
@@ -1061,8 +1058,8 @@ fn test_no_invalid_unpacking_error_for_unresolved_name_in_tuple() {
     check_diagnostics(expect![[r#"
         module 0x1::main {
             fun main() {
-                let (a, b) = call();
-                           //^^^^ err: Unresolved reference `call`: cannot resolve
+                let (_a, _b) = call();
+                             //^^^^ err: Unresolved reference `call`: cannot resolve
             }
         }
     "#]]);
@@ -1075,8 +1072,8 @@ fn test_no_invalid_unpacking_error_for_unresolved_name_in_struct() {
         module 0x1::main {
             struct S { val: u8 }
             fun main() {
-                let S { val } = call();
-                              //^^^^ err: Unresolved reference `call`: cannot resolve
+                let S { val: _ } = call();
+                                 //^^^^ err: Unresolved reference `call`: cannot resolve
             }
         }
     "#]]);
@@ -1341,7 +1338,7 @@ fn test_no_error_for_table_borrow_mut_of_unknown_type() {
             struct Table<phantom K: copy + drop, V: store> has store {
                 inner: V
             }
-            public fun borrow_mut<K: copy + drop, V: store>(table: &mut Table<K, V>, key: K): &mut V {
+            public fun borrow_mut<K: copy + drop, V: store>(table: &mut Table<K, V>, _key: K): &mut V {
                 &mut table.inner
             }
         }
@@ -1508,7 +1505,7 @@ fn test_no_invalid_unpacking_for_full_struct_pat() {
         module 0x1::m {
             struct S<phantom CoinType> { amount: u8 }
             fun call<CallCoinType>(s: S<CallCoinType>) {
-                let S { amount: my_amount } = s;
+                let S { amount: _my_amount } = s;
             }
         }
     "#]]);
@@ -1522,6 +1519,7 @@ fn test_no_invalid_unpacking_for_shorthand_struct_pat() {
             struct S<phantom CoinType> { amount: u8 }
             fun call<CallCoinType>(s: S<CallCoinType>) {
                 let S { amount } = s;
+                amount;
             }
         }
     "#]]);
@@ -1534,6 +1532,7 @@ fn test_no_invalid_unpacking_variable_in_parens() {
         module 0x1::m {
             fun call() {
                 let (a) = 1;
+                a;
             }
         }
     "#]]);
@@ -1564,8 +1563,8 @@ fn test_deref_type_error() {
             fun main() {
                 let s = S {};
                 let mut_s = &mut s;
-                let b: bool = *mut_s;
-                            //^^^^^^ err: Incompatible type '0x1::m::S', expected 'bool'
+                let _b: bool = *mut_s;
+                             //^^^^^^ err: Incompatible type '0x1::m::S', expected 'bool'
             }
         }
     "#]]);
@@ -1731,7 +1730,7 @@ fn test_comma_separator_allows_correctly_get_call_expr_type() {
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::m {
-            fun call(a: u64, b: u8) {}
+            native fun call(a: u64, b: u8);
             fun main() {
                 call(,2u64);
                     //^^^^ err: Incompatible type 'u64', expected 'u8'
@@ -1790,7 +1789,7 @@ fn test_unpack_mut_ref_with_tuple_pattern() {
                 token_data_id: u64,
             }
             fun main(bin: &mut Bin) {
-                let (a, b) = bin;
+                let (_, _) = bin;
                   //^^^^^^ err: Assigned expr of type '&mut 0x1::m::Bin' cannot be unpacked with tuple pattern
             }
         }
@@ -1844,8 +1843,8 @@ fn test_range_expr_end_has_different_type() {
     check_diagnostics(expect![[r#"
         module 0x1::m {
             fun main() {
-                let a = 1..true;
-                         //^^^^ err: Incompatible type 'bool', expected 'integer'
+                let _a = 1..true;
+                          //^^^^ err: Incompatible type 'bool', expected 'integer'
             }
         }
     "#]]);
@@ -1897,7 +1896,7 @@ fn test_unpacking_of_struct_ref_allowed() {
         module 0x1::m {
             struct Field { id: u8 }
             fun main() {
-                let Field { id } = &Field { id: 1 };
+                let Field { id: _ } = &Field { id: 1 };
             }
         }
     "#]]);
@@ -1990,7 +1989,7 @@ fn test_no_invalid_dereference_inside_lambda() {
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::vector {
-            public fun enumerate_ref<Element>(self: vector<Element>, _f: |&Element|) {}
+            public native fun enumerate_ref<Element>(self: vector<Element>, f: |&Element|);
         }
         module 0x1::m {
             fun main() {
@@ -2005,7 +2004,7 @@ fn test_invalid_dereference_inside_lambda() {
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::vector {
-            public fun enumerate_ref<Element>(self: vector<Element>, _f: |Element|) {}
+            public native fun enumerate_ref<Element>(self: vector<Element>, _f: |Element|);
         }
         module 0x1::m {
             fun main() {
@@ -2023,8 +2022,8 @@ fn test_struct_lit_with_expected_type_of_different_generic_argument() {
         module 0x1::m {
             struct S<R> { val: R }
             fun main() {
-                let s: S<u8> = S<u16> { val: 1 };
-                             //^^^^^^^^^^^^^^^^^ err: Incompatible type '0x1::m::S<u16>', expected '0x1::m::S<u8>'
+                let _s: S<u8> = S<u16> { val: 1 };
+                              //^^^^^^^^^^^^^^^^^ err: Incompatible type '0x1::m::S<u16>', expected '0x1::m::S<u8>'
             }
         }
     "#]]);
@@ -2037,8 +2036,8 @@ fn test_tuple_struct_lit_with_expected_type_of_different_generic_argument() {
         module 0x1::m {
             struct S<R>(R);
             fun main() {
-                let s: S<u8> = S<u16>(1);
-                             //^^^^^^^^^ err: Incompatible type '0x1::m::S<u16>', expected '0x1::m::S<u8>'
+                let _s: S<u8> = S<u16>(1);
+                              //^^^^^^^^^ err: Incompatible type '0x1::m::S<u16>', expected '0x1::m::S<u8>'
             }
         }
     "#]]);
@@ -2051,8 +2050,8 @@ fn test_struct_lit_field_with_expected_type_of_different_generic_argument() {
         module 0x1::m {
             struct S<R> { val: R }
             fun main() {
-                let s: S<u8> = S { val: 1u16 };
-                                      //^^^^ err: Incompatible type 'u16', expected 'u8'
+                let _s: S<u8> = S { val: 1u16 };
+                                       //^^^^ err: Incompatible type 'u16', expected 'u8'
             }
         }
     "#]]);
@@ -2065,8 +2064,8 @@ fn test_tuple_struct_lit_field_with_expected_type_of_different_generic_argument(
         module 0x1::m {
             struct S<R>(R);
             fun main() {
-                let s: S<u8> = S(1u16);
-                               //^^^^ err: Incompatible type 'u16', expected 'u8'
+                let _s: S<u8> = S(1u16);
+                                //^^^^ err: Incompatible type 'u16', expected 'u8'
             }
         }
     "#]]);
@@ -2079,8 +2078,8 @@ fn test_return_only_call_expr() {
         module 0x1::m {
             native fun call(): u16;
             fun main() {
-                let a: u8 = call();
-                          //^^^^^^ err: Incompatible type 'u16', expected 'u8'
+                let _a: u8 = call();
+                           //^^^^^^ err: Incompatible type 'u16', expected 'u8'
             }
         }
     "#]]);
@@ -2147,7 +2146,7 @@ fn test_for_each_vector_fold() {
     check_diagnostics(expect![[r#"
         module 0x1::vector {
             /// Apply the function to each element in the vector, consuming it.
-            public inline fun for_each<ForEachElement>(self: vector<ForEachElement>, f: |ForEachElement|) {}
+            public inline fun for_each<ForEachElement>(self: vector<ForEachElement>, _f: |ForEachElement|) { self; }
             public inline fun fold<Accumulator, Element>(
                 self: vector<Element>,
                 init: Accumulator,
@@ -2237,7 +2236,7 @@ fn test_instantiate_tuple_struct_with_lambda() {
         module 0x1::main {
             struct Predicate<T>(|&u64|bool) has copy;
             fun main() {
-                let predicate = Predicate(|x| *x > 0);
+                let _predicate = Predicate(|x| *x > 0);
             }
         }
     "#]])
@@ -2249,7 +2248,7 @@ fn test_instantiate_tuple_struct_with_lambda_with_generic() {
     check_diagnostics(expect![[r#"
         module 0x1::main {
             struct Predicate<T>(|&T|bool) has copy;
-            fun call(pred: Predicate<u64>) {
+            fun call(_pred: Predicate<u64>) {
             }
             fun main() {
                 let predicate = Predicate(|x| *x > 0);
@@ -2266,7 +2265,7 @@ fn test_instantiate_tuple_struct_with_lambda_with_explicit_generic() {
         module 0x1::main {
             struct Predicate<T>(|&T|bool) has copy;
             fun main() {
-                let predicate = Predicate::<u64>(|x| *x > 0);
+                let _predicate = Predicate::<u64>(|x| *x > 0);
             }
         }
     "#]])
@@ -2278,7 +2277,7 @@ fn test_cannot_provide_predicate_where_lambda_is_expected() {
     check_diagnostics(expect![[r#"
         module 0x1::main {
             struct Predicate<T>(|&T|bool) has copy;
-            fun call1(predicate: |&u64|bool) {}
+            fun call1(_predicate: |&u64|bool) {}
             fun main() {
                 let predicate = Predicate(|x| *x > 0);
                                             //^^ err: Invalid argument to '>': expected integer type, but found 'T'
@@ -2295,7 +2294,7 @@ fn test_can_provide_lambda_where_predicate_is_expected() {
     check_diagnostics(expect![[r#"
         module 0x1::main {
             struct Predicate<T>(|&T|bool) has copy;
-            fun call2(predicate: Predicate<u64>) {}
+            fun call2(_predicate: Predicate<u64>) {}
             fun main() {
                 call2(|x| *x > 0);
             }
