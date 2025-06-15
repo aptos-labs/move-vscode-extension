@@ -378,6 +378,9 @@ MatchArm =
 MatchGuard =
     'if' Expr
 
+AnyCallExpr =
+    CallExpr | MethodCallExpr | AssertMacroExpr
+
 CallExpr =
     Expr ValueArgList
 

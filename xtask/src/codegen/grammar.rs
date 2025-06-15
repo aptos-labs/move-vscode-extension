@@ -262,7 +262,7 @@ fn generate_enum(
     let mut kinds = vec![];
     let mut variant_kinds = vec![];
     let mut variant_kind_contructors = vec![];
-    for variant_name in variant_names {
+    for variant_name in variant_names.clone() {
         let variant = format_ident!("{}", variant_name);
         variants.push(variant.clone());
         if let Some(inner_enum) = grammar.enums.iter().find(|it| &it.name == variant_name) {
@@ -367,6 +367,20 @@ fn generate_enum(
         }
     };
 
+    let direct_from_variants = variants.clone();
+
+    let (transitive_directs, transitive_inners): (Vec<proc_macro2::Ident>, Vec<proc_macro2::Ident>) =
+        enum_src
+            .transitive_variants
+            .iter()
+            .map(|(direct_variant, inner_variant)| {
+                (
+                    format_ident!("{}", direct_variant),
+                    format_ident!("{}", inner_variant),
+                )
+            })
+            .unzip();
+
     (
         quote! {
             #[pretty_doc_comment_placeholder_workaround]
@@ -379,10 +393,18 @@ fn generate_enum(
         },
         quote! {
             #(
-                impl From<#variants> for #enum_name {
+                impl From<#direct_from_variants> for #enum_name {
                     #[inline]
-                    fn from(node: #variants) -> #enum_name {
-                        #enum_name::#variants(node)
+                    fn from(node: #direct_from_variants) -> #enum_name {
+                        #enum_name::#direct_from_variants(node)
+                    }
+                }
+            )*
+            #(
+                impl From<#transitive_inners> for #enum_name {
+                    #[inline]
+                    fn from(node: #transitive_inners) -> #enum_name {
+                        #enum_name::#transitive_directs(#transitive_directs::#transitive_inners(node))
                     }
                 }
             )*
@@ -627,6 +649,20 @@ fn lower(grammar: &Grammar) -> AstSrc {
                 });
             }
         }
+    }
+
+    for (i, enum_src) in res.enums.clone().iter().enumerate() {
+        let mut transitive_variants = vec![];
+        {
+            for direct_variant in enum_src.variants.iter() {
+                if let Some(variant_enum) = res.enums.iter().find(|it| &it.name == direct_variant) {
+                    for inner_variant in &variant_enum.variants {
+                        transitive_variants.push((direct_variant.clone(), inner_variant.clone()));
+                    }
+                }
+            }
+        }
+        res.enums.get_mut(i).unwrap().transitive_variants = transitive_variants;
     }
 
     fn get_enums_for_node(node_name: &String, enums: &Vec<AstEnumSrc>) -> HashSet<String> {

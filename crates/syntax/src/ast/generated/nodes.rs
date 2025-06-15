@@ -2050,6 +2050,13 @@ pub enum AddressRef {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum AnyCallExpr {
+    AssertMacroExpr(AssertMacroExpr),
+    CallExpr(CallExpr),
+    MethodCallExpr(MethodCallExpr),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AnyField {
     NamedField(NamedField),
     TupleField(TupleField),
@@ -5401,6 +5408,80 @@ impl AstNode for AddressRef {
         }
     }
 }
+impl From<AssertMacroExpr> for AnyCallExpr {
+    #[inline]
+    fn from(node: AssertMacroExpr) -> AnyCallExpr { AnyCallExpr::AssertMacroExpr(node) }
+}
+impl From<CallExpr> for AnyCallExpr {
+    #[inline]
+    fn from(node: CallExpr) -> AnyCallExpr { AnyCallExpr::CallExpr(node) }
+}
+impl From<MethodCallExpr> for AnyCallExpr {
+    #[inline]
+    fn from(node: MethodCallExpr) -> AnyCallExpr { AnyCallExpr::MethodCallExpr(node) }
+}
+impl From<AnyCallExpr> for Expr {
+    #[inline]
+    fn from(node: AnyCallExpr) -> Expr {
+        match node {
+            AnyCallExpr::AssertMacroExpr(it) => it.into(),
+            AnyCallExpr::CallExpr(it) => it.into(),
+            AnyCallExpr::MethodCallExpr(it) => it.into(),
+        }
+    }
+}
+impl AnyCallExpr {
+    pub fn assert_macro_expr(self) -> Option<AssertMacroExpr> {
+        match (self) {
+            AnyCallExpr::AssertMacroExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn call_expr(self) -> Option<CallExpr> {
+        match (self) {
+            AnyCallExpr::CallExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn method_call_expr(self) -> Option<MethodCallExpr> {
+        match (self) {
+            AnyCallExpr::MethodCallExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    #[inline]
+    pub fn value_arg_list(&self) -> Option<ValueArgList> {
+        match self {
+            AnyCallExpr::AssertMacroExpr(it) => it.value_arg_list(),
+            AnyCallExpr::CallExpr(it) => it.value_arg_list(),
+            AnyCallExpr::MethodCallExpr(it) => it.value_arg_list(),
+        }
+    }
+}
+impl AstNode for AnyCallExpr {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(kind, ASSERT_MACRO_EXPR | CALL_EXPR | METHOD_CALL_EXPR)
+    }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            ASSERT_MACRO_EXPR => AnyCallExpr::AssertMacroExpr(AssertMacroExpr { syntax }),
+            CALL_EXPR => AnyCallExpr::CallExpr(CallExpr { syntax }),
+            METHOD_CALL_EXPR => AnyCallExpr::MethodCallExpr(MethodCallExpr { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            AnyCallExpr::AssertMacroExpr(it) => &it.syntax(),
+            AnyCallExpr::CallExpr(it) => &it.syntax(),
+            AnyCallExpr::MethodCallExpr(it) => &it.syntax(),
+        }
+    }
+}
 impl From<NamedField> for AnyField {
     #[inline]
     fn from(node: NamedField) -> AnyField { AnyField::NamedField(node) }
@@ -7834,6 +7915,14 @@ impl From<SpecPredicateStmt> for Stmt {
     #[inline]
     fn from(node: SpecPredicateStmt) -> Stmt { Stmt::SpecPredicateStmt(node) }
 }
+impl From<InvariantStmt> for Stmt {
+    #[inline]
+    fn from(node: InvariantStmt) -> Stmt { Stmt::GenericSpecStmt(GenericSpecStmt::InvariantStmt(node)) }
+}
+impl From<AxiomStmt> for Stmt {
+    #[inline]
+    fn from(node: AxiomStmt) -> Stmt { Stmt::GenericSpecStmt(GenericSpecStmt::AxiomStmt(node)) }
+}
 impl Stmt {
     pub fn aborts_if_stmt(self) -> Option<AbortsIfStmt> {
         match (self) {
@@ -8710,6 +8799,11 @@ impl From<SpecInlineFun> for AnyMslOnly {
     fn from(node: SpecInlineFun) -> AnyMslOnly { AnyMslOnly { syntax: node.syntax } }
 }
 impl std::fmt::Display for AddressRef {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for AnyCallExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
