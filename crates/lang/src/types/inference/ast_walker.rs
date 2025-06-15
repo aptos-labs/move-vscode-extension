@@ -125,10 +125,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         };
         for binding in bindings {
             let binding_ty = {
-                let binding_type_owner = binding.owner();
+                let binding_type_owner = binding.ident_owner();
                 let ty_lowering = self.ctx.ty_lowering();
                 match binding_type_owner {
-                    Some(ast::IdentPatKind::Param(fun_param)) => fun_param
+                    Some(ast::IdentPatOwner::Param(fun_param)) => fun_param
                         .type_()
                         .map(|it| ty_lowering.lower_type(it.in_file(binding_file_id)))
                         .unwrap_or(Ty::Unknown),

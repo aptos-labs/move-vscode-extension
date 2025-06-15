@@ -22,7 +22,7 @@ MyDep = { local = "../MyDep"}
 module std::m {
     use std::table::Table;
     use std::table::Unknown;
-    fun main(t: Table) {
+    fun main(_t: Table) {
     }
 }
     "#,

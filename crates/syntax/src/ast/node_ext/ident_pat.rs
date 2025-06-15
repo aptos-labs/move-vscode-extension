@@ -7,7 +7,7 @@ impl ast::IdentPat {
         self.clone().into()
     }
 
-    pub fn owner(&self) -> Option<ast::IdentPatKind> {
-        self.syntax().ancestor_strict::<ast::IdentPatKind>()
+    pub fn ident_owner(&self) -> Option<ast::IdentPatOwner> {
+        self.syntax().ancestor_strict::<ast::IdentPatOwner>()
     }
 }

@@ -130,12 +130,7 @@ fn generate_ident_pat(
     sema: &Semantics<'_, RootDatabase>,
     buffer: &mut String,
 ) -> Option<()> {
-    let owner = ident_pat.owner()?;
-    let ident_kind = match owner {
-        ast::IdentPatKind::Param(_) => "parameter",
-        ast::IdentPatKind::LambdaParam(_) => "parameter",
-        ast::IdentPatKind::LetStmt(_) => "variable",
-    };
+    let ident_kind = ident_pat.ident_owner()?.kind();
     write!(buffer, "{ident_kind} {}", ident_pat.name()?.as_string()).ok()?;
 
     let ident_pat = sema.wrap_node_infile(ident_pat);

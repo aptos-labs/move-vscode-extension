@@ -71,8 +71,8 @@ ReferenceElement =
 InferenceCtxOwner =
     Fun | SpecFun | SpecInlineFun | ItemSpec | Schema
 
-IdentPatKind =
-    LetStmt | Param | LambdaParam
+IdentPatOwner =
+    LetStmt | Param | LambdaParam | SchemaField | QuantBinding | ItemSpecParam | ForCondition
 
 UseStmt =
     Attr* 'use' UseSpeck ';'
@@ -527,7 +527,7 @@ ImplyIncludeExpr =
     Expr
 
 IfElseIncludeExpr =
-    'if' Condition SchemaLit 'else' SchemaLit
+    'if' Condition then_schema_lit:SchemaLit 'else' else_schema_lit:SchemaLit
 
 SchemaLit =
     Path SchemaLitFieldList?

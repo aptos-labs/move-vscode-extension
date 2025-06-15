@@ -99,6 +99,14 @@ impl<'db> SemanticsImpl<'db> {
             .is_some_and(|it| it.data(self.db) == file_id)
     }
 
+    pub fn resolve_element_to_element<Named: AstNode>(
+        &self,
+        reference: ast::ReferenceElement,
+    ) -> Option<InFile<Named>> {
+        let reference = self.wrap_node_infile(reference);
+        self.resolve_to_element(reference)
+    }
+
     pub fn resolve_to_element<Named: AstNode>(
         &self,
         reference: InFile<ast::ReferenceElement>,

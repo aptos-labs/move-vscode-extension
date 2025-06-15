@@ -40,26 +40,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
     pub(super) fn process_include_schema(&mut self, include_schema: &ast::IncludeSchema) -> Option<()> {
         let include_expr = include_schema.include_expr()?;
-        match include_expr {
-            ast::IncludeExpr::SchemaIncludeExpr(schema_include_expr) => {
-                let schema_lit = schema_include_expr.schema_lit()?;
-                self.process_schema_lit(&schema_lit);
-            }
-            ast::IncludeExpr::AndIncludeExpr(and_include_expr) => {
-                let left_schema_lit = and_include_expr.left_schema_lit()?;
-                self.process_schema_lit(&left_schema_lit);
-                let right_schema_lit = and_include_expr.right_schema_lit()?;
-                self.process_schema_lit(&right_schema_lit);
-            }
-            ast::IncludeExpr::IfElseIncludeExpr(if_else_include_expr) => {
-                let condition_expr = if_else_include_expr.condition()?.expr()?;
-                self.infer_expr_coerceable_to(&condition_expr, Ty::Bool);
-                let schema_lit = if_else_include_expr.schema_lit()?;
-                self.process_schema_lit(&schema_lit);
-            }
-            ast::IncludeExpr::ImplyIncludeExpr(_) => {
-                // ignore it for now
-            }
+        for schema_lit in include_expr.schema_lits() {
+            self.process_schema_lit(&schema_lit);
         }
         Some(())
     }

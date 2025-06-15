@@ -594,7 +594,9 @@ impl IfElseIncludeExpr {
     #[inline]
     pub fn condition(&self) -> Option<Condition> { support::child(&self.syntax) }
     #[inline]
-    pub fn schema_lit(&self) -> Option<SchemaLit> { support::child(&self.syntax) }
+    pub fn else_schema_lit(&self) -> Option<SchemaLit> { support::child(&self.syntax) }
+    #[inline]
+    pub fn then_schema_lit(&self) -> Option<SchemaLit> { support::child(&self.syntax) }
     #[inline]
     pub fn else_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![else]) }
     #[inline]
@@ -2141,10 +2143,14 @@ pub enum GenericSpecStmt {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum IdentPatKind {
+pub enum IdentPatOwner {
+    ForCondition(ForCondition),
+    ItemSpecParam(ItemSpecParam),
     LambdaParam(LambdaParam),
     LetStmt(LetStmt),
     Param(Param),
+    QuantBinding(QuantBinding),
+    SchemaField(SchemaField),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -6461,47 +6467,102 @@ impl AstNode for GenericSpecStmt {
         }
     }
 }
-impl From<LambdaParam> for IdentPatKind {
+impl From<ForCondition> for IdentPatOwner {
     #[inline]
-    fn from(node: LambdaParam) -> IdentPatKind { IdentPatKind::LambdaParam(node) }
+    fn from(node: ForCondition) -> IdentPatOwner { IdentPatOwner::ForCondition(node) }
 }
-impl From<LetStmt> for IdentPatKind {
+impl From<ItemSpecParam> for IdentPatOwner {
     #[inline]
-    fn from(node: LetStmt) -> IdentPatKind { IdentPatKind::LetStmt(node) }
+    fn from(node: ItemSpecParam) -> IdentPatOwner { IdentPatOwner::ItemSpecParam(node) }
 }
-impl From<Param> for IdentPatKind {
+impl From<LambdaParam> for IdentPatOwner {
     #[inline]
-    fn from(node: Param) -> IdentPatKind { IdentPatKind::Param(node) }
+    fn from(node: LambdaParam) -> IdentPatOwner { IdentPatOwner::LambdaParam(node) }
 }
-impl IdentPatKind {
+impl From<LetStmt> for IdentPatOwner {
+    #[inline]
+    fn from(node: LetStmt) -> IdentPatOwner { IdentPatOwner::LetStmt(node) }
+}
+impl From<Param> for IdentPatOwner {
+    #[inline]
+    fn from(node: Param) -> IdentPatOwner { IdentPatOwner::Param(node) }
+}
+impl From<QuantBinding> for IdentPatOwner {
+    #[inline]
+    fn from(node: QuantBinding) -> IdentPatOwner { IdentPatOwner::QuantBinding(node) }
+}
+impl From<SchemaField> for IdentPatOwner {
+    #[inline]
+    fn from(node: SchemaField) -> IdentPatOwner { IdentPatOwner::SchemaField(node) }
+}
+impl IdentPatOwner {
+    pub fn for_condition(self) -> Option<ForCondition> {
+        match (self) {
+            IdentPatOwner::ForCondition(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn item_spec_param(self) -> Option<ItemSpecParam> {
+        match (self) {
+            IdentPatOwner::ItemSpecParam(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn lambda_param(self) -> Option<LambdaParam> {
         match (self) {
-            IdentPatKind::LambdaParam(item) => Some(item),
+            IdentPatOwner::LambdaParam(item) => Some(item),
             _ => None,
         }
     }
     pub fn let_stmt(self) -> Option<LetStmt> {
         match (self) {
-            IdentPatKind::LetStmt(item) => Some(item),
+            IdentPatOwner::LetStmt(item) => Some(item),
             _ => None,
         }
     }
     pub fn param(self) -> Option<Param> {
         match (self) {
-            IdentPatKind::Param(item) => Some(item),
+            IdentPatOwner::Param(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn quant_binding(self) -> Option<QuantBinding> {
+        match (self) {
+            IdentPatOwner::QuantBinding(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn schema_field(self) -> Option<SchemaField> {
+        match (self) {
+            IdentPatOwner::SchemaField(item) => Some(item),
             _ => None,
         }
     }
 }
-impl AstNode for IdentPatKind {
+impl AstNode for IdentPatOwner {
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, LAMBDA_PARAM | LET_STMT | PARAM) }
+    fn can_cast(kind: SyntaxKind) -> bool {
+        matches!(
+            kind,
+            FOR_CONDITION
+                | ITEM_SPEC_PARAM
+                | LAMBDA_PARAM
+                | LET_STMT
+                | PARAM
+                | QUANT_BINDING
+                | SCHEMA_FIELD
+        )
+    }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
-            LAMBDA_PARAM => IdentPatKind::LambdaParam(LambdaParam { syntax }),
-            LET_STMT => IdentPatKind::LetStmt(LetStmt { syntax }),
-            PARAM => IdentPatKind::Param(Param { syntax }),
+            FOR_CONDITION => IdentPatOwner::ForCondition(ForCondition { syntax }),
+            ITEM_SPEC_PARAM => IdentPatOwner::ItemSpecParam(ItemSpecParam { syntax }),
+            LAMBDA_PARAM => IdentPatOwner::LambdaParam(LambdaParam { syntax }),
+            LET_STMT => IdentPatOwner::LetStmt(LetStmt { syntax }),
+            PARAM => IdentPatOwner::Param(Param { syntax }),
+            QUANT_BINDING => IdentPatOwner::QuantBinding(QuantBinding { syntax }),
+            SCHEMA_FIELD => IdentPatOwner::SchemaField(SchemaField { syntax }),
             _ => return None,
         };
         Some(res)
@@ -6509,9 +6570,13 @@ impl AstNode for IdentPatKind {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            IdentPatKind::LambdaParam(it) => &it.syntax(),
-            IdentPatKind::LetStmt(it) => &it.syntax(),
-            IdentPatKind::Param(it) => &it.syntax(),
+            IdentPatOwner::ForCondition(it) => &it.syntax(),
+            IdentPatOwner::ItemSpecParam(it) => &it.syntax(),
+            IdentPatOwner::LambdaParam(it) => &it.syntax(),
+            IdentPatOwner::LetStmt(it) => &it.syntax(),
+            IdentPatOwner::Param(it) => &it.syntax(),
+            IdentPatOwner::QuantBinding(it) => &it.syntax(),
+            IdentPatOwner::SchemaField(it) => &it.syntax(),
         }
     }
 }
@@ -8689,7 +8754,7 @@ impl std::fmt::Display for GenericSpecStmt {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
-impl std::fmt::Display for IdentPatKind {
+impl std::fmt::Display for IdentPatOwner {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

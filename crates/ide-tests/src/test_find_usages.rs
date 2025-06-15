@@ -202,3 +202,41 @@ module 0x1::m {
     "#;
     check_find_usages(source)
 }
+
+#[test]
+fn test_schema_find_usages() {
+    // language=Move
+    let source = r#"
+module 0x1::m {
+    spec schema  S {
+        val: u8;
+    }
+    spec schema T {
+        my_val: u8;
+        //^
+        include S { val: my_val };
+                         //X
+    }
+}
+    "#;
+    check_find_usages(source)
+}
+
+#[test]
+fn test_schema_find_usages_shorthand() {
+    // language=Move
+    let source = r#"
+module 0x1::m {
+    spec schema  S {
+        val: u8;
+    }
+    spec schema T {
+        val: u8;
+       //^
+        include S { val };
+                    //X
+    }
+}
+    "#;
+    check_find_usages(source)
+}

@@ -60,7 +60,7 @@ fn test_no_unresolved_reference_for_primitive_type() {
     // language=Move
     check_diagnostics(expect![[r#"
 script {
-    fun main(s: &signer) {
+    fun main(_s: &signer) {
     }
 }
 "#]]);
@@ -76,8 +76,8 @@ fn test_unresolved_reference_for_variable_in_struct_lit_field() {
             }
 
             fun main() {
-                let t = T { my_field: my_unknown };
-                                    //^^^^^^^^^^ err: Unresolved reference `my_unknown`: cannot resolve
+                let _t = T { my_field: my_unknown };
+                                     //^^^^^^^^^^ err: Unresolved reference `my_unknown`: cannot resolve
             }
         }
     "#]]);
@@ -94,7 +94,7 @@ module 0x1::M {
 
     fun main() {
         let my_field = 1;
-        let t = T { my_field };
+        let _t = T { my_field };
     }
 }
 "#]]);
@@ -110,8 +110,8 @@ fn test_unresolved_field_in_struct_lit() {
             }
 
             fun main() {
-                let t = T { my_unknown_field: 1 };
-                          //^^^^^^^^^^^^^^^^ err: Unresolved reference `my_unknown_field`: cannot resolve
+                let _t = T { my_unknown_field: 1 };
+                           //^^^^^^^^^^^^^^^^ err: Unresolved reference `my_unknown_field`: cannot resolve
 
             }
         }
@@ -147,7 +147,7 @@ fn test_unresolved_field_in_struct_pat_shorthand() {
 
             fun main() {
                 let T { my_unknown_field } = T { my_field: 1 };
-
+                my_unknown_field;
             }
         }
     "#]]);
@@ -160,7 +160,7 @@ fn test_unresolved_module() {
     check_diagnostics(expect![[r#"
         module 0x1::M {
             fun main() {
-                let t = transaction::create();
+                let _t = transaction::create();
             }
         }
     "#]]);
@@ -172,8 +172,8 @@ fn test_unresolved_fq_module() {
     check_diagnostics(expect![[r#"
         module 0x1::M {
             fun main() {
-                let t = std::transaction::create();
-                           //^^^^^^^^^^^ err: Unresolved reference `transaction`: cannot resolve
+                let _t = std::transaction::create();
+                            //^^^^^^^^^^^ err: Unresolved reference `transaction`: cannot resolve
             }
         }
     "#]]);
@@ -612,8 +612,10 @@ fn test_no_error_for_fields_if_destructuring_unknown_struct() {
             fun main() {
                 let S { val } = 1;
                   //^ err: Unresolved reference `S`: cannot resolve
+                val;
                 let S(val) = 1;
                   //^ err: Unresolved reference `S`: cannot resolve
+                val;
             }
         }
     "#]]);
@@ -628,8 +630,10 @@ fn test_no_error_for_fields_if_destructuring_unknown_struct_with_qualifier() {
             fun main() {
                 let R::Inner { val } = 1;
                      //^^^^^ err: Unresolved reference `Inner`: cannot resolve
+                val;
                 let R::Inner(val) = 1;
                      //^^^^^ err: Unresolved reference `Inner`: cannot resolve
+                val;
             }
         }
     "#]]);

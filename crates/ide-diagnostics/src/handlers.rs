@@ -2,6 +2,7 @@ mod can_be_replaced_with_compound_expr;
 mod can_be_replaced_with_method_call;
 mod type_checking;
 mod unresolved_reference;
+pub(crate) mod unused_variables;
 
 pub(crate) use can_be_replaced_with_compound_expr::can_be_replaced_with_compound_expr;
 pub(crate) use can_be_replaced_with_method_call::can_be_replaced_with_method_call;

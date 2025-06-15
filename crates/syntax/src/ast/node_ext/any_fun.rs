@@ -1,6 +1,23 @@
 use crate::ast;
+use crate::ast::HasVisibility;
 
 impl ast::AnyFun {
+    pub fn is_native(&self) -> bool {
+        match self {
+            ast::AnyFun::Fun(fun) => fun.native_token().is_some(),
+            ast::AnyFun::SpecFun(fun) => fun.native_token().is_some(),
+            ast::AnyFun::SpecInlineFun(fun) => fun.native_token().is_some(),
+        }
+    }
+
+    pub fn is_uninterpreted(&self) -> bool {
+        match self {
+            ast::AnyFun::Fun(fun) => false,
+            ast::AnyFun::SpecFun(fun) => fun.spec_block().is_some(),
+            ast::AnyFun::SpecInlineFun(fun) => fun.spec_block().is_some(),
+        }
+    }
+
     pub fn params(&self) -> Vec<ast::Param> {
         self.param_list()
             .map(|list| list.params().collect())
