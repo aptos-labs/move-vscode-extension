@@ -26,6 +26,16 @@ fn test_no_error_function_parameter() {
 }
 
 #[test]
+fn test_no_error_for_unused_const() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            const MY_CONST: u8 = 1;
+        }
+    "#]]);
+}
+
+#[test]
 fn test_unused_variable() {
     // language=Move
     check_diagnostics(expect![[r#"
