@@ -1,6 +1,7 @@
-use crate::codegen::grammar::ast_src::AstNodeSrc;
+use crate::codegen::grammar::ast_src::{AstNodeSrc, AstSrc};
 use crate::codegen::grammar::{find_common_traits, to_upper_snake_case};
 use quote::{format_ident, quote};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct AnyNodeDefSrc {
@@ -10,31 +11,31 @@ pub struct AnyNodeDefSrc {
     pub kinds: Vec<String>,
 }
 
-pub(crate) fn extract_any_node_def(trait_name: &str, nodes: Vec<&AstNodeSrc>) -> AnyNodeDefSrc {
-    let any_trait_name = format_ident!("Any{}", trait_name);
+pub(crate) fn extract_any_node_def(trait_name: &str, impls: Vec<&AstNodeSrc>) -> AnyNodeDefSrc {
+    let any_node_name = format_ident!("Any{}", trait_name);
 
-    let common_traits = find_common_traits(nodes.clone())
+    let common_traits_for_impls = find_common_traits(impls.clone())
         .into_iter()
         .filter(|common_trait| common_trait != trait_name)
         .collect::<Vec<_>>();
 
-    let impl_common_traits = common_traits
+    let impl_common_traits = common_traits_for_impls
         .iter()
         .map(|common_trait| {
             let common_trait = format_ident!("{}", common_trait);
-            quote! { impl ast::#common_trait for #any_trait_name {} }
+            quote! { impl ast::#common_trait for #any_node_name {} }
         })
         .collect::<Vec<_>>();
 
-    let kinds = nodes
+    let kinds = impls
         .iter()
         .map(|name| to_upper_snake_case(&name.name.to_string()))
         .collect();
-    let node_names = nodes.iter().map(|node| node.name.clone()).collect();
+    let node_names = impls.iter().map(|node| node.name.clone()).collect();
 
     AnyNodeDefSrc {
         trait_name: trait_name.to_string(),
-        common_traits,
+        common_traits: common_traits_for_impls,
         from_impls: node_names,
         kinds,
     }

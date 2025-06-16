@@ -377,14 +377,14 @@ pub(crate) fn get_required_fields(node_name: &str) -> &[&str] {
     &[]
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub(crate) struct AstSrc {
     pub(crate) tokens: Vec<String>,
     pub(crate) nodes: Vec<AstNodeSrc>,
     pub(crate) enums: Vec<AstEnumSrc>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct AstNodeSrc {
     pub(crate) doc: Vec<String>,
     pub(crate) name: String,
