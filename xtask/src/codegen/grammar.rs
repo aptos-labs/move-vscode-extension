@@ -16,7 +16,9 @@ use crate::codegen::grammar::ast_src::{
     AstNodeSrc, AstSrc, Cardinality, Field, KINDS_SRC, KindsSrc, NON_METHOD_TRAITS, TRAITS,
     get_required_fields,
 };
-use crate::codegen::grammar::lower_enum::{AstEnumSrc, generate_field_method_for_enum, lower_enum};
+use crate::codegen::grammar::lower_enum::{
+    AstEnumSrc, NodeKind, generate_field_method_for_enum, lower_enum, node_kind,
+};
 use crate::codegen::{add_preamble, ensure_file_contents, reformat};
 use check_keyword::CheckKeyword;
 use itertools::{Either, Itertools};
@@ -154,21 +156,24 @@ fn generate_nodes(kinds: KindsSrc, grammar: &AstSrc) -> String {
         .map(|enum_src| generate_enum(grammar, enum_src))
         .unzip();
 
-    let mut any_node_def_srcs = grammar
+    let traits_with_impls = grammar
         .nodes
         .iter()
         .flat_map(|node| node.traits.iter().map(move |t| (t, node)))
         .into_group_map()
         .into_iter()
         .sorted_by_key(|(name, _)| *name)
-        .map(|(trait_name, nodes)| extract_any_node_def(trait_name, nodes))
+        .collect::<Vec<_>>();
+    let mut any_nodes_srcs = traits_with_impls
+        .into_iter()
+        .map(|(trait_name, impls)| extract_any_node_def(trait_name, impls))
         .collect::<Vec<_>>();
 
-    for any_node_def_src in any_node_def_srcs.clone() {
+    for any_node_def_src in any_nodes_srcs.clone() {
         let current_trait_name = any_node_def_src.trait_name;
         let other_defs_with_trait =
-            find_node_defs_with_trait(&current_trait_name, any_node_def_srcs.clone());
-        if let Some(any_def) = any_node_def_srcs
+            find_node_defs_with_trait(&current_trait_name, any_nodes_srcs.clone());
+        if let Some(any_def) = any_nodes_srcs
             .iter_mut()
             .find(|it| it.trait_name == current_trait_name)
         {
@@ -178,7 +183,7 @@ fn generate_nodes(kinds: KindsSrc, grammar: &AstSrc) -> String {
         }
     }
 
-    let (any_node_defs, any_node_boilerplate_impls): (Vec<_>, Vec<_>) = any_node_def_srcs
+    let (any_node_defs, any_node_boilerplate_impls): (Vec<_>, Vec<_>) = any_nodes_srcs
         .into_iter()
         .map(|it| generate_any_node_def(it))
         .unzip();
@@ -627,17 +632,20 @@ fn lower(grammar: &Grammar) -> AstSrc {
         ..Default::default()
     };
 
-    let nodes = grammar.iter().collect::<Vec<_>>();
+    let all_nodes = grammar.iter().collect::<Vec<_>>();
 
-    for &node in &nodes {
-        let node_name = grammar[node].name.clone();
-        let rule = &grammar[node].rule;
-        let _g = panic_context::enter(node_name.clone());
-        match lower_enum(grammar, node_name.as_str(), rule) {
-            Some(enum_src) => {
-                res.enums.push(enum_src);
-            }
-            None => {
+    let mut all_kinds = all_nodes
+        .iter()
+        .map(|it| node_kind(grammar, it))
+        .collect::<Vec<_>>();
+    for kind in all_kinds {
+        match kind {
+            NodeKind::Node(node) => {
+                let node_name = grammar[node].name.clone();
+                let rule = &grammar[node].rule;
+
+                let _g = panic_context::enter(node_name.clone());
+
                 let mut fields = Vec::new();
                 let required_fields = get_required_fields(node_name.as_str());
                 lower_rule(&mut fields, grammar, None, rule, required_fields);
@@ -647,6 +655,10 @@ fn lower(grammar: &Grammar) -> AstSrc {
                     traits: Vec::new(),
                     fields,
                 });
+            }
+            NodeKind::Enum { root, variants } => {
+                let enum_src = lower_enum(grammar, root.clone(), variants, &res);
+                res.enums.push(enum_src);
             }
         }
     }
@@ -665,26 +677,16 @@ fn lower(grammar: &Grammar) -> AstSrc {
         res.enums.get_mut(i).unwrap().transitive_variants = transitive_variants;
     }
 
-    fn get_enums_for_node(node_name: &String, enums: &Vec<AstEnumSrc>) -> HashSet<String> {
-        let mut res = HashSet::new();
-        for e in enums.iter() {
-            if e.variants.contains(node_name) {
-                res.insert(e.name.clone());
-            }
-        }
-        res
-    }
-
     let enums = res.enums.clone();
     for enum_src in res.enums.iter_mut() {
         let first_variant = enum_src.variants.first();
         match first_variant {
             None => break,
             Some(first_variant) => {
-                let mut common_enums = get_enums_for_node(first_variant, &enums);
+                let mut common_enums = lower_enum::get_enums_for_node(first_variant, &enums);
 
                 for variant in enum_src.variants.iter() {
-                    let variant_enums = get_enums_for_node(variant, &enums);
+                    let variant_enums = lower_enum::get_enums_for_node(variant, &enums);
                     common_enums = common_enums.intersection(&variant_enums).cloned().collect();
                 }
 
@@ -694,10 +696,9 @@ fn lower(grammar: &Grammar) -> AstSrc {
         }
     }
 
-    deduplicate_fields(&mut res);
-    // extract_enums(&mut res);
+    deduplicate_node_fields(&mut res);
     extract_struct_traits(&mut res);
-    extract_enum_traits(&mut res);
+    lower_enum::extract_common_enum_traits(&mut res);
     res.nodes.sort_by_key(|it| it.name.clone());
     res.enums.sort_by_key(|it| it.name.clone());
     res.tokens.sort();
@@ -869,7 +870,7 @@ fn lower_separated_list(
     true
 }
 
-fn deduplicate_fields(ast: &mut AstSrc) {
+fn deduplicate_node_fields(ast: &mut AstSrc) {
     for node in &mut ast.nodes {
         let mut i = 0;
         'outer: while i < node.fields.len() {
@@ -940,33 +941,16 @@ fn extract_struct_trait(node: &mut AstNodeSrc, trait_name: &str, methods: &[&str
     }
 }
 
-fn extract_enum_traits(ast: &mut AstSrc) {
-    for enum_ in &mut ast.enums {
-        let nodes = &ast.nodes;
-
-        let nodes = enum_
-            .variants
-            .iter()
-            .filter_map(|variant| nodes.iter().find(|it| &it.name == variant))
-            .collect::<Vec<_>>();
-
-        let enum_traits = find_common_traits(nodes);
-        if !enum_traits.is_empty() {
-            enum_.traits = enum_traits;
-        }
-    }
-}
-
 fn find_common_traits(nodes: Vec<&AstNodeSrc>) -> Vec<String> {
-    let mut variant_traits = nodes
+    let mut node_traits = nodes
         .into_iter()
         .map(|node| node.traits.iter().cloned().collect::<BTreeSet<_>>());
     // collect traits present on all the variants
-    let mut enum_traits = match variant_traits.next() {
+    let mut enum_traits = match node_traits.next() {
         Some(it) => it,
         None => return vec![],
     };
-    for traits in variant_traits {
+    for traits in node_traits {
         enum_traits = enum_traits.intersection(&traits).cloned().collect();
     }
     enum_traits.into_iter().collect()
