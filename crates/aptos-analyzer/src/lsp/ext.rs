@@ -128,6 +128,4 @@ impl Notification for MovefmtVersionError {
 pub struct MovefmtVersionErrorParams {
     pub message: String,
     pub aptos_path: Option<String>,
-    #[allow(non_snake_case)]
-    pub aptos_path_from_PATH: bool,
 }

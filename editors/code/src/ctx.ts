@@ -216,8 +216,7 @@ export class Ctx {
                         await vscode.window.showErrorMessage(warningMessage, updateLabel);
                     if (selected === updateLabel) {
                         const terminal = vscode.window.createTerminal(`Update Movefmt`);
-                        const exe = params.aptosPathFromPATH ? "aptos" : aptosPath!!;
-                        terminal.sendText(`${exe} update movefmt --target-version ${MOVEFMT_REQUIRED_VERSION}`);
+                        terminal.sendText(`${aptosPath} update movefmt --target-version ${MOVEFMT_REQUIRED_VERSION}`);
                         terminal.show(false)
                     }
                 }),

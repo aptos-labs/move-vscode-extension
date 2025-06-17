@@ -37,7 +37,6 @@ export const movefmtVersionError = new lc.NotificationType<MovefmtVersionParams>
 export type MovefmtVersionParams = {
     message: string;
     aptosPath: string | null;
-    aptosPathFromPATH: boolean;
 }
 
 
