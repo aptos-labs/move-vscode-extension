@@ -12,8 +12,6 @@ use vfs::FileId;
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct SyntaxLoc {
     file_id: FileId,
-    text_range: TextRange,
-    kind: SyntaxKind,
     syntax_ptr: SyntaxNodePtr,
     // only for debugging here, might be removed in the future
     node_name: Option<String>,
@@ -23,24 +21,21 @@ impl SyntaxLoc {
     pub fn from_ast_node<T: AstNode>(file_id: FileId, ast_node: &T) -> Self {
         let node = ast_node.syntax();
 
-        let text_range = node.text_range();
-        let kind = node.kind();
-
-        let node_name = node
-            .children_with_tokens()
-            .find(|child| {
-                let kind = child.kind();
-                kind == SyntaxKind::NAME
-                    || kind == SyntaxKind::NAME_REF
-                    || kind == SyntaxKind::PATH_SEGMENT
-                    || kind == SyntaxKind::QUOTE_IDENT
-            })
-            .map(|it| it.to_string());
+        let node_name = {
+            let _p = tracing::debug_span!("SyntaxLoc::from_ast_node::node_name").entered();
+            node.children_with_tokens()
+                .find(|child| {
+                    let kind = child.kind();
+                    kind == SyntaxKind::NAME
+                        || kind == SyntaxKind::NAME_REF
+                        || kind == SyntaxKind::PATH_SEGMENT
+                        || kind == SyntaxKind::QUOTE_IDENT
+                })
+                .map(|it| it.to_string())
+        };
 
         SyntaxLoc {
             file_id: file_id.to_owned(),
-            text_range,
-            kind,
             syntax_ptr: SyntaxNodePtr::new(node),
             node_name,
         }
@@ -48,15 +43,10 @@ impl SyntaxLoc {
 
     pub fn to_ast<T: AstNode>(&self, db: &dyn SourceDatabase) -> Option<InFile<T>> {
         let file = self.get_source_file(db)?;
-        let ancestors_at_offset = ancestors_at_offset(file.syntax(), self.node_offset());
-        for ancestor in ancestors_at_offset {
-            if ancestor.text_range().end() == self.node_offset() {
-                if let Some(node) = T::cast(ancestor) {
-                    return Some(InFile::new(self.file_id, node));
-                }
-            }
-        }
-        None
+        self.syntax_ptr
+            .try_to_node(file.syntax())
+            .and_then(|node| T::cast(node))
+            .map(|ast_node| InFile::new(self.file_id, ast_node))
     }
 
     pub fn item_scope(&self, db: &dyn SourceDatabase) -> Option<NamedItemScope> {
@@ -86,15 +76,11 @@ impl SyntaxLoc {
     }
 
     pub fn kind(&self) -> SyntaxKind {
-        self.kind
-    }
-
-    pub fn text_range(&self) -> TextRange {
-        self.text_range
+        self.syntax_ptr.kind()
     }
 
     pub fn node_offset(&self) -> TextSize {
-        self.text_range.end()
+        self.syntax_ptr.text_range().end()
     }
 
     pub fn node_name(&self) -> Option<String> {
@@ -122,7 +108,7 @@ impl fmt::Debug for SyntaxLoc {
                 .debug_tuple("Loc")
                 .field(&format!(
                     "{:?} named '{}' at {}::{:?}",
-                    self.kind,
+                    self.syntax_ptr.kind(),
                     name,
                     self.file_id.index(),
                     self.node_offset()
@@ -132,7 +118,7 @@ impl fmt::Debug for SyntaxLoc {
                 .debug_tuple("Loc")
                 .field(&format!(
                     "{:?} at {}::{:?}",
-                    self.kind,
+                    self.syntax_ptr.kind(),
                     self.file_id.index(),
                     self.node_offset()
                 ))
