@@ -137,28 +137,6 @@ export class Config {
         );
     }
 
-    // /** The path to aptos-cli executable. */
-    // async aptosPath() {
-    //     let aptosPath = this.cfg.get<string>('aptosPath');
-    //     if (!aptosPath) {
-    //         // try to find it in $PATH
-    //         let aptos = await which("aptos", { nothrow: true });
-    //         if (aptos === null) {
-    //             return undefined;
-    //         }
-    //         return Path.resolve(aptos);
-    //     }
-    //
-    //     if (aptosPath.startsWith('~/')) {
-    //         aptosPath = os.homedir() + aptosPath.slice('~'.length);
-    //     }
-    //
-    //     if (process.platform === 'win32' && !aptosPath.endsWith('.exe')) {
-    //         aptosPath = aptosPath + '.exe';
-    //     }
-    //     return Path.resolve(aptosPath);
-    // }
-
     get showSyntaxTree() {
         return this.get<boolean>("showSyntaxTree");
     }
