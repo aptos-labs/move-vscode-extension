@@ -5,9 +5,7 @@ import * as lc from "vscode-languageclient/node";
 
 import { CommandFactory, Ctx, fetchWorkspace } from './ctx';
 import * as commands from "./commands";
-import { Config } from './config';
 import { setContextValue } from "./util";
-import commandExists from "command-exists";
 
 const APTOS_PROJECT_CONTEXT_NAME = "inAptosProject";
 
@@ -144,6 +142,7 @@ function createCommands(): Record<string, CommandFactory> {
         // triggerParameterHints: { enabled: commands.triggerParameterHints },
         // rename: { enabled: commands.rename },
         openLogs: { enabled: commands.openLogs },
+        // runAptosUpdateMovefmt: { enabled: commands.runAptosUpdateMovefmt },
         // revealDependency: { enabled: commands.revealDependency },
         // syntaxTreeReveal: { enabled: commands.syntaxTreeReveal },
         // syntaxTreeCopy: { enabled: commands.syntaxTreeCopy },

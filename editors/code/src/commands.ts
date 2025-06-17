@@ -1,6 +1,6 @@
 import vscode from "vscode";
 import * as lsp_ext from "./lsp_ext";
-import {Cmd, Ctx, CtxInit} from "./ctx";
+import { Cmd, Ctx, CtxInit } from "./ctx";
 
 export function analyzerStatus(ctx: CtxInit): Cmd {
     const tdcp = new (class implements vscode.TextDocumentContentProvider {

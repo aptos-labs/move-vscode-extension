@@ -281,6 +281,7 @@ export function substituteVariablesInEnv(env: Env): Env {
 
 
 const VarRegex = new RegExp(/\$\{(.+?)\}/g);
+
 function substituteVSCodeVariableInString(val: string): string {
     return val.replace(VarRegex, (substring: string, varName) => {
         if (Is.string(varName)) {

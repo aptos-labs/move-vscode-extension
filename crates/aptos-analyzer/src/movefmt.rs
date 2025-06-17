@@ -1,13 +1,22 @@
+use crate::config::MovefmtConfig;
 use crate::global_state::GlobalStateSnapshot;
 use crate::line_index::LineEndings;
 use crate::lsp::{LspError, from_proto, to_proto};
+use crate::lsp_ext::{MovefmtVersionError, MovefmtVersionErrorParams};
 use crate::toolchain;
 use anyhow::Context;
+use clap::ArgAction::Version;
 use ide_db::text_edit::TextEdit;
 use lsp_server::ErrorCode;
 use lsp_types::TextDocumentIdentifier;
-use std::io::Write;
-use std::process::Stdio;
+use lsp_types::notification::Notification;
+use regex::Regex;
+use std::cell::LazyCell;
+use std::io;
+use std::io::{ErrorKind, Write};
+use std::path::PathBuf;
+use std::process::{Command, Stdio};
+use std::sync::LazyLock;
 use syntax::{TextRange, TextSize};
 
 pub(crate) fn run_movefmt(
@@ -41,13 +50,21 @@ pub(crate) fn run_movefmt(
     let movefmt_config = match snap.config.movefmt() {
         Some(cfg) => cfg,
         None => {
-            return Err(LspError::new(
-                ErrorCode::RequestFailed as i32,
-                String::from("movefmt path is not provided"),
-            )
-            .into());
+            snap.ask_client_for_movefmt_update("movefmt is not provided".to_string());
+            return Ok(None);
+            // return Err(LspError::new(
+            //     ErrorCode::RequestFailed as i32,
+            //     String::from("movefmt path is not provided"),
+            // )
+            // .into());
         }
     };
+
+    let current_version = get_movefmt_version(&movefmt_config)?;
+    if current_version < semver::Version::new(1, 2, 1) {
+        snap.ask_client_for_movefmt_update(format!("current version {current_version} < 1.2.1"));
+        return Ok(None);
+    }
 
     let mut command = toolchain::command(&movefmt_config.path, current_dir);
     command.arg("--quiet");
@@ -61,13 +78,7 @@ pub(crate) fn run_movefmt(
         let _p = tracing::info_span!("movefmt").entered();
         tracing::info!(?command);
 
-        let mut movefmt = command
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()
-            .context(format!("Failed to spawn {command:?}"))?;
-
+        let mut movefmt = spawn_command(command)?;
         movefmt.stdin.as_mut().unwrap().write_all(file_text.as_bytes())?;
 
         movefmt.wait_with_output()?
@@ -82,7 +93,7 @@ pub(crate) fn run_movefmt(
 
         return match output.status.code() {
             Some(1) if stdout.contains("a valid move code") => {
-                snap.show_message_to_client(
+                snap.show_message(
                     lsp_types::MessageType::ERROR,
                     "movefmt error: invalid syntax".to_string(),
                 );
@@ -112,5 +123,50 @@ pub(crate) fn run_movefmt(
             &line_index,
             TextEdit::replace(TextRange::up_to(TextSize::of(&*file_text)), new_text),
         )))
+    }
+}
+
+fn get_movefmt_version(movefmt_config: &MovefmtConfig) -> anyhow::Result<semver::Version> {
+    let mut command = toolchain::command(&movefmt_config.path, std::env::current_dir()?);
+    command.arg("--version");
+    command.env("MOVEFMT_LOG", "error");
+    let process = spawn_command(command)?;
+
+    let version_stdout: String = process.wait_with_output()?.stdout.try_into()?;
+    let version = parse_movefmt_version(version_stdout.as_str());
+    version.ok_or_else(|| {
+        anyhow::Error::new(io::Error::new(
+            ErrorKind::InvalidData,
+            format!("Invalid movefmt version output {version_stdout:?}"),
+        ))
+    })
+}
+
+fn spawn_command(mut command: Command) -> anyhow::Result<std::process::Child> {
+    command
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .context(format!("Failed to spawn {command:?}"))
+}
+
+fn parse_movefmt_version(version_stdout: &str) -> Option<semver::Version> {
+    let captures = VERSION_REGEX.captures(version_stdout)?;
+    let version = captures.get(1)?;
+    semver::Version::parse(version.as_str()).ok()
+}
+
+static VERSION_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"movefmt v(.+)").unwrap());
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use semver::Version;
+
+    #[test]
+    fn test_parse_movefmt_version() {
+        let version = parse_movefmt_version("movefmt v1.2.1".into()).unwrap();
+        assert_eq!(version, Version::new(1, 2, 1));
     }
 }

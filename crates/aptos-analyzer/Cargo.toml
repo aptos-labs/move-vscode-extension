@@ -30,6 +30,11 @@ shellexpand = "3.1.1"
 strip-ansi-escapes = "0.2.1"
 duration-string = "0.5.2"
 
+semver = "1.0.26"
+pathsearch = "0.2.0"
+which = { version = "8.0.0", features = ["real-sys"] }
+regex.workspace = true
+
 codespan-reporting = "0.12.0"
 
 tracing = { workspace = true }

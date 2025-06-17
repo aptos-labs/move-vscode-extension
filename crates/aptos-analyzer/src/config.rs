@@ -1,5 +1,6 @@
 pub(crate) mod config_change;
 pub(crate) mod options;
+mod utils;
 pub mod validation;
 
 use crate::lsp::capabilities::ClientCapabilities;
@@ -13,6 +14,7 @@ use std::sync::OnceLock;
 use vfs::AbsPathBuf;
 
 use crate::config::options::{DefaultConfigData, FullConfigInput};
+use crate::config::utils::find_movefmt_path;
 use crate::config::validation::ConfigErrors;
 use crate::flycheck::{AptosCliOptions, FlycheckConfig};
 use ide::inlay_hints::{InlayFieldsToResolve, InlayHintsConfig};
@@ -299,7 +301,7 @@ impl Config {
     // }
 
     pub(crate) fn flycheck_config(&self) -> Option<FlycheckConfig> {
-        let cli_path = self.aptos_cli_path()?;
+        let cli_path = self.aptos_path()?;
         let options = AptosCliOptions {
             extra_args: self.extra_args().clone(),
             ..AptosCliOptions::default()
@@ -321,14 +323,21 @@ impl Config {
         self.check_extraArgs()
     }
 
-    pub fn aptos_cli_path(&self) -> Option<Utf8PathBuf> {
+    pub fn aptos_path(&self) -> Option<Utf8PathBuf> {
         self.aptosPath().clone()
     }
 
     pub fn movefmt(&self) -> Option<MovefmtConfig> {
-        let path = self.movefmt_path().clone()?;
+        if let Some(explicit_path) = self.movefmt_path().clone() {
+            return Some(MovefmtConfig {
+                path: explicit_path,
+                extra_args: self.movefmt_extraArgs().clone(),
+            });
+        }
+
+        let guessed_path = find_movefmt_path()?;
         Some(MovefmtConfig {
-            path,
+            path: guessed_path,
             extra_args: self.movefmt_extraArgs().clone(),
         })
     }

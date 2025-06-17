@@ -105,7 +105,7 @@ Same for type checking:
     "aptos-analyzer.diagnostics.enableTypeChecking": true
 ```
 
-### Formatting (for `movefmt` >= 1.2.1)
+### Formatting (works with `movefmt` >= 1.2.1)
 
 Specify a path to the `movefmt` executable and extra args (like a `--config-path`) if necessary:
 ```json5
@@ -129,8 +129,8 @@ Checks code in the editor after saving the document by running `aptos move compi
 To enable, specify in your `settings.json`:
 ```json5
 {
-    "aptos-analyzer.checkOnSave": true,
     "aptos-analyzer.aptosPath": "/home/mkurnikov/bin/aptos", // path to aptos-cli on your machine
+    "aptos-analyzer.checkOnSave": true,
 }
 ```
 

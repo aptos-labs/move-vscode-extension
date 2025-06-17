@@ -6,10 +6,12 @@ use crate::line_index::{LineEndings, LineIndex};
 use crate::lsp::from_proto;
 use crate::lsp::to_proto::url_from_abs_path;
 use crate::lsp_ext;
+use crate::lsp_ext::{MovefmtVersionError, MovefmtVersionErrorParams};
 use crate::main_loop::Task;
 use crate::mem_docs::MemDocs;
 use crate::op_queue::{Cause, OpQueue};
 use crate::task_pool::TaskPool;
+use camino::Utf8PathBuf;
 use crossbeam_channel::{Receiver, Sender, unbounded};
 use ide::{Analysis, AnalysisHost, Cancellable};
 use lang::builtins_file;
@@ -374,12 +376,38 @@ impl GlobalStateSnapshot {
         self.vfs_read().file_path(file_id).clone()
     }
 
-    pub(crate) fn show_message_to_client(&self, message_type: lsp_types::MessageType, message: String) {
-        let not = lsp_server::Notification::new(
+    pub(crate) fn show_message(&self, message_type: lsp_types::MessageType, message: String) {
+        let notif = lsp_server::Notification::new(
             lsp_types::notification::ShowMessage::METHOD.to_owned(),
             lsp_types::ShowMessageParams { typ: message_type, message },
         );
-        self.send(not.into());
+        self.send_notification(notif);
+    }
+
+    pub(crate) fn ask_client_for_movefmt_update(&self, message: String) {
+        let mut from_env = false;
+        let aptos_cli = match self.config.aptos_path() {
+            Some(p) => Some(p),
+            None => {
+                from_env = true;
+                which::which("aptos")
+                    .ok()
+                    .and_then(|it| Utf8PathBuf::from_path_buf(it).ok())
+            }
+        };
+        tracing::info!(cli = ?aptos_cli, "Ask to fetch movefmt");
+        let notif = lsp_server::Notification::new(
+            MovefmtVersionError::METHOD.to_owned(),
+            MovefmtVersionErrorParams {
+                message,
+                aptos_path: aptos_cli.map(|it| it.to_string()),
+            },
+        );
+        self.send_notification(notif);
+    }
+
+    pub(crate) fn send_notification(&self, notif: lsp_server::Notification) {
+        self.send(notif.into())
     }
 
     #[track_caller]
