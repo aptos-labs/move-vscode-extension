@@ -19,6 +19,17 @@ impl Ability {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AbilityBoundList {
+    pub(crate) syntax: SyntaxNode,
+}
+impl AbilityBoundList {
+    #[inline]
+    pub fn abilities(&self) -> AstChildren<Ability> { support::children(&self.syntax) }
+    #[inline]
+    pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AbilityList {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1802,6 +1813,8 @@ pub struct TypeParam {
 }
 impl TypeParam {
     #[inline]
+    pub fn ability_bound_list(&self) -> Option<AbilityBoundList> { support::child(&self.syntax) }
+    #[inline]
     pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
     #[inline]
     pub fn phantom_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![phantom]) }
@@ -2373,6 +2386,27 @@ impl AstNode for Ability {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == ABILITY }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for AbilityBoundList {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ABILITY_BOUND_LIST
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == ABILITY_BOUND_LIST }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -8934,6 +8968,11 @@ impl std::fmt::Display for TypeOwner {
     }
 }
 impl std::fmt::Display for Ability {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for AbilityBoundList {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

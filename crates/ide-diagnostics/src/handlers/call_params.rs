@@ -1,7 +1,6 @@
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use ide_db::Severity;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, ast};
 
