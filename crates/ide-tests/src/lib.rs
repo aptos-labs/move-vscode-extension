@@ -12,6 +12,7 @@ mod test_syntax_highlighting;
 mod test_unresolved_reference;
 mod types;
 
+mod test_abilities_key;
 mod test_completion_functions;
 mod test_completion_loops;
 mod test_completion_methods;

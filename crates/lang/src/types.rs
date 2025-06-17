@@ -1,3 +1,4 @@
+pub mod abilities;
 pub mod has_type_params_ext;
 pub mod inference;
 pub mod lowering;

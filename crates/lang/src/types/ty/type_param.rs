@@ -1,4 +1,5 @@
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
+use base_db::SourceDatabase;
 use syntax::ast;
 use syntax::files::InFile;
 
@@ -14,5 +15,9 @@ impl TyTypeParameter {
 
     pub fn from_loc(origin_loc: SyntaxLoc) -> Self {
         TyTypeParameter { origin_loc }
+    }
+
+    pub fn origin_type_param(&self, db: &dyn SourceDatabase) -> Option<InFile<ast::TypeParam>> {
+        self.origin_loc.to_ast::<ast::TypeParam>(db)
     }
 }

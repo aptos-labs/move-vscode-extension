@@ -433,7 +433,10 @@ TypeParamList =
     '<' type_parameters:(TypeParam (',' TypeParam)* ','?)? '>'
 
 TypeParam =
-    'phantom'? Name
+    'phantom'? Name AbilityBoundList?
+
+AbilityBoundList =
+    ':' abilities:(Ability (',' Ability)* ','?)?
 
 TypeArgList =
     '<' type_arguments:(TypeArg (',' TypeArg)* ','?)? '>'

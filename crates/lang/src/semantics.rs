@@ -21,7 +21,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::{fmt, ops};
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
-use syntax::files::{FileRange, InFile};
+use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, SyntaxNode, SyntaxToken, TextSize, ast};
 use vfs::FileId;
 

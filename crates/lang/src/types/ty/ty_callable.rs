@@ -6,7 +6,7 @@ use std::ops::Deref;
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TyCallable {
     pub param_types: Vec<Ty>,
-    ret_type: Box<Ty>,
+    pub ret_type: Box<Ty>,
     pub kind: CallKind,
 }
 
