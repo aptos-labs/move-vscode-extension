@@ -1023,10 +1023,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             Ty::Reference(_) | Ty::Tuple(_) => {
                 self.ctx
                     .type_errors
-                    .push(TypeError::wrong_arguments_to_borrow_expr(
-                        inner_expr.in_file(self.ctx.file_id),
-                        inner_ty,
-                    ));
+                    .push(TypeError::wrong_arguments_to_borrow_expr(inner_expr, inner_ty));
                 Ty::Unknown
             }
             _ => inner_ty,
@@ -1044,10 +1041,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let inner_ty = match inner_ty {
             Ty::Reference(_) => inner_ty,
             _ => {
-                self.ctx.type_errors.push(TypeError::invalid_dereference(
-                    inner_expr.in_file(self.ctx.file_id),
-                    inner_ty,
-                ));
+                self.ctx
+                    .type_errors
+                    .push(TypeError::invalid_dereference(inner_expr, inner_ty));
                 return None;
             }
         };
@@ -1126,7 +1122,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             .supports_arithm_op()
         {
             self.ctx.type_errors.push(TypeError::unsupported_op(
-                lhs.in_file(self.ctx.file_id),
+                &lhs,
                 left_ty.clone(),
                 ast::BinaryOp::ArithOp(arith_op),
             ));
@@ -1140,7 +1136,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 .supports_arithm_op()
             {
                 self.ctx.type_errors.push(TypeError::unsupported_op(
-                    rhs.in_file(self.ctx.file_id),
+                    &rhs,
                     right_ty.clone(),
                     ast::BinaryOp::ArithOp(arith_op),
                 ));
@@ -1150,7 +1146,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 let combined = self.ctx.combine_types(left_ty.clone(), right_ty.clone());
                 if combined.is_err() {
                     self.ctx.type_errors.push(TypeError::wrong_arguments_to_bin_expr(
-                        bin_expr.clone().in_file(self.ctx.file_id),
+                        bin_expr.clone(),
                         left_ty.clone(),
                         right_ty,
                         ast::BinaryOp::ArithOp(arith_op),
@@ -1223,7 +1219,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             let combined = self.ctx.combine_types(left_ty.clone(), right_ty.clone());
             if combined.is_err() {
                 self.ctx.type_errors.push(TypeError::wrong_arguments_to_bin_expr(
-                    bin_expr.clone().in_file(self.ctx.file_id),
+                    bin_expr.clone(),
                     left_ty,
                     right_ty,
                     ast::BinaryOp::CmpOp(cmp_op),
@@ -1247,7 +1243,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             .supports_ordering()
         {
             self.ctx.type_errors.push(TypeError::unsupported_op(
-                lhs.in_file(self.ctx.file_id),
+                &lhs,
                 left_ty.clone(),
                 ast::BinaryOp::CmpOp(cmp_op),
             ));
@@ -1261,7 +1257,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 .supports_ordering()
             {
                 self.ctx.type_errors.push(TypeError::unsupported_op(
-                    rhs.clone().in_file(self.ctx.file_id),
+                    &rhs,
                     right_ty.clone(),
                     ast::BinaryOp::CmpOp(cmp_op),
                 ));

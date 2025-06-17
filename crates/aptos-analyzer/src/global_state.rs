@@ -385,15 +385,11 @@ impl GlobalStateSnapshot {
     }
 
     pub(crate) fn ask_client_for_movefmt_update(&self, message: String) {
-        let mut from_env = false;
         let aptos_cli = match self.config.aptos_path() {
             Some(p) => Some(p),
-            None => {
-                from_env = true;
-                which::which("aptos")
-                    .ok()
-                    .and_then(|it| Utf8PathBuf::from_path_buf(it).ok())
-            }
+            None => which::which("aptos")
+                .ok()
+                .and_then(|it| Utf8PathBuf::from_path_buf(it).ok()),
         };
         tracing::info!(cli = ?aptos_cli, "Ask to fetch movefmt");
         let notif = lsp_server::Notification::new(

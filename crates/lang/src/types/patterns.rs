@@ -54,10 +54,9 @@ impl TypeAstWalker<'_, '_> {
                             .instantiate_path(struct_pat.path().into(), struct_.in_file(file_id))
                             .into_ty_adt()?;
                         if !self.ctx.is_tys_compatible(expected, Ty::Adt(pat_ty)) {
-                            self.ctx.type_errors.push(TypeError::invalid_unpacking(
-                                pat.in_file(self.ctx.file_id),
-                                ty.clone(),
-                            ));
+                            self.ctx
+                                .type_errors
+                                .push(TypeError::invalid_unpacking(pat, ty.clone()));
                         }
                     }
                 }
@@ -143,10 +142,9 @@ impl TypeAstWalker<'_, '_> {
                     .ctx
                     .is_tys_compatible(ty.clone(), Ty::Tuple(TyTuple::unknown(pats.len())))
                 {
-                    self.ctx.type_errors.push(TypeError::invalid_unpacking(
-                        pat.in_file(self.ctx.file_id),
-                        ty.clone(),
-                    ));
+                    self.ctx
+                        .type_errors
+                        .push(TypeError::invalid_unpacking(pat, ty.clone()));
                 }
 
                 let inner_types = ty.into_ty_tuple().map(|it| it.types).unwrap_or_default();
