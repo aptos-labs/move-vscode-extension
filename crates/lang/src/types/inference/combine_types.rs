@@ -1,4 +1,3 @@
-use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::inference::InferenceCtx;
 use crate::types::substitution::ApplySubstitution;
@@ -10,8 +9,7 @@ use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
 use std::cell::RefCell;
 use std::iter::zip;
-use syntax::files::{InFile, InFileExt};
-use syntax::{SyntaxNodeOrToken, ast};
+use syntax::{AstNode, SyntaxKind, SyntaxNodeOrToken, TextRange, ast};
 
 impl InferenceCtx<'_> {
     #[allow(clippy::wrong_self_convention)]
@@ -29,12 +27,7 @@ impl InferenceCtx<'_> {
         match combined {
             Ok(()) => true,
             Err(error_tys) => {
-                self.report_type_mismatch(
-                    error_tys,
-                    node_or_token.in_file(self.file_id),
-                    actual,
-                    expected,
-                );
+                self.report_type_mismatch(error_tys, node_or_token, actual, expected);
                 false
             }
         }
@@ -278,7 +271,7 @@ impl InferenceCtx<'_> {
     fn report_type_mismatch(
         &mut self,
         _mismatch_error_tys: MismatchErrorTypes,
-        node_or_token: InFile<SyntaxNodeOrToken>,
+        node_or_token: SyntaxNodeOrToken,
         actual: Ty,
         expected: Ty,
     ) {
@@ -304,143 +297,158 @@ impl MismatchErrorTypes {
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum TypeError {
     TypeMismatch {
-        loc: SyntaxLoc,
+        text_range: TextRange,
         expected_ty: Ty,
         actual_ty: Ty,
     },
     UnsupportedOp {
-        loc: SyntaxLoc,
+        text_range: TextRange,
         ty: Ty,
         op: String,
     },
     WrongArgumentsToBinExpr {
-        loc: SyntaxLoc,
+        text_range: TextRange,
         left_ty: Ty,
         right_ty: Ty,
         op: String,
     },
     InvalidUnpacking {
-        loc: SyntaxLoc,
+        text_range: TextRange,
+        pat_kind: SyntaxKind,
         assigned_ty: Ty,
     },
     CircularType {
-        loc: SyntaxLoc,
+        text_range: TextRange,
         type_name: String,
     },
     WrongArgumentToBorrowExpr {
-        loc: SyntaxLoc,
+        text_range: TextRange,
         actual_ty: Ty,
     },
     InvalidDereference {
-        loc: SyntaxLoc,
+        text_range: TextRange,
         actual_ty: Ty,
     },
 }
 
 impl TypeError {
-    pub fn loc(&self) -> SyntaxLoc {
+    pub fn text_range(&self) -> TextRange {
         match self {
-            TypeError::TypeMismatch { loc, .. } => loc.clone(),
-            TypeError::UnsupportedOp { loc, .. } => loc.clone(),
-            TypeError::WrongArgumentsToBinExpr { loc, .. } => loc.clone(),
-            TypeError::InvalidUnpacking { loc, .. } => loc.clone(),
-            TypeError::CircularType { loc, .. } => loc.clone(),
-            TypeError::WrongArgumentToBorrowExpr { loc, .. } => loc.clone(),
-            TypeError::InvalidDereference { loc, .. } => loc.clone(),
+            TypeError::TypeMismatch { text_range, .. } => text_range.clone(),
+            TypeError::UnsupportedOp { text_range, .. } => text_range.clone(),
+            TypeError::WrongArgumentsToBinExpr { text_range, .. } => text_range.clone(),
+            TypeError::InvalidUnpacking { text_range, .. } => text_range.clone(),
+            TypeError::CircularType { text_range, .. } => text_range.clone(),
+            TypeError::WrongArgumentToBorrowExpr { text_range, .. } => text_range.clone(),
+            TypeError::InvalidDereference { text_range, .. } => text_range.clone(),
         }
     }
-    pub fn type_mismatch(
-        node_or_token: InFile<SyntaxNodeOrToken>,
-        expected_ty: Ty,
-        actual_ty: Ty,
-    ) -> Self {
-        let (file_id, node_or_token) = node_or_token.unpack();
+    pub fn type_mismatch(node_or_token: SyntaxNodeOrToken, expected_ty: Ty, actual_ty: Ty) -> Self {
         TypeError::TypeMismatch {
-            loc: SyntaxLoc::from_node_or_token(file_id, node_or_token),
+            text_range: node_or_token.text_range(),
             expected_ty,
             actual_ty,
         }
     }
 
-    pub fn unsupported_op(expr: InFile<ast::Expr>, ty: Ty, op: ast::BinaryOp) -> Self {
+    pub fn unsupported_op(expr: &ast::Expr, ty: Ty, op: ast::BinaryOp) -> Self {
         TypeError::UnsupportedOp {
-            loc: expr.loc(),
+            text_range: expr.syntax().text_range(),
             ty,
             op: op.to_string(),
         }
     }
 
     pub fn wrong_arguments_to_bin_expr(
-        expr: InFile<ast::BinExpr>,
+        expr: ast::BinExpr,
         left_ty: Ty,
         right_ty: Ty,
         op: ast::BinaryOp,
     ) -> Self {
         TypeError::WrongArgumentsToBinExpr {
-            loc: expr.loc(),
+            text_range: expr.syntax().text_range(),
             left_ty,
             right_ty,
             op: op.to_string(),
         }
     }
 
-    pub fn wrong_arguments_to_borrow_expr(inner_expr: InFile<ast::Expr>, actual_ty: Ty) -> Self {
+    pub fn wrong_arguments_to_borrow_expr(inner_expr: ast::Expr, actual_ty: Ty) -> Self {
         TypeError::WrongArgumentToBorrowExpr {
-            loc: inner_expr.loc(),
+            text_range: inner_expr.syntax().text_range(),
             actual_ty,
         }
     }
 
-    pub fn invalid_dereference(inner_expr: InFile<ast::Expr>, actual_ty: Ty) -> Self {
+    pub fn invalid_dereference(inner_expr: ast::Expr, actual_ty: Ty) -> Self {
         TypeError::InvalidDereference {
-            loc: inner_expr.loc(),
+            text_range: inner_expr.syntax().text_range(),
             actual_ty,
         }
     }
 
-    pub fn invalid_unpacking(pat: InFile<ast::Pat>, assigned_ty: Ty) -> Self {
-        TypeError::InvalidUnpacking { loc: pat.loc(), assigned_ty }
+    pub fn invalid_unpacking(pat: ast::Pat, assigned_ty: Ty) -> Self {
+        TypeError::InvalidUnpacking {
+            text_range: pat.syntax().text_range(),
+            pat_kind: pat.syntax().kind(),
+            assigned_ty,
+        }
     }
 
-    pub fn circular_type(path: InFile<ast::Path>, type_name: String) -> Self {
-        TypeError::CircularType { loc: path.loc(), type_name }
+    pub fn circular_type(path: ast::Path, type_name: String) -> Self {
+        TypeError::CircularType {
+            text_range: path.syntax().text_range(),
+            type_name,
+        }
     }
 }
 
 impl TypeFoldable<TypeError> for TypeError {
     fn deep_fold_with(self, folder: impl TypeFolder) -> TypeError {
         match self {
-            TypeError::TypeMismatch { loc, expected_ty, actual_ty } => TypeError::TypeMismatch {
-                loc,
+            TypeError::TypeMismatch {
+                text_range,
+                expected_ty,
+                actual_ty,
+            } => TypeError::TypeMismatch {
+                text_range,
                 expected_ty: expected_ty.fold_with(folder.clone()),
                 actual_ty: actual_ty.fold_with(folder),
             },
-            TypeError::UnsupportedOp { loc, ty, op } => TypeError::UnsupportedOp {
-                loc,
+            TypeError::UnsupportedOp { text_range, ty, op } => TypeError::UnsupportedOp {
+                text_range,
                 ty: ty.fold_with(folder),
                 op,
             },
-            TypeError::WrongArgumentsToBinExpr { loc, left_ty, right_ty, op } => {
-                TypeError::WrongArgumentsToBinExpr {
-                    loc,
-                    left_ty: left_ty.fold_with(folder.clone()),
-                    right_ty: right_ty.fold_with(folder),
-                    op,
-                }
-            }
-            TypeError::InvalidUnpacking { loc, assigned_ty } => TypeError::InvalidUnpacking {
-                loc,
+            TypeError::WrongArgumentsToBinExpr {
+                text_range,
+                left_ty,
+                right_ty,
+                op,
+            } => TypeError::WrongArgumentsToBinExpr {
+                text_range,
+                left_ty: left_ty.fold_with(folder.clone()),
+                right_ty: right_ty.fold_with(folder),
+                op,
+            },
+            TypeError::InvalidUnpacking {
+                text_range,
+                pat_kind,
+                assigned_ty,
+            } => TypeError::InvalidUnpacking {
+                text_range,
+                pat_kind,
                 assigned_ty: assigned_ty.fold_with(folder),
             },
             TypeError::CircularType { .. } => self,
-            TypeError::WrongArgumentToBorrowExpr { loc, actual_ty } => {
+            TypeError::WrongArgumentToBorrowExpr { text_range, actual_ty } => {
                 TypeError::WrongArgumentToBorrowExpr {
-                    loc,
+                    text_range,
                     actual_ty: actual_ty.fold_with(folder),
                 }
             }
-            TypeError::InvalidDereference { loc, actual_ty } => TypeError::InvalidDereference {
-                loc,
+            TypeError::InvalidDereference { text_range, actual_ty } => TypeError::InvalidDereference {
+                text_range,
                 actual_ty: actual_ty.fold_with(folder),
             },
         }

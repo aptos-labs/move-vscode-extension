@@ -39,7 +39,7 @@ pub(crate) fn recursive_struct_check(
                     acc,
                     ctx,
                     file_id,
-                    &TypeError::circular_type(leaf_path, owner_item_name.clone()),
+                    &TypeError::circular_type(leaf_path.value, owner_item_name.clone()),
                 );
             }
         }
@@ -69,14 +69,14 @@ pub(crate) fn type_check(
     // drop all type errors with ty unknown inside to prevent false positives
     remaining_errors.retain(|type_error| !type_error.has_ty_unknown());
 
-    remaining_errors.sort_by_key(|err| err.loc().text_range().start());
+    remaining_errors.sort_by_key(|err| err.text_range().start());
     // need to reverse() to pop() correctly
     remaining_errors.reverse();
     'outer: while let Some(type_error) = remaining_errors.pop() {
         // if any of the remaining errors are inside the range, then drop the error
-        let error_range = type_error.loc().text_range();
+        let error_range = type_error.text_range();
         for remaining_error in remaining_errors.iter() {
-            if error_range.contains_range(remaining_error.loc().text_range()) {
+            if error_range.contains_range(remaining_error.text_range()) {
                 continue 'outer;
             }
         }
@@ -93,45 +93,49 @@ fn register_type_error(
     type_error: &TypeError,
 ) {
     match type_error {
-        TypeError::TypeMismatch { loc, actual_ty, expected_ty } => {
+        TypeError::TypeMismatch {
+            text_range,
+            actual_ty,
+            expected_ty,
+        } => {
             let actual = ctx.sema.render_ty(actual_ty);
             let expected = ctx.sema.render_ty(expected_ty);
             acc.push(Diagnostic::new(
                 DiagnosticCode::Lsp("type-error", Severity::Error),
                 format!("Incompatible type '{actual}', expected '{expected}'"),
-                FileRange {
-                    file_id,
-                    range: loc.text_range(),
-                },
+                FileRange { file_id, range: *text_range },
             ))
         }
-        TypeError::UnsupportedOp { loc, ty, op } => {
+        TypeError::UnsupportedOp { text_range, ty, op } => {
             let ty = ctx.sema.render_ty(ty);
             acc.push(Diagnostic::new(
                 DiagnosticCode::Lsp("type-error", Severity::Error),
                 format!("Invalid argument to '{op}': expected integer type, but found '{ty}'"),
-                FileRange {
-                    file_id,
-                    range: loc.text_range(),
-                },
+                FileRange { file_id, range: *text_range },
             ))
         }
-        TypeError::WrongArgumentsToBinExpr { loc, left_ty, right_ty, op } => {
+        TypeError::WrongArgumentsToBinExpr {
+            text_range,
+            left_ty,
+            right_ty,
+            op,
+        } => {
             let left_ty = ctx.sema.render_ty(left_ty);
             let right_ty = ctx.sema.render_ty(right_ty);
             acc.push(Diagnostic::new(
                 DiagnosticCode::Lsp("type-error", Severity::Error),
                 format!("Incompatible arguments to '{op}': '{left_ty}' and '{right_ty}'"),
-                FileRange {
-                    file_id,
-                    range: loc.text_range(),
-                },
+                FileRange { file_id, range: *text_range },
             ))
         }
-        TypeError::InvalidUnpacking { loc, assigned_ty } => {
+        TypeError::InvalidUnpacking {
+            text_range,
+            pat_kind: kind,
+            assigned_ty,
+        } => {
             use syntax::SyntaxKind::*;
 
-            let message = match loc.kind() {
+            let message = match kind {
                 STRUCT_PAT if !matches!(assigned_ty, Ty::Adt(_) | Ty::Tuple(_)) => {
                     format!(
                         "Assigned expr of type '{}' cannot be unpacked with struct pattern",
@@ -154,40 +158,28 @@ fn register_type_error(
             acc.push(Diagnostic::new(
                 DiagnosticCode::Lsp("type-error", Severity::Error),
                 message,
-                FileRange {
-                    file_id,
-                    range: loc.text_range(),
-                },
+                FileRange { file_id, range: *text_range },
             ))
         }
-        TypeError::CircularType { loc, type_name } => acc.push(Diagnostic::new(
+        TypeError::CircularType { text_range, type_name } => acc.push(Diagnostic::new(
             DiagnosticCode::Lsp("type-error", Severity::Error),
             format!("Circular reference of type '{type_name}'"),
-            FileRange {
-                file_id,
-                range: loc.text_range(),
-            },
+            FileRange { file_id, range: *text_range },
         )),
-        TypeError::WrongArgumentToBorrowExpr { loc, actual_ty } => {
+        TypeError::WrongArgumentToBorrowExpr { text_range, actual_ty } => {
             let ty = ctx.sema.render_ty(actual_ty);
             acc.push(Diagnostic::new(
                 DiagnosticCode::Lsp("type-error", Severity::Error),
                 format!("Expected a single non-reference type, but found '{ty}'"),
-                FileRange {
-                    file_id,
-                    range: loc.text_range(),
-                },
+                FileRange { file_id, range: *text_range },
             ))
         }
-        TypeError::InvalidDereference { loc, actual_ty } => {
+        TypeError::InvalidDereference { text_range, actual_ty } => {
             let ty = ctx.sema.render_ty(actual_ty);
             acc.push(Diagnostic::new(
                 DiagnosticCode::Lsp("type-error", Severity::Error),
                 format!("Invalid dereference. Expected '&_' but found '{ty}'"),
-                FileRange {
-                    file_id,
-                    range: loc.text_range(),
-                },
+                FileRange { file_id, range: *text_range },
             ))
         }
     }
