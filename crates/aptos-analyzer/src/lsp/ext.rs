@@ -115,3 +115,19 @@ pub struct CodeActionData {
     pub id: String,
     pub version: Option<i32>,
 }
+
+pub enum MovefmtVersionError {}
+
+impl Notification for MovefmtVersionError {
+    type Params = MovefmtVersionErrorParams;
+    const METHOD: &'static str = "aptos-analyzer/movefmtVersionError";
+}
+
+#[derive(Deserialize, Serialize, PartialEq, Eq, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct MovefmtVersionErrorParams {
+    pub message: String,
+    pub aptos_path: Option<String>,
+    #[allow(non_snake_case)]
+    pub aptos_path_from_PATH: bool,
+}

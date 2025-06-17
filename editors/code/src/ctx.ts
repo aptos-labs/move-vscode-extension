@@ -15,6 +15,8 @@ import { spawn } from "node:child_process";
 // only those are in use. We use "Empty" to represent these scenarios
 // (r-a still somewhat works with Live Share, because commands are tunneled to the host)
 
+const MOVEFMT_REQUIRED_VERSION = "1.2.1";
+
 export type Workspace =
     | { kind: "Empty" }
     | { kind: "Workspace Folder" }
@@ -197,6 +199,27 @@ export class Ctx {
             this.pushClientCleanup(
                 this._client.onNotification(lsp_ext.openServerLogs, () => {
                     this.outputChannel!.show();
+                }),
+            );
+            this.pushClientCleanup(
+                this._client.onNotification(lsp_ext.movefmtVersionError, async (params) => {
+                    const aptosPath = params.aptosPath;
+                    const warningMessage = `movefmt error: ${params.message}`;
+                    if (aptosPath === undefined) {
+                        await vscode.window.showErrorMessage(
+                            `${warningMessage}. Configure 'aptos-analyzer.aptosPath' to fetch it from the editor`
+                        );
+                        return;
+                    }
+                    const updateLabel = "Run `aptos update` in Terminal";
+                    const selected =
+                        await vscode.window.showErrorMessage(warningMessage, updateLabel);
+                    if (selected === updateLabel) {
+                        const terminal = vscode.window.createTerminal(`Update Movefmt`);
+                        const exe = params.aptosPathFromPATH ? "aptos" : aptosPath!!;
+                        terminal.sendText(`${exe} update movefmt --target-version ${MOVEFMT_REQUIRED_VERSION}`);
+                        terminal.show(false)
+                    }
                 }),
             );
         }

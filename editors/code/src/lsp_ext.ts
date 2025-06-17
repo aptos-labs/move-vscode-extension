@@ -32,3 +32,12 @@ export const viewSyntaxTree = new lc.RequestType<ViewSyntaxTreeParams, string, v
 );
 export type ViewSyntaxTreeParams = { textDocument: lc.TextDocumentIdentifier };
 
+export const movefmtVersionError = new lc.NotificationType<MovefmtVersionParams>("aptos-analyzer/movefmtVersionError");
+
+export type MovefmtVersionParams = {
+    message: string;
+    aptosPath: string | null;
+    aptosPathFromPATH: boolean;
+}
+
+

@@ -8,7 +8,7 @@ export async function createClient(
     serverOptions: lc.ServerOptions,
 ): Promise<lc.LanguageClient> {
 
-    const raMiddleware: lc.Middleware = {
+    const lspMiddleware: lc.Middleware = {
         workspace: {
             // HACK: This is a workaround, when the client has been disposed, VSCode
             // continues to emit events to the client and the default one for this event
@@ -41,7 +41,7 @@ export async function createClient(
         // initializationOptions,
         traceOutputChannel,
         outputChannel,
-        middleware: raMiddleware,
+        middleware: lspMiddleware,
         markdown: {
             supportHtml: true,
         },
