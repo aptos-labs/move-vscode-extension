@@ -3,10 +3,10 @@ use base_db::inputs::InternFileId;
 use base_db::{SourceDatabase, source_db};
 use std::fmt;
 use std::fmt::Formatter;
-use syntax::SyntaxKind;
 use syntax::algo::ancestors_at_offset;
 use syntax::files::InFile;
-use syntax::{AstNode, SourceFile, SyntaxNodeOrToken, TextRange, TextSize, ast};
+use syntax::{AstNode, SourceFile, TextRange, TextSize, ast};
+use syntax::{SyntaxKind, SyntaxNodePtr};
 use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]
@@ -14,38 +14,34 @@ pub struct SyntaxLoc {
     file_id: FileId,
     text_range: TextRange,
     kind: SyntaxKind,
+    syntax_ptr: SyntaxNodePtr,
     // only for debugging here, might be removed in the future
     node_name: Option<String>,
 }
 
 impl SyntaxLoc {
-    pub fn from_ast_node<T: AstNode>(file_id: FileId, node: &T) -> Self {
-        let node_or_token = SyntaxNodeOrToken::Node(node.syntax().clone());
-        Self::from_node_or_token(file_id, node_or_token)
-    }
+    pub fn from_ast_node<T: AstNode>(file_id: FileId, ast_node: &T) -> Self {
+        let node = ast_node.syntax();
 
-    pub fn from_node_or_token(file_id: FileId, node_or_token: SyntaxNodeOrToken) -> Self {
-        let text_range = node_or_token.text_range();
-        let kind = node_or_token.kind();
+        let text_range = node.text_range();
+        let kind = node.kind();
 
-        let mut node_name = None;
-        if let SyntaxNodeOrToken::Node(node) = node_or_token {
-            node_name = node
-                .children_with_tokens()
-                .find(|child| {
-                    let kind = child.kind();
-                    kind == SyntaxKind::NAME
-                        || kind == SyntaxKind::NAME_REF
-                        || kind == SyntaxKind::PATH_SEGMENT
-                        || kind == SyntaxKind::QUOTE_IDENT
-                })
-                .map(|it| it.to_string());
-        }
+        let node_name = node
+            .children_with_tokens()
+            .find(|child| {
+                let kind = child.kind();
+                kind == SyntaxKind::NAME
+                    || kind == SyntaxKind::NAME_REF
+                    || kind == SyntaxKind::PATH_SEGMENT
+                    || kind == SyntaxKind::QUOTE_IDENT
+            })
+            .map(|it| it.to_string());
 
         SyntaxLoc {
             file_id: file_id.to_owned(),
             text_range,
             kind,
+            syntax_ptr: SyntaxNodePtr::new(node),
             node_name,
         }
     }
