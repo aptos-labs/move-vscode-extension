@@ -81,8 +81,11 @@ pub fn apply_error_marks(source: &str, mut marks: Vec<ErrorMark>) -> String {
         source_lines.insert(line as usize, line_text.clone());
         added += 1;
     }
-    let res = source_lines.join("\n");
-    res.trim_start().to_string()
+    let mut res = source_lines.join("\n");
+    res = res.trim_start().trim_end().to_string();
+    // add newline at the end
+    res.push_str("\n");
+    res
 }
 
 fn line_with_mark(line_index: &LineIndex, mark: ErrorMark) -> (u32, String) {
@@ -105,7 +108,7 @@ fn line_with_mark(line_index: &LineIndex, mark: ErrorMark) -> (u32, String) {
         (prefix, mark_range)
     };
 
-    let line = format!("{prefix}//{mark_range} {message}");
+    let line = format!("{prefix}//{mark_range} {message}").trim_end().to_string();
     (lc_start.line, line)
 }
 

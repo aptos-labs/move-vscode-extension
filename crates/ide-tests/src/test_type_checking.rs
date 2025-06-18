@@ -111,7 +111,7 @@ fn test_immutable_reference_not_compatible_with_mutable_reference() {
                 is_none(opt);
                       //^^^ err: Incompatible type '&0x1::M::Option<Element>', expected '&mut 0x1::M::Option<Element>'
             }
-        } 
+        }
     "#]]);
 }
 

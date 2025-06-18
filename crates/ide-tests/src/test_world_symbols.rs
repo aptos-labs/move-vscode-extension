@@ -31,11 +31,11 @@ module 0x1::main {
         expect![[r#"
             module 0x1::main {
                 struct SMain { val: u8 }
-                     //^^^^^ 
+                     //^^^^^
                 enum Main { One, Two }
-                   //^^^^ 
+                   //^^^^
                 fun main() {
-                  //^^^^ 
+                  //^^^^
                 }
             }
     "#]],
@@ -48,7 +48,7 @@ module 0x1::main {
             module 0x1::main {
                 struct SMain { val: u8 }
                 enum Main { One, Two }
-                          //^^^ 
+                          //^^^
                 fun main() {
                 }
             }
@@ -62,7 +62,7 @@ module 0x1::main {
             module 0x1::main {
                 struct SMain { val: u8 }
                 enum Main { One, Two }
-                               //^^^ 
+                               //^^^
                 fun main() {
                 }
             }
