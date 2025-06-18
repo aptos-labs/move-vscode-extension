@@ -740,7 +740,7 @@ impl GlobalState {
             // .on::<RETRY, lsp_ext::ViewCrateGraph>(handlers::handle_view_crate_graph)
             // .on::<RETRY, lsp_ext::ViewItemTree>(handlers::handle_view_item_tree)
             // .on::<RETRY, lsp_ext::DiscoverTest>(handlers::handle_discover_test)
-            // .on::<RETRY, lsp_ext::WorkspaceSymbol>(handlers::handle_workspace_symbol)
+            .on::<RETRY, lsp_request::WorkspaceSymbolRequest>(handlers::handle_workspace_symbol)
             // .on::<NO_RETRY, lsp_ext::Ssr>(handlers::handle_ssr)
             // .on::<NO_RETRY, lsp_ext::ViewRecursiveMemoryLayout>(handlers::handle_view_recursive_memory_layout)
             .on::<NO_RETRY, lsp_ext::ViewSyntaxTree>(request::handle_view_syntax_tree)

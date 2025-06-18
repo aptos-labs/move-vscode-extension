@@ -1,6 +1,7 @@
 use base_db::SourceDatabase;
 use ide_db::{RootDatabase, SymbolKind, ast_kind_to_symbol_kind};
 use lang::Semantics;
+use lang::loc::SyntaxLoc;
 use lang::nameres::scope::ScopeEntry;
 use std::fmt;
 use syntax::files::InFile;
@@ -88,47 +89,50 @@ impl NavigationTarget {
         sema: &'db Semantics<'db, RootDatabase>,
         scope_entry: ScopeEntry,
     ) -> Option<NavigationTarget> {
-        let entry_name = scope_entry.name;
-        let file_id = scope_entry.node_loc.file_id();
-        if sema
-            .db
-            .builtins_file_id()
-            .is_some_and(|fid| fid.data(sema.db) == file_id)
-        {
+        Self::from_syntax_loc(sema.db, scope_entry.name, scope_entry.node_loc)
+    }
+
+    pub(crate) fn from_syntax_loc(
+        db: &RootDatabase,
+        element_name: String,
+        syntax_loc: SyntaxLoc,
+    ) -> Option<NavigationTarget> {
+        let file_id = syntax_loc.file_id();
+        if db.builtins_file_id().is_some_and(|fid| fid.data(db) == file_id) {
             return None;
         }
-        if let Some(label_decl) = scope_entry.node_loc.to_ast::<ast::LabelDecl>(sema.db) {
+        if let Some(label_decl) = syntax_loc.to_ast::<ast::LabelDecl>(db) {
             let label = label_decl.value;
             let name_range = label.quote_ident_token().text_range();
             let node_range = label.syntax().text_range();
             return Some(NavigationTarget::from_syntax(
                 file_id,
-                entry_name.into(),
+                element_name.into(),
                 Some(name_range),
                 node_range,
                 SymbolKind::Label,
             ));
         }
-        if let Some(tuple_field) = scope_entry.node_loc.to_ast::<ast::TupleField>(sema.db) {
+        if let Some(tuple_field) = syntax_loc.to_ast::<ast::TupleField>(db) {
             let tuple_field = tuple_field.value;
             let node_range = tuple_field.syntax().text_range();
             return Some(NavigationTarget::from_syntax(
                 file_id,
-                entry_name.into(),
+                element_name.into(),
                 Some(node_range.clone()),
                 node_range,
                 SymbolKind::Field,
             ));
         }
 
-        let named_item = scope_entry.node_loc.to_ast::<ast::NamedElement>(sema.db)?.value;
+        let named_item = syntax_loc.to_ast::<ast::NamedElement>(db)?.value;
         let name_range = named_item.name().map(|name| name.ident_token().text_range());
         let node_range = named_item.syntax().text_range();
 
         let kind = ast_kind_to_symbol_kind(&named_item);
         Some(NavigationTarget::from_syntax(
             file_id,
-            entry_name.into(),
+            element_name.into(),
             name_range,
             node_range,
             kind,

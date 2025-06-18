@@ -12,6 +12,7 @@ pub mod rename;
 pub mod root_db;
 pub mod search;
 pub mod source_change;
+pub mod symbol_index;
 mod syntax_helpers;
 pub mod text_edit;
 

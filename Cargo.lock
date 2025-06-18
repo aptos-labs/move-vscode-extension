@@ -785,6 +785,7 @@ dependencies = [
  "anyhow",
  "base-db",
  "crossbeam-channel",
+ "fst",
  "indexmap",
  "itertools",
  "lang",

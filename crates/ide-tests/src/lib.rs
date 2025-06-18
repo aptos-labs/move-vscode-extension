@@ -25,5 +25,6 @@ mod test_resolve_types;
 mod test_type_checking;
 mod test_unused_variables;
 mod test_view_syntax_tree;
+mod test_world_symbols;
 
 pub use test_utils::tracing::init_tracing_for_test;

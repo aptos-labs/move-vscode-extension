@@ -10,7 +10,7 @@ use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::ty::Ty;
-use base_db::inputs::InternFileId;
+use base_db::inputs::{FileIdInput, InternFileId};
 use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
 use std::sync::Arc;
@@ -133,15 +133,19 @@ fn file_ids_by_module_address_tracked<'db>(
         }
     }
     files_with_modules
-    // let source_file_ids = all_package_file_ids(db, package_id);
-    // let mut file_ids = vec![];
-    // for source_file_id in source_file_ids {
-    //     let modules = get_modules_in_file(db, *source_file_id, address.clone());
-    //     if !modules.is_empty() {
-    //         file_ids.push(source_file_id);
-    //     }
-    // }
-    // file_ids
+}
+
+pub fn modules_for_package_id<'db>(
+    db: &'db dyn SourceDatabase,
+    package_id: PackageId,
+) -> Vec<SyntaxLoc> {
+    let source_file_ids = source_file_ids_in_package(db, package_id);
+    let mut all_locs = vec![];
+    for source_file_id in source_file_ids {
+        let module_locs = get_all_modules_in_file(db, source_file_id.intern(db));
+        all_locs.extend(module_locs);
+    }
+    all_locs
 }
 
 // #[salsa_macros::tracked(returns(ref))]
@@ -262,4 +266,15 @@ pub(crate) fn get_modules_in_file(
         .filter(|m| m.address_equals_to(address.clone(), false))
         .collect::<Vec<_>>();
     modules
+}
+
+#[salsa_macros::tracked]
+pub(crate) fn get_all_modules_in_file(db: &dyn SourceDatabase, file_id: FileIdInput) -> Vec<SyntaxLoc> {
+    let source_file = source_db::parse(db, file_id).tree();
+    let modules = source_file.all_modules().collect::<Vec<_>>();
+    let module_locs = modules
+        .into_iter()
+        .map(|it| it.in_file(file_id.data(db)).loc())
+        .collect::<Vec<_>>();
+    module_locs
 }

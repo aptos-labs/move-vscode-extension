@@ -6,12 +6,14 @@ use crate::movefmt::run_movefmt;
 use crate::{Config, lsp_ext, unwrap_or_return_default};
 use ide::Cancellable;
 use ide_db::assists::{AssistKind, AssistResolveStrategy, SingleResolve};
+use ide_db::symbol_index::Query;
 use line_index::TextRange;
 use lsp_server::ErrorCode;
 use lsp_types::{
     CodeActionOrCommand, HoverContents, InlayHint, InlayHintParams, Location, PrepareRenameResponse,
     RenameParams, ResourceOp, ResourceOperationKind, SemanticTokensParams, SemanticTokensRangeParams,
     SemanticTokensRangeResult, SemanticTokensResult, TextDocumentIdentifier, WorkspaceEdit,
+    WorkspaceSymbolParams,
 };
 use stdx::format_to;
 use stdx::itertools::Itertools;
@@ -79,6 +81,45 @@ pub(crate) fn handle_semantic_tokens_full(
     // snap.semantic_tokens_cache.lock().insert(params.text_document.uri, semantic_tokens.clone());
 
     Ok(Some(semantic_tokens.into()))
+}
+
+pub(crate) fn handle_workspace_symbol(
+    snap: GlobalStateSnapshot,
+    params: WorkspaceSymbolParams,
+) -> anyhow::Result<Option<lsp_types::WorkspaceSymbolResponse>> {
+    let _p = tracing::info_span!("handle_workspace_symbol").entered();
+
+    let symbols = exec_query(&snap, Query::new(params.query), 100)?;
+
+    return Ok(Some(lsp_types::WorkspaceSymbolResponse::Nested(symbols)));
+
+    fn exec_query(
+        snap: &GlobalStateSnapshot,
+        query: Query,
+        limit: usize,
+    ) -> anyhow::Result<Vec<lsp_types::WorkspaceSymbol>> {
+        let mut res = Vec::new();
+        for nav in snap.analysis.symbol_search(query, limit)? {
+            let container_name = nav.container_name.as_ref().map(|v| v.to_string());
+
+            let info = lsp_types::WorkspaceSymbol {
+                name: match &nav.alias {
+                    Some(alias) => format!("{} (alias for {})", alias, nav.name),
+                    None => format!("{}", nav.name),
+                },
+                kind: nav
+                    .kind
+                    .map(to_proto::symbol_kind)
+                    .unwrap_or(lsp_types::SymbolKind::VARIABLE),
+                tags: None,
+                container_name,
+                location: lsp_types::OneOf::Left(to_proto::location_from_nav(snap, nav)?),
+                data: None,
+            };
+            res.push(info);
+        }
+        Ok(res)
+    }
 }
 
 pub(crate) fn handle_goto_definition(
