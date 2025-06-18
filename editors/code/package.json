@@ -3,9 +3,9 @@
     "displayName": "Move on Aptos (beta)",
     "description": "Move on Aptos Language Extension",
     "private": true,
-    "publisher": "aptos",
+    "publisher": "AptosLabs",
     "version": "0.1.0-dev",
-    "icon": "./icons/aptos_black.png",
+    "icon": "./icons/move_on_aptos.jpeg",
     "releaseTag": null,
     "homepage": "https://github.com/aptos-labs/aptos-move-analyzer",
     "repository": {
