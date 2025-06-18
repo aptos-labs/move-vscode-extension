@@ -8,7 +8,7 @@ import path from "path";
 type ShowStatusBar = "always" | "never" | { documentSelector: vscode.DocumentSelector };
 
 export class Config {
-    readonly extensionId = "aptos.aptos-analyzer";
+    readonly extensionId = "aptoslabs.aptos-analyzer";
     configureLang: vscode.Disposable | undefined;
 
     readonly rootSection = "aptos-analyzer";

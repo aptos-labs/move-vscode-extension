@@ -155,7 +155,7 @@ function checkConflictingExtensions() {
     if (vscode.extensions.getExtension("MoveBit.aptos-move-analyzer")) {
         vscode.window
             .showWarningMessage(
-                `You have both the aptos-analyzer (aptos.aptos-analyzer) and MoveBit's aptos-move-analyzer (MoveBit.aptos-move-analyzer) ` +
+                `You have both the aptos-analyzer (aptoslabs.aptos-analyzer) and MoveBit's aptos-move-analyzer (MoveBit.aptos-move-analyzer) ` +
                 "plugins enabled. These are known to conflict and cause various functions of " +
                 "both plugins to not work correctly. You should disable one of them.",
                 "Got it",
