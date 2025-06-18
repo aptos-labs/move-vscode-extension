@@ -5,7 +5,7 @@ use std::fmt;
 use std::fmt::Formatter;
 use syntax::algo::ancestors_at_offset;
 use syntax::files::InFile;
-use syntax::{AstNode, SourceFile, TextRange, TextSize, ast};
+use syntax::{AstNode, SourceFile, TextSize, ast};
 use syntax::{SyntaxKind, SyntaxNodePtr};
 use vfs::FileId;
 

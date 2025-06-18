@@ -75,12 +75,12 @@ pub(crate) fn check_inlay_hints(expect: Expect) {
 fn test_ident_pat_inlay_hints() {
     // language=Move
     check_inlay_hints(expect![[r#"
-module 0x1::m {
-    fun main() {
-        let a = 1;
-          //^ integer
-    }
-}
+        module 0x1::m {
+            fun main() {
+                let a = 1;
+                  //^ integer
+            }
+        }
     "#]]);
 }
 
@@ -88,13 +88,13 @@ module 0x1::m {
 fn test_ident_pat_in_lambda_param() {
     // language=Move
     check_inlay_hints(expect![[r#"
-module 0x1::m {
-    fun for_each(v: vector<u8>, f: |u8| u8) {}
-    fun main() {
-        for_each(vector[], |elem| elem);
-                          //^^^^ u8
-    }
-}
+        module 0x1::m {
+            fun for_each(v: vector<u8>, f: |u8| u8) {}
+            fun main() {
+                for_each(vector[], |elem| elem);
+                                  //^^^^ u8
+            }
+        }
     "#]]);
 }
 
@@ -102,19 +102,19 @@ module 0x1::m {
 fn test_item_from_move_stdlib_is_always_local() {
     // language=Move
     check_inlay_hints(expect![[r#"
-module std::string {
-    struct String { val: u8 }
-    public fun get_s(): String {
-        String { val: 1 }
-    }
-}
-module 0x1::m {
-    use std::string::get_s;
-    fun main() {
-        let a = get_s();
-          //^ String
-    }
-}
+        module std::string {
+            struct String { val: u8 }
+            public fun get_s(): String {
+                String { val: 1 }
+            }
+        }
+        module 0x1::m {
+            use std::string::get_s;
+            fun main() {
+                let a = get_s();
+                  //^ String
+            }
+        }
     "#]]);
 }
 
@@ -122,19 +122,19 @@ module 0x1::m {
 fn test_item_from_aptos_stdlib_is_always_local() {
     // language=Move
     check_inlay_hints(expect![[r#"
-module aptos_std::string {
-    struct String { val: u8 }
-    public fun get_s(): String {
-        String { val: 1 }
-    }
-}
-module 0x1::m {
-    use aptos_std::string::get_s;
-    fun main() {
-        let a = get_s();
-          //^ String
-    }
-}
+        module aptos_std::string {
+            struct String { val: u8 }
+            public fun get_s(): String {
+                String { val: 1 }
+            }
+        }
+        module 0x1::m {
+            use aptos_std::string::get_s;
+            fun main() {
+                let a = get_s();
+                  //^ String
+            }
+        }
     "#]]);
 }
 
@@ -142,18 +142,18 @@ module 0x1::m {
 fn test_item_from_the_same_package_hints_only_with_name() {
     // language=Move
     check_inlay_hints(expect![[r#"
-module 0x2::price_management {
-    struct Price { val: u8 }
-    public fun get_s(): Price {
-        Price { val: 1 }
-    }
-}
-module 0x2::m {
-    use 0x2::price_management;
-    fun main() {
-        let a = price_management::get_s();
-          //^ Price
-    }
-}
+        module 0x2::price_management {
+            struct Price { val: u8 }
+            public fun get_s(): Price {
+                Price { val: 1 }
+            }
+        }
+        module 0x2::m {
+            use 0x2::price_management;
+            fun main() {
+                let a = price_management::get_s();
+                  //^ Price
+            }
+        }
     "#]]);
 }

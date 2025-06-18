@@ -64,8 +64,10 @@ pub fn remove_marks(source: &str, mark: &str) -> String {
     trimmed_source
 }
 
-pub fn apply_error_marks(source: &str, marks: Vec<ErrorMark>) -> String {
+pub fn apply_error_marks(source: &str, mut marks: Vec<ErrorMark>) -> String {
     let line_index = LineIndex::new(source);
+
+    marks.sort_by_key(|it| it.text_range.start());
 
     let lines_with_marks = marks
         .into_iter()
@@ -79,7 +81,11 @@ pub fn apply_error_marks(source: &str, marks: Vec<ErrorMark>) -> String {
         source_lines.insert(line as usize, line_text.clone());
         added += 1;
     }
-    source_lines.join("\n")
+    let mut res = source_lines.join("\n");
+    res = res.trim_start().trim_end().to_string();
+    // add newline at the end
+    res.push_str("\n");
+    res
 }
 
 fn line_with_mark(line_index: &LineIndex, mark: ErrorMark) -> (u32, String) {
@@ -102,7 +108,7 @@ fn line_with_mark(line_index: &LineIndex, mark: ErrorMark) -> (u32, String) {
         (prefix, mark_range)
     };
 
-    let line = format!("{prefix}//{mark_range} {message}");
+    let line = format!("{prefix}//{mark_range} {message}").trim_end().to_string();
     (lc_start.line, line)
 }
 

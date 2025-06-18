@@ -36,12 +36,6 @@ impl ast::Module {
         // spec callables
         items.extend(into_named_elements(self.spec_functions()));
         items.extend(into_named_elements(self.spec_inline_functions()));
-        // entries.extend(
-        //     module
-        //         .spec_inline_functions()
-        //         .wrapped_in_file(self.file_id)
-        //         .to_entries(),
-        // );
         items
     }
 

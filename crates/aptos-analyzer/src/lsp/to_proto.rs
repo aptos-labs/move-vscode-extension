@@ -261,6 +261,18 @@ pub(crate) fn location(
     Ok(loc)
 }
 
+/// Prefer using `location_link`, if the client has the cap.
+pub(crate) fn location_from_nav(
+    snap: &GlobalStateSnapshot,
+    nav: NavigationTarget,
+) -> Cancellable<lsp_types::Location> {
+    let url = url(snap, nav.file_id);
+    let line_index = snap.file_line_index(nav.file_id)?;
+    let range = lsp_range(&line_index, nav.focus_or_full_range());
+    let loc = lsp_types::Location::new(url, range);
+    Ok(loc)
+}
+
 static TOKEN_RESULT_COUNTER: AtomicU32 = AtomicU32::new(1);
 
 pub(crate) fn semantic_tokens(

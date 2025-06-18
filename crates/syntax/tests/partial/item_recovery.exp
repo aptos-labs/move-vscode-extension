@@ -36,4 +36,3 @@ spec ref
       //^ expected `{`
 spec 0x1::ref
            //^ expected `{`
-

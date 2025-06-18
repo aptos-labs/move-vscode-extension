@@ -15,15 +15,15 @@ impl RootDatabase {
 
         tracing::trace!("apply_change {:?}", change);
 
-        // if let Some(roots) = &change.roots {
-        //     let mut local_roots = FxHashSet::default();
-        //     let mut library_roots = FxHashSet::default();
+        // if let Some(roots) = &change.package_roots {
+        //     let mut local_roots = HashSet::default();
+        //     let mut library_roots = HashSet::default();
         //     for (idx, root) in roots.iter().enumerate() {
-        //         let root_id = SourceRootId(idx as u32);
-        //         if root.is_library {
-        //             library_roots.insert(root_id);
+        //         let package_id = PackageId::new(self, idx as u32);
+        //         if root.is_library() {
+        //             library_roots.insert(package_id);
         //         } else {
-        //             local_roots.insert(root_id);
+        //             local_roots.insert(package_id);
         //         }
         //     }
         //     self.set_local_roots_with_durability(Arc::new(local_roots), Durability::HIGH);

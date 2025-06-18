@@ -15,9 +15,7 @@ pub fn check_diagnostics(expect: Expect) {
 
     let (_, _, diagnostics) = get_diagnostics(trimmed_source.as_str());
 
-    let mut actual = apply_diagnostics_to_file(&trimmed_source, &diagnostics);
-    actual.push_str("\n");
-
+    let actual = apply_diagnostics_to_file(&trimmed_source, &diagnostics);
     expect.assert_eq(stdx::trim_indent(&actual).as_str());
 }
 
@@ -32,9 +30,7 @@ pub fn check_diagnostics_and_fix(before: Expect, after: Expect) {
     let diagnostic = diagnostics.pop().expect("no diagnostics found");
     assert_no_extra_diagnostics(&trimmed_before_source, diagnostics);
 
-    let mut actual = apply_diagnostics_to_file(&trimmed_before_source, &vec![diagnostic.clone()]);
-    actual.push_str("\n");
-
+    let actual = apply_diagnostics_to_file(&trimmed_before_source, &vec![diagnostic.clone()]);
     before.assert_eq(stdx::trim_indent(&actual).as_str());
 
     let fix = &diagnostic

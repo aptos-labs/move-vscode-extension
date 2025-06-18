@@ -111,7 +111,7 @@ fn test_immutable_reference_not_compatible_with_mutable_reference() {
                 is_none(opt);
                       //^^^ err: Incompatible type '&0x1::M::Option<Element>', expected '&mut 0x1::M::Option<Element>'
             }
-        } 
+        }
     "#]]);
 }
 
@@ -735,8 +735,8 @@ fn test_error_add_bool_in_assignment_expr() {
                 let a = 1u64;
                 let b = false;
                 a = a + b;
-                      //^ err: Invalid argument to '+': expected integer type, but found 'bool'
               //^^^^^^^^^ weak: Can be replaced with compound assignment
+                      //^ err: Invalid argument to '+': expected integer type, but found 'bool'
             }
         }
     "#]]);

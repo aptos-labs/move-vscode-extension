@@ -3,7 +3,7 @@
 use base_db::change::FileChanges;
 use base_db::{SourceDatabase, source_db};
 use ide_completion::item::CompletionItem;
-use ide_db::{RootDatabase, root_db};
+use ide_db::{RootDatabase, root_db, symbol_index};
 use line_index::{LineCol, LineIndex};
 use std::sync::Arc;
 use syntax::{SourceFile, TextRange, TextSize};
@@ -33,6 +33,7 @@ pub use ide_db::assists::{Assist, AssistKind, AssistResolveStrategy};
 use ide_db::rename::RenameError;
 use ide_db::search::SearchScope;
 use ide_db::source_change::SourceChange;
+use ide_db::symbol_index::Query;
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 pub use salsa::Cancelled;
@@ -245,17 +246,16 @@ impl Analysis {
     //     })
     // }
 
-    // /// Fuzzy searches for a symbol.
-    // pub fn symbol_search(&self, query: Query, limit: usize) -> Cancellable<Vec<NavigationTarget>> {
-    //     self.with_db(|db| {
-    //         symbol_index::world_symbols(db, query)
-    //             .into_iter() // xx: should we make this a par iter?
-    //             .filter_map(|s| s.try_to_nav(db))
-    //             .take(limit)
-    //             .map(UpmappingResult::call_site)
-    //             .collect::<Vec<_>>()
-    //     })
-    // }
+    /// Fuzzy searches for a symbol.
+    pub fn symbol_search(&self, query: Query, limit: usize) -> Cancellable<Vec<NavigationTarget>> {
+        self.with_db(|db| {
+            symbol_index::world_symbols(db, query)
+                .into_iter()
+                .filter_map(|s| NavigationTarget::from_syntax_loc(db, s.name, s.syntax_loc))
+                .take(limit)
+                .collect::<Vec<_>>()
+        })
+    }
 
     /// Returns the definitions from the symbol at `position`.
     pub fn goto_definition(
