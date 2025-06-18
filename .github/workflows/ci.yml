@@ -31,7 +31,9 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install nextest
-        uses: taiki-e/install-action@nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: nextest@0.9.98
 
       - run: cargo nextest run --hide-progress-bar --no-fail-fast
 
