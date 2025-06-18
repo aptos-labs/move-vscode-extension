@@ -18,7 +18,7 @@ pub use crate::parse::lexer::parse_single_token;
 pub use crate::parse::SyntaxKind;
 pub use crate::{
     ast::{AstNode, AstToken},
-    ptr::{AstPtr, SyntaxNodePtr},
+    ptr::SyntaxNodePtr,
     syntax_error::SyntaxError,
     syntax_node::{
         IntoNodeOrToken, PreorderWithTokens, SyntaxElement, SyntaxElementChildren, SyntaxNode,
