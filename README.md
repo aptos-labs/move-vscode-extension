@@ -60,29 +60,7 @@ Add the following to settings.json to mark Move library sources as read-only:
 ```
 
 
-## Features
-
-### Language support
-
-* syntax / semantic highlighting
-* go-to-definition
-* completion
-* lints and quickfixes
-* find references
-* rename refactoring
-* inlay type hints
-```
-module 0x1::m {
-    struct S { val: u8 }
-    fun method(self: S, a: u8, b: u8): u8 {
-        self.val
-    }
-    fun main(s: S) {
-        method(s, 1, 2);
-      //^^^^^^^^^^^^^^^ weak: Can be replaced with method call
-    }
-}
-  ```
+## Configuration
 
 ### Inlay hints
 
@@ -212,10 +190,9 @@ The end goal is to be at a feature parity with the Intellij-Move plugin.
 Next features planned are (roughly in the expected order of implementation):
 
 * More error highlighting: 
-  - Not enough type params / params / missing fields.
+  - Not enough type params / missing fields.
   - Replace `vector::borrow` with `v[]`.
-  - `aptos move lint` lints with quickfixes.
-* Unused local variable lint (with quickfix to prefix name with `_`).
+  - Support `aptos move lint` lints with quickfixes.
 * Add "item is private" clarification to the "unresolved reference" diagnostic.
 * Unused imports (with quickfix).
-* Auto-import.
+* Global auto-completion (auto-import).
