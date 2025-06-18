@@ -83,13 +83,16 @@ pub(crate) fn handle_semantic_tokens_full(
     Ok(Some(semantic_tokens.into()))
 }
 
+/// A value to use, when uncertain which limit to pick.
+pub const DEFAULT_QUERY_SEARCH_LIMIT: usize = 100;
+
 pub(crate) fn handle_workspace_symbol(
     snap: GlobalStateSnapshot,
     params: WorkspaceSymbolParams,
 ) -> anyhow::Result<Option<lsp_types::WorkspaceSymbolResponse>> {
     let _p = tracing::info_span!("handle_workspace_symbol").entered();
 
-    let symbols = exec_query(&snap, Query::new(params.query), 100)?;
+    let symbols = exec_query(&snap, Query::new(params.query), DEFAULT_QUERY_SEARCH_LIMIT)?;
 
     return Ok(Some(lsp_types::WorkspaceSymbolResponse::Nested(symbols)));
 
