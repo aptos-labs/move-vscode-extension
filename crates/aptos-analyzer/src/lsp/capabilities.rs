@@ -54,7 +54,7 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
         // type_definition_provider: Some(TypeDefinitionProviderCapability::Simple(true)),
         // implementation_provider: Some(ImplementationProviderCapability::Simple(true)),
         references_provider: Some(OneOf::Left(true)),
-        // document_highlight_provider: Some(OneOf::Left(true)),
+        document_highlight_provider: Some(OneOf::Left(true)),
         // document_symbol_provider: Some(OneOf::Left(true)),
         workspace_symbol_provider: Some(OneOf::Left(true)),
         code_action_provider: Some(config.caps().code_action_capabilities()),

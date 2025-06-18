@@ -10,10 +10,10 @@ use ide_db::symbol_index::Query;
 use line_index::TextRange;
 use lsp_server::ErrorCode;
 use lsp_types::{
-    CodeActionOrCommand, HoverContents, InlayHint, InlayHintParams, Location, PrepareRenameResponse,
-    RenameParams, ResourceOp, ResourceOperationKind, SemanticTokensParams, SemanticTokensRangeParams,
-    SemanticTokensRangeResult, SemanticTokensResult, TextDocumentIdentifier, WorkspaceEdit,
-    WorkspaceSymbolParams,
+    CodeActionOrCommand, DocumentHighlightKind, HoverContents, InlayHint, InlayHintParams, Location,
+    PrepareRenameResponse, RenameParams, ResourceOp, ResourceOperationKind, SemanticTokensParams,
+    SemanticTokensRangeParams, SemanticTokensRangeResult, SemanticTokensResult, TextDocumentIdentifier,
+    WorkspaceEdit, WorkspaceSymbolParams,
 };
 use stdx::format_to;
 use stdx::itertools::Itertools;
@@ -462,6 +462,30 @@ pub(crate) fn handle_analyzer_status(
     format_to!(buf, "{:#?}", snap.config);
 
     Ok(buf)
+}
+
+pub(crate) fn handle_document_highlight(
+    snap: GlobalStateSnapshot,
+    params: lsp_types::DocumentHighlightParams,
+) -> anyhow::Result<Option<Vec<lsp_types::DocumentHighlight>>> {
+    let _p = tracing::info_span!("handle_document_highlight").entered();
+
+    let position = from_proto::file_position(&snap, params.text_document_position_params)?;
+    let line_index = snap.file_line_index(position.file_id)?;
+    let package_id = snap.analysis.package_id(position.file_id)?;
+
+    let refs = match snap.analysis.highlight_related(position)? {
+        None => return Ok(None),
+        Some(refs) => refs,
+    };
+    let res = refs
+        .into_iter()
+        .map(|range| lsp_types::DocumentHighlight {
+            range: to_proto::lsp_range(&line_index, range),
+            kind: Some(DocumentHighlightKind::TEXT),
+        })
+        .collect();
+    Ok(Some(res))
 }
 
 pub(crate) fn handle_inlay_hints(

@@ -4,6 +4,7 @@ use ide_db::search::SearchScope;
 use ide_db::{RootDatabase, search};
 use itertools::Itertools;
 use lang::Semantics;
+use lang::nameres::scope::ScopeEntryExt;
 use std::collections::HashMap;
 use syntax::SyntaxKind::*;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
@@ -43,7 +44,7 @@ pub(crate) fn find_all_refs<'a>(
     let sema = Semantics::new(db, position.file_id);
 
     let tree = sema.parse(position.file_id).syntax().clone();
-    let named_item = find_def(&sema, &tree, position.offset)?;
+    let named_item = find_def_at_offset(&sema, &tree, position.offset)?;
 
     let usages = search::item_usages(&sema, named_item.clone())
         .set_scope(search_scope)
@@ -62,12 +63,12 @@ pub(crate) fn find_all_refs<'a>(
     Some(ReferenceSearchResult { declaration, references })
 }
 
-pub(crate) fn find_def(
+pub(crate) fn find_def_at_offset(
     sema: &Semantics<'_, RootDatabase>,
-    syntax: &SyntaxNode,
+    tree: &SyntaxNode,
     offset: TextSize,
 ) -> Option<InFile<ast::NamedElement>> {
-    let token = syntax
+    let token = tree
         .token_at_offset(offset)
         .find(|t| matches!(t.kind(), IDENT | INT_NUMBER | QUOTE_IDENT))?;
 
@@ -77,10 +78,9 @@ pub(crate) fn find_def(
             match NameRefClass::classify(sema, &name_ref)? {
                 NameRefClass::Definition(Definition::NamedItem(_, named_item)) => Some(named_item),
                 // NameRefClass::FieldShorthand {
-                //     local_ref,
-                //     field_ref: _,
-                //     adt_subst: _,
-                // } => Definition::Local(local_ref),
+                //     ident_pat,
+                //     named_field,
+                // } => Some(ident_pat.named_element()),
                 _ => None,
             }
         }

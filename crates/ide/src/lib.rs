@@ -11,6 +11,7 @@ use vfs::FileId;
 
 pub mod extend_selection;
 mod goto_definition;
+mod highlight_related;
 mod hover;
 pub mod inlay_hints;
 mod navigation_target;
@@ -36,6 +37,7 @@ use ide_db::source_change::SourceChange;
 use ide_db::symbol_index::Query;
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
+use lang::Semantics;
 pub use salsa::Cancelled;
 use syntax::files::{FilePosition, FileRange};
 
@@ -414,16 +416,12 @@ impl Analysis {
         self.with_db(|db| syntax_highlighting::highlight(db, file_id, None))
     }
 
-    // /// Computes all ranges to highlight for a given item in a file.
-    // pub fn highlight_related(
-    //     &self,
-    //     config: HighlightRelatedConfig,
-    //     position: FilePosition,
-    // ) -> Cancellable<Option<Vec<HighlightedRange>>> {
-    //     self.with_db(|db| {
-    //         highlight_related::highlight_related(&Semantics::new(db), config, position)
-    //     })
-    // }
+    /// Computes all ranges to highlight for a given item in a file.
+    pub fn highlight_related(&self, position: FilePosition) -> Cancellable<Option<Vec<TextRange>>> {
+        self.with_db(|db| {
+            highlight_related::highlight_related(&Semantics::new(db, position.file_id), position)
+        })
+    }
 
     /// Computes syntax highlighting for the given file range.
     pub fn highlight_range(&self, frange: FileRange) -> Cancellable<Vec<HlRange>> {
