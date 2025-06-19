@@ -4,7 +4,6 @@ use crate::parse::grammar::types::TYPE_FIRST;
 use crate::parse::grammar::utils::{
     delimited, delimited_items_with_recover, delimited_with_recovery, list,
 };
-use stdx::panic_context::PanicContext;
 
 pub(crate) fn opt_path_type_arg_list(p: &mut Parser, mode: Mode) {
     match mode {
@@ -32,14 +31,6 @@ pub(crate) fn opt_type_arg_list_for_type(p: &mut Parser) {
         "expected generic argument",
         TokenSet(!0), // no recovery
     );
-    // delimited(
-    //     p,
-    //     T![,],
-    //     || "expected generic argument".into(),
-    //     |p| p.at(T![>]),
-    //     TYPE_ARG_FIRST,
-    //     type_arg,
-    // );
     p.expect(T![>]);
     m.complete(p, TYPE_ARG_LIST);
 }
@@ -78,9 +69,6 @@ pub(super) fn opt_type_arg_list_for_expr(p: &mut Parser, colon_colon_required: b
 
 pub(crate) const TYPE_ARG_FIRST: TokenSet = TokenSet::new(&[IDENT]);
 // .union(types::TYPE_FIRST);
-
-// Despite its name, it can also be used for generic param list.
-const GENERIC_ARG_RECOVERY_SET: TokenSet = TokenSet::new(&[T![>], T![,]]);
 
 pub(crate) fn type_arg(p: &mut Parser) -> bool {
     match p.current() {
