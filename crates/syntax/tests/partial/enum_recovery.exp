@@ -1,0 +1,9 @@
+module 0x1::enum_recovery {
+    enum
+      //^ expected identifier, got 'enum'
+    enum S
+        //^ expected `{`
+    enum S<T>
+           //^ expected `{`
+    fun main() {}
+}

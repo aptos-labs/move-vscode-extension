@@ -49,6 +49,10 @@ impl Parser {
         self.nth(0)
     }
 
+    pub(crate) fn current_text(&self) -> &str {
+        self.token_source.current_text()
+    }
+
     pub(crate) fn nth_is_jointed_to_next(&self, n: usize) -> bool {
         self.token_source.lookahead_nth(n).is_jointed_to_next
     }
@@ -361,8 +365,8 @@ impl Parser {
 
     pub(crate) fn bump_with_error(&mut self, message: &str) {
         let m = self.start();
-        self.push_error(message);
         self.bump_any();
+        self.push_error(message);
         m.complete(self, ERROR);
     }
 

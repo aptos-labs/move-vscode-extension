@@ -8,6 +8,6 @@ module 0x1::unclosed_strings {
         ";
       //^ unexpected character
       //^ expected expression
-      //^ unexpected token SEMICOLON
+       //^ unexpected token SEMICOLON
     }
 }

@@ -210,9 +210,24 @@ fn name_ref_or_index(p: &mut Parser) {
 // }
 
 fn item_name_or_recover(p: &mut Parser, extra_recover_at: impl Fn(&Parser) -> bool) -> bool {
-    name_or_recover(p, |p| {
-        at_item_start(p) || at_block_start(p) || extra_recover_at(p)
-    })
+    // name_or_recover(p, |p| {
+    //     at_item_start(p) || at_block_start(p) || extra_recover_at(p)
+    // })
+    if at_item_start(p) {
+        p.push_error(format!("expected identifier, got '{}'", p.current_text()));
+        return false;
+    }
+    // let recover_until = |p| at_item_start(p) || at_block_start(p) || extra_recover_at(p);
+    if !p.at(IDENT) {
+        p.error_and_recover_until("expected an identifier", |p| {
+            at_item_start(p) || at_block_start(p) || extra_recover_at(p)
+        });
+        return false;
+    }
+    let m = p.start();
+    p.bump(IDENT);
+    m.complete(p, NAME);
+    true
 }
 
 fn name_or_recover(p: &mut Parser, stop: impl Fn(&Parser) -> bool) -> bool {
@@ -224,15 +239,6 @@ fn name_or_recover(p: &mut Parser, stop: impl Fn(&Parser) -> bool) -> bool {
     p.bump(IDENT);
     m.complete(p, NAME);
     true
-    //
-    // if p.at(IDENT) {
-    //     let m = p.start();
-    //     p.bump(IDENT);
-    //     m.complete(p, NAME);
-    //     true
-    // } else {
-    //     false
-    // }
 }
 
 fn error_block(p: &mut Parser, message: &str) {

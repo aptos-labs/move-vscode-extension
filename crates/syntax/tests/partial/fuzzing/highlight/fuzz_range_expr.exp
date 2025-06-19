@@ -11,7 +11,7 @@ module 0x1::dot_dot_pattern {
                           //^ unexpected token COMMA
                                 //^ expected an item, got EQ
                                   //^ expected an item, got IDENT
-                                  //^ expected an item, got SEMICOLON
+                                   //^ expected an item, got SEMICOLON
     }
 }
 //< unexpected token R_CURLY

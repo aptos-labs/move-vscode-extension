@@ -215,8 +215,9 @@ pub(crate) fn on_function_modifiers_start(p: &Parser) -> bool {
         T![native] => true,
         T![friend] => true,
         T![inline] => true,
-        IDENT if p.at_contextual_kw("entry") => true,
-        IDENT if p.at_contextual_kw("package") => true,
+        // not a name of a function
+        IDENT if p.at_contextual_kw("entry") && !p.nth_at_ts(1, ts!(T!['('], T![<])) => true,
+        IDENT if p.at_contextual_kw("package") && !p.nth_at_ts(1, ts!(T!['('], T![<])) => true,
         _ => false,
     }
 }

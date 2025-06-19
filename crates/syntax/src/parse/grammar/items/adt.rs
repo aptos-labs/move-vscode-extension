@@ -88,13 +88,6 @@ pub(super) fn enum_(p: &mut Parser, m: Marker) {
         m.complete(p, ENUM);
         return;
     }
-    // if !name_or_bump_until(p, item_first) {
-    //     m.complete(p, ENUM);
-    //     // m.abandon(p);
-    //     return;
-    // }
-
-    // name_r(p, ITEM_KW_RECOVERY_SET);
     type_params::opt_type_param_list(p);
     opt_abilities_list(p, ts!(T!['{']));
     if p.at(T!['{']) {
