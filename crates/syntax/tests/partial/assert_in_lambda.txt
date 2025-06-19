@@ -41,7 +41,8 @@ SOURCE_FILE@0..119
                     NAME_REF@66..72
                       IDENT@66..72 "assert"
             ERROR@72..73
-              BANG@72..73 "!"
+              ERROR@72..73
+                BANG@72..73 "!"
             COMMA@73..74 ","
             WHITESPACE@74..75 " "
             LAMBDA_TYPE_PARAM@75..81
@@ -51,7 +52,8 @@ SOURCE_FILE@0..119
                     NAME_REF@75..81
                       IDENT@75..81 "assert"
             ERROR@81..84
-              BANG@81..82 "!"
+              ERROR@81..82
+                BANG@81..82 "!"
               L_PAREN@82..83 "("
               R_PAREN@83..84 ")"
             COMMA@84..85 ","

@@ -49,11 +49,11 @@ fn use_speck(p: &mut Parser, top_level: bool) {
             m.abandon(p);
             let msg = "expected one of `*`, `::`, `{`, `self`, `super` or an identifier";
             if top_level {
-                p.error_and_bump_until(msg, at_item_start);
+                p.error_and_recover_until(msg, at_item_start);
             } else {
                 // if we are parsing a nested tree, we have to eat a token to
                 // main balanced `{}`
-                p.error_and_bump_any(msg);
+                p.bump_error(msg);
             }
             return;
         }

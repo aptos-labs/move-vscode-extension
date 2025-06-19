@@ -1,0 +1,48 @@
+SOURCE_FILE@0..105
+  MODULE@0..104
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..13
+      IDENT@12..13 "M"
+    WHITESPACE@13..14 " "
+    L_CURLY@14..15 "{"
+    WHITESPACE@15..20 "\n    "
+    STRUCT@20..102
+      STRUCT_KW@20..26 "struct"
+      WHITESPACE@26..27 " "
+      NAME@27..50
+        IDENT@27..50 "ResourceValidatorConfig"
+      WHITESPACE@50..51 " "
+      NAMED_FIELD_LIST@51..102
+        L_CURLY@51..52 "{"
+        WHITESPACE@52..61 "\n        "
+        NAMED_FIELD@61..95
+          NAME@61..78
+            IDENT@61..78 "operator_account2"
+          COLON@78..79 ":"
+          WHITESPACE@79..80 " "
+          PATH_TYPE@80..95
+            PATH@80..95
+              PATH_SEGMENT@80..95
+                NAME_REF@80..86
+                  IDENT@80..86 "Option"
+                TYPE_ARG_LIST@86..95
+                  L_ANGLE@86..87 "<"
+                  TYPE_ARG@87..94
+                    REF_TYPE@87..94
+                      AMP@87..88 "&"
+                      PATH_TYPE@88..94
+                        PATH@88..94
+                          PATH_SEGMENT@88..94
+                            NAME_REF@88..94
+                              IDENT@88..94 "signer"
+                  R_ANGLE@94..95 ">"
+        COMMA@95..96 ","
+        WHITESPACE@96..101 "\n    "
+        R_CURLY@101..102 "}"
+    WHITESPACE@102..103 "\n"
+    R_CURLY@103..104 "}"
+  WHITESPACE@104..105 "\n"

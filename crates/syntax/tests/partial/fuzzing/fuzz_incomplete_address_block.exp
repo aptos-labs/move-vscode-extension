@@ -3,6 +3,6 @@ module m {
 }
 }
 address 0x2 {
-           //^ expected module
 modul
-   //^ expected R_CURLY
+//< expected module
+//< expected R_CURLY

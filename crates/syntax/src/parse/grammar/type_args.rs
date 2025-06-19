@@ -1,6 +1,10 @@
 use super::*;
 use crate::parse::grammar::paths::Mode;
-use crate::parse::grammar::utils::list;
+use crate::parse::grammar::types::TYPE_FIRST;
+use crate::parse::grammar::utils::{
+    delimited, delimited_items_with_recover, delimited_with_recovery, list,
+};
+use stdx::panic_context::PanicContext;
 
 pub(crate) fn opt_path_type_arg_list(p: &mut Parser<'_>, mode: Mode) {
     match mode {
@@ -11,21 +15,32 @@ pub(crate) fn opt_path_type_arg_list(p: &mut Parser<'_>, mode: Mode) {
 }
 
 pub(crate) fn opt_type_arg_list_for_type(p: &mut Parser<'_>) {
+    let _p = stdx::panic_context::enter("opt_type_arg_list_for_type".to_string());
     let m = p.start();
     let current = p.current();
     if current != T![<] {
         m.abandon(p);
         return;
     }
-    list(
+    p.bump(T![<]);
+    delimited_with_recovery(
         p,
-        T![<],
         T![>],
+        // TYPE_ARG_FIRST + TYPE_FIRST,
+        |p| type_arg(p),
         T![,],
-        || "expected generic argument".into(),
-        TYPE_ARG_FIRST,
-        type_arg,
+        "expected generic argument",
+        TokenSet(!0), // no recovery
     );
+    // delimited(
+    //     p,
+    //     T![,],
+    //     || "expected generic argument".into(),
+    //     |p| p.at(T![>]),
+    //     TYPE_ARG_FIRST,
+    //     type_arg,
+    // );
+    p.expect(T![>]);
     m.complete(p, TYPE_ARG_LIST);
 }
 
@@ -81,9 +96,8 @@ pub(crate) fn type_arg(p: &mut Parser<'_>) -> bool {
 
             let m = m.precede(p).complete(p, PATH_TYPE);
             m.precede(p).complete(p, TYPE_ARG);
-            // types::opt_type_bounds_as_dyn_trait_type(p, m).precede(p).complete(p, TYPE_ARG);
         }
-        _ if p.at_ts(types::TYPE_FIRST) => {
+        _ if p.at_ts(TYPE_FIRST) => {
             let m = p.start();
             types::type_(p);
             m.complete(p, TYPE_ARG);

@@ -1,12 +1,12 @@
 addr {}
 //< unexpected token IDENT
    //^ unexpected token L_CURLY
-    //^ unexpected token R_CURLY
+   //^ unexpected token R_CURLY
 add {}
 //< unexpected token IDENT
   //^ unexpected token L_CURLY
-   //^ unexpected token R_CURLY
+  //^ unexpected token R_CURLY
 mod {}
 //< unexpected token IDENT
   //^ unexpected token L_CURLY
-   //^ unexpected token R_CURLY
+  //^ unexpected token R_CURLY

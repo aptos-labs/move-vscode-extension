@@ -39,7 +39,7 @@ pub(crate) fn function(p: &mut Parser, m: Marker) {
         fun_signature(p, false, true);
     } else {
         // p.error("expected 'fun'");
-        p.error_and_bump_until("expected 'fun'", at_item_start);
+        p.error_and_recover_until("expected 'fun'", at_item_start);
     }
     m.complete(p, FUN);
 }
@@ -97,7 +97,7 @@ fn bump_modifier_if_possible(
 ) {
     let exists = possible_modifiers.remove(&modifier);
     if !exists {
-        p.error_and_bump_any(&format!("duplicate modifier '{:?}'", modifier));
+        p.bump_error(&format!("duplicate modifier '{:?}'", modifier));
         return;
     }
     p.bump_remap(modifier);
@@ -122,7 +122,7 @@ fn opt_inner_public_modifier(p: &mut Parser) {
                 p.bump(T![script]);
             }
             _ => {
-                p.error_and_bump_until_ts("expected public modifier", TokenSet::new(&[T![')']]));
+                p.error_and_recover_until_ts("expected public modifier", TokenSet::new(&[T![')']]));
             }
         }
         p.expect(T![')']);
@@ -133,7 +133,7 @@ fn acquires(p: &mut Parser) {
     let m = p.start();
     p.bump(T![acquires]);
     if !paths::is_path_start(p) {
-        p.error_and_bump_until("expected type", |p| {
+        p.error_and_recover_until("expected type", |p| {
             at_item_start(p) || p.at(T!['{']) || p.at(T![;])
         });
     }
@@ -171,7 +171,7 @@ fn fun_signature(p: &mut Parser, is_spec: bool, allow_acquires: bool) {
     if p.at(T!['(']) {
         params::fun_param_list(p);
     } else {
-        p.error_and_bump_until("expected function arguments", |p| {
+        p.error_and_recover_until("expected function arguments", |p| {
             at_item_start(p) || p.at_ts(ts!(T![;], T!['{']))
         });
         // p.error("expected function arguments");

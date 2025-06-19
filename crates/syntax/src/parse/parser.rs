@@ -288,32 +288,53 @@ impl<'t> Parser<'t> {
     //     self.err_recover_at_ts(message, TokenSet::EMPTY);
     // }
 
-    /// Create an error node and consume the next token.
-    pub(crate) fn error_and_bump_until_ts(&mut self, message: &str, stop_at_ts: TokenSet) {
-        self.error_and_bump_until(message, |p| p.at_ts(stop_at_ts));
-        // match self.current() {
-        //     T!['{'] | T!['}'] => {
-        //         self.error(message);
-        //         return;
-        //     }
-        //     _ => (),
-        // }
-        //
-        // if self.at_ts(recovery) {
-        //     self.error(message);
-        //     return;
-        // }
-        //
-        // let m = self.start();
-        // self.error(message);
-        // self.bump_any();
-        // m.complete(self, ERROR);
+    // pub(crate) fn error_bump_any(&mut self, message: &str) {
+    //     let m = self.start();
+    //     self.push_error(message);
+    //     self.bump_any();
+    //     m.complete(self, ERROR);
+    // }
+
+    // /// Create an error node and consume the next token.
+    // pub(crate) fn error_and_bump_until_ts(&mut self, message: &str, stop_at_ts: TokenSet) {
+    //     self.error_and_bump_until(message, |p| p.at_ts(stop_at_ts));
+    //     // match self.current() {
+    //     //     T!['{'] | T!['}'] => {
+    //     //         self.error(message);
+    //     //         return;
+    //     //     }
+    //     //     _ => (),
+    //     // }
+    //     //
+    //     // if self.at_ts(recovery) {
+    //     //     self.error(message);
+    //     //     return;
+    //     // }
+    //     //
+    //     // let m = self.start();
+    //     // self.error(message);
+    //     // self.bump_any();
+    //     // m.complete(self, ERROR);
+    // }
+
+    pub(crate) fn error_and_recover_until_ts(&mut self, message: &str, stop_at: TokenSet) {
+        self.error_and_recover_until(message, |p| p.at_ts(stop_at))
     }
 
     /// adds error and then bumps until `stop()` is true
-    pub(crate) fn error_and_bump_until(&mut self, message: &str, stop: impl Fn(&Parser) -> bool) {
+    pub(crate) fn error_and_recover_until(&mut self, message: &str, stop: impl Fn(&Parser) -> bool) {
+        // if the next token is stop token, just push error,
+        // otherwise wrap the next token with the error node and start `recover_until()`
+        if stop(self) {
+            self.push_error(message);
+            return;
+        }
+        let m = self.start();
+        self.bump_any();
         self.push_error(message);
-        self.bump_until(stop);
+        m.complete(self, ERROR);
+
+        self.recover_until(stop);
     }
 
     // pub(crate) fn with_recover_until(&mut self, f: impl Fn(&mut Parser)) {
@@ -321,6 +342,15 @@ impl<'t> Parser<'t> {
     //     f(self);
     //     // self.stop_recovery = None;
     // }
+
+    pub(crate) fn recover_until(&mut self, stop: impl Fn(&Parser) -> bool) {
+        while !self.at(EOF) {
+            if stop(self) {
+                break;
+            }
+            self.bump_any();
+        }
+    }
 
     pub(crate) fn bump_until(&mut self, stop: impl Fn(&Parser) -> bool) {
         while !self.at(EOF) {
@@ -331,7 +361,7 @@ impl<'t> Parser<'t> {
         }
     }
 
-    pub(crate) fn error_and_bump_any(&mut self, message: &str) {
+    pub(crate) fn bump_error(&mut self, message: &str) {
         let m = self.start();
         self.push_error(message);
         self.bump_any();

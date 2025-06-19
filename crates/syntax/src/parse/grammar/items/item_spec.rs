@@ -63,7 +63,7 @@ fn item_spec_type_param(p: &mut Parser<'_>) -> bool {
         }
         _ => {
             m.abandon(p);
-            p.error_and_bump_any("expected type parameter");
+            p.bump_error("expected type parameter");
             return false;
         }
     }
@@ -77,7 +77,7 @@ pub(crate) fn item_spec_param_list(p: &mut Parser) {
         if p.at_ts(ITEM_SPEC_PARAM_FIRST) {
             item_spec_param(p);
         } else {
-            p.error_and_bump_until_ts("expected value parameter", ITEM_SPEC_PARAM_RECOVERY_SET);
+            p.error_and_recover_until_ts("expected value parameter", ITEM_SPEC_PARAM_RECOVERY_SET);
         }
         if !p.at(T![')']) {
             p.expect(T![,]);
@@ -94,7 +94,7 @@ fn item_spec_param(p: &mut Parser) {
     if p.at(T![:]) {
         types::ascription(p);
     } else {
-        p.error_and_bump_until_ts("missing type for parameter", ITEM_SPEC_PARAM_RECOVERY_SET);
+        p.error_and_recover_until_ts("missing type for parameter", ITEM_SPEC_PARAM_RECOVERY_SET);
     }
 
     m.complete(p, ITEM_SPEC_PARAM);

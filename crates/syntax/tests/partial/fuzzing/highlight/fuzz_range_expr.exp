@@ -5,13 +5,13 @@ module 0x1::dot_dot_pattern {
                //^ expected SEMICOLON
                //^ expected expression
                //^ unexpected token COLON
-                      //^ expected identifier
+                      //^^ expected identifier
                           //^ expected SEMICOLON
                           //^ expected expression
                           //^ unexpected token COMMA
                                 //^ expected an item, got EQ
                                   //^ expected an item, got IDENT
-                                   //^ expected an item, got SEMICOLON
+                                  //^ expected an item, got SEMICOLON
     }
 }
 //< unexpected token R_CURLY

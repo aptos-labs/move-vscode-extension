@@ -29,7 +29,8 @@ SOURCE_FILE@0..95
         COMMA@58..59 ","
         COMMA@59..60 ","
         WHITESPACE@60..61 " "
-        INT_NUMBER@61..63 "11"
+        ERROR@61..63
+          INT_NUMBER@61..63 "11"
         COMMA@63..64 ","
         WHITESPACE@64..65 " "
         TYPE_PARAM@65..73
@@ -48,7 +49,8 @@ SOURCE_FILE@0..95
           ABILITY_BOUND_LIST@77..80
             COLON@77..78 ":"
             WHITESPACE@78..79 " "
-            INT_NUMBER@79..80 "1"
+            ERROR@79..80
+              INT_NUMBER@79..80 "1"
         R_ANGLE@80..81 ">"
       PARAM_LIST@81..83
         L_PAREN@81..82 "("

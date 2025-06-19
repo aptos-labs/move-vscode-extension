@@ -5,7 +5,7 @@ use std::ops::{Add, BitOr};
 
 /// A bit-set of `SyntaxKind`s
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub(crate) struct TokenSet(u128);
+pub struct TokenSet(pub u128);
 
 impl Add<TokenSet> for TokenSet {
     type Output = TokenSet;

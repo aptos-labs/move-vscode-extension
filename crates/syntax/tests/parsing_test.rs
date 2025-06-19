@@ -1,6 +1,6 @@
 use std::path::Path;
 use std::{env, fs, panic};
-use syntax::{AstNode, SourceFile};
+use syntax::{algo, ast, AstNode, SourceFile};
 use test_utils::{apply_error_marks, fixtures, ErrorMark};
 
 fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<()> {
@@ -21,16 +21,34 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
     let errors_fpath = fpath.with_extension("").with_extension("exp");
     // let html_fpath = fpath.with_extension("").with_extension("html");
 
-    let errors = parse.errors();
-    let marks = errors
-        .iter()
-        .map(|it| ErrorMark {
-            text_range: it.range(),
-            message: it.to_string(),
-            custom_symbol: None,
-        })
-        .collect();
-    let error_output = apply_error_marks(&input, marks);
+    let syntax_errors = parse.errors();
+
+    let mut error_marks = vec![];
+    for syntax_error in syntax_errors.iter() {
+        if let Some(error) =
+            algo::find_node_at_offset::<ast::AstError>(file.syntax(), syntax_error.range().start())
+        {
+            error_marks.push(ErrorMark::at_range(
+                error.syntax().text_range(),
+                syntax_error.to_string(),
+            ));
+            continue;
+        }
+        error_marks.push(ErrorMark::at_range(
+            syntax_error.range(),
+            syntax_error.to_string(),
+        ));
+    }
+
+    // let marks = errors
+    //     .iter()
+    //     .map(|it| ErrorMark {
+    //         text_range: it.range(),
+    //         message: it.to_string(),
+    //         custom_symbol: None,
+    //     })
+    //     .collect();
+    let error_output = apply_error_marks(&input, error_marks);
 
     let expected_output = if output_fpath.exists() {
         let existing = fs::read_to_string(&output_fpath).unwrap();
@@ -58,7 +76,7 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
 
     // pretty_assertions::assert_eq!(&expected_html_output.unwrap_or("".to_string()), &html_output);
 
-    if !errors.is_empty() {
+    if !syntax_errors.is_empty() {
         if allow_errors {
             pretty_assertions::assert_eq!(
                 &expected_errors_output.unwrap_or("".to_string()),

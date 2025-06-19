@@ -16,34 +16,37 @@ SOURCE_FILE@0..65
       BLOCK_EXPR@24..62
         L_CURLY@24..25 "{"
         WHITESPACE@25..34 "\n        "
-        EXPR_STMT@34..41
-          BIN_EXPR@34..41
-            PATH_EXPR@34..38
-              PATH@34..38
-                PATH_SEGMENT@34..38
+        EXPR_STMT@34..56
+          CALL_EXPR@34..55
+            PATH_EXPR@34..53
+              PATH@34..53
+                PATH_SEGMENT@34..53
                   NAME_REF@34..38
                     IDENT@34..38 "call"
-            L_ANGLE@38..39 "<"
-            PATH_EXPR@39..41
-              PATH@39..41
-                PATH_SEGMENT@39..41
-                  NAME_REF@39..41
-                    IDENT@39..41 "u8"
-        ERROR@41..42
-          COMMA@41..42 ","
-        WHITESPACE@42..43 " "
-        EXPR_STMT@43..50
-          VECTOR_LIT_EXPR@43..50
-            IDENT@43..49 "vector"
-            TYPE_ARG_LIST@49..50
-              L_ANGLE@49..50 "<"
-              TYPE_ARG@50..50
-        EXPR_STMT@50..56
-          BIN_EXPR@50..55
-            LITERAL@50..51
-              INT_NUMBER@50..51 "8"
-            SHR@51..53 ">>"
-            UNIT_EXPR@53..55
+                  TYPE_ARG_LIST@38..53
+                    L_ANGLE@38..39 "<"
+                    TYPE_ARG@39..41
+                      PATH_TYPE@39..41
+                        PATH@39..41
+                          PATH_SEGMENT@39..41
+                            NAME_REF@39..41
+                              IDENT@39..41 "u8"
+                    COMMA@41..42 ","
+                    WHITESPACE@42..43 " "
+                    TYPE_ARG@43..52
+                      PATH_TYPE@43..52
+                        PATH@43..52
+                          PATH_SEGMENT@43..52
+                            NAME_REF@43..49
+                              IDENT@43..49 "vector"
+                            TYPE_ARG_LIST@49..52
+                              L_ANGLE@49..50 "<"
+                              TYPE_ARG@50..51
+                                ERROR@50..51
+                                  INT_NUMBER@50..51 "8"
+                              R_ANGLE@51..52 ">"
+                    R_ANGLE@52..53 ">"
+            VALUE_ARG_LIST@53..55
               L_PAREN@53..54 "("
               R_PAREN@54..55 ")"
           SEMICOLON@55..56 ";"

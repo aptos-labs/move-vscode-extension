@@ -12,6 +12,8 @@ module 0x1::struct_recovery {
     struct S has copy,, {}
                     //^ expected ability
     struct S { field: , field2: }
-                   //^ expected type
-                             //^ expected type
+                    //^ expected type
+                    //^ expected COMMA
+                              //^ expected type
 }
+ //< expected R_CURLY

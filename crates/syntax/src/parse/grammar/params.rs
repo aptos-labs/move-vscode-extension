@@ -8,7 +8,7 @@ pub(crate) fn fun_param_list(p: &mut Parser) {
         if p.at_ts(PARAM_FIRST) {
             param(p);
         } else {
-            p.error_and_bump_until_ts("expected value parameter", PARAM_RECOVERY_SET);
+            p.error_and_recover_until_ts("expected value parameter", PARAM_RECOVERY_SET);
         }
         if !p.at(T![')']) {
             p.expect(T![,]);
@@ -24,7 +24,7 @@ fn param(p: &mut Parser) {
     if p.at(T![:]) {
         types::ascription(p);
     } else {
-        p.error_and_bump_until_ts("missing type for function parameter", PARAM_RECOVERY_SET);
+        p.error_and_recover_until_ts("missing type for function parameter", PARAM_RECOVERY_SET);
     }
     m.complete(p, PARAM);
 }

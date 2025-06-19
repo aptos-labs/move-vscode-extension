@@ -20,7 +20,7 @@ fn type_param_list(p: &mut Parser<'_>) {
         if p.at(IDENT) || p.at_contextual_kw_ident("phantom") {
             type_param(p);
         } else {
-            p.error_and_bump_until_ts("expected type parameter", TYPE_PARAM_RECOVERY_SET);
+            p.error_and_recover_until_ts("expected type parameter", TYPE_PARAM_RECOVERY_SET);
         }
         if !p.at(T![>]) {
             p.expect(T![,]);
@@ -58,7 +58,7 @@ pub(crate) fn ability_bound_list_recover_until(p: &mut Parser, recovery_set: Tok
     p.bump(T![:]);
     while !p.at(EOF) && !p.at_ts(recovery_set) {
         if !ability(p) {
-            p.error_and_bump_until_ts("expected ability", recovery_set.union(ts!(T![+])));
+            p.error_and_recover_until_ts("expected ability", recovery_set.union(ts!(T![+])));
         }
         if !p.at_ts(recovery_set) {
             p.eat(T![+]);

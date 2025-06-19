@@ -77,8 +77,13 @@ pub fn apply_error_marks(source: &str, mut marks: Vec<ErrorMark>) -> String {
     let mut source_lines = source.lines().map(|it| it.to_string()).collect::<Vec<_>>();
     let mut added = 0;
     for (line, line_text) in lines_with_marks {
-        let line = line + 1 + added;
-        source_lines.insert(line as usize, line_text.clone());
+        let line = (line + 1 + added) as usize;
+        let line_text = line_text.clone();
+        if line <= source_lines.len() {
+            source_lines.insert(line, line_text);
+        } else {
+            source_lines.push(line_text);
+        }
         added += 1;
     }
     let mut res = source_lines.join("\n");

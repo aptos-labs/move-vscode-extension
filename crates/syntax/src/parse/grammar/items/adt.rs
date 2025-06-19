@@ -62,7 +62,7 @@ fn abilities_list(p: &mut Parser, extra_set: TokenSet) {
             p.bump(IDENT);
             m.complete(p, ABILITY);
         } else {
-            p.error_and_bump_until("expected ability", |p| at_next_item_start(p, extra_set));
+            p.error_and_recover_until("expected ability", |p| at_next_item_start(p, extra_set));
         }
         if !at_next_item_start(p, extra_set) {
             p.expect(T![,]);
@@ -143,7 +143,7 @@ pub(crate) fn variant_list(p: &mut Parser<'_>) {
             m.complete(p, VARIANT);
         } else {
             m.abandon(p);
-            p.error_and_bump_any("expected enum variant");
+            p.bump_error("expected enum variant");
         }
         curly_braces
     }
@@ -178,7 +178,7 @@ pub(crate) fn named_field_list(p: &mut Parser<'_>) {
             m.complete(p, NAMED_FIELD);
         } else {
             m.abandon(p);
-            p.error_and_bump_any("expected named field declaration");
+            p.bump_error("expected named field declaration");
         }
     }
 }

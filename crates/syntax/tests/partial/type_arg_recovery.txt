@@ -38,10 +38,8 @@ SOURCE_FILE@0..88
                           NAME_REF@64..65
                             IDENT@64..65 "a"
                   COMMA@65..66 ","
-                  ERROR@66..67
-                    COMMA@66..67 ","
-                  ERROR@67..68
-                    COMMA@67..68 ","
+                  COMMA@66..67 ","
+                  COMMA@67..68 ","
                   TYPE_ARG@68..69
                     PATH_TYPE@68..69
                       PATH@68..69

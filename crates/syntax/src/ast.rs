@@ -14,11 +14,6 @@ pub mod visibility;
 
 use std::marker::PhantomData;
 
-use crate::{
-    syntax_node::{SyntaxNode, SyntaxNodeChildren, SyntaxToken},
-    SyntaxKind,
-};
-
 pub use self::{
     generated::{nodes::*, tokens::*},
     // expr_ext::{ArrayExprKind, BlockModifier, CallableExpr, ElseBranch, LiteralKind},
@@ -27,6 +22,11 @@ pub use self::{
     token_ext::{CommentKind, CommentPlacement, CommentShape, IsString, QuoteOffsets},
     traits::{HasAttrs, HasItems, HasStmts, HasUseStmts, HoverDocsOwner, MslOnly},
     visibility::HasVisibility,
+};
+use crate::SyntaxKind::{CONST, ERROR};
+use crate::{
+    syntax_node::{SyntaxNode, SyntaxNodeChildren, SyntaxToken},
+    SyntaxKind,
 };
 
 /// The main trait to go from untyped `SyntaxNode`  to a typed ast. The
@@ -102,6 +102,36 @@ impl<N: AstNode> Iterator for AstChildren<N> {
     type Item = N;
     fn next(&mut self) -> Option<N> {
         self.inner.find_map(N::cast)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AstError {
+    pub(crate) syntax: SyntaxNode,
+}
+impl AstNode for AstError {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ERROR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool {
+        kind == ERROR
+    }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        &self.syntax
     }
 }
 

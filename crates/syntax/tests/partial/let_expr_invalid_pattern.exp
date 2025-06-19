@@ -1,9 +1,8 @@
 module 0x1::let_expr_invalid_pattern {
     fun main() {
-        let
-         //^ expected pattern
-        &self.vec[0]
-                  //^ expected SEMICOLON
+        let &self.vec[0]
+          //^ expected pattern
+                      //^ expected SEMICOLON
     }
     spec main {}
 }

@@ -17,7 +17,7 @@ pub(super) fn ascription_or_recover(p: &mut Parser, recover_until: TokenSet) {
         p.bump(T![:]);
         type_(p);
     } else {
-        p.error_and_bump_until_ts("missing type annotation", recover_until);
+        p.error_and_recover_until_ts("missing type annotation", recover_until);
     }
 }
 
@@ -28,8 +28,25 @@ pub(super) fn ascription(p: &mut Parser) {
 }
 
 pub(crate) fn type_(p: &mut Parser) -> bool {
-    // never recover
-    type_or_recover_until(p, |_| true)
+    type_or(p, |p| p.bump_error("expected type"))
+    // type_or_recover_until(p, |p| p.at_ts(TokenSet(!0)))
+    // type_or_recover_until(p, |p| p.at_ts(TokenSet(!0)))
+}
+
+pub(crate) fn type_or(p: &mut Parser, on_invalid: impl Fn(&mut Parser)) -> bool {
+    match p.current() {
+        T!['('] => paren_or_tuple_or_unit_type(p),
+        T![&] => ref_type(p),
+        T![|] => lambda_type(p),
+        _ if paths::is_path_start(p) => path_type(p),
+        _ => {
+            on_invalid(p);
+            // p.bump_error("expected type");
+            // p.error_and_recover_until("expected type", stop);
+            return false;
+        }
+    }
+    true
 }
 
 pub(crate) fn type_or_recover_until(p: &mut Parser, stop: impl Fn(&Parser) -> bool) -> bool {
@@ -39,7 +56,7 @@ pub(crate) fn type_or_recover_until(p: &mut Parser, stop: impl Fn(&Parser) -> bo
         T![|] => lambda_type(p),
         _ if paths::is_path_start(p) => path_type(p),
         _ => {
-            p.error_and_bump_until("expected type", stop);
+            p.error_and_recover_until("expected type", stop);
             return false;
         }
     }

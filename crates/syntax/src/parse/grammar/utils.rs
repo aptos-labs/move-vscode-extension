@@ -1,7 +1,7 @@
 use crate::parse::parser::Parser;
 use crate::parse::token_set::TokenSet;
-use crate::SyntaxKind;
 use crate::SyntaxKind::{EOF, ERROR};
+use crate::{ts, SyntaxKind, T};
 
 pub(crate) fn delimited_items_with_recover(
     p: &mut Parser<'_>,
@@ -90,6 +90,8 @@ pub(crate) fn delimited(
     );
 }
 
+// type ParserAt = dyn Fn(&Parser) -> bool;
+
 pub(crate) fn delimited_fn(
     p: &mut Parser,
     delim: SyntaxKind,
@@ -124,6 +126,65 @@ pub(crate) fn delimited_fn(
             } else {
                 break;
             }
+        }
+    }
+}
+
+pub(crate) fn delimited_with_recovery(
+    p: &mut Parser,
+    at_list_end: SyntaxKind,
+    // at_element_first: TokenSet,
+    element: impl Fn(&mut Parser) -> bool,
+    delimiter: SyntaxKind,
+    expected_element: &str,
+    element_recovery_set: TokenSet,
+) {
+    delimited_with_recovery_fn(
+        p,
+        |p| p.at_ts(ts!(at_list_end)),
+        // |p| p.at_ts(at_element_first),
+        element,
+        delimiter,
+        expected_element,
+        element_recovery_set,
+    )
+}
+
+pub(crate) fn delimited_with_recovery_fn(
+    p: &mut Parser,
+    at_list_end: impl Fn(&Parser) -> bool,
+    // at_element_first: impl Fn(&Parser) -> bool,
+    element: impl Fn(&mut Parser) -> bool,
+    delimiter: SyntaxKind,
+    expected_element: &str,
+    element_recovery_set: TokenSet,
+) {
+    let mut iteration = 0;
+    while !p.at(EOF) && !at_list_end(p) {
+        iteration += 1;
+        if iteration > 1000 {
+            // something's wrong and we don't want to hang
+            #[cfg(debug_assertions)]
+            {
+                panic!(
+                    "at {:?}: reached limit iteration in delimited_with_recovery_fn() loop",
+                    p.current()
+                );
+            }
+            break;
+        }
+        // check whether we can parse element, if not, then recover till the end of the list
+        let at_element = element(p);
+        if !at_element {
+            p.error_and_recover_until_ts(expected_element, element_recovery_set);
+        }
+        // if at_element_first(p) {
+        //     element(p);
+        // } else {
+        //     p.error_and_recover_until_ts(expected_element, element_recovery_set);
+        // }
+        if !at_list_end(p) {
+            p.expect(delimiter);
         }
     }
 }
