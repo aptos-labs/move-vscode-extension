@@ -1,5 +1,0 @@
-module 0x1::type_arg_recovery {
-    struct S {
-        field: T<a,,,b,c<x<y>>>,
-    }
-}

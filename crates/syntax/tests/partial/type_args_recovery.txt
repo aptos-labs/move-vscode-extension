@@ -5,39 +5,38 @@ SOURCE_FILE@0..88
     VALUE_ADDRESS@7..10
       INT_NUMBER@7..10 "0x1"
     COLON_COLON@10..12 "::"
-    NAME@12..29
-      IDENT@12..29 "type_arg_recovery"
-    WHITESPACE@29..30 " "
-    L_CURLY@30..31 "{"
-    WHITESPACE@31..36 "\n    "
-    STRUCT@36..85
-      STRUCT_KW@36..42 "struct"
-      WHITESPACE@42..43 " "
-      NAME@43..44
-        IDENT@43..44 "S"
-      WHITESPACE@44..45 " "
-      NAMED_FIELD_LIST@45..85
-        L_CURLY@45..46 "{"
-        WHITESPACE@46..55 "\n        "
-        NAMED_FIELD@55..78
-          NAME@55..60
-            IDENT@55..60 "field"
-          COLON@60..61 ":"
-          WHITESPACE@61..62 " "
-          PATH_TYPE@62..78
-            PATH@62..78
-              PATH_SEGMENT@62..78
-                NAME_REF@62..63
-                  IDENT@62..63 "T"
-                TYPE_ARG_LIST@63..78
-                  L_ANGLE@63..64 "<"
-                  TYPE_ARG@64..65
-                    PATH_TYPE@64..65
-                      PATH@64..65
-                        PATH_SEGMENT@64..65
-                          NAME_REF@64..65
-                            IDENT@64..65 "a"
-                  COMMA@65..66 ","
+    NAME@12..30
+      IDENT@12..30 "type_args_recovery"
+    WHITESPACE@30..31 " "
+    L_CURLY@31..32 "{"
+    WHITESPACE@32..37 "\n    "
+    STRUCT@37..85
+      STRUCT_KW@37..43 "struct"
+      WHITESPACE@43..44 " "
+      NAME@44..45
+        IDENT@44..45 "S"
+      WHITESPACE@45..46 " "
+      NAMED_FIELD_LIST@46..85
+        L_CURLY@46..47 "{"
+        WHITESPACE@47..56 "\n        "
+        NAMED_FIELD@56..78
+          NAME@56..61
+            IDENT@56..61 "field"
+          COLON@61..62 ":"
+          WHITESPACE@62..63 " "
+          PATH_TYPE@63..78
+            PATH@63..78
+              PATH_SEGMENT@63..78
+                NAME_REF@63..64
+                  IDENT@63..64 "T"
+                TYPE_ARG_LIST@64..78
+                  L_ANGLE@64..65 "<"
+                  TYPE_ARG@65..66
+                    PATH_TYPE@65..66
+                      PATH@65..66
+                        PATH_SEGMENT@65..66
+                          NAME_REF@65..66
+                            IDENT@65..66 "a"
                   COMMA@66..67 ","
                   COMMA@67..68 ","
                   TYPE_ARG@68..69

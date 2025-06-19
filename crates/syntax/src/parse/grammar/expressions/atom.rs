@@ -349,7 +349,7 @@ fn match_arm(p: &mut Parser) {
     }
     let has_fat_arrow = p.expect(T![=>]);
     if !has_fat_arrow {
-        p.bump_until(|p| p.at(T!['}']));
+        p.recover_until(|p| p.at(T!['}']));
         m.complete(p, MATCH_ARM);
         return;
     }

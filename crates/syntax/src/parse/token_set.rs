@@ -62,9 +62,9 @@ impl TokenSet {
         TokenSet(self.0 | other.0)
     }
 
-    // pub(crate) const fn sub(self, other: TokenSet) -> TokenSet {
-    //     TokenSet(self.0 & other.0)
-    // }
+    pub(crate) const fn sub(self, other: TokenSet) -> TokenSet {
+        TokenSet(self.0 ^ other.0)
+    }
 
     pub(crate) const fn contains(&self, kind: SyntaxKind) -> bool {
         self.0 & mask(kind) != 0
@@ -86,5 +86,10 @@ mod tests {
 
         assert_eq!(ts!(T![,], T![;]) | T![:], ts!(T![,], T![;], T![:]));
         assert_eq!(ts!(T![,], T![;]) + ts!(T![:]), ts!(T![,], T![;], T![:]));
+    }
+
+    #[test]
+    fn test_sub() {
+        assert_eq!(ts!(T![,], T![')']).sub(ts!(T![,])), ts!(T![')']));
     }
 }

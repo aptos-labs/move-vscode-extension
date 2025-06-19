@@ -6,7 +6,8 @@ pub(crate) fn fun_param_list(p: &mut Parser) {
     p.bump(T!['(']);
     while !p.at(EOF) && !p.at(T![')']) {
         if p.at_ts(PARAM_FIRST) {
-            param(p);
+            p.with_recover_ts(ts!(T![,], T![')']), param);
+            // param(p);
         } else {
             p.error_and_recover_until_ts("expected value parameter", PARAM_RECOVERY_SET);
         }

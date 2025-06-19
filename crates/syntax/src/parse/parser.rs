@@ -328,7 +328,9 @@ impl Parser {
     pub(crate) fn error_and_recover_until(&mut self, message: &str, stop: impl Fn(&Parser) -> bool) {
         // if the next token is stop token, just push error,
         // otherwise wrap the next token with the error node and start `recover_until()`
-        if stop(self) {
+        if stop(self)
+        /*|| self.at_ts(self.full_recover_set())*/
+        {
             self.push_error(message);
             return;
         }
@@ -337,25 +339,15 @@ impl Parser {
         self.push_error(message);
         m.complete(self, ERROR);
 
+        // if !self.recover_sets.is_empty() {
+        //     let full_recover_set = self.full_recover_set();
+        //     self.recover_until(|p| stop(p) || p.at_ts(full_recover_set));
+        //     return;
+        // }
         self.recover_until(stop);
     }
 
-    // pub(crate) fn with_recover_until(&mut self, f: impl Fn(&mut Parser)) {
-    //     // self.stop_recovery = Some(Box::new(stop_recovery));
-    //     f(self);
-    //     // self.stop_recovery = None;
-    // }
-
     pub(crate) fn recover_until(&mut self, stop: impl Fn(&Parser) -> bool) {
-        while !self.at(EOF) {
-            if stop(self) {
-                break;
-            }
-            self.bump_any();
-        }
-    }
-
-    pub(crate) fn bump_until(&mut self, stop: impl Fn(&Parser) -> bool) {
         while !self.at(EOF) {
             if stop(self) {
                 break;
@@ -467,7 +459,7 @@ impl Marker {
 
 // recovery sets
 impl Parser {
-    pub fn full_recover_set(&self) -> TokenSet {
+    pub fn outer_recovery_set(&self) -> TokenSet {
         self.recover_sets.iter().fold(ts!(), |acc, ts| acc + *ts)
     }
 

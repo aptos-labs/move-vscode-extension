@@ -160,7 +160,9 @@ pub(crate) fn delimited_with_recovery_fn(
     element_recovery_set: TokenSet,
 ) {
     let mut iteration = 0;
-    while !p.at(EOF) && !at_list_end(p) {
+    let outer_recovery_set = p.outer_recovery_set().sub(ts!(delimiter));
+    // let at_list_end = |p: &Parser| p.at_ts(outer_recovery_set) || at_list_end(p);
+    while !p.at(EOF) && !p.at_ts(outer_recovery_set) && !at_list_end(p) {
         iteration += 1;
         if iteration > 1000 {
             // something's wrong and we don't want to hang

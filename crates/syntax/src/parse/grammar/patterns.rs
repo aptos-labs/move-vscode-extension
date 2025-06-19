@@ -19,7 +19,6 @@ pub(crate) fn pat(p: &mut Parser) -> Option<CompletedMarker> {
             return None;
         }
     };
-
     Some(m)
 }
 

@@ -1,5 +1,4 @@
 script {
-    fun main() {
-        call<u8, vector<8>>();
+    fun main(a: Pat<u8, vector<8>>) {
     }
 }

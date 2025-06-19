@@ -7,7 +7,7 @@ use crate::parse::grammar::utils::{
 
 pub(crate) fn opt_path_type_arg_list(p: &mut Parser, mode: Mode) {
     match mode {
-        Mode::Use /*| Mode::Attr */ => {}
+        Mode::Use => {}
         Mode::Type => opt_type_arg_list_for_type(p),
         Mode::Expr => opt_type_arg_list_for_expr(p, false),
     }
@@ -26,9 +26,9 @@ pub(crate) fn opt_type_arg_list_for_type(p: &mut Parser) {
         p,
         T![>],
         // TYPE_ARG_FIRST + TYPE_FIRST,
-        |p| type_arg(p),
+        |p| type_arg(p, true),
         T![,],
-        "expected generic argument",
+        "expected type argument",
         TokenSet(!0), // no recovery
     );
     p.expect(T![>]);
@@ -47,9 +47,10 @@ pub(super) fn opt_type_arg_list_for_expr(p: &mut Parser, colon_colon_required: b
     }
     p.bump(T![<]);
 
+    // NOTE: we cannot add recovery in expr, it's ambiguous with the lt/gt expr
     let at_end = |p: &Parser| p.at_ts(ts!(T![>], T!['('], T!['{']));
     while !p.at(EOF) && !at_end(p) {
-        if !type_arg(p) {
+        if !type_arg(p, false) {
             break;
         }
         if !p.eat(T![,]) {
@@ -70,7 +71,7 @@ pub(super) fn opt_type_arg_list_for_expr(p: &mut Parser, colon_colon_required: b
 pub(crate) const TYPE_ARG_FIRST: TokenSet = TokenSet::new(&[IDENT]);
 // .union(types::TYPE_FIRST);
 
-pub(crate) fn type_arg(p: &mut Parser) -> bool {
+pub(crate) fn type_arg(p: &mut Parser, is_type: bool) -> bool {
     match p.current() {
         IDENT => {
             let m = p.start();
@@ -85,9 +86,21 @@ pub(crate) fn type_arg(p: &mut Parser) -> bool {
         }
         _ if p.at_ts(TYPE_FIRST) => {
             let m = p.start();
-            // can't recover at T![>] due to ambiguity
-            p.with_recover_t(T![,], types::type_);
+            let mut rec = ts!(T![,]);
+            // can't recover at T![>] in expr due to ambiguity
+            if is_type {
+                rec = rec.union(ts!(T![>]))
+            }
+            let is_valid_type = p.with_recover_ts(rec, types::type_);
+            if !is_type && !is_valid_type {
+                // have to be safe
+                m.abandon(p);
+                return false;
+            }
             m.complete(p, TYPE_ARG);
+            // if !is_valid_type {
+            //     return false;
+            // }
         }
         _ => return false,
     }
