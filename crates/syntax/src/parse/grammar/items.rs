@@ -39,7 +39,7 @@ pub(super) fn item(p: &mut Parser) {
     let m = match opt_item(p, m) {
         Ok(()) => {
             if p.at(T![;]) {
-                p.bump_error(
+                p.bump_with_error(
                     "expected item, found `;`\n\
                      consider removing this semicolon",
                 );
@@ -61,7 +61,7 @@ pub(super) fn item(p: &mut Parser) {
         // }
         T!['}'] => p.error("unexpected '}'"),
         EOF => p.error("unexpected EOF"),
-        _ => p.bump_error(&format!("expected an item, got {:?}", p.current())),
+        _ => p.bump_with_error(&format!("expected an item, got {:?}", p.current())),
     }
 }
 

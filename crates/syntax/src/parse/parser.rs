@@ -25,6 +25,7 @@ pub struct Parser {
     token_source: TextTokenSource,
     events: Vec<Event>,
     pub(crate) recover_sets: Vec<TokenSet>,
+    // pub(crate) recover_fns: Vec<Box<dyn Fn(&Parser) -> bool>>,
 }
 
 impl Parser {
@@ -33,6 +34,7 @@ impl Parser {
             token_source,
             events: vec![],
             recover_sets: vec![],
+            // recover_fns: vec![],
         }
     }
 
@@ -334,10 +336,11 @@ impl Parser {
             self.push_error(message);
             return;
         }
-        let m = self.start();
-        self.bump_any();
-        self.push_error(message);
-        m.complete(self, ERROR);
+        self.bump_with_error(message);
+        // let m = self.start();
+        // self.bump_any();
+        // self.push_error(message);
+        // m.complete(self, ERROR);
 
         // if !self.recover_sets.is_empty() {
         //     let full_recover_set = self.full_recover_set();
@@ -356,7 +359,7 @@ impl Parser {
         }
     }
 
-    pub(crate) fn bump_error(&mut self, message: &str) {
+    pub(crate) fn bump_with_error(&mut self, message: &str) {
         let m = self.start();
         self.push_error(message);
         self.bump_any();

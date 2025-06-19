@@ -97,7 +97,7 @@ fn bump_modifier_if_possible(
 ) {
     let exists = possible_modifiers.remove(&modifier);
     if !exists {
-        p.bump_error(&format!("duplicate modifier '{:?}'", modifier));
+        p.bump_with_error(&format!("duplicate modifier '{:?}'", modifier));
         return;
     }
     p.bump_remap(modifier);

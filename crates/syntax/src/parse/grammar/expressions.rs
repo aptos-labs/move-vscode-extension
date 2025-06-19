@@ -123,7 +123,7 @@ pub(crate) fn struct_lit_field_list(p: &mut Parser) {
                 m.abandon(p);
             }
             _ => {
-                p.bump_error("expected identifier");
+                p.bump_with_error("expected identifier");
                 m.abandon(p);
             }
         }
@@ -376,7 +376,7 @@ pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
         return;
     }
 
-    p.bump_error(&format!("unexpected token {:?}", p.current()));
+    p.bump_with_error(&format!("unexpected token {:?}", p.current()));
 }
 
 fn let_stmt(p: &mut Parser, m: Marker, is_spec: bool) {

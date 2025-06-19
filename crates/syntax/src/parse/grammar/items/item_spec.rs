@@ -63,7 +63,7 @@ fn item_spec_type_param(p: &mut Parser) -> bool {
         }
         _ => {
             m.abandon(p);
-            p.bump_error("expected type parameter");
+            p.bump_with_error("expected type parameter");
             return false;
         }
     }

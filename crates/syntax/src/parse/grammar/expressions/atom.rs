@@ -27,7 +27,7 @@ pub(crate) fn literal(p: &mut Parser) -> Option<CompletedMarker> {
         }
         BAD_CHARACTER => {
             m.abandon(p);
-            p.bump_error("unexpected character");
+            p.bump_with_error("unexpected character");
             return None;
         }
         _ => {

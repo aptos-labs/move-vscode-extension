@@ -63,7 +63,7 @@ pub mod entry_points {
                 IDENT if p.at_contextual_kw("address") => address_def(p, m),
                 _ => {
                     m.abandon(p);
-                    p.bump_error(&format!("unexpected token {:?}", p.current()))
+                    p.bump_with_error(&format!("unexpected token {:?}", p.current()))
                 }
             }
         }
@@ -184,7 +184,7 @@ fn name_ref(p: &mut Parser) {
         p.bump(IDENT);
         m.complete(p, NAME_REF);
     } else {
-        p.bump_error("expected identifier");
+        p.bump_with_error("expected identifier");
     }
 }
 
@@ -198,7 +198,7 @@ fn name_ref_or_index(p: &mut Parser) {
         p.bump_any();
         m.complete(p, NAME_REF);
     } else {
-        p.bump_error("expected integer or identifier");
+        p.bump_with_error("expected integer or identifier");
     }
 }
 

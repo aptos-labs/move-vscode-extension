@@ -144,7 +144,7 @@ pub(crate) fn variant_list(p: &mut Parser) {
             m.complete(p, VARIANT);
         } else {
             m.abandon(p);
-            p.bump_error("expected enum variant");
+            p.bump_with_error("expected enum variant");
         }
         curly_braces
     }
@@ -180,7 +180,7 @@ fn named_field(p: &mut Parser) {
         m.complete(p, NAMED_FIELD);
     } else {
         m.abandon(p);
-        p.bump_error("expected named field declaration");
+        p.bump_with_error("expected named field declaration");
     }
 }
 

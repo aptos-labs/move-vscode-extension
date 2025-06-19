@@ -53,7 +53,7 @@ fn use_speck(p: &mut Parser, top_level: bool) {
             } else {
                 // if we are parsing a nested tree, we have to eat a token to
                 // main balanced `{}`
-                p.bump_error(msg);
+                p.bump_with_error(msg);
             }
             return;
         }
