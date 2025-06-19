@@ -25,7 +25,7 @@ pub struct Parser {
     token_source: TextTokenSource,
     events: Vec<Event>,
     pub(crate) recover_sets: Vec<TokenSet>,
-    // pub(crate) recover_fns: Vec<Box<dyn Fn(&Parser) -> bool>>,
+    pub(crate) recover_fns: Vec<Box<dyn Fn(&Parser) -> bool>>,
 }
 
 impl Parser {
@@ -34,7 +34,7 @@ impl Parser {
             token_source,
             events: vec![],
             recover_sets: vec![],
-            // recover_fns: vec![],
+            recover_fns: vec![],
         }
     }
 
@@ -464,6 +464,23 @@ impl Marker {
 impl Parser {
     pub fn outer_recovery_set(&self) -> TokenSet {
         self.recover_sets.iter().fold(ts!(), |acc, ts| acc + *ts)
+    }
+
+    #[allow(clippy::needless_lifetimes)]
+    pub fn outer_recovery_fn<'t>(&'t self) -> impl Fn(&'t Parser) -> bool {
+        let outer_recovery_set = self.outer_recovery_set();
+        move |p| p.at_ts(outer_recovery_set) || self.recover_fns.iter().any(|recover_fn| recover_fn(p))
+    }
+
+    pub(crate) fn with_recover_fn<'t, T>(
+        &mut self,
+        rec: impl Fn(&Parser) -> bool + 'static,
+        f: impl FnOnce(&mut Parser) -> T,
+    ) -> T {
+        self.recover_fns.push(Box::new(rec));
+        let res = f(self);
+        self.recover_fns.pop();
+        res
     }
 
     pub(crate) fn with_recover_t<T>(&mut self, t: SyntaxKind, f: impl FnOnce(&mut Parser) -> T) -> T {

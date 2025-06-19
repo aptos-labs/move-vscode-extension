@@ -1,6 +1,6 @@
 use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::parse::grammar::items::{at_block_start, at_item_start};
-use crate::parse::grammar::types::type_or;
+// use crate::parse::grammar::types::type_or;
 use crate::parse::grammar::utils::list;
 use crate::parse::grammar::{
     ability, attributes, error_block, item_name_or_recover, name, name_or_recover, type_params, types,
