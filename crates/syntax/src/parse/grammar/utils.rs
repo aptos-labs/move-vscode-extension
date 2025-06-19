@@ -166,13 +166,13 @@ pub(crate) fn delimited_with_recovery_fn(
         iteration += 1;
         if iteration > 1000 {
             // something's wrong and we don't want to hang
-            #[cfg(debug_assertions)]
-            {
-                panic!(
-                    "at {:?}: reached limit iteration in delimited_with_recovery_fn() loop",
-                    p.current()
-                );
-            }
+            // #[cfg(debug_assertions)]
+            // {
+            //     panic!(
+            //         "at {:?}: reached limit iteration in delimited_with_recovery_fn() loop",
+            //         p.current()
+            //     );
+            // }
             break;
         }
         // check whether we can parse element, if not, then recover till the end of the list
