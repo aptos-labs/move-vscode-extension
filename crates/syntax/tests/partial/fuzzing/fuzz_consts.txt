@@ -1,0 +1,41 @@
+SOURCE_FILE@0..61
+  MODULE@0..60
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..23
+      IDENT@12..23 "fuzz_consts"
+    WHITESPACE@23..24 " "
+    L_CURLY@24..25 "{"
+    WHITESPACE@25..30 "\n    "
+    CONST@30..58
+      CONST_KW@30..35 "const"
+      WHITESPACE@35..36 " "
+      NAME@36..37
+        IDENT@36..37 "B"
+      COLON@37..38 ":"
+      WHITESPACE@38..39 " "
+      PATH_TYPE@39..48
+        PATH@39..48
+          PATH_SEGMENT@39..48
+            NAME_REF@39..45
+              IDENT@39..45 "vector"
+            TYPE_ARG_LIST@45..48
+              L_ANGLE@45..46 "<"
+              TYPE_ARG@46..48
+                PATH_TYPE@46..48
+                  PATH@46..48
+                    PATH_SEGMENT@46..48
+                      NAME_REF@46..48
+                        IDENT@46..48 "u8"
+      WHITESPACE@48..49 " "
+      EQ@49..50 "="
+      WHITESPACE@50..51 " "
+      LITERAL@51..57
+        BYTE_STRING@51..57 "b\"123\""
+      SEMICOLON@57..58 ";"
+    WHITESPACE@58..59 "\n"
+    R_CURLY@59..60 "}"
+  WHITESPACE@60..61 "\n"

@@ -106,13 +106,16 @@ fn const_(p: &mut Parser, m: Marker) {
     p.with_recover_fn(
         |p| at_item_start(p) || p.at(T![;]),
         |p| {
-            if p.at(T![:]) {
-                // p.with_recover_ts(ts!(T![;]), types::ascription);
-                p.with_recover_fn(|p| at_item_start(p) || p.at_ts(ts!(T![;])), types::ascription);
-                // types::ascription(p);
-            } else {
-                p.error("expected type annotation");
-            }
+            p.with_recover_t(T![=], |p| {
+                if p.at(T![:]) {
+                    // p.with_recover_ts(ts!(T![;]), types::ascription);
+                    types::ascription(p);
+                    // p.with_recover_fn(|p| at_item_start(p) || p.at_ts(ts!(T![;])), types::ascription);
+                    // types::ascription(p);
+                } else {
+                    p.error("expected type annotation");
+                }
+            });
             if p.expect(T![=]) {
                 expr(p);
             }

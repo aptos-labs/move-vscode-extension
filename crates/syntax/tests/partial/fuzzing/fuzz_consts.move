@@ -1,0 +1,3 @@
+module 0x1::fuzz_consts {
+    const B: vector<u8 = b"123";
+}
