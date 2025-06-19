@@ -109,7 +109,8 @@ fn line_with_mark(line_index: &LineIndex, mark: ErrorMark) -> (u32, String) {
         (prefix, mark_range)
     } else {
         let prefix = repeated(" ", start_col - 2);
-        let mark_range = repeated(&symbol, max(1, end_col - start_col));
+        let mark_range = repeated(&symbol, max(1, end_col.saturating_sub(start_col)));
+        // let mark_range = repeated(&symbol, max(1, end_col - start_col));
         (prefix, mark_range)
     };
 
