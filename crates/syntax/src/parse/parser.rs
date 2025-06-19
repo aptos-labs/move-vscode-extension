@@ -7,6 +7,7 @@ use crate::parse::text_token_source::TextTokenSource;
 use crate::parse::token_set::TokenSet;
 use crate::parse::ParseError;
 use crate::{
+    ts,
     SyntaxKind::{self, EOF, ERROR, TOMBSTONE},
     T,
 };
@@ -20,16 +21,18 @@ use crate::{
 /// tree, but rather a flat stream of events of the form
 /// "start expression, consume number literal,
 /// finish expression". See `Event` docs for more.
-pub struct Parser<'t> {
-    token_source: &'t mut TextTokenSource<'t>,
+pub struct Parser {
+    token_source: TextTokenSource,
     events: Vec<Event>,
+    pub(crate) recover_sets: Vec<TokenSet>,
 }
 
-impl<'t> Parser<'t> {
-    pub(super) fn new(token_source: &'t mut TextTokenSource<'t>) -> Parser<'t> {
+impl Parser {
+    pub(super) fn new(token_source: TextTokenSource) -> Parser {
         Parser {
             token_source,
-            events: Vec::new(),
+            events: vec![],
+            recover_sets: vec![],
         }
     }
 
@@ -462,6 +465,46 @@ impl Marker {
     }
 }
 
+// recovery sets
+impl Parser {
+    pub fn full_recover_set(&self) -> TokenSet {
+        self.recover_sets.iter().fold(ts!(), |acc, ts| acc + *ts)
+    }
+
+    pub(crate) fn with_recover_t<T>(&mut self, t: SyntaxKind, f: impl FnOnce(&mut Parser) -> T) -> T {
+        self.with_recover_ts(ts!(t), f)
+    }
+
+    pub(crate) fn with_recover_ts<T>(&mut self, ts: TokenSet, f: impl FnOnce(&mut Parser) -> T) -> T {
+        self.recover_sets.push(ts);
+        let res = f(self);
+        self.recover_sets.pop();
+        res
+    }
+
+    // #[allow(clippy::needless_lifetimes)]
+    // pub(crate) fn with_recovery<'t>(
+    //     &'t mut self,
+    //     t: SyntaxKind,
+    // ) -> scopeguard::ScopeGuard<&'t mut Parser, impl FnOnce(&'t mut Parser)> {
+    //     self.rec_sets.push(ts!(t));
+    //     scopeguard::guard(self, |p| {
+    //         p.rec_sets.pop();
+    //     })
+    // }
+
+    // #[allow(clippy::needless_lifetimes)]
+    // pub(crate) fn with_recovery_ts<'t>(
+    //     &'t mut self,
+    //     ts: TokenSet,
+    // ) -> scopeguard::ScopeGuard<&'t mut Parser, impl FnOnce(&'t mut Parser)> {
+    //     self.rec_sets.push(ts);
+    //     scopeguard::guard(self, |p| {
+    //         p.rec_sets.pop();
+    //     })
+    // }
+}
+
 #[derive(Debug)]
 pub(crate) struct CompletedMarker {
     pos: u32,
@@ -534,7 +577,7 @@ impl CompletedMarker {
         }
     }
 
-    // pub(crate) fn last_token(&self, p: &Parser<'_>) -> Option<SyntaxKind> {
+    // pub(crate) fn last_token(&self, p: &Parser) -> Option<SyntaxKind> {
     //     let end_pos = self.end_pos as usize;
     //     // debug_assert_eq!(p.events[end_pos - 1], Event::Finish);
     //     p.events[..end_pos].iter().rev().find_map(|event| match event {

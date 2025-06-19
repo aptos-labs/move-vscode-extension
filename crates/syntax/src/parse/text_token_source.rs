@@ -6,8 +6,8 @@ use crate::parse::lexer::RawToken;
 use crate::{SyntaxKind::EOF, TextRange, TextSize};
 
 /// Implementation of `parser::TokenSource` that takes tokens from source code text.
-pub(crate) struct TextTokenSource<'t> {
-    text: &'t str,
+pub(crate) struct TextTokenSource {
+    text: String,
     /// token and its start position (non-whitespace/comment tokens)
     /// ```non-rust
     ///  struct Foo;
@@ -24,9 +24,9 @@ pub(crate) struct TextTokenSource<'t> {
     curr: (Token, usize),
 }
 
-impl<'t> TextTokenSource<'t> {
+impl TextTokenSource {
     /// Generate input from tokens(expect comment and whitespace).
-    pub(crate) fn new(text: &'t str, raw_tokens: &'t [RawToken]) -> TextTokenSource<'t> {
+    pub(crate) fn new(text: &str, raw_tokens: Vec<RawToken>) -> TextTokenSource {
         let raw_tokens_with_offsets: Vec<_> = raw_tokens
             .iter()
             .filter_map({
@@ -46,7 +46,7 @@ impl<'t> TextTokenSource<'t> {
 
         let first_token = token_at_pos(0, &raw_tokens_with_offsets);
         TextTokenSource {
-            text,
+            text: text.to_string(),
             raw_tokens_with_offsets,
             curr: (first_token, 0),
         }

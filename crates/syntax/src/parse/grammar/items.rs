@@ -10,7 +10,7 @@ use crate::parse::grammar::{attributes, error_block, item_name_or_recover, types
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
-use crate::T;
+use crate::{ts, T};
 
 // // test mod_contents
 // // fn foo() {}
@@ -24,7 +24,7 @@ use crate::T;
 //     }
 // }
 
-pub(crate) fn item_list(p: &mut Parser<'_>) {
+pub(crate) fn item_list(p: &mut Parser) {
     assert!(p.at(T!['{']));
     p.bump(T!['{']);
     while !p.at(EOF) && !(p.at(T!['}'])) {

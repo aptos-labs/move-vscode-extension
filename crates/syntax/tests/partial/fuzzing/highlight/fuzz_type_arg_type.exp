@@ -1,6 +1,15 @@
 script {
     fun main() {
         call<u8, vector<8>>();
+             //^ expected SEMICOLON
+             //^ expected expression
+             //^ unexpected token COMMA
                       //^ expected type
     }
 }
+ //< expected COMMA
+ //< expected R_ANGLE
+//< expected '['
+//< expected SEMICOLON
+//< expected R_CURLY
+//< expected R_CURLY

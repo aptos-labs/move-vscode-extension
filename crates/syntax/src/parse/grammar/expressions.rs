@@ -213,7 +213,7 @@ pub(crate) fn lhs(p: &mut Parser, r: Restrictions) -> Option<(CompletedMarker, B
 }
 
 fn postfix_expr(
-    p: &mut Parser<'_>,
+    p: &mut Parser,
     mut lhs: CompletedMarker,
     // Calls are disallowed if the type is a block and we prefer statements because the call cannot be disambiguated from a tuple
     // E.g. `while true {break}();` is parsed as
@@ -240,10 +240,7 @@ fn postfix_expr(
     (lhs, block_like)
 }
 
-fn postfix_dot_expr(
-    p: &mut Parser<'_>,
-    lhs: CompletedMarker,
-) -> Result<CompletedMarker, CompletedMarker> {
+fn postfix_dot_expr(p: &mut Parser, lhs: CompletedMarker) -> Result<CompletedMarker, CompletedMarker> {
     assert!(p.at(T![.]));
 
     if p.nth_at(1, IDENT) && (p.nth_at(2, T!['(']) || p.nth_at(2, T![::])) {
@@ -253,7 +250,7 @@ fn postfix_dot_expr(
     dot_expr(p, lhs)
 }
 
-fn method_call_expr(p: &mut Parser<'_>, lhs: CompletedMarker) -> CompletedMarker {
+fn method_call_expr(p: &mut Parser, lhs: CompletedMarker) -> CompletedMarker {
     assert!(p.at(T![.]) && p.nth_at(1, IDENT) && (p.nth(2) == T!['('] || p.nth_at(2, T![::])));
     let m = lhs.precede(p);
     p.bump(T![.]);
@@ -268,7 +265,7 @@ fn method_call_expr(p: &mut Parser<'_>, lhs: CompletedMarker) -> CompletedMarker
     m.complete(p, METHOD_CALL_EXPR)
 }
 
-fn dot_expr(p: &mut Parser<'_>, lhs: CompletedMarker) -> Result<CompletedMarker, CompletedMarker> {
+fn dot_expr(p: &mut Parser, lhs: CompletedMarker) -> Result<CompletedMarker, CompletedMarker> {
     assert!(p.at(T![.]));
     let m = lhs.precede(p);
     p.bump(T![.]);
@@ -288,7 +285,7 @@ fn dot_expr(p: &mut Parser<'_>, lhs: CompletedMarker) -> Result<CompletedMarker,
     Ok(m.complete(p, DOT_EXPR))
 }
 
-fn index_expr(p: &mut Parser<'_>, lhs: CompletedMarker) -> CompletedMarker {
+fn index_expr(p: &mut Parser, lhs: CompletedMarker) -> CompletedMarker {
     assert!(p.at(T!['[']));
     let m = lhs.precede(p);
     p.bump(T!['[']);
@@ -297,7 +294,7 @@ fn index_expr(p: &mut Parser<'_>, lhs: CompletedMarker) -> CompletedMarker {
     m.complete(p, INDEX_EXPR)
 }
 
-fn arg_list(p: &mut Parser<'_>) {
+fn arg_list(p: &mut Parser) {
     assert!(p.at(T!['(']));
     let m = p.start();
     p.bump(T!['(']);

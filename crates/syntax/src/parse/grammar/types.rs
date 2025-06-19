@@ -28,7 +28,8 @@ pub(super) fn ascription(p: &mut Parser) {
 }
 
 pub(crate) fn type_(p: &mut Parser) -> bool {
-    type_or(p, |p| p.bump_error("expected type"))
+    type_or_recover_until(p, |p| p.at_ts(p.full_recover_set()))
+    // type_or(p, |p| p.bump_error("expected type"))
     // type_or_recover_until(p, |p| p.at_ts(TokenSet(!0)))
 }
 

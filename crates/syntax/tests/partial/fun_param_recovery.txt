@@ -23,13 +23,12 @@ SOURCE_FILE@0..81
               IDENT@46..47 "a"
         COMMA@47..48 ","
         WHITESPACE@48..49 " "
-        PARAM@49..52
+        PARAM@49..51
           IDENT_PAT@49..50
             NAME@49..50
               IDENT@49..50 "b"
           COLON@50..51 ":"
-          ERROR@51..52
-            COMMA@51..52 ","
+        COMMA@51..52 ","
         COMMA@52..53 ","
         WHITESPACE@53..54 " "
         PARAM@54..57

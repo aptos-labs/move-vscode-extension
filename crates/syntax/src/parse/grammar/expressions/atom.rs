@@ -261,7 +261,7 @@ fn if_expr(p: &mut Parser) -> CompletedMarker {
     m.complete(p, IF_EXPR)
 }
 
-fn label_decl(p: &mut Parser<'_>) {
+fn label_decl(p: &mut Parser) {
     assert!(p.at(QUOTE_IDENT) && p.nth(1) == T![:]);
     let m = p.start();
     p.bump(QUOTE_IDENT);
@@ -269,7 +269,7 @@ fn label_decl(p: &mut Parser<'_>) {
     m.complete(p, LABEL_DECL);
 }
 
-fn loop_expr(p: &mut Parser<'_>, m: Option<Marker>) -> CompletedMarker {
+fn loop_expr(p: &mut Parser, m: Option<Marker>) -> CompletedMarker {
     assert!(p.at(T![loop]));
     let m = m.unwrap_or_else(|| p.start());
     p.bump(T![loop]);
@@ -302,7 +302,7 @@ fn for_condition(p: &mut Parser) {
     m.complete(p, FOR_CONDITION);
 }
 
-fn while_expr(p: &mut Parser<'_>, m: Option<Marker>) -> CompletedMarker {
+fn while_expr(p: &mut Parser, m: Option<Marker>) -> CompletedMarker {
     assert!(p.at(T![while]));
     let m = m.unwrap_or_else(|| p.start());
     p.bump(T![while]);
@@ -398,14 +398,14 @@ pub(crate) fn inline_expr(p: &mut Parser) {
     m.complete(p, INLINE_EXPR);
 }
 
-fn stmt_list(p: &mut Parser<'_>, is_spec: bool) {
+fn stmt_list(p: &mut Parser, is_spec: bool) {
     assert!(p.at(T!['{']));
     p.bump(T!['{']);
     expr_block_contents(p, is_spec);
     p.expect(T!['}']);
 }
 
-fn return_expr(p: &mut Parser<'_>) -> CompletedMarker {
+fn return_expr(p: &mut Parser) -> CompletedMarker {
     assert!(p.at(T![return]));
     let m = p.start();
     p.bump(T![return]);
@@ -415,7 +415,7 @@ fn return_expr(p: &mut Parser<'_>) -> CompletedMarker {
     m.complete(p, RETURN_EXPR)
 }
 
-fn abort_expr(p: &mut Parser<'_>) -> CompletedMarker {
+fn abort_expr(p: &mut Parser) -> CompletedMarker {
     assert!(p.at(T![abort]));
     let m = p.start();
     p.bump(T![abort]);
@@ -425,7 +425,7 @@ fn abort_expr(p: &mut Parser<'_>) -> CompletedMarker {
     m.complete(p, ABORT_EXPR)
 }
 
-fn continue_expr(p: &mut Parser<'_>) -> CompletedMarker {
+fn continue_expr(p: &mut Parser) -> CompletedMarker {
     assert!(p.at(T![continue]));
     let m = p.start();
     p.bump(T![continue]);
@@ -433,7 +433,7 @@ fn continue_expr(p: &mut Parser<'_>) -> CompletedMarker {
     m.complete(p, CONTINUE_EXPR)
 }
 
-fn break_expr(p: &mut Parser<'_>) -> CompletedMarker {
+fn break_expr(p: &mut Parser) -> CompletedMarker {
     assert!(p.at(T![break]));
     let m = p.start();
     p.bump(T![break]);
@@ -451,7 +451,7 @@ fn break_expr(p: &mut Parser<'_>) -> CompletedMarker {
     m.complete(p, BREAK_EXPR)
 }
 
-fn opt_label(p: &mut Parser<'_>) {
+fn opt_label(p: &mut Parser) {
     if p.at(QUOTE_IDENT) {
         let m = p.start();
         p.eat(QUOTE_IDENT);

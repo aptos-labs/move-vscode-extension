@@ -32,7 +32,7 @@ pub(crate) fn item_spec(p: &mut Parser, m: Marker) {
     m.complete(p, ITEM_SPEC);
 }
 
-fn item_spec_type_param_list(p: &mut Parser<'_>) {
+fn item_spec_type_param_list(p: &mut Parser) {
     assert!(p.at(T![<]));
     let m = p.start();
     list(
@@ -47,7 +47,7 @@ fn item_spec_type_param_list(p: &mut Parser<'_>) {
     m.complete(p, ITEM_SPEC_TYPE_PARAM_LIST);
 }
 
-fn item_spec_type_param(p: &mut Parser<'_>) -> bool {
+fn item_spec_type_param(p: &mut Parser) -> bool {
     let m = p.start();
     if p.at_contextual_kw_ident("phantom") {
         p.bump_remap(T![phantom]);

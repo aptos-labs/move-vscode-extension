@@ -6,13 +6,13 @@ use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{ts, T};
 
-pub(super) fn opt_type_param_list(p: &mut Parser<'_>) {
+pub(super) fn opt_type_param_list(p: &mut Parser) {
     if p.at(T![<]) {
         type_param_list(p);
     }
 }
 
-fn type_param_list(p: &mut Parser<'_>) {
+fn type_param_list(p: &mut Parser) {
     let m = p.start();
     p.bump(T![<]);
 
@@ -30,7 +30,7 @@ fn type_param_list(p: &mut Parser<'_>) {
     m.complete(p, TYPE_PARAM_LIST);
 }
 
-fn type_param(p: &mut Parser<'_>) {
+fn type_param(p: &mut Parser) {
     let m = p.start();
 
     let mut has_phantom = false;

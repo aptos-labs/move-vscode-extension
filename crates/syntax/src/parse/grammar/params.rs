@@ -22,7 +22,8 @@ fn param(p: &mut Parser) {
     let m = p.start();
     patterns::ident_or_wildcard_pat_or_recover(p, PARAM_RECOVERY_SET);
     if p.at(T![:]) {
-        types::ascription(p);
+        p.with_recover_t(T![,], types::ascription);
+        // types::ascription(p);
     } else {
         p.error_and_recover_until_ts("missing type for function parameter", PARAM_RECOVERY_SET);
     }

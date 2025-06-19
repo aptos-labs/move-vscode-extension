@@ -73,7 +73,7 @@ pub mod entry_points {
 
 // test mod_item
 // module 0x1::m {}
-pub(crate) fn module(p: &mut Parser<'_>, m: Marker) {
+pub(crate) fn module(p: &mut Parser, m: Marker) {
     p.bump(T![module]);
     module_name(p);
     if p.at(T!['{']) {
@@ -84,7 +84,7 @@ pub(crate) fn module(p: &mut Parser<'_>, m: Marker) {
     m.complete(p, MODULE);
 }
 
-pub(crate) fn address_def(p: &mut Parser<'_>, m: Marker) {
+pub(crate) fn address_def(p: &mut Parser, m: Marker) {
     p.bump_remap(T![address]);
     any_address(p);
     if p.at(T!['{']) {
@@ -192,7 +192,7 @@ fn name_ref(p: &mut Parser) {
 const IDENT_OR_INT_NUMBER: TokenSet = TokenSet::new(&[INT_NUMBER, IDENT]);
 
 #[allow(unused)]
-fn name_ref_or_index(p: &mut Parser<'_>) {
+fn name_ref_or_index(p: &mut Parser) {
     if p.at_ts(IDENT_OR_INT_NUMBER) {
         let m = p.start();
         p.bump_any();
@@ -202,7 +202,7 @@ fn name_ref_or_index(p: &mut Parser<'_>) {
     }
 }
 
-// fn name_ref_or_index(p: &mut Parser<'_>) {
+// fn name_ref_or_index(p: &mut Parser) {
 //     assert!(p.at(IDENT) || p.at(INT_NUMBER));
 //     let m = p.start();
 //     p.bump_any();

@@ -194,7 +194,7 @@ fn fun_signature(p: &mut Parser, is_spec: bool, allow_acquires: bool) {
     }
 }
 
-pub(crate) fn opt_ret_type(p: &mut Parser<'_>) {
+pub(crate) fn opt_ret_type(p: &mut Parser) {
     if p.at(T![:]) {
         let m = p.start();
         p.bump(T![:]);

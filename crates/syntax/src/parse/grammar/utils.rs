@@ -4,12 +4,12 @@ use crate::SyntaxKind::{EOF, ERROR};
 use crate::{ts, SyntaxKind, T};
 
 pub(crate) fn delimited_items_with_recover(
-    p: &mut Parser<'_>,
+    p: &mut Parser,
     rbrace: SyntaxKind,
     delim: SyntaxKind,
     end_at: TokenSet,
     item_kind: SyntaxKind,
-    mut parse_item: impl FnMut(&mut Parser<'_>) -> bool,
+    mut parse_item: impl FnMut(&mut Parser) -> bool,
 ) {
     while !p.at(EOF) && !p.at(rbrace) && !p.at_ts(end_at) {
         if p.at(delim) {
@@ -35,13 +35,13 @@ pub(crate) fn delimited_items_with_recover(
 /// The `parser` passed this is required to at least consume one token if it returns `true`.
 /// If the `parser` returns false, parsing will stop.
 pub(crate) fn list(
-    p: &mut Parser<'_>,
+    p: &mut Parser,
     bra: SyntaxKind,
     ket: SyntaxKind,
     delim: SyntaxKind,
     unexpected_delim_message: impl Fn() -> String,
     item_first_set: TokenSet,
-    parser: impl FnMut(&mut Parser<'_>) -> bool,
+    parser: impl FnMut(&mut Parser) -> bool,
 ) {
     p.bump(bra);
     delimited(
@@ -60,7 +60,7 @@ pub(crate) fn list(
 //     unexpected_delim_message: &str,
 //     is_end: impl Fn(&Parser) -> bool,
 //     item_first_set: TokenSet,
-//     parser: impl FnMut(&mut Parser<'_>) -> bool,
+//     parser: impl FnMut(&mut Parser) -> bool,
 // ) {
 //     delimited(
 //         p,
@@ -78,7 +78,7 @@ pub(crate) fn delimited(
     unexpected_delim_message: impl Fn() -> String,
     is_end: impl Fn(&Parser) -> bool,
     item_first_set: TokenSet,
-    parse: impl FnMut(&mut Parser<'_>) -> bool,
+    parse: impl FnMut(&mut Parser) -> bool,
 ) {
     delimited_fn(
         p,
@@ -98,7 +98,7 @@ pub(crate) fn delimited_fn(
     unexpected_delim_message: impl Fn() -> String,
     is_end: impl Fn(&Parser) -> bool,
     at_item_first: impl Fn(&Parser) -> bool,
-    mut parse: impl FnMut(&mut Parser<'_>) -> bool,
+    mut parse: impl FnMut(&mut Parser) -> bool,
 ) {
     let mut iteration = 0;
     while !p.at(EOF) && !is_end(p) {

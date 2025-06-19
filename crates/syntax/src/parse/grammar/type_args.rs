@@ -6,7 +6,7 @@ use crate::parse::grammar::utils::{
 };
 use stdx::panic_context::PanicContext;
 
-pub(crate) fn opt_path_type_arg_list(p: &mut Parser<'_>, mode: Mode) {
+pub(crate) fn opt_path_type_arg_list(p: &mut Parser, mode: Mode) {
     match mode {
         Mode::Use /*| Mode::Attr */ => {}
         Mode::Type => opt_type_arg_list_for_type(p),
@@ -14,7 +14,7 @@ pub(crate) fn opt_path_type_arg_list(p: &mut Parser<'_>, mode: Mode) {
     }
 }
 
-pub(crate) fn opt_type_arg_list_for_type(p: &mut Parser<'_>) {
+pub(crate) fn opt_type_arg_list_for_type(p: &mut Parser) {
     let _p = stdx::panic_context::enter("opt_type_arg_list_for_type".to_string());
     let m = p.start();
     let current = p.current();
@@ -44,7 +44,7 @@ pub(crate) fn opt_type_arg_list_for_type(p: &mut Parser<'_>) {
     m.complete(p, TYPE_ARG_LIST);
 }
 
-pub(super) fn opt_type_arg_list_for_expr(p: &mut Parser<'_>, colon_colon_required: bool) {
+pub(super) fn opt_type_arg_list_for_expr(p: &mut Parser, colon_colon_required: bool) {
     let m;
     if p.at(T![::]) && p.nth(1) == T![<] {
         m = p.start();
@@ -82,9 +82,7 @@ pub(crate) const TYPE_ARG_FIRST: TokenSet = TokenSet::new(&[IDENT]);
 // Despite its name, it can also be used for generic param list.
 const GENERIC_ARG_RECOVERY_SET: TokenSet = TokenSet::new(&[T![>], T![,]]);
 
-// test generic_arg
-// type T = S<i32, dyn T, fn()>;
-pub(crate) fn type_arg(p: &mut Parser<'_>) -> bool {
+pub(crate) fn type_arg(p: &mut Parser) -> bool {
     match p.current() {
         IDENT => {
             let m = p.start();
@@ -99,7 +97,8 @@ pub(crate) fn type_arg(p: &mut Parser<'_>) -> bool {
         }
         _ if p.at_ts(TYPE_FIRST) => {
             let m = p.start();
-            types::type_(p);
+            // can't recover at T![>] due to ambiguity
+            p.with_recover_t(T![,], types::type_);
             m.complete(p, TYPE_ARG);
         }
         _ => return false,

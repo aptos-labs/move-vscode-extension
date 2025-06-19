@@ -1,10 +1,10 @@
 SOURCE_FILE@0..65
-  SCRIPT@0..64
+  SCRIPT@0..65
     SCRIPT_KW@0..6 "script"
     WHITESPACE@6..7 " "
     L_CURLY@7..8 "{"
     WHITESPACE@8..13 "\n    "
-    FUN@13..62
+    FUN@13..65
       FUN_KW@13..16 "fun"
       WHITESPACE@16..17 " "
       NAME@17..21
@@ -13,45 +13,41 @@ SOURCE_FILE@0..65
         L_PAREN@21..22 "("
         R_PAREN@22..23 ")"
       WHITESPACE@23..24 " "
-      BLOCK_EXPR@24..62
+      BLOCK_EXPR@24..65
         L_CURLY@24..25 "{"
         WHITESPACE@25..34 "\n        "
-        EXPR_STMT@34..56
-          CALL_EXPR@34..55
-            PATH_EXPR@34..53
-              PATH@34..53
-                PATH_SEGMENT@34..53
+        EXPR_STMT@34..41
+          BIN_EXPR@34..41
+            PATH_EXPR@34..38
+              PATH@34..38
+                PATH_SEGMENT@34..38
                   NAME_REF@34..38
                     IDENT@34..38 "call"
-                  TYPE_ARG_LIST@38..53
-                    L_ANGLE@38..39 "<"
-                    TYPE_ARG@39..41
-                      PATH_TYPE@39..41
-                        PATH@39..41
-                          PATH_SEGMENT@39..41
-                            NAME_REF@39..41
-                              IDENT@39..41 "u8"
-                    COMMA@41..42 ","
-                    WHITESPACE@42..43 " "
-                    TYPE_ARG@43..52
-                      PATH_TYPE@43..52
-                        PATH@43..52
-                          PATH_SEGMENT@43..52
-                            NAME_REF@43..49
-                              IDENT@43..49 "vector"
-                            TYPE_ARG_LIST@49..52
-                              L_ANGLE@49..50 "<"
-                              TYPE_ARG@50..51
-                                ERROR@50..51
-                                  INT_NUMBER@50..51 "8"
-                              R_ANGLE@51..52 ">"
-                    R_ANGLE@52..53 ">"
-            VALUE_ARG_LIST@53..55
-              L_PAREN@53..54 "("
-              R_PAREN@54..55 ")"
-          SEMICOLON@55..56 ";"
-        WHITESPACE@56..61 "\n    "
-        R_CURLY@61..62 "}"
-    WHITESPACE@62..63 "\n"
-    R_CURLY@63..64 "}"
-  WHITESPACE@64..65 "\n"
+            L_ANGLE@38..39 "<"
+            PATH_EXPR@39..41
+              PATH@39..41
+                PATH_SEGMENT@39..41
+                  NAME_REF@39..41
+                    IDENT@39..41 "u8"
+        ERROR@41..42
+          COMMA@41..42 ","
+        WHITESPACE@42..43 " "
+        EXPR_STMT@43..65
+          VECTOR_LIT_EXPR@43..65
+            IDENT@43..49 "vector"
+            TYPE_ARG_LIST@49..64
+              L_ANGLE@49..50 "<"
+              TYPE_ARG@50..64
+                ERROR@50..51
+                  INT_NUMBER@50..51 "8"
+                R_ANGLE@51..52 ">"
+                R_ANGLE@52..53 ">"
+                L_PAREN@53..54 "("
+                R_PAREN@54..55 ")"
+                SEMICOLON@55..56 ";"
+                WHITESPACE@56..61 "\n    "
+                R_CURLY@61..62 "}"
+                WHITESPACE@62..63 "\n"
+                R_CURLY@63..64 "}"
+            WHITESPACE@64..65 "\n"
+            ERROR@65..65
