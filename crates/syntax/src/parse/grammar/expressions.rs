@@ -386,7 +386,8 @@ fn let_stmt(p: &mut Parser, m: Marker, is_spec: bool) {
     }
     pat(p);
     if p.at(T![:]) {
-        types::ascription(p);
+        p.with_recover_ts(ts!(T![=], T![;]), types::ascription);
+        // types::ascription(p);
     }
     opt_initializer_expr(p);
     p.expect(T![;]);
