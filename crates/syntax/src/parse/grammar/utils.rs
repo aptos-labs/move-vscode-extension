@@ -103,7 +103,7 @@ pub(crate) fn delimited_fn(
     let mut iteration = 0;
     while !p.at(EOF) && !is_end(p) {
         iteration += 1;
-        if iteration > 100 {
+        if iteration > 1000 {
             // something's wrong and we don't want to hang
             break;
         }
@@ -195,7 +195,7 @@ pub(crate) fn delimited_with_recovery_fn(
         }
 
         iteration += 1;
-        if iteration > 100 {
+        if iteration > 1000 {
             // something's wrong and we don't want to hang
             #[cfg(debug_assertions)]
             {
