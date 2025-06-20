@@ -1,8 +1,8 @@
 use crate::item_scope::NamedItemScope;
 use base_db::inputs::InternFileId;
 use base_db::{SourceDatabase, source_db};
-use std::fmt;
 use std::fmt::Formatter;
+use std::{env, fmt};
 use syntax::algo::ancestors_at_offset;
 use syntax::files::InFile;
 use syntax::{AstNode, SourceFile, TextSize, ast};
@@ -21,9 +21,11 @@ impl SyntaxLoc {
     pub fn from_ast_node<T: AstNode>(file_id: FileId, ast_node: &T) -> Self {
         let node = ast_node.syntax();
 
-        let node_name = {
+        let mut node_name: Option<String> = None;
+        if env::var("APT_SYNTAXLOC_DEBUG").is_ok() {
             let _p = tracing::debug_span!("SyntaxLoc::from_ast_node::node_name").entered();
-            node.children_with_tokens()
+            node_name = node
+                .children_with_tokens()
                 .find(|child| {
                     let kind = child.kind();
                     kind == SyntaxKind::NAME
@@ -31,8 +33,8 @@ impl SyntaxLoc {
                         || kind == SyntaxKind::PATH_SEGMENT
                         || kind == SyntaxKind::QUOTE_IDENT
                 })
-                .map(|it| it.to_string())
-        };
+                .map(|it| it.to_string());
+        }
 
         SyntaxLoc {
             file_id: file_id.to_owned(),

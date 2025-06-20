@@ -139,18 +139,18 @@ impl<'db> SemanticsImpl<'db> {
     pub fn get_expr_type(&self, expr: &InFile<ast::Expr>) -> Option<Ty> {
         let msl = expr.value.syntax().is_msl_context();
         let inference = self.inference(expr, msl)?;
-        inference.get_expr_type(&expr.value)
+        inference.get_expr_type(&expr.loc())
     }
 
     pub fn get_call_expr_type(&self, expr: &InFile<ast::AnyCallExpr>) -> Option<TyCallable> {
         let msl = expr.value.syntax().is_msl_context();
         let inference = self.inference(expr, msl)?;
-        inference.get_call_expr_type(&expr.value)?.into_ty_callable()
+        inference.get_call_expr_type(&expr.loc())?.into_ty_callable()
     }
 
     pub fn get_ident_pat_type(&self, ident_pat: &InFile<ast::IdentPat>, msl: bool) -> Option<Ty> {
         let inference = self.inference(ident_pat, msl)?;
-        inference.get_pat_type(&ast::Pat::IdentPat(ident_pat.value.clone()))
+        inference.get_pat_type(&ident_pat.loc())
     }
 
     pub fn render_ty(&self, ty: &Ty) -> String {
