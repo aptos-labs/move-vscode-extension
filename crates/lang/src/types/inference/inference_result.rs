@@ -1,4 +1,3 @@
-use crate::loc;
 use crate::loc::{SyntaxLoc, SyntaxLocNodeExt};
 use crate::nameres::scope::{ScopeEntry, VecExt};
 use crate::types::inference::InferenceCtx;

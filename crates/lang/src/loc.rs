@@ -6,7 +6,7 @@ use std::{env, fmt};
 use syntax::algo::ancestors_at_offset;
 use syntax::files::InFile;
 use syntax::{AstNode, SourceFile, TextSize, ast};
-use syntax::{SyntaxKind, SyntaxNodePtr};
+use syntax::{SyntaxKind, SyntaxKind::*, SyntaxNodePtr};
 use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]
@@ -52,22 +52,21 @@ impl SyntaxLoc {
     }
 
     pub fn item_scope(&self, db: &dyn SourceDatabase) -> Option<NamedItemScope> {
-        use syntax::SyntaxKind::*;
+        let _p = tracing::debug_span!("SyntaxLoc::item_scope").entered();
 
         let file = self.get_source_file(db)?;
         let ancestors = ancestors_at_offset(file.syntax(), self.node_offset());
         for ancestor in ancestors {
-            let Some(has_attrs) = ast::AnyHasAttrs::cast(ancestor.clone()) else {
-                continue;
-            };
             if matches!(
                 ancestor.kind(),
-                SCHEMA | ITEM_SPEC | MODULE_SPEC | SPEC_BLOCK_EXPR
+                SCHEMA | SPEC_FUN | SPEC_INLINE_FUN | ITEM_SPEC | MODULE_SPEC | SPEC_BLOCK_EXPR
             ) {
                 return Some(NamedItemScope::Verify);
             }
-            if let Some(ancestor_scope) = item_scope_from_attributes(has_attrs) {
-                return Some(ancestor_scope);
+            if let Some(has_attrs) = ast::AnyHasAttrs::cast(ancestor) {
+                if let Some(ancestor_scope) = item_scope_from_attributes(has_attrs) {
+                    return Some(ancestor_scope);
+                }
             }
         }
         Some(NamedItemScope::Main)
