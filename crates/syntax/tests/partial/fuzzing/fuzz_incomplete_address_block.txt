@@ -27,5 +27,6 @@ SOURCE_FILE@0..49
     WHITESPACE@40..41 " "
     L_CURLY@41..42 "{"
     WHITESPACE@42..43 "\n"
-    IDENT@43..48 "modul"
+    ERROR@43..48
+      IDENT@43..48 "modul"
   WHITESPACE@48..49 "\n"

@@ -1,5 +1,5 @@
-SOURCE_FILE@0..180
-  MODULE@0..179
+SOURCE_FILE@0..179
+  MODULE@0..178
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
     VALUE_ADDRESS@7..10
@@ -9,97 +9,97 @@ SOURCE_FILE@0..180
       IDENT@12..26 "public_package"
     WHITESPACE@26..27 " "
     L_CURLY@27..28 "{"
-    WHITESPACE@28..34 "\n\n    "
-    FUN@34..137
-      VISIBILITY_MODIFIER@34..49
-        PUBLIC_KW@34..40 "public"
-        L_PAREN@40..41 "("
-        PACKAGE_KW@41..48 "package"
-        R_PAREN@48..49 ")"
-      WHITESPACE@49..50 " "
-      FUN_KW@50..53 "fun"
-      WHITESPACE@53..54 " "
-      NAME@54..61
-        IDENT@54..61 "package"
-      PARAM_LIST@61..74
-        L_PAREN@61..62 "("
-        PARAM@62..73
-          IDENT_PAT@62..69
-            NAME@62..69
-              IDENT@62..69 "package"
-          COLON@69..70 ":"
-          WHITESPACE@70..71 " "
-          PATH_TYPE@71..73
-            PATH@71..73
-              PATH_SEGMENT@71..73
-                NAME_REF@71..73
-                  IDENT@71..73 "u8"
-        R_PAREN@73..74 ")"
-      RET_TYPE@74..78
-        COLON@74..75 ":"
-        WHITESPACE@75..76 " "
-        PATH_TYPE@76..78
-          PATH@76..78
-            PATH_SEGMENT@76..78
-              NAME_REF@76..78
-                IDENT@76..78 "u8"
-      WHITESPACE@78..79 " "
-      BLOCK_EXPR@79..137
-        L_CURLY@79..80 "{"
-        WHITESPACE@80..89 "\n        "
-        LET_STMT@89..115
-          LET_KW@89..92 "let"
-          WHITESPACE@92..93 " "
-          IDENT_PAT@93..100
-            NAME@93..100
-              IDENT@93..100 "package"
-          WHITESPACE@100..101 " "
-          EQ@101..102 "="
-          WHITESPACE@102..103 " "
-          BIN_EXPR@103..114
-            PATH_EXPR@103..110
-              PATH@103..110
-                PATH_SEGMENT@103..110
-                  NAME_REF@103..110
-                    IDENT@103..110 "package"
-            WHITESPACE@110..111 " "
-            PLUS@111..112 "+"
-            WHITESPACE@112..113 " "
-            LITERAL@113..114
-              INT_NUMBER@113..114 "1"
-          SEMICOLON@114..115 ";"
-        WHITESPACE@115..124 "\n        "
-        PATH_EXPR@124..131
-          PATH@124..131
-            PATH_SEGMENT@124..131
-              NAME_REF@124..131
-                IDENT@124..131 "package"
-        WHITESPACE@131..136 "\n    "
-        R_CURLY@136..137 "}"
-    WHITESPACE@137..142 "\n    "
-    FUN@142..177
-      VISIBILITY_MODIFIER@142..149
-        PACKAGE_KW@142..149 "package"
-      WHITESPACE@149..150 " "
-      FUN_KW@150..153 "fun"
-      WHITESPACE@153..154 " "
-      NAME@154..168
-        IDENT@154..168 "my_package_fun"
-      PARAM_LIST@168..170
-        L_PAREN@168..169 "("
-        R_PAREN@169..170 ")"
-      RET_TYPE@170..174
-        COLON@170..171 ":"
-        WHITESPACE@171..172 " "
-        PATH_TYPE@172..174
-          PATH@172..174
-            PATH_SEGMENT@172..174
-              NAME_REF@172..174
-                IDENT@172..174 "u8"
-      WHITESPACE@174..175 " "
-      BLOCK_EXPR@175..177
-        L_CURLY@175..176 "{"
-        R_CURLY@176..177 "}"
-    WHITESPACE@177..178 "\n"
-    R_CURLY@178..179 "}"
-  WHITESPACE@179..180 "\n"
+    WHITESPACE@28..33 "\n    "
+    FUN@33..136
+      VISIBILITY_MODIFIER@33..48
+        PUBLIC_KW@33..39 "public"
+        L_PAREN@39..40 "("
+        PACKAGE_KW@40..47 "package"
+        R_PAREN@47..48 ")"
+      WHITESPACE@48..49 " "
+      FUN_KW@49..52 "fun"
+      WHITESPACE@52..53 " "
+      NAME@53..60
+        IDENT@53..60 "package"
+      PARAM_LIST@60..73
+        L_PAREN@60..61 "("
+        PARAM@61..72
+          IDENT_PAT@61..68
+            NAME@61..68
+              IDENT@61..68 "package"
+          COLON@68..69 ":"
+          WHITESPACE@69..70 " "
+          PATH_TYPE@70..72
+            PATH@70..72
+              PATH_SEGMENT@70..72
+                NAME_REF@70..72
+                  IDENT@70..72 "u8"
+        R_PAREN@72..73 ")"
+      RET_TYPE@73..77
+        COLON@73..74 ":"
+        WHITESPACE@74..75 " "
+        PATH_TYPE@75..77
+          PATH@75..77
+            PATH_SEGMENT@75..77
+              NAME_REF@75..77
+                IDENT@75..77 "u8"
+      WHITESPACE@77..78 " "
+      BLOCK_EXPR@78..136
+        L_CURLY@78..79 "{"
+        WHITESPACE@79..88 "\n        "
+        LET_STMT@88..114
+          LET_KW@88..91 "let"
+          WHITESPACE@91..92 " "
+          IDENT_PAT@92..99
+            NAME@92..99
+              IDENT@92..99 "package"
+          WHITESPACE@99..100 " "
+          EQ@100..101 "="
+          WHITESPACE@101..102 " "
+          BIN_EXPR@102..113
+            PATH_EXPR@102..109
+              PATH@102..109
+                PATH_SEGMENT@102..109
+                  NAME_REF@102..109
+                    IDENT@102..109 "package"
+            WHITESPACE@109..110 " "
+            PLUS@110..111 "+"
+            WHITESPACE@111..112 " "
+            LITERAL@112..113
+              INT_NUMBER@112..113 "1"
+          SEMICOLON@113..114 ";"
+        WHITESPACE@114..123 "\n        "
+        PATH_EXPR@123..130
+          PATH@123..130
+            PATH_SEGMENT@123..130
+              NAME_REF@123..130
+                IDENT@123..130 "package"
+        WHITESPACE@130..135 "\n    "
+        R_CURLY@135..136 "}"
+    WHITESPACE@136..141 "\n    "
+    FUN@141..176
+      VISIBILITY_MODIFIER@141..148
+        PACKAGE_KW@141..148 "package"
+      WHITESPACE@148..149 " "
+      FUN_KW@149..152 "fun"
+      WHITESPACE@152..153 " "
+      NAME@153..167
+        IDENT@153..167 "my_package_fun"
+      PARAM_LIST@167..169
+        L_PAREN@167..168 "("
+        R_PAREN@168..169 ")"
+      RET_TYPE@169..173
+        COLON@169..170 ":"
+        WHITESPACE@170..171 " "
+        PATH_TYPE@171..173
+          PATH@171..173
+            PATH_SEGMENT@171..173
+              NAME_REF@171..173
+                IDENT@171..173 "u8"
+      WHITESPACE@173..174 " "
+      BLOCK_EXPR@174..176
+        L_CURLY@174..175 "{"
+        R_CURLY@175..176 "}"
+    WHITESPACE@176..177 "\n"
+    R_CURLY@177..178 "}"
+  WHITESPACE@178..179 "\n"

@@ -1,0 +1,42 @@
+SOURCE_FILE@0..70
+  MODULE@0..69
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..19
+      IDENT@12..19 "let_mut"
+    WHITESPACE@19..20 " "
+    L_CURLY@20..21 "{"
+    WHITESPACE@21..26 "\n    "
+    FUN@26..67
+      FUN_KW@26..29 "fun"
+      WHITESPACE@29..30 " "
+      NAME@30..34
+        IDENT@30..34 "main"
+      PARAM_LIST@34..36
+        L_PAREN@34..35 "("
+        R_PAREN@35..36 ")"
+      WHITESPACE@36..37 " "
+      BLOCK_EXPR@37..67
+        L_CURLY@37..38 "{"
+        WHITESPACE@38..47 "\n        "
+        LET_STMT@47..61
+          LET_KW@47..50 "let"
+          WHITESPACE@50..51 " "
+          ERROR@51..54
+            MUT_KW@51..54 "mut"
+          WHITESPACE@54..55 " "
+          IDENT@55..56 "a"
+          WHITESPACE@56..57 " "
+          EQ@57..58 "="
+          WHITESPACE@58..59 " "
+          LITERAL@59..60
+            INT_NUMBER@59..60 "1"
+          SEMICOLON@60..61 ";"
+        WHITESPACE@61..66 "\n    "
+        R_CURLY@66..67 "}"
+    WHITESPACE@67..68 "\n"
+    R_CURLY@68..69 "}"
+  WHITESPACE@69..70 "\n"

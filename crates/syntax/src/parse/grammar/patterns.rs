@@ -3,6 +3,7 @@ use crate::parse::parser::{CompletedMarker, Parser};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{SyntaxKind, T};
+use std::cell::LazyCell;
 
 pub(crate) fn pat(p: &mut Parser) -> Option<CompletedMarker> {
     let m = match p.current() {
@@ -14,11 +15,10 @@ pub(crate) fn pat(p: &mut Parser) -> Option<CompletedMarker> {
         T!['_'] => wildcard_pat(p),
         T!['('] => tuple_pat(p),
         _ => {
-            p.error_and_bump_until_ts("expected pattern", PAT_RECOVERY_SET);
+            p.error_and_recover_until_ts("expected pattern", PAT_RECOVERY_SET);
             return None;
         }
     };
-
     Some(m)
 }
 
@@ -30,38 +30,12 @@ pub(crate) fn ident_or_wildcard_pat_or_recover(
         T![ident] => ident_pat(p),
         T!['_'] => wildcard_pat(p),
         _ => {
-            p.error_and_bump_until_ts("expected ident or '_' pattern", recovery_set);
+            p.error_and_recover_until_ts("expected ident or '_'", recovery_set);
             return None;
         }
     };
     Some(m)
 }
-
-// fn atom_pat(p: &mut Parser, recovery_set: TokenSet) -> Option<CompletedMarker> {
-//     let m = match p.current() {
-//         INT_NUMBER if p.nth_at(1, T![::]) => path_pat(p),
-//         IDENT => path_pat(p),
-//         // IDENT /*| INT_NUMBER if p.nth_at(1, T![::])*/ => match p.nth(1) {
-//         //     // Checks the token after an IDENT to see if a pattern is a path (Struct { .. }) or macro
-//         //     // (T![x]).
-//         //     T!['('] | T!['{'] | T![::] | T![<] => path_pat(p),
-//         //     // T![:] if p.nth_at(1, T![::]) => path_or_macro_pat(p),
-//         //     _ => ident_pat(p),
-//         // },
-//
-//         // _ if is_literal_pat_start(p) => literal_pat(p),
-//         T![..] => rest_pat(p),
-//         // T![.] if p.at(T![..]) => rest_pat(p),
-//         T!['_'] => wildcard_pat(p),
-//         T!['('] => tuple_pat(p),
-//         _ => {
-//             p.error_and_bump_until_ts("expected pattern", recovery_set);
-//             return None;
-//         }
-//     };
-//
-//     Some(m)
-// }
 
 fn path_pat(p: &mut Parser) -> CompletedMarker {
     match p.nth(1) {
@@ -88,43 +62,6 @@ fn path_pat(p: &mut Parser) -> CompletedMarker {
     }
 }
 
-// // test path_part
-// // fn foo() {
-// //     let foo::Bar = ();
-// //     let ::Bar = ();
-// //     let Bar { .. } = ();
-// //     let Bar(..) = ();
-// // }
-// fn path_pat(p: &mut Parser) -> CompletedMarker {
-//     assert!(paths::is_path_start(p));
-//     let m = p.start();
-//     paths::expr_path(p);
-//     let kind = match p.current() {
-//         T!['('] => {
-//             tuple_pat_fields(p);
-//             TUPLE_STRUCT_PAT
-//         }
-//         T!['{'] => {
-//             struct_pat_field_list(p);
-//             STRUCT_PAT
-//         }
-//         // T![<] => {
-//         //     opt_path_type_args(p);
-//         //     PATH_PAT
-//         // }
-//         // test marco_pat
-//         // fn main() {
-//         //     let m!(x) = 0;
-//         // }
-//         // T![!] => {
-//         //     items::macro_call_after_excl(p);
-//         //     return m.complete(p, MACRO_CALL).precede(p).complete(p, MACRO_PAT);
-//         // }
-//         _ => PATH_PAT,
-//     };
-//     m.complete(p, kind)
-// }
-
 fn tuple_pat_fields(p: &mut Parser) {
     assert!(p.at(T!['(']));
     p.bump(T!['(']);
@@ -146,7 +83,7 @@ fn struct_pat_field(p: &mut Parser) {
             wildcard_pat(p);
         }
         _ => {
-            p.error_and_bump_until_ts("expected identifier", PAT_RECOVERY_SET);
+            p.error_and_recover_until_ts("expected identifier", PAT_RECOVERY_SET);
         }
     }
 }
@@ -247,16 +184,28 @@ pub(crate) const PAT_FIRST: TokenSet = expressions::atom::LITERAL_FIRST
     .union(paths::PATH_FIRST)
     .union(TokenSet::new(&[T!['('], T!['_'], T![..]]));
 
-/// tokens which are definitely not a part of pattern (mark the end of it)
-pub(crate) const PAT_RECOVERY_SET: TokenSet = TokenSet::new(&[
-    T![let],
-    T![spec],
+#[rustfmt::skip]
+pub(crate) const EXPR_STMT_FIRST: TokenSet = TokenSet::new(&[
     T![if],
     T![while],
     T![loop],
-    T![match],
-    T![')'],
-    T!['}'],
-    T![,],
-    T![=],
+    T![match]
 ]);
+
+#[rustfmt::skip]
+pub(crate) const STMT_FIRST: TokenSet =
+    EXPR_STMT_FIRST.union(
+        TokenSet::new(&[
+            T![let],
+            T![spec]
+        ]));
+
+#[rustfmt::skip]
+pub(crate) const PAT_RECOVERY_SET: TokenSet =
+    STMT_FIRST.union(
+          TokenSet::new(&[
+              T![')'],
+              T!['}'],
+              T![,],
+              T![=]
+          ]));

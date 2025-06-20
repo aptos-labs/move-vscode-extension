@@ -1,0 +1,48 @@
+SOURCE_FILE@0..82
+  MODULE@0..81
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..25
+      IDENT@12..25 "enum_recovery"
+    WHITESPACE@25..26 " "
+    L_CURLY@26..27 "{"
+    WHITESPACE@27..32 "\n    "
+    ENUM@32..36
+      ENUM_KW@32..36 "enum"
+    WHITESPACE@36..41 "\n    "
+    ENUM@41..47
+      ENUM_KW@41..45 "enum"
+      WHITESPACE@45..46 " "
+      NAME@46..47
+        IDENT@46..47 "S"
+    WHITESPACE@47..52 "\n    "
+    ENUM@52..61
+      ENUM_KW@52..56 "enum"
+      WHITESPACE@56..57 " "
+      NAME@57..58
+        IDENT@57..58 "S"
+      TYPE_PARAM_LIST@58..61
+        L_ANGLE@58..59 "<"
+        TYPE_PARAM@59..60
+          NAME@59..60
+            IDENT@59..60 "T"
+        R_ANGLE@60..61 ">"
+    WHITESPACE@61..66 "\n    "
+    FUN@66..79
+      FUN_KW@66..69 "fun"
+      WHITESPACE@69..70 " "
+      NAME@70..74
+        IDENT@70..74 "main"
+      PARAM_LIST@74..76
+        L_PAREN@74..75 "("
+        R_PAREN@75..76 ")"
+      WHITESPACE@76..77 " "
+      BLOCK_EXPR@77..79
+        L_CURLY@77..78 "{"
+        R_CURLY@78..79 "}"
+    WHITESPACE@79..80 "\n"
+    R_CURLY@80..81 "}"
+  WHITESPACE@81..82 "\n"

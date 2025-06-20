@@ -10,7 +10,7 @@ use crate::parse::grammar::{attributes, error_block, item_name_or_recover, types
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
-use crate::T;
+use crate::{ts, T};
 
 // // test mod_contents
 // // fn foo() {}
@@ -24,7 +24,7 @@ use crate::T;
 //     }
 // }
 
-pub(crate) fn item_list(p: &mut Parser<'_>) {
+pub(crate) fn item_list(p: &mut Parser) {
     assert!(p.at(T!['{']));
     p.bump(T!['{']);
     while !p.at(EOF) && !(p.at(T!['}'])) {
@@ -39,7 +39,7 @@ pub(super) fn item(p: &mut Parser) {
     let m = match opt_item(p, m) {
         Ok(()) => {
             if p.at(T![;]) {
-                p.error_and_bump_any(
+                p.bump_with_error(
                     "expected item, found `;`\n\
                      consider removing this semicolon",
                 );
@@ -61,19 +61,19 @@ pub(super) fn item(p: &mut Parser) {
         // }
         T!['}'] => p.error("unexpected '}'"),
         EOF => p.error("unexpected EOF"),
-
-        _ => p.error_and_bump_any(&format!("expected an item, got {:?}", p.current())),
+        _ => p.bump_with_error(&format!("expected an item, got {:?}", p.current())),
     }
 }
 
 /// Try to parse an item, completing `m` in case of success.
 pub(super) fn opt_item(p: &mut Parser, m: Marker) -> Result<(), Marker> {
-    let m = match try_items_with_no_modifiers(p, m) {
-        Ok(()) => return Ok(()),
-        Err(m) => m,
-    };
-
     match p.current() {
+        T![use] => use_item::use_stmt(p, m),
+        T![struct] => adt::struct_(p, m),
+        T![const] => const_(p, m),
+        T![friend] if !p.nth_at(1, T![fun]) => friend_decl(p, m),
+        IDENT if p.at_contextual_kw("enum") => adt::enum_(p, m),
+
         T![fun] => fun::function(p, m),
         _ if p.at_ts_fn(fun::on_function_modifiers_start) => fun::function(p, m),
 
@@ -89,33 +89,6 @@ pub(super) fn opt_item(p: &mut Parser, m: Marker) -> Result<(), Marker> {
                 _ => item_spec::item_spec(p, m),
             }
         }
-
-        // T![spec] if !p.nth_at(1, T![fun]) => {
-        //     p.bump(T![spec]);
-        //     if p.at_contextual_kw_ident("schema") {
-        //         schema(p, m);
-        //         return Ok(());
-        //     }
-        //     item_spec(p, m)
-        // }
-        // T![spec] if p.nth_at(1, T![fun]) => fun::spec_function(p, m),
-
-        // _ => {
-        //     p.error("expected an item");
-        //     m.complete(p, ERROR);
-        // }
-        _ => return Err(m),
-    }
-    Ok(())
-}
-
-fn try_items_with_no_modifiers(p: &mut Parser, m: Marker) -> Result<(), Marker> {
-    match p.current() {
-        T![use] => use_item::use_stmt(p, m),
-        T![struct] => adt::struct_(p, m),
-        T![const] => const_(p, m),
-        T![friend] if !p.nth_at(1, T![fun]) => friend_decl(p, m),
-        IDENT if p.at_contextual_kw("enum") => adt::enum_(p, m),
         _ => return Err(m),
     };
     Ok(())
@@ -130,14 +103,35 @@ fn const_(p: &mut Parser, m: Marker) {
         return;
     }
 
-    if p.at(T![:]) {
-        types::ascription(p);
-    } else {
-        p.error("expected type annotation");
-    }
-    if p.expect(T![=]) {
-        expr(p);
-    }
+    p.with_recover_fn(
+        |p| at_item_start(p) || p.at(T![;]),
+        |p| {
+            p.with_recover_t(T![=], |p| {
+                if p.at(T![:]) {
+                    // p.with_recover_ts(ts!(T![;]), types::ascription);
+                    types::ascription(p);
+                    // p.with_recover_fn(|p| at_item_start(p) || p.at_ts(ts!(T![;])), types::ascription);
+                    // types::ascription(p);
+                } else {
+                    p.error("expected type annotation");
+                }
+            });
+            if p.expect(T![=]) {
+                expr(p);
+            }
+        },
+    );
+
+    // if p.at(T![:]) {
+    //     // p.with_recover_ts(ts!(T![;]), types::ascription);
+    //     p.with_recover_fn(|p| at_item_start(p) || p.at_ts(ts!(T![;])), types::ascription);
+    //     // types::ascription(p);
+    // } else {
+    //     p.error("expected type annotation");
+    // }
+    // if p.expect(T![=]) {
+    //     expr(p);
+    // }
     p.expect(T![;]);
     m.complete(p, CONST);
 }

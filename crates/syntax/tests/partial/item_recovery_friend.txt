@@ -1,0 +1,51 @@
+SOURCE_FILE@0..95
+  MODULE@0..94
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..32
+      IDENT@12..32 "item_recovery_friend"
+    WHITESPACE@32..33 " "
+    L_CURLY@33..34 "{"
+    WHITESPACE@34..39 "\n    "
+    FRIEND@39..49
+      FRIEND_KW@39..45 "friend"
+      WHITESPACE@45..46 " "
+      PATH@46..49
+        PATH_SEGMENT@46..49
+          PATH_ADDRESS@46..49
+            VALUE_ADDRESS@46..49
+              INT_NUMBER@46..49 "0x1"
+    WHITESPACE@49..54 "\n    "
+    FRIEND@54..66
+      FRIEND_KW@54..60 "friend"
+      WHITESPACE@60..61 " "
+      PATH@61..66
+        PATH@61..64
+          PATH_SEGMENT@61..64
+            PATH_ADDRESS@61..64
+              VALUE_ADDRESS@61..64
+                INT_NUMBER@61..64 "0x1"
+        COLON_COLON@64..66 "::"
+    WHITESPACE@66..71 "\n    "
+    FRIEND@71..84
+      FRIEND_KW@71..77 "friend"
+      WHITESPACE@77..78 " "
+      PATH@78..84
+        PATH@78..81
+          PATH_SEGMENT@78..81
+            PATH_ADDRESS@78..81
+              VALUE_ADDRESS@78..81
+                INT_NUMBER@78..81 "0x1"
+        COLON_COLON@81..83 "::"
+        PATH_SEGMENT@83..84
+          NAME_REF@83..84
+            IDENT@83..84 "m"
+    WHITESPACE@84..89 "\n    "
+    FUN@89..92
+      FUN_KW@89..92 "fun"
+    WHITESPACE@92..93 "\n"
+    R_CURLY@93..94 "}"
+  WHITESPACE@94..95 "\n"

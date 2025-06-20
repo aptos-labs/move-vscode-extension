@@ -1,12 +1,10 @@
 use crate::references::find_def_at_offset;
-use ide_db::defs::IdentClass;
-use ide_db::helpers::pick_best_token;
 use ide_db::search::SearchScope;
 use ide_db::{RootDatabase, search};
 use lang::Semantics;
 use std::collections::HashSet;
 use syntax::files::FilePosition;
-use syntax::{AstNode, SyntaxToken, T, TextRange};
+use syntax::{AstNode, TextRange};
 
 pub(crate) fn highlight_related<'db>(
     sema: &'db Semantics<'db, RootDatabase>,

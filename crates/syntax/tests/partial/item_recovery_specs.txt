@@ -1,0 +1,87 @@
+SOURCE_FILE@0..194
+  MODULE@0..193
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..31
+      IDENT@12..31 "item_recovery_specs"
+    WHITESPACE@31..32 " "
+    L_CURLY@32..33 "{"
+    WHITESPACE@33..38 "\n    "
+    SPEC_FUN@38..46
+      SPEC_KW@38..42 "spec"
+      WHITESPACE@42..43 " "
+      FUN_KW@43..46 "fun"
+    WHITESPACE@46..51 "\n    "
+    SPEC_FUN@51..64
+      SPEC_KW@51..55 "spec"
+      WHITESPACE@55..56 " "
+      FUN_KW@56..59 "fun"
+      WHITESPACE@59..60 " "
+      NAME@60..64
+        IDENT@60..64 "main"
+    WHITESPACE@64..69 "\n    "
+    SPEC_FUN@69..84
+      SPEC_KW@69..73 "spec"
+      WHITESPACE@73..74 " "
+      FUN_KW@74..77 "fun"
+      WHITESPACE@77..78 " "
+      NAME@78..82
+        IDENT@78..82 "main"
+      PARAM_LIST@82..84
+        L_PAREN@82..83 "("
+        R_PAREN@83..84 ")"
+    WHITESPACE@84..89 "\n    "
+    SCHEMA@89..100
+      SPEC_KW@89..93 "spec"
+      WHITESPACE@93..94 " "
+      SCHEMA_KW@94..100 "schema"
+    WHITESPACE@100..105 "\n    "
+    SCHEMA@105..118
+      SPEC_KW@105..109 "spec"
+      WHITESPACE@109..110 " "
+      SCHEMA_KW@110..116 "schema"
+      WHITESPACE@116..117 " "
+      NAME@117..118
+        IDENT@117..118 "S"
+    WHITESPACE@118..123 "\n    "
+    SCHEMA@123..139
+      SPEC_KW@123..127 "spec"
+      WHITESPACE@127..128 " "
+      SCHEMA_KW@128..134 "schema"
+      WHITESPACE@134..135 " "
+      NAME@135..136
+        IDENT@135..136 "S"
+      TYPE_PARAM_LIST@136..139
+        L_ANGLE@136..137 "<"
+        TYPE_PARAM@137..138
+          NAME@137..138
+            IDENT@137..138 "T"
+        R_ANGLE@138..139 ">"
+    WHITESPACE@139..144 "\n    "
+    ITEM_SPEC@144..155
+      SPEC_KW@144..148 "spec"
+      WHITESPACE@148..149 " "
+      MODULE_KW@149..155 "module"
+    WHITESPACE@155..160 "\n    "
+    FUN@160..191
+      FUN_KW@160..163 "fun"
+      WHITESPACE@163..164 " "
+      NAME@164..168
+        IDENT@164..168 "main"
+      PARAM_LIST@168..170
+        L_PAREN@168..169 "("
+        R_PAREN@169..170 ")"
+      WHITESPACE@170..171 " "
+      BLOCK_EXPR@171..191
+        L_CURLY@171..172 "{"
+        WHITESPACE@172..181 "\n        "
+        SPEC_BLOCK_EXPR@181..185
+          SPEC_KW@181..185 "spec"
+        WHITESPACE@185..190 "\n    "
+        R_CURLY@190..191 "}"
+    WHITESPACE@191..192 "\n"
+    R_CURLY@192..193 "}"
+  WHITESPACE@193..194 "\n"

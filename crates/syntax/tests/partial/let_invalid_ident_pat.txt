@@ -67,7 +67,8 @@ SOURCE_FILE@0..249
                       NAME@178..192
                         IDENT@178..192 "withdraw_proof"
                   STRUCT_PAT_FIELD@192..207
-                    DOT@192..193 "."
+                    ERROR@192..193
+                      DOT@192..193 "."
                     IDENT@193..207 "expiration_sec"
                   COMMA@207..208 ","
                   WHITESPACE@208..225 "\n                "

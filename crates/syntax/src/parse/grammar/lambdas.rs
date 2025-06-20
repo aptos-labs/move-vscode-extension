@@ -24,7 +24,7 @@ pub(crate) fn lambda_param_list(p: &mut Parser) -> bool {
     true
 }
 
-fn lambda_param(p: &mut Parser<'_>) -> bool {
+fn lambda_param(p: &mut Parser) -> bool {
     let m = p.start();
     patterns::ident_or_wildcard_pat_or_recover(p, PAT_RECOVERY_SET.union(ts!(T![|])));
     if p.at(T![:]) {

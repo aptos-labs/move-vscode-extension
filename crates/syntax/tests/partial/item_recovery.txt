@@ -2,7 +2,8 @@ SOURCE_FILE@0..191
   MODULE@0..10
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
-    INT_NUMBER@7..10 "0x1"
+    ERROR@7..10
+      INT_NUMBER@7..10 "0x1"
   WHITESPACE@10..11 "\n"
   MODULE@11..23
     MODULE_KW@11..17 "module"
@@ -80,7 +81,7 @@ SOURCE_FILE@0..191
         NAME_REF@171..174
           IDENT@171..174 "ref"
   WHITESPACE@174..175 "\n"
-  MODULE_SPEC@175..188
+  MODULE_SPEC@175..191
     SPEC_KW@175..179 "spec"
     WHITESPACE@179..180 " "
     PATH@180..188
@@ -93,4 +94,5 @@ SOURCE_FILE@0..191
       PATH_SEGMENT@185..188
         NAME_REF@185..188
           IDENT@185..188 "ref"
-  WHITESPACE@188..191 "\n\n\n"
+    WHITESPACE@188..191 "\n\n\n"
+    ERROR@191..191

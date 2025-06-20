@@ -513,7 +513,7 @@ fn test_do_not_crash_type_checking_invalid_number_of_type_params_or_call_params(
             fun m() {
                 let _s = S<u8, u8>{};
                 call(1, 2, 3);
-                      //^ warn: This function takes 1 parameters, but 3 parameters were supplied
+                      //^ err: This function takes 1 parameters, but 3 parameters were supplied
             }
         }
     "#]]);
@@ -956,7 +956,7 @@ fn test_call_expr_with_incomplete_arguments_and_explicit_type() {
             fun main() {
                 call<u8>(1u64);
                        //^^^^ err: Incompatible type 'u64', expected 'u8'
-                           //^ warn: This function takes 2 parameters, but 1 parameters were supplied
+                           //^ err: This function takes 2 parameters, but 1 parameters were supplied
             }
         }
     "#]]);
@@ -971,7 +971,7 @@ fn test_call_expr_with_incomplete_arguments_and_implicit_type() {
             fun main() {
                 call(1u8, 1u64);
                         //^^^^ err: Incompatible type 'u64', expected 'u8'
-                            //^ warn: This function takes 3 parameters, but 2 parameters were supplied
+                            //^ err: This function takes 3 parameters, but 2 parameters were supplied
             }
         }
     "#]]);

@@ -30,13 +30,13 @@ fn test_invalid_number_of_arguments_local() {
 
             fun main() {
                 params_0(4);
-                       //^ warn: This function takes 0 parameters, but 1 parameters were supplied
+                       //^ err: This function takes 0 parameters, but 1 parameters were supplied
                 params_1();
-                       //^ warn: This function takes 1 parameters, but 0 parameters were supplied
+                       //^ err: This function takes 1 parameters, but 0 parameters were supplied
                 params_1(1, 4);
-                          //^ warn: This function takes 1 parameters, but 2 parameters were supplied
+                          //^ err: This function takes 1 parameters, but 2 parameters were supplied
                 params_3(5, 1);
-                           //^ warn: This function takes 3 parameters, but 2 parameters were supplied
+                           //^ err: This function takes 3 parameters, but 2 parameters were supplied
             }
         }
     "#]]);
@@ -54,13 +54,13 @@ fn test_invalid_number_of_arguments_receiver_style() {
 
             fun main(s: S) {
                 s.get_field_0(4);
-                            //^ warn: This function takes 0 parameters, but 1 parameters were supplied
+                            //^ err: This function takes 0 parameters, but 1 parameters were supplied
                 s.get_field_1();
-                            //^ warn: This function takes 1 parameters, but 0 parameters were supplied
+                            //^ err: This function takes 1 parameters, but 0 parameters were supplied
                 s.get_field_1(1, 4);
-                               //^ warn: This function takes 1 parameters, but 2 parameters were supplied
+                               //^ err: This function takes 1 parameters, but 2 parameters were supplied
                 s.get_field_3(5, 1);
-                                //^ warn: This function takes 3 parameters, but 2 parameters were supplied
+                                //^ err: This function takes 3 parameters, but 2 parameters were supplied
             }
         }
     "#]]);
@@ -77,7 +77,7 @@ fn test_invalid_number_of_arguments_with_import() {
             use 0x1::p::params_3;
             fun main() {
                 params_3(5, 1);
-                           //^ warn: This function takes 3 parameters, but 2 parameters were supplied
+                           //^ err: This function takes 3 parameters, but 2 parameters were supplied
             }
         }
     "#]]);
@@ -94,7 +94,7 @@ fn test_invalid_number_of_arguments_with_import_alias() {
             use 0x1::p::params_3 as params_alias;
             fun main() {
                 params_alias(5, 1);
-                               //^ warn: This function takes 3 parameters, but 2 parameters were supplied
+                               //^ err: This function takes 3 parameters, but 2 parameters were supplied
             }
         }
     "#]]);
@@ -107,7 +107,7 @@ fn test_lambda_expr_expect_single_parameter() {
         module 0x1::m {
             inline fun main<Element>(_e: Element, f: |Element| u8) {
                 f();
-                //^ warn: This function takes 1 parameters, but 0 parameters were supplied
+                //^ err: This function takes 1 parameters, but 0 parameters were supplied
             }
         }
     "#]]);
@@ -120,11 +120,11 @@ fn test_assert_macro_expects_one_or_two_parameters() {
         module 0x1::m {
             fun call() {
                 assert!();
-                      //^ warn: This function takes 1 to 2 parameters, but 0 parameters were supplied
+                      //^ err: This function takes 1 to 2 parameters, but 0 parameters were supplied
                 assert!(true);
                 assert!(true, 1);
                 assert!(true, 1, 1);            }
-                               //^ warn: This function takes 1 to 2 parameters, but 3 parameters were supplied
+                               //^ err: This function takes 1 to 2 parameters, but 3 parameters were supplied
         }
     "#]]);
 }

@@ -1,0 +1,27 @@
+module 0x1::item_recovery_const {
+    const C1
+          //^ expected type annotation
+          //^ expected EQ
+          //^ expected SEMICOLON
+    const C1;
+          //^ expected type annotation
+          //^ expected EQ
+    const C2:
+           //^ expected type
+           //^ expected EQ
+           //^ expected SEMICOLON
+    const C2:;
+           //^ expected type
+           //^ expected EQ
+    const C3: u8
+              //^ expected EQ
+              //^ expected SEMICOLON
+    const C3: u8;
+              //^ expected EQ
+    const C5: u8 =;
+                //^ expected expression
+    const C4: u8 =
+                //^ expected expression
+                //^ expected SEMICOLON
+    fun main() {}
+}

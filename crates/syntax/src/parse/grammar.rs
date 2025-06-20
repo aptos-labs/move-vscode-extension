@@ -63,7 +63,7 @@ pub mod entry_points {
                 IDENT if p.at_contextual_kw("address") => address_def(p, m),
                 _ => {
                     m.abandon(p);
-                    p.error_and_bump_any(&format!("unexpected token {:?}", p.current()))
+                    p.bump_with_error(&format!("unexpected token {:?}", p.current()))
                 }
             }
         }
@@ -73,18 +73,18 @@ pub mod entry_points {
 
 // test mod_item
 // module 0x1::m {}
-pub(crate) fn module(p: &mut Parser<'_>, m: Marker) {
+pub(crate) fn module(p: &mut Parser, m: Marker) {
     p.bump(T![module]);
     module_name(p);
     if p.at(T!['{']) {
         items::item_list(p);
     } else {
-        p.error_and_bump_until_ts("expected `{`", TOP_LEVEL_FIRST);
+        p.error_and_recover_until_ts("expected `{`", TOP_LEVEL_FIRST);
     }
     m.complete(p, MODULE);
 }
 
-pub(crate) fn address_def(p: &mut Parser<'_>, m: Marker) {
+pub(crate) fn address_def(p: &mut Parser, m: Marker) {
     p.bump_remap(T![address]);
     any_address(p);
     if p.at(T!['{']) {
@@ -96,12 +96,12 @@ pub(crate) fn address_def(p: &mut Parser<'_>, m: Marker) {
                 module(p, m);
             } else {
                 m.abandon(p);
-                p.error_and_bump_until_ts("expected module", ts!(T![module], T!['}']));
+                p.error_and_recover_until_ts("expected module", ts!(T![module], T!['}']));
             }
         }
         p.expect(T!['}']);
     } else {
-        p.error_and_bump_until_ts("expected `{`", TOP_LEVEL_FIRST);
+        p.error_and_recover_until_ts("expected `{`", TOP_LEVEL_FIRST);
     }
     m.complete(p, ADDRESS_DEF);
 }
@@ -112,7 +112,7 @@ pub(crate) fn module_spec(p: &mut Parser, m: Marker) {
     if p.at(T!['{']) {
         items::item_list(p);
     } else {
-        p.error_and_bump_until_ts("expected `{`", TOP_LEVEL_FIRST);
+        p.error_and_recover_until_ts("expected `{`", TOP_LEVEL_FIRST);
     }
     m.complete(p, MODULE_SPEC);
 }
@@ -124,7 +124,7 @@ pub(crate) fn script(p: &mut Parser, m: Marker) {
         // mod b { }
         items::item_list(p);
     } else {
-        p.error_and_bump_until_ts("expected `{`", TOP_LEVEL_FIRST);
+        p.error_and_recover_until_ts("expected `{`", TOP_LEVEL_FIRST);
     }
     m.complete(p, SCRIPT);
 }
@@ -173,7 +173,7 @@ fn name_ref_or_bump_until(p: &mut Parser, stop: impl Fn(&Parser) -> bool) -> boo
         m.complete(p, NAME_REF);
         true
     } else {
-        p.error_and_bump_until("expected identifier", stop);
+        p.error_and_recover_until("expected identifier", stop);
         false
     }
 }
@@ -184,7 +184,7 @@ fn name_ref(p: &mut Parser) {
         p.bump(IDENT);
         m.complete(p, NAME_REF);
     } else {
-        p.error_and_bump_any("expected identifier");
+        p.bump_with_error("expected identifier");
     }
 }
 
@@ -192,17 +192,17 @@ fn name_ref(p: &mut Parser) {
 const IDENT_OR_INT_NUMBER: TokenSet = TokenSet::new(&[INT_NUMBER, IDENT]);
 
 #[allow(unused)]
-fn name_ref_or_index(p: &mut Parser<'_>) {
+fn name_ref_or_index(p: &mut Parser) {
     if p.at_ts(IDENT_OR_INT_NUMBER) {
         let m = p.start();
         p.bump_any();
         m.complete(p, NAME_REF);
     } else {
-        p.error_and_bump_any("expected integer or identifier");
+        p.bump_with_error("expected integer or identifier");
     }
 }
 
-// fn name_ref_or_index(p: &mut Parser<'_>) {
+// fn name_ref_or_index(p: &mut Parser) {
 //     assert!(p.at(IDENT) || p.at(INT_NUMBER));
 //     let m = p.start();
 //     p.bump_any();
@@ -210,33 +210,35 @@ fn name_ref_or_index(p: &mut Parser<'_>) {
 // }
 
 fn item_name_or_recover(p: &mut Parser, extra_recover_at: impl Fn(&Parser) -> bool) -> bool {
-    name_or_recover(p, |p| {
-        at_item_start(p) || at_block_start(p) || extra_recover_at(p)
-    })
-    // if !name_or_bump_until(p, item_first) {
-    //     // m.abandon(p);
-    //     return;
-    // }
-}
-
-fn name_or_recover(p: &mut Parser, stop: impl Fn(&Parser) -> bool) -> bool {
+    // name_or_recover(p, |p| {
+    //     at_item_start(p) || at_block_start(p) || extra_recover_at(p)
+    // })
+    if at_item_start(p) {
+        p.push_error(format!("expected identifier, got '{}'", p.current_text()));
+        return false;
+    }
+    // let recover_until = |p| at_item_start(p) || at_block_start(p) || extra_recover_at(p);
     if !p.at(IDENT) {
-        p.error_and_bump_until("expected an identifier", stop);
+        p.error_and_recover_until("expected an identifier", |p| {
+            at_item_start(p) || at_block_start(p) || extra_recover_at(p)
+        });
         return false;
     }
     let m = p.start();
     p.bump(IDENT);
     m.complete(p, NAME);
     true
-    //
-    // if p.at(IDENT) {
-    //     let m = p.start();
-    //     p.bump(IDENT);
-    //     m.complete(p, NAME);
-    //     true
-    // } else {
-    //     false
-    // }
+}
+
+fn name_or_recover(p: &mut Parser, stop: impl Fn(&Parser) -> bool) -> bool {
+    if !p.at(IDENT) {
+        p.error_and_recover_until("expected an identifier", stop);
+        return false;
+    }
+    let m = p.start();
+    p.bump(IDENT);
+    m.complete(p, NAME);
+    true
 }
 
 fn error_block(p: &mut Parser, message: &str) {

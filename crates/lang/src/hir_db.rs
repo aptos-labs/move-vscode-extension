@@ -252,6 +252,7 @@ pub fn item_scope(db: &dyn SourceDatabase, syntax_loc: SyntaxLoc) -> NamedItemSc
     ) -> NamedItemScope {
         loc.syntax_loc(db).item_scope(db).unwrap_or(NamedItemScope::Main)
     }
+
     item_scope_tracked(db, SyntaxLocInput::new(db, syntax_loc))
 }
 

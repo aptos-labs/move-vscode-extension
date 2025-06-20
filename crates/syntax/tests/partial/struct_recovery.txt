@@ -69,7 +69,8 @@ SOURCE_FILE@0..170
         ABILITY@124..128
           IDENT@124..128 "copy"
         COMMA@128..129 ","
-        COMMA@129..130 ","
+        ERROR@129..130
+          COMMA@129..130 ","
       WHITESPACE@130..131 " "
       NAMED_FIELD_LIST@131..133
         L_CURLY@131..132 "{"

@@ -1,0 +1,25 @@
+module 0x1::item_recovery_fields {
+    struct S {
+        val0
+          //^ expected type annotation
+          //^ expected COMMA
+        val1,
+          //^ expected type annotation
+        val2:,
+           //^ expected type
+        val3: u8
+              //^ expected COMMA
+        val5: vector<,
+                   //^ expected R_ANGLE
+        val6: vector<T,
+        val8: vector<T
+          //^ expected COMMA
+          //^ expected R_ANGLE
+          //^ expected COMMA
+          //^ expected named field declaration
+          //^ expected COMMA
+                  //^ expected type annotation
+                  //^ expected COMMA
+                    //^ expected type annotation
+    }
+}

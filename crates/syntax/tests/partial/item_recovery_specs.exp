@@ -1,0 +1,22 @@
+module 0x1::item_recovery_specs {
+    spec fun
+          //^ expected identifier, got 'spec'
+    spec fun main
+               //^ expected function arguments
+               //^ expected a block
+    spec fun main()
+                 //^ expected a block
+    spec schema
+             //^ expected an identifier
+             //^ expected a block
+    spec schema S
+               //^ expected a block
+    spec schema S<T>
+                  //^ expected a block
+    spec module
+             //^ expected a block
+    fun main() {
+        spec
+          //^ expected a block
+    }
+}

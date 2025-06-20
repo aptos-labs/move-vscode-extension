@@ -52,7 +52,7 @@ pub(crate) fn check_value_arguments<'db>(
             .map(|it| it.text_range())
             .unwrap_or(value_arg_list.syntax().text_range());
         acc.push(Diagnostic::new(
-            DiagnosticCode::Lsp("arguments-number-mismatch", Severity::Warning),
+            DiagnosticCode::Lsp("arguments-number-mismatch", Severity::Error),
             format!("This function takes {expected_count_message} parameters, but {actual_count} parameters were supplied"),
             FileRange { file_id, range },
         ));
@@ -63,7 +63,7 @@ pub(crate) fn check_value_arguments<'db>(
         for error_expr in arg_exprs.iter().skip(max) {
             let range = error_expr.syntax().text_range();
             acc.push(Diagnostic::new(
-                DiagnosticCode::Lsp("arguments-number-mismatch", Severity::Warning),
+                DiagnosticCode::Lsp("arguments-number-mismatch", Severity::Error),
                 format!("This function takes {expected_count_message} parameters, but {actual_count} parameters were supplied"),
                 FileRange { file_id, range },
             ));

@@ -111,6 +111,8 @@ pub fn get_entries_from_walking_scopes(
     start_at: InFile<ast::ReferenceElement>,
     ns: NsSet,
 ) -> Vec<ScopeEntry> {
+    let _p = tracing::debug_span!("get_entries_from_walking_scopes").entered();
+
     let resolve_scopes = get_resolve_scopes(db, start_at);
 
     let mut visited_names = HashMap::<String, NsSet>::new();

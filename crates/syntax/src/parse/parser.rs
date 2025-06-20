@@ -7,6 +7,7 @@ use crate::parse::text_token_source::TextTokenSource;
 use crate::parse::token_set::TokenSet;
 use crate::parse::ParseError;
 use crate::{
+    ts,
     SyntaxKind::{self, EOF, ERROR, TOMBSTONE},
     T,
 };
@@ -20,16 +21,20 @@ use crate::{
 /// tree, but rather a flat stream of events of the form
 /// "start expression, consume number literal,
 /// finish expression". See `Event` docs for more.
-pub struct Parser<'t> {
-    token_source: &'t mut TextTokenSource<'t>,
+pub struct Parser {
+    token_source: TextTokenSource,
     events: Vec<Event>,
+    pub(crate) recover_sets: Vec<TokenSet>,
+    pub(crate) recover_fns: Vec<Box<dyn Fn(&Parser) -> bool>>,
 }
 
-impl<'t> Parser<'t> {
-    pub(super) fn new(token_source: &'t mut TextTokenSource<'t>) -> Parser<'t> {
+impl Parser {
+    pub(super) fn new(token_source: TextTokenSource) -> Parser {
         Parser {
             token_source,
-            events: Vec::new(),
+            events: vec![],
+            recover_sets: vec![],
+            recover_fns: vec![],
         }
     }
 
@@ -42,6 +47,18 @@ impl<'t> Parser<'t> {
     /// the special `EOF` kind is returned.
     pub(crate) fn current(&self) -> SyntaxKind {
         self.nth(0)
+    }
+
+    pub(crate) fn text_context(&self) -> (&str, &str, &str) {
+        (
+            self.token_source.prev_text(),
+            self.token_source.current_text(),
+            self.token_source.next_text(),
+        )
+    }
+
+    pub(crate) fn current_text(&self) -> &str {
+        self.token_source.current_text()
     }
 
     pub(crate) fn nth_is_jointed_to_next(&self, n: usize) -> bool {
@@ -275,11 +292,21 @@ impl<'t> Parser<'t> {
     /// Consume the next token if it is `kind` or emit an error
     /// otherwise.
     pub(crate) fn expect(&mut self, kind: SyntaxKind) -> bool {
+        // if self.eat(kind) {
+        //     return true;
+        // }
+        // self.push_error(format!("expected {:?}", kind));
+        // false
+        self.expect_with_error(kind, &format!("expected {:?}", kind))
+    }
+
+    /// Consume the next token if it is `kind` or emit an error
+    /// otherwise.
+    pub(crate) fn expect_with_error(&mut self, kind: SyntaxKind, error_message: &str) -> bool {
         if self.eat(kind) {
             return true;
         }
-        // self.expected_kind_error(kind);
-        self.push_error(format!("expected {:?}", kind));
+        self.push_error(error_message);
         false
     }
 
@@ -288,41 +315,64 @@ impl<'t> Parser<'t> {
     //     self.err_recover_at_ts(message, TokenSet::EMPTY);
     // }
 
-    /// Create an error node and consume the next token.
-    pub(crate) fn error_and_bump_until_ts(&mut self, message: &str, stop_at_ts: TokenSet) {
-        self.error_and_bump_until(message, |p| p.at_ts(stop_at_ts));
-        // match self.current() {
-        //     T!['{'] | T!['}'] => {
-        //         self.error(message);
-        //         return;
-        //     }
-        //     _ => (),
-        // }
-        //
-        // if self.at_ts(recovery) {
-        //     self.error(message);
-        //     return;
-        // }
-        //
-        // let m = self.start();
-        // self.error(message);
-        // self.bump_any();
-        // m.complete(self, ERROR);
+    // pub(crate) fn error_bump_any(&mut self, message: &str) {
+    //     let m = self.start();
+    //     self.push_error(message);
+    //     self.bump_any();
+    //     m.complete(self, ERROR);
+    // }
+
+    // /// Create an error node and consume the next token.
+    // pub(crate) fn error_and_bump_until_ts(&mut self, message: &str, stop_at_ts: TokenSet) {
+    //     self.error_and_bump_until(message, |p| p.at_ts(stop_at_ts));
+    //     // match self.current() {
+    //     //     T!['{'] | T!['}'] => {
+    //     //         self.error(message);
+    //     //         return;
+    //     //     }
+    //     //     _ => (),
+    //     // }
+    //     //
+    //     // if self.at_ts(recovery) {
+    //     //     self.error(message);
+    //     //     return;
+    //     // }
+    //     //
+    //     // let m = self.start();
+    //     // self.error(message);
+    //     // self.bump_any();
+    //     // m.complete(self, ERROR);
+    // }
+
+    pub(crate) fn error_and_recover_until_ts(&mut self, message: &str, stop_at: TokenSet) {
+        self.error_and_recover_until(message, |p| p.at_ts(stop_at))
     }
 
     /// adds error and then bumps until `stop()` is true
-    pub(crate) fn error_and_bump_until(&mut self, message: &str, stop: impl Fn(&Parser) -> bool) {
-        self.push_error(message);
-        self.bump_until(stop);
+    pub(crate) fn error_and_recover_until(&mut self, message: &str, stop: impl Fn(&Parser) -> bool) {
+        // if the next token is stop token, just push error,
+        // otherwise wrap the next token with the error node and start `recover_until()`
+        if stop(self)
+        /*|| self.at_ts(self.full_recover_set())*/
+        {
+            self.push_error(message);
+            return;
+        }
+        self.bump_with_error(message);
+        // let m = self.start();
+        // self.bump_any();
+        // self.push_error(message);
+        // m.complete(self, ERROR);
+
+        // if !self.recover_sets.is_empty() {
+        //     let full_recover_set = self.full_recover_set();
+        //     self.recover_until(|p| stop(p) || p.at_ts(full_recover_set));
+        //     return;
+        // }
+        self.recover_until(stop);
     }
 
-    // pub(crate) fn with_recover_until(&mut self, f: impl Fn(&mut Parser)) {
-    //     // self.stop_recovery = Some(Box::new(stop_recovery));
-    //     f(self);
-    //     // self.stop_recovery = None;
-    // }
-
-    pub(crate) fn bump_until(&mut self, stop: impl Fn(&Parser) -> bool) {
+    pub(crate) fn recover_until(&mut self, stop: impl Fn(&Parser) -> bool) {
         while !self.at(EOF) {
             if stop(self) {
                 break;
@@ -331,10 +381,10 @@ impl<'t> Parser<'t> {
         }
     }
 
-    pub(crate) fn error_and_bump_any(&mut self, message: &str) {
+    pub(crate) fn bump_with_error(&mut self, message: &str) {
         let m = self.start();
-        self.push_error(message);
         self.bump_any();
+        self.push_error(message);
         m.complete(self, ERROR);
     }
 
@@ -432,6 +482,63 @@ impl Marker {
     }
 }
 
+// recovery sets
+impl Parser {
+    pub fn outer_recovery_set(&self) -> TokenSet {
+        self.recover_sets.iter().fold(ts!(), |acc, ts| acc + *ts)
+    }
+
+    #[allow(clippy::needless_lifetimes)]
+    pub fn outer_recovery_fn<'t>(&'t self) -> impl Fn(&'t Parser) -> bool {
+        let outer_recovery_set = self.outer_recovery_set();
+        move |p| p.at_ts(outer_recovery_set) || self.recover_fns.iter().any(|recover_fn| recover_fn(p))
+    }
+
+    pub(crate) fn with_recover_fn<'t, T>(
+        &mut self,
+        rec: impl Fn(&Parser) -> bool + 'static,
+        f: impl FnOnce(&mut Parser) -> T,
+    ) -> T {
+        self.recover_fns.push(Box::new(rec));
+        let res = f(self);
+        self.recover_fns.pop();
+        res
+    }
+
+    pub(crate) fn with_recover_t<T>(&mut self, t: SyntaxKind, f: impl FnOnce(&mut Parser) -> T) -> T {
+        self.with_recover_ts(ts!(t), f)
+    }
+
+    pub(crate) fn with_recover_ts<T>(&mut self, ts: TokenSet, f: impl FnOnce(&mut Parser) -> T) -> T {
+        self.recover_sets.push(ts);
+        let res = f(self);
+        self.recover_sets.pop();
+        res
+    }
+
+    // #[allow(clippy::needless_lifetimes)]
+    // pub(crate) fn with_recovery<'t>(
+    //     &'t mut self,
+    //     t: SyntaxKind,
+    // ) -> scopeguard::ScopeGuard<&'t mut Parser, impl FnOnce(&'t mut Parser)> {
+    //     self.rec_sets.push(ts!(t));
+    //     scopeguard::guard(self, |p| {
+    //         p.rec_sets.pop();
+    //     })
+    // }
+
+    // #[allow(clippy::needless_lifetimes)]
+    // pub(crate) fn with_recovery_ts<'t>(
+    //     &'t mut self,
+    //     ts: TokenSet,
+    // ) -> scopeguard::ScopeGuard<&'t mut Parser, impl FnOnce(&'t mut Parser)> {
+    //     self.rec_sets.push(ts);
+    //     scopeguard::guard(self, |p| {
+    //         p.rec_sets.pop();
+    //     })
+    // }
+}
+
 #[derive(Debug)]
 pub(crate) struct CompletedMarker {
     pos: u32,
@@ -504,7 +611,7 @@ impl CompletedMarker {
         }
     }
 
-    // pub(crate) fn last_token(&self, p: &Parser<'_>) -> Option<SyntaxKind> {
+    // pub(crate) fn last_token(&self, p: &Parser) -> Option<SyntaxKind> {
     //     let end_pos = self.end_pos as usize;
     //     // debug_assert_eq!(p.events[end_pos - 1], Event::Finish);
     //     p.events[..end_pos].iter().rev().find_map(|event| match event {

@@ -33,9 +33,9 @@ pub struct Token {
 pub(crate) fn parse_text(text: &str, entry_point: fn(&mut Parser)) -> (GreenNode, Vec<SyntaxError>) {
     let (raw_tokens, lexer_errors) = tokenize(text);
 
-    let mut token_source = TextTokenSource::new(text, &raw_tokens);
+    let mut token_source = TextTokenSource::new(text, raw_tokens.clone());
 
-    let mut p = Parser::new(&mut token_source);
+    let mut p = Parser::new(token_source);
     entry_point(&mut p);
     let events = p.finish();
 

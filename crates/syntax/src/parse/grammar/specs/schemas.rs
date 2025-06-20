@@ -175,7 +175,7 @@ fn opt_wildcard_pattern_modifier(p: &mut Parser) {
     while !p.at(EOF) {
         if p.at(T![public]) {
             if !all_modifiers.contains(&T![public]) {
-                p.error_and_bump_any("duplicate modifier 'public'");
+                p.bump_with_error("duplicate modifier 'public'");
                 continue;
             }
             found = true;
@@ -185,7 +185,7 @@ fn opt_wildcard_pattern_modifier(p: &mut Parser) {
         }
         if p.at_contextual_kw_ident("internal") {
             if !all_modifiers.contains(&T![internal]) {
-                p.error_and_bump_any("duplicate modifier 'internal'");
+                p.bump_with_error("duplicate modifier 'internal'");
                 continue;
             }
             found = true;

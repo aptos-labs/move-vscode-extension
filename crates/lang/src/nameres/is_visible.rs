@@ -71,11 +71,8 @@ pub fn is_visible_in_context(
     }
 
     // #[test] functions cannot be used from non-imports
-    if item.syntax().kind() == FUN {
-        if ast::Fun::cast(item.syntax().clone())
-            .unwrap()
-            .has_atom_attr("test")
-        {
+    if let Some(fun) = ast::Fun::cast(item.syntax().clone()) {
+        if fun.has_atom_attr("test") {
             return false;
         }
     }

@@ -1,0 +1,103 @@
+SOURCE_FILE@0..187
+  MODULE@0..186
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..32
+      IDENT@12..32 "item_recovery_fields"
+    WHITESPACE@32..33 " "
+    L_CURLY@33..34 "{"
+    WHITESPACE@34..39 "\n    "
+    STRUCT@39..184
+      STRUCT_KW@39..45 "struct"
+      WHITESPACE@45..46 " "
+      NAME@46..47
+        IDENT@46..47 "S"
+      WHITESPACE@47..48 " "
+      NAMED_FIELD_LIST@48..184
+        L_CURLY@48..49 "{"
+        WHITESPACE@49..58 "\n        "
+        NAMED_FIELD@58..62
+          NAME@58..62
+            IDENT@58..62 "val0"
+        WHITESPACE@62..71 "\n        "
+        NAMED_FIELD@71..75
+          NAME@71..75
+            IDENT@71..75 "val1"
+        COMMA@75..76 ","
+        WHITESPACE@76..85 "\n        "
+        NAMED_FIELD@85..90
+          NAME@85..89
+            IDENT@85..89 "val2"
+          COLON@89..90 ":"
+        COMMA@90..91 ","
+        WHITESPACE@91..100 "\n        "
+        NAMED_FIELD@100..108
+          NAME@100..104
+            IDENT@100..104 "val3"
+          COLON@104..105 ":"
+          WHITESPACE@105..106 " "
+          PATH_TYPE@106..108
+            PATH@106..108
+              PATH_SEGMENT@106..108
+                NAME_REF@106..108
+                  IDENT@106..108 "u8"
+        WHITESPACE@108..117 "\n        "
+        NAMED_FIELD@117..130
+          NAME@117..121
+            IDENT@117..121 "val5"
+          COLON@121..122 ":"
+          WHITESPACE@122..123 " "
+          PATH_TYPE@123..130
+            PATH@123..130
+              PATH_SEGMENT@123..130
+                NAME_REF@123..129
+                  IDENT@123..129 "vector"
+                TYPE_ARG_LIST@129..130
+                  L_ANGLE@129..130 "<"
+        COMMA@130..131 ","
+        WHITESPACE@131..140 "\n        "
+        NAMED_FIELD@140..168
+          NAME@140..144
+            IDENT@140..144 "val6"
+          COLON@144..145 ":"
+          WHITESPACE@145..146 " "
+          PATH_TYPE@146..168
+            PATH@146..168
+              PATH_SEGMENT@146..168
+                NAME_REF@146..152
+                  IDENT@146..152 "vector"
+                TYPE_ARG_LIST@152..168
+                  L_ANGLE@152..153 "<"
+                  TYPE_ARG@153..154
+                    PATH_TYPE@153..154
+                      PATH@153..154
+                        PATH_SEGMENT@153..154
+                          NAME_REF@153..154
+                            IDENT@153..154 "T"
+                  COMMA@154..155 ","
+                  WHITESPACE@155..164 "\n        "
+                  TYPE_ARG@164..168
+                    PATH_TYPE@164..168
+                      PATH@164..168
+                        PATH_SEGMENT@164..168
+                          NAME_REF@164..168
+                            IDENT@164..168 "val8"
+        ERROR@168..169
+          COLON@168..169 ":"
+        WHITESPACE@169..170 " "
+        NAMED_FIELD@170..177
+          NAME@170..176
+            IDENT@170..176 "vector"
+          ERROR@176..177
+            L_ANGLE@176..177 "<"
+        NAMED_FIELD@177..178
+          NAME@177..178
+            IDENT@177..178 "T"
+        WHITESPACE@178..183 "\n    "
+        R_CURLY@183..184 "}"
+    WHITESPACE@184..185 "\n"
+    R_CURLY@185..186 "}"
+  WHITESPACE@186..187 "\n"

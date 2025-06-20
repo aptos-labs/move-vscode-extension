@@ -1,12 +1,13 @@
 use crate::item_scope::NamedItemScope;
 use base_db::inputs::InternFileId;
 use base_db::{SourceDatabase, source_db};
-use std::fmt;
+use std::collections::HashSet;
 use std::fmt::Formatter;
+use std::{env, fmt};
 use syntax::algo::ancestors_at_offset;
 use syntax::files::InFile;
 use syntax::{AstNode, SourceFile, TextSize, ast};
-use syntax::{SyntaxKind, SyntaxNodePtr};
+use syntax::{SyntaxKind, SyntaxKind::*, SyntaxNodePtr};
 use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]
@@ -21,9 +22,11 @@ impl SyntaxLoc {
     pub fn from_ast_node<T: AstNode>(file_id: FileId, ast_node: &T) -> Self {
         let node = ast_node.syntax();
 
-        let node_name = {
+        let mut node_name: Option<String> = None;
+        if env::var("APT_SYNTAXLOC_DEBUG").is_ok() {
             let _p = tracing::debug_span!("SyntaxLoc::from_ast_node::node_name").entered();
-            node.children_with_tokens()
+            node_name = node
+                .children_with_tokens()
                 .find(|child| {
                     let kind = child.kind();
                     kind == SyntaxKind::NAME
@@ -31,8 +34,8 @@ impl SyntaxLoc {
                         || kind == SyntaxKind::PATH_SEGMENT
                         || kind == SyntaxKind::QUOTE_IDENT
                 })
-                .map(|it| it.to_string())
-        };
+                .map(|it| it.to_string());
+        }
 
         SyntaxLoc {
             file_id: file_id.to_owned(),
@@ -50,22 +53,19 @@ impl SyntaxLoc {
     }
 
     pub fn item_scope(&self, db: &dyn SourceDatabase) -> Option<NamedItemScope> {
-        use syntax::SyntaxKind::*;
-
         let file = self.get_source_file(db)?;
         let ancestors = ancestors_at_offset(file.syntax(), self.node_offset());
         for ancestor in ancestors {
-            let Some(has_attrs) = ast::AnyHasAttrs::cast(ancestor.clone()) else {
-                continue;
-            };
             if matches!(
                 ancestor.kind(),
-                SCHEMA | ITEM_SPEC | MODULE_SPEC | SPEC_BLOCK_EXPR
+                SCHEMA | SPEC_FUN | SPEC_INLINE_FUN | ITEM_SPEC | MODULE_SPEC | SPEC_BLOCK_EXPR
             ) {
                 return Some(NamedItemScope::Verify);
             }
-            if let Some(ancestor_scope) = item_scope_from_attributes(has_attrs) {
-                return Some(ancestor_scope);
+            if let Some(has_attrs) = ast::AnyHasAttrs::cast(ancestor) {
+                if let Some(ancestor_scope) = item_scope_from_attributes(has_attrs) {
+                    return Some(ancestor_scope);
+                }
             }
         }
         Some(NamedItemScope::Main)
@@ -159,10 +159,14 @@ impl<T: AstNode> SyntaxLocNodeExt for T {
 }
 
 fn item_scope_from_attributes(has_attrs: impl ast::HasAttrs) -> Option<NamedItemScope> {
-    if has_attrs.has_atom_attr("test_only") || has_attrs.has_atom_attr("test") {
+    let atom_attrs = has_attrs.atom_attrs().collect::<HashSet<_>>();
+    if atom_attrs.is_empty() {
+        return None;
+    }
+    if atom_attrs.contains("test_only") || atom_attrs.contains("test") {
         return Some(NamedItemScope::Test);
     }
-    if has_attrs.has_atom_attr("verify_only") {
+    if atom_attrs.contains("verify_only") {
         return Some(NamedItemScope::Verify);
     }
     None

@@ -1,0 +1,47 @@
+SOURCE_FILE@0..96
+  MODULE@0..95
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..41
+      IDENT@12..41 "type_args_incomplete_ ..."
+    WHITESPACE@41..42 " "
+    L_CURLY@42..43 "{"
+    WHITESPACE@43..48 "\n    "
+    FUN@48..93
+      FUN_KW@48..51 "fun"
+      WHITESPACE@51..52 " "
+      NAME@52..56
+        IDENT@52..56 "main"
+      PARAM_LIST@56..85
+        L_PAREN@56..57 "("
+        PARAM@57..84
+          IDENT_PAT@57..67
+            NAME@57..67
+              IDENT@57..67 "asset_type"
+          COLON@67..68 ":"
+          WHITESPACE@68..69 " "
+          PATH_TYPE@69..84
+            PATH@69..84
+              PATH_SEGMENT@69..84
+                NAME_REF@69..75
+                  IDENT@69..75 "Object"
+                TYPE_ARG_LIST@75..84
+                  L_ANGLE@75..76 "<"
+                  TYPE_ARG@76..84
+                    PATH_TYPE@76..84
+                      PATH@76..84
+                        PATH_SEGMENT@76..84
+                          NAME_REF@76..84
+                            IDENT@76..84 "Metadata"
+        R_PAREN@84..85 ")"
+      WHITESPACE@85..86 " "
+      BLOCK_EXPR@86..93
+        L_CURLY@86..87 "{"
+        WHITESPACE@87..92 "\n    "
+        R_CURLY@92..93 "}"
+    WHITESPACE@93..94 "\n"
+    R_CURLY@94..95 "}"
+  WHITESPACE@95..96 "\n"

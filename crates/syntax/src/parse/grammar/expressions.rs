@@ -1,7 +1,7 @@
 use crate::parse::grammar::expressions::atom::{call_expr, EXPR_FIRST};
-use crate::parse::grammar::items::{fun, use_item};
+use crate::parse::grammar::items::{at_item_start, fun, use_item};
 use crate::parse::grammar::lambdas::lambda_param_list;
-use crate::parse::grammar::patterns::pat;
+use crate::parse::grammar::patterns::{pat, STMT_FIRST};
 use crate::parse::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt};
 use crate::parse::grammar::specs::quants::{choose_expr, exists_expr, forall_expr, is_at_quant_kw};
 use crate::parse::grammar::specs::schemas::{
@@ -123,7 +123,7 @@ pub(crate) fn struct_lit_field_list(p: &mut Parser) {
                 m.abandon(p);
             }
             _ => {
-                p.error_and_bump_any("expected identifier");
+                p.bump_with_error("expected identifier");
                 m.abandon(p);
             }
         }
@@ -213,7 +213,7 @@ pub(crate) fn lhs(p: &mut Parser, r: Restrictions) -> Option<(CompletedMarker, B
 }
 
 fn postfix_expr(
-    p: &mut Parser<'_>,
+    p: &mut Parser,
     mut lhs: CompletedMarker,
     // Calls are disallowed if the type is a block and we prefer statements because the call cannot be disambiguated from a tuple
     // E.g. `while true {break}();` is parsed as
@@ -240,10 +240,7 @@ fn postfix_expr(
     (lhs, block_like)
 }
 
-fn postfix_dot_expr(
-    p: &mut Parser<'_>,
-    lhs: CompletedMarker,
-) -> Result<CompletedMarker, CompletedMarker> {
+fn postfix_dot_expr(p: &mut Parser, lhs: CompletedMarker) -> Result<CompletedMarker, CompletedMarker> {
     assert!(p.at(T![.]));
 
     if p.nth_at(1, IDENT) && (p.nth_at(2, T!['(']) || p.nth_at(2, T![::])) {
@@ -253,7 +250,7 @@ fn postfix_dot_expr(
     dot_expr(p, lhs)
 }
 
-fn method_call_expr(p: &mut Parser<'_>, lhs: CompletedMarker) -> CompletedMarker {
+fn method_call_expr(p: &mut Parser, lhs: CompletedMarker) -> CompletedMarker {
     assert!(p.at(T![.]) && p.nth_at(1, IDENT) && (p.nth(2) == T!['('] || p.nth_at(2, T![::])));
     let m = lhs.precede(p);
     p.bump(T![.]);
@@ -268,7 +265,7 @@ fn method_call_expr(p: &mut Parser<'_>, lhs: CompletedMarker) -> CompletedMarker
     m.complete(p, METHOD_CALL_EXPR)
 }
 
-fn dot_expr(p: &mut Parser<'_>, lhs: CompletedMarker) -> Result<CompletedMarker, CompletedMarker> {
+fn dot_expr(p: &mut Parser, lhs: CompletedMarker) -> Result<CompletedMarker, CompletedMarker> {
     assert!(p.at(T![.]));
     let m = lhs.precede(p);
     p.bump(T![.]);
@@ -288,7 +285,7 @@ fn dot_expr(p: &mut Parser<'_>, lhs: CompletedMarker) -> Result<CompletedMarker,
     Ok(m.complete(p, DOT_EXPR))
 }
 
-fn index_expr(p: &mut Parser<'_>, lhs: CompletedMarker) -> CompletedMarker {
+fn index_expr(p: &mut Parser, lhs: CompletedMarker) -> CompletedMarker {
     assert!(p.at(T!['[']));
     let m = lhs.precede(p);
     p.bump(T!['[']);
@@ -297,7 +294,7 @@ fn index_expr(p: &mut Parser<'_>, lhs: CompletedMarker) -> CompletedMarker {
     m.complete(p, INDEX_EXPR)
 }
 
-fn arg_list(p: &mut Parser<'_>) {
+fn arg_list(p: &mut Parser) {
     assert!(p.at(T!['(']));
     let m = p.start();
     p.bump(T!['(']);
@@ -379,7 +376,7 @@ pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
         return;
     }
 
-    p.error_and_bump_any(&format!("unexpected token {:?}", p.current()));
+    p.bump_with_error(&format!("unexpected token {:?}", p.current()));
 }
 
 fn let_stmt(p: &mut Parser, m: Marker, is_spec: bool) {
@@ -389,7 +386,8 @@ fn let_stmt(p: &mut Parser, m: Marker, is_spec: bool) {
     }
     pat(p);
     if p.at(T![:]) {
-        types::ascription(p);
+        p.with_recover_ts(ts!(T![=], T![;]), types::ascription);
+        // types::ascription(p);
     }
     opt_initializer_expr(p);
     p.expect(T![;]);
@@ -419,7 +417,8 @@ pub(super) fn expr_block_contents(p: &mut Parser, is_spec: bool) {
             p.bump(T![;]);
             continue;
         }
-        stmt(p, false, is_spec);
+        p.with_recover_ts(STMT_FIRST, |p| stmt(p, false, is_spec));
+        // stmt(p, false, is_spec);
     }
 }
 

@@ -4,7 +4,6 @@ use ide_db::search::SearchScope;
 use ide_db::{RootDatabase, search};
 use itertools::Itertools;
 use lang::Semantics;
-use lang::nameres::scope::ScopeEntryExt;
 use std::collections::HashMap;
 use syntax::SyntaxKind::*;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;

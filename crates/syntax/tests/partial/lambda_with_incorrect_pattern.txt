@@ -27,7 +27,8 @@ SOURCE_FILE@0..95
             LAMBDA_PARAM_LIST@69..83
               PIPE@69..70 "|"
               LAMBDA_PARAM@70..72
-                AMP@70..71 "&"
+                ERROR@70..71
+                  AMP@70..71 "&"
                 IDENT@71..72 "a"
               COMMA@72..73 ","
               WHITESPACE@73..74 " "
@@ -43,7 +44,8 @@ SOURCE_FILE@0..95
               COMMA@78..79 ","
               WHITESPACE@79..80 " "
               LAMBDA_PARAM@80..82
-                INT_NUMBER@80..82 "22"
+                ERROR@80..82
+                  INT_NUMBER@80..82 "22"
               PIPE@82..83 "|"
             WHITESPACE@83..84 " "
             LITERAL@84..85
