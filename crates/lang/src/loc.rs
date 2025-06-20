@@ -1,6 +1,7 @@
 use crate::item_scope::NamedItemScope;
 use base_db::inputs::InternFileId;
 use base_db::{SourceDatabase, source_db};
+use std::collections::HashSet;
 use std::fmt::Formatter;
 use std::{env, fmt};
 use syntax::algo::ancestors_at_offset;
@@ -52,8 +53,6 @@ impl SyntaxLoc {
     }
 
     pub fn item_scope(&self, db: &dyn SourceDatabase) -> Option<NamedItemScope> {
-        let _p = tracing::debug_span!("SyntaxLoc::item_scope").entered();
-
         let file = self.get_source_file(db)?;
         let ancestors = ancestors_at_offset(file.syntax(), self.node_offset());
         for ancestor in ancestors {
@@ -160,10 +159,14 @@ impl<T: AstNode> SyntaxLocNodeExt for T {
 }
 
 fn item_scope_from_attributes(has_attrs: impl ast::HasAttrs) -> Option<NamedItemScope> {
-    if has_attrs.has_atom_attr("test_only") || has_attrs.has_atom_attr("test") {
+    let atom_attrs = has_attrs.atom_attrs().collect::<HashSet<_>>();
+    if atom_attrs.is_empty() {
+        return None;
+    }
+    if atom_attrs.contains("test_only") || atom_attrs.contains("test") {
         return Some(NamedItemScope::Test);
     }
-    if has_attrs.has_atom_attr("verify_only") {
+    if atom_attrs.contains("verify_only") {
         return Some(NamedItemScope::Verify);
     }
     None

@@ -2,16 +2,16 @@ mod docs;
 pub mod has_item_list;
 pub mod has_use_stmts;
 
+use crate::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use crate::ast::{support, AstChildren, Stmt};
 use crate::{ast, AstNode};
-use std::collections::HashMap;
-use std::fmt;
-use std::io::Read;
-
-use crate::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 pub use docs::HoverDocsOwner;
 pub use has_item_list::HasItems;
 pub use has_use_stmts::HasUseStmts;
+use itertools::Itertools;
+use std::collections::{HashMap, HashSet};
+use std::fmt;
+use std::io::Read;
 
 // pub trait NamedElement: AstNode {
 //     fn name(&self) -> Option<ast::Name> {
@@ -59,8 +59,13 @@ pub trait HasAttrs: AstNode {
     fn attrs(&self) -> AstChildren<ast::Attr> {
         support::children(self.syntax())
     }
+
+    fn atom_attrs(&self) -> impl Iterator<Item = String> {
+        self.attrs().filter_map(|x| x.as_simple_atom())
+    }
+
     fn has_atom_attr(&self, atom: &str) -> bool {
-        self.attrs().filter_map(|x| x.as_simple_atom()).any(|x| x == atom)
+        self.atom_attrs().contains(atom)
     }
 }
 
