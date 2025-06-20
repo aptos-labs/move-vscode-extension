@@ -161,22 +161,14 @@ fn fun_signature(p: &mut Parser, is_spec: bool, allow_acquires: bool) {
     if !item_name_or_recover(p, |p| p.at(T![<]) || p.at(T!['('])) {
         return;
     }
-
-    // name_or_bump_until(p, item_first);
-    // name_r(p, ITEM_KW_RECOVERY_SET);
-    // test function_type_params
-    // fn foo<T: Clone + Copy>(){}
     type_params::opt_type_param_list(p);
-
     if p.at(T!['(']) {
         params::fun_param_list(p);
     } else {
         p.error_and_recover_until("expected function arguments", |p| {
             at_item_start(p) || p.at_ts(ts!(T![;], T!['{']))
         });
-        // p.error("expected function arguments");
     }
-
     opt_ret_type(p);
 
     if p.at(T![acquires]) {

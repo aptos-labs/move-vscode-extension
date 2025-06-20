@@ -156,7 +156,7 @@ pub(crate) fn delimited_with_recovery_fn(
     // at_element_first: impl Fn(&Parser) -> bool,
     element: impl Fn(&mut Parser) -> bool,
     delimiter: SyntaxKind,
-    expected_element: &str,
+    expected_element_error: &str,
     element_recovery_set: TokenSet,
 ) {
     let mut iteration = 0;
@@ -175,10 +175,10 @@ pub(crate) fn delimited_with_recovery_fn(
             // }
             break;
         }
-        // check whether we can parse element, if not, then recover till the end of the list
+        // check whether we can parse element, if not, then recover till the delimiter / end of the list
         let at_element = element(p);
         if !at_element {
-            p.error_and_recover_until_ts(expected_element, element_recovery_set);
+            p.error_and_recover_until_ts(expected_element_error, element_recovery_set + ts!(delimiter));
         }
         // if at_element_first(p) {
         //     element(p);
