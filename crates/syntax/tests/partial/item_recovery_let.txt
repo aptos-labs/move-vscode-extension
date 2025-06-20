@@ -1,0 +1,137 @@
+SOURCE_FILE@0..201
+  MODULE@0..200
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..29
+      IDENT@12..29 "item_recovery_let"
+    WHITESPACE@29..30 " "
+    L_CURLY@30..31 "{"
+    WHITESPACE@31..36 "\n    "
+    FUN@36..198
+      FUN_KW@36..39 "fun"
+      WHITESPACE@39..40 " "
+      NAME@40..44
+        IDENT@40..44 "main"
+      PARAM_LIST@44..46
+        L_PAREN@44..45 "("
+        R_PAREN@45..46 ")"
+      WHITESPACE@46..47 " "
+      BLOCK_EXPR@47..198
+        L_CURLY@47..48 "{"
+        WHITESPACE@48..57 "\n        "
+        LET_STMT@57..60
+          LET_KW@57..60 "let"
+        WHITESPACE@60..69 "\n        "
+        LET_STMT@69..74
+          LET_KW@69..72 "let"
+          WHITESPACE@72..73 " "
+          IDENT_PAT@73..74
+            NAME@73..74
+              IDENT@73..74 "a"
+        WHITESPACE@74..83 "\n        "
+        LET_STMT@83..89
+          LET_KW@83..86 "let"
+          WHITESPACE@86..87 " "
+          IDENT_PAT@87..88
+            NAME@87..88
+              IDENT@87..88 "a"
+          COLON@88..89 ":"
+        WHITESPACE@89..98 "\n        "
+        LET_STMT@98..107
+          LET_KW@98..101 "let"
+          WHITESPACE@101..102 " "
+          IDENT_PAT@102..103
+            NAME@102..103
+              IDENT@102..103 "a"
+          COLON@103..104 ":"
+          WHITESPACE@104..105 " "
+          PATH_TYPE@105..107
+            PATH@105..107
+              PATH_SEGMENT@105..107
+                NAME_REF@105..107
+                  IDENT@105..107 "u8"
+        WHITESPACE@107..116 "\n        "
+        LET_STMT@116..127
+          LET_KW@116..119 "let"
+          WHITESPACE@119..120 " "
+          IDENT_PAT@120..121
+            NAME@120..121
+              IDENT@120..121 "a"
+          COLON@121..122 ":"
+          WHITESPACE@122..123 " "
+          PATH_TYPE@123..127
+            PATH@123..127
+              PATH_SEGMENT@123..127
+                NAME_REF@123..125
+                  IDENT@123..125 "u8"
+                TYPE_ARG_LIST@125..127
+                  L_ANGLE@125..126 "<"
+                  R_ANGLE@126..127 ">"
+        WHITESPACE@127..136 "\n        "
+        LET_STMT@136..150
+          LET_KW@136..139 "let"
+          WHITESPACE@139..140 " "
+          IDENT_PAT@140..141
+            NAME@140..141
+              IDENT@140..141 "a"
+          COLON@141..142 ":"
+          WHITESPACE@142..143 " "
+          PATH_TYPE@143..150
+            PATH@143..150
+              PATH_SEGMENT@143..150
+                NAME_REF@143..145
+                  IDENT@143..145 "u8"
+                TYPE_ARG_LIST@145..150
+                  L_ANGLE@145..146 "<"
+                  TYPE_ARG@146..147
+                    PATH_TYPE@146..147
+                      PATH@146..147
+                        PATH_SEGMENT@146..147
+                          NAME_REF@146..147
+                            IDENT@146..147 "T"
+                  COMMA@147..148 ","
+                  COMMA@148..149 ","
+                  R_ANGLE@149..150 ">"
+        WHITESPACE@150..159 "\n        "
+        LET_STMT@159..170
+          LET_KW@159..162 "let"
+          WHITESPACE@162..163 " "
+          IDENT_PAT@163..164
+            NAME@163..164
+              IDENT@163..164 "a"
+          COLON@164..165 ":"
+          WHITESPACE@165..166 " "
+          PATH_TYPE@166..168
+            PATH@166..168
+              PATH_SEGMENT@166..168
+                NAME_REF@166..168
+                  IDENT@166..168 "u8"
+          WHITESPACE@168..169 " "
+          EQ@169..170 "="
+        WHITESPACE@170..179 "\n        "
+        LET_STMT@179..192
+          LET_KW@179..182 "let"
+          WHITESPACE@182..183 " "
+          IDENT_PAT@183..184
+            NAME@183..184
+              IDENT@183..184 "a"
+          COLON@184..185 ":"
+          WHITESPACE@185..186 " "
+          PATH_TYPE@186..188
+            PATH@186..188
+              PATH_SEGMENT@186..188
+                NAME_REF@186..188
+                  IDENT@186..188 "u8"
+          WHITESPACE@188..189 " "
+          EQ@189..190 "="
+          WHITESPACE@190..191 " "
+          LITERAL@191..192
+            INT_NUMBER@191..192 "1"
+        WHITESPACE@192..197 "\n    "
+        R_CURLY@197..198 "}"
+    WHITESPACE@198..199 "\n"
+    R_CURLY@199..200 "}"
+  WHITESPACE@200..201 "\n"

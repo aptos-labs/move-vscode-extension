@@ -1,5 +1,5 @@
-SOURCE_FILE@0..88
-  MODULE@0..87
+SOURCE_FILE@0..89
+  MODULE@0..88
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
     VALUE_ADDRESS@7..10
@@ -10,26 +10,26 @@ SOURCE_FILE@0..88
     WHITESPACE@30..31 " "
     L_CURLY@31..32 "{"
     WHITESPACE@32..37 "\n    "
-    STRUCT@37..85
+    STRUCT@37..86
       STRUCT_KW@37..43 "struct"
       WHITESPACE@43..44 " "
       NAME@44..45
         IDENT@44..45 "S"
       WHITESPACE@45..46 " "
-      NAMED_FIELD_LIST@46..85
+      NAMED_FIELD_LIST@46..86
         L_CURLY@46..47 "{"
         WHITESPACE@47..56 "\n        "
-        NAMED_FIELD@56..78
+        NAMED_FIELD@56..77
           NAME@56..61
             IDENT@56..61 "field"
           COLON@61..62 ":"
           WHITESPACE@62..63 " "
-          PATH_TYPE@63..78
-            PATH@63..78
-              PATH_SEGMENT@63..78
+          PATH_TYPE@63..77
+            PATH@63..77
+              PATH_SEGMENT@63..77
                 NAME_REF@63..64
                   IDENT@63..64 "T"
-                TYPE_ARG_LIST@64..78
+                TYPE_ARG_LIST@64..77
                   L_ANGLE@64..65 "<"
                   TYPE_ARG@65..66
                     PATH_TYPE@65..66
@@ -38,42 +38,44 @@ SOURCE_FILE@0..88
                           NAME_REF@65..66
                             IDENT@65..66 "a"
                   COMMA@66..67 ","
-                  COMMA@67..68 ","
-                  TYPE_ARG@68..69
-                    PATH_TYPE@68..69
-                      PATH@68..69
-                        PATH_SEGMENT@68..69
-                          NAME_REF@68..69
-                            IDENT@68..69 "b"
-                  COMMA@69..70 ","
-                  TYPE_ARG@70..77
-                    PATH_TYPE@70..77
-                      PATH@70..77
-                        PATH_SEGMENT@70..77
-                          NAME_REF@70..71
-                            IDENT@70..71 "c"
-                          TYPE_ARG_LIST@71..77
-                            L_ANGLE@71..72 "<"
-                            TYPE_ARG@72..76
-                              PATH_TYPE@72..76
-                                PATH@72..76
-                                  PATH_SEGMENT@72..76
-                                    NAME_REF@72..73
-                                      IDENT@72..73 "x"
-                                    TYPE_ARG_LIST@73..76
-                                      L_ANGLE@73..74 "<"
-                                      TYPE_ARG@74..75
-                                        PATH_TYPE@74..75
-                                          PATH@74..75
-                                            PATH_SEGMENT@74..75
-                                              NAME_REF@74..75
-                                                IDENT@74..75 "y"
-                                      R_ANGLE@75..76 ">"
-                            R_ANGLE@76..77 ">"
-                  R_ANGLE@77..78 ">"
-        COMMA@78..79 ","
-        WHITESPACE@79..84 "\n    "
-        R_CURLY@84..85 "}"
-    WHITESPACE@85..86 "\n"
-    R_CURLY@86..87 "}"
-  WHITESPACE@87..88 "\n"
+                  TYPE_ARG@67..68
+                    PATH_TYPE@67..68
+                      PATH@67..68
+                        PATH_SEGMENT@67..68
+                          NAME_REF@67..68
+                            IDENT@67..68 "b"
+                  COMMA@68..69 ","
+                  TYPE_ARG@69..76
+                    PATH_TYPE@69..76
+                      PATH@69..76
+                        PATH_SEGMENT@69..76
+                          NAME_REF@69..70
+                            IDENT@69..70 "c"
+                          TYPE_ARG_LIST@70..76
+                            L_ANGLE@70..71 "<"
+                            TYPE_ARG@71..75
+                              PATH_TYPE@71..75
+                                PATH@71..75
+                                  PATH_SEGMENT@71..75
+                                    NAME_REF@71..72
+                                      IDENT@71..72 "x"
+                                    TYPE_ARG_LIST@72..75
+                                      L_ANGLE@72..73 "<"
+                                      TYPE_ARG@73..74
+                                        PATH_TYPE@73..74
+                                          PATH@73..74
+                                            PATH_SEGMENT@73..74
+                                              NAME_REF@73..74
+                                                IDENT@73..74 "y"
+                                      R_ANGLE@74..75 ">"
+                            R_ANGLE@75..76 ">"
+                  COMMA@76..77 ","
+        COMMA@77..78 ","
+        ERROR@78..79
+          R_ANGLE@78..79 ">"
+        COMMA@79..80 ","
+        WHITESPACE@80..85 "\n    "
+        R_CURLY@85..86 "}"
+    WHITESPACE@86..87 "\n"
+    R_CURLY@87..88 "}"
+  WHITESPACE@88..89 "\n"

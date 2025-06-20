@@ -77,9 +77,23 @@ impl TextTokenSource {
         self.curr = (token_at_pos(pos, &self.raw_tokens_with_offsets), pos);
     }
 
+    pub(crate) fn prev_text(&self) -> &str {
+        self.raw_tokens_with_offsets
+            .get(self.curr.1 - 1)
+            .map(|(token, offset)| &self.text[TextRange::at(*offset, token.len)])
+            .unwrap_or_default()
+    }
+
     pub(crate) fn current_text(&self) -> &str {
         self.raw_tokens_with_offsets
             .get(self.curr.1)
+            .map(|(token, offset)| &self.text[TextRange::at(*offset, token.len)])
+            .unwrap_or_default()
+    }
+
+    pub(crate) fn next_text(&self) -> &str {
+        self.raw_tokens_with_offsets
+            .get(self.curr.1 + 1)
             .map(|(token, offset)| &self.text[TextRange::at(*offset, token.len)])
             .unwrap_or_default()
     }

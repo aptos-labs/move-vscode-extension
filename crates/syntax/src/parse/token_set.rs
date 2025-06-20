@@ -1,6 +1,8 @@
 //! A bit-set of `SyntaxKind`s.
 
 use crate::SyntaxKind;
+use std::fmt;
+use std::fmt::Formatter;
 use std::ops::{Add, BitOr};
 
 /// A bit-set of `SyntaxKind`s
@@ -63,7 +65,7 @@ impl TokenSet {
     }
 
     pub(crate) const fn sub(self, other: TokenSet) -> TokenSet {
-        TokenSet(self.0 ^ other.0)
+        TokenSet(self.0 & !other.0)
     }
 
     pub(crate) const fn contains(&self, kind: SyntaxKind) -> bool {
@@ -91,5 +93,13 @@ mod tests {
     #[test]
     fn test_sub() {
         assert_eq!(ts!(T![,], T![')']).sub(ts!(T![,])), ts!(T![')']));
+        assert_eq!(ts!(T![,]).sub(ts!(T![,], T![')'])), ts!());
+        assert_eq!(ts!(T![,], T![')']).sub(ts!(T![+])), ts!(T![,], T![')']));
+    }
+
+    #[test]
+    fn test_contains() {
+        assert!(ts!(T![,], T![')']).contains(T![,]));
+        assert!(ts!(T![,], T![')']).contains(T![')']));
     }
 }

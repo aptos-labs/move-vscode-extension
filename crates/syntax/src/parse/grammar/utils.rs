@@ -160,26 +160,31 @@ pub(crate) fn delimited_with_recovery_fn(
     element_recovery_set: TokenSet,
 ) {
     let mut iteration = 0;
-    let outer_recovery_set = p.outer_recovery_set().sub(ts!(delimiter));
+    let outer_recovery_set = p.outer_recovery_set();
+
+    // cannot recover if there delimiter divides outer elements
+    let should_not_recover = outer_recovery_set.contains(delimiter);
+    let modified_recovery_set = outer_recovery_set.sub(ts!(delimiter));
+
     // let at_list_end = |p: &Parser| p.at_ts(outer_recovery_set) || at_list_end(p);
-    while !p.at(EOF) && !p.at_ts(outer_recovery_set) && !at_list_end(p) {
-        iteration += 1;
-        if iteration > 1000 {
-            // something's wrong and we don't want to hang
-            // #[cfg(debug_assertions)]
-            // {
-            //     panic!(
-            //         "at {:?}: reached limit iteration in delimited_with_recovery_fn() loop",
-            //         p.current()
-            //     );
-            // }
-            break;
-        }
+    while !p.at(EOF) && !p.at_ts(modified_recovery_set) && !at_list_end(p) {
+        #[cfg(debug_assertions)]
+        let _p = stdx::panic_context::enter(format!("p.text_context() = {:?}", p.text_context(),));
+
         // check whether we can parse element, if not, then recover till the delimiter / end of the list
         let at_element = element(p);
         if !at_element {
+            if should_not_recover {
+                // should stop here
+                break;
+            }
             p.error_and_recover_until_ts(expected_element_error, element_recovery_set + ts!(delimiter));
         }
+
+        if p.at_ts(modified_recovery_set) {
+            break;
+        }
+
         // if at_element_first(p) {
         //     element(p);
         // } else {
@@ -187,6 +192,19 @@ pub(crate) fn delimited_with_recovery_fn(
         // }
         if !at_list_end(p) {
             p.expect(delimiter);
+        }
+
+        iteration += 1;
+        if iteration > 100 {
+            // something's wrong and we don't want to hang
+            #[cfg(debug_assertions)]
+            {
+                panic!(
+                    "at {:?}: reached limit iteration in delimited_with_recovery_fn() loop, at_element = {at_element}",
+                    p.current()
+                );
+            }
+            break;
         }
     }
 }

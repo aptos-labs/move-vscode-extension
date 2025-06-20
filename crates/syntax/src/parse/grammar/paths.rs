@@ -75,6 +75,8 @@ fn path_segment(p: &mut Parser, mode: Mode, first: bool, additional_recovery_set
             m.complete(p, NAME_REF);
         }
         IDENT => {
+            #[cfg(debug_assertions)]
+            let _p = stdx::panic_context::enter(format!("path_segment {:?}", p.current_text()));
             name_ref(p);
             opt_path_type_arg_list(p, mode);
         }

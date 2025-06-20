@@ -1,7 +1,7 @@
 use crate::parse::grammar::expressions::atom::{call_expr, EXPR_FIRST};
-use crate::parse::grammar::items::{fun, use_item};
+use crate::parse::grammar::items::{at_item_start, fun, use_item};
 use crate::parse::grammar::lambdas::lambda_param_list;
-use crate::parse::grammar::patterns::pat;
+use crate::parse::grammar::patterns::{pat, STMT_FIRST};
 use crate::parse::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt};
 use crate::parse::grammar::specs::quants::{choose_expr, exists_expr, forall_expr, is_at_quant_kw};
 use crate::parse::grammar::specs::schemas::{
@@ -417,7 +417,8 @@ pub(super) fn expr_block_contents(p: &mut Parser, is_spec: bool) {
             p.bump(T![;]);
             continue;
         }
-        stmt(p, false, is_spec);
+        p.with_recover_ts(STMT_FIRST, |p| stmt(p, false, is_spec));
+        // stmt(p, false, is_spec);
     }
 }
 

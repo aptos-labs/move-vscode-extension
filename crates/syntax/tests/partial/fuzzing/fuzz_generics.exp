@@ -1,7 +1,6 @@
 script {
     fun main<T, U>() {
         let b: map<u8, u8;
-                       //^ expected COMMA
                        //^ expected R_ANGLE
     }
 }

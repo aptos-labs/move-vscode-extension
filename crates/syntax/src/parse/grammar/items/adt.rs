@@ -167,9 +167,22 @@ fn named_field(p: &mut Parser) {
     let m = p.start();
     // attributes::outer_attrs(p);
     if p.at(IDENT) {
+        #[cfg(debug_assertions)]
+        let _p = stdx::panic_context::enter(format!("named_field {:?}", p.current_text()));
+
         name(p);
-        p.expect(T![:]);
-        p.with_recover_t(T![,], |p| types::type_(p));
+        let at_colon = p.eat(T![:]);
+        // let at_colon = p.expect_with_error(T![:], "expected type annotation");
+        // p.with_recover_t(T![,], |p| types::type_(p));
+        // p.expect(T![:]);
+        if at_colon {
+            p.with_recover_t(T![,], |p| types::type_(p));
+        } else {
+            p.error_and_recover_until_ts(
+                "expected type annotation",
+                p.outer_recovery_set().union(ts!(T![,], T![ident])),
+            );
+        }
         m.complete(p, NAMED_FIELD);
     } else {
         m.abandon(p);

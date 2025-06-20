@@ -49,6 +49,14 @@ impl Parser {
         self.nth(0)
     }
 
+    pub(crate) fn text_context(&self) -> (&str, &str, &str) {
+        (
+            self.token_source.prev_text(),
+            self.token_source.current_text(),
+            self.token_source.next_text(),
+        )
+    }
+
     pub(crate) fn current_text(&self) -> &str {
         self.token_source.current_text()
     }
@@ -284,11 +292,21 @@ impl Parser {
     /// Consume the next token if it is `kind` or emit an error
     /// otherwise.
     pub(crate) fn expect(&mut self, kind: SyntaxKind) -> bool {
+        // if self.eat(kind) {
+        //     return true;
+        // }
+        // self.push_error(format!("expected {:?}", kind));
+        // false
+        self.expect_with_error(kind, &format!("expected {:?}", kind))
+    }
+
+    /// Consume the next token if it is `kind` or emit an error
+    /// otherwise.
+    pub(crate) fn expect_with_error(&mut self, kind: SyntaxKind, error_message: &str) -> bool {
         if self.eat(kind) {
             return true;
         }
-        // self.expected_kind_error(kind);
-        self.push_error(format!("expected {:?}", kind));
+        self.push_error(error_message);
         false
     }
 
