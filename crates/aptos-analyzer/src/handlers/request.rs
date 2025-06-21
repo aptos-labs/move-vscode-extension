@@ -17,6 +17,7 @@ use lsp_types::{
 };
 use stdx::format_to;
 use stdx::itertools::Itertools;
+use syntax::TextSize;
 use syntax::files::FileRange;
 // pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
 //     let req = FetchPackagesRequest { force_reload_deps: false };
@@ -181,6 +182,42 @@ pub(crate) fn handle_completion(
 
     let completion_list = lsp_types::CompletionList { is_incomplete: true, items };
     Ok(Some(completion_list.into()))
+}
+
+pub(crate) fn handle_on_type_formatting(
+    snap: GlobalStateSnapshot,
+    params: lsp_types::DocumentOnTypeFormattingParams,
+) -> anyhow::Result<Option<Vec<lsp_types::TextEdit>>> {
+    let _p = tracing::info_span!("handle_on_type_formatting").entered();
+
+    let char_typed = params.ch.chars().next().unwrap_or('\0');
+    if !snap.config.typing_trigger_chars().contains(char_typed) {
+        return Ok(None);
+    }
+
+    let mut position = from_proto::file_position(&snap, params.text_document_position)?;
+    let line_index = snap.file_line_index(position.file_id)?;
+
+    // in `ide`, the `on_type` invariant is that
+    // `text.char_at(position) == typed_char`.
+    position.offset -= TextSize::of('.');
+
+    let text = snap.analysis.file_text(position.file_id)?;
+    if stdx::never!(!text[usize::from(position.offset)..].starts_with(char_typed)) {
+        return Ok(None);
+    }
+
+    let edit = snap.analysis.on_char_typed(position, char_typed)?;
+    let edit = match edit {
+        Some(it) => it,
+        None => return Ok(None),
+    };
+
+    // This should be a single-file edit
+    let (_, text_edit) = edit.source_file_edits.into_iter().next().unwrap();
+
+    let change = to_proto::text_edit_vec(&line_index, text_edit);
+    Ok(Some(change))
 }
 
 pub(crate) fn handle_document_diagnostics(

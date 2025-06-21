@@ -1,5 +1,5 @@
-SOURCE_FILE@0..201
-  MODULE@0..200
+SOURCE_FILE@0..224
+  MODULE@0..223
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
     VALUE_ADDRESS@7..10
@@ -10,7 +10,7 @@ SOURCE_FILE@0..201
     WHITESPACE@29..30 " "
     L_CURLY@30..31 "{"
     WHITESPACE@31..36 "\n    "
-    FUN@36..198
+    FUN@36..221
       FUN_KW@36..39 "fun"
       WHITESPACE@39..40 " "
       NAME@40..44
@@ -19,7 +19,7 @@ SOURCE_FILE@0..201
         L_PAREN@44..45 "("
         R_PAREN@45..46 ")"
       WHITESPACE@46..47 " "
-      BLOCK_EXPR@47..198
+      BLOCK_EXPR@47..221
         L_CURLY@47..48 "{"
         WHITESPACE@48..57 "\n        "
         LET_STMT@57..60
@@ -130,8 +130,24 @@ SOURCE_FILE@0..201
           WHITESPACE@190..191 " "
           LITERAL@191..192
             INT_NUMBER@191..192 "1"
-        WHITESPACE@192..197 "\n    "
-        R_CURLY@197..198 "}"
-    WHITESPACE@198..199 "\n"
-    R_CURLY@199..200 "}"
-  WHITESPACE@200..201 "\n"
+        WHITESPACE@192..201 "\n        "
+        LET_STMT@201..215
+          LET_KW@201..204 "let"
+          WHITESPACE@204..205 " "
+          IDENT_PAT@205..206
+            NAME@205..206
+              IDENT@205..206 "a"
+          COLON@206..207 ":"
+          WHITESPACE@207..208 " "
+          PATH_TYPE@208..215
+            PATH@208..215
+              PATH_SEGMENT@208..215
+                NAME_REF@208..214
+                  IDENT@208..214 "vector"
+                TYPE_ARG_LIST@214..215
+                  L_ANGLE@214..215 "<"
+        WHITESPACE@215..220 "\n    "
+        R_CURLY@220..221 "}"
+    WHITESPACE@221..222 "\n"
+    R_CURLY@222..223 "}"
+  WHITESPACE@223..224 "\n"

@@ -23,6 +23,7 @@ mod test_rename;
 mod test_resolve_items;
 mod test_resolve_types;
 mod test_type_checking;
+mod test_typing;
 mod test_unused_variables;
 mod test_view_syntax_tree;
 mod test_world_symbols;

@@ -355,6 +355,19 @@
                 }
             },
             {
+                "title": "typing",
+                "properties": {
+                    "aptos-analyzer.typing.triggerChars": {
+                        "markdownDescription": "Specify the characters allowed to invoke special on typing triggers.\n- typing `<` in a path or type position inserts a closing `>` after the path or type.",
+                        "default": "<",
+                        "type": [
+                            "null",
+                            "string"
+                        ]
+                    }
+                }
+            },
+            {
                 "title": "$generated-end"
             }
         ],

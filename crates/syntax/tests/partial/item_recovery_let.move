@@ -8,5 +8,6 @@ module 0x1::item_recovery_let {
         let a: u8<T,,>
         let a: u8 =
         let a: u8 = 1
+        let a: vector<
     }
 }

@@ -103,6 +103,10 @@ config_data! {
 
         /// Additional arguments to `rustfmt`.
         movefmt_extraArgs: Vec<String>               = vec![],
+
+        /// Specify the characters allowed to invoke special on typing triggers.
+        /// - typing `<` in a path or type position inserts a closing `>` after the path or type.
+        typing_triggerChars: Option<String> = Some("<".to_owned()),
     }
 }
 

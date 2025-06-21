@@ -19,6 +19,7 @@ mod references;
 mod rename;
 pub mod syntax_highlighting;
 mod type_info;
+mod typing;
 mod view_syntax_tree;
 
 use crate::hover::HoverResult;
@@ -187,24 +188,21 @@ impl Analysis {
         self.with_db(|db| view_syntax_tree::view_syntax_tree(db, file_id))
     }
 
-    // pub const SUPPORTED_TRIGGER_CHARS: &'static str = typing::TRIGGER_CHARS;
+    pub const SUPPORTED_TRIGGER_CHARS: &[char] = typing::TRIGGER_CHARS;
 
-    // /// Returns an edit which should be applied after a character was typed.
-    // ///
-    // /// This is useful for some on-the-fly fixups, like adding `;` to `let =`
-    // /// automatically.
-    // pub fn on_char_typed(
-    //     &self,
-    //     position: FilePosition,
-    //     char_typed: char,
-    // ) -> Cancellable<Option<SourceChange>> {
-    //     // Fast path to not even parse the file.
-    //     if !typing::TRIGGER_CHARS.contains(char_typed) {
-    //         return Ok(None);
-    //     }
-    //
-    //     self.with_db(|db| typing::on_char_typed(db, position, char_typed))
-    // }
+    /// Returns an edit which should be applied after a character was typed.
+    pub fn on_char_typed(
+        &self,
+        position: FilePosition,
+        char_typed: char,
+    ) -> Cancellable<Option<SourceChange>> {
+        // Fast path to not even parse the file.
+        if !typing::TRIGGER_CHARS.contains(&char_typed) {
+            return Ok(None);
+        }
+
+        self.with_db(|db| typing::on_char_typed(db, position, char_typed))
+    }
 
     // /// Returns a tree representation of symbols in the file. Useful to draw a
     // /// file outline.

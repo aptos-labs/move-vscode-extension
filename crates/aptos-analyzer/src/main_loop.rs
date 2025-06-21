@@ -676,7 +676,7 @@ impl GlobalState {
             // .on_sync::<lsp_ext::OnEnter>(handlers::handle_on_enter)
             .on_sync::<lsp_request::SelectionRangeRequest>(handlers::handle_selection_range)
             // .on_sync::<lsp_ext::MatchingBrace>(handlers::handle_matching_brace)
-            // .on_sync::<lsp_ext::OnTypeFormatting>(handlers::handle_on_type_formatting)
+            .on_sync::<lsp_request::OnTypeFormatting>(handlers::handle_on_type_formatting)
             // Formatting should be done immediately as the editor might wait on it, but we can't
             // put it on the main thread as we do not want the main thread to block on movefmt.
             // So we have an extra thread just for formatting requests to make sure it gets handled

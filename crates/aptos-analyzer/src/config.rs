@@ -380,6 +380,10 @@ impl Config {
         num_cpus::get_physical()
     }
 
+    pub fn typing_trigger_chars(&self) -> &str {
+        self.typing_triggerChars().as_deref().unwrap_or_default()
+    }
+
     pub fn json_schema() -> serde_json::Value {
         let mut s = FullConfigInput::json_schema();
 

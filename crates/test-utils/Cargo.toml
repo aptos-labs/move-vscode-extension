@@ -6,6 +6,8 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+dissimilar = "1.0.10"
+
 tracing.workspace = true
 tracing-subscriber.workspace = true
 line-index.workspace = true

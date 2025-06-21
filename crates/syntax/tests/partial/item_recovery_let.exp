@@ -21,5 +21,8 @@ module 0x1::item_recovery_let {
                  //^ expected SEMICOLON
         let a: u8 = 1
                    //^ expected SEMICOLON
+        let a: vector<
+                    //^ expected R_ANGLE
+                    //^ expected SEMICOLON
     }
 }

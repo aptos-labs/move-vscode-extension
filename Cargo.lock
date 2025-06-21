@@ -1796,6 +1796,7 @@ version = "0.1.0"
 dependencies = [
  "aptos-analyzer",
  "base-db",
+ "dissimilar",
  "ide",
  "ide-db",
  "lang",

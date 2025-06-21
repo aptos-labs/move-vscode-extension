@@ -417,7 +417,7 @@ pub(super) fn expr_block_contents(p: &mut Parser, is_spec: bool) {
             p.bump(T![;]);
             continue;
         }
-        p.with_recover_ts(STMT_FIRST, |p| stmt(p, false, is_spec));
+        p.with_recover_ts(STMT_FIRST | T!['}'], |p| stmt(p, false, is_spec));
         // stmt(p, false, is_spec);
     }
 }
