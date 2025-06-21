@@ -1,4 +1,4 @@
-SOURCE_FILE@0..543
+SOURCE_FILE@0..568
   COMMENT@0..7 "// line"
   WHITESPACE@7..8 "\n"
   SCRIPT@8..138
@@ -172,4 +172,6 @@ SOURCE_FILE@0..543
     WHITESPACE@528..529 "\n"
     R_CURLY@529..530 "}"
   WHITESPACE@530..532 "\n\n"
-  COMMENT@532..543 "/* unclosed"
+  COMMENT@532..555 "// привет, мир"
+  WHITESPACE@555..557 "\n\n"
+  COMMENT@557..568 "/* unclosed"
