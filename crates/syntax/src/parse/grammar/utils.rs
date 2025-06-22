@@ -137,15 +137,15 @@ pub(crate) fn delimited_with_recovery(
 ) {
     let mut iteration = 0;
 
-    let list_end_ts = list_end.map(|it| it.into()).unwrap_or(TokenSet::EMPTY);
-    let at_list_end = |p: &Parser| p.at_ts(list_end_ts);
-
     let outer_recovery_set = p.outer_recovery_set();
+    let list_end_ts = list_end.map(|it| it.into()).unwrap_or(TokenSet::EMPTY);
+
     // cannot recover if delimiter divides outer elements
     let modified_recovery_set = outer_recovery_set
         .clone()
         .with_token_set(list_end_ts)
         .without_recovery_token(delimiter.into());
+    let at_list_end = |p: &Parser| p.at_ts(list_end_ts);
 
     let outer_recovery_on_delimiter = outer_recovery_set.contains(delimiter);
 

@@ -2,7 +2,7 @@ use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::parse::grammar::expressions::atom::block_expr;
 use crate::parse::grammar::items::{at_item_start, fun};
 use crate::parse::grammar::patterns::ident_or_wildcard_pat_or_recover;
-use crate::parse::grammar::utils::list;
+use crate::parse::grammar::utils::{delimited_with_recovery, list};
 use crate::parse::grammar::{name_ref, name_ref_or_bump_until, patterns, type_params, types};
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::token_set::TokenSet;
@@ -73,32 +73,41 @@ fn item_spec_type_param(p: &mut Parser) -> bool {
 pub(crate) fn item_spec_param_list(p: &mut Parser) {
     let list_marker = p.start();
     p.bump(T!['(']);
-    while !p.at(EOF) && !p.at(T![')']) {
-        if p.at_ts(ITEM_SPEC_PARAM_FIRST) {
-            item_spec_param(p);
-        } else {
-            p.error_and_recover("expected value parameter", ITEM_SPEC_PARAM_RECOVERY_SET.into());
-            // p.error_and_recover_until_ts("expected value parameter", ITEM_SPEC_PARAM_RECOVERY_SET);
-        }
-        if !p.at(T![')']) {
-            p.expect(T![,]);
-        }
-    }
+    delimited_with_recovery(
+        p,
+        item_spec_param,
+        T![,],
+        "expected value parameter",
+        Some(T![')']),
+    );
+    // while !p.at(EOF) && !p.at(T![')']) {
+    //     if p.at_ts(ITEM_SPEC_PARAM_FIRST) {
+    //         item_spec_param(p);
+    //     } else {
+    //         p.error_and_recover("expected value parameter", ITEM_SPEC_PARAM_RECOVERY_SET.into());
+    //         // p.error_and_recover_until_ts("expected value parameter", ITEM_SPEC_PARAM_RECOVERY_SET);
+    //     }
+    //     if !p.at(T![')']) {
+    //         p.expect(T![,]);
+    //     }
+    // }
     p.expect(T![')']);
     list_marker.complete(p, ITEM_SPEC_PARAM_LIST);
 }
 
-fn item_spec_param(p: &mut Parser) {
+fn item_spec_param(p: &mut Parser) -> bool {
     let m = p.start();
     ident_or_wildcard_pat_or_recover(p, ITEM_SPEC_PARAM_RECOVERY_SET);
 
     if p.at(T![:]) {
         types::ascription(p);
     } else {
-        p.error_and_recover_until_ts("missing type for parameter", ITEM_SPEC_PARAM_RECOVERY_SET);
+        p.error_and_recover("missing type for parameter", ITEM_SPEC_PARAM_RECOVERY_SET.into());
+        // p.error_and_recover_until_ts("missing type for parameter", ITEM_SPEC_PARAM_RECOVERY_SET);
     }
 
     m.complete(p, ITEM_SPEC_PARAM);
+    true
 }
 
 const TYPE_PARAM_RECOVERY_SET: TokenSet = TokenSet::new(&[T![,], T![>]]);

@@ -43,7 +43,8 @@ pub(crate) fn ident_or_wildcard_pat_or_recover(
         T![ident] => ident_pat(p),
         T!['_'] => wildcard_pat(p),
         _ => {
-            p.error_and_recover_until_ts("expected ident or '_'", recovery_set);
+            p.error_and_recover("expected ident or '_'", recovery_set.into());
+            // p.error_and_recover_until_ts("expected ident or '_'", recovery_set);
             return None;
         }
     };
