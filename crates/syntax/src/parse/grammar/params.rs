@@ -6,7 +6,7 @@ pub(crate) fn fun_param_list(p: &mut Parser) {
     let m = p.start();
     p.bump(T!['(']);
     p.with_recover_token(T![')'], |p| {
-        delimited_with_recovery(p, param, T![,], "expected value parameter", true)
+        delimited_with_recovery(p, param, T![,], "expected value parameter", Some(T![')']))
     });
     // delimited_with_recovery(p, T![')'], param, T![,], "expected value parameter");
     p.expect(T![')']);

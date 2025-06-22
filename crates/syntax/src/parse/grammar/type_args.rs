@@ -23,7 +23,13 @@ pub(crate) fn opt_type_arg_list_for_type(p: &mut Parser) {
     }
     p.bump(T![<]);
     p.with_recover_token(T![>], |p| {
-        delimited_with_recovery(p, |p| type_arg(p, true), T![,], "expected type argument", true)
+        delimited_with_recovery(
+            p,
+            |p| type_arg(p, true),
+            T![,],
+            "expected type argument",
+            Some(T![>]),
+        )
     });
     // delimited_with_recovery(
     //     p,

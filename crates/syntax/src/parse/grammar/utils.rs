@@ -133,41 +133,46 @@ pub(crate) fn delimited_with_recovery(
     element: impl Fn(&mut Parser) -> bool,
     delimiter: SyntaxKind,
     expected_element_error: &str,
-    allow_empty: bool,
+    list_end: Option<SyntaxKind>,
 ) {
     let mut iteration = 0;
+
+    let list_end_ts = list_end.map(|it| it.into()).unwrap_or(TokenSet::EMPTY);
+    let at_list_end = |p: &Parser| p.at_ts(list_end_ts);
 
     let outer_recovery_set = p.outer_recovery_set();
     // cannot recover if delimiter divides outer elements
     let modified_recovery_set = outer_recovery_set
         .clone()
+        .with_token_set(list_end_ts)
         .without_recovery_token(delimiter.into());
+
     let outer_recovery_on_delimiter = outer_recovery_set.contains(delimiter);
 
     let mut is_empty = true;
-    while !p.at(EOF) {
+    while !p.at(EOF) && !at_list_end(p) {
         #[cfg(debug_assertions)]
         let _p = stdx::panic_context::enter(format!("p.text_context() = {:?}", p.current_context()));
 
         // check whether we can parse element, if not, then recover till the delimiter / end of the list
-        let at_element = p.with_recover_token(delimiter, |p| element(p));
+        let mut recover_set = TokenSet::new(&[delimiter]);
+        if let Some(list_end) = list_end {
+            recover_set = recover_set | list_end;
+        }
+        let at_element = p.with_recover_token_set(recover_set, |p| element(p));
         if at_element {
             is_empty = false;
         }
         if !at_element {
+            // if outer recovery set has delimiter, we can't recover in inner lists
             if outer_recovery_on_delimiter {
-                // should stop here
                 break;
             }
-            if allow_empty && is_empty && modified_recovery_set.contains_current(p) {
+            // if list is empty
+            if list_end.is_some() && is_empty && at_list_end(p) {
                 break;
             }
-            p.error_and_recover_until(expected_element_error, |p| {
-                outer_recovery_set
-                    .clone()
-                    .with_token_set(delimiter)
-                    .contains_current(p)
-            });
+            p.error_and_recover(expected_element_error, delimiter.into());
         }
 
         if modified_recovery_set.contains_current(p) {

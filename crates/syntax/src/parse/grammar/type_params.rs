@@ -17,7 +17,7 @@ fn type_param_list(p: &mut Parser) {
     p.bump(T![<]);
 
     p.with_recover_token(T![>], |p| {
-        delimited_with_recovery(p, type_param, T![,], "expected type parameter", true)
+        delimited_with_recovery(p, type_param, T![,], "expected type parameter", Some(T![>]))
     });
     // delimited_with_recovery(p, T![>], type_param, T![,], "expected type parameter");
 
@@ -90,7 +90,7 @@ pub(crate) fn ability_bound_list_recover_until(p: &mut Parser) {
     assert!(p.at(T![:]));
     let m = p.start();
     p.bump(T![:]);
-    delimited_with_recovery(p, ability, T![+], "expected ability", false);
+    delimited_with_recovery(p, ability, T![+], "expected ability", None);
     // while !p.at(EOF) && !p.at_ts(recovery_set) {
     //     if !ability(p) {
     //         p.error_and_recover_until_ts("expected ability", recovery_set.union(ts!(T![+])));

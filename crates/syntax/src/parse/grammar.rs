@@ -270,7 +270,7 @@ pub(crate) fn abilities_list(p: &mut Parser) {
     assert!(p.at_contextual_kw_ident("has"));
     let m = p.start();
     p.bump_remap(T![has]);
-    delimited_with_recovery(p, ability, T![,], "expected ability", false);
+    delimited_with_recovery(p, ability, T![,], "expected ability", None);
     m.complete(p, ABILITY_LIST);
 }
 

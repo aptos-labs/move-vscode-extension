@@ -40,6 +40,12 @@ pub struct RecoverySet {
     keywords: HashSet<String>,
 }
 
+impl From<SyntaxKind> for RecoverySet {
+    fn from(value: SyntaxKind) -> Self {
+        RecoverySet::from_ts(value.into())
+    }
+}
+
 impl From<TokenSet> for RecoverySet {
     fn from(value: TokenSet) -> Self {
         RecoverySet::from_ts(value)

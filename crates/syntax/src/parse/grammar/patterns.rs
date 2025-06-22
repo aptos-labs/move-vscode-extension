@@ -1,3 +1,4 @@
+use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{error_block, expressions, name, name_ref, paths};
 use crate::parse::parser::{CompletedMarker, Parser};
 use crate::parse::token_set::TokenSet;
@@ -81,7 +82,7 @@ fn tuple_pat_fields(p: &mut Parser) {
     p.expect(T![')']);
 }
 
-fn struct_pat_field(p: &mut Parser) {
+fn struct_pat_field(p: &mut Parser) -> bool {
     match p.current() {
         IDENT if p.nth(1) == T![:] => {
             name_ref(p);
@@ -97,39 +98,77 @@ fn struct_pat_field(p: &mut Parser) {
         _ => {
             p.error_and_recover("expected identifier", TokenSet::EMPTY.into());
             // p.error_and_recover_until_ts("expected identifier", PAT_RECOVERY_SET);
+            return false;
         }
     }
+    true
 }
 
 fn struct_pat_field_list(p: &mut Parser) {
     assert!(p.at(T!['{']));
     let m = p.start();
     p.bump(T!['{']);
-    while !p.at(EOF) && !p.at(T!['}']) {
-        let m = p.start();
-        // attributes::outer_attrs(p);
 
-        match p.current() {
-            // A trailing `..` is *not* treated as a REST_PAT.
-            T![..] => {
-                // T![.] if p.at(T![..]) => {
-                p.bump(T![..]);
-                m.complete(p, REST_PAT);
-            }
-            T!['{'] => {
-                error_block(p, "expected ident");
-                m.abandon(p);
-            }
-            _ => {
-                p.with_recover_token_set(T!['}'] | T![,], struct_pat_field);
-                // struct_pat_field(p);
-                m.complete(p, STRUCT_PAT_FIELD);
-            }
-        }
-        if !p.at(T!['}']) {
-            p.expect(T![,]);
-        }
-    }
+    p.with_recover_token(T!['}'], |p| {
+        delimited_with_recovery(
+            p,
+            |p| {
+                let m = p.start();
+                match p.current() {
+                    // A trailing `..` is *not* treated as a REST_PAT.
+                    T![..] => {
+                        p.bump(T![..]);
+                        m.complete(p, REST_PAT);
+                        return true;
+                    }
+                    // T!['{'] => {
+                    //     error_block(p, "expected ident");
+                    //     m.abandon(p);
+                    //     return false;
+                    // }
+                    T!['}'] => {
+                        // empty struct pat
+                        m.abandon(p);
+                        return true;
+                    }
+                    _ => {
+                        let res = struct_pat_field(p);
+                        m.complete(p, STRUCT_PAT_FIELD);
+                        res
+                    }
+                }
+            },
+            T![,],
+            "expected ident",
+            Some(T!['}']),
+        );
+    });
+
+    // while !p.at(EOF) && !p.at(T!['}']) {
+    //     let m = p.start();
+    //     // attributes::outer_attrs(p);
+    //     match p.current() {
+    //         // A trailing `..` is *not* treated as a REST_PAT.
+    //         T![..] => {
+    //             // T![.] if p.at(T![..]) => {
+    //             p.bump(T![..]);
+    //             m.complete(p, REST_PAT);
+    //             return;
+    //         }
+    //         T!['{'] => {
+    //             error_block(p, "expected ident");
+    //             m.abandon(p);
+    //         }
+    //         _ => {
+    //             p.with_recover_token_set(T!['}'] | T![,], struct_pat_field);
+    //             // struct_pat_field(p);
+    //             m.complete(p, STRUCT_PAT_FIELD);
+    //         }
+    //     }
+    //     if !p.at(T!['}']) {
+    //         p.expect(T![,]);
+    //     }
+    // }
     p.expect(T!['}']);
     m.complete(p, STRUCT_PAT_FIELD_LIST);
 }
