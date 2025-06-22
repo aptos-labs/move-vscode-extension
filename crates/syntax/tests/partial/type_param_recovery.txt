@@ -1,5 +1,5 @@
-SOURCE_FILE@0..95
-  MODULE@0..94
+SOURCE_FILE@0..264
+  MODULE@0..263
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
     VALUE_ADDRESS@7..10
@@ -10,56 +10,184 @@ SOURCE_FILE@0..95
     WHITESPACE@31..32 " "
     L_CURLY@32..33 "{"
     WHITESPACE@33..38 "\n    "
-    FUN@38..92
-      FUN_KW@38..41 "fun"
-      WHITESPACE@41..42 " "
-      NAME@42..46
-        IDENT@42..46 "main"
-      TYPE_PARAM_LIST@46..81
-        L_ANGLE@46..47 "<"
-        TYPE_PARAM@47..49
-          NAME@47..48
-            IDENT@47..48 "a"
-          ABILITY_BOUND_LIST@48..49
-            COLON@48..49 ":"
+    STRUCT@38..55
+      STRUCT_KW@38..44 "struct"
+      WHITESPACE@44..45 " "
+      NAME@45..47
+        IDENT@45..47 "S1"
+      TYPE_PARAM_LIST@47..52
+        L_ANGLE@47..48 "<"
+        TYPE_PARAM@48..49
+          NAME@48..49
+            IDENT@48..49 "T"
         COMMA@49..50 ","
-        WHITESPACE@50..51 " "
-        TYPE_PARAM@51..58
-          PHANTOM_KW@51..58 "phantom"
-        COMMA@58..59 ","
-        COMMA@59..60 ","
-        WHITESPACE@60..61 " "
-        ERROR@61..63
-          INT_NUMBER@61..63 "11"
-        COMMA@63..64 ","
-        WHITESPACE@64..65 " "
-        TYPE_PARAM@65..73
-          NAME@65..67
-            IDENT@65..67 "bb"
-          ABILITY_BOUND_LIST@67..73
-            COLON@67..68 ":"
-            ABILITY@68..72
-              IDENT@68..72 "copy"
-            PLUS@72..73 "+"
-        COMMA@73..74 ","
-        WHITESPACE@74..75 " "
-        TYPE_PARAM@75..80
-          NAME@75..77
-            IDENT@75..77 "dd"
-          ABILITY_BOUND_LIST@77..80
-            COLON@77..78 ":"
-            WHITESPACE@78..79 " "
-            ERROR@79..80
-              INT_NUMBER@79..80 "1"
-        R_ANGLE@80..81 ">"
-      PARAM_LIST@81..83
-        L_PAREN@81..82 "("
-        R_PAREN@82..83 ")"
-      WHITESPACE@83..84 " "
-      BLOCK_EXPR@84..92
-        L_CURLY@84..85 "{"
-        WHITESPACE@85..91 "\n\n    "
-        R_CURLY@91..92 "}"
-    WHITESPACE@92..93 "\n"
-    R_CURLY@93..94 "}"
-  WHITESPACE@94..95 "\n"
+        COMMA@50..51 ","
+        R_ANGLE@51..52 ">"
+      TUPLE_FIELD_LIST@52..54
+        L_PAREN@52..53 "("
+        R_PAREN@53..54 ")"
+      SEMICOLON@54..55 ";"
+    WHITESPACE@55..60 "\n    "
+    STRUCT@60..76
+      STRUCT_KW@60..66 "struct"
+      WHITESPACE@66..67 " "
+      NAME@67..69
+        IDENT@67..69 "S2"
+      TYPE_PARAM_LIST@69..73
+        L_ANGLE@69..70 "<"
+        TYPE_PARAM@70..72
+          NAME@70..71
+            IDENT@70..71 "T"
+          ABILITY_BOUND_LIST@71..72
+            COLON@71..72 ":"
+        R_ANGLE@72..73 ">"
+      TUPLE_FIELD_LIST@73..75
+        L_PAREN@73..74 "("
+        R_PAREN@74..75 ")"
+      SEMICOLON@75..76 ";"
+    WHITESPACE@76..81 "\n    "
+    STRUCT@81..98
+      STRUCT_KW@81..87 "struct"
+      WHITESPACE@87..88 " "
+      NAME@88..90
+        IDENT@88..90 "S3"
+      TYPE_PARAM_LIST@90..95
+        L_ANGLE@90..91 "<"
+        TYPE_PARAM@91..93
+          NAME@91..92
+            IDENT@91..92 "T"
+          ABILITY_BOUND_LIST@92..93
+            COLON@92..93 ":"
+        COMMA@93..94 ","
+        R_ANGLE@94..95 ">"
+      TUPLE_FIELD_LIST@95..97
+        L_PAREN@95..96 "("
+        R_PAREN@96..97 ")"
+      SEMICOLON@97..98 ";"
+    WHITESPACE@98..103 "\n    "
+    STRUCT@103..125
+      STRUCT_KW@103..109 "struct"
+      WHITESPACE@109..110 " "
+      NAME@110..112
+        IDENT@110..112 "S4"
+      TYPE_PARAM_LIST@112..122
+        L_ANGLE@112..113 "<"
+        TYPE_PARAM@113..120
+          NAME@113..114
+            IDENT@113..114 "T"
+          ABILITY_BOUND_LIST@114..120
+            COLON@114..115 ":"
+            ABILITY@115..119
+              IDENT@115..119 "copy"
+            PLUS@119..120 "+"
+        COMMA@120..121 ","
+        R_ANGLE@121..122 ">"
+      TUPLE_FIELD_LIST@122..124
+        L_PAREN@122..123 "("
+        R_PAREN@123..124 ")"
+      SEMICOLON@124..125 ";"
+    WHITESPACE@125..131 "\n\n    "
+    STRUCT@131..152
+      STRUCT_KW@131..137 "struct"
+      WHITESPACE@137..138 " "
+      NAME@138..140
+        IDENT@138..140 "S5"
+      TYPE_PARAM_LIST@140..149
+        L_ANGLE@140..141 "<"
+        TYPE_PARAM@141..148
+          PHANTOM_KW@141..148 "phantom"
+        R_ANGLE@148..149 ">"
+      TUPLE_FIELD_LIST@149..151
+        L_PAREN@149..150 "("
+        R_PAREN@150..151 ")"
+      SEMICOLON@151..152 ";"
+    WHITESPACE@152..157 "\n    "
+    STRUCT@157..179
+      STRUCT_KW@157..163 "struct"
+      WHITESPACE@163..164 " "
+      NAME@164..166
+        IDENT@164..166 "S6"
+      TYPE_PARAM_LIST@166..176
+        L_ANGLE@166..167 "<"
+        TYPE_PARAM@167..174
+          PHANTOM_KW@167..174 "phantom"
+        COMMA@174..175 ","
+        R_ANGLE@175..176 ">"
+      TUPLE_FIELD_LIST@176..178
+        L_PAREN@176..177 "("
+        R_PAREN@177..178 ")"
+      SEMICOLON@178..179 ";"
+    WHITESPACE@179..184 "\n    "
+    STRUCT@184..201
+      STRUCT_KW@184..190 "struct"
+      WHITESPACE@190..191 " "
+      NAME@191..193
+        IDENT@191..193 "S7"
+      TYPE_PARAM_LIST@193..198
+        L_ANGLE@193..194 "<"
+        TYPE_PARAM@194..197
+          NAME@194..195
+            IDENT@194..195 "D"
+          ABILITY_BOUND_LIST@195..197
+            COLON@195..196 ":"
+            ERROR@196..197
+              INT_NUMBER@196..197 "1"
+        R_ANGLE@197..198 ">"
+      TUPLE_FIELD_LIST@198..200
+        L_PAREN@198..199 "("
+        R_PAREN@199..200 ")"
+      SEMICOLON@200..201 ";"
+    WHITESPACE@201..207 "\n\n    "
+    FUN@207..261
+      FUN_KW@207..210 "fun"
+      WHITESPACE@210..211 " "
+      NAME@211..215
+        IDENT@211..215 "main"
+      TYPE_PARAM_LIST@215..250
+        L_ANGLE@215..216 "<"
+        TYPE_PARAM@216..218
+          NAME@216..217
+            IDENT@216..217 "a"
+          ABILITY_BOUND_LIST@217..218
+            COLON@217..218 ":"
+        COMMA@218..219 ","
+        WHITESPACE@219..220 " "
+        TYPE_PARAM@220..227
+          PHANTOM_KW@220..227 "phantom"
+        COMMA@227..228 ","
+        COMMA@228..229 ","
+        WHITESPACE@229..230 " "
+        ERROR@230..232
+          INT_NUMBER@230..232 "11"
+        COMMA@232..233 ","
+        WHITESPACE@233..234 " "
+        TYPE_PARAM@234..242
+          NAME@234..236
+            IDENT@234..236 "bb"
+          ABILITY_BOUND_LIST@236..242
+            COLON@236..237 ":"
+            ABILITY@237..241
+              IDENT@237..241 "copy"
+            PLUS@241..242 "+"
+        COMMA@242..243 ","
+        WHITESPACE@243..244 " "
+        TYPE_PARAM@244..249
+          NAME@244..246
+            IDENT@244..246 "dd"
+          ABILITY_BOUND_LIST@246..249
+            COLON@246..247 ":"
+            WHITESPACE@247..248 " "
+            ERROR@248..249
+              INT_NUMBER@248..249 "1"
+        R_ANGLE@249..250 ">"
+      PARAM_LIST@250..252
+        L_PAREN@250..251 "("
+        R_PAREN@251..252 ")"
+      WHITESPACE@252..253 " "
+      BLOCK_EXPR@253..261
+        L_CURLY@253..254 "{"
+        WHITESPACE@254..260 "\n\n    "
+        R_CURLY@260..261 "}"
+    WHITESPACE@261..262 "\n"
+    R_CURLY@262..263 "}"
+  WHITESPACE@263..264 "\n"

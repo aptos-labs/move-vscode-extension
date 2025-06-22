@@ -11,7 +11,7 @@ pub(crate) fn fun_param_list(p: &mut Parser) {
         param,
         T![,],
         "expected value parameter",
-        Some(PARAM_RECOVERY_SET),
+        PARAM_RECOVERY_SET,
     );
     p.expect(T![')']);
     m.complete(p, PARAM_LIST);

@@ -130,34 +130,33 @@ pub(crate) fn delimited_fn(
     }
 }
 
+// pub(crate) fn delimited_with_recovery(
+//     p: &mut Parser,
+//     list_end: SyntaxKind,
+//     // at_element_first: TokenSet,
+//     element: impl Fn(&mut Parser) -> bool,
+//     delimiter: SyntaxKind,
+//     expected_element: &str,
+//     element_recovery_set: TokenSet,
+// ) {
+//     delimited_with_recovery_fn(
+//         p,
+//         list_end,
+//         // |p| p.at_ts(at_element_first),
+//         element,
+//         delimiter,
+//         expected_element,
+//         element_recovery_set,
+//     )
+// }
+
 pub(crate) fn delimited_with_recovery(
     p: &mut Parser,
     list_end: SyntaxKind,
-    // at_element_first: TokenSet,
-    element: impl Fn(&mut Parser) -> bool,
-    delimiter: SyntaxKind,
-    expected_element: &str,
-    element_recovery_set: Option<TokenSet>,
-) {
-    delimited_with_recovery_fn(
-        p,
-        list_end,
-        // |p| p.at_ts(at_element_first),
-        element,
-        delimiter,
-        expected_element,
-        element_recovery_set,
-    )
-}
-
-pub(crate) fn delimited_with_recovery_fn(
-    p: &mut Parser,
-    list_end: SyntaxKind,
-    // at_element_first: impl Fn(&Parser) -> bool,
     element: impl Fn(&mut Parser) -> bool,
     delimiter: SyntaxKind,
     expected_element_error: &str,
-    element_recovery_set: Option<TokenSet>,
+    recover_ts: TokenSet,
 ) {
     let mut iteration = 0;
     let outer_recovery_set = p.outer_recovery_set();
@@ -173,22 +172,26 @@ pub(crate) fn delimited_with_recovery_fn(
         let _p = stdx::panic_context::enter(format!("p.text_context() = {:?}", p.current_context(),));
 
         // check whether we can parse element, if not, then recover till the delimiter / end of the list
-        let at_element = p.with_recover_t(list_end, |p| element(p));
+        let at_element = p.with_recover_ts(delimiter | list_end, |p| element(p));
         // let at_element = element(p);
         if !at_element {
             if should_not_recover {
                 // should stop here
                 break;
             }
-            match element_recovery_set {
-                Some(recover_ts) => {
-                    p.error_and_recover_until_ts(expected_element_error, recover_ts | delimiter)
-                }
-                None => {
-                    // no recovery
-                    p.push_error(expected_element_error);
-                }
-            }
+            p.error_and_recover_until_ts(
+                expected_element_error,
+                outer_recovery_set | delimiter | list_end,
+            );
+            // match element_recovery_set {
+            //     Some(recover_ts) => {
+            //         p.error_and_recover_until_ts(expected_element_error, recover_ts | delimiter)
+            //     }
+            //     None => {
+            //         // no recovery
+            //         p.push_error(expected_element_error);
+            //     }
+            // }
             // p.error_and_recover_until_ts(expected_element_error, element_recovery_set + ts!(delimiter));
         }
 
