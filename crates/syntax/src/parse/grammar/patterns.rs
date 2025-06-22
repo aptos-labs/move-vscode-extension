@@ -22,6 +22,17 @@ pub(crate) fn pat(p: &mut Parser) -> Option<CompletedMarker> {
     Some(m)
 }
 
+pub(crate) fn ident_or_wildcard_pat(p: &mut Parser) -> bool {
+    match p.current() {
+        T![ident] => ident_pat(p),
+        T!['_'] => wildcard_pat(p),
+        _ => {
+            return false;
+        }
+    };
+    true
+}
+
 pub(crate) fn ident_or_wildcard_pat_or_recover(
     p: &mut Parser,
     recovery_set: TokenSet,

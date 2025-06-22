@@ -42,6 +42,10 @@ impl Parser {
         self.events
     }
 
+    pub(crate) fn pos(&self) -> usize {
+        self.token_source.current_pos()
+    }
+
     /// Returns the kind of the current token.
     /// If parser has already reached the end of input,
     /// the special `EOF` kind is returned.
@@ -49,7 +53,7 @@ impl Parser {
         self.nth(0)
     }
 
-    pub(crate) fn text_context(&self) -> (&str, &str, &str) {
+    pub(crate) fn current_context(&self) -> (&str, &str, &str) {
         (
             self.token_source.prev_text(),
             self.token_source.current_text(),

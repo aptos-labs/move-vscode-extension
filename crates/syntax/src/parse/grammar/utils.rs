@@ -132,16 +132,16 @@ pub(crate) fn delimited_fn(
 
 pub(crate) fn delimited_with_recovery(
     p: &mut Parser,
-    at_list_end: SyntaxKind,
+    list_end: SyntaxKind,
     // at_element_first: TokenSet,
     element: impl Fn(&mut Parser) -> bool,
     delimiter: SyntaxKind,
     expected_element: &str,
-    element_recovery_set: TokenSet,
+    element_recovery_set: Option<TokenSet>,
 ) {
     delimited_with_recovery_fn(
         p,
-        |p| p.at_ts(ts!(at_list_end)),
+        list_end,
         // |p| p.at_ts(at_element_first),
         element,
         delimiter,
@@ -152,12 +152,12 @@ pub(crate) fn delimited_with_recovery(
 
 pub(crate) fn delimited_with_recovery_fn(
     p: &mut Parser,
-    at_list_end: impl Fn(&Parser) -> bool,
+    list_end: SyntaxKind,
     // at_element_first: impl Fn(&Parser) -> bool,
     element: impl Fn(&mut Parser) -> bool,
     delimiter: SyntaxKind,
     expected_element_error: &str,
-    element_recovery_set: TokenSet,
+    element_recovery_set: Option<TokenSet>,
 ) {
     let mut iteration = 0;
     let outer_recovery_set = p.outer_recovery_set();
@@ -165,20 +165,31 @@ pub(crate) fn delimited_with_recovery_fn(
     // cannot recover if there delimiter divides outer elements
     let should_not_recover = outer_recovery_set.contains(delimiter);
     let modified_recovery_set = outer_recovery_set.sub(ts!(delimiter));
+    let at_list_end = |p: &Parser| p.at(list_end);
+    // let at_list_end = |p: &Parser| p.at_ts(modified_recovery_set) || p.at(list_end);
 
-    // let at_list_end = |p: &Parser| p.at_ts(outer_recovery_set) || at_list_end(p);
-    while !p.at(EOF) && !p.at_ts(modified_recovery_set) && !at_list_end(p) {
+    while !p.at(EOF) && !at_list_end(p) {
         #[cfg(debug_assertions)]
-        let _p = stdx::panic_context::enter(format!("p.text_context() = {:?}", p.text_context(),));
+        let _p = stdx::panic_context::enter(format!("p.text_context() = {:?}", p.current_context(),));
 
         // check whether we can parse element, if not, then recover till the delimiter / end of the list
-        let at_element = element(p);
+        let at_element = p.with_recover_t(list_end, |p| element(p));
+        // let at_element = element(p);
         if !at_element {
             if should_not_recover {
                 // should stop here
                 break;
             }
-            p.error_and_recover_until_ts(expected_element_error, element_recovery_set + ts!(delimiter));
+            match element_recovery_set {
+                Some(recover_ts) => {
+                    p.error_and_recover_until_ts(expected_element_error, recover_ts | delimiter)
+                }
+                None => {
+                    // no recovery
+                    p.push_error(expected_element_error);
+                }
+            }
+            // p.error_and_recover_until_ts(expected_element_error, element_recovery_set + ts!(delimiter));
         }
 
         if p.at_ts(modified_recovery_set) {
@@ -191,6 +202,8 @@ pub(crate) fn delimited_with_recovery_fn(
         //     p.error_and_recover_until_ts(expected_element, element_recovery_set);
         // }
         if !at_list_end(p) {
+            // dbg!(&p.current_context());
+            // panic!("{:?}", p.current_context());
             p.expect(delimiter);
         }
 
