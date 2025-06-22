@@ -11,7 +11,6 @@ use crate::{
 };
 use drop_bomb::DropBomb;
 use std::collections::HashSet;
-use std::ops::Add;
 
 /// `Parser` struct provides the low-level API for
 /// navigating through the stream of tokens and
@@ -581,6 +580,23 @@ impl Parser {
         self.with_recover_tokens(vt.into_iter().map(|it| it.into()).collect(), f)
     }
 
+    pub(crate) fn with_recover_token_set<T>(
+        &mut self,
+        token_set: impl Into<TokenSet>,
+        f: impl FnOnce(&mut Parser) -> T,
+    ) -> T {
+        self.recovery_set_stack
+            .push(self.outer_recovery_set().with_recovery_set(token_set));
+        // for token in token_set.clone() {
+        //     new_rec_set = new_rec_set.with_recovery_token(token);
+        // }
+
+        let res = f(self);
+
+        self.recovery_set_stack.pop();
+        res
+    }
+
     pub(crate) fn with_recover_tokens<T>(
         &mut self,
         tokens: Vec<RecoveryToken>,
@@ -592,25 +608,9 @@ impl Parser {
         }
         self.recovery_set_stack.push(new_rec_set);
 
-        // if let Some(recovery_set) = self.recovery_set_stack.last() {
-        //     let mut new_rec_set = recovery_set.clone();
-        //     for token in tokens.clone() {
-        //         new_rec_set = new_rec_set.with_recovery_token(token);
-        //     }
-        //     self.recovery_set_stack.push(new_rec_set);
-        // } else {
-        //     self.recovery_set_stack.push(new_rec_set);
-        // }
-        // let tokens_len = tokens.len();
-        // self.recovery_tokens.extend(tokens);
-
         let res = f(self);
 
-        // for _ in 0..tokens_len {
-        //     self.recovery_tokens.pop();
-        // }
         self.recovery_set_stack.pop();
-
         res
     }
 

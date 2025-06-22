@@ -44,6 +44,7 @@ pub(crate) mod utils;
 use crate::parse::grammar::attributes::outer_attrs;
 use crate::parse::grammar::items::{at_block_start, at_item_start};
 use crate::parse::grammar::paths::Mode;
+use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::parser::Marker;
 use crate::parse::token_set::TokenSet;
 use crate::{parse::Parser, ts, SyntaxKind::*, T};
@@ -263,6 +264,14 @@ fn error_block(p: &mut Parser, message: &str) {
     expressions::expr_block_contents(p, false);
     p.eat(T!['}']);
     m.complete(p, ERROR);
+}
+
+pub(crate) fn abilities_list(p: &mut Parser) {
+    assert!(p.at_contextual_kw_ident("has"));
+    let m = p.start();
+    p.bump_remap(T![has]);
+    delimited_with_recovery(p, ability, T![,], "expected ability", false);
+    m.complete(p, ABILITY_LIST);
 }
 
 pub(crate) fn ability(p: &mut Parser) -> bool {

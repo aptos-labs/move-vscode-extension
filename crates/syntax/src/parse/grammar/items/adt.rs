@@ -3,7 +3,8 @@ use crate::parse::grammar::items::{at_block_start, at_item_start, item_start_tok
 // use crate::parse::grammar::types::type_or;
 use crate::parse::grammar::utils::{delimited_with_recovery, list};
 use crate::parse::grammar::{
-    ability, attributes, error_block, item_name_or_recover, name, name_or_recover, type_params, types,
+    abilities_list, ability, attributes, error_block, item_name_or_recover, name, name_or_recover,
+    type_params, types,
 };
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::token_set::TokenSet;
@@ -16,17 +17,7 @@ pub(super) fn struct_(p: &mut Parser, m: Marker) {
     p.bump(T![struct]);
     item_name_or_recover(p, struct_enum_recover_at);
     type_params::opt_type_param_list(p);
-    opt_abilities_list(p, vec![T!['{'], T!['(']]);
-    // opt_abilities_list(p, T!['{'] | T!['(']);
-    // if p.at_contextual_kw_ident("has") {
-    //     p.with_recover_fn(at_item_start, |p| {
-    //         p.with_recover_ts(T!['{'] | T!['('], |p| abilities_list(p, TokenSet::EMPTY));
-    //     })
-    // }
-    // p.with_recover_fn(at_item_start, |p| {
-    // });
-    // p.with_recover_ts(T!['{'] | T!['('], |p| opt_abilities_list(p, TokenSet::EMPTY));
-    // opt_abilities_list(p, ts!(T!['{']));
+    p.with_recover_token_set(T!['{'] | T!['('], opt_abilities_list);
     match p.current() {
         T!['{'] => {
             p.with_recover_token(T!['}'], |p| named_field_list(p));
@@ -37,51 +28,28 @@ pub(super) fn struct_(p: &mut Parser, m: Marker) {
         }
         T!['('] => {
             tuple_field_list(p);
-            opt_abilities_list(p, vec![T![;]]);
+            p.with_recover_token_set(T![;], opt_abilities_list);
             p.expect(T![;]);
         }
         _ => p.error("expected `;`, `{`, or `(`"),
     }
-    // opt_abilities_list(p);
     m.complete(p, STRUCT);
 }
 
 fn opt_abilities_list_with_semicolon(p: &mut Parser) {
-    let has_postfix_abilities = opt_abilities_list(p, vec![T![;]]);
+    let has_postfix_abilities = p.with_recover_token_set(T![;], opt_abilities_list);
     if has_postfix_abilities {
         p.expect(T![;]);
     }
 }
 
-fn opt_abilities_list(p: &mut Parser, extra_recover_set: Vec<SyntaxKind>) -> bool {
+fn opt_abilities_list(p: &mut Parser) -> bool {
     if p.at_contextual_kw_ident("has") {
-        let extra_set = extra_recover_set.into_iter().map(|it| it.into()).collect();
-        p.with_recover_tokens(item_start_tokens(), |p| {
-            p.with_recover_tokens(extra_set, |p| abilities_list(p, TokenSet::EMPTY));
-        });
-        // p.with_recover_fn(at_item_start, |p| {});
+        p.with_recover_tokens(item_start_tokens(), abilities_list);
         return true;
     }
-    // if p.at_contextual_kw_ident("has") {
-    //     abilities_list(p, extra_recover_set);
-    //     return true;
-    // }
     false
 }
-
-fn abilities_list(p: &mut Parser, extra_set: TokenSet) {
-    assert!(p.at_contextual_kw_ident("has"));
-    let m = p.start();
-    p.bump_remap(T![has]);
-    delimited_with_recovery(p, ability, T![,], "expected ability", false);
-    m.complete(p, ABILITY_LIST);
-}
-
-fn at_next_item_start(p: &Parser, extra_set: TokenSet) -> bool {
-    at_item_start(p) || p.at_ts(extra_set)
-}
-
-pub(crate) const ABILITY_FIRST: TokenSet = TokenSet::new(&[IDENT]);
 
 pub(super) fn enum_(p: &mut Parser, m: Marker) {
     p.bump_remap(T![enum]);
@@ -91,7 +59,7 @@ pub(super) fn enum_(p: &mut Parser, m: Marker) {
         return;
     }
     type_params::opt_type_param_list(p);
-    opt_abilities_list(p, vec![T!['{']]);
+    p.with_recover_token_set(T!['{'], opt_abilities_list);
     if p.at(T!['{']) {
         variant_list(p);
     } else {
