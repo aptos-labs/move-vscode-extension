@@ -1,20 +1,19 @@
 use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
-use crate::parse::grammar::items::{at_block_start, at_item_start, item_start_rset, item_start_tokens};
+use crate::parse::grammar::items::item_start_rec_set;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{
-    abilities_list, ability, attributes, error_block, item_name_or_recover, name, name_or_recover,
-    type_params, types,
+    abilities_list, attributes, error_block, item_name_or_recover, name_or_recover_with, type_params,
+    types,
 };
 use crate::parse::parser::{Marker, Parser, RecoverySet};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
-use crate::{ts, SyntaxKind, T};
+use crate::T;
 
-// test struct_item
-// struct S {}
 pub(super) fn struct_(p: &mut Parser, m: Marker) {
     p.bump(T![struct]);
-    item_name_or_recover(p, struct_enum_recover_at);
+    // item_name_or_recover(p, struct_enum_recover_at);
+    name_or_recover_with(p, struct_enum_name_rec_set());
     type_params::opt_type_param_list(p);
     p.with_recover_token_set(T!['{'] | T!['('], opt_abilities_list);
     match p.current() {
@@ -44,7 +43,7 @@ fn opt_abilities_list_with_semicolon(p: &mut Parser) {
 
 fn opt_abilities_list(p: &mut Parser) -> bool {
     if p.at_contextual_kw_ident("has") {
-        p.with_recovery_set(item_start_rset(), abilities_list);
+        p.with_recovery_set(item_start_rec_set(), abilities_list);
         return true;
     }
     false
@@ -53,14 +52,14 @@ fn opt_abilities_list(p: &mut Parser) -> bool {
 pub(super) fn enum_(p: &mut Parser, m: Marker) {
     p.bump_remap(T![enum]);
 
-    if !item_name_or_recover(p, struct_enum_recover_at) {
+    if !name_or_recover_with(p, struct_enum_name_rec_set()) {
         m.complete(p, ENUM);
         return;
     }
     type_params::opt_type_param_list(p);
     p.with_recover_token_set(T!['{'], opt_abilities_list);
     if p.at(T!['{']) {
-        variant_list(p);
+        enum_variant_list(p);
     } else {
         p.error("expected `{`");
     }
@@ -68,7 +67,7 @@ pub(super) fn enum_(p: &mut Parser, m: Marker) {
     m.complete(p, ENUM);
 }
 
-pub(crate) fn variant_list(p: &mut Parser) {
+pub(crate) fn enum_variant_list(p: &mut Parser) {
     assert!(p.at(T!['{']));
     let m = p.start();
     p.bump(T!['{']);
@@ -77,7 +76,7 @@ pub(crate) fn variant_list(p: &mut Parser) {
             error_block(p, "expected enum variant");
             continue;
         }
-        let is_curly = variant(p);
+        let is_curly = enum_variant(p);
         if !p.at(T!['}']) {
             if is_curly {
                 p.eat(T![,]);
@@ -88,32 +87,31 @@ pub(crate) fn variant_list(p: &mut Parser) {
     }
     p.expect(T!['}']);
     m.complete(p, VARIANT_LIST);
-
-    fn variant(p: &mut Parser) -> bool {
-        let mut curly_braces = false;
-        let m = p.start();
-        attributes::outer_attrs(p);
-        if p.at(IDENT) {
-            name(p);
-            match p.current() {
-                T!['{'] => {
-                    curly_braces = true;
-                    named_field_list(p)
-                }
-                T!['('] => tuple_field_list(p),
-                _ => (),
-            }
-            m.complete(p, VARIANT);
-        } else {
-            m.abandon(p);
-            p.bump_with_error("expected enum variant");
-        }
-        curly_braces
-    }
 }
 
-// test record_field_list
-// struct S { a: i32, b: f32 }
+fn enum_variant(p: &mut Parser) -> bool {
+    let mut curly_braces = false;
+    let m = p.start();
+    attributes::outer_attrs(p);
+    if p.at(IDENT) {
+        // name(p);
+        name_or_recover_with(p, TokenSet::EMPTY.into());
+        match p.current() {
+            T!['{'] => {
+                curly_braces = true;
+                named_field_list(p)
+            }
+            T!['('] => tuple_field_list(p),
+            _ => (),
+        }
+        m.complete(p, VARIANT);
+    } else {
+        m.abandon(p);
+        p.bump_with_error("expected enum variant");
+    }
+    curly_braces
+}
+
 pub(crate) fn named_field_list(p: &mut Parser) {
     assert!(p.at(T!['{']));
     let m = p.start();
@@ -134,12 +132,12 @@ pub(crate) fn named_field_list(p: &mut Parser) {
 
 fn named_field(p: &mut Parser) {
     let m = p.start();
-    // attributes::outer_attrs(p);
     if p.at(IDENT) {
         #[cfg(debug_assertions)]
         let _p = stdx::panic_context::enter(format!("named_field {:?}", p.current_text()));
 
-        name(p);
+        name_or_recover_with(p, TokenSet::EMPTY.into());
+        // name(p);
         let at_colon = p.eat(T![:]);
         if at_colon {
             p.with_recovery_token(T![,], types::type_);
@@ -154,6 +152,12 @@ fn named_field(p: &mut Parser) {
         m.abandon(p);
         p.bump_with_error("expected named field declaration");
     }
+}
+
+fn struct_enum_name_rec_set() -> RecoverySet {
+    RecoverySet::new()
+        .with_token_set(T![<] | T!['{'])
+        .with_recovery_token("has".into())
 }
 
 fn struct_enum_recover_at(p: &Parser) -> bool {

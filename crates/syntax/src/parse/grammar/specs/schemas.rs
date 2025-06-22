@@ -1,21 +1,25 @@
 use crate::parse::grammar::expressions::atom::{block_expr, condition, IDENT_FIRST};
 use crate::parse::grammar::expressions::{expr, opt_initializer_expr};
-use crate::parse::grammar::items::at_item_start;
+use crate::parse::grammar::items::{at_item_start, item_start_rec_set};
 use crate::parse::grammar::paths::{is_path_start, type_path};
 use crate::parse::grammar::patterns::ident_pat;
 use crate::parse::grammar::specs::predicates::opt_predicate_property_list;
 use crate::parse::grammar::utils::delimited_with_recovery;
-use crate::parse::grammar::{name, name_or_recover, name_ref, type_params, types};
+use crate::parse::grammar::{name, name_or_recover_with, name_ref, type_params, types};
 use crate::parse::parser::{CompletedMarker, Marker, Parser, RecoveryToken};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{ts, T};
 
 pub(crate) fn schema(p: &mut Parser, m: Marker) {
-    assert!(p.at(IDENT) && p.at_contextual_kw("schema"));
+    assert!(p.at_contextual_kw_ident("schema"));
     p.bump_remap(T![schema]);
-    name_or_recover(p, at_item_start);
-    type_params::opt_type_param_list(p);
+    p.with_recovery_set(item_start_rec_set(), |p| {
+        name_or_recover_with(p, TokenSet::EMPTY.into());
+        type_params::opt_type_param_list(p);
+    });
+    // name_or_recover(p, at_item_start);
+    // type_params::opt_type_param_list(p);
     block_expr(p, true);
     m.complete(p, SCHEMA);
 }

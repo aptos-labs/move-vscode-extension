@@ -1,7 +1,7 @@
 керкер
-//< unexpected token BAD_CHARACTER
-//^^ unexpected token BAD_CHARACTER
-  //^^ unexpected token BAD_CHARACTER
-    //^^ unexpected token BAD_CHARACTER
-      //^^ unexpected token BAD_CHARACTER
-        //^^ unexpected token BAD_CHARACTER
+//< unexpected ident 'к'
+//^^ unexpected ident 'е'
+  //^^ unexpected ident 'р'
+    //^^ unexpected ident 'к'
+      //^^ unexpected ident 'е'
+        //^^ unexpected ident 'р'

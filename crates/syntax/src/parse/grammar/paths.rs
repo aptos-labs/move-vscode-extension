@@ -1,3 +1,4 @@
+use crate::parse::grammar::items::item_start_rec_set;
 use crate::parse::grammar::type_args::opt_path_type_arg_list;
 use crate::parse::grammar::{any_address, items, name_ref, value_address};
 use crate::parse::parser::{CompletedMarker, Parser};
@@ -20,15 +21,15 @@ pub(super) fn is_path_start(p: &Parser) -> bool {
 }
 
 pub(super) fn use_path(p: &mut Parser) {
-    path(p, Mode::Use, ts!());
+    path(p, Mode::Use);
 }
 
 pub(crate) fn type_path(p: &mut Parser) {
-    path(p, Mode::Type, ts!());
+    path(p, Mode::Type);
 }
 
 pub(super) fn expr_path(p: &mut Parser) {
-    path(p, Mode::Expr, ts!());
+    path(p, Mode::Expr);
 }
 
 pub(crate) fn type_path_for_qualifier(p: &mut Parser, qual: CompletedMarker) -> CompletedMarker {
@@ -42,9 +43,9 @@ pub(crate) enum Mode {
     Expr,
 }
 
-pub(crate) fn path(p: &mut Parser, mode: Mode, additional_recovery_set: TokenSet) {
+pub(crate) fn path(p: &mut Parser, mode: Mode) {
     let path = p.start();
-    path_segment(p, mode, true, additional_recovery_set);
+    path_segment(p, mode, true);
     let qual = path.complete(p, PATH);
     path_for_qualifier(p, mode, qual);
 }
@@ -55,7 +56,7 @@ fn path_for_qualifier(p: &mut Parser, mode: Mode, mut qual: CompletedMarker) -> 
         if p.at(T![::]) && !use_tree {
             let path = qual.precede(p);
             p.bump(T![::]);
-            path_segment(p, mode, false, ts!());
+            path_segment(p, mode, false);
             let path = path.complete(p, PATH);
             qual = path;
         } else {
@@ -64,7 +65,7 @@ fn path_for_qualifier(p: &mut Parser, mode: Mode, mut qual: CompletedMarker) -> 
     }
 }
 
-fn path_segment(p: &mut Parser, mode: Mode, first: bool, additional_recovery_set: TokenSet) {
+fn path_segment(p: &mut Parser, mode: Mode, first: bool) {
     let m = p.start();
 
     let empty = if first { !p.eat(T![::]) } else { true };
@@ -86,11 +87,11 @@ fn path_segment(p: &mut Parser, mode: Mode, first: bool, additional_recovery_set
             m.complete(p, PATH_ADDRESS);
         }
         _ => {
-            p.error_and_recover_until("expected identifier", |p| {
-                items::at_item_start(p) || p.at_ts(additional_recovery_set)
-            });
+            p.error_and_recover("expected identifier", item_start_rec_set());
+            // p.error_and_recover_until("expected identifier", |p| {
+            //     items::at_item_start(p) || p.at_ts(additional_recovery_set)
+            // });
             if empty {
-                // test_err empty_segment
                 // use crate::;
                 m.abandon(p);
                 return;

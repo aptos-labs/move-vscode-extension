@@ -11,8 +11,7 @@ use crate::parse::grammar::{attributes, error_block, item_name_or_recover, types
 use crate::parse::parser::{Marker, Parser, RecoverySet, RecoveryToken};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
-use crate::{ts, SyntaxKind, T};
-use std::iter;
+use crate::{SyntaxKind, T};
 // // test mod_contents
 // // fn foo() {}
 // // macro_rules! foo {}
@@ -29,7 +28,8 @@ pub(crate) fn item_list(p: &mut Parser) {
     assert!(p.at(T!['{']));
     p.bump(T!['{']);
     while !p.at(EOF) && !(p.at(T!['}'])) {
-        item(p);
+        p.with_recovery_token(T!['}'], item);
+        // item(p);
     }
     p.expect(T!['}']);
 }
@@ -37,7 +37,7 @@ pub(crate) fn item_list(p: &mut Parser) {
 pub(super) fn item(p: &mut Parser) {
     let m = p.start();
     attributes::outer_attrs(p);
-    let m = match p.with_recover_tokens(item_start_tokens(), |p| opt_item(p, m)) {
+    let m = match p.with_recovery_set(item_start_rec_set(), |p| opt_item(p, m)) {
         // let m = match opt_item(p, m) {
         Ok(()) => {
             if p.at(T![;]) {
@@ -167,7 +167,7 @@ pub(crate) fn item_start_tokens() -> Vec<RecoveryToken> {
     tokens
 }
 
-pub(crate) fn item_start_rset() -> RecoverySet {
+pub(crate) fn item_start_rec_set() -> RecoverySet {
     RecoverySet::new()
         .with_token_set(ITEM_KEYWORDS)
         .with_kw_ident("enum")

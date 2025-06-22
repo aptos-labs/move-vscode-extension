@@ -1,8 +1,8 @@
 module 0x1::item_recovery_struct {
     struct { }
-        //^ expected an identifier
+        //^ expected identifier, got '{'
     struct <T> has
-        //^ expected an identifier
+        //^ expected identifier, got '<'
                 //^ expected ability
                 //^ expected `;`, `{`, or `(`
     struct S has {}

@@ -1,12 +1,12 @@
 addr {}
-//< unexpected token IDENT
-   //^ unexpected token L_CURLY
-    //^ unexpected token R_CURLY
+//< unexpected ident 'addr'
+   //^ unexpected ident '{'
+    //^ unexpected ident '}'
 add {}
-//< unexpected token IDENT
-  //^ unexpected token L_CURLY
-   //^ unexpected token R_CURLY
+//< unexpected ident 'add'
+  //^ unexpected ident '{'
+   //^ unexpected ident '}'
 mod {}
-//< unexpected token IDENT
-  //^ unexpected token L_CURLY
-   //^ unexpected token R_CURLY
+//< unexpected ident 'mod'
+  //^ unexpected ident '{'
+   //^ unexpected ident '}'

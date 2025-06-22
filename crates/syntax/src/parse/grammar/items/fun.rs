@@ -1,5 +1,5 @@
 use crate::parse::grammar::expressions::atom::block_expr;
-use crate::parse::grammar::items::{at_item_start, item_start_rset};
+use crate::parse::grammar::items::{at_item_start, item_start_rec_set};
 use crate::parse::grammar::paths::PATH_FIRST;
 use crate::parse::grammar::types::path_type;
 use crate::parse::grammar::utils::delimited_with_recovery;
@@ -39,7 +39,7 @@ pub(crate) fn function(p: &mut Parser, m: Marker) {
         fun_signature(p, false, true);
     } else {
         // p.error("expected 'fun'");
-        p.error_and_recover("expected 'fun'", item_start_rset());
+        p.error_and_recover("expected 'fun'", item_start_rec_set());
         // p.error_and_recover_until("expected 'fun'", at_item_start);
     }
     m.complete(p, FUN);

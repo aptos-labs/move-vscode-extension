@@ -12,4 +12,4 @@ module 0x1::dot_dot_pattern {
                                    //^ expected an item, got SEMICOLON
     }
 }
-//< unexpected token R_CURLY
+//< unexpected ident '}'

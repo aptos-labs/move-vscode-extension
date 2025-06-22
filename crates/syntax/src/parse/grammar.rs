@@ -43,9 +43,9 @@ pub(crate) mod utils;
 
 use crate::parse::grammar::attributes::outer_attrs;
 use crate::parse::grammar::items::{at_block_start, at_item_start};
-use crate::parse::grammar::paths::Mode;
+use crate::parse::grammar::paths::{use_path, Mode};
 use crate::parse::grammar::utils::delimited_with_recovery;
-use crate::parse::parser::Marker;
+use crate::parse::parser::{Marker, RecoverySet};
 use crate::parse::token_set::TokenSet;
 use crate::{parse::Parser, ts, SyntaxKind::*, T};
 
@@ -64,7 +64,7 @@ pub mod entry_points {
                 IDENT if p.at_contextual_kw("address") => address_def(p, m),
                 _ => {
                     m.abandon(p);
-                    p.bump_with_error(&format!("unexpected token {:?}", p.current()))
+                    p.bump_with_error(&format!("unexpected ident '{}'", p.current_text()))
                 }
             }
         }
@@ -76,11 +76,20 @@ pub mod entry_points {
 // module 0x1::m {}
 pub(crate) fn module(p: &mut Parser, m: Marker) {
     p.bump(T![module]);
-    module_name(p);
+    // module_name(p);
+
+    if p.nth_at(1, T![::]) {
+        // named address
+        any_address(p);
+        p.bump(T![::]);
+    }
+    name_or_recover_with(p, TOP_LEVEL_FIRST.into());
+
     if p.at(T!['{']) {
         items::item_list(p);
     } else {
-        p.error_and_recover_until_ts("expected `{`", TOP_LEVEL_FIRST);
+        p.error_and_recover("expected '{'", TOP_LEVEL_FIRST.into());
+        // p.error_and_recover_until_ts("expected `{`", TOP_LEVEL_FIRST);
     }
     m.complete(p, MODULE);
 }
@@ -109,12 +118,14 @@ pub(crate) fn address_def(p: &mut Parser, m: Marker) {
 
 pub(crate) fn module_spec(p: &mut Parser, m: Marker) {
     p.bump(T![spec]);
-    paths::path(p, Mode::Use, ts!(T!['{']));
+    p.with_recovery_set(top_level_set().with_token_set(T!['{']), use_path);
+
     if p.at(T!['{']) {
         items::item_list(p);
     } else {
-        p.error_and_recover_until_ts("expected `{`", TOP_LEVEL_FIRST);
+        p.error_and_recover("expected '{'", top_level_set());
     }
+
     m.complete(p, MODULE_SPEC);
 }
 
@@ -158,6 +169,10 @@ pub(crate) fn value_address(p: &mut Parser) {
     let m = p.start();
     p.bump(INT_NUMBER);
     m.complete(p, VALUE_ADDRESS);
+}
+
+pub(crate) fn top_level_set() -> RecoverySet {
+    TOP_LEVEL_FIRST.into()
 }
 
 pub(crate) const TOP_LEVEL_FIRST: TokenSet =
@@ -245,6 +260,24 @@ fn name_or_recover(p: &mut Parser, stop: impl Fn(&Parser) -> bool) -> bool {
         p.error_and_recover_until("expected an identifier", stop);
         return false;
     }
+    let m = p.start();
+    p.bump(IDENT);
+    m.complete(p, NAME);
+    true
+}
+
+fn name_or_recover_with(p: &mut Parser, extra: RecoverySet) -> bool {
+    if !p.at(IDENT) {
+        p.error_and_recover(&format!("expected identifier, got '{}'", p.current_text()), extra);
+        return false;
+    }
+
+    let rec_set = p.outer_recovery_set().with_merged(extra);
+    if rec_set.contains_current(p) {
+        p.error(&format!("expected identifier, got '{}'", p.current_text()));
+        return false;
+    }
+
     let m = p.start();
     p.bump(IDENT);
     m.complete(p, NAME);

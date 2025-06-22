@@ -1,11 +1,13 @@
 module 0x1
-     //^^^ expected an identifier
-     //^^^ expected `{`
+     //^^^ expected identifier, got '0x1'
+     //^^^ expected '{'
 module 0x1::
-          //^ expected an identifier
-          //^ expected `{`
+          //^ expected identifier, got 'module'
+          //^ expected '{'
 module 0x1::item
-              //^ expected `{`
+              //^ expected '{'
+module std::item
+              //^ expected '{'
 
 module 0x1::item_recovery {
     unknown
@@ -25,16 +27,16 @@ module 0x1::item_recovery {
     spec ref
           //^ expected a block
 }
-unknown
-//< unexpected token IDENT
-script
-    //^ expected `{`
-spec
-spec ref
-//< expected identifier
-//< expected `{`
-      //^ expected `{`
-spec 0x1::ref
+    unknown
+  //^^^^^^^ unexpected ident 'unknown'
+    script
+        //^ expected `{`
+    spec
+    spec ref
+  //^ expected identifier
+  //^ expected '{'
+          //^ expected '{'
+    spec 0x1::ref
 
 
-//< expected `{`
+//< expected '{'
