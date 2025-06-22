@@ -2,6 +2,7 @@ use crate::parse::parser::Parser;
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::{EOF, ERROR};
 use crate::{ts, SyntaxKind, T};
+use stdx::print_backtrace;
 
 pub(crate) fn delimited_items_with_recover(
     p: &mut Parser,
@@ -159,54 +160,42 @@ pub(crate) fn delimited_with_recovery(
     recover_ts: TokenSet,
 ) {
     let mut iteration = 0;
+
     let outer_recovery_set = p.outer_recovery_set();
+    // cannot recover if delimiter divides outer elements
+    let modified_recovery_set = outer_recovery_set
+        .clone()
+        .without_recovery_token(delimiter.into());
+    let outer_recovery_on_delimiter = outer_recovery_set.contains(delimiter);
 
-    // cannot recover if there delimiter divides outer elements
-    let should_not_recover = outer_recovery_set.contains(delimiter);
-    let modified_recovery_set = outer_recovery_set.sub(ts!(delimiter));
     let at_list_end = |p: &Parser| p.at(list_end);
-    // let at_list_end = |p: &Parser| p.at_ts(modified_recovery_set) || p.at(list_end);
-
     while !p.at(EOF) && !at_list_end(p) {
         #[cfg(debug_assertions)]
-        let _p = stdx::panic_context::enter(format!("p.text_context() = {:?}", p.current_context(),));
+        let _p = stdx::panic_context::enter(format!("p.text_context() = {:?}", p.current_context()));
 
         // check whether we can parse element, if not, then recover till the delimiter / end of the list
-        let at_element = p.with_recover_ts(delimiter | list_end, |p| element(p));
-        // let at_element = element(p);
+        let at_element = p.with_recover_token_kinds(vec![delimiter, list_end], |p| element(p));
         if !at_element {
-            if should_not_recover {
+            if outer_recovery_on_delimiter {
                 // should stop here
                 break;
             }
-            p.error_and_recover_until_ts(
-                expected_element_error,
-                outer_recovery_set | delimiter | list_end,
-            );
-            // match element_recovery_set {
-            //     Some(recover_ts) => {
-            //         p.error_and_recover_until_ts(expected_element_error, recover_ts | delimiter)
-            //     }
-            //     None => {
-            //         // no recovery
-            //         p.push_error(expected_element_error);
-            //     }
-            // }
-            // p.error_and_recover_until_ts(expected_element_error, element_recovery_set + ts!(delimiter));
+            if delimiter == T![,] && (at_list_end(p) || modified_recovery_set.contains_current(p)) {
+                // trailing comma
+                break;
+            }
+            p.error_and_recover_until(expected_element_error, |p| {
+                outer_recovery_set
+                    .clone()
+                    .with_recovery_set(delimiter | list_end)
+                    .contains_current(p)
+            });
         }
 
-        if p.at_ts(modified_recovery_set) {
+        if modified_recovery_set.contains_current(p) {
             break;
         }
-
-        // if at_element_first(p) {
-        //     element(p);
-        // } else {
-        //     p.error_and_recover_until_ts(expected_element, element_recovery_set);
-        // }
         if !at_list_end(p) {
-            // dbg!(&p.current_context());
-            // panic!("{:?}", p.current_context());
             p.expect(delimiter);
         }
 

@@ -20,5 +20,7 @@ script {
         Transaction::call<u8, u8, vector<u8>>();
 
         assert(true, 1);
+
+        call<>();
     }
 }

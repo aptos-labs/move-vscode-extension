@@ -30,7 +30,7 @@ indexmap = "^2.7.1"
 toml = "^0.8.20"
 walkdir = "^2.5.0"
 regex = "1.11.1"
-camino = { version =  "1.1.9", features = ["serde1"] }
+camino = { version = "1.1.9", features = ["serde1"] }
 memchr = "2.7.4"
 
 tracing = "^0.1.41"

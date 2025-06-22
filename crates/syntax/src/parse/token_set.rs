@@ -9,6 +9,12 @@ use std::ops::{Add, BitOr};
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct TokenSet(pub u128);
 
+impl From<SyntaxKind> for TokenSet {
+    fn from(value: SyntaxKind) -> Self {
+        TokenSet::new(&[value])
+    }
+}
+
 impl Add<TokenSet> for TokenSet {
     type Output = TokenSet;
     fn add(self, rhs: TokenSet) -> Self::Output {

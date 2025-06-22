@@ -86,21 +86,18 @@ pub(crate) fn type_arg(p: &mut Parser, is_type: bool) -> bool {
         }
         _ if p.at_ts(TYPE_FIRST) => {
             let m = p.start();
-            let mut rec = ts!(T![,]);
+            let mut rec = vec![T![,]];
             // can't recover at T![>] in expr due to ambiguity
             if is_type {
-                rec = rec.union(ts!(T![>]))
+                rec.push(T![>]);
             }
-            let is_valid_type = p.with_recover_ts(rec, types::type_);
+            let is_valid_type = p.with_recover_token_kinds(rec, types::type_);
             if !is_type && !is_valid_type {
                 // have to be safe
                 m.abandon(p);
                 return false;
             }
             m.complete(p, TYPE_ARG);
-            // if !is_valid_type {
-            //     return false;
-            // }
         }
         _ => return false,
     }

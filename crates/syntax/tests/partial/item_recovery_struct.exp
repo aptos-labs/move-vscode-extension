@@ -1,12 +1,10 @@
-module 0x1::struct_recovery {
+module 0x1::item_recovery_struct {
     struct { }
         //^ expected an identifier
     struct <T> has
         //^ expected an identifier
-                //^ expected ability
                 //^ expected `;`, `{`, or `(`
     struct S has {}
-              //^ expected ability
     struct S has copy,
                     //^ expected `;`, `{`, or `(`
     struct S has copy,, {}

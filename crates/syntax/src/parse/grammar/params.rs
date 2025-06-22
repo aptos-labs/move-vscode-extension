@@ -25,7 +25,7 @@ fn param(p: &mut Parser) -> bool {
         return false;
     }
     if p.expect_with_error(T![:], "expected type annotation") {
-        p.with_recover_t(T![,], types::type_);
+        p.with_recover_token(T![,], types::type_);
     }
     m.complete(p, PARAM);
     true

@@ -195,6 +195,11 @@ pub(crate) const PAT_FIRST: TokenSet = expressions::atom::LITERAL_FIRST
     .union(paths::PATH_FIRST)
     .union(TokenSet::new(&[T!['('], T!['_'], T![..]]));
 
+pub(crate) const EXPR_STMT_KEYWORDS_LIST: &[SyntaxKind] = &[T![if], T![while], T![loop], T![match]];
+
+pub(crate) const STMT_KEYWORDS_LIST: &[SyntaxKind] =
+    &[T![if], T![while], T![loop], T![match], T![let], T![spec]];
+
 #[rustfmt::skip]
 pub(crate) const EXPR_STMT_FIRST: TokenSet = TokenSet::new(&[
     T![if],

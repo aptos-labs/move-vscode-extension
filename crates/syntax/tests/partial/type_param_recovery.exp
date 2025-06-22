@@ -9,7 +9,6 @@ module 0x1::type_param_recovery {
 
     struct S5<phantom>();
                    //^ expected identifier
-                   //^ expected type parameter
     struct S6<phantom,>();
                    //^ expected identifier
                    //^ expected type parameter

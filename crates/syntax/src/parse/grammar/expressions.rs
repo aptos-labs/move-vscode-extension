@@ -1,7 +1,7 @@
 use crate::parse::grammar::expressions::atom::{call_expr, EXPR_FIRST};
 use crate::parse::grammar::items::{at_item_start, fun, use_item};
 use crate::parse::grammar::lambdas::lambda_param_list;
-use crate::parse::grammar::patterns::{pat, STMT_FIRST};
+use crate::parse::grammar::patterns::{pat, STMT_FIRST, STMT_KEYWORDS_LIST};
 use crate::parse::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt};
 use crate::parse::grammar::specs::quants::{choose_expr, exists_expr, forall_expr, is_at_quant_kw};
 use crate::parse::grammar::specs::schemas::{
@@ -13,6 +13,8 @@ use crate::parse::parser::{CompletedMarker, Marker, Parser};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{ts, SyntaxKind, T};
+use std::io::Read;
+use std::iter;
 
 pub(crate) mod atom;
 
@@ -386,7 +388,7 @@ fn let_stmt(p: &mut Parser, m: Marker, is_spec: bool) {
     }
     pat(p);
     if p.at(T![:]) {
-        p.with_recover_ts(ts!(T![=], T![;]), types::ascription);
+        p.with_recover_token_kinds(vec![T![=], T![;]], types::ascription);
         // types::ascription(p);
     }
     opt_initializer_expr(p);
@@ -417,7 +419,15 @@ pub(super) fn expr_block_contents(p: &mut Parser, is_spec: bool) {
             p.bump(T![;]);
             continue;
         }
-        p.with_recover_ts(STMT_FIRST | T!['}'], |p| stmt(p, false, is_spec));
+        p.with_recover_tokens(
+            STMT_KEYWORDS_LIST
+                .iter()
+                .map(|it| it.clone().into())
+                .into_iter()
+                .chain(iter::once(T!['}'].into()))
+                .collect(),
+            |p| stmt(p, false, is_spec),
+        );
         // stmt(p, false, is_spec);
     }
 }

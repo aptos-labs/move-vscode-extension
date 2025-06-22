@@ -1,7 +1,5 @@
 //! See [`Parser`].
 
-use drop_bomb::DropBomb;
-
 use crate::parse::event::Event;
 use crate::parse::text_token_source::TextTokenSource;
 use crate::parse::token_set::TokenSet;
@@ -11,6 +9,9 @@ use crate::{
     SyntaxKind::{self, EOF, ERROR, TOMBSTONE},
     T,
 };
+use drop_bomb::DropBomb;
+use std::collections::HashSet;
+use std::ops::Add;
 
 /// `Parser` struct provides the low-level API for
 /// navigating through the stream of tokens and
@@ -24,8 +25,86 @@ use crate::{
 pub struct Parser {
     token_source: TextTokenSource,
     events: Vec<Event>,
-    pub(crate) recover_sets: Vec<TokenSet>,
-    pub(crate) recover_fns: Vec<Box<dyn Fn(&Parser) -> bool>>,
+    recovery_tokens: Vec<RecoveryToken>,
+}
+
+#[derive(Debug, Clone)]
+pub enum RecoveryToken {
+    SyntaxKind(SyntaxKind),
+    KwIdent(String),
+}
+
+#[derive(Debug, Clone)]
+pub struct RecoverySet {
+    token_set: TokenSet,
+    keywords: HashSet<String>,
+}
+
+impl RecoverySet {
+    pub(crate) fn new() -> Self {
+        RecoverySet {
+            token_set: TokenSet::EMPTY,
+            keywords: HashSet::new(),
+        }
+    }
+
+    pub(crate) fn with_recovery_set(mut self, recovery_set: impl Into<TokenSet>) -> Self {
+        self.token_set = self.token_set + recovery_set.into();
+        self
+    }
+
+    pub(crate) fn with_recovery_token(mut self, recovery_token: RecoveryToken) -> Self {
+        match recovery_token {
+            RecoveryToken::SyntaxKind(t) => {
+                self.token_set = self.token_set | t;
+            }
+            RecoveryToken::KwIdent(kw) => {
+                self.keywords.insert(kw);
+            }
+        }
+        self
+    }
+
+    pub(crate) fn without_recovery_token(mut self, recovery_token: RecoveryToken) -> Self {
+        match recovery_token {
+            RecoveryToken::SyntaxKind(t) => {
+                self.token_set = self.token_set.sub(ts!(t));
+            }
+            RecoveryToken::KwIdent(kw) => {
+                self.keywords.remove(&kw);
+            }
+        };
+        self
+    }
+
+    pub(crate) fn contains(&self, t: SyntaxKind) -> bool {
+        self.token_set.contains(t)
+    }
+
+    pub(crate) fn contains_current(&self, p: &Parser) -> bool {
+        match p.current() {
+            T![ident] => {
+                if self.token_set.contains(T![ident]) {
+                    return true;
+                }
+                let current_text = p.current_text();
+                self.keywords.contains(current_text)
+            }
+            kind => self.token_set.contains(kind),
+        }
+    }
+}
+
+impl From<SyntaxKind> for RecoveryToken {
+    fn from(value: SyntaxKind) -> Self {
+        RecoveryToken::SyntaxKind(value)
+    }
+}
+
+impl From<&str> for RecoveryToken {
+    fn from(value: &str) -> Self {
+        RecoveryToken::KwIdent(value.to_string())
+    }
 }
 
 impl Parser {
@@ -33,8 +112,7 @@ impl Parser {
         Parser {
             token_source,
             events: vec![],
-            recover_sets: vec![],
-            recover_fns: vec![],
+            recovery_tokens: vec![],
         }
     }
 
@@ -353,27 +431,25 @@ impl Parser {
     }
 
     /// adds error and then bumps until `stop()` is true
-    pub(crate) fn error_and_recover_until(&mut self, message: &str, stop: impl Fn(&Parser) -> bool) {
+    pub(crate) fn error_and_recover_until(
+        &mut self,
+        message: &str,
+        at_stop_token: impl Fn(&Parser) -> bool,
+    ) {
         // if the next token is stop token, just push error,
         // otherwise wrap the next token with the error node and start `recover_until()`
-        if stop(self)
-        /*|| self.at_ts(self.full_recover_set())*/
-        {
+        if at_stop_token(self) {
             self.push_error(message);
             return;
         }
         self.bump_with_error(message);
-        // let m = self.start();
-        // self.bump_any();
-        // self.push_error(message);
-        // m.complete(self, ERROR);
-
-        // if !self.recover_sets.is_empty() {
-        //     let full_recover_set = self.full_recover_set();
-        //     self.recover_until(|p| stop(p) || p.at_ts(full_recover_set));
-        //     return;
-        // }
-        self.recover_until(stop);
+        // bump tokens until reached `stop_token`
+        while !self.at(EOF) && !at_stop_token(self) {
+            // if at_stop_token(self) {
+            //     break;
+            // }
+            self.bump_any();
+        }
     }
 
     pub(crate) fn recover_until(&mut self, stop: impl Fn(&Parser) -> bool) {
@@ -488,59 +564,46 @@ impl Marker {
 
 // recovery sets
 impl Parser {
-    pub fn outer_recovery_set(&self) -> TokenSet {
-        self.recover_sets.iter().fold(ts!(), |acc, ts| acc + *ts)
+    pub fn outer_recovery_set(&self) -> RecoverySet {
+        let mut recovery_set = RecoverySet::new();
+        for recovery_token in self.recovery_tokens.clone() {
+            recovery_set = recovery_set.with_recovery_token(recovery_token);
+        }
+        recovery_set
     }
 
-    #[allow(clippy::needless_lifetimes)]
-    pub fn outer_recovery_fn<'t>(&'t self) -> impl Fn(&'t Parser) -> bool {
-        let outer_recovery_set = self.outer_recovery_set();
-        move |p| p.at_ts(outer_recovery_set) || self.recover_fns.iter().any(|recover_fn| recover_fn(p))
-    }
-
-    pub(crate) fn with_recover_fn<'t, T>(
+    pub(crate) fn with_recover_token_kinds<T>(
         &mut self,
-        rec: impl Fn(&Parser) -> bool + 'static,
+        vt: Vec<SyntaxKind>,
         f: impl FnOnce(&mut Parser) -> T,
     ) -> T {
-        self.recover_fns.push(Box::new(rec));
+        self.with_recover_tokens(vt.into_iter().map(|it| it.into()).collect(), f)
+    }
+
+    pub(crate) fn with_recover_tokens<T>(
+        &mut self,
+        tokens: Vec<RecoveryToken>,
+        f: impl FnOnce(&mut Parser) -> T,
+    ) -> T {
+        let tokens_len = tokens.len();
+        self.recovery_tokens.extend(tokens);
         let res = f(self);
-        self.recover_fns.pop();
+        for _ in 0..tokens_len {
+            self.recovery_tokens.pop();
+        }
         res
     }
 
-    pub(crate) fn with_recover_t<T>(&mut self, t: SyntaxKind, f: impl FnOnce(&mut Parser) -> T) -> T {
-        self.with_recover_ts(ts!(t), f)
-    }
-
-    pub(crate) fn with_recover_ts<T>(&mut self, ts: TokenSet, f: impl FnOnce(&mut Parser) -> T) -> T {
-        self.recover_sets.push(ts);
+    pub(crate) fn with_recover_token<'t, T>(
+        &mut self,
+        token: impl Into<RecoveryToken>,
+        f: impl FnOnce(&mut Parser) -> T,
+    ) -> T {
+        self.recovery_tokens.push(token.into());
         let res = f(self);
-        self.recover_sets.pop();
+        self.recovery_tokens.pop();
         res
     }
-
-    // #[allow(clippy::needless_lifetimes)]
-    // pub(crate) fn with_recovery<'t>(
-    //     &'t mut self,
-    //     t: SyntaxKind,
-    // ) -> scopeguard::ScopeGuard<&'t mut Parser, impl FnOnce(&'t mut Parser)> {
-    //     self.rec_sets.push(ts!(t));
-    //     scopeguard::guard(self, |p| {
-    //         p.rec_sets.pop();
-    //     })
-    // }
-
-    // #[allow(clippy::needless_lifetimes)]
-    // pub(crate) fn with_recovery_ts<'t>(
-    //     &'t mut self,
-    //     ts: TokenSet,
-    // ) -> scopeguard::ScopeGuard<&'t mut Parser, impl FnOnce(&'t mut Parser)> {
-    //     self.rec_sets.push(ts);
-    //     scopeguard::guard(self, |p| {
-    //         p.rec_sets.pop();
-    //     })
-    // }
 }
 
 #[derive(Debug)]

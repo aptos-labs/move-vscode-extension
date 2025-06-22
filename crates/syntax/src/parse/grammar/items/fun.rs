@@ -4,7 +4,7 @@ use crate::parse::grammar::paths::PATH_FIRST;
 use crate::parse::grammar::types::path_type;
 use crate::parse::grammar::utils::delimited;
 use crate::parse::grammar::{item_name_or_recover, params, paths, type_params, types};
-use crate::parse::parser::{Marker, Parser};
+use crate::parse::parser::{Marker, Parser, RecoveryToken};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::{
     ACQUIRES, EOF, FUN, IDENT, RET_TYPE, SPEC_FUN, SPEC_INLINE_FUN, VISIBILITY_MODIFIER,
@@ -212,4 +212,15 @@ pub(crate) fn on_function_modifiers_start(p: &Parser) -> bool {
         IDENT if p.at_contextual_kw("package") && !p.nth_at_ts(1, ts!(T!['('], T![<])) => true,
         _ => false,
     }
+}
+
+pub(crate) fn function_modifier_tokens() -> Vec<RecoveryToken> {
+    vec![
+        T![public].into(),
+        T![native].into(),
+        T![friend].into(),
+        T![inline].into(),
+        "entry".into(),
+        "package".into(),
+    ]
 }
