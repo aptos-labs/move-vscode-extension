@@ -1,6 +1,6 @@
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{error_block, expressions, name, name_ref, paths};
-use crate::parse::parser::{CompletedMarker, Parser};
+use crate::parse::parser::{CompletedMarker, Parser, RecoverySet};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{SyntaxKind, T};
@@ -24,31 +24,28 @@ pub(crate) fn pat(p: &mut Parser) -> Option<CompletedMarker> {
     Some(m)
 }
 
-pub(crate) fn ident_or_wildcard_pat(p: &mut Parser) -> bool {
+// pub(crate) fn ident_or_wildcard_pat(p: &mut Parser) -> bool {
+//     match p.current() {
+//         T![ident] => ident_pat(p),
+//         T!['_'] => wildcard_pat(p),
+//         _ => {
+//             return false;
+//         }
+//     };
+//     true
+// }
+
+pub(crate) fn ident_or_wildcard_pat_with_recovery(p: &mut Parser) -> bool {
     match p.current() {
         T![ident] => ident_pat(p),
         T!['_'] => wildcard_pat(p),
         _ => {
+            p.error_and_recover("expected ident", RecoverySet::new());
+            // p.error_and_recover_until_ts("expected ident or '_'", recovery_set);
             return false;
         }
     };
     true
-}
-
-pub(crate) fn ident_or_wildcard_pat_or_recover(
-    p: &mut Parser,
-    recovery_set: TokenSet,
-) -> Option<CompletedMarker> {
-    let m = match p.current() {
-        T![ident] => ident_pat(p),
-        T!['_'] => wildcard_pat(p),
-        _ => {
-            p.error_and_recover("expected ident or '_'", recovery_set.into());
-            // p.error_and_recover_until_ts("expected ident or '_'", recovery_set);
-            return None;
-        }
-    };
-    Some(m)
 }
 
 fn path_pat(p: &mut Parser) -> CompletedMarker {

@@ -7,7 +7,7 @@ use crate::parse::grammar::specs::quants::{choose_expr, exists_expr, forall_expr
 use crate::parse::grammar::specs::schemas::{
     apply_schema, global_variable, include_schema, schema_field,
 };
-use crate::parse::grammar::utils::{delimited_items_with_recover, list};
+use crate::parse::grammar::utils::{delimited_with_recovery, list};
 use crate::parse::grammar::{attributes, error_block, name_ref, patterns, type_args, types};
 use crate::parse::parser::{CompletedMarker, Marker, Parser};
 use crate::parse::token_set::TokenSet;
@@ -76,7 +76,10 @@ pub(crate) fn expr_bp(
             }
         }
 
-        expr_bp(p, None, Restrictions { prefer_stmt: false, ..r }, op_bp + 1);
+        let cm = expr_bp(p, None, Restrictions { prefer_stmt: false, ..r }, op_bp + 1);
+        if cm.is_none() {
+            p.error("expected expression");
+        }
         lhs = m.complete(p, if is_range { RANGE_EXPR } else { BIN_EXPR });
     }
     Some((lhs, BlockLike::NotBlock))
@@ -300,16 +303,58 @@ fn arg_list(p: &mut Parser) {
     assert!(p.at(T!['(']));
     let m = p.start();
     p.bump(T!['(']);
-    delimited_items_with_recover(p, T![')'], T![,], ts!(T![;], T![let], T!['}']), VALUE_ARG, |p| {
-        let m = p.start();
-        let is_expr = expr(p);
-        if is_expr {
-            m.complete(p, VALUE_ARG);
-        } else {
-            m.abandon(p);
-        }
-        is_expr
-    });
+    delimited_with_recovery(
+        p,
+        |p| {
+            let m = p.start();
+            let is_expr = expr(p);
+            if is_expr {
+                m.complete(p, VALUE_ARG);
+                true
+            } else {
+                if p.at(T![,]) {
+                    // ,,,,
+                    m.complete(p, VALUE_ARG);
+                    false
+                } else {
+                    m.abandon(p);
+                    false
+                }
+            }
+            // if !is_expr && p.at(T![,]) {
+            //     // ,,,,
+            //     m.complete(p, VALUE_ARG);
+            // }
+            // if !is_expr && p.current() == T![,] {
+            //     m.complete(p, VALUE_ARG);
+            //     return true;
+            // } else {
+            //     m.abandon(p);
+            // }
+            // false
+            // m.complete(p, VALUE_ARG);
+            // true
+            // if is_expr {
+            //     m.complete(p, VALUE_ARG);
+            // } else {
+            //     m.abandon(p);
+            // }
+            // is_expr
+        },
+        T![,],
+        "expected argument",
+        Some(T![')']),
+    );
+    // delimited_items_with_recover(p, T![')'], T![,], ts!(T![;], T![let], T!['}']), VALUE_ARG, |p| {
+    //     let m = p.start();
+    //     let is_expr = expr(p);
+    //     if is_expr {
+    //         m.complete(p, VALUE_ARG);
+    //     } else {
+    //         m.abandon(p);
+    //     }
+    //     is_expr
+    // });
     p.expect(T![')']);
     m.complete(p, VALUE_ARG_LIST);
 }
@@ -369,7 +414,7 @@ pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
         }
     }
 
-    if let Some((cm, _)) = stmt_expr(p, Some(stmt_m)) {
+    if let Some((cm, _)) = p.with_recover_token(T![;], |p| stmt_expr(p, Some(stmt_m))) {
         if !(p.at(T!['}']) || (prefer_expr && p.at(EOF))) {
             let m = cm.precede(p);
             p.expect(T![;]);

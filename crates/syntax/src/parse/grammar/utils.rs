@@ -3,35 +3,6 @@ use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::{EOF, ERROR};
 use crate::{SyntaxKind, T};
 
-pub(crate) fn delimited_items_with_recover(
-    p: &mut Parser,
-    rbrace: SyntaxKind,
-    delim: SyntaxKind,
-    end_at: TokenSet,
-    item_kind: SyntaxKind,
-    mut parse_item: impl FnMut(&mut Parser) -> bool,
-) {
-    while !p.at(EOF) && !p.at(rbrace) && !p.at_ts(end_at) {
-        if p.at(delim) {
-            // Recover if an argument is missing and only got a delimiter,
-            // e.g. `(a, , b)`.
-            let empty_item = p.start();
-            p.push_error(format!("unexpected {:?}", delim));
-            empty_item.complete(p, item_kind);
-            p.bump(delim);
-            continue;
-        }
-        let is_item = parse_item(p);
-        if !is_item {
-            // invalid item encountered, stop iterating
-            break;
-        }
-        if !p.eat(delim) {
-            break;
-        }
-    }
-}
-
 /// The `parser` passed this is required to at least consume one token if it returns `true`.
 /// If the `parser` returns false, parsing will stop.
 pub(crate) fn list(
@@ -54,23 +25,6 @@ pub(crate) fn list(
     );
     p.expect(ket);
 }
-
-// pub(crate) fn comma_separated_list(
-//     p: &mut Parser,
-//     unexpected_delim_message: &str,
-//     is_end: impl Fn(&Parser) -> bool,
-//     item_first_set: TokenSet,
-//     parser: impl FnMut(&mut Parser) -> bool,
-// ) {
-//     delimited(
-//         p,
-//         T![,],
-//         || unexpected_delim_message.into(),
-//         is_end,
-//         item_first_set,
-//         parser,
-//     )
-// }
 
 pub(crate) fn delimited(
     p: &mut Parser,

@@ -1,9 +1,7 @@
 use super::*;
 use crate::parse::grammar::paths::Mode;
 use crate::parse::grammar::types::TYPE_FIRST;
-use crate::parse::grammar::utils::{
-    delimited, delimited_items_with_recover, delimited_with_recovery, list,
-};
+use crate::parse::grammar::utils::{delimited, delimited_with_recovery, list};
 
 pub(crate) fn opt_path_type_arg_list(p: &mut Parser, mode: Mode) {
     match mode {

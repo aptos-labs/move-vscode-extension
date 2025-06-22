@@ -12,7 +12,6 @@ module 0x1::match {
                                       //^ expected FAT_ARROW
             Some { value: Option::None } =
                                       //^ expected SEMICOLON
-                                      //^ expected expression
                                        //^ unexpected token EQ
                                        //^ expected R_CURLY
                                        //^ expected R_CURLY

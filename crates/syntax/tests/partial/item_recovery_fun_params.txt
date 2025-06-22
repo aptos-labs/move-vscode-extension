@@ -35,14 +35,16 @@ SOURCE_FILE@0..90
               IDENT@58..59 "b"
           COLON@59..60 ":"
         COMMA@60..61 ","
+        PARAM@61..61
         COMMA@61..62 ","
         WHITESPACE@62..63 " "
         PARAM@63..64
           IDENT_PAT@63..64
             NAME@63..64
               IDENT@63..64 "c"
-        ERROR@64..66
-          COLON_COLON@64..66 "::"
+        PARAM@64..66
+          ERROR@64..66
+            COLON_COLON@64..66 "::"
         COMMA@66..67 ","
         WHITESPACE@67..68 " "
         PARAM@68..73
@@ -56,9 +58,10 @@ SOURCE_FILE@0..90
               PATH_SEGMENT@71..73
                 NAME_REF@71..73
                   IDENT@71..73 "u8"
-        ERROR@73..74
-          PLUS@73..74 "+"
-        IDENT@74..76 "u8"
+        PARAM@73..76
+          ERROR@73..74
+            PLUS@73..74 "+"
+          IDENT@74..76 "u8"
         COMMA@76..77 ","
         WHITESPACE@77..78 " "
         PARAM@78..83

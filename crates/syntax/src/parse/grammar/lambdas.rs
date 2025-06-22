@@ -1,5 +1,5 @@
 use crate::parse::grammar::patterns::PAT_RECOVERY_SET;
-use crate::parse::grammar::utils::{delimited_items_with_recover, delimited_with_recovery};
+use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{patterns, types};
 use crate::parse::parser::Parser;
 use crate::parse::token_set::TokenSet;
@@ -28,10 +28,11 @@ pub(crate) fn lambda_param_list(p: &mut Parser) -> bool {
 
 fn lambda_param(p: &mut Parser) -> bool {
     let m = p.start();
-    patterns::ident_or_wildcard_pat_or_recover(p, TokenSet::EMPTY);
-    // patterns::ident_or_wildcard_pat_or_recover(p, PAT_RECOVERY_SET.union(ts!(T![|])));
-    if p.at(T![:]) {
-        types::ascription(p);
+    let is_ident = patterns::ident_or_wildcard_pat_with_recovery(p);
+    if is_ident {
+        if p.at(T![:]) {
+            types::ascription(p);
+        }
     }
     m.complete(p, LAMBDA_PARAM);
     true

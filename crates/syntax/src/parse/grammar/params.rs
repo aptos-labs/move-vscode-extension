@@ -15,14 +15,19 @@ pub(crate) fn fun_param_list(p: &mut Parser) {
 
 fn param(p: &mut Parser) -> bool {
     let m = p.start();
-    let is_ident = patterns::ident_or_wildcard_pat(p);
-    if !is_ident {
-        m.abandon(p);
-        return false;
+    let is_ident = patterns::ident_or_wildcard_pat_with_recovery(p);
+    if is_ident {
+        if p.expect_with_error(T![:], "expected type annotation") {
+            p.with_recover_token(T![,], types::type_);
+        }
     }
-    if p.expect_with_error(T![:], "expected type annotation") {
-        p.with_recover_token(T![,], types::type_);
-    }
+    // if !is_ident {
+    //     m.abandon(p);
+    //     return false;
+    // }
+    // if p.expect_with_error(T![:], "expected type annotation") {
+    //     p.with_recover_token(T![,], types::type_);
+    // }
     m.complete(p, PARAM);
     true
 }

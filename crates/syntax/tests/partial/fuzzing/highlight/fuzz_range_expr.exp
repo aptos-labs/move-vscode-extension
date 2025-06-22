@@ -3,11 +3,9 @@ module 0x1::dot_dot_pattern {
         let S4  y: S3 { .. },.. } = x;
             //^ expected SEMICOLON
                //^ expected SEMICOLON
-               //^ expected expression
                //^ unexpected token COLON
                       //^^ expected identifier
                           //^ expected SEMICOLON
-                          //^ expected expression
                           //^ unexpected token COMMA
                                 //^ expected an item, got EQ
                                   //^ expected an item, got IDENT

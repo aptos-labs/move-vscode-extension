@@ -120,7 +120,7 @@ pub(crate) fn atom_expr(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> 
         T![continue] => continue_expr(p),
         T![break] => break_expr(p),
         _ => {
-            p.error("expected expression");
+            // p.error("expected expression");
             // p.error_and_bump_any("expected expression");
             // p.err_and_bump("expected expression", EXPR_RECOVERY_SET);
             return None;

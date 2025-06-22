@@ -1,7 +1,7 @@
 use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::parse::grammar::expressions::atom::block_expr;
 use crate::parse::grammar::items::{at_item_start, fun};
-use crate::parse::grammar::patterns::ident_or_wildcard_pat_or_recover;
+use crate::parse::grammar::patterns::ident_or_wildcard_pat_with_recovery;
 use crate::parse::grammar::utils::{delimited_with_recovery, list};
 use crate::parse::grammar::{name_ref, name_ref_or_bump_until, patterns, type_params, types};
 use crate::parse::parser::{Marker, Parser};
@@ -97,14 +97,21 @@ pub(crate) fn item_spec_param_list(p: &mut Parser) {
 
 fn item_spec_param(p: &mut Parser) -> bool {
     let m = p.start();
-    ident_or_wildcard_pat_or_recover(p, ITEM_SPEC_PARAM_RECOVERY_SET);
-
-    if p.at(T![:]) {
-        types::ascription(p);
-    } else {
-        p.error_and_recover("missing type for parameter", ITEM_SPEC_PARAM_RECOVERY_SET.into());
-        // p.error_and_recover_until_ts("missing type for parameter", ITEM_SPEC_PARAM_RECOVERY_SET);
+    let is_ident = ident_or_wildcard_pat_with_recovery(p);
+    if is_ident {
+        if p.at(T![:]) {
+            types::ascription(p);
+        } else {
+            p.error_and_recover("missing type for parameter", TokenSet::EMPTY.into());
+        }
     }
+
+    // if p.at(T![:]) {
+    //     types::ascription(p);
+    // } else {
+    //     p.error_and_recover("missing type for parameter", TokenSet::EMPTY.into());
+    //     // p.error_and_recover_until_ts("missing type for parameter", ITEM_SPEC_PARAM_RECOVERY_SET);
+    // }
 
     m.complete(p, ITEM_SPEC_PARAM);
     true

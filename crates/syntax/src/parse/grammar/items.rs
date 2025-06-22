@@ -116,7 +116,10 @@ fn const_(p: &mut Parser, m: Marker) {
             }
         });
         if p.expect(T![=]) {
-            expr(p);
+            let is_expr = expr(p);
+            if !is_expr {
+                p.error("expected expression");
+            }
         }
     });
 

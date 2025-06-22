@@ -3,10 +3,10 @@ module 0x1::item_recovery_fun_params {
             //^ expected type annotation
                //^ expected type annotation
                    //^ expected type
-                    //^ expected value parameter
+                    //^ expected ident
                        //^^ expected type annotation
                        //^^ expected COMMA
-                       //^^ expected value parameter
+                       //^^ expected ident
                                 //^ expected COMMA
-                                //^ expected value parameter
+                                //^ expected ident
 }
