@@ -15,7 +15,7 @@ SOURCE_FILE@0..339
       BLOCK_EXPR@27..336
         L_CURLY@27..28 "{"
         WHITESPACE@28..37 "\n        "
-        APPLY_SCHEMA@37..57
+        APPLY_SCHEMA@37..58
           APPLY_KW@37..42 "apply"
           WHITESPACE@42..43 " "
           SCHEMA_LIT@43..49
@@ -38,9 +38,9 @@ SOURCE_FILE@0..339
             WHITESPACE@52..53 " "
             WILDCARD_PATTERN@53..57
               WILDCARD_IDENT@53..57 "*foo"
-        SEMICOLON@57..58 ";"
+          SEMICOLON@57..58 ";"
         WHITESPACE@58..67 "\n        "
-        APPLY_SCHEMA@67..106
+        APPLY_SCHEMA@67..107
           APPLY_KW@67..72 "apply"
           WHITESPACE@72..73 " "
           SCHEMA_LIT@73..83
@@ -60,9 +60,9 @@ SOURCE_FILE@0..339
             WHITESPACE@95..96 " "
             WILDCARD_PATTERN@96..106
               WILDCARD_IDENT@96..106 "initialize"
-        SEMICOLON@106..107 ";"
+          SEMICOLON@106..107 ";"
         WHITESPACE@107..116 "\n        "
-        APPLY_SCHEMA@116..158
+        APPLY_SCHEMA@116..159
           APPLY_KW@116..121 "apply"
           WHITESPACE@121..122 " "
           SCHEMA_LIT@122..143
@@ -104,9 +104,9 @@ SOURCE_FILE@0..339
                   NAME@156..157
                     IDENT@156..157 "X"
                 R_ANGLE@157..158 ">"
-        SEMICOLON@158..159 ";"
+          SEMICOLON@158..159 ";"
         WHITESPACE@159..168 "\n        "
-        APPLY_SCHEMA@168..239
+        APPLY_SCHEMA@168..240
           APPLY_KW@168..173 "apply"
           WHITESPACE@173..174 " "
           SCHEMA_LIT@174..223
@@ -136,9 +136,9 @@ SOURCE_FILE@0..339
             WHITESPACE@226..227 " "
             WILDCARD_PATTERN@227..239
               WILDCARD_IDENT@227..239 "make_account"
-        SEMICOLON@239..240 ";"
+          SEMICOLON@239..240 ";"
         WHITESPACE@240..249 "\n        "
-        APPLY_SCHEMA@249..329
+        APPLY_SCHEMA@249..330
           APPLY_KW@249..254 "apply"
           WHITESPACE@254..255 " "
           SCHEMA_LIT@255..276
@@ -206,7 +206,7 @@ SOURCE_FILE@0..339
                   NAME@327..328
                     IDENT@327..328 "X"
                 R_ANGLE@328..329 ">"
-        SEMICOLON@329..330 ";"
+          SEMICOLON@329..330 ";"
         WHITESPACE@330..335 "\n    "
         R_CURLY@335..336 "}"
     WHITESPACE@336..337 "\n"

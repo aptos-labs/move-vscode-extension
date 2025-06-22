@@ -153,18 +153,11 @@ fn vector_lit_expr(p: &mut Parser) -> CompletedMarker {
     p.bump(IDENT);
     type_args::opt_path_type_arg_list(p, Mode::Type);
     if p.at(T!['[']) {
-        list(
-            p,
-            T!['['],
-            T![']'],
-            T![,],
-            || "expected comma".into(),
-            EXPR_FIRST,
-            |p| expr(p),
-        );
+        p.bump(T!['[']);
+        delimited_with_recovery(p, expr, T![,], "expected expression", Some(T![']']));
+        p.expect(T![']']);
     } else {
         p.error_and_recover("expected '['", STMT_FIRST.into());
-        // p.error_and_recover_until_ts("expected '['", STMT_FIRST);
     }
     m.complete(p, VECTOR_LIT_EXPR)
 }

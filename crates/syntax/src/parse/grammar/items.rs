@@ -104,8 +104,8 @@ fn const_(p: &mut Parser, m: Marker) {
         return;
     }
 
-    p.with_recover_token(T![;], |p| {
-        p.with_recover_token(T![=], |p| {
+    p.with_recovery_token(T![;], |p| {
+        p.with_recovery_token(T![=], |p| {
             if p.at(T![:]) {
                 // p.with_recover_ts(ts!(T![;]), types::ascription);
                 types::ascription(p);

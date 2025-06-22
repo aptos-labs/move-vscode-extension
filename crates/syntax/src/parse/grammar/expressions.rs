@@ -7,7 +7,7 @@ use crate::parse::grammar::specs::quants::{choose_expr, exists_expr, forall_expr
 use crate::parse::grammar::specs::schemas::{
     apply_schema, global_variable, include_schema, schema_field,
 };
-use crate::parse::grammar::utils::{delimited_with_recovery, list};
+use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{attributes, error_block, name_ref, patterns, type_args, types};
 use crate::parse::parser::{CompletedMarker, Marker, Parser};
 use crate::parse::token_set::TokenSet;
@@ -398,23 +398,30 @@ pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
             stmt_m.abandon(p);
             return;
         }
-        // enable stmt level items unique to specs
-        let spec_only_stmts = vec![
-            schema_field,
-            global_variable,
-            pragma_stmt,
-            update_stmt,
-            include_schema,
-            apply_schema,
-            spec_predicate,
-        ];
-        if spec_only_stmts.iter().any(|spec_stmt| spec_stmt(p)) {
+
+        let is_spec_stmt = p.with_recovery_token(T![;], |p| {
+            // enable stmt level items unique to specs
+            let spec_only_stmts = vec![
+                schema_field,
+                global_variable,
+                pragma_stmt,
+                update_stmt,
+                include_schema,
+                apply_schema,
+                spec_predicate,
+            ];
+            if spec_only_stmts.iter().any(|spec_stmt| spec_stmt(p)) {
+                return true;
+            }
+            false
+        });
+        if is_spec_stmt {
             stmt_m.abandon(p);
             return;
         }
     }
 
-    if let Some((cm, _)) = p.with_recover_token(T![;], |p| stmt_expr(p, Some(stmt_m))) {
+    if let Some((cm, _)) = p.with_recovery_token(T![;], |p| stmt_expr(p, Some(stmt_m))) {
         if !(p.at(T!['}']) || (prefer_expr && p.at(EOF))) {
             let m = cm.precede(p);
             p.expect(T![;]);

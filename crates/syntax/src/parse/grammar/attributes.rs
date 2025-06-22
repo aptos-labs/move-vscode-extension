@@ -1,5 +1,5 @@
 use crate::parse::grammar::paths::PATH_FIRST;
-use crate::parse::grammar::utils::list;
+use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{expressions, paths};
 use crate::parse::parser::Parser;
 use crate::parse::token_set::TokenSet;
@@ -28,13 +28,6 @@ fn attr(p: &mut Parser, inner: bool) {
         p.error("expected `[`");
     }
 
-    // if p.eat(T!['[']) {
-    //     attr_item_list(p, );
-    //     // if !p.eat(T![']']) {
-    //     //     p.error("expected `]`");
-    //     // }
-    // } else {
-    // }
     attr.complete(p, ATTR);
 }
 
@@ -58,15 +51,9 @@ pub(super) fn attr_item(p: &mut Parser) -> bool {
 }
 
 pub(crate) fn attr_item_list(p: &mut Parser, lparen: SyntaxKind, rparen: SyntaxKind) {
-    list(
-        p,
-        lparen,
-        rparen,
-        T![,],
-        || "expected attribute item".into(),
-        PATH_FIRST,
-        |p| attr_item(p),
-    );
+    p.bump(lparen);
+    delimited_with_recovery(p, attr_item, T![,], "expected attribute item", Some(rparen));
+    p.expect(rparen);
 }
 
 pub(super) const ATTRIBUTE_FIRST: TokenSet = TokenSet::new(&[T![#]]);

@@ -1,4 +1,4 @@
-use crate::parse::grammar::utils::{delimited, delimited_fn};
+use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{paths, type_params};
 use crate::parse::token_set::TokenSet;
 use crate::parse::Parser;
@@ -28,12 +28,7 @@ pub(super) fn ascription(p: &mut Parser) {
 }
 
 pub(crate) fn type_(p: &mut Parser) -> bool {
-    // let recovery_fn = p.outer_recovery_fn();
     type_or_recover_until(p, |p| p.outer_recovery_set().contains_current(p))
-    // type_or_recover_until(p, |p| p.at_outer_recover_t(p.current()))
-    // type_or_recover_until(p, |p| p.at_ts(p.outer_recovery_set()))
-    // type_or(p, |p| p.bump_error("expected type"))
-    // type_or_recover_until(p, |p| p.at_ts(TokenSet(!0)))
 }
 
 pub(crate) fn type_or(p: &mut Parser, on_invalid: impl Fn(&mut Parser)) -> bool {
@@ -96,12 +91,8 @@ fn lambda_type(p: &mut Parser) {
         m.abandon_with_rollback(p);
         return;
     }
-    delimited(
+    delimited_with_recovery(
         p,
-        T![,],
-        || "unexpected type".into(),
-        |p| p.at(T![|]),
-        TYPE_FIRST_NO_LAMBDA,
         |p| {
             let m = p.start();
             let is_type = type_or_recover_until(p, |p| p.at_ts(ts!(T![,], T![|])));
@@ -112,6 +103,9 @@ fn lambda_type(p: &mut Parser) {
             }
             true
         },
+        T![,],
+        "expected type",
+        Some(T![|]),
     );
     if !p.eat(T![|]) {
         m.abandon_with_rollback(p);

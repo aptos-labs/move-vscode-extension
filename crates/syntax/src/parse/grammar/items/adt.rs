@@ -1,7 +1,6 @@
 use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::parse::grammar::items::{at_block_start, at_item_start, item_start_rset, item_start_tokens};
-// use crate::parse::grammar::types::type_or;
-use crate::parse::grammar::utils::{delimited_with_recovery, list};
+use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{
     abilities_list, ability, attributes, error_block, item_name_or_recover, name, name_or_recover,
     type_params, types,
@@ -20,7 +19,7 @@ pub(super) fn struct_(p: &mut Parser, m: Marker) {
     p.with_recover_token_set(T!['{'] | T!['('], opt_abilities_list);
     match p.current() {
         T!['{'] => {
-            p.with_recover_token(T!['}'], |p| named_field_list(p));
+            p.with_recovery_token(T!['}'], |p| named_field_list(p));
             opt_abilities_list_with_semicolon(p);
         }
         T![;] => {
@@ -143,7 +142,7 @@ fn named_field(p: &mut Parser) {
         name(p);
         let at_colon = p.eat(T![:]);
         if at_colon {
-            p.with_recover_token(T![,], types::type_);
+            p.with_recovery_token(T![,], types::type_);
         } else {
             p.error_and_recover(
                 "expected type annotation",
@@ -167,16 +166,11 @@ const TUPLE_FIELD_FIRST: TokenSet =
 fn tuple_field_list(p: &mut Parser) {
     assert!(p.at(T!['(']));
     let m = p.start();
-    list(
+    p.bump(T!['(']);
+    delimited_with_recovery(
         p,
-        T!['('],
-        T![')'],
-        T![,],
-        || "expected tuple field".into(),
-        TUPLE_FIELD_FIRST,
         |p| {
             let em = p.start();
-            // attributes::outer_attrs(p);
             if !p.at_ts(types::TYPE_FIRST) {
                 p.error("expected a type");
                 em.abandon(p);
@@ -186,6 +180,10 @@ fn tuple_field_list(p: &mut Parser) {
             em.complete(p, TUPLE_FIELD);
             true
         },
+        T![,],
+        "expected tuple field",
+        Some(T![')']),
     );
+    p.expect(T![')']);
     m.complete(p, TUPLE_FIELD_LIST);
 }

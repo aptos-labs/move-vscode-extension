@@ -5,7 +5,7 @@ use crate::T;
 pub(crate) fn fun_param_list(p: &mut Parser) {
     let m = p.start();
     p.bump(T!['(']);
-    p.with_recover_token(T![')'], |p| {
+    p.with_recovery_token(T![')'], |p| {
         delimited_with_recovery(p, param, T![,], "expected value parameter", Some(T![')']))
     });
     // delimited_with_recovery(p, T![')'], param, T![,], "expected value parameter");
@@ -18,7 +18,7 @@ fn param(p: &mut Parser) -> bool {
     let is_ident = patterns::ident_or_wildcard_pat_with_recovery(p);
     if is_ident {
         if p.expect_with_error(T![:], "expected type annotation") {
-            p.with_recover_token(T![,], types::type_);
+            p.with_recovery_token(T![,], types::type_);
         }
     }
     // if !is_ident {

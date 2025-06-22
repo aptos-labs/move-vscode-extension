@@ -1,7 +1,7 @@
 use super::*;
 use crate::parse::grammar::paths::Mode;
 use crate::parse::grammar::types::TYPE_FIRST;
-use crate::parse::grammar::utils::{delimited, delimited_with_recovery, list};
+use crate::parse::grammar::utils::delimited_with_recovery;
 
 pub(crate) fn opt_path_type_arg_list(p: &mut Parser, mode: Mode) {
     match mode {
@@ -20,7 +20,7 @@ pub(crate) fn opt_type_arg_list_for_type(p: &mut Parser) {
         return;
     }
     p.bump(T![<]);
-    p.with_recover_token(T![>], |p| {
+    p.with_recovery_token(T![>], |p| {
         delimited_with_recovery(
             p,
             |p| type_arg(p, true),

@@ -2,7 +2,7 @@ use crate::parse::grammar::expressions::atom::block_expr;
 use crate::parse::grammar::items::{at_item_start, item_start_rset};
 use crate::parse::grammar::paths::PATH_FIRST;
 use crate::parse::grammar::types::path_type;
-use crate::parse::grammar::utils::delimited;
+use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{item_name_or_recover, params, paths, type_params, types};
 use crate::parse::parser::{Marker, Parser, RecoverySet, RecoveryToken};
 use crate::parse::token_set::TokenSet;
@@ -133,25 +133,19 @@ fn opt_inner_public_modifier(p: &mut Parser) {
 fn acquires(p: &mut Parser) {
     let m = p.start();
     p.bump(T![acquires]);
-    if !paths::is_path_start(p) {
-        p.error_and_recover_until("expected type", |p| {
-            at_item_start(p) || p.at(T!['{']) || p.at(T![;])
-        });
-    }
-    delimited(
+    delimited_with_recovery(
         p,
-        T![,],
-        || "unexpected ','".into(),
-        |p| p.at(T!['{']) || p.at(T![;]),
-        PATH_FIRST,
         |p| {
-            if paths::is_path_start(p) {
-                path_type(p);
-            } else {
-                p.error("expected type");
+            let is_path = paths::is_path_start(p);
+            if !is_path {
+                return false;
             }
+            path_type(p);
             true
         },
+        T![,],
+        "expected type",
+        None,
     );
     m.complete(p, ACQUIRES);
 }
@@ -170,15 +164,18 @@ fn fun_signature(p: &mut Parser, is_spec: bool, allow_acquires: bool) {
             at_item_start(p) || p.at_ts(ts!(T![;], T!['{']))
         });
     }
-    opt_ret_type(p);
 
-    if p.at(T![acquires]) {
-        if allow_acquires {
-            acquires(p);
-        } else {
-            p.error("'acquires' not allowed");
+    p.with_recover_token_set(T!['{'] | T![;], |p| {
+        // opt_ret_type(p);
+        p.with_recovery_token(T![acquires], opt_ret_type);
+        if p.at(T![acquires]) {
+            if allow_acquires {
+                acquires(p);
+            } else {
+                p.error("'acquires' not allowed");
+            }
         }
-    }
+    });
 
     if p.at(T![;]) {
         p.bump(T![;]);

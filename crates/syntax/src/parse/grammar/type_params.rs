@@ -1,5 +1,5 @@
 use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
-use crate::parse::grammar::utils::{delimited_with_recovery, list};
+use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{ability, name, name_2, name_or_recover, patterns, types};
 use crate::parse::parser::Parser;
 use crate::parse::token_set::TokenSet;
@@ -16,7 +16,7 @@ fn type_param_list(p: &mut Parser) {
     let m = p.start();
     p.bump(T![<]);
 
-    p.with_recover_token(T![>], |p| {
+    p.with_recovery_token(T![>], |p| {
         delimited_with_recovery(p, type_param, T![,], "expected type parameter", Some(T![>]))
     });
     // delimited_with_recovery(p, T![>], type_param, T![,], "expected type parameter");

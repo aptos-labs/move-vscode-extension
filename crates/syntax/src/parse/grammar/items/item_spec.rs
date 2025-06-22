@@ -1,9 +1,9 @@
 use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::parse::grammar::expressions::atom::block_expr;
-use crate::parse::grammar::items::{at_item_start, fun};
+use crate::parse::grammar::items::{at_item_start, fun, item_start_rset};
 use crate::parse::grammar::patterns::ident_or_wildcard_pat_with_recovery;
-use crate::parse::grammar::utils::{delimited_with_recovery, list};
-use crate::parse::grammar::{name_ref, name_ref_or_bump_until, patterns, type_params, types};
+use crate::parse::grammar::utils::delimited_with_recovery;
+use crate::parse::grammar::{name_ref, name_ref_or_recover, patterns, type_params, types};
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
@@ -13,37 +13,42 @@ pub(crate) fn item_spec(p: &mut Parser, m: Marker) {
     if p.at(T![module]) {
         p.bump(T![module]);
     } else {
-        let ref_m = p.start();
-        let res = name_ref_or_bump_until(p, |p| at_item_start(p) || p.at(T!['{']));
-        if res {
-            ref_m.complete(p, ITEM_SPEC_REF);
-        } else {
-            ref_m.abandon(p);
-        }
-        if p.at(T![<]) {
-            item_spec_type_param_list(p);
-        }
-        if p.at(T!['(']) {
-            item_spec_param_list(p);
-            fun::opt_ret_type(p);
-        }
+        p.with_recovery_set(item_start_rset().with_token_set(T!['{']), item_spec_signature);
     }
     block_expr(p, true);
     m.complete(p, ITEM_SPEC);
 }
 
+fn item_spec_signature(p: &mut Parser) {
+    let ref_m = p.start();
+    let res = name_ref_or_recover(p);
+    // let res = name_ref_or_bump_until(p, |p| at_item_start(p) || p.at(T!['{']));
+    if res {
+        ref_m.complete(p, ITEM_SPEC_REF);
+    } else {
+        ref_m.abandon(p);
+    }
+    if p.at(T![<]) {
+        item_spec_type_param_list(p);
+    }
+    if p.at(T!['(']) {
+        item_spec_param_list(p);
+        p.with_recovery_token(T!['{'], fun::opt_ret_type);
+    }
+}
+
 fn item_spec_type_param_list(p: &mut Parser) {
     assert!(p.at(T![<]));
     let m = p.start();
-    list(
+    p.bump(T![<]);
+    delimited_with_recovery(
         p,
-        T![<],
-        T![>],
+        item_spec_type_param,
         T![,],
-        || "expected type parameter".into(),
-        ts!(IDENT).union(ATTRIBUTE_FIRST),
-        |p| item_spec_type_param(p),
+        "expected type parameter",
+        Some(T![>]),
     );
+    p.expect(T![>]);
     m.complete(p, ITEM_SPEC_TYPE_PARAM_LIST);
 }
 

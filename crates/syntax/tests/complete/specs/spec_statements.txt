@@ -230,7 +230,7 @@ SOURCE_FILE@0..910
               INT_NUMBER@386..387 "1"
           SEMICOLON@387..388 ";"
         WHITESPACE@388..398 "\n\n        "
-        APPLY_SCHEMA@398..426
+        APPLY_SCHEMA@398..427
           APPLY_KW@398..403 "apply"
           WHITESPACE@403..404 " "
           SCHEMA_LIT@404..419
@@ -244,7 +244,7 @@ SOURCE_FILE@0..910
             WHITESPACE@422..423 " "
             WILDCARD_PATTERN@423..426
               WILDCARD_IDENT@423..426 "bar"
-        SEMICOLON@426..427 ";"
+          SEMICOLON@426..427 ";"
         WHITESPACE@427..436 "\n        "
         ABORTS_IF_STMT@436..496
           ABORTS_IF_KW@436..445 "aborts_if"

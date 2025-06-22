@@ -107,7 +107,7 @@ fn struct_pat_field_list(p: &mut Parser) {
     let m = p.start();
     p.bump(T!['{']);
 
-    p.with_recover_token(T!['}'], |p| {
+    p.with_recovery_token(T!['}'], |p| {
         delimited_with_recovery(
             p,
             |p| {

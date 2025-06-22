@@ -1,6 +1,6 @@
 use crate::parse::grammar::expressions::atom::EXPR_FIRST;
 use crate::parse::grammar::expressions::{expr, opt_initializer_expr, Restrictions};
-use crate::parse::grammar::utils::{delimited, list};
+use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{expressions, type_params};
 use crate::parse::parser::Parser;
 use crate::parse::token_set::TokenSet;
@@ -110,21 +110,7 @@ pub(crate) fn aborts_with_predicate(p: &mut Parser) -> bool {
     let m = p.start();
     p.bump_remap(T![aborts_with]);
     opt_predicate_property_list(p);
-    delimited(
-        p,
-        T![,],
-        || "expected expression".into(),
-        |p| p.at(T![;]) || p.at(T!['}']),
-        EXPR_FIRST,
-        expr,
-    );
-    // comma_separated_list(
-    //     p,
-    //     "expected expression",
-    //     |p| p.at(T![;]) || p.at(T!['}']),
-    //     EXPR_FIRST,
-    //     expr,
-    // );
+    delimited_with_recovery(p, expr, T![,], "expected expression", None);
     m.complete(p, ABORTS_WITH_STMT);
     true
 }
@@ -169,12 +155,8 @@ pub(crate) fn pragma_stmt(p: &mut Parser) -> bool {
     }
     let m = p.start();
     p.bump_remap(T![pragma]);
-    delimited(
+    delimited_with_recovery(
         p,
-        T![,],
-        || "expected attribute".into(),
-        |p| p.at(T![;]) || p.at(T!['}']),
-        TokenSet::new(&[IDENT, T![friend]]),
         |p| {
             let m = p.start();
             match p.current() {
@@ -192,6 +174,9 @@ pub(crate) fn pragma_stmt(p: &mut Parser) -> bool {
             m.complete(p, PRAGMA_ATTR_ITEM);
             true
         },
+        T![,],
+        "expected attribute",
+        None,
     );
     p.expect(T![;]);
     m.complete(p, PRAGMA_STMT);
@@ -203,13 +188,9 @@ pub(crate) fn opt_predicate_property_list(p: &mut Parser) -> bool {
         return false;
     }
     let m = p.start();
-    list(
+    p.bump(T!['[']);
+    delimited_with_recovery(
         p,
-        T!['['],
-        T![']'],
-        T![,],
-        || "expected identifier".into(),
-        TokenSet::new(&[IDENT]),
         |p| {
             let m = p.start();
             let found = p.eat(IDENT);
@@ -220,7 +201,29 @@ pub(crate) fn opt_predicate_property_list(p: &mut Parser) -> bool {
             m.complete(p, SPEC_PREDICATE_PROPERTY);
             found
         },
+        T![,],
+        "expected identifier",
+        Some(T![']']),
     );
+    // list(
+    //     p,
+    //     T!['['],
+    //     T![']'],
+    //     T![,],
+    //     || "expected identifier".into(),
+    //     TokenSet::new(&[IDENT]),
+    //     |p| {
+    //         let m = p.start();
+    //         let found = p.eat(IDENT);
+    //         if p.at(T![=]) {
+    //             p.bump(T![=]);
+    //             expressions::atom::literal(p);
+    //         }
+    //         m.complete(p, SPEC_PREDICATE_PROPERTY);
+    //         found
+    //     },
+    // );
+    p.expect(T![']']);
     m.complete(p, SPEC_PREDICATE_PROPERTY_LIST);
     true
 }

@@ -666,7 +666,7 @@ impl Parser {
         res
     }
 
-    pub(crate) fn with_recover_token<'t, T>(
+    pub(crate) fn with_recovery_token<'t, T>(
         &mut self,
         token: impl Into<RecoveryToken>,
         f: impl FnOnce(&mut Parser) -> T,

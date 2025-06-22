@@ -167,20 +167,15 @@ fn name(p: &mut Parser) -> bool {
     name_or_recover(p, |p| p.at_ts(TokenSet::EMPTY))
 }
 
-// fn name_no_recover(p: &mut Parser) -> bool {
-//     name_or_recover(p, |p| p.at_ts(TokenSet(!0)))
-// }
-
-fn name_ref_or_bump_until(p: &mut Parser, stop: impl Fn(&Parser) -> bool) -> bool {
-    if p.at(IDENT) {
-        let m = p.start();
-        p.bump(IDENT);
-        m.complete(p, NAME_REF);
-        true
-    } else {
-        p.error_and_recover_until("expected identifier", stop);
-        false
+fn name_ref_or_recover(p: &mut Parser) -> bool {
+    if !p.at(IDENT) {
+        p.error_and_recover("expected identifier", TokenSet::EMPTY.into());
+        return false;
     }
+    let m = p.start();
+    p.bump(IDENT);
+    m.complete(p, NAME_REF);
+    true
 }
 
 fn name_ref(p: &mut Parser) {
