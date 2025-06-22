@@ -25,7 +25,8 @@ use std::ops::Add;
 pub struct Parser {
     token_source: TextTokenSource,
     events: Vec<Event>,
-    recovery_tokens: Vec<RecoveryToken>,
+    // recovery_tokens: Vec<RecoveryToken>,
+    recovery_set_stack: Vec<RecoverySet>,
 }
 
 #[derive(Debug, Clone)]
@@ -112,7 +113,8 @@ impl Parser {
         Parser {
             token_source,
             events: vec![],
-            recovery_tokens: vec![],
+            // recovery_tokens: vec![],
+            recovery_set_stack: vec![],
         }
     }
 
@@ -565,11 +567,10 @@ impl Marker {
 // recovery sets
 impl Parser {
     pub fn outer_recovery_set(&self) -> RecoverySet {
-        let mut recovery_set = RecoverySet::new();
-        for recovery_token in self.recovery_tokens.clone() {
-            recovery_set = recovery_set.with_recovery_token(recovery_token);
-        }
-        recovery_set
+        self.recovery_set_stack
+            .last()
+            .cloned()
+            .unwrap_or(RecoverySet::new())
     }
 
     pub(crate) fn with_recover_token_kinds<T>(
@@ -585,12 +586,31 @@ impl Parser {
         tokens: Vec<RecoveryToken>,
         f: impl FnOnce(&mut Parser) -> T,
     ) -> T {
-        let tokens_len = tokens.len();
-        self.recovery_tokens.extend(tokens);
-        let res = f(self);
-        for _ in 0..tokens_len {
-            self.recovery_tokens.pop();
+        let mut new_rec_set = self.outer_recovery_set();
+        for token in tokens.clone() {
+            new_rec_set = new_rec_set.with_recovery_token(token);
         }
+        self.recovery_set_stack.push(new_rec_set);
+
+        // if let Some(recovery_set) = self.recovery_set_stack.last() {
+        //     let mut new_rec_set = recovery_set.clone();
+        //     for token in tokens.clone() {
+        //         new_rec_set = new_rec_set.with_recovery_token(token);
+        //     }
+        //     self.recovery_set_stack.push(new_rec_set);
+        // } else {
+        //     self.recovery_set_stack.push(new_rec_set);
+        // }
+        // let tokens_len = tokens.len();
+        // self.recovery_tokens.extend(tokens);
+
+        let res = f(self);
+
+        // for _ in 0..tokens_len {
+        //     self.recovery_tokens.pop();
+        // }
+        self.recovery_set_stack.pop();
+
         res
     }
 
@@ -599,10 +619,11 @@ impl Parser {
         token: impl Into<RecoveryToken>,
         f: impl FnOnce(&mut Parser) -> T,
     ) -> T {
-        self.recovery_tokens.push(token.into());
-        let res = f(self);
-        self.recovery_tokens.pop();
-        res
+        self.with_recover_tokens(vec![token.into()], f)
+        // self.recovery_tokens.push(token.into());
+        // let res = f(self);
+        // self.recovery_tokens.pop();
+        // res
     }
 }
 
