@@ -90,8 +90,6 @@ pub(crate) fn delimited(
     );
 }
 
-// type ParserAt = dyn Fn(&Parser) -> bool;
-
 pub(crate) fn delimited_fn(
     p: &mut Parser,
     delim: SyntaxKind,
@@ -130,32 +128,12 @@ pub(crate) fn delimited_fn(
     }
 }
 
-// pub(crate) fn delimited_with_recovery(
-//     p: &mut Parser,
-//     list_end: SyntaxKind,
-//     // at_element_first: TokenSet,
-//     element: impl Fn(&mut Parser) -> bool,
-//     delimiter: SyntaxKind,
-//     expected_element: &str,
-//     element_recovery_set: TokenSet,
-// ) {
-//     delimited_with_recovery_fn(
-//         p,
-//         list_end,
-//         // |p| p.at_ts(at_element_first),
-//         element,
-//         delimiter,
-//         expected_element,
-//         element_recovery_set,
-//     )
-// }
-
 pub(crate) fn delimited_with_recovery(
     p: &mut Parser,
-    list_end: SyntaxKind,
     element: impl Fn(&mut Parser) -> bool,
     delimiter: SyntaxKind,
     expected_element_error: &str,
+    allow_empty: bool,
 ) {
     let mut iteration = 0;
 
@@ -166,26 +144,28 @@ pub(crate) fn delimited_with_recovery(
         .without_recovery_token(delimiter.into());
     let outer_recovery_on_delimiter = outer_recovery_set.contains(delimiter);
 
-    let at_list_end = |p: &Parser| p.at(list_end);
-    while !p.at(EOF) && !at_list_end(p) {
+    let mut is_empty = true;
+    while !p.at(EOF) {
         #[cfg(debug_assertions)]
         let _p = stdx::panic_context::enter(format!("p.text_context() = {:?}", p.current_context()));
 
         // check whether we can parse element, if not, then recover till the delimiter / end of the list
-        let at_element = p.with_recover_token_kinds(vec![delimiter, list_end], |p| element(p));
+        let at_element = p.with_recover_token(delimiter, |p| element(p));
+        if at_element {
+            is_empty = false;
+        }
         if !at_element {
             if outer_recovery_on_delimiter {
                 // should stop here
                 break;
             }
-            if delimiter == T![,] && (at_list_end(p) || modified_recovery_set.contains_current(p)) {
-                // trailing comma
+            if allow_empty && is_empty && modified_recovery_set.contains_current(p) {
                 break;
             }
             p.error_and_recover_until(expected_element_error, |p| {
                 outer_recovery_set
                     .clone()
-                    .with_recovery_set(delimiter | list_end)
+                    .with_recovery_set(delimiter)
                     .contains_current(p)
             });
         }
@@ -193,8 +173,12 @@ pub(crate) fn delimited_with_recovery(
         if modified_recovery_set.contains_current(p) {
             break;
         }
-        if !at_list_end(p) {
-            p.expect(delimiter);
+        let is_delim = p.expect(delimiter);
+        if is_delim {
+            if delimiter == T![,] && modified_recovery_set.contains_current(p) {
+                // trailing comma
+                break;
+            }
         }
 
         iteration += 1;

@@ -73,24 +73,7 @@ fn abilities_list(p: &mut Parser, extra_set: TokenSet) {
     assert!(p.at_contextual_kw_ident("has"));
     let m = p.start();
     p.bump_remap(T![has]);
-    // let mut is_empty = true;
-    delimited_with_recovery(p, EOF, ability, T![,], "expected ability");
-    // while !p.at(EOF) && !at_next_item_start(p, extra_set) {
-    //     is_empty = false;
-    //     if p.at(IDENT) {
-    //         let m = p.start();
-    //         p.bump(IDENT);
-    //         m.complete(p, ABILITY);
-    //     } else {
-    //         p.error_and_recover_until("expected ability", |p| at_next_item_start(p, extra_set));
-    //     }
-    //     if !at_next_item_start(p, extra_set) {
-    //         p.expect(T![,]);
-    //     }
-    // }
-    // if is_empty {
-    //     p.error("expected ability");
-    // }
+    delimited_with_recovery(p, ability, T![,], "expected ability", false);
     m.complete(p, ABILITY_LIST);
 }
 

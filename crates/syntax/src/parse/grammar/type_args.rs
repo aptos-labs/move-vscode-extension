@@ -22,14 +22,17 @@ pub(crate) fn opt_type_arg_list_for_type(p: &mut Parser) {
         return;
     }
     p.bump(T![<]);
-    delimited_with_recovery(
-        p,
-        T![>],
-        // TYPE_ARG_FIRST + TYPE_FIRST,
-        |p| type_arg(p, true),
-        T![,],
-        "expected type argument",
-    );
+    p.with_recover_token(T![>], |p| {
+        delimited_with_recovery(p, |p| type_arg(p, true), T![,], "expected type argument", true)
+    });
+    // delimited_with_recovery(
+    //     p,
+    //     T![>],
+    //     // TYPE_ARG_FIRST + TYPE_FIRST,
+    //     |p| type_arg(p, true),
+    //     T![,],
+    //     "expected type argument",
+    // );
     p.expect(T![>]);
     m.complete(p, TYPE_ARG_LIST);
 }
