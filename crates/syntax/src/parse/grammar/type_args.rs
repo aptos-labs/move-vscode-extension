@@ -29,7 +29,6 @@ pub(crate) fn opt_type_arg_list_for_type(p: &mut Parser) {
         |p| type_arg(p, true),
         T![,],
         "expected type argument",
-        TokenSet(!0), // no recovery
     );
     p.expect(T![>]);
     m.complete(p, TYPE_ARG_LIST);

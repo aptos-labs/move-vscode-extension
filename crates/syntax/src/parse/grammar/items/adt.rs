@@ -74,7 +74,7 @@ fn abilities_list(p: &mut Parser, extra_set: TokenSet) {
     let m = p.start();
     p.bump_remap(T![has]);
     // let mut is_empty = true;
-    delimited_with_recovery(p, EOF, ability, T![,], "expected ability", TokenSet::EMPTY);
+    delimited_with_recovery(p, EOF, ability, T![,], "expected ability");
     // while !p.at(EOF) && !at_next_item_start(p, extra_set) {
     //     is_empty = false;
     //     if p.at(IDENT) {

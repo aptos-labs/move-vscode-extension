@@ -1,8 +1,7 @@
 use crate::parse::parser::Parser;
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::{EOF, ERROR};
-use crate::{ts, SyntaxKind, T};
-use stdx::print_backtrace;
+use crate::{SyntaxKind, T};
 
 pub(crate) fn delimited_items_with_recover(
     p: &mut Parser,
@@ -157,7 +156,6 @@ pub(crate) fn delimited_with_recovery(
     element: impl Fn(&mut Parser) -> bool,
     delimiter: SyntaxKind,
     expected_element_error: &str,
-    recover_ts: TokenSet,
 ) {
     let mut iteration = 0;
 
