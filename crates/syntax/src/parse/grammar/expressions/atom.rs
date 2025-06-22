@@ -2,6 +2,7 @@ use super::*;
 use crate::parse::grammar::paths::Mode;
 use crate::parse::grammar::specs::{opt_spec_block_expr, spec_block_expr};
 use crate::parse::grammar::{any_address, paths};
+use crate::parse::parser::RecoverySet;
 use crate::parse::token_set::TokenSet;
 use crate::ts;
 
@@ -162,7 +163,8 @@ fn vector_lit_expr(p: &mut Parser) -> CompletedMarker {
             |p| expr(p),
         );
     } else {
-        p.error_and_recover_until_ts("expected '['", STMT_FIRST);
+        p.error_and_recover("expected '['", STMT_FIRST.into());
+        // p.error_and_recover_until_ts("expected '['", STMT_FIRST);
     }
     m.complete(p, VECTOR_LIT_EXPR)
 }
@@ -295,7 +297,8 @@ fn for_condition(p: &mut Parser) {
         p.bump_remap(T![in]);
         expr(p);
     } else {
-        p.error_and_recover_until_ts("expected 'in'", EXPR_FIRST.union(ts!(T![')'])));
+        p.error_and_recover("expected 'in'", EXPR_FIRST.union(ts!(T![')'])).into());
+        // p.error_and_recover_until_ts("expected 'in'", EXPR_FIRST.union(ts!(T![')'])));
     }
     opt_spec_block_expr(p);
     p.expect(T![')']);

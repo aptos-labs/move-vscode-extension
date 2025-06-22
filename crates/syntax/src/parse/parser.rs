@@ -40,6 +40,12 @@ pub struct RecoverySet {
     keywords: HashSet<String>,
 }
 
+impl From<TokenSet> for RecoverySet {
+    fn from(value: TokenSet) -> Self {
+        RecoverySet::from_ts(value)
+    }
+}
+
 impl RecoverySet {
     pub(crate) fn new() -> Self {
         RecoverySet {
@@ -48,8 +54,25 @@ impl RecoverySet {
         }
     }
 
-    pub(crate) fn with_recovery_set(mut self, recovery_set: impl Into<TokenSet>) -> Self {
-        self.token_set = self.token_set + recovery_set.into();
+    pub(crate) fn from_ts(token_set: TokenSet) -> Self {
+        let mut rset = Self::new();
+        rset.token_set = token_set;
+        rset
+    }
+
+    pub(crate) fn with_merged(mut self, other: RecoverySet) -> Self {
+        self.token_set = self.token_set.union(other.token_set);
+        self.keywords.extend(other.keywords);
+        self
+    }
+
+    pub(crate) fn with_token_set(mut self, token_set: impl Into<TokenSet>) -> Self {
+        self.token_set = self.token_set + token_set.into();
+        self
+    }
+
+    pub(crate) fn with_kw_ident(mut self, kw_ident: &str) -> Self {
+        self.keywords.insert(kw_ident.to_string());
         self
     }
 
@@ -453,6 +476,22 @@ impl Parser {
         }
     }
 
+    /// adds error and then bumps until `stop()` is true
+    pub(crate) fn error_and_recover(&mut self, message: &str, rs: RecoverySet) {
+        // if the next token is stop token, just push error,
+        // otherwise wrap the next token with the error node and start `recover_until()`
+        let rec_set = self.outer_recovery_set().with_merged(rs);
+        if rec_set.contains_current(self) {
+            self.push_error(message);
+            return;
+        }
+        self.bump_with_error(message);
+        // bump tokens until reached `stop_token`
+        while !self.at(EOF) && !rec_set.contains_current(self) {
+            self.bump_any();
+        }
+    }
+
     pub(crate) fn recover_until(&mut self, stop: impl Fn(&Parser) -> bool) {
         while !self.at(EOF) {
             if stop(self) {
@@ -580,19 +619,26 @@ impl Parser {
         self.with_recover_tokens(vt.into_iter().map(|it| it.into()).collect(), f)
     }
 
+    pub(crate) fn with_recovery_set<T>(
+        &mut self,
+        recovery_set: RecoverySet,
+        f: impl FnOnce(&mut Parser) -> T,
+    ) -> T {
+        self.recovery_set_stack
+            .push(self.outer_recovery_set().with_merged(recovery_set));
+        let res = f(self);
+        self.recovery_set_stack.pop();
+        res
+    }
+
     pub(crate) fn with_recover_token_set<T>(
         &mut self,
         token_set: impl Into<TokenSet>,
         f: impl FnOnce(&mut Parser) -> T,
     ) -> T {
         self.recovery_set_stack
-            .push(self.outer_recovery_set().with_recovery_set(token_set));
-        // for token in token_set.clone() {
-        //     new_rec_set = new_rec_set.with_recovery_token(token);
-        // }
-
+            .push(self.outer_recovery_set().with_token_set(token_set));
         let res = f(self);
-
         self.recovery_set_stack.pop();
         res
     }

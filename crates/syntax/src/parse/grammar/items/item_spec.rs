@@ -77,7 +77,8 @@ pub(crate) fn item_spec_param_list(p: &mut Parser) {
         if p.at_ts(ITEM_SPEC_PARAM_FIRST) {
             item_spec_param(p);
         } else {
-            p.error_and_recover_until_ts("expected value parameter", ITEM_SPEC_PARAM_RECOVERY_SET);
+            p.error_and_recover("expected value parameter", ITEM_SPEC_PARAM_RECOVERY_SET.into());
+            // p.error_and_recover_until_ts("expected value parameter", ITEM_SPEC_PARAM_RECOVERY_SET);
         }
         if !p.at(T![')']) {
             p.expect(T![,]);

@@ -1,12 +1,12 @@
 use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
-use crate::parse::grammar::items::{at_block_start, at_item_start, item_start_tokens};
+use crate::parse::grammar::items::{at_block_start, at_item_start, item_start_rset, item_start_tokens};
 // use crate::parse::grammar::types::type_or;
 use crate::parse::grammar::utils::{delimited_with_recovery, list};
 use crate::parse::grammar::{
     abilities_list, ability, attributes, error_block, item_name_or_recover, name, name_or_recover,
     type_params, types,
 };
-use crate::parse::parser::{Marker, Parser};
+use crate::parse::parser::{Marker, Parser, RecoverySet};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{ts, SyntaxKind, T};
@@ -45,7 +45,7 @@ fn opt_abilities_list_with_semicolon(p: &mut Parser) {
 
 fn opt_abilities_list(p: &mut Parser) -> bool {
     if p.at_contextual_kw_ident("has") {
-        p.with_recover_tokens(item_start_tokens(), abilities_list);
+        p.with_recovery_set(item_start_rset(), abilities_list);
         return true;
     }
     false
@@ -143,10 +143,12 @@ fn named_field(p: &mut Parser) {
         name(p);
         let at_colon = p.eat(T![:]);
         if at_colon {
-            p.with_recover_token(T![,], |p| types::type_(p));
+            p.with_recover_token(T![,], types::type_);
         } else {
-            let rec_set = p.outer_recovery_set().with_recovery_set(T![,] | T![ident]);
-            p.error_and_recover_until("expected type annotation", |p| rec_set.contains_current(p));
+            p.error_and_recover(
+                "expected type annotation",
+                RecoverySet::from_ts(T![,] | T![ident]),
+            );
         }
         m.complete(p, NAMED_FIELD);
     } else {

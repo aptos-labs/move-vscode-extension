@@ -4,7 +4,7 @@ pub(crate) mod item_spec;
 pub(crate) mod use_item;
 
 use crate::parse::grammar::expressions::expr;
-use crate::parse::grammar::items::fun::function_modifier_tokens;
+use crate::parse::grammar::items::fun::{function_modifier_recovery_set, function_modifier_tokens};
 use crate::parse::grammar::paths::use_path;
 use crate::parse::grammar::specs::schemas::schema;
 use crate::parse::grammar::{attributes, error_block, item_name_or_recover, types};
@@ -162,6 +162,13 @@ pub(crate) fn item_start_tokens() -> Vec<RecoveryToken> {
     tokens.extend(function_modifier_tokens());
     tokens.push("enum".into());
     tokens
+}
+
+pub(crate) fn item_start_rset() -> RecoverySet {
+    RecoverySet::new()
+        .with_token_set(ITEM_KEYWORDS)
+        .with_kw_ident("enum")
+        .with_merged(function_modifier_recovery_set())
 }
 
 const ITEM_KW_START_LIST: &[SyntaxKind] = &[

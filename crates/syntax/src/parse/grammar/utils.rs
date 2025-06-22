@@ -165,7 +165,7 @@ pub(crate) fn delimited_with_recovery(
             p.error_and_recover_until(expected_element_error, |p| {
                 outer_recovery_set
                     .clone()
-                    .with_recovery_set(delimiter)
+                    .with_token_set(delimiter)
                     .contains_current(p)
             });
         }

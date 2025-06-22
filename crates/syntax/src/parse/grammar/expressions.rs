@@ -386,12 +386,18 @@ fn let_stmt(p: &mut Parser, m: Marker, is_spec: bool) {
     if is_spec && p.at_contextual_kw_ident("post") {
         p.bump_remap(T![post]);
     }
-    pat(p);
-    if p.at(T![:]) {
-        p.with_recover_token_kinds(vec![T![=], T![;]], types::ascription);
-        // types::ascription(p);
-    }
+    p.with_recover_token_set(T![=] | T![;], |p| {
+        pat(p);
+        if p.at(T![:]) {
+            p.with_recover_token_set(T![=] | T![;], types::ascription);
+        }
+    });
     opt_initializer_expr(p);
+    // if p.at(T![:]) {
+    //     p.with_recover_token_set(T![=] | T![;], types::ascription);
+    //     // types::ascription(p);
+    // }
+    // opt_initializer_expr(p);
     p.expect(T![;]);
 
     m.complete(p, LET_STMT);
@@ -419,15 +425,16 @@ pub(super) fn expr_block_contents(p: &mut Parser, is_spec: bool) {
             p.bump(T![;]);
             continue;
         }
-        p.with_recover_tokens(
-            STMT_KEYWORDS_LIST
-                .iter()
-                .map(|it| it.clone().into())
-                .into_iter()
-                .chain(iter::once(T!['}'].into()))
-                .collect(),
-            |p| stmt(p, false, is_spec),
-        );
+        p.with_recover_token_set(STMT_FIRST | T!['}'], |p| stmt(p, false, is_spec));
+        // p.with_recover_tokens(
+        //     STMT_KEYWORDS_LIST
+        //         .iter()
+        //         .map(|it| it.clone().into())
+        //         .into_iter()
+        //         .chain(iter::once(T!['}'].into()))
+        //         .collect(),
+        //     |p| stmt(p, false, is_spec),
+        // );
         // stmt(p, false, is_spec);
     }
 }

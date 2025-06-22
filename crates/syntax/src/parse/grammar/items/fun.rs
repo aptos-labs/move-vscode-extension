@@ -1,10 +1,10 @@
 use crate::parse::grammar::expressions::atom::block_expr;
-use crate::parse::grammar::items::at_item_start;
+use crate::parse::grammar::items::{at_item_start, item_start_rset};
 use crate::parse::grammar::paths::PATH_FIRST;
 use crate::parse::grammar::types::path_type;
 use crate::parse::grammar::utils::delimited;
 use crate::parse::grammar::{item_name_or_recover, params, paths, type_params, types};
-use crate::parse::parser::{Marker, Parser, RecoveryToken};
+use crate::parse::parser::{Marker, Parser, RecoverySet, RecoveryToken};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::{
     ACQUIRES, EOF, FUN, IDENT, RET_TYPE, SPEC_FUN, SPEC_INLINE_FUN, VISIBILITY_MODIFIER,
@@ -39,7 +39,8 @@ pub(crate) fn function(p: &mut Parser, m: Marker) {
         fun_signature(p, false, true);
     } else {
         // p.error("expected 'fun'");
-        p.error_and_recover_until("expected 'fun'", at_item_start);
+        p.error_and_recover("expected 'fun'", item_start_rset());
+        // p.error_and_recover_until("expected 'fun'", at_item_start);
     }
     m.complete(p, FUN);
 }
@@ -223,4 +224,12 @@ pub(crate) fn function_modifier_tokens() -> Vec<RecoveryToken> {
         "entry".into(),
         "package".into(),
     ]
+}
+
+pub(crate) fn function_modifier_recovery_set() -> RecoverySet {
+    let mut rec_set = RecoverySet::new();
+    rec_set
+        .with_token_set(T![public] | T![native] | T![friend] | T![inline])
+        .with_kw_ident("entry")
+        .with_kw_ident("package")
 }

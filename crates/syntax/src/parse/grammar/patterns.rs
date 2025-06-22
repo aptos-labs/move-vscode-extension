@@ -15,7 +15,8 @@ pub(crate) fn pat(p: &mut Parser) -> Option<CompletedMarker> {
         T!['_'] => wildcard_pat(p),
         T!['('] => tuple_pat(p),
         _ => {
-            p.error_and_recover_until_ts("expected pattern", PAT_RECOVERY_SET);
+            p.error_and_recover("expected pattern", TokenSet::EMPTY.into());
+            // p.error_and_recover_until_ts("expected pattern", PAT_RECOVERY_SET);
             return None;
         }
     };
@@ -94,7 +95,8 @@ fn struct_pat_field(p: &mut Parser) {
             wildcard_pat(p);
         }
         _ => {
-            p.error_and_recover_until_ts("expected identifier", PAT_RECOVERY_SET);
+            p.error_and_recover("expected identifier", TokenSet::EMPTY.into());
+            // p.error_and_recover_until_ts("expected identifier", PAT_RECOVERY_SET);
         }
     }
 }
@@ -119,7 +121,8 @@ fn struct_pat_field_list(p: &mut Parser) {
                 m.abandon(p);
             }
             _ => {
-                struct_pat_field(p);
+                p.with_recover_token_set(T!['}'] | T![,], struct_pat_field);
+                // struct_pat_field(p);
                 m.complete(p, STRUCT_PAT_FIELD);
             }
         }
@@ -160,7 +163,8 @@ fn tuple_pat(p: &mut Parser) -> CompletedMarker {
         }
         // has_rest |= p.at(T![..]);
 
-        pat(p);
+        p.with_recover_token_set(T![')'] | T![,], pat);
+        // pat(p);
         if !p.at(T![')']) {
             // has_comma = true;
             p.expect(T![,]);
