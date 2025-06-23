@@ -1770,6 +1770,7 @@ dependencies = [
  "drop_bomb",
  "either",
  "itertools",
+ "line-index",
  "pretty_assertions",
  "rand 0.9.1",
  "regex",

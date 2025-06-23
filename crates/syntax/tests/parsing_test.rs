@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::{env, fs, panic};
 use syntax::{algo, ast, AstNode, SourceFile};
-use test_utils::{apply_error_marks, fixtures, ErrorMark};
+use test_utils::{apply_source_marks, fixtures, SourceMark};
 
 fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<()> {
     let input = fs::read_to_string(fpath).unwrap();
@@ -28,13 +28,13 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
         if let Some(error) =
             algo::find_node_at_offset::<ast::AstError>(file.syntax(), syntax_error.range().start())
         {
-            error_marks.push(ErrorMark::at_range(
+            error_marks.push(SourceMark::at_range(
                 error.syntax().text_range(),
                 syntax_error.to_string(),
             ));
             continue;
         }
-        error_marks.push(ErrorMark::at_range(
+        error_marks.push(SourceMark::at_range(
             syntax_error.range(),
             syntax_error.to_string(),
         ));
@@ -48,7 +48,7 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
     //         custom_symbol: None,
     //     })
     //     .collect();
-    let error_output = apply_error_marks(&input, error_marks);
+    let error_output = apply_source_marks(&input, error_marks);
 
     let expected_output = if output_fpath.exists() {
         let existing = fs::read_to_string(&output_fpath).unwrap();

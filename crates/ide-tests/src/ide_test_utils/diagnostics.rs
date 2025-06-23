@@ -4,7 +4,7 @@ use ide::Analysis;
 use ide_db::assists::{Assist, AssistResolveStrategy};
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
-use test_utils::{ErrorMark, apply_error_marks, fixtures, get_first_marked_position, remove_marks};
+use test_utils::{SourceMark, apply_source_marks, fixtures, get_first_marked_position, remove_marks};
 use vfs::FileId;
 
 pub fn check_diagnostics(expect: Expect) {
@@ -93,12 +93,12 @@ fn apply_diagnostics_to_file(source: &str, diagnostics: &Vec<Diagnostic>) -> Str
         .map(|it| {
             let text_range = it.range.range;
             let message = format!("{} {}", it.severity.to_test_ident(), it.message.clone());
-            ErrorMark {
+            SourceMark {
                 text_range,
                 message,
                 custom_symbol: None,
             }
         })
         .collect();
-    apply_error_marks(source, markings)
+    apply_source_marks(source, markings)
 }
