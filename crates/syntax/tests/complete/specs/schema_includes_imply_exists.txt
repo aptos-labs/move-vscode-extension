@@ -1,0 +1,61 @@
+SOURCE_FILE@0..182
+  MODULE@0..181
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..40
+      IDENT@12..40 "schema_includes_imply ..."
+    WHITESPACE@40..41 " "
+    L_CURLY@41..42 "{"
+    WHITESPACE@42..47 "\n    "
+    ITEM_SPEC@47..179
+      SPEC_KW@47..51 "spec"
+      WHITESPACE@51..52 " "
+      MODULE_KW@52..58 "module"
+      WHITESPACE@58..59 " "
+      BLOCK_EXPR@59..179
+        L_CURLY@59..60 "{"
+        WHITESPACE@60..69 "\n        "
+        INCLUDE_SCHEMA@69..173
+          INCLUDE_KW@69..76 "include"
+          WHITESPACE@76..77 " "
+          AND_INCLUDE_EXPR@77..172
+            SCHEMA_LIT@77..95
+              PATH@77..95
+                PATH_SEGMENT@77..95
+                  NAME_REF@77..95
+                    IDENT@77..95 "add_all_currencies"
+            WHITESPACE@95..96 " "
+            AMP_AMP@96..98 "&&"
+            WHITESPACE@98..99 " "
+            SCHEMA_LIT@99..172
+              PATH@99..172
+                ERROR@99..100
+                  BANG@99..100 "!"
+                IDENT@100..106 "exists"
+                L_ANGLE@106..107 "<"
+                IDENT@107..114 "Balance"
+                L_ANGLE@114..115 "<"
+                IDENT@115..118 "XUS"
+                R_ANGLE@118..119 ">"
+                R_ANGLE@119..120 ">"
+                L_PAREN@120..121 "("
+                IDENT@121..125 "addr"
+                R_PAREN@125..126 ")"
+                WHITESPACE@126..139 "\n            "
+                IMPLIES@139..142 "==>"
+                WHITESPACE@142..143 " "
+                IDENT@143..147 "Diem"
+                COLON_COLON@147..149 "::"
+                IDENT@149..167 "AbortsIfNoCurrency"
+                L_ANGLE@167..168 "<"
+                IDENT@168..171 "XUS"
+                R_ANGLE@171..172 ">"
+          SEMICOLON@172..173 ";"
+        WHITESPACE@173..178 "\n    "
+        R_CURLY@178..179 "}"
+    WHITESPACE@179..180 "\n"
+    R_CURLY@180..181 "}"
+  WHITESPACE@181..182 "\n"

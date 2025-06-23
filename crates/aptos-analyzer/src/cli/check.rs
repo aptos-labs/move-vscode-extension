@@ -28,8 +28,15 @@ pub struct Check {
     #[clap(long, value_parser = ["error", "warn", "note"], value_delimiter = ',', num_args=1..)]
     pub kinds: Option<Vec<String>>,
 
+    /// Only show diagnostics of kinds (comma separated)
+    #[clap(long, value_delimiter = ',', num_args=1..)]
+    pub disable: Option<Vec<String>>,
+
     #[clap(long)]
     pub verbose: bool,
+
+    #[clap(short, long)]
+    pub quiet: bool,
 
     #[clap(long)]
     pub fix: bool,
@@ -131,11 +138,13 @@ impl Check {
             }
 
             if specific_fpath.is_none() {
-                print!("processing {package_root_dir}");
-                if !metadata.resolve_deps {
-                    print!(" [no_deps]");
+                if !self.quiet {
+                    print!("processing {package_root_dir}");
+                    if !metadata.resolve_deps {
+                        print!(" [no_deps]");
+                    }
+                    println!()
                 }
-                println!()
             }
 
             let file_ids = package_root.file_set.iter().collect::<Vec<_>>();
@@ -172,8 +181,14 @@ impl Check {
                     if self.fix || !metadata.resolve_deps {
                         diagnostics_config = diagnostics_config.for_assists();
                     }
+
+                    let disabled_codes = self.disable.clone().unwrap_or_default();
                     let diagnostics =
-                        find_diagnostics_for_a_file(&db, file_id, &diag_kinds, &diagnostics_config);
+                        find_diagnostics_for_a_file(&db, file_id, &diag_kinds, &diagnostics_config)
+                            .into_iter()
+                            .filter(|diag| !disabled_codes.contains(&diag.code.as_str().to_string()))
+                            .collect::<Vec<_>>();
+
                     let file_text = db.file_text(file_id).text(&db);
                     if !self.fix {
                         for diagnostic in diagnostics.clone() {

@@ -6,6 +6,7 @@ use crate::parse::lexer::RawToken;
 use crate::{SyntaxKind::EOF, TextRange, TextSize};
 
 /// Implementation of `parser::TokenSource` that takes tokens from source code text.
+#[derive(Debug)]
 pub(crate) struct TextTokenSource {
     text: String,
     /// token and its start position (non-whitespace/comment tokens)
@@ -86,6 +87,20 @@ impl TextTokenSource {
             .get(self.curr.1 - 1)
             .map(|(token, offset)| &self.text[TextRange::at(*offset, token.len)])
             .unwrap_or_default()
+    }
+
+    pub(crate) fn curr_pos(&self) -> usize {
+        self.curr.1
+    }
+
+    pub(crate) fn token_range(&self, offset: usize) -> Option<TextRange> {
+        // let curr_pos = self.curr.1 as isize;
+        // if curr_pos < offset {
+        //     return None;
+        // }
+        self.raw_tokens_with_offsets
+            .get(offset)
+            .map(|(token, offset)| TextRange::at(*offset, token.len))
     }
 
     pub(crate) fn current_text(&self) -> &str {

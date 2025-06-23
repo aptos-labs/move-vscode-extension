@@ -6,12 +6,10 @@ use crate::parse::text_token_source::TextTokenSource;
 use crate::parse::token_set::TokenSet;
 use crate::parse::ParseError;
 use crate::{
-    ts,
     SyntaxKind::{self, EOF, ERROR, TOMBSTONE},
     T,
 };
 use drop_bomb::DropBomb;
-use std::collections::HashSet;
 
 /// `Parser` struct provides the low-level API for
 /// navigating through the stream of tokens and
@@ -23,9 +21,8 @@ use std::collections::HashSet;
 /// "start expression, consume number literal,
 /// finish expression". See `Event` docs for more.
 pub struct Parser {
-    token_source: TextTokenSource,
+    pub(crate) token_source: TextTokenSource,
     events: Vec<Event>,
-    // recovery_tokens: Vec<RecoveryToken>,
     recovery_set_stack: Vec<RecoverySet>,
 }
 
@@ -64,6 +61,21 @@ impl Parser {
 
     pub(crate) fn current_text(&self) -> &str {
         self.token_source.current_text()
+    }
+
+    /// How much whitespaces are skipped from prev to curr
+    pub(crate) fn prev_ws_at(&self, n: usize) -> usize {
+        let nth = self.token_source.curr_pos() + n;
+        if nth == 0 {
+            return 0;
+        }
+        let Some(from_range) = self.token_source.token_range(nth - 1) else {
+            return 0;
+        };
+        let Some(to_range) = self.token_source.token_range(nth) else {
+            return 0;
+        };
+        (to_range.start() - from_range.end()).into()
     }
 
     pub(crate) fn nth_is_jointed_to_next(&self, n: usize) -> bool {

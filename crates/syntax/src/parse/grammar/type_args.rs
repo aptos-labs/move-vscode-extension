@@ -1,7 +1,8 @@
 use super::*;
 use crate::parse::grammar::paths::Mode;
-use crate::parse::grammar::types::TYPE_FIRST;
+use crate::parse::grammar::types::{TYPE_FIRST, TYPE_FIRST_NO_LAMBDA};
 use crate::parse::grammar::utils::delimited_with_recovery;
+use crate::TextSize;
 
 pub(crate) fn opt_path_type_arg_list(p: &mut Parser, mode: Mode) {
     match mode {
@@ -29,28 +30,36 @@ pub(crate) fn opt_type_arg_list_for_type(p: &mut Parser) {
             Some(T![>]),
         )
     });
-    // delimited_with_recovery(
-    //     p,
-    //     T![>],
-    //     // TYPE_ARG_FIRST + TYPE_FIRST,
-    //     |p| type_arg(p, true),
-    //     T![,],
-    //     "expected type argument",
-    // );
     p.expect(T![>]);
     m.complete(p, TYPE_ARG_LIST);
 }
 
 pub(super) fn opt_type_arg_list_for_expr(p: &mut Parser, colon_colon_required: bool) {
     let m;
-    if p.at(T![::]) && p.nth(1) == T![<] {
+    if p.at(T![::]) && p.nth_at(1, T![<]) {
         m = p.start();
         p.bump(T![::]);
-    } else if !colon_colon_required && p.at(T![<]) {
-        m = p.start();
     } else {
-        return;
+        if !p.at(T![<]) {
+            return;
+        }
+        // '::' is optional if there's no whitespace between ident and '<'
+        if !colon_colon_required || p.prev_ws_at(0) == 0 {
+            m = p.start();
+        } else {
+            return;
+        }
     }
+
+    // if p.at(T![::]) && p.nth(1) == T![<] {
+    //     m = p.start();
+    //     p.bump(T![::]);
+    // } else if !colon_colon_required && p.at(T![<]) {
+    //     m = p.start();
+    // } else {
+    //     // '::' is optional if there's no whitespace between ident and '<'
+    //     return;
+    // }
     p.bump(T![<]);
 
     // NOTE: we cannot add recovery in expr, it's ambiguous with the lt/gt expr
