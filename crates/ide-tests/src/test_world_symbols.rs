@@ -1,6 +1,6 @@
 use expect_test::{Expect, expect};
 use ide_db::symbol_index::Query;
-use test_utils::{ErrorMark, apply_error_marks, fixtures};
+use test_utils::{SourceMark, apply_source_marks, fixtures};
 
 fn check_symbols(source: &str, query: Query, with_symbols: Expect) {
     let (analysis, _) = fixtures::from_single_file(source.to_string());
@@ -8,9 +8,9 @@ fn check_symbols(source: &str, query: Query, with_symbols: Expect) {
 
     let marks = symbols
         .iter()
-        .map(|it| ErrorMark::at_range(it.focus_or_full_range(), ""))
+        .map(|it| SourceMark::at_range(it.focus_or_full_range(), ""))
         .collect::<Vec<_>>();
-    with_symbols.assert_eq(&apply_error_marks(source, marks));
+    with_symbols.assert_eq(&apply_source_marks(source, marks));
 }
 
 #[test]

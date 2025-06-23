@@ -2,7 +2,7 @@ use lang::nameres::scope::VecExt;
 use stdx::itertools::Itertools;
 use syntax::files::FilePosition;
 use test_utils::{
-    ErrorMark, apply_error_marks, fixtures, get_all_marked_positions,
+    SourceMark, apply_source_marks, fixtures, get_all_marked_positions,
     get_marked_position_offset_with_data,
 };
 
@@ -60,17 +60,17 @@ fn check_find_usages(source: &str) {
         {
             let missing_marks = missing_target_offsets
                 .into_iter()
-                .map(|offset| ErrorMark::at_offset(offset, "missing reference"))
+                .map(|offset| SourceMark::at_offset(offset, "missing reference"))
                 .collect();
-            apply_error_marks(&source, missing_marks)
+            apply_source_marks(&source, missing_marks)
         }
     );
     assert!(actual_ref_ranges.is_empty(), "extra references found: \n{}", {
         let extra_marks = actual_ref_ranges
             .into_iter()
-            .map(|range| ErrorMark::at_range(range, "extra reference"))
+            .map(|range| SourceMark::at_range(range, "extra reference"))
             .collect();
-        apply_error_marks(&source, extra_marks)
+        apply_source_marks(&source, extra_marks)
     });
 }
 
