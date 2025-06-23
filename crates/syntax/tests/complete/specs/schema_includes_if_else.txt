@@ -1,5 +1,5 @@
-SOURCE_FILE@0..148
-  MODULE@0..147
+SOURCE_FILE@0..110
+  MODULE@0..109
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
     VALUE_ADDRESS@7..10
@@ -10,12 +10,12 @@ SOURCE_FILE@0..148
     WHITESPACE@31..32 " "
     L_CURLY@32..33 "{"
     WHITESPACE@33..38 "\n    "
-    ITEM_SPEC@38..145
+    ITEM_SPEC@38..107
       SPEC_KW@38..42 "spec"
       WHITESPACE@42..43 " "
       MODULE_KW@43..49 "module"
       WHITESPACE@49..50 " "
-      BLOCK_EXPR@50..145
+      BLOCK_EXPR@50..107
         L_CURLY@50..51 "{"
         WHITESPACE@51..60 "\n        "
         INCLUDE_SCHEMA@60..101
@@ -44,27 +44,8 @@ SOURCE_FILE@0..148
                   NAME_REF@92..100
                     IDENT@92..100 "MySchema"
           SEMICOLON@100..101 ";"
-        WHITESPACE@101..110 "\n        "
-        INCLUDE_SCHEMA@110..139
-          INCLUDE_KW@110..117 "include"
-          WHITESPACE@117..118 " "
-          AND_INCLUDE_EXPR@118..138
-            SCHEMA_LIT@118..126
-              PATH@118..126
-                PATH_SEGMENT@118..126
-                  NAME_REF@118..126
-                    IDENT@118..126 "MySchema"
-            WHITESPACE@126..127 " "
-            AMP_AMP@127..129 "&&"
-            WHITESPACE@129..130 " "
-            SCHEMA_LIT@130..138
-              PATH@130..138
-                PATH_SEGMENT@130..138
-                  NAME_REF@130..138
-                    IDENT@130..138 "MySchema"
-          SEMICOLON@138..139 ";"
-        WHITESPACE@139..144 "\n    "
-        R_CURLY@144..145 "}"
-    WHITESPACE@145..146 "\n"
-    R_CURLY@146..147 "}"
-  WHITESPACE@147..148 "\n"
+        WHITESPACE@101..106 "\n    "
+        R_CURLY@106..107 "}"
+    WHITESPACE@107..108 "\n"
+    R_CURLY@108..109 "}"
+  WHITESPACE@109..110 "\n"

@@ -630,6 +630,10 @@ pub struct ImplyIncludeExpr {
 impl ImplyIncludeExpr {
     #[inline]
     pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn schema_lit(&self) -> Option<SchemaLit> { support::child(&self.syntax) }
+    #[inline]
+    pub fn imply_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![==>]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

@@ -21,38 +21,73 @@ SOURCE_FILE@0..182
         INCLUDE_SCHEMA@69..173
           INCLUDE_KW@69..76 "include"
           WHITESPACE@76..77 " "
-          AND_INCLUDE_EXPR@77..172
-            SCHEMA_LIT@77..95
-              PATH@77..95
-                PATH_SEGMENT@77..95
-                  NAME_REF@77..95
-                    IDENT@77..95 "add_all_currencies"
-            WHITESPACE@95..96 " "
-            AMP_AMP@96..98 "&&"
-            WHITESPACE@98..99 " "
-            SCHEMA_LIT@99..172
-              PATH@99..172
-                ERROR@99..100
-                  BANG@99..100 "!"
-                IDENT@100..106 "exists"
-                L_ANGLE@106..107 "<"
-                IDENT@107..114 "Balance"
-                L_ANGLE@114..115 "<"
-                IDENT@115..118 "XUS"
-                R_ANGLE@118..119 ">"
-                R_ANGLE@119..120 ">"
-                L_PAREN@120..121 "("
-                IDENT@121..125 "addr"
-                R_PAREN@125..126 ")"
-                WHITESPACE@126..139 "\n            "
-                IMPLIES@139..142 "==>"
-                WHITESPACE@142..143 " "
-                IDENT@143..147 "Diem"
+          IMPLY_INCLUDE_EXPR@77..172
+            BIN_EXPR@77..126
+              PATH_EXPR@77..95
+                PATH@77..95
+                  PATH_SEGMENT@77..95
+                    NAME_REF@77..95
+                      IDENT@77..95 "add_all_currencies"
+              WHITESPACE@95..96 " "
+              AMP_AMP@96..98 "&&"
+              WHITESPACE@98..99 " "
+              BANG_EXPR@99..126
+                BANG@99..100 "!"
+                CALL_EXPR@100..126
+                  PATH_EXPR@100..120
+                    PATH@100..120
+                      PATH_SEGMENT@100..120
+                        NAME_REF@100..106
+                          IDENT@100..106 "exists"
+                        TYPE_ARG_LIST@106..120
+                          L_ANGLE@106..107 "<"
+                          TYPE_ARG@107..119
+                            PATH_TYPE@107..119
+                              PATH@107..119
+                                PATH_SEGMENT@107..119
+                                  NAME_REF@107..114
+                                    IDENT@107..114 "Balance"
+                                  TYPE_ARG_LIST@114..119
+                                    L_ANGLE@114..115 "<"
+                                    TYPE_ARG@115..118
+                                      PATH_TYPE@115..118
+                                        PATH@115..118
+                                          PATH_SEGMENT@115..118
+                                            NAME_REF@115..118
+                                              IDENT@115..118 "XUS"
+                                    R_ANGLE@118..119 ">"
+                          R_ANGLE@119..120 ">"
+                  VALUE_ARG_LIST@120..126
+                    L_PAREN@120..121 "("
+                    VALUE_ARG@121..125
+                      PATH_EXPR@121..125
+                        PATH@121..125
+                          PATH_SEGMENT@121..125
+                            NAME_REF@121..125
+                              IDENT@121..125 "addr"
+                    R_PAREN@125..126 ")"
+            WHITESPACE@126..139 "\n            "
+            IMPLIES@139..142 "==>"
+            WHITESPACE@142..143 " "
+            SCHEMA_LIT@143..172
+              PATH@143..172
+                PATH@143..147
+                  PATH_SEGMENT@143..147
+                    NAME_REF@143..147
+                      IDENT@143..147 "Diem"
                 COLON_COLON@147..149 "::"
-                IDENT@149..167 "AbortsIfNoCurrency"
-                L_ANGLE@167..168 "<"
-                IDENT@168..171 "XUS"
-                R_ANGLE@171..172 ">"
+                PATH_SEGMENT@149..172
+                  NAME_REF@149..167
+                    IDENT@149..167 "AbortsIfNoCurrency"
+                  TYPE_ARG_LIST@167..172
+                    L_ANGLE@167..168 "<"
+                    TYPE_ARG@168..171
+                      PATH_TYPE@168..171
+                        PATH@168..171
+                          PATH_SEGMENT@168..171
+                            NAME_REF@168..171
+                              IDENT@168..171 "XUS"
+                    R_ANGLE@171..172 ">"
           SEMICOLON@172..173 ";"
         WHITESPACE@173..178 "\n    "
         R_CURLY@178..179 "}"

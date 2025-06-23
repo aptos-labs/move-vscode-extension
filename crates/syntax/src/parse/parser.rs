@@ -44,6 +44,10 @@ impl Parser {
         self.token_source.current_pos()
     }
 
+    pub(crate) fn event_pos(&self) -> usize {
+        self.events.len() - 1
+    }
+
     /// Returns the kind of the current token.
     /// If parser has already reached the end of input,
     /// the special `EOF` kind is returned.
@@ -353,16 +357,18 @@ impl Parser {
         self.push_event(Event::Token { kind, n_raw_tokens });
     }
 
-    fn rollback(&mut self) {
-        if let Some(Event::Token { kind: _, n_raw_tokens }) = self.events.pop() {
-            for _ in 0..n_raw_tokens {
-                self.token_source.rollback();
-            }
-        }
-    }
-
     fn push_event(&mut self, event: Event) {
         self.events.push(event);
+    }
+
+    fn pop_event(&mut self) -> Option<Event> {
+        let event = self.events.pop();
+        if let Some(Event::Token { kind: _, n_raw_tokens }) = &event {
+            for _ in 0..*n_raw_tokens {
+                self.token_source.pop_position();
+            }
+        }
+        event
     }
 
     // /// add event before the last token (used for errors)
@@ -392,6 +398,7 @@ impl Marker {
     pub(crate) fn complete(mut self, p: &mut Parser, kind: SyntaxKind) -> CompletedMarker {
         self.bomb.defuse();
         let idx = self.pos as usize;
+        // replace TOMBSTONE with `kind`
         match &mut p.events[idx] {
             Event::Start { kind: slot, .. } => {
                 *slot = kind;
@@ -433,7 +440,7 @@ impl Marker {
             }
         } else {
             for _ in idx..p.events.len() {
-                p.rollback();
+                p.pop_event();
             }
         }
     }
@@ -551,20 +558,9 @@ impl CompletedMarker {
     }
 
     /// Abandons the syntax tree node. All its children events are dropped and position restored.
-    pub(crate) fn abandon_with_rollback(self, p: &mut Parser) {
-        let idx = self.pos as usize;
-        if idx == p.events.len() - 1 {
-            match p.events.pop() {
-                Some(Event::Start {
-                    kind: TOMBSTONE,
-                    forward_parent: None,
-                }) => (),
-                _ => unreachable!(),
-            }
-        } else {
-            for _ in idx..p.events.len() {
-                p.rollback();
-            }
+    pub(crate) fn abandon_with_rollback(self, p: &mut Parser, parent_event_pos: usize) {
+        while p.events.len() != parent_event_pos + 1 {
+            p.pop_event();
         }
     }
 
