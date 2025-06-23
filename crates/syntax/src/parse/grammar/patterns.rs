@@ -1,10 +1,10 @@
 use crate::parse::grammar::utils::delimited_with_recovery;
-use crate::parse::grammar::{error_block, expressions, name, name_ref, paths};
-use crate::parse::parser::{CompletedMarker, Parser, RecoverySet};
+use crate::parse::grammar::{expressions, name, name_ref, paths};
+use crate::parse::parser::{CompletedMarker, Parser};
+use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{SyntaxKind, T};
-use std::cell::LazyCell;
 
 pub(crate) fn pat(p: &mut Parser) -> Option<CompletedMarker> {
     let m = match p.current() {
@@ -16,8 +16,26 @@ pub(crate) fn pat(p: &mut Parser) -> Option<CompletedMarker> {
         T!['_'] => wildcard_pat(p),
         T!['('] => tuple_pat(p),
         _ => {
-            p.error_and_recover("expected pattern", TokenSet::EMPTY.into());
+            p.error_and_recover("expected pattern", TokenSet::EMPTY);
             // p.error_and_recover_until_ts("expected pattern", PAT_RECOVERY_SET);
+            return None;
+        }
+    };
+    Some(m)
+}
+
+pub(crate) fn pat_or_recover(p: &mut Parser, extra_set: RecoverySet) -> Option<CompletedMarker> {
+    let m = match p.current() {
+        // 0x1 '::'
+        INT_NUMBER if p.nth_at(1, T![::]) => path_pat(p),
+        IDENT => path_pat(p),
+
+        T![..] => rest_pat(p),
+        T!['_'] => wildcard_pat(p),
+        T!['('] => tuple_pat(p),
+
+        _ => {
+            p.error_and_recover("expected pattern", extra_set);
             return None;
         }
     };
@@ -35,12 +53,12 @@ pub(crate) fn pat(p: &mut Parser) -> Option<CompletedMarker> {
 //     true
 // }
 
-pub(crate) fn ident_or_wildcard_pat_with_recovery(p: &mut Parser) -> bool {
+pub(crate) fn ident_pat_or_recover(p: &mut Parser) -> bool {
     match p.current() {
         T![ident] => ident_pat(p),
         T!['_'] => wildcard_pat(p),
         _ => {
-            p.error_and_recover("expected ident", RecoverySet::new());
+            p.error_and_recover("expected ident", TokenSet::EMPTY);
             // p.error_and_recover_until_ts("expected ident or '_'", recovery_set);
             return false;
         }
@@ -68,7 +86,6 @@ fn path_pat(p: &mut Parser) -> CompletedMarker {
             };
             m.complete(p, kind)
         }
-        // T![:] if p.nth_at(1, T![::]) => path_or_macro_pat(p),
         _ => ident_pat(p),
     }
 }
@@ -94,7 +111,7 @@ fn struct_pat_field(p: &mut Parser) -> bool {
             wildcard_pat(p);
         }
         _ => {
-            p.error_and_recover("expected identifier", TokenSet::EMPTY.into());
+            p.error_and_recover("expected identifier", TokenSet::EMPTY);
             // p.error_and_recover_until_ts("expected identifier", PAT_RECOVERY_SET);
             return false;
         }
@@ -200,7 +217,7 @@ fn tuple_pat(p: &mut Parser) -> CompletedMarker {
         }
         // has_rest |= p.at(T![..]);
 
-        p.with_recover_token_set(T![')'] | T![,], pat);
+        p.with_recovery_token_set(T![')'] | T![,], pat);
         // pat(p);
         if !p.at(T![')']) {
             // has_comma = true;

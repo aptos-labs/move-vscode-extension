@@ -12,7 +12,7 @@ pub(super) fn is_path_start(p: &Parser) -> bool {
     match p.current() {
         // addresses
         INT_NUMBER if p.nth_at(1, T![::]) => true,
-        IDENT /*| T![self] | T![super] | T![crate]*/ => true,
+        IDENT => true,
         T![::] => true,
         T!['_'] => true,
         // T![:] if p.at(T![::]) => true,
@@ -52,8 +52,8 @@ pub(crate) fn path(p: &mut Parser, mode: Mode) {
 
 fn path_for_qualifier(p: &mut Parser, mode: Mode, mut qual: CompletedMarker) -> CompletedMarker {
     loop {
-        let use_tree = matches!(p.nth(1), T!['{']);
-        if p.at(T![::]) && !use_tree {
+        let is_use_tree = matches!(p.nth(1), T!['{']);
+        if p.at(T![::]) && !is_use_tree {
             let path = qual.precede(p);
             p.bump(T![::]);
             path_segment(p, mode, false);
@@ -88,11 +88,7 @@ fn path_segment(p: &mut Parser, mode: Mode, first: bool) {
         }
         _ => {
             p.error_and_recover("expected identifier", item_start_rec_set());
-            // p.error_and_recover_until("expected identifier", |p| {
-            //     items::at_item_start(p) || p.at_ts(additional_recovery_set)
-            // });
             if empty {
-                // use crate::;
                 m.abandon(p);
                 return;
             }

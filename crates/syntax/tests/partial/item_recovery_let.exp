@@ -1,20 +1,12 @@
 module 0x1::item_recovery_let {
     fun main() {
         let
-         //^ expected pattern
-         //^ expected SEMICOLON
         let a
-           //^ expected SEMICOLON
+      //^^^ expected pattern
         let a:
-            //^ expected type
-            //^ expected SEMICOLON
         let a: u8
-               //^ expected SEMICOLON
         let a: u8<>
-                 //^ expected SEMICOLON
         let a: u8<T,,>
-                  //^ expected type argument
-                    //^ expected SEMICOLON
         let a: u8 =
                  //^ expected expression
                  //^ expected SEMICOLON

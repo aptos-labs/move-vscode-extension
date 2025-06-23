@@ -1,6 +1,7 @@
 //! See [`Parser`].
 
 use crate::parse::event::Event;
+use crate::parse::recovery_set::{RecoverySet, RecoveryToken};
 use crate::parse::text_token_source::TextTokenSource;
 use crate::parse::token_set::TokenSet;
 use crate::parse::ParseError;
@@ -26,114 +27,6 @@ pub struct Parser {
     events: Vec<Event>,
     // recovery_tokens: Vec<RecoveryToken>,
     recovery_set_stack: Vec<RecoverySet>,
-}
-
-#[derive(Debug, Clone)]
-pub enum RecoveryToken {
-    SyntaxKind(SyntaxKind),
-    KwIdent(String),
-}
-
-#[derive(Debug, Clone)]
-pub struct RecoverySet {
-    token_set: TokenSet,
-    keywords: HashSet<String>,
-}
-
-impl From<SyntaxKind> for RecoverySet {
-    fn from(value: SyntaxKind) -> Self {
-        RecoverySet::from_ts(value.into())
-    }
-}
-
-impl From<TokenSet> for RecoverySet {
-    fn from(value: TokenSet) -> Self {
-        RecoverySet::from_ts(value)
-    }
-}
-
-impl RecoverySet {
-    pub(crate) fn new() -> Self {
-        RecoverySet {
-            token_set: TokenSet::EMPTY,
-            keywords: HashSet::new(),
-        }
-    }
-
-    pub(crate) fn from_ts(token_set: TokenSet) -> Self {
-        let mut rset = Self::new();
-        rset.token_set = token_set;
-        rset
-    }
-
-    pub(crate) fn with_merged(mut self, other: RecoverySet) -> Self {
-        self.token_set = self.token_set.union(other.token_set);
-        self.keywords.extend(other.keywords);
-        self
-    }
-
-    pub(crate) fn with_token_set(mut self, token_set: impl Into<TokenSet>) -> Self {
-        self.token_set = self.token_set + token_set.into();
-        self
-    }
-
-    pub(crate) fn with_kw_ident(mut self, kw_ident: &str) -> Self {
-        self.keywords.insert(kw_ident.to_string());
-        self
-    }
-
-    pub(crate) fn with_recovery_token(mut self, recovery_token: RecoveryToken) -> Self {
-        match recovery_token {
-            RecoveryToken::SyntaxKind(t) => {
-                self.token_set = self.token_set | t;
-            }
-            RecoveryToken::KwIdent(kw) => {
-                self.keywords.insert(kw);
-            }
-        }
-        self
-    }
-
-    pub(crate) fn without_recovery_token(mut self, recovery_token: RecoveryToken) -> Self {
-        match recovery_token {
-            RecoveryToken::SyntaxKind(t) => {
-                self.token_set = self.token_set.sub(ts!(t));
-            }
-            RecoveryToken::KwIdent(kw) => {
-                self.keywords.remove(&kw);
-            }
-        };
-        self
-    }
-
-    pub(crate) fn contains(&self, t: SyntaxKind) -> bool {
-        self.token_set.contains(t)
-    }
-
-    pub(crate) fn contains_current(&self, p: &Parser) -> bool {
-        match p.current() {
-            T![ident] => {
-                if self.token_set.contains(T![ident]) {
-                    return true;
-                }
-                let current_text = p.current_text();
-                self.keywords.contains(current_text)
-            }
-            kind => self.token_set.contains(kind),
-        }
-    }
-}
-
-impl From<SyntaxKind> for RecoveryToken {
-    fn from(value: SyntaxKind) -> Self {
-        RecoveryToken::SyntaxKind(value)
-    }
-}
-
-impl From<&str> for RecoveryToken {
-    fn from(value: &str) -> Self {
-        RecoveryToken::KwIdent(value.to_string())
-    }
 }
 
 impl Parser {
@@ -404,11 +297,6 @@ impl Parser {
     /// Consume the next token if it is `kind` or emit an error
     /// otherwise.
     pub(crate) fn expect(&mut self, kind: SyntaxKind) -> bool {
-        // if self.eat(kind) {
-        //     return true;
-        // }
-        // self.push_error(format!("expected {:?}", kind));
-        // false
         self.expect_with_error(kind, &format!("expected {:?}", kind))
     }
 
@@ -422,92 +310,23 @@ impl Parser {
         false
     }
 
-    // /// Create an error node and consume the next token.
-    // pub(crate) fn error_and_bump(&mut self, message: &str) {
-    //     self.err_recover_at_ts(message, TokenSet::EMPTY);
-    // }
-
-    // pub(crate) fn error_bump_any(&mut self, message: &str) {
-    //     let m = self.start();
-    //     self.push_error(message);
-    //     self.bump_any();
-    //     m.complete(self, ERROR);
-    // }
-
-    // /// Create an error node and consume the next token.
-    // pub(crate) fn error_and_bump_until_ts(&mut self, message: &str, stop_at_ts: TokenSet) {
-    //     self.error_and_bump_until(message, |p| p.at_ts(stop_at_ts));
-    //     // match self.current() {
-    //     //     T!['{'] | T!['}'] => {
-    //     //         self.error(message);
-    //     //         return;
-    //     //     }
-    //     //     _ => (),
-    //     // }
-    //     //
-    //     // if self.at_ts(recovery) {
-    //     //     self.error(message);
-    //     //     return;
-    //     // }
-    //     //
-    //     // let m = self.start();
-    //     // self.error(message);
-    //     // self.bump_any();
-    //     // m.complete(self, ERROR);
-    // }
-
-    pub(crate) fn error_and_recover_until_ts(&mut self, message: &str, stop_at: TokenSet) {
-        self.error_and_recover_until(message, |p| p.at_ts(stop_at))
-    }
-
     /// adds error and then bumps until `stop()` is true
-    pub(crate) fn error_and_recover_until(
-        &mut self,
-        message: &str,
-        at_stop_token: impl Fn(&Parser) -> bool,
-    ) {
+    pub(crate) fn error_and_recover(&mut self, message: &str, rs: impl Into<RecoverySet>) {
         // if the next token is stop token, just push error,
         // otherwise wrap the next token with the error node and start `recover_until()`
-        if at_stop_token(self) {
-            self.push_error(message);
-            return;
-        }
-        self.bump_with_error(message);
-        // bump tokens until reached `stop_token`
-        while !self.at(EOF) && !at_stop_token(self) {
-            // if at_stop_token(self) {
-            //     break;
-            // }
-            self.bump_any();
-        }
-    }
-
-    /// adds error and then bumps until `stop()` is true
-    pub(crate) fn error_and_recover(&mut self, message: &str, rs: RecoverySet) {
-        // if the next token is stop token, just push error,
-        // otherwise wrap the next token with the error node and start `recover_until()`
-        let rec_set = self.outer_recovery_set().with_merged(rs);
+        let rec_set = self.outer_recovery_set().with_merged(rs.into());
         if rec_set.contains_current(self) {
             self.push_error(message);
             return;
         }
-        self.bump_with_error(message);
+        self.error_and_bump(message);
         // bump tokens until reached `stop_token`
         while !self.at(EOF) && !rec_set.contains_current(self) {
             self.bump_any();
         }
     }
 
-    pub(crate) fn recover_until(&mut self, stop: impl Fn(&Parser) -> bool) {
-        while !self.at(EOF) {
-            if stop(self) {
-                break;
-            }
-            self.bump_any();
-        }
-    }
-
-    pub(crate) fn bump_with_error(&mut self, message: &str) {
+    pub(crate) fn error_and_bump(&mut self, message: &str) {
         let m = self.start();
         self.bump_any();
         self.push_error(message);
@@ -617,14 +436,6 @@ impl Parser {
             .unwrap_or(RecoverySet::new())
     }
 
-    pub(crate) fn with_recover_token_kinds<T>(
-        &mut self,
-        vt: Vec<SyntaxKind>,
-        f: impl FnOnce(&mut Parser) -> T,
-    ) -> T {
-        self.with_recover_tokens(vt.into_iter().map(|it| it.into()).collect(), f)
-    }
-
     pub(crate) fn with_recovery_set<T>(
         &mut self,
         recovery_set: RecoverySet,
@@ -637,7 +448,7 @@ impl Parser {
         res
     }
 
-    pub(crate) fn with_recover_token_set<T>(
+    pub(crate) fn with_recovery_token_set<T>(
         &mut self,
         token_set: impl Into<TokenSet>,
         f: impl FnOnce(&mut Parser) -> T,
@@ -649,7 +460,7 @@ impl Parser {
         res
     }
 
-    pub(crate) fn with_recover_tokens<T>(
+    pub(crate) fn with_recovery_tokens<T>(
         &mut self,
         tokens: Vec<RecoveryToken>,
         f: impl FnOnce(&mut Parser) -> T,
@@ -659,9 +470,7 @@ impl Parser {
             new_rec_set = new_rec_set.with_recovery_token(token);
         }
         self.recovery_set_stack.push(new_rec_set);
-
         let res = f(self);
-
         self.recovery_set_stack.pop();
         res
     }
@@ -671,11 +480,7 @@ impl Parser {
         token: impl Into<RecoveryToken>,
         f: impl FnOnce(&mut Parser) -> T,
     ) -> T {
-        self.with_recover_tokens(vec![token.into()], f)
-        // self.recovery_tokens.push(token.into());
-        // let res = f(self);
-        // self.recovery_tokens.pop();
-        // res
+        self.with_recovery_tokens(vec![token.into()], f)
     }
 }
 

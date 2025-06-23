@@ -1,13 +1,24 @@
 module 0x1::assert_in_lambda {
     fun main(
         f: |Element, assert!, assert!(), call(| Element,
+        //^ expected COMMA
+         //^ expected ident
+                         //^ missing type annotation
                          //^ expected COMMA
-                         //^ expected type
+                         //^ expected ident
+                                  //^ missing type annotation
                                   //^ expected COMMA
-                                  //^ expected type
-                                           //^ expected COMMA
-                                            //^ expected R_PAREN
+                                  //^ expected ident
+                                     //^ expected a block
+                                     //^ expected an item, got COMMA
+                                           //^ expected an item, got IDENT
+                                           //^ expected an item, got L_PAREN
+                                            //^ expected an item, got PIPE
+                                                     //^ expected an item, got IDENT
+                                                     //^ expected an item, got COMMA
     ) {
+  //^ expected an item, got R_PAREN
+    //^ expected an item, got a block
 
     }
 }

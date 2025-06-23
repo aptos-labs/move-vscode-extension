@@ -2,20 +2,20 @@ use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::parse::grammar::items::item_start_rec_set;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{
-    abilities_list, attributes, error_block, item_name_or_recover, name_or_recover_with, type_params,
-    types,
+    abilities_list, attributes, error_block, name_or_recover, type_params, types,
 };
-use crate::parse::parser::{Marker, Parser, RecoverySet};
+use crate::parse::parser::{Marker, Parser};
+use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::T;
+use std::sync::LazyLock;
 
 pub(super) fn struct_(p: &mut Parser, m: Marker) {
     p.bump(T![struct]);
-    // item_name_or_recover(p, struct_enum_recover_at);
-    name_or_recover_with(p, struct_enum_name_rec_set());
+    name_or_recover(p, adt_name_recovery());
     type_params::opt_type_param_list(p);
-    p.with_recover_token_set(T!['{'] | T!['('], opt_abilities_list);
+    p.with_recovery_token_set(T!['{'] | T!['('], opt_abilities_list);
     match p.current() {
         T!['{'] => {
             p.with_recovery_token(T!['}'], |p| named_field_list(p));
@@ -26,7 +26,7 @@ pub(super) fn struct_(p: &mut Parser, m: Marker) {
         }
         T!['('] => {
             tuple_field_list(p);
-            p.with_recover_token_set(T![;], opt_abilities_list);
+            p.with_recovery_token_set(T![;], opt_abilities_list);
             p.expect(T![;]);
         }
         _ => p.error("expected `;`, `{`, or `(`"),
@@ -34,30 +34,16 @@ pub(super) fn struct_(p: &mut Parser, m: Marker) {
     m.complete(p, STRUCT);
 }
 
-fn opt_abilities_list_with_semicolon(p: &mut Parser) {
-    let has_postfix_abilities = p.with_recover_token_set(T![;], opt_abilities_list);
-    if has_postfix_abilities {
-        p.expect(T![;]);
-    }
-}
-
-fn opt_abilities_list(p: &mut Parser) -> bool {
-    if p.at_contextual_kw_ident("has") {
-        p.with_recovery_set(item_start_rec_set(), abilities_list);
-        return true;
-    }
-    false
-}
-
 pub(super) fn enum_(p: &mut Parser, m: Marker) {
     p.bump_remap(T![enum]);
 
-    if !name_or_recover_with(p, struct_enum_name_rec_set()) {
+    if !name_or_recover(p, adt_name_recovery()) {
         m.complete(p, ENUM);
         return;
     }
     type_params::opt_type_param_list(p);
-    p.with_recover_token_set(T!['{'], opt_abilities_list);
+    p.with_recovery_token_set(T!['{'], opt_abilities_list);
+
     if p.at(T!['{']) {
         enum_variant_list(p);
     } else {
@@ -95,7 +81,7 @@ fn enum_variant(p: &mut Parser) -> bool {
     attributes::outer_attrs(p);
     if p.at(IDENT) {
         // name(p);
-        name_or_recover_with(p, TokenSet::EMPTY.into());
+        name_or_recover(p, TokenSet::EMPTY.into());
         match p.current() {
             T!['{'] => {
                 curly_braces = true;
@@ -107,12 +93,27 @@ fn enum_variant(p: &mut Parser) -> bool {
         m.complete(p, VARIANT);
     } else {
         m.abandon(p);
-        p.bump_with_error("expected enum variant");
+        p.error_and_bump("expected enum variant");
     }
     curly_braces
 }
 
-pub(crate) fn named_field_list(p: &mut Parser) {
+fn opt_abilities_list_with_semicolon(p: &mut Parser) {
+    let has_postfix_abilities = p.with_recovery_token_set(T![;], opt_abilities_list);
+    if has_postfix_abilities {
+        p.expect(T![;]);
+    }
+}
+
+fn opt_abilities_list(p: &mut Parser) -> bool {
+    if p.at_contextual_kw_ident("has") {
+        p.with_recovery_set(item_start_rec_set(), abilities_list);
+        return true;
+    }
+    false
+}
+
+fn named_field_list(p: &mut Parser) {
     assert!(p.at(T!['{']));
     let m = p.start();
     p.bump(T!['{']);
@@ -136,29 +137,33 @@ fn named_field(p: &mut Parser) {
         #[cfg(debug_assertions)]
         let _p = stdx::panic_context::enter(format!("named_field {:?}", p.current_text()));
 
-        name_or_recover_with(p, TokenSet::EMPTY.into());
+        name_or_recover(p, TokenSet::EMPTY.into());
         // name(p);
         let at_colon = p.eat(T![:]);
         if at_colon {
             p.with_recovery_token(T![,], types::type_);
         } else {
-            p.error_and_recover(
-                "expected type annotation",
-                RecoverySet::from_ts(T![,] | T![ident]),
-            );
+            p.error_and_recover("missing type annotation", RecoverySet::from_ts(T![,] | T![ident]));
         }
         m.complete(p, NAMED_FIELD);
     } else {
         m.abandon(p);
-        p.bump_with_error("expected named field declaration");
+        p.error_and_bump("expected named field declaration");
     }
 }
 
-fn struct_enum_name_rec_set() -> RecoverySet {
-    RecoverySet::new()
+fn adt_name_recovery() -> RecoverySet {
+    item_start_rec_set()
         .with_token_set(T![<] | T!['{'])
         .with_recovery_token("has".into())
+    // item_start_rec_set().with_merged(struct_or_enum_name_rec_set())
 }
+
+// fn struct_or_enum_name_rec_set() -> RecoverySet {
+//     RecoverySet::new()
+//         .with_token_set(T![<] | T!['{'])
+//         .with_recovery_token("has".into())
+// }
 
 fn struct_enum_recover_at(p: &Parser) -> bool {
     p.at(T![<]) || p.at_contextual_kw_ident("has")

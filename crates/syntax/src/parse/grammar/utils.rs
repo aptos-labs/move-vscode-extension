@@ -34,7 +34,7 @@ pub(crate) fn delimited_with_recovery(
         if let Some(list_end) = list_end {
             recover_set = recover_set | list_end;
         }
-        let at_element = p.with_recover_token_set(recover_set, |p| element(p));
+        let at_element = p.with_recovery_token_set(recover_set, |p| element(p));
         if at_element {
             is_empty = false;
         }
@@ -47,7 +47,7 @@ pub(crate) fn delimited_with_recovery(
             if list_end.is_some() && is_empty && at_list_end(p) {
                 break;
             }
-            p.error_and_recover(expected_element_error, delimiter.into());
+            p.error_and_recover(expected_element_error, delimiter);
         }
 
         if modified_recovery_set.contains_current(p) {

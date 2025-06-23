@@ -33,27 +33,24 @@ SOURCE_FILE@0..124
               L_PAREN@66..67 "("
           SEMICOLON@67..68 ";"
         WHITESPACE@68..77 "\n        "
-        EXPR_STMT@77..82
-          CALL_EXPR@77..82
+        EXPR_STMT@77..101
+          CALL_EXPR@77..100
             PATH_EXPR@77..81
               PATH@77..81
                 PATH_SEGMENT@77..81
                   NAME_REF@77..81
                     IDENT@77..81 "call"
-            VALUE_ARG_LIST@81..82
+            VALUE_ARG_LIST@81..100
               L_PAREN@81..82 "("
-        WHITESPACE@82..91 "\n        "
-        LET_STMT@91..101
-          LET_KW@91..94 "let"
-          WHITESPACE@94..95 " "
-          IDENT_PAT@95..96
-            NAME@95..96
+              WHITESPACE@82..91 "\n        "
+              ERROR@91..94
+                LET_KW@91..94 "let"
+              WHITESPACE@94..95 " "
               IDENT@95..96 "a"
-          WHITESPACE@96..97 " "
-          EQ@97..98 "="
-          WHITESPACE@98..99 " "
-          LITERAL@99..100
-            INT_NUMBER@99..100 "1"
+              WHITESPACE@96..97 " "
+              EQ@97..98 "="
+              WHITESPACE@98..99 " "
+              INT_NUMBER@99..100 "1"
           SEMICOLON@100..101 ";"
         WHITESPACE@101..110 "\n        "
         CALL_EXPR@110..115

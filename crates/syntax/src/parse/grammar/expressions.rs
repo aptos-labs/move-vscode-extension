@@ -1,7 +1,7 @@
-use crate::parse::grammar::expressions::atom::{call_expr, EXPR_FIRST};
+use crate::parse::grammar::expressions::atom::call_expr;
 use crate::parse::grammar::items::{at_item_start, fun, use_item};
 use crate::parse::grammar::lambdas::lambda_param_list;
-use crate::parse::grammar::patterns::{pat, STMT_FIRST, STMT_KEYWORDS_LIST};
+use crate::parse::grammar::patterns::{pat, STMT_KEYWORDS_LIST};
 use crate::parse::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt};
 use crate::parse::grammar::specs::quants::{choose_expr, exists_expr, forall_expr, is_at_quant_kw};
 use crate::parse::grammar::specs::schemas::{
@@ -17,6 +17,7 @@ use std::io::Read;
 use std::iter;
 
 pub(crate) mod atom;
+pub(crate) mod stmts;
 
 pub(crate) fn expr(p: &mut Parser) -> bool {
     let r = Restrictions {
@@ -128,7 +129,7 @@ pub(crate) fn struct_lit_field_list(p: &mut Parser) {
                 m.abandon(p);
             }
             _ => {
-                p.bump_with_error("expected identifier");
+                p.error_and_bump("expected identifier");
                 m.abandon(p);
             }
         }
@@ -139,8 +140,6 @@ pub(crate) fn struct_lit_field_list(p: &mut Parser) {
     p.expect(T!['}']);
     m.complete(p, STRUCT_LIT_FIELD_LIST);
 }
-
-const LHS_FIRST: TokenSet = atom::ATOM_EXPR_FIRST.union(TokenSet::new(&[T![&], T![*], T![!]]));
 
 pub(crate) fn lhs(p: &mut Parser, r: Restrictions) -> Option<(CompletedMarker, BlockLike)> {
     let m;
@@ -313,13 +312,12 @@ fn arg_list(p: &mut Parser) {
                 true
             } else {
                 if p.at(T![,]) {
-                    // ,,,,
+                    // ,,
                     m.complete(p, VALUE_ARG);
-                    false
                 } else {
                     m.abandon(p);
-                    false
                 }
+                false
             }
             // if !is_expr && p.at(T![,]) {
             //     // ,,,,
@@ -378,83 +376,6 @@ impl BlockLike {
     }
 }
 
-pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
-    let stmt_m = p.start();
-
-    attributes::outer_attrs(p);
-
-    if p.at(T![let]) {
-        let_stmt(p, stmt_m, is_spec);
-        return;
-    }
-    if p.at(T![use]) {
-        use_item::use_stmt(p, stmt_m);
-        return;
-    }
-
-    if is_spec {
-        if p.at(T![native]) && p.nth_at(1, T![fun]) || p.at(T![fun]) {
-            fun::spec_inline_function(p);
-            stmt_m.abandon(p);
-            return;
-        }
-
-        let is_spec_stmt = p.with_recovery_token(T![;], |p| {
-            // enable stmt level items unique to specs
-            let spec_only_stmts = vec![
-                schema_field,
-                global_variable,
-                pragma_stmt,
-                update_stmt,
-                include_schema,
-                apply_schema,
-                spec_predicate,
-            ];
-            if spec_only_stmts.iter().any(|spec_stmt| spec_stmt(p)) {
-                return true;
-            }
-            false
-        });
-        if is_spec_stmt {
-            stmt_m.abandon(p);
-            return;
-        }
-    }
-
-    if let Some((cm, _)) = p.with_recovery_token(T![;], |p| stmt_expr(p, Some(stmt_m))) {
-        if !(p.at(T!['}']) || (prefer_expr && p.at(EOF))) {
-            let m = cm.precede(p);
-            p.expect(T![;]);
-            m.complete(p, EXPR_STMT);
-        }
-        return;
-    }
-
-    p.bump_with_error(&format!("unexpected token {:?}", p.current()));
-}
-
-fn let_stmt(p: &mut Parser, m: Marker, is_spec: bool) {
-    p.bump(T![let]);
-    if is_spec && p.at_contextual_kw_ident("post") {
-        p.bump_remap(T![post]);
-    }
-    p.with_recover_token_set(T![=] | T![;], |p| {
-        pat(p);
-        if p.at(T![:]) {
-            p.with_recover_token_set(T![=] | T![;], types::ascription);
-        }
-    });
-    opt_initializer_expr(p);
-    // if p.at(T![:]) {
-    //     p.with_recover_token_set(T![=] | T![;], types::ascription);
-    //     // types::ascription(p);
-    // }
-    // opt_initializer_expr(p);
-    p.expect(T![;]);
-
-    m.complete(p, LET_STMT);
-}
-
 pub(crate) fn opt_initializer_expr(p: &mut Parser) {
     if p.eat(T![=]) {
         if !expr(p) {
@@ -477,17 +398,7 @@ pub(super) fn expr_block_contents(p: &mut Parser, is_spec: bool) {
             p.bump(T![;]);
             continue;
         }
-        p.with_recover_token_set(STMT_FIRST | T!['}'], |p| stmt(p, false, is_spec));
-        // p.with_recover_tokens(
-        //     STMT_KEYWORDS_LIST
-        //         .iter()
-        //         .map(|it| it.clone().into())
-        //         .into_iter()
-        //         .chain(iter::once(T!['}'].into()))
-        //         .collect(),
-        //     |p| stmt(p, false, is_spec),
-        // );
-        // stmt(p, false, is_spec);
+        p.with_recovery_token_set(T!['}'], |p| stmts::stmt(p, false, is_spec));
     }
 }
 
@@ -496,6 +407,11 @@ pub(crate) struct Restrictions {
     pub forbid_structs: bool,
     pub prefer_stmt: bool,
 }
+
+pub(crate) const EXPR_FIRST: TokenSet =
+    atom::ATOM_EXPR_FIRST.union(TokenSet::new(&[T![&], T![*], T![!]]));
+
+pub(crate) const STMT_FIRST: TokenSet = EXPR_FIRST.union(TokenSet::new(&[T![let]]));
 
 /// Binding powers of operators for a Pratt parser.
 ///

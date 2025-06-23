@@ -2,12 +2,8 @@ use super::*;
 use crate::parse::grammar::paths::Mode;
 use crate::parse::grammar::specs::{opt_spec_block_expr, spec_block_expr};
 use crate::parse::grammar::{any_address, paths};
-use crate::parse::parser::RecoverySet;
 use crate::parse::token_set::TokenSet;
 use crate::ts;
-
-pub(crate) const LITERAL_FIRST: TokenSet =
-    TokenSet::new(&[T![true], T![false], INT_NUMBER, T![@], BYTE_STRING, HEX_STRING]);
 
 pub(crate) fn literal(p: &mut Parser) -> Option<CompletedMarker> {
     let m = p.start();
@@ -28,7 +24,7 @@ pub(crate) fn literal(p: &mut Parser) -> Option<CompletedMarker> {
         }
         BAD_CHARACTER => {
             m.abandon(p);
-            p.bump_with_error("unexpected character");
+            p.error_and_bump("unexpected character");
             return None;
         }
         _ => {
@@ -39,28 +35,29 @@ pub(crate) fn literal(p: &mut Parser) -> Option<CompletedMarker> {
     Some(m.complete(p, LITERAL))
 }
 
-// E.g. for after the break in `if break {}`, this should not match
-pub(super) const ATOM_EXPR_FIRST: TokenSet =
-    LITERAL_FIRST.union(paths::PATH_FIRST).union(TokenSet::new(&[
-        T!['('],
-        T!['{'],
-        T!['['],
-        T![|],
-        T![move],
-        T![if],
-        T![while],
-        T![loop],
-        T![for],
-        T![match],
-        T![return],
-        T![break],
-        T![continue],
-        T![copy],
-        T![move],
-        QUOTE_IDENT,
-    ]));
+pub(crate) const LITERAL_FIRST: TokenSet =
+    TokenSet::new(&[T![true], T![false], INT_NUMBER, T![@], BYTE_STRING, HEX_STRING]);
 
-pub(crate) const STMT_FIRST: TokenSet = EXPR_FIRST.union(TokenSet::new(&[T![let]]));
+pub(crate) const KW_EXPR_FIRST: TokenSet = TokenSet::new(&[
+    T![move],
+    T![if],
+    T![while],
+    T![loop],
+    T![for],
+    T![match],
+    T![return],
+    T![break],
+    T![continue],
+    T![copy],
+    T![move],
+    QUOTE_IDENT,
+]);
+
+// E.g. for after the break in `if break {}`, this should not match
+pub(crate) const ATOM_EXPR_FIRST: TokenSet = LITERAL_FIRST
+    .union(paths::PATH_FIRST)
+    .union(KW_EXPR_FIRST)
+    .union(TokenSet::new(&[T!['('], T!['{'], T!['['], T![|], QUOTE_IDENT]));
 
 pub(crate) fn atom_expr(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> {
     if let Some(m) = literal(p) {
@@ -157,7 +154,7 @@ fn vector_lit_expr(p: &mut Parser) -> CompletedMarker {
         delimited_with_recovery(p, expr, T![,], "expected expression", Some(T![']']));
         p.expect(T![']']);
     } else {
-        p.error_and_recover("expected '['", STMT_FIRST.into());
+        p.error_and_recover("expected '['", STMT_FIRST);
     }
     m.complete(p, VECTOR_LIT_EXPR)
 }
@@ -219,7 +216,7 @@ fn paren_or_tuple_or_annotated_expr(p: &mut Parser) -> CompletedMarker {
         // try for `(a: u8)` annotated expr
         if outer {
             if p.at(T![:]) {
-                types::ascription(p);
+                types::type_annotation(p);
                 p.expect(T![')']);
                 return m.complete(p, ANNOTATED_EXPR);
             }
@@ -290,7 +287,7 @@ fn for_condition(p: &mut Parser) {
         p.bump_remap(T![in]);
         expr(p);
     } else {
-        p.error_and_recover("expected 'in'", EXPR_FIRST.union(ts!(T![')'])).into());
+        p.error_and_recover("expected 'in'", EXPR_FIRST | T![')']);
         // p.error_and_recover_until_ts("expected 'in'", EXPR_FIRST.union(ts!(T![')'])));
     }
     opt_spec_block_expr(p);
@@ -343,12 +340,14 @@ fn match_arm(p: &mut Parser) {
     if p.at(T![if]) {
         match_guard(p);
     }
-    let has_fat_arrow = p.expect(T![=>]);
-    if !has_fat_arrow {
-        p.recover_until(|p| p.at(T!['}']));
+
+    if !p.at(T![=>]) {
+        p.error_and_recover("expected '=>'", T!['}'] | T![,]);
         m.complete(p, MATCH_ARM);
         return;
     }
+    p.bump(T![=>]);
+
     let blocklike = match stmt_expr(p, None) {
         Some((_, blocklike)) => blocklike,
         None => BlockLike::NotBlock,
@@ -455,6 +454,6 @@ fn opt_label(p: &mut Parser) {
     }
 }
 
-pub(crate) const EXPR_FIRST: TokenSet = LHS_FIRST;
+// pub(crate) const EXPR_FIRST: TokenSet = EXPR_LHS_FIRST;
 
 pub(crate) const IDENT_FIRST: TokenSet = TokenSet::new(&[IDENT]);

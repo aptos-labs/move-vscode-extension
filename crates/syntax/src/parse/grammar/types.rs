@@ -1,65 +1,10 @@
 use crate::parse::grammar::utils::delimited_with_recovery;
-use crate::parse::grammar::{paths, type_params};
+use crate::parse::grammar::{paths, type_params, types};
+use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
 use crate::parse::Parser;
 use crate::SyntaxKind::*;
 use crate::{ts, T};
-
-pub(super) const TYPE_FIRST_NO_LAMBDA: TokenSet =
-    paths::PATH_FIRST.union(TokenSet::new(&[T!['('], T!['['], T![<], T![!], T![*], T![&]]));
-
-pub(super) const TYPE_FIRST: TokenSet = TYPE_FIRST_NO_LAMBDA.union(ts!(T![|]));
-
-pub(super) const TYPE_RECOVERY_SET: TokenSet = TokenSet::new(&[T![')'], T![>], T![,]]);
-
-pub(super) fn ascription_or_recover(p: &mut Parser, recover_until: TokenSet) {
-    if p.at(T![:]) {
-        p.bump(T![:]);
-        type_(p);
-    } else {
-        p.error_and_recover_until_ts("missing type annotation", recover_until);
-    }
-}
-
-pub(super) fn ascription(p: &mut Parser) {
-    assert!(p.at(T![:]));
-    p.bump(T![:]);
-    type_(p);
-}
-
-pub(crate) fn type_(p: &mut Parser) -> bool {
-    type_or_recover_until(p, |p| p.outer_recovery_set().contains_current(p))
-}
-
-pub(crate) fn type_or(p: &mut Parser, on_invalid: impl Fn(&mut Parser)) -> bool {
-    match p.current() {
-        T!['('] => paren_or_tuple_or_unit_type(p),
-        T![&] => ref_type(p),
-        T![|] => lambda_type(p),
-        _ if paths::is_path_start(p) => path_type(p),
-        _ => {
-            on_invalid(p);
-            // p.bump_error("expected type");
-            // p.error_and_recover_until("expected type", stop);
-            return false;
-        }
-    }
-    true
-}
-
-pub(crate) fn type_or_recover_until(p: &mut Parser, stop: impl Fn(&Parser) -> bool) -> bool {
-    match p.current() {
-        T!['('] => paren_or_tuple_or_unit_type(p),
-        T![&] => ref_type(p),
-        T![|] => lambda_type(p),
-        _ if paths::is_path_start(p) => path_type(p),
-        _ => {
-            p.error_and_recover_until("expected type", stop);
-            return false;
-        }
-    }
-    true
-}
 
 pub(super) fn path_type(p: &mut Parser) {
     assert!(paths::is_path_start(p));
@@ -68,6 +13,30 @@ pub(super) fn path_type(p: &mut Parser) {
     paths::type_path(p);
 
     m.complete(p, PATH_TYPE);
+}
+
+pub(crate) fn type_annotation(p: &mut Parser) {
+    assert!(p.at(T![:]));
+    p.bump(T![:]);
+    type_(p);
+}
+
+pub(crate) fn type_(p: &mut Parser) -> bool {
+    type_or_recover(p, TokenSet::EMPTY)
+}
+
+pub(crate) fn type_or_recover(p: &mut Parser, extra: impl Into<RecoverySet>) -> bool {
+    match p.current() {
+        T!['('] => paren_or_tuple_or_unit_type(p),
+        T![&] => ref_type(p),
+        T![|] => lambda_type(p),
+        _ if paths::is_path_start(p) => path_type(p),
+        _ => {
+            p.error_and_recover("expected type", extra.into());
+            return false;
+        }
+    }
+    true
 }
 
 // test reference_type;
@@ -95,7 +64,8 @@ fn lambda_type(p: &mut Parser) {
         p,
         |p| {
             let m = p.start();
-            let is_type = type_or_recover_until(p, |p| p.at_ts(ts!(T![,], T![|])));
+            let is_type = type_or_recover(p, T![,] | T![|]);
+            // let is_type = type_or_recover_until(p, |p| p.at_ts(ts!(T![,], T![|])));
             if is_type {
                 m.complete(p, LAMBDA_TYPE_PARAM);
             } else {
@@ -158,3 +128,10 @@ fn paren_or_tuple_or_unit_type(p: &mut Parser) {
     };
     m.complete(p, kind);
 }
+
+pub(super) const TYPE_FIRST_NO_LAMBDA: TokenSet =
+    paths::PATH_FIRST.union(TokenSet::new(&[T!['('], T!['['], T![<], T![!], T![*], T![&]]));
+
+pub(super) const TYPE_FIRST: TokenSet = TYPE_FIRST_NO_LAMBDA.union(ts!(T![|]));
+
+pub(super) const TYPE_RECOVERY_SET: TokenSet = TokenSet::new(&[T![')'], T![>], T![,]]);

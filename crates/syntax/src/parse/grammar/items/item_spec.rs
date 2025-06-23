@@ -1,7 +1,7 @@
 use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::parse::grammar::expressions::atom::block_expr;
 use crate::parse::grammar::items::{at_item_start, fun, item_start_rec_set};
-use crate::parse::grammar::patterns::ident_or_wildcard_pat_with_recovery;
+use crate::parse::grammar::patterns::ident_pat_or_recover;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{name_ref, name_ref_or_recover, patterns, type_params, types};
 use crate::parse::parser::{Marker, Parser};
@@ -22,7 +22,6 @@ pub(crate) fn item_spec(p: &mut Parser, m: Marker) {
 fn item_spec_signature(p: &mut Parser) {
     let ref_m = p.start();
     let res = name_ref_or_recover(p);
-    // let res = name_ref_or_bump_until(p, |p| at_item_start(p) || p.at(T!['{']));
     if res {
         ref_m.complete(p, ITEM_SPEC_REF);
     } else {
@@ -62,13 +61,14 @@ fn item_spec_type_param(p: &mut Parser) -> bool {
             name_ref(p);
             if p.at(T![:]) {
                 p.bump(T![:]);
+                // type_params::ability_bound_list_recover_until(p);
                 type_params::ability_bound_list(p);
             }
             m.complete(p, ITEM_SPEC_TYPE_PARAM);
         }
         _ => {
             m.abandon(p);
-            p.bump_with_error("expected type parameter");
+            p.error_and_bump("expected type parameter");
             return false;
         }
     }
@@ -91,12 +91,12 @@ pub(crate) fn item_spec_param_list(p: &mut Parser) {
 
 fn item_spec_param(p: &mut Parser) -> bool {
     let m = p.start();
-    let is_ident = ident_or_wildcard_pat_with_recovery(p);
+    let is_ident = ident_pat_or_recover(p);
     if is_ident {
         if p.at(T![:]) {
-            types::ascription(p);
+            types::type_annotation(p);
         } else {
-            p.error_and_recover("missing type for parameter", TokenSet::EMPTY.into());
+            p.error_and_recover("missing type annotation", TokenSet::EMPTY);
         }
     }
     m.complete(p, ITEM_SPEC_PARAM);

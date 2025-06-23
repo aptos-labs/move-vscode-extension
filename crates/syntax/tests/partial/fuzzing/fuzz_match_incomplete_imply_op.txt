@@ -64,7 +64,8 @@ SOURCE_FILE@0..283
                   WHITESPACE@116..117 " "
                   R_CURLY@117..118 "}"
               WHITESPACE@118..119 " "
-              EQ@119..120 "="
+              ERROR@119..120
+                EQ@119..120 "="
             WHITESPACE@120..129 "\n        "
             R_CURLY@129..130 "}"
         WHITESPACE@130..135 "\n    "
@@ -97,7 +98,7 @@ SOURCE_FILE@0..283
             MATCH_ARM_LIST@194..280
               L_CURLY@194..195 "{"
               WHITESPACE@195..208 "\n            "
-              MATCH_ARM@208..278
+              MATCH_ARM@208..238
                 STRUCT_PAT@208..236
                   PATH@208..212
                     PATH_SEGMENT@208..212
@@ -125,8 +126,11 @@ SOURCE_FILE@0..283
                     WHITESPACE@234..235 " "
                     R_CURLY@235..236 "}"
                 WHITESPACE@236..237 " "
-                EQ@237..238 "="
-                COMMA@238..239 ","
+                ERROR@237..238
+                  EQ@237..238 "="
+              MATCH_ARM@238..278
+                ERROR@238..239
+                  COMMA@238..239 ","
                 WHITESPACE@239..252 "\n            "
                 IDENT@252..256 "Some"
                 WHITESPACE@256..257 " "

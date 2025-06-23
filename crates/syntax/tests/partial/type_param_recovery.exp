@@ -1,5 +1,6 @@
 module 0x1::type_param_recovery {
     struct S1<T,,>();
+              //^ expected identifier, got ','
               //^ expected type parameter
     struct S2<T:>();
               //^ expected ability
@@ -9,18 +10,20 @@ module 0x1::type_param_recovery {
                    //^ expected ability
 
     struct S5<phantom>();
-                   //^ expected identifier
+                   //^ expected identifier, got '>'
     struct S6<phantom,>();
-                   //^ expected identifier
+                   //^ expected identifier, got ','
                    //^ expected type parameter
     struct S7<D:1>();
               //^ expected ability
 
     fun main<a:, phantom,, 11, bb:copy+, dd: 1>() {
              //^ expected ability
-                      //^ expected identifier
+                      //^ expected identifier, got ','
                       //^ expected type parameter
+                       //^ expected identifier, got ','
                        //^ expected type parameter
+                         //^^ expected identifier, got '11'
                          //^^ expected type parameter
                                      //^ expected ability
                                            //^ expected ability

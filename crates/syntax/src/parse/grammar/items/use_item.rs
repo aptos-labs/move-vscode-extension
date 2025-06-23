@@ -1,19 +1,12 @@
-use crate::parse::grammar::items::at_item_start;
+use crate::parse::grammar::items::{at_item_start, item_start_rec_set};
 use crate::parse::grammar::{name, paths};
 use crate::parse::parser::{Marker, Parser};
 use crate::SyntaxKind::*;
 use crate::T;
 
-pub(crate) fn use_stmt(p: &mut Parser, stmt: Marker) {
-    p.bump(T![use]);
-    use_speck(p, true);
-    p.expect(T![;]);
-    stmt.complete(p, USE_STMT);
-}
-
 // test use_tree
 // use outer::tree::{inner::tree};
-fn use_speck(p: &mut Parser, top_level: bool) {
+pub(crate) fn use_speck(p: &mut Parser, top_level: bool) {
     let m = p.start();
     match p.current() {
         T!['{'] => use_group(p),
@@ -49,11 +42,12 @@ fn use_speck(p: &mut Parser, top_level: bool) {
             m.abandon(p);
             let msg = "expected one of `*`, `::`, `{`, `self`, `super` or an identifier";
             if top_level {
-                p.error_and_recover_until(msg, at_item_start);
+                p.error_and_recover(msg, item_start_rec_set());
+                // p.error_and_recover_until(msg, at_item_start);
             } else {
                 // if we are parsing a nested tree, we have to eat a token to
                 // main balanced `{}`
-                p.bump_with_error(msg);
+                p.error_and_bump(msg);
             }
             return;
         }

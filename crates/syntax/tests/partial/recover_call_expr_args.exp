@@ -4,10 +4,9 @@ module 0x1::recover_call_expr_args {
            //^ expected argument
            //^ expected R_PAREN
         call(
-           //^ expected argument
-           //^ expected R_PAREN
-           //^ expected SEMICOLON
         let a = 1;
+      //^^^ expected argument
+               //^ expected R_PAREN
         call(
            //^ expected argument
            //^ expected R_PAREN

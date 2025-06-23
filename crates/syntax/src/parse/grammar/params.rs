@@ -15,9 +15,9 @@ pub(crate) fn fun_param_list(p: &mut Parser) {
 
 fn param(p: &mut Parser) -> bool {
     let m = p.start();
-    let is_ident = patterns::ident_or_wildcard_pat_with_recovery(p);
+    let is_ident = patterns::ident_pat_or_recover(p);
     if is_ident {
-        if p.expect_with_error(T![:], "expected type annotation") {
+        if p.expect_with_error(T![:], "missing type annotation") {
             p.with_recovery_token(T![,], types::type_);
         }
     }

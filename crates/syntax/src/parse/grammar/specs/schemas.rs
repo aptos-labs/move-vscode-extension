@@ -1,12 +1,13 @@
-use crate::parse::grammar::expressions::atom::{block_expr, condition, IDENT_FIRST};
+use crate::parse::grammar::expressions::atom::{block_expr, condition};
 use crate::parse::grammar::expressions::{expr, opt_initializer_expr};
-use crate::parse::grammar::items::{at_item_start, item_start_rec_set};
+use crate::parse::grammar::items::item_start_rec_set;
 use crate::parse::grammar::paths::{is_path_start, type_path};
 use crate::parse::grammar::patterns::ident_pat;
 use crate::parse::grammar::specs::predicates::opt_predicate_property_list;
 use crate::parse::grammar::utils::delimited_with_recovery;
-use crate::parse::grammar::{name, name_or_recover_with, name_ref, type_params, types};
-use crate::parse::parser::{CompletedMarker, Marker, Parser, RecoveryToken};
+use crate::parse::grammar::{name, name_or_recover, name_ref, type_params, types};
+use crate::parse::parser::{CompletedMarker, Marker, Parser};
+use crate::parse::recovery_set::RecoveryToken;
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{ts, T};
@@ -15,7 +16,7 @@ pub(crate) fn schema(p: &mut Parser, m: Marker) {
     assert!(p.at_contextual_kw_ident("schema"));
     p.bump_remap(T![schema]);
     p.with_recovery_set(item_start_rec_set(), |p| {
-        name_or_recover_with(p, TokenSet::EMPTY.into());
+        name_or_recover(p, item_start_rec_set());
         type_params::opt_type_param_list(p);
     });
     // name_or_recover(p, at_item_start);
@@ -32,7 +33,7 @@ pub(crate) fn schema_field(p: &mut Parser) -> bool {
     ident_pat(p);
     // patterns::ident_pat(p);
     if p.at(T![:]) {
-        types::ascription(p);
+        types::type_annotation(p);
     } else {
         m.abandon_with_rollback(p);
         return false;
@@ -51,7 +52,7 @@ pub(crate) fn global_variable(p: &mut Parser) -> bool {
     // patterns::ident_pat(p);
     type_params::opt_type_param_list(p);
     if p.at(T![:]) {
-        types::ascription(p);
+        types::type_annotation(p);
     } else {
         m.abandon_with_rollback(p);
         return false;
@@ -173,7 +174,7 @@ fn opt_wildcard_pattern_modifier(p: &mut Parser) {
     while !p.at(EOF) {
         if p.at(T![public]) {
             if !all_modifiers.contains(&T![public]) {
-                p.bump_with_error("duplicate modifier 'public'");
+                p.error_and_bump("duplicate modifier 'public'");
                 continue;
             }
             found = true;
@@ -183,7 +184,7 @@ fn opt_wildcard_pattern_modifier(p: &mut Parser) {
         }
         if p.at_contextual_kw_ident("internal") {
             if !all_modifiers.contains(&T![internal]) {
-                p.bump_with_error("duplicate modifier 'internal'");
+                p.error_and_bump("duplicate modifier 'internal'");
                 continue;
             }
             found = true;

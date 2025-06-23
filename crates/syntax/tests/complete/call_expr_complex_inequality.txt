@@ -1,0 +1,71 @@
+SOURCE_FILE@0..140
+  MODULE@0..139
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..40
+      IDENT@12..40 "call_expr_complex_ine ..."
+    WHITESPACE@40..41 " "
+    L_CURLY@41..42 "{"
+    WHITESPACE@42..47 "\n    "
+    FUN@47..137
+      FUN_KW@47..50 "fun"
+      WHITESPACE@50..51 " "
+      NAME@51..55
+        IDENT@51..55 "main"
+      PARAM_LIST@55..57
+        L_PAREN@55..56 "("
+        R_PAREN@56..57 ")"
+      WHITESPACE@57..58 " "
+      BLOCK_EXPR@58..137
+        L_CURLY@58..59 "{"
+        WHITESPACE@59..68 "\n        "
+        EXPR_STMT@68..131
+          BIN_EXPR@68..130
+            CALL_EXPR@68..110
+              PATH_EXPR@68..80
+                PATH@68..80
+                  PATH_SEGMENT@68..80
+                    NAME_REF@68..80
+                      IDENT@68..80 "bucket_index"
+              VALUE_ARG_LIST@80..110
+                L_PAREN@80..81 "("
+                VALUE_ARG@81..97
+                  DOT_EXPR@81..97
+                    PATH_EXPR@81..85
+                      PATH@81..85
+                        PATH_SEGMENT@81..85
+                          NAME_REF@81..85
+                            IDENT@81..85 "self"
+                    DOT@85..86 "."
+                    NAME_REF@86..97
+                      IDENT@86..97 "num_buckets"
+                COMMA@97..98 ","
+                WHITESPACE@98..99 " "
+                VALUE_ARG@99..109
+                  DOT_EXPR@99..109
+                    PATH_EXPR@99..104
+                      PATH@99..104
+                        PATH_SEGMENT@99..104
+                          NAME_REF@99..104
+                            IDENT@99..104 "entry"
+                    DOT@104..105 "."
+                    NAME_REF@105..109
+                      IDENT@105..109 "hash"
+                R_PAREN@109..110 ")"
+            WHITESPACE@110..111 " "
+            NOT_EQ@111..113 "!="
+            WHITESPACE@113..114 " "
+            PATH_EXPR@114..130
+              PATH@114..130
+                PATH_SEGMENT@114..130
+                  NAME_REF@114..130
+                    IDENT@114..130 "new_bucket_index"
+          SEMICOLON@130..131 ";"
+        WHITESPACE@131..136 "\n    "
+        R_CURLY@136..137 "}"
+    WHITESPACE@137..138 "\n"
+    R_CURLY@138..139 "}"
+  WHITESPACE@139..140 "\n"

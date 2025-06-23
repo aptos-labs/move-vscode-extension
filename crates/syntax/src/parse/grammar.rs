@@ -42,10 +42,10 @@ mod types;
 pub(crate) mod utils;
 
 use crate::parse::grammar::attributes::outer_attrs;
-use crate::parse::grammar::items::{at_block_start, at_item_start};
 use crate::parse::grammar::paths::{use_path, Mode};
 use crate::parse::grammar::utils::delimited_with_recovery;
-use crate::parse::parser::{Marker, RecoverySet};
+use crate::parse::parser::Marker;
+use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
 use crate::{parse::Parser, ts, SyntaxKind::*, T};
 
@@ -64,7 +64,7 @@ pub mod entry_points {
                 IDENT if p.at_contextual_kw("address") => address_def(p, m),
                 _ => {
                     m.abandon(p);
-                    p.bump_with_error(&format!("unexpected ident '{}'", p.current_text()))
+                    p.error_and_bump(&format!("unexpected ident '{}'", p.current_text()))
                 }
             }
         }
@@ -72,24 +72,19 @@ pub mod entry_points {
     }
 }
 
-// test mod_item
-// module 0x1::m {}
 pub(crate) fn module(p: &mut Parser, m: Marker) {
     p.bump(T![module]);
-    // module_name(p);
-
     if p.nth_at(1, T![::]) {
         // named address
         any_address(p);
         p.bump(T![::]);
     }
-    name_or_recover_with(p, TOP_LEVEL_FIRST.into());
+    name_or_recover(p, TOP_LEVEL_FIRST.into());
 
     if p.at(T!['{']) {
         items::item_list(p);
     } else {
-        p.error_and_recover("expected '{'", TOP_LEVEL_FIRST.into());
-        // p.error_and_recover_until_ts("expected `{`", TOP_LEVEL_FIRST);
+        p.error_and_recover("expected '{'", TOP_LEVEL_FIRST);
     }
     m.complete(p, MODULE);
 }
@@ -106,12 +101,12 @@ pub(crate) fn address_def(p: &mut Parser, m: Marker) {
                 module(p, m);
             } else {
                 m.abandon(p);
-                p.error_and_recover_until_ts("expected module", ts!(T![module], T!['}']));
+                p.error_and_recover("expected module", T![module] | T!['}']);
             }
         }
         p.expect(T!['}']);
     } else {
-        p.error_and_recover_until_ts("expected `{`", TOP_LEVEL_FIRST);
+        p.error_and_recover("expected '{'", TOP_LEVEL_FIRST);
     }
     m.complete(p, ADDRESS_DEF);
 }
@@ -132,11 +127,9 @@ pub(crate) fn module_spec(p: &mut Parser, m: Marker) {
 pub(crate) fn script(p: &mut Parser, m: Marker) {
     p.bump(T![script]);
     if p.at(T!['{']) {
-        // test mod_item_curly
-        // mod b { }
         items::item_list(p);
     } else {
-        p.error_and_recover_until_ts("expected `{`", TOP_LEVEL_FIRST);
+        p.error_and_recover("expected `{`", TOP_LEVEL_FIRST);
     }
     m.complete(p, SCRIPT);
 }
@@ -147,7 +140,7 @@ pub(crate) fn module_name(p: &mut Parser) {
         any_address(p);
         p.bump(T![::]);
     }
-    name_or_recover(p, |p| p.at_ts(TOP_LEVEL_FIRST));
+    name_or_recover(p, TOP_LEVEL_FIRST.into());
 }
 
 pub(crate) fn any_address(p: &mut Parser) {
@@ -160,7 +153,6 @@ pub(crate) fn any_address(p: &mut Parser) {
         m.complete(p, NAMED_ADDRESS);
     } else {
         p.error("expected address reference");
-        // p.error_and_bump_any("expected address reference");
     }
 }
 
@@ -179,14 +171,21 @@ pub(crate) const TOP_LEVEL_FIRST: TokenSet =
     TokenSet::new(&[T![module], T![script], T![spec], T![address]]);
 
 fn name(p: &mut Parser) -> bool {
-    name_or_recover(p, |p| p.at_ts(TokenSet::EMPTY))
+    name_or_recover(p, TokenSet::EMPTY.into())
 }
 
 fn name_ref_or_recover(p: &mut Parser) -> bool {
     if !p.at(IDENT) {
-        p.error_and_recover("expected identifier", TokenSet::EMPTY.into());
+        p.error_and_recover("expected identifier", TokenSet::EMPTY);
         return false;
     }
+
+    let rec_set = p.outer_recovery_set();
+    if rec_set.contains_current(p) {
+        p.error(&format!("expected identifier, got '{}'", p.current_text()));
+        return false;
+    }
+
     let m = p.start();
     p.bump(IDENT);
     m.complete(p, NAME_REF);
@@ -199,7 +198,7 @@ fn name_ref(p: &mut Parser) {
         p.bump(IDENT);
         m.complete(p, NAME_REF);
     } else {
-        p.bump_with_error("expected identifier");
+        p.error_and_bump("expected identifier");
     }
 }
 
@@ -213,60 +212,21 @@ fn name_ref_or_index(p: &mut Parser) {
         p.bump_any();
         m.complete(p, NAME_REF);
     } else {
-        p.bump_with_error("expected integer or identifier");
+        p.error_and_bump("expected integer or identifier");
     }
 }
 
-// fn name_ref_or_index(p: &mut Parser) {
-//     assert!(p.at(IDENT) || p.at(INT_NUMBER));
+// fn name_2(p: &mut Parser) -> bool {
+//     if !p.at(IDENT) {
+//         return false;
+//     }
 //     let m = p.start();
-//     p.bump_any();
-//     m.complete(p, NAME_REF);
+//     p.bump(IDENT);
+//     m.complete(p, NAME);
+//     true
 // }
 
-fn item_name_or_recover(p: &mut Parser, extra_recover_at: impl Fn(&Parser) -> bool) -> bool {
-    // name_or_recover(p, |p| {
-    //     at_item_start(p) || at_block_start(p) || extra_recover_at(p)
-    // })
-    if at_item_start(p) {
-        p.push_error(format!("expected identifier, got '{}'", p.current_text()));
-        return false;
-    }
-    // let recover_until = |p| at_item_start(p) || at_block_start(p) || extra_recover_at(p);
-    if !p.at(IDENT) {
-        p.error_and_recover_until("expected an identifier", |p| {
-            at_item_start(p) || at_block_start(p) || extra_recover_at(p)
-        });
-        return false;
-    }
-    let m = p.start();
-    p.bump(IDENT);
-    m.complete(p, NAME);
-    true
-}
-
-fn name_2(p: &mut Parser) -> bool {
-    if !p.at(IDENT) {
-        return false;
-    }
-    let m = p.start();
-    p.bump(IDENT);
-    m.complete(p, NAME);
-    true
-}
-
-fn name_or_recover(p: &mut Parser, stop: impl Fn(&Parser) -> bool) -> bool {
-    if !p.at(IDENT) {
-        p.error_and_recover_until("expected an identifier", stop);
-        return false;
-    }
-    let m = p.start();
-    p.bump(IDENT);
-    m.complete(p, NAME);
-    true
-}
-
-fn name_or_recover_with(p: &mut Parser, extra: RecoverySet) -> bool {
+fn name_or_recover(p: &mut Parser, extra: RecoverySet) -> bool {
     if !p.at(IDENT) {
         p.error_and_recover(&format!("expected identifier, got '{}'", p.current_text()), extra);
         return false;

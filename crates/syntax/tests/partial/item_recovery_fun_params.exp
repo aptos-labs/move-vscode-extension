@@ -1,10 +1,10 @@
 module 0x1::item_recovery_fun_params {
     fun main(a, b, b:,, c::, d: u8+u8, e: u8) {}
-            //^ expected type annotation
-               //^ expected type annotation
+            //^ missing type annotation
+               //^ missing type annotation
                    //^ expected type
                     //^ expected ident
-                       //^^ expected type annotation
+                       //^^ missing type annotation
                        //^^ expected COMMA
                        //^^ expected ident
                                 //^ expected COMMA

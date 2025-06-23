@@ -3,12 +3,14 @@ pub(crate) mod fun;
 pub(crate) mod item_spec;
 pub(crate) mod use_item;
 
-use crate::parse::grammar::expressions::expr;
+use crate::parse::grammar::expressions::{expr, stmts, EXPR_FIRST};
 use crate::parse::grammar::items::fun::{function_modifier_recovery_set, function_modifier_tokens};
 use crate::parse::grammar::paths::use_path;
+use crate::parse::grammar::patterns::STMT_FIRST;
 use crate::parse::grammar::specs::schemas::schema;
-use crate::parse::grammar::{attributes, error_block, item_name_or_recover, types};
-use crate::parse::parser::{Marker, Parser, RecoverySet, RecoveryToken};
+use crate::parse::grammar::{attributes, error_block, name_or_recover, types};
+use crate::parse::parser::{Marker, Parser};
+use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{SyntaxKind, T};
@@ -37,11 +39,11 @@ pub(crate) fn item_list(p: &mut Parser) {
 pub(super) fn item(p: &mut Parser) {
     let m = p.start();
     attributes::outer_attrs(p);
-    let m = match p.with_recovery_set(item_start_rec_set(), |p| opt_item(p, m)) {
+    let m = match opt_item(p, m) {
         // let m = match opt_item(p, m) {
         Ok(()) => {
             if p.at(T![;]) {
-                p.bump_with_error(
+                p.error_and_bump(
                     "expected item, found `;`\n\
                      consider removing this semicolon",
                 );
@@ -63,14 +65,14 @@ pub(super) fn item(p: &mut Parser) {
         // }
         T!['}'] => p.error("unexpected '}'"),
         EOF => p.error("unexpected EOF"),
-        _ => p.bump_with_error(&format!("expected an item, got {:?}", p.current())),
+        _ => p.error_and_bump(&format!("expected an item, got {:?}", p.current())),
     }
 }
 
 /// Try to parse an item, completing `m` in case of success.
 pub(super) fn opt_item(p: &mut Parser, m: Marker) -> Result<(), Marker> {
     match p.current() {
-        T![use] => use_item::use_stmt(p, m),
+        T![use] => stmts::use_stmt(p, m),
         T![struct] => adt::struct_(p, m),
         T![const] => const_(p, m),
         T![friend] if !p.nth_at(1, T![fun]) => friend_decl(p, m),
@@ -99,20 +101,17 @@ pub(super) fn opt_item(p: &mut Parser, m: Marker) -> Result<(), Marker> {
 fn const_(p: &mut Parser, m: Marker) {
     p.bump(T![const]);
 
-    if !item_name_or_recover(p, |p| p.at(T![;])) {
+    if !name_or_recover(p, item_start_rec_set().with_token_set(T![;])) {
         m.complete(p, CONST);
         return;
     }
 
-    p.with_recovery_token(T![;], |p| {
+    p.with_recovery_set(item_start_rec_set().with_token_set(T![;]), |p| {
         p.with_recovery_token(T![=], |p| {
             if p.at(T![:]) {
-                // p.with_recover_ts(ts!(T![;]), types::ascription);
-                types::ascription(p);
-                // p.with_recover_fn(|p| at_item_start(p) || p.at_ts(ts!(T![;])), types::ascription);
-                // types::ascription(p);
+                types::type_annotation(p);
             } else {
-                p.error("expected type annotation");
+                p.error("missing type annotation");
             }
         });
         if p.expect(T![=]) {
@@ -123,16 +122,6 @@ fn const_(p: &mut Parser, m: Marker) {
         }
     });
 
-    // if p.at(T![:]) {
-    //     // p.with_recover_ts(ts!(T![;]), types::ascription);
-    //     p.with_recover_fn(|p| at_item_start(p) || p.at_ts(ts!(T![;])), types::ascription);
-    //     // types::ascription(p);
-    // } else {
-    //     p.error("expected type annotation");
-    // }
-    // if p.expect(T![=]) {
-    //     expr(p);
-    // }
     p.expect(T![;]);
     m.complete(p, CONST);
 }
@@ -143,10 +132,6 @@ pub(crate) fn friend_decl(p: &mut Parser, m: Marker) {
     p.expect(T![;]);
     m.complete(p, FRIEND);
 }
-
-// pub(crate) fn item_first_or_l_curly(p: &Parser) -> bool {
-//     item_first(p)
-// }
 
 pub(crate) fn at_block_start(p: &Parser) -> bool {
     p.at(T!['{'])
@@ -159,19 +144,27 @@ pub(crate) fn at_item_start(p: &Parser) -> bool {
         || p.at_contextual_kw_ident("enum")
 }
 
-pub(crate) fn item_start_tokens() -> Vec<RecoveryToken> {
-    let mut tokens = vec![];
-    tokens.extend(ITEM_KW_START_LIST.iter().map(|it| it.clone().into()));
-    tokens.extend(function_modifier_tokens());
-    tokens.push("enum".into());
-    tokens
-}
+// pub(crate) fn item_start_tokens() -> Vec<RecoveryToken> {
+//     let mut tokens = vec![];
+//     tokens.extend(ITEM_KW_START_LIST.iter().map(|it| it.clone().into()));
+//     tokens.extend(function_modifier_tokens());
+//     tokens.push("enum".into());
+//     tokens
+// }
 
 pub(crate) fn item_start_rec_set() -> RecoverySet {
     RecoverySet::new()
         .with_token_set(ITEM_KEYWORDS)
         .with_kw_ident("enum")
         .with_merged(function_modifier_recovery_set())
+}
+
+pub(crate) fn stmt_start_rec_set() -> RecoverySet {
+    RecoverySet::from_ts(STMT_FIRST)
+    // RecoverySet::new()
+    //     .with_token_set(ITEM_KEYWORDS)
+    //     .with_kw_ident("enum")
+    //     .with_merged(function_modifier_recovery_set())
 }
 
 const ITEM_KW_START_LIST: &[SyntaxKind] = &[

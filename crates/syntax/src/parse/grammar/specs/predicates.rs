@@ -1,4 +1,3 @@
-use crate::parse::grammar::expressions::atom::EXPR_FIRST;
 use crate::parse::grammar::expressions::{expr, opt_initializer_expr, Restrictions};
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{expressions, type_params};
