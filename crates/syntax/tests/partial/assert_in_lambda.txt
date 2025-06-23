@@ -10,78 +10,66 @@ SOURCE_FILE@0..119
     WHITESPACE@28..29 " "
     L_CURLY@29..30 "{"
     WHITESPACE@30..35 "\n    "
-    FUN@35..116
+    FUN@35..84
       FUN_KW@35..38 "fun"
       WHITESPACE@38..39 " "
       NAME@39..43
         IDENT@39..43 "main"
-      PARAM_LIST@43..107
+      PARAM_LIST@43..84
         L_PAREN@43..44 "("
         WHITESPACE@44..53 "\n        "
-        PARAM@53..100
+        PARAM@53..55
           IDENT_PAT@53..54
             NAME@53..54
               IDENT@53..54 "f"
           COLON@54..55 ":"
-          WHITESPACE@55..56 " "
-          LAMBDA_TYPE@56..100
+        WHITESPACE@55..56 " "
+        PARAM@56..64
+          ERROR@56..57
             PIPE@56..57 "|"
-            LAMBDA_TYPE_PARAM@57..64
-              PATH_TYPE@57..64
-                PATH@57..64
-                  PATH_SEGMENT@57..64
-                    NAME_REF@57..64
-                      IDENT@57..64 "Element"
-            COMMA@64..65 ","
-            WHITESPACE@65..66 " "
-            LAMBDA_TYPE_PARAM@66..72
-              PATH_TYPE@66..72
-                PATH@66..72
-                  PATH_SEGMENT@66..72
-                    NAME_REF@66..72
-                      IDENT@66..72 "assert"
-            ERROR@72..73
-              ERROR@72..73
-                BANG@72..73 "!"
-            COMMA@73..74 ","
-            WHITESPACE@74..75 " "
-            LAMBDA_TYPE_PARAM@75..81
-              PATH_TYPE@75..81
-                PATH@75..81
-                  PATH_SEGMENT@75..81
-                    NAME_REF@75..81
-                      IDENT@75..81 "assert"
-            ERROR@81..84
-              ERROR@81..82
-                BANG@81..82 "!"
-              L_PAREN@82..83 "("
-              R_PAREN@83..84 ")"
-            COMMA@84..85 ","
-            WHITESPACE@85..86 " "
-            LAMBDA_TYPE_PARAM@86..90
-              PATH_TYPE@86..90
-                PATH@86..90
-                  PATH_SEGMENT@86..90
-                    NAME_REF@86..90
-                      IDENT@86..90 "call"
-            LAMBDA_TYPE_PARAM@90..91
-              PAREN_TYPE@90..91
-                L_PAREN@90..91 "("
-            PIPE@91..92 "|"
-            WHITESPACE@92..93 " "
-            PATH_TYPE@93..100
-              PATH@93..100
-                PATH_SEGMENT@93..100
-                  NAME_REF@93..100
-                    IDENT@93..100 "Element"
-        COMMA@100..101 ","
-        WHITESPACE@101..106 "\n    "
-        R_PAREN@106..107 ")"
-      WHITESPACE@107..108 " "
-      BLOCK_EXPR@108..116
-        L_CURLY@108..109 "{"
-        WHITESPACE@109..115 "\n\n    "
-        R_CURLY@115..116 "}"
+          IDENT@57..64 "Element"
+        COMMA@64..65 ","
+        WHITESPACE@65..66 " "
+        PARAM@66..72
+          IDENT_PAT@66..72
+            NAME@66..72
+              IDENT@66..72 "assert"
+        PARAM@72..73
+          ERROR@72..73
+            BANG@72..73 "!"
+        COMMA@73..74 ","
+        WHITESPACE@74..75 " "
+        PARAM@75..81
+          IDENT_PAT@75..81
+            NAME@75..81
+              IDENT@75..81 "assert"
+        PARAM@81..83
+          ERROR@81..82
+            BANG@81..82 "!"
+          L_PAREN@82..83 "("
+        R_PAREN@83..84 ")"
+    ERROR@84..85
+      COMMA@84..85 ","
+    WHITESPACE@85..86 " "
+    ERROR@86..90
+      IDENT@86..90 "call"
+    ERROR@90..91
+      L_PAREN@90..91 "("
+    ERROR@91..92
+      PIPE@91..92 "|"
+    WHITESPACE@92..93 " "
+    ERROR@93..100
+      IDENT@93..100 "Element"
+    ERROR@100..101
+      COMMA@100..101 ","
+    WHITESPACE@101..106 "\n    "
+    ERROR@106..107
+      R_PAREN@106..107 ")"
+    WHITESPACE@107..108 " "
+    ERROR@108..116
+      L_CURLY@108..109 "{"
+      WHITESPACE@109..115 "\n\n    "
+      R_CURLY@115..116 "}"
     WHITESPACE@116..117 "\n"
     R_CURLY@117..118 "}"
   WHITESPACE@118..119 "\n"

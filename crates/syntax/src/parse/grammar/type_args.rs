@@ -1,9 +1,7 @@
 use super::*;
 use crate::parse::grammar::paths::Mode;
 use crate::parse::grammar::types::TYPE_FIRST;
-use crate::parse::grammar::utils::{
-    delimited, delimited_items_with_recover, delimited_with_recovery, list,
-};
+use crate::parse::grammar::utils::delimited_with_recovery;
 
 pub(crate) fn opt_path_type_arg_list(p: &mut Parser, mode: Mode) {
     match mode {
@@ -22,15 +20,23 @@ pub(crate) fn opt_type_arg_list_for_type(p: &mut Parser) {
         return;
     }
     p.bump(T![<]);
-    delimited_with_recovery(
-        p,
-        T![>],
-        // TYPE_ARG_FIRST + TYPE_FIRST,
-        |p| type_arg(p, true),
-        T![,],
-        "expected type argument",
-        TokenSet(!0), // no recovery
-    );
+    p.with_recovery_token(T![>], |p| {
+        delimited_with_recovery(
+            p,
+            |p| type_arg(p, true),
+            T![,],
+            "expected type argument",
+            Some(T![>]),
+        )
+    });
+    // delimited_with_recovery(
+    //     p,
+    //     T![>],
+    //     // TYPE_ARG_FIRST + TYPE_FIRST,
+    //     |p| type_arg(p, true),
+    //     T![,],
+    //     "expected type argument",
+    // );
     p.expect(T![>]);
     m.complete(p, TYPE_ARG_LIST);
 }
@@ -86,21 +92,19 @@ pub(crate) fn type_arg(p: &mut Parser, is_type: bool) -> bool {
         }
         _ if p.at_ts(TYPE_FIRST) => {
             let m = p.start();
-            let mut rec = ts!(T![,]);
+            let mut rec = vec![T![,]];
+            let mut rec_token_set = TokenSet::from(T![,]);
             // can't recover at T![>] in expr due to ambiguity
             if is_type {
-                rec = rec.union(ts!(T![>]))
+                rec_token_set = rec_token_set | T![>];
             }
-            let is_valid_type = p.with_recover_ts(rec, types::type_);
+            let is_valid_type = p.with_recovery_token_set(rec_token_set, types::type_);
             if !is_type && !is_valid_type {
                 // have to be safe
                 m.abandon(p);
                 return false;
             }
             m.complete(p, TYPE_ARG);
-            // if !is_valid_type {
-            //     return false;
-            // }
         }
         _ => return false,
     }

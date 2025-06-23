@@ -1,7 +1,7 @@
-use crate::parse::grammar::patterns::PAT_RECOVERY_SET;
-use crate::parse::grammar::utils::delimited_items_with_recover;
+use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{patterns, types};
 use crate::parse::parser::Parser;
+use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{ts, T};
 
@@ -13,7 +13,7 @@ pub(crate) fn lambda_param_list(p: &mut Parser) -> bool {
         return false;
     }
 
-    delimited_items_with_recover(p, T![|], T![,], ts!(), LAMBDA_PARAM, lambda_param);
+    delimited_with_recovery(p, lambda_param, T![,], "expected ident", Some(T![|]));
 
     if !p.eat(T![|]) {
         list_marker.abandon_with_rollback(p);
@@ -26,9 +26,11 @@ pub(crate) fn lambda_param_list(p: &mut Parser) -> bool {
 
 fn lambda_param(p: &mut Parser) -> bool {
     let m = p.start();
-    patterns::ident_or_wildcard_pat_or_recover(p, PAT_RECOVERY_SET.union(ts!(T![|])));
-    if p.at(T![:]) {
-        types::ascription(p);
+    let is_ident = patterns::ident_pat_or_recover(p);
+    if is_ident {
+        if p.at(T![:]) {
+            types::type_annotation(p);
+        }
     }
     m.complete(p, LAMBDA_PARAM);
     true

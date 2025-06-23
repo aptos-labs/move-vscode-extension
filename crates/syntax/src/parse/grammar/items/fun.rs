@@ -1,10 +1,11 @@
 use crate::parse::grammar::expressions::atom::block_expr;
-use crate::parse::grammar::items::at_item_start;
+use crate::parse::grammar::items::{at_item_start, item_start_rec_set};
 use crate::parse::grammar::paths::PATH_FIRST;
-use crate::parse::grammar::types::path_type;
-use crate::parse::grammar::utils::delimited;
-use crate::parse::grammar::{item_name_or_recover, params, paths, type_params, types};
+use crate::parse::grammar::types::{path_type, type_, type_or_recover};
+use crate::parse::grammar::utils::delimited_with_recovery;
+use crate::parse::grammar::{name_or_recover, params, paths, type_params, types};
 use crate::parse::parser::{Marker, Parser};
+use crate::parse::recovery_set::{RecoverySet, RecoveryToken};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::{
     ACQUIRES, EOF, FUN, IDENT, RET_TYPE, SPEC_FUN, SPEC_INLINE_FUN, VISIBILITY_MODIFIER,
@@ -39,7 +40,8 @@ pub(crate) fn function(p: &mut Parser, m: Marker) {
         fun_signature(p, false, true);
     } else {
         // p.error("expected 'fun'");
-        p.error_and_recover_until("expected 'fun'", at_item_start);
+        p.error_and_recover("expected 'fun'", item_start_rec_set());
+        // p.error_and_recover_until("expected 'fun'", at_item_start);
     }
     m.complete(p, FUN);
 }
@@ -97,7 +99,7 @@ fn bump_modifier_if_possible(
 ) {
     let exists = possible_modifiers.remove(&modifier);
     if !exists {
-        p.bump_with_error(&format!("duplicate modifier '{:?}'", modifier));
+        p.error_and_bump(&format!("duplicate modifier '{:?}'", modifier));
         return;
     }
     p.bump_remap(modifier);
@@ -122,7 +124,8 @@ fn opt_inner_public_modifier(p: &mut Parser) {
                 p.bump(T![script]);
             }
             _ => {
-                p.error_and_recover_until_ts("expected public modifier", TokenSet::new(&[T![')']]));
+                p.error_and_recover("expected public modifier", TokenSet::new(&[T![')']]));
+                // p.error_and_recover_until_ts("expected public modifier", TokenSet::new(&[T![')']]));
             }
         }
         p.expect(T![')']);
@@ -132,25 +135,19 @@ fn opt_inner_public_modifier(p: &mut Parser) {
 fn acquires(p: &mut Parser) {
     let m = p.start();
     p.bump(T![acquires]);
-    if !paths::is_path_start(p) {
-        p.error_and_recover_until("expected type", |p| {
-            at_item_start(p) || p.at(T!['{']) || p.at(T![;])
-        });
-    }
-    delimited(
+    delimited_with_recovery(
         p,
-        T![,],
-        || "unexpected ','".into(),
-        |p| p.at(T!['{']) || p.at(T![;]),
-        PATH_FIRST,
         |p| {
-            if paths::is_path_start(p) {
-                path_type(p);
-            } else {
-                p.error("expected type");
+            let is_path = paths::is_path_start(p);
+            if !is_path {
+                return false;
             }
+            path_type(p);
             true
         },
+        T![,],
+        "expected type",
+        None,
     );
     m.complete(p, ACQUIRES);
 }
@@ -158,43 +155,53 @@ fn acquires(p: &mut Parser) {
 fn fun_signature(p: &mut Parser, is_spec: bool, allow_acquires: bool) {
     p.bump(T![fun]);
 
-    if !item_name_or_recover(p, |p| p.at(T![<]) || p.at(T!['('])) {
+    let has_name = p.with_recovery_set(item_start_rec_set(), |p| {
+        if !name_or_recover(p, (T![<] | T!['(']).into()) {
+            return false;
+        }
+        type_params::opt_type_param_list(p);
+        true
+    });
+    if !has_name {
         return;
     }
-    type_params::opt_type_param_list(p);
-    if p.at(T!['(']) {
-        params::fun_param_list(p);
-    } else {
-        p.error_and_recover_until("expected function arguments", |p| {
-            at_item_start(p) || p.at_ts(ts!(T![;], T!['{']))
-        });
-    }
-    opt_ret_type(p);
 
-    if p.at(T![acquires]) {
-        if allow_acquires {
-            acquires(p);
+    let signature_recovery_set = item_start_rec_set().with_token_set(T![;] | T!['{']);
+    p.with_recovery_set(signature_recovery_set, |p| {
+        if p.at(T!['(']) {
+            params::fun_param_list(p);
         } else {
-            p.error("'acquires' not allowed");
+            p.error_and_recover("expected function arguments", TokenSet::EMPTY);
         }
-    }
+    });
+
+    let item_rec_set = item_start_rec_set().with_token_set(T!['{'] | T![;]);
+    p.with_recovery_set(item_rec_set, |p| {
+        p.with_recovery_token(T![acquires], opt_ret_type);
+        if p.at(T![acquires]) {
+            if allow_acquires {
+                acquires(p);
+            } else {
+                p.error("'acquires' not allowed");
+            }
+        }
+    });
 
     if p.at(T![;]) {
         p.bump(T![;]);
-    } else {
-        block_expr(p, is_spec);
+        return;
     }
+    block_expr(p, is_spec);
 }
 
 pub(crate) fn opt_ret_type(p: &mut Parser) {
-    if p.at(T![:]) {
-        let m = p.start();
-        p.bump(T![:]);
-        types::type_or_recover_until(p, |p| {
-            at_item_start(p) || p.at_ts(ts!(T![acquires], T![;], T!['{']))
-        });
-        m.complete(p, RET_TYPE);
+    if !p.at(T![:]) {
+        return;
     }
+    let m = p.start();
+    p.bump(T![:]);
+    type_(p);
+    m.complete(p, RET_TYPE);
 }
 
 // fn signature_end(p: &Parser) -> bool {
@@ -212,4 +219,22 @@ pub(crate) fn on_function_modifiers_start(p: &Parser) -> bool {
         IDENT if p.at_contextual_kw("package") && !p.nth_at_ts(1, ts!(T!['('], T![<])) => true,
         _ => false,
     }
+}
+
+pub(crate) fn function_modifier_tokens() -> Vec<RecoveryToken> {
+    vec![
+        T![public].into(),
+        T![native].into(),
+        T![friend].into(),
+        T![inline].into(),
+        "entry".into(),
+        "package".into(),
+    ]
+}
+
+pub(crate) fn function_modifier_recovery_set() -> RecoverySet {
+    let mut rec_set = RecoverySet::new();
+    rec_set.with_token_set(T![public] | T![native] | T![friend] | T![inline])
+    // .with_kw_ident("entry")
+    // .with_kw_ident("package")
 }

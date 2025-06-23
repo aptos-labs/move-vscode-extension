@@ -2,17 +2,18 @@ module 0x1::match {
     fun t7_unqualified_variant() {
         match (self) {
             Some { value: Option::None } =
-                                      //^ expected FAT_ARROW
+                                       //^ expected '=>'
         }
     }
 
     fun t8_unqualified_variant() {
         match (self) {
             Some { value: Option::None } =,
-                                      //^ expected FAT_ARROW
+                                       //^ expected '=>'
+                                        //^ expected pattern
             Some { value: Option::None } =
+                                    //^ expected '=>'
                                       //^ expected SEMICOLON
-                                      //^ expected expression
                                        //^ unexpected token EQ
                                        //^ expected R_CURLY
                                        //^ expected R_CURLY

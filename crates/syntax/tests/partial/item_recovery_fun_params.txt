@@ -1,5 +1,5 @@
-SOURCE_FILE@0..87
-  MODULE@0..86
+SOURCE_FILE@0..90
+  MODULE@0..89
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
     VALUE_ADDRESS@7..10
@@ -10,12 +10,12 @@ SOURCE_FILE@0..87
     WHITESPACE@36..37 " "
     L_CURLY@37..38 "{"
     WHITESPACE@38..43 "\n    "
-    FUN@43..84
+    FUN@43..87
       FUN_KW@43..46 "fun"
       WHITESPACE@46..47 " "
       NAME@47..51
         IDENT@47..51 "main"
-      PARAM_LIST@51..81
+      PARAM_LIST@51..84
         L_PAREN@51..52 "("
         PARAM@52..53
           IDENT_PAT@52..53
@@ -23,54 +23,63 @@ SOURCE_FILE@0..87
               IDENT@52..53 "a"
         COMMA@53..54 ","
         WHITESPACE@54..55 " "
-        PARAM@55..57
+        PARAM@55..56
           IDENT_PAT@55..56
             NAME@55..56
               IDENT@55..56 "b"
-          COLON@56..57 ":"
-        COMMA@57..58 ","
-        COMMA@58..59 ","
-        WHITESPACE@59..60 " "
-        PARAM@60..63
-          IDENT_PAT@60..61
-            NAME@60..61
-              IDENT@60..61 "c"
-          ERROR@61..63
-            COLON_COLON@61..63 "::"
-        COMMA@63..64 ","
-        WHITESPACE@64..65 " "
-        PARAM@65..70
-          IDENT_PAT@65..66
-            NAME@65..66
-              IDENT@65..66 "d"
-          COLON@66..67 ":"
-          WHITESPACE@67..68 " "
-          PATH_TYPE@68..70
-            PATH@68..70
-              PATH_SEGMENT@68..70
-                NAME_REF@68..70
-                  IDENT@68..70 "u8"
-        ERROR@70..71
-          PLUS@70..71 "+"
-        IDENT@71..73 "u8"
-        COMMA@73..74 ","
-        WHITESPACE@74..75 " "
-        PARAM@75..80
-          IDENT_PAT@75..76
-            NAME@75..76
-              IDENT@75..76 "e"
-          COLON@76..77 ":"
-          WHITESPACE@77..78 " "
-          PATH_TYPE@78..80
-            PATH@78..80
-              PATH_SEGMENT@78..80
-                NAME_REF@78..80
-                  IDENT@78..80 "u8"
-        R_PAREN@80..81 ")"
-      WHITESPACE@81..82 " "
-      BLOCK_EXPR@82..84
-        L_CURLY@82..83 "{"
-        R_CURLY@83..84 "}"
-    WHITESPACE@84..85 "\n"
-    R_CURLY@85..86 "}"
-  WHITESPACE@86..87 "\n"
+        COMMA@56..57 ","
+        WHITESPACE@57..58 " "
+        PARAM@58..60
+          IDENT_PAT@58..59
+            NAME@58..59
+              IDENT@58..59 "b"
+          COLON@59..60 ":"
+        COMMA@60..61 ","
+        PARAM@61..61
+        COMMA@61..62 ","
+        WHITESPACE@62..63 " "
+        PARAM@63..64
+          IDENT_PAT@63..64
+            NAME@63..64
+              IDENT@63..64 "c"
+        PARAM@64..66
+          ERROR@64..66
+            COLON_COLON@64..66 "::"
+        COMMA@66..67 ","
+        WHITESPACE@67..68 " "
+        PARAM@68..73
+          IDENT_PAT@68..69
+            NAME@68..69
+              IDENT@68..69 "d"
+          COLON@69..70 ":"
+          WHITESPACE@70..71 " "
+          PATH_TYPE@71..73
+            PATH@71..73
+              PATH_SEGMENT@71..73
+                NAME_REF@71..73
+                  IDENT@71..73 "u8"
+        PARAM@73..76
+          ERROR@73..74
+            PLUS@73..74 "+"
+          IDENT@74..76 "u8"
+        COMMA@76..77 ","
+        WHITESPACE@77..78 " "
+        PARAM@78..83
+          IDENT_PAT@78..79
+            NAME@78..79
+              IDENT@78..79 "e"
+          COLON@79..80 ":"
+          WHITESPACE@80..81 " "
+          PATH_TYPE@81..83
+            PATH@81..83
+              PATH_SEGMENT@81..83
+                NAME_REF@81..83
+                  IDENT@81..83 "u8"
+        R_PAREN@83..84 ")"
+      WHITESPACE@84..85 " "
+      BLOCK_EXPR@85..87
+        L_CURLY@85..86 "{"
+        R_CURLY@86..87 "}"
+    WHITESPACE@87..88 "\n"
+    R_CURLY@88..89 "}"
+  WHITESPACE@89..90 "\n"

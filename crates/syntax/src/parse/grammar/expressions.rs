@@ -1,20 +1,23 @@
-use crate::parse::grammar::expressions::atom::{call_expr, EXPR_FIRST};
+use crate::parse::grammar::expressions::atom::call_expr;
 use crate::parse::grammar::items::{at_item_start, fun, use_item};
 use crate::parse::grammar::lambdas::lambda_param_list;
-use crate::parse::grammar::patterns::{pat, STMT_FIRST};
+use crate::parse::grammar::patterns::{pat, STMT_KEYWORDS_LIST};
 use crate::parse::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt};
 use crate::parse::grammar::specs::quants::{choose_expr, exists_expr, forall_expr, is_at_quant_kw};
 use crate::parse::grammar::specs::schemas::{
     apply_schema, global_variable, include_schema, schema_field,
 };
-use crate::parse::grammar::utils::{delimited_items_with_recover, list};
+use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{attributes, error_block, name_ref, patterns, type_args, types};
 use crate::parse::parser::{CompletedMarker, Marker, Parser};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{ts, SyntaxKind, T};
+use std::io::Read;
+use std::iter;
 
 pub(crate) mod atom;
+pub(crate) mod stmts;
 
 pub(crate) fn expr(p: &mut Parser) -> bool {
     let r = Restrictions {
@@ -74,7 +77,10 @@ pub(crate) fn expr_bp(
             }
         }
 
-        expr_bp(p, None, Restrictions { prefer_stmt: false, ..r }, op_bp + 1);
+        let cm = expr_bp(p, None, Restrictions { prefer_stmt: false, ..r }, op_bp + 1);
+        if cm.is_none() {
+            p.error("expected expression");
+        }
         lhs = m.complete(p, if is_range { RANGE_EXPR } else { BIN_EXPR });
     }
     Some((lhs, BlockLike::NotBlock))
@@ -123,7 +129,7 @@ pub(crate) fn struct_lit_field_list(p: &mut Parser) {
                 m.abandon(p);
             }
             _ => {
-                p.bump_with_error("expected identifier");
+                p.error_and_bump("expected identifier");
                 m.abandon(p);
             }
         }
@@ -134,8 +140,6 @@ pub(crate) fn struct_lit_field_list(p: &mut Parser) {
     p.expect(T!['}']);
     m.complete(p, STRUCT_LIT_FIELD_LIST);
 }
-
-const LHS_FIRST: TokenSet = atom::ATOM_EXPR_FIRST.union(TokenSet::new(&[T![&], T![*], T![!]]));
 
 pub(crate) fn lhs(p: &mut Parser, r: Restrictions) -> Option<(CompletedMarker, BlockLike)> {
     let m;
@@ -298,16 +302,57 @@ fn arg_list(p: &mut Parser) {
     assert!(p.at(T!['(']));
     let m = p.start();
     p.bump(T!['(']);
-    delimited_items_with_recover(p, T![')'], T![,], ts!(T![;], T![let], T!['}']), VALUE_ARG, |p| {
-        let m = p.start();
-        let is_expr = expr(p);
-        if is_expr {
-            m.complete(p, VALUE_ARG);
-        } else {
-            m.abandon(p);
-        }
-        is_expr
-    });
+    delimited_with_recovery(
+        p,
+        |p| {
+            let m = p.start();
+            let is_expr = expr(p);
+            if is_expr {
+                m.complete(p, VALUE_ARG);
+                true
+            } else {
+                if p.at(T![,]) {
+                    // ,,
+                    m.complete(p, VALUE_ARG);
+                } else {
+                    m.abandon(p);
+                }
+                false
+            }
+            // if !is_expr && p.at(T![,]) {
+            //     // ,,,,
+            //     m.complete(p, VALUE_ARG);
+            // }
+            // if !is_expr && p.current() == T![,] {
+            //     m.complete(p, VALUE_ARG);
+            //     return true;
+            // } else {
+            //     m.abandon(p);
+            // }
+            // false
+            // m.complete(p, VALUE_ARG);
+            // true
+            // if is_expr {
+            //     m.complete(p, VALUE_ARG);
+            // } else {
+            //     m.abandon(p);
+            // }
+            // is_expr
+        },
+        T![,],
+        "expected argument",
+        Some(T![')']),
+    );
+    // delimited_items_with_recover(p, T![')'], T![,], ts!(T![;], T![let], T!['}']), VALUE_ARG, |p| {
+    //     let m = p.start();
+    //     let is_expr = expr(p);
+    //     if is_expr {
+    //         m.complete(p, VALUE_ARG);
+    //     } else {
+    //         m.abandon(p);
+    //     }
+    //     is_expr
+    // });
     p.expect(T![')']);
     m.complete(p, VALUE_ARG_LIST);
 }
@@ -329,70 +374,6 @@ impl BlockLike {
             BLOCK_EXPR | IF_EXPR | WHILE_EXPR | FOR_EXPR | LOOP_EXPR | MATCH_EXPR
         )
     }
-}
-
-pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
-    let stmt_m = p.start();
-
-    attributes::outer_attrs(p);
-
-    if p.at(T![let]) {
-        let_stmt(p, stmt_m, is_spec);
-        return;
-    }
-    if p.at(T![use]) {
-        use_item::use_stmt(p, stmt_m);
-        return;
-    }
-
-    if is_spec {
-        if p.at(T![native]) && p.nth_at(1, T![fun]) || p.at(T![fun]) {
-            fun::spec_inline_function(p);
-            stmt_m.abandon(p);
-            return;
-        }
-        // enable stmt level items unique to specs
-        let spec_only_stmts = vec![
-            schema_field,
-            global_variable,
-            pragma_stmt,
-            update_stmt,
-            include_schema,
-            apply_schema,
-            spec_predicate,
-        ];
-        if spec_only_stmts.iter().any(|spec_stmt| spec_stmt(p)) {
-            stmt_m.abandon(p);
-            return;
-        }
-    }
-
-    if let Some((cm, _)) = stmt_expr(p, Some(stmt_m)) {
-        if !(p.at(T!['}']) || (prefer_expr && p.at(EOF))) {
-            let m = cm.precede(p);
-            p.expect(T![;]);
-            m.complete(p, EXPR_STMT);
-        }
-        return;
-    }
-
-    p.bump_with_error(&format!("unexpected token {:?}", p.current()));
-}
-
-fn let_stmt(p: &mut Parser, m: Marker, is_spec: bool) {
-    p.bump(T![let]);
-    if is_spec && p.at_contextual_kw_ident("post") {
-        p.bump_remap(T![post]);
-    }
-    pat(p);
-    if p.at(T![:]) {
-        p.with_recover_ts(ts!(T![=], T![;]), types::ascription);
-        // types::ascription(p);
-    }
-    opt_initializer_expr(p);
-    p.expect(T![;]);
-
-    m.complete(p, LET_STMT);
 }
 
 pub(crate) fn opt_initializer_expr(p: &mut Parser) {
@@ -417,8 +398,7 @@ pub(super) fn expr_block_contents(p: &mut Parser, is_spec: bool) {
             p.bump(T![;]);
             continue;
         }
-        p.with_recover_ts(STMT_FIRST, |p| stmt(p, false, is_spec));
-        // stmt(p, false, is_spec);
+        p.with_recovery_token_set(T!['}'], |p| stmts::stmt(p, false, is_spec));
     }
 }
 
@@ -427,6 +407,11 @@ pub(crate) struct Restrictions {
     pub forbid_structs: bool,
     pub prefer_stmt: bool,
 }
+
+pub(crate) const EXPR_FIRST: TokenSet =
+    atom::ATOM_EXPR_FIRST.union(TokenSet::new(&[T![&], T![*], T![!]]));
+
+pub(crate) const STMT_FIRST: TokenSet = EXPR_FIRST.union(TokenSet::new(&[T![let]]));
 
 /// Binding powers of operators for a Pratt parser.
 ///

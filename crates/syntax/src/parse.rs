@@ -4,6 +4,7 @@ pub(crate) mod parser;
 mod token_set;
 
 pub mod lexer;
+pub(crate) mod recovery_set;
 mod text_token_source;
 mod text_tree_sink;
 

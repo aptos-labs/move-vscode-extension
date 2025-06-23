@@ -56,6 +56,10 @@ impl TextTokenSource {
         self.curr.0
     }
 
+    pub(crate) fn current_pos(&self) -> usize {
+        self.curr.1
+    }
+
     /// Lookahead n token
     pub(crate) fn lookahead_nth(&self, n: usize) -> Token {
         token_at_pos(self.curr.1 + n, &self.raw_tokens_with_offsets)

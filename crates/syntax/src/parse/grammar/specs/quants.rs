@@ -97,7 +97,7 @@ pub(crate) fn quant_binding(p: &mut Parser) -> bool {
             expect_expr(p);
         }
         T![:] => {
-            types::ascription(p);
+            types::type_annotation(p);
         }
         _ => {
             m.abandon_with_rollback(p);

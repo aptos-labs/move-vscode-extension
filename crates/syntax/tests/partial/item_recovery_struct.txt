@@ -1,0 +1,102 @@
+SOURCE_FILE@0..175
+  MODULE@0..174
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..32
+      IDENT@12..32 "item_recovery_struct"
+    WHITESPACE@32..33 " "
+    L_CURLY@33..34 "{"
+    WHITESPACE@34..39 "\n    "
+    STRUCT@39..49
+      STRUCT_KW@39..45 "struct"
+      WHITESPACE@45..46 " "
+      NAMED_FIELD_LIST@46..49
+        L_CURLY@46..47 "{"
+        WHITESPACE@47..48 " "
+        R_CURLY@48..49 "}"
+    WHITESPACE@49..54 "\n    "
+    STRUCT@54..68
+      STRUCT_KW@54..60 "struct"
+      WHITESPACE@60..61 " "
+      TYPE_PARAM_LIST@61..64
+        L_ANGLE@61..62 "<"
+        TYPE_PARAM@62..63
+          NAME@62..63
+            IDENT@62..63 "T"
+        R_ANGLE@63..64 ">"
+      WHITESPACE@64..65 " "
+      ABILITY_LIST@65..68
+        HAS_KW@65..68 "has"
+    WHITESPACE@68..73 "\n    "
+    STRUCT@73..88
+      STRUCT_KW@73..79 "struct"
+      WHITESPACE@79..80 " "
+      NAME@80..81
+        IDENT@80..81 "S"
+      WHITESPACE@81..82 " "
+      ABILITY_LIST@82..85
+        HAS_KW@82..85 "has"
+      WHITESPACE@85..86 " "
+      NAMED_FIELD_LIST@86..88
+        L_CURLY@86..87 "{"
+        R_CURLY@87..88 "}"
+    WHITESPACE@88..93 "\n    "
+    STRUCT@93..111
+      STRUCT_KW@93..99 "struct"
+      WHITESPACE@99..100 " "
+      NAME@100..101
+        IDENT@100..101 "S"
+      WHITESPACE@101..102 " "
+      ABILITY_LIST@102..111
+        HAS_KW@102..105 "has"
+        WHITESPACE@105..106 " "
+        ABILITY@106..110
+          IDENT@106..110 "copy"
+        COMMA@110..111 ","
+    WHITESPACE@111..116 "\n    "
+    STRUCT@116..138
+      STRUCT_KW@116..122 "struct"
+      WHITESPACE@122..123 " "
+      NAME@123..124
+        IDENT@123..124 "S"
+      WHITESPACE@124..125 " "
+      ABILITY_LIST@125..135
+        HAS_KW@125..128 "has"
+        WHITESPACE@128..129 " "
+        ABILITY@129..133
+          IDENT@129..133 "copy"
+        COMMA@133..134 ","
+        COMMA@134..135 ","
+      WHITESPACE@135..136 " "
+      NAMED_FIELD_LIST@136..138
+        L_CURLY@136..137 "{"
+        R_CURLY@137..138 "}"
+    WHITESPACE@138..143 "\n    "
+    STRUCT@143..172
+      STRUCT_KW@143..149 "struct"
+      WHITESPACE@149..150 " "
+      NAME@150..151
+        IDENT@150..151 "S"
+      WHITESPACE@151..152 " "
+      NAMED_FIELD_LIST@152..172
+        L_CURLY@152..153 "{"
+        WHITESPACE@153..154 " "
+        NAMED_FIELD@154..160
+          NAME@154..159
+            IDENT@154..159 "field"
+          COLON@159..160 ":"
+        WHITESPACE@160..161 " "
+        COMMA@161..162 ","
+        WHITESPACE@162..163 " "
+        NAMED_FIELD@163..170
+          NAME@163..169
+            IDENT@163..169 "field2"
+          COLON@169..170 ":"
+        WHITESPACE@170..171 " "
+        R_CURLY@171..172 "}"
+    WHITESPACE@172..173 "\n"
+    R_CURLY@173..174 "}"
+  WHITESPACE@174..175 "\n"

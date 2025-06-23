@@ -1,9 +1,12 @@
 module 0x1::item_recovery_fun_params {
-    fun main(a, b:,, c::, d: u8+u8, e: u8) {}
-            //^ missing type for function parameter
-                //^ expected type
-                 //^ expected value parameter
-                    //^^ missing type for function parameter
-                             //^ expected COMMA
-                             //^ expected value parameter
+    fun main(a, b, b:,, c::, d: u8+u8, e: u8) {}
+            //^ missing type annotation
+               //^ missing type annotation
+                   //^ expected type
+                    //^ expected ident
+                       //^^ missing type annotation
+                       //^^ expected COMMA
+                       //^^ expected ident
+                                //^ expected COMMA
+                                //^ expected ident
 }

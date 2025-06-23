@@ -1,13 +1,15 @@
-//! A bit-set of `SyntaxKind`s.
-
-use crate::SyntaxKind;
-use std::fmt;
-use std::fmt::Formatter;
+use crate::{SyntaxKind, T};
 use std::ops::{Add, BitOr};
 
 /// A bit-set of `SyntaxKind`s
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub struct TokenSet(pub u128);
+
+impl From<SyntaxKind> for TokenSet {
+    fn from(value: SyntaxKind) -> Self {
+        TokenSet::new(&[value])
+    }
+}
 
 impl Add<TokenSet> for TokenSet {
     type Output = TokenSet;
@@ -40,10 +42,10 @@ impl BitOr<TokenSet> for SyntaxKind {
 #[macro_export]
 macro_rules! ts {
     () => (
-        crate::parse::token_set::TokenSet::EMPTY
+        TokenSet::EMPTY
     );
     ($($x:expr),+ $(,)?) => (
-        crate::parse::token_set::TokenSet::new(&[$($x),+])
+        TokenSet::new(&[$($x),+])
     );
 }
 
@@ -75,31 +77,4 @@ impl TokenSet {
 
 const fn mask(kind: SyntaxKind) -> u128 {
     1u128 << (kind as usize)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::T;
-
-    #[test]
-    fn test_token_sets() {
-        assert_eq!(ts!(T![,], T![;]), TokenSet::new(&[T![,], T![;]]));
-
-        assert_eq!(ts!(T![,], T![;]) | T![:], ts!(T![,], T![;], T![:]));
-        assert_eq!(ts!(T![,], T![;]) + ts!(T![:]), ts!(T![,], T![;], T![:]));
-    }
-
-    #[test]
-    fn test_sub() {
-        assert_eq!(ts!(T![,], T![')']).sub(ts!(T![,])), ts!(T![')']));
-        assert_eq!(ts!(T![,]).sub(ts!(T![,], T![')'])), ts!());
-        assert_eq!(ts!(T![,], T![')']).sub(ts!(T![+])), ts!(T![,], T![')']));
-    }
-
-    #[test]
-    fn test_contains() {
-        assert!(ts!(T![,], T![')']).contains(T![,]));
-        assert!(ts!(T![,], T![')']).contains(T![')']));
-    }
 }

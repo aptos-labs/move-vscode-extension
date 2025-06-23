@@ -1,8 +1,7 @@
 //! See [`Parser`].
 
-use drop_bomb::DropBomb;
-
 use crate::parse::event::Event;
+use crate::parse::recovery_set::{RecoverySet, RecoveryToken};
 use crate::parse::text_token_source::TextTokenSource;
 use crate::parse::token_set::TokenSet;
 use crate::parse::ParseError;
@@ -11,6 +10,8 @@ use crate::{
     SyntaxKind::{self, EOF, ERROR, TOMBSTONE},
     T,
 };
+use drop_bomb::DropBomb;
+use std::collections::HashSet;
 
 /// `Parser` struct provides the low-level API for
 /// navigating through the stream of tokens and
@@ -24,8 +25,8 @@ use crate::{
 pub struct Parser {
     token_source: TextTokenSource,
     events: Vec<Event>,
-    pub(crate) recover_sets: Vec<TokenSet>,
-    pub(crate) recover_fns: Vec<Box<dyn Fn(&Parser) -> bool>>,
+    // recovery_tokens: Vec<RecoveryToken>,
+    recovery_set_stack: Vec<RecoverySet>,
 }
 
 impl Parser {
@@ -33,13 +34,17 @@ impl Parser {
         Parser {
             token_source,
             events: vec![],
-            recover_sets: vec![],
-            recover_fns: vec![],
+            // recovery_tokens: vec![],
+            recovery_set_stack: vec![],
         }
     }
 
     pub(crate) fn finish(self) -> Vec<Event> {
         self.events
+    }
+
+    pub(crate) fn pos(&self) -> usize {
+        self.token_source.current_pos()
     }
 
     /// Returns the kind of the current token.
@@ -49,7 +54,7 @@ impl Parser {
         self.nth(0)
     }
 
-    pub(crate) fn text_context(&self) -> (&str, &str, &str) {
+    pub(crate) fn current_context(&self) -> (&str, &str, &str) {
         (
             self.token_source.prev_text(),
             self.token_source.current_text(),
@@ -292,11 +297,6 @@ impl Parser {
     /// Consume the next token if it is `kind` or emit an error
     /// otherwise.
     pub(crate) fn expect(&mut self, kind: SyntaxKind) -> bool {
-        // if self.eat(kind) {
-        //     return true;
-        // }
-        // self.push_error(format!("expected {:?}", kind));
-        // false
         self.expect_with_error(kind, &format!("expected {:?}", kind))
     }
 
@@ -310,78 +310,23 @@ impl Parser {
         false
     }
 
-    // /// Create an error node and consume the next token.
-    // pub(crate) fn error_and_bump(&mut self, message: &str) {
-    //     self.err_recover_at_ts(message, TokenSet::EMPTY);
-    // }
-
-    // pub(crate) fn error_bump_any(&mut self, message: &str) {
-    //     let m = self.start();
-    //     self.push_error(message);
-    //     self.bump_any();
-    //     m.complete(self, ERROR);
-    // }
-
-    // /// Create an error node and consume the next token.
-    // pub(crate) fn error_and_bump_until_ts(&mut self, message: &str, stop_at_ts: TokenSet) {
-    //     self.error_and_bump_until(message, |p| p.at_ts(stop_at_ts));
-    //     // match self.current() {
-    //     //     T!['{'] | T!['}'] => {
-    //     //         self.error(message);
-    //     //         return;
-    //     //     }
-    //     //     _ => (),
-    //     // }
-    //     //
-    //     // if self.at_ts(recovery) {
-    //     //     self.error(message);
-    //     //     return;
-    //     // }
-    //     //
-    //     // let m = self.start();
-    //     // self.error(message);
-    //     // self.bump_any();
-    //     // m.complete(self, ERROR);
-    // }
-
-    pub(crate) fn error_and_recover_until_ts(&mut self, message: &str, stop_at: TokenSet) {
-        self.error_and_recover_until(message, |p| p.at_ts(stop_at))
-    }
-
     /// adds error and then bumps until `stop()` is true
-    pub(crate) fn error_and_recover_until(&mut self, message: &str, stop: impl Fn(&Parser) -> bool) {
+    pub(crate) fn error_and_recover(&mut self, message: &str, rs: impl Into<RecoverySet>) {
         // if the next token is stop token, just push error,
         // otherwise wrap the next token with the error node and start `recover_until()`
-        if stop(self)
-        /*|| self.at_ts(self.full_recover_set())*/
-        {
+        let rec_set = self.outer_recovery_set().with_merged(rs.into());
+        if rec_set.contains_current(self) {
             self.push_error(message);
             return;
         }
-        self.bump_with_error(message);
-        // let m = self.start();
-        // self.bump_any();
-        // self.push_error(message);
-        // m.complete(self, ERROR);
-
-        // if !self.recover_sets.is_empty() {
-        //     let full_recover_set = self.full_recover_set();
-        //     self.recover_until(|p| stop(p) || p.at_ts(full_recover_set));
-        //     return;
-        // }
-        self.recover_until(stop);
-    }
-
-    pub(crate) fn recover_until(&mut self, stop: impl Fn(&Parser) -> bool) {
-        while !self.at(EOF) {
-            if stop(self) {
-                break;
-            }
+        self.error_and_bump(message);
+        // bump tokens until reached `stop_token`
+        while !self.at(EOF) && !rec_set.contains_current(self) {
             self.bump_any();
         }
     }
 
-    pub(crate) fn bump_with_error(&mut self, message: &str) {
+    pub(crate) fn error_and_bump(&mut self, message: &str) {
         let m = self.start();
         self.bump_any();
         self.push_error(message);
@@ -484,59 +429,59 @@ impl Marker {
 
 // recovery sets
 impl Parser {
-    pub fn outer_recovery_set(&self) -> TokenSet {
-        self.recover_sets.iter().fold(ts!(), |acc, ts| acc + *ts)
+    pub fn outer_recovery_set(&self) -> RecoverySet {
+        self.recovery_set_stack
+            .last()
+            .cloned()
+            .unwrap_or(RecoverySet::new())
     }
 
-    #[allow(clippy::needless_lifetimes)]
-    pub fn outer_recovery_fn<'t>(&'t self) -> impl Fn(&'t Parser) -> bool {
-        let outer_recovery_set = self.outer_recovery_set();
-        move |p| p.at_ts(outer_recovery_set) || self.recover_fns.iter().any(|recover_fn| recover_fn(p))
-    }
-
-    pub(crate) fn with_recover_fn<'t, T>(
+    pub(crate) fn with_recovery_set<T>(
         &mut self,
-        rec: impl Fn(&Parser) -> bool + 'static,
+        recovery_set: RecoverySet,
         f: impl FnOnce(&mut Parser) -> T,
     ) -> T {
-        self.recover_fns.push(Box::new(rec));
+        self.recovery_set_stack
+            .push(self.outer_recovery_set().with_merged(recovery_set));
         let res = f(self);
-        self.recover_fns.pop();
+        self.recovery_set_stack.pop();
         res
     }
 
-    pub(crate) fn with_recover_t<T>(&mut self, t: SyntaxKind, f: impl FnOnce(&mut Parser) -> T) -> T {
-        self.with_recover_ts(ts!(t), f)
-    }
-
-    pub(crate) fn with_recover_ts<T>(&mut self, ts: TokenSet, f: impl FnOnce(&mut Parser) -> T) -> T {
-        self.recover_sets.push(ts);
+    pub(crate) fn with_recovery_token_set<T>(
+        &mut self,
+        token_set: impl Into<TokenSet>,
+        f: impl FnOnce(&mut Parser) -> T,
+    ) -> T {
+        self.recovery_set_stack
+            .push(self.outer_recovery_set().with_token_set(token_set));
         let res = f(self);
-        self.recover_sets.pop();
+        self.recovery_set_stack.pop();
         res
     }
 
-    // #[allow(clippy::needless_lifetimes)]
-    // pub(crate) fn with_recovery<'t>(
-    //     &'t mut self,
-    //     t: SyntaxKind,
-    // ) -> scopeguard::ScopeGuard<&'t mut Parser, impl FnOnce(&'t mut Parser)> {
-    //     self.rec_sets.push(ts!(t));
-    //     scopeguard::guard(self, |p| {
-    //         p.rec_sets.pop();
-    //     })
-    // }
+    pub(crate) fn with_recovery_tokens<T>(
+        &mut self,
+        tokens: Vec<RecoveryToken>,
+        f: impl FnOnce(&mut Parser) -> T,
+    ) -> T {
+        let mut new_rec_set = self.outer_recovery_set();
+        for token in tokens.clone() {
+            new_rec_set = new_rec_set.with_recovery_token(token);
+        }
+        self.recovery_set_stack.push(new_rec_set);
+        let res = f(self);
+        self.recovery_set_stack.pop();
+        res
+    }
 
-    // #[allow(clippy::needless_lifetimes)]
-    // pub(crate) fn with_recovery_ts<'t>(
-    //     &'t mut self,
-    //     ts: TokenSet,
-    // ) -> scopeguard::ScopeGuard<&'t mut Parser, impl FnOnce(&'t mut Parser)> {
-    //     self.rec_sets.push(ts);
-    //     scopeguard::guard(self, |p| {
-    //         p.rec_sets.pop();
-    //     })
-    // }
+    pub(crate) fn with_recovery_token<'t, T>(
+        &mut self,
+        token: impl Into<RecoveryToken>,
+        f: impl FnOnce(&mut Parser) -> T,
+    ) -> T {
+        self.with_recovery_tokens(vec![token.into()], f)
+    }
 }
 
 #[derive(Debug)]

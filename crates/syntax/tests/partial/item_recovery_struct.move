@@ -1,4 +1,4 @@
-module 0x1::struct_recovery {
+module 0x1::item_recovery_struct {
     struct { }
     struct <T> has
     struct S has {}

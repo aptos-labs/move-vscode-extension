@@ -1,21 +1,26 @@
-use crate::parse::grammar::expressions::atom::{block_expr, condition, IDENT_FIRST};
+use crate::parse::grammar::expressions::atom::{block_expr, condition};
 use crate::parse::grammar::expressions::{expr, opt_initializer_expr};
-use crate::parse::grammar::items::at_item_start;
+use crate::parse::grammar::items::item_start_rec_set;
 use crate::parse::grammar::paths::{is_path_start, type_path};
 use crate::parse::grammar::patterns::ident_pat;
 use crate::parse::grammar::specs::predicates::opt_predicate_property_list;
-use crate::parse::grammar::utils::{delimited_fn, list};
+use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{name, name_or_recover, name_ref, type_params, types};
 use crate::parse::parser::{CompletedMarker, Marker, Parser};
+use crate::parse::recovery_set::RecoveryToken;
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{ts, T};
 
 pub(crate) fn schema(p: &mut Parser, m: Marker) {
-    assert!(p.at(IDENT) && p.at_contextual_kw("schema"));
+    assert!(p.at_contextual_kw_ident("schema"));
     p.bump_remap(T![schema]);
-    name_or_recover(p, at_item_start);
-    type_params::opt_type_param_list(p);
+    p.with_recovery_set(item_start_rec_set(), |p| {
+        name_or_recover(p, item_start_rec_set());
+        type_params::opt_type_param_list(p);
+    });
+    // name_or_recover(p, at_item_start);
+    // type_params::opt_type_param_list(p);
     block_expr(p, true);
     m.complete(p, SCHEMA);
 }
@@ -28,7 +33,7 @@ pub(crate) fn schema_field(p: &mut Parser) -> bool {
     ident_pat(p);
     // patterns::ident_pat(p);
     if p.at(T![:]) {
-        types::ascription(p);
+        types::type_annotation(p);
     } else {
         m.abandon_with_rollback(p);
         return false;
@@ -47,7 +52,7 @@ pub(crate) fn global_variable(p: &mut Parser) -> bool {
     // patterns::ident_pat(p);
     type_params::opt_type_param_list(p);
     if p.at(T![:]) {
-        types::ascription(p);
+        types::type_annotation(p);
     } else {
         m.abandon_with_rollback(p);
         return false;
@@ -126,6 +131,7 @@ pub(crate) fn apply_schema(p: &mut Parser) -> bool {
     if p.at_contextual_kw_ident("except") {
         apply_except(p);
     }
+    p.expect(T![;]);
     m.complete(p, APPLY_SCHEMA);
     true
 }
@@ -133,7 +139,7 @@ pub(crate) fn apply_schema(p: &mut Parser) -> bool {
 fn apply_to(p: &mut Parser) {
     let m = p.start();
     p.bump_remap(T![to]);
-    wildcard_pattern_list(p);
+    p.with_recovery_token(RecoveryToken::from("except"), wildcard_pattern_list);
     m.complete(p, APPLY_TO);
 }
 
@@ -146,14 +152,7 @@ fn apply_except(p: &mut Parser) {
 }
 
 fn wildcard_pattern_list(p: &mut Parser) {
-    delimited_fn(
-        p,
-        T![,],
-        || "expected function pattern".into(),
-        |p| p.at_contextual_kw_ident("except") || p.at(T![;]),
-        |p| p.at_ts(TokenSet::new(&[IDENT, T![*], T![public]])) && !p.at_contextual_kw_ident("except"),
-        wildcard_pattern,
-    );
+    delimited_with_recovery(p, wildcard_pattern, T![,], "expected function pattern", None);
 }
 
 fn wildcard_pattern(p: &mut Parser) -> bool {
@@ -175,7 +174,7 @@ fn opt_wildcard_pattern_modifier(p: &mut Parser) {
     while !p.at(EOF) {
         if p.at(T![public]) {
             if !all_modifiers.contains(&T![public]) {
-                p.bump_with_error("duplicate modifier 'public'");
+                p.error_and_bump("duplicate modifier 'public'");
                 continue;
             }
             found = true;
@@ -185,7 +184,7 @@ fn opt_wildcard_pattern_modifier(p: &mut Parser) {
         }
         if p.at_contextual_kw_ident("internal") {
             if !all_modifiers.contains(&T![internal]) {
-                p.bump_with_error("duplicate modifier 'internal'");
+                p.error_and_bump("duplicate modifier 'internal'");
                 continue;
             }
             found = true;
@@ -229,13 +228,9 @@ fn schema_lit(p: &mut Parser) -> CompletedMarker {
 
     if p.at(T!['{']) {
         let m = p.start();
-        list(
+        p.bump(T!['{']);
+        delimited_with_recovery(
             p,
-            T!['{'],
-            T!['}'],
-            T![,],
-            || "expected identifier".into(),
-            IDENT_FIRST,
             |p| {
                 if !p.at(IDENT) {
                     return false;
@@ -246,15 +241,14 @@ fn schema_lit(p: &mut Parser) -> CompletedMarker {
                     p.expect(T![:]);
                 }
                 expr(p);
-                // name_ref(p);
-                // // p.bump(IDENT);
-                // if p.eat(T![:]) {
-                //     expr(p);
-                // }
                 m.complete(p, SCHEMA_LIT_FIELD);
                 true
             },
+            T![,],
+            "expected identifier",
+            Some(T!['}']),
         );
+        p.expect(T!['}']);
         m.complete(p, SCHEMA_LIT_FIELD_LIST);
     }
     m.complete(p, SCHEMA_LIT)

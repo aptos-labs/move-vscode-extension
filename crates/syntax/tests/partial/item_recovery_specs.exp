@@ -7,7 +7,7 @@ module 0x1::item_recovery_specs {
     spec fun main()
                  //^ expected a block
     spec schema
-             //^ expected an identifier
+             //^ expected identifier, got 'spec'
              //^ expected a block
     spec schema S
                //^ expected a block
