@@ -1,7 +1,7 @@
 use crate::parse::grammar::expressions::atom::{block_expr, condition};
-use crate::parse::grammar::expressions::{expr, opt_initializer_expr};
+use crate::parse::grammar::expressions::{expr, expr_bp, opt_initializer_expr, Restrictions};
 use crate::parse::grammar::items::item_start_rec_set;
-use crate::parse::grammar::paths::{is_path_start, type_path};
+use crate::parse::grammar::paths::type_path;
 use crate::parse::grammar::patterns::ident_pat;
 use crate::parse::grammar::specs::predicates::opt_predicate_property_list;
 use crate::parse::grammar::utils::delimited_with_recovery;
@@ -10,7 +10,7 @@ use crate::parse::parser::{CompletedMarker, Marker, Parser};
 use crate::parse::recovery_set::RecoveryToken;
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
-use crate::{ts, T};
+use crate::T;
 
 pub(crate) fn schema(p: &mut Parser, m: Marker) {
     assert!(p.at_contextual_kw_ident("schema"));
@@ -76,47 +76,70 @@ pub(crate) fn include_schema(p: &mut Parser) -> bool {
     true
 }
 
-fn include_schema_expr(p: &mut Parser) {
+const INCLUDE_SCHEMA_RECOVERY_SET: TokenSet = TokenSet::new(&[T![;], T!['}']]);
+
+fn include_schema_expr(p: &mut Parser) -> Option<()> {
     if p.at(T![if]) {
-        let m = p.start();
-        p.bump(T![if]);
-        condition(p);
-        schema_lit(p);
-        if p.expect(T![else]) {
-            schema_lit(p);
-        }
-        m.complete(p, IF_ELSE_INCLUDE_EXPR);
-    } else {
-        if is_path_start(p) {
-            // try to parse schema lit
-            let schema_lit_lhs = schema_lit(p);
-            if p.at(T![&&]) {
-                let m = schema_lit_lhs.precede(p);
-                p.bump(T![&&]);
-                schema_lit(p);
-                m.complete(p, AND_INCLUDE_EXPR);
-            } else {
-                if p.at_ts(ts!(T![;], T!['}'])) {
-                    let m = schema_lit_lhs.precede(p);
-                    m.complete(p, SCHEMA_INCLUDE_EXPR);
-                } else {
-                    schema_lit_lhs.abandon_with_rollback(p);
-                    // try to parse imply expr next
-                    include_imply_expr(p);
-                }
-            }
-        } else {
-            // if it's not a path, it has to be IMPLY_INCLUDE_EXPR
-            include_imply_expr(p);
-        }
+        include_if_else_expr(p);
+        return Some(());
     }
+
+    let parent_pos = p.event_pos();
+    // allow all ops besides '==>'
+    let lhs_expr = inner_expr(p, 2)?;
+    if p.at(T![==>]) {
+        let m = lhs_expr.precede(p);
+        p.bump(T![==>]);
+        schema_lit(p);
+        m.complete(p, IMPLY_INCLUDE_EXPR);
+        return Some(());
+    }
+    lhs_expr.abandon_with_rollback(p, parent_pos);
+
+    // allow all ops besides '&&'
+    let parent_pos = p.event_pos();
+    let lhs_expr = inner_expr(p, 6)?;
+
+    let at_amp = p.at(T![&&]);
+    lhs_expr.abandon_with_rollback(p, parent_pos);
+
+    if at_amp {
+        let m = p.start();
+        schema_lit(p);
+        if !p.at(T![&&]) {
+            p.error_and_recover("expected schema lit", INCLUDE_SCHEMA_RECOVERY_SET);
+            return None;
+        }
+        p.bump(T![&&]);
+        schema_lit(p);
+        m.complete(p, AND_INCLUDE_EXPR);
+        return Some(());
+    }
+
+    let m = p.start();
+    schema_lit(p);
+    m.complete(p, SCHEMA_INCLUDE_EXPR);
+
+    Some(())
 }
 
-fn include_imply_expr(p: &mut Parser) {
-    // giving up here on correct parsing and just reading everything as expr
+fn inner_expr(p: &mut Parser, bp: u8) -> Option<CompletedMarker> {
+    let cm = expr_bp(p, None, Restrictions::default(), bp).map(|it| it.0);
+    if cm.is_none() {
+        p.error_and_recover("expected expression", INCLUDE_SCHEMA_RECOVERY_SET);
+    }
+    cm
+}
+
+fn include_if_else_expr(p: &mut Parser) -> CompletedMarker {
     let m = p.start();
-    expr(p);
-    m.complete(p, IMPLY_INCLUDE_EXPR);
+    p.bump(T![if]);
+    condition(p);
+    schema_lit(p);
+    if p.expect(T![else]) {
+        schema_lit(p);
+    }
+    m.complete(p, IF_ELSE_INCLUDE_EXPR)
 }
 
 pub(crate) fn apply_schema(p: &mut Parser) -> bool {

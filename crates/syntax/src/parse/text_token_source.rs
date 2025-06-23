@@ -77,7 +77,7 @@ impl TextTokenSource {
     }
 
     /// rollback to the previous token
-    pub(crate) fn rollback(&mut self) {
+    pub(crate) fn pop_position(&mut self) {
         let pos = self.curr.1 - 1;
         self.curr = (token_at_pos(pos, &self.raw_tokens_with_offsets), pos);
     }

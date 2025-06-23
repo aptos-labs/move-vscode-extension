@@ -1,0 +1,90 @@
+SOURCE_FILE@0..158
+  MODULE@0..157
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..31
+      IDENT@12..31 "schema_includes_lit"
+    WHITESPACE@31..32 " "
+    L_CURLY@32..33 "{"
+    WHITESPACE@33..38 "\n    "
+    ITEM_SPEC@38..155
+      SPEC_KW@38..42 "spec"
+      WHITESPACE@42..43 " "
+      MODULE_KW@43..49 "module"
+      WHITESPACE@49..50 " "
+      BLOCK_EXPR@50..155
+        L_CURLY@50..51 "{"
+        WHITESPACE@51..60 "\n        "
+        INCLUDE_SCHEMA@60..149
+          INCLUDE_KW@60..67 "include"
+          WHITESPACE@67..68 " "
+          IMPLY_INCLUDE_EXPR@68..148
+            BIN_EXPR@68..87
+              DOT_EXPR@68..78
+                PATH_EXPR@68..72
+                  PATH@68..72
+                    PATH_SEGMENT@68..72
+                      NAME_REF@68..72
+                        IDENT@68..72 "vote"
+                DOT@72..73 "."
+                NAME_REF@73..78
+                  IDENT@73..78 "agree"
+              WHITESPACE@78..79 " "
+              NOT_EQ@79..81 "!="
+              WHITESPACE@81..82 " "
+              PATH_EXPR@82..87
+                PATH@82..87
+                  PATH_SEGMENT@82..87
+                    NAME_REF@82..87
+                      IDENT@82..87 "agree"
+            WHITESPACE@87..88 " "
+            IMPLIES@88..91 "==>"
+            WHITESPACE@91..92 " "
+            SCHEMA_LIT@92..148
+              PATH@92..124
+                PATH_SEGMENT@92..124
+                  NAME_REF@92..107
+                    IDENT@92..107 "CheckChangeVote"
+                  TYPE_ARG_LIST@107..124
+                    L_ANGLE@107..108 "<"
+                    TYPE_ARG@108..114
+                      PATH_TYPE@108..114
+                        PATH@108..114
+                          PATH_SEGMENT@108..114
+                            NAME_REF@108..114
+                              IDENT@108..114 "TokenT"
+                    COMMA@114..115 ","
+                    WHITESPACE@115..116 " "
+                    TYPE_ARG@116..123
+                      PATH_TYPE@116..123
+                        PATH@116..123
+                          PATH_SEGMENT@116..123
+                            NAME_REF@116..123
+                              IDENT@116..123 "ActionT"
+                    R_ANGLE@123..124 ">"
+              SCHEMA_LIT_FIELD_LIST@124..148
+                L_CURLY@124..125 "{"
+                SCHEMA_LIT_FIELD@125..129
+                  PATH_EXPR@125..129
+                    PATH@125..129
+                      PATH_SEGMENT@125..129
+                        NAME_REF@125..129
+                          IDENT@125..129 "vote"
+                COMMA@129..130 ","
+                WHITESPACE@130..131 " "
+                SCHEMA_LIT_FIELD@131..147
+                  PATH_EXPR@131..147
+                    PATH@131..147
+                      PATH_SEGMENT@131..147
+                        NAME_REF@131..147
+                          IDENT@131..147 "proposer_address"
+                R_CURLY@147..148 "}"
+          SEMICOLON@148..149 ";"
+        WHITESPACE@149..154 "\n    "
+        R_CURLY@154..155 "}"
+    WHITESPACE@155..156 "\n"
+    R_CURLY@156..157 "}"
+  WHITESPACE@157..158 "\n"

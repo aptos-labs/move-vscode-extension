@@ -287,7 +287,7 @@ BinExpr =
     '||' | '&&'
     | '==' | '!=' | '<=' | '>=' | '<' | '>'
     | '+' | '*' | '-' | '/' | '%' | '<<' | '>>' | '^' | '|' | '&'
-    | '=' | '+=' | '/=' | '*=' | '%=' | '>>=' | '<<=' | '-=' | '|=' | '&=' | '^='
+    | '=' | '+=' | '/=' | '*=' | '%=' | '>>=' | '<<=' | '-=' | '|=' | '&=' | '^=' | '==>'
     )
     rhs:Expr
 
@@ -530,7 +530,7 @@ AndIncludeExpr =
     left_schema_lit:SchemaLit and_op:'&&' right_schema_lit:SchemaLit
 
 ImplyIncludeExpr =
-    Expr
+    Expr '==>' SchemaLit
 
 IfElseIncludeExpr =
     'if' Condition then_schema_lit:SchemaLit 'else' else_schema_lit:SchemaLit

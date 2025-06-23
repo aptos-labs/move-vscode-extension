@@ -20,8 +20,7 @@ impl ast::IncludeExpr {
                 .chain(if_expr_include_expr.else_schema_lit().into_iter())
                 .collect(),
             ast::IncludeExpr::ImplyIncludeExpr(imply_expr) => {
-                // ignore for now
-                vec![]
+                imply_expr.schema_lit().into_iter().collect()
             }
         }
     }

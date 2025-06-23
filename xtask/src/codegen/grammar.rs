@@ -1025,6 +1025,7 @@ impl Field {
                 let name = match name.as_str() {
                     ";" => "semicolon",
                     "->" => "thin_arrow",
+                    "==>" => "imply",
                     "'{'" => "l_curly",
                     "'}'" => "r_curly",
                     "'('" => "l_paren",
