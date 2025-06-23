@@ -1,7 +1,7 @@
 module 0x1::M {
     struct Coin<phantom CoinType, phantom CoinType2> {}
 
-    struct ValidatorConfig<T> has store, drop {
+    struct ValidatorConfig<T> has store, drop, copy {
         val1: u8,
         val2: vector<T>,
     }

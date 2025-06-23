@@ -70,7 +70,13 @@ pub(crate) fn include_schema(p: &mut Parser) -> bool {
     let m = p.start();
     p.bump_remap(T![include]);
     opt_predicate_property_list(p);
+    include_schema_expr(p);
+    p.expect(T![;]);
+    m.complete(p, INCLUDE_SCHEMA);
+    true
+}
 
+fn include_schema_expr(p: &mut Parser) {
     if p.at(T![if]) {
         let m = p.start();
         p.bump(T![if]);
@@ -104,9 +110,6 @@ pub(crate) fn include_schema(p: &mut Parser) -> bool {
             include_imply_expr(p);
         }
     }
-    p.expect(T![;]);
-    m.complete(p, INCLUDE_SCHEMA);
-    true
 }
 
 fn include_imply_expr(p: &mut Parser) {

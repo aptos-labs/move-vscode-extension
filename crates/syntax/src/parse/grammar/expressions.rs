@@ -247,7 +247,9 @@ fn postfix_expr(
 fn postfix_dot_expr(p: &mut Parser, lhs: CompletedMarker) -> Result<CompletedMarker, CompletedMarker> {
     assert!(p.at(T![.]));
 
-    if p.nth_at(1, IDENT) && (p.nth_at(2, T!['(']) || p.nth_at(2, T![::])) {
+    if p.nth_at(1, IDENT)
+        && (p.nth_at_ts(2, T!['('] | T![::]) || p.nth_at(2, T![<]) && p.prev_ws_at(2) == 0)
+    {
         return Ok(method_call_expr(p, lhs));
     }
 
@@ -255,7 +257,7 @@ fn postfix_dot_expr(p: &mut Parser, lhs: CompletedMarker) -> Result<CompletedMar
 }
 
 fn method_call_expr(p: &mut Parser, lhs: CompletedMarker) -> CompletedMarker {
-    assert!(p.at(T![.]) && p.nth_at(1, IDENT) && (p.nth(2) == T!['('] || p.nth_at(2, T![::])));
+    // assert!(p.at(T![.]) && p.nth_at(1, IDENT) && (p.nth(2) == T!['('] || p.nth_at(2, T![::])));
     let m = lhs.precede(p);
     p.bump(T![.]);
     name_ref(p);
