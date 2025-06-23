@@ -83,7 +83,7 @@ fn test_hover_for_function() {
 module 0x1::m {
     struct S<T> { val: T }
     /// function docs
-    fun main(a: u8, b: S<u8>): S<u8> {
+    fun main(a: u8, b: S<u8>): S<u8> acquires S {
         main(1, S { val: 1 });
         //^
     }

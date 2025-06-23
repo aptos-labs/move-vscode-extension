@@ -1,11 +1,11 @@
 #![cfg(test)]
 
 mod fold;
-mod hover;
 mod ide_test_utils;
 mod resolve;
 mod test_completion;
 mod test_inlay_hints;
+mod test_quick_docs;
 mod test_replace_with_compound_expr;
 mod test_replace_with_method_call;
 mod test_syntax_highlighting;
