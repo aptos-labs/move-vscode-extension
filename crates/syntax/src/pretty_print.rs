@@ -3,6 +3,12 @@ use line_index::LineIndex;
 use std::cmp::max;
 use std::iter;
 
+pub fn underline_range_in_text(source: &str, text_range: TextRange) -> String {
+    let mark = SourceMark::at_range(text_range, "");
+    let res = apply_source_marks(source, vec![mark]);
+    res
+}
+
 pub struct SourceMark {
     pub text_range: TextRange,
     pub message: String,

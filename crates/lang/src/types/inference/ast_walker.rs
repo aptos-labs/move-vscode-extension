@@ -23,7 +23,7 @@ use std::sync::LazyLock;
 use syntax::ast::HasStmts;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, IntoNodeOrToken, ast};
+use syntax::{AstNode, IntoNodeOrToken, ast, pretty_print};
 
 pub struct TypeAstWalker<'a, 'db> {
     pub ctx: &'a mut InferenceCtx<'db>,
@@ -301,7 +301,15 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         self.ctx.db.unwind_if_revision_cancelled();
 
         if self.ctx.expr_types.contains_key(expr) {
-            unreachable!("trying to infer expr twice");
+            let file_text = expr
+                .syntax()
+                .containing_file()
+                .unwrap()
+                .syntax()
+                .text()
+                .to_string();
+            let file = pretty_print::underline_range_in_text(&file_text, expr.syntax().text_range());
+            unreachable!("trying to infer expr twice, \n{}", file);
         }
 
         let expected_ty = expected.ty(self.ctx);

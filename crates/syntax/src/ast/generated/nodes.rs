@@ -605,10 +605,6 @@ impl IfElseIncludeExpr {
     #[inline]
     pub fn condition(&self) -> Option<Condition> { support::child(&self.syntax) }
     #[inline]
-    pub fn else_schema_lit(&self) -> Option<SchemaLit> { support::child(&self.syntax) }
-    #[inline]
-    pub fn then_schema_lit(&self) -> Option<SchemaLit> { support::child(&self.syntax) }
-    #[inline]
     pub fn else_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![else]) }
     #[inline]
     pub fn if_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![if]) }

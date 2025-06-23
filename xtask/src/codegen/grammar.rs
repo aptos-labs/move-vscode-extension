@@ -781,6 +781,8 @@ fn lower_rule(
                     | "rhs"
                     | "then_branch"
                     | "else_branch"
+                    | "then_schema_lit"
+                    | "else_schema_lit"
                     // | "loop_body_expr"
                     | "start_expr"
                     | "end_expr"
