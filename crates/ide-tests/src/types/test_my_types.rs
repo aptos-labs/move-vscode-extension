@@ -133,3 +133,25 @@ fn test_field_for_uninitialized_variable_that_inferred_later() {
     "#,
     );
 }
+
+#[test]
+fn test_infer_include_if_else() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::m {
+            struct XUS {}
+            spec schema AddCurrencyAbortsIf<CoinType> {
+                dd_addr: address;
+            }
+            spec schema S<CoinType> {
+                    let dd_addr = @0x1;
+                    let add_all_currencies = true;
+                    include if (add_all_currencies) AddCurrencyAbortsIf<XUS>{dd_addr: dd_addr}
+                                                                                     //^ address
+                            else AddCurrencyAbortsIf<CoinType>{dd_addr: dd_addr};
+            }
+        }
+    "#,
+    );
+}

@@ -21,6 +21,7 @@ mod generic_element;
 mod generic_spec_stmt;
 mod ident_pat;
 mod ident_pat_owner;
+mod if_else_include_expr;
 mod if_expr;
 mod include_expr;
 pub mod index_expr;
