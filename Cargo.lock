@@ -817,6 +817,7 @@ dependencies = [
 name = "ide-tests"
 version = "0.1.0"
 dependencies = [
+ "datatest-stable",
  "expect-test",
  "ide",
  "ide-completion",
@@ -829,6 +830,20 @@ dependencies = [
  "syntax",
  "test-utils",
  "vfs",
+]
+
+[[package]]
+name = "ide-tests-corpus"
+version = "0.1.0"
+dependencies = [
+ "codespan-reporting",
+ "datatest-stable",
+ "expect-test",
+ "ide-db",
+ "ide-diagnostics",
+ "ide-tests",
+ "paths",
+ "test-utils",
 ]
 
 [[package]]

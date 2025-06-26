@@ -176,6 +176,9 @@ impl Check {
                         );
                     }
                     let abs_file_path = vfs.file_path(file_id).as_path().unwrap().to_path_buf();
+                    if self.verbose {
+                        println!("{}", abs_file_path);
+                    }
 
                     let mut diagnostics_config = DiagnosticsConfig::test_sample();
                     if self.fix || !metadata.resolve_deps {
