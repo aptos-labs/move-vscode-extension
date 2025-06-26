@@ -48,13 +48,15 @@ use crate::parse::parser::Marker;
 use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
 use crate::{parse::Parser, ts, SyntaxKind::*, T};
+use std::ops::ControlFlow::Continue;
 
 pub mod entry_points {
     use super::*;
+    use std::ops::ControlFlow::Continue;
 
     pub fn source_file(p: &mut Parser) {
         let m = p.start();
-        while !p.at(EOF) {
+        p.iterate_to_EOF(TokenSet::EMPTY, |p| {
             let m = p.start();
             outer_attrs(p);
             match p.current() {
@@ -67,7 +69,8 @@ pub mod entry_points {
                     p.error_and_bump(&format!("unexpected ident '{}'", p.current_text()))
                 }
             }
-        }
+            Continue(())
+        });
         m.complete(p, SOURCE_FILE);
     }
 }
@@ -94,7 +97,7 @@ pub(crate) fn address_def(p: &mut Parser, m: Marker) {
     any_address(p);
     if p.at(T!['{']) {
         p.bump(T!['{']);
-        while !p.at(EOF) && !p.at(T!['}']) {
+        p.iterate_to_EOF(T!['}'], |p| {
             let m = p.start();
             outer_attrs(p);
             if p.at(T![module]) {
@@ -103,7 +106,8 @@ pub(crate) fn address_def(p: &mut Parser, m: Marker) {
                 m.abandon(p);
                 p.error_and_recover("expected module", T![module] | T!['}']);
             }
-        }
+            Continue(())
+        });
         p.expect(T!['}']);
     } else {
         p.error_and_recover("expected '{'", TOP_LEVEL_FIRST);
@@ -215,16 +219,6 @@ fn name_ref_or_index(p: &mut Parser) {
         p.error_and_bump("expected integer or identifier");
     }
 }
-
-// fn name_2(p: &mut Parser) -> bool {
-//     if !p.at(IDENT) {
-//         return false;
-//     }
-//     let m = p.start();
-//     p.bump(IDENT);
-//     m.complete(p, NAME);
-//     true
-// }
 
 fn name_or_recover(p: &mut Parser, extra: RecoverySet) -> bool {
     if !p.at(IDENT) {

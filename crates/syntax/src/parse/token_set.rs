@@ -75,6 +75,6 @@ impl TokenSet {
     }
 }
 
-const fn mask(kind: SyntaxKind) -> u128 {
+pub const fn mask(kind: SyntaxKind) -> u128 {
     1u128 << (kind as usize)
 }

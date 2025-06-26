@@ -1,8 +1,12 @@
 use crate::parse::grammar::specs::predicates::expect_expr;
+use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{patterns, types};
 use crate::parse::parser::{CompletedMarker, Parser};
+use crate::parse::recovery_set::RecoverySet;
 use crate::SyntaxKind::*;
 use crate::T;
+use std::ops::ControlFlow;
+use std::ops::ControlFlow::{Break, Continue};
 
 pub(crate) fn is_at_quant_kw(p: &mut Parser) -> bool {
     let at_kw =
@@ -56,32 +60,14 @@ pub(crate) fn choose_expr(p: &mut Parser) -> Option<CompletedMarker> {
 }
 
 pub(crate) fn quant_binding_list(p: &mut Parser) {
-    if !p.at(IDENT) {
-        return;
-    }
+    // if !p.at(IDENT) {
+    //     return;
+    // }
     let m = p.start();
-    while !p.at(EOF) && !p.at(T![;]) && !p.at(T![:]) && !p.at_contextual_kw_ident("where") {
-        if p.at(T![,]) {
-            // Recover if an argument is missing and only got a delimiter,
-            // e.g. `(a, , b)`.
-            // Wrap the erroneous delimiter in an error node so that fixup logic gets rid of it.
-            let m = p.start();
-            p.error("expected quant binding");
-            p.bump(T![,]);
-            m.complete(p, ERROR);
-            continue;
-        }
-        if !quant_binding(p) {
-            break;
-        }
-        if !p.eat(T![,]) {
-            if p.at(IDENT) && !p.at_contextual_kw_ident("where") {
-                p.error("expected ','");
-            } else {
-                break;
-            }
-        }
-    }
+    let stop_at = RecoverySet::from_ts(T![;] | T![:]).with_kw("where");
+    p.with_recovery_set(stop_at, |p| {
+        delimited_with_recovery(p, quant_binding, T![,], "expected quant binding", None)
+    });
     m.complete(p, QUANT_BINDING_LIST);
 }
 

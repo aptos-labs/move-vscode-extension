@@ -1,4 +1,6 @@
+use crate::ide_test_utils::diagnostics::check_diagnostics;
 use crate::types::check_expr_type;
+use expect_test::expect;
 
 // language=Move
 #[test]
@@ -154,4 +156,20 @@ fn test_infer_include_if_else() {
         }
     "#,
     );
+}
+
+#[test]
+fn test_paren_pat() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::main {
+            fun main() {
+                let ((((a)))) = (1, 2);
+                a;
+              //^ integer
+            }
+        }
+    "#,
+    )
 }

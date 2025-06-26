@@ -5,6 +5,7 @@ use crate::parse::token_set::TokenSet;
 use crate::parse::Parser;
 use crate::SyntaxKind::*;
 use crate::{ts, T};
+use std::ops::ControlFlow::{Break, Continue};
 
 pub(super) fn path_type(p: &mut Parser) {
     assert!(paths::is_path_start(p));
@@ -100,29 +101,28 @@ fn paren_or_tuple_or_unit_type(p: &mut Parser) {
     p.bump(T!['(']);
     let mut n_types: u32 = 0;
     let mut trailing_comma: bool = false;
-    while !p.at(EOF) && !p.at(T![')']) {
+
+    p.iterate_to_EOF(T![')'], |p| {
         n_types += 1;
         type_(p);
         if p.eat(T![,]) {
             trailing_comma = true;
         } else {
             trailing_comma = false;
-            break;
+            return Break(());
         }
-    }
+        Continue(())
+    });
+
     p.expect(T![')']);
 
     let kind = if n_types == 1 && !trailing_comma {
-        // test paren_type
         // type T = (i32);
         PAREN_TYPE
     } else if n_types == 0 {
+        // type T = ();
         UNIT_TYPE
     } else {
-        // test unit_type
-        // type T = ();
-
-        // test singleton_tuple_type
         // type T = (i32,);
         TUPLE_TYPE
     };

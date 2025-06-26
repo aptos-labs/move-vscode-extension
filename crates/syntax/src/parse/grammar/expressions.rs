@@ -1,7 +1,7 @@
 use crate::parse::grammar::expressions::atom::call_expr;
 use crate::parse::grammar::items::{at_item_start, fun, use_item};
 use crate::parse::grammar::lambdas::lambda_param_list;
-use crate::parse::grammar::patterns::{pat, STMT_KEYWORDS_LIST};
+use crate::parse::grammar::patterns::STMT_KEYWORDS_LIST;
 use crate::parse::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt};
 use crate::parse::grammar::specs::quants::{choose_expr, exists_expr, forall_expr, is_at_quant_kw};
 use crate::parse::grammar::specs::schemas::{
@@ -15,6 +15,7 @@ use crate::SyntaxKind::*;
 use crate::{ts, SyntaxKind, T};
 use std::io::Read;
 use std::iter;
+use std::ops::ControlFlow::Continue;
 
 pub(crate) mod atom;
 pub(crate) mod stmts;
@@ -108,15 +109,10 @@ pub(crate) fn struct_lit_field_list(p: &mut Parser) {
     assert!(p.at(T!['{']));
     let m = p.start();
     p.bump(T!['{']);
-    while !p.at(EOF) && !p.at(T!['}']) {
+    p.iterate_to_EOF(T!['}'], |p| {
         let m = p.start();
-        // attributes::outer_attrs(p);
         match p.current() {
-            IDENT /*| INT_NUMBER*/ => {
-                // test_err record_literal_before_ellipsis_recovery
-                // fn main() {
-                //     S { field ..S::default() }
-                // }
+            IDENT => {
                 if p.nth_at(1, T![:]) {
                     name_ref(p);
                     p.expect(T![:]);
@@ -124,10 +120,10 @@ pub(crate) fn struct_lit_field_list(p: &mut Parser) {
                 expr(p);
                 m.complete(p, STRUCT_LIT_FIELD);
             }
-            T!['{'] => {
-                error_block(p, "expected a field");
-                m.abandon(p);
-            }
+            // T!['{'] => {
+            //     error_block(p, "expected a field");
+            //     m.abandon(p);
+            // }
             _ => {
                 p.error_and_bump("expected identifier");
                 m.abandon(p);
@@ -136,7 +132,8 @@ pub(crate) fn struct_lit_field_list(p: &mut Parser) {
         if !p.at(T!['}']) {
             p.expect(T![,]);
         }
-    }
+        Continue(())
+    });
     p.expect(T!['}']);
     m.complete(p, STRUCT_LIT_FIELD_LIST);
 }
@@ -395,13 +392,14 @@ pub(super) fn stmt_expr(p: &mut Parser, stmt_m: Option<Marker>) -> Option<(Compl
 }
 
 pub(super) fn expr_block_contents(p: &mut Parser, is_spec: bool) {
-    while !p.at(EOF) && !p.at(T!['}']) {
+    p.iterate_to_EOF(T!['}'], |p| {
         if p.at(T![;]) {
             p.bump(T![;]);
-            continue;
+            return Continue(());
         }
         p.with_recovery_token_set(T!['}'], |p| stmts::stmt(p, false, is_spec));
-    }
+        Continue(())
+    });
 }
 
 #[derive(Clone, Copy, Default)]

@@ -14,25 +14,18 @@ use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{SyntaxKind, T};
-// // test mod_contents
-// // fn foo() {}
-// // macro_rules! foo {}
-// // foo::bar!();
-// // super::baz! {}
-// // struct S;
-// pub(super) fn mod_contents(p: &mut Parser) {
-//     while !p.at(EOF) && !(p.at(T!['}'])) {
-//         item(p);
-//     }
-// }
+use std::ops::ControlFlow;
+use std::ops::ControlFlow::Continue;
 
 pub(crate) fn item_list(p: &mut Parser) {
     assert!(p.at(T!['{']));
     p.bump(T!['{']);
-    while !p.at(EOF) && !(p.at(T!['}'])) {
+
+    p.iterate_to_EOF(T!['}'], |p| {
         p.with_recovery_token(T!['}'], item);
-        // item(p);
-    }
+        Continue(())
+    });
+
     p.expect(T!['}']);
 }
 
@@ -155,7 +148,7 @@ pub(crate) fn at_item_start(p: &Parser) -> bool {
 pub(crate) fn item_start_rec_set() -> RecoverySet {
     RecoverySet::new()
         .with_token_set(ITEM_KEYWORDS)
-        .with_kw_ident("enum")
+        .with_kw("enum")
         .with_merged(function_modifier_recovery_set())
 }
 

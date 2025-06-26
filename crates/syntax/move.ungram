@@ -173,6 +173,9 @@ Pat =
 
 TuplePat =
     '(' pats:(Pat (',' Pat)* ','?)? ')'
+ParenPat =
+    '(' Pat ')'
+UnitPat = '(' ')'
 
 TupleStructPat =
     Path '(' fields:(Pat (',' Pat)* ','?)? ')'

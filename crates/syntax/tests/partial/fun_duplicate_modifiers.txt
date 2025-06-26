@@ -1,0 +1,23 @@
+SOURCE_FILE@0..62
+  MODULE@0..61
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..35
+      IDENT@12..35 "fun_duplicate_modifiers"
+    WHITESPACE@35..36 " "
+    L_CURLY@36..37 "{"
+    WHITESPACE@37..42 "\n    "
+    FUN@42..59
+      VISIBILITY_MODIFIER@42..48
+        PUBLIC_KW@42..48 "public"
+      WHITESPACE@48..49 " "
+      VISIBILITY_MODIFIER@49..55
+        PUBLIC_KW@49..55 "public"
+      WHITESPACE@55..56 " "
+      FUN_KW@56..59 "fun"
+    WHITESPACE@59..60 "\n"
+    R_CURLY@60..61 "}"
+  WHITESPACE@61..62 "\n"

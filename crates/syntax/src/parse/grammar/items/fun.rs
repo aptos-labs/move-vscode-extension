@@ -11,10 +11,13 @@ use crate::SyntaxKind::{
     ACQUIRES, EOF, FUN, IDENT, RET_TYPE, SPEC_FUN, SPEC_INLINE_FUN, VISIBILITY_MODIFIER,
 };
 use crate::{ts, SyntaxKind, T};
+use std::cell::RefCell;
 use std::collections::HashSet;
+use std::ops::ControlFlow::{Break, Continue};
+use std::ops::{ControlFlow, DerefMut};
 
 pub(crate) fn spec_function(p: &mut Parser, m: Marker) {
-    opt_modifiers(p);
+    opt_fun_modifiers(p);
     if !p.at(T![fun]) {
         m.abandon(p);
         return;
@@ -35,7 +38,7 @@ pub(crate) fn spec_inline_function(p: &mut Parser) {
 }
 
 pub(crate) fn function(p: &mut Parser, m: Marker) {
-    opt_modifiers(p);
+    opt_fun_modifiers(p);
     if p.at(T![fun]) {
         fun_signature(p, false, true);
     } else {
@@ -46,50 +49,36 @@ pub(crate) fn function(p: &mut Parser, m: Marker) {
     m.complete(p, FUN);
 }
 
-fn opt_modifiers(p: &mut Parser) {
-    let mut remaining_modifiers: HashSet<SyntaxKind> = vec![
-        T![inline],
-        T![entry],
-        T![public],
-        T![native],
-        T![friend],
-        T![package],
-    ]
-    .into_iter()
-    .collect();
-
-    while !p.at(EOF) {
+fn opt_fun_modifiers(p: &mut Parser) {
+    p.iterate_to_EOF(TokenSet::EMPTY, |p| {
         match p.current() {
-            T![native] => {
-                bump_modifier_if_possible(p, &mut remaining_modifiers, T![native]);
-            }
-            T![inline] => {
-                bump_modifier_if_possible(p, &mut remaining_modifiers, T![inline]);
-            }
+            T![native] => p.bump(T![native]),
+            T![inline] => p.bump(T![inline]),
             IDENT if p.at_contextual_kw("entry") => {
-                bump_modifier_if_possible(p, &mut remaining_modifiers, T![entry]);
+                p.bump_remap(T![entry]);
             }
             T![public] => {
                 let m = p.start();
-                bump_modifier_if_possible(p, &mut remaining_modifiers, T![public]);
+                p.bump(T![public]);
                 opt_inner_public_modifier(p);
                 m.complete(p, VISIBILITY_MODIFIER);
             }
             T![friend] => {
                 let m = p.start();
-                bump_modifier_if_possible(p, &mut remaining_modifiers, T![friend]);
+                p.bump_remap(T![friend]);
                 m.complete(p, VISIBILITY_MODIFIER);
             }
             IDENT if p.at_contextual_kw("package") => {
                 let m = p.start();
-                bump_modifier_if_possible(p, &mut remaining_modifiers, T![package]);
+                p.bump_remap(T![package]);
                 m.complete(p, VISIBILITY_MODIFIER);
             }
             _ => {
-                break;
+                return Break(());
             }
         }
-    }
+        Continue(())
+    });
 }
 
 fn bump_modifier_if_possible(

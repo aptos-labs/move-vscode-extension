@@ -6,12 +6,13 @@ module 0x1::let_invalid_ident_pat {
                     expiration_sec: withdraw_proof.expiration_sec,
                                                 //^ expected COMMA
                                                 //^ expected identifier
-                                                               //^ expected ident
+                                                               //^ expected R_CURLY
+                                                                //^ expected R_PAREN
+                                                                //^ expected R_PAREN
+                                                                //^ expected SEMICOLON
                 }
             )
-           //^ expected COMMA
-           //^ expected a pattern
-           //^ expected R_PAREN
-           //^ expected SEMICOLON
+          //^ expected an item, got R_PAREN
     }
 }
+//< unexpected ident '}'

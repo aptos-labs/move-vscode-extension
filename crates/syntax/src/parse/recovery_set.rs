@@ -24,7 +24,7 @@ impl From<&str> for RecoveryToken {
 
 #[derive(Debug, Clone)]
 pub struct RecoverySet {
-    token_set: TokenSet,
+    pub token_set: TokenSet,
     keywords: HashSet<String>,
 }
 
@@ -65,7 +65,7 @@ impl RecoverySet {
         self
     }
 
-    pub(crate) fn with_kw_ident(mut self, kw_ident: &str) -> Self {
+    pub(crate) fn with_kw(mut self, kw_ident: &str) -> Self {
         self.keywords.insert(kw_ident.to_string());
         self
     }

@@ -3,10 +3,11 @@ use crate::parse::grammar::{name, paths};
 use crate::parse::parser::{Marker, Parser};
 use crate::SyntaxKind::*;
 use crate::T;
+use std::ops::ControlFlow::Continue;
 
 // test use_tree
 // use outer::tree::{inner::tree};
-pub(crate) fn use_speck(p: &mut Parser, top_level: bool) {
+pub(crate) fn use_speck(p: &mut Parser, at_the_top: bool) {
     let m = p.start();
     match p.current() {
         T!['{'] => use_group(p),
@@ -41,12 +42,12 @@ pub(crate) fn use_speck(p: &mut Parser, top_level: bool) {
         _ => {
             m.abandon(p);
             let msg = "expected one of `*`, `::`, `{`, `self`, `super` or an identifier";
-            if top_level {
+            if at_the_top {
                 p.error_and_recover(msg, item_start_rec_set());
                 // p.error_and_recover_until(msg, at_item_start);
             } else {
                 // if we are parsing a nested tree, we have to eat a token to
-                // main balanced `{}`
+                // remain balanced `{}`
                 p.error_and_bump(msg);
             }
             return;
@@ -60,12 +61,13 @@ pub(crate) fn use_group(p: &mut Parser) {
     assert!(p.at(T!['{']));
     let m = p.start();
     p.bump(T!['{']);
-    while !p.at(EOF) && !p.at(T!['}']) {
+    p.iterate_to_EOF(T!['}'], |p| {
         use_speck(p, false);
         if !p.at(T!['}']) {
             p.expect(T![,]);
         }
-    }
+        Continue(())
+    });
     p.expect(T!['}']);
     m.complete(p, USE_GROUP);
 }

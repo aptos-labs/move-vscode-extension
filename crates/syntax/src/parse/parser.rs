@@ -10,6 +10,7 @@ use crate::{
     T,
 };
 use drop_bomb::DropBomb;
+use std::ops::ControlFlow;
 
 /// `Parser` struct provides the low-level API for
 /// navigating through the stream of tokens and
@@ -42,6 +43,41 @@ impl Parser {
 
     pub(crate) fn pos(&self) -> usize {
         self.token_source.current_pos()
+    }
+
+    pub(crate) fn at_same_pos_as(&self, last_pos: Option<usize>) -> bool {
+        last_pos.is_some_and(|it| it == self.pos())
+    }
+
+    #[allow(non_snake_case)]
+    pub(crate) fn iterate_to_EOF(
+        &mut self,
+        stop_at: impl Into<TokenSet>,
+        f: impl FnMut(&mut Parser) -> ControlFlow<()>,
+    ) {
+        self.iterate_to_EOF_rec(stop_at.into(), f)
+    }
+
+    #[allow(non_snake_case)]
+    pub(crate) fn iterate_to_EOF_rec(
+        &mut self,
+        stop_at_rec: impl Into<RecoverySet>,
+        mut f: impl FnMut(&mut Parser) -> ControlFlow<()>,
+    ) {
+        let stop_at = stop_at_rec.into();
+        while !self.at(EOF) && !stop_at.contains_current(self) {
+            let pos_before = self.pos();
+            let cf = f(self);
+            if matches!(cf, ControlFlow::Break(_)) {
+                break;
+            }
+            if self.pos() == pos_before {
+                // iteration is stuck
+                #[cfg(debug_assertions)]
+                panic!("iteration is stuck at {:?}", self.current_context());
+                break;
+            }
+        }
     }
 
     pub(crate) fn event_pos(&self) -> usize {
