@@ -9,6 +9,7 @@ use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::T;
+use std::ops::ControlFlow::Continue;
 use std::sync::LazyLock;
 
 pub(super) fn struct_(p: &mut Parser, m: Marker) {
@@ -57,11 +58,8 @@ pub(crate) fn enum_variant_list(p: &mut Parser) {
     assert!(p.at(T!['{']));
     let m = p.start();
     p.bump(T!['{']);
-    while !p.at(EOF) && !p.at(T!['}']) {
-        if p.at(T!['{']) {
-            error_block(p, "expected enum variant");
-            continue;
-        }
+
+    p.iterate_to_EOF(T!['}'], |p| {
         let is_curly = enum_variant(p);
         if !p.at(T!['}']) {
             if is_curly {
@@ -70,7 +68,9 @@ pub(crate) fn enum_variant_list(p: &mut Parser) {
                 p.expect(T![,]);
             }
         }
-    }
+        Continue(())
+    });
+
     p.expect(T!['}']);
     m.complete(p, VARIANT_LIST);
 }
@@ -117,28 +117,25 @@ fn named_field_list(p: &mut Parser) {
     assert!(p.at(T!['{']));
     let m = p.start();
     p.bump(T!['{']);
-    while !p.at(T!['}']) && !p.at(EOF) {
-        if p.at(T!['{']) {
-            error_block(p, "expected field");
-            continue;
-        }
+    p.iterate_to_EOF(T!['}'], |p| {
         named_field(p);
         if !p.at(T!['}']) {
             p.expect(T![,]);
         }
-    }
+        Continue(())
+    });
     p.expect(T!['}']);
     m.complete(p, NAMED_FIELD_LIST);
 }
 
-fn named_field(p: &mut Parser) {
+fn named_field(p: &mut Parser) -> bool {
     let m = p.start();
     if p.at(IDENT) {
         #[cfg(debug_assertions)]
         let _p = stdx::panic_context::enter(format!("named_field {:?}", p.current_text()));
 
         name_or_recover(p, TokenSet::EMPTY.into());
-        // name(p);
+
         let at_colon = p.eat(T![:]);
         if at_colon {
             p.with_recovery_token(T![,], types::type_);
@@ -149,7 +146,9 @@ fn named_field(p: &mut Parser) {
     } else {
         m.abandon(p);
         p.error_and_bump("expected named field declaration");
+        return false;
     }
+    true
 }
 
 fn adt_name_recovery() -> RecoverySet {

@@ -3,6 +3,7 @@ use crate::parse::grammar::paths::Mode;
 use crate::parse::grammar::types::{TYPE_FIRST, TYPE_FIRST_NO_LAMBDA};
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::TextSize;
+use std::ops::ControlFlow::{Break, Continue};
 
 pub(crate) fn opt_path_type_arg_list(p: &mut Parser, mode: Mode) {
     match mode {
@@ -51,31 +52,22 @@ pub(super) fn opt_type_arg_list_for_expr(p: &mut Parser, colon_colon_required: b
         }
     }
 
-    // if p.at(T![::]) && p.nth(1) == T![<] {
-    //     m = p.start();
-    //     p.bump(T![::]);
-    // } else if !colon_colon_required && p.at(T![<]) {
-    //     m = p.start();
-    // } else {
-    //     // '::' is optional if there's no whitespace between ident and '<'
-    //     return;
-    // }
     p.bump(T![<]);
 
-    // NOTE: we cannot add recovery in expr, it's ambiguous with the lt/gt expr
-    let at_end = |p: &Parser| p.at_ts(ts!(T![>], T!['('], T!['{']));
-    while !p.at(EOF) && !at_end(p) {
+    // NOTE: we cannot add recovery in type args for expr, it's ambiguous with the lt/gt expr
+    p.iterate_to_EOF(T![>] | T!['('] | T!['{'], |p| {
         if !type_arg(p, false) {
-            break;
+            return Break(());
         }
         if !p.eat(T![,]) {
             if p.at_ts(TYPE_ARG_FIRST) {
                 p.error("expected ','");
             } else {
-                break;
+                return Break(());
             }
         }
-    }
+        Continue(())
+    });
     if !p.eat(T![>]) {
         m.abandon_with_rollback(p);
         return;

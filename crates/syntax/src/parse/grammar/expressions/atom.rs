@@ -1,9 +1,13 @@
 use super::*;
 use crate::parse::grammar::paths::Mode;
+use crate::parse::grammar::patterns::pat_or_recover;
 use crate::parse::grammar::specs::{opt_spec_block_expr, spec_block_expr};
 use crate::parse::grammar::{any_address, paths};
-use crate::parse::token_set::TokenSet;
+use crate::parse::recovery_set::RecoverySet;
+use crate::parse::recovery_set::RecoveryToken::SyntaxKind;
+use crate::parse::token_set::{mask, TokenSet};
 use crate::ts;
+use std::ops::ControlFlow::Break;
 
 pub(crate) fn literal(p: &mut Parser) -> Option<CompletedMarker> {
     let m = p.start();
@@ -162,13 +166,17 @@ fn vector_lit_expr(p: &mut Parser) -> CompletedMarker {
 fn match_expr(p: &mut Parser) -> Option<CompletedMarker> {
     let m = p.start();
     p.bump_remap(T![match]);
+
     p.bump(T!['(']);
     expr(p);
     p.expect(T![')']);
+
     if !p.at(T!['{']) {
+        // this is a match() function
         m.abandon_with_rollback(p);
         return None;
     }
+
     match_arm_list(p);
     Some(m.complete(p, MATCH_EXPR))
 }
@@ -203,32 +211,36 @@ fn paren_or_tuple_or_annotated_expr(p: &mut Parser) -> CompletedMarker {
         p.bump(T![')']);
         return m.complete(p, UNIT_EXPR);
     }
+
     let mut outer = true;
     let mut saw_comma = false;
     let mut saw_expr = false;
-    while !p.at(EOF) && !p.at(T![')']) {
+    let mut saw_type_annotation = false;
+    p.iterate_to_EOF(T![')'], |p| {
         saw_expr = true;
-
         if !expr(p) {
-            break;
+            return Break(());
         }
-
         // try for `(a: u8)` annotated expr
         if outer {
             if p.at(T![:]) {
                 types::type_annotation(p);
-                p.expect(T![')']);
-                return m.complete(p, ANNOTATED_EXPR);
+                saw_type_annotation = true;
+                return Break(());
             }
             outer = false;
         }
-
         if !p.at(T![')']) {
             saw_comma = true;
             p.expect(T![,]);
         }
-    }
+        Continue(())
+    });
+
     p.expect(T![')']);
+    if saw_type_annotation {
+        return m.complete(p, ANNOTATED_EXPR);
+    }
     m.complete(
         p,
         if saw_expr && !saw_comma {
@@ -323,29 +335,50 @@ pub(crate) fn match_arm_list(p: &mut Parser) {
     let m = p.start();
     p.eat(T!['{']);
 
+    let mut last_pos: Option<usize> = None;
     while !p.at(EOF) && !p.at(T!['}']) {
-        if p.at(T!['{']) {
-            error_block(p, "expected match arm");
-            continue;
+        match_arm(p, TokenSet::EMPTY);
+        if p.at_same_pos_as(last_pos) {
+            // iteration is stuck
+            #[cfg(debug_assertions)]
+            panic!("iteration is stuck at {:?}", p.current_context());
+            break;
         }
-        match_arm(p);
+        last_pos = Some(p.pos());
     }
     p.expect(T!['}']);
     m.complete(p, MATCH_ARM_LIST);
 }
 
-fn match_arm(p: &mut Parser) {
+fn match_arm(p: &mut Parser, recovery_set: TokenSet) -> bool {
     let m = p.start();
-    pat(p);
+    let is_pat = pat_or_recover(p, TokenSet::EMPTY);
+    // let cm = p.with_recovery_token_set(T![=>] | T!['}'], pat);
+    // let cm = pat(p);
+    if !is_pat {
+        m.abandon(p);
+        return false;
+    }
     if p.at(T![if]) {
-        match_guard(p);
+        // match_guard(p);
+        let m = p.start();
+        p.bump(T![if]);
+        expr(p);
+        m.complete(p, MATCH_GUARD);
     }
 
     if !p.at(T![=>]) {
-        p.error_and_recover("expected '=>'", T!['}'] | T![,]);
-        m.complete(p, MATCH_ARM);
-        return;
+        p.error_and_recover("expected '=>'", recovery_set);
+        m.abandon(p);
+        return false;
     }
+
+    // if !p.at(T![=>]) {
+    //     p.error_and_recover("expected '=>'", T!['}'] | T![,]);
+    //     m.complete(p, MATCH_ARM);
+    //     return false;
+    // }
+
     p.bump(T![=>]);
 
     let blocklike = match stmt_expr(p, None) {
@@ -357,6 +390,7 @@ fn match_arm(p: &mut Parser) {
         p.error("expected `,`");
     }
     m.complete(p, MATCH_ARM);
+    true
 }
 
 fn match_guard(p: &mut Parser) -> CompletedMarker {

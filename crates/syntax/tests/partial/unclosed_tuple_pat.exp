@@ -1,0 +1,16 @@
+module 0x1::unclosed_tuple_pat {
+    fun main() {
+        let (;
+           //^ expected pattern
+           //^ expected R_PAREN
+        let (
+           //^ expected pattern
+           //^ expected R_PAREN
+           //^ expected SEMICOLON
+        let (a;
+            //^ expected R_PAREN
+        let (a
+            //^ expected R_PAREN
+            //^ expected SEMICOLON
+    }
+}

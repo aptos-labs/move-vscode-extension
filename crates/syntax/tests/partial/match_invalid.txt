@@ -1,0 +1,63 @@
+SOURCE_FILE@0..108
+  MODULE@0..107
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..25
+      IDENT@12..25 "match_invalid"
+    WHITESPACE@25..26 " "
+    L_CURLY@26..27 "{"
+    WHITESPACE@27..32 "\n    "
+    FUN@32..105
+      FUN_KW@32..35 "fun"
+      WHITESPACE@35..36 " "
+      NAME@36..40
+        IDENT@36..40 "main"
+      PARAM_LIST@40..50
+        L_PAREN@40..41 "("
+        PARAM@41..49
+          IDENT_PAT@41..42
+            NAME@41..42
+              IDENT@41..42 "s"
+          COLON@42..43 ":"
+          WHITESPACE@43..44 " "
+          PATH_TYPE@44..49
+            PATH@44..49
+              PATH_SEGMENT@44..49
+                NAME_REF@44..49
+                  IDENT@44..49 "Enum0"
+        R_PAREN@49..50 ")"
+      WHITESPACE@50..51 " "
+      BLOCK_EXPR@51..105
+        L_CURLY@51..52 "{"
+        WHITESPACE@52..61 "\n        "
+        MATCH_EXPR@61..99
+          MATCH_KW@61..66 "match"
+          WHITESPACE@66..67 " "
+          L_PAREN@67..68 "("
+          PATH_EXPR@68..69
+            PATH@68..69
+              PATH_SEGMENT@68..69
+                NAME_REF@68..69
+                  IDENT@68..69 "s"
+          R_PAREN@69..70 ")"
+          WHITESPACE@70..71 " "
+          MATCH_ARM_LIST@71..99
+            L_CURLY@71..72 "{"
+            WHITESPACE@72..85 "\n            "
+            TUPLE_PAT@85..88
+              L_PAREN@85..86 "("
+              ERROR@86..87
+                INT_NUMBER@86..87 "1"
+              R_PAREN@87..88 ")"
+            ERROR@88..89
+              SEMICOLON@88..89 ";"
+            WHITESPACE@89..98 "\n        "
+            R_CURLY@98..99 "}"
+        WHITESPACE@99..104 "\n    "
+        R_CURLY@104..105 "}"
+    WHITESPACE@105..106 "\n"
+    R_CURLY@106..107 "}"
+  WHITESPACE@107..108 "\n"

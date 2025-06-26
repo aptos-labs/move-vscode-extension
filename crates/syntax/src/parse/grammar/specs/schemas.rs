@@ -11,6 +11,7 @@ use crate::parse::recovery_set::RecoveryToken;
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::T;
+use std::ops::ControlFlow::{Break, Continue};
 
 pub(crate) fn schema(p: &mut Parser, m: Marker) {
     assert!(p.at_contextual_kw_ident("schema"));
@@ -194,35 +195,18 @@ fn wildcard_pattern(p: &mut Parser) -> bool {
 }
 
 fn opt_wildcard_pattern_modifier(p: &mut Parser) {
-    let mut all_modifiers = vec![T![public], T![internal]];
-    let mut found = false;
     let m = p.start();
-    while !p.at(EOF) {
-        if p.at(T![public]) {
-            if !all_modifiers.contains(&T![public]) {
-                p.error_and_bump("duplicate modifier 'public'");
-                continue;
-            }
-            found = true;
+    match p.current() {
+        T![public] => {
             p.bump(T![public]);
-            all_modifiers = all_modifiers.into_iter().filter(|m| *m != T![public]).collect();
-            continue;
         }
-        if p.at_contextual_kw_ident("internal") {
-            if !all_modifiers.contains(&T![internal]) {
-                p.error_and_bump("duplicate modifier 'internal'");
-                continue;
-            }
-            found = true;
+        IDENT if p.at_contextual_kw_ident("internal") => {
             p.bump_remap(T![internal]);
-            all_modifiers = all_modifiers.into_iter().filter(|m| *m != T![internal]).collect();
-            continue;
         }
-        break;
-    }
-    if !found {
-        m.abandon(p);
-        return;
+        _ => {
+            m.abandon(p);
+            return;
+        }
     }
     m.complete(p, WILDCARD_PATTERN_MODIFIER);
 }

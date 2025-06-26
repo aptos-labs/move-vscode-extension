@@ -5,41 +5,60 @@ use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{SyntaxKind, T};
+use std::ops::ControlFlow::{Break, Continue};
 
-pub(crate) fn pat(p: &mut Parser) -> Option<CompletedMarker> {
-    let m = match p.current() {
-        // 0x1 '::'
-        INT_NUMBER if p.nth_at(1, T![::]) => path_pat(p),
-        IDENT => path_pat(p),
-        // _ if is_literal_pat_start(p) => literal_pat(p),
-        T![..] => rest_pat(p),
-        T!['_'] => wildcard_pat(p),
-        T!['('] => tuple_pat(p),
-        _ => {
-            p.error_and_recover("expected pattern", TokenSet::EMPTY);
-            // p.error_and_recover_until_ts("expected pattern", PAT_RECOVERY_SET);
-            return None;
-        }
-    };
-    Some(m)
-}
+// pub(crate) fn pat(p: &mut Parser) -> bool {
+//     let m = match p.current() {
+//         // 0x1 '::'
+//         INT_NUMBER if p.nth_at(1, T![::]) => path_pat(p),
+//         IDENT => path_pat(p),
+//         // _ if is_literal_pat_start(p) => literal_pat(p),
+//         T![..] => rest_pat(p),
+//         T!['_'] => wildcard_pat(p),
+//         T!['('] => tuple_or_unit_or_paren_pat(p),
+//         _ => {
+//             p.error_and_recover("expected pattern", TokenSet::EMPTY);
+//             // p.error_and_recover_until_ts("expected pattern", PAT_RECOVERY_SET);
+//             return false;
+//         }
+//     };
+//     true
+// }
 
-pub(crate) fn pat_or_recover(p: &mut Parser, extra_set: RecoverySet) -> Option<CompletedMarker> {
-    let m = match p.current() {
-        // 0x1 '::'
-        INT_NUMBER if p.nth_at(1, T![::]) => path_pat(p),
-        IDENT => path_pat(p),
+pub(crate) fn pat_or_recover(p: &mut Parser, extra_set: impl Into<RecoverySet>) -> bool {
+    p.with_recovery_set(extra_set.into(), |p| {
+        let m = match p.current() {
+            // 0x1 '::'
+            INT_NUMBER if p.nth_at(1, T![::]) => path_pat(p),
+            IDENT => path_pat(p),
 
-        T![..] => rest_pat(p),
-        T!['_'] => wildcard_pat(p),
-        T!['('] => tuple_pat(p),
+            T![..] => rest_pat(p),
+            T!['_'] => wildcard_pat(p),
+            T!['('] => tuple_or_unit_or_paren_pat(p),
 
-        _ => {
-            p.error_and_recover("expected pattern", extra_set);
-            return None;
-        }
-    };
-    Some(m)
+            _ => {
+                p.error_and_recover("expected pattern", TokenSet::EMPTY);
+                return false;
+            }
+        };
+        true
+    })
+    // let m = match p.current() {
+    //     // 0x1 '::'
+    //     INT_NUMBER if p.nth_at(1, T![::]) => path_pat(p),
+    //     IDENT => path_pat(p),
+    //
+    //     T![..] => rest_pat(p),
+    //     T!['_'] => wildcard_pat(p),
+    //     T!['('] => tuple_or_unit_or_paren_pat(p),
+    //
+    //     _ => {
+    //         p.error_and_recover("expected pattern", extra_set);
+    //         return false;
+    //     }
+    // };
+    // true
+    // Some(m)
 }
 
 // pub(crate) fn ident_or_wildcard_pat(p: &mut Parser) -> bool {
@@ -93,7 +112,26 @@ fn path_pat(p: &mut Parser) -> CompletedMarker {
 fn tuple_pat_fields(p: &mut Parser) {
     assert!(p.at(T!['(']));
     p.bump(T!['(']);
-    pat_list(p, T![')']);
+
+    delimited_with_recovery(
+        p,
+        |p| pat_or_recover(p, TokenSet::EMPTY),
+        T![,],
+        "expected pattern",
+        Some(T![')']),
+    );
+
+    // while !p.at(EOF) && !p.at(T![')']) {
+    //     if !p.at_ts(PAT_FIRST) {
+    //         p.error("expected a pattern");
+    //         break;
+    //     }
+    //     pat_or_recover(p, TokenSet::EMPTY);
+    //     if !p.at(T![')']) {
+    //         p.expect(T![,]);
+    //     }
+    // }
+
     p.expect(T![')']);
 }
 
@@ -102,7 +140,7 @@ fn struct_pat_field(p: &mut Parser) -> bool {
         IDENT if p.nth(1) == T![:] => {
             name_ref(p);
             p.bump(T![:]);
-            pat(p);
+            pat_or_recover(p, TokenSet::EMPTY);
         }
         IDENT => {
             ident_pat(p);
@@ -136,11 +174,6 @@ fn struct_pat_field_list(p: &mut Parser) {
                         m.complete(p, REST_PAT);
                         return true;
                     }
-                    // T!['{'] => {
-                    //     error_block(p, "expected ident");
-                    //     m.abandon(p);
-                    //     return false;
-                    // }
                     T!['}'] => {
                         // empty struct pat
                         m.abandon(p);
@@ -159,31 +192,6 @@ fn struct_pat_field_list(p: &mut Parser) {
         );
     });
 
-    // while !p.at(EOF) && !p.at(T!['}']) {
-    //     let m = p.start();
-    //     // attributes::outer_attrs(p);
-    //     match p.current() {
-    //         // A trailing `..` is *not* treated as a REST_PAT.
-    //         T![..] => {
-    //             // T![.] if p.at(T![..]) => {
-    //             p.bump(T![..]);
-    //             m.complete(p, REST_PAT);
-    //             return;
-    //         }
-    //         T!['{'] => {
-    //             error_block(p, "expected ident");
-    //             m.abandon(p);
-    //         }
-    //         _ => {
-    //             p.with_recover_token_set(T!['}'] | T![,], struct_pat_field);
-    //             // struct_pat_field(p);
-    //             m.complete(p, STRUCT_PAT_FIELD);
-    //         }
-    //     }
-    //     if !p.at(T!['}']) {
-    //         p.expect(T![,]);
-    //     }
-    // }
     p.expect(T!['}']);
     m.complete(p, STRUCT_PAT_FIELD_LIST);
 }
@@ -202,45 +210,44 @@ fn rest_pat(p: &mut Parser) -> CompletedMarker {
     m.complete(p, REST_PAT)
 }
 
-fn tuple_pat(p: &mut Parser) -> CompletedMarker {
+fn tuple_or_unit_or_paren_pat(p: &mut Parser) -> CompletedMarker {
     assert!(p.at(T!['(']));
     let m = p.start();
     p.bump(T!['(']);
-    // let mut has_comma = false;
-    // let mut has_pat = false;
-    // let mut has_rest = false;
-    while !p.at(EOF) && !p.at(T![')']) {
-        // has_pat = true;
-        if !p.at_ts(PAT_FIRST) {
-            p.error("expected a pattern");
-            break;
-        }
-        // has_rest |= p.at(T![..]);
+    let mut has_comma = false;
+    let mut has_pat = false;
 
-        p.with_recovery_token_set(T![')'] | T![,], pat);
-        // pat(p);
-        if !p.at(T![')']) {
-            // has_comma = true;
-            p.expect(T![,]);
+    let outer_recovery_set = p.outer_recovery_set();
+    p.iterate_to_EOF(T![')'], |p| {
+        let found_pat = pat_or_recover(p, T![,] | T![')']);
+        if found_pat {
+            has_pat = true;
         }
-    }
+
+        if outer_recovery_set.contains_current(p) {
+            return Break(());
+        }
+
+        if !p.at(T![')']) {
+            if p.expect(T![,]) {
+                has_comma = true;
+            }
+        }
+
+        Continue(())
+    });
     p.expect(T![')']);
 
-    m.complete(p, TUPLE_PAT)
-    // m.complete(p, if !has_comma && !has_rest && has_pat { PAREN_PAT } else { TUPLE_PAT })
-}
-
-fn pat_list(p: &mut Parser, ket: SyntaxKind) {
-    while !p.at(EOF) && !p.at(ket) {
-        if !p.at_ts(PAT_FIRST) {
-            p.error("expected a pattern");
-            break;
-        }
-        pat(p);
-        if !p.at(ket) {
-            p.expect(T![,]);
-        }
-    }
+    m.complete(
+        p,
+        if !has_pat && !has_comma {
+            UNIT_PAT
+        } else if has_pat && !has_comma {
+            PAREN_PAT
+        } else {
+            TUPLE_PAT
+        },
+    )
 }
 
 pub(crate) fn ident_pat(p: &mut Parser) -> CompletedMarker {

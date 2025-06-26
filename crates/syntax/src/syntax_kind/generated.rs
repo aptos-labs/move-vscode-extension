@@ -165,6 +165,8 @@ pub enum SyntaxKind {
     LAMBDA_TYPE_ABILITY_LIST,
     REF_TYPE,
     UNIT_TYPE,
+    PAREN_PAT,
+    UNIT_PAT,
     PAT,
     IDENT_PAT,
     WILDCARD_PAT,
