@@ -14,6 +14,10 @@ use syntax::{AstNode, SyntaxKind, SyntaxNodeOrToken, TextRange, ast};
 impl InferenceCtx<'_> {
     #[allow(clippy::wrong_self_convention)]
     pub fn is_tys_compatible(&mut self, ty: Ty, into_ty: Ty) -> bool {
+        // zero element type is unit expr and compatible with anything
+        if matches!(&into_ty, Ty::Tuple(ty_tuple) if ty_tuple.types.len() == 0) {
+            return true;
+        }
         self.freeze(|ctx| ctx.combine_types(ty, into_ty).is_ok())
     }
 
@@ -35,7 +39,13 @@ impl InferenceCtx<'_> {
 
     pub fn combine_types(&mut self, expected_ty: Ty, actual_ty: Ty) -> CombineResult {
         let expected_ty = expected_ty.refine_for_specs(self.msl);
-        let actual_ty = actual_ty.refine_for_specs(self.msl);
+
+        let mut actual_ty = actual_ty.refine_for_specs(self.msl);
+        if let Some(inner_tuple_ty) = actual_ty.single_element_tuple_ty() {
+            if !matches!(expected_ty, Ty::Tuple(_)) {
+                actual_ty = inner_tuple_ty;
+            }
+        }
 
         let expected_ty = self.resolve_ty_infer_shallow(expected_ty);
         let actual_ty = self.resolve_ty_infer_shallow(actual_ty);
@@ -276,7 +286,7 @@ impl InferenceCtx<'_> {
         expected: Ty,
     ) {
         let type_error = TypeError::type_mismatch(node_or_token, expected, actual);
-        self.type_errors.push(type_error);
+        self.push_type_error(None, type_error);
     }
 }
 
@@ -343,6 +353,7 @@ impl TypeError {
             TypeError::InvalidDereference { text_range, .. } => text_range.clone(),
         }
     }
+
     pub fn type_mismatch(node_or_token: SyntaxNodeOrToken, expected_ty: Ty, actual_ty: Ty) -> Self {
         TypeError::TypeMismatch {
             text_range: node_or_token.text_range(),

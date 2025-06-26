@@ -2317,3 +2317,83 @@ fn test_equality_should_allow_for_different_ref_mutability() {
         }
     "#]])
 }
+
+#[test]
+fn test_empty_tuple_is_unit_expr() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun call() {}
+            fun main() {
+                let () = call();
+                let () = ();
+            }
+        }
+    "#]])
+}
+
+#[test]
+fn test_empty_tuple_on_the_left_is_unit_expr_but_trying_to_put_value_there() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun call(): u8 { 1 }
+            fun main() {
+                let () = call();
+            }
+        }
+    "#]])
+}
+
+#[test]
+fn test_unit_expr_is_not_allowed_as_local_variable_type() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun call() {}
+            fun main() {
+                let _x = ();
+                let _x = call();
+            }
+        }
+    "#]])
+}
+
+#[test]
+fn test_single_element_tuple_can_be_stored_in_a_single_variable() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun call(_a: u8) {}
+            fun main() {
+                let x = (1,);
+                x + 1;
+            }
+        }
+    "#]])
+}
+
+#[test]
+fn test_single_element_tuple_can_be_used_in_call_expr() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun call(_a: u8) {}
+            fun main() {
+                call((1,));
+            }
+        }
+    "#]])
+}
+
+#[test]
+fn test_equality_with_lambda_type_which_gets_its_value_later() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main() {
+                1 < (|| { 2u8 })();
+            }
+        }
+    "#]])
+}

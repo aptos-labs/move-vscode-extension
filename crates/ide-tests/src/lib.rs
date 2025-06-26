@@ -1,7 +1,5 @@
-#![cfg(test)]
-
 mod fold;
-mod ide_test_utils;
+pub mod ide_test_utils;
 mod resolve;
 mod test_completion;
 mod test_inlay_hints;

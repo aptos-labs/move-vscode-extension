@@ -29,10 +29,7 @@ impl SyntaxLoc {
                 .children_with_tokens()
                 .find(|child| {
                     let kind = child.kind();
-                    kind == SyntaxKind::NAME
-                        || kind == SyntaxKind::NAME_REF
-                        || kind == SyntaxKind::PATH_SEGMENT
-                        || kind == SyntaxKind::QUOTE_IDENT
+                    kind == NAME || kind == NAME_REF || kind == PATH_SEGMENT || kind == QUOTE_IDENT
                 })
                 .map(|it| it.to_string());
         }

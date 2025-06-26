@@ -140,6 +140,16 @@ impl Ty {
         }
     }
 
+    pub fn single_element_tuple_ty(&self) -> Option<Ty> {
+        if let Ty::Tuple(ty_tuple) = self {
+            let types = &ty_tuple.types;
+            if types.len() == 1 {
+                return types.clone().pop();
+            }
+        }
+        None
+    }
+
     pub fn into_ty_seq(self) -> Option<TySequence> {
         match self {
             Ty::Seq(ty_seq) => Some(ty_seq),

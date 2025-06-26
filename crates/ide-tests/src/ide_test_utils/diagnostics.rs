@@ -1,9 +1,10 @@
 use crate::init_tracing_for_test;
-use expect_test::Expect;
+use expect_test::{Expect, ExpectFile};
 use ide::Analysis;
 use ide_db::assists::{Assist, AssistResolveStrategy};
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
+use std::collections::HashSet;
 use test_utils::{SourceMark, apply_source_marks, fixtures, get_first_marked_position, remove_marks};
 use vfs::FileId;
 
@@ -14,6 +15,22 @@ pub fn check_diagnostics(expect: Expect) {
     let trimmed_source = remove_marks(&source, "//^");
 
     let (_, _, diagnostics) = get_diagnostics(trimmed_source.as_str());
+
+    let actual = apply_diagnostics_to_file(&trimmed_source, &diagnostics);
+    expect.assert_eq(stdx::trim_indent(&actual).as_str());
+}
+
+pub fn check_diagnostics_in_file(expect: ExpectFile, disabled_codes: HashSet<String>) {
+    init_tracing_for_test();
+
+    let source = stdx::trim_indent(&expect.data());
+    let trimmed_source = remove_marks(&source, "//^");
+
+    let (_, _, diagnostics) = get_diagnostics(trimmed_source.as_str());
+    let diagnostics = diagnostics
+        .into_iter()
+        .filter(|diag| !disabled_codes.contains(&diag.code.as_str().to_string()))
+        .collect::<Vec<_>>();
 
     let actual = apply_diagnostics_to_file(&trimmed_source, &diagnostics);
     expect.assert_eq(stdx::trim_indent(&actual).as_str());

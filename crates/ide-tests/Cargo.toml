@@ -21,3 +21,6 @@ ide = { path = "../ide" }
 ide-db = { path = "../ide-db" }
 ide-completion = { path = "../ide-completion" }
 ide-diagnostics = { path = "../ide-diagnostics" }
+
+[dev-dependencies]
+datatest-stable = "0.3.2"

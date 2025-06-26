@@ -31,12 +31,16 @@ impl TypeAstWalker<'_, '_> {
                     .ctx
                     .resolve_ident_pat_cached(ident_pat.clone(), Some(ty.clone()))
                     .map(|it| it.value);
-                let ident_pat_ty =
+                let mut ident_pat_ty =
                     if matches!(named_item.map(|it| it.syntax().kind()), Some(SyntaxKind::VARIANT)) {
                         strip_references(ty, def_bm).0
                     } else {
                         apply_bm(ty, def_bm, self.ctx.msl)
                     };
+                // special-case single element tuples
+                if let Some(inner_ty) = ident_pat_ty.single_element_tuple_ty() {
+                    ident_pat_ty = inner_ty;
+                }
                 self.ctx.pat_types.insert(ident_pat.into(), ident_pat_ty);
             }
             ast::Pat::StructPat(struct_pat) => {

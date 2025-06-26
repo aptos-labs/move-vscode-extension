@@ -380,3 +380,35 @@ script {
     "#,
     )
 }
+
+#[test]
+fn test_resolve_match_struct_lit_enum_field_to_the_function_value() {
+    check_resolve(
+        // language=Move
+        r#"
+module 0x1::main {
+    enum S { Variant { field: |bool| bool }}
+                       //X
+    fun main() {
+        ()(S::Variant { field: myfield });
+                          //^
+    }
+}    "#,
+    )
+}
+
+#[test]
+fn test_resolve_match_struct_lit_field_to_the_function_value() {
+    check_resolve(
+        // language=Move
+        r#"
+module 0x1::main {
+    struct S { field: |bool| bool }
+                //X
+    fun main() {
+        ()(S { field: |_| true });
+                //^
+    }
+}    "#,
+    )
+}
