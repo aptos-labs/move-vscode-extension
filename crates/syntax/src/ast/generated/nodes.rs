@@ -1834,6 +1834,17 @@ impl TypeParamList {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct UnitExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl UnitExpr {
+    #[inline]
+    pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
+    #[inline]
+    pub fn r_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![')']) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct UnitType {
     pub(crate) syntax: SyntaxNode,
 }
@@ -2126,6 +2137,7 @@ pub enum Expr {
     SpecBlockExpr(SpecBlockExpr),
     StructLit(StructLit),
     TupleExpr(TupleExpr),
+    UnitExpr(UnitExpr),
     VectorLitExpr(VectorLitExpr),
     WhileExpr(WhileExpr),
 }
@@ -5043,6 +5055,27 @@ impl AstNode for TypeParamList {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for UnitExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        UNIT_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == UNIT_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for UnitType {
     #[inline]
     fn kind() -> SyntaxKind
@@ -5899,6 +5932,10 @@ impl From<TupleExpr> for Expr {
     #[inline]
     fn from(node: TupleExpr) -> Expr { Expr::TupleExpr(node) }
 }
+impl From<UnitExpr> for Expr {
+    #[inline]
+    fn from(node: UnitExpr) -> Expr { Expr::UnitExpr(node) }
+}
 impl From<VectorLitExpr> for Expr {
     #[inline]
     fn from(node: VectorLitExpr) -> Expr { Expr::VectorLitExpr(node) }
@@ -6100,6 +6137,12 @@ impl Expr {
             _ => None,
         }
     }
+    pub fn unit_expr(self) -> Option<UnitExpr> {
+        match (self) {
+            Expr::UnitExpr(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn vector_lit_expr(self) -> Option<VectorLitExpr> {
         match (self) {
             Expr::VectorLitExpr(item) => Some(item),
@@ -6150,6 +6193,7 @@ impl AstNode for Expr {
                 | SPEC_BLOCK_EXPR
                 | STRUCT_LIT
                 | TUPLE_EXPR
+                | UNIT_EXPR
                 | VECTOR_LIT_EXPR
                 | WHILE_EXPR
         )
@@ -6189,6 +6233,7 @@ impl AstNode for Expr {
             SPEC_BLOCK_EXPR => Expr::SpecBlockExpr(SpecBlockExpr { syntax }),
             STRUCT_LIT => Expr::StructLit(StructLit { syntax }),
             TUPLE_EXPR => Expr::TupleExpr(TupleExpr { syntax }),
+            UNIT_EXPR => Expr::UnitExpr(UnitExpr { syntax }),
             VECTOR_LIT_EXPR => Expr::VectorLitExpr(VectorLitExpr { syntax }),
             WHILE_EXPR => Expr::WhileExpr(WhileExpr { syntax }),
             _ => return None,
@@ -6230,6 +6275,7 @@ impl AstNode for Expr {
             Expr::SpecBlockExpr(it) => &it.syntax(),
             Expr::StructLit(it) => &it.syntax(),
             Expr::TupleExpr(it) => &it.syntax(),
+            Expr::UnitExpr(it) => &it.syntax(),
             Expr::VectorLitExpr(it) => &it.syntax(),
             Expr::WhileExpr(it) => &it.syntax(),
         }
@@ -9598,6 +9644,11 @@ impl std::fmt::Display for TypeParam {
     }
 }
 impl std::fmt::Display for TypeParamList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for UnitExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

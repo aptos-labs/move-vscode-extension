@@ -1,2 +1,2 @@
-pub(crate) mod completion_utils;
-pub(crate) mod diagnostics;
+pub mod completion_utils;
+pub mod diagnostics;

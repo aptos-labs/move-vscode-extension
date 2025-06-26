@@ -252,6 +252,7 @@ Expr =
     | IsExpr
     | Literal
     | ParenExpr
+    | UnitExpr
     | PathExpr
     | BorrowExpr | DerefExpr | BangExpr
     | ResourceExpr
@@ -314,6 +315,9 @@ StructLitField =
 
 ParenExpr =
     '(' Expr ')'
+
+UnitExpr =
+    '(' ')'
 
 IfExpr =
     'if' Condition then_branch:BlockOrInlineExpr ('else' else_branch:BlockOrInlineExpr)?
