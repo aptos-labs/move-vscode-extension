@@ -286,7 +286,7 @@ impl InferenceCtx<'_> {
         expected: Ty,
     ) {
         let type_error = TypeError::type_mismatch(node_or_token, expected, actual);
-        self.push_type_error(None, type_error);
+        self.push_type_error(type_error);
     }
 }
 

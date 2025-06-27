@@ -2283,9 +2283,8 @@ fn test_cannot_provide_predicate_where_lambda_is_expected() {
             fun call1(_predicate: |&u64|bool) {}
             fun main() {
                 let predicate = Predicate(|x| *x > 0);
-                                            //^^ err: Invalid argument to '>': expected integer type, but found 'T'
                 call1(predicate);
-                    //^^^^^^^^^ err: Incompatible type '0x1::main::Predicate<T>', expected '|&u64| -> bool'
+                    //^^^^^^^^^ err: Incompatible type '0x1::main::Predicate<integer>', expected '|&u64| -> bool'
             }
         }
     "#]])
@@ -2393,6 +2392,19 @@ fn test_equality_with_lambda_type_which_gets_its_value_later() {
         module 0x1::main {
             fun main() {
                 1 < (|| { 2u8 })();
+            }
+        }
+    "#]])
+}
+
+#[test]
+fn test_equality_with_lambda_type_which_gets_its_value_later_with_variable() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main() {
+                let v = || { 2u8 };
+                1 < v();
             }
         }
     "#]])

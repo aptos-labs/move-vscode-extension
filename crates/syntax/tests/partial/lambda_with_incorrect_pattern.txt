@@ -22,31 +22,42 @@ SOURCE_FILE@0..95
       BLOCK_EXPR@59..92
         L_CURLY@59..60 "{"
         WHITESPACE@60..69 "\n        "
-        EXPR_STMT@69..86
-          LAMBDA_EXPR@69..85
-            LAMBDA_PARAM_LIST@69..83
-              PIPE@69..70 "|"
-              LAMBDA_PARAM@70..72
-                ERROR@70..71
-                  AMP@70..71 "&"
-                IDENT@71..72 "a"
-              COMMA@72..73 ","
-              WHITESPACE@73..74 " "
-              LAMBDA_PARAM@74..75
-                WILDCARD_PAT@74..75
-                  UNDERSCORE@74..75 "_"
-              COMMA@75..76 ","
-              WHITESPACE@76..77 " "
-              LAMBDA_PARAM@77..78
-                IDENT_PAT@77..78
-                  NAME@77..78
-                    IDENT@77..78 "d"
-              COMMA@78..79 ","
-              WHITESPACE@79..80 " "
-              LAMBDA_PARAM@80..82
-                ERROR@80..82
-                  INT_NUMBER@80..82 "22"
-              PIPE@82..83 "|"
+        ERROR@69..70
+          PIPE@69..70 "|"
+        EXPR_STMT@70..72
+          BORROW_EXPR@70..72
+            AMP@70..71 "&"
+            PATH_EXPR@71..72
+              PATH@71..72
+                PATH_SEGMENT@71..72
+                  NAME_REF@71..72
+                    IDENT@71..72 "a"
+        ERROR@72..73
+          COMMA@72..73 ","
+        WHITESPACE@73..74 " "
+        EXPR_STMT@74..75
+          PATH_EXPR@74..75
+            PATH@74..75
+              PATH_SEGMENT@74..75
+                NAME_REF@74..75
+                  IDENT@74..75 "_"
+        ERROR@75..76
+          COMMA@75..76 ","
+        WHITESPACE@76..77 " "
+        EXPR_STMT@77..78
+          PATH_EXPR@77..78
+            PATH@77..78
+              PATH_SEGMENT@77..78
+                NAME_REF@77..78
+                  IDENT@77..78 "d"
+        ERROR@78..79
+          COMMA@78..79 ","
+        WHITESPACE@79..80 " "
+        EXPR_STMT@80..86
+          BIN_EXPR@80..85
+            LITERAL@80..82
+              INT_NUMBER@80..82 "22"
+            PIPE@82..83 "|"
             WHITESPACE@83..84 " "
             LITERAL@84..85
               INT_NUMBER@84..85 "1"

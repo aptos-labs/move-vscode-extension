@@ -1128,10 +1128,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             .resolve_ty_vars_if_possible(left_ty.clone())
             .supports_arithm_op()
         {
-            self.ctx.push_type_error(
-                Some(lhs.syntax()),
-                TypeError::unsupported_op(&lhs, left_ty.clone(), ast::BinaryOp::ArithOp(arith_op)),
-            );
+            self.ctx.push_type_error(TypeError::unsupported_op(
+                &lhs,
+                left_ty.clone(),
+                ast::BinaryOp::ArithOp(arith_op),
+            ));
             is_error = true;
         }
         if let Some(rhs) = rhs {
@@ -1141,24 +1142,22 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 .resolve_ty_vars_if_possible(right_ty.clone())
                 .supports_arithm_op()
             {
-                self.ctx.push_type_error(
-                    Some(rhs.syntax()),
-                    TypeError::unsupported_op(&rhs, right_ty.clone(), ast::BinaryOp::ArithOp(arith_op)),
-                );
+                self.ctx.push_type_error(TypeError::unsupported_op(
+                    &rhs,
+                    right_ty.clone(),
+                    ast::BinaryOp::ArithOp(arith_op),
+                ));
                 is_error = true;
             }
             if !is_error {
                 let combined = self.ctx.combine_types(left_ty.clone(), right_ty.clone());
                 if combined.is_err() {
-                    self.ctx.push_type_error(
-                        Some(bin_expr.syntax()),
-                        TypeError::wrong_arguments_to_bin_expr(
-                            bin_expr.clone(),
-                            left_ty.clone(),
-                            right_ty,
-                            ast::BinaryOp::ArithOp(arith_op),
-                        ),
-                    );
+                    self.ctx.push_type_error(TypeError::wrong_arguments_to_bin_expr(
+                        bin_expr.clone(),
+                        left_ty.clone(),
+                        right_ty,
+                        ast::BinaryOp::ArithOp(arith_op),
+                    ));
                     is_error = true;
                 }
             }
@@ -1226,15 +1225,12 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
             let combined = self.ctx.combine_types(left_ty.clone(), right_ty.clone());
             if combined.is_err() {
-                self.ctx.push_type_error(
-                    Some(bin_expr.syntax()),
-                    TypeError::wrong_arguments_to_bin_expr(
-                        bin_expr.clone(),
-                        left_ty,
-                        right_ty,
-                        ast::BinaryOp::CmpOp(cmp_op),
-                    ),
-                );
+                self.ctx.push_type_error(TypeError::wrong_arguments_to_bin_expr(
+                    bin_expr.clone(),
+                    left_ty,
+                    right_ty,
+                    ast::BinaryOp::CmpOp(cmp_op),
+                ));
             }
         }
         Ty::Bool
@@ -1253,10 +1249,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             .resolve_ty_vars_if_possible(left_ty.clone())
             .supports_ordering()
         {
-            self.ctx.push_type_error(
-                Some(lhs.syntax()),
-                TypeError::unsupported_op(&lhs, left_ty.clone(), ast::BinaryOp::CmpOp(cmp_op)),
-            );
+            self.ctx.push_type_error(TypeError::unsupported_op(
+                &lhs,
+                left_ty.clone(),
+                ast::BinaryOp::CmpOp(cmp_op),
+            ));
             is_error = true;
         }
         if let Some(rhs) = rhs {
@@ -1266,10 +1263,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 .resolve_ty_vars_if_possible(right_ty.clone())
                 .supports_ordering()
             {
-                self.ctx.push_type_error(
-                    Some(rhs.syntax()),
-                    TypeError::unsupported_op(&rhs, right_ty.clone(), ast::BinaryOp::CmpOp(cmp_op)),
-                );
+                self.ctx.push_type_error(TypeError::unsupported_op(
+                    &rhs,
+                    right_ty.clone(),
+                    ast::BinaryOp::CmpOp(cmp_op),
+                ));
                 is_error = true;
             }
             if !is_error {

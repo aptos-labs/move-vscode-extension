@@ -65,6 +65,8 @@ fn lambda_type(p: &mut Parser) {
         p,
         |p| {
             let m = p.start();
+            // let is_type = p.reset_recovery_set(type_);
+            // let is_type = type_or_recover(p, TokenSet::EMPTY);
             let is_type = type_or_recover(p, T![,] | T![|]);
             // let is_type = type_or_recover_until(p, |p| p.at_ts(ts!(T![,], T![|])));
             if is_type {
