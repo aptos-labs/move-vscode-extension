@@ -179,7 +179,11 @@ impl Ty {
     }
 
     pub fn render(&self, db: &dyn SourceDatabase, context_file_id: Option<FileId>) -> String {
-        TypeRenderer::new(db, context_file_id).render(self)
+        let mut out = String::new();
+        TypeRenderer::new(db, context_file_id, &mut out)
+            .render(self)
+            .unwrap();
+        out
     }
 }
 
