@@ -1,0 +1,59 @@
+SOURCE_FILE@0..88
+  MODULE@0..87
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..31
+      IDENT@12..31 "lambda_with_no_body"
+    WHITESPACE@31..32 " "
+    L_CURLY@32..33 "{"
+    WHITESPACE@33..38 "\n    "
+    FUN@38..85
+      FUN_KW@38..41 "fun"
+      WHITESPACE@41..42 " "
+      NAME@42..46
+        IDENT@42..46 "main"
+      PARAM_LIST@46..48
+        L_PAREN@46..47 "("
+        R_PAREN@47..48 ")"
+      WHITESPACE@48..49 " "
+      BLOCK_EXPR@49..85
+        L_CURLY@49..50 "{"
+        WHITESPACE@50..59 "\n        "
+        EXPR_STMT@59..79
+          LAMBDA_EXPR@59..78
+            LAMBDA_PARAM_LIST@59..78
+              PIPE@59..60 "|"
+              LAMBDA_PARAM@60..67
+                IDENT_PAT@60..63
+                  NAME@60..63
+                    IDENT@60..63 "var"
+                COLON@63..64 ":"
+                WHITESPACE@64..65 " "
+                PATH_TYPE@65..67
+                  PATH@65..67
+                    PATH_SEGMENT@65..67
+                      NAME_REF@65..67
+                        IDENT@65..67 "u8"
+              COMMA@67..68 ","
+              WHITESPACE@68..69 " "
+              LAMBDA_PARAM@69..77
+                IDENT_PAT@69..73
+                  NAME@69..73
+                    IDENT@69..73 "var2"
+                COLON@73..74 ":"
+                WHITESPACE@74..75 " "
+                PATH_TYPE@75..77
+                  PATH@75..77
+                    PATH_SEGMENT@75..77
+                      NAME_REF@75..77
+                        IDENT@75..77 "u8"
+              PIPE@77..78 "|"
+          SEMICOLON@78..79 ";"
+        WHITESPACE@79..84 "\n    "
+        R_CURLY@84..85 "}"
+    WHITESPACE@85..86 "\n"
+    R_CURLY@86..87 "}"
+  WHITESPACE@87..88 "\n"

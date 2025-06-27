@@ -57,6 +57,7 @@ subdir = "aptos-framework"
         )
         .unwrap();
 
+    // let skipped_messages = vec![];
     let skipped_messages = vec!["Assigned expr of type '()'", "Unresolved reference `field"];
 
     let diagnostics = diagnostics
@@ -65,9 +66,9 @@ subdir = "aptos-framework"
             if disabled_codes.contains(&diag.code.as_str().to_string()) {
                 return false;
             }
-            if skipped_messages.iter().any(|it| diag.message.contains(it)) {
-                return false;
-            }
+            // if skipped_messages.iter().any(|it| diag.message.contains(it)) {
+            //     return false;
+            // }
             true
         })
         .collect::<Vec<_>>();
