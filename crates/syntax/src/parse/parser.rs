@@ -166,6 +166,11 @@ impl Parser {
         ts.contains(nth_kind)
     }
 
+    pub(crate) fn nth_at_rset(&self, n: usize, rs: RecoverySet) -> bool {
+        let nth_kind = self.nth(n);
+        rs.contains(nth_kind)
+    }
+
     pub(crate) fn nth_at(&self, n: usize, kind: SyntaxKind) -> bool {
         match kind {
             // T![-=] => self.at_composite2(n, T![-], T![=]),

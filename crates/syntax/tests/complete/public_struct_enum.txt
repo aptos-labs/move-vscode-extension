@@ -1,0 +1,95 @@
+SOURCE_FILE@0..177
+  MODULE@0..176
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..30
+      IDENT@12..30 "public_struct_enum"
+    WHITESPACE@30..31 " "
+    L_CURLY@31..32 "{"
+    WHITESPACE@32..37 "\n    "
+    STRUCT@37..55
+      VISIBILITY_MODIFIER@37..43
+        PUBLIC_KW@37..43 "public"
+      WHITESPACE@43..44 " "
+      STRUCT_KW@44..50 "struct"
+      WHITESPACE@50..51 " "
+      NAME@51..52
+        IDENT@51..52 "S"
+      WHITESPACE@52..53 " "
+      NAMED_FIELD_LIST@53..55
+        L_CURLY@53..54 "{"
+        R_CURLY@54..55 "}"
+    WHITESPACE@55..60 "\n    "
+    ENUM@60..86
+      VISIBILITY_MODIFIER@60..66
+        PUBLIC_KW@60..66 "public"
+      WHITESPACE@66..67 " "
+      ENUM_KW@67..71 "enum"
+      WHITESPACE@71..72 " "
+      NAME@72..73
+        IDENT@72..73 "S"
+      WHITESPACE@73..74 " "
+      VARIANT_LIST@74..86
+        L_CURLY@74..75 "{"
+        WHITESPACE@75..76 " "
+        VARIANT@76..79
+          NAME@76..79
+            IDENT@76..79 "One"
+        COMMA@79..80 ","
+        WHITESPACE@80..81 " "
+        VARIANT@81..84
+          NAME@81..84
+            IDENT@81..84 "Two"
+        WHITESPACE@84..85 " "
+        R_CURLY@85..86 "}"
+    WHITESPACE@86..92 "\n\n    "
+    STRUCT@92..118
+      VISIBILITY_MODIFIER@92..106
+        PUBLIC_KW@92..98 "public"
+        L_PAREN@98..99 "("
+        FRIEND_KW@99..105 "friend"
+        R_PAREN@105..106 ")"
+      WHITESPACE@106..107 " "
+      STRUCT_KW@107..113 "struct"
+      WHITESPACE@113..114 " "
+      NAME@114..115
+        IDENT@114..115 "S"
+      WHITESPACE@115..116 " "
+      NAMED_FIELD_LIST@116..118
+        L_CURLY@116..117 "{"
+        R_CURLY@117..118 "}"
+    WHITESPACE@118..123 "\n    "
+    STRUCT@123..150
+      VISIBILITY_MODIFIER@123..138
+        PUBLIC_KW@123..129 "public"
+        L_PAREN@129..130 "("
+        PACKAGE_KW@130..137 "package"
+        R_PAREN@137..138 ")"
+      WHITESPACE@138..139 " "
+      STRUCT_KW@139..145 "struct"
+      WHITESPACE@145..146 " "
+      NAME@146..147
+        IDENT@146..147 "S"
+      WHITESPACE@147..148 " "
+      NAMED_FIELD_LIST@148..150
+        L_CURLY@148..149 "{"
+        R_CURLY@149..150 "}"
+    WHITESPACE@150..155 "\n    "
+    STRUCT@155..174
+      VISIBILITY_MODIFIER@155..162
+        PACKAGE_KW@155..162 "package"
+      WHITESPACE@162..163 " "
+      STRUCT_KW@163..169 "struct"
+      WHITESPACE@169..170 " "
+      NAME@170..171
+        IDENT@170..171 "S"
+      WHITESPACE@171..172 " "
+      NAMED_FIELD_LIST@172..174
+        L_CURLY@172..173 "{"
+        R_CURLY@173..174 "}"
+    WHITESPACE@174..175 "\n"
+    R_CURLY@175..176 "}"
+  WHITESPACE@176..177 "\n"
