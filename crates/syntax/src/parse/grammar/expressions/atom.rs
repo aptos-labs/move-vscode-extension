@@ -111,11 +111,7 @@ pub(crate) fn atom_expr(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> 
                 }
             }
         }
-        T!['{'] => {
-            let m = p.start();
-            stmt_list(p, false);
-            m.complete(p, BLOCK_EXPR)
-        }
+        T!['{'] => block_expr(p, false),
         T![return] => return_expr(p),
         T![abort] => abort_expr(p),
         T![continue] => continue_expr(p),
@@ -334,33 +330,23 @@ pub(crate) fn match_arm_list(p: &mut Parser) {
     assert!(p.at(T!['{']));
     let m = p.start();
     p.eat(T!['{']);
-
-    let mut last_pos: Option<usize> = None;
-    while !p.at(EOF) && !p.at(T!['}']) {
+    // it's an expr block too
+    p.iterate_to_EOF(T!['}'], |p| {
         match_arm(p, TokenSet::EMPTY);
-        if p.at_same_pos_as(last_pos) {
-            // iteration is stuck
-            #[cfg(debug_assertions)]
-            panic!("iteration is stuck at {:?}", p.current_context());
-            break;
-        }
-        last_pos = Some(p.pos());
-    }
+        Continue(())
+    });
     p.expect(T!['}']);
     m.complete(p, MATCH_ARM_LIST);
 }
 
 fn match_arm(p: &mut Parser, recovery_set: TokenSet) -> bool {
     let m = p.start();
-    let is_pat = pat_or_recover(p, TokenSet::EMPTY);
-    // let cm = p.with_recovery_token_set(T![=>] | T!['}'], pat);
-    // let cm = pat(p);
+    let is_pat = pat_or_recover(p, T![=>] | T!['}']);
     if !is_pat {
         m.abandon(p);
         return false;
     }
     if p.at(T![if]) {
-        // match_guard(p);
         let m = p.start();
         p.bump(T![if]);
         expr(p);
@@ -372,13 +358,6 @@ fn match_arm(p: &mut Parser, recovery_set: TokenSet) -> bool {
         m.abandon(p);
         return false;
     }
-
-    // if !p.at(T![=>]) {
-    //     p.error_and_recover("expected '=>'", T!['}'] | T![,]);
-    //     m.complete(p, MATCH_ARM);
-    //     return false;
-    // }
-
     p.bump(T![=>]);
 
     let blocklike = match stmt_expr(p, None) {
@@ -409,15 +388,14 @@ pub(crate) fn block_or_inline_expr(p: &mut Parser, is_spec: bool) {
     }
 }
 
-pub(crate) fn block_expr(p: &mut Parser, is_spec: bool) {
-    if !p.at(T!['{']) {
-        p.error("expected a block");
-        return;
-    }
-    let m = p.start();
-    stmt_list(p, is_spec);
-
-    m.complete(p, BLOCK_EXPR);
+pub(crate) fn block_expr(p: &mut Parser, is_spec: bool) -> CompletedMarker {
+    assert!(p.at(T!['{']));
+    // we're in new block, we can't use recovery set rules from before
+    p.reset_recovery_set(|p| {
+        let m = p.start();
+        stmt_list(p, is_spec);
+        m.complete(p, BLOCK_EXPR)
+    })
 }
 
 pub(crate) fn inline_expr(p: &mut Parser) {

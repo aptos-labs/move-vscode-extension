@@ -8,6 +8,7 @@ use crate::parse::grammar::specs::schemas::{
 use crate::parse::grammar::{attributes, types};
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::recovery_set::RecoverySet;
+use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::{EOF, EXPR_STMT, LET_STMT, USE_STMT};
 use crate::T;
 
@@ -73,7 +74,8 @@ fn let_stmt(p: &mut Parser, m: Marker, is_spec: bool) {
     }
     let recovery_set = stmt_start_rec_set().with_token_set(T![=] | T![;]);
     // let rec_set = item_start_rec_set().with_token_set(T![=] | T![;]);
-    pat_or_recover(p, recovery_set.clone());
+    p.with_recovery_set(recovery_set.clone(), |p| pat_or_recover(p, TokenSet::EMPTY));
+    // pat_or_recover(p, recovery_set.clone());
     if p.at(T![:]) {
         p.with_recovery_set(recovery_set, types::type_annotation);
     }

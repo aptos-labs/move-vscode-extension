@@ -22,7 +22,12 @@ pub(crate) fn schema(p: &mut Parser, m: Marker) {
     });
     // name_or_recover(p, at_item_start);
     // type_params::opt_type_param_list(p);
-    block_expr(p, true);
+    // block_expr(p, true);
+    if p.at(T!['{']) {
+        block_expr(p, true);
+    } else {
+        p.error("expected a block");
+    }
     m.complete(p, SCHEMA);
 }
 
