@@ -36,7 +36,7 @@ pub(crate) fn type_path_for_qualifier(p: &mut Parser, qual: CompletedMarker) -> 
     path_for_qualifier(p, Mode::Type, qual)
 }
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub(crate) enum Mode {
     Use,
     Type,
