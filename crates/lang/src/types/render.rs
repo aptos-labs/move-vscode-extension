@@ -29,138 +29,166 @@ impl HirWrite for fmt::Formatter<'_> {}
 
 pub struct TypeRenderer<'db> {
     db: &'db dyn SourceDatabase,
-    context_file_id: Option<FileId>,
+    current_file_id: Option<FileId>,
+    sink: &'db mut dyn HirWrite,
 }
 
 impl<'db> TypeRenderer<'db> {
-    pub fn new(db: &'db dyn SourceDatabase, context: Option<FileId>) -> Self {
-        TypeRenderer { db, context_file_id: context }
+    pub fn new(
+        db: &'db dyn SourceDatabase,
+        context: Option<FileId>,
+        sink: &'db mut dyn HirWrite,
+    ) -> Self {
+        TypeRenderer {
+            db,
+            current_file_id: context,
+            sink,
+        }
     }
 
-    pub fn render(&self, ty: &Ty) -> String {
+    pub fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.sink.write_str(s)
+    }
+
+    pub fn render(&mut self, ty: &Ty) -> anyhow::Result<()> {
         match ty {
             Ty::Seq(ty_seq) => {
                 let type_name = match ty_seq {
                     TySequence::Vector(_) => "vector",
                     TySequence::Range(_) => "range",
                 };
-                format!("{}<{}>", type_name, self.render(&ty_seq.item()))
+                self.write_str(type_name)?;
+                self.render_type_args(&vec![ty_seq.item()])?;
             }
-            Ty::Adt(ty_adt) => self.render_ty_adt(ty_adt),
-            Ty::Schema(ty_schema) => self.render_ty_schema(ty_schema),
-            Ty::Callable(ty_callable) => self.render_ty_callable(ty_callable),
+            Ty::Adt(ty_adt) => self.render_ty_adt(ty_adt)?,
+            Ty::Schema(ty_schema) => self.render_ty_schema(ty_schema)?,
+            Ty::Callable(ty_callable) => self.render_ty_callable(ty_callable)?,
             Ty::Reference(ty_ref) => {
                 let prefix = if ty_ref.is_mut() { "&mut " } else { "&" };
-                let inner = self.render(&ty_ref.referenced());
-                format!("{}{}", prefix, inner)
+                self.write_str(prefix)?;
+                self.render(&ty_ref.referenced())?;
             }
             Ty::Tuple(ty_tuple) => {
-                let rendered_tys = self.render_list(&ty_tuple.types, ", ");
-                format!("({})", rendered_tys)
+                self.render_type_list("(", &ty_tuple.types, ")")?;
             }
 
-            Ty::TypeParam(ty_tp) => self.render_ty_tp(ty_tp),
+            Ty::TypeParam(ty_tp) => self.render_type_param(ty_tp)?,
             Ty::Infer(ty_infer) => match ty_infer {
-                TyInfer::Var(ty_var) => self.render_ty_var(ty_var),
-                TyInfer::IntVar(_) => "?integer".to_string(),
+                TyInfer::Var(ty_var) => self.render_ty_var(ty_var)?,
+                TyInfer::IntVar(_) => self.write_str("?integer")?,
             },
 
-            Ty::Bool => "bool".to_string(),
-            Ty::Signer => "signer".to_string(),
-            Ty::Address => "address".to_string(),
-            Ty::Integer(kind) => kind.to_string(),
-            Ty::Num => "num".to_string(),
-            Ty::Bv => "bv".to_string(),
+            Ty::Bool => self.write_str("bool")?,
+            Ty::Signer => self.write_str("signer")?,
+            Ty::Address => self.write_str("address")?,
+            Ty::Integer(kind) => self.write_str(&kind.to_string())?,
+            Ty::Num => self.write_str("num")?,
+            Ty::Bv => self.write_str("bv")?,
 
-            Ty::Unit => "()".to_string(),
-            Ty::Unknown => unknown(),
-            Ty::Never => never(),
+            Ty::Unit => self.write_str("()")?,
+            Ty::Unknown => self.sink.write_str(UNKNOWN)?,
+            Ty::Never => self.write_str(NEVER)?,
         }
+        Ok(())
     }
 
-    fn render_list(&self, tys: &Vec<Ty>, sep: &str) -> String {
-        tys.iter().map(|it| self.render(it)).join(sep)
+    fn render_type_param(&mut self, type_param: &TyTypeParameter) -> fmt::Result {
+        self.write_str(&self.origin_loc_name(&type_param.origin_loc))
     }
 
-    fn render_ty_tp(&self, type_param: &TyTypeParameter) -> String {
-        self.origin_loc_name(&type_param.origin_loc)
-    }
-
-    fn render_ty_var(&self, ty_var: &TyVar) -> String {
+    fn render_ty_var(&mut self, ty_var: &TyVar) -> fmt::Result {
         match &ty_var.kind {
-            TyVarKind::Anonymous(index) => format!("?_{index}"),
+            TyVarKind::Anonymous(index) => write!(self.sink, "?_{index}"),
             TyVarKind::WithOrigin { origin_loc, index } => {
                 let origin = self.origin_loc_name(origin_loc);
-                format!("?{origin}_{index}")
+                write!(self.sink, "?{origin}_{index}")
             }
         }
     }
 
-    fn render_ty_callable(&self, ty_callable: &TyCallable) -> String {
+    fn render_ty_callable(&mut self, ty_callable: &TyCallable) -> anyhow::Result<()> {
         match ty_callable.kind {
             CallKind::Fun => {
-                let params = format!("fn({})", self.render_list(&ty_callable.param_types, ", "));
+                self.render_type_list("fn(", &ty_callable.param_types, ")")?;
                 let ret_type = ty_callable.ret_type();
-                if matches!(ret_type, Ty::Unit) {
-                    params
-                } else {
-                    format!("{} -> {}", params, self.render(&ret_type))
+                if !matches!(ret_type, Ty::Unit) {
+                    self.write_str(" -> ")?;
+                    self.render(&ret_type)?;
                 }
             }
             CallKind::Lambda => {
-                let params = format!("|{}|", self.render_list(&ty_callable.param_types, ", "));
+                self.render_type_list("|", &ty_callable.param_types, "|")?;
                 let ret_type = ty_callable.ret_type();
-                if matches!(ret_type, Ty::Unit) {
-                    format!("{} -> ()", params)
-                } else {
-                    format!("{} -> {}", params, self.render(&ret_type))
-                }
+                self.write_str(" -> ")?;
+                self.render(&ret_type)?;
             }
         }
+        Ok(())
     }
 
-    fn render_ty_adt(&self, ty_adt: &TyAdt) -> String {
+    fn render_ty_adt(&mut self, ty_adt: &TyAdt) -> anyhow::Result<()> {
         let item = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(self.db).unwrap();
-        let item_fq_name = self.render_fq_item(item.map_into()).unwrap_or(anonymous());
-        format!("{}{}", item_fq_name, self.render_type_args(&ty_adt.type_args))
+        self.render_fq_name(item.map_into())?;
+        self.render_type_args(&ty_adt.type_args)?;
+        Ok(())
     }
 
-    fn render_ty_schema(&self, ty_adt: &TySchema) -> String {
+    fn render_ty_schema(&mut self, ty_adt: &TySchema) -> anyhow::Result<()> {
         let item = ty_adt.schema_loc.to_ast::<ast::Schema>(self.db).unwrap();
-        let item_fq_name = self.render_fq_item(item.map_into()).unwrap_or(anonymous());
-        // let item_fq_name = item
-        //     .fq_name(self.db)
-        //     .map(|it| it.fq_identifier_text())
-        //     .unwrap_or(anonymous());
-        format!("{}{}", item_fq_name, self.render_type_args(&ty_adt.type_args))
+        self.render_fq_name(item.map_into())?;
+        self.render_type_args(&ty_adt.type_args)?;
+        Ok(())
     }
 
-    fn render_type_args(&self, type_args: &Vec<Ty>) -> String {
+    fn render_type_args(&mut self, type_args: &Vec<Ty>) -> anyhow::Result<()> {
         if type_args.is_empty() {
-            return "".to_string();
+            return Ok(());
         }
-        format!("<{}>", self.render_list(type_args, ", "))
+        self.render_type_list("<", type_args, ">")
     }
 
-    fn render_fq_item(&self, item: InFile<ast::Item>) -> Option<String> {
-        let fq_name = item.fq_name(self.db)?;
+    fn render_type_list(&mut self, prefix: &str, tys: &Vec<Ty>, suffix: &str) -> anyhow::Result<()> {
+        self.write_str(prefix)?;
+        for (i, ty) in tys.iter().enumerate() {
+            self.render(&ty)?;
+            if i != tys.len() - 1 {
+                self.write_str(", ")?;
+            }
+        }
+        self.write_str(suffix)?;
+        Ok(())
+    }
 
-        let Some(ctx_file_id) = self.context_file_id else {
-            return Some(fq_name.fq_identifier_text());
+    fn render_fq_name(&mut self, item: InFile<ast::NamedElement>) -> anyhow::Result<()> {
+        let Some(fq_name) = item.fq_name(self.db) else {
+            self.write_str(UNRESOLVED)?;
+            return Ok(());
+        };
+
+        self.sink.start_location_link(item.clone());
+
+        let Some(ctx_file_id) = self.current_file_id else {
+            self.write_str(&fq_name.fq_identifier_text())?;
+            return Ok(());
         };
 
         let addr_name = fq_name.address().identifier_text();
         if matches!(addr_name.as_str(), "std" | "aptos_std") {
-            return Some(fq_name.name());
+            self.write_str(&fq_name.name())?;
+            return Ok(());
         }
 
         let item_package_id = self.db.file_package_id(item.file_id);
         let context_package_id = self.db.file_package_id(ctx_file_id);
         if item_package_id == context_package_id {
-            return Some(fq_name.name());
+            self.write_str(&fq_name.name())?;
+            return Ok(());
         }
+        self.write_str(&fq_name.module_and_item_text())?;
 
-        Some(fq_name.module_and_item_text())
+        self.sink.end_location_link();
+
+        Ok(())
     }
 
     fn origin_loc_name(&self, origin_loc: &SyntaxLoc) -> String {
@@ -168,18 +196,14 @@ impl<'db> TypeRenderer<'db> {
             .to_ast::<ast::TypeParam>(self.db)
             .and_then(|tp| tp.value.name())
             .map(|tp_name| tp_name.as_string())
-            .unwrap_or(anonymous())
+            .unwrap_or(unresolved())
     }
 }
 
-fn unknown() -> String {
-    "<unknown>".to_string()
-}
+const UNKNOWN: &str = "<unknown>";
+const NEVER: &str = "<never>";
+const UNRESOLVED: &str = "<anonymous>";
 
-fn never() -> String {
-    "<never>".to_string()
-}
-
-fn anonymous() -> String {
-    "<anonymous>".to_string()
+fn unresolved() -> String {
+    UNRESOLVED.to_string()
 }
