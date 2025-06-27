@@ -141,7 +141,7 @@ impl NavigationTarget {
 
     /// Allows `NavigationTarget` to be created from a `NameOwner`
     pub(crate) fn from_named_item<'db>(
-        _sema: &'db Semantics<'db, RootDatabase>,
+        // _sema: &'db Semantics<'db, RootDatabase>,
         named_item: InFile<ast::NamedElement>,
     ) -> Option<NavigationTarget> {
         let (file_id, named_item) = named_item.unpack();

@@ -5,6 +5,7 @@ use crate::lsp::{LspError, from_proto, to_proto};
 use crate::movefmt::run_movefmt;
 use crate::{Config, lsp_ext, unwrap_or_return_default};
 use ide::Cancellable;
+use ide::inlay_hints::InlayFieldsToResolve;
 use ide_db::assists::{AssistKind, AssistResolveStrategy, SingleResolve};
 use ide_db::symbol_index::Query;
 use line_index::TextRange;
@@ -15,9 +16,11 @@ use lsp_types::{
     SemanticTokensRangeParams, SemanticTokensRangeResult, SemanticTokensResult, TextDocumentIdentifier,
     WorkspaceEdit, WorkspaceSymbolParams,
 };
+use std::hash::DefaultHasher;
 use stdx::format_to;
 use stdx::itertools::Itertools;
 use syntax::files::FileRange;
+use vfs::FileId;
 // pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
 //     let req = FetchPackagesRequest { force_reload_deps: false };
 //     state
@@ -522,6 +525,60 @@ pub(crate) fn handle_inlay_hints(
             .collect::<Cancellable<Vec<_>>>()?,
     ))
 }
+
+// pub(crate) fn handle_inlay_hints_resolve(
+//     snap: GlobalStateSnapshot,
+//     mut original_hint: InlayHint,
+// ) -> anyhow::Result<InlayHint> {
+//     let _p = tracing::info_span!("handle_inlay_hints_resolve").entered();
+//
+//     let Some(data) = original_hint.data.take() else {
+//         return Ok(original_hint);
+//     };
+//     let resolve_data: lsp_ext::InlayHintResolveData = serde_json::from_value(data)?;
+//     let file_id = FileId::from_raw(resolve_data.file_id);
+//     if resolve_data.version != snap.file_version(file_id) {
+//         tracing::warn!("Inlay hint resolve data is outdated");
+//         return Ok(original_hint);
+//     }
+//     let Some(hash) = resolve_data.hash.parse().ok() else {
+//         return Ok(original_hint);
+//     };
+//     anyhow::ensure!(snap.file_exists(file_id), "Invalid LSP resolve data");
+//
+//     let line_index = snap.file_line_index(file_id)?;
+//     let range = from_proto::text_range(&line_index, resolve_data.resolve_range)?;
+//
+//     let mut forced_resolve_inlay_hints_config = snap.config.inlay_hints();
+//     forced_resolve_inlay_hints_config.fields_to_resolve = InlayFieldsToResolve::empty();
+//     let resolve_hints = snap.analysis.inlay_hints_resolve(
+//         &forced_resolve_inlay_hints_config,
+//         file_id,
+//         range,
+//         hash,
+//         |hint| {
+//             std::hash::BuildHasher::hash_one(
+//                 &std::hash::BuildHasherDefault::<DefaultHasher>::default(),
+//                 hint,
+//             )
+//         },
+//     )?;
+//
+//     Ok(resolve_hints
+//         .and_then(|it| {
+//             to_proto::inlay_hint(
+//                 &snap,
+//                 &forced_resolve_inlay_hints_config.fields_to_resolve,
+//                 &line_index,
+//                 file_id,
+//                 it,
+//             )
+//             .ok()
+//         })
+//         .filter(|hint| hint.position == original_hint.position)
+//         .filter(|hint| hint.kind == original_hint.kind)
+//         .unwrap_or(original_hint))
+// }
 
 pub(crate) fn handle_code_action(
     snap: GlobalStateSnapshot,

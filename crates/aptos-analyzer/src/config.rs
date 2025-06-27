@@ -8,6 +8,7 @@ use camino::Utf8PathBuf;
 use ide_completion::config::CompletionConfig;
 use ide_db::AllowSnippets;
 use paths::AbsPath;
+use semver::Version;
 use std::collections::HashSet;
 use std::fmt;
 use std::sync::OnceLock;
@@ -201,11 +202,9 @@ impl Config {
 
     pub fn inlay_hints(&self) -> InlayHintsConfig {
         let client_capability_fields = self.inlay_hint_resolve_support_properties();
-
         InlayHintsConfig {
             render_colons: self.inlayHints_renderColons().to_owned(),
             type_hints: self.inlayHints_typeHints_enable().to_owned(),
-            // sized_bound: self.inlayHints_implicitSizedBoundHints_enable().to_owned(),
             // parameter_hints: self.inlayHints_parameterHints_enable().to_owned(),
             // generic_parameter_hints: GenericParameterHints {
             //     type_hints: self.inlayHints_genericParameterHints_type_enable().to_owned(),
@@ -213,68 +212,14 @@ impl Config {
             //     const_hints: self.inlayHints_genericParameterHints_const_enable().to_owned(),
             // },
             // chaining_hints: self.inlayHints_chainingHints_enable().to_owned(),
-            // discriminant_hints: match self.inlayHints_discriminantHints_enable() {
-            //     DiscriminantHintsDef::Always => ide::DiscriminantHints::Always,
-            //     DiscriminantHintsDef::Never => ide::DiscriminantHints::Never,
-            //     DiscriminantHintsDef::Fieldless => ide::DiscriminantHints::Fieldless,
-            // },
-            // closure_return_type_hints: match self.inlayHints_closureReturnTypeHints_enable() {
-            //     ClosureReturnTypeHintsDef::Always => ide::ClosureReturnTypeHints::Always,
-            //     ClosureReturnTypeHintsDef::Never => ide::ClosureReturnTypeHints::Never,
-            //     ClosureReturnTypeHintsDef::WithBlock => ide::ClosureReturnTypeHints::WithBlock,
-            // },
-            // lifetime_elision_hints: match self.inlayHints_lifetimeElisionHints_enable() {
-            //     LifetimeElisionDef::Always => ide::LifetimeElisionHints::Always,
-            //     LifetimeElisionDef::Never => ide::LifetimeElisionHints::Never,
-            //     LifetimeElisionDef::SkipTrivial => ide::LifetimeElisionHints::SkipTrivial,
-            // },
-            // hide_named_constructor_hints: self
-            //     .inlayHints_typeHints_hideNamedConstructor()
-            //     .to_owned(),
-            // hide_closure_initialization_hints: self
-            //     .inlayHints_typeHints_hideClosureInitialization()
-            //     .to_owned(),
             hide_closure_parameter_hints: self.inlayHints_typeHints_hideClosureParameter().to_owned(),
-            // closure_style: match self.inlayHints_closureStyle() {
-            //     ClosureStyle::ImplFn => hir::ClosureStyle::ImplFn,
-            //     ClosureStyle::RustAnalyzer => hir::ClosureStyle::RANotation,
-            //     ClosureStyle::WithId => hir::ClosureStyle::ClosureWithId,
-            //     ClosureStyle::Hide => hir::ClosureStyle::Hide,
-            // },
-            // closure_capture_hints: self.inlayHints_closureCaptureHints_enable().to_owned(),
-            // adjustment_hints: match self.inlayHints_expressionAdjustmentHints_enable() {
-            //     AdjustmentHintsDef::Always => ide::AdjustmentHints::Always,
-            //     AdjustmentHintsDef::Never => match self.inlayHints_reborrowHints_enable() {
-            //         ReborrowHintsDef::Always | ReborrowHintsDef::Mutable => {
-            //             ide::AdjustmentHints::ReborrowOnly
-            //         }
-            //         ReborrowHintsDef::Never => ide::AdjustmentHints::Never,
-            //     },
-            //     AdjustmentHintsDef::Reborrow => ide::AdjustmentHints::ReborrowOnly,
-            // },
-            // adjustment_hints_mode: match self.inlayHints_expressionAdjustmentHints_mode() {
-            //     AdjustmentHintsModeDef::Prefix => ide::AdjustmentHintsMode::Prefix,
-            //     AdjustmentHintsModeDef::Postfix => ide::AdjustmentHintsMode::Postfix,
-            //     AdjustmentHintsModeDef::PreferPrefix => ide::AdjustmentHintsMode::PreferPrefix,
-            //     AdjustmentHintsModeDef::PreferPostfix => ide::AdjustmentHintsMode::PreferPostfix,
-            // },
-            // adjustment_hints_hide_outside_unsafe: self
-            //     .inlayHints_expressionAdjustmentHints_hideOutsideUnsafe()
-            //     .to_owned(),
-            // binding_mode_hints: self.inlayHints_bindingModeHints_enable().to_owned(),
-            // param_names_for_lifetime_elision_hints: self
-            //     .inlayHints_lifetimeElisionHints_useParameterNames()
-            //     .to_owned(),
             // max_length: self.inlayHints_maxLength().to_owned(),
-            // closing_brace_hints_min_lines: if self.inlayHints_closingBraceHints_enable().to_owned()
-            // {
+            // closing_brace_hints_min_lines: if self.inlayHints_closingBraceHints_enable().to_owned() {
             //     Some(self.inlayHints_closingBraceHints_minLines().to_owned())
             // } else {
             //     None
             // },
             fields_to_resolve: InlayFieldsToResolve::from_client_capabilities(&client_capability_fields),
-            // implicit_drop_hints: self.inlayHints_implicitDrops_enable().to_owned(),
-            // range_exclusive_hints: self.inlayHints_rangeExclusiveHints_enable().to_owned(),
         }
     }
 

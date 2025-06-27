@@ -18,7 +18,8 @@ use ide_db::text_edit::{TextChange, TextEdit};
 use ide_db::{Severity, SymbolKind};
 use line_index::{TextRange, TextSize};
 use lsp_types::{DocumentChanges, OneOf};
-use std::hash::Hasher;
+use serde_json::to_value;
+use std::hash::{DefaultHasher, Hasher};
 use std::mem;
 use std::ops::Not;
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -136,7 +137,7 @@ pub(crate) fn lsp_completion_text_edit(
 pub(crate) fn text_edit_vec(line_index: &LineIndex, text_edit: TextEdit) -> Vec<lsp_types::TextEdit> {
     text_edit
         .into_iter()
-        .map(|indel| lsp_text_edit(line_index, indel))
+        .map(|change| lsp_text_edit(line_index, change))
         .collect()
 }
 
@@ -700,15 +701,15 @@ pub(crate) fn inlay_hint(
         })
     };
 
-    // let resolve_range_and_hash = hint_needs_resolve(&inlay_hint).map(|range| {
-    //     (
-    //         range,
-    //         std::hash::BuildHasher::hash_one(
-    //             &std::hash::BuildHasherDefault::<FxHasher>::default(),
-    //             &inlay_hint,
-    //         ),
-    //     )
-    // });
+    let resolve_range_and_hash = hint_needs_resolve(&inlay_hint).map(|range| {
+        (
+            range,
+            std::hash::BuildHasher::hash_one(
+                &std::hash::BuildHasherDefault::<DefaultHasher>::default(),
+                &inlay_hint,
+            ),
+        )
+    });
 
     let mut something_to_resolve = false;
     let text_edits = inlay_hint
@@ -717,14 +718,14 @@ pub(crate) fn inlay_hint(
         .and_then(|it| match it {
             LazyProperty::Computed(it) => Some(it),
             LazyProperty::Lazy => {
-                // something_to_resolve |=
-                //     resolve_range_and_hash.is_some() && fields_to_resolve.resolve_text_edits;
-                // something_to_resolve |= snap
-                //     .config
-                //     .visual_studio_code_version()
-                //     .is_none_or(|version| VersionReq::parse(">=1.86.0").unwrap().matches(version))
-                //     && resolve_range_and_hash.is_some()
-                //     && fields_to_resolve.resolve_text_edits;
+                something_to_resolve |=
+                    resolve_range_and_hash.is_some() && fields_to_resolve.resolve_text_edits;
+                something_to_resolve |= /*snap
+                    .config
+                    .visual_studio_code_version()
+                    .is_none_or(|version| VersionReq::parse(">=1.86.0").unwrap().matches(version))
+                    &&*/ resolve_range_and_hash.is_some()
+                    && fields_to_resolve.resolve_text_edits;
                 None
             }
         })
@@ -732,23 +733,23 @@ pub(crate) fn inlay_hint(
     let (label, tooltip) = inlay_hint_label(
         snap,
         fields_to_resolve,
-        // &mut something_to_resolve,
-        // resolve_range_and_hash.is_some(),
+        &mut something_to_resolve,
+        resolve_range_and_hash.is_some(),
         inlay_hint.label,
     )?;
 
-    // let data = match resolve_range_and_hash {
-    //     Some((resolve_range, hash)) if something_to_resolve => Some(
-    //         to_value(lsp_ext::InlayHintResolveData {
-    //             file_id: file_id.index(),
-    //             hash: hash.to_string(),
-    //             version: snap.file_version(file_id),
-    //             resolve_range: range(line_index, resolve_range),
-    //         })
-    //         .unwrap(),
-    //     ),
-    //     _ => None,
-    // };
+    let data = match resolve_range_and_hash {
+        Some((resolve_range, hash)) if something_to_resolve => Some(
+            to_value(lsp_ext::InlayHintResolveData {
+                file_id: file_id.index(),
+                hash: hash.to_string(),
+                version: snap.file_version(file_id),
+                resolve_range: lsp_range(line_index, resolve_range),
+            })
+            .unwrap(),
+        ),
+        _ => None,
+    };
 
     Ok(lsp_types::InlayHint {
         position: match inlay_hint.position {
@@ -765,7 +766,7 @@ pub(crate) fn inlay_hint(
             _ => None,
         },
         text_edits,
-        data: None,
+        data,
         tooltip,
         label,
     })
@@ -774,8 +775,8 @@ pub(crate) fn inlay_hint(
 fn inlay_hint_label(
     snap: &GlobalStateSnapshot,
     fields_to_resolve: &InlayFieldsToResolve,
-    // something_to_resolve: &mut bool,
-    // needs_resolve: bool,
+    something_to_resolve: &mut bool,
+    needs_resolve: bool,
     mut label: InlayHintLabel,
 ) -> Cancellable<(lsp_types::InlayHintLabel, Option<lsp_types::InlayHintTooltip>)> {
     let (label, tooltip) = match &*label.parts {
@@ -784,7 +785,7 @@ fn inlay_hint_label(
             let tooltip = tooltip.and_then(|it| match it {
                 LazyProperty::Computed(it) => Some(it),
                 LazyProperty::Lazy => {
-                    // *something_to_resolve |= needs_resolve && fields_to_resolve.resolve_hint_tooltip;
+                    *something_to_resolve |= needs_resolve && fields_to_resolve.resolve_hint_tooltip;
                     None
                 }
             });
@@ -808,7 +809,7 @@ fn inlay_hint_label(
                     let tooltip = part.tooltip.and_then(|it| match it {
                         LazyProperty::Computed(it) => Some(it),
                         LazyProperty::Lazy => {
-                            // *something_to_resolve |= fields_to_resolve.resolve_label_tooltip;
+                            *something_to_resolve |= fields_to_resolve.resolve_label_tooltip;
                             None
                         }
                     });
@@ -831,7 +832,7 @@ fn inlay_hint_label(
                         .and_then(|it| match it {
                             LazyProperty::Computed(it) => Some(it),
                             LazyProperty::Lazy => {
-                                // *something_to_resolve |= fields_to_resolve.resolve_label_location;
+                                *something_to_resolve |= fields_to_resolve.resolve_label_location;
                                 None
                             }
                         })

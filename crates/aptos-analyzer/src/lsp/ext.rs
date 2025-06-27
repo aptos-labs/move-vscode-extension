@@ -129,3 +129,13 @@ pub struct MovefmtVersionErrorParams {
     pub message: String,
     pub aptos_path: Option<String>,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct InlayHintResolveData {
+    pub file_id: u32,
+    // This is a string instead of a u64 as javascript can't represent u64 fully
+    pub hash: String,
+    pub resolve_range: Range,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub version: Option<i32>,
+}

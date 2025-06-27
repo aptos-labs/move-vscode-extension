@@ -1,6 +1,7 @@
 use crate::config::Config;
 use crate::line_index::PositionEncoding;
 use crate::lsp::semantic_tokens;
+use ide::inlay_hints::InlayFieldsToResolve;
 use line_index::WideEncoding;
 use lsp_types::{
     CodeActionKind, CodeActionOptions, CodeActionProviderCapability, CompletionOptions,
@@ -10,6 +11,7 @@ use lsp_types::{
     SemanticTokensOptions, ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind,
     WorkDoneProgressOptions,
 };
+use std::collections::HashSet;
 
 pub fn server_capabilities(config: &Config) -> ServerCapabilities {
     ServerCapabilities {
@@ -175,6 +177,25 @@ pub struct ClientCapabilities(pub lsp_types::ClientCapabilities);
 impl ClientCapabilities {
     pub fn new(caps: lsp_types::ClientCapabilities) -> Self {
         Self(caps)
+    }
+
+    pub fn inlay_hint_resolve_support_properties(&self) -> HashSet<&str> {
+        self.0
+            .text_document
+            .as_ref()
+            .and_then(|text| text.inlay_hint.as_ref())
+            .and_then(|inlay_hint_caps| inlay_hint_caps.resolve_support.as_ref())
+            .map(|inlay_resolve| inlay_resolve.properties.iter())
+            .into_iter()
+            .flatten()
+            .map(|s| s.as_str())
+            .collect()
+    }
+
+    fn inlay_hints_resolve_provider(&self) -> bool {
+        let client_capabilities = self.inlay_hint_resolve_support_properties();
+        let fields_to_resolve = InlayFieldsToResolve::from_client_capabilities(&client_capabilities);
+        fields_to_resolve != InlayFieldsToResolve::empty()
     }
 
     pub fn location_link(&self) -> bool {

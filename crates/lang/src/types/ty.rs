@@ -14,7 +14,7 @@ use crate::nameres::name_resolution::get_modules_as_entries;
 use crate::nameres::scope::{ScopeEntryListExt, VecExt};
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::inference::TyVarIndex;
-use crate::types::render::TypeRenderer;
+use crate::types::render::{HirWrite, TypeRenderer};
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::range_like::TySequence;

@@ -58,7 +58,7 @@ pub(crate) fn find_all_refs<'a>(
         })
         .collect();
 
-    let declaration = NavigationTarget::from_named_item(&sema, named_item);
+    let declaration = NavigationTarget::from_named_item(named_item);
     Some(ReferenceSearchResult { declaration, references })
 }
 
