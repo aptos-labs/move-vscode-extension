@@ -2409,3 +2409,30 @@ fn test_equality_with_lambda_type_which_gets_its_value_later_with_variable() {
         }
     "#]])
 }
+
+#[test]
+fn test_annotated_expr_returns_its_type() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct Vector<T> {}
+
+            public fun dummy_vector(): Vector<u8> {
+                (Vector{}: Vector<u8>)
+            }
+        }
+    "#]])
+}
+
+#[test]
+fn test_annotated_expr_with_invalid_inner_type() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            public fun main() {
+                (1: bool);
+               //^ err: Incompatible type 'integer', expected 'bool'
+            }
+        }
+    "#]])
+}

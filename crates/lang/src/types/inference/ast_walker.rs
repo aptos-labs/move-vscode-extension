@@ -412,6 +412,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
             ast::Expr::Literal(lit) => self.infer_literal(lit),
             ast::Expr::UnitExpr(_) => Ty::Unit,
+            ast::Expr::AnnotatedExpr(annotated_expr) => {
+                self.infer_annotated_expr(annotated_expr).unwrap_or(Ty::Unknown)
+            }
 
             ast::Expr::ForallExpr(it) => self.infer_quant_expr(&it.clone().into()).unwrap_or(Ty::Bool),
             ast::Expr::ExistsExpr(it) => self.infer_quant_expr(&it.clone().into()).unwrap_or(Ty::Bool),
@@ -1243,6 +1246,16 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
         }
         Ty::Bool
+    }
+
+    fn infer_annotated_expr(&mut self, annotated_expr: &ast::AnnotatedExpr) -> Option<Ty> {
+        let expr = annotated_expr.expr()?;
+
+        let type_ = annotated_expr.type_()?;
+        let ty = self.ctx.ty_lowering().lower_type(type_.in_file(self.ctx.file_id));
+
+        let expr_ty = self.infer_expr_coerceable_to(&expr, ty);
+        Some(expr_ty)
     }
 
     fn infer_literal(&mut self, literal: &ast::Literal) -> Ty {

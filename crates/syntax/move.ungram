@@ -258,6 +258,7 @@ Expr =
     | Literal
     | ParenExpr
     | UnitExpr
+    | AnnotatedExpr
     | PathExpr
     | BorrowExpr | DerefExpr | BangExpr
     | ResourceExpr
@@ -323,6 +324,7 @@ ParenExpr =
 
 UnitExpr =
     '(' ')'
+AnnotatedExpr = '(' Expr ':' Type ')'
 
 IfExpr =
     'if' Condition then_branch:BlockOrInlineExpr ('else' else_branch:BlockOrInlineExpr)?
