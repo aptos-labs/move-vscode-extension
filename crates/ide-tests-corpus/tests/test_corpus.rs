@@ -45,6 +45,7 @@ subdir = "aptos-framework"
     let mut disabled_codes = HashSet::new();
     disabled_codes.insert("unused-variable".to_string());
     disabled_codes.insert("replace-with-method-call".to_string());
+    disabled_codes.insert("replace-with-compound-expr".to_string());
 
     let (file_id, _) = test_state.file_with_caret("/*caret*/");
 
@@ -88,7 +89,7 @@ subdir = "aptos-framework"
 }
 
 datatest_stable::harness! {
-    { test = test_diagnostics, root = "/home/mkurnikov/code/move-fuzzing/sources", pattern = r"^.*\.move$" },
+    { test = test_diagnostics, root = "/home/mkurnikov/code/move-fuzzing-llm", pattern = r"^.*\.move$" },
 }
 
 fn print_diagnostic(file_text: &str, file_path: &AbsPath, diagnostic: Diagnostic) {

@@ -51,27 +51,14 @@ pub(crate) fn function(p: &mut Parser, m: Marker) {
 
 fn opt_fun_modifiers(p: &mut Parser) {
     p.iterate_to_EOF(TokenSet::EMPTY, |p| {
+        if visibility_modifier(p) {
+            return Continue(());
+        }
         match p.current() {
             T![native] => p.bump(T![native]),
             T![inline] => p.bump(T![inline]),
             IDENT if p.at_contextual_kw("entry") => {
                 p.bump_remap(T![entry]);
-            }
-            T![public] => {
-                let m = p.start();
-                p.bump(T![public]);
-                opt_inner_public_modifier(p);
-                m.complete(p, VISIBILITY_MODIFIER);
-            }
-            T![friend] => {
-                let m = p.start();
-                p.bump_remap(T![friend]);
-                m.complete(p, VISIBILITY_MODIFIER);
-            }
-            IDENT if p.at_contextual_kw("package") => {
-                let m = p.start();
-                p.bump_remap(T![package]);
-                m.complete(p, VISIBILITY_MODIFIER);
             }
             _ => {
                 return Break(());
@@ -79,6 +66,31 @@ fn opt_fun_modifiers(p: &mut Parser) {
         }
         Continue(())
     });
+}
+
+pub(crate) fn visibility_modifier(p: &mut Parser) -> bool {
+    match p.current() {
+        T![public] => {
+            let m = p.start();
+            p.bump(T![public]);
+            opt_inner_public_modifier(p);
+            m.complete(p, VISIBILITY_MODIFIER);
+        }
+        T![friend] => {
+            let m = p.start();
+            p.bump_remap(T![friend]);
+            m.complete(p, VISIBILITY_MODIFIER);
+        }
+        IDENT if p.at_contextual_kw("package") => {
+            let m = p.start();
+            p.bump_remap(T![package]);
+            m.complete(p, VISIBILITY_MODIFIER);
+        }
+        _ => {
+            return false;
+        }
+    }
+    true
 }
 
 fn bump_modifier_if_possible(
@@ -204,16 +216,28 @@ pub(crate) fn opt_ret_type(p: &mut Parser) {
 
 pub(crate) fn on_function_modifiers_start(p: &Parser) -> bool {
     match p.current() {
-        T![public] => true,
+        // T![public] => true,
         T![native] => true,
-        T![friend] => true,
+        // T![friend] => true,
         T![inline] => true,
         // not a name of a function
-        IDENT if p.at_contextual_kw("entry") && !p.nth_at_ts(1, ts!(T!['('], T![<])) => true,
-        IDENT if p.at_contextual_kw("package") && !p.nth_at_ts(1, ts!(T!['('], T![<])) => true,
+        IDENT if p.at_contextual_kw("entry") && !p.nth_at_ts(1, ITEM_BRACE_START) => true,
+        // IDENT if p.at_contextual_kw("package") && !p.nth_at_ts(1, ITEM_BRACE_START) => true,
         _ => false,
     }
 }
+
+pub(crate) fn on_visibility_modifier_start(p: &Parser) -> bool {
+    match p.current() {
+        T![public] => true,
+        T![friend] => true,
+        // not a name of an item
+        IDENT if p.at_contextual_kw("package") && !p.nth_at_ts(1, ITEM_BRACE_START) => true,
+        _ => false,
+    }
+}
+
+const ITEM_BRACE_START: TokenSet = TokenSet::new(&[T![<], T!['('], T!['{']]);
 
 pub(crate) fn function_modifier_tokens() -> Vec<RecoveryToken> {
     vec![

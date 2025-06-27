@@ -4,7 +4,10 @@ pub(crate) mod item_spec;
 pub(crate) mod use_item;
 
 use crate::parse::grammar::expressions::{expr, stmts, EXPR_FIRST};
-use crate::parse::grammar::items::fun::{function_modifier_recovery_set, function_modifier_tokens};
+use crate::parse::grammar::items::fun::{
+    function_modifier_recovery_set, function_modifier_tokens, on_function_modifiers_start,
+    on_visibility_modifier_start, visibility_modifier,
+};
 use crate::parse::grammar::paths::use_path;
 use crate::parse::grammar::patterns::STMT_FIRST;
 use crate::parse::grammar::specs::schemas::schema;
@@ -15,7 +18,7 @@ use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{SyntaxKind, T};
 use std::ops::ControlFlow;
-use std::ops::ControlFlow::Continue;
+use std::ops::ControlFlow::{Break, Continue};
 
 pub(crate) fn item_list(p: &mut Parser) {
     assert!(p.at(T!['{']));
@@ -62,17 +65,43 @@ pub(super) fn item(p: &mut Parser) {
     }
 }
 
+fn after_friend_item_rset() -> RecoverySet {
+    RecoverySet::new()
+        .with_token_set(T![fun] | T![struct])
+        .with_kw("enum")
+}
+
 /// Try to parse an item, completing `m` in case of success.
 pub(super) fn opt_item(p: &mut Parser, m: Marker) -> Result<(), Marker> {
     match p.current() {
         T![use] => stmts::use_stmt(p, m),
-        T![struct] => adt::struct_(p, m),
         T![const] => const_(p, m),
-        T![friend] if !p.nth_at(1, T![fun]) => friend_decl(p, m),
+
+        // todo: does not handle `friend native myfun()` cases
+        T![friend] if !p.nth_at_rset(1, after_friend_item_rset()) => friend_decl(p, m),
+
+        // adt
+        T![struct] => adt::struct_(p, m),
         IDENT if p.at_contextual_kw("enum") => adt::enum_(p, m),
 
+        // fun
         T![fun] => fun::function(p, m),
-        _ if p.at_ts_fn(fun::on_function_modifiers_start) => fun::function(p, m),
+        _ if on_function_modifiers_start(p) => fun::function(p, m),
+
+        // visibility
+        _ if on_visibility_modifier_start(p) => {
+            p.iterate_to_EOF(TokenSet::EMPTY, |p| {
+                if !visibility_modifier(p) {
+                    return Break(());
+                }
+                Continue(())
+            });
+            match p.current() {
+                T![struct] => adt::struct_(p, m),
+                IDENT if p.at_contextual_kw("enum") => adt::enum_(p, m),
+                _ => fun::function(p, m),
+            }
+        }
 
         T![spec] => {
             p.bump(T![spec]);
@@ -82,7 +111,7 @@ pub(super) fn opt_item(p: &mut Parser, m: Marker) -> Result<(), Marker> {
             }
             match p.current() {
                 T![fun] => fun::spec_function(p, m),
-                _ if p.at_ts_fn(fun::on_function_modifiers_start) => fun::spec_function(p, m),
+                _ if p.at_ts_fn(on_function_modifiers_start) => fun::spec_function(p, m),
                 _ => item_spec::item_spec(p, m),
             }
         }
@@ -133,7 +162,8 @@ pub(crate) fn at_block_start(p: &Parser) -> bool {
 pub(crate) fn at_item_start(p: &Parser) -> bool {
     p.at_ts(ITEM_KEYWORDS)
         || p.at(T!['}'])
-        || fun::on_function_modifiers_start(p)
+        || on_function_modifiers_start(p)
+        || on_visibility_modifier_start(p)
         || p.at_contextual_kw_ident("enum")
 }
 
