@@ -303,19 +303,7 @@ impl<'db> InferenceCtx<'db> {
         self.pat_types.get(&ident_pat.into()).cloned()
     }
 
-    pub fn push_type_error(&mut self, node: Option<&SyntaxNode>, type_error: TypeError) {
-        match type_error {
-            TypeError::TypeMismatch { .. } => (),
-            _ => {
-                // this is temporary lambda special-case until there's a proper support
-                if let Some(node) = node {
-                    if node.descendants_of_type::<ast::LambdaExpr>().next().is_some() {
-                        // if there's a lambda expr under the highlighted node, skip the error
-                        return;
-                    }
-                }
-            }
-        }
+    pub fn push_type_error(&mut self, type_error: TypeError) {
         self.type_errors.push(type_error);
     }
 }

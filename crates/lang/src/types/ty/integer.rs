@@ -50,6 +50,9 @@ impl fmt::Display for IntegerKind {
 
 impl Ty {
     pub fn supports_op(&self, op: ast::BinaryOp) -> bool {
+        if matches!(self, Ty::Infer(_)) {
+            return true;
+        }
         match op {
             ast::BinaryOp::ArithOp(_) => {
                 matches!(

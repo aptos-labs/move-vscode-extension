@@ -26,13 +26,18 @@ pub(crate) fn delimited_with_recovery(
 
     let mut is_empty = true;
     while !p.at(EOF) && !at_list_end(p) {
+        let pos_before = p.pos();
+
         #[cfg(debug_assertions)]
         let _p = stdx::panic_context::enter(format!("p.text_context() = {:?}", p.current_context()));
 
         // check whether we can parse element, if not, then recover till the delimiter / end of the list
         let mut recover_set = TokenSet::new(&[delimiter]);
         if let Some(list_end) = list_end {
-            recover_set = recover_set | list_end;
+            // can't recover on pipe
+            if list_end != T![|] {
+                recover_set = recover_set | list_end;
+            }
         }
         let at_element = p.with_recovery_token_set(recover_set, |p| element(p));
         if at_element {
@@ -61,8 +66,7 @@ pub(crate) fn delimited_with_recovery(
             }
         }
 
-        iteration += 1;
-        if iteration > 1000 {
+        if p.pos() == pos_before {
             // something's wrong and we don't want to hang
             #[cfg(debug_assertions)]
             {

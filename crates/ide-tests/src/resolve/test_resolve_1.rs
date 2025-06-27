@@ -412,3 +412,21 @@ module 0x1::main {
 }    "#,
     )
 }
+
+#[test]
+fn test_resolve_enum_field_from_one_of_variants_only_with_function_value() {
+    check_resolve(
+        // language=Move
+        r#"
+module 0x1::main {
+    struct S { val: u8 }
+              //X
+    fun main() {
+        let a = (|| { S { val: 1 } })();
+        a.val;
+          //^
+    }
+}
+"#,
+    )
+}
