@@ -1,0 +1,102 @@
+SOURCE_FILE@0..149
+  MODULE@0..148
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..44
+      IDENT@12..44 "function_value_with_c ..."
+    WHITESPACE@44..45 " "
+    L_CURLY@45..46 "{"
+    WHITESPACE@46..51 "\n    "
+    FUN@51..146
+      FUN_KW@51..54 "fun"
+      WHITESPACE@54..55 " "
+      NAME@55..59
+        IDENT@55..59 "main"
+      PARAM_LIST@59..61
+        L_PAREN@59..60 "("
+        R_PAREN@60..61 ")"
+      WHITESPACE@61..62 " "
+      BLOCK_EXPR@62..146
+        L_CURLY@62..63 "{"
+        WHITESPACE@63..72 "\n        "
+        LET_STMT@72..140
+          LET_KW@72..75 "let"
+          WHITESPACE@75..76 " "
+          IDENT_PAT@76..77
+            NAME@76..77
+              IDENT@76..77 "s"
+          COLON@77..78 ":"
+          WHITESPACE@78..79 " "
+          LAMBDA_TYPE@79..139
+            PIPE@79..80 "|"
+            WHITESPACE@80..81 " "
+            LAMBDA_TYPE_PARAM@81..85
+              PATH_TYPE@81..85
+                PATH@81..85
+                  PATH_SEGMENT@81..85
+                    NAME_REF@81..85
+                      IDENT@81..85 "bool"
+            WHITESPACE@85..86 " "
+            PIPE@86..87 "|"
+            WHITESPACE@87..88 " "
+            TUPLE_TYPE@88..123
+              L_PAREN@88..89 "("
+              PATH_TYPE@89..91
+                PATH@89..91
+                  PATH_SEGMENT@89..91
+                    NAME_REF@89..91
+                      IDENT@89..91 "u8"
+              COMMA@91..92 ","
+              WHITESPACE@92..93 " "
+              LAMBDA_TYPE@93..117
+                PIPE@93..94 "|"
+                WHITESPACE@94..95 " "
+                LAMBDA_TYPE_PARAM@95..99
+                  PATH_TYPE@95..99
+                    PATH@95..99
+                      PATH_SEGMENT@95..99
+                        NAME_REF@95..99
+                          IDENT@95..99 "bool"
+                WHITESPACE@99..100 " "
+                PIPE@100..101 "|"
+                WHITESPACE@101..102 " "
+                LAMBDA_TYPE_ABILITY_LIST@102..117
+                  HAS_KW@102..105 "has"
+                  WHITESPACE@105..106 " "
+                  ABILITY_BOUND_LIST@106..117
+                    ABILITY@106..110
+                      IDENT@106..110 "copy"
+                    WHITESPACE@110..111 " "
+                    PLUS@111..112 "+"
+                    WHITESPACE@112..113 " "
+                    ABILITY@113..117
+                      IDENT@113..117 "drop"
+              COMMA@117..118 ","
+              WHITESPACE@118..119 " "
+              PATH_TYPE@119..122
+                PATH@119..122
+                  PATH_SEGMENT@119..122
+                    NAME_REF@119..122
+                      IDENT@119..122 "u16"
+              R_PAREN@122..123 ")"
+            WHITESPACE@123..124 " "
+            LAMBDA_TYPE_ABILITY_LIST@124..139
+              HAS_KW@124..127 "has"
+              WHITESPACE@127..128 " "
+              ABILITY_BOUND_LIST@128..139
+                ABILITY@128..132
+                  IDENT@128..132 "copy"
+                WHITESPACE@132..133 " "
+                PLUS@133..134 "+"
+                WHITESPACE@134..135 " "
+                ABILITY@135..139
+                  IDENT@135..139 "drop"
+          SEMICOLON@139..140 ";"
+        WHITESPACE@140..145 "\n    "
+        R_CURLY@145..146 "}"
+    WHITESPACE@146..147 "\n"
+    R_CURLY@147..148 "}"
+  WHITESPACE@148..149 "\n"
