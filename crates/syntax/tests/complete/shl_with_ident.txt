@@ -1,0 +1,78 @@
+SOURCE_FILE@0..131
+  MODULE@0..130
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..26
+      IDENT@12..26 "shl_with_ident"
+    WHITESPACE@26..27 " "
+    L_CURLY@27..28 "{"
+    WHITESPACE@28..33 "\n    "
+    FUN@33..128
+      FUN_KW@33..36 "fun"
+      WHITESPACE@36..37 " "
+      NAME@37..41
+        IDENT@37..41 "main"
+      PARAM_LIST@41..43
+        L_PAREN@41..42 "("
+        R_PAREN@42..43 ")"
+      WHITESPACE@43..44 " "
+      BLOCK_EXPR@44..128
+        L_CURLY@44..45 "{"
+        WHITESPACE@45..54 "\n        "
+        LET_STMT@54..83
+          LET_KW@54..57 "let"
+          WHITESPACE@57..58 " "
+          IDENT_PAT@58..62
+            NAME@58..62
+              IDENT@58..62 "left"
+          WHITESPACE@62..63 " "
+          EQ@63..64 "="
+          WHITESPACE@64..65 " "
+          BIN_EXPR@65..82
+            PATH_EXPR@65..66
+              PATH@65..66
+                PATH_SEGMENT@65..66
+                  NAME_REF@65..66
+                    IDENT@65..66 "x"
+            WHITESPACE@66..67 " "
+            SHL@67..69 "<<"
+            WHITESPACE@69..70 " "
+            PATH_EXPR@70..82
+              PATH@70..82
+                PATH_SEGMENT@70..82
+                  NAME_REF@70..82
+                    IDENT@70..82 "actual_shift"
+          SEMICOLON@82..83 ";"
+        WHITESPACE@83..92 "\n        "
+        LET_STMT@92..122
+          LET_KW@92..95 "let"
+          WHITESPACE@95..96 " "
+          IDENT_PAT@96..101
+            NAME@96..101
+              IDENT@96..101 "right"
+          WHITESPACE@101..102 " "
+          EQ@102..103 "="
+          WHITESPACE@103..104 " "
+          BIN_EXPR@104..121
+            PATH_EXPR@104..105
+              PATH@104..105
+                PATH_SEGMENT@104..105
+                  NAME_REF@104..105
+                    IDENT@104..105 "x"
+            WHITESPACE@105..106 " "
+            SHR@106..108 ">>"
+            WHITESPACE@108..109 " "
+            PATH_EXPR@109..121
+              PATH@109..121
+                PATH_SEGMENT@109..121
+                  NAME_REF@109..121
+                    IDENT@109..121 "actual_shift"
+          SEMICOLON@121..122 ";"
+        WHITESPACE@122..127 "\n    "
+        R_CURLY@127..128 "}"
+    WHITESPACE@128..129 "\n"
+    R_CURLY@129..130 "}"
+  WHITESPACE@130..131 "\n"

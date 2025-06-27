@@ -15,12 +15,10 @@ pub(crate) fn opt_path_type_arg_list(p: &mut Parser, mode: Mode) {
 
 pub(crate) fn opt_type_arg_list_for_type(p: &mut Parser) {
     let _p = stdx::panic_context::enter("opt_type_arg_list_for_type".to_string());
-    let m = p.start();
-    let current = p.current();
-    if current != T![<] {
-        m.abandon(p);
+    if !p.at(T![<]) {
         return;
     }
+    let m = p.start();
     p.bump(T![<]);
     p.with_recovery_token(T![>], |p| {
         delimited_with_recovery(
@@ -55,20 +53,23 @@ pub(super) fn opt_type_arg_list_for_expr(p: &mut Parser, colon_colon_required: b
     p.bump(T![<]);
 
     // NOTE: we cannot add recovery in type args for expr, it's ambiguous with the lt/gt expr
+    let mut has_error = false;
     p.iterate_to_EOF(T![>] | T!['('] | T!['{'], |p| {
         if !type_arg(p, false) {
+            has_error = true;
             return Break(());
         }
         if !p.eat(T![,]) {
             if p.at_ts(TYPE_ARG_FIRST) {
                 p.error("expected ','");
+                has_error = true;
             } else {
                 return Break(());
             }
         }
         Continue(())
     });
-    if !p.eat(T![>]) {
+    if has_error || !p.eat(T![>]) {
         m.abandon_with_rollback(p);
         return;
     }
