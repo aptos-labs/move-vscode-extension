@@ -128,3 +128,22 @@ fn test_assert_macro_expects_one_or_two_parameters() {
         }
     "#]]);
 }
+
+#[test]
+fn test_missing_value_arguments_for_tuple_struct_contructor() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct S(u8, bool, vector<u8>);
+            public fun main() {
+                S(1);
+                 //^ err: This function takes 3 parameters, but 1 parameters were supplied
+                S(1, true);
+                       //^ err: This function takes 3 parameters, but 2 parameters were supplied
+                S(1, true, b"1234");
+                S(1, true, b"1234", b"1234");
+                                  //^^^^^^^ err: This function takes 3 parameters, but 4 parameters were supplied
+            }
+        }
+    "#]]);
+}
