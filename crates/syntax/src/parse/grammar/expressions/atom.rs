@@ -1,11 +1,9 @@
 use super::*;
 use crate::parse::grammar::paths::Mode;
-use crate::parse::grammar::patterns::pat_or_recover;
+use crate::parse::grammar::patterns::pat;
 use crate::parse::grammar::specs::{opt_spec_block_expr, spec_block_expr};
 use crate::parse::grammar::{any_address, paths};
-use crate::parse::recovery_set::RecoverySet;
-use crate::parse::recovery_set::RecoveryToken::SyntaxKind;
-use crate::parse::token_set::{mask, TokenSet};
+use crate::parse::token_set::TokenSet;
 use crate::ts;
 use std::ops::ControlFlow::Break;
 
@@ -331,9 +329,11 @@ pub(crate) fn match_arm_list(p: &mut Parser) {
     let m = p.start();
     p.eat(T!['{']);
     // it's an expr block too
-    p.iterate_to_EOF(T!['}'], |p| {
-        match_arm(p, TokenSet::EMPTY);
-        Continue(())
+    p.reset_recovery_set(|p| {
+        p.iterate_to_EOF(T!['}'], |p| {
+            match_arm(p, TokenSet::EMPTY);
+            Continue(())
+        });
     });
     p.expect(T!['}']);
     m.complete(p, MATCH_ARM_LIST);
@@ -341,11 +341,11 @@ pub(crate) fn match_arm_list(p: &mut Parser) {
 
 fn match_arm(p: &mut Parser, recovery_set: TokenSet) -> bool {
     let m = p.start();
-    let is_pat = pat_or_recover(p, T![=>] | T!['}']);
-    if !is_pat {
-        m.abandon(p);
-        return false;
-    }
+    p.with_recovery_token_set(T![=>] | T!['}'], pat);
+    // if !is_pat {
+    //     m.abandon(p);
+    //     return false;
+    // }
     if p.at(T![if]) {
         let m = p.start();
         p.bump(T![if]);
@@ -353,6 +353,10 @@ fn match_arm(p: &mut Parser, recovery_set: TokenSet) -> bool {
         m.complete(p, MATCH_GUARD);
     }
 
+    // if !p.expect(T![=>]) {
+    //     m.abandon(p);
+    //     return false;
+    // }
     if !p.at(T![=>]) {
         p.error_and_recover("expected '=>'", recovery_set);
         m.abandon(p);

@@ -1,0 +1,53 @@
+SOURCE_FILE@0..84
+  MODULE@0..83
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..27
+      IDENT@12..27 "invalid_match_2"
+    WHITESPACE@27..28 " "
+    L_CURLY@28..29 "{"
+    WHITESPACE@29..34 "\n    "
+    FUN@34..81
+      FUN_KW@34..37 "fun"
+      WHITESPACE@37..38 " "
+      NAME@38..42
+        IDENT@38..42 "main"
+      PARAM_LIST@42..44
+        L_PAREN@42..43 "("
+        R_PAREN@43..44 ")"
+      WHITESPACE@44..45 " "
+      BLOCK_EXPR@45..81
+        L_CURLY@45..46 "{"
+        WHITESPACE@46..55 "\n        "
+        MATCH_EXPR@55..75
+          MATCH_KW@55..60 "match"
+          WHITESPACE@60..61 " "
+          L_PAREN@61..62 "("
+          PATH_EXPR@62..63
+            PATH@62..63
+              PATH_SEGMENT@62..63
+                NAME_REF@62..63
+                  IDENT@62..63 "x"
+          R_PAREN@63..64 ")"
+          WHITESPACE@64..65 " "
+          MATCH_ARM_LIST@65..75
+            L_CURLY@65..66 "{"
+            WHITESPACE@66..67 " "
+            MATCH_ARM@67..73
+              ERROR@67..68
+                INT_NUMBER@67..68 "1"
+              WHITESPACE@68..69 " "
+              FAT_ARROW@69..71 "=>"
+              WHITESPACE@71..72 " "
+              LITERAL@72..73
+                INT_NUMBER@72..73 "2"
+            WHITESPACE@73..74 " "
+            R_CURLY@74..75 "}"
+        WHITESPACE@75..80 "\n    "
+        R_CURLY@80..81 "}"
+    WHITESPACE@81..82 "\n"
+    R_CURLY@82..83 "}"
+  WHITESPACE@83..84 "\n"

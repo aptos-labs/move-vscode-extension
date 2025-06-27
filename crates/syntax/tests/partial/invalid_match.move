@@ -1,4 +1,4 @@
-module 0x1::match_invalid {
+module 0x1::invalid_match {
     fun call(s: Enum0) {
         match (s) {
             (1)

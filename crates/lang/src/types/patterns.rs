@@ -166,6 +166,11 @@ impl TypeAstWalker<'_, '_> {
                 self.ctx.pat_types.insert(wildcard_pat.into(), ty);
             }
             ast::Pat::RestPat(_) => (),
+            ast::Pat::ParenPat(paren_pat) => {
+                let inner_pat = paren_pat.pat()?;
+                self.collect_pat_bindings(inner_pat, ty, def_bm);
+            }
+            ast::Pat::UnitPat(_) => (),
         };
         Some(())
     }
