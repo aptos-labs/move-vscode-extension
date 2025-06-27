@@ -20,7 +20,7 @@ use std::collections::HashMap;
 use std::hash::Hash;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, SyntaxNode, ast};
+use syntax::{AstNode, ast};
 use vfs::FileId;
 
 use crate::nameres::path_resolution::remove_variant_ident_pats;
