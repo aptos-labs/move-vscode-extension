@@ -1,14 +1,12 @@
 use crate::parse::grammar::expressions::{opt_initializer_expr, stmt_expr};
-use crate::parse::grammar::items::{fun, item_start_rec_set, stmt_start_rec_set, use_item};
-use crate::parse::grammar::patterns::pat_or_recover;
+use crate::parse::grammar::items::{fun, stmt_start_rec_set, use_item};
+use crate::parse::grammar::patterns::pat;
 use crate::parse::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt};
 use crate::parse::grammar::specs::schemas::{
     apply_schema, global_variable, include_schema, schema_field,
 };
 use crate::parse::grammar::{attributes, types};
 use crate::parse::parser::{Marker, Parser};
-use crate::parse::recovery_set::RecoverySet;
-use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::{EOF, EXPR_STMT, LET_STMT, USE_STMT};
 use crate::T;
 
@@ -74,7 +72,7 @@ fn let_stmt(p: &mut Parser, m: Marker, is_spec: bool) {
     }
     let recovery_set = stmt_start_rec_set().with_token_set(T![=] | T![;]);
     // let rec_set = item_start_rec_set().with_token_set(T![=] | T![;]);
-    p.with_recovery_set(recovery_set.clone(), |p| pat_or_recover(p, TokenSet::EMPTY));
+    p.with_recovery_set(recovery_set.clone(), pat);
     // pat_or_recover(p, recovery_set.clone());
     if p.at(T![:]) {
         p.with_recovery_set(recovery_set, types::type_annotation);

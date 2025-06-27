@@ -1,12 +1,12 @@
 SOURCE_FILE@0..186
-  MODULE@0..183
+  MODULE@0..185
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
     VALUE_ADDRESS@7..10
       INT_NUMBER@7..10 "0x1"
     COLON_COLON@10..12 "::"
     NAME@12..25
-      IDENT@12..25 "match_invalid"
+      IDENT@12..25 "invalid_match"
     WHITESPACE@25..26 " "
     L_CURLY@26..27 "{"
     WHITESPACE@27..32 "\n    "
@@ -57,7 +57,7 @@ SOURCE_FILE@0..186
         WHITESPACE@98..103 "\n    "
         R_CURLY@103..104 "}"
     WHITESPACE@104..110 "\n\n    "
-    FUN@110..177
+    FUN@110..183
       FUN_KW@110..113 "fun"
       WHITESPACE@113..114 " "
       NAME@114..118
@@ -77,35 +77,34 @@ SOURCE_FILE@0..186
                   IDENT@122..127 "Enum0"
         R_PAREN@127..128 ")"
       WHITESPACE@128..129 " "
-      BLOCK_EXPR@129..177
+      BLOCK_EXPR@129..183
         L_CURLY@129..130 "{"
         WHITESPACE@130..139 "\n        "
-        EXPR_STMT@139..167
-          MATCH_EXPR@139..166
-            MATCH_KW@139..144 "match"
-            WHITESPACE@144..145 " "
-            L_PAREN@145..146 "("
-            PATH_EXPR@146..147
-              PATH@146..147
-                PATH_SEGMENT@146..147
-                  NAME_REF@146..147
-                    IDENT@146..147 "s"
-            R_PAREN@147..148 ")"
-            WHITESPACE@148..149 " "
-            MATCH_ARM_LIST@149..166
-              L_CURLY@149..150 "{"
-              WHITESPACE@150..163 "\n            "
-              UNIT_PAT@163..166
-                L_PAREN@163..164 "("
-                ERROR@164..165
-                  INT_NUMBER@164..165 "1"
-                R_PAREN@165..166 ")"
-          SEMICOLON@166..167 ";"
-        WHITESPACE@167..176 "\n        "
-        R_CURLY@176..177 "}"
-    WHITESPACE@177..182 "\n    "
-    R_CURLY@182..183 "}"
-  WHITESPACE@183..184 "\n"
-  ERROR@184..185
+        MATCH_EXPR@139..177
+          MATCH_KW@139..144 "match"
+          WHITESPACE@144..145 " "
+          L_PAREN@145..146 "("
+          PATH_EXPR@146..147
+            PATH@146..147
+              PATH_SEGMENT@146..147
+                NAME_REF@146..147
+                  IDENT@146..147 "s"
+          R_PAREN@147..148 ")"
+          WHITESPACE@148..149 " "
+          MATCH_ARM_LIST@149..177
+            L_CURLY@149..150 "{"
+            WHITESPACE@150..163 "\n            "
+            UNIT_PAT@163..166
+              L_PAREN@163..164 "("
+              ERROR@164..165
+                INT_NUMBER@164..165 "1"
+              R_PAREN@165..166 ")"
+            ERROR@166..167
+              SEMICOLON@166..167 ";"
+            WHITESPACE@167..176 "\n        "
+            R_CURLY@176..177 "}"
+        WHITESPACE@177..182 "\n    "
+        R_CURLY@182..183 "}"
+    WHITESPACE@183..184 "\n"
     R_CURLY@184..185 "}"
   WHITESPACE@185..186 "\n"

@@ -2286,11 +2286,13 @@ pub enum NamedElement {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Pat {
     IdentPat(IdentPat),
+    ParenPat(ParenPat),
     PathPat(PathPat),
     RestPat(RestPat),
     StructPat(StructPat),
     TuplePat(TuplePat),
     TupleStructPat(TupleStructPat),
+    UnitPat(UnitPat),
     WildcardPat(WildcardPat),
 }
 
@@ -7578,6 +7580,10 @@ impl From<IdentPat> for Pat {
     #[inline]
     fn from(node: IdentPat) -> Pat { Pat::IdentPat(node) }
 }
+impl From<ParenPat> for Pat {
+    #[inline]
+    fn from(node: ParenPat) -> Pat { Pat::ParenPat(node) }
+}
 impl From<PathPat> for Pat {
     #[inline]
     fn from(node: PathPat) -> Pat { Pat::PathPat(node) }
@@ -7598,6 +7604,10 @@ impl From<TupleStructPat> for Pat {
     #[inline]
     fn from(node: TupleStructPat) -> Pat { Pat::TupleStructPat(node) }
 }
+impl From<UnitPat> for Pat {
+    #[inline]
+    fn from(node: UnitPat) -> Pat { Pat::UnitPat(node) }
+}
 impl From<WildcardPat> for Pat {
     #[inline]
     fn from(node: WildcardPat) -> Pat { Pat::WildcardPat(node) }
@@ -7606,6 +7616,12 @@ impl Pat {
     pub fn ident_pat(self) -> Option<IdentPat> {
         match (self) {
             Pat::IdentPat(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn paren_pat(self) -> Option<ParenPat> {
+        match (self) {
+            Pat::ParenPat(item) => Some(item),
             _ => None,
         }
     }
@@ -7639,6 +7655,12 @@ impl Pat {
             _ => None,
         }
     }
+    pub fn unit_pat(self) -> Option<UnitPat> {
+        match (self) {
+            Pat::UnitPat(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn wildcard_pat(self) -> Option<WildcardPat> {
         match (self) {
             Pat::WildcardPat(item) => Some(item),
@@ -7651,18 +7673,28 @@ impl AstNode for Pat {
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            IDENT_PAT | PATH_PAT | REST_PAT | STRUCT_PAT | TUPLE_PAT | TUPLE_STRUCT_PAT | WILDCARD_PAT
+            IDENT_PAT
+                | PAREN_PAT
+                | PATH_PAT
+                | REST_PAT
+                | STRUCT_PAT
+                | TUPLE_PAT
+                | TUPLE_STRUCT_PAT
+                | UNIT_PAT
+                | WILDCARD_PAT
         )
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
             IDENT_PAT => Pat::IdentPat(IdentPat { syntax }),
+            PAREN_PAT => Pat::ParenPat(ParenPat { syntax }),
             PATH_PAT => Pat::PathPat(PathPat { syntax }),
             REST_PAT => Pat::RestPat(RestPat { syntax }),
             STRUCT_PAT => Pat::StructPat(StructPat { syntax }),
             TUPLE_PAT => Pat::TuplePat(TuplePat { syntax }),
             TUPLE_STRUCT_PAT => Pat::TupleStructPat(TupleStructPat { syntax }),
+            UNIT_PAT => Pat::UnitPat(UnitPat { syntax }),
             WILDCARD_PAT => Pat::WildcardPat(WildcardPat { syntax }),
             _ => return None,
         };
@@ -7672,11 +7704,13 @@ impl AstNode for Pat {
     fn syntax(&self) -> &SyntaxNode {
         match self {
             Pat::IdentPat(it) => &it.syntax(),
+            Pat::ParenPat(it) => &it.syntax(),
             Pat::PathPat(it) => &it.syntax(),
             Pat::RestPat(it) => &it.syntax(),
             Pat::StructPat(it) => &it.syntax(),
             Pat::TuplePat(it) => &it.syntax(),
             Pat::TupleStructPat(it) => &it.syntax(),
+            Pat::UnitPat(it) => &it.syntax(),
             Pat::WildcardPat(it) => &it.syntax(),
         }
     }

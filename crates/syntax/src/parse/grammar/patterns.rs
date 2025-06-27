@@ -7,6 +7,10 @@ use crate::SyntaxKind::*;
 use crate::{SyntaxKind, T};
 use std::ops::ControlFlow::{Break, Continue};
 
+pub(crate) fn pat(p: &mut Parser) -> bool {
+    pat_or_recover(p, TokenSet::EMPTY)
+}
+
 pub(crate) fn pat_or_recover(p: &mut Parser, extra_set: impl Into<RecoverySet>) -> bool {
     match p.current() {
         // 0x1 '::'
@@ -66,13 +70,7 @@ fn tuple_pat_fields(p: &mut Parser) {
     assert!(p.at(T!['(']));
     p.bump(T!['(']);
 
-    delimited_with_recovery(
-        p,
-        |p| pat_or_recover(p, TokenSet::EMPTY),
-        T![,],
-        "expected pattern",
-        Some(T![')']),
-    );
+    delimited_with_recovery(p, pat, T![,], "expected pattern", Some(T![')']));
 
     // while !p.at(EOF) && !p.at(T![')']) {
     //     if !p.at_ts(PAT_FIRST) {
@@ -93,7 +91,7 @@ fn struct_pat_field(p: &mut Parser) -> bool {
         IDENT if p.nth(1) == T![:] => {
             name_ref(p);
             p.bump(T![:]);
-            pat_or_recover(p, TokenSet::EMPTY);
+            pat(p);
         }
         IDENT => {
             ident_pat(p);

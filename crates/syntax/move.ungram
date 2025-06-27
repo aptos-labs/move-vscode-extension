@@ -170,6 +170,8 @@ Pat =
     | RestPat
     | WildcardPat
     | PathPat
+    | ParenPat
+    | UnitPat
 
 TuplePat =
     '(' pats:(Pat (',' Pat)* ','?)? ')'

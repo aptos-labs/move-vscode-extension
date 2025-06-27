@@ -1,4 +1,4 @@
-module 0x1::match_invalid {
+module 0x1::invalid_match {
     fun call(s: Enum0) {
         match (s) {
             (1)
@@ -12,8 +12,6 @@ module 0x1::match_invalid {
             (1);
            //^ expected pattern
              //^ expected '=>'
-             //^ expected R_CURLY
         }
     }
 }
-//< unexpected ident '}'

@@ -165,7 +165,7 @@ fn test_paren_pat() {
         r#"
         module 0x1::main {
             fun main() {
-                let ((((a)))) = (1, 2);
+                let ((((a)))) = 1;
                 a;
               //^ integer
             }
