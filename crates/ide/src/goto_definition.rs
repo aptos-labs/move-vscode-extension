@@ -46,7 +46,7 @@ pub(crate) fn goto_definition_multi(
     {
         return match defn {
             Definition::NamedItem(_, named_item) => {
-                let nav_target = NavigationTarget::from_named_item(&sema, named_item);
+                let nav_target = NavigationTarget::from_named_item(named_item);
                 Some(RangeInfo::new(
                     original_token.text_range(),
                     nav_target.into_iter().collect(),

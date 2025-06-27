@@ -5,7 +5,7 @@ pub mod lowering;
 pub mod substitution;
 pub mod ty;
 
-pub(crate) mod render;
+pub mod render;
 
 mod expectation;
 pub mod fold;

@@ -5,6 +5,7 @@ use base_db::{SourceDatabase, source_db};
 use ide_completion::item::CompletionItem;
 use ide_db::{RootDatabase, root_db, symbol_index};
 use line_index::{LineCol, LineIndex};
+use std::panic::UnwindSafe;
 use std::sync::Arc;
 use syntax::{SourceFile, TextRange, TextSize};
 use vfs::FileId;
@@ -226,18 +227,18 @@ impl Analysis {
         self.with_db(|db| inlay_hints::inlay_hints(db, file_id, range, config))
     }
 
-    // pub fn inlay_hints_resolve(
-    //     &self,
-    //     config: &InlayHintsConfig,
-    //     file_id: FileId,
-    //     resolve_range: TextRange,
-    //     hash: u64,
-    //     hasher: impl Fn(&InlayHint) -> u64 + Send + UnwindSafe,
-    // ) -> Cancellable<Option<InlayHint>> {
-    //     self.with_db(|db| {
-    //         inlay_hints::inlay_hints_resolve(db, file_id, resolve_range, hash, config, hasher)
-    //     })
-    // }
+    pub fn inlay_hints_resolve(
+        &self,
+        config: &InlayHintsConfig,
+        file_id: FileId,
+        resolve_range: TextRange,
+        hash: u64,
+        hasher: impl Fn(&InlayHint) -> u64 + Send + UnwindSafe,
+    ) -> Cancellable<Option<InlayHint>> {
+        self.with_db(|db| {
+            inlay_hints::inlay_hints_resolve(db, file_id, resolve_range, hash, config, hasher)
+        })
+    }
 
     // /// Returns the set of folding ranges.
     // pub fn folding_ranges(&self, file_id: FileId) -> Cancellable<Vec<Fold>> {

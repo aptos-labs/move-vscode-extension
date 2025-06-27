@@ -376,6 +376,10 @@ impl GlobalStateSnapshot {
         self.vfs_read().file_path(file_id).clone()
     }
 
+    pub(crate) fn file_exists(&self, file_id: FileId) -> bool {
+        self.vfs.read().0.exists(file_id)
+    }
+
     pub(crate) fn show_message(&self, message_type: lsp_types::MessageType, message: String) {
         let notif = lsp_server::Notification::new(
             lsp_types::notification::ShowMessage::METHOD.to_owned(),

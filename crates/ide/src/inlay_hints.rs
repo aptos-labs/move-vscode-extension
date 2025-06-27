@@ -1,14 +1,16 @@
 mod ident_pat;
 
+use crate::NavigationTarget;
 use ide_db::RootDatabase;
 use ide_db::text_edit::{TextEdit, TextEditBuilder};
 use itertools::Itertools;
 use lang::Semantics;
+use lang::types::render::HirWrite;
 use lang::types::ty::Ty;
 use std::collections::HashSet;
 use std::fmt::Write;
 use std::{fmt, mem};
-use syntax::files::{FileRange, InFileExt};
+use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, SyntaxNode, TextRange, TextSize, WalkEvent, ast, match_ast};
 use vfs::FileId;
 
@@ -25,7 +27,7 @@ pub(crate) fn inlay_hints(
 
     let mut acc = Vec::new();
     let mut hints = |event| {
-        if let Some(node) = handle_event(/*ctx, */ event) {
+        if let WalkEvent::Enter(node) = event {
             hints(&mut acc, &sema, config, file_id, node);
         }
     };
@@ -47,39 +49,6 @@ pub(crate) fn inlay_hints(
     acc
 }
 
-fn handle_event(/*ctx: &mut InlayHintCtx, */ node: WalkEvent<SyntaxNode>) -> Option<SyntaxNode> {
-    match node {
-        WalkEvent::Enter(node) => {
-            // if let Some(node) = ast::AnyHasGenericParams::cast(node.clone()) {
-            //     let params = node
-            //         .generic_param_list()
-            //         .map(|it| {
-            //             it.lifetime_params()
-            //                 .filter_map(|it| {
-            //                     it.lifetime().map(|it| format_smolstr!("{}", &it.text()[1..]))
-            //                 })
-            //                 .collect()
-            //         })
-            //         .unwrap_or_default();
-            //     ctx.lifetime_stacks.push(params);
-            // }
-            // if let Some(node) = ast::ExternBlock::cast(node.clone()) {
-            //     ctx.extern_block_parent = Some(node);
-            // }
-            Some(node)
-        }
-        WalkEvent::Leave(_) => {
-            // if ast::AnyHasGenericParams::can_cast(n.kind()) {
-            //     ctx.lifetime_stacks.pop();
-            // }
-            // if ast::ExternBlock::can_cast(n.kind()) {
-            //     ctx.extern_block_parent = None;
-            // }
-            None
-        }
-    }
-}
-
 fn hints(
     hints: &mut Vec<InlayHint>,
     sema: &Semantics<'_, RootDatabase>,
@@ -98,29 +67,46 @@ fn hints(
     };
 }
 
+pub(crate) fn inlay_hints_resolve(
+    db: &RootDatabase,
+    file_id: FileId,
+    resolve_range: TextRange,
+    hash: u64,
+    config: &InlayHintsConfig,
+    hasher: impl Fn(&InlayHint) -> u64,
+) -> Option<InlayHint> {
+    let _p = tracing::info_span!("inlay_hints_resolve").entered();
+    let sema = Semantics::new(db, file_id);
+    let file = sema.parse(file_id);
+    let file = file.syntax();
+
+    let mut acc = Vec::new();
+    let mut hints = |event| {
+        if let WalkEvent::Enter(node) = event {
+            hints(&mut acc, &sema, config, file_id, node);
+        }
+    };
+    let mut preorder = file.preorder();
+    while let Some(event) = preorder.next() {
+        // FIXME: This can miss some hints that require the parent of the range to calculate
+        if matches!(&event, WalkEvent::Enter(node) if resolve_range.intersect(node.text_range()).is_none())
+        {
+            preorder.skip_subtree();
+            continue;
+        }
+        hints(event);
+    }
+    acc.into_iter().find(|hint| hasher(hint) == hash)
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct InlayHintsConfig {
     pub render_colons: bool,
     pub type_hints: bool,
-    // pub sized_bound: bool,
-    // pub discriminant_hints: DiscriminantHints,
     // pub parameter_hints: bool,
     // pub generic_parameter_hints: GenericParameterHints,
     // pub chaining_hints: bool,
-    // pub adjustment_hints: AdjustmentHints,
-    // pub adjustment_hints_mode: AdjustmentHintsMode,
-    // pub adjustment_hints_hide_outside_unsafe: bool,
-    // pub closure_return_type_hints: ClosureReturnTypeHints,
-    // pub closure_capture_hints: bool,
-    // pub binding_mode_hints: bool,
-    // pub implicit_drop_hints: bool,
-    // pub lifetime_elision_hints: LifetimeElisionHints,
-    // pub param_names_for_lifetime_elision_hints: bool,
-    // pub hide_named_constructor_hints: bool,
-    // pub hide_closure_initialization_hints: bool,
     pub hide_closure_parameter_hints: bool,
-    // pub range_exclusive_hints: bool,
-    // pub closure_style: ClosureStyle,
     // pub max_length: Option<usize>,
     // pub closing_brace_hints_min_lines: Option<usize>,
     pub fields_to_resolve: InlayFieldsToResolve,
@@ -471,31 +457,29 @@ impl fmt::Write for InlayHintLabelBuilder<'_> {
     }
 }
 
-// impl HirWrite for InlayHintLabelBuilder<'_> {
-//     fn start_location_link(&mut self, def: ModuleDefId) {
-//         never!(self.location.is_some(), "location link is already started");
-//         self.make_new_part();
-//
-//         self.location = Some(if self.resolve {
-//             LazyProperty::Lazy
-//         } else {
-//             LazyProperty::Computed({
-//                 let Some(location) = ModuleDef::from(def).try_to_nav(self.db) else {
-//                     return;
-//                 };
-//                 let location = location.call_site();
-//                 FileRange {
-//                     file_id: location.file_id,
-//                     range: location.focus_or_full_range(),
-//                 }
-//             })
-//         });
-//     }
-//
-//     fn end_location_link(&mut self) {
-//         self.make_new_part();
-//     }
-// }
+impl HirWrite for InlayHintLabelBuilder<'_> {
+    fn start_location_link(&mut self, named_item: InFile<ast::NamedElement>) -> Option<()> {
+        stdx::never!(self.location.is_some(), "location link is already started");
+        self.make_new_part();
+
+        self.location = Some(if self.resolve {
+            LazyProperty::Lazy
+        } else {
+            LazyProperty::Computed({
+                let nav_target = NavigationTarget::from_named_item(named_item)?;
+                FileRange {
+                    file_id: nav_target.file_id,
+                    range: nav_target.focus_or_full_range(),
+                }
+            })
+        });
+        Some(())
+    }
+
+    fn end_location_link(&mut self) {
+        self.make_new_part();
+    }
+}
 
 impl InlayHintLabelBuilder<'_> {
     fn make_new_part(&mut self) {

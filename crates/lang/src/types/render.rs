@@ -8,10 +8,24 @@ use crate::types::ty::ty_callable::{CallKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyVar, TyVarKind};
 use crate::types::ty::type_param::TyTypeParameter;
 use base_db::SourceDatabase;
+use std::fmt;
 use stdx::itertools::Itertools;
 use syntax::ast;
 use syntax::files::InFile;
 use vfs::FileId;
+
+pub trait HirWrite: fmt::Write {
+    fn start_location_link(&mut self, _named_item: InFile<ast::NamedElement>) -> Option<()> {
+        Some(())
+    }
+    fn end_location_link(&mut self) {}
+}
+
+// String will ignore link metadata
+impl HirWrite for String {}
+
+// `core::Formatter` will ignore metadata
+impl HirWrite for fmt::Formatter<'_> {}
 
 pub struct TypeRenderer<'db> {
     db: &'db dyn SourceDatabase,
