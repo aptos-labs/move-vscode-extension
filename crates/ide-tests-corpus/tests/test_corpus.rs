@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use codespan_reporting::diagnostic::{Label, LabelStyle};
 use codespan_reporting::term;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
@@ -58,9 +60,6 @@ subdir = "aptos-framework"
         )
         .unwrap();
 
-    // let skipped_messages = vec![];
-    let skipped_messages = vec!["Assigned expr of type '()'", "Unresolved reference `field"];
-
     let diagnostics = diagnostics
         .into_iter()
         .filter(|diag| {
@@ -88,9 +87,11 @@ subdir = "aptos-framework"
     Ok(())
 }
 
-datatest_stable::harness! {
-    { test = test_diagnostics, root = "/home/mkurnikov/code/move-fuzzing-llm", pattern = r"^.*\.move$" },
-}
+fn main() {}
+
+// datatest_stable::harness! {
+//     { test = test_diagnostics, root = "/home/mkurnikov/code/move-fuzzing-llm", pattern = r"^.*\.move$" },
+// }
 
 fn print_diagnostic(file_text: &str, file_path: &AbsPath, diagnostic: Diagnostic) {
     let Diagnostic {
