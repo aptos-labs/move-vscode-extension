@@ -141,6 +141,23 @@ pub struct AndIncludeExpr {
 impl AndIncludeExpr {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AnnotatedExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl AnnotatedExpr {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
+    #[inline]
+    pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
+    #[inline]
+    pub fn r_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![')']) }
+    #[inline]
+    pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ApplyExcept {
     pub(crate) syntax: SyntaxNode,
 }
@@ -2130,6 +2147,7 @@ pub enum BlockOrInlineExpr {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Expr {
     AbortExpr(AbortExpr),
+    AnnotatedExpr(AnnotatedExpr),
     AssertMacroExpr(AssertMacroExpr),
     BangExpr(BangExpr),
     BinExpr(BinExpr),
@@ -2613,6 +2631,27 @@ impl AstNode for AndIncludeExpr {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == AND_INCLUDE_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for AnnotatedExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ANNOTATED_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == ANNOTATED_EXPR }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -5876,6 +5915,10 @@ impl From<AbortExpr> for Expr {
     #[inline]
     fn from(node: AbortExpr) -> Expr { Expr::AbortExpr(node) }
 }
+impl From<AnnotatedExpr> for Expr {
+    #[inline]
+    fn from(node: AnnotatedExpr) -> Expr { Expr::AnnotatedExpr(node) }
+}
 impl From<AssertMacroExpr> for Expr {
     #[inline]
     fn from(node: AssertMacroExpr) -> Expr { Expr::AssertMacroExpr(node) }
@@ -6016,6 +6059,12 @@ impl Expr {
     pub fn abort_expr(self) -> Option<AbortExpr> {
         match (self) {
             Expr::AbortExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn annotated_expr(self) -> Option<AnnotatedExpr> {
+        match (self) {
+            Expr::AnnotatedExpr(item) => Some(item),
             _ => None,
         }
     }
@@ -6230,6 +6279,7 @@ impl AstNode for Expr {
         matches!(
             kind,
             ABORT_EXPR
+                | ANNOTATED_EXPR
                 | ASSERT_MACRO_EXPR
                 | BANG_EXPR
                 | BIN_EXPR
@@ -6270,6 +6320,7 @@ impl AstNode for Expr {
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
             ABORT_EXPR => Expr::AbortExpr(AbortExpr { syntax }),
+            ANNOTATED_EXPR => Expr::AnnotatedExpr(AnnotatedExpr { syntax }),
             ASSERT_MACRO_EXPR => Expr::AssertMacroExpr(AssertMacroExpr { syntax }),
             BANG_EXPR => Expr::BangExpr(BangExpr { syntax }),
             BIN_EXPR => Expr::BinExpr(BinExpr { syntax }),
@@ -6312,6 +6363,7 @@ impl AstNode for Expr {
     fn syntax(&self) -> &SyntaxNode {
         match self {
             Expr::AbortExpr(it) => &it.syntax(),
+            Expr::AnnotatedExpr(it) => &it.syntax(),
             Expr::AssertMacroExpr(it) => &it.syntax(),
             Expr::BangExpr(it) => &it.syntax(),
             Expr::BinExpr(it) => &it.syntax(),
@@ -9159,6 +9211,11 @@ impl std::fmt::Display for AddressLit {
     }
 }
 impl std::fmt::Display for AndIncludeExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for AnnotatedExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
