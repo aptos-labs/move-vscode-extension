@@ -17,6 +17,10 @@ pub(crate) fn spec_block_expr(p: &mut Parser) -> CompletedMarker {
     assert!(p.at(T![spec]));
     let m = p.start();
     p.bump(T![spec]);
-    block_expr(p, true);
+    if p.at(T!['{']) {
+        block_expr(p, true);
+    } else {
+        p.error("expected a block");
+    }
     m.complete(p, SPEC_BLOCK_EXPR)
 }

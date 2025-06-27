@@ -15,7 +15,11 @@ pub(crate) fn item_spec(p: &mut Parser, m: Marker) {
     } else {
         p.with_recovery_set(item_start_rec_set().with_token_set(T!['{']), item_spec_signature);
     }
-    block_expr(p, true);
+    if p.at(T!['{']) {
+        block_expr(p, true);
+    } else {
+        p.error("expected a block");
+    }
     m.complete(p, ITEM_SPEC);
 }
 

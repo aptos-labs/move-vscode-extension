@@ -7,70 +7,23 @@ use crate::SyntaxKind::*;
 use crate::{SyntaxKind, T};
 use std::ops::ControlFlow::{Break, Continue};
 
-// pub(crate) fn pat(p: &mut Parser) -> bool {
-//     let m = match p.current() {
-//         // 0x1 '::'
-//         INT_NUMBER if p.nth_at(1, T![::]) => path_pat(p),
-//         IDENT => path_pat(p),
-//         // _ if is_literal_pat_start(p) => literal_pat(p),
-//         T![..] => rest_pat(p),
-//         T!['_'] => wildcard_pat(p),
-//         T!['('] => tuple_or_unit_or_paren_pat(p),
-//         _ => {
-//             p.error_and_recover("expected pattern", TokenSet::EMPTY);
-//             // p.error_and_recover_until_ts("expected pattern", PAT_RECOVERY_SET);
-//             return false;
-//         }
-//     };
-//     true
-// }
-
 pub(crate) fn pat_or_recover(p: &mut Parser, extra_set: impl Into<RecoverySet>) -> bool {
-    p.with_recovery_set(extra_set.into(), |p| {
-        let m = match p.current() {
-            // 0x1 '::'
-            INT_NUMBER if p.nth_at(1, T![::]) => path_pat(p),
-            IDENT => path_pat(p),
+    match p.current() {
+        // 0x1 '::'
+        INT_NUMBER if p.nth_at(1, T![::]) => path_pat(p),
+        IDENT => path_pat(p),
 
-            T![..] => rest_pat(p),
-            T!['_'] => wildcard_pat(p),
-            T!['('] => tuple_or_unit_or_paren_pat(p),
+        T![..] => rest_pat(p),
+        T!['_'] => wildcard_pat(p),
+        T!['('] => tuple_or_unit_or_paren_pat(p),
 
-            _ => {
-                p.error_and_recover("expected pattern", TokenSet::EMPTY);
-                return false;
-            }
-        };
-        true
-    })
-    // let m = match p.current() {
-    //     // 0x1 '::'
-    //     INT_NUMBER if p.nth_at(1, T![::]) => path_pat(p),
-    //     IDENT => path_pat(p),
-    //
-    //     T![..] => rest_pat(p),
-    //     T!['_'] => wildcard_pat(p),
-    //     T!['('] => tuple_or_unit_or_paren_pat(p),
-    //
-    //     _ => {
-    //         p.error_and_recover("expected pattern", extra_set);
-    //         return false;
-    //     }
-    // };
-    // true
-    // Some(m)
+        _ => {
+            p.error_and_recover("expected pattern", extra_set.into());
+            return false;
+        }
+    };
+    true
 }
-
-// pub(crate) fn ident_or_wildcard_pat(p: &mut Parser) -> bool {
-//     match p.current() {
-//         T![ident] => ident_pat(p),
-//         T!['_'] => wildcard_pat(p),
-//         _ => {
-//             return false;
-//         }
-//     };
-//     true
-// }
 
 pub(crate) fn ident_pat_or_recover(p: &mut Parser) -> bool {
     match p.current() {

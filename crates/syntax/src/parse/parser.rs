@@ -45,6 +45,10 @@ impl Parser {
         self.token_source.current_pos()
     }
 
+    pub(crate) fn should_stop(&self, stop_at: &RecoverySet) -> bool {
+        stop_at.contains(self.current())
+    }
+
     pub(crate) fn at_same_pos_as(&self, last_pos: Option<usize>) -> bool {
         last_pos.is_some_and(|it| it == self.pos())
     }
@@ -65,10 +69,20 @@ impl Parser {
         mut f: impl FnMut(&mut Parser) -> ControlFlow<()>,
     ) {
         let stop_at = stop_at_rec.into();
-        while !self.at(EOF) && !stop_at.contains_current(self) {
+        while !self.at(EOF) && !self.should_stop(&stop_at) {
             let pos_before = self.pos();
+
+            // add loop end to recovery set
+            self.recovery_set_stack
+                .push(self.outer_recovery_set().with_merged(stop_at.clone()));
             let cf = f(self);
+            self.recovery_set_stack.pop();
+
             if matches!(cf, ControlFlow::Break(_)) {
+                break;
+            }
+            let outer_rec = self.outer_recovery_set();
+            if self.should_stop(&outer_rec) {
                 break;
             }
             if self.pos() == pos_before {
@@ -498,6 +512,15 @@ impl Parser {
     ) -> T {
         self.recovery_set_stack
             .push(self.outer_recovery_set().with_merged(recovery_set));
+        let res = f(self);
+        self.recovery_set_stack.pop();
+        res
+    }
+
+    pub(crate) fn reset_recovery_set<T>(&mut self, f: impl FnOnce(&mut Parser) -> T) -> T {
+        self.recovery_set_stack.push(RecoverySet::new());
+        // self.recovery_set_stack
+        //     .push(self.outer_recovery_set().with_merged(recovery_set));
         let res = f(self);
         self.recovery_set_stack.pop();
         res

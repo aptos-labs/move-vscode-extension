@@ -1,9 +1,19 @@
 module 0x1::match_invalid {
+    fun call(s: Enum0) {
+        match (s) {
+            (1)
+           //^ expected pattern
+             //^ expected '=>'
+        }
+    }
+
     fun main(s: Enum0) {
         match (s) {
             (1);
            //^ expected pattern
              //^ expected '=>'
+             //^ expected R_CURLY
         }
     }
 }
+//< unexpected ident '}'

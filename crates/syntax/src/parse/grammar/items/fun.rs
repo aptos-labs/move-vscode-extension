@@ -180,7 +180,12 @@ fn fun_signature(p: &mut Parser, is_spec: bool, allow_acquires: bool) {
         p.bump(T![;]);
         return;
     }
-    block_expr(p, is_spec);
+    if p.at(T!['{']) {
+        block_expr(p, is_spec);
+        return;
+    }
+
+    p.error("expected a block");
 }
 
 pub(crate) fn opt_ret_type(p: &mut Parser) {
