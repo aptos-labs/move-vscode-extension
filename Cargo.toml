@@ -3,7 +3,7 @@ members = ["crates/*", "xtask"]
 resolver = "2"
 
 [workspace.package]
-rust-version = "1.87.0"
+rust-version = "1.88"
 edition = "2024"
 license = "MIT"
 
@@ -13,6 +13,10 @@ rowan.opt-level = 3
 text-size.opt-level = 3
 serde.opt-level = 3
 salsa.opt-level = 3
+dissimilar.opt-level = 3
+
+# This speeds up `cargo xtask dist`.
+miniz_oxide.opt-level = 3
 
 [workspace.dependencies]
 either = "1.13.0"
