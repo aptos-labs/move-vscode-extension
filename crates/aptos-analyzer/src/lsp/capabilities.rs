@@ -134,13 +134,13 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
             .into(),
         ),
         // moniker_provider: None,
-        inlay_hint_provider: Some(OneOf::Left(true)),
-        // inlay_hint_provider: Some(OneOf::Right(InlayHintServerCapabilities::Options(
-        //     InlayHintOptions {
-        //         work_done_progress_options: Default::default(),
-        //         resolve_provider: Some(config.caps().inlay_hints_resolve_provider()),
-        //     },
-        // ))),
+        // inlay_hint_provider: Some(OneOf::Left(true)),
+        inlay_hint_provider: Some(OneOf::Right(InlayHintServerCapabilities::Options(
+            InlayHintOptions {
+                work_done_progress_options: Default::default(),
+                resolve_provider: Some(config.caps().inlay_hints_resolve_provider()),
+            },
+        ))),
         // inline_value_provider: None,
         // experimental: Some(json!({
         //     "externalDocs": true,
