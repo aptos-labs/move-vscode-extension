@@ -2436,3 +2436,20 @@ fn test_annotated_expr_with_invalid_inner_type() {
         }
     "#]])
 }
+
+#[test]
+fn test_type_check_arguments_for_tuple_struct() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct S(u8, bool, vector<u8>);
+            public fun main() {
+                S(1, true, b"123");
+                S(false, 1, false);
+                //^^^^^ err: Incompatible type 'bool', expected 'u8'
+                       //^ err: Incompatible type 'integer', expected 'bool'
+                          //^^^^^ err: Incompatible type 'bool', expected 'vector<u8>'
+            }
+        }
+    "#]])
+}
