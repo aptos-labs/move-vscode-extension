@@ -19,7 +19,6 @@ dissimilar.opt-level = 3
 miniz_oxide.opt-level = 3
 
 [workspace.dependencies]
-either = "1.13.0"
 rowan = "=0.15.15"
 itertools = "0.14.0"
 lsp-types = { version = "=0.95.1", features = ["proposed"] }

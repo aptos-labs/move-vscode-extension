@@ -1785,7 +1785,6 @@ version = "0.1.0"
 dependencies = [
  "datatest-stable",
  "drop_bomb",
- "either",
  "itertools",
  "line-index",
  "pretty_assertions",
