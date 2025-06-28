@@ -533,11 +533,7 @@
         "package": "vsce package -o aptos-analyzer.vsix",
         "build": "npm run build-base -- --sourcemap",
         "watch": "npm run build-base -- --sourcemap --watch",
-        "lint": "eslint src",
-        "lint:fix": "npm run lint -- --fix",
-        "typecheck": "tsc",
-        "pretest": "npm run typecheck && npm run build",
-        "test": "vscode-test"
+        "typecheck": "tsc"
     },
     "dependencies": {
         "@vscode/vsce": "=3.3.2",
@@ -546,14 +542,8 @@
     },
     "devDependencies": {
         "@types/command-exists": "^1.2.3",
-        "@types/mocha": "^10.0.10",
         "@types/node": "20.x",
         "@types/vscode": "^1.96.0",
-        "@typescript-eslint/eslint-plugin": "^8.22.0",
-        "@typescript-eslint/parser": "^8.22.0",
-        "@vscode/test-cli": "^0.0.10",
-        "@vscode/test-electron": "^2.4.1",
-        "eslint": "^9.19.0",
         "esbuild": "^0.25.0",
         "typescript": "^5.7.3"
     }
