@@ -7,7 +7,7 @@ use salsa::Setter;
 use std::sync::Arc;
 use vfs::FileId;
 
-#[salsa::interned(no_lifetime)]
+#[salsa_macros::interned(no_lifetime)]
 #[derive(Debug)]
 pub struct FileIdInput {
     pub data: FileId,

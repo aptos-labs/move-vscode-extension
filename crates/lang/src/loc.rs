@@ -124,6 +124,8 @@ impl fmt::Debug for SyntaxLoc {
     }
 }
 
+// for `revisions` parameter, see https://github.com/salsa-rs/salsa/pull/911
+// #[salsa_macros::interned(debug, revisions = usize::MAX)]
 #[salsa_macros::interned(debug)]
 pub struct SyntaxLocInput {
     pub syntax_loc: SyntaxLoc,
