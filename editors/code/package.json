@@ -528,8 +528,8 @@
         }
     },
     "scripts": {
-        "vscode:prepublish": "npm run build-base -- --minify",
         "build-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --target=node20",
+        "vscode:prepublish": "npm run build-base -- --minify",
         "package": "vsce package -o aptos-analyzer.vsix",
         "build": "npm run build-base -- --sourcemap",
         "watch": "npm run build-base -- --sourcemap --watch",
