@@ -8,7 +8,6 @@ use camino::Utf8PathBuf;
 use ide_completion::config::CompletionConfig;
 use ide_db::AllowSnippets;
 use paths::AbsPath;
-use semver::Version;
 use std::collections::HashSet;
 use std::fmt;
 use std::sync::OnceLock;
