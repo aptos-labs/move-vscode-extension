@@ -447,7 +447,7 @@ struct InlayHintLabelBuilder<'a> {
     db: &'a RootDatabase,
     result: InlayHintLabel,
     last_part: String,
-    resolve: bool,
+    client_can_lazy_resolve: bool,
     location: Option<LazyProperty<FileRange>>,
 }
 
@@ -461,25 +461,18 @@ impl HirWrite for InlayHintLabelBuilder<'_> {
     fn start_location_link(&mut self, named_item: InFile<ast::NamedElement>) -> Option<()> {
         stdx::never!(self.location.is_some(), "location link is already started");
         self.make_new_part();
-
-        self.location = Some(LazyProperty::Computed({
-            let nav_target = NavigationTarget::from_named_item(named_item)?;
-            FileRange {
-                file_id: nav_target.file_id,
-                range: nav_target.focus_or_full_range(),
-            }
-        }));
-        // self.location = Some(if self.resolve {
-        //     LazyProperty::Lazy
-        // } else {
-        //     LazyProperty::Computed({
-        //         let nav_target = NavigationTarget::from_named_item(named_item)?;
-        //         FileRange {
-        //             file_id: nav_target.file_id,
-        //             range: nav_target.focus_or_full_range(),
-        //         }
-        //     })
-        // });
+        self.location = Some(if self.client_can_lazy_resolve {
+            LazyProperty::Lazy
+        } else {
+            LazyProperty::Computed({
+                tracing::info!("resolve inlay hint location");
+                let nav_target = NavigationTarget::from_named_item(named_item)?;
+                FileRange {
+                    file_id: nav_target.file_id,
+                    range: nav_target.focus_or_full_range(),
+                }
+            })
+        });
         Some(())
     }
 
@@ -517,7 +510,7 @@ fn label_of_ty(
         last_part: String::new(),
         location: None,
         result: InlayHintLabel::default(),
-        resolve: config.fields_to_resolve.resolve_label_location,
+        client_can_lazy_resolve: config.fields_to_resolve.resolve_label_location,
     };
     sema.render_ty_truncated(ty, file_id, &mut label_builder).ok()?;
     // label_builder
