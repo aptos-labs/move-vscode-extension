@@ -178,11 +178,18 @@ impl Ty {
         }
     }
 
+    pub fn render_to<'db>(
+        &self,
+        db: &'db dyn SourceDatabase,
+        context_file_id: Option<FileId>,
+        sink: &'db mut dyn HirWrite,
+    ) -> anyhow::Result<()> {
+        TypeRenderer::new(db, context_file_id, sink).render(self)
+    }
+
     pub fn render(&self, db: &dyn SourceDatabase, context_file_id: Option<FileId>) -> String {
         let mut out = String::new();
-        TypeRenderer::new(db, context_file_id, &mut out)
-            .render(self)
-            .unwrap();
+        self.render_to(db, context_file_id, &mut out).unwrap();
         out
     }
 }

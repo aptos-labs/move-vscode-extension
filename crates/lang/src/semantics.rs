@@ -10,6 +10,7 @@ use crate::semantics::source_to_def::SourceToDefCache;
 use crate::types::inference::InferenceCtx;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::lowering::TyLowering;
+use crate::types::render::HirWrite;
 use crate::types::ty::Ty;
 use crate::types::ty::ty_callable::TyCallable;
 use base_db::inputs::InternFileId;
@@ -157,8 +158,13 @@ impl<'db> SemanticsImpl<'db> {
         ty.render(self.db, None)
     }
 
-    pub fn render_ty_truncated(&self, ty: &Ty, context_file_id: FileId) -> String {
-        ty.render(self.db, Some(context_file_id))
+    pub fn render_ty_truncated(
+        &self,
+        ty: &Ty,
+        context_file_id: FileId,
+        write_to: &mut dyn HirWrite,
+    ) -> anyhow::Result<()> {
+        ty.render_to(self.db, Some(context_file_id), write_to)
     }
 
     pub fn render_ty_expected_form(&self, ty: &Ty) -> String {
