@@ -13,7 +13,6 @@ pub(crate) fn install(client: bool, server: bool) -> anyhow::Result<()> {
     }
     if client {
         install_client(&sh).context("install client")?;
-        // install_client(&sh).context("cannot find VSCode editor")?;
     }
     Ok(())
 }
