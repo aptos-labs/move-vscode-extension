@@ -9,7 +9,6 @@ use crate::types::ty::ty_var::{TyInfer, TyVar, TyVarKind};
 use crate::types::ty::type_param::TyTypeParameter;
 use base_db::SourceDatabase;
 use std::fmt;
-use stdx::itertools::Itertools;
 use syntax::ast;
 use syntax::files::InFile;
 use vfs::FileId;

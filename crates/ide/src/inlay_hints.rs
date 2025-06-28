@@ -8,7 +8,6 @@ use lang::Semantics;
 use lang::types::render::HirWrite;
 use lang::types::ty::Ty;
 use std::collections::HashSet;
-use std::fmt::Write;
 use std::{fmt, mem};
 use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, SyntaxNode, TextRange, TextSize, WalkEvent, ast, match_ast};
