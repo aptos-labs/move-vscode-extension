@@ -169,12 +169,14 @@ impl<'db> TypeRenderer<'db> {
 
         let Some(ctx_file_id) = self.current_file_id else {
             self.write_str(&fq_name.fq_identifier_text())?;
+            self.sink.end_location_link();
             return Ok(());
         };
 
         let addr_name = fq_name.address().identifier_text();
         if matches!(addr_name.as_str(), "std" | "aptos_std") {
             self.write_str(&fq_name.name())?;
+            self.sink.end_location_link();
             return Ok(());
         }
 
@@ -182,10 +184,11 @@ impl<'db> TypeRenderer<'db> {
         let context_package_id = self.db.file_package_id(ctx_file_id);
         if item_package_id == context_package_id {
             self.write_str(&fq_name.name())?;
+            self.sink.end_location_link();
             return Ok(());
         }
-        self.write_str(&fq_name.module_and_item_text())?;
 
+        self.write_str(&fq_name.module_and_item_text())?;
         self.sink.end_location_link();
 
         Ok(())
