@@ -57,7 +57,7 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
         // implementation_provider: Some(ImplementationProviderCapability::Simple(true)),
         references_provider: Some(OneOf::Left(true)),
         document_highlight_provider: Some(OneOf::Left(true)),
-        // document_symbol_provider: Some(OneOf::Left(true)),
+        document_symbol_provider: Some(OneOf::Left(true)),
         workspace_symbol_provider: Some(OneOf::Left(true)),
         code_action_provider: Some(config.caps().code_action_capabilities()),
         // code_lens_provider: Some(CodeLensOptions { resolve_provider: Some(true) }),
@@ -134,14 +134,12 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
             .into(),
         ),
         // moniker_provider: None,
-        // inlay_hint_provider: Some(OneOf::Left(true)),
         inlay_hint_provider: Some(OneOf::Right(InlayHintServerCapabilities::Options(
             InlayHintOptions {
                 work_done_progress_options: Default::default(),
                 resolve_provider: Some(config.caps().inlay_hints_resolve_provider()),
             },
         ))),
-        // inline_value_provider: None,
         // experimental: Some(json!({
         //     "externalDocs": true,
         //     "hoverRange": true,
@@ -166,6 +164,7 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
                 work_done_progress_options: WorkDoneProgressOptions { work_done_progress: None },
             },
         )),
+        // inline_value_provider: None,
         // inline_completion_provider: None,
         ..ServerCapabilities::default()
     }
@@ -200,6 +199,18 @@ impl ClientCapabilities {
 
     pub fn location_link(&self) -> bool {
         (|| -> _ { self.0.text_document.as_ref()?.definition?.link_support })().unwrap_or_default()
+    }
+
+    pub fn hierarchical_symbols(&self) -> bool {
+        (|| -> _ {
+            self.0
+                .text_document
+                .as_ref()?
+                .document_symbol
+                .as_ref()?
+                .hierarchical_document_symbol_support
+        })()
+        .unwrap_or_default()
     }
 
     pub fn semantic_tokens_refresh(&self) -> bool {

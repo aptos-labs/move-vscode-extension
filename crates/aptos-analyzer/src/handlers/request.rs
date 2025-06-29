@@ -13,8 +13,8 @@ use lsp_server::ErrorCode;
 use lsp_types::{
     CodeActionOrCommand, DocumentHighlightKind, HoverContents, InlayHint, InlayHintParams, Location,
     PrepareRenameResponse, RenameParams, ResourceOp, ResourceOperationKind, SemanticTokensParams,
-    SemanticTokensRangeParams, SemanticTokensRangeResult, SemanticTokensResult, TextDocumentIdentifier,
-    WorkspaceEdit, WorkspaceSymbolParams,
+    SemanticTokensRangeParams, SemanticTokensRangeResult, SemanticTokensResult, SymbolInformation,
+    TextDocumentIdentifier, Url, WorkspaceEdit, WorkspaceSymbolParams,
 };
 use std::hash::DefaultHasher;
 use stdx::format_to;
@@ -84,6 +84,84 @@ pub(crate) fn handle_semantic_tokens_full(
     // snap.semantic_tokens_cache.lock().insert(params.text_document.uri, semantic_tokens.clone());
 
     Ok(Some(semantic_tokens.into()))
+}
+
+pub(crate) fn handle_document_symbol(
+    snap: GlobalStateSnapshot,
+    params: lsp_types::DocumentSymbolParams,
+) -> anyhow::Result<Option<lsp_types::DocumentSymbolResponse>> {
+    let _p = tracing::info_span!("handle_document_symbol").entered();
+
+    let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
+    let line_index = snap.file_line_index(file_id)?;
+
+    let mut parents: Vec<(lsp_types::DocumentSymbol, Option<usize>)> = Vec::new();
+
+    for symbol in snap.analysis.file_structure(file_id)? {
+        #[allow(deprecated)]
+        let doc_symbol = lsp_types::DocumentSymbol {
+            name: symbol.label,
+            kind: to_proto::symbol_kind(symbol.kind),
+            detail: None,
+            tags: None,
+            deprecated: None,
+            range: to_proto::lsp_range(&line_index, symbol.node_range),
+            selection_range: to_proto::lsp_range(&line_index, symbol.navigation_range),
+            children: None,
+        };
+        parents.push((doc_symbol, symbol.parent));
+    }
+
+    // Builds hierarchy from a flat list, in reverse order (so that indices
+    // makes sense)
+    let document_symbols = {
+        let mut acc = Vec::new();
+        while let Some((mut node, parent_idx)) = parents.pop() {
+            if let Some(children) = &mut node.children {
+                children.reverse();
+            }
+            let parent = match parent_idx {
+                None => &mut acc,
+                Some(i) => parents[i].0.children.get_or_insert_with(Vec::new),
+            };
+            parent.push(node);
+        }
+        acc.reverse();
+        acc
+    };
+
+    let res = if snap.config.hierarchical_symbols() {
+        document_symbols.into()
+    } else {
+        let url = to_proto::url(&snap, file_id);
+        let mut symbol_information = Vec::<SymbolInformation>::new();
+        for symbol in document_symbols {
+            flatten_document_symbol(&symbol, None, &url, &mut symbol_information);
+        }
+        symbol_information.into()
+    };
+    return Ok(Some(res));
+
+    fn flatten_document_symbol(
+        symbol: &lsp_types::DocumentSymbol,
+        container_name: Option<String>,
+        url: &Url,
+        res: &mut Vec<SymbolInformation>,
+    ) {
+        #[allow(deprecated)]
+        res.push(SymbolInformation {
+            name: symbol.name.clone(),
+            kind: symbol.kind,
+            tags: symbol.tags.clone(),
+            deprecated: symbol.deprecated,
+            location: Location::new(url.clone(), symbol.range),
+            container_name,
+        });
+
+        for child in symbol.children.iter().flatten() {
+            flatten_document_symbol(child, Some(symbol.name.clone()), url, res);
+        }
+    }
 }
 
 /// A value to use, when uncertain which limit to pick.

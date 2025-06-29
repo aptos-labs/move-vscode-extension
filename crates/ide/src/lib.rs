@@ -11,6 +11,7 @@ use syntax::{SourceFile, TextRange, TextSize};
 use vfs::FileId;
 
 pub mod extend_selection;
+mod file_structure;
 mod goto_definition;
 mod highlight_related;
 mod hover;
@@ -22,6 +23,7 @@ pub mod syntax_highlighting;
 mod type_info;
 mod view_syntax_tree;
 
+use crate::file_structure::StructureNode;
 use crate::hover::HoverResult;
 use crate::inlay_hints::{InlayHint, InlayHintsConfig};
 pub use crate::navigation_target::NavigationTarget;
@@ -207,15 +209,14 @@ impl Analysis {
     //     self.with_db(|db| typing::on_char_typed(db, position, char_typed))
     // }
 
-    // /// Returns a tree representation of symbols in the file. Useful to draw a
-    // /// file outline.
-    // pub fn file_structure(&self, file_id: FileId) -> Cancellable<Vec<StructureNode>> {
-    //     self.with_db(|db| {
-    //         file_structure::file_structure(
-    //             &db.parse(EditionedFileId::current_edition(file_id)).tree(),
-    //         )
-    //     })
-    // }
+    /// Returns a tree representation of symbols in the file. Useful to draw a
+    /// file outline.
+    pub fn file_structure(&self, file_id: FileId) -> Cancellable<Vec<StructureNode>> {
+        self.with_db(|db| {
+            let file = source_db::parse(db, file_id.intern(db)).tree();
+            file_structure::file_structure(&file)
+        })
+    }
 
     /// Returns a list of the places in the file where type hints can be displayed.
     pub fn inlay_hints(
