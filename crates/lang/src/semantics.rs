@@ -158,7 +158,13 @@ impl<'db> SemanticsImpl<'db> {
         ty.render(self.db, None)
     }
 
-    pub fn render_ty_truncated(
+    pub fn render_ty_truncated(&self, ty: &Ty, context_file_id: FileId) -> String {
+        let mut out = String::new();
+        ty.render_to(self.db, Some(context_file_id), &mut out).unwrap();
+        out
+    }
+
+    pub fn render_ty_truncated_to(
         &self,
         ty: &Ty,
         context_file_id: FileId,

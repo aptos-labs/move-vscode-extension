@@ -1,3 +1,4 @@
+use crate::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use crate::parse::SyntaxKind;
 use crate::{AstNode, SyntaxNode, TextRange, TextSize};
 use std::borrow::Borrow;
@@ -130,6 +131,10 @@ impl<T> InFile<Vec<T>> {
 impl<T: AstNode> InFile<T> {
     pub fn syntax(&self) -> InFile<SyntaxNode> {
         self.map_ref(|it| it.syntax().to_owned())
+    }
+
+    pub fn is_msl(&self) -> bool {
+        self.value.syntax().is_msl_context()
     }
 
     pub fn syntax_text(&self) -> String {

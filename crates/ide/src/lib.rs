@@ -19,6 +19,7 @@ pub mod inlay_hints;
 mod navigation_target;
 mod references;
 mod rename;
+mod signature_help;
 pub mod syntax_highlighting;
 mod type_info;
 mod view_syntax_tree;
@@ -43,6 +44,8 @@ use ide_diagnostics::diagnostic::Diagnostic;
 use lang::Semantics;
 pub use salsa::Cancelled;
 use syntax::files::{FilePosition, FileRange};
+
+pub use crate::signature_help::SignatureHelp;
 
 pub type Cancellable<T> = Result<T, Cancelled>;
 
@@ -338,10 +341,10 @@ impl Analysis {
     //     })
     // }
 
-    // /// Computes parameter information at the given position.
-    // pub fn signature_help(&self, position: FilePosition) -> Cancellable<Option<SignatureHelp>> {
-    //     self.with_db(|db| signature_help::signature_help(db, position))
-    // }
+    /// Computes parameter information at the given position.
+    pub fn signature_help(&self, position: FilePosition) -> Cancellable<Option<SignatureHelp>> {
+        self.with_db(|db| signature_help::signature_help(db, position))
+    }
 
     pub fn expr_type_info(&self, position: FilePosition) -> Cancellable<Option<String>> {
         self.with_db(|db| type_info::expr_type_info(db, position))

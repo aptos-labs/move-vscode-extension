@@ -20,6 +20,7 @@ mod test_missing_value_arguments;
 mod test_rename;
 mod test_resolve_items;
 mod test_resolve_types;
+mod test_signature_help;
 mod test_type_checking;
 mod test_unused_variables;
 mod test_view_syntax_tree;

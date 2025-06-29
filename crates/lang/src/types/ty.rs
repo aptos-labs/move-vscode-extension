@@ -1,5 +1,5 @@
 pub mod adt;
-pub(crate) mod integer;
+pub mod integer;
 pub(crate) mod range_like;
 pub mod reference;
 pub(crate) mod schema;
