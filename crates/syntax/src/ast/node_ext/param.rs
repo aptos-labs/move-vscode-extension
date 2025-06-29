@@ -15,6 +15,7 @@ impl ast::Param {
         if self.wildcard_pat().is_some() {
             return "_".to_string();
         }
+        // todo: ident_pat can be none
         let ident_pat = self.ident_pat().unwrap();
         ident_pat.name().unwrap().as_string()
     }

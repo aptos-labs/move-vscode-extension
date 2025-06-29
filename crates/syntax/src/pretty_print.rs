@@ -61,7 +61,7 @@ pub fn apply_source_marks(source: &str, mut marks: Vec<SourceMark>) -> String {
         added += 1;
     }
     let mut res = source_lines.join("\n");
-    res = res.trim_start().trim_end().to_string();
+    res = res.trim_start_matches("\n").trim_end().to_string();
     // add newline at the end
     res.push_str("\n");
     res

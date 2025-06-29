@@ -365,6 +365,20 @@ pub(crate) fn handle_selection_range(
     Ok(Some(res?))
 }
 
+pub(crate) fn handle_signature_help(
+    snap: GlobalStateSnapshot,
+    params: lsp_types::SignatureHelpParams,
+) -> anyhow::Result<Option<lsp_types::SignatureHelp>> {
+    let _p = tracing::info_span!("handle_signature_help").entered();
+    let position = from_proto::file_position(&snap, params.text_document_position_params)?;
+    let help = match snap.analysis.signature_help(position)? {
+        Some(it) => it,
+        None => return Ok(None),
+    };
+    let res = to_proto::signature_help(help, snap.config.signature_help_label_offsets());
+    Ok(Some(res))
+}
+
 pub(crate) fn handle_hover(
     snap: GlobalStateSnapshot,
     params: lsp_types::HoverParams,

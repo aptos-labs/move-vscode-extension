@@ -8,8 +8,8 @@ use lsp_types::{
     CompletionOptionsCompletionItem, HoverProviderCapability, InlayHintOptions,
     InlayHintServerCapabilities, OneOf, PositionEncodingKind, RenameOptions,
     SelectionRangeProviderCapability, SemanticTokensFullOptions, SemanticTokensLegend,
-    SemanticTokensOptions, ServerCapabilities, TextDocumentSyncCapability, TextDocumentSyncKind,
-    WorkDoneProgressOptions,
+    SemanticTokensOptions, ServerCapabilities, SignatureHelpOptions, TextDocumentSyncCapability,
+    TextDocumentSyncKind, WorkDoneProgressOptions,
 };
 use std::collections::HashSet;
 
@@ -46,11 +46,11 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
             // completion_item: config.caps().completion_item(),
             work_done_progress_options: WorkDoneProgressOptions { work_done_progress: None },
         }),
-        // signature_help_provider: Some(SignatureHelpOptions {
-        //     trigger_characters: Some(vec!["(".to_owned(), ",".to_owned(), "<".to_owned()]),
-        //     retrigger_characters: None,
-        //     work_done_progress_options: WorkDoneProgressOptions { work_done_progress: None },
-        // }),
+        signature_help_provider: Some(SignatureHelpOptions {
+            trigger_characters: Some(vec!["(".to_owned(), ",".to_owned() /*, "<".to_owned()*/]),
+            retrigger_characters: None,
+            work_done_progress_options: WorkDoneProgressOptions { work_done_progress: None },
+        }),
         // declaration_provider: Some(DeclarationCapability::Simple(true)),
         definition_provider: Some(OneOf::Left(true)),
         // type_definition_provider: Some(TypeDefinitionProviderCapability::Simple(true)),

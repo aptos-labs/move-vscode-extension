@@ -716,7 +716,7 @@ impl GlobalState {
             })
             .on::<RETRY, lsp_request::DocumentSymbolRequest>(handlers::handle_document_symbol)
             // .on::<RETRY, lsp_request::FoldingRangeRequest>(handlers::handle_folding_range)
-            // .on::<NO_RETRY, lsp_request::SignatureHelpRequest>(handlers::handle_signature_help)
+            .on::<NO_RETRY, lsp_request::SignatureHelpRequest>(handlers::handle_signature_help)
             // .on::<RETRY, lsp_request::WillRenameFiles>(handlers::handle_will_rename_files)
             .on::<NO_RETRY, lsp_request::GotoDefinition>(handlers::handle_goto_definition)
             // .on::<NO_RETRY, lsp_request::GotoDeclaration>(handlers::handle_goto_declaration)

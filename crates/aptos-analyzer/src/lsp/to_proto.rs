@@ -9,7 +9,7 @@ use ide::inlay_hints::{
     InlayTooltip, LazyProperty,
 };
 use ide::syntax_highlighting::tags::{Highlight, HlOperator, HlPunct, HlTag};
-use ide::{Cancellable, HlRange, NavigationTarget};
+use ide::{Cancellable, HlRange, NavigationTarget, SignatureHelp};
 use ide_completion::item::{CompletionItem, CompletionItemKind};
 use ide_db::assists::{Assist, AssistKind};
 use ide_db::rename::RenameError;
@@ -682,6 +682,56 @@ pub(crate) fn code_action(
         }
     };
     Ok(res)
+}
+
+pub(crate) fn signature_help(call_info: SignatureHelp, label_offsets: bool) -> lsp_types::SignatureHelp {
+    let (label, parameters) = match label_offsets {
+        false => {
+            let params = call_info
+                .parameter_labels()
+                .map(|label| lsp_types::ParameterInformation {
+                    label: lsp_types::ParameterLabel::Simple(label.to_owned()),
+                    documentation: None,
+                })
+                .collect::<Vec<_>>();
+            let label = call_info.parameter_labels().join(", ");
+            (label, params)
+        }
+        true => {
+            let mut params = Vec::new();
+            let mut label = String::new();
+            let mut first = true;
+            for param in call_info.parameter_labels() {
+                if !first {
+                    label.push_str(", ");
+                }
+                first = false;
+                let start = label.chars().count() as u32;
+                label.push_str(param);
+                let end = label.chars().count() as u32;
+                params.push(lsp_types::ParameterInformation {
+                    label: lsp_types::ParameterLabel::LabelOffsets([start, end]),
+                    documentation: None,
+                });
+            }
+
+            (label, params)
+        }
+    };
+
+    let active_parameter = call_info.active_parameter.map(|it| it as u32);
+
+    let signature = lsp_types::SignatureInformation {
+        label,
+        parameters: Some(parameters),
+        active_parameter,
+        documentation: None,
+    };
+    lsp_types::SignatureHelp {
+        signatures: vec![signature],
+        active_signature: Some(0),
+        active_parameter,
+    }
 }
 
 pub(crate) fn inlay_hint(

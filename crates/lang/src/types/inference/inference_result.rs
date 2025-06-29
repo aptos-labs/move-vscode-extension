@@ -38,7 +38,8 @@ impl InferenceResult {
 
         let pat_types = fully_resolve_map_values(ctx.pat_types.clone(), &ctx);
         let expr_types = fully_resolve_map_values(ctx.expr_types.clone(), &ctx);
-        let call_expr_types = fully_resolve_map_values(ctx.call_expr_types.clone(), &ctx);
+        let call_expr_types =
+            fully_resolve_map_values_fallback_to_origin(ctx.call_expr_types.clone(), &ctx);
 
         let file_id = ctx.file_id;
         let resolved_paths = keys_into_syntax_loc(ctx.resolved_paths, file_id);
@@ -144,6 +145,19 @@ fn fully_resolve_map_values(
         .into_iter()
         .map(|(pat, ty)| {
             let res_ty = ctx.fully_resolve_vars(ty);
+            (pat.loc(ctx.file_id), res_ty)
+        })
+        .collect()
+}
+
+fn fully_resolve_map_values_fallback_to_origin(
+    ty_map: HashMap<impl AstNode, Ty>,
+    ctx: &InferenceCtx,
+) -> HashMap<SyntaxLoc, Ty> {
+    ty_map
+        .into_iter()
+        .map(|(pat, ty)| {
+            let res_ty = ctx.fully_resolve_vars_fallback_to_origin(ty);
             (pat.loc(ctx.file_id), res_ty)
         })
         .collect()
