@@ -3,7 +3,7 @@ use crate::global_state::GlobalStateSnapshot;
 use crate::lsp::utils::invalid_params_error;
 use crate::lsp::{LspError, from_proto, to_proto};
 use crate::movefmt::run_movefmt;
-use crate::{Config, lsp_ext, unwrap_or_return_default};
+use crate::{Config, lsp_ext, try_default};
 use ide::Cancellable;
 use ide::inlay_hints::InlayFieldsToResolve;
 use ide_db::assists::{AssistKind, AssistResolveStrategy, SingleResolve};
@@ -35,7 +35,7 @@ pub(crate) fn handle_semantic_tokens_range(
 ) -> anyhow::Result<Option<SemanticTokensRangeResult>> {
     let _p = tracing::info_span!("handle_semantic_tokens_range").entered();
 
-    let frange = unwrap_or_return_default!(from_proto::file_range(
+    let frange = try_default!(from_proto::file_range(
         &snap,
         &params.text_document,
         params.range
@@ -378,8 +378,7 @@ pub(crate) fn handle_references(
 ) -> anyhow::Result<Option<Vec<Location>>> {
     let _p = tracing::info_span!("handle_references").entered();
 
-    let position =
-        unwrap_or_return_default!(from_proto::file_position(&snap, params.text_document_position).ok());
+    let position = try_default!(from_proto::file_position(&snap, params.text_document_position).ok());
     let Some(refs) = snap.analysis.find_all_refs(position, None)? else {
         return Ok(None);
     };
@@ -497,7 +496,7 @@ pub(crate) fn handle_inlay_hints(
 ) -> anyhow::Result<Option<Vec<InlayHint>>> {
     let _p = tracing::info_span!("handle_inlay_hints").entered();
     let document_uri = &params.text_document.uri;
-    let FileRange { file_id, range } = unwrap_or_return_default!(from_proto::file_range(
+    let FileRange { file_id, range } = try_default!(from_proto::file_range(
         &snap,
         &TextDocumentIdentifier::new(document_uri.to_owned()),
         params.range,
@@ -595,7 +594,7 @@ pub(crate) fn handle_code_action(
 
     let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
 
-    let frange = unwrap_or_return_default!(from_proto::file_range(
+    let frange = try_default!(from_proto::file_range(
         &snap,
         &params.text_document,
         params.range
