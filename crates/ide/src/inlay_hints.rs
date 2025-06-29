@@ -464,7 +464,6 @@ impl HirWrite for InlayHintLabelBuilder<'_> {
             LazyProperty::Lazy
         } else {
             LazyProperty::Computed({
-                tracing::info!("resolve inlay hint location");
                 let nav_target = NavigationTarget::from_named_item(named_item)?;
                 FileRange {
                     file_id: nav_target.file_id,
