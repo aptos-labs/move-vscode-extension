@@ -1,4 +1,4 @@
-# Move on Aptos Language Extension
+# Move on Aptos – Official Move Language Support
 
 This is the official extension for the [Move on Aptos smart-contract language](https://aptos.dev/en/build/smart-contracts).
 

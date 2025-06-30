@@ -1,7 +1,7 @@
 {
     "name": "aptos-analyzer",
     "displayName": "Move on Aptos (beta)",
-    "description": "Move on Aptos Language Extension",
+    "description": "Move on Aptos – Official Move Language Support",
     "version": "0.1.0-dev",
     "private": true,
     "publisher": "aptoslabs",
@@ -9,11 +9,12 @@
     "releaseTag": null,
     "homepage": "https://github.com/aptos-labs/aptos-move-analyzer",
     "repository": {
-        "url": "https://github.com/aptos-labs/aptos-move-analyzer.git",
-        "type": "git"
+        "type": "git",
+        "url": "https://github.com/aptos-labs/aptos-move-analyzer.git"
     },
     "bugs": {
-        "url": "https://github.com/aptos-labs/aptos-move-analyzer/issues"
+        "url": "https://github.com/aptos-labs/aptos-move-analyzer/issues",
+        "email": "maksim@aptoslabs.com"
     },
     "engines": {
         "vscode": "^1.96.0"
@@ -28,7 +29,12 @@
     ],
     "keywords": [
         "move",
-        "aptos"
+        "aptos",
+        "blockchain",
+        "smart-contract",
+        "web3",
+        "debug",
+        "movefmt"
     ],
     "main": "./out/extension.js",
     "contributes": {
