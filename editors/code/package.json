@@ -1,7 +1,7 @@
 {
     "name": "aptos-analyzer",
     "displayName": "Move on Aptos (beta)",
-    "description": "Move on Aptos Language Extension",
+    "description": "Move on Aptos – Official Move Language Support",
     "version": "0.1.0-dev",
     "private": true,
     "publisher": "aptoslabs",
@@ -28,7 +28,12 @@
     ],
     "keywords": [
         "move",
-        "aptos"
+        "aptos",
+        "blockchain",
+        "smart-contract",
+        "web3",
+        "debug",
+        "movefmt"
     ],
     "main": "./out/extension.js",
     "contributes": {
