@@ -1,0 +1,106 @@
+SOURCE_FILE@0..172
+  MODULE@0..171
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..38
+      IDENT@12..38 "forall_with_if_and_on ..."
+    WHITESPACE@38..39 " "
+    L_CURLY@39..40 "{"
+    WHITESPACE@40..45 "\n    "
+    ITEM_SPEC@45..169
+      SPEC_KW@45..49 "spec"
+      WHITESPACE@49..50 " "
+      MODULE_KW@50..56 "module"
+      WHITESPACE@56..57 " "
+      BLOCK_EXPR@57..169
+        L_CURLY@57..58 "{"
+        WHITESPACE@58..67 "\n        "
+        SPEC_PREDICATE_STMT@67..163
+          ENSURES_KW@67..74 "ensures"
+          WHITESPACE@74..75 " "
+          SPEC_PREDICATE_PROPERTY_LIST@75..85
+            L_BRACK@75..76 "["
+            SPEC_PREDICATE_PROPERTY@76..84
+              IDENT@76..84 "abstract"
+            R_BRACK@84..85 "]"
+          WHITESPACE@85..86 " "
+          FORALL_EXPR@86..162
+            FORALL_KW@86..92 "forall"
+            WHITESPACE@92..93 " "
+            QUANT_BINDING_LIST@93..97
+              QUANT_BINDING@93..97
+                IDENT_PAT@93..94
+                  NAME@93..94
+                    IDENT@93..94 "k"
+                COLON@94..95 ":"
+                WHITESPACE@95..96 " "
+                PATH_TYPE@96..97
+                  PATH@96..97
+                    PATH_SEGMENT@96..97
+                      NAME_REF@96..97
+                        IDENT@96..97 "K"
+            COLON@97..98 ":"
+            WHITESPACE@98..99 " "
+            BIN_EXPR@99..162
+              CALL_EXPR@99..128
+                PATH_EXPR@99..120
+                  PATH@99..120
+                    PATH@99..105
+                      PATH_SEGMENT@99..105
+                        NAME_REF@99..105
+                          IDENT@99..105 "vector"
+                    COLON_COLON@105..107 "::"
+                    PATH_SEGMENT@107..120
+                      NAME_REF@107..120
+                        IDENT@107..120 "spec_contains"
+                VALUE_ARG_LIST@120..128
+                  L_PAREN@120..121 "("
+                  VALUE_ARG@121..125
+                    PATH_EXPR@121..125
+                      PATH@121..125
+                        PATH_SEGMENT@121..125
+                          NAME_REF@121..125
+                            IDENT@121..125 "keys"
+                  COMMA@125..126 ","
+                  VALUE_ARG@126..127
+                    PATH_EXPR@126..127
+                      PATH@126..127
+                        PATH_SEGMENT@126..127
+                          NAME_REF@126..127
+                            IDENT@126..127 "k"
+                  R_PAREN@127..128 ")"
+              WHITESPACE@128..129 " "
+              LESS_IMPLIES@129..133 "<==>"
+              WHITESPACE@133..134 " "
+              CALL_EXPR@134..162
+                PATH_EXPR@134..151
+                  PATH@134..151
+                    PATH_SEGMENT@134..151
+                      NAME_REF@134..151
+                        IDENT@134..151 "spec_contains_key"
+                VALUE_ARG_LIST@151..162
+                  L_PAREN@151..152 "("
+                  VALUE_ARG@152..158
+                    PATH_EXPR@152..158
+                      PATH@152..158
+                        PATH_SEGMENT@152..158
+                          NAME_REF@152..158
+                            IDENT@152..158 "result"
+                  COMMA@158..159 ","
+                  WHITESPACE@159..160 " "
+                  VALUE_ARG@160..161
+                    PATH_EXPR@160..161
+                      PATH@160..161
+                        PATH_SEGMENT@160..161
+                          NAME_REF@160..161
+                            IDENT@160..161 "k"
+                  R_PAREN@161..162 ")"
+          SEMICOLON@162..163 ";"
+        WHITESPACE@163..168 "\n    "
+        R_CURLY@168..169 "}"
+    WHITESPACE@169..170 "\n"
+    R_CURLY@170..171 "}"
+  WHITESPACE@171..172 "\n"

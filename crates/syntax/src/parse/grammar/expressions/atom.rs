@@ -364,7 +364,7 @@ fn match_arm(p: &mut Parser, recovery_set: TokenSet) -> bool {
     }
     p.bump(T![=>]);
 
-    let blocklike = match stmt_expr(p, None) {
+    let blocklike = match stmt_expr(p) {
         Some((_, blocklike)) => blocklike,
         None => BlockLike::NotBlock,
     };

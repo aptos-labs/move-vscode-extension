@@ -224,6 +224,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "WHERE_EXPR",
         "QUANT_BINDING_LIST",
         "QUANT_BINDING",
+        "QUANT_TRIGGER_LIST",
 
         "NAMED_FIELD_LIST",
         "NAMED_FIELD",

@@ -1,3 +1,5 @@
+use crate::parse::grammar::expressions::atom::block_expr;
+use crate::parse::grammar::expressions::{expr, expr_block_contents, stmt_expr, stmts};
 use crate::parse::grammar::specs::predicates::expect_expr;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{patterns, types};
@@ -24,6 +26,9 @@ pub(crate) fn forall_expr(p: &mut Parser) -> Option<CompletedMarker> {
     let m = p.start();
     p.bump_remap(T![forall]);
     quant_binding_list(p);
+    if p.at(T!['{']) {
+        quant_trigger_list(p);
+    }
     opt_where_expr(p);
     if p.expect(T![:]) {
         expect_expr(p);
@@ -38,6 +43,9 @@ pub(crate) fn exists_expr(p: &mut Parser) -> Option<CompletedMarker> {
     let m = p.start();
     p.bump_remap(T![exists]);
     quant_binding_list(p);
+    if p.at(T!['{']) {
+        quant_trigger_list(p);
+    }
     opt_where_expr(p);
     if p.expect(T![:]) {
         expect_expr(p);
@@ -60,11 +68,15 @@ pub(crate) fn choose_expr(p: &mut Parser) -> Option<CompletedMarker> {
 }
 
 pub(crate) fn quant_binding_list(p: &mut Parser) {
-    // if !p.at(IDENT) {
-    //     return;
-    // }
     let m = p.start();
-    let stop_at = RecoverySet::from_ts(T![;] | T![:]).with_kw("where");
+    let stop_at = RecoverySet::new()
+        // end of statement
+        .with_token_set(T![;])
+        // quantifier hint
+        .with_token_set(T!['{'])
+        // end of quant bindings
+        .with_kw("where")
+        .with_token_set(T![:]);
     p.with_recovery_set(stop_at, |p| {
         delimited_with_recovery(p, quant_binding, T![,], "expected quant binding", None)
     });
@@ -78,12 +90,12 @@ pub(crate) fn quant_binding(p: &mut Parser) -> bool {
     let m = p.start();
     patterns::ident_pat(p);
     match p.current() {
+        T![:] => {
+            types::type_annotation(p);
+        }
         IDENT if p.at_contextual_kw("in") => {
             p.bump_remap(T![in]);
             expect_expr(p);
-        }
-        T![:] => {
-            types::type_annotation(p);
         }
         _ => {
             m.abandon_with_rollback(p);
@@ -92,6 +104,18 @@ pub(crate) fn quant_binding(p: &mut Parser) -> bool {
     }
     m.complete(p, QUANT_BINDING);
     true
+}
+
+fn quant_trigger_list(p: &mut Parser) {
+    assert!(p.at(T!['{']));
+    // we're in new block, we can't use recovery set rules from before
+    let m = p.start();
+    p.bump(T!['{']);
+    p.reset_recovery_set(|p| {
+        delimited_with_recovery(p, expr, T![,], "expected expr", Some(T!['}']));
+    });
+    p.expect(T!['}']);
+    m.complete(p, QUANT_TRIGGER_LIST);
 }
 
 fn opt_where_expr(p: &mut Parser) {

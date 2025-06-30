@@ -383,12 +383,12 @@ pub(crate) fn opt_initializer_expr(p: &mut Parser) {
     }
 }
 
-pub(super) fn stmt_expr(p: &mut Parser, stmt_m: Option<Marker>) -> Option<(CompletedMarker, BlockLike)> {
+pub(crate) fn stmt_expr(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> {
     let r = Restrictions {
         forbid_structs: false,
         prefer_stmt: true,
     };
-    expr_bp(p, stmt_m, r, 1)
+    expr_bp(p, None, r, 1)
 }
 
 pub(super) fn expr_block_contents(p: &mut Parser, is_spec: bool) {

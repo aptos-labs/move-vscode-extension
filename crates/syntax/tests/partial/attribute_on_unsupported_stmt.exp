@@ -1,0 +1,7 @@
+module 0x1::free_attribute {
+    fun main() {
+        #[test_only]
+      //^^^^^^^^^^^^ unexpected attribute
+        let a = 1;
+    }
+}
