@@ -1,0 +1,46 @@
+SOURCE_FILE@0..87
+  MODULE@0..86
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..23
+      IDENT@12..23 "imply_exprs"
+    WHITESPACE@23..24 " "
+    L_CURLY@24..25 "{"
+    WHITESPACE@25..30 "\n    "
+    ITEM_SPEC@30..84
+      SPEC_KW@30..34 "spec"
+      WHITESPACE@34..35 " "
+      MODULE_KW@35..41 "module"
+      WHITESPACE@41..42 " "
+      BLOCK_EXPR@42..84
+        L_CURLY@42..43 "{"
+        WHITESPACE@43..52 "\n        "
+        EXPR_STMT@52..60
+          BIN_EXPR@52..59
+            LITERAL@52..53
+              INT_NUMBER@52..53 "1"
+            WHITESPACE@53..54 " "
+            IMPLIES@54..57 "==>"
+            WHITESPACE@57..58 " "
+            LITERAL@58..59
+              INT_NUMBER@58..59 "2"
+          SEMICOLON@59..60 ";"
+        WHITESPACE@60..69 "\n        "
+        EXPR_STMT@69..78
+          BIN_EXPR@69..77
+            LITERAL@69..70
+              INT_NUMBER@69..70 "1"
+            WHITESPACE@70..71 " "
+            LESS_IMPLIES@71..75 "<==>"
+            WHITESPACE@75..76 " "
+            LITERAL@76..77
+              INT_NUMBER@76..77 "2"
+          SEMICOLON@77..78 ";"
+        WHITESPACE@78..83 "\n    "
+        R_CURLY@83..84 "}"
+    WHITESPACE@84..85 "\n"
+    R_CURLY@85..86 "}"
+  WHITESPACE@86..87 "\n"

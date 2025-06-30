@@ -11,23 +11,29 @@ use crate::SyntaxKind::{EOF, EXPR_STMT, LET_STMT, USE_STMT};
 use crate::T;
 
 pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
-    let stmt_m = p.start();
-
-    attributes::outer_attrs(p);
-
-    if p.at(T![let]) {
-        let_stmt(p, stmt_m, is_spec);
+    let use_stmt_m = p.start();
+    let mut attrs = attributes::outer_attrs(p);
+    if p.at(T![use]) {
+        use_stmt(p, use_stmt_m);
         return;
     }
-    if p.at(T![use]) {
-        use_stmt(p, stmt_m);
+    if let Some(last_attr) = attrs.pop() {
+        p.wrap_with_error(last_attr, "unexpected attribute");
+        if p.at(T!['}']) {
+            use_stmt_m.abandon(p);
+            return;
+        }
+    }
+    use_stmt_m.abandon(p);
+
+    if p.at(T![let]) {
+        let_stmt(p, is_spec);
         return;
     }
 
     if is_spec {
         if p.at(T![native]) && p.nth_at(1, T![fun]) || p.at(T![fun]) {
             fun::spec_inline_function(p);
-            stmt_m.abandon(p);
             return;
         }
 
@@ -48,12 +54,11 @@ pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
             false
         });
         if is_spec_stmt {
-            stmt_m.abandon(p);
             return;
         }
     }
 
-    if let Some((cm, _)) = p.with_recovery_token(T![;], |p| stmt_expr(p, Some(stmt_m))) {
+    if let Some((cm, _)) = p.with_recovery_token(T![;], |p| stmt_expr(p)) {
         if !(p.at(T!['}']) || (prefer_expr && p.at(EOF))) {
             let m = cm.precede(p);
             p.expect(T![;]);
@@ -65,7 +70,8 @@ pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
     p.error_and_bump(&format!("unexpected token {:?}", p.current()));
 }
 
-fn let_stmt(p: &mut Parser, m: Marker, is_spec: bool) {
+fn let_stmt(p: &mut Parser, is_spec: bool) {
+    let m = p.start();
     p.bump(T![let]);
     if is_spec && p.at_contextual_kw_ident("post") {
         p.bump_remap(T![post]);

@@ -360,6 +360,12 @@ impl Parser {
         self.push_error(message);
     }
 
+    pub(crate) fn wrap_with_error(&mut self, cm: CompletedMarker, message: impl Into<String>) {
+        let m = cm.precede(self);
+        self.push_error(message);
+        m.complete(self, ERROR);
+    }
+
     pub(crate) fn push_error(&mut self, message: impl Into<String>) {
         let msg = ParseError(Box::new(message.into()));
         self.push_event(Event::Error { msg });

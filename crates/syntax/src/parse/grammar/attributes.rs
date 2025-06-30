@@ -1,18 +1,20 @@
 use crate::parse::grammar::paths::PATH_FIRST;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{expressions, paths};
-use crate::parse::parser::Parser;
+use crate::parse::parser::{CompletedMarker, Parser};
 use crate::parse::token_set::TokenSet;
 use crate::SyntaxKind::*;
 use crate::{SyntaxKind, T};
 
-pub(super) fn outer_attrs(p: &mut Parser) {
+pub(super) fn outer_attrs(p: &mut Parser) -> Vec<CompletedMarker> {
+    let mut attrs = vec![];
     while p.at(T![#]) {
-        attr(p, false);
+        attrs.push(attr(p, false));
     }
+    attrs
 }
 
-fn attr(p: &mut Parser, inner: bool) {
+fn attr(p: &mut Parser, inner: bool) -> CompletedMarker {
     assert!(p.at(T![#]));
 
     let attr = p.start();
@@ -28,7 +30,7 @@ fn attr(p: &mut Parser, inner: bool) {
         p.error("expected `[`");
     }
 
-    attr.complete(p, ATTR);
+    attr.complete(p, ATTR)
 }
 
 pub(super) fn attr_item(p: &mut Parser) -> bool {
