@@ -511,3 +511,25 @@ module std::option {
         "#]],
     );
 }
+
+#[test]
+fn test_complete_built_signer_in_type_position() {
+    do_single_completion(
+        // language=Move
+        r#"
+module std::string {}
+module std::option {
+    use std::string;
+    struct Option { vec: sig/*caret*/ }
+}
+    "#,
+        // language=Move
+        expect![[r#"
+            module std::string {}
+            module std::option {
+                use std::string;
+                struct Option { vec: signer/*caret*/ }
+            }
+        "#]],
+    );
+}
