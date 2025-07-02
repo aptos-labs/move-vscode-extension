@@ -56,14 +56,14 @@ fn test_loop_label_for_break() {
     "#,
         // language=Move
         expect![[r#"
-        module 0x1::m {
-            fun main() {
-                'label: loop {
-                    break 'label;
+            module 0x1::m {
+                fun main() {
+                    'label: loop {
+                        break 'label;
+                    }
                 }
             }
-        }
-    "#]],
+        "#]],
     )
 }
 
@@ -82,13 +82,13 @@ fn test_loop_label_for_break_from_single_quote() {
     "#,
         // language=Move
         expect![[r#"
-        module 0x1::m {
-            fun main() {
-                'label: loop {
-                    break 'label;
+            module 0x1::m {
+                fun main() {
+                    'label: loop {
+                        break 'label;
+                    }
                 }
             }
-        }
-    "#]],
+        "#]],
     )
 }

@@ -155,23 +155,23 @@ impl NameRefClass {
     ) -> Option<NameRefClass> {
         let ref_parent = name_ref.syntax().parent()?;
 
-        if let Some(struct_lit_field) = ast::StructLitField::for_field_name(name_ref) {
-            // if shorthand, then it should contain two elements
-            let is_shorthand = struct_lit_field.name_ref().is_none();
-            return if !is_shorthand {
-                // NameRef :: Expr
-                let named_field = sema.resolve_to_element::<ast::NamedField>(
-                    sema.wrap_node_infile(struct_lit_field.into()),
-                )?;
-                Some(NameRefClass::Definition(Definition::NamedItem(
-                    SymbolKind::Field,
-                    named_field.map_into(),
-                )))
-            } else {
-                let path = struct_lit_field.shorthand_path()?;
-                let entries = sema.resolve(path.into());
-                let (named_field, ident_pat) = into_field_shorthand_items(sema.db, entries)?;
-                Some(NameRefClass::FieldShorthand { ident_pat, named_field })
+        if let Some(struct_lit_field_kind) = name_ref.try_into_struct_lit_field() {
+            return match struct_lit_field_kind {
+                ast::StructLitFieldKind::Full { struct_field, .. } => {
+                    // NameRef :: Expr
+                    let named_field = sema.resolve_to_element::<ast::NamedField>(
+                        sema.wrap_node_infile(struct_field.into()),
+                    )?;
+                    Some(NameRefClass::Definition(Definition::NamedItem(
+                        SymbolKind::Field,
+                        named_field.map_into(),
+                    )))
+                }
+                ast::StructLitFieldKind::Shorthand { struct_field: _, path } => {
+                    let entries = sema.resolve(path.into());
+                    let (named_field, ident_pat) = into_field_shorthand_items(sema.db, entries)?;
+                    Some(NameRefClass::FieldShorthand { ident_pat, named_field })
+                }
             };
         }
 

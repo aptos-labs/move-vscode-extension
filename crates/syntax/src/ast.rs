@@ -18,6 +18,8 @@ pub use self::{
     generated::{nodes::*, tokens::*},
     // expr_ext::{ArrayExprKind, BlockModifier, CallableExpr, ElseBranch, LiteralKind},
     node_ext::literal::LiteralKind,
+    node_ext::struct_lit_field::StructLitFieldKind,
+    node_ext::struct_pat_field::PatFieldKind,
     operators::{ArithOp, BinaryOp, CmpOp, LogicOp, Ordering, RangeOp, UnaryOp},
     token_ext::{CommentKind, CommentPlacement, CommentShape, IsString, QuoteOffsets},
     traits::{HasAttrs, HasItems, HasStmts, HasUseStmts, HoverDocsOwner, MslOnly},

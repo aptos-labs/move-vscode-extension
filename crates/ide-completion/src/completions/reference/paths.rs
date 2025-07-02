@@ -57,7 +57,9 @@ pub(crate) fn add_path_completions(
                 continue;
             }
             _ => {
-                acc.add(render_named_item(ctx, name, named_item).build(ctx.db));
+                let mut item = render_named_item(ctx, &name, named_item);
+                item.insert_snippet(format!("{name}$0"));
+                acc.add(item.build(ctx.db));
             }
         }
     }

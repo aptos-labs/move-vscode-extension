@@ -142,8 +142,14 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
             // }
         }
 
-        if let Some(struct_lit_field) = ast::StructLitField::for_shorthand_path(&path) {
-            return Some(PathKind::FieldShorthand { struct_lit_field });
+        if let Some(path_name_ref) = path.segment().and_then(|it| it.name_ref()) {
+            if let Some(ast::StructLitFieldKind::Shorthand { struct_field, .. }) =
+                path_name_ref.try_into_struct_lit_field()
+            {
+                return Some(PathKind::FieldShorthand {
+                    struct_lit_field: struct_field,
+                });
+            }
         }
 
         return Some(PathKind::Unqualified { ns });

@@ -139,7 +139,7 @@ fn test_type_parameters_available_in_let_type_completion() {
         expect![[r#"
             module 0x1::m {
                 fun main<CoinType>() {
-                    let a: CoinType
+                    let a: CoinType/*caret*/
                 }
             }
         "#]],
