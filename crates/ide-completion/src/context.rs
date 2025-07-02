@@ -3,7 +3,6 @@ mod analysis;
 use crate::completions::item_list::ItemListKind;
 use crate::config::CompletionConfig;
 use crate::context::analysis::analyze;
-use crate::item::{CompletionItem, CompletionItemBuilder, CompletionItemKind};
 use base_db::inputs::InternFileId;
 use base_db::source_db;
 use ide_db::RootDatabase;
