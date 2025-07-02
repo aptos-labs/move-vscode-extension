@@ -15,7 +15,6 @@ pub(super) fn is_path_start(p: &Parser) -> bool {
         IDENT => true,
         T![::] => true,
         T!['_'] => true,
-        // T![:] if p.at(T![::]) => true,
         _ => false,
     }
 }

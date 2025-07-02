@@ -1,5 +1,5 @@
 use crate::parse::grammar::expressions::{opt_initializer_expr, stmt_expr};
-use crate::parse::grammar::items::{fun, stmt_start_rec_set, use_item};
+use crate::parse::grammar::items::{fun, item_start_kws_only, stmt_start_kws, use_item};
 use crate::parse::grammar::patterns::pat;
 use crate::parse::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt};
 use crate::parse::grammar::specs::schemas::{
@@ -14,7 +14,7 @@ pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
     let use_stmt_m = p.start();
     let mut attrs = attributes::outer_attrs(p);
     if p.at(T![use]) {
-        use_stmt(p, use_stmt_m);
+        p.with_recovery_set(stmt_start_kws(), |p| use_stmt(p, use_stmt_m));
         return;
     }
     if let Some(last_attr) = attrs.pop() {
@@ -76,7 +76,7 @@ fn let_stmt(p: &mut Parser, is_spec: bool) {
     if is_spec && p.at_contextual_kw_ident("post") {
         p.bump_remap(T![post]);
     }
-    let recovery_set = stmt_start_rec_set().with_token_set(T![=] | T![;]);
+    let recovery_set = stmt_start_kws().with_token_set(T![=] | T![;]);
     // let rec_set = item_start_rec_set().with_token_set(T![=] | T![;]);
     p.with_recovery_set(recovery_set.clone(), pat);
     // pat_or_recover(p, recovery_set.clone());
@@ -92,7 +92,7 @@ fn let_stmt(p: &mut Parser, is_spec: bool) {
 
 pub(crate) fn use_stmt(p: &mut Parser, stmt: Marker) {
     p.bump(T![use]);
-    use_item::use_speck(p, true);
+    p.with_recovery_set(T![;].into(), |p| use_item::use_speck(p, true));
     p.expect(T![;]);
     stmt.complete(p, USE_STMT);
 }
