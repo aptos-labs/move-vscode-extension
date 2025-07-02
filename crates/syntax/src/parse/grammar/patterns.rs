@@ -229,7 +229,8 @@ pub(crate) const STMT_FIRST: TokenSet =
     EXPR_STMT_FIRST.union(
         TokenSet::new(&[
             T![let],
-            T![spec]
+            T![spec],
+            T![use],
         ]));
 
 #[rustfmt::skip]

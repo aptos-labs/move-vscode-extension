@@ -250,6 +250,13 @@ pub(crate) fn function_modifier_tokens() -> Vec<RecoveryToken> {
     ]
 }
 
+pub(crate) fn function_modifier_kws() -> RecoverySet {
+    let mut rec_set = RecoverySet::new();
+    rec_set.with_token_set(T![public] | T![native] | T![friend] | T![inline])
+    // .with_kw_ident("entry")
+    // .with_kw_ident("package")
+}
+
 pub(crate) fn function_modifier_recovery_set() -> RecoverySet {
     let mut rec_set = RecoverySet::new();
     rec_set.with_token_set(T![public] | T![native] | T![friend] | T![inline])

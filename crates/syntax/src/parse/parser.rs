@@ -388,10 +388,10 @@ impl Parser {
     }
 
     /// adds error and then bumps until `stop()` is true
-    pub(crate) fn error_and_recover(&mut self, message: &str, rs: impl Into<RecoverySet>) {
+    pub(crate) fn error_and_recover(&mut self, message: &str, extra_rs: impl Into<RecoverySet>) {
         // if the next token is stop token, just push error,
         // otherwise wrap the next token with the error node and start `recover_until()`
-        let rec_set = self.outer_recovery_set().with_merged(rs.into());
+        let rec_set = self.outer_recovery_set().with_merged(extra_rs.into());
         if rec_set.contains_current(self) {
             self.push_error(message);
             return;

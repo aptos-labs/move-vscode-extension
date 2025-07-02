@@ -5,8 +5,8 @@ pub(crate) mod use_item;
 
 use crate::parse::grammar::expressions::{expr, stmts, EXPR_FIRST};
 use crate::parse::grammar::items::fun::{
-    function_modifier_recovery_set, function_modifier_tokens, on_function_modifiers_start,
-    on_visibility_modifier_start, visibility_modifier,
+    function_modifier_kws, function_modifier_recovery_set, function_modifier_tokens,
+    on_function_modifiers_start, on_visibility_modifier_start, visibility_modifier,
 };
 use crate::parse::grammar::paths::use_path;
 use crate::parse::grammar::patterns::STMT_FIRST;
@@ -74,7 +74,7 @@ fn after_friend_item_rset() -> RecoverySet {
 /// Try to parse an item, completing `m` in case of success.
 pub(super) fn opt_item(p: &mut Parser, m: Marker) -> Result<(), Marker> {
     match p.current() {
-        T![use] => stmts::use_stmt(p, m),
+        T![use] => p.with_recovery_set(item_start_kws_only(), |p| stmts::use_stmt(p, m)),
         T![const] => const_(p, m),
 
         // todo: does not handle `friend native myfun()` cases
@@ -175,6 +175,11 @@ pub(crate) fn at_item_start(p: &Parser) -> bool {
 //     tokens
 // }
 
+// safe recovery set for `item_start()`
+pub(crate) fn item_start_kws_only() -> RecoverySet {
+    RecoverySet::from_ts(ITEM_KEYWORDS).with_merged(function_modifier_kws())
+}
+
 pub(crate) fn item_start_rec_set() -> RecoverySet {
     RecoverySet::new()
         .with_token_set(ITEM_KEYWORDS)
@@ -182,12 +187,8 @@ pub(crate) fn item_start_rec_set() -> RecoverySet {
         .with_merged(function_modifier_recovery_set())
 }
 
-pub(crate) fn stmt_start_rec_set() -> RecoverySet {
+pub(crate) fn stmt_start_kws() -> RecoverySet {
     RecoverySet::from_ts(STMT_FIRST)
-    // RecoverySet::new()
-    //     .with_token_set(ITEM_KEYWORDS)
-    //     .with_kw_ident("enum")
-    //     .with_merged(function_modifier_recovery_set())
 }
 
 const ITEM_KW_START_LIST: &[SyntaxKind] = &[
