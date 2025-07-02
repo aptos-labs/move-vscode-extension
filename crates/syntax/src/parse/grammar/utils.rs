@@ -1,6 +1,6 @@
+use crate::SyntaxKind::{EOF, ERROR};
 use crate::parse::parser::Parser;
 use crate::parse::token_set::TokenSet;
-use crate::SyntaxKind::{EOF, ERROR};
 use crate::{SyntaxKind, T};
 
 pub(crate) fn delimited_with_recovery(

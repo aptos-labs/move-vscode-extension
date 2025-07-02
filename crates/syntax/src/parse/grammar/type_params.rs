@@ -1,11 +1,11 @@
+use crate::SyntaxKind::*;
 use crate::parse::event::Event::Token;
 use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{ability, name, name_or_recover, patterns, types};
 use crate::parse::parser::Parser;
 use crate::parse::token_set::TokenSet;
-use crate::SyntaxKind::*;
-use crate::{ts, T};
+use crate::{T, ts};
 
 pub(super) fn opt_type_param_list(p: &mut Parser) {
     if p.at(T![<]) {

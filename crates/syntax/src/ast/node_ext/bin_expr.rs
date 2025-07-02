@@ -1,6 +1,6 @@
 use crate::ast::operators::{ArithOp, BinaryOp, CmpOp, LogicOp, Ordering};
 use crate::ast::support;
-use crate::{ast, AstNode, SyntaxToken, T};
+use crate::{AstNode, SyntaxToken, T, ast};
 
 impl ast::BinExpr {
     // todo: not optional

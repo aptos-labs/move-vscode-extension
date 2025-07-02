@@ -1,4 +1,4 @@
-use crate::{ast, match_ast, AstNode, SyntaxNode};
+use crate::{AstNode, SyntaxNode, ast, match_ast};
 
 impl ast::ReferenceElement {
     // pub fn method_or_path(&self) -> Option<ast::MethodOrPath> {

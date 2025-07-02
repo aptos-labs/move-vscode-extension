@@ -3,7 +3,8 @@ pub(crate) mod fun;
 pub(crate) mod item_spec;
 pub(crate) mod use_item;
 
-use crate::parse::grammar::expressions::{expr, stmts, EXPR_FIRST};
+use crate::SyntaxKind::*;
+use crate::parse::grammar::expressions::{EXPR_FIRST, expr, stmts};
 use crate::parse::grammar::items::fun::{
     function_modifier_kws, function_modifier_recovery_set, function_modifier_tokens,
     on_function_modifiers_start, on_visibility_modifier_start, visibility_modifier,
@@ -15,7 +16,6 @@ use crate::parse::grammar::{attributes, error_block, name_or_recover, types};
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
-use crate::SyntaxKind::*;
 use crate::{SyntaxKind, T};
 use std::ops::ControlFlow;
 use std::ops::ControlFlow::{Break, Continue};

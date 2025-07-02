@@ -6,11 +6,10 @@ use crate::parse::ParseError;
 
 use crate::parse::lexer::RawToken;
 use crate::{
-    ast,
-    syntax_node::GreenNode,
     SyntaxError,
     SyntaxKind::{self, *},
-    SyntaxTreeBuilder, TextRange, TextSize,
+    SyntaxTreeBuilder, TextRange, TextSize, ast,
+    syntax_node::GreenNode,
 };
 
 /// Bridges the parser with our specific syntax tree representation.

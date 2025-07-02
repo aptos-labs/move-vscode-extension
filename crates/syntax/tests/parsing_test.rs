@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::{env, fs, panic};
-use syntax::{algo, ast, AstNode, SourceFile};
-use test_utils::{apply_source_marks, fixtures, SourceMark};
+use syntax::{AstNode, SourceFile, algo, ast};
+use test_utils::{SourceMark, apply_source_marks, fixtures};
 
 fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<()> {
     let input = fs::read_to_string(fpath).unwrap();

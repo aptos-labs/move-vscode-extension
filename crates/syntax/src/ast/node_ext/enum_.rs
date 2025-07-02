@@ -1,5 +1,5 @@
 use crate::ast::NamedElement;
-use crate::{ast, AstNode};
+use crate::{AstNode, ast};
 use std::collections::HashSet;
 
 impl ast::Enum {

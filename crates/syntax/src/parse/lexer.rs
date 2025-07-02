@@ -1,6 +1,6 @@
-use crate::parse::lexer::move_model::Tok;
 use crate::parse::SyntaxKind::*;
-use crate::{SyntaxError, SyntaxKind, TextRange, TextSize, T};
+use crate::parse::lexer::move_model::Tok;
+use crate::{SyntaxError, SyntaxKind, T, TextRange, TextSize};
 
 mod move_model;
 

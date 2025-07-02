@@ -1,5 +1,5 @@
-use crate::ast::{support, SchemaLit};
-use crate::{ast, AstNode};
+use crate::ast::{SchemaLit, support};
+use crate::{AstNode, ast};
 
 impl ast::AndIncludeExpr {
     pub fn left_schema_lit(&self) -> Option<SchemaLit> {

@@ -2,7 +2,7 @@ pub(crate) mod quote;
 
 use crate::ast::make::quote::quote;
 use crate::parse::SyntaxKind;
-use crate::{ast, AstNode, SourceFile, SyntaxToken};
+use crate::{AstNode, SourceFile, SyntaxToken, ast};
 
 // // pub fn name(name: &str) -> ast::Name {
 // //     ast_from_text(&format!("module {name}"))
@@ -52,7 +52,7 @@ fn ast_from_text<N: AstNode>(text: &str) -> N {
 pub mod tokens {
     use std::sync::LazyLock;
 
-    use crate::{ast, AstNode, Parse, SourceFile, SyntaxKind::*, SyntaxToken};
+    use crate::{AstNode, Parse, SourceFile, SyntaxKind::*, SyntaxToken, ast};
 
     pub(crate) static SOURCE_FILE: LazyLock<Parse> =
         LazyLock::new(|| SourceFile::parse("module 0x1::m { fun main() { 1; 1 + 1; } }"));

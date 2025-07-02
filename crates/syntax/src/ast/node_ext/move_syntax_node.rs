@@ -1,6 +1,6 @@
-use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::SyntaxKind::*;
-use crate::{ast, AstNode, SyntaxNode};
+use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
+use crate::{AstNode, SyntaxNode, ast};
 
 pub trait MoveSyntaxElementExt {
     fn node(&self) -> &SyntaxNode;

@@ -1,10 +1,10 @@
+use crate::SyntaxKind::*;
+use crate::T;
 use crate::parse::grammar::items::item_start_kws_only;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{name, paths};
 use crate::parse::parser::Parser;
 use crate::parse::token_set::TokenSet;
-use crate::SyntaxKind::*;
-use crate::T;
 use std::ops::ControlFlow::Continue;
 
 // recovery set is passed from the outside

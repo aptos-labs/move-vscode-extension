@@ -1,3 +1,5 @@
+use crate::SyntaxKind::{EOF, EXPR_STMT, LET_STMT, USE_STMT};
+use crate::T;
 use crate::parse::grammar::expressions::{opt_initializer_expr, stmt_expr};
 use crate::parse::grammar::items::{fun, item_start_kws_only, stmt_start_kws, use_item};
 use crate::parse::grammar::patterns::pat;
@@ -7,8 +9,6 @@ use crate::parse::grammar::specs::schemas::{
 };
 use crate::parse::grammar::{attributes, types};
 use crate::parse::parser::{Marker, Parser};
-use crate::SyntaxKind::{EOF, EXPR_STMT, LET_STMT, USE_STMT};
-use crate::T;
 
 pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
     let use_stmt_m = p.start();

@@ -1,5 +1,5 @@
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
-use crate::{ast, AstNode, SyntaxKind};
+use crate::{AstNode, SyntaxKind, ast};
 
 impl ast::Path {
     pub fn path_address(&self) -> Option<ast::PathAddress> {

@@ -1,6 +1,6 @@
-use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::ast::NamedElement;
-use crate::{ast, AstNode};
+use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
+use crate::{AstNode, ast};
 
 impl ast::IdentPat {
     pub fn reference(&self) -> ast::ReferenceElement {

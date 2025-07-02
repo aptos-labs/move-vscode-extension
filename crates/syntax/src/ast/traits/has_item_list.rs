@@ -1,5 +1,5 @@
-use crate::ast::{support, AstChildren, FieldsOwner, HasAttrs, HasStmts};
-use crate::{ast, AstNode};
+use crate::ast::{AstChildren, FieldsOwner, HasAttrs, HasStmts, support};
+use crate::{AstNode, ast};
 
 pub trait HasItems: AstNode {
     fn items(&self) -> AstChildren<ast::Item> {

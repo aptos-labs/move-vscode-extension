@@ -1,8 +1,8 @@
-use crate::ast;
-use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
-use crate::ast::NamedElement;
-use crate::parse::SyntaxKind;
 use crate::SyntaxKind::*;
+use crate::ast;
+use crate::ast::NamedElement;
+use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
+use crate::parse::SyntaxKind;
 use std::collections::HashSet;
 
 impl ast::Fun {

@@ -1,9 +1,9 @@
+use crate::SyntaxKind::*;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{patterns, types};
 use crate::parse::parser::Parser;
 use crate::parse::token_set::TokenSet;
-use crate::SyntaxKind::*;
-use crate::{ts, T};
+use crate::{T, ts};
 
 pub(crate) fn lambda_param_list(p: &mut Parser) -> bool {
     let list_marker = p.start();

@@ -1,10 +1,10 @@
+use crate::SyntaxKind::*;
 use crate::parse::grammar::items::item_start_rec_set;
 use crate::parse::grammar::type_args::opt_path_type_arg_list;
 use crate::parse::grammar::{any_address, items, name_ref, value_address};
 use crate::parse::parser::{CompletedMarker, Parser};
 use crate::parse::token_set::TokenSet;
-use crate::SyntaxKind::*;
-use crate::{ts, T};
+use crate::{T, ts};
 
 pub(super) const PATH_FIRST: TokenSet = TokenSet::new(&[IDENT, INT_NUMBER]);
 

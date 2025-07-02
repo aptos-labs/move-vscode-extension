@@ -1,5 +1,5 @@
 use crate::ast::node_ext::text_of_first_token;
-use crate::{ast, AstNode, TokenText};
+use crate::{AstNode, TokenText, ast};
 use rowan::{GreenNodeData, GreenTokenData, NodeOrToken};
 use std::borrow::Cow;
 

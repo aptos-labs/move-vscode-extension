@@ -1,6 +1,6 @@
 use crate::ast;
-use crate::ast::traits::into_named_elements;
 use crate::ast::HasItems;
+use crate::ast::traits::into_named_elements;
 
 impl ast::ModuleSpec {
     pub fn importable_items(&self) -> Vec<ast::NamedElement> {

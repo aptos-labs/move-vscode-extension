@@ -1,3 +1,5 @@
+use crate::SyntaxKind::*;
+use crate::T;
 use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::parse::grammar::items::item_start_rec_set;
 use crate::parse::grammar::utils::delimited_with_recovery;
@@ -7,8 +9,6 @@ use crate::parse::grammar::{
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
-use crate::SyntaxKind::*;
-use crate::T;
 use std::ops::ControlFlow::Continue;
 use std::sync::LazyLock;
 

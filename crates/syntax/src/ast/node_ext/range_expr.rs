@@ -1,5 +1,5 @@
 use crate::ast::support;
-use crate::{ast, AstNode};
+use crate::{AstNode, ast};
 
 impl ast::RangeExpr {
     pub fn start_expr(&self) -> Option<ast::Expr> {

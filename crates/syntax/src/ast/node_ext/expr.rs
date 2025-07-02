@@ -1,5 +1,5 @@
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
-use crate::{ast, AstNode};
+use crate::{AstNode, ast};
 
 impl ast::Expr {
     pub fn is_block_like(&self) -> bool {

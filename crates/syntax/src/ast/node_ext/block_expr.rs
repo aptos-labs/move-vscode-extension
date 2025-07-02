@@ -1,6 +1,6 @@
 use crate::ast::HasStmts;
 use crate::parse::SyntaxKind::{FOR_EXPR, FUN, IF_EXPR, LOOP_EXPR, WHILE_EXPR};
-use crate::{ast, AstNode};
+use crate::{AstNode, ast};
 
 impl ast::BlockExpr {
     pub fn schema_fields(&self) -> Vec<ast::SchemaField> {

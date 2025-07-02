@@ -1,4 +1,4 @@
-use crate::{ast, AstToken, TextRange, TextSize};
+use crate::{AstToken, TextRange, TextSize, ast};
 use stdx::always;
 
 impl ast::Comment {

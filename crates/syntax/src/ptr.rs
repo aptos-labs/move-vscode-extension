@@ -11,14 +11,14 @@
 
 use std::hash::Hash;
 
-use crate::{syntax_node::Aptos, AstNode, SyntaxNode};
+use crate::{AstNode, SyntaxNode, syntax_node::Aptos};
 
 /// A "pointer" to a [`SyntaxNode`], via location in the source code.
 pub type SyntaxNodePtr = rowan::ast::SyntaxNodePtr<Aptos>;
 
 #[test]
 fn test_local_syntax_ptr() {
-    use crate::{ast, AstNode, SourceFile};
+    use crate::{AstNode, SourceFile, ast};
 
     let file = SourceFile::parse("module 0x1::m { fun main() {} }").ok().unwrap();
     let fun = file.syntax().descendants().find_map(ast::Fun::cast).unwrap();

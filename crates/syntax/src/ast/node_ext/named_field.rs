@@ -1,6 +1,6 @@
 use crate::ast;
-use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::ast::NamedElement;
+use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 
 impl ast::NamedField {
     pub fn fields_owner(&self) -> ast::FieldsOwner {

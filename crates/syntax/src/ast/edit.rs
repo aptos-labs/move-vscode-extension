@@ -1,5 +1,5 @@
 use crate::ast::make;
-use crate::{ast, ted, AstToken, SyntaxElement, SyntaxNode, SyntaxToken};
+use crate::{AstToken, SyntaxElement, SyntaxNode, SyntaxToken, ast, ted};
 use rowan::NodeOrToken;
 use std::{fmt, iter, ops};
 

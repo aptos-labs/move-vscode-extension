@@ -1,3 +1,4 @@
+use crate::SyntaxKind::*;
 use crate::parse::grammar::expressions::atom::call_expr;
 use crate::parse::grammar::items::{at_item_start, fun, use_item};
 use crate::parse::grammar::lambdas::lambda_param_list;
@@ -11,8 +12,7 @@ use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{attributes, error_block, name_ref, patterns, type_args, types};
 use crate::parse::parser::{CompletedMarker, Marker, Parser};
 use crate::parse::token_set::TokenSet;
-use crate::SyntaxKind::*;
-use crate::{ts, SyntaxKind, T};
+use crate::{SyntaxKind, T, ts};
 use std::io::Read;
 use std::iter;
 use std::ops::ControlFlow::Continue;

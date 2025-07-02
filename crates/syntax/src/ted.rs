@@ -5,8 +5,8 @@
 use std::{mem, ops::RangeInclusive};
 
 use crate::{
-    ast::{self, edit::IndentLevel, make, AstNode},
     SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken, T,
+    ast::{self, AstNode, edit::IndentLevel, make},
 };
 
 /// Utility trait to allow calling `ted` functions with references or owned

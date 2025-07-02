@@ -1,5 +1,5 @@
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
-use crate::{ast, AstNode};
+use crate::{AstNode, ast};
 
 impl ast::Pat {
     pub fn bindings(&self) -> Vec<ast::IdentPat> {

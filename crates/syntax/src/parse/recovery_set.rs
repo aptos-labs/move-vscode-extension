@@ -1,6 +1,6 @@
 use crate::parse::parser::Parser;
 use crate::parse::token_set::TokenSet;
-use crate::{ts, SyntaxKind, T};
+use crate::{SyntaxKind, T, ts};
 use std::collections::HashSet;
 use std::ops::{Add, BitOr};
 
