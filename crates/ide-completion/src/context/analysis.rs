@@ -38,7 +38,16 @@ pub(crate) fn analyze(
 
     let item_list_kind = match ident_parent.kind() {
         SOURCE_FILE => ItemListKind::SourceFile,
-        MODULE => ItemListKind::Module,
+        MODULE => {
+            let module = ident_parent.cast::<ast::Module>().unwrap();
+            // no completions if module has no '{' yet
+            let l_curly_token = module.l_curly_token()?;
+            // if it's before the '{', then no completions available
+            if ident.text_range().end() < l_curly_token.text_range().start() {
+                return None;
+            }
+            ItemListKind::Module
+        }
         FUN if ident_prev_sibling == Some(VISIBILITY_MODIFIER) => {
             let fun = ident_parent.cast::<ast::Fun>().unwrap();
             ItemListKind::Function {

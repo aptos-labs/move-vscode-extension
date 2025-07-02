@@ -107,53 +107,45 @@ fn source_edit_from_name_ref(
     new_name: &dyn fmt::Display,
     named_element: &ast::NamedElement,
 ) -> bool {
-    if let Some(struct_lit_field) = ast::StructLitField::for_name_ref(name_ref) {
-        let field_name_ref = struct_lit_field.name_ref();
-        let field_path_expr = struct_lit_field.shorthand_path_expr();
-        match &(field_name_ref, field_path_expr) {
-            // field: init-expr, check if we can use a field init shorthand
-            (Some(field_name), Some(path_expr)) => {
-                let new_name = new_name.to_string();
-                if field_name == name_ref {
-                    if path_expr.syntax().text().to_string() == new_name {
+    if let Some(struct_lit_field_kind) = name_ref.try_into_struct_lit_field() {
+        match struct_lit_field_kind {
+            ast::StructLitFieldKind::Full {
+                struct_field: _,
+                name_ref: field_name_ref,
+                expr,
+            } => {
+                // field: init-expr, check if we can use a field init shorthand
+                if let Some(expr) = expr {
+                    let new_name = new_name.to_string();
+                    if &field_name_ref == name_ref && expr.syntax().text().to_string() == new_name {
                         // Foo { field: local } -> Foo { local }
                         //       ^^^^^^^ delete this
-
-                        // same names, we can use a shorthand here instead.
-                        // we do not want to erase attributes hence this range start
-                        let s = field_name.syntax().text_range().start();
-                        let e = path_expr.syntax().text_range().start();
-                        edit.delete(TextRange::new(s, e));
+                        let name_start = field_name_ref.syntax().text_range().start();
+                        let expr_start = expr.syntax().text_range().start();
+                        edit.delete(TextRange::new(name_start, expr_start));
                         return true;
                     }
-                } /*else if path_expr == name_ref && field_name.text() == new_name {
-                // Foo { field: local } -> Foo { field }
-                //            ^^^^^^^ delete this
-
-                // same names, we can use a shorthand here instead.
-                // we do not want to erase attributes hence this range start
-                let s = field_name.syntax().text_range().end();
-                let e = path_expr.syntax().text_range().end();
-                edit.delete(TextRange::new(s, e));
-                return true;
-                }*/
+                }
             }
-            // init shorthand
-            (None, Some(_)) if matches!(named_element, ast::NamedElement::NamedField(_)) => {
-                // Foo { field } -> Foo { new_name: field }
-                //       ^ insert `new_name: `
-                let offset = name_ref.syntax().text_range().start();
-                edit.insert(offset, format!("{new_name}: "));
-                return true;
+            ast::StructLitFieldKind::Shorthand { .. } => {
+                match named_element {
+                    ast::NamedElement::NamedField(_) => {
+                        // Foo { field } -> Foo { new_name: field }
+                        //       ^ insert `new_name: `
+                        let offset = name_ref.syntax().text_range().start();
+                        edit.insert(offset, format!("{new_name}: "));
+                        return true;
+                    }
+                    ast::NamedElement::IdentPat(_) => {
+                        // Foo { field } -> Foo { field: new_name }
+                        //            ^ insert `: new_name`
+                        let offset = name_ref.syntax().text_range().end();
+                        edit.insert(offset, format!(": {new_name}"));
+                        return true;
+                    }
+                    _ => (),
+                }
             }
-            (None, Some(_)) if matches!(named_element, ast::NamedElement::IdentPat(_)) => {
-                // Foo { field } -> Foo { field: new_name }
-                //            ^ insert `: new_name`
-                let offset = name_ref.syntax().text_range().end();
-                edit.insert(offset, format!(": {new_name}"));
-                return true;
-            }
-            _ => (),
         }
     } else if let Some(struct_pat_field) = ast::StructPatField::for_field_name_ref(name_ref) {
         let field_name_ref = struct_pat_field.name_ref();

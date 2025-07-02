@@ -370,7 +370,7 @@ module 0x1::m {
                     S[@0x1].field;
                 }
             }
-    "#]],
+        "#]],
     );
 }
 
@@ -458,5 +458,56 @@ module std::option {
     use aptos_std:::/*caret*/
 }
     "#,
+    );
+}
+
+#[test]
+fn test_no_item_completion_if_no_l_brace() {
+    check_no_completions(
+        // language=Move
+        r#"
+module std::option pa/*caret*/
+    "#,
+    );
+}
+
+#[test]
+fn test_no_item_completion_before_l_brace_in_module() {
+    check_no_completions(
+        // language=Move
+        r#"
+module std::option pa/*caret*/ {
+}
+    "#,
+    );
+}
+
+#[test]
+fn test_completion_in_expr_position_in_struct_literal() {
+    do_single_completion(
+        // language=Move
+        r#"
+module std::string {}
+module std::option {
+    use std::string;
+    struct Option { vec: u8 }
+    fun main() {
+        let my_vec = 1;
+        Option { vec: stri/*caret*/ }
+    }
+}
+    "#,
+        // language=Move
+        expect![[r#"
+            module std::string {}
+            module std::option {
+                use std::string;
+                struct Option { vec: u8 }
+                fun main() {
+                    let my_vec = 1;
+                    Option { vec: string/*caret*/ }
+                }
+            }
+        "#]],
     );
 }

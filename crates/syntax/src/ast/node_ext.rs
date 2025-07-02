@@ -60,7 +60,7 @@ mod source_file;
 pub mod spec_predicate_stmt;
 mod struct_;
 mod struct_lit;
-mod struct_lit_field;
+pub mod struct_lit_field;
 mod struct_or_enum;
 mod struct_pat;
 pub mod struct_pat_field;
