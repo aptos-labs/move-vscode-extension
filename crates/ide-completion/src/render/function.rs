@@ -40,7 +40,7 @@ pub(crate) fn render_function(
     item_builder.set_label(format!("{function_name}({params_line})"));
 
     if let Some(_) = ctx.config.allow_snippets {
-        let snippet_parens = if path_ctx.has_use_stmt_parent {
+        let snippet_parens = if path_ctx.is_use_stmt() {
             "$0"
         } else {
             if params.is_empty() {

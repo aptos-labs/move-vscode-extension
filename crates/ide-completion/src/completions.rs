@@ -26,6 +26,10 @@ impl CompletionItemBuilder {
 }
 
 impl Completions {
+    pub(crate) fn add_all(&mut self, items: Vec<CompletionItem>) {
+        self.buf.extend(items);
+    }
+
     pub(crate) fn add(&mut self, item: CompletionItem) {
         self.buf.push(item)
     }
