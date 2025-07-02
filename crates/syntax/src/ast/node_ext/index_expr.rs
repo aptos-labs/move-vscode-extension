@@ -1,5 +1,5 @@
 use crate::ast::support;
-use crate::{ast, AstNode};
+use crate::{AstNode, ast};
 
 impl ast::IndexExpr {
     pub fn base_expr(&self) -> ast::Expr {

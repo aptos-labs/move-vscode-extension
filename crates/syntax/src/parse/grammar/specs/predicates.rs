@@ -1,10 +1,10 @@
-use crate::parse::grammar::expressions::{expr, opt_initializer_expr, Restrictions};
+use crate::SyntaxKind::*;
+use crate::T;
+use crate::parse::grammar::expressions::{Restrictions, expr, opt_initializer_expr};
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{expressions, type_params};
 use crate::parse::parser::Parser;
 use crate::parse::token_set::TokenSet;
-use crate::SyntaxKind::*;
-use crate::T;
 
 pub(crate) fn spec_predicate(p: &mut Parser) -> bool {
     condition_predicates(p)

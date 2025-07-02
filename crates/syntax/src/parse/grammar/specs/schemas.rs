@@ -1,5 +1,7 @@
+use crate::SyntaxKind::*;
+use crate::T;
 use crate::parse::grammar::expressions::atom::{block_expr, condition};
-use crate::parse::grammar::expressions::{expr, expr_bp, opt_initializer_expr, Restrictions};
+use crate::parse::grammar::expressions::{Restrictions, expr, expr_bp, opt_initializer_expr};
 use crate::parse::grammar::items::item_start_rec_set;
 use crate::parse::grammar::paths::type_path;
 use crate::parse::grammar::patterns::ident_pat;
@@ -9,8 +11,6 @@ use crate::parse::grammar::{name, name_or_recover, name_ref, type_params, types}
 use crate::parse::parser::{CompletedMarker, Marker, Parser};
 use crate::parse::recovery_set::RecoveryToken;
 use crate::parse::token_set::TokenSet;
-use crate::SyntaxKind::*;
-use crate::T;
 use std::ops::ControlFlow::{Break, Continue};
 
 pub(crate) fn schema(p: &mut Parser, m: Marker) {

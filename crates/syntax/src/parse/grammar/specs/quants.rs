@@ -1,3 +1,5 @@
+use crate::SyntaxKind::*;
+use crate::T;
 use crate::parse::grammar::expressions::atom::block_expr;
 use crate::parse::grammar::expressions::{expr, expr_block_contents, stmt_expr, stmts};
 use crate::parse::grammar::specs::predicates::expect_expr;
@@ -5,8 +7,6 @@ use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{patterns, types};
 use crate::parse::parser::{CompletedMarker, Parser};
 use crate::parse::recovery_set::RecoverySet;
-use crate::SyntaxKind::*;
-use crate::T;
 use std::ops::ControlFlow;
 use std::ops::ControlFlow::{Break, Continue};
 

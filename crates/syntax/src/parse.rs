@@ -8,11 +8,11 @@ pub(crate) mod recovery_set;
 mod text_token_source;
 mod text_tree_sink;
 
+use crate::SyntaxError;
 use crate::parse::lexer::tokenize;
 use crate::parse::parser::Parser;
 use crate::parse::text_token_source::TextTokenSource;
 use crate::parse::text_tree_sink::TextTreeSink;
-use crate::SyntaxError;
 use rowan::GreenNode;
 
 pub use crate::syntax_kind::SyntaxKind;

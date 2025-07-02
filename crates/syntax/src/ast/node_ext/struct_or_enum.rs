@@ -1,7 +1,7 @@
-use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::ast::NamedElement;
+use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::files::InFile;
-use crate::{ast, AstNode};
+use crate::{AstNode, ast};
 use std::collections::HashSet;
 
 impl ast::StructOrEnum {

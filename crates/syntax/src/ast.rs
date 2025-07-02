@@ -27,8 +27,8 @@ pub use self::{
 };
 use crate::SyntaxKind::{CONST, ERROR};
 use crate::{
-    syntax_node::{SyntaxNode, SyntaxNodeChildren, SyntaxToken},
     SyntaxKind,
+    syntax_node::{SyntaxNode, SyntaxNodeChildren, SyntaxToken},
 };
 
 /// The main trait to go from untyped `SyntaxNode`  to a typed ast. The

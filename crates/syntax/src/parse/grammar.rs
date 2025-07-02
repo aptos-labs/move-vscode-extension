@@ -42,12 +42,12 @@ mod types;
 pub(crate) mod utils;
 
 use crate::parse::grammar::attributes::outer_attrs;
-use crate::parse::grammar::paths::{use_path, Mode};
+use crate::parse::grammar::paths::{Mode, use_path};
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::parser::Marker;
 use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
-use crate::{parse::Parser, ts, SyntaxKind::*, T};
+use crate::{SyntaxKind::*, T, parse::Parser, ts};
 use std::ops::ControlFlow::Continue;
 
 pub mod entry_points {

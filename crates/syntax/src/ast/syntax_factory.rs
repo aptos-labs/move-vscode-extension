@@ -10,7 +10,7 @@ mod constructors;
 mod exprs;
 
 use crate::syntax_editor::mapping::SyntaxMapping;
-use crate::{ast, AstNode, SourceFile};
+use crate::{AstNode, SourceFile, ast};
 use std::cell::{RefCell, RefMut};
 
 pub struct SyntaxFactory {

@@ -1,9 +1,9 @@
+use crate::SyntaxKind::*;
 use crate::parse::grammar::paths::PATH_FIRST;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{expressions, paths};
 use crate::parse::parser::{CompletedMarker, Parser};
 use crate::parse::token_set::TokenSet;
-use crate::SyntaxKind::*;
 use crate::{SyntaxKind, T};
 
 pub(super) fn outer_attrs(p: &mut Parser) -> Vec<CompletedMarker> {

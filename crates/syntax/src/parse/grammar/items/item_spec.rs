@@ -1,3 +1,4 @@
+use crate::SyntaxKind::*;
 use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::parse::grammar::expressions::atom::block_expr;
 use crate::parse::grammar::items::{at_item_start, fun, item_start_rec_set};
@@ -6,8 +7,7 @@ use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{name_ref, name_ref_or_recover, patterns, type_params, types};
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::token_set::TokenSet;
-use crate::SyntaxKind::*;
-use crate::{ts, T};
+use crate::{T, ts};
 
 pub(crate) fn item_spec(p: &mut Parser, m: Marker) {
     if p.at(T![module]) {

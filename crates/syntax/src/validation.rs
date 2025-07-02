@@ -2,7 +2,7 @@
 //!
 //! A failed validation emits a diagnostic.
 
-use crate::{match_ast, SyntaxError, SyntaxNode};
+use crate::{SyntaxError, SyntaxNode, match_ast};
 
 pub(crate) fn validate(root: &SyntaxNode, errors: &mut Vec<SyntaxError>) {
     let _p = tracing::info_span!("parser::validate").entered();

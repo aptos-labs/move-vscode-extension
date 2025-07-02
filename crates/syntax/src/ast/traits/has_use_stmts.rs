@@ -1,5 +1,5 @@
-use crate::ast::{support, AstChildren, UseStmt};
-use crate::{ast, AstNode};
+use crate::ast::{AstChildren, UseStmt, support};
+use crate::{AstNode, ast};
 
 pub trait HasUseStmts: AstNode {
     #[inline]

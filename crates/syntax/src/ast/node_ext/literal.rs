@@ -1,5 +1,5 @@
 use crate::parse::SyntaxKind::ATTR;
-use crate::{ast, AstNode, AstToken, SyntaxToken, T};
+use crate::{AstNode, AstToken, SyntaxToken, T, ast};
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum LiteralKind {

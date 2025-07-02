@@ -76,7 +76,7 @@ mod wildcard_pattern;
 
 use crate::parse::SyntaxKind;
 use crate::token_text::TokenText;
-use crate::{ast, AstNode, AstToken, SyntaxNode};
+use crate::{AstNode, AstToken, SyntaxNode, ast};
 use rowan::{GreenNodeData, GreenTokenData, NodeOrToken};
 use std::borrow::Cow;
 

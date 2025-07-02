@@ -3,8 +3,8 @@ pub mod has_item_list;
 pub mod has_use_stmts;
 
 use crate::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
-use crate::ast::{support, AstChildren, Stmt};
-use crate::{ast, AstNode};
+use crate::ast::{AstChildren, Stmt, support};
+use crate::{AstNode, ast};
 pub use docs::HoverDocsOwner;
 pub use has_item_list::HasItems;
 pub use has_use_stmts::HasUseStmts;

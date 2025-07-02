@@ -1,9 +1,9 @@
+use crate::SyntaxKind::*;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{expressions, name, name_ref, paths};
 use crate::parse::parser::{CompletedMarker, Parser};
 use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
-use crate::SyntaxKind::*;
 use crate::{SyntaxKind, T};
 use std::ops::ControlFlow::{Break, Continue};
 

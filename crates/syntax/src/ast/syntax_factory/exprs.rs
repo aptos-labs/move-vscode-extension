@@ -1,6 +1,6 @@
-use crate::ast::syntax_factory::{ast_from_text, SyntaxFactory};
+use crate::ast::syntax_factory::{SyntaxFactory, ast_from_text};
 use crate::syntax_editor::mapping::SyntaxMappingBuilder;
-use crate::{ast, AstNode};
+use crate::{AstNode, ast};
 use std::fmt::format;
 
 impl SyntaxFactory {

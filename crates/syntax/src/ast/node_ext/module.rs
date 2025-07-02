@@ -1,7 +1,7 @@
 use crate::ast;
+use crate::ast::HasItems;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::ast::traits::into_named_elements;
-use crate::ast::HasItems;
 
 impl ast::Module {
     pub fn parent_address_def(&self) -> Option<ast::AddressDef> {

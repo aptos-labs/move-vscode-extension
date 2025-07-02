@@ -1,4 +1,4 @@
-use crate::{ast, AstNode};
+use crate::{AstNode, ast};
 
 impl ast::Attr {
     pub fn as_simple_atom(&self) -> Option<String> {

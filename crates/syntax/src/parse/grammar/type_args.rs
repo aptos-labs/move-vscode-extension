@@ -1,8 +1,8 @@
 use super::*;
+use crate::TextSize;
 use crate::parse::grammar::paths::Mode;
 use crate::parse::grammar::types::{TYPE_FIRST, TYPE_FIRST_NO_LAMBDA};
 use crate::parse::grammar::utils::delimited_with_recovery;
-use crate::TextSize;
 use std::ops::ControlFlow::{Break, Continue};
 
 pub(crate) fn opt_path_type_arg_list(p: &mut Parser, mode: Mode) {

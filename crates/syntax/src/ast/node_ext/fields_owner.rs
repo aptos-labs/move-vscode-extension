@@ -1,6 +1,6 @@
 use crate::ast::support;
 use crate::parse::SyntaxKind;
-use crate::{ast, AstNode};
+use crate::{AstNode, ast};
 use std::collections::HashMap;
 
 impl ast::FieldsOwner {

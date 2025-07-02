@@ -1,5 +1,5 @@
 use crate::ast::support;
-use crate::{ast, AstNode, IntoNodeOrToken, SyntaxNodeOrToken};
+use crate::{AstNode, IntoNodeOrToken, SyntaxNodeOrToken, ast};
 
 impl ast::IfExpr {
     pub fn condition_expr(&self) -> Option<ast::Expr> {

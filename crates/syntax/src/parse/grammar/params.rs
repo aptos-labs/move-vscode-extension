@@ -1,6 +1,6 @@
 use super::*;
-use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::T;
+use crate::parse::grammar::utils::delimited_with_recovery;
 
 pub(crate) fn fun_param_list(p: &mut Parser) {
     let m = p.start();

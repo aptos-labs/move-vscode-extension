@@ -1,9 +1,9 @@
-use super::{ast_from_text, SyntaxFactory};
+use super::{SyntaxFactory, ast_from_text};
 use crate::ast::make::quote::quote;
 use crate::parse::SyntaxKind;
 use crate::{
-    ast::{self, make},
     AstNode, SourceFile, SyntaxNode, SyntaxToken,
+    ast::{self, make},
 };
 use stdx::itertools::Itertools;
 

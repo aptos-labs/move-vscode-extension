@@ -1,4 +1,4 @@
-use crate::{ast, AstNode, AstToken};
+use crate::{AstNode, AstToken, ast};
 use std::cmp::Ordering;
 
 pub trait HoverDocsOwner: AstNode {

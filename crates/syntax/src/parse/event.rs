@@ -7,9 +7,9 @@
 //! tree builder: the parser produces a stream of events like
 //! `start node`, `finish node`, and `FileBuilder` converts
 //! this stream to a real tree.
-use crate::parse::text_tree_sink::TextTreeSink;
-use crate::parse::ParseError;
 use crate::SyntaxKind::{self, *};
+use crate::parse::ParseError;
+use crate::parse::text_tree_sink::TextTreeSink;
 use std::mem;
 
 /// `Parser` produces a flat list of `Event`s.

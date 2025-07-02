@@ -1,10 +1,10 @@
+use crate::SyntaxKind::*;
+use crate::parse::Parser;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{paths, type_params, types};
 use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
-use crate::parse::Parser;
-use crate::SyntaxKind::*;
-use crate::{ts, T};
+use crate::{T, ts};
 use std::ops::ControlFlow::{Break, Continue};
 
 pub(super) fn path_type(p: &mut Parser) {

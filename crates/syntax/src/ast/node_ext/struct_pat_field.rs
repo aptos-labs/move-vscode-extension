@@ -1,5 +1,5 @@
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
-use crate::{ast, AstNode};
+use crate::{AstNode, ast};
 
 impl ast::StructPatField {
     pub fn struct_pat(&self) -> ast::StructPat {

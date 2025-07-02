@@ -1,5 +1,5 @@
 use crate::ast::support;
-use crate::{ast, AstNode};
+use crate::{AstNode, ast};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum VisLevel {

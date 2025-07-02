@@ -1,10 +1,10 @@
 //! See [`Parser`].
 
+use crate::parse::ParseError;
 use crate::parse::event::Event;
 use crate::parse::recovery_set::{RecoverySet, RecoveryToken};
 use crate::parse::text_token_source::TextTokenSource;
 use crate::parse::token_set::TokenSet;
-use crate::parse::ParseError;
 use crate::{
     SyntaxKind::{self, EOF, ERROR, TOMBSTONE},
     T,
