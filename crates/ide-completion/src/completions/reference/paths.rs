@@ -23,9 +23,6 @@ pub(crate) fn add_path_completions(
 ) -> Option<()> {
     let acc = &mut completions.borrow_mut();
 
-    // let path_kind = path_kind(context_path.clone().value, true)?;
-    // tracing::debug!(?path_kind);
-
     let path_ctx = path_completion_ctx(&context_path);
 
     if let Some(completion_items) = add_completions_from_the_resolution_entries(ctx, &path_ctx) {
