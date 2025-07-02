@@ -50,7 +50,11 @@ Then install it from the editor using the `"Install from VSIX..."` command.
 
 ## Recommended configuration for the Move package directories
 
-Add the following to settings.json to mark Move library sources as read-only:
+LSP is somewhat limited in what it can actually do, so some of the settings need to be specified manually. 
+
+### Mark Move Library sources read-only
+
+Add the following to your `settings.json`:
 
 ```json5
     "files.readonlyInclude": {
@@ -59,6 +63,15 @@ Add the following to settings.json to mark Move library sources as read-only:
     }
 ```
 
+### Auto-close `b"` and `x"` properly
+
+```json5
+    "[move]": {
+        "editor.wordSeparators": "`~!@#$%^&*()-=+[{]}\\|;:'\",.<>/?bx",
+    },
+```
+
+A bunch of symbols in the config value are the defaults, we're adding `b` and `x` symbols for the string prefixes. 
 
 ## Configuration
 
