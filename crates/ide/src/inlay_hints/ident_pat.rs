@@ -11,20 +11,22 @@ pub(super) fn hints(
     acc: &mut Vec<InlayHint>,
     sema: &Semantics<'_, RootDatabase>,
     config: &InlayHintsConfig,
-    pat: &InFile<ast::IdentPat>,
+    ident_pat: &InFile<ast::IdentPat>,
 ) -> Option<()> {
     if !config.type_hints {
         return None;
     }
-    let ty = sema.get_ident_pat_type(pat, false)?;
+    let ty = sema.get_ident_pat_type(ident_pat, false)?;
     if ty.is_unknown() {
         return None;
     }
 
-    let (file_id, pat) = pat.unpack_ref();
-    // let pat = &pat.value;
+    let (file_id, ident_pat) = ident_pat.unpack_ref();
+    if ident_pat.name().is_some_and(|it| it.as_string().starts_with("_")) {
+        return None;
+    }
 
-    let parent = pat.syntax().parent()?.cast::<ast::IdentPatOwner>()?;
+    let parent = ident_pat.syntax().parent()?.cast::<ast::IdentPatOwner>()?;
     let type_ascriptable = match parent {
         ast::IdentPatOwner::LambdaParam(lambda_param) => {
             if lambda_param.type_().is_some() {
@@ -55,7 +57,7 @@ pub(super) fn hints(
             ty,
             colon_token
                 .as_ref()
-                .map_or_else(|| pat.syntax().text_range(), |t| t.text_range())
+                .map_or_else(|| ident_pat.syntax().text_range(), |t| t.text_range())
                 .end(),
             &|_| (),
             if colon_token.is_some() { "" } else { ": " },
@@ -69,9 +71,9 @@ pub(super) fn hints(
         label.prepend_str(": ");
     }
 
-    let text_range = match pat.name() {
+    let text_range = match ident_pat.name() {
         Some(name) => name.syntax().text_range(),
-        None => pat.syntax().text_range(),
+        None => ident_pat.syntax().text_range(),
     };
 
     acc.push(InlayHint {
@@ -85,7 +87,7 @@ pub(super) fn hints(
         position: InlayHintPosition::After,
         pad_left: !render_colons,
         pad_right: false,
-        resolve_parent: Some(pat.syntax().text_range()),
+        resolve_parent: Some(ident_pat.syntax().text_range()),
     });
 
     Some(())

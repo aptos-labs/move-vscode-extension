@@ -157,3 +157,16 @@ fn test_item_from_the_same_package_hints_only_with_name() {
         }
     "#]]);
 }
+
+#[test]
+fn test_do_not_show_inlay_hint_for_underscored_params() {
+    // language=Move
+    check_inlay_hints(expect![[r#"
+        module 0x1::m {
+            fun for_each(v: vector<u8>, f: |u8| u8) {}
+            fun main() {
+                for_each(vector[], |_elem| 1);
+            }
+        }
+    "#]]);
+}
