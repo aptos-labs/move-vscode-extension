@@ -533,3 +533,17 @@ module std::option {
         "#]],
     );
 }
+
+#[test]
+fn test_no_builtin_type_if_path_qualifier_is_present() {
+    check_no_completions(
+        // language=Move
+        r#"
+module std::string {}
+module std::option {
+    use std::string;
+    struct Option { vec: string::sig/*caret*/ }
+}
+    "#,
+    );
+}

@@ -11,9 +11,8 @@ use std::cell::RefCell;
 use syntax::SyntaxKind::*;
 use syntax::ast::idents::PRIMITIVE_TYPES;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
-use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, SyntaxKind, T, ast};
+use syntax::{AstNode, T, ast};
 
 #[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn add_path_completions(
@@ -29,19 +28,21 @@ pub(crate) fn add_path_completions(
         acc.add_all(completion_items);
     }
 
-    match path_ctx.kind {
-        PathKind::Type => {
-            for primitive_type in PRIMITIVE_TYPES.iter() {
-                let mut completion_item = CompletionItem::new(
-                    CompletionItemKind::BuiltinType,
-                    ctx.source_range(),
-                    primitive_type.clone(),
-                );
-                completion_item.insert_snippet(format!("{}$0", primitive_type));
-                acc.add(completion_item.build(ctx.db));
+    if path_ctx.qualifier.is_none() {
+        match path_ctx.kind {
+            PathKind::Type => {
+                for primitive_type in PRIMITIVE_TYPES.iter() {
+                    let mut completion_item = CompletionItem::new(
+                        CompletionItemKind::BuiltinType,
+                        ctx.source_range(),
+                        *primitive_type,
+                    );
+                    completion_item.insert_snippet(format!("{}$0", primitive_type));
+                    acc.add(completion_item.build(ctx.db));
+                }
             }
+            _ => (),
         }
-        _ => (),
     }
 
     Some(())
@@ -123,13 +124,12 @@ pub(crate) struct PathCompletionCtx {
     pub(crate) has_call_parens: bool,
     /// Whether the path segment has type args or not.
     pub(crate) has_type_args: bool,
-    // /// The qualifier of the current path.
-    // pub(crate) qualified: Qualified,
+    /// The qualifier of the current path.
+    pub(crate) qualifier: Option<InFile<ast::Path>>,
     // /// The parent of the path we are completing.
     // pub(crate) parent: Option<ast::Path>,
-    // /// The path of which we are completing the segment
     // pub(crate) path: ast::Path,
-    /// The path of which we are completing the segment in the original file
+    /// The path of which we are completing the segment
     pub(crate) context_path: Option<InFile<ast::Path>>,
     pub(crate) kind: PathKind,
 }
@@ -140,6 +140,7 @@ impl Default for PathCompletionCtx {
             has_call_parens: false,
             has_type_args: false,
             context_path: None,
+            qualifier: None,
             kind: PathKind::Expr,
         }
     }
@@ -184,10 +185,12 @@ fn path_completion_ctx(path: &InFile<ast::Path>) -> PathCompletionCtx {
         Some(PATH_TYPE) => PathKind::Type,
         _ => PathKind::Expr,
     };
+    let qualifier = path.qualifier().map(|it| it.in_file(file_id));
     PathCompletionCtx {
         has_call_parens,
         has_type_args,
         kind: path_kind,
+        qualifier,
         context_path: Some(path.clone().in_file(file_id)),
     }
 }
