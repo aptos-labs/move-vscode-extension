@@ -25,11 +25,6 @@ pub(crate) fn inlay_hints(
     let file = file.syntax();
 
     let mut acc = Vec::new();
-    let mut hints = |event| {
-        if let WalkEvent::Enter(node) = event {
-            hints(&mut acc, &sema, config, file_id, node);
-        }
-    };
     let mut preorder = file.preorder();
     while let Some(event) = preorder.next() {
         // FIXME: This can miss some hints that require the parent of the range to calculate
@@ -40,7 +35,9 @@ pub(crate) fn inlay_hints(
             preorder.skip_subtree();
             continue;
         }
-        hints(event);
+        if let WalkEvent::Enter(node) = event {
+            hints(&mut acc, &sema, config, file_id, node);
+        }
     }
     if let Some(range_limit) = range_limit {
         acc.retain(|hint| range_limit.contains_range(hint.range));
@@ -80,11 +77,6 @@ pub(crate) fn inlay_hints_resolve(
     let file = file.syntax();
 
     let mut acc = Vec::new();
-    let mut hints = |event| {
-        if let WalkEvent::Enter(node) = event {
-            hints(&mut acc, &sema, config, file_id, node);
-        }
-    };
     let mut preorder = file.preorder();
     while let Some(event) = preorder.next() {
         // FIXME: This can miss some hints that require the parent of the range to calculate
@@ -93,7 +85,9 @@ pub(crate) fn inlay_hints_resolve(
             preorder.skip_subtree();
             continue;
         }
-        hints(event);
+        if let WalkEvent::Enter(node) = event {
+            hints(&mut acc, &sema, config, file_id, node);
+        }
     }
     acc.into_iter().find(|hint| hasher(hint) == hash)
 }
