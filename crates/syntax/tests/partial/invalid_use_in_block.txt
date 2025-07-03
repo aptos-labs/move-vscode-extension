@@ -1,5 +1,5 @@
-SOURCE_FILE@0..280
-  MODULE@0..280
+SOURCE_FILE@0..352
+  MODULE@0..352
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
     VALUE_ADDRESS@7..10
@@ -10,7 +10,7 @@ SOURCE_FILE@0..280
     WHITESPACE@32..33 " "
     L_CURLY@33..34 "{"
     WHITESPACE@34..39 "\n    "
-    FUN@39..278
+    FUN@39..350
       FUN_KW@39..42 "fun"
       WHITESPACE@42..43 " "
       NAME@43..47
@@ -19,7 +19,7 @@ SOURCE_FILE@0..280
         L_PAREN@47..48 "("
         R_PAREN@48..49 ")"
       WHITESPACE@49..50 " "
-      BLOCK_EXPR@50..278
+      BLOCK_EXPR@50..350
         L_CURLY@50..51 "{"
         WHITESPACE@51..60 "\n        "
         USE_STMT@60..63
@@ -100,10 +100,10 @@ SOURCE_FILE@0..280
                     IDENT@172..178 "string"
               COLON_COLON@178..180 "::"
         WHITESPACE@180..189 "\n        "
-        USE_STMT@189..207
+        USE_STMT@189..208
           USE_KW@189..192 "use"
           WHITESPACE@192..193 " "
-          USE_SPECK@193..207
+          USE_SPECK@193..208
             PATH@193..204
               PATH@193..196
                 PATH_SEGMENT@193..196
@@ -114,54 +114,104 @@ SOURCE_FILE@0..280
                 NAME_REF@198..204
                   IDENT@198..204 "string"
             COLON_COLON@204..206 "::"
-            USE_GROUP@206..207
+            USE_GROUP@206..208
               L_CURLY@206..207 "{"
-        WHITESPACE@207..216 "\n        "
-        USE_STMT@216..238
-          USE_KW@216..219 "use"
-          WHITESPACE@219..220 " "
-          USE_SPECK@220..238
-            PATH@220..231
-              PATH@220..223
-                PATH_SEGMENT@220..223
-                  NAME_REF@220..223
-                    IDENT@220..223 "std"
-              COLON_COLON@223..225 "::"
-              PATH_SEGMENT@225..231
-                NAME_REF@225..231
-                  IDENT@225..231 "string"
-            COLON_COLON@231..233 "::"
-            USE_GROUP@233..238
-              L_CURLY@233..234 "{"
-              USE_SPECK@234..237
-                PATH@234..237
-                  PATH@234..235
-                    PATH_SEGMENT@234..235
-                      NAME_REF@234..235
-                        IDENT@234..235 "a"
-                  COLON_COLON@235..237 "::"
-              R_CURLY@237..238 "}"
-        WHITESPACE@238..247 "\n        "
-        USE_STMT@247..272
-          USE_KW@247..250 "use"
-          WHITESPACE@250..251 " "
-          USE_SPECK@251..272
-            PATH@251..262
-              PATH@251..254
-                PATH_SEGMENT@251..254
-                  NAME_REF@251..254
-                    IDENT@251..254 "std"
-              COLON_COLON@254..256 "::"
-              PATH_SEGMENT@256..262
-                NAME_REF@256..262
-                  IDENT@256..262 "string"
-            COLON_COLON@262..264 "::"
-            USE_GROUP@264..272
-              L_CURLY@264..265 "{"
-              ERROR@265..271
-                BYTE_STRING@265..271 "b\"123\""
-              R_CURLY@271..272 "}"
-        WHITESPACE@272..277 "\n    "
-        R_CURLY@277..278 "}"
-    WHITESPACE@278..279 "\n"
-    R_CURLY@279..280 "}"
+              R_CURLY@207..208 "}"
+        WHITESPACE@208..217 "\n        "
+        USE_STMT@217..239
+          USE_KW@217..220 "use"
+          WHITESPACE@220..221 " "
+          USE_SPECK@221..239
+            PATH@221..232
+              PATH@221..224
+                PATH_SEGMENT@221..224
+                  NAME_REF@221..224
+                    IDENT@221..224 "std"
+              COLON_COLON@224..226 "::"
+              PATH_SEGMENT@226..232
+                NAME_REF@226..232
+                  IDENT@226..232 "string"
+            COLON_COLON@232..234 "::"
+            USE_GROUP@234..239
+              L_CURLY@234..235 "{"
+              USE_SPECK@235..238
+                PATH@235..238
+                  PATH@235..236
+                    PATH_SEGMENT@235..236
+                      NAME_REF@235..236
+                        IDENT@235..236 "a"
+                  COLON_COLON@236..238 "::"
+              R_CURLY@238..239 "}"
+        WHITESPACE@239..248 "\n        "
+        USE_STMT@248..270
+          USE_KW@248..251 "use"
+          WHITESPACE@251..252 " "
+          USE_SPECK@252..269
+            PATH@252..263
+              PATH@252..255
+                PATH_SEGMENT@252..255
+                  NAME_REF@252..255
+                    IDENT@252..255 "std"
+              COLON_COLON@255..257 "::"
+              PATH_SEGMENT@257..263
+                NAME_REF@257..263
+                  IDENT@257..263 "string"
+            COLON_COLON@263..265 "::"
+            USE_GROUP@265..269
+              L_CURLY@265..266 "{"
+              ERROR@266..268
+                IF_KW@266..268 "if"
+              R_CURLY@268..269 "}"
+          SEMICOLON@269..270 ";"
+        WHITESPACE@270..279 "\n        "
+        USE_STMT@279..310
+          USE_KW@279..282 "use"
+          WHITESPACE@282..283 " "
+          USE_SPECK@283..309
+            PATH@283..294
+              PATH@283..286
+                PATH_SEGMENT@283..286
+                  NAME_REF@283..286
+                    IDENT@283..286 "std"
+              COLON_COLON@286..288 "::"
+              PATH_SEGMENT@288..294
+                NAME_REF@288..294
+                  IDENT@288..294 "string"
+            COLON_COLON@294..296 "::"
+            USE_GROUP@296..309
+              L_CURLY@296..297 "{"
+              ERROR@297..301
+                SPEC_KW@297..301 "spec"
+              COMMA@301..302 ","
+              WHITESPACE@302..303 " "
+              USE_SPECK@303..308
+                PATH@303..308
+                  PATH_SEGMENT@303..308
+                    NAME_REF@303..308
+                      IDENT@303..308 "ident"
+              R_CURLY@308..309 "}"
+          SEMICOLON@309..310 ";"
+        WHITESPACE@310..319 "\n        "
+        USE_STMT@319..344
+          USE_KW@319..322 "use"
+          WHITESPACE@322..323 " "
+          USE_SPECK@323..344
+            PATH@323..334
+              PATH@323..326
+                PATH_SEGMENT@323..326
+                  NAME_REF@323..326
+                    IDENT@323..326 "std"
+              COLON_COLON@326..328 "::"
+              PATH_SEGMENT@328..334
+                NAME_REF@328..334
+                  IDENT@328..334 "string"
+            COLON_COLON@334..336 "::"
+            USE_GROUP@336..344
+              L_CURLY@336..337 "{"
+              ERROR@337..343
+                BYTE_STRING@337..343 "b\"123\""
+              R_CURLY@343..344 "}"
+        WHITESPACE@344..349 "\n    "
+        R_CURLY@349..350 "}"
+    WHITESPACE@350..351 "\n"
+    R_CURLY@351..352 "}"

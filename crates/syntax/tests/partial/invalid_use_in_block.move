@@ -6,8 +6,10 @@ module 0x1::invalid_use_in_block {
         use std::
         use std::;
         use std::string::
-        use std::string::{
+        use std::string::{}
         use std::string::{a::}
+        use std::string::{if};
+        use std::string::{spec, ident};
         use std::string::{b"123"}
     }
 }
