@@ -3,6 +3,7 @@ mod analysis;
 use crate::completions::item_list::ItemListKind;
 use crate::config::CompletionConfig;
 use crate::context::analysis::analyze;
+use crate::item::{CompletionItem, CompletionItemBuilder, CompletionItemKind};
 use base_db::inputs::InternFileId;
 use base_db::source_db;
 use ide_db::RootDatabase;
@@ -63,6 +64,26 @@ impl CompletionContext<'_> {
 
     pub(crate) fn containing_module(&self) -> Option<ast::Module> {
         self.original_token.parent()?.containing_module()
+    }
+
+    pub(crate) fn new_item(
+        &self,
+        kind: CompletionItemKind,
+        label: impl Into<String>,
+    ) -> CompletionItemBuilder {
+        CompletionItem::new(kind, self.source_range(), label.into())
+    }
+
+    pub(crate) fn new_snippet_item(
+        &self,
+        kind: CompletionItemKind,
+        snippet: impl Into<String>,
+    ) -> CompletionItem {
+        let snippet = snippet.into();
+        let label = snippet.replace("$0", "");
+        let mut item = CompletionItem::new(kind, self.source_range(), &label);
+        item.insert_snippet(snippet);
+        item.build(self.db)
     }
 }
 

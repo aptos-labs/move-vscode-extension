@@ -3,6 +3,7 @@ use crate::context::CompletionContext;
 use crate::item::{CompletionItem, CompletionItemKind};
 use crate::render::function::{FunctionKind, render_function};
 use crate::render::render_named_item;
+use ide_db::SymbolKind;
 use lang::nameres::labels;
 use lang::nameres::path_kind::path_kind;
 use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variants};
@@ -31,15 +32,23 @@ pub(crate) fn add_path_completions(
     if path_ctx.qualifier.is_none() {
         match path_ctx.kind {
             PathKind::Type => {
-                for primitive_type in PRIMITIVE_TYPES.iter() {
-                    let mut completion_item = CompletionItem::new(
-                        CompletionItemKind::BuiltinType,
-                        ctx.source_range(),
-                        *primitive_type,
+                for type_name in PRIMITIVE_TYPES.iter() {
+                    acc.add(
+                        ctx.new_snippet_item(CompletionItemKind::BuiltinType, format!("{type_name}$0")),
                     );
-                    completion_item.insert_snippet(format!("{}$0", primitive_type));
-                    acc.add(completion_item.build(ctx.db));
                 }
+            }
+            PathKind::Expr => {
+                // vector literal
+                acc.add(ctx.new_snippet_item(CompletionItemKind::Keyword, "vector[$0]"));
+
+                // assert!
+                let mut item = ctx.new_item(
+                    CompletionItemKind::SymbolKind(SymbolKind::Assert),
+                    "assert!(_: bool, err: u64)",
+                );
+                item.insert_snippet("assert!($0)");
+                acc.add(item.build(ctx.db));
             }
             _ => (),
         }
