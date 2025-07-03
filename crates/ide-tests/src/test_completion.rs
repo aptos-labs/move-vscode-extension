@@ -591,3 +591,47 @@ module std::option {
         "#]],
     );
 }
+
+#[test]
+fn test_complete_function_in_item_spec() {
+    do_single_completion(
+        // language=Move
+        r#"
+module std::option {
+    fun main() {
+    }
+    spec ma/*caret*/
+}
+    "#,
+        // language=Move
+        expect![[r#"
+            module std::option {
+                fun main() {
+                }
+                spec main /*caret*/
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_complete_module_keyword_at_item_spec() {
+    do_single_completion(
+        // language=Move
+        r#"
+module std::option {
+    fun main() {
+    }
+    spec mod/*caret*/
+}
+    "#,
+        // language=Move
+        expect![[r#"
+            module std::option {
+                fun main() {
+                }
+                spec module /*caret*/
+            }
+        "#]],
+    );
+}

@@ -6,7 +6,7 @@ use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::{AstNode, SyntaxNode, SyntaxToken, TextRange, TextSize, ast};
 
-pub(crate) fn analyze(
+pub(crate) fn analyze_completion_context(
     original_file: SyntaxNode,
     fake_file: SyntaxNode,
     original_offset: TextSize,
@@ -92,6 +92,11 @@ fn analyze_ref(
                     fake_range.end() - TextSize::of(COMPLETION_MARKER),
                 ),
             })
+        }
+        ast::ReferenceElement::ItemSpecRef(_) => {
+            let original_item_spec =
+                find_node_at_offset::<ast::ItemSpec>(&original_file, original_offset)?;
+            Some(ReferenceKind::ItemSpecRef { original_item_spec })
         }
         _ => None,
     };
