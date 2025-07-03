@@ -35,7 +35,6 @@ pub enum PathKind {
 
     // any multi element path
     Qualified {
-        path: ast::Path,
         qualifier: ast::Path,
         ns: NsSet,
         kind: QualifiedKind,
@@ -53,10 +52,9 @@ impl fmt::Debug for PathKind {
                 .finish(),
             PathKind::FieldShorthand { .. } => f.debug_struct("FieldShorthand").finish(),
             PathKind::Unqualified { ns } => f.debug_struct("Unqualified").field("ns", &ns).finish(),
-            PathKind::Qualified { path, qualifier, ns, kind } => f
+            PathKind::Qualified { qualifier, ns, kind } => f
                 .debug_struct("Qualified")
                 .field("kind", &kind)
-                .field("path", &path.syntax().text())
                 .field("qualifier", &qualifier.syntax().text())
                 .field("ns", &ns)
                 .finish(),
@@ -87,7 +85,6 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
         let parent_use_speck = use_group.syntax().parent_of_type::<ast::UseSpeck>()?;
         let use_group_qualifier = parent_use_speck.path()?;
         return Some(PathKind::Qualified {
-            path,
             qualifier: use_group_qualifier,
             ns: IMPORTABLE_NS | MODULES,
             kind: QualifiedKind::UseGroupItem,
@@ -166,7 +163,6 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
                 qualifier_path_address.value_address().address_text(),
             ));
             return Some(PathKind::Qualified {
-                path,
                 qualifier,
                 ns: MODULES,
                 kind: QualifiedKind::Module { address: value_address },
@@ -184,7 +180,6 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
             .is_some_and(|it| matches!(it, USE_SPECK | FRIEND | MODULE_SPEC))
         {
             return Some(PathKind::Qualified {
-                path,
                 qualifier,
                 ns: MODULES,
                 kind: QualifiedKind::Module {
@@ -197,7 +192,6 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
         if let Some(_) = named_address {
             // known named address, can be module path, or module item path too
             return Some(PathKind::Qualified {
-                path,
                 qualifier,
                 ns,
                 kind: QualifiedKind::ModuleOrItem {
@@ -211,7 +205,6 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
         //            ^ path
         if has_trailing_colon_colon {
             return Some(PathKind::Qualified {
-                path,
                 qualifier,
                 ns,
                 kind: QualifiedKind::ModuleOrItem {
@@ -226,7 +219,6 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
 
         // module::[name]
         return Some(PathKind::Qualified {
-            path,
             qualifier,
             ns,
             kind: QualifiedKind::ModuleItemOrEnumVariant,
@@ -236,7 +228,6 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
     if path.root_parent_of_type::<ast::UseSpeck>().is_some() {
         // MODULES are for `use 0x1::m::Self;`
         return Some(PathKind::Qualified {
-            path,
             qualifier,
             ns: ns | MODULES,
             kind: QualifiedKind::FQModuleItem,
@@ -245,7 +236,6 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
 
     // three-element path
     Some(PathKind::Qualified {
-        path,
         qualifier,
         // remove MODULE if it's added, as it cannot be a MODULE
         ns: ns - Ns::MODULE,
