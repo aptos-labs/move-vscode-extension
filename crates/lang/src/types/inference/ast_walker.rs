@@ -560,7 +560,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 .filter_by_name(method_call_expr.reference_name())
                 .filter_by_visibility(
                     self.ctx.db,
-                    &method_call_expr.clone().in_file(self.ctx.file_id).map_into(),
+                    &method_call_expr.clone().in_file(self.ctx.file_id).syntax(),
                 )
                 .single_or_none();
         self.ctx

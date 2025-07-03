@@ -173,7 +173,7 @@ pub fn resolve_path(
     let entries_by_expected_type = entries_filtered_by_name.filter_by_expected_type(db, expected_type);
 
     let entries_by_visibility =
-        entries_by_expected_type.filter_by_visibility(db, &context_element.map_into());
+        entries_by_expected_type.filter_by_visibility(db, &context_element.syntax());
     tracing::debug!(?entries_by_visibility);
 
     filter_by_function_namespace_special_case(entries_by_visibility, &ctx)

@@ -66,17 +66,24 @@ fn add_completions_from_the_resolution_entries(
     ctx: &CompletionContext<'_>,
     path_ctx: &PathCompletionCtx,
 ) -> Option<Vec<CompletionItem>> {
-    let context_path = path_ctx.original_path.clone()?;
-
-    let path_kind = path_kind(context_path.value.qualifier(), context_path.value.clone(), true)?;
+    let path_kind = match path_ctx.original_path.clone() {
+        Some(original_path) => {
+            path_kind(original_path.value.qualifier(), original_path.value.clone(), true)?
+        }
+        None => {
+            return None;
+        }
+    };
     tracing::debug!(?path_kind);
 
+    let original_path = path_ctx.original_path.clone()?;
+
     let resolution_ctx = ResolutionContext {
-        start_at: context_path.syntax().clone(),
+        start_at: original_path.syntax().clone(),
         is_completion: true,
     };
     let entries = get_path_resolve_variants(ctx.db, &resolution_ctx, path_kind.clone())
-        .filter_by_visibility(ctx.db, &context_path.clone().map_into());
+        .filter_by_visibility(ctx.db, &original_path.syntax().clone());
     tracing::debug!(completion_item_entries = ?entries);
 
     let mut completion_items = vec![];
