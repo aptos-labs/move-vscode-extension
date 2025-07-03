@@ -14,7 +14,7 @@ use syntax::ast::idents::PRIMITIVE_TYPES;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, T, algo, ast};
+use syntax::{AstNode, SyntaxNode, T, algo, ast};
 
 #[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn add_path_completions(
@@ -66,24 +66,44 @@ fn add_completions_from_the_resolution_entries(
     ctx: &CompletionContext<'_>,
     path_ctx: &PathCompletionCtx,
 ) -> Option<Vec<CompletionItem>> {
+    let original_file = ctx.original_file()?;
+
     let path_kind = match path_ctx.original_path.clone() {
         Some(original_path) => {
             path_kind(original_path.value.qualifier(), original_path.value.clone(), true)?
         }
         None => {
-            return None;
+            let original_qualifier = path_ctx.original_qualifier(&original_file);
+            let fake_path_kind = path_kind(original_qualifier, path_ctx.fake_path.clone(), true)?;
+            if matches!(fake_path_kind, path_kind::PathKind::FieldShorthand { .. }) {
+                return None;
+            }
+            // return None;
+            fake_path_kind
         }
     };
     tracing::debug!(?path_kind);
 
-    let original_path = path_ctx.original_path.clone()?;
+    let original_start_at = path_ctx
+        .original_path
+        .as_ref()
+        .map(|it| it.syntax())
+        .or_else(|| {
+            let original_start_at_from_fake = algo::ancestors_at_offset(
+                original_file.syntax(),
+                path_ctx.fake_path.syntax().text_range().start(),
+            )
+            .next()?
+            .in_file(ctx.position.file_id);
+            Some(original_start_at_from_fake)
+        })?;
 
     let resolution_ctx = ResolutionContext {
-        start_at: original_path.syntax().clone(),
+        start_at: original_start_at.clone(),
         is_completion: true,
     };
     let entries = get_path_resolve_variants(ctx.db, &resolution_ctx, path_kind.clone())
-        .filter_by_visibility(ctx.db, &original_path.syntax().clone());
+        .filter_by_visibility(ctx.db, &original_start_at.clone());
     tracing::debug!(completion_item_entries = ?entries);
 
     let mut completion_items = vec![];
@@ -182,7 +202,7 @@ pub(crate) struct PathCompletionCtx {
 }
 
 impl PathCompletionCtx {
-    pub fn original_qualifier(&self, original_file: ast::SourceFile) -> Option<ast::Path> {
+    pub fn original_qualifier(&self, original_file: &ast::SourceFile) -> Option<ast::Path> {
         let fake_qualifier = self.fake_path.qualifier()?;
         algo::find_node_at_offset::<ast::Path>(
             original_file.syntax(),
