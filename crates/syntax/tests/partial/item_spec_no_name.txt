@@ -1,5 +1,5 @@
-SOURCE_FILE@0..44
-  MODULE@0..43
+SOURCE_FILE@0..43
+  MODULE@0..42
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
     VALUE_ADDRESS@7..10
@@ -12,6 +12,6 @@ SOURCE_FILE@0..44
     WHITESPACE@31..36 "\n    "
     ITEM_SPEC@36..40
       SPEC_KW@36..40 "spec"
-    WHITESPACE@40..42 " \n"
-    R_CURLY@42..43 "}"
-  WHITESPACE@43..44 "\n"
+    WHITESPACE@40..41 "\n"
+    R_CURLY@41..42 "}"
+  WHITESPACE@42..43 "\n"
