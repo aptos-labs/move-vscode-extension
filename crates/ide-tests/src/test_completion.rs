@@ -547,3 +547,47 @@ module std::option {
     "#,
     );
 }
+
+#[test]
+fn test_complete_vector_literal() {
+    do_single_completion(
+        // language=Move
+        r#"
+module std::option {
+    fun main() {
+        vec/*caret*/
+    }
+}
+    "#,
+        // language=Move
+        expect![[r#"
+            module std::option {
+                fun main() {
+                    vector[/*caret*/]
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_complete_assert_macro() {
+    do_single_completion(
+        // language=Move
+        r#"
+module std::option {
+    fun main() {
+        ass/*caret*/
+    }
+}
+    "#,
+        // language=Move
+        expect![[r#"
+            module std::option {
+                fun main() {
+                    assert!(/*caret*/)
+                }
+            }
+        "#]],
+    );
+}

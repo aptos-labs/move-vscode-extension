@@ -2,7 +2,6 @@ use crate::completions::reference::paths::PathCompletionCtx;
 use crate::context::CompletionContext;
 use crate::item::CompletionItemBuilder;
 use crate::render::render_named_item;
-use base_db::SourceDatabase;
 use lang::types::lowering::TyLowering;
 use lang::types::substitution::{ApplySubstitution, Substitution};
 use lang::types::ty::Ty;
@@ -31,7 +30,7 @@ pub(crate) fn render_function(
     let function_name = fun.name().unwrap().as_string();
     item_builder.lookup_by(function_name.clone());
 
-    let params = render_params(ctx.db, fun.clone(), call_ty.clone()).unwrap_or_default();
+    let params = render_params(ctx, fun.clone(), call_ty.clone()).unwrap_or_default();
     let params = match kind {
         FunctionKind::Fun => params,
         FunctionKind::Method => params.into_iter().skip(1).collect(),
@@ -52,18 +51,22 @@ pub(crate) fn render_function(
         item_builder.insert_snippet(format!("{function_name}{snippet_parens}"));
     }
 
-    match call_ty.ret_type().unwrap_all_refs() {
+    // match call_ty.ret_type().unwrap_all_refs() {
+    match call_ty.ret_type() {
         Ty::Unit => (),
         ret_ty => {
-            let ret_ty_txt = ret_ty.render(ctx.db, None);
-            item_builder.set_detail(Some(ret_ty_txt));
+            item_builder.set_detail(Some(render_ty(ctx, &ret_ty)));
         }
     }
 
     item_builder
 }
 
-fn render_params(db: &dyn SourceDatabase, fun: ast::AnyFun, call_ty: TyCallable) -> Option<Vec<String>> {
+fn render_params(
+    ctx: &CompletionContext<'_>,
+    fun: ast::AnyFun,
+    call_ty: TyCallable,
+) -> Option<Vec<String>> {
     let params_with_types = fun
         .params()
         .into_iter()
@@ -71,11 +74,13 @@ fn render_params(db: &dyn SourceDatabase, fun: ast::AnyFun, call_ty: TyCallable)
         .collect::<Vec<_>>();
     let mut res = vec![];
     for (param, ty) in params_with_types.into_iter() {
-        let param_name = param.ident_name();
-        let rendered_ty = ty.render(db, None);
-        res.push(format!("{}: {}", param_name, rendered_ty));
+        res.push(format!("{}: {}", param.ident_name(), render_ty(ctx, &ty)));
     }
     Some(res)
+}
+
+fn render_ty(ctx: &CompletionContext<'_>, ty: &Ty) -> String {
+    ctx.sema.render_ty_truncated(ty, ctx.position.file_id)
 }
 
 pub(crate) enum FunctionKind {
