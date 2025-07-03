@@ -64,11 +64,11 @@ pub(crate) fn analyze_completion_context(
 }
 
 fn analyze_ref(
-    ref_element: &ast::ReferenceElement,
+    fake_ref: &ast::ReferenceElement,
     original_file: SyntaxNode,
     original_offset: TextSize,
 ) -> Option<CompletionAnalysis> {
-    let reference_kind = match ref_element {
+    let reference_kind = match fake_ref {
         ast::ReferenceElement::Path(fake_path) => {
             let original_path = find_node_at_offset::<ast::Path>(&original_file, original_offset);
             Some(ReferenceKind::Path {
@@ -93,9 +93,13 @@ fn analyze_ref(
                 ),
             })
         }
-        ast::ReferenceElement::ItemSpecRef(_) => {
-            let original_item_spec =
-                find_node_at_offset::<ast::ItemSpec>(&original_file, original_offset)?;
+        ast::ReferenceElement::ItemSpecRef(fake_item_spec_ref) => {
+            // spec keyword location will be the same in the original file
+            let fake_spec_kw = fake_item_spec_ref.item_spec().spec_token()?;
+            let original_spec_kw = original_file
+                .token_at_offset(fake_spec_kw.text_range().start())
+                .right_biased()?;
+            let original_item_spec = original_spec_kw.parent()?.cast::<ast::ItemSpec>()?;
             Some(ReferenceKind::ItemSpecRef { original_item_spec })
         }
         _ => None,

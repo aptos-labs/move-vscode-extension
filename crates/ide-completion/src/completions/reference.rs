@@ -53,6 +53,8 @@ fn add_item_spec_ref_completions(
     let acc = &mut completions.borrow_mut();
 
     acc.add(ctx.new_snippet_item(CompletionItemKind::Keyword, "module $0"));
+    acc.add(ctx.new_snippet_item(CompletionItemKind::Keyword, "schema $0"));
+    acc.add(ctx.new_snippet_item(CompletionItemKind::Keyword, "fun $0"));
 
     let module = item_spec.module(ctx.db)?;
     for named_item in module.flat_map(|it| it.verifiable_items()) {

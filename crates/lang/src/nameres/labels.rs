@@ -31,17 +31,6 @@ pub fn get_loop_labels_resolve_variants(label: InFile<ast::Label>) -> Vec<ScopeE
             label_entries.push(entry);
         }
     }
-
-    // for scope in label.syntax().ancestors() {
-    //     if is_label_barrier(scope.kind()) {
-    //         break;
-    //     }
-    //     let opt_label_decl = scope.cast::<ast::LoopLike>().and_then(|it| it.label_decl());
-    //     if let Some(label_decl) = opt_label_decl {
-    //         let entry = label_decl_to_entry(label_decl.in_file(file_id));
-    //         label_entries.push(entry);
-    //     }
-    // }
     tracing::debug!(?label_entries);
     label_entries
 }

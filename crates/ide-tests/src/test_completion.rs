@@ -1,6 +1,6 @@
 use crate::ide_test_utils::completion_utils::{
-    check_completion_exact, check_completions_contains, check_completions_with_prefix_exact,
-    check_no_completions, do_single_completion,
+    check_completion_exact, check_completions, check_completions_contains,
+    check_completions_with_prefix_exact, check_no_completions, do_single_completion,
 };
 use expect_test::expect;
 
@@ -633,5 +633,18 @@ module std::option {
                 spec module /*caret*/
             }
         "#]],
+    );
+}
+
+#[test]
+fn test_complete_other_spec_keywords() {
+    check_completions(
+        // language=Move
+        r#"
+module std::option {
+    spec /*caret*/
+}
+    "#,
+        expect![[r#"["module", "schema", "fun"]"#]],
     );
 }

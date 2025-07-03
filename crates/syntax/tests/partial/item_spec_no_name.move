@@ -1,0 +1,3 @@
+module 0x1::item_spec_no_name {
+    spec
+}
