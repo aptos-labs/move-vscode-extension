@@ -57,14 +57,14 @@ pub fn get_path_resolve_variants(
             vec![]
         }
 
-        PathKind::FieldShorthand { struct_lit_field } => {
+        PathKind::FieldShorthand { struct_field } => {
             let mut entries = vec![];
             entries.extend(get_entries_from_walking_scopes(
                 db,
                 ctx.path.map_ref(|it| it.reference()),
                 NAMES,
             ));
-            let lit_field = ctx.wrap_in_file(struct_lit_field);
+            let lit_field = ctx.wrap_in_file(struct_field);
             let lit_field_entries = nameres::resolve_multi_no_inf(db, lit_field).unwrap_or_default();
             entries.extend(lit_field_entries);
             entries
@@ -161,7 +161,7 @@ pub fn resolve_path(
     };
     let context_element = path.clone();
 
-    let Some(path_kind) = path_kind(path.clone().value, false) else {
+    let Some(path_kind) = path_kind(path.value.qualifier(), path.clone().value, false) else {
         return vec![];
     };
     tracing::debug!(?path_kind);

@@ -25,6 +25,7 @@ pub trait SyntaxNodeExt {
     fn ancestor_strict<Ast: AstNode>(&self) -> Option<Ast>;
 
     fn has_ancestor_strict<Ast: AstNode>(&self) -> bool;
+    fn has_ancestor_or_self<Ast: AstNode>(&self) -> bool;
 
     fn parent_of_type<Ast: AstNode>(&self) -> Option<Ast>;
 
@@ -80,6 +81,10 @@ impl SyntaxNodeExt for SyntaxNode {
 
     fn has_ancestor_strict<Ast: AstNode>(&self) -> bool {
         self.ancestor_strict::<Ast>().is_some()
+    }
+
+    fn has_ancestor_or_self<Ast: AstNode>(&self) -> bool {
+        self.ancestor_or_self::<Ast>().is_some()
     }
 
     fn parent_of_type<Ast: AstNode>(&self) -> Option<Ast> {

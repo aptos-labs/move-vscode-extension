@@ -98,11 +98,11 @@ fn add_method_completion_items(
         let _ = inference_ctx.combine_types(self_ty.clone(), coerced_receiver_ty);
 
         let apply_subst = inference_ctx.fully_resolve_vars_fallback_to_origin(subst);
-        let path_ctx = PathCompletionCtx::default();
         acc.add(
             render_function(
                 ctx,
-                &path_ctx,
+                false,
+                false,
                 method_name,
                 method.map_into(),
                 FunctionKind::Method,

@@ -1,7 +1,7 @@
 use crate::nameres::address::{Address, NamedAddr, ValueAddr, resolve_named_address};
 use crate::nameres::namespaces::{
-    ALL_NS, ENUMS_N_MODULES, IMPORTABLE_NS, MODULES, NAMES, NAMES_N_FUNCTIONS_N_VARIANTS, NONE, Ns,
-    NsSet, SCHEMAS, TYPES_N_ENUMS, TYPES_N_ENUMS_N_ENUM_VARIANTS, TYPES_N_ENUMS_N_MODULES,
+    ALL_NS, ENUMS_N_MODULES, IMPORTABLE_NS, MODULES, NAMES, NAMES_N_FUNCTIONS_N_VARIANTS, Ns, NsSet,
+    SCHEMAS, TYPES_N_ENUMS, TYPES_N_ENUMS_N_ENUM_VARIANTS, TYPES_N_ENUMS_N_MODULES,
     TYPES_N_ENUMS_N_NAMES,
 };
 use enumset::enum_set;
@@ -10,7 +10,7 @@ use std::fmt::Formatter;
 use syntax::SyntaxKind::*;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::{SyntaxNodeExt, SyntaxTokenExt};
-use syntax::{AstNode, T, ast};
+use syntax::{AstNode, SyntaxNode, T, ast};
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum PathKind {
@@ -26,7 +26,7 @@ pub enum PathKind {
     // MyStruct { foo }
     //            ^^^
     FieldShorthand {
-        struct_lit_field: ast::StructLitField,
+        struct_field: ast::StructLitField,
     },
     // foo
     Unqualified {
@@ -78,7 +78,11 @@ pub enum QualifiedKind {
 }
 
 /// can return None on deeply invalid trees
-pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
+pub fn path_kind(
+    qualifier: Option<ast::Path>,
+    path: ast::Path,
+    is_completion: bool,
+) -> Option<PathKind> {
     if let Some(use_group) = path.syntax().ancestor_strict::<ast::UseGroup>() {
         // use 0x1::m::{item}
         //                ^
@@ -91,14 +95,16 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
         });
     }
 
+    let path_parent = path.syntax().parent()?;
+
     // [0x1::foo]::bar
     //     ^ qualifier
-    let qualifier = path.qualifier();
     let has_trailing_colon_colon = path
         .ident_token()
         .and_then(|it| it.next_token())
         .is_some_and(|token| token.is(T![::]));
-    let ns = path_namespaces(path.clone(), is_completion);
+
+    let ns = path_namespaces(qualifier.as_ref(), path_parent, is_completion);
 
     // one-element path
     if qualifier.is_none() {
@@ -143,9 +149,7 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
             if let Some(ast::StructLitFieldKind::Shorthand { struct_field, .. }) =
                 path_name_ref.try_into_struct_lit_field()
             {
-                return Some(PathKind::FieldShorthand {
-                    struct_lit_field: struct_field,
-                });
+                return Some(PathKind::FieldShorthand { struct_field });
             }
         }
 
@@ -243,13 +247,12 @@ pub fn path_kind(path: ast::Path, is_completion: bool) -> Option<PathKind> {
     })
 }
 
-fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
+fn path_namespaces(
+    qualifier: Option<&ast::Path>,
+    path_parent: SyntaxNode,
+    is_completion: bool,
+) -> NsSet {
     use syntax::SyntaxKind::*;
-
-    let qualifier = path.qualifier();
-    let Some(path_parent) = path.syntax().parent() else {
-        return NONE;
-    };
 
     match path_parent.kind() {
         // mod::foo::bar
@@ -287,7 +290,7 @@ fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
 
         CALL_EXPR => NAMES_N_FUNCTIONS_N_VARIANTS,
 
-        PATH_EXPR if path.syntax().has_ancestor_strict::<ast::AttrItem>() => ALL_NS,
+        PATH_EXPR if path_parent.has_ancestor_or_self::<ast::AttrItem>() => ALL_NS,
 
         // TYPE | ENUM for resource indexing, NAME for vector indexing
         PATH_EXPR if path_parent.parent_is::<ast::IndexExpr>() => TYPES_N_ENUMS_N_NAMES,
@@ -304,7 +307,6 @@ fn path_namespaces(path: ast::Path, is_completion: bool) -> NsSet {
 
         SCHEMA_LIT => SCHEMAS,
 
-        // todo:
         STRUCT_LIT | STRUCT_PAT | TUPLE_STRUCT_PAT | PATH_PAT => TYPES_N_ENUMS_N_ENUM_VARIANTS,
 
         // todo:

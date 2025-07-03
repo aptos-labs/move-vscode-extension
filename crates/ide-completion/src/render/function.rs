@@ -11,7 +11,8 @@ use syntax::files::InFile;
 
 pub(crate) fn render_function(
     ctx: &CompletionContext<'_>,
-    path_ctx: &PathCompletionCtx,
+    is_use_stmt: bool,
+    has_any_parens: bool,
     fun_name: String,
     fun: InFile<ast::AnyFun>,
     kind: FunctionKind,
@@ -39,13 +40,13 @@ pub(crate) fn render_function(
     item_builder.set_label(format!("{function_name}({params_line})"));
 
     if let Some(_) = ctx.config.allow_snippets {
-        let snippet_parens = if path_ctx.is_use_stmt() {
+        let snippet_parens = if is_use_stmt {
             "$0"
         } else {
             if params.is_empty() {
-                if path_ctx.has_any_parens() { "$0" } else { "()$0" }
+                if has_any_parens { "$0" } else { "()$0" }
             } else {
-                if path_ctx.has_any_parens() { "$0" } else { "($0)" }
+                if has_any_parens { "$0" } else { "($0)" }
             }
         };
         item_builder.insert_snippet(format!("{function_name}{snippet_parens}"));

@@ -32,15 +32,12 @@ impl fmt::Debug for ResolveScope {
     }
 }
 
-pub fn get_resolve_scopes(
-    db: &dyn SourceDatabase,
-    start_at: InFile<ast::ReferenceElement>,
-) -> Vec<ResolveScope> {
+pub fn get_resolve_scopes(db: &dyn SourceDatabase, start_at: InFile<SyntaxNode>) -> Vec<ResolveScope> {
     let (file_id, start_at) = start_at.unpack();
 
     let mut scopes = vec![];
-    let mut opt_scope = start_at.syntax().parent();
-    let mut prev_scope = start_at.syntax().to_owned();
+    let mut opt_scope = start_at.parent();
+    let mut prev_scope = start_at.to_owned();
 
     while let Some(ref scope) = opt_scope {
         scopes.push(ResolveScope {
@@ -113,7 +110,7 @@ pub fn get_entries_from_walking_scopes(
 ) -> Vec<ScopeEntry> {
     let _p = tracing::debug_span!("get_entries_from_walking_scopes").entered();
 
-    let resolve_scopes = get_resolve_scopes(db, start_at);
+    let resolve_scopes = get_resolve_scopes(db, start_at.syntax());
 
     let mut visited_names = HashMap::<String, NsSet>::new();
     let mut entries = vec![];
