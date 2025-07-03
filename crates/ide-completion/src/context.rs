@@ -2,7 +2,7 @@ mod analysis;
 
 use crate::completions::item_list::ItemListKind;
 use crate::config::CompletionConfig;
-use crate::context::analysis::analyze;
+use crate::context::analysis::analyze_completion_context;
 use crate::item::{CompletionItem, CompletionItemBuilder, CompletionItemKind};
 use base_db::inputs::InternFileId;
 use base_db::source_db;
@@ -34,6 +34,9 @@ pub enum ReferenceKind {
     Label {
         fake_label: ast::Label,
         source_range: TextRange,
+    },
+    ItemSpecRef {
+        original_item_spec: ast::ItemSpec,
     },
 }
 
@@ -81,7 +84,8 @@ impl CompletionContext<'_> {
     ) -> CompletionItem {
         let snippet = snippet.into();
         let label = snippet.replace("$0", "");
-        let mut item = CompletionItem::new(kind, self.source_range(), &label);
+        let label = label.trim();
+        let mut item = CompletionItem::new(kind, self.source_range(), label);
         item.insert_snippet(snippet);
         item.build(self.db)
     }
@@ -120,7 +124,7 @@ impl<'a> CompletionContext<'a> {
             }
         }
 
-        let analysis = analyze(
+        let analysis = analyze_completion_context(
             original_file.syntax().clone(),
             file_with_fake_ident.syntax().clone(),
             offset,
