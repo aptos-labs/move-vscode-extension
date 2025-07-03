@@ -17,7 +17,7 @@ use syntax::ast::HasItems;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt, OptionInFileExt};
-use syntax::{AstNode, ast};
+use syntax::{AstNode, SyntaxNode, ast};
 use vfs::FileId;
 
 fn refine_path_expected_type(
@@ -59,11 +59,8 @@ pub fn get_path_resolve_variants(
 
         PathKind::FieldShorthand { struct_field } => {
             let mut entries = vec![];
-            entries.extend(get_entries_from_walking_scopes(
-                db,
-                ctx.path.map_ref(|it| it.reference()),
-                NAMES,
-            ));
+            entries.extend(get_entries_from_walking_scopes(db, ctx.start_at.clone(), NAMES));
+
             let lit_field = ctx.wrap_in_file(struct_field);
             let lit_field_entries = nameres::resolve_multi_no_inf(db, lit_field).unwrap_or_default();
             entries.extend(lit_field_entries);
@@ -73,7 +70,7 @@ pub fn get_path_resolve_variants(
         PathKind::NamedAddressOrUnqualifiedPath { ns, .. } | PathKind::Unqualified { ns } => {
             let mut entries = vec![];
             if ns.contains(Ns::MODULE) {
-                if let Some(module) = ctx.containing_module().opt_in_file(ctx.path.file_id) {
+                if let Some(module) = ctx.containing_module().opt_in_file(ctx.file_id()) {
                     // Self::call() as an expression
                     entries.push(ScopeEntry {
                         name: "Self".to_string(),
@@ -83,11 +80,7 @@ pub fn get_path_resolve_variants(
                     })
                 }
             }
-            entries.extend(get_entries_from_walking_scopes(
-                db,
-                ctx.path.map_ref(|it| it.reference()),
-                ns,
-            ));
+            entries.extend(get_entries_from_walking_scopes(db, ctx.start_at.clone(), ns));
             entries
         }
 
@@ -166,14 +159,17 @@ pub fn resolve_path(
     };
     tracing::debug!(?path_kind);
 
-    let ctx = ResolutionContext { path, is_completion: false };
+    let ctx = ResolutionContext {
+        start_at: path.syntax(),
+        is_completion: false,
+    };
     let entries = get_path_resolve_variants(db, &ctx, path_kind.clone());
     tracing::debug!(path_resolve_variants = ?entries);
 
     let entries_filtered_by_name = entries.filter_by_name(path_name.clone());
     tracing::debug!(filter_by_name = ?path_name, ?entries_filtered_by_name);
 
-    let expected_type = refine_path_expected_type(db, ctx.path.file_id, path_kind, expected_type);
+    let expected_type = refine_path_expected_type(db, ctx.file_id(), path_kind, expected_type);
     let entries_by_expected_type = entries_filtered_by_name.filter_by_expected_type(db, expected_type);
 
     let entries_by_visibility =
@@ -187,8 +183,9 @@ fn filter_by_function_namespace_special_case(
     entries: Vec<ScopeEntry>,
     ctx: &ResolutionContext,
 ) -> Vec<ScopeEntry> {
-    let path_expr = ctx.parent_path_expr();
-    if path_expr.is_some_and(|it| it.syntax().parent_of_type::<ast::CallExpr>().is_some()) {
+    // let path_expr = ctx.parent_path_expr();
+    if ctx.is_call_expr() {
+        // if path_expr.is_some_and(|it| it.syntax().parent_of_type::<ast::CallExpr>().is_some()) {
         let function_entries = entries.clone().filter_by_ns(FUNCTIONS);
         return if !function_entries.is_empty() {
             function_entries
@@ -232,38 +229,54 @@ pub(crate) fn remove_variant_ident_pats(
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ResolutionContext {
-    pub path: InFile<ast::Path>,
+    pub start_at: InFile<SyntaxNode>,
     pub is_completion: bool,
 }
 
 impl ResolutionContext {
     pub fn containing_module(&self) -> Option<ast::Module> {
-        self.path.value.syntax().containing_module()
+        self.start_at.value.containing_module()
+    }
+
+    #[inline]
+    pub fn file_id(&self) -> FileId {
+        self.start_at.file_id
     }
 
     pub fn wrap_in_file<T: AstNode>(&self, node: T) -> InFile<T> {
-        InFile::new(self.path.file_id, node)
+        InFile::new(self.file_id(), node)
     }
 
-    pub fn parent_path_expr(&self) -> Option<ast::PathExpr> {
-        self.path
-            .value
-            .root_path()
-            .syntax()
-            .parent_of_type::<ast::PathExpr>()
-    }
+    // pub fn parent_path_expr(&self) -> Option<ast::PathExpr> {
+    //     self.start_at
+    //         .value
+    //         .root_path()
+    //         .syntax()
+    //         .parent_of_type::<ast::PathExpr>()
+    // }
 
     pub fn is_call_expr(&self) -> bool {
-        let path_expr = self
-            .path
-            .value
-            .root_path()
-            .syntax()
-            .parent_of_type::<ast::PathExpr>();
-        path_expr.is_some_and(|it| it.syntax().parent_is::<ast::CallExpr>())
+        let path = self.start_at.as_ref().and_then(|it| it.cast::<ast::Path>());
+        match path {
+            None => {
+                // todo: way to determine call expr?
+                false
+            }
+            Some(path) => {
+                let path_expr = path.value.root_path().syntax().parent_of_type::<ast::PathExpr>();
+                path_expr.is_some_and(|it| it.syntax().parent_is::<ast::CallExpr>())
+            }
+        }
+        // let path_expr = self
+        //     .start_at
+        //     .value
+        //     .root_path()
+        //     .syntax()
+        //     .parent_of_type::<ast::PathExpr>();
+        // path_expr.is_some_and(|it| it.syntax().parent_is::<ast::CallExpr>())
     }
 
     pub fn package_id(&self, db: &dyn SourceDatabase) -> PackageId {
-        db.file_package_id(self.path.file_id)
+        db.file_package_id(self.file_id())
     }
 }

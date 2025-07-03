@@ -105,12 +105,12 @@ fn module_inner_spec_scopes(
 
 pub fn get_entries_from_walking_scopes(
     db: &dyn SourceDatabase,
-    start_at: InFile<ast::ReferenceElement>,
+    start_at: InFile<SyntaxNode>,
     ns: NsSet,
 ) -> Vec<ScopeEntry> {
     let _p = tracing::debug_span!("get_entries_from_walking_scopes").entered();
 
-    let resolve_scopes = get_resolve_scopes(db, start_at.syntax());
+    let resolve_scopes = get_resolve_scopes(db, start_at);
 
     let mut visited_names = HashMap::<String, NsSet>::new();
     let mut entries = vec![];
@@ -171,7 +171,7 @@ pub fn get_modules_as_entries(
 #[tracing::instrument(
     level = "debug",
     skip(db, ctx, qualifier),
-    fields(qualifier = ?qualifier.syntax().text(), path = ?ctx.path.syntax_text()))]
+    fields(qualifier = ?qualifier.syntax().text(), path = ?ctx.start_at.value.text()))]
 pub fn get_qualified_path_entries(
     db: &dyn SourceDatabase,
     ctx: &ResolutionContext,

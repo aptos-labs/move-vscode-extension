@@ -701,7 +701,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             } else {
                 let binding = get_entries_from_walking_scopes(
                     self.ctx.db,
-                    lit_field.clone().in_file(self.ctx.file_id).map_into(),
+                    lit_field.syntax().clone().in_file(self.ctx.file_id),
+                    // lit_field.clone().in_file(self.ctx.file_id).map_into(),
                     NAMES,
                 )
                 .filter_by_name(lit_field_name)

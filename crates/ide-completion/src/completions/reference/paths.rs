@@ -72,7 +72,7 @@ fn add_completions_from_the_resolution_entries(
     tracing::debug!(?path_kind);
 
     let resolution_ctx = ResolutionContext {
-        path: context_path.clone(),
+        start_at: context_path.syntax().clone(),
         is_completion: true,
     };
     let entries = get_path_resolve_variants(ctx.db, &resolution_ctx, path_kind.clone())
