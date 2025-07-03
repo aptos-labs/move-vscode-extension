@@ -39,14 +39,14 @@ pub(crate) fn use_group(p: &mut Parser) {
     assert!(p.at(T!['{']));
     let m = p.start();
     p.bump(T!['{']);
-    p.with_recovery_set(item_start_kws_only().with_token_set(T![;]), |p| {
+    p.reset_recovery_set(|p| {
         delimited_with_recovery(
             p,
             |p| use_speck(p, false),
             T![,],
             "expected identifier",
             Some(T!['}']),
-        );
+        )
     });
     p.expect(T!['}']);
     m.complete(p, USE_GROUP);
