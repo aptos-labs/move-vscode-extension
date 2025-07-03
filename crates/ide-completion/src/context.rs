@@ -11,7 +11,7 @@ use lang::Semantics;
 use syntax::SyntaxKind::*;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::FilePosition;
-use syntax::{AstNode, SyntaxToken, T, TextRange, ast};
+use syntax::{AstNode, SourceFile, SyntaxToken, T, TextRange, algo, ast};
 
 const COMPLETION_MARKER: &str = "raCompletionMarker";
 
@@ -55,6 +55,10 @@ pub(crate) struct CompletionContext<'db> {
 }
 
 impl CompletionContext<'_> {
+    pub(crate) fn original_file(&self) -> Option<SourceFile> {
+        algo::containing_file_for_token(self.original_token.clone())
+    }
+
     /// The range of the identifier that is being completed.
     pub(crate) fn source_range(&self) -> TextRange {
         let kind = self.original_token.kind();
@@ -88,6 +92,10 @@ impl CompletionContext<'_> {
         let mut item = CompletionItem::new(kind, self.source_range(), label);
         item.insert_snippet(snippet);
         item.build(self.db)
+    }
+
+    pub(crate) fn new_snippet_keyword(&self, snippet: impl Into<String>) -> CompletionItem {
+        self.new_snippet_item(CompletionItemKind::Keyword, snippet)
     }
 }
 

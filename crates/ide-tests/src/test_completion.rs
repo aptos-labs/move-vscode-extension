@@ -637,7 +637,7 @@ module std::option {
 }
 
 #[test]
-fn test_complete_other_spec_keywords() {
+fn test_complete_other_item_spec_keywords() {
     check_completions(
         // language=Move
         r#"
@@ -645,6 +645,135 @@ module std::option {
     spec /*caret*/
 }
     "#,
-        expect![[r#"["module", "schema", "fun"]"#]],
+        expect![[r#"
+            [
+                "module",
+                "schema",
+                "fun",
+            ]"#]],
+    );
+}
+
+#[test]
+fn test_no_spec_block_keywords_in_block() {
+    check_no_completions(
+        // language=Move
+        r#"
+module std::option {
+    fun main() {
+        assum/*caret*/
+    }
+}
+    "#,
+    );
+}
+
+#[test]
+fn test_no_spec_block_keywords_in_spec_block_but_not_directly_at_stmt() {
+    check_no_completions(
+        // language=Move
+        r#"
+module std::option {
+    fun main() {
+        &assum/*caret*/
+    }
+}
+    "#,
+    );
+}
+
+#[test]
+fn test_spec_predicate_keywords_in_spec_block() {
+    check_completions(
+        // language=Move
+        r#"
+module std::option {
+    spec module {
+        /*caret*/
+    }
+}
+    "#,
+        expect![[r#"
+        [
+            "if",
+            "match",
+            "loop",
+            "while",
+            "for",
+            "let",
+            "true",
+            "false",
+            "assert",
+            "assume",
+            "requires",
+            "decreases",
+            "ensures",
+            "modifies",
+            "include",
+            "apply",
+            "aborts_if",
+            "aborts_with",
+            "emits",
+            "axiom",
+            "pragma",
+            "vector[]",
+            "assert!(_: bool, err: u64)",
+        ]"#]],
+    );
+}
+
+#[test]
+fn test_spec_predicate_keywords_in_inner_spec_block() {
+    check_completions(
+        // language=Move
+        r#"
+module std::option {
+    spec module {
+        {
+            /*caret*/
+        }
+    }
+}
+    "#,
+        expect![[r#"
+        [
+            "if",
+            "match",
+            "loop",
+            "while",
+            "for",
+            "let",
+            "true",
+            "false",
+            "assert",
+            "assume",
+            "requires",
+            "decreases",
+            "ensures",
+            "modifies",
+            "include",
+            "apply",
+            "aborts_if",
+            "aborts_with",
+            "emits",
+            "axiom",
+            "pragma",
+            "vector[]",
+            "assert!(_: bool, err: u64)",
+        ]"#]],
+    );
+}
+
+#[test]
+fn test_no_expr_keywords_in_path_type() {
+    check_no_completions(
+        // language=Move
+        r#"
+module std::option {
+    fun main() {
+        let a: wh/*caret*/
+    }
+}
+    "#,
     );
 }
