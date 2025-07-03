@@ -11,26 +11,31 @@ use lang::nameres::scope::ScopeEntryListExt;
 use std::cell::RefCell;
 use syntax::SyntaxKind::*;
 use syntax::ast::idents::PRIMITIVE_TYPES;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, T, ast};
+use syntax::{AstNode, T, algo, ast};
 
 #[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn add_path_completions(
     completions: &RefCell<Completions>,
     ctx: &CompletionContext<'_>,
-    context_path: InFile<ast::Path>,
+    original_path: Option<InFile<ast::Path>>,
+    fake_path: ast::Path,
 ) -> Option<()> {
+    let path_ctx = path_completion_ctx(ctx, &original_path, fake_path.clone())?;
+
+    if path_ctx.qualifier.is_none() && path_ctx.path_kind == PathKind::Expr {
+        add_expr_keywords(completions, ctx, &fake_path);
+    }
+
     let acc = &mut completions.borrow_mut();
-
-    let path_ctx = path_completion_ctx(&context_path);
-
     if let Some(completion_items) = add_completions_from_the_resolution_entries(ctx, &path_ctx) {
         acc.add_all(completion_items);
     }
 
     if path_ctx.qualifier.is_none() {
-        match path_ctx.kind {
+        match path_ctx.path_kind {
             PathKind::Type => {
                 for type_name in PRIMITIVE_TYPES.iter() {
                     acc.add(
@@ -61,7 +66,7 @@ fn add_completions_from_the_resolution_entries(
     ctx: &CompletionContext<'_>,
     path_ctx: &PathCompletionCtx,
 ) -> Option<Vec<CompletionItem>> {
-    let context_path = path_ctx.context_path.clone()?;
+    let context_path = path_ctx.original_path.clone()?;
 
     let path_kind = path_kind(context_path.value.clone(), true)?;
     tracing::debug!(?path_kind);
@@ -103,27 +108,52 @@ fn add_completions_from_the_resolution_entries(
     Some(completion_items)
 }
 
-pub(crate) fn add_expr_keywords(completions: &RefCell<Completions>, ctx: &CompletionContext<'_>) {
-    let add_keyword = |kw, right_shift| {
-        let mut comps = completions.borrow_mut();
-        let shift = if right_shift { " " } else { "" };
-        comps.add_keyword_snippet(ctx, kw, &format!("{kw}{shift}$0"));
-    };
+pub(crate) fn add_expr_keywords(
+    completions: &RefCell<Completions>,
+    ctx: &CompletionContext<'_>,
+    fake_path: &ast::Path,
+) -> Option<()> {
+    let mut acc = completions.borrow_mut();
 
-    add_keyword("if", true);
-    add_keyword("match", true);
-    add_keyword("loop", true);
-    add_keyword("while", true);
-    add_keyword("for", true);
-    add_keyword("let", true);
+    acc.add(ctx.new_snippet_keyword("if $0"));
+    acc.add(ctx.new_snippet_keyword("match $0"));
+    acc.add(ctx.new_snippet_keyword("loop $0"));
+    acc.add(ctx.new_snippet_keyword("while $0"));
+    acc.add(ctx.new_snippet_keyword("for $0"));
+    acc.add(ctx.new_snippet_keyword("let $0"));
 
-    add_keyword("true", false);
-    add_keyword("false", false);
+    acc.add(ctx.new_snippet_keyword("true$0"));
+    acc.add(ctx.new_snippet_keyword("false$0"));
 
     if !labels::loop_ancestors(&ctx.original_token.clone().into()).is_empty() {
-        add_keyword("continue", false);
-        add_keyword("break", false);
+        acc.add(ctx.new_snippet_keyword("continue$0"));
+        acc.add(ctx.new_snippet_keyword("break$0"));
     }
+
+    let is_msl_expr = fake_path.syntax().is_msl_context();
+    if !is_msl_expr {
+        return Some(());
+    }
+
+    // only direct path of ExprStmt / BlockExpr
+    let parent = fake_path.path_expr()?.syntax().parent()?.kind();
+    if matches!(parent, EXPR_STMT | BLOCK_EXPR) {
+        acc.add(ctx.new_snippet_keyword("assert $0"));
+        acc.add(ctx.new_snippet_keyword("assume $0"));
+        acc.add(ctx.new_snippet_keyword("requires $0"));
+        acc.add(ctx.new_snippet_keyword("decreases $0"));
+        acc.add(ctx.new_snippet_keyword("ensures $0"));
+        acc.add(ctx.new_snippet_keyword("modifies $0"));
+        acc.add(ctx.new_snippet_keyword("include $0"));
+        acc.add(ctx.new_snippet_keyword("apply $0"));
+        acc.add(ctx.new_snippet_keyword("aborts_if $0"));
+        acc.add(ctx.new_snippet_keyword("aborts_with $0"));
+        acc.add(ctx.new_snippet_keyword("emits $0"));
+        acc.add(ctx.new_snippet_keyword("axiom $0"));
+        acc.add(ctx.new_snippet_keyword("pragma $0"));
+    }
+
+    Some(())
 }
 
 /// The state of the path we are currently completing.
@@ -139,8 +169,9 @@ pub(crate) struct PathCompletionCtx {
     // pub(crate) parent: Option<ast::Path>,
     // pub(crate) path: ast::Path,
     /// The path of which we are completing the segment
-    pub(crate) context_path: Option<InFile<ast::Path>>,
-    pub(crate) kind: PathKind,
+    pub(crate) original_path: Option<InFile<ast::Path>>,
+    // pub(crate) fake_path: Option<InFile<ast::Path>>,
+    pub(crate) path_kind: PathKind,
 }
 
 impl Default for PathCompletionCtx {
@@ -148,9 +179,9 @@ impl Default for PathCompletionCtx {
         PathCompletionCtx {
             has_call_parens: false,
             has_type_args: false,
-            context_path: None,
+            original_path: None,
             qualifier: None,
-            kind: PathKind::Expr,
+            path_kind: PathKind::Expr,
         }
     }
 }
@@ -160,7 +191,7 @@ impl PathCompletionCtx {
         self.has_call_parens || self.has_type_args
     }
     pub fn is_use_stmt(&self) -> bool {
-        self.kind == PathKind::Use
+        self.path_kind == PathKind::Use
     }
 }
 
@@ -171,35 +202,49 @@ pub(crate) enum PathKind {
     Use,
 }
 
-fn path_completion_ctx(path: &InFile<ast::Path>) -> PathCompletionCtx {
-    let (file_id, path) = path.unpack_ref();
-
-    let ident_token = path
-        .segment()
+fn path_completion_ctx(
+    ctx: &CompletionContext<'_>,
+    original_path: &Option<InFile<ast::Path>>,
+    fake_path: ast::Path,
+) -> Option<PathCompletionCtx> {
+    let original_ident_token = original_path
+        .as_ref()
+        .and_then(|it| it.value.segment())
         .and_then(|it| it.name_ref())
         .and_then(|it| it.ident_token());
 
-    let has_type_args = ident_token
+    let has_type_args = original_ident_token
         .clone()
         .and_then(|it| it.next_token_no_trivia())
         .is_some_and(|it| it.kind() == T![<]);
-    let has_call_parens = ident_token
+    let has_call_parens = original_ident_token
         .clone()
         .and_then(|it| it.next_token_no_trivia())
         .is_some_and(|it| it.kind() == T!['(']);
 
-    let path_parent = path.syntax().parent().map(|it| it.kind());
-    let path_kind = match path_parent {
-        Some(USE_SPECK) => PathKind::Use,
-        Some(PATH_TYPE) => PathKind::Type,
-        _ => PathKind::Expr,
+    let fake_path_parent = fake_path.root_path().syntax().parent()?;
+    let path_kind = match fake_path_parent.kind() {
+        USE_SPECK => PathKind::Use,
+        PATH_TYPE => PathKind::Type,
+        PATH_EXPR => PathKind::Expr,
+        _ => {
+            return None;
+        }
     };
-    let qualifier = path.qualifier().map(|it| it.in_file(file_id));
-    PathCompletionCtx {
+    let mut qualifier: Option<InFile<ast::Path>> = None;
+    if let Some(fake_path_qualifier) = fake_path.qualifier() {
+        let original_file = ctx.original_file()?;
+        let original_qualifier = algo::find_node_at_offset::<ast::Path>(
+            original_file.syntax(),
+            fake_path_qualifier.syntax().text_range().start(),
+        );
+        qualifier = original_qualifier.map(|it| it.in_file(ctx.position.file_id));
+    }
+    Some(PathCompletionCtx {
         has_call_parens,
         has_type_args,
-        kind: path_kind,
+        path_kind: path_kind,
         qualifier,
-        context_path: Some(path.clone().in_file(file_id)),
-    }
+        original_path: original_path.clone(),
+    })
 }

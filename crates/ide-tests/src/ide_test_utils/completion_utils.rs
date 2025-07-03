@@ -82,7 +82,7 @@ pub fn check_completions(source: &str, expected: Expect) {
 
     let completion_items = completions_at_offset(source, offset, true);
 
-    let lookup_labels_txt = format!("{:?}", lookup_labels(completion_items));
+    let lookup_labels_txt = format!("{:#?}", lookup_labels(completion_items));
     expected.assert_eq(&lookup_labels_txt);
 }
 

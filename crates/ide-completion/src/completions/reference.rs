@@ -9,7 +9,6 @@ use crate::completions::reference::paths::add_path_completions;
 use crate::context::{CompletionContext, ReferenceKind};
 use crate::item::CompletionItemKind;
 use crate::render::render_named_item;
-use lang::nameres::path_kind::{PathKind, path_kind};
 use lang::node_ext::item::ModuleItemExt;
 use std::cell::RefCell;
 use syntax::ast;
@@ -22,17 +21,12 @@ pub(crate) fn add_reference_completions(
 ) -> Option<()> {
     let file_id = ctx.position.file_id;
     match reference_kind {
-        ReferenceKind::Path { original_path, fake_path: _ } => {
-            let kw_path = original_path.clone()?;
-            let kw_path_kind = path_kind(kw_path, true)?;
-
-            if matches!(kw_path_kind, PathKind::Unqualified { .. }) {
-                paths::add_expr_keywords(completions, ctx);
-            }
-
-            let path = original_path?;
-            add_path_completions(completions, ctx, path.in_file(file_id))
-        }
+        ReferenceKind::Path { original_path, fake_path } => add_path_completions(
+            completions,
+            ctx,
+            original_path.map(|it| it.in_file(file_id)),
+            fake_path,
+        ),
         ReferenceKind::FieldRef { receiver_expr } => {
             add_method_or_field_completions(completions, ctx, receiver_expr.in_file(file_id))
         }

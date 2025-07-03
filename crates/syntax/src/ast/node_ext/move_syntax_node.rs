@@ -1,6 +1,6 @@
 use crate::SyntaxKind::*;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
-use crate::{AstNode, SyntaxNode, ast};
+use crate::{AstNode, SyntaxNode, algo, ast};
 
 pub trait MoveSyntaxElementExt {
     fn node(&self) -> &SyntaxNode;
@@ -18,7 +18,7 @@ pub trait MoveSyntaxElementExt {
     }
 
     fn containing_file(&self) -> Option<ast::SourceFile> {
-        self.node().ancestor_strict::<ast::SourceFile>()
+        algo::containing_file_for_node(self.node().clone())
     }
 
     fn is<T: AstNode>(&self) -> bool {

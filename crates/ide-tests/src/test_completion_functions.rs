@@ -177,7 +177,11 @@ fn test_public_friend_functions_for_fq_completion() {
             }
         }
     "#,
-        expect![[r#"["create_friend()", "create()"]"#]],
+        expect![[r#"
+            [
+                "create_friend()",
+                "create()",
+            ]"#]],
     )
 }
 
@@ -196,7 +200,11 @@ fn test_public_and_public_script_completions_for_script() {
             }
         }
     "#,
-        expect![[r#"["create_script()", "create()"]"#]],
+        expect![[r#"
+            [
+                "create_script()",
+                "create()",
+            ]"#]],
     )
 }
 
@@ -216,7 +224,14 @@ fn test_self_completion() {
             }
         }
     "#,
-        expect![[r#"["create_friend()", "create_script()", "create()", "create_private()", "main()"]"#]],
+        expect![[r#"
+            [
+                "create_friend()",
+                "create_script()",
+                "create()",
+                "create_private()",
+                "main()",
+            ]"#]],
     )
 }
 
@@ -358,7 +373,10 @@ fn test_test_only_function_completion_in_test_only_scope() {
             use 0x1::minter::get/*caret*/
         }
     "#,
-        expect![[r#"["get_weekly()"]"#]],
+        expect![[r#"
+            [
+                "get_weekly()",
+            ]"#]],
     )
 }
 
@@ -376,7 +394,10 @@ fn test_test_only_function_completion_in_test_only_use_stmt_scope() {
             use 0x1::minter::get/*caret*/
         }
     "#,
-        expect![[r#"["get_weekly()"]"#]],
+        expect![[r#"
+            [
+                "get_weekly()",
+            ]"#]],
     )
 }
 
