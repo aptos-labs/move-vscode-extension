@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 use crate::ide_test_utils::diagnostics::{check_diagnostics, check_diagnostics_and_fix};
 use expect_test::expect;
 

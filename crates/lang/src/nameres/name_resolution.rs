@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 use crate::hir_db::get_modules_in_file;
 use crate::nameres::address::Address;
 use crate::nameres::namespaces::{Ns, NsSet};

@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 use crate::config::config_change::ConfigChange;
 use crate::global_state::{GlobalState, LoadPackagesRequest};
 use crate::lsp::from_proto;

@@ -209,3 +209,11 @@ Next features planned are (roughly in the expected order of implementation):
 * Add "item is private" clarification to the "unresolved reference" diagnostic.
 * Unused imports (with quickfix).
 * Global auto-completion (auto-import).
+
+## Acknowledgements
+This project is inspired by [rust-analyzer](https://github.com/rust-lang/rust-analyzer).
+
+Portions of the code in this project are derived from rust-analyzer and are used under 
+the terms of the Apache License, Version 2.0.
+
+We thank the rust-analyzer contributors for their work and inspiration.

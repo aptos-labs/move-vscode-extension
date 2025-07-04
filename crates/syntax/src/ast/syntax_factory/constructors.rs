@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 use super::{SyntaxFactory, ast_from_text};
 use crate::ast::make::quote::quote;
 use crate::parse::SyntaxKind;

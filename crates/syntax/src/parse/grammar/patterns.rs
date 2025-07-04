@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 use crate::SyntaxKind::*;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{expressions, name, name_ref, paths};

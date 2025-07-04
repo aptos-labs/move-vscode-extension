@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 use crate::nameres;
 use crate::nameres::get_named_field_entries;
 use crate::nameres::name_resolution::get_entries_from_walking_scopes;

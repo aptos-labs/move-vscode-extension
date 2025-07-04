@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 //! A thin wrapper around [`stdx::thread::Pool`] which threads a sender through spawned jobs.
 //! It is used in [`crate::global_state::GlobalState`] throughout the main loop.
 

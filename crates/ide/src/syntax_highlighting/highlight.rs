@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 pub(crate) mod name_like;
 
 use crate::syntax_highlighting::tags::{Highlight, HlOperator, HlPunct, HlTag};
