@@ -1,10 +1,10 @@
 use crate::completions::item_list::ItemListKind;
 use crate::context::{COMPLETION_MARKER, CompletionAnalysis, ReferenceKind};
 use syntax::SyntaxKind::{FUN, MODULE, SOURCE_FILE, VISIBILITY_MODIFIER};
-use syntax::algo::find_node_at_offset;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
-use syntax::{AstNode, SyntaxNode, SyntaxToken, TextRange, TextSize, ast};
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
+use syntax::{AstNode, SyntaxNode, SyntaxToken, TextRange, TextSize, algo, ast};
 
 pub(crate) fn analyze_completion_context(
     original_file: SyntaxNode,
@@ -70,16 +70,33 @@ fn analyze_ref(
 ) -> Option<CompletionAnalysis> {
     let reference_kind = match fake_ref {
         ast::ReferenceElement::Path(fake_path) => {
-            let original_path = find_node_at_offset::<ast::Path>(&original_file, original_offset);
-            Some(ReferenceKind::Path {
-                original_path,
-                fake_path: fake_path.clone(),
-            })
+            // check for struct lit field
+            if let Some(fake_path_expr) = fake_path.root_path().path_expr()
+                && let Some(fake_struct_lit_field) =
+                    fake_path_expr.syntax().parent_of_type::<ast::StructLitField>()
+                // S { val/*caret*/ }
+                && fake_struct_lit_field.is_shorthand()
+            {
+                let fake_struct_lit = fake_struct_lit_field.struct_lit();
+                let original_struct_lit = algo::find_node_at_offset::<ast::StructLit>(
+                    &original_file,
+                    fake_struct_lit.syntax().text_range().start(),
+                )?;
+                Some(ReferenceKind::StructLitField { original_struct_lit })
+            } else {
+                let original_path =
+                    algo::find_node_at_offset::<ast::Path>(&original_file, original_offset);
+                Some(ReferenceKind::Path {
+                    original_path,
+                    fake_path: fake_path.clone(),
+                })
+            }
         }
         ast::ReferenceElement::DotExpr(_) => {
             let original_receiver_expr =
-                find_node_at_offset::<ast::DotExpr>(&original_file, original_offset)?.receiver_expr();
-            Some(ReferenceKind::FieldRef {
+                algo::find_node_at_offset::<ast::DotExpr>(&original_file, original_offset)?
+                    .receiver_expr();
+            Some(ReferenceKind::DotExpr {
                 receiver_expr: original_receiver_expr,
             })
         }

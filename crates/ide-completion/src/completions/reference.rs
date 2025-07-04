@@ -27,7 +27,7 @@ pub(crate) fn add_reference_completions(
             original_path.map(|it| it.in_file(file_id)),
             fake_path,
         ),
-        ReferenceKind::FieldRef { receiver_expr } => {
+        ReferenceKind::DotExpr { receiver_expr } => {
             add_method_or_field_completions(completions, ctx, receiver_expr.in_file(file_id))
         }
         ReferenceKind::Label { fake_label, source_range } => {
@@ -35,6 +35,9 @@ pub(crate) fn add_reference_completions(
         }
         ReferenceKind::ItemSpecRef { original_item_spec } => {
             add_item_spec_ref_completions(completions, ctx, original_item_spec.in_file(file_id))
+        }
+        ReferenceKind::StructLitField { original_struct_lit } => {
+            add_struct_lit_fields_completions(completions, ctx, original_struct_lit.in_file(file_id))
         }
     }
 }
@@ -50,9 +53,9 @@ fn add_item_spec_ref_completions(
     acc.add(ctx.new_snippet_item(CompletionItemKind::Keyword, "schema $0"));
     acc.add(ctx.new_snippet_item(CompletionItemKind::Keyword, "fun $0"));
 
-    let module = item_spec.module(ctx.db)?;
-    for named_item in module.flat_map(|it| it.verifiable_items()) {
-        if let Some(name) = named_item.value.name() {
+    let module = item_spec.module(ctx.db)?.value;
+    for named_item in module.verifiable_items() {
+        if let Some(name) = named_item.name() {
             let name = name.as_string();
             let mut comp_item = render_named_item(ctx, &name, named_item);
             comp_item.insert_snippet(format!("{name} $0"));
@@ -60,5 +63,25 @@ fn add_item_spec_ref_completions(
         }
     }
 
+    Some(())
+}
+
+fn add_struct_lit_fields_completions(
+    completions: &RefCell<Completions>,
+    ctx: &CompletionContext<'_>,
+    original_struct_lit: InFile<ast::StructLit>,
+) -> Option<()> {
+    let fields_owner = ctx
+        .sema
+        .resolve_to_element::<ast::FieldsOwner>(original_struct_lit.map(|it| it.path().into()))?;
+
+    let acc = &mut completions.borrow_mut();
+
+    let (_, fields_owner) = fields_owner.unpack();
+    for named_field in fields_owner.named_fields() {
+        if let Some(comp_item) = ctx.new_snippet_named_item(named_field.into()) {
+            acc.add(comp_item);
+        }
+    }
     Some(())
 }

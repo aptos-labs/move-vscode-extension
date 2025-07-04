@@ -1,5 +1,5 @@
 use crate::item_scope::NamedItemScope;
-use crate::loc::{SyntaxLoc, SyntaxLocFileExt, SyntaxLocNodeExt};
+use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::nameres::namespaces::{Ns, TYPES_N_ENUMS};
 use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::ModuleLangExt;
