@@ -9,7 +9,7 @@ use std::fmt::Formatter;
 use stdx::itertools::Itertools;
 use syntax::SyntaxKind::{IDENT_PAT, NAMED_FIELD};
 use syntax::files::{InFile, InFileVecExt};
-use syntax::{AstNode, SyntaxKind, ast};
+use syntax::{AstNode, SyntaxKind, SyntaxNode, ast};
 use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]
@@ -125,7 +125,7 @@ pub trait ScopeEntryListExt {
     fn filter_by_visibility(
         self,
         db: &dyn SourceDatabase,
-        context: &InFile<ast::ReferenceElement>,
+        context: &InFile<SyntaxNode>,
     ) -> Vec<ScopeEntry>;
     fn filter_by_expected_type(
         self,
@@ -148,10 +148,10 @@ impl ScopeEntryListExt for Vec<ScopeEntry> {
     fn filter_by_visibility(
         self,
         db: &dyn SourceDatabase,
-        context: &InFile<ast::ReferenceElement>,
+        context: &InFile<SyntaxNode>,
     ) -> Vec<ScopeEntry> {
         self.into_iter()
-            .filter(|entry| is_visible_in_context(db, entry, context))
+            .filter(|entry| is_visible_in_context(db, entry, &context))
             .collect()
     }
 

@@ -694,31 +694,83 @@ module std::option {
 }
     "#,
         expect![[r#"
-        [
-            "if",
-            "match",
-            "loop",
-            "while",
-            "for",
-            "let",
-            "true",
-            "false",
-            "assert",
-            "assume",
-            "requires",
-            "decreases",
-            "ensures",
-            "modifies",
-            "include",
-            "apply",
-            "aborts_if",
-            "aborts_with",
-            "emits",
-            "axiom",
-            "pragma",
-            "vector[]",
-            "assert!(_: bool, err: u64)",
-        ]"#]],
+            [
+                "if",
+                "match",
+                "loop",
+                "while",
+                "for",
+                "let",
+                "true",
+                "false",
+                "assert",
+                "assume",
+                "requires",
+                "decreases",
+                "ensures",
+                "modifies",
+                "include",
+                "apply",
+                "aborts_if",
+                "aborts_with",
+                "emits",
+                "axiom",
+                "pragma",
+                "Self",
+                "max_u8() -> num",
+                "max_u64() -> num",
+                "max_u128() -> num",
+                "global(addr: address) -> T",
+                "old(t: T) -> T",
+                "update_field(s: S, fname: F, val: V) -> S",
+                "TRACE(t: T) -> T",
+                "concat(v1: vector<T>, v2: vector<T>) -> vector<T>",
+                "vec(t: T) -> vector<T>",
+                "len(t: vector<T>) -> num",
+                "contains(v: vector<T>, e: T) -> bool",
+                "index_of(v: vector<T>, e: T) -> num",
+                "range(v: vector<T>) -> <unknown>",
+                "update(v: vector<T>, i: num, t: T) -> vector<T>",
+                "in_range(v: vector<T>, i: num) -> bool",
+                "int2bv(i: num) -> bv",
+                "bv2int(b: bv) -> num",
+                "MAX_U8",
+                "MAX_U16",
+                "MAX_U32",
+                "MAX_U64",
+                "MAX_U128",
+                "MAX_U256",
+                "move_from(addr: address) -> T",
+                "move_to(acc: &signer, res: T)",
+                "borrow_global(addr: address) -> &T",
+                "borrow_global_mut(addr: address) -> &mut T",
+                "exists(addr: address) -> bool",
+                "freeze(mut_ref: &mut S) -> &S",
+                "vector[]",
+                "assert!(_: bool, err: u64)",
+            ]"#]],
+    );
+}
+
+#[test]
+fn test_spec_predicate_keywords_in_spec_block_assume() {
+    do_single_completion(
+        // language=Move
+        r#"
+module std::option {
+    spec module {
+        assu/*caret*/
+    }
+}
+    "#,
+        // language=Move
+        expect![[r#"
+            module std::option {
+                spec module {
+                    assume /*caret*/
+                }
+            }
+        "#]],
     );
 }
 
@@ -736,31 +788,61 @@ module std::option {
 }
     "#,
         expect![[r#"
-        [
-            "if",
-            "match",
-            "loop",
-            "while",
-            "for",
-            "let",
-            "true",
-            "false",
-            "assert",
-            "assume",
-            "requires",
-            "decreases",
-            "ensures",
-            "modifies",
-            "include",
-            "apply",
-            "aborts_if",
-            "aborts_with",
-            "emits",
-            "axiom",
-            "pragma",
-            "vector[]",
-            "assert!(_: bool, err: u64)",
-        ]"#]],
+            [
+                "if",
+                "match",
+                "loop",
+                "while",
+                "for",
+                "let",
+                "true",
+                "false",
+                "assert",
+                "assume",
+                "requires",
+                "decreases",
+                "ensures",
+                "modifies",
+                "include",
+                "apply",
+                "aborts_if",
+                "aborts_with",
+                "emits",
+                "axiom",
+                "pragma",
+                "Self",
+                "max_u8() -> num",
+                "max_u64() -> num",
+                "max_u128() -> num",
+                "global(addr: address) -> T",
+                "old(t: T) -> T",
+                "update_field(s: S, fname: F, val: V) -> S",
+                "TRACE(t: T) -> T",
+                "concat(v1: vector<T>, v2: vector<T>) -> vector<T>",
+                "vec(t: T) -> vector<T>",
+                "len(t: vector<T>) -> num",
+                "contains(v: vector<T>, e: T) -> bool",
+                "index_of(v: vector<T>, e: T) -> num",
+                "range(v: vector<T>) -> <unknown>",
+                "update(v: vector<T>, i: num, t: T) -> vector<T>",
+                "in_range(v: vector<T>, i: num) -> bool",
+                "int2bv(i: num) -> bv",
+                "bv2int(b: bv) -> num",
+                "MAX_U8",
+                "MAX_U16",
+                "MAX_U32",
+                "MAX_U64",
+                "MAX_U128",
+                "MAX_U256",
+                "move_from(addr: address) -> T",
+                "move_to(acc: &signer, res: T)",
+                "borrow_global(addr: address) -> &T",
+                "borrow_global_mut(addr: address) -> &mut T",
+                "exists(addr: address) -> bool",
+                "freeze(mut_ref: &mut S) -> &S",
+                "vector[]",
+                "assert!(_: bool, err: u64)",
+            ]"#]],
     );
 }
 
@@ -775,5 +857,21 @@ module std::option {
     }
 }
     "#,
+    );
+}
+
+#[test]
+fn test_path_completion_without_ident() {
+    check_completions_contains(
+        // language=Move
+        r#"
+module std::option {
+    fun call() {}
+    fun main() {
+        /*caret*/
+    }
+}
+    "#,
+        vec!["call()"],
     );
 }

@@ -1,5 +1,5 @@
 use crate::item_scope::NamedItemScope;
-use crate::loc::{SyntaxLocFileExt, SyntaxLocNodeExt};
+use crate::loc::{SyntaxLoc, SyntaxLocFileExt, SyntaxLocNodeExt};
 use crate::nameres::namespaces::{Ns, TYPES_N_ENUMS};
 use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::ModuleLangExt;
@@ -10,24 +10,24 @@ use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::visibility::{Vis, VisLevel};
 use syntax::ast::{HasAttrs, HasVisibility};
 use syntax::files::{InFile, InFileExt, OptionInFileExt};
-use syntax::{AstNode, ast};
+use syntax::{AstNode, SyntaxNode, ast};
 
 pub fn is_visible_in_context(
     db: &dyn SourceDatabase,
     scope_entry: &ScopeEntry,
-    context: &InFile<ast::ReferenceElement>,
+    context: &InFile<SyntaxNode>,
 ) -> bool {
     use syntax::SyntaxKind::*;
 
     let (context_file_id, context) = context.unpack_ref();
 
     // inside msl everything is visible
-    if context.syntax().is_msl_context() {
+    if context.is_msl_context() {
         return true;
     }
 
     // if inside MvAttrItem like abort_code=
-    if context.syntax().ancestor_strict::<ast::AttrItem>().is_some() {
+    if context.ancestor_strict::<ast::AttrItem>().is_some() {
         return true;
     }
 
@@ -42,8 +42,9 @@ pub fn is_visible_in_context(
     let item_ns = scope_entry.ns;
     let opt_visible_item = ast::AnyHasVisibility::cast(item.syntax().clone());
 
-    let context_usage_scope = hir_db::item_scope(db, context.loc(context_file_id));
-    let context_opt_path = ast::Path::cast(context.syntax().to_owned());
+    let context_usage_scope =
+        hir_db::item_scope(db, SyntaxLoc::from_syntax_node(context_file_id, context));
+    let context_opt_path = ast::Path::cast(context.to_owned());
     if let Some(path) = context_opt_path.clone() {
         if path.root_parent_of_type::<ast::UseSpeck>().is_some() {
             // those are always public in use specks
@@ -103,13 +104,13 @@ pub fn is_visible_in_context(
     }
 
     // local methods, Self::method - everything is visible
-    let context_module = context.syntax().containing_module();
+    let context_module = context.containing_module();
     if item_module.is_some() && context_module.is_some() && item_module == context_module {
         return true;
     }
 
     // local items in script
-    if let Some(context_script) = context.syntax().containing_script() {
+    if let Some(context_script) = context.containing_script() {
         if item
             .syntax()
             .containing_script()

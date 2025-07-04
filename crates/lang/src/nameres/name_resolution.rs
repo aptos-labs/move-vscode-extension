@@ -32,15 +32,12 @@ impl fmt::Debug for ResolveScope {
     }
 }
 
-pub fn get_resolve_scopes(
-    db: &dyn SourceDatabase,
-    start_at: InFile<ast::ReferenceElement>,
-) -> Vec<ResolveScope> {
+pub fn get_resolve_scopes(db: &dyn SourceDatabase, start_at: InFile<SyntaxNode>) -> Vec<ResolveScope> {
     let (file_id, start_at) = start_at.unpack();
 
     let mut scopes = vec![];
-    let mut opt_scope = start_at.syntax().parent();
-    let mut prev_scope = start_at.syntax().to_owned();
+    let mut opt_scope = start_at.parent();
+    let mut prev_scope = start_at.to_owned();
 
     while let Some(ref scope) = opt_scope {
         scopes.push(ResolveScope {
@@ -108,7 +105,7 @@ fn module_inner_spec_scopes(
 
 pub fn get_entries_from_walking_scopes(
     db: &dyn SourceDatabase,
-    start_at: InFile<ast::ReferenceElement>,
+    start_at: InFile<SyntaxNode>,
     ns: NsSet,
 ) -> Vec<ScopeEntry> {
     let _p = tracing::debug_span!("get_entries_from_walking_scopes").entered();
@@ -174,7 +171,7 @@ pub fn get_modules_as_entries(
 #[tracing::instrument(
     level = "debug",
     skip(db, ctx, qualifier),
-    fields(qualifier = ?qualifier.syntax().text(), path = ?ctx.path.syntax_text()))]
+    fields(qualifier = ?qualifier.syntax().text(), path = ?ctx.start_at.value.text()))]
 pub fn get_qualified_path_entries(
     db: &dyn SourceDatabase,
     ctx: &ResolutionContext,

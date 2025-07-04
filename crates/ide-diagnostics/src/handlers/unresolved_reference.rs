@@ -78,7 +78,7 @@ fn unresolved_path(
         return None;
     }
 
-    let pkind = path_kind(path.clone(), false)?;
+    let pkind = path_kind(path.qualifier(), path.clone(), false)?;
     match pkind {
         PathKind::NamedAddress(_)
         | PathKind::NamedAddressOrUnqualifiedPath { .. }

@@ -4,17 +4,17 @@ use crate::item::{CompletionItem, CompletionItemKind};
 use crate::render::function::{FunctionKind, render_function};
 use crate::render::render_named_item;
 use ide_db::SymbolKind;
-use lang::nameres::labels;
 use lang::nameres::path_kind::path_kind;
 use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variants};
 use lang::nameres::scope::ScopeEntryListExt;
+use lang::nameres::{labels, path_kind};
 use std::cell::RefCell;
 use syntax::SyntaxKind::*;
 use syntax::ast::idents::PRIMITIVE_TYPES;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, T, algo, ast};
+use syntax::{AstNode, SyntaxNode, T, algo, ast};
 
 #[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn add_path_completions(
@@ -66,17 +66,44 @@ fn add_completions_from_the_resolution_entries(
     ctx: &CompletionContext<'_>,
     path_ctx: &PathCompletionCtx,
 ) -> Option<Vec<CompletionItem>> {
-    let context_path = path_ctx.original_path.clone()?;
+    let original_file = ctx.original_file()?;
 
-    let path_kind = path_kind(context_path.value.clone(), true)?;
+    let path_kind = match path_ctx.original_path.clone() {
+        Some(original_path) => {
+            path_kind(original_path.value.qualifier(), original_path.value.clone(), true)?
+        }
+        None => {
+            let original_qualifier = path_ctx.original_qualifier(&original_file);
+            let fake_path_kind = path_kind(original_qualifier, path_ctx.fake_path.clone(), true)?;
+            if matches!(fake_path_kind, path_kind::PathKind::FieldShorthand { .. }) {
+                return None;
+            }
+            // return None;
+            fake_path_kind
+        }
+    };
     tracing::debug!(?path_kind);
 
+    let original_start_at = path_ctx
+        .original_path
+        .as_ref()
+        .map(|it| it.syntax())
+        .or_else(|| {
+            let original_start_at_from_fake = algo::ancestors_at_offset(
+                original_file.syntax(),
+                path_ctx.fake_path.syntax().text_range().start(),
+            )
+            .next()?
+            .in_file(ctx.position.file_id);
+            Some(original_start_at_from_fake)
+        })?;
+
     let resolution_ctx = ResolutionContext {
-        path: context_path.clone(),
+        start_at: original_start_at.clone(),
         is_completion: true,
     };
     let entries = get_path_resolve_variants(ctx.db, &resolution_ctx, path_kind.clone())
-        .filter_by_visibility(ctx.db, &context_path.clone().map_into());
+        .filter_by_visibility(ctx.db, &original_start_at.clone());
     tracing::debug!(completion_item_entries = ?entries);
 
     let mut completion_items = vec![];
@@ -88,7 +115,8 @@ fn add_completions_from_the_resolution_entries(
                 completion_items.push(
                     render_function(
                         ctx,
-                        path_ctx,
+                        path_ctx.is_use_stmt(),
+                        path_ctx.has_any_parens(),
                         name,
                         named_item.cast_into::<ast::AnyFun>()?,
                         FunctionKind::Fun,
@@ -167,29 +195,25 @@ pub(crate) struct PathCompletionCtx {
     pub(crate) qualifier: Option<InFile<ast::Path>>,
     // /// The parent of the path we are completing.
     // pub(crate) parent: Option<ast::Path>,
-    // pub(crate) path: ast::Path,
+    pub(crate) fake_path: ast::Path,
     /// The path of which we are completing the segment
     pub(crate) original_path: Option<InFile<ast::Path>>,
-    // pub(crate) fake_path: Option<InFile<ast::Path>>,
     pub(crate) path_kind: PathKind,
 }
 
-impl Default for PathCompletionCtx {
-    fn default() -> Self {
-        PathCompletionCtx {
-            has_call_parens: false,
-            has_type_args: false,
-            original_path: None,
-            qualifier: None,
-            path_kind: PathKind::Expr,
-        }
-    }
-}
-
 impl PathCompletionCtx {
+    pub fn original_qualifier(&self, original_file: &ast::SourceFile) -> Option<ast::Path> {
+        let fake_qualifier = self.fake_path.qualifier()?;
+        algo::find_node_at_offset::<ast::Path>(
+            original_file.syntax(),
+            fake_qualifier.syntax().text_range().start(),
+        )
+    }
+
     pub fn has_any_parens(&self) -> bool {
         self.has_call_parens || self.has_type_args
     }
+
     pub fn is_use_stmt(&self) -> bool {
         self.path_kind == PathKind::Use
     }
@@ -243,8 +267,9 @@ fn path_completion_ctx(
     Some(PathCompletionCtx {
         has_call_parens,
         has_type_args,
-        path_kind: path_kind,
+        path_kind,
         qualifier,
+        fake_path,
         original_path: original_path.clone(),
     })
 }

@@ -48,7 +48,7 @@ pub fn get_ident_pat_resolve_variants(
         ENUM_VARIANTS
     };
 
-    let binding_entries = get_entries_from_walking_scopes(db, ident_pat.in_file(file_id).map_into(), ns);
+    let binding_entries = get_entries_from_walking_scopes(db, ident_pat.in_file(file_id).syntax(), ns);
     for binding_entry in binding_entries {
         if let Some(named_item) = binding_entry.clone().cast_into::<ast::NamedElement>(db) {
             let is_constant_like = is_constant_like(&named_item);
