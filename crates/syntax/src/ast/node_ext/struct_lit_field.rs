@@ -41,6 +41,10 @@ impl ast::NameRef {
 }
 
 impl ast::StructLitField {
+    pub fn is_shorthand(&self) -> bool {
+        self.name_ref().is_none()
+    }
+
     /// Deals with field init shorthand
     pub fn field_name(&self) -> Option<ast::NameRef> {
         if let Some(name_ref) = self.name_ref() {

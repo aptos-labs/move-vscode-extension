@@ -875,3 +875,26 @@ module std::option {
         vec!["call()"],
     );
 }
+
+#[test]
+fn test_named_field_completion_in_struct_lit() {
+    do_single_completion(
+        // language=Move
+        r#"
+module std::option {
+    struct S { named_val: u8 }
+    fun main() {
+        S { na/*caret*/ }
+    }
+}
+    "#,
+        expect![[r#"
+            module std::option {
+                struct S { named_val: u8 }
+                fun main() {
+                    S { named_val/*caret*/ }
+                }
+            }
+        "#]],
+    );
+}

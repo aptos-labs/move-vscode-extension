@@ -14,7 +14,7 @@ use syntax::ast::idents::PRIMITIVE_TYPES;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, SyntaxNode, T, algo, ast};
+use syntax::{AstNode, T, algo, ast};
 
 #[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn add_path_completions(
@@ -127,7 +127,7 @@ fn add_completions_from_the_resolution_entries(
                 continue;
             }
             _ => {
-                let mut item = render_named_item(ctx, &name, named_item);
+                let mut item = render_named_item(ctx, &name, named_item.value);
                 item.insert_snippet(format!("{name}$0"));
                 completion_items.push(item.build(ctx.db));
             }
