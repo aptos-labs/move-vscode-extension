@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 //! Maps *syntax* of various definitions to their semantic ids.
 //!
 //! This is a very interesting module, and, in some sense, can be considered the

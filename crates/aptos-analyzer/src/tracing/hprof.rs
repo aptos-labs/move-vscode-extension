@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 //! Consumer of `tracing` data, which prints a hierarchical profile.
 //!
 //! Based on https://github.com/davidbarsky/tracing-tree, but does less, while

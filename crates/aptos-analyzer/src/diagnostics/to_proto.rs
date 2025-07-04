@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 use crate::flycheck::compiler_diagnostic::DiagnosticLabel;
 use crate::global_state::GlobalStateSnapshot;
 use crate::lsp::to_proto::url_from_abs_path;

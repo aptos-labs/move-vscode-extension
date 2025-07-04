@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 use crate::ide_test_utils::completion_utils::{
     check_completion_exact, check_completions, check_completions_contains,
     check_completions_with_prefix_exact, check_no_completions, do_single_completion,

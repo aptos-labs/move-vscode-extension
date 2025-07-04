@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 use crate::hir_db;
 use crate::nameres::labels::get_loop_labels_resolve_variants;
 use crate::nameres::path_resolution::remove_variant_ident_pats;

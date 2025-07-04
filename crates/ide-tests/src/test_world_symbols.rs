@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 use expect_test::{Expect, expect};
 use ide_db::symbol_index::Query;
 use test_utils::{SourceMark, apply_source_marks, fixtures};

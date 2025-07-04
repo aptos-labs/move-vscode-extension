@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 //! Primitive tree editor, ed for trees.
 //!
 //! The `_raw`-suffixed functions insert elements as is, unsuffixed versions fix

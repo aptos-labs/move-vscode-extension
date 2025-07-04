@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 use crate::ast::node_ext::text_of_first_token;
 use crate::{AstNode, TokenText, ast};
 use rowan::{GreenNodeData, GreenTokenData, NodeOrToken};

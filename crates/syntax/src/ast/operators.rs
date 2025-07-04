@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 //! Defines a bunch of data-less enums for unary and binary operators.
 //!
 //! Types here don't know about AST, this allows re-using them for both AST and

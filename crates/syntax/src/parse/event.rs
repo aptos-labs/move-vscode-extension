@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 //! This module provides a way to construct a `File`.
 //! It is intended to be completely decoupled from the
 //! parser, so as to allow to evolve the tree representation

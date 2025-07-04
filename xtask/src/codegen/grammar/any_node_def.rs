@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 use crate::codegen::grammar::ast_src::{AstNodeSrc, AstSrc};
 use crate::codegen::grammar::{find_common_traits, to_upper_snake_case};
 use quote::{format_ident, quote};

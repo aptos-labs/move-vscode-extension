@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 use crate::SyntaxKind::{EOF, EXPR_STMT, LET_STMT, USE_STMT};
 use crate::T;
 use crate::parse::grammar::expressions::{opt_initializer_expr, stmt_expr};
