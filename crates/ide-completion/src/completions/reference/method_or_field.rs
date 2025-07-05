@@ -6,7 +6,6 @@
 
 use crate::completions::Completions;
 use crate::context::CompletionContext;
-use crate::item::CompletionRelevance;
 use crate::render::function::{FunctionKind, render_function};
 use crate::render::render_named_item;
 use lang::loc::SyntaxLocFileExt;

@@ -6,7 +6,7 @@
 
 use crate::context::CompletionContext;
 use crate::item::{CompletionItemBuilder, CompletionRelevance};
-use crate::render::{compute_exact_name_match, compute_type_match, render_named_item};
+use crate::render::{compute_type_match, render_named_item};
 use lang::types::lowering::TyLowering;
 use lang::types::substitution::{ApplySubstitution, Substitution};
 use lang::types::ty::Ty;
