@@ -69,6 +69,8 @@ pub(crate) fn compute_type_match(
 
     if expected_ty == &item_ty {
         Some(CompletionRelevanceTypeMatch::Exact)
+    } else if ctx.sema.is_tys_compatible(item_ty, expected_ty.clone(), true) {
+        Some(CompletionRelevanceTypeMatch::CouldUnify)
     } else {
         None
     }

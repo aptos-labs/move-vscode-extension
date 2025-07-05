@@ -137,3 +137,25 @@ module std::main {
             ]"#]],
     );
 }
+
+#[test]
+fn test_sort_types_accounting_for_integer_variables() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    fun receiver(a: u16) {}
+    fun main() {
+        let call_integer_type = 1;
+        let call_bool_type: bool = true;
+        receiver(ca/*caret*/)
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "call_integer_type",
+                "call_bool_type",
+            ]"#]],
+    );
+}
