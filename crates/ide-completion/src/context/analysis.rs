@@ -16,18 +16,23 @@ use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::{AstNode, SyntaxNode, SyntaxToken, TextRange, TextSize, algo, ast};
 
+pub(crate) struct AnalysisResult {
+    pub analysis: CompletionAnalysis,
+    pub expected: (Option<Ty>, Option<ast::NameLike>),
+}
+
 pub(crate) fn completion_analysis(
     sema: &Semantics<'_, RootDatabase>,
     original_file: SyntaxNode,
     fake_file: SyntaxNode,
     original_offset: TextSize,
     original_token: &SyntaxToken,
-) -> Option<(CompletionAnalysis, Option<ast::NameLike>)> {
+) -> Option<AnalysisResult> {
     // as we insert after the offset, right biased will *always* pick the identifier no matter
     // if there is an ident already typed or not
     let fake_token = fake_file.token_at_offset(original_offset).right_biased()?;
 
-    let (_, expected_name) = expected_type_and_name(&sema, &original_file, &fake_token);
+    let expected = expected_type_and_name(&sema, &original_file, &fake_token);
 
     if !original_token.kind().is_keyword() {
         if let Some(fake_ref) = fake_token
@@ -35,7 +40,7 @@ pub(crate) fn completion_analysis(
             .find_map(ast::ReferenceElement::cast)
         {
             let analysis = analyze_ref(&fake_ref, original_file, original_offset);
-            return analysis.map(|it| (it, expected_name));
+            return analysis.map(|analysis| AnalysisResult { analysis, expected });
         }
     }
 
@@ -74,7 +79,10 @@ pub(crate) fn completion_analysis(
         }
     };
 
-    Some((CompletionAnalysis::Item(item_list_kind), None))
+    Some(AnalysisResult {
+        analysis: CompletionAnalysis::Item(item_list_kind),
+        expected: (None, None),
+    })
 }
 
 fn analyze_ref(

@@ -5,8 +5,12 @@
 // Modifications have been made to the original code.
 
 use crate::context::CompletionContext;
-use crate::item::{CompletionItem, CompletionItemBuilder, CompletionItemKind, CompletionRelevance};
+use crate::item::{
+    CompletionItem, CompletionItemBuilder, CompletionItemKind, CompletionRelevance,
+    CompletionRelevanceTypeMatch,
+};
 use ide_db::SymbolKind;
+use lang::types::ty::Ty;
 use syntax::{AstNode, SyntaxKind, ast};
 
 pub(crate) mod function;
@@ -17,9 +21,8 @@ pub(crate) fn render_named_item(
     item_name: &str,
     named_item: ast::NamedElement,
 ) -> CompletionItemBuilder {
-    let completion_kind = item_to_kind(named_item.syntax().kind());
-
-    let mut item = CompletionItem::new(completion_kind, ctx.source_range(), item_name);
+    let item_kind = item_to_kind(named_item.syntax().kind());
+    let mut item = CompletionItem::new(item_kind, ctx.source_range(), item_name);
     item.set_relevance(CompletionRelevance {
         exact_name_match: compute_exact_name_match(ctx, &item_name),
         ..CompletionRelevance::default()
@@ -48,6 +51,25 @@ pub(crate) fn item_to_kind(kind: SyntaxKind) -> CompletionItemKind {
             tracing::info!("Unhandled completion item {:?}", kind);
             CompletionItemKind::UnresolvedReference
         }
+    }
+}
+
+fn compute_type_match(
+    ctx: &CompletionContext<'_>,
+    completion_ty: Ty,
+) -> Option<CompletionRelevanceTypeMatch> {
+    let expected_ty = ctx.expected_type.as_ref()?;
+
+    // We don't ever consider unit type to be an exact type match, since
+    // nearly always this is not meaningful to the user.
+    if matches!(expected_ty, Ty::Unit) {
+        return None;
+    }
+
+    if expected_ty == &completion_ty {
+        Some(CompletionRelevanceTypeMatch::Exact)
+    } else {
+        None
     }
 }
 
