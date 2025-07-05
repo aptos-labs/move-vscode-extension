@@ -49,6 +49,15 @@ pub struct CompletionItem {
 
     /// Additional info to show in the UI pop up.
     pub detail: Option<String>,
+
+    /// We use this to sort completion. Relevance records facts like "do the
+    /// types align precisely?". We can't sort by relevances directly, they are
+    /// only partially ordered.
+    ///
+    /// Note that Relevance ignores fuzzy match score. We compute Relevance for
+    /// all possible items, and then separately build an ordered completion list
+    /// based on relevance and fuzzy matching with the already typed identifier.
+    pub relevance: CompletionRelevance,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -77,7 +86,105 @@ impl fmt::Debug for CompletionItem {
             s.field("text_edit", &self.text_edit);
         }
         s.field("kind", &self.kind);
+        if self.relevance != CompletionRelevance::default() {
+            s.field("relevance", &self.relevance);
+        }
         s.finish()
+    }
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Default)]
+pub struct CompletionRelevance {
+    /// This is set when the identifier being completed matches up with the name that is expected,
+    /// like in a function argument.
+    ///
+    /// ```ignore
+    /// fn f(spam: String) {}
+    /// fn main() {
+    ///     let spam = 92;
+    ///     f($0) // name of local matches the name of param
+    /// }
+    /// ```
+    pub exact_name_match: bool,
+    /// See [`CompletionRelevanceTypeMatch`].
+    pub type_match: Option<CompletionRelevanceTypeMatch>,
+    /// Set for local variables.
+    ///
+    /// ```ignore
+    /// fn foo(a: u32) {
+    ///     let b = 0;
+    ///     $0 // `a` and `b` are local
+    /// }
+    /// ```
+    pub is_local: bool,
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub enum CompletionRelevanceTypeMatch {
+    /// This is set in cases like these:
+    ///
+    /// ```ignore
+    /// enum Option<T> { Some(T), None }
+    /// fn f(a: Option<u32>) {}
+    /// fn main {
+    ///     f(Option::N$0) // type `Option<T>` could unify with `Option<u32>`
+    /// }
+    /// ```
+    CouldUnify,
+    /// This is set in cases where the type matches the expected type, like:
+    ///
+    /// ```ignore
+    /// fn f(spam: String) {}
+    /// fn main() {
+    ///     let foo = String::new();
+    ///     f($0) // type of local matches the type of param
+    /// }
+    /// ```
+    Exact,
+}
+
+impl CompletionRelevance {
+    /// Provides a relevance score. Higher values are more relevant.
+    ///
+    /// The absolute value of the relevance score is not meaningful, for
+    /// example a value of BASE_SCORE doesn't mean "not relevant", rather
+    /// it means "least relevant". The score value should only be used
+    /// for relative ordering.
+    ///
+    /// See is_relevant if you need to make some judgement about score
+    /// in an absolute sense.
+    const BASE_SCORE: u32 = u32::MAX / 2;
+
+    pub fn score(self) -> u32 {
+        let mut score = Self::BASE_SCORE;
+        let CompletionRelevance {
+            exact_name_match,
+            type_match,
+            is_local,
+        } = self;
+
+        // slightly prefer locals
+        if is_local {
+            score += 1;
+        }
+
+        if exact_name_match {
+            score += 20;
+        }
+        score += match type_match {
+            Some(CompletionRelevanceTypeMatch::Exact) => 18,
+            Some(CompletionRelevanceTypeMatch::CouldUnify) => 5,
+            None => 0,
+        };
+
+        score
+    }
+
+    /// Returns true when the score for this threshold is above
+    /// some threshold such that we think it is especially likely
+    /// to be relevant.
+    pub fn is_relevant(&self) -> bool {
+        self.score() > Self::BASE_SCORE
     }
 }
 
@@ -142,6 +249,7 @@ impl CompletionItem {
             lookup: None,
             kind: kind.into(),
             text_edit: None,
+            relevance: CompletionRelevance::default(),
         }
     }
 
@@ -163,6 +271,7 @@ pub(crate) struct CompletionItemBuilder {
     lookup: Option<String>,
     kind: CompletionItemKind,
     text_edit: Option<TextEdit>,
+    relevance: CompletionRelevance,
 }
 
 impl CompletionItemBuilder {
@@ -190,6 +299,7 @@ impl CompletionItemBuilder {
             is_snippet: self.is_snippet,
             detail: self.detail,
             lookup,
+            relevance: self.relevance,
         }
     }
     pub(crate) fn lookup_by(&mut self, lookup: impl Into<String>) -> &mut CompletionItemBuilder {
@@ -225,6 +335,13 @@ impl CompletionItemBuilder {
                 self.detail = Some(detail.split('\n').next().unwrap().to_owned());
             }
         }
+        self
+    }
+    pub(crate) fn set_relevance(
+        &mut self,
+        relevance: CompletionRelevance,
+    ) -> &mut CompletionItemBuilder {
+        self.relevance = relevance;
         self
     }
 }

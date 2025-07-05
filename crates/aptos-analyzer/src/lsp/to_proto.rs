@@ -16,7 +16,7 @@ use ide::inlay_hints::{
 };
 use ide::syntax_highlighting::tags::{Highlight, HlOperator, HlPunct, HlTag};
 use ide::{Cancellable, HlRange, NavigationTarget, SignatureHelp};
-use ide_completion::item::{CompletionItem, CompletionItemKind};
+use ide_completion::item::{CompletionItem, CompletionItemKind, CompletionRelevance};
 use ide_db::assists::{Assist, AssistKind};
 use ide_db::rename::RenameError;
 use ide_db::source_change::{FileSystemEdit, SourceChange};
@@ -402,8 +402,13 @@ pub(crate) fn completion_items(
     items: Vec<CompletionItem>,
 ) -> Vec<lsp_types::CompletionItem> {
     let mut res = Vec::with_capacity(items.len());
+    let max_relevance = items
+        .iter()
+        .map(|it| it.relevance.score())
+        .max()
+        .unwrap_or_default();
     for item in items {
-        completion_item(&mut res, config, line_index, &params, item);
+        completion_item(&mut res, config, line_index, &params, max_relevance, item);
     }
     res
 }
@@ -413,6 +418,7 @@ fn completion_item(
     config: &Config,
     line_index: &LineIndex,
     params: &lsp_types::TextDocumentPositionParams,
+    max_relevance: u32,
     item: CompletionItem,
 ) {
     let filter_text = item.lookup().to_owned();
@@ -476,7 +482,23 @@ fn completion_item(
         lsp_item.label.push_str(label_detail.as_str());
     }
 
+    set_score(&mut lsp_item, max_relevance, item.relevance);
+
     acc.push(lsp_item);
+}
+
+fn set_score(res: &mut lsp_types::CompletionItem, max_relevance: u32, relevance: CompletionRelevance) {
+    if relevance.is_relevant() && relevance.score() == max_relevance {
+        res.preselect = Some(true);
+    }
+    // The relevance needs to be inverted to come up with a sort score
+    // because the client will sort ascending.
+    let sort_score = relevance.score() ^ 0xFF_FF_FF_FF;
+    // Zero pad the string to ensure values can be properly sorted
+    // by the client. Hex format is used because it is easier to
+    // visually compare very large values, which the sort text
+    // tends to be since it is the opposite of the score.
+    res.sort_text = Some(format!("{sort_score:08x}"));
 }
 
 pub(crate) fn markup_content(markup: String) -> lsp_types::MarkupContent {

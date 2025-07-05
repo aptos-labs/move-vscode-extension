@@ -8,7 +8,7 @@ mod analysis;
 
 use crate::completions::item_list::ItemListKind;
 use crate::config::CompletionConfig;
-use crate::context::analysis::analyze_completion_context;
+use crate::context::analysis::completion_analysis;
 use crate::item::{CompletionItem, CompletionItemBuilder, CompletionItemKind};
 use crate::render::item_to_kind;
 use base_db::inputs::InternFileId;
@@ -16,6 +16,7 @@ use base_db::source_db;
 use ide_db::RootDatabase;
 use lang::Semantics;
 use syntax::SyntaxKind::*;
+use syntax::ast::NameLike;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::FilePosition;
 use syntax::{AstNode, SourceFile, SyntaxToken, T, TextRange, algo, ast};
@@ -62,6 +63,10 @@ pub(crate) struct CompletionContext<'db> {
 
     /// The token before the cursor, in the original file.
     pub(crate) original_token: SyntaxToken,
+
+    /// The expected name of what we are completing.
+    /// This is usually the parameter name of the function argument we are completing.
+    pub(crate) expected_name: Option<NameLike>,
 }
 
 impl CompletionContext<'_> {
@@ -151,7 +156,8 @@ impl<'a> CompletionContext<'a> {
             }
         }
 
-        let analysis = analyze_completion_context(
+        let (analysis, expected_name) = completion_analysis(
+            &sema,
             original_file.syntax().clone(),
             file_with_fake_ident.syntax().clone(),
             offset,
@@ -166,6 +172,7 @@ impl<'a> CompletionContext<'a> {
             position,
             msl,
             original_token,
+            expected_name,
         };
 
         Some((ctx, analysis))

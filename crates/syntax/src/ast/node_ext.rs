@@ -48,6 +48,7 @@ mod method_or_path;
 mod module;
 mod module_spec;
 pub mod move_syntax_node;
+mod name_like;
 pub mod name_ref;
 pub mod named_field;
 mod param;

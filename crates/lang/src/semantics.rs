@@ -248,16 +248,15 @@ impl<'db> SemanticsImpl<'db> {
         InFile::new(file_id, node)
     }
 
+    pub fn wrap_token_infile(&self, token: SyntaxToken) -> InFile<SyntaxToken> {
+        let (file_id, _) = self.find_file(&token.parent().unwrap()).unpack();
+        InFile::new(file_id, token)
+    }
+
     // todo: rename to root_file_id()
     fn lookup(&self, root_node: &SyntaxNode) -> Option<FileId> {
         let cache = self.s2d_cache.borrow();
         cache.root_to_file_cache.get(root_node).copied()
-    }
-
-    #[allow(unused)]
-    fn wrap_token_infile(&self, token: SyntaxToken) -> InFile<SyntaxToken> {
-        let (file_id, _) = self.find_file(&token.parent().unwrap()).unpack();
-        InFile::new(file_id, token)
     }
 
     /// Attempts to map the node out of macro expanded files returning the original file range.
