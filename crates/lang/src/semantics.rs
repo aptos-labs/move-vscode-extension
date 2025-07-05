@@ -216,13 +216,13 @@ impl<'db> SemanticsImpl<'db> {
         TyLowering::new(self.db, msl).lower_type(type_)
     }
 
-    pub fn is_tys_compatible(&self, left_ty: Ty, right_ty: Ty, with_autoborrow: bool) -> bool {
+    pub fn is_tys_compatible(&self, ty: Ty, into_ty: Ty, with_autoborrow: bool) -> bool {
         // Any file_id could be used here, we are not interested in unification. Could be improved later.
         let ctx = &mut InferenceCtx::new(self.db, FileId::from_raw(MAX_FILE_ID), false);
         if with_autoborrow {
-            ctx.is_tys_compatible_with_autoborrow(left_ty, right_ty)
+            ctx.is_tys_compatible_with_autoborrow(ty, into_ty)
         } else {
-            ctx.is_tys_compatible(left_ty, right_ty)
+            ctx.is_tys_compatible(ty, into_ty)
         }
     }
 
