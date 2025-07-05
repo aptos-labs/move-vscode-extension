@@ -8,13 +8,14 @@ mod analysis;
 
 use crate::completions::item_list::ItemListKind;
 use crate::config::CompletionConfig;
-use crate::context::analysis::completion_analysis;
+use crate::context::analysis::{AnalysisResult, completion_analysis};
 use crate::item::{CompletionItem, CompletionItemBuilder, CompletionItemKind};
 use crate::render::item_to_kind;
 use base_db::inputs::InternFileId;
 use base_db::source_db;
 use ide_db::RootDatabase;
 use lang::Semantics;
+use lang::types::ty::Ty;
 use syntax::SyntaxKind::*;
 use syntax::ast::NameLike;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
@@ -67,6 +68,8 @@ pub(crate) struct CompletionContext<'db> {
     /// The expected name of what we are completing.
     /// This is usually the parameter name of the function argument we are completing.
     pub(crate) expected_name: Option<NameLike>,
+    /// The expected type of what we are completing.
+    pub(crate) expected_type: Option<Ty>,
 }
 
 impl CompletionContext<'_> {
@@ -156,7 +159,10 @@ impl<'a> CompletionContext<'a> {
             }
         }
 
-        let (analysis, expected_name) = completion_analysis(
+        let AnalysisResult {
+            analysis,
+            expected: (expected_type, expected_name),
+        } = completion_analysis(
             &sema,
             original_file.syntax().clone(),
             file_with_fake_ident.syntax().clone(),
@@ -173,6 +179,7 @@ impl<'a> CompletionContext<'a> {
             msl,
             original_token,
             expected_name,
+            expected_type,
         };
 
         Some((ctx, analysis))

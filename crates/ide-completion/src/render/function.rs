@@ -5,8 +5,8 @@
 // Modifications have been made to the original code.
 
 use crate::context::CompletionContext;
-use crate::item::CompletionItemBuilder;
-use crate::render::render_named_item;
+use crate::item::{CompletionItemBuilder, CompletionRelevance};
+use crate::render::{compute_exact_name_match, compute_type_match, render_named_item};
 use lang::types::lowering::TyLowering;
 use lang::types::substitution::{ApplySubstitution, Substitution};
 use lang::types::ty::Ty;
@@ -58,12 +58,19 @@ pub(crate) fn render_function(
     }
 
     // match call_ty.ret_type().unwrap_all_refs() {
-    match call_ty.ret_type() {
+    let ret_type = call_ty.ret_type();
+    match &ret_type {
         Ty::Unit => (),
         ret_ty => {
-            item_builder.set_detail(Some(render_ty(ctx, &ret_ty)));
+            item_builder.set_detail(Some(render_ty(ctx, ret_ty)));
         }
     }
+
+    item_builder.set_relevance(CompletionRelevance {
+        type_match: compute_type_match(ctx, ret_type),
+        exact_name_match: compute_exact_name_match(ctx, &fun_name),
+        ..CompletionRelevance::default()
+    });
 
     item_builder
 }

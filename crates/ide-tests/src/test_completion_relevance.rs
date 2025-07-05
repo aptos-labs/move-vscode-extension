@@ -22,3 +22,25 @@ module std::main {
             ]"#]],
     );
 }
+
+#[test]
+fn test_type_match() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    fun call_longer_invalid_type(): u8 {}
+    fun call_valid_type(): u16 {}
+    fun receiver(a: u16) {}
+    fun main() {
+        receiver(ca/*caret*/)
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "call_valid_type() -> u16",
+                "call_longer_invalid_type() -> u8",
+            ]"#]],
+    );
+}
