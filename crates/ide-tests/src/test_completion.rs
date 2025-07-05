@@ -882,10 +882,10 @@ module std::option {
     );
 }
 
+// language=Move
 #[test]
 fn test_named_field_completion_in_struct_lit() {
     do_single_completion(
-        // language=Move
         r#"
 module std::option {
     struct S { named_val: u8 }
@@ -899,6 +899,73 @@ module std::option {
                 struct S { named_val: u8 }
                 fun main() {
                     S { named_val/*caret*/ }
+                }
+            }
+        "#]],
+    );
+}
+
+// language=Move
+#[test]
+fn test_complete_vector_type_with_angle_brackets() {
+    do_single_completion(
+        r#"
+module std::option {
+    fun main() {
+        let a: vec/*caret*/
+    }
+}
+    "#,
+        expect![[r#"
+            module std::option {
+                fun main() {
+                    let a: vector</*caret*/>
+                }
+            }
+        "#]],
+    );
+}
+
+// language=Move
+#[test]
+fn test_struct_type_no_type_params() {
+    do_single_completion(
+        r#"
+module std::option {
+    struct MyStruct { val: u8 }
+    fun main() {
+        let a: MyS/*caret*/
+    }
+}
+    "#,
+        expect![[r#"
+            module std::option {
+                struct MyStruct { val: u8 }
+                fun main() {
+                    let a: MyStruct/*caret*/
+                }
+            }
+        "#]],
+    );
+}
+
+// language=Move
+#[test]
+fn test_struct_type_with_type_params() {
+    do_single_completion(
+        r#"
+module std::option {
+    struct MyStruct<T> { val: T }
+    fun main() {
+        let a: MyS/*caret*/
+    }
+}
+    "#,
+        expect![[r#"
+            module std::option {
+                struct MyStruct<T> { val: T }
+                fun main() {
+                    let a: MyStruct</*caret*/>
                 }
             }
         "#]],

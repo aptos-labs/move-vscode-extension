@@ -6,6 +6,7 @@
 
 #![allow(dead_code)]
 
+pub mod active_parameter;
 pub mod apply_change;
 pub mod assist_config;
 pub mod assist_context;

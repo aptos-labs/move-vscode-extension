@@ -5,6 +5,8 @@
 // Modifications have been made to the original code.
 
 use ide_db::RootDatabase;
+use ide_db::active_parameter::{callable_for_arg_list, generic_item_for_type_arg_list};
+use itertools::Itertools;
 use lang::Semantics;
 use lang::node_ext::call_ext;
 use lang::types::lowering::TyLowering;
@@ -13,9 +15,7 @@ use lang::types::ty::integer::IntegerKind;
 use lang::types::ty::ty_callable::TyCallable;
 use stdx::format_to;
 use syntax::files::{FilePosition, InFile, InFileExt};
-use syntax::{
-    AstNode, Direction, NodeOrToken, SyntaxToken, T, TextRange, TextSize, algo, ast, match_ast,
-};
+use syntax::{AstNode, Direction, SyntaxToken, TextRange, TextSize, algo, ast, match_ast};
 
 /// Contains information about an item signature as seen from a use site.
 ///
@@ -77,12 +77,53 @@ pub(crate) fn signature_help(
                     }
                     return signature_help_for_call(&sema, arg_list.in_file(file_id), token);
                 },
+                ast::TypeArgList(arg_list) => {
+                    let cursor_outside = arg_list.r_angle_token().as_ref() == Some(&token);
+                    if cursor_outside {
+                        continue;
+                    }
+                    return signature_help_for_type_args(&sema, arg_list.in_file(file_id), token);
+                },
                 _ => (),
             }
         }
     }
 
     None
+}
+
+fn signature_help_for_type_args(
+    sema: &Semantics<'_, RootDatabase>,
+    type_arg_list: InFile<ast::TypeArgList>,
+    token: SyntaxToken,
+) -> Option<SignatureHelp> {
+    let (generic_item, active_param) = generic_item_for_type_arg_list(sema, type_arg_list, &token)?;
+    let mut res = SignatureHelp {
+        signature: String::new(),
+        parameters: vec![],
+        active_parameter: Some(active_param),
+    };
+
+    let type_params = generic_item.value.type_params();
+    if type_params.is_empty() {
+        res.signature = "<no arguments>".to_string();
+        return Some(res);
+    }
+
+    let mut buf = String::new();
+    for type_param in type_params {
+        buf.clear();
+        let param_name = type_param.name().map(|it| it.as_string()).unwrap_or_default();
+        format_to!(buf, "{}", param_name);
+        let ability_bounds = type_param.ability_bounds();
+        if !ability_bounds.is_empty() {
+            let bounds = ability_bounds.iter().map(|it| it.to_string()).join(" + ");
+            format_to!(buf, ": {}", bounds);
+        }
+        res.push_param(&buf);
+    }
+
+    Some(res)
 }
 
 #[derive(Debug)]
@@ -190,24 +231,4 @@ fn get_call_param_ty(
         param_ty = pty.or_else(|| Some(ty_lowering.lower_type(param_type)))
     }
     param_ty
-}
-
-pub fn callable_for_arg_list(
-    arg_list: InFile<ast::ValueArgList>,
-    at_offset: TextSize,
-) -> Option<(InFile<ast::AnyCallExpr>, Option<usize>)> {
-    let (file_id, arg_list) = arg_list.unpack();
-
-    debug_assert!(arg_list.syntax().text_range().contains(at_offset));
-    let callable = arg_list.syntax().parent().and_then(ast::AnyCallExpr::cast)?;
-    let active_param = callable.value_arg_list().map(|arg_list| {
-        arg_list
-            .syntax()
-            .children_with_tokens()
-            .filter_map(NodeOrToken::into_token)
-            .filter(|t| t.kind() == T![,])
-            .take_while(|t| t.text_range().start() <= at_offset)
-            .count()
-    });
-    Some((callable.in_file(file_id), active_param))
 }
