@@ -117,8 +117,9 @@ impl<'db> SemanticsImpl<'db> {
 
     pub fn resolve_to_element<Named: AstNode>(
         &self,
-        reference: InFile<ast::ReferenceElement>,
+        reference: InFile<impl Into<ast::ReferenceElement>>,
     ) -> Option<InFile<Named>> {
+        let reference = reference.map(|it| it.into());
         let element = self
             .resolve_in_file(reference)
             .single_or_none()?
@@ -128,12 +129,17 @@ impl<'db> SemanticsImpl<'db> {
         Some(element)
     }
 
-    pub fn resolve(&self, reference: ast::ReferenceElement) -> Vec<ScopeEntry> {
+    pub fn resolve(&self, reference: impl Into<ast::ReferenceElement>) -> Vec<ScopeEntry> {
+        let reference = reference.into();
         let reference = self.wrap_node_infile(reference);
         self.resolve_in_file(reference)
     }
 
-    pub fn resolve_in_file(&self, reference: InFile<ast::ReferenceElement>) -> Vec<ScopeEntry> {
+    pub fn resolve_in_file(
+        &self,
+        reference: InFile<impl Into<ast::ReferenceElement>>,
+    ) -> Vec<ScopeEntry> {
+        let reference = reference.map(|it| it.into());
         let msl = reference.syntax().value.is_msl_context();
         let inference = self.inference(&reference, msl);
         nameres::resolve_multi(self.db, reference, inference).unwrap_or_default()

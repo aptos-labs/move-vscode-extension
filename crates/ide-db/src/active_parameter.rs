@@ -32,7 +32,7 @@ pub fn generic_item_for_type_arg_list(
 
     let method_or_path = type_arg_list.method_or_path()?;
     let generic_item =
-        sema.resolve_to_element::<ast::GenericElement>(method_or_path.in_file(file_id).map_into())?;
+        sema.resolve_to_element::<ast::GenericElement>(method_or_path.in_file(file_id))?;
 
     let active_param = type_arg_list
         .syntax()

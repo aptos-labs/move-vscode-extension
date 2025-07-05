@@ -27,10 +27,9 @@ pub fn callee_kind<DB: SourceDatabase>(
             let reference = call_expr.path()?.reference();
             sema.resolve_to_element::<ast::NamedElement>(reference.in_file(call_file_id))
         }
-        ast::AnyCallExpr::MethodCallExpr(method_call_expr) => sema
-            .resolve_to_element::<ast::NamedElement>(
-                method_call_expr.clone().in_file(call_file_id).map_into(),
-            ),
+        ast::AnyCallExpr::MethodCallExpr(method_call_expr) => {
+            sema.resolve_to_element::<ast::NamedElement>(method_call_expr.clone().in_file(call_file_id))
+        }
         ast::AnyCallExpr::AssertMacroExpr(_) => {
             return Some(CalleeKind::AssertMacro.in_file(call_file_id));
         }
