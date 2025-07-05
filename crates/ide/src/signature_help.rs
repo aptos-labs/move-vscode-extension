@@ -5,7 +5,7 @@
 // Modifications have been made to the original code.
 
 use ide_db::RootDatabase;
-use ide_db::active_parameter::{callable_for_arg_list, generic_item_for_type_arg_list};
+use ide_db::active_parameter::{call_expr_for_arg_list, generic_item_for_type_arg_list};
 use itertools::Itertools;
 use lang::Semantics;
 use lang::node_ext::call_ext;
@@ -137,18 +137,13 @@ fn signature_help_for_call(
     arg_list: InFile<ast::ValueArgList>,
     token: SyntaxToken,
 ) -> Option<SignatureHelp> {
-    let (any_call_expr, active_parameter) = callable_for_arg_list(arg_list, token.text_range().start())?;
-
-    let mut res = SignatureHelp {
-        signature: String::new(),
-        parameters: vec![],
-        active_parameter,
-    };
+    let (any_call_expr, active_parameter) =
+        call_expr_for_arg_list(arg_list, token.text_range().start())?;
 
     let db = sema.db;
-    let ty_lowering = TyLowering::new(db, any_call_expr.is_msl());
     let call_ty = sema.get_call_expr_type(&any_call_expr);
 
+    let ty_lowering = TyLowering::new(db, any_call_expr.is_msl());
     let mut fn_params = vec![];
     let (callee_file_id, callee_kind) = call_ext::callee_kind(sema, &any_call_expr)?.unpack();
     match callee_kind {
@@ -194,6 +189,12 @@ fn signature_help_for_call(
             }
         }
     }
+
+    let mut res = SignatureHelp {
+        signature: String::new(),
+        parameters: vec![],
+        active_parameter,
+    };
 
     if fn_params.is_empty() {
         res.signature = "<no arguments>".to_string();

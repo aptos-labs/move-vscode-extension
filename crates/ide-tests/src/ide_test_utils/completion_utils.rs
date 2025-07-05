@@ -86,7 +86,8 @@ pub fn check_completions(source: &str, expected: Expect) {
 
     let (source, offset) = get_and_replace_caret(source, "/*caret*/");
 
-    let completion_items = completions_at_offset(source, offset, true);
+    let mut completion_items = completions_at_offset(source, offset, true);
+    completion_items.sort_by_key(|it| it.relevance.score() ^ 0xFF_FF_FF_FF);
 
     let lookup_labels_txt = format!("{:#?}", lookup_labels(completion_items));
     expected.assert_eq(&lookup_labels_txt);

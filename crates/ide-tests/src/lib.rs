@@ -20,6 +20,7 @@ mod test_abilities_key;
 mod test_completion_functions;
 mod test_completion_loops;
 mod test_completion_methods;
+mod test_completion_relevance;
 mod test_find_usages;
 mod test_load_dependencies;
 mod test_missing_value_arguments;

@@ -1,16 +1,91 @@
 use crate::RootDatabase;
 use lang::Semantics;
+use lang::node_ext::call_ext;
+use lang::node_ext::call_ext::CalleeKind;
+use lang::types::ty::Ty;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, NodeOrToken, SyntaxToken, T, TextSize, ast};
+use syntax::{AstNode, NodeOrToken, SyntaxNode, SyntaxToken, T, TextSize, algo, ast};
 
-pub fn callable_for_arg_list(
+#[derive(Debug)]
+pub struct ActiveParameter {
+    pub ty: Option<Ty>,
+    pub src: Option<InFile<ast::Param>>,
+}
+
+impl ActiveParameter {
+    /// Returns information about the call argument this token is part of.
+    pub fn at_token(
+        sema: &Semantics<'_, RootDatabase>,
+        original_file: &SyntaxNode,
+        token: SyntaxToken,
+    ) -> Option<Self> {
+        let (any_call_expr, active_parameter) = call_expr_for_token(token)?;
+
+        let any_call_expr = algo::find_node_at_offset::<ast::AnyCallExpr>(
+            original_file,
+            any_call_expr.syntax().text_range().start(),
+        )?;
+        let any_call_expr = sema.wrap_node_infile(any_call_expr);
+
+        let msl = any_call_expr.value.syntax().is_msl_context();
+        let idx = active_parameter?;
+
+        let (callee_file_id, callee_kind) = call_ext::callee_kind(sema, &any_call_expr)?.unpack();
+        match callee_kind {
+            CalleeKind::Function(any_fun) => {
+                let mut params = any_fun.params();
+                if idx >= params.len() {
+                    return None;
+                }
+                let param = params.swap_remove(idx);
+                let ty = param
+                    .type_()
+                    .map(|it| sema.lower_type(it.in_file(callee_file_id), msl));
+                Some(ActiveParameter {
+                    ty,
+                    src: Some(param.in_file(callee_file_id)),
+                })
+            }
+            // todo:
+            _ => None,
+        }
+    }
+
+    pub fn ident(&self) -> Option<ast::Name> {
+        let param = self.src.as_ref()?;
+        let ident_pat = param.value.ident_pat()?;
+        ident_pat.name()
+    }
+}
+
+pub fn call_expr_for_token(token: SyntaxToken) -> Option<(ast::AnyCallExpr, Option<usize>)> {
+    let offset = token.text_range().start();
+    // Find the calling expression and its NameRef
+    let parent = token.parent()?;
+    let callable = parent.ancestors().filter_map(ast::AnyCallExpr::cast).find(|it| {
+        it.value_arg_list()
+            .is_some_and(|it| it.syntax().text_range().contains(offset))
+    })?;
+
+    let active_param = active_parameter_at_offset(&callable, offset);
+    Some((callable, active_param))
+}
+
+pub fn call_expr_for_arg_list(
     arg_list: InFile<ast::ValueArgList>,
     at_offset: TextSize,
 ) -> Option<(InFile<ast::AnyCallExpr>, Option<usize>)> {
     let (file_id, arg_list) = arg_list.unpack();
 
     debug_assert!(arg_list.syntax().text_range().contains(at_offset));
-    let callable = arg_list.syntax().parent().and_then(ast::AnyCallExpr::cast)?;
+    let call_expr = arg_list.syntax().parent().and_then(ast::AnyCallExpr::cast)?;
+
+    let active_param = active_parameter_at_offset(&call_expr, at_offset);
+    Some((call_expr.in_file(file_id), active_param))
+}
+
+fn active_parameter_at_offset(callable: &ast::AnyCallExpr, at_offset: TextSize) -> Option<usize> {
     let active_param = callable.value_arg_list().map(|arg_list| {
         arg_list
             .syntax()
@@ -20,7 +95,7 @@ pub fn callable_for_arg_list(
             .take_while(|t| t.text_range().start() <= at_offset)
             .count()
     });
-    Some((callable.in_file(file_id), active_param))
+    active_param
 }
 
 pub fn generic_item_for_type_arg_list(

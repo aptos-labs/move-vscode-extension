@@ -5,7 +5,7 @@
 // Modifications have been made to the original code.
 
 use crate::context::CompletionContext;
-use crate::item::{CompletionItem, CompletionItemBuilder, CompletionItemKind};
+use crate::item::{CompletionItem, CompletionItemBuilder, CompletionItemKind, CompletionRelevance};
 use ide_db::SymbolKind;
 use syntax::{AstNode, SyntaxKind, ast};
 
@@ -14,11 +14,18 @@ pub(crate) mod struct_or_enum;
 
 pub(crate) fn render_named_item(
     ctx: &CompletionContext<'_>,
-    name: &str,
+    item_name: &str,
     named_item: ast::NamedElement,
 ) -> CompletionItemBuilder {
     let completion_kind = item_to_kind(named_item.syntax().kind());
-    CompletionItem::new(completion_kind, ctx.source_range(), name)
+
+    let mut item = CompletionItem::new(completion_kind, ctx.source_range(), item_name);
+    item.set_relevance(CompletionRelevance {
+        exact_name_match: compute_exact_name_match(ctx, &item_name),
+        ..CompletionRelevance::default()
+    });
+
+    item
 }
 
 pub(crate) fn item_to_kind(kind: SyntaxKind) -> CompletionItemKind {
@@ -42,4 +49,10 @@ pub(crate) fn item_to_kind(kind: SyntaxKind) -> CompletionItemKind {
             CompletionItemKind::UnresolvedReference
         }
     }
+}
+
+pub(crate) fn compute_exact_name_match(ctx: &CompletionContext<'_>, completion_name: &str) -> bool {
+    ctx.expected_name
+        .as_ref()
+        .is_some_and(|name| name.as_string() == completion_name)
 }
