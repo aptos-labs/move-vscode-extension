@@ -10,7 +10,7 @@ pub(crate) fn render_struct_or_enum(
     item_name: String,
     struct_or_enum: InFile<ast::StructOrEnum>,
 ) -> CompletionItemBuilder {
-    let mut item_builder = render_named_item(ctx, &item_name, struct_or_enum.clone().value.into());
+    let mut item_builder = render_named_item(ctx, &item_name, struct_or_enum.clone().value);
 
     let has_type_params = !struct_or_enum.ty_type_params().is_empty();
     let snippet = if has_type_params {

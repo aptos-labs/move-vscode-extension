@@ -24,7 +24,7 @@ module std::main {
 }
 
 #[test]
-fn test_type_match() {
+fn test_sort_completions_by_function_return_type() {
     check_completions(
         // language=Move
         r#"
@@ -41,6 +41,99 @@ module std::main {
             [
                 "call_valid_type() -> u16",
                 "call_longer_invalid_type() -> u8",
+            ]"#]],
+    );
+}
+
+#[test]
+fn test_sort_completions_by_method_return_type() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    struct S { val: u8 }
+    fun val_u8_not_valid(self: &S): u8 { 1 }
+    fun val_u16_valid(self: &S): u16 { 1 }
+    fun receiver(a: u16) {}
+    fun main(s: S) {
+        receiver(val/*caret*/)
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "val_u16_valid(self: &S) -> u16",
+                "val_u8_not_valid(self: &S) -> u8",
+            ]"#]],
+    );
+}
+
+#[test]
+fn test_sort_completions_by_method_return_type_with_generic() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    struct S<T> { val: T }
+    fun val_u8_invalid<T>(self: &S<T>): u8 { 1 }
+    fun val_t<T>(self: &S<T>): T { 1 }
+    fun receiver(a: u16) {}
+    fun main(s: S<u16>) {
+        receiver(s.val_/*caret*/)
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "val_t() -> u16",
+                "val_u8_invalid() -> u8",
+            ]"#]],
+    );
+}
+
+#[test]
+fn test_sort_completions_by_ident_pat_type() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    fun receiver(a: u16) {}
+    fun main() {
+        let call_valid_type: u16 = 1;
+        let call_longer_invalid_type: u8 = 1;
+        receiver(ca/*caret*/)
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "call_valid_type",
+                "call_longer_invalid_type",
+            ]"#]],
+    );
+}
+
+#[test]
+fn test_prioritize_local_idents_over_global_items() {
+    check_completions(
+        // language=Move
+        r#"
+module std::string {
+    public fun ident_longer(): u8 { 1 }
+}
+module std::main {
+    fun ident_longer(): u8 { 1 }
+    fun receiver(a: u8) {}
+    fun main(ident: u8) {
+        use std::string::ident_longer;
+        receiver(ide/*caret*/)
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "ident",
+                "ident_longer() -> u8",
             ]"#]],
     );
 }

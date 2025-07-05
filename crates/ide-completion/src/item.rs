@@ -6,7 +6,7 @@
 
 use ide_db::text_edit::TextEdit;
 use ide_db::{RootDatabase, SymbolKind};
-use std::fmt;
+use std::{fmt, mem};
 use stdx::{impl_from, never};
 use syntax::TextRange;
 
@@ -335,6 +335,13 @@ impl CompletionItemBuilder {
                 self.detail = Some(detail.split('\n').next().unwrap().to_owned());
             }
         }
+        self
+    }
+    pub(crate) fn with_relevance(
+        &mut self,
+        relevance: impl FnOnce(CompletionRelevance) -> CompletionRelevance,
+    ) -> &mut CompletionItemBuilder {
+        self.relevance = relevance(mem::take(&mut self.relevance));
         self
     }
     pub(crate) fn set_relevance(

@@ -6,7 +6,7 @@
 
 use crate::context::CompletionContext;
 use crate::item::{CompletionItemBuilder, CompletionRelevance};
-use crate::render::{compute_exact_name_match, compute_type_match, render_named_item};
+use crate::render::{compute_type_match, render_named_item};
 use lang::types::lowering::TyLowering;
 use lang::types::substitution::{ApplySubstitution, Substitution};
 use lang::types::ty::Ty;
@@ -23,7 +23,7 @@ pub(crate) fn render_function(
     kind: FunctionKind,
     apply_subst: Option<Substitution>,
 ) -> CompletionItemBuilder {
-    let mut item_builder = render_named_item(ctx, &fun_name, fun.clone().value.into());
+    let mut item_builder = render_named_item(ctx, &fun_name, fun.clone().value);
 
     let ty_lowering = TyLowering::new(ctx.db, ctx.msl);
     let mut call_ty = ty_lowering.lower_any_function(fun.clone().map_into());
@@ -66,10 +66,9 @@ pub(crate) fn render_function(
         }
     }
 
-    item_builder.set_relevance(CompletionRelevance {
+    item_builder.with_relevance(|r| CompletionRelevance {
         type_match: compute_type_match(ctx, ret_type),
-        exact_name_match: compute_exact_name_match(ctx, &fun_name),
-        ..CompletionRelevance::default()
+        ..r
     });
 
     item_builder
