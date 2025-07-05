@@ -79,7 +79,7 @@ fn add_struct_lit_fields_completions(
 ) -> Option<()> {
     let fields_owner = ctx
         .sema
-        .resolve_to_element::<ast::FieldsOwner>(original_struct_lit.map(|it| it.path().into()))?;
+        .resolve_to_element::<ast::FieldsOwner>(original_struct_lit.map(|it| it.path()))?;
 
     let acc = &mut completions.borrow_mut();
 

@@ -97,7 +97,7 @@ fn unresolved_path(
                 QualifiedKind::ModuleItemOrEnumVariant
                 | QualifiedKind::FQModuleItem
                 | QualifiedKind::UseGroupItem => {
-                    let resolved = ctx.sema.resolve(qualifier.into()).single_or_none();
+                    let resolved = ctx.sema.resolve(qualifier).single_or_none();
                     // qualifier is unresolved, no need to resolve current path
                     if resolved.is_none() {
                         return None;
@@ -173,7 +173,7 @@ fn try_check_resolve(
     ctx: &DiagnosticsContext<'_>,
     reference: InFile<ast::ReferenceElement>,
 ) -> Option<()> {
-    let entries = ctx.sema.resolve_in_file(reference.clone().map_into());
+    let entries = ctx.sema.resolve_in_file(reference.clone());
     let reference_node = reference.and_then_ref(|it| it.reference_node())?;
     let reference_name = reference.value.reference_name()?;
     match entries.len() {

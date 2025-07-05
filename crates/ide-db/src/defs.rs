@@ -112,8 +112,7 @@ impl NameClass {
         ident_pat: ast::IdentPat,
     ) -> Option<NameClass> {
         let ident_pat = sema.wrap_node_infile(ident_pat);
-        if let Some(resolved_ident_pat) =
-            sema.resolve_to_element::<ast::NamedElement>(ident_pat.clone().map_into())
+        if let Some(resolved_ident_pat) = sema.resolve_to_element::<ast::NamedElement>(ident_pat.clone())
         {
             if matches!(resolved_ident_pat.kind(), CONST | VARIANT) {
                 let defn = Definition::named_item(resolved_ident_pat);
@@ -165,16 +164,15 @@ impl NameRefClass {
             return match struct_lit_field_kind {
                 ast::StructLitFieldKind::Full { struct_field, .. } => {
                     // NameRef :: Expr
-                    let named_field = sema.resolve_to_element::<ast::NamedField>(
-                        sema.wrap_node_infile(struct_field.into()),
-                    )?;
+                    let named_field =
+                        sema.resolve_to_element::<ast::NamedField>(sema.wrap_node_infile(struct_field))?;
                     Some(NameRefClass::Definition(Definition::NamedItem(
                         SymbolKind::Field,
                         named_field.map_into(),
                     )))
                 }
                 ast::StructLitFieldKind::Shorthand { struct_field: _, path } => {
-                    let entries = sema.resolve(path.into());
+                    let entries = sema.resolve(path);
                     let (named_field, ident_pat) = into_field_shorthand_items(sema.db, entries)?;
                     Some(NameRefClass::FieldShorthand { ident_pat, named_field })
                 }
@@ -182,7 +180,7 @@ impl NameRefClass {
         }
 
         if let Some(path) = ref_parent.cast::<ast::PathSegment>().map(|it| it.parent_path()) {
-            let res = sema.resolve(path.into()).single_or_none();
+            let res = sema.resolve(path).single_or_none();
             return match res {
                 Some(entry) => {
                     let named_item = entry.node_loc.to_ast::<ast::NamedElement>(sema.db)?;
