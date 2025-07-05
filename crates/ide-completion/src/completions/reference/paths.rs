@@ -6,10 +6,10 @@
 
 use crate::completions::Completions;
 use crate::context::CompletionContext;
-use crate::item::{CompletionItem, CompletionItemKind};
+use crate::item::{CompletionItem, CompletionItemKind, CompletionRelevance};
 use crate::render::function::{FunctionKind, render_function};
-use crate::render::render_named_item;
 use crate::render::struct_or_enum::render_struct_or_enum;
+use crate::render::{compute_type_match, render_named_item};
 use ide_db::SymbolKind;
 use lang::nameres::path_kind::path_kind;
 use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variants};
@@ -143,6 +143,23 @@ fn add_completions_from_the_resolution_entries(
                     render_struct_or_enum(ctx, name, named_item.cast_into::<ast::StructOrEnum>()?)
                         .build(ctx.db),
                 );
+            }
+            IDENT_PAT => {
+                let ident_pat = named_item.cast_into::<ast::IdentPat>()?;
+
+                let mut item = render_named_item(ctx, &name, ident_pat.value.clone());
+                item.insert_snippet(format!("{name}$0"));
+                item.with_relevance(|r| CompletionRelevance { is_local: true, ..r });
+
+                let ident_ty = ctx.sema.get_ident_pat_type(&ident_pat, ctx.msl);
+                if let Some(ident_ty) = ident_ty {
+                    item.with_relevance(|r| CompletionRelevance {
+                        type_match: compute_type_match(ctx, ident_ty),
+                        ..r
+                    });
+                }
+
+                completion_items.push(item.build(ctx.db));
             }
             _ => {
                 let mut item = render_named_item(ctx, &name, named_item.value);

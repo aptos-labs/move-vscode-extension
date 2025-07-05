@@ -19,9 +19,10 @@ pub(crate) mod struct_or_enum;
 pub(crate) fn render_named_item(
     ctx: &CompletionContext<'_>,
     item_name: &str,
-    named_item: ast::NamedElement,
+    named_item: impl Into<ast::NamedElement>,
 ) -> CompletionItemBuilder {
-    let item_kind = item_to_kind(named_item.syntax().kind());
+    let item_kind = item_to_kind(named_item.into().syntax().kind());
+
     let mut item = CompletionItem::new(item_kind, ctx.source_range(), item_name);
     item.set_relevance(CompletionRelevance {
         exact_name_match: compute_exact_name_match(ctx, &item_name),
@@ -54,9 +55,9 @@ pub(crate) fn item_to_kind(kind: SyntaxKind) -> CompletionItemKind {
     }
 }
 
-fn compute_type_match(
+pub(crate) fn compute_type_match(
     ctx: &CompletionContext<'_>,
-    completion_ty: Ty,
+    item_ty: Ty,
 ) -> Option<CompletionRelevanceTypeMatch> {
     let expected_ty = ctx.expected_type.as_ref()?;
 
@@ -66,7 +67,7 @@ fn compute_type_match(
         return None;
     }
 
-    if expected_ty == &completion_ty {
+    if expected_ty == &item_ty {
         Some(CompletionRelevanceTypeMatch::Exact)
     } else {
         None
