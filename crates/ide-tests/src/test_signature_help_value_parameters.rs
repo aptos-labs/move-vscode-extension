@@ -10,7 +10,7 @@ use syntax::files::FilePosition;
 use syntax::pretty_print::{SourceMark, apply_source_marks};
 use test_utils::{fixtures, get_and_replace_caret};
 
-fn check_signature_info(source: &str, expect: Expect) {
+pub(crate) fn check_signature_info(source: &str, expect: Expect) {
     let (source, offset) = get_and_replace_caret(source, "/*caret*/");
     let (analysis, file_id) = fixtures::from_single_file(source.to_string());
 

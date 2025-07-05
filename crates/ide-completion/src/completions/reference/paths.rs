@@ -9,6 +9,7 @@ use crate::context::CompletionContext;
 use crate::item::{CompletionItem, CompletionItemKind};
 use crate::render::function::{FunctionKind, render_function};
 use crate::render::render_named_item;
+use crate::render::struct_or_enum::render_struct_or_enum;
 use ide_db::SymbolKind;
 use lang::nameres::path_kind::path_kind;
 use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variants};
@@ -44,6 +45,12 @@ pub(crate) fn add_path_completions(
         match path_ctx.path_kind {
             PathKind::Type => {
                 for type_name in PRIMITIVE_TYPES.iter() {
+                    if *type_name == "vector" {
+                        let mut item = ctx.new_item(CompletionItemKind::BuiltinType, "vector");
+                        item.insert_snippet("vector<$0>");
+                        acc.add(item.build(ctx.db));
+                        continue;
+                    }
                     acc.add(
                         ctx.new_snippet_item(CompletionItemKind::BuiltinType, format!("{type_name}$0")),
                     );
@@ -130,7 +137,12 @@ fn add_completions_from_the_resolution_entries(
                     )
                     .build(ctx.db),
                 );
-                continue;
+            }
+            STRUCT | ENUM => {
+                completion_items.push(
+                    render_struct_or_enum(ctx, name, named_item.cast_into::<ast::StructOrEnum>()?)
+                        .build(ctx.db),
+                );
             }
             _ => {
                 let mut item = render_named_item(ctx, &name, named_item.value);

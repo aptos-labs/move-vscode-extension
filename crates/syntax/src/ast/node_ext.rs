@@ -74,6 +74,7 @@ pub mod syntax_element;
 pub mod syntax_node;
 pub mod syntax_token;
 pub mod type_;
+mod type_arg_list;
 mod type_param;
 mod value_arg_list;
 mod vector_lit_expr;

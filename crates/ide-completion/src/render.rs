@@ -10,6 +10,7 @@ use ide_db::SymbolKind;
 use syntax::{AstNode, SyntaxKind, ast};
 
 pub(crate) mod function;
+pub(crate) mod struct_or_enum;
 
 pub(crate) fn render_named_item(
     ctx: &CompletionContext<'_>,
