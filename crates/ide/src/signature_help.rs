@@ -144,13 +144,13 @@ fn signature_help_for_struct_lit(
         token.text_range().start(),
     )?;
     let (file_id, fields_owner) = fields_owner.unpack();
+    let named_fields = fields_owner.named_fields();
 
     let mut res = SignatureHelp {
         signature: String::new(),
         parameters: vec![],
-        active_parameter: None,
+        active_parameter: Some(named_fields.len()),
     };
-    let named_fields = fields_owner.named_fields();
     if named_fields.is_empty() {
         res.signature = "<no fields>".to_string();
         return Some(res);

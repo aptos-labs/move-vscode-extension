@@ -72,6 +72,20 @@ fn test_do_not_highlight_anything_if_all_filled_and_not_in_position() {
 }
 
 #[test]
+fn test_do_not_highlight_anything_if_all_filled_and_not_in_position_with_vectors() {
+    // language=Move
+    let source = r#"
+    module 0x1::m {
+        struct S { val1: vector<u8>, val2: vector<u8> }
+        fun m() {
+            S { val1: vector[1], val2: vector[2], /*caret*/ };
+        }
+    }
+            "#;
+    check_signature_info(source, expect!["val1: vector<u8>, val2: vector<u8>"]);
+}
+
+#[test]
 fn test_show_field_with_position_0_passed_in_reverse_order() {
     // language=Move
     let source = r#"
