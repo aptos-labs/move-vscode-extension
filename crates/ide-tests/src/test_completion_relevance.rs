@@ -24,7 +24,7 @@ module std::main {
 }
 
 #[test]
-fn test_sort_completions_by_function_return_type() {
+fn test_sort_completions_by_function_return_type_in_call_expr_argument() {
     check_completions(
         // language=Move
         r#"
@@ -41,6 +41,28 @@ module std::main {
             [
                 "call_valid_type() -> u16",
                 "call_longer_invalid_type() -> u8",
+            ]"#]],
+    );
+}
+
+#[test]
+fn test_sort_completions_by_function_return_type_in_struct_lit_field() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    fun call_longer_invalid_type(): u8 {}
+    fun call_valid_type(): u16 {}
+    struct S { named: u16 }
+    fun main() {
+        S { named: ca/*caret*/ }
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "call_longer_invalid_type() -> u8",
+                "call_valid_type() -> u16",
             ]"#]],
     );
 }

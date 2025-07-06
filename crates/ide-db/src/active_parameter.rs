@@ -3,6 +3,7 @@ use lang::Semantics;
 use lang::node_ext::call_ext;
 use lang::node_ext::call_ext::CalleeKind;
 use lang::types::ty::Ty;
+use std::collections::HashSet;
 use syntax::algo::ancestors_at_offset;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
@@ -121,4 +122,45 @@ pub fn generic_item_for_type_arg_list(
         .count();
 
     Some((generic_item, active_param))
+}
+
+pub fn fields_owner_for_struct_lit(
+    sema: &Semantics<'_, RootDatabase>,
+    struct_lit: InFile<ast::StructLit>,
+    token: &SyntaxToken,
+) -> Option<(InFile<ast::FieldsOwner>, Option<String>)> {
+    let lit_fields = struct_lit.value.clone().fields();
+
+    let fields_owner = sema.resolve_to_element::<ast::FieldsOwner>(struct_lit.map(|it| it.path()))?;
+    let named_fields = fields_owner.value.named_fields();
+
+    let active_lit_field = lit_fields
+        .iter()
+        .find(|it| it.syntax().text_range().contains(token.text_range().start()))
+        .and_then(|it| it.field_name());
+
+    let active_field_name = match active_lit_field {
+        Some(name_ref) => Some(name_ref.as_string()),
+        None => {
+            // compute next field skipping all filled fields
+            let all_field_names = named_fields
+                .iter()
+                .filter_map(|it| it.name().map(|it| it.as_string()));
+            let provided_field_names = lit_fields
+                .iter()
+                .filter_map(|it| it.field_name().map(|it| it.as_string()))
+                .collect::<HashSet<_>>();
+
+            let mut next_field_name: Option<String> = None;
+            for field_name in all_field_names {
+                if !provided_field_names.contains(&field_name) {
+                    next_field_name = Some(field_name);
+                    break;
+                }
+            }
+            next_field_name
+        }
+    };
+
+    Some((fields_owner, active_field_name))
 }

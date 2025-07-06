@@ -51,6 +51,22 @@ impl ast::StructLitField {
         self.name_ref().is_none()
     }
 
+    pub fn field_kind(&self) -> Option<StructLitFieldKind> {
+        if let Some(name_ref) = self.name_ref() {
+            Some(StructLitFieldKind::Full {
+                struct_field: self.clone(),
+                name_ref,
+                expr: self.expr(),
+            })
+        } else {
+            let path = self.expr()?.path_expr()?.path();
+            Some(StructLitFieldKind::Shorthand {
+                struct_field: self.clone(),
+                path,
+            })
+        }
+    }
+
     /// Deals with field init shorthand
     pub fn field_name(&self) -> Option<ast::NameRef> {
         if let Some(name_ref) = self.name_ref() {

@@ -4,8 +4,8 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use ide_db::RootDatabase;
 use ide_db::active_parameter::{call_expr_for_arg_list, generic_item_for_type_arg_list};
+use ide_db::{RootDatabase, active_parameter};
 use itertools::Itertools;
 use lang::Semantics;
 use lang::node_ext::call_ext;
@@ -84,6 +84,13 @@ pub(crate) fn signature_help(
                     }
                     return signature_help_for_type_args(&sema, arg_list.in_file(file_id), token);
                 },
+                ast::StructLit(struct_lit) => {
+                    let cursor_outside = struct_lit.struct_lit_field_list().and_then(|list| list.r_curly_token()).as_ref() == Some(&token);
+                    if cursor_outside {
+                        continue;
+                    }
+                    return signature_help_for_struct_lit(&sema, struct_lit.in_file(file_id), token);
+                },
                 _ => (),
             }
         }
@@ -121,6 +128,49 @@ fn signature_help_for_type_args(
             format_to!(buf, ": {}", bounds);
         }
         res.push_param(&buf);
+    }
+
+    Some(res)
+}
+
+fn signature_help_for_struct_lit(
+    sema: &Semantics<'_, RootDatabase>,
+    struct_lit: InFile<ast::StructLit>,
+    token: SyntaxToken,
+) -> Option<SignatureHelp> {
+    let (fields_owner, active_field_name) =
+        active_parameter::fields_owner_for_struct_lit(sema, struct_lit.clone(), &token)?;
+    let (file_id, fields_owner) = fields_owner.unpack();
+
+    let mut res = SignatureHelp {
+        signature: String::new(),
+        parameters: vec![],
+        active_parameter: None,
+    };
+    let named_fields = fields_owner.named_fields();
+    if named_fields.is_empty() {
+        res.signature = "<no fields>".to_string();
+        return Some(res);
+    }
+
+    let ty_lowering = TyLowering::new(sema.db, struct_lit.is_msl());
+    for (i, named_field) in named_fields.iter().enumerate() {
+        if let Some(name) = named_field.name() {
+            let field_name = name.as_string();
+            if active_field_name.as_ref().is_some_and(|it| it == &field_name) {
+                res.active_parameter = Some(i);
+            }
+            let mut field_text = String::new();
+            format_to!(field_text, "{}", field_name);
+            if let Some(field_type) = named_field.type_().map(|it| it.in_file(file_id)) {
+                format_to!(
+                    field_text,
+                    ": {}",
+                    sema.render_ty_truncated(&ty_lowering.lower_type(field_type), file_id)
+                );
+            }
+            res.push_param(&field_text);
+        }
     }
 
     Some(res)
