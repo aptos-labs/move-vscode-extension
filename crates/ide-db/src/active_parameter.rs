@@ -3,24 +3,25 @@ use lang::Semantics;
 use lang::node_ext::call_ext;
 use lang::node_ext::call_ext::CalleeKind;
 use lang::types::ty::Ty;
+use syntax::algo::ancestors_at_offset;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, NodeOrToken, SyntaxNode, SyntaxToken, T, TextSize, algo, ast};
 
 #[derive(Debug)]
-pub struct ActiveParameter {
+pub struct ActiveParameterInfo {
     pub ty: Option<Ty>,
     pub src: Option<InFile<ast::Param>>,
 }
 
-impl ActiveParameter {
+impl ActiveParameterInfo {
     /// Returns information about the call argument this token is part of.
-    pub fn at_token(
+    pub fn at_offset(
         sema: &Semantics<'_, RootDatabase>,
         original_file: &SyntaxNode,
-        token: SyntaxToken,
+        offset: TextSize,
     ) -> Option<Self> {
-        let (any_call_expr, active_parameter) = call_expr_for_token(token)?;
+        let (any_call_expr, active_parameter) = call_expr_for_offset(original_file, offset)?;
 
         let any_call_expr = algo::find_node_at_offset::<ast::AnyCallExpr>(
             original_file,
@@ -42,7 +43,7 @@ impl ActiveParameter {
                 let ty = param
                     .type_()
                     .map(|it| sema.lower_type(it.in_file(callee_file_id), msl));
-                Some(ActiveParameter {
+                Some(ActiveParameterInfo {
                     ty,
                     src: Some(param.in_file(callee_file_id)),
                 })
@@ -59,17 +60,19 @@ impl ActiveParameter {
     }
 }
 
-pub fn call_expr_for_token(token: SyntaxToken) -> Option<(ast::AnyCallExpr, Option<usize>)> {
-    let offset = token.text_range().start();
+pub fn call_expr_for_offset(
+    file: &SyntaxNode,
+    offset: TextSize,
+) -> Option<(ast::AnyCallExpr, Option<usize>)> {
     // Find the calling expression and its NameRef
-    let parent = token.parent()?;
-    let callable = parent.ancestors().filter_map(ast::AnyCallExpr::cast).find(|it| {
-        it.value_arg_list()
-            .is_some_and(|it| it.syntax().text_range().contains(offset))
-    })?;
-
-    let active_param = active_parameter_at_offset(&callable, offset);
-    Some((callable, active_param))
+    let call_expr = ancestors_at_offset(file, offset)
+        .filter_map(ast::AnyCallExpr::cast)
+        .find(|it| {
+            it.value_arg_list()
+                .is_some_and(|it| it.syntax().text_range().contains(offset))
+        })?;
+    let active_param = active_parameter_at_offset(&call_expr, offset);
+    Some((call_expr, active_param))
 }
 
 pub fn call_expr_for_arg_list(
