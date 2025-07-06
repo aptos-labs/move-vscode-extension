@@ -7,7 +7,7 @@
 use crate::completions::Completions;
 use crate::context::CompletionContext;
 use crate::render::function::{FunctionKind, render_function};
-use crate::render::render_named_item;
+use crate::render::new_named_item;
 use lang::loc::SyntaxLocFileExt;
 use lang::nameres::path_resolution::get_method_resolve_variants;
 use lang::types::has_type_params_ext::GenericItemExt;
@@ -62,7 +62,7 @@ fn add_field_completion_items(
         let name = named_field.field_name().as_string();
         let named_field = named_field.in_file(file_id);
 
-        let mut completion_item = render_named_item(ctx, &name, named_field.value.clone());
+        let mut completion_item = new_named_item(ctx, &name, named_field.kind());
 
         if let Some(field_ty) = ty_lowering.lower_type_owner(named_field.map_into()) {
             let field_detail = field_ty.substitute(&ty_adt.substitution).render(ctx.db, None);

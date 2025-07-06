@@ -5,15 +5,10 @@
 // Modifications have been made to the original code.
 
 use crate::ide_test_utils::completion_utils::{
-    check_completion_exact, check_completions, check_completions_contains,
-    check_completions_with_prefix_exact, check_no_completions, do_single_completion,
+    check_completion_exact, check_completions, check_completions_contains, check_no_completions,
+    do_single_completion,
 };
 use expect_test::expect;
-use ide_completion::config::CompletionConfig;
-use ide_db::AllowSnippets;
-use syntax::files::FilePosition;
-use test_utils::fixtures::test_state::{named, named_with_deps};
-use test_utils::{fixtures, get_and_replace_caret};
 
 #[rustfmt::skip]
 #[test]
@@ -125,7 +120,7 @@ module 0x1::m {
 
 #[test]
 fn test_complete_function_item() {
-    check_completions_with_prefix_exact(
+    check_completions(
         // language=Move
         r#"
 module 0x1::m {
@@ -135,13 +130,16 @@ module 0x1::m {
     }
 }
     "#,
-        vec!["call()"],
+        expect![[r#"
+            [
+                "call()",
+            ]"#]],
     );
 }
 
 #[test]
 fn test_complete_function_parameter() {
-    check_completions_with_prefix_exact(
+    check_completions(
         // language=Move
         r#"
 module 0x1::m {
@@ -150,13 +148,16 @@ module 0x1::m {
     }
 }
     "#,
-        vec!["my_param"],
+        expect![[r#"
+            [
+                "my_param -> u8",
+            ]"#]],
     );
 }
 
 #[test]
 fn test_complete_variable_with_same_name_parameter() {
-    check_completions_with_prefix_exact(
+    check_completions(
         // language=Move
         r#"
 module 0x1::m {
@@ -166,7 +167,10 @@ module 0x1::m {
     }
 }
     "#,
-        vec!["my_param"],
+        expect![[r#"
+            [
+                "my_param -> integer",
+            ]"#]],
     );
 }
 
@@ -287,10 +291,30 @@ module 0x1::m {
                 struct S { field: u8 }
                 struct T { s: S }
                 fun main() {
-                    T[@0x1].s.field;
+                    T[@0x1].s.field/*caret*/;
                 }
             }
         "#]],
+    );
+}
+
+#[test]
+fn test_field_completion_detail() {
+    check_completions(
+        // language=Move
+        r#"
+module 0x1::m {
+    struct S { field: u8 }
+    struct T { s: S }
+    fun main() {
+        T[@0x1].s.fi/*caret*/;
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "field -> u8",
+            ]"#]],
     );
 }
 
@@ -378,7 +402,7 @@ module 0x1::m {
             module 0x1::m {
                 struct S { field: u8 }
                 fun main() {
-                    S[@0x1].field;
+                    S[@0x1].field/*caret*/;
                 }
             }
         "#]],
@@ -387,7 +411,7 @@ module 0x1::m {
 
 #[test]
 fn test_variable_completion_in_nested_block() {
-    check_completions_contains(
+    check_completions(
         // language=Move
         r#"
 module 0x1::m {
@@ -398,13 +422,16 @@ module 0x1::m {
     }
 }
     "#,
-        vec!["var"],
+        expect![[r#"
+            [
+                "var -> u8",
+            ]"#]],
     );
 }
 
 #[test]
 fn test_variable_completion_in_if_block_after_incomplete_call_expr() {
-    check_completions_contains(
+    check_completions(
         // language=Move
         r#"
 module 0x1::m {
@@ -416,7 +443,10 @@ module 0x1::m {
     }
 }
     "#,
-        vec!["var"],
+        expect![[r#"
+            [
+                "var -> u8",
+            ]"#]],
     );
 }
 
@@ -991,5 +1021,25 @@ module std::main {
     }
 }
     "#,
+    );
+}
+
+#[test]
+fn test_named_field_completions_detail() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    struct S { val_1: u8, val_2: u16 }
+    fun main() {
+        S { va/*caret*/ }
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "val_1 -> u8",
+                "val_2 -> u16",
+            ]"#]],
     );
 }

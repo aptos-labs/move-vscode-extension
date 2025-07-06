@@ -11,23 +11,25 @@ use crate::item::{
 };
 use ide_db::SymbolKind;
 use lang::types::ty::Ty;
-use syntax::{AstNode, SyntaxKind, ast};
+use syntax::SyntaxKind;
 
 pub(crate) mod function;
 pub(crate) mod struct_or_enum;
+pub(crate) mod type_owner;
 
-pub(crate) fn render_named_item(
+pub(crate) fn new_named_item(
     ctx: &CompletionContext<'_>,
     item_name: &str,
-    named_item: impl Into<ast::NamedElement>,
+    item_kind: SyntaxKind,
 ) -> CompletionItemBuilder {
-    let item_kind = item_to_kind(named_item.into().syntax().kind());
+    let completion_item_kind = item_to_kind(item_kind);
 
-    let mut item = CompletionItem::new(item_kind, ctx.source_range(), item_name);
+    let mut item = CompletionItem::new(completion_item_kind, ctx.source_range(), item_name);
     item.set_relevance(CompletionRelevance {
         exact_name_match: compute_exact_name_match(ctx, &item_name),
         ..CompletionRelevance::default()
     });
+    item.insert_snippet(format!("{item_name}$0"));
 
     item
 }

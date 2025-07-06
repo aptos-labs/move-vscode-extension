@@ -49,9 +49,15 @@ pub fn check_completions_with_prefix_exact(source: &str, expected_items: Vec<&st
     let completion_items = completions_at_offset(source, caret_offset, true);
 
     let mut lookup_labels = lookup_labels(completion_items);
+    let actual = lookup_labels.clone();
     for item in expected_items {
         let item = item.to_string();
-        assert!(lookup_labels.contains(&item), "missing item '{}'", item);
+        assert!(
+            lookup_labels.contains(&item),
+            "missing item '{}', actual items: {:?}",
+            item,
+            actual
+        );
         lookup_labels.retain(|lookup| *lookup != item);
     }
 

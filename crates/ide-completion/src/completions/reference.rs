@@ -14,11 +14,12 @@ use crate::completions::reference::method_or_field::add_method_or_field_completi
 use crate::completions::reference::paths::add_path_completions;
 use crate::context::{CompletionContext, ReferenceKind};
 use crate::item::CompletionItemKind;
-use crate::render::render_named_item;
+use crate::render::new_named_item;
+use crate::render::type_owner::render_type_owner;
 use lang::node_ext::item::ModuleItemExt;
 use std::cell::RefCell;
-use syntax::ast;
 use syntax::files::{InFile, InFileExt};
+use syntax::{AstNode, ast};
 
 pub(crate) fn add_reference_completions(
     completions: &RefCell<Completions>,
@@ -63,7 +64,7 @@ fn add_item_spec_ref_completions(
     for named_item in module.verifiable_items() {
         if let Some(name) = named_item.name() {
             let name = name.as_string();
-            let mut comp_item = render_named_item(ctx, &name, named_item);
+            let mut comp_item = new_named_item(ctx, &name, named_item.syntax().kind());
             comp_item.insert_snippet(format!("{name} $0"));
             acc.add(comp_item.build(ctx.db));
         }
@@ -83,10 +84,10 @@ fn add_struct_lit_fields_completions(
 
     let acc = &mut completions.borrow_mut();
 
-    let (_, fields_owner) = fields_owner.unpack();
-    for named_field in fields_owner.named_fields() {
-        if let Some(comp_item) = ctx.new_snippet_named_item(named_field.into()) {
-            acc.add(comp_item);
+    for named_field in fields_owner.flat_map(|it| it.named_fields()) {
+        if let Some(name) = named_field.value.name() {
+            let item = render_type_owner(ctx, &name.as_string(), named_field.map_into());
+            acc.add(item.build(ctx.db));
         }
     }
     Some(())

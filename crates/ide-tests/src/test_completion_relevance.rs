@@ -17,8 +17,8 @@ module std::main {
     "#,
         expect![[r#"
             [
-                "exact_match",
-                "exact_match_with_suffix",
+                "exact_match -> u8",
+                "exact_match_with_suffix -> u8",
             ]"#]],
     );
 }
@@ -107,8 +107,8 @@ module std::main {
     "#,
         expect![[r#"
             [
-                "call_valid_type",
-                "call_longer_invalid_type",
+                "call_valid_type -> u16",
+                "call_longer_invalid_type -> u8",
             ]"#]],
     );
 }
@@ -132,7 +132,7 @@ module std::main {
     "#,
         expect![[r#"
             [
-                "ident",
+                "ident -> u8",
                 "ident_longer() -> u8",
             ]"#]],
     );
@@ -154,8 +154,8 @@ module std::main {
     "#,
         expect![[r#"
             [
-                "call_integer_type",
-                "call_bool_type",
+                "call_integer_type -> integer",
+                "call_bool_type -> bool",
             ]"#]],
     );
 }
