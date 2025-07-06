@@ -27,6 +27,7 @@ mod test_missing_value_arguments;
 mod test_rename;
 mod test_resolve_items;
 mod test_resolve_types;
+mod test_signature_help_struct_lit_fields;
 mod test_signature_help_type_parameters;
 mod test_signature_help_value_parameters;
 mod test_type_checking;

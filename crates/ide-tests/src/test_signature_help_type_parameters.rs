@@ -1,4 +1,4 @@
-use crate::test_signature_help_value_parameters::check_signature_info;
+use crate::ide_test_utils::check_signature_info;
 use expect_test::expect;
 
 #[test]

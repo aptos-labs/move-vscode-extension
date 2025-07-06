@@ -140,7 +140,11 @@ fn named_field(p: &mut Parser) -> bool {
         #[cfg(debug_assertions)]
         let _p = stdx::panic_context::enter(format!("named_field {:?}", p.current_text()));
 
-        name_or_recover(p, TokenSet::EMPTY.into());
+        let has_name = name_or_recover(p, TokenSet::EMPTY.into());
+        if !has_name {
+            m.abandon(p);
+            return false;
+        }
 
         let at_colon = p.eat(T![:]);
         if at_colon {
