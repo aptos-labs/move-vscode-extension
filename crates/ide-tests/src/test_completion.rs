@@ -9,6 +9,11 @@ use crate::ide_test_utils::completion_utils::{
     check_completions_with_prefix_exact, check_no_completions, do_single_completion,
 };
 use expect_test::expect;
+use ide_completion::config::CompletionConfig;
+use ide_db::AllowSnippets;
+use syntax::files::FilePosition;
+use test_utils::fixtures::test_state::{named, named_with_deps};
+use test_utils::{fixtures, get_and_replace_caret};
 
 #[rustfmt::skip]
 #[test]
@@ -969,5 +974,22 @@ module std::option {
                 }
             }
         "#]],
+    );
+}
+
+#[test]
+fn test_no_completion_for_lambda_param() {
+    check_no_completions(
+        // language=Move
+        r#"
+module std::vector {
+    public inline fun for_each<T>(self: vector<T>, f: |T|) {}
+}
+module std::main {
+    fun main() {
+        vector[1].for_each(|el/*caret*/|)
+    }
+}
+    "#,
     );
 }

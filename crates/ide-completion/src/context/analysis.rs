@@ -7,10 +7,10 @@
 use crate::completions::item_list::ItemListKind;
 use crate::context::{COMPLETION_MARKER, CompletionAnalysis, ReferenceKind};
 use ide_db::RootDatabase;
-use ide_db::active_parameter::ActiveParameter;
+use ide_db::active_parameter::ActiveParameterInfo;
 use lang::Semantics;
 use lang::types::ty::Ty;
-use syntax::SyntaxKind::{FUN, MODULE, SOURCE_FILE, VISIBILITY_MODIFIER};
+use syntax::SyntaxKind::{FUN, MODULE, SOURCE_FILE, VALUE_ARG_LIST, VISIBILITY_MODIFIER};
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
@@ -28,12 +28,11 @@ pub(crate) fn completion_analysis(
     original_offset: TextSize,
     original_token: &SyntaxToken,
 ) -> Option<AnalysisResult> {
+    let expected = expected_type_and_name(&sema, &original_file, original_offset);
+
     // as we insert after the offset, right biased will *always* pick the identifier no matter
     // if there is an ident already typed or not
     let fake_token = fake_file.token_at_offset(original_offset).right_biased()?;
-
-    let expected = expected_type_and_name(&sema, &original_file, &fake_token);
-
     if !original_token.kind().is_keyword() {
         if let Some(fake_ref) = fake_token
             .parent_ancestors()
@@ -81,7 +80,7 @@ pub(crate) fn completion_analysis(
 
     Some(AnalysisResult {
         analysis: CompletionAnalysis::Item(item_list_kind),
-        expected: (None, None),
+        expected,
     })
 }
 
@@ -147,40 +146,32 @@ fn analyze_ref(
 }
 
 fn find_original_node<N: AstNode>(original_file: &SyntaxNode, fake_node: &SyntaxNode) -> Option<N> {
-    algo::find_node_at_offset(&original_file, fake_node.text_range().start())
+    let node_start = fake_node.text_range().start();
+    if !original_file.text_range().contains(node_start) {
+        tracing::error!(
+            fake_node_kind = ?fake_node.kind(),
+            "cannot auto-complete, fake node start outside of file",
+        );
+        return None;
+    }
+    algo::find_node_at_offset(&original_file, node_start)
 }
 
 fn expected_type_and_name<'db>(
     sema: &Semantics<'db, RootDatabase>,
     original_file: &SyntaxNode,
-    fake_token: &SyntaxToken,
+    offset: TextSize,
 ) -> (Option<Ty>, Option<ast::NameLike>) {
-    let mut node = match fake_token.parent() {
-        Some(it) => it,
-        None => return (None, None),
-    };
-
-    let (ty, name) = loop {
-        if let Some(_) = node.cast::<ast::ValueArgList>() {
-            break ActiveParameter::at_token(sema, original_file, fake_token.clone())
-                .map(|ap| {
-                    let name = ap.ident().map(ast::NameLike::Name);
-                    (ap.ty, name)
+    for ancestor in algo::ancestors_at_offset(original_file, offset) {
+        if ancestor.kind() == VALUE_ARG_LIST {
+            let active_param = ActiveParameterInfo::at_offset(sema, original_file, offset);
+            return active_param
+                .map(|active| {
+                    let name = active.ident().map(ast::NameLike::Name);
+                    (active.ty, name)
                 })
                 .unwrap_or((None, None));
         }
-
-        match node.parent() {
-            Some(n) => {
-                node = n;
-                continue;
-            }
-            None => break (None, None),
-        }
-    };
-
-    (
-        ty,
-        name.and_then(|it| find_original_node::<ast::NameLike>(&original_file, it.syntax())),
-    )
+    }
+    (None, None)
 }
