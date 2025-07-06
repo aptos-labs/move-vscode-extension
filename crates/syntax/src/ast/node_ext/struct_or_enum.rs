@@ -4,9 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::ast::NamedElement;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
-use crate::files::InFile;
 use crate::{AstNode, ast};
 use std::collections::HashSet;
 
@@ -42,7 +40,7 @@ impl ast::StructOrEnum {
                 let mut fields = vec![];
                 for variant in enum_.variants() {
                     for field in variant.named_fields() {
-                        let field_name = field.name().expect("always present").as_string();
+                        let field_name = field.field_name().as_string();
 
                         if visited_names.contains(&field_name) {
                             continue;

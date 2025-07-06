@@ -21,6 +21,7 @@ impl ast::NamedField {
         fields_owner
     }
 
+    // invariant checked
     pub fn field_name(&self) -> ast::Name {
         self.name()
             .expect("`name` is required to be present for ast::NamedField")

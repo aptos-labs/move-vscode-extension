@@ -90,15 +90,9 @@ pub fn call_expr_for_arg_list(
 }
 
 fn active_parameter_at_offset(callable: &ast::AnyCallExpr, at_offset: TextSize) -> Option<usize> {
-    let active_param = callable.value_arg_list().map(|arg_list| {
-        arg_list
-            .syntax()
-            .children_with_tokens()
-            .filter_map(NodeOrToken::into_token)
-            .filter(|t| t.kind() == T![,])
-            .take_while(|t| t.text_range().start() <= at_offset)
-            .count()
-    });
+    let active_param = callable
+        .value_arg_list()
+        .map(|arg_list| active_param(arg_list.syntax(), at_offset));
     active_param
 }
 
@@ -113,39 +107,31 @@ pub fn generic_item_for_type_arg_list(
     let generic_item =
         sema.resolve_to_element::<ast::GenericElement>(method_or_path.in_file(file_id))?;
 
-    let active_param = type_arg_list
-        .syntax()
-        .children_with_tokens()
-        .filter_map(NodeOrToken::into_token)
-        .filter(|t| t.kind() == T![,])
-        .take_while(|t| t.text_range().start() <= token.text_range().start())
-        .count();
-
+    let active_param = active_param(type_arg_list.syntax(), token.text_range().start());
     Some((generic_item, active_param))
 }
 
 pub fn fields_owner_for_struct_lit(
     sema: &Semantics<'_, RootDatabase>,
     struct_lit: InFile<ast::StructLit>,
-    token: &SyntaxToken,
+    offset: TextSize,
 ) -> Option<(InFile<ast::FieldsOwner>, Option<String>)> {
+    let active_lit_field_idx = struct_lit
+        .value
+        .struct_lit_field_list()
+        .map(|list| active_param(list.syntax(), offset))?;
+
     let lit_fields = struct_lit.value.clone().fields();
+    let active_lit_field = lit_fields.get(active_lit_field_idx).and_then(|it| it.name_ref());
 
     let fields_owner = sema.resolve_to_element::<ast::FieldsOwner>(struct_lit.map(|it| it.path()))?;
     let named_fields = fields_owner.value.named_fields();
-
-    let active_lit_field = lit_fields
-        .iter()
-        .find(|it| it.syntax().text_range().contains(token.text_range().start()))
-        .and_then(|it| it.field_name());
 
     let active_field_name = match active_lit_field {
         Some(name_ref) => Some(name_ref.as_string()),
         None => {
             // compute next field skipping all filled fields
-            let all_field_names = named_fields
-                .iter()
-                .filter_map(|it| it.name().map(|it| it.as_string()));
+            let all_field_names = named_fields.iter().map(|it| it.field_name().as_string());
             let provided_field_names = lit_fields
                 .iter()
                 .filter_map(|it| it.field_name().map(|it| it.as_string()))
@@ -163,4 +149,13 @@ pub fn fields_owner_for_struct_lit(
     };
 
     Some((fields_owner, active_field_name))
+}
+
+fn active_param(list_node: &SyntaxNode, offset: TextSize) -> usize {
+    list_node
+        .children_with_tokens()
+        .filter_map(NodeOrToken::into_token)
+        .filter(|t| t.kind() == T![,])
+        .take_while(|t| t.text_range().start() <= offset)
+        .count()
 }

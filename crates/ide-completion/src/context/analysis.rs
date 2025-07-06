@@ -6,11 +6,11 @@
 
 use crate::completions::item_list::ItemListKind;
 use crate::context::{COMPLETION_MARKER, CompletionAnalysis, ReferenceKind};
-use ide_db::RootDatabase;
 use ide_db::active_parameter::ActiveParameterInfo;
+use ide_db::{RootDatabase, active_parameter};
 use lang::Semantics;
 use lang::types::ty::Ty;
-use syntax::SyntaxKind::{FUN, MODULE, SOURCE_FILE, VALUE_ARG_LIST, VISIBILITY_MODIFIER};
+use syntax::SyntaxKind::{FUN, MODULE, SOURCE_FILE, STRUCT_LIT, VALUE_ARG_LIST, VISIBILITY_MODIFIER};
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
@@ -159,6 +159,23 @@ fn expected_type_and_name<'db>(
                     (active.ty, name)
                 })
                 .unwrap_or((None, None));
+        }
+        if ancestor.kind() == STRUCT_LIT {
+            let struct_lit = sema.wrap_node_infile(ancestor.cast::<ast::StructLit>().unwrap());
+            let msl = struct_lit.is_msl();
+            if let Some((fields_owner, Some(active_field_name))) =
+                active_parameter::fields_owner_for_struct_lit(sema, struct_lit, offset)
+            {
+                if let Some(named_field) =
+                    fields_owner.and_then(|it| it.field_by_name(&active_field_name))
+                {
+                    let name = named_field.value.field_name();
+                    let ty = named_field
+                        .and_then(|it| it.type_())
+                        .map(|field_type| sema.lower_type(field_type, msl));
+                    return (ty, Some(name.into()));
+                }
+            }
         }
     }
     (None, None)

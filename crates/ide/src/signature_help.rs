@@ -138,8 +138,11 @@ fn signature_help_for_struct_lit(
     struct_lit: InFile<ast::StructLit>,
     token: SyntaxToken,
 ) -> Option<SignatureHelp> {
-    let (fields_owner, active_field_name) =
-        active_parameter::fields_owner_for_struct_lit(sema, struct_lit.clone(), &token)?;
+    let (fields_owner, active_field_name) = active_parameter::fields_owner_for_struct_lit(
+        sema,
+        struct_lit.clone(),
+        token.text_range().start(),
+    )?;
     let (file_id, fields_owner) = fields_owner.unpack();
 
     let mut res = SignatureHelp {
@@ -153,24 +156,22 @@ fn signature_help_for_struct_lit(
         return Some(res);
     }
 
-    let ty_lowering = TyLowering::new(sema.db, struct_lit.is_msl());
+    let msl = struct_lit.is_msl();
     for (i, named_field) in named_fields.iter().enumerate() {
-        if let Some(name) = named_field.name() {
-            let field_name = name.as_string();
-            if active_field_name.as_ref().is_some_and(|it| it == &field_name) {
-                res.active_parameter = Some(i);
-            }
-            let mut field_text = String::new();
-            format_to!(field_text, "{}", field_name);
-            if let Some(field_type) = named_field.type_().map(|it| it.in_file(file_id)) {
-                format_to!(
-                    field_text,
-                    ": {}",
-                    sema.render_ty_truncated(&ty_lowering.lower_type(field_type), file_id)
-                );
-            }
-            res.push_param(&field_text);
+        let field_name = named_field.field_name().as_string();
+        if active_field_name.as_ref().is_some_and(|it| it == &field_name) {
+            res.active_parameter = Some(i);
         }
+        let mut field_text = String::new();
+        format_to!(field_text, "{}", field_name);
+        if let Some(field_type) = named_field.type_().map(|it| it.in_file(file_id)) {
+            format_to!(
+                field_text,
+                ": {}",
+                sema.render_ty_truncated(&sema.lower_type(field_type, msl), file_id)
+            );
+        }
+        res.push_param(&field_text);
     }
 
     Some(res)

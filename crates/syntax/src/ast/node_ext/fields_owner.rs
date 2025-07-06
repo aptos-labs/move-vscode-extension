@@ -26,6 +26,16 @@ impl ast::FieldsOwner {
             .unwrap_or_default()
     }
 
+    pub fn field_by_name(&self, field_name: &str) -> Option<ast::NamedField> {
+        let fields = self.named_field_list().map(|it| it.fields())?;
+        for field in fields.into_iter() {
+            if field.field_name().as_string() == field_name {
+                return Some(field);
+            }
+        }
+        None
+    }
+
     pub fn named_fields_map(&self) -> HashMap<String, ast::NamedField> {
         self.named_fields()
             .into_iter()

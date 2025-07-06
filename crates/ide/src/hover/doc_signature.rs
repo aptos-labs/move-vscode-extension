@@ -121,7 +121,7 @@ fn generate_struct(struct_: ast::Struct, buffer: &mut String) -> Option<()> {
 }
 
 fn generate_field(field: ast::NamedField, buffer: &mut String) -> Option<()> {
-    write!(buffer, "field {}", field.name()?.as_string()).ok()?;
+    write!(buffer, "field {}", field.field_name().as_string()).ok()?;
     generate_type_annotation(field.type_(), buffer)?;
     Some(())
 }

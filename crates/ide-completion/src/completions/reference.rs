@@ -85,10 +85,9 @@ fn add_struct_lit_fields_completions(
     let acc = &mut completions.borrow_mut();
 
     for named_field in fields_owner.flat_map(|it| it.named_fields()) {
-        if let Some(name) = named_field.value.name() {
-            let item = render_type_owner(ctx, &name.as_string(), named_field.map_into());
-            acc.add(item.build(ctx.db));
-        }
+        let field_name = named_field.value.field_name().as_string();
+        let item = render_type_owner(ctx, &field_name, named_field.map_into());
+        acc.add(item.build(ctx.db));
     }
     Some(())
 }

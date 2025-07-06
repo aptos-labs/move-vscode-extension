@@ -55,14 +55,14 @@ module std::main {
     fun call_valid_type(): u16 {}
     struct S { named: u16 }
     fun main() {
-        S { named: ca/*caret*/ }
+        S { named: ca/*caret*/ };
     }
 }
     "#,
         expect![[r#"
             [
-                "call_longer_invalid_type() -> u8",
                 "call_valid_type() -> u16",
+                "call_longer_invalid_type() -> u8",
             ]"#]],
     );
 }
