@@ -99,7 +99,7 @@ fn analyze_ref(
                 && fake_struct_lit_field.is_shorthand()
             {
                 let fake_struct_lit = fake_struct_lit_field.struct_lit();
-                let original_struct_lit = algo::find_node_at_offset::<ast::StructLit>(
+                let original_struct_lit = algo::find_node_at_offset(
                     &original_file,
                     fake_struct_lit.syntax().text_range().start(),
                 )?;
@@ -143,18 +143,6 @@ fn analyze_ref(
         _ => None,
     };
     reference_kind.map(|kind| CompletionAnalysis::Reference(kind))
-}
-
-fn find_original_node<N: AstNode>(original_file: &SyntaxNode, fake_node: &SyntaxNode) -> Option<N> {
-    let node_start = fake_node.text_range().start();
-    if !original_file.text_range().contains(node_start) {
-        tracing::error!(
-            fake_node_kind = ?fake_node.kind(),
-            "cannot auto-complete, fake node start outside of file",
-        );
-        return None;
-    }
-    algo::find_node_at_offset(&original_file, node_start)
 }
 
 fn expected_type_and_name<'db>(

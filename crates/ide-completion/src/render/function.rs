@@ -6,7 +6,7 @@
 
 use crate::context::CompletionContext;
 use crate::item::{CompletionItemBuilder, CompletionRelevance};
-use crate::render::{compute_type_match, render_named_item};
+use crate::render::{compute_type_match, new_named_item};
 use lang::types::lowering::TyLowering;
 use lang::types::substitution::{ApplySubstitution, Substitution};
 use lang::types::ty::Ty;
@@ -23,7 +23,7 @@ pub(crate) fn render_function(
     kind: FunctionKind,
     apply_subst: Option<Substitution>,
 ) -> CompletionItemBuilder {
-    let mut item_builder = render_named_item(ctx, &fun_name, fun.clone().value);
+    let mut item_builder = new_named_item(ctx, &fun_name, fun.kind());
 
     let ty_lowering = TyLowering::new(ctx.db, ctx.msl);
     let mut call_ty = ty_lowering.lower_any_function(fun.clone().map_into());
@@ -91,7 +91,7 @@ fn render_params(
     Some(res)
 }
 
-fn render_ty(ctx: &CompletionContext<'_>, ty: &Ty) -> String {
+pub(crate) fn render_ty(ctx: &CompletionContext<'_>, ty: &Ty) -> String {
     ctx.sema.render_ty_truncated(ty, ctx.position.file_id)
 }
 

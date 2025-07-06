@@ -6,10 +6,11 @@
 
 use crate::completions::Completions;
 use crate::context::CompletionContext;
-use crate::item::{CompletionItem, CompletionItemKind, CompletionRelevance};
+use crate::item::{CompletionItem, CompletionItemKind};
 use crate::render::function::{FunctionKind, render_function};
+use crate::render::new_named_item;
 use crate::render::struct_or_enum::render_struct_or_enum;
-use crate::render::{compute_type_match, render_named_item};
+use crate::render::type_owner::{render_ident_pat, render_type_owner};
 use ide_db::SymbolKind;
 use lang::nameres::path_kind::path_kind;
 use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variants};
@@ -123,7 +124,8 @@ fn add_completions_from_the_resolution_entries(
     for entry in entries {
         let name = entry.name.clone();
         let named_item = entry.cast_into::<ast::NamedElement>(ctx.db)?;
-        match named_item.kind() {
+        let named_item_kind = named_item.kind();
+        match named_item_kind {
             FUN | SPEC_FUN | SPEC_INLINE_FUN => {
                 completion_items.push(
                     render_function(
@@ -146,24 +148,15 @@ fn add_completions_from_the_resolution_entries(
             }
             IDENT_PAT => {
                 let ident_pat = named_item.cast_into::<ast::IdentPat>()?;
-
-                let mut item = render_named_item(ctx, &name, ident_pat.value.clone());
-                item.insert_snippet(format!("{name}$0"));
-                item.with_relevance(|r| CompletionRelevance { is_local: true, ..r });
-
-                let ident_ty = ctx.sema.get_ident_pat_type(&ident_pat, ctx.msl);
-                if let Some(ident_ty) = ident_ty {
-                    item.with_relevance(|r| CompletionRelevance {
-                        type_match: compute_type_match(ctx, ident_ty),
-                        ..r
-                    });
-                }
-
+                completion_items.push(render_ident_pat(ctx, &name, ident_pat).build(ctx.db));
+            }
+            GLOBAL_VARIABLE_DECL => {
+                let global_var = named_item.cast_into::<ast::GlobalVariableDecl>()?;
+                let item = render_type_owner(ctx, &name, global_var.map_into());
                 completion_items.push(item.build(ctx.db));
             }
             _ => {
-                let mut item = render_named_item(ctx, &name, named_item.value);
-                item.insert_snippet(format!("{name}$0"));
+                let item = new_named_item(ctx, &name, named_item_kind);
                 completion_items.push(item.build(ctx.db));
             }
         }

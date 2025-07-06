@@ -10,7 +10,6 @@ use crate::completions::item_list::ItemListKind;
 use crate::config::CompletionConfig;
 use crate::context::analysis::{AnalysisResult, completion_analysis};
 use crate::item::{CompletionItem, CompletionItemBuilder, CompletionItemKind};
-use crate::render::item_to_kind;
 use base_db::inputs::InternFileId;
 use base_db::source_db;
 use ide_db::RootDatabase;
@@ -110,15 +109,6 @@ impl CompletionContext<'_> {
         let mut item = CompletionItem::new(kind, self.source_range(), label);
         item.insert_snippet(snippet);
         item.build(self.db)
-    }
-
-    pub(crate) fn new_snippet_named_item(
-        &self,
-        named_item: ast::NamedElement,
-    ) -> Option<CompletionItem> {
-        let item_kind = item_to_kind(named_item.syntax().kind());
-        let name = named_item.name()?.as_string();
-        Some(self.new_snippet_item(item_kind, format!("{name}$0")))
     }
 
     pub(crate) fn new_snippet_keyword(&self, snippet: impl Into<String>) -> CompletionItem {
