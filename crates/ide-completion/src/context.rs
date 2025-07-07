@@ -19,7 +19,7 @@ use syntax::SyntaxKind::*;
 use syntax::ast::NameLike;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::FilePosition;
-use syntax::{AstNode, SourceFile, SyntaxToken, T, TextRange, algo, ast};
+use syntax::{AstNode, SourceFile, SyntaxToken, T, TextRange, TextSize, algo, ast};
 
 const COMPLETION_MARKER: &str = "raCompletionMarker";
 
@@ -74,6 +74,10 @@ pub(crate) struct CompletionContext<'db> {
 impl CompletionContext<'_> {
     pub(crate) fn original_file(&self) -> Option<SourceFile> {
         algo::containing_file_for_token(self.original_token.clone())
+    }
+
+    pub(crate) fn original_offset(&self) -> TextSize {
+        self.position.offset
     }
 
     /// The range of the identifier that is being completed.

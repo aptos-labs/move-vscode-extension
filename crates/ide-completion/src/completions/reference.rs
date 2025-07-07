@@ -18,6 +18,7 @@ use crate::render::new_named_item;
 use crate::render::type_owner::render_type_owner;
 use lang::node_ext::item::ModuleItemExt;
 use std::cell::RefCell;
+use std::collections::HashSet;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 
@@ -78,14 +79,26 @@ fn add_struct_lit_fields_completions(
     ctx: &CompletionContext<'_>,
     original_struct_lit: InFile<ast::StructLit>,
 ) -> Option<()> {
+    let acc = &mut completions.borrow_mut();
+
+    let provided_field_names = original_struct_lit
+        .value
+        .fields()
+        .iter()
+        // do not account for the current field
+        .filter(|it| !it.syntax().text_range().contains_inclusive(ctx.original_offset()))
+        .filter_map(|it| it.field_name())
+        .map(|it| it.as_string())
+        .collect::<HashSet<_>>();
+
     let fields_owner = ctx
         .sema
         .resolve_to_element::<ast::FieldsOwner>(original_struct_lit.map(|it| it.path()))?;
-
-    let acc = &mut completions.borrow_mut();
-
     for named_field in fields_owner.flat_map(|it| it.named_fields()) {
         let field_name = named_field.value.field_name().as_string();
+        if provided_field_names.contains(&field_name) {
+            continue;
+        }
         let item = render_type_owner(ctx, &field_name, named_field.map_into());
         acc.add(item.build(ctx.db));
     }
