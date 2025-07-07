@@ -46,7 +46,9 @@ module 0x1::m {
             ```move
             0x1::m
 
-            struct S has key { }
+            struct S has key {
+                val: u8
+            }
             ```
             ---
             struct docs
@@ -61,7 +63,7 @@ fn test_hover_for_enum() {
         r#"
 module 0x1::m {
     /// enum docs
-    enum S has key { One, Two }
+    enum S has key { One { val: u8 }, Two(u8, u8) }
     fun main() {
         S::One;
       //^
@@ -73,7 +75,10 @@ module 0x1::m {
             ```move
             0x1::m
 
-            enum S has key { }
+            enum S has key {
+                One { ... },
+                Two(...)
+            }
             ```
             ---
             enum docs
@@ -162,6 +167,70 @@ module 0x1::m {
             0x1::m::S
 
             variant One
+            ```
+            ---
+            my enum variant
+        "#]],
+    )
+}
+
+#[test]
+fn test_hover_for_enum_variant_with_named_fields() {
+    check_hover(
+        // language=Move
+        r#"
+module 0x1::m {
+    /// struct docs
+    enum S has key {
+        /// my enum variant
+        One { val: u8 },
+        Two,
+    }
+    fun main() {
+        S::One;
+           //^
+    }
+}
+    "#,
+        // language=Markdown
+        expect![[r#"
+            ```move
+            0x1::m::S
+
+            variant One {
+                val: u8
+            }
+            ```
+            ---
+            my enum variant
+        "#]],
+    )
+}
+
+#[test]
+fn test_hover_for_enum_variant_with_tuple_fields() {
+    check_hover(
+        // language=Move
+        r#"
+module 0x1::m {
+    /// struct docs
+    enum S has key {
+        /// my enum variant
+        One(u8),
+        Two,
+    }
+    fun main() {
+        S::One;
+           //^
+    }
+}
+    "#,
+        // language=Markdown
+        expect![[r#"
+            ```move
+            0x1::m::S
+
+            variant One(u8)
             ```
             ---
             my enum variant
