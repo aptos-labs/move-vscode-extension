@@ -11,6 +11,7 @@ use base_db::SourceDatabase;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast, match_ast};
 
+#[derive(Debug, Eq, PartialEq)]
 pub enum ItemFQName {
     Module {
         address: Address,
@@ -23,6 +24,20 @@ pub enum ItemFQName {
 }
 
 impl ItemFQName {
+    pub fn new_item(
+        address: Address,
+        module_name: impl Into<String>,
+        item_name: impl Into<String>,
+    ) -> Self {
+        ItemFQName::Item {
+            module_fq_name: Box::new(ItemFQName::Module {
+                address,
+                name: module_name.into(),
+            }),
+            name: item_name.into(),
+        }
+    }
+
     pub fn address(&self) -> &Address {
         match self {
             ItemFQName::Module { address, .. } => address,

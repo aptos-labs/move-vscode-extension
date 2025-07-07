@@ -202,8 +202,13 @@ impl<'db> SemanticsImpl<'db> {
         }
     }
 
-    pub fn fq_name(&self, item: impl AstNode) -> Option<ItemFQName> {
-        let item = self.wrap_node_infile(item);
+    pub fn fq_name_for_item(&self, item: impl AstNode) -> Option<ItemFQName> {
+        let file_item = self.wrap_node_infile(item);
+        self.fq_name_for_file_item(file_item)
+    }
+
+    #[inline]
+    pub fn fq_name_for_file_item(&self, item: InFile<impl AstNode>) -> Option<ItemFQName> {
         item.fq_name(self.db)
     }
 

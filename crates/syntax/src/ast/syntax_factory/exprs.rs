@@ -15,7 +15,6 @@ impl SyntaxFactory {
         else {
             unreachable!()
         };
-
         if let Some(mut mapping) = self.mappings() {
             let mut builder = SyntaxMappingBuilder::new(ast.syntax().clone());
             builder.map_node(lhs.syntax().clone(), ast.lhs().unwrap().syntax().clone());
@@ -24,6 +23,10 @@ impl SyntaxFactory {
         }
 
         ast
+    }
+
+    pub fn expr_index(&self, base_expr: ast::Expr, arg_expr: ast::Expr) -> ast::IndexExpr {
+        expr_from_text(&format!("{base_expr}[{arg_expr}]"))
     }
 
     pub fn expr_paren(&self, expr: ast::Expr) -> ast::Expr {
@@ -44,7 +47,6 @@ impl SyntaxFactory {
     }
 }
 
-// Consider `op: SyntaxKind` instead for nicer syntax at the call-site?
 pub(super) fn expr_bin_op(lhs: ast::Expr, op: ast::BinaryOp, rhs: ast::Expr) -> ast::Expr {
     expr_from_text(&format!("{lhs} {op} {rhs}"))
 }

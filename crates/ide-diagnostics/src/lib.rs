@@ -96,6 +96,9 @@ pub fn semantic_diagnostics(
                 ast::BinExpr(it) => {
                     handlers::can_be_replaced_with_compound_expr(&mut acc, &ctx, it.in_file(file_id));
                 },
+                ast::DerefExpr(it) => {
+                    handlers::can_be_replaced_with_index_expr(&mut acc, &ctx, it.in_file(file_id));
+                },
                 ast::NamedField(it) => {
                     handlers::recursive_struct_check(&mut acc, &ctx, it.in_file(file_id));
                 },

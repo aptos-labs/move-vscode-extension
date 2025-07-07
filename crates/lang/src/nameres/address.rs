@@ -18,6 +18,10 @@ impl Address {
         Address::Named(NamedAddr::new(name.to_string()))
     }
 
+    pub fn value(value: &str) -> Self {
+        Address::Value(ValueAddr::new(value.to_string()))
+    }
+
     pub fn resolve_to_numeric_address(self) -> Option<NumericAddress> {
         match self {
             Address::Named(named_addr) => resolve_named_address(named_addr.name.as_str()),
