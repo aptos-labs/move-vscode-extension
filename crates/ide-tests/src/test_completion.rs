@@ -1081,3 +1081,37 @@ module std::main {
             ]"#]],
     );
 }
+
+#[test]
+fn test_module_completion_in_types() {
+    check_completions(
+        // language=Move
+        r#"
+module std::table {
+    struct Table {}
+}
+module std::main {
+    struct S { val_1: std::tab/*caret*/ }
+}
+    "#,
+        expect![[r#"
+            [
+                "table",
+            ]"#]],
+    );
+}
+
+#[test]
+fn test_enum_variants_should_not_be_present_in_types() {
+    check_no_completions(
+        // language=Move
+        r#"
+module std::table {
+    enum Table { One, Two }
+}
+module std::main {
+    struct S { val_1: std::table::Table::O/*caret*/ }
+}
+    "#,
+    );
+}

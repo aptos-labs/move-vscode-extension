@@ -292,7 +292,13 @@ fn path_namespaces(
         }
         // a: foo::bar
         //         ^
-        PATH_TYPE if qualifier.is_some() => TYPES_N_ENUMS,
+        PATH_TYPE if qualifier.is_some() => {
+            if is_completion {
+                TYPES_N_ENUMS_N_MODULES
+            } else {
+                TYPES_N_ENUMS
+            }
+        }
 
         CALL_EXPR => NAMES_N_FUNCTIONS_N_VARIANTS,
 
