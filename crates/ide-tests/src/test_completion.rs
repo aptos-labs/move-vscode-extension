@@ -27,11 +27,11 @@ module 0x1::m {
                 "enum",
                 "spec",
                 "friend",
-                "inline",
+                "public",
                 "native",
                 "entry",
+                "inline",
                 "package",
-                "public",
             ]"#]],
     );
 }
