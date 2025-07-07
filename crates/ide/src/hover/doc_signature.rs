@@ -19,12 +19,12 @@ impl DocSignatureOwner for ast::NamedElement {
     fn header(&self, sema: &Semantics<'_, RootDatabase>, buffer: &mut String) -> Option<()> {
         let header = match_ast! {
             match (self.syntax()) {
-                ast::Module(it) => sema.fq_name(it)?.address_identifier_text(),
-                ast::Item(it) => sema.fq_name(it)?.module_identifier_text(),
-                ast::SpecInlineFun(it) => sema.fq_name(it)?.module_identifier_text(),
-                ast::NamedField(it) => sema.fq_name(it.fields_owner())?.fq_identifier_text(),
-                ast::Variant(it) => sema.fq_name(it.enum_())?.fq_identifier_text(),
-                ast::Const(it) => sema.fq_name(it)?.module_identifier_text(),
+                ast::Module(it) => sema.fq_name_for_item(it)?.address_identifier_text(),
+                ast::Item(it) => sema.fq_name_for_item(it)?.module_identifier_text(),
+                ast::SpecInlineFun(it) => sema.fq_name_for_item(it)?.module_identifier_text(),
+                ast::NamedField(it) => sema.fq_name_for_item(it.fields_owner())?.fq_identifier_text(),
+                ast::Variant(it) => sema.fq_name_for_item(it.enum_())?.fq_identifier_text(),
+                ast::Const(it) => sema.fq_name_for_item(it)?.module_identifier_text(),
                 ast::IdentPat(_) => {
                     // no header
                     return None;

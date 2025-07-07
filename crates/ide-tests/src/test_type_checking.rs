@@ -2459,3 +2459,16 @@ fn test_type_check_arguments_for_tuple_struct() {
         }
     "#]])
 }
+
+#[test]
+fn test_no_error_if_expr_return_value_is_not_consumed() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            native fun borrow<Element>(v: &vector<Element>, i: u8): &Element;
+            public fun main() {
+                *borrow(&vector[1, 2], 0);
+            }
+        }
+    "#]])
+}

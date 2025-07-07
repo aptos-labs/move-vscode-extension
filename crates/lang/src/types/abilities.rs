@@ -87,8 +87,10 @@ impl Ty {
             Ty::Seq(TySequence::Vector(item_ty)) => item_ty.abilities(db),
             Ty::Infer(TyInfer::Var(_)) => Some(Ability::all()),
             Ty::Reference(_) => Some(vec![Ability::Drop, Ability::Copy]),
-            // todo:
-            _ => Some(Ability::all()),
+            // todo: lambda abilities
+            Ty::Callable(_) => Some(Ability::all()),
+            Ty::Tuple(_) => Some(Ability::all()),
+            Ty::Schema(_) => Some(Ability::all()),
         }
     }
 }

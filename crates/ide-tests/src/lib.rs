@@ -25,6 +25,7 @@ mod test_find_usages;
 mod test_load_dependencies;
 mod test_missing_value_arguments;
 mod test_rename;
+mod test_replace_with_index_expr;
 mod test_resolve_items;
 mod test_resolve_types;
 mod test_signature_help_struct_lit_fields;

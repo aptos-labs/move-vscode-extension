@@ -6,12 +6,14 @@
 
 pub(crate) mod call_params;
 mod can_be_replaced_with_compound_expr;
+mod can_be_replaced_with_index_expr;
 mod can_be_replaced_with_method_call;
 mod type_checking;
 mod unresolved_reference;
 pub(crate) mod unused_variables;
 
 pub(crate) use can_be_replaced_with_compound_expr::can_be_replaced_with_compound_expr;
+pub(crate) use can_be_replaced_with_index_expr::can_be_replaced_with_index_expr;
 pub(crate) use can_be_replaced_with_method_call::can_be_replaced_with_method_call;
 pub(crate) use type_checking::{recursive_struct_check, type_check};
 pub(crate) use unresolved_reference::find_unresolved_references;

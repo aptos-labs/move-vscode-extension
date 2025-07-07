@@ -193,11 +193,6 @@ impl<'db> TyLowering<'db> {
                 let first_arg_ty = first_arg_type
                     .map(|it| self.lower_type(it.in_file(file_id)))
                     .unwrap_or(Ty::Unknown);
-                // let arg_ty = path
-                //     .type_args()
-                //     .first()
-                //     .map(|it| self.lower_type(it.type_().in_file(file_id)))
-                //     .unwrap_or(Ty::Unknown);
                 Ty::new_vector(first_arg_ty)
             }
             _ => {
