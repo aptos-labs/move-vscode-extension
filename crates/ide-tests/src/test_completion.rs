@@ -1043,3 +1043,41 @@ module std::main {
             ]"#]],
     );
 }
+
+#[test]
+fn test_do_not_show_already_present_fields_in_completion() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    struct S { val_1: u8, val_2: u16 }
+    fun main() {
+        S { val_1: 1, va/*caret*/ }
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "val_2 -> u16",
+            ]"#]],
+    );
+}
+
+#[test]
+fn test_show_current_field_in_completion() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    struct S { val_1: u8 }
+    fun main() {
+        S { val_1/*caret*/ }
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "val_1 -> u8",
+            ]"#]],
+    );
+}
