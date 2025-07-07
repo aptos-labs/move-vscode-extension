@@ -8,7 +8,6 @@ use crate::completions::Completions;
 use crate::context::CompletionContext;
 use std::cell::RefCell;
 use std::collections::HashSet;
-use std::ops::Sub;
 
 /// The kind of item list a [`PathKind::Item`] belongs to.
 #[derive(Debug, PartialEq, Eq)]
@@ -67,9 +66,11 @@ fn add_keywords(
             }
         }
         ItemListKind::Function { existing_modifiers } => {
-            let remaining_modifiers = all_function_modifiers().sub(existing_modifiers);
-            for modifier in remaining_modifiers {
-                add_keyword_s(modifier);
+            for function_modifier in all_function_modifiers() {
+                if existing_modifiers.contains(&function_modifier) {
+                    continue;
+                }
+                add_keyword_s(function_modifier);
             }
             add_keyword("fun");
         }
@@ -78,7 +79,7 @@ fn add_keywords(
     Some(())
 }
 
-fn all_function_modifiers() -> HashSet<String> {
+fn all_function_modifiers() -> Vec<String> {
     vec!["public", "native", "entry", "inline", "package", "friend"]
         .into_iter()
         .map(|it| it.to_string())
