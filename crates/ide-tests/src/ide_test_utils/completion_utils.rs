@@ -42,51 +42,6 @@ pub fn do_single_completion(before: &str, after: Expect) {
     after.assert_eq(&res);
 }
 
-pub fn check_completions_with_prefix_exact(source: &str, expected_items: Vec<&str>) {
-    init_tracing_for_test();
-
-    let (source, caret_offset) = get_and_replace_caret(source, "/*caret*/");
-    let completion_items = completions_at_offset(source, caret_offset, true);
-
-    let mut lookup_labels = lookup_labels(completion_items);
-    let actual = lookup_labels.clone();
-    for item in expected_items {
-        let item = item.to_string();
-        assert!(
-            lookup_labels.contains(&item),
-            "missing item '{}', actual items: {:?}",
-            item,
-            actual
-        );
-        lookup_labels.retain(|lookup| *lookup != item);
-    }
-
-    assert!(lookup_labels.is_empty(), "extra items {:?}", lookup_labels);
-}
-
-pub fn check_completions_contains(source: &str, contains_items: Vec<&str>) {
-    init_tracing_for_test();
-
-    let (source, offset) = get_and_replace_caret(source, "/*caret*/");
-
-    let completion_items = completions_at_offset(source, offset, false);
-
-    let mut lookup_labels = lookup_labels(completion_items);
-    let lookup_labels_txt = format!("{:?}", lookup_labels);
-    for item in contains_items.clone() {
-        let item = item.to_string();
-        assert!(
-            lookup_labels.contains(&item),
-            "missing item '{}', actual: {}",
-            item,
-            lookup_labels_txt
-        );
-        lookup_labels.retain(|lookup| *lookup != item);
-    }
-
-    // assert!(lookup_labels.is_empty(), "extra items {:?}", lookup_labels);
-}
-
 pub fn check_completions(source: &str, expected: Expect) {
     init_tracing_for_test();
 
@@ -99,31 +54,14 @@ pub fn check_completions(source: &str, expected: Expect) {
     expected.assert_eq(&lookup_labels_txt);
 }
 
-pub fn check_completion_exact(source: &str, expected_items: Vec<&str>) {
-    let completion_items = completions_at_caret(source);
-
-    let mut lookup_labels = lookup_labels(completion_items);
-    for expected_item in expected_items {
-        let item = expected_item.to_string();
-        assert!(lookup_labels.contains(&item), "missing item '{}'", expected_item);
-        lookup_labels.retain(|lookup| *lookup != item);
-    }
-
-    assert!(lookup_labels.is_empty(), "extra items {:?}", lookup_labels);
-}
-
 pub fn check_no_completions(source: &str) {
-    let completion_items = completions_at_caret(source);
+    let (source, caret_offset) = get_and_replace_caret(source, "/*caret*/");
+    let completion_items = completions_at_offset(source, caret_offset, true);
     assert!(
         completion_items.is_empty(),
         "extra completion items {:?}",
         lookup_labels(completion_items),
     );
-}
-
-fn completions_at_caret(source: &str) -> Vec<CompletionItem> {
-    let (source, caret_offset) = get_and_replace_caret(source, "/*caret*/");
-    completions_at_offset(source, caret_offset, true)
 }
 
 fn completions_at_offset(

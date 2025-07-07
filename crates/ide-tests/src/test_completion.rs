@@ -5,36 +5,50 @@
 // Modifications have been made to the original code.
 
 use crate::ide_test_utils::completion_utils::{
-    check_completion_exact, check_completions, check_completions_contains, check_no_completions,
-    do_single_completion,
+    check_completions, check_no_completions, do_single_completion,
 };
 use expect_test::expect;
 
-#[rustfmt::skip]
 #[test]
 fn test_module_item_list_completion() {
-    check_completion_exact(
+    check_completions(
         // language=Move
         r#"
 module 0x1::m {
     /*caret*/
 }
     "#,
-        vec![
-            "fun", "struct", "const", "enum", "use", "spec", "friend",
-            "public", "entry", "native", "inline", "package",
-        ],
+        expect![[r#"
+            [
+                "use",
+                "fun",
+                "struct",
+                "const",
+                "enum",
+                "spec",
+                "friend",
+                "inline",
+                "native",
+                "entry",
+                "package",
+                "public",
+            ]"#]],
     );
 }
 
 #[test]
 fn test_top_level_completion_items() {
-    check_completion_exact(
+    check_completions(
         // language=Move
         r#"
 /*caret*/
     "#,
-        vec!["module", "script", "spec"],
+        expect![[r#"
+            [
+                "module",
+                "script",
+                "spec",
+            ]"#]],
     );
 }
 
@@ -54,14 +68,17 @@ mod/*caret*/
 
 #[test]
 fn test_complete_fun_keyword() {
-    check_completions_contains(
+    check_completions(
         // language=Move
         r#"
 module 0x1::m {
     public fu/*caret*/
 }
     "#,
-        vec!["fun"],
+        expect![[r#"
+            [
+                "fun",
+            ]"#]],
     );
 }
 
@@ -91,7 +108,7 @@ module 0x1::m {
 
 #[test]
 fn test_expr_start_completion() {
-    check_completions_contains(
+    check_completions(
         // language=Move
         r#"
 module 0x1::m {
@@ -100,7 +117,10 @@ module 0x1::m {
     }
 }
     "#,
-        vec!["if", "while", "let", "loop", "match", "for", "true", "false"],
+        expect![[r#"
+            [
+                "if",
+            ]"#]],
     );
 }
 
@@ -238,7 +258,7 @@ module 0x1::m {
 
 #[test]
 fn test_local_type_completion() {
-    check_completions_contains(
+    check_completions(
         // language=Move
         r#"
 module 0x1::m {
@@ -248,13 +268,16 @@ module 0x1::m {
     }
 }
     "#,
-        vec!["VestingContract"],
+        expect![[r#"
+            [
+                "VestingContract",
+            ]"#]],
     );
 }
 
 #[test]
 fn test_external_module_item_completion() {
-    check_completions_contains(
+    check_completions(
         // language=Move
         r#"
 module 0x1::v {
@@ -268,7 +291,11 @@ module 0x1::m {
     }
 }
     "#,
-        vec!["call1()", "call2()"],
+        expect![[r#"
+            [
+                "call1()",
+                "call2()",
+            ]"#]],
     );
 }
 
@@ -352,7 +379,7 @@ module 0x1::m {
 
 #[test]
 fn test_field_completion_with_substituted_type() {
-    check_completions_contains(
+    check_completions(
         // language=Move
         r#"
 module 0x1::m {
@@ -362,13 +389,16 @@ module 0x1::m {
     }
 }
     "#,
-        vec!["val -> u8"],
+        expect![[r#"
+            [
+                "val -> u8",
+            ]"#]],
     );
 }
 
 #[test]
 fn test_method_completion_with_substituted_parameters() {
-    check_completions_contains(
+    check_completions(
         // language=Move
         r#"
 module 0x1::m {
@@ -381,7 +411,10 @@ module 0x1::m {
     }
 }
     "#,
-        vec!["receiver(my_val: u8) -> u8"],
+        expect![[r#"
+            [
+                "receiver(my_val: u8) -> u8",
+            ]"#]],
     );
 }
 
@@ -452,7 +485,7 @@ module 0x1::m {
 
 #[test]
 fn test_for_each_ref_lambda_parameter() {
-    check_completions_contains(
+    check_completions(
         // language=Move
         r#"
 module std::option {
@@ -474,7 +507,10 @@ module std::asset {
     }
 }
     "#,
-        vec!["module_address -> address"],
+        expect![[r#"
+            [
+                "module_address -> address",
+            ]"#]],
     );
 }
 
@@ -903,7 +939,7 @@ module std::option {
 
 #[test]
 fn test_path_completion_without_ident() {
-    check_completions_contains(
+    check_completions(
         // language=Move
         r#"
 module std::option {
@@ -913,7 +949,28 @@ module std::option {
     }
 }
     "#,
-        vec!["call()"],
+        expect![[r#"
+            [
+                "if",
+                "match",
+                "loop",
+                "while",
+                "for",
+                "let",
+                "true",
+                "false",
+                "Self",
+                "call()",
+                "main()",
+                "move_from(addr: address) -> T",
+                "move_to(acc: &signer, res: T)",
+                "borrow_global(addr: address) -> &T",
+                "borrow_global_mut(addr: address) -> &mut T",
+                "exists(addr: address) -> bool",
+                "freeze(mut_ref: &mut S) -> &S",
+                "vector[]",
+                "assert!(_: bool, err: u64)",
+            ]"#]],
     );
 }
 
