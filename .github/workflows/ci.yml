@@ -49,7 +49,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Build aptos-analyzer binary with xtask
+      - name: Build aptos-language-server binary with xtask
         run: cargo xtask install --server
 
       - name: Fetch aptos-core repository
@@ -59,7 +59,7 @@ jobs:
           path: aptos-core
 
       - name: Check diagnostics on aptos-core:framework
-        run: aptos-analyzer check --kinds error -- ./aptos-core/aptos-move/framework
+        run: aptos-language-server check --kinds error -- ./aptos-core/aptos-move/framework
 
   build_vsix:
     name: Build .vsix extension

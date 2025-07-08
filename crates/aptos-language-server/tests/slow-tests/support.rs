@@ -13,7 +13,7 @@ use std::{
     time::Duration,
 };
 
-use aptos_analyzer::{Config, lsp, main_loop};
+use aptos_language_server::{Config, lsp, main_loop};
 use crossbeam_channel::{Receiver, after, select};
 use lsp_server::{Connection, Message, Notification, Request};
 use lsp_types::{TextDocumentIdentifier, Url, notification::Exit, request::Shutdown};

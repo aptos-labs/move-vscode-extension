@@ -10,7 +10,7 @@ import { Cmd, Ctx, CtxInit } from "./ctx";
 
 export function analyzerStatus(ctx: CtxInit): Cmd {
     const tdcp = new (class implements vscode.TextDocumentContentProvider {
-        readonly uri = vscode.Uri.parse("aptos-analyzer-status://status");
+        readonly uri = vscode.Uri.parse("aptos-lsp-status://status");
         readonly eventEmitter = new vscode.EventEmitter<vscode.Uri>();
 
         async provideTextDocumentContent(_uri: vscode.Uri): Promise<string> {
@@ -31,7 +31,7 @@ export function analyzerStatus(ctx: CtxInit): Cmd {
     })();
 
     ctx.pushExtCleanup(
-        vscode.workspace.registerTextDocumentContentProvider("aptos-analyzer-status", tdcp),
+        vscode.workspace.registerTextDocumentContentProvider("aptos-lsp-status", tdcp),
     );
 
     return async () => {
@@ -46,7 +46,7 @@ export function analyzerStatus(ctx: CtxInit): Cmd {
 
 export function toggleLSPLogs(ctx: Ctx): Cmd {
     return async () => {
-        const config = vscode.workspace.getConfiguration("aptos-analyzer");
+        const config = vscode.workspace.getConfiguration("move-on-aptos");
         const targetValue =
             config.get<string | undefined>("trace.server") === "verbose" ? undefined : "verbose";
 
@@ -77,11 +77,11 @@ export function syntaxTreeShowWhitespace(ctx: CtxInit): Cmd {
 export function serverVersion(ctx: CtxInit): Cmd {
     return async () => {
         if (!ctx.serverPath) {
-            void vscode.window.showWarningMessage(`aptos-analyzer server is not running`);
+            void vscode.window.showWarningMessage(`aptos-language-server is not running`);
             return;
         }
         void vscode.window.showInformationMessage(
-            `aptos-analyzer version: ${ctx.serverVersion} [${ctx.serverPath}]`,
+            `aptos-language-server version: ${ctx.serverVersion} [${ctx.serverPath}]`,
         );
     };
 }

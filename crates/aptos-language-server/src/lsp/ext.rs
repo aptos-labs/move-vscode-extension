@@ -16,7 +16,7 @@ pub enum AnalyzerStatus {}
 impl Request for AnalyzerStatus {
     type Params = AnalyzerStatusParams;
     type Result = String;
-    const METHOD: &'static str = "aptos-analyzer/analyzerStatus";
+    const METHOD: &'static str = "aptos-language-server/analyzerStatus";
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -30,28 +30,28 @@ pub enum ReloadWorkspace {}
 impl Request for ReloadWorkspace {
     type Params = ();
     type Result = ();
-    const METHOD: &'static str = "aptos-analyzer/reloadWorkspace";
+    const METHOD: &'static str = "aptos-language-server/reloadWorkspace";
 }
 
 pub enum CancelFlycheck {}
 
 impl Notification for CancelFlycheck {
     type Params = ();
-    const METHOD: &'static str = "aptos-analyzer/cancelFlycheck";
+    const METHOD: &'static str = "aptos-language-server/cancelFlycheck";
 }
 
 pub enum RunFlycheck {}
 
 impl Notification for RunFlycheck {
     type Params = RunFlycheckParams;
-    const METHOD: &'static str = "aptos-analyzer/runFlycheck";
+    const METHOD: &'static str = "aptos-language-server/runFlycheck";
 }
 
 pub enum ClearFlycheck {}
 
 impl Notification for ClearFlycheck {
     type Params = ();
-    const METHOD: &'static str = "aptos-analyzer/clearFlycheck";
+    const METHOD: &'static str = "aptos-language-server/clearFlycheck";
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -64,7 +64,7 @@ pub enum OpenServerLogs {}
 
 impl Notification for OpenServerLogs {
     type Params = ();
-    const METHOD: &'static str = "aptos-analyzer/openServerLogs";
+    const METHOD: &'static str = "aptos-language-server/openServerLogs";
 }
 
 pub enum ServerStatusNotification {}
@@ -105,7 +105,7 @@ pub enum ViewSyntaxTree {}
 impl Request for ViewSyntaxTree {
     type Params = ViewSyntaxTreeParams;
     type Result = String;
-    const METHOD: &'static str = "aptos-analyzer/viewSyntaxTree";
+    const METHOD: &'static str = "aptos-language-server/viewSyntaxTree";
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -126,7 +126,7 @@ pub enum MovefmtVersionError {}
 
 impl Notification for MovefmtVersionError {
     type Params = MovefmtVersionErrorParams;
-    const METHOD: &'static str = "aptos-analyzer/movefmtVersionError";
+    const METHOD: &'static str = "aptos-language-server/movefmtVersionError";
 }
 
 #[derive(Deserialize, Serialize, PartialEq, Eq, Clone)]

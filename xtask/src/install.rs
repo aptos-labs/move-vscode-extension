@@ -58,25 +58,25 @@ fn install_client(sh: &Shell) -> anyhow::Result<()> {
             format_err!(
                 "Can't execute `{} --version`. Perhaps it is not in $PATH?\n\
                 NOTE:\nTo install the extension for the other editors (ie. Cursor IDE),\n\
-                use \"Install from VSIX...\" command with the `./editors/code/aptos-analyzer.vsix` extension file",
+                use \"Install from VSIX...\" command with the `./editors/code/move-on-aptos.vsix` extension file",
                 candidates[0]
             )
         })?;
 
     // Install & verify.
     let installed_extensions = if cfg!(unix) {
-        cmd!(sh, "{code} --install-extension aptos-analyzer.vsix --force").run()?;
+        cmd!(sh, "{code} --install-extension move-on-aptos.vsix --force").run()?;
         cmd!(sh, "{code} --list-extensions").read()?
     } else {
         cmd!(
             sh,
-            "cmd.exe /c {code}.cmd --install-extension aptos-analyzer.vsix --force"
+            "cmd.exe /c {code}.cmd --install-extension move-on-aptos.vsix --force"
         )
         .run()?;
         cmd!(sh, "cmd.exe /c {code}.cmd --list-extensions").read()?
     };
 
-    if !installed_extensions.contains("aptos-analyzer") {
+    if !installed_extensions.contains("move-on-aptos") {
         bail!(
             "Could not install the Visual Studio Code extension. \
             Please make sure you have at least NodeJS 16.x together with the latest version of VS Code installed and try again. \
@@ -91,7 +91,7 @@ fn install_server(sh: &Shell) -> anyhow::Result<()> {
     let profile = "release";
     let cmd = cmd!(
         sh,
-        "cargo install --path crates/aptos-analyzer --profile={profile} --locked --force"
+        "cargo install --path crates/aptos-language-server --profile={profile} --locked --force"
     );
     cmd.run()?;
     Ok(())

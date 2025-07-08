@@ -377,11 +377,15 @@ impl GlobalState {
         };
 
         if packages_from_fs.is_empty() {
-            format_to!(buf, "aptos-analyzer failed to find any packages");
+            format_to!(buf, "aptos-language-server failed to find any packages");
         } else {
             for package_from_fs in packages_from_fs {
                 if let Err(load_err) = package_from_fs {
-                    format_to!(buf, "aptos-analyzer failed to load package: {:#}\n", load_err);
+                    format_to!(
+                        buf,
+                        "aptos-language-server failed to load package: {:#}\n",
+                        load_err
+                    );
                 }
             }
         }

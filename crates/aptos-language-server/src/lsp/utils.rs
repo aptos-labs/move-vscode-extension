@@ -108,18 +108,18 @@ impl GlobalState {
         }
     }
 
-    /// aptos-analyzer is resilient -- if it fails, this doesn't usually affect
+    /// aptos-language-server is resilient -- if it fails, this doesn't usually affect
     /// the user experience. Part of that is that we deliberately hide panics
     /// from the user.
     ///
-    /// We do however want to pester aptos-analyzer developers with panics and
+    /// We do however want to pester aptos-language-server developers with panics and
     /// other "you really gotta fix that" messages. The current strategy is to
     /// be noisy for "from source" builds or when profiling is enabled.
     ///
     /// It's unclear if making from source `cargo xtask install` builds more
     /// panicky is a good idea, let's see if we can keep our awesome bleeding
     /// edge users from being upset!
-    pub(crate) fn poke_aptos_analyzer_developer(&mut self, message: String) {
+    pub(crate) fn poke_aptos_language_server_developer(&mut self, message: String) {
         let poke_devs = std::env::var("POKE_APT_DEVS").ok().is_some();
         let profiling_enabled = std::env::var("APT_PROFILER").is_ok();
         if poke_devs || profiling_enabled {
@@ -144,7 +144,7 @@ impl GlobalState {
         });
         let cancellable = Some(cancel_token.is_some());
         let token = lsp_types::ProgressToken::String(
-            cancel_token.unwrap_or_else(|| format!("aptos-analyzer/{title}")),
+            cancel_token.unwrap_or_else(|| format!("aptos-language-server/{title}")),
         );
         tracing::debug!(?token, ?state, "report_progress {message:?}");
         let work_done_progress = match state {

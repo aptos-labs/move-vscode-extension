@@ -44,7 +44,6 @@ export async function createClient(
 
     const clientOptions: lc.LanguageClientOptions = {
         documentSelector: [{ scheme: 'file', language: 'move' }],
-        // initializationOptions,
         traceOutputChannel,
         outputChannel,
         middleware: lspMiddleware,
@@ -53,47 +52,9 @@ export async function createClient(
         },
     };
 
-    // const newEnv = Object.assign({}, process.env, this.config.serverExtraEnv);
-    // const executable: lc.Executable = {
-    //     command: this.config.serverPath,
-    //     options: {shell: true, env: newEnv},
-    // };
-    // const serverOptions: lc.ServerOptions = {
-    //     run: executable,
-    //     debug: executable,
-    // };
-
-    // The vscode-languageclient module reads a configuration option named
-    // "<extension-name>.trace.server" to determine whether to log messages. If a trace output
-    // channel is specified, these messages are printed there, otherwise they appear in the
-    // output channel that it automatically created by the `LanguageClient` (in this extension,
-    // that is 'Move Language Server'). For more information, see:
-    // https://code.visualstudio.com/api/language-extensions/language-server-extension-guide#logging-support-for-language-server
-    // const traceOutputChannel = vscode.window.createOutputChannel(
-    //     'Aptos Analyzer Trace',
-    // );
-    // vscode.workspace.onDidChangeConfiguration(
-    //     async (_) => {
-    //         await this.client?.sendNotification(lc.DidChangeConfigurationNotification.type, {
-    //             settings: "",
-    //         });
-    //     },
-    //     null,
-    // )
-    // const clientOptions: lc.LanguageClientOptions = {
-    //     documentSelector: [{scheme: 'file', language: 'move'}],
-    //     traceOutputChannel,
-    // };
-    // this._client = new lc.LanguageClient(
-    //     'aptos-analyzer',
-    //     'Aptos Analyzer Language Server',
-    //     serverOptions,
-    //     clientOptions,
-    // );
-
     const client = new lc.LanguageClient(
-        'aptos-analyzer',
-        'Aptos Analyzer Language Server',
+        'move-on-aptos',
+        'Move-on-Aptos Language Client',
         serverOptions,
         clientOptions,
     );
@@ -102,40 +63,16 @@ export async function createClient(
     client.registerFeature(new ExperimentalFeatures(/*config*/));
 
     return client;
-    // return this._client;
 }
 
 class ExperimentalFeatures implements lc.StaticFeature {
-    // private readonly testExplorer: boolean;
-    //
-    // constructor(config: Configuration) {
-    //     this.testExplorer = config.testExplorer || false;
-    // }
-
     getState(): lc.FeatureState {
         return { kind: "static" };
     }
 
     fillClientCapabilities(capabilities: lc.ClientCapabilities): void {
         capabilities.experimental = {
-            snippetTextEdit: true,
-            codeActionGroup: true,
-            // hoverActions: true,
             serverStatusNotification: true,
-            // colorDiagnosticOutput: true,
-            openServerLogs: true,
-            // localDocs: true,
-            // testExplorer: this.testExplorer,
-            // commands: {
-            //     commands: [
-            //         "rust-analyzer.runSingle",
-            //         "rust-analyzer.debugSingle",
-            //         "rust-analyzer.showReferences",
-            //         "rust-analyzer.gotoLocation",
-            //         "rust-analyzer.triggerParameterHints",
-            //         "rust-analyzer.rename",
-            //     ],
-            // },
             ...capabilities.experimental,
         };
     }

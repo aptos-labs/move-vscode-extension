@@ -4,13 +4,13 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-//! Driver for aptos-analyzer.
+//! Driver for aptos-language-server.
 
 use std::{env, fs, path::PathBuf, process::ExitCode, sync::Arc};
 
 use anyhow::Context;
-use aptos_analyzer::cli::{AptosAnalyzerCmd, CliArgs};
-use aptos_analyzer::{Config, ConfigChange, ConfigErrors, from_json};
+use aptos_language_server::cli::{AptosAnalyzerCmd, CliArgs};
+use aptos_language_server::{Config, ConfigChange, ConfigErrors, from_json};
 use clap::Parser;
 use lsp_server::Connection;
 use paths::Utf8PathBuf;
@@ -28,12 +28,12 @@ fn main() -> anyhow::Result<ExitCode> {
     match args.subcommand {
         None => {
             if args.version {
-                println!("aptos-analyzer {}", aptos_analyzer::version());
+                println!("aptos-language-server {}", aptos_language_server::version());
             }
         }
         Some(AptosAnalyzerCmd::LspServer) => 'lsp_server: {
             if args.version {
-                println!("aptos-analyzer {}", aptos_analyzer::version());
+                println!("aptos-language-server {}", aptos_language_server::version());
                 break 'lsp_server;
             }
 
@@ -47,7 +47,7 @@ fn main() -> anyhow::Result<ExitCode> {
                 run_server,
             )?;
         }
-        Some(AptosAnalyzerCmd::Check(cmd)) => {
+        Some(AptosAnalyzerCmd::Diagnostics(cmd)) => {
             let exit_code = cmd.run()?;
             return Ok(exit_code);
         }
@@ -99,7 +99,7 @@ fn setup_logging(log_file_option: Option<PathBuf>) -> anyhow::Result<()> {
         None => BoxMakeWriter::new(std::io::stderr),
     };
 
-    aptos_analyzer::tracing::LoggingConfig {
+    aptos_language_server::tracing::LoggingConfig {
         writer,
         // Deliberately enable all `error` logs if the user has not set RA_LOG, as there is usually
         // useful information in there for debugging.
@@ -130,7 +130,7 @@ fn with_extra_thread(
 }
 
 fn run_server() -> anyhow::Result<()> {
-    tracing::info!("server version {} will start", aptos_analyzer::version());
+    tracing::info!("server version {} will start", aptos_language_server::version());
 
     let (connection, io_threads, mut config) = initialization_handshake()?;
 
@@ -141,7 +141,7 @@ fn run_server() -> anyhow::Result<()> {
     }
 
     // blocks
-    let main_loop_result = aptos_analyzer::main_loop(config, connection);
+    let main_loop_result = aptos_language_server::main_loop(config, connection);
 
     let io_threads_result = io_threads.join();
     // If the io_threads have an error, there's usually an error on the main
@@ -254,13 +254,13 @@ fn initialization_handshake() -> anyhow::Result<(Connection, lsp_server::IoThrea
         }
     }
 
-    let server_capabilities = aptos_analyzer::server_capabilities(&config);
+    let server_capabilities = aptos_language_server::server_capabilities(&config);
 
     let initialize_result = lsp_types::InitializeResult {
         capabilities: server_capabilities,
         server_info: Some(lsp_types::ServerInfo {
-            name: String::from("aptos-analyzer"),
-            version: Some(aptos_analyzer::version().to_string()),
+            name: String::from("aptos-language-server"),
+            version: Some(aptos_language_server::version().to_string()),
         }),
         offset_encoding: None,
     };

@@ -8,7 +8,7 @@
 
 use std::fmt;
 
-/// Information about the git repository where rust-analyzer was built from.
+/// Information about the git repository where aptos-language-server was built from.
 pub struct CommitInfo {
     pub short_commit_hash: &'static str,
     pub commit_hash: &'static str,

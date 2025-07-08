@@ -308,7 +308,7 @@ pub(crate) fn handle_document_diagnostics(
     Ok(lsp_types::DocumentDiagnosticReportResult::Report(
         lsp_types::DocumentDiagnosticReport::Full(lsp_types::RelatedFullDocumentDiagnosticReport {
             full_document_diagnostic_report: lsp_types::FullDocumentDiagnosticReport {
-                result_id: Some("aptos-analyzer".to_owned()),
+                result_id: Some("aptos-language-server".to_owned()),
                 items: diagnostics.collect(),
             },
             related_documents: None,
@@ -321,7 +321,7 @@ pub(crate) fn empty_diagnostic_report() -> lsp_types::DocumentDiagnosticReportRe
         lsp_types::RelatedFullDocumentDiagnosticReport {
             related_documents: None,
             full_document_diagnostic_report: lsp_types::FullDocumentDiagnosticReport {
-                result_id: Some("aptos-analyzer".to_owned()),
+                result_id: Some("aptos-language-server".to_owned()),
                 items: vec![],
             },
         },

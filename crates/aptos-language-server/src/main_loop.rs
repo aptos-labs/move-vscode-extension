@@ -332,7 +332,7 @@ impl GlobalState {
             tracing::warn!(
                 "overly long loop turn took {loop_duration:?} (event handling took {event_handling_duration:?}): {event_dbg_msg}"
             );
-            self.poke_aptos_analyzer_developer(format!(
+            self.poke_aptos_language_server_developer(format!(
                 "overly long loop turn took {loop_duration:?} (event handling took {event_handling_duration:?}): {event_dbg_msg}"
             ));
         }
@@ -624,7 +624,7 @@ impl GlobalState {
                     state,
                     message,
                     None,
-                    Some(format!("aptos-analyzer/flycheck/{id}")),
+                    Some(format!("aptos-language-server/flycheck/{id}")),
                 );
             }
         }
@@ -708,7 +708,7 @@ impl GlobalState {
                         lsp_types::RelatedFullDocumentDiagnosticReport {
                             related_documents: None,
                             full_document_diagnostic_report: lsp_types::FullDocumentDiagnosticReport {
-                                result_id: Some("aptos-analyzer".to_owned()),
+                                result_id: Some("aptos-language-server".to_owned()),
                                 items: vec![],
                             },
                         },

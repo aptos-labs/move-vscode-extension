@@ -68,7 +68,7 @@ module std::table {
     let expected_resp = expect_test::expect![[r#"
         {
           "kind": "full",
-          "resultId": "aptos-analyzer",
+          "resultId": "aptos-language-server",
           "items": [
             {
               "range": {
@@ -83,7 +83,7 @@ module std::table {
               },
               "severity": 1,
               "code": "unresolved-reference",
-              "source": "aptos-analyzer",
+              "source": "aptos-language-server",
               "message": "Unresolved reference `Unknown`: cannot resolve"
             }
           ]
