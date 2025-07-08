@@ -72,7 +72,7 @@ InferenceCtxOwner =
     Fun | SpecFun | SpecInlineFun | ItemSpec | Schema
 
 IdentPatOwner =
-    LetStmt | Param | LambdaParam | SchemaField | QuantBinding | ItemSpecParam | ForCondition
+    LetStmt | Param | LambdaParam | SchemaField | QuantBinding | ItemSpecParam | ForCondition | MatchArm
 
 UseStmt =
     Attr* 'use' UseSpeck ';'

@@ -2,8 +2,8 @@ use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use ide_db::Severity;
 use std::collections::HashSet;
+use syntax::ast;
 use syntax::files::InFile;
-use syntax::{AstNode, ast};
 
 #[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn missing_fields_in_struct_lit(

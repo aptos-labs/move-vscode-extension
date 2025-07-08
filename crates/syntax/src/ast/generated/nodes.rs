@@ -2228,6 +2228,7 @@ pub enum IdentPatOwner {
     ItemSpecParam(ItemSpecParam),
     LambdaParam(LambdaParam),
     LetStmt(LetStmt),
+    MatchArm(MatchArm),
     Param(Param),
     QuantBinding(QuantBinding),
     SchemaField(SchemaField),
@@ -6770,6 +6771,10 @@ impl From<LetStmt> for IdentPatOwner {
     #[inline]
     fn from(node: LetStmt) -> IdentPatOwner { IdentPatOwner::LetStmt(node) }
 }
+impl From<MatchArm> for IdentPatOwner {
+    #[inline]
+    fn from(node: MatchArm) -> IdentPatOwner { IdentPatOwner::MatchArm(node) }
+}
 impl From<Param> for IdentPatOwner {
     #[inline]
     fn from(node: Param) -> IdentPatOwner { IdentPatOwner::Param(node) }
@@ -6807,6 +6812,12 @@ impl IdentPatOwner {
             _ => None,
         }
     }
+    pub fn match_arm(self) -> Option<MatchArm> {
+        match (self) {
+            IdentPatOwner::MatchArm(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn param(self) -> Option<Param> {
         match (self) {
             IdentPatOwner::Param(item) => Some(item),
@@ -6835,6 +6846,7 @@ impl AstNode for IdentPatOwner {
                 | ITEM_SPEC_PARAM
                 | LAMBDA_PARAM
                 | LET_STMT
+                | MATCH_ARM
                 | PARAM
                 | QUANT_BINDING
                 | SCHEMA_FIELD
@@ -6847,6 +6859,7 @@ impl AstNode for IdentPatOwner {
             ITEM_SPEC_PARAM => IdentPatOwner::ItemSpecParam(ItemSpecParam { syntax }),
             LAMBDA_PARAM => IdentPatOwner::LambdaParam(LambdaParam { syntax }),
             LET_STMT => IdentPatOwner::LetStmt(LetStmt { syntax }),
+            MATCH_ARM => IdentPatOwner::MatchArm(MatchArm { syntax }),
             PARAM => IdentPatOwner::Param(Param { syntax }),
             QUANT_BINDING => IdentPatOwner::QuantBinding(QuantBinding { syntax }),
             SCHEMA_FIELD => IdentPatOwner::SchemaField(SchemaField { syntax }),
@@ -6861,6 +6874,7 @@ impl AstNode for IdentPatOwner {
             IdentPatOwner::ItemSpecParam(it) => &it.syntax(),
             IdentPatOwner::LambdaParam(it) => &it.syntax(),
             IdentPatOwner::LetStmt(it) => &it.syntax(),
+            IdentPatOwner::MatchArm(it) => &it.syntax(),
             IdentPatOwner::Param(it) => &it.syntax(),
             IdentPatOwner::QuantBinding(it) => &it.syntax(),
             IdentPatOwner::SchemaField(it) => &it.syntax(),
