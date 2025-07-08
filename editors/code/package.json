@@ -1,5 +1,5 @@
 {
-    "name": "aptos-analyzer",
+    "name": "move-on-aptos",
     "displayName": "Move on Aptos (beta)",
     "description": "Move on Aptos – Official Move Language Support",
     "version": "0.1.0-dev",
@@ -7,13 +7,13 @@
     "publisher": "aptoslabs",
     "icon": "./icons/move_on_aptos.jpeg",
     "releaseTag": null,
-    "homepage": "https://github.com/aptos-labs/aptos-move-analyzer",
+    "homepage": "https://github.com/aptos-labs/move-vscode-extension",
     "repository": {
         "type": "git",
-        "url": "https://github.com/aptos-labs/aptos-move-analyzer.git"
+        "url": "https://github.com/aptos-labs/move-vscode-extension.git"
     },
     "bugs": {
-        "url": "https://github.com/aptos-labs/aptos-move-analyzer/issues",
+        "url": "https://github.com/aptos-labs/move-vscode-extension/issues",
         "email": "maksim@aptoslabs.com"
     },
     "engines": {
@@ -40,53 +40,53 @@
     "contributes": {
         "commands": [
             {
-                "command": "aptos-analyzer.analyzerStatus",
+                "command": "move-on-aptos.analyzerStatus",
                 "title": "Status",
-                "category": "aptos-analyzer"
+                "category": "move-on-aptos"
             },
             {
-                "command": "aptos-analyzer.restartServer",
+                "command": "move-on-aptos.restartServer",
                 "title": "Restart server",
-                "category": "aptos-analyzer"
+                "category": "move-on-aptos"
             },
             {
-                "command": "aptos-analyzer.startServer",
+                "command": "move-on-aptos.startServer",
                 "title": "Start server",
-                "category": "aptos-analyzer"
+                "category": "move-on-aptos"
             },
             {
-                "command": "aptos-analyzer.stopServer",
+                "command": "move-on-aptos.stopServer",
                 "title": "Stop server",
-                "category": "aptos-analyzer"
+                "category": "move-on-aptos"
             },
             {
-                "command": "aptos-analyzer.serverVersion",
-                "title": "Show Analyzer Version",
-                "category": "aptos-analyzer"
+                "command": "move-on-aptos.serverVersion",
+                "title": "Show Language Server Version",
+                "category": "move-on-aptos"
             },
             {
-                "command": "aptos-analyzer.toggleLSPLogs",
+                "command": "move-on-aptos.toggleLSPLogs",
                 "title": "Toggle LSP Logs",
-                "category": "aptos-analyzer"
+                "category": "move-on-aptos"
             },
             {
-                "command": "aptos-analyzer.syntaxTreeHideWhitespace",
+                "command": "move-on-aptos.syntaxTreeHideWhitespace",
                 "title": "Hide Whitespace",
                 "icon": "$(filter)",
-                "category": "aptos-analyzer (syntax tree)"
+                "category": "move-on-aptos (syntax tree)"
             },
             {
-                "command": "aptos-analyzer.syntaxTreeShowWhitespace",
+                "command": "move-on-aptos.syntaxTreeShowWhitespace",
                 "title": "Show Whitespace",
                 "icon": "$(filter-filled)",
-                "category": "aptos-analyzer (syntax tree)"
+                "category": "move-on-aptos (syntax tree)"
             }
         ],
         "configuration": [
             {
                 "title": "statusBar",
                 "properties": {
-                    "aptos-analyzer.statusBar.clickAction": {
+                    "move-on-aptos.statusBar.clickAction": {
                         "type": "string",
                         "enum": [
                             "stopServer",
@@ -99,7 +99,7 @@
                         "default": "openLogs",
                         "markdownDescription": "Action to run when clicking the extension status bar item."
                     },
-                    "aptos-analyzer.statusBar.showStatusBar": {
+                    "move-on-aptos.statusBar.showStatusBar": {
                         "markdownDescription": "When to show the extension status bar.\n\n`\"always\"` Always show the status bar.\n\n`\"never\"` Never show the status bar.\n\n`{ documentSelector: <DocumentSelector>[] }` Show the status bar if the open file matches any of the given document selectors.\n\nSee [VS Code -- DocumentSelector](https://code.visualstudio.com/api/references/document-selector) for more information.",
                         "anyOf": [
                             {
@@ -151,16 +151,16 @@
             {
                 "title": "server",
                 "properties": {
-                    "aptos-analyzer.server.path": {
+                    "move-on-aptos.server.path": {
                         "type": [
                             "null",
                             "string"
                         ],
                         "scope": "machine-overridable",
                         "default": null,
-                        "markdownDescription": "Path to aptos-analyzer executable (points to bundled binary by default)."
+                        "markdownDescription": "Path to aptos-language-server executable (points to bundled binary by default)."
                     },
-                    "aptos-analyzer.server.extraEnv": {
+                    "move-on-aptos.server.extraEnv": {
                         "type": [
                             "null",
                             "object"
@@ -172,9 +172,9 @@
                             ]
                         },
                         "default": null,
-                        "markdownDescription": "Extra environment variables that will be passed to the aptos-analyzer executable. Useful for passing e.g. `RA_LOG` for debugging."
+                        "markdownDescription": "Extra environment variables that will be passed to the aptos-language-server executable. Useful for passing e.g. `RA_LOG` for debugging."
                     },
-                    "aptos-analyzer.trace.server": {
+                    "move-on-aptos.trace.server": {
                         "type": "string",
                         "scope": "window",
                         "enum": [
@@ -188,15 +188,15 @@
                             "Full log"
                         ],
                         "default": "off",
-                        "description": "Trace requests to the aptos-analyzer (this is usually overly verbose and not recommended for regular users)."
+                        "description": "Trace requests to the aptos-language-server (this is usually overly verbose and not recommended for regular users)."
                     },
-                    "aptos-analyzer.showSyntaxTree": {
+                    "move-on-aptos.showSyntaxTree": {
                         "markdownDescription": "Whether to show the syntax tree view.",
                         "default": false,
                         "type": "boolean"
                     },
-                    "aptos-analyzer.initializeStopped": {
-                        "markdownDescription": "Do not start aptos-analyzer server when the extension is activated.",
+                    "move-on-aptos.initializeStopped": {
+                        "markdownDescription": "Do not start aptos-language-server server when the extension is activated.",
                         "default": false,
                         "type": "boolean"
                     }
@@ -208,7 +208,7 @@
             {
                 "title": "general",
                 "properties": {
-                    "aptos-analyzer.aptosPath": {
+                    "move-on-aptos.aptosPath": {
                         "markdownDescription": "Path to the `aptos-cli` executable.",
                         "default": null,
                         "type": [
@@ -221,7 +221,7 @@
             {
                 "title": "aptos",
                 "properties": {
-                    "aptos-analyzer.aptos.autoreload": {
+                    "move-on-aptos.aptos.autoreload": {
                         "markdownDescription": "Automatically refresh project info on `Move.toml` changes.",
                         "default": true,
                         "type": "boolean"
@@ -231,7 +231,7 @@
             {
                 "title": "general",
                 "properties": {
-                    "aptos-analyzer.checkOnSave": {
+                    "move-on-aptos.checkOnSave": {
                         "markdownDescription": "Run the check command for diagnostics on save.",
                         "default": true,
                         "type": "boolean"
@@ -241,7 +241,7 @@
             {
                 "title": "check",
                 "properties": {
-                    "aptos-analyzer.check.command": {
+                    "move-on-aptos.check.command": {
                         "markdownDescription": "Aptos command to use for `aptos move compile`.",
                         "default": "compile",
                         "type": "string"
@@ -251,7 +251,7 @@
             {
                 "title": "check",
                 "properties": {
-                    "aptos-analyzer.check.extraArgs": {
+                    "move-on-aptos.check.extraArgs": {
                         "markdownDescription": "Extra arguments for `aptos move compile`.",
                         "default": [],
                         "type": "array",
@@ -264,8 +264,8 @@
             {
                 "title": "diagnostics",
                 "properties": {
-                    "aptos-analyzer.diagnostics.enable": {
-                        "markdownDescription": "Whether to show native aptos-analyzer diagnostics.",
+                    "move-on-aptos.diagnostics.enable": {
+                        "markdownDescription": "Whether to show native aptos-language-server diagnostics.",
                         "default": true,
                         "type": "boolean"
                     }
@@ -274,7 +274,7 @@
             {
                 "title": "diagnostics",
                 "properties": {
-                    "aptos-analyzer.diagnostics.enableTypeChecking": {
+                    "move-on-aptos.diagnostics.enableTypeChecking": {
                         "markdownDescription": "Whether to show \"Type Checking\" diagnostic.",
                         "default": true,
                         "type": "boolean"
@@ -284,7 +284,7 @@
             {
                 "title": "diagnostics",
                 "properties": {
-                    "aptos-analyzer.diagnostics.enableUnresolvedReference": {
+                    "move-on-aptos.diagnostics.enableUnresolvedReference": {
                         "markdownDescription": "Whether to show \"Unresolved reference\" diagnostic.",
                         "default": true,
                         "type": "boolean"
@@ -294,8 +294,8 @@
             {
                 "title": "files",
                 "properties": {
-                    "aptos-analyzer.files.excludeDirs": {
-                        "markdownDescription": "These paths (file/directories) will be ignored by aptos-analyzer. They are\nrelative to the workspace root, and globs are not supported. You may\nalso need to add the folders to Code's `files.watcherExclude`.",
+                    "move-on-aptos.files.excludeDirs": {
+                        "markdownDescription": "These paths (file/directories) will be ignored by aptos-language-server. They are\nrelative to the workspace root, and globs are not supported. You may\nalso need to add the folders to Code's `files.watcherExclude`.",
                         "default": [],
                         "type": "array",
                         "items": {
@@ -307,7 +307,7 @@
             {
                 "title": "inlayHints",
                 "properties": {
-                    "aptos-analyzer.inlayHints.renderColons": {
+                    "move-on-aptos.inlayHints.renderColons": {
                         "markdownDescription": "Whether to render leading colons for type hints, and trailing colons for parameter hints.",
                         "default": true,
                         "type": "boolean"
@@ -317,7 +317,7 @@
             {
                 "title": "inlayHints",
                 "properties": {
-                    "aptos-analyzer.inlayHints.typeHints.enable": {
+                    "move-on-aptos.inlayHints.typeHints.enable": {
                         "markdownDescription": "Whether to show inlay type hints for variables.",
                         "default": true,
                         "type": "boolean"
@@ -327,7 +327,7 @@
             {
                 "title": "inlayHints",
                 "properties": {
-                    "aptos-analyzer.inlayHints.typeHints.hideClosureParameter": {
+                    "move-on-aptos.inlayHints.typeHints.hideClosureParameter": {
                         "markdownDescription": "Whether to hide inlay parameter type hints for closures.",
                         "default": false,
                         "type": "boolean"
@@ -337,7 +337,7 @@
             {
                 "title": "movefmt",
                 "properties": {
-                    "aptos-analyzer.movefmt.extraArgs": {
+                    "move-on-aptos.movefmt.extraArgs": {
                         "markdownDescription": "Additional arguments to `rustfmt`.",
                         "default": [],
                         "type": "array",
@@ -350,7 +350,7 @@
             {
                 "title": "movefmt",
                 "properties": {
-                    "aptos-analyzer.movefmt.path": {
+                    "move-on-aptos.movefmt.path": {
                         "markdownDescription": "Path to the `movefmt` executable.",
                         "default": null,
                         "type": [
@@ -492,22 +492,22 @@
         "menus": {
             "commandPalette": [
                 {
-                    "command": "aptos-analyzer.syntaxTreeHideWhitespace",
+                    "command": "move-on-aptos.syntaxTreeHideWhitespace",
                     "when": "false"
                 },
                 {
-                    "command": "aptos-analyzer.syntaxTreeShowWhitespace",
+                    "command": "move-on-aptos.syntaxTreeShowWhitespace",
                     "when": "false"
                 }
             ],
             "view/title": [
                 {
-                    "command": "aptos-analyzer.syntaxTreeHideWhitespace",
+                    "command": "move-on-aptos.syntaxTreeHideWhitespace",
                     "group": "navigation",
                     "when": "view == aptosSyntaxTree && !aptosSyntaxTree.hideWhitespace"
                 },
                 {
-                    "command": "aptos-analyzer.syntaxTreeShowWhitespace",
+                    "command": "move-on-aptos.syntaxTreeShowWhitespace",
                     "group": "navigation",
                     "when": "view == aptosSyntaxTree && aptosSyntaxTree.hideWhitespace"
                 }
@@ -519,7 +519,7 @@
                     "id": "aptosSyntaxTree",
                     "name": "Move on Aptos Syntax Tree",
                     "icon": "$(file-code)",
-                    "when": "inAptosProject && config.aptos-analyzer.showSyntaxTree"
+                    "when": "inAptosProject && config.move-on-aptos.showSyntaxTree"
                 }
             ]
         },
@@ -536,7 +536,7 @@
     "scripts": {
         "build-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --target=node20",
         "vscode:prepublish": "npm run build-base -- --minify",
-        "package": "vsce package -o aptos-analyzer.vsix",
+        "package": "vsce package -o move-on-aptos.vsix",
         "build": "npm run build-base -- --sourcemap",
         "watch": "npm run build-base -- --sourcemap --watch",
         "typecheck": "tsc"

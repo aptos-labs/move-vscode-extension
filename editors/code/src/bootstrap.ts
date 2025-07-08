@@ -16,8 +16,8 @@ export async function bootstrap(
     const path = await getServer(context, config);
     if (!path) {
         throw new Error(
-            "aptos-analyzer Language Server is not available. " +
-            "See README for the [proper installation procedure](https://github.com/aptos-labs/aptos-move-analyzer/blob/main/README.md).",
+            "Aptos Language Server is not available. " +
+            "See README for the [proper installation procedure](https://github.com/aptos-labs/move-vscode-extension/blob/main/README.md).",
         );
     }
 
@@ -26,7 +26,7 @@ export async function bootstrap(
     if (!await isValidExecutable(path, config.serverExtraEnv)) {
         throw new Error(
             `Failed to execute ${path} --version.` +
-            (config.serverPath
+            (config.languageServerPath
                 ? `\`config.server.path\` or \`config.serverPath\` has been set explicitly.\
             Consider removing this config or making a valid server binary available at that path.`
                 : ""),
@@ -46,7 +46,7 @@ async function getServer(
     } = context.extension.packageJSON;
 
     // check if the server path is configured explicitly
-    const explicitPath = /*process.env["__RA_LSP_SERVER_DEBUG"] ?? */config.serverPath;
+    const explicitPath = /*process.env["__RA_LSP_SERVER_DEBUG"] ?? */config.languageServerPath;
     if (explicitPath) {
         if (explicitPath.startsWith("~/")) {
             return os.homedir() + explicitPath.slice("~".length);
@@ -54,12 +54,12 @@ async function getServer(
         return explicitPath;
     }
 
-    // if there's no releaseTag, then it runs the `aptos-analyzer` from $PATH
-    if (packageJson.releaseTag === null) return "aptos-analyzer";
+    // if there's no releaseTag, then it runs the `aptos-language-server` from $PATH
+    if (packageJson.releaseTag === null) return "aptos-language-server";
 
     // finally, use the bundled one
     const ext = process.platform === "win32" ? ".exe" : "";
-    const bundled = vscode.Uri.joinPath(context.extensionUri, "server", `aptos-analyzer${ext}`);
+    const bundled = vscode.Uri.joinPath(context.extensionUri, "server", `aptos-language-server${ext}`);
     const bundledExists = await fileExists(bundled);
     if (bundledExists) {
         return bundled.fsPath;
@@ -67,7 +67,7 @@ async function getServer(
 
     await vscode.window.showErrorMessage(
         "Unfortunately we don't ship binaries for your platform yet. " +
-        "You need to manually clone the aptos-analyzer repository and " +
+        "You need to manually clone the https://github.com/aptos-labs/move-vscode-extension/ repository and " +
         "run `cargo xtask install --server` to build the language server from sources."
     );
     return undefined;

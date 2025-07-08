@@ -16,7 +16,7 @@ This is the official extension for the [Move on Aptos smart-contract language](h
 ## Installation
 
 We publish nightly pre-compiled VSCode extensions for Linux, MacOS (x86 and arm) and Windows. 
-Download a `.vsix` bundle for your platform from https://github.com/aptos-labs/aptos-move-analyzer/releases/tag/nightly, 
+Download a `.vsix` bundle for your platform from https://github.com/aptos-labs/move-vscode-extension/releases/tag/nightly, 
 then install it in your editor with 
 `"Install from VSIX..."`([reference](https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_install-from-a-vsix)) command.
 
@@ -28,13 +28,13 @@ cargo run -p xtask -- install --server --client
 ```
 (or just `cargo xtask install --server --client`, see https://github.com/matklad/cargo-xtask) 
 
-The command builds `aptos-analyzer.vsix` extension file and installs it into your VSCode. 
+The command builds `move-on-aptos.vsix` extension file and installs it into your VSCode. 
 Then it runs `cargo install` to build and install language server.
 
 Put
 
 ```
-"aptos-analyzer.server.path": "~/.cargo/bin/aptos-analyzer",
+"move-on-aptos.server.path": "~/.cargo/bin/aptos-language-server",
 ```
 
 to your `settings.json` to point the extension to your locally built language server.
@@ -45,7 +45,7 @@ Now, open any Move file to instantiate the extension. Disable other VSCode exten
 
 If you use https://www.cursor.com/ AI editor, you need to do a bit more work.
 
-Run the installation command above. The result would be a `./editors/code/aptos-analyzer.vsix` vscode extension package.
+Run the installation command above. The result would be a `./editors/code/move-on-aptos.vsix` vscode extension package.
 Then install it from the editor using the `"Install from VSIX..."` command.
 
 ## Recommended configuration for the Move package directories
@@ -91,7 +91,7 @@ To disable those, use:
 
 ```json5
 {
-    "aptos-analyzer.inlayHints.typeHints.enable": false,
+    "move-on-aptos.inlayHints.typeHints.enable": false,
 }
 ```
 
@@ -100,13 +100,13 @@ To disable those, use:
 If there's any issue with missing go-to-definition, the "unresolved reference" diagnostic could be helpful:
 
 ```
-    "aptos-analyzer.diagnostics.enableUnresolvedReference": true
+    "move-on-aptos.diagnostics.enableUnresolvedReference": true
 ```
 
 Same for type checking:
 
 ```
-    "aptos-analyzer.diagnostics.enableTypeChecking": true
+    "move-on-aptos.diagnostics.enableTypeChecking": true
 ```
 
 ### Formatting (works with `movefmt` >= 1.2.1)
@@ -114,8 +114,8 @@ Same for type checking:
 Specify a path to the `movefmt` executable and extra args (like a `--config-path`) if necessary:
 ```json5
 {
-    "aptos-analyzer.movefmt.path": "~/code/movefmt/target/release/movefmt",
-    "aptos-analyzer.movefmt.extraArgs": [],
+    "move-on-aptos.movefmt.path": "~/code/movefmt/target/release/movefmt",
+    "move-on-aptos.movefmt.extraArgs": [],
 }
 ```
 
@@ -133,23 +133,23 @@ Checks code in the editor after saving the document by running `aptos move compi
 To enable, specify in your `settings.json`:
 ```json5
 {
-    "aptos-analyzer.aptosPath": "/home/mkurnikov/bin/aptos", // path to aptos-cli on your machine
-    "aptos-analyzer.checkOnSave": true,
+    "move-on-aptos.aptosPath": "/home/mkurnikov/bin/aptos", // path to aptos-cli on your machine
+    "move-on-aptos.checkOnSave": true,
 }
 ```
 
-To provide additional arguments to the `compile` command, use `aptos-analyzer.check.extraArgs`:
+To provide additional arguments to the `compile` command, use `move-on-aptos.check.extraArgs`:
 
 ```json5
 {   
-    "aptos-analyzer.check.extraArgs": ["--dev"],
+    "move-on-aptos.check.extraArgs": ["--dev"],
 }
 ```
 
 To run `aptos move lint` instead, specify custom `aptos move` command with:
 ```json5
 {
-    "aptos-analyzer.check.command": "lint",
+    "move-on-aptos.check.command": "lint",
 }
 ```
 
@@ -158,17 +158,17 @@ To run `aptos move lint` instead, specify custom `aptos move` command with:
 It's useful to enable INFO logging level, it's not very chatty and could provide with a valuable information to debug:
 
 ```
-    "aptos-analyzer.server.extraEnv": { "RA_LOG": "info" },
+    "move-on-aptos.server.extraEnv": { "RA_LOG": "info" },
 ```
 
 ## Additional commands
 
-### `aptos-analyzer check --fix`
+### `aptos-language-server diagnostics --fix`
 
 Run server diagnostics on the file (or package directory). If `--fix` is provided, automatically applies available autofixes:   
 
 ```shell
-  $ aptos-analyzer check --fix ./aptos-stdlib/sources/cryptography/keyless.move 
+  $ aptos-language-server diagnostics --fix ./aptos-stdlib/sources/cryptography/keyless.move 
 processing package 'aptos-stdlib', file: /home/mkurnikov/code/aptos-core/aptos-move/framework/aptos-stdlib/sources/cryptography/keyless.move
 note[replace-with-method-call]: Can be replaced with method call
    ┌─ /home/mkurnikov/code/aptos-core/aptos-move/framework/aptos-stdlib/sources/cryptography/keyless.move:67:17

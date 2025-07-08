@@ -41,7 +41,7 @@ config_data! {
         /// Extra arguments for `aptos move compile`.
         check_extraArgs: Vec<String>             = vec![],
 
-        /// Whether to show native aptos-analyzer diagnostics.
+        /// Whether to show native aptos-language-server diagnostics.
         diagnostics_enable: bool                = true,
 
         /// Whether to show "Unresolved reference" diagnostic.
@@ -50,7 +50,7 @@ config_data! {
         /// Whether to show "Type Checking" diagnostic.
         diagnostics_enableTypeChecking: bool                = true,
 
-        /// These paths (file/directories) will be ignored by aptos-analyzer. They are
+        /// These paths (file/directories) will be ignored by aptos-language-server. They are
         /// relative to the workspace root, and globs are not supported. You may
         /// also need to add the folders to Code's `files.watcherExclude`.
         files_excludeDirs: Vec<Utf8PathBuf> = vec![],
@@ -218,7 +218,7 @@ fn schema(fields: &[SchemaField]) -> serde_json::Value {
                 .find('.')
                 .map(|end| String::from(&name[..end]))
                 .unwrap_or("general".into());
-            let name = format!("aptos-analyzer.{name}");
+            let name = format!("move-on-aptos.{name}");
             let props = field_props(field, ty, doc, default);
             serde_json::json!({
                 "title": category,
@@ -323,7 +323,7 @@ fn manual(fields: &[SchemaField]) -> String {
     fields
         .iter()
         .fold(String::new(), |mut acc, (field, _ty, doc, default)| {
-            let name = format!("aptos-analyzer.{}", field.replace('_', "."));
+            let name = format!("move-on-aptos.{}", field.replace('_', "."));
             let doc = doc_comment_to_string(doc);
             if default.contains('\n') {
                 format_to_acc!(

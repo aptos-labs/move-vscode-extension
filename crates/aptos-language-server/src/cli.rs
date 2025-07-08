@@ -4,9 +4,9 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-mod check;
+mod diagnostics;
 
-use crate::cli::check::Check;
+use crate::cli::diagnostics::Diagnostics;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -26,5 +26,5 @@ pub struct CliArgs {
 #[derive(Debug, Subcommand)]
 pub enum AptosAnalyzerCmd {
     LspServer,
-    Check(Check),
+    Diagnostics(Diagnostics),
 }

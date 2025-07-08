@@ -1,4 +1,5 @@
 node_modules
 out
 aptos-analyzer.vsix
+move-on-aptos.vsix
 server

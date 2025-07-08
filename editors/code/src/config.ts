@@ -14,10 +14,13 @@ import path from "path";
 type ShowStatusBar = "always" | "never" | { documentSelector: vscode.DocumentSelector };
 
 export class Config {
-    readonly extensionId = "aptoslabs.aptos-analyzer";
+    readonly extensionId = "aptoslabs.move-on-aptos";
     configureLang: vscode.Disposable | undefined;
 
-    readonly rootSection = "aptos-analyzer";
+    readonly rootSection = "move-on-aptos";
+    private readonly requiresServerReloadOpts = ["server", "showSyntaxTree"].map(
+        (opt) => `${this.rootSection}.${opt}`,
+    );
 
     constructor(disposables: Disposable[]) {
         vscode.workspace.onDidChangeConfiguration(this.onDidChangeConfiguration, this, disposables);
@@ -57,24 +60,24 @@ export class Config {
         //     }
         // }
 
-        // const requiresServerReloadOpt = this.requiresServerReloadOpts.find((opt) =>
-        //     event.affectsConfiguration(opt),
-        // );
+        const requiresServerReloadOpt = this.requiresServerReloadOpts.find((opt) =>
+            event.affectsConfiguration(opt),
+        );
 
-        // if (!requiresServerReloadOpt) return;
-        //
+        if (!requiresServerReloadOpt) return;
+
         // if (this.restartServerOnConfigChange) {
-        //     await vscode.commands.executeCommand("rust-analyzer.restartServer");
+        //     await vscode.commands.executeCommand("move-on-aptos.restartServer");
         //     return;
         // }
 
-        // const message = `Changing "${requiresServerReloadOpt}" requires a server restart`;
-        // const userResponse = await vscode.window.showInformationMessage(message, "Restart now");
+        const message = `Changing "${requiresServerReloadOpt}" requires a server restart`;
+        const userResponse = await vscode.window.showInformationMessage(message, "Restart now");
 
-        // if (userResponse) {
-        //     const command = "aptos-analyzer.restartServer";
-        //     await vscode.commands.executeCommand(command);
-        // }
+        if (userResponse) {
+            const command = "move-on-aptos.restartServer";
+            await vscode.commands.executeCommand(command);
+        }
     }
 
     /**
@@ -113,8 +116,8 @@ export class Config {
         // this.extCtx.subscriptions.push(disposable);
     }
 
-    /** The path to the aptos-analyzer executable. */
-    get serverPath() {
+    /** The path to the aptos-language-server executable. */
+    get languageServerPath() {
         let serverPath = this.cfg.get<string>('server.path');
         if (!serverPath) {
             return undefined;
@@ -172,7 +175,7 @@ export class Config {
      * const nullableNum = vscode
      *  .workspace
      *  .getConfiguration
-     *  .getConfiguration("aptos-analyzer")
+     *  .getConfiguration("move-on-aptos")
      *  .get<number | null>(path)!;
      *
      * // What happens is that type of `nullableNum` is `number` but not `null | number`:

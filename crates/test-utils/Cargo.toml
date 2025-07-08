@@ -21,4 +21,4 @@ lang = { path = "../lang" }
 ide = { path = "../ide" }
 ide-db = { path = "../ide-db" }
 project-model = { path = "../project-model" }
-aptos-analyzer = { path = "../aptos-analyzer" }
+aptos-language-server = { path = "../aptos-language-server" }

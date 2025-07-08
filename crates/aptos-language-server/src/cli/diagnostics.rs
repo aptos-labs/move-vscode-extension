@@ -27,7 +27,7 @@ use syntax::TextRange;
 use vfs::FileId;
 
 #[derive(Debug, Args)]
-pub struct Check {
+pub struct Diagnostics {
     pub path: PathBuf,
 
     /// Only show diagnostics of kinds (comma separated)
@@ -48,7 +48,7 @@ pub struct Check {
     pub fix: bool,
 }
 
-impl Check {
+impl Diagnostics {
     pub fn run(self) -> anyhow::Result<ExitCode> {
         const STACK_SIZE: usize = 1024 * 1024 * 8;
 

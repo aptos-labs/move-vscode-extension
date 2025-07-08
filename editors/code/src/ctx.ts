@@ -5,7 +5,6 @@
 // Modifications have been made to the original code.
 
 import * as vscode from 'vscode';
-import { IndentAction } from 'vscode';
 import * as lc from "vscode-languageclient/node";
 import { Config } from "./config";
 import { AptosEditor, isAptosDocument, isAptosEditor, isMoveTomlEditor, LazyOutputChannel, log } from "./util";
@@ -163,11 +162,11 @@ export class Ctx {
         // that is 'Move Language Server'). For more information, see:
         // https://code.visualstudio.com/api/language-extensions/language-server-extension-guide#logging-support-for-language-server
         if (!this.traceOutputChannel) {
-            this.traceOutputChannel = new LazyOutputChannel("aptos-analyzer LSP Trace");
+            this.traceOutputChannel = new LazyOutputChannel("Move-on-Aptos LSP Trace");
             this.pushExtCleanup(this.traceOutputChannel);
         }
         if (!this.outputChannel) {
-            this.outputChannel = vscode.window.createOutputChannel("aptos-analyzer Language Server");
+            this.outputChannel = vscode.window.createOutputChannel("Move-on-Aptos Language Server");
             this.pushExtCleanup(this.outputChannel);
         }
 
@@ -175,7 +174,7 @@ export class Ctx {
             this._serverPath = await this.bootstrap();
             text(spawn(this._serverPath, ["--version"]).stdout.setEncoding("utf-8")).then(
                 (data) => {
-                    const prefix = `aptos-analyzer `;
+                    const prefix = `aptos-language-server `;
                     this._serverVersion = data
                         .slice(data.startsWith(prefix) ? prefix.length : 0)
                         .trim();
@@ -213,7 +212,7 @@ export class Ctx {
                     const warningMessage = `movefmt error: ${params.message}`;
                     if (aptosPath === undefined) {
                         await vscode.window.showErrorMessage(
-                            `${warningMessage}. Configure 'aptos-analyzer.aptosPath' to fetch it from the editor`
+                            `${warningMessage}. Configure 'move-on-aptos.aptosPath' to fetch it from the editor`
                         );
                         return;
                     }
@@ -368,7 +367,7 @@ export class Ctx {
         };
 
         for (const [name, factory] of Object.entries(this.commandFactories)) {
-            const fullName = `aptos-analyzer.${name}`;
+            const fullName = `move-on-aptos.${name}`;
             let callback;
             if (isClientRunning(this)) {
                 // we asserted that `client` is defined
@@ -378,7 +377,7 @@ export class Ctx {
             } else {
                 callback = () =>
                     vscode.window.showErrorMessage(
-                        `command ${fullName} failed: aptos-analyzer server is not running`,
+                        `command ${fullName} failed: aptos-language-server is not running`,
                     );
             }
 
@@ -406,9 +405,9 @@ export class Ctx {
                 statusBar.color = undefined;
                 statusBar.backgroundColor = undefined;
                 if (this.config.statusBarClickAction === "stopServer") {
-                    statusBar.command = "aptos-analyzer.stopServer";
+                    statusBar.command = "move-on-aptos.stopServer";
                 } else {
-                    statusBar.command = "aptos-analyzer.openLogs";
+                    statusBar.command = "move-on-aptos.openLogs";
                 }
                 void this.syntaxTreeProvider?.refresh();
                 break;
@@ -417,26 +416,26 @@ export class Ctx {
                 statusBar.backgroundColor = new vscode.ThemeColor(
                     "statusBarItem.warningBackground",
                 );
-                statusBar.command = "aptos-analyzer.openLogs";
+                statusBar.command = "move-on-aptos.openLogs";
                 icon = "$(warning) ";
                 break;
             case "error":
                 statusBar.color = new vscode.ThemeColor("statusBarItem.errorForeground");
                 statusBar.backgroundColor = new vscode.ThemeColor("statusBarItem.errorBackground");
-                statusBar.command = "aptos-analyzer.openLogs";
+                statusBar.command = "move-on-aptos.openLogs";
                 icon = "$(error) ";
                 break;
             case "stopped":
                 statusBar.tooltip.appendText("Server is stopped");
                 statusBar.tooltip.appendMarkdown(
-                    "\n\n[Start server](command:aptos-analyzer.startServer)",
+                    "\n\n[Start server](command:move-on-aptos.startServer)",
                 );
                 statusBar.color = new vscode.ThemeColor("statusBarItem.warningForeground");
                 statusBar.backgroundColor = new vscode.ThemeColor(
                     "statusBarItem.warningBackground",
                 );
-                statusBar.command = "aptos-analyzer.startServer";
-                statusBar.text = "$(stop-circle) aptos-analyzer";
+                statusBar.command = "move-on-aptos.startServer";
+                statusBar.text = "$(stop-circle) move-on-aptos";
                 return;
         }
         if (status.message) {
@@ -448,17 +447,16 @@ export class Ctx {
 
         // const toggleCheckOnSave = this.config.checkOnSave ? "Disable" : "Enable";
         statusBar.tooltip.appendMarkdown(
-            `[Extension Info](command:aptos-analyzer.serverVersion "Show version and server binary info"): Version ${this.version}, Server Version ${this._serverVersion}\n\n` +
+            `[Extension Info](command:move-on-aptos.serverVersion "Show version and server binary info"): Version ${this.version}, Server Version ${this._serverVersion}\n\n` +
             `---\n\n` +
-            `[$(terminal) Open Logs](command:aptos-analyzer.openLogs "Open the server logs")\n\n` +
-            // `[$(settings) ${toggleCheckOnSave} Check on Save](command:aptos-analyzer.toggleCheckOnSave "Temporarily ${toggleCheckOnSave.toLowerCase()} check on save functionality")\n\n` +
+            `[$(terminal) Open Logs](command:move-on-aptos.openLogs "Open the server logs")\n\n` +
+            // `[$(settings) ${toggleCheckOnSave} Check on Save](command:move-on-aptos.toggleCheckOnSave "Temporarily ${toggleCheckOnSave.toLowerCase()} check on save functionality")\n\n` +
             // `[$(refresh) Reload Workspace](command:rust-analyzer.reloadWorkspace "Reload and rediscover workspaces")\n\n` +
-            // `[$(symbol-property) Rebuild Build Dependencies](command:rust-analyzer.rebuildProcMacros "Rebuild build scripts and proc-macros")\n\n` +
-            `[$(stop-circle) Stop server](command:aptos-analyzer.stopServer "Stop the server")\n\n` +
-            `[$(debug-restart) Restart server](command:aptos-analyzer.restartServer "Restart the server")`,
+            `[$(stop-circle) Stop server](command:move-on-aptos.stopServer "Stop the server")\n\n` +
+            `[$(debug-restart) Restart server](command:move-on-aptos.restartServer "Restart the server")`,
         );
         if (!status.quiescent) icon = "$(loading~spin) ";
-        statusBar.text = `${icon}aptos-analyzer`;
+        statusBar.text = `${icon}move-on-aptos`;
     }
 
     private updateStatusBarVisibility(editor: vscode.TextEditor | undefined) {

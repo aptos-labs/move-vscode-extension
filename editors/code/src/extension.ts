@@ -32,7 +32,7 @@ export async function activate(
     // so we do it ourselves.
     await activateServer(ctx).catch((err) => {
         void vscode.window.showErrorMessage(
-            `Cannot activate aptos-analyzer extension: ${err.message}`,
+            `Cannot activate move-on-aptos extension: ${err.message}`,
         );
         throw err;
     });
@@ -149,7 +149,6 @@ function createCommands(): Record<string, CommandFactory> {
         // rename: { enabled: commands.rename },
         openLogs: { enabled: commands.openLogs },
         // runAptosUpdateMovefmt: { enabled: commands.runAptosUpdateMovefmt },
-        // revealDependency: { enabled: commands.revealDependency },
         // syntaxTreeReveal: { enabled: commands.syntaxTreeReveal },
         // syntaxTreeCopy: { enabled: commands.syntaxTreeCopy },
         syntaxTreeHideWhitespace: { enabled: commands.syntaxTreeHideWhitespace },
@@ -161,7 +160,7 @@ function checkConflictingExtensions() {
     if (vscode.extensions.getExtension("MoveBit.aptos-move-analyzer")) {
         vscode.window
             .showWarningMessage(
-                `You have both the aptos-analyzer (aptoslabs.aptos-analyzer) and MoveBit's aptos-move-analyzer (MoveBit.aptos-move-analyzer) ` +
+                `You have both the move-on-aptos (aptoslabs.move-on-aptos) and MoveBit's aptos-move-analyzer (MoveBit.aptos-move-analyzer) ` +
                 "plugins enabled. These are known to conflict and cause various functions of " +
                 "both plugins to not work correctly. You should disable one of them.",
                 "Got it",

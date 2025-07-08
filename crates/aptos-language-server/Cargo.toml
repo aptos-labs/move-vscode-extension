@@ -1,12 +1,12 @@
 [package]
-name = "aptos-analyzer"
+name = "aptos-language-server"
 version = "0.1.0"
 rust-version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [[bin]]
-name = "aptos-analyzer"
+name = "aptos-language-server"
 path = "src/bin/main.rs"
 
 [dependencies]

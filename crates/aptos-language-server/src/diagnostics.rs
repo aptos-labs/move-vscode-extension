@@ -235,7 +235,7 @@ pub(crate) fn to_proto_diagnostic(
         // code_description: Some(lsp_types::CodeDescription {
         //     href: lsp_types::Url::parse(&d.code.url()).unwrap(),
         // }),
-        source: Some("aptos-analyzer".to_owned()),
+        source: Some("aptos-language-server".to_owned()),
         message: d.message,
         related_information: None,
         tags: d.unused.then(|| vec![lsp_types::DiagnosticTag::UNNECESSARY]),

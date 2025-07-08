@@ -4,7 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use aptos_analyzer::tracing::LoggingConfig;
+use aptos_language_server::tracing::LoggingConfig;
 use tracing::Level;
 use tracing_subscriber::fmt::writer::BoxMakeWriter;
 
