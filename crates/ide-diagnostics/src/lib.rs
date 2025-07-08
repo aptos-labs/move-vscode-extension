@@ -90,6 +90,12 @@ pub fn semantic_diagnostics(
                 ast::CallExpr(it) => {
                     handlers::can_be_replaced_with_method_call(&mut acc, &ctx, it.in_file(file_id));
                 },
+                ast::AssertMacroExpr(it) => {
+                    handlers::error_const_docs::error_const_in_assert(&mut acc, &ctx, it.in_file(file_id));
+                },
+                ast::AbortExpr(it) => {
+                    handlers::error_const_docs::error_const_in_abort(&mut acc, &ctx, it.in_file(file_id));
+                },
                 ast::IdentPat(it) => {
                     handlers::unused_variables::check_unused_ident_pat(&mut acc, &ctx, it.in_file(file_id));
                 },
