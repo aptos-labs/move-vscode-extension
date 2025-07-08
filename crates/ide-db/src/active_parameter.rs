@@ -125,16 +125,15 @@ pub fn fields_owner_for_struct_lit(
     let active_lit_field = lit_fields.get(active_lit_field_idx).and_then(|it| it.name_ref());
 
     let fields_owner = sema.resolve_to_element::<ast::FieldsOwner>(struct_lit.map(|it| it.path()))?;
-    let named_fields = fields_owner.value.named_fields();
 
     let active_field_name = match active_lit_field {
         Some(name_ref) => Some(name_ref.as_string()),
         None => {
             // compute next field skipping all filled fields
-            let all_field_names = named_fields.iter().map(|it| it.field_name().as_string());
+            let all_field_names = fields_owner.value.named_field_names();
             let provided_field_names = lit_fields
                 .iter()
-                .filter_map(|it| it.field_name().map(|it| it.as_string()))
+                .filter_map(|it| it.field_name())
                 .collect::<HashSet<_>>();
 
             let mut next_field_name: Option<String> = None;

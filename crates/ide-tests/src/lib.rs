@@ -24,6 +24,7 @@ mod test_completion_relevance;
 mod test_error_const_docs;
 mod test_find_usages;
 mod test_load_dependencies;
+mod test_missing_fields;
 mod test_missing_value_arguments;
 mod test_rename;
 mod test_replace_with_index_expr;

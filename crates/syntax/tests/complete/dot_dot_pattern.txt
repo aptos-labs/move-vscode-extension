@@ -258,8 +258,9 @@ SOURCE_FILE@0..831
             STRUCT_PAT_FIELD_LIST@293..299
               L_CURLY@293..294 "{"
               WHITESPACE@294..295 " "
-              REST_PAT@295..297
-                DOT_DOT@295..297 ".."
+              STRUCT_PAT_FIELD@295..297
+                REST_PAT@295..297
+                  DOT_DOT@295..297 ".."
               WHITESPACE@297..298 " "
               R_CURLY@298..299 "}"
           WHITESPACE@299..300 " "
@@ -294,8 +295,9 @@ SOURCE_FILE@0..831
                     IDENT@325..327 "_x"
               COMMA@327..328 ","
               WHITESPACE@328..329 " "
-              REST_PAT@329..331
-                DOT_DOT@329..331 ".."
+              STRUCT_PAT_FIELD@329..331
+                REST_PAT@329..331
+                  DOT_DOT@329..331 ".."
               WHITESPACE@331..332 " "
               R_CURLY@332..333 "}"
           WHITESPACE@333..334 " "
@@ -330,8 +332,9 @@ SOURCE_FILE@0..831
                     IDENT@359..361 "_y"
               COMMA@361..362 ","
               WHITESPACE@362..363 " "
-              REST_PAT@363..365
-                DOT_DOT@363..365 ".."
+              STRUCT_PAT_FIELD@363..365
+                REST_PAT@363..365
+                  DOT_DOT@363..365 ".."
               WHITESPACE@365..366 " "
               R_CURLY@366..367 "}"
           WHITESPACE@367..368 " "
@@ -366,8 +369,9 @@ SOURCE_FILE@0..831
                     IDENT@394..396 "_x"
               COMMA@396..397 ","
               WHITESPACE@397..398 " "
-              REST_PAT@398..400
-                DOT_DOT@398..400 ".."
+              STRUCT_PAT_FIELD@398..400
+                REST_PAT@398..400
+                  DOT_DOT@398..400 ".."
               WHITESPACE@400..401 " "
               R_CURLY@401..402 "}"
           WHITESPACE@402..403 " "
@@ -402,8 +406,9 @@ SOURCE_FILE@0..831
                     IDENT@428..430 "_y"
               COMMA@430..431 ","
               WHITESPACE@431..432 " "
-              REST_PAT@432..434
-                DOT_DOT@432..434 ".."
+              STRUCT_PAT_FIELD@432..434
+                REST_PAT@432..434
+                  DOT_DOT@432..434 ".."
               WHITESPACE@434..435 " "
               R_CURLY@435..436 "}"
           WHITESPACE@436..437 " "
@@ -442,14 +447,16 @@ SOURCE_FILE@0..831
                   STRUCT_PAT_FIELD_LIST@465..471
                     L_CURLY@465..466 "{"
                     WHITESPACE@466..467 " "
-                    REST_PAT@467..469
-                      DOT_DOT@467..469 ".."
+                    STRUCT_PAT_FIELD@467..469
+                      REST_PAT@467..469
+                        DOT_DOT@467..469 ".."
                     WHITESPACE@469..470 " "
                     R_CURLY@470..471 "}"
               COMMA@471..472 ","
               WHITESPACE@472..473 " "
-              REST_PAT@473..475
-                DOT_DOT@473..475 ".."
+              STRUCT_PAT_FIELD@473..475
+                REST_PAT@473..475
+                  DOT_DOT@473..475 ".."
               WHITESPACE@475..476 " "
               R_CURLY@476..477 "}"
           WHITESPACE@477..478 " "
@@ -498,14 +505,16 @@ SOURCE_FILE@0..831
                           IDENT@511..513 "_x"
                     COMMA@513..514 ","
                     WHITESPACE@514..515 " "
-                    REST_PAT@515..517
-                      DOT_DOT@515..517 ".."
+                    STRUCT_PAT_FIELD@515..517
+                      REST_PAT@515..517
+                        DOT_DOT@515..517 ".."
                     WHITESPACE@517..518 " "
                     R_CURLY@518..519 "}"
               COMMA@519..520 ","
               WHITESPACE@520..521 " "
-              REST_PAT@521..523
-                DOT_DOT@521..523 ".."
+              STRUCT_PAT_FIELD@521..523
+                REST_PAT@521..523
+                  DOT_DOT@521..523 ".."
               WHITESPACE@523..524 " "
               R_CURLY@524..525 "}"
           WHITESPACE@525..526 " "
@@ -554,8 +563,9 @@ SOURCE_FILE@0..831
                           IDENT@559..562 "_x1"
                     COMMA@562..563 ","
                     WHITESPACE@563..564 " "
-                    REST_PAT@564..566
-                      DOT_DOT@564..566 ".."
+                    STRUCT_PAT_FIELD@564..566
+                      REST_PAT@564..566
+                        DOT_DOT@564..566 ".."
                     WHITESPACE@566..567 " "
                     R_CURLY@567..568 "}"
               COMMA@568..569 ","
@@ -616,14 +626,16 @@ SOURCE_FILE@0..831
                           IDENT@612..614 "_y"
                     COMMA@614..615 ","
                     WHITESPACE@615..616 " "
-                    REST_PAT@616..618
-                      DOT_DOT@616..618 ".."
+                    STRUCT_PAT_FIELD@616..618
+                      REST_PAT@616..618
+                        DOT_DOT@616..618 ".."
                     WHITESPACE@618..619 " "
                     R_CURLY@619..620 "}"
               COMMA@620..621 ","
               WHITESPACE@621..622 " "
-              REST_PAT@622..624
-                DOT_DOT@622..624 ".."
+              STRUCT_PAT_FIELD@622..624
+                REST_PAT@622..624
+                  DOT_DOT@622..624 ".."
               WHITESPACE@624..625 " "
               R_CURLY@625..626 "}"
           WHITESPACE@626..627 " "
@@ -672,8 +684,9 @@ SOURCE_FILE@0..831
                           IDENT@660..663 "_x1"
                     COMMA@663..664 ","
                     WHITESPACE@664..665 " "
-                    REST_PAT@665..667
-                      DOT_DOT@665..667 ".."
+                    STRUCT_PAT_FIELD@665..667
+                      REST_PAT@665..667
+                        DOT_DOT@665..667 ".."
                     WHITESPACE@667..668 " "
                     R_CURLY@668..669 "}"
               COMMA@669..670 ","
@@ -786,8 +799,9 @@ SOURCE_FILE@0..831
               STRUCT_PAT_FIELD_LIST@772..778
                 L_CURLY@772..773 "{"
                 WHITESPACE@773..774 " "
-                REST_PAT@774..776
-                  DOT_DOT@774..776 ".."
+                STRUCT_PAT_FIELD@774..776
+                  REST_PAT@774..776
+                    DOT_DOT@774..776 ".."
                 WHITESPACE@776..777 " "
                 R_CURLY@777..778 "}"
             R_PAREN@778..779 ")"
@@ -829,8 +843,9 @@ SOURCE_FILE@0..831
                   R_PAREN@810..811 ")"
               COMMA@811..812 ","
               WHITESPACE@812..813 " "
-              REST_PAT@813..815
-                DOT_DOT@813..815 ".."
+              STRUCT_PAT_FIELD@813..815
+                REST_PAT@813..815
+                  DOT_DOT@813..815 ".."
               WHITESPACE@815..816 " "
               R_CURLY@816..817 "}"
           WHITESPACE@817..818 " "

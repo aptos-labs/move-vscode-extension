@@ -686,7 +686,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
         let named_fields = fields_owner.named_fields_map();
         for lit_field in struct_lit.fields() {
-            let lit_field_name = lit_field.field_name();
+            let lit_field_name = lit_field.field_name_ref();
             if lit_field_name.is_none() {
                 continue;
             }

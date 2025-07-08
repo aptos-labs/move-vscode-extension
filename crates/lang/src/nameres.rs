@@ -123,7 +123,7 @@ fn resolve_multi_no_inf(
             let struct_path = struct_lit_field.struct_lit().path();
             let fields_owner =
                 resolve_no_inf_cast::<ast::FieldsOwner>(db, struct_path.in_file(file_id))?;
-            let field_name = struct_lit_field.field_name()?.as_string();
+            let field_name = struct_lit_field.field_name_ref()?.as_string();
             Some(get_named_field_entries(fields_owner).filter_by_name(field_name))
         }
         _ => {
@@ -170,7 +170,7 @@ fn resolve_multi_with_inf(
                 .get_resolve_method_or_path(struct_path.into())?
                 .cast_into::<ast::FieldsOwner>(db)?;
 
-            let field_name = struct_lit_field.field_name()?.as_string();
+            let field_name = struct_lit_field.field_name_ref()?.as_string();
             get_named_field_entries(fields_owner).filter_by_name(field_name)
         }
         ast::ReferenceElement::SchemaLitField(schema_lit_field) => {

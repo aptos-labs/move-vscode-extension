@@ -517,7 +517,7 @@ fn test_do_not_crash_type_checking_invalid_number_of_type_params_or_call_params(
             struct S<R: key> { val: R }
             fun call(_a: u8) {}
             fun m() {
-                let _s = S<u8, u8>{};
+                let _s = S<u8, u8>{ val: 1 };
                 call(1, 2, 3);
                       //^ err: This function takes 1 parameters, but 3 parameters were supplied
             }
