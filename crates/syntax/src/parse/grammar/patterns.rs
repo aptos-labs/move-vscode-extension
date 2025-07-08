@@ -105,6 +105,11 @@ fn struct_pat_field(p: &mut Parser) -> bool {
         T!['_'] => {
             wildcard_pat(p);
         }
+        T![..] => {
+            let m = p.start();
+            p.bump(T![..]);
+            m.complete(p, REST_PAT);
+        }
         _ => {
             p.error_and_recover("expected identifier", TokenSet::EMPTY);
             // p.error_and_recover_until_ts("expected identifier", PAT_RECOVERY_SET);
@@ -123,23 +128,23 @@ fn struct_pat_field_list(p: &mut Parser) {
         delimited_with_recovery(
             p,
             |p| {
-                let m = p.start();
+                let field_m = p.start();
                 match p.current() {
-                    // A trailing `..` is *not* treated as a REST_PAT.
-                    T![..] => {
-                        p.bump(T![..]);
-                        m.complete(p, REST_PAT);
-                        return true;
-                    }
+                    // T![..] => {
+                    //     let m = p.start();
+                    //     p.bump(T![..]);
+                    //     m.complete(p, REST_PAT);
+                    //     return true;
+                    // }
                     T!['}'] => {
                         // empty struct pat
-                        m.abandon(p);
+                        field_m.abandon(p);
                         return true;
                     }
                     _ => {
-                        let res = struct_pat_field(p);
-                        m.complete(p, STRUCT_PAT_FIELD);
-                        res
+                        let is_field = struct_pat_field(p);
+                        field_m.complete(p, STRUCT_PAT_FIELD);
+                        is_field
                     }
                 }
             },

@@ -108,6 +108,12 @@ pub fn semantic_diagnostics(
                 ast::NamedField(it) => {
                     handlers::recursive_struct_check(&mut acc, &ctx, it.in_file(file_id));
                 },
+                ast::StructLit(it) => {
+                    handlers::missing_fields::missing_fields_in_struct_lit(&mut acc, &ctx, it.in_file(file_id));
+                },
+                ast::StructPat(it) => {
+                    handlers::missing_fields::missing_fields_in_struct_pat(&mut acc, &ctx, it.in_file(file_id));
+                },
                 _ => (),
             }
         }

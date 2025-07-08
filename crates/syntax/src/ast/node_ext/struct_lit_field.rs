@@ -68,7 +68,7 @@ impl ast::StructLitField {
     }
 
     /// Deals with field init shorthand
-    pub fn field_name(&self) -> Option<ast::NameRef> {
+    pub fn field_name_ref(&self) -> Option<ast::NameRef> {
         if let Some(name_ref) = self.name_ref() {
             return Some(name_ref);
         }
@@ -79,6 +79,10 @@ impl ast::StructLitField {
             return Some(name_ref);
         }
         None
+    }
+
+    pub fn field_name(&self) -> Option<String> {
+        self.field_name_ref().map(|it| it.as_string())
     }
 
     pub fn struct_lit(&self) -> ast::StructLit {

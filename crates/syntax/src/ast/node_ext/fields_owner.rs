@@ -26,6 +26,13 @@ impl ast::FieldsOwner {
             .unwrap_or_default()
     }
 
+    pub fn named_field_names(&self) -> Vec<String> {
+        self.named_fields()
+            .iter()
+            .map(|it| it.field_name().as_string())
+            .collect()
+    }
+
     pub fn field_by_name(&self, field_name: &str) -> Option<ast::NamedField> {
         let fields = self.named_field_list().map(|it| it.fields())?;
         for field in fields.into_iter() {

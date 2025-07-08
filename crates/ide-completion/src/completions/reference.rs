@@ -87,7 +87,7 @@ fn add_struct_lit_fields_completions(
         .iter()
         // do not account for the current field
         .filter(|it| !it.syntax().text_range().contains_inclusive(ctx.original_offset()))
-        .filter_map(|it| it.field_name())
+        .filter_map(|it| it.field_name_ref())
         .map(|it| it.as_string())
         .collect::<HashSet<_>>();
 

@@ -12,4 +12,8 @@ impl ast::StructPat {
             .map(|it| it.fields().collect())
             .unwrap_or_default()
     }
+
+    pub fn has_rest_pat(&self) -> bool {
+        self.fields().iter().any(|it| it.rest_pat().is_some())
+    }
 }

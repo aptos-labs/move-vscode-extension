@@ -166,3 +166,33 @@ fn test_no_error_uninterpreted_spec_function() {
         }
     "#]]);
 }
+
+#[test]
+fn test_unused_variable_in_match() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            enum Num { One { val: u8 }}
+
+            fun main(s: Num) {
+                match (s) {
+                    Num::One { val: myval } => true
+                };
+            }
+        }    "#]]);
+}
+
+#[test]
+fn test_unused_variable_in_match_with_shorthand() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            enum Num { One { val: u8 }}
+
+            fun main(s: Num) {
+                match (s) {
+                    Num::One { val: myval } => true
+                };
+            }
+        }    "#]]);
+}

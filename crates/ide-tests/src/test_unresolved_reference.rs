@@ -118,7 +118,7 @@ fn test_unresolved_field_in_struct_lit() {
             }
 
             fun main() {
-                let _t = T { my_unknown_field: 1 };
+                let _t = T { my_unknown_field: 1, my_field: 1 };
                            //^^^^^^^^^^^^^^^^ err: Unresolved reference `my_unknown_field`: cannot resolve
 
             }
@@ -136,7 +136,7 @@ fn test_unresolved_field_in_struct_pat() {
             }
 
             fun main() {
-                let T { my_unknown_field: _ } = T { my_field: 1 };
+                let T { my_unknown_field: _, my_field: _ } = T { my_field: 1 };
                       //^^^^^^^^^^^^^^^^ err: Unresolved reference `my_unknown_field`: cannot resolve
 
             }
@@ -154,7 +154,7 @@ fn test_unresolved_field_in_struct_pat_shorthand() {
             }
 
             fun main() {
-                let T { my_unknown_field } = T { my_field: 1 };
+                let T { my_unknown_field, my_field: _ } = T { my_field: 1 };
                 my_unknown_field;
             }
         }
