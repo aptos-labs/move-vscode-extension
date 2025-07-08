@@ -50,7 +50,7 @@ fn test_error_no_doc_comment_assert() {
     check_diagnostics(expect![[r#"
         module 0x1::m {
             const ERR_ONE: u8 = 1;
-                //^^^^^^^ warn: Missing documentation comment (used as a human-readable error message on-chain)
+                //^^^^^^^ warn: Missing documentation comment (provides a human-readable error message on-chain)
             fun main() {
                 assert!(true, ERR_ONE);
             }
@@ -64,7 +64,7 @@ fn test_error_no_doc_comment_abort() {
     check_diagnostics(expect![[r#"
         module 0x1::m {
             const ERR_ONE: u8 = 1;
-                //^^^^^^^ warn: Missing documentation comment (used as a human-readable error message on-chain)
+                //^^^^^^^ warn: Missing documentation comment (provides a human-readable error message on-chain)
             fun main() {
                 abort ERR_ONE;
             }
@@ -79,7 +79,7 @@ fn test_error_no_doc_comment_simple_comment_assert() {
         module 0x1::m {
             // not docs
             const ERR_ONE: u8 = 1;
-                //^^^^^^^ warn: Missing documentation comment (used as a human-readable error message on-chain)
+                //^^^^^^^ warn: Missing documentation comment (provides a human-readable error message on-chain)
             fun main() {
                 assert!(true, ERR_ONE);
             }

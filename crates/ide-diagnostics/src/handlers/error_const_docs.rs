@@ -54,7 +54,7 @@ fn check_if_resolved_to_documented_error_const(
     {
         acc.push(Diagnostic::new(
             DiagnosticCode::Lsp("missing-const-doc-comment", Severity::Warning),
-            "Missing a documentation comment (provides a human-readable error message on-chain)",
+            "Missing documentation comment (provides a human-readable error message on-chain)",
             const_ident.file_range(),
         ))
     }
