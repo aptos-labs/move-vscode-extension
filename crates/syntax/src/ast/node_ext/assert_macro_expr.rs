@@ -10,4 +10,10 @@ impl ast::AssertMacroExpr {
     pub fn arg_exprs(&self) -> Vec<Option<ast::Expr>> {
         self.value_arg_list().map(|it| it.arg_exprs()).unwrap_or_default()
     }
+
+    pub fn error_expr(&self) -> Option<ast::Expr> {
+        let mut arg_exprs = self.arg_exprs().into_iter();
+        let _ = arg_exprs.next();
+        arg_exprs.next().flatten()
+    }
 }

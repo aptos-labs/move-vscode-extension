@@ -204,7 +204,6 @@ Next features planned are (roughly in the expected order of implementation):
 
 * More error highlighting: 
   - Not enough type params / missing fields.
-  - Replace `vector::borrow` with `v[]`.
   - Support `aptos move lint` lints with quickfixes.
 * Add "item is private" clarification to the "unresolved reference" diagnostic.
 * Unused imports (with quickfix).

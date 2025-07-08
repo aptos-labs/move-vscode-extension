@@ -99,6 +99,9 @@ impl Check {
         ws_root: AbsPathBuf,
         specific_fpath: Option<AbsPathBuf>,
     ) -> anyhow::Result<ExitCode> {
+        let disabled_codes = self.disable.clone().unwrap_or_default();
+        println!("disabled diagnostics: {:?}", disabled_codes);
+
         let all_packages = load_from_fs::load_aptos_packages(ws_manifests)
             .into_iter()
             .filter_map(|it| it.ok())
@@ -191,12 +194,13 @@ impl Check {
                         diagnostics_config = diagnostics_config.for_assists();
                     }
 
-                    let disabled_codes = self.disable.clone().unwrap_or_default();
-                    let diagnostics =
-                        find_diagnostics_for_a_file(&db, file_id, &diag_kinds, &diagnostics_config)
-                            .into_iter()
-                            .filter(|diag| !disabled_codes.contains(&diag.code.as_str().to_string()))
-                            .collect::<Vec<_>>();
+                    let diagnostics = find_diagnostics_for_a_file(
+                        &db,
+                        file_id,
+                        &diag_kinds,
+                        &diagnostics_config,
+                        &disabled_codes,
+                    );
 
                     let file_text = db.file_text(file_id).text(&db);
                     if !self.fix {
@@ -241,6 +245,7 @@ impl Check {
                                 file_id,
                                 &diag_kinds,
                                 &diagnostics_config,
+                                &disabled_codes,
                             );
                         }
                     }
@@ -271,6 +276,7 @@ fn find_diagnostics_for_a_file(
     file_id: FileId,
     diag_kinds: &Option<Vec<Severity>>,
     config: &DiagnosticsConfig,
+    disabled_codes: &Vec<String>,
 ) -> Vec<Diagnostic> {
     let analysis = Analysis::new(db.snapshot());
     let mut diagnostics = analysis
@@ -283,6 +289,9 @@ fn find_diagnostics_for_a_file(
             .collect();
     }
     diagnostics
+        .into_iter()
+        .filter(|diag| !disabled_codes.contains(&diag.code.as_str().to_string()))
+        .collect()
 }
 
 fn apply_first_fix(

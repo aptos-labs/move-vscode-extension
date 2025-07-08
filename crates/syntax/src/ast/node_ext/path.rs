@@ -39,6 +39,10 @@ impl ast::Path {
         self.root_path().syntax().parent().map(|it| it.kind())
     }
 
+    pub fn is_local(&self) -> bool {
+        self.root_path() == self.base_path()
+    }
+
     /** For `Foo::bar::baz::quux` path returns `Foo` */
     pub fn base_path(&self) -> ast::Path {
         let qualifier = self.qualifier();

@@ -8,6 +8,7 @@ pub(crate) mod call_params;
 mod can_be_replaced_with_compound_expr;
 mod can_be_replaced_with_index_expr;
 mod can_be_replaced_with_method_call;
+pub(crate) mod error_const_docs;
 mod type_checking;
 mod unresolved_reference;
 pub(crate) mod unused_variables;
