@@ -93,3 +93,26 @@ export function openLogs(ctx: CtxInit): Cmd {
         }
     };
 }
+
+export function cancelFlycheck(ctx: CtxInit): Cmd {
+    return async () => {
+        await ctx.client.sendNotification(lsp_ext.cancelFlycheck);
+    };
+}
+
+export function clearFlycheck(ctx: CtxInit): Cmd {
+    return async () => {
+        await ctx.client.sendNotification(lsp_ext.clearFlycheck);
+    };
+}
+
+export function runFlycheck(ctx: CtxInit): Cmd {
+    return async () => {
+        const editor = ctx.activeAptosEditor;
+        const client = ctx.client;
+        const params = editor ? { uri: editor.document.uri.toString() } : null;
+
+        await client.sendNotification(lsp_ext.runFlycheck, { textDocument: params });
+    };
+}
+
