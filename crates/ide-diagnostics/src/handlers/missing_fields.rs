@@ -122,3 +122,38 @@ pub(crate) fn missing_fields_in_struct_pat(
 
     Some(())
 }
+
+#[tracing::instrument(level = "debug", skip_all)]
+pub(crate) fn missing_fields_in_tuple_struct_pat(
+    acc: &mut Vec<Diagnostic>,
+    ctx: &DiagnosticsContext<'_>,
+    tuple_struct_pat: InFile<ast::TupleStructPat>,
+) -> Option<()> {
+    if tuple_struct_pat.value.has_rest_pat() {
+        return None;
+    }
+    let pat_path = tuple_struct_pat.as_ref().map(|it| it.path());
+    let fields_owner = ctx
+        .sema
+        .resolve_to_element::<ast::FieldsOwner>(pat_path.clone())?;
+
+    let n_declared = fields_owner.value.tuple_fields().len();
+    let n_provided = tuple_struct_pat.value.fields().collect::<Vec<_>>().len();
+
+    if n_provided < n_declared {
+        let owner_type = match fields_owner.value {
+            ast::FieldsOwner::Struct(_) => "Struct",
+            ast::FieldsOwner::Variant(_) => "Enum variant",
+        };
+        let error_message = format!(
+            "{owner_type} pattern does not match its declaration: expected {n_declared} fields, found {n_provided}"
+        );
+        acc.push(Diagnostic::new(
+            DiagnosticCode::Lsp("missing-tuple-pat-fields", Severity::Error),
+            error_message,
+            tuple_struct_pat.file_range(),
+        ));
+    }
+
+    Some(())
+}

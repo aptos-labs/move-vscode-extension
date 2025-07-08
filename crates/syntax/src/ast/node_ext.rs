@@ -76,6 +76,7 @@ pub mod struct_pat_field;
 pub mod syntax_element;
 pub mod syntax_node;
 pub mod syntax_token;
+mod tuple_struct_pat;
 pub mod type_;
 mod type_arg_list;
 mod type_param;
