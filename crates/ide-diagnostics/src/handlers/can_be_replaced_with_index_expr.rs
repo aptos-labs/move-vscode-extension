@@ -134,10 +134,10 @@ fn fixes(
 
             let mut base_expr = base_expr;
             if with_parens {
-                base_expr = make.expr_paren(base_expr);
+                base_expr = make.paren_expr(base_expr).into();
             }
-            let new_index_expr = make.expr_index(base_expr, arg_expr);
-            editor.replace(deref_expr.syntax(), new_index_expr.syntax().clone_for_update());
+            let new_index_expr = make.index_expr(base_expr, arg_expr);
+            editor.replace(deref_expr.syntax(), new_index_expr.syntax());
 
             builder.add_file_edits(file_id, editor);
         },
