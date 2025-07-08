@@ -64,8 +64,8 @@ fn test_missing_fields_for_enum_variant() {
                 let a = Num::Two { val: 1 };
                       //^^^^^^^^ err: Missing field for `Num::Two` initializer: `val2`
                 match (a) {
-                    Num::Two { val } => true
-                  //^^^^^^^^^^^^^^^^ err: Enum variant pattern does not mention field `val2`
+                    Num::Two { val: _ } => true
+                  //^^^^^^^^^^^^^^^^^^^ err: Enum variant pattern does not mention field `val2`
                 };
             }
         }

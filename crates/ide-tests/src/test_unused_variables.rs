@@ -177,9 +177,11 @@ fn test_unused_variable_in_match() {
             fun main(s: Num) {
                 match (s) {
                     Num::One { val: myval } => true
+                                  //^^^^^ warn: Unused variable 'myval'
                 };
             }
-        }    "#]]);
+        }
+    "#]]);
 }
 
 #[test]
@@ -191,8 +193,10 @@ fn test_unused_variable_in_match_with_shorthand() {
 
             fun main(s: Num) {
                 match (s) {
-                    Num::One { val: myval } => true
+                    Num::One { val } => true
+                             //^^^ warn: Unused variable 'val'
                 };
             }
-        }    "#]]);
+        }
+    "#]]);
 }

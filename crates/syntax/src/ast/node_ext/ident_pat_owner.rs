@@ -16,6 +16,7 @@ impl ast::IdentPatOwner {
             ast::IdentPatOwner::ForCondition(_) => "variable",
             ast::IdentPatOwner::SchemaField(_) => "field",
             ast::IdentPatOwner::QuantBinding(_) => "variable",
+            ast::IdentPatOwner::MatchArm(_) => "variable",
         };
         kind.to_string()
     }
