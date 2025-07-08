@@ -7,11 +7,13 @@
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use base_db::SourceDatabase;
-use ide_db::Severity;
+use ide_db::{RootDatabase, Severity};
+use lang::Semantics;
 use lang::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
-use lang::nameres::scope::{VecExt, into_field_shorthand_items};
+use lang::nameres::scope::{ScopeEntry, VecExt, into_field_shorthand_items};
 use lang::node_ext::item_spec;
 use lang::types::ty::Ty;
+use std::collections::HashSet;
 use syntax::ast::idents::PRIMITIVE_TYPES;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
@@ -186,8 +188,20 @@ fn try_check_resolve(
         }
         1 => (),
         _ => {
-            if into_field_shorthand_items(ctx.sema.db, entries).is_some() {
+            if into_field_shorthand_items(ctx.sema.db, entries.clone()).is_some() {
                 return None;
+            }
+            if is_entries_from_duplicate_dependencies(&ctx.sema, entries) {
+                acc.push(Diagnostic::new(
+                    DiagnosticCode::Lsp("unresolved-reference", Severity::Error),
+                    format!(
+                        "Unresolved reference `{}`: resolved to multiple elements from different packages. \
+                        You have duplicate dependencies in your package manifest.",
+                        reference_name
+                    ),
+                    reference_node.file_range(),
+                ));
+                return Some(());
             }
             acc.push(Diagnostic::new(
                 DiagnosticCode::Lsp("unresolved-reference", Severity::Error),
@@ -200,4 +214,15 @@ fn try_check_resolve(
         }
     }
     Some(())
+}
+
+fn is_entries_from_duplicate_dependencies(
+    sema: &Semantics<'_, RootDatabase>,
+    entries: Vec<ScopeEntry>,
+) -> bool {
+    let package_ids = entries
+        .iter()
+        .map(|it| sema.db.file_package_id(it.node_loc.file_id()))
+        .collect::<HashSet<_>>();
+    package_ids.len() > 1
 }
