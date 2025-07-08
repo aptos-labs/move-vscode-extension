@@ -4,8 +4,10 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::ide_test_utils::diagnostics::check_diagnostics;
+use crate::ide_test_utils::diagnostics::{check_diagnostics, check_diagnostics_on_tmpfs};
 use expect_test::expect;
+use test_utils::fixtures;
+use test_utils::fixtures::test_state::{named_with_deps, raw};
 
 #[test]
 fn test_unresolved_variable() {
@@ -816,4 +818,79 @@ fn test_shorthand_with_struct_lit_field_and_schema_field() {
             }
         }
     "#]])
+}
+
+#[test]
+fn test_unresolved_reference_from_two_different_aptos_frameworks() {
+    let test_packages = vec![
+        raw(
+            "Std",
+            "std_1",
+            // language=Move
+            r#"
+//- vector.move
+module std::vector {
+    public native fun new<T>(): vector<T>;
+}
+"#,
+        ),
+        raw(
+            "Std",
+            "std_2",
+            // language=Move
+            r#"
+//- vector.move
+module std::vector {
+    public native fun new<T>(): vector<T>;
+}
+"#,
+        ),
+        named_with_deps(
+            "Dep",
+            // language=TOML
+            r#"
+[dependencies]
+Std = { local = "../std_1" }
+        "#,
+            // language=Move
+            r#"
+//- dep.move
+module std::dep {}
+            "#,
+        ),
+        named_with_deps(
+            "Main",
+            // language=TOML
+            r#"
+[dependencies]
+Std = { local = "../std_2" }
+Dep = { local = "../Dep" }
+        "#,
+            // language=Move
+            r#"
+//- main.move
+module std::main {
+    use std::vector::new;/*caret*/
+    fun main() {
+        new();
+    }
+}
+            "#,
+        ),
+    ];
+    let test_state = fixtures::from_multiple_files_on_tmpfs(test_packages);
+    // language=Move
+    check_diagnostics_on_tmpfs(
+        test_state,
+        expect![[r#"
+            module std::main {
+                use std::vector::new;/*caret*/
+                       //^^^^^^ err: Unresolved reference `vector`: resolved to multiple elements from different packages. You have duplicate dependencies in your package manifest.
+                fun main() {
+                    new();
+                  //^^^ err: Unresolved reference `new`: cannot resolve
+                }
+            }
+        "#]],
+    );
 }

@@ -11,6 +11,7 @@ use ide_db::assists::{Assist, AssistResolveStrategy};
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 use std::collections::HashSet;
+use test_utils::fixtures::TestState;
 use test_utils::{SourceMark, apply_source_marks, fixtures, get_first_marked_position, remove_marks};
 use vfs::FileId;
 
@@ -23,6 +24,22 @@ pub fn check_diagnostics(expect: Expect) {
     let (_, _, diagnostics) = get_diagnostics(trimmed_source.as_str());
 
     let actual = apply_diagnostics_to_file(&trimmed_source, &diagnostics);
+    expect.assert_eq(stdx::trim_indent(&actual).as_str());
+}
+
+pub fn check_diagnostics_on_tmpfs(test_state: TestState, expect: Expect) {
+    // init_tracing_for_test();
+
+    let (file_id, file_source) = test_state.file_with_caret("/*caret*/");
+
+    let config = DiagnosticsConfig::test_sample();
+    let frange = test_state.analysis().full_file_range(file_id).unwrap();
+    let diagnostics = test_state
+        .analysis()
+        .semantic_diagnostics(&config, AssistResolveStrategy::All, frange)
+        .unwrap();
+
+    let actual = apply_diagnostics_to_file(&file_source, &diagnostics);
     expect.assert_eq(stdx::trim_indent(&actual).as_str());
 }
 

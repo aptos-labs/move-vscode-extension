@@ -59,6 +59,7 @@ pub fn from_multiple_files_on_tmpfs(test_packages: Vec<TestPackageFiles>) -> Tes
     TestState { vfs, analysis_host }
 }
 
+#[derive(Debug)]
 pub struct TestPackageFiles {
     move_toml: String,
     root_dir: String,
@@ -73,6 +74,21 @@ pub fn named(name: &str, source_files: &str) -> TestPackageFiles {
             r#"
 [package]
 name = "{name}"
+version = "0.1.0"
+        "#
+        )),
+        source_files: source_files.to_string(),
+    }
+}
+
+pub fn raw(package_name: &str, root_dir: &str, source_files: &str) -> TestPackageFiles {
+    // language=TOML
+    TestPackageFiles {
+        root_dir: root_dir.to_string(),
+        move_toml: stdx::trim_indent(&format!(
+            r#"
+[package]
+name = "{package_name}"
 version = "0.1.0"
         "#
         )),
