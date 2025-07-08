@@ -79,8 +79,8 @@ fn test_missing_positional_fields_for_tuple_pattern() {
         module 0x1::m {
             struct S(u8, u8);
             fun main(s: S) {
-                let S (val) = s;
-                     //^^^ warn: Unused variable 'val'
+                let S(_) = s;
+                  //^^^^ err: Struct pattern does not match its declaration: expected 2 fields, found 1
             }
         }
     "#]]);
@@ -93,8 +93,7 @@ fn test_missing_positional_fields_with_rest() {
         module 0x1::m {
             struct S(u8, u8);
             fun main(s: S) {
-                let S(val, ..) = s;
-                    //^^^ warn: Unused variable 'val'
+                let S(_, ..) = s;
             }
         }
     "#]]);
@@ -107,8 +106,8 @@ fn test_missing_positional_fields_with_enum_variant() {
         module 0x1::m {
             enum S { Inner(u8, u8) }
             fun main(s: S) {
-                let S::Inner(val) = s;
-                           //^^^ warn: Unused variable 'val'
+                let S::Inner(_) = s;
+                  //^^^^^^^^^^^ err: Enum variant pattern does not match its declaration: expected 2 fields, found 1
             }
         }
     "#]]);
