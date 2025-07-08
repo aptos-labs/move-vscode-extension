@@ -126,33 +126,6 @@ Formatting on Save can be enabled in VSCode with
 }
 ```
 
-### Aptos Compiler check on Save
-
-Checks code in the editor after saving the document by running `aptos move compile`.
-
-To enable, specify in your `settings.json`:
-```json5
-{
-    "move-on-aptos.aptosPath": "/home/mkurnikov/bin/aptos", // path to aptos-cli on your machine
-    "move-on-aptos.checkOnSave": true,
-}
-```
-
-To provide additional arguments to the `compile` command, use `move-on-aptos.check.extraArgs`:
-
-```json5
-{   
-    "move-on-aptos.check.extraArgs": ["--dev"],
-}
-```
-
-To run `aptos move lint` instead, specify custom `aptos move` command with:
-```json5
-{
-    "move-on-aptos.check.command": "lint",
-}
-```
-
 ## Debugging
 
 It's useful to enable INFO logging level, it's not very chatty and could provide with a valuable information to debug:
