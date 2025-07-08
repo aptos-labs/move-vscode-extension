@@ -120,11 +120,11 @@ fn fixes(
                     // do nothing, those operations priorities are correct without parens
                 }
                 _ => {
-                    receiver_expr = make.expr_paren(receiver_expr);
+                    receiver_expr = make.paren_expr(receiver_expr).into();
                 }
             }
             let method_arg_list = make.arg_list(method_args);
-            let method_call_expr = make.expr_method_call(
+            let method_call_expr = make.method_call_expr(
                 receiver_expr,
                 make.name_ref(&name),
                 type_arg_list,
@@ -132,7 +132,7 @@ fn fixes(
             );
 
             let mut editor = builder.make_editor(&call_expr_parent);
-            editor.replace(call_expr.syntax(), method_call_expr.syntax().clone_for_update());
+            editor.replace(call_expr.syntax(), method_call_expr.syntax());
 
             builder.add_file_edits(file_id, editor);
         },

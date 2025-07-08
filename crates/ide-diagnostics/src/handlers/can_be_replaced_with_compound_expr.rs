@@ -65,8 +65,8 @@ fn fixes(
                 let make = SyntaxFactory::new();
                 let mut editor = builder.make_editor(&expr_parent);
 
-                let new_bin_expr = make.expr_bin(lhs_expr, compound_op, rhs_expr);
-                editor.replace(bin_expr.syntax(), new_bin_expr.syntax().clone_for_update());
+                let new_bin_expr = make.bin_expr(lhs_expr, compound_op, rhs_expr);
+                editor.replace(bin_expr.syntax(), new_bin_expr.syntax());
 
                 builder.add_file_edits(file_id, editor);
             },
