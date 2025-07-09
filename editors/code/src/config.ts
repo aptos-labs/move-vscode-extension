@@ -18,7 +18,7 @@ export class Config {
     configureLang: vscode.Disposable | undefined;
 
     readonly rootSection = "move-on-aptos";
-    private readonly requiresServerReloadOpts = ["server", "showSyntaxTree"].map(
+    private readonly requiresServerReloadOpts = ["server", "files", "showSyntaxTree"].map(
         (opt) => `${this.rootSection}.${opt}`,
     );
 
