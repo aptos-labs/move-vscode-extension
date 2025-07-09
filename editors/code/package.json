@@ -274,6 +274,16 @@
             {
                 "title": "inlayHints",
                 "properties": {
+                    "move-on-aptos.inlayHints.parameterHints.enable": {
+                        "markdownDescription": "Whether to show function parameter name inlay hints at the call\nsite.",
+                        "default": true,
+                        "type": "boolean"
+                    }
+                }
+            },
+            {
+                "title": "inlayHints",
+                "properties": {
                     "move-on-aptos.inlayHints.renderColons": {
                         "markdownDescription": "Whether to render leading colons for type hints, and trailing colons for parameter hints.",
                         "default": true,

@@ -21,7 +21,7 @@ use crate::types::ty::Ty;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::range_like::TySequence;
 use crate::types::ty::reference::{Mutability, autoborrow};
-use crate::types::ty::ty_callable::{CallKind, TyCallable};
+use crate::types::ty::ty_callable::{TyCallable, TyCallableKind};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar};
 use regex::Regex;
 use std::iter;
@@ -580,7 +580,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 .instantiate_path_for_fun(method_call_expr.to_owned().into(), method.map_into()),
             None => {
                 // add 1 for `self` parameter
-                TyCallable::fake(1 + method_call_expr.arg_exprs().len(), CallKind::Fun)
+                TyCallable::fake(
+                    1 + method_call_expr.arg_exprs().len(),
+                    TyCallableKind::Named(None),
+                )
             }
         };
         let method_ty = self.ctx.resolve_ty_vars_if_possible(method_ty);
@@ -613,7 +616,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 let callable_ty = self.ctx.instantiate_adt_item_as_callable(path, ty_adt)?;
                 callable_ty
             }
-            _ => TyCallable::fake(call_expr.arg_exprs().len(), CallKind::Fun),
+            _ => TyCallable::fake(call_expr.arg_exprs().len(), TyCallableKind::Named(None)),
         };
         let expected_arg_tys = self.infer_expected_call_arg_tys(&callable_ty, expected);
         let args = call_expr
@@ -821,7 +824,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
         let vec_ty = Ty::new_vector(arg_ty_var);
 
-        let lit_call_ty = TyCallable::new(declared_arg_tys.clone(), vec_ty.clone(), CallKind::Fun);
+        let lit_call_ty = TyCallable::new(
+            declared_arg_tys.clone(),
+            vec_ty.clone(),
+            TyCallableKind::Named(None),
+        );
         let expected_arg_tys = self.infer_expected_call_arg_tys(&lit_call_ty, expected);
         let args = arg_exprs
             .into_iter()

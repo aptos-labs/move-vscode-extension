@@ -1,11 +1,8 @@
 use crate::RootDatabase;
 use lang::Semantics;
-use lang::node_ext::call_ext;
-use lang::node_ext::call_ext::CalleeKind;
 use lang::types::ty::Ty;
 use std::collections::HashSet;
 use syntax::algo::ancestors_at_offset;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, NodeOrToken, SyntaxNode, SyntaxToken, T, TextSize, algo, ast};
 
@@ -30,28 +27,21 @@ impl ActiveParameterInfo {
         )?;
         let any_call_expr = sema.wrap_node_infile(any_call_expr);
 
-        let msl = any_call_expr.value.syntax().is_msl_context();
-        let idx = active_parameter?;
+        let callable = sema.callable(&any_call_expr)?;
+        let active_idx = active_parameter?;
 
-        let (callee_file_id, callee_kind) = call_ext::callee_kind(sema, &any_call_expr)?.unpack();
-        match callee_kind {
-            CalleeKind::Function(any_fun) => {
-                let mut params = any_fun.params();
-                if idx >= params.len() {
-                    return None;
-                }
-                let param = params.swap_remove(idx);
-                let ty = param
-                    .type_()
-                    .map(|it| sema.lower_type(it.in_file(callee_file_id), msl));
-                Some(ActiveParameterInfo {
-                    ty,
-                    src: Some(param.in_file(callee_file_id)),
-                })
-            }
-            // todo:
-            _ => None,
+        let mut params = callable.params()?;
+        if active_idx >= params.len() {
+            return None;
         }
+        let param = params.swap_remove(active_idx);
+        let param_ty = param.ty;
+
+        let fun_param = param.kind.into_fun_param()?;
+        Some(ActiveParameterInfo {
+            ty: param_ty,
+            src: Some(fun_param.in_file(callable.file_id())),
+        })
     }
 
     pub fn ident(&self) -> Option<ast::Name> {

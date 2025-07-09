@@ -24,7 +24,6 @@ use ide_db::text_edit::{TextChange, TextEdit};
 use ide_db::{Severity, SymbolKind};
 use line_index::{TextRange, TextSize};
 use lsp_types::{DocumentChanges, OneOf};
-use serde_json::to_value;
 use std::hash::{DefaultHasher, Hasher};
 use std::mem;
 use std::ops::Not;
@@ -818,7 +817,7 @@ pub(crate) fn inlay_hint(
 
     let data = match resolve_range_and_hash {
         Some((resolve_range, hash)) if something_to_resolve => Some(
-            to_value(lsp_ext::InlayHintResolveData {
+            serde_json::to_value(lsp_ext::InlayHintResolveData {
                 file_id: file_id.index(),
                 hash: hash.to_string(),
                 version: snap.file_version(file_id),

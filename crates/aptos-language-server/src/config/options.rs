@@ -81,9 +81,9 @@ config_data! {
         // inlayHints_implicitSizedBoundHints_enable: bool            = false,
         // /// Maximum length for inlay hints. Set to null to have an unlimited length.
         // inlayHints_maxLength: Option<usize>                        = Some(30),
-        // /// Whether to show function parameter name inlay hints at the call
-        // /// site.
-        // inlayHints_parameterHints_enable: bool                     = true,
+        /// Whether to show function parameter name inlay hints at the call
+        /// site.
+        inlayHints_parameterHints_enable: bool                     = true,
         // /// Whether to show exclusive range inlay hints.
         // inlayHints_rangeExclusiveHints_enable: bool                = false,
         /// Whether to render leading colons for type hints, and trailing colons for parameter hints.

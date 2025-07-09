@@ -4,6 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+use crate::loc::SyntaxLoc;
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::ty::Ty;
 use std::iter;
@@ -13,7 +14,13 @@ use std::ops::Deref;
 pub struct TyCallable {
     pub param_types: Vec<Ty>,
     pub ret_type: Box<Ty>,
-    pub kind: CallKind,
+    pub kind: TyCallableKind,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum TyCallableKind {
+    Named(Option<SyntaxLoc>),
+    Lambda(Option<SyntaxLoc>),
 }
 
 impl From<TyCallable> for Ty {
@@ -28,14 +35,8 @@ impl TyCallable {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum CallKind {
-    Lambda,
-    Fun,
-}
-
 impl TyCallable {
-    pub fn new(param_types: Vec<Ty>, ret_type: Ty, kind: CallKind) -> Self {
+    pub fn new(param_types: Vec<Ty>, ret_type: Ty, kind: TyCallableKind) -> Self {
         TyCallable {
             param_types,
             ret_type: Box::new(ret_type),
@@ -43,7 +44,7 @@ impl TyCallable {
         }
     }
 
-    pub fn fake(n_params: usize, kind: CallKind) -> Self {
+    pub fn fake(n_params: usize, kind: TyCallableKind) -> Self {
         TyCallable {
             param_types: iter::repeat_n(Ty::Unknown, n_params).collect(),
             ret_type: Box::new(Ty::Unknown),

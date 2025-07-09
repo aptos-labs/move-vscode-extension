@@ -452,3 +452,44 @@ fn test_tuple_enum_variant_with_generics() {
     "#]],
     );
 }
+
+#[test]
+fn test_lambda_expr() {
+    // language=Move
+    let source = r#"
+        module 0x1::m {
+            fun main() {
+                let lambda = |a: u8, b: u8| a + b;
+                lambda(/*caret*/);
+            }
+        }
+        "#;
+
+    check_signature_info(
+        source,
+        expect![[r#"
+            >>a: u8, b: u8
+            //^^^^^
+        "#]],
+    );
+}
+
+#[test]
+fn test_lambda_type() {
+    // language=Move
+    let source = r#"
+        module 0x1::m {
+            fun main(lambda: |u8, u8| u8) {
+                lambda(/*caret*/);
+            }
+        }
+        "#;
+
+    check_signature_info(
+        source,
+        expect![[r#"
+        >>u8, u8
+        //^^
+    "#]],
+    );
+}
