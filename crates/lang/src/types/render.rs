@@ -10,7 +10,7 @@ use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::range_like::TySequence;
 use crate::types::ty::schema::TySchema;
-use crate::types::ty::ty_callable::{CallableKind, TyCallable};
+use crate::types::ty::ty_callable::{TyCallable, TyCallableKind};
 use crate::types::ty::ty_var::{TyInfer, TyVar, TyVarKind};
 use crate::types::ty::type_param::TyTypeParameter;
 use base_db::SourceDatabase;
@@ -113,7 +113,7 @@ impl<'db> TypeRenderer<'db> {
 
     fn render_ty_callable(&mut self, ty_callable: &TyCallable) -> anyhow::Result<()> {
         match ty_callable.kind {
-            CallableKind::Fun(_) => {
+            TyCallableKind::Named(_) => {
                 self.render_type_list("fn(", &ty_callable.param_types, ")")?;
                 let ret_type = ty_callable.ret_type();
                 if !matches!(ret_type, Ty::Unit) {
@@ -121,7 +121,7 @@ impl<'db> TypeRenderer<'db> {
                     self.render(&ret_type)?;
                 }
             }
-            CallableKind::Lambda(_) => {
+            TyCallableKind::Lambda(_) => {
                 self.render_type_list("|", &ty_callable.param_types, "|")?;
                 let ret_type = ty_callable.ret_type();
                 self.write_str(" -> ")?;

@@ -8,7 +8,7 @@ use crate::loc::SyntaxLocFileExt;
 use crate::types::expectation::Expected;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::ty::Ty;
-use crate::types::ty::ty_callable::{CallableKind, TyCallable};
+use crate::types::ty::ty_callable::{TyCallable, TyCallableKind};
 use syntax::files::InFileExt;
 use syntax::{IntoNodeOrToken, ast};
 
@@ -28,7 +28,7 @@ impl TypeAstWalker<'_, '_> {
         let lambda_call_ty = TyCallable::new(
             param_tys,
             Ty::new_ty_var(&self.ctx.ty_var_index),
-            CallableKind::Lambda(Some(lambda_expr.clone().in_file(self.ctx.file_id).loc())),
+            TyCallableKind::Lambda(Some(lambda_expr.clone().in_file(self.ctx.file_id).loc())),
         );
 
         // defer inference

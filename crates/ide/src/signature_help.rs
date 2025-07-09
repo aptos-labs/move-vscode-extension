@@ -8,11 +8,7 @@ use ide_db::active_parameter::{call_expr_for_arg_list, generic_item_for_type_arg
 use ide_db::{RootDatabase, active_parameter};
 use itertools::Itertools;
 use lang::Semantics;
-use lang::node_ext::call_ext;
-use lang::types::lowering::TyLowering;
 use lang::types::ty::Ty;
-use lang::types::ty::integer::IntegerKind;
-use lang::types::ty::ty_callable::TyCallable;
 use stdx::format_to;
 use syntax::files::{FilePosition, InFile, InFileExt};
 use syntax::{AstNode, Direction, SyntaxToken, TextRange, TextSize, algo, ast, match_ast};
@@ -191,55 +187,7 @@ fn signature_help_for_call(
     let (any_call_expr, active_parameter) =
         call_expr_for_arg_list(arg_list, token.text_range().start())?;
 
-    let db = sema.db;
-    let call_ty = sema.get_call_expr_type(&any_call_expr);
-
-    let ty_lowering = TyLowering::new(db, any_call_expr.is_msl());
-    let mut fn_params = vec![];
-    let (callee_file_id, callee_kind) = call_ext::callee_kind(sema, &any_call_expr)?.unpack();
-    match callee_kind {
-        call_ext::CalleeKind::Function(fun) => {
-            for (i, param) in fun.params().into_iter().enumerate() {
-                if i == 0 && matches!(any_call_expr.value, ast::AnyCallExpr::MethodCallExpr(_)) {
-                    continue;
-                }
-                let param_name = Some(param.ident_name());
-                let type_ = param.type_().map(|it| it.in_file(callee_file_id));
-                fn_params.push(FnParam {
-                    name: param_name,
-                    ty: get_call_param_ty(type_, i, &ty_lowering, call_ty.as_ref()),
-                });
-            }
-        }
-        call_ext::CalleeKind::AssertMacro => {
-            fn_params.push(FnParam {
-                name: Some("_".to_string()),
-                ty: Some(Ty::Bool),
-            });
-            fn_params.push(FnParam {
-                name: Some("err".to_string()),
-                ty: Some(Ty::Integer(IntegerKind::U64)),
-            });
-        }
-        call_ext::CalleeKind::TupleStruct(s) => {
-            for (i, tuple_field) in s.tuple_fields().iter().enumerate() {
-                let type_ = tuple_field.type_().map(|it| it.in_file(callee_file_id));
-                fn_params.push(FnParam {
-                    name: None,
-                    ty: get_call_param_ty(type_, i, &ty_lowering, call_ty.as_ref()),
-                });
-            }
-        }
-        call_ext::CalleeKind::TupleEnumVariant(s) => {
-            for (i, tuple_field) in s.tuple_fields().iter().enumerate() {
-                let type_ = tuple_field.type_().map(|it| it.in_file(callee_file_id));
-                fn_params.push(FnParam {
-                    name: None,
-                    ty: get_call_param_ty(type_, i, &ty_lowering, call_ty.as_ref()),
-                });
-            }
-        }
-    }
+    let callable = sema.callable(&any_call_expr)?;
 
     let mut res = SignatureHelp {
         signature: String::new(),
@@ -247,40 +195,27 @@ fn signature_help_for_call(
         active_parameter,
     };
 
-    if fn_params.is_empty() {
+    let callable_params = callable.params()?;
+    if callable_params.is_empty() {
         res.signature = "<no arguments>".to_string();
         return Some(res);
     }
 
-    for fn_param in fn_params {
+    for callable_param in callable_params {
         let mut p = String::new();
-        if let Some(name) = fn_param.name {
+        if let Some(name) = callable_param.name {
             format_to!(p, "{}: ", name);
         }
         format_to!(
             p,
             "{}",
-            fn_param
+            callable_param
                 .ty
-                .map(|it| sema.render_ty_truncated(&it, callee_file_id))
+                .map(|it| sema.render_ty_truncated(&it, callable.file_id()))
                 .unwrap_or_default()
         );
         res.push_param(&p);
     }
 
     Some(res)
-}
-
-fn get_call_param_ty(
-    type_: Option<InFile<ast::Type>>,
-    i: usize,
-    ty_lowering: &TyLowering,
-    call_ty: Option<&TyCallable>,
-) -> Option<Ty> {
-    let mut param_ty = None;
-    if let Some(param_type) = type_ {
-        let pty = call_ty.and_then(|it| it.param_types.get(i)).cloned();
-        param_ty = pty.or_else(|| Some(ty_lowering.lower_type(param_type)))
-    }
-    param_ty
 }

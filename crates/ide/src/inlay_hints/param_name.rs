@@ -7,7 +7,7 @@
 use crate::inlay_hints::{InlayHint, InlayHintLabel, InlayHintPosition, InlayHintsConfig, InlayKind};
 use ide_db::RootDatabase;
 use lang::Semantics;
-use lang::types::ty::ty_callable::Callable;
+use lang::node_ext::callable::CallableItem;
 use syntax::files::InFile;
 use syntax::{AstNode, ast};
 
@@ -21,35 +21,17 @@ pub(super) fn hints(
         return None;
     }
 
-    let callable_ty = sema.get_call_expr_type(&call_expr)?;
+    let callable = sema.callable(&call_expr)?;
+    if matches!(callable.callable_item, CallableItem::AssertMacro) {
+        return None;
+    }
+
+    let params = callable.params()?;
     let arg_exprs = call_expr.value.arg_exprs();
-
-    let callable = callable_ty.kind.callable(sema.db)?;
-    let params = match callable {
-        Callable::Fun(any_fun) => {
-            let params = any_fun
-                .value
-                .params()
-                .iter()
-                .map(|it| Some(it.ident_name()))
-                .collect::<Vec<_>>();
-            params
-        }
-        Callable::LambdaExpr(lambda_expr) => {
-            let params = lambda_expr
-                .value
-                .params()
-                .iter()
-                .map(|it| it.ident_pat()?.name().map(|it| it.as_string()))
-                .collect::<Vec<_>>();
-            params
-        }
-    };
-
-    for (param, arg_expr) in params.iter().zip(arg_exprs) {
-        if let (Some(param), Some(arg_expr)) = (param, arg_expr) {
+    for (param_name, arg_expr) in params.into_iter().map(|it| it.name).zip(arg_exprs) {
+        if let (Some(param_name), Some(arg_expr)) = (param_name, arg_expr) {
             if matches!(arg_expr, ast::Expr::Literal(_) | ast::Expr::BinExpr(_)) {
-                let mut label = InlayHintLabel::simple(param, None, None);
+                let mut label = InlayHintLabel::simple(param_name, None, None);
                 if config.render_colons {
                     label.append_str(": ");
                 }

@@ -24,6 +24,22 @@ fn test_inlay_parameter_hints_for_literals_on_fun() {
 }
 
 #[test]
+fn test_no_hints_for_tuple_structs_and_assert() {
+    // language=Move
+    check_inlay_hints(expect![[r#"
+        module 0x1::m {
+            struct S(u8, u8);
+            enum T { One(u8, u8) }
+            fun main() {
+                S(1, 1);
+                T::One(1, 1);
+                assert!(true, 1);
+            }
+        }
+    "#]]);
+}
+
+#[test]
 fn test_inlay_parameter_hints_for_literals_on_method() {
     // language=Move
     check_inlay_hints(expect![[r#"
@@ -43,9 +59,9 @@ fn test_inlay_parameter_hints_for_literals_on_method() {
                 let limit: u8 = 1;
                 s.receiver(
                     1,
-                  //^ self
+                  //^ min_size
                     1 + 2,
-                  //^^^^^ min_size
+                  //^^^^^ mid_size
                     max_size(),
                     limit
                 );

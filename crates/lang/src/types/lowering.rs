@@ -15,7 +15,7 @@ use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::reference::Mutability;
 use crate::types::ty::schema::TySchema;
 use crate::types::ty::tuple::TyTuple;
-use crate::types::ty::ty_callable::{CallableKind, TyCallable};
+use crate::types::ty::ty_callable::{TyCallable, TyCallableKind};
 use crate::types::ty::type_param::TyTypeParameter;
 use base_db::SourceDatabase;
 use syntax::ast;
@@ -85,7 +85,7 @@ impl<'db> TyLowering<'db> {
                 Some(Ty::Callable(TyCallable::new(
                     param_tys,
                     ret_ty,
-                    CallableKind::Lambda(None),
+                    TyCallableKind::Lambda(Some(lambda_type.loc(file_id))),
                 )))
             }
         }
@@ -165,7 +165,7 @@ impl<'db> TyLowering<'db> {
         TyCallable::new(
             param_types,
             ret_type,
-            CallableKind::Fun(Some(any_fun.loc(file_id))),
+            TyCallableKind::Named(Some(any_fun.loc(file_id))),
         )
     }
 

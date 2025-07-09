@@ -17,7 +17,7 @@ use crate::types::lowering::TyLowering;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
-use crate::types::ty::ty_callable::{CallableKind, TyCallable};
+use crate::types::ty::ty_callable::{TyCallable, TyCallableKind};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
 use crate::types::unification::UnificationTable;
 use base_db::SourceDatabase;
@@ -29,6 +29,7 @@ use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 use vfs::FileId;
 
+use crate::loc::SyntaxLocFileExt;
 use crate::nameres::path_resolution::remove_variant_ident_pats;
 pub use combine_types::TypeError;
 use syntax::SyntaxKind::{STRUCT, VARIANT};
@@ -166,6 +167,7 @@ impl<'db> InferenceCtx<'db> {
                 variant.value.into()
             }
         };
+        let fields_owner_loc = fields_owner.clone().in_file(adt_item_file_id).loc();
 
         let tuple_fields = fields_owner.tuple_field_list()?.fields().collect::<Vec<_>>();
         let param_types = tuple_fields
@@ -177,8 +179,12 @@ impl<'db> InferenceCtx<'db> {
             })
             .collect::<Vec<_>>();
         let ret_type = Ty::new_ty_adt(adt_item.clone());
-        let callable_ty = TyCallable::new(param_types, ret_type, CallableKind::Fun(None))
-            .substitute(&ty_adt.substitution);
+        let callable_ty = TyCallable::new(
+            param_types,
+            ret_type,
+            TyCallableKind::Named(Some(fields_owner_loc)),
+        )
+        .substitute(&ty_adt.substitution);
 
         let ty_vars_subst = adt_item.ty_vars_subst(&self.ty_var_index);
         Some(callable_ty.substitute(&ty_vars_subst))
