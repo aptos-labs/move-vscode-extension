@@ -7,7 +7,6 @@
 use crate::config::Config;
 use crate::config::validation::ConfigErrors;
 use crate::diagnostics::DiagnosticCollection;
-use crate::flycheck::{FlycheckHandle, FlycheckMessage};
 use crate::line_index::{LineEndings, LineIndex};
 use crate::lsp::from_proto;
 use crate::lsp::to_proto::url_from_abs_path;
@@ -77,12 +76,6 @@ pub(crate) struct GlobalState {
     pub(crate) shutdown_requested: bool,
     pub(crate) last_reported_status: lsp_ext::ServerStatusParams,
 
-    // Flycheck
-    pub(crate) flycheck_jobs: Arc<[FlycheckHandle]>,
-    pub(crate) flycheck_sender: Sender<FlycheckMessage>,
-    pub(crate) flycheck_receiver: Receiver<FlycheckMessage>,
-    pub(crate) last_flycheck_error: Option<String>,
-
     // VFS
     pub(crate) vfs_loader: Handle<Box<vfs_notify::NotifyHandle>, Receiver<vfs::loader::Message>>,
     pub(crate) vfs: Arc<RwLock<(vfs::Vfs, HashMap<FileId, LineEndings>)>>,
@@ -107,7 +100,6 @@ pub(crate) struct GlobalStateSnapshot {
     mem_docs: MemDocs,
     vfs: Arc<RwLock<(vfs::Vfs, HashMap<FileId, LineEndings>)>>,
     pub(crate) all_packages: Arc<Vec<AptosPackage>>,
-    pub(crate) flycheck_jobs: Arc<[FlycheckHandle]>,
     sender: Sender<lsp_server::Message>,
 }
 
@@ -136,8 +128,6 @@ impl GlobalState {
             Handle { handle, receiver }
         };
 
-        let (flycheck_sender, flycheck_receiver) = unbounded();
-
         let mut analysis_host = AnalysisHost::new();
 
         let vfs = Arc::new(RwLock::new((vfs::Vfs::default(), HashMap::default())));
@@ -164,11 +154,6 @@ impl GlobalState {
             },
             package_root_config: PackageRootConfig::default(),
             config_errors: Default::default(),
-
-            flycheck_jobs: Arc::from_iter([]),
-            flycheck_sender,
-            flycheck_receiver,
-            last_flycheck_error: None,
 
             vfs_loader,
             vfs,
@@ -199,7 +184,6 @@ impl GlobalState {
             vfs: Arc::clone(&self.vfs),
             mem_docs: self.mem_docs.clone(),
             // semantic_tokens_cache: Arc::clone(&self.semantic_tokens_cache),
-            flycheck_jobs: self.flycheck_jobs.clone(),
             sender: self.sender.clone(),
         }
     }
@@ -234,7 +218,7 @@ impl GlobalState {
         handler(self, response)
     }
 
-    pub(crate) fn send_notification<N: lsp_types::notification::Notification>(&self, params: N::Params) {
+    pub(crate) fn send_notification<N: Notification>(&self, params: N::Params) {
         let not = lsp_server::Notification::new(N::METHOD.to_owned(), params);
         self.send(not.into());
     }
@@ -281,40 +265,42 @@ impl GlobalState {
         mut diagnostics: Vec<lsp_types::Diagnostic>,
     ) {
         // We put this on a separate thread to avoid blocking the main thread with serialization work
-        self.task_pool.handle.spawn_with_sender(stdx::thread::ThreadIntent::Worker, {
-            let sender = self.sender.clone();
-            move |_| {
-                // VSCode assumes diagnostic messages to be non-empty strings, so we need to patch
-                // empty diagnostics. Neither the docs of VSCode nor the LSP spec say whether
-                // diagnostic messages are actually allowed to be empty or not and patching this
-                // in the VSCode client does not work as the assertion happens in the protocol
-                // conversion. So this hack is here to stay, and will be considered a hack
-                // until the LSP decides to state that empty messages are allowed.
+        self.task_pool
+            .handle
+            .spawn_with_sender(stdx::thread::ThreadIntent::Worker, {
+                let sender = self.sender.clone();
+                move |_| {
+                    // VSCode assumes diagnostic messages to be non-empty strings, so we need to patch
+                    // empty diagnostics. Neither the docs of VSCode nor the LSP spec say whether
+                    // diagnostic messages are actually allowed to be empty or not and patching this
+                    // in the VSCode client does not work as the assertion happens in the protocol
+                    // conversion. So this hack is here to stay, and will be considered a hack
+                    // until the LSP decides to state that empty messages are allowed.
 
-                // See https://github.com/rust-lang/rust-analyzer/issues/11404
-                // See https://github.com/rust-lang/rust-analyzer/issues/13130
-                let patch_empty = |message: &mut String| {
-                    if message.is_empty() {
-                        " ".clone_into(message);
-                    }
-                };
+                    // See https://github.com/rust-lang/rust-analyzer/issues/11404
+                    // See https://github.com/rust-lang/rust-analyzer/issues/13130
+                    let patch_empty = |message: &mut String| {
+                        if message.is_empty() {
+                            " ".clone_into(message);
+                        }
+                    };
 
-                for d in &mut diagnostics {
-                    patch_empty(&mut d.message);
-                    if let Some(dri) = &mut d.related_information {
-                        for dri in dri {
-                            patch_empty(&mut dri.message);
+                    for d in &mut diagnostics {
+                        patch_empty(&mut d.message);
+                        if let Some(dri) = &mut d.related_information {
+                            for dri in dri {
+                                patch_empty(&mut dri.message);
+                            }
                         }
                     }
-                }
 
-                let not = lsp_server::Notification::new(
-                    <lsp_types::notification::PublishDiagnostics as lsp_types::notification::Notification>::METHOD.to_owned(),
-                    lsp_types::PublishDiagnosticsParams { uri, diagnostics, version },
-                );
-                _ = sender.send(not.into());
-            }
-        });
+                    let not = lsp_server::Notification::new(
+                        <lsp_types::notification::PublishDiagnostics as Notification>::METHOD.to_owned(),
+                        lsp_types::PublishDiagnosticsParams { uri, diagnostics, version },
+                    );
+                    _ = sender.send(not.into());
+                }
+            });
     }
 }
 

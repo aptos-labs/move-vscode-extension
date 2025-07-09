@@ -6,16 +6,13 @@
 
 use crate::config::Config;
 use crate::diagnostics::{DiagnosticsGeneration, NativeDiagnosticsFetchKind, fetch_native_diagnostics};
-use crate::flycheck::FlycheckMessage;
-use crate::global_state::{
-    GlobalState, LoadPackagesRequest, LoadPackagesResponse, file_id_to_url, url_to_file_id,
-};
+use crate::global_state::{GlobalState, LoadPackagesRequest, LoadPackagesResponse, file_id_to_url};
 use crate::handlers::dispatch::{NotificationDispatcher, RequestDispatcher};
 use crate::handlers::request;
 use crate::lsp::from_proto;
 use crate::lsp::utils::{Progress, notification_is};
+use crate::lsp_ext;
 use crate::reload::FetchPackagesProgress;
-use crate::{flycheck, lsp_ext};
 use base_db::SourceDatabase;
 use crossbeam_channel::Receiver;
 use lsp_server::Connection;
@@ -58,7 +55,6 @@ enum Event {
     Lsp(lsp_server::Message),
     Task(Task),
     Vfs(vfs::loader::Message),
-    Flycheck(FlycheckMessage),
 }
 
 impl fmt::Display for Event {
@@ -66,7 +62,6 @@ impl fmt::Display for Event {
         match self {
             Event::Lsp(_) => write!(f, "Event::Lsp"),
             Event::Vfs(msg) => write!(f, "Event::Vfs({msg:?})"),
-            Event::Flycheck(flycheck) => write!(f, "Event::Flycheck({:?})", flycheck),
             Event::Task(task) => {
                 write!(f, "Event::Task({})", task)
             }
@@ -103,7 +98,6 @@ impl fmt::Debug for Event {
             Event::Lsp(it) => fmt::Debug::fmt(it, f),
             Event::Task(it) => fmt::Debug::fmt(it, f),
             Event::Vfs(it) => fmt::Debug::fmt(it, f),
-            Event::Flycheck(it) => fmt::Debug::fmt(it, f),
         }
     }
 }
@@ -197,9 +191,6 @@ impl GlobalState {
 
             recv(self.vfs_loader.receiver) -> task =>
                 task.map(Event::Vfs),
-
-            recv(self.flycheck_receiver) -> task =>
-                task.map(Event::Flycheck),
         }
         .map(Some)
     }
@@ -239,14 +230,6 @@ impl GlobalState {
                     self.handle_vfs_msg(message);
                 }
             }
-            Event::Flycheck(message) => {
-                let _p = tracing::info_span!("GlobalState::handle_event/flycheck").entered();
-                self.handle_flycheck_msg(message);
-                // Coalesce many flycheck updates into a single loop turn
-                while let Ok(message) = self.flycheck_receiver.try_recv() {
-                    self.handle_flycheck_msg(message);
-                }
-            }
         }
         let event_handling_duration = loop_start.elapsed();
 
@@ -261,12 +244,6 @@ impl GlobalState {
 
         if self.is_projects_fully_loaded() {
             let became_fully_loaded = !was_fully_loaded;
-            if became_fully_loaded {
-                if self.config.check_on_save() {
-                    // Project has loaded properly, kick off initial flycheck
-                    self.flycheck_jobs.iter().for_each(|flycheck| flycheck.restart());
-                }
-            }
 
             let ask_for_client_refresh = became_fully_loaded || any_file_changed;
             if ask_for_client_refresh {
@@ -471,7 +448,6 @@ impl GlobalState {
                             tracing::error!("FetchWorkspaceError: {fetch_err}");
                         }
                         self.reason_to_state_refresh = Some("loaded aptos packages from fs".to_owned());
-                        self.diagnostics.clear_flycheck_all();
                         (Progress::End, None)
                     }
                 };
@@ -556,76 +532,6 @@ impl GlobalState {
             // so only set it if its not in there
             if !self.mem_docs.contains(&path) && (is_changed || vfs.file_id(&path).is_none()) {
                 vfs.set_file_contents(path, contents);
-            }
-        }
-    }
-
-    fn handle_flycheck_msg(&mut self, message: FlycheckMessage) {
-        let _p = tracing::span!(Level::INFO, "flycheck ", ?message).entered();
-        match message {
-            FlycheckMessage::AddDiagnostic { ws_id, diagnostic } => {
-                let snap = self.snapshot();
-                let mapped_diagnostic =
-                    crate::diagnostics::to_proto::map_aptos_diagnostic_to_lsp(&diagnostic, &snap);
-                match mapped_diagnostic {
-                    Ok(diag) => match url_to_file_id(&self.vfs.read().0, &diag.url) {
-                        Ok(file_id) => {
-                            self.diagnostics
-                                .add_flycheck_diagnostic(ws_id, file_id, diag.diagnostic)
-                        }
-                        Err(err) => {
-                            tracing::error!(
-                                "flycheck {ws_id}: File with cargo diagnostic not found in VFS: {}",
-                                err
-                            );
-                        }
-                    },
-                    Err(err) => {
-                        tracing::error!(
-                            "flycheck {ws_id}: Error mapping diagnostic to lsp types: {}",
-                            err
-                        );
-                    }
-                }
-            }
-
-            FlycheckMessage::ClearDiagnostics { ws_id } => self.diagnostics.clear_flycheck(ws_id),
-
-            FlycheckMessage::Progress { ws_id: id, progress } => {
-                let (state, message) = match progress {
-                    flycheck::Progress::DidStart => (Progress::Begin, None),
-                    flycheck::Progress::DidCancel => {
-                        self.last_flycheck_error = None;
-                        (Progress::End, None)
-                    }
-                    flycheck::Progress::DidFailToRestart(err) => {
-                        self.last_flycheck_error = Some(format!("cargo check failed to start: {err}"));
-                        return;
-                    }
-                    flycheck::Progress::DidFinish(result) => {
-                        self.last_flycheck_error = result
-                            .err()
-                            .map(|err| format!("cargo check failed to start: {err}"));
-                        (Progress::End, None)
-                    }
-                };
-
-                let flycheck_config = self.config.flycheck_config().unwrap();
-
-                // When we're running multiple flychecks, we have to include a disambiguator in
-                // the title, or the editor complains. Note that this is a user-facing string.
-                let title = if self.flycheck_jobs.len() == 1 {
-                    format!("{}", flycheck_config)
-                } else {
-                    format!("{} (#{})", flycheck_config, id + 1)
-                };
-                self.report_progress(
-                    &title,
-                    state,
-                    message,
-                    None,
-                    Some(format!("aptos-language-server/flycheck/{id}")),
-                );
             }
         }
     }
@@ -771,9 +677,6 @@ impl GlobalState {
             handlers::handle_did_change_workspace_folders,
         )
         .on_sync_mut::<notification::DidChangeWatchedFiles>(handlers::handle_did_change_watched_files)
-        .on_sync_mut::<lsp_ext::RunFlycheck>(handlers::handle_run_flycheck)
-        .on_sync_mut::<lsp_ext::CancelFlycheck>(handlers::handle_cancel_flycheck)
-        .on_sync_mut::<lsp_ext::ClearFlycheck>(handlers::handle_clear_flycheck)
         .finish();
     }
 }

@@ -15,13 +15,6 @@ export const analyzerStatus = new lc.RequestType<AnalyzerStatusParams, string, v
 );
 export type AnalyzerStatusParams = { textDocument?: lc.TextDocumentIdentifier };
 
-export const cancelFlycheck = new lc.NotificationType0("aptos-language-server/cancelFlycheck");
-export const clearFlycheck = new lc.NotificationType0("aptos-language-server/clearFlycheck");
-
-export const runFlycheck = new lc.NotificationType<{
-    textDocument: lc.TextDocumentIdentifier | null
-}>("aptos-language-server/runFlycheck");
-
 export const openServerLogs = new lc.NotificationType0("aptos-language-server/openServerLogs");
 
 export const serverStatus = new lc.NotificationType<ServerStatusParams>(

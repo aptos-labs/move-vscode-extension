@@ -8,7 +8,6 @@ use crate::config::config_change::ConfigChange;
 use crate::global_state::{GlobalState, LoadPackagesRequest};
 use crate::lsp::from_proto;
 use crate::lsp::utils::apply_document_changes;
-use crate::lsp_ext::RunFlycheckParams;
 use crate::mem_docs::DocumentData;
 use crate::{Config, reload};
 use camino::Utf8PathBuf;
@@ -21,7 +20,6 @@ use paths::AbsPathBuf;
 use std::ops::Not;
 use std::sync::Arc;
 use stdx::itertools::Itertools;
-use vfs::VfsPath;
 use vfs::loader::Handle;
 
 #[tracing::instrument(level = "info", skip_all)]
@@ -36,19 +34,9 @@ pub(crate) fn handle_cancel(state: &mut GlobalState, params: CancelParams) -> an
 
 #[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_work_done_progress_cancel(
-    state: &mut GlobalState,
-    params: WorkDoneProgressCancelParams,
+    _state: &mut GlobalState,
+    _params: WorkDoneProgressCancelParams,
 ) -> anyhow::Result<()> {
-    if let lsp_types::NumberOrString::String(s) = &params.token {
-        if let Some(id) = s.strip_prefix("aptos-language-server/flycheck/") {
-            if let Ok(id) = id.parse::<u32>() {
-                if let Some(flycheck) = state.flycheck_jobs.get(id as usize) {
-                    flycheck.cancel();
-                }
-            }
-        }
-    }
-
     // Just ignore this. It is OK to continue sending progress
     // notifications for this token, as the client can't know when
     // we accepted notification.
@@ -152,16 +140,7 @@ pub(crate) fn handle_did_save_text_document(
                 );
             }
         }
-        if !state.config.check_on_save() || run_flycheck(state, vfs_path) {
-            return Ok(());
-        }
-    } else if state.config.check_on_save() {
-        // No specific flycheck was triggered, so let's trigger all of them.
-        for flycheck_job in state.flycheck_jobs.iter() {
-            flycheck_job.restart();
-        }
     }
-
     Ok(())
 }
 
@@ -260,89 +239,6 @@ pub(crate) fn handle_did_change_watched_files(
         if let Ok(path) = from_proto::abs_path(&change.uri) {
             state.vfs_loader.handle.invalidate(path);
         }
-    }
-    Ok(())
-}
-
-#[tracing::instrument(level = "info", skip_all)]
-fn run_flycheck(state: &mut GlobalState, vfs_path: VfsPath) -> bool {
-    let file_id = state.vfs.read().0.file_id(&vfs_path);
-    if let Some((saved_file_id, _)) = file_id {
-        let world = state.snapshot();
-
-        let mut updated = false;
-        let task = move || -> Result<(), ide::Cancelled> {
-            let saved_file_path = world
-                .file_id_to_file_path(saved_file_id)
-                .as_path()
-                .expect("cannot be none, as it's been filtered at the first if-let")
-                .to_owned();
-
-            let workspace_ids = world
-                .all_packages
-                .iter()
-                .enumerate()
-                .filter(|(_, ws)| ws.contains_file(saved_file_path.as_path()));
-
-            // Find and trigger corresponding flychecks
-            'flychecks: for flycheck_job in world.flycheck_jobs.iter() {
-                for (ws_id, _) in workspace_ids.clone() {
-                    if ws_id == flycheck_job.ws_id() {
-                        updated = true;
-                        flycheck_job.restart();
-                        continue 'flychecks;
-                    }
-                }
-            }
-            // No specific flycheck was triggered, so let's trigger all of them.
-            if !updated {
-                for flycheck_job in world.flycheck_jobs.iter() {
-                    flycheck_job.restart();
-                }
-            }
-            Ok(())
-        };
-        state
-            .task_pool
-            .handle
-            .spawn_with_sender(stdx::thread::ThreadIntent::Worker, move |_| {
-                if let Err(e) = std::panic::catch_unwind(task) {
-                    tracing::error!("flycheck task panicked: {e:?}")
-                }
-            });
-        true
-    } else {
-        false
-    }
-}
-
-#[tracing::instrument(level = "info", skip_all)]
-pub(crate) fn handle_cancel_flycheck(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
-    state.flycheck_jobs.iter().for_each(|flycheck| flycheck.cancel());
-    Ok(())
-}
-
-#[tracing::instrument(level = "info", skip_all)]
-pub(crate) fn handle_clear_flycheck(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
-    state.diagnostics.clear_flycheck_all();
-    Ok(())
-}
-
-#[tracing::instrument(level = "debug", skip_all)]
-pub(crate) fn handle_run_flycheck(
-    state: &mut GlobalState,
-    params: RunFlycheckParams,
-) -> anyhow::Result<()> {
-    if let Some(text_document) = params.text_document {
-        if let Ok(vfs_path) = from_proto::vfs_path(&text_document.uri) {
-            if run_flycheck(state, vfs_path) {
-                return Ok(());
-            }
-        }
-    }
-    // No specific flycheck was triggered, so let's trigger all of them.
-    for ws_flycheck_job in state.flycheck_jobs.iter() {
-        ws_flycheck_job.restart();
     }
     Ok(())
 }

@@ -55,7 +55,7 @@ impl ParseFromLine for AptosDiagnostic {
 #[cfg(test)]
 mod tests {
     use crate::command::ParseFromLine;
-    use crate::flycheck::compiler_diagnostic::AptosDiagnostic;
+    use crate::compiler_diagnostic::AptosDiagnostic;
 
     #[test]
     fn test_basic_compiler_error() {

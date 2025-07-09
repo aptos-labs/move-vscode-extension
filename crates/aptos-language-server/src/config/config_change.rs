@@ -7,7 +7,7 @@
 use crate::Config;
 use crate::config::options::FullConfigInput;
 use crate::config::validation::{ConfigErrorInner, ConfigErrors};
-use serde::de::{DeserializeOwned, Error};
+use serde::de::DeserializeOwned;
 use std::iter;
 use std::sync::Arc;
 
@@ -46,15 +46,6 @@ impl Config {
 
                 config.client_config = (full_config_input, config_errors);
             }
-            // should_update = true;
-        }
-
-        let flycheck_command = config.check_command().as_str();
-        if !matches!(flycheck_command, "compile" | "lint") {
-            config.validation_errors.0.push(Arc::new(ConfigErrorInner::Json {
-                config_key: "/check/command".to_owned(),
-                error: serde_json::Error::custom("expected one of the [\"compile\", \"lint\"]"),
-            }));
         }
 
         config
