@@ -185,25 +185,9 @@ fn test_type_of_range_function_integer() {
         r#"
         module 0x1::main {
             spec module {
-                let my_range = range(vector[1, 2]);
+                let my_range = range(vector[true, true]);
                 my_range;
                //^ range<num>
-            }
-        }
-    "#,
-    )
-}
-
-#[test]
-fn test_type_of_range_function_bool() {
-    // language=Move
-    check_expr_type(
-        r#"
-        module 0x1::main {
-            spec module {
-                let my_range = range(vector[true]);
-                my_range;
-               //^ range<bool>
             }
         }
     "#,
