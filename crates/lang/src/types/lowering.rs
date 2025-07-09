@@ -12,6 +12,7 @@ use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::integer::IntegerKind;
+use crate::types::ty::range_like::TySequence;
 use crate::types::ty::reference::Mutability;
 use crate::types::ty::schema::TySchema;
 use crate::types::ty::tuple::TyTuple;
@@ -203,6 +204,13 @@ impl<'db> TyLowering<'db> {
                     .map(|it| self.lower_type(it.in_file(file_id)))
                     .unwrap_or(Ty::Unknown);
                 Ty::new_vector(first_arg_ty)
+            }
+            "range" => {
+                let first_arg_type = path.type_args().first().and_then(|it| it.type_());
+                let first_arg_ty = first_arg_type
+                    .map(|it| self.lower_type(it.in_file(file_id)))
+                    .unwrap_or(Ty::Unknown);
+                Ty::Seq(TySequence::Range(Box::new(first_arg_ty)))
             }
             _ => {
                 return None;

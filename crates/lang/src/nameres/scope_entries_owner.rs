@@ -104,14 +104,20 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: InFile<SyntaxNode>
                 entries.extend(InFile::new(file_id, idx_binding).to_entry())
             }
         }
-        FORALL_EXPR | EXISTS_EXPR | CHOOSE_EXPR => {
-            let owner = scope.syntax_cast::<ast::QuantBindingsOwner>().unwrap();
+        FORALL_EXPR | EXISTS_EXPR => {
+            let owner = scope.syntax_cast::<ast::QuantExpr>().unwrap();
             entries.extend(
                 owner
                     .value
                     .quant_bindings_as_ident_pats()
                     .to_entries(owner.file_id),
             );
+        }
+        CHOOSE_EXPR => {
+            let choose_expr = scope.syntax_cast::<ast::ChooseExpr>().unwrap();
+            if let Some(ident_pat) = choose_expr.value.quant_binding_ident_pat() {
+                entries.extend(ident_pat.in_file(file_id).to_entry());
+            }
         }
         AXIOM_STMT | INVARIANT_STMT => {
             let generic_stmt = scope.syntax_cast::<ast::GenericSpecStmt>().unwrap();

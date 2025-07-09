@@ -426,18 +426,17 @@ SOURCE_FILE@0..910
                   CHOOSE_EXPR@724..760
                     CHOOSE_KW@724..730 "choose"
                     WHITESPACE@730..731 " "
-                    QUANT_BINDING_LIST@731..737
-                      QUANT_BINDING@731..737
-                        IDENT_PAT@731..732
-                          NAME@731..732
-                            IDENT@731..732 "x"
-                        COLON@732..733 ":"
-                        WHITESPACE@733..734 " "
-                        PATH_TYPE@734..737
-                          PATH@734..737
-                            PATH_SEGMENT@734..737
-                              NAME_REF@734..737
-                                IDENT@734..737 "u64"
+                    QUANT_BINDING@731..737
+                      IDENT_PAT@731..732
+                        NAME@731..732
+                          IDENT@731..732 "x"
+                      COLON@732..733 ":"
+                      WHITESPACE@733..734 " "
+                      PATH_TYPE@734..737
+                        PATH@734..737
+                          PATH_SEGMENT@734..737
+                            NAME_REF@734..737
+                              IDENT@734..737 "u64"
                     WHITESPACE@737..738 " "
                     WHERE_EXPR@738..760
                       WHERE_KW@738..743 "where"

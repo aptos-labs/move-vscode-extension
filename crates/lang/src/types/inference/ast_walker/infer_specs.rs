@@ -122,6 +122,22 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         Some(Ty::Bool)
     }
 
+    pub(super) fn infer_choose_expr(&mut self, choose_expr: &ast::ChooseExpr) -> Ty {
+        let mut quant_binding_ty = Ty::Unknown;
+        if let Some(quant_binding) = choose_expr.quant_binding() {
+            if let Some(ident_pat) = quant_binding.ident_pat() {
+                quant_binding_ty = self.infer_quant_binding_ty(&quant_binding).unwrap_or(Ty::Unknown);
+                self.ctx
+                    .pat_types
+                    .insert(ident_pat.into(), quant_binding_ty.clone());
+            }
+        }
+        if let Some(where_expr) = choose_expr.where_expr().and_then(|it| it.expr()) {
+            self.infer_expr_coerceable_to(&where_expr, Ty::Bool);
+        }
+        quant_binding_ty
+    }
+
     fn infer_quant_binding_ty(&mut self, quant_binding: &ast::QuantBinding) -> Option<Ty> {
         let ty = if quant_binding.in_token().is_some() {
             let range_expr = quant_binding.expr()?;
@@ -144,7 +160,6 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 let expr = exists_expr.expr()?;
                 self.infer_expr_coerceable_to(&expr, Ty::Bool);
             }
-            ast::QuantExpr::ChooseExpr(_) => (),
         }
         Some(())
     }
