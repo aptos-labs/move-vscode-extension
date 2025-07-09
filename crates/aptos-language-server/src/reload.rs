@@ -5,7 +5,6 @@
 // Modifications have been made to the original code.
 
 use crate::config::FilesWatcher;
-use crate::flycheck::FlycheckHandle;
 use crate::global_state::{GlobalState, LoadPackagesRequest, LoadPackagesResponse};
 use crate::lsp::utils::Progress;
 use crate::main_loop::Task;
@@ -70,8 +69,6 @@ impl GlobalState {
             };
             self.load_aptos_packages_queue
                 .request_op("discovered projects changed".to_owned(), req)
-        } else if self.config.flycheck_config() != old_config.flycheck_config() {
-            self.respawn_flycheck();
         }
     }
 
@@ -94,12 +91,6 @@ impl GlobalState {
         if let Some(err) = &self.config_errors {
             status.health |= lsp_ext::Health::Warning;
             format_to!(message, "{err}\n");
-        }
-
-        if let Some(err) = &self.last_flycheck_error {
-            status.health |= lsp_ext::Health::Warning;
-            message.push_str(err);
-            message.push('\n');
         }
 
         if self.config.discovered_manifests().is_empty() {
@@ -362,9 +353,6 @@ impl GlobalState {
         let mut changes = FileChanges::new();
         changes.set_package_graph(package_graph);
         self.analysis_host.apply_change(changes);
-
-        // self.process_pending_file_changes();
-        self.respawn_flycheck();
     }
 
     pub(super) fn load_packages_error(&self) -> Result<(), String> {
@@ -394,32 +382,6 @@ impl GlobalState {
             return Ok(());
         }
         Err(buf)
-    }
-
-    fn respawn_flycheck(&mut self) {
-        let _p = tracing::info_span!("GlobalState::reload_flycheck").entered();
-        let config = self.config.flycheck_config();
-        if config.is_none() {
-            self.flycheck_jobs = Arc::from_iter([]);
-            return;
-        }
-
-        let config = config.unwrap();
-        if !config.enabled {
-            tracing::info!("stop reloading flycheck as it's disabled in settings");
-            return;
-        }
-
-        let sender = self.flycheck_sender.clone();
-        self.flycheck_jobs = self
-            .ws_root_packages()
-            .enumerate()
-            .filter_map(|(id, ws)| Some((id, ws.content_root(), ws.manifest_path())))
-            .map(|(ws_id, ws_root, _)| {
-                FlycheckHandle::spawn(ws_id, sender.clone(), config.clone(), ws_root.to_path_buf())
-            })
-            .collect::<Vec<_>>()
-            .into();
     }
 }
 

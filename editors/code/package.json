@@ -229,39 +229,6 @@
                 }
             },
             {
-                "title": "general",
-                "properties": {
-                    "move-on-aptos.checkOnSave": {
-                        "markdownDescription": "Run the check command for diagnostics on save.",
-                        "default": true,
-                        "type": "boolean"
-                    }
-                }
-            },
-            {
-                "title": "check",
-                "properties": {
-                    "move-on-aptos.check.command": {
-                        "markdownDescription": "Aptos command to use for `aptos move compile`.",
-                        "default": "compile",
-                        "type": "string"
-                    }
-                }
-            },
-            {
-                "title": "check",
-                "properties": {
-                    "move-on-aptos.check.extraArgs": {
-                        "markdownDescription": "Extra arguments for `aptos move compile`.",
-                        "default": [],
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            {
                 "title": "diagnostics",
                 "properties": {
                     "move-on-aptos.diagnostics.enable": {

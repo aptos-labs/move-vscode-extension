@@ -8,6 +8,6 @@ Features:
 * find all references, symbol renaming
 * types and documentation on hover
 * inlay hints for types
-* assists (code actions)
+* real-time diagnostics
+* quickfixes (code actions)
 * `movefmt` integration
-* `aptos move compile` on-the-fly check

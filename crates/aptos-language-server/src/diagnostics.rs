@@ -24,8 +24,6 @@ pub(crate) struct DiagnosticCollection {
     pub(crate) native_syntax: HashMap<FileId, (DiagnosticsGeneration, Vec<lsp_types::Diagnostic>)>,
     pub(crate) native_semantic: HashMap<FileId, (DiagnosticsGeneration, Vec<lsp_types::Diagnostic>)>,
 
-    // flycheck_id (ws_id) -> (file_id -> Vec<Diagnostic>)
-    pub(crate) flycheck: HashMap<usize, HashMap<FileId, Vec<lsp_types::Diagnostic>>>,
     changes: HashSet<FileId>,
 
     /// Counter for supplying a new generation number for diagnostics.
@@ -36,45 +34,9 @@ pub(crate) struct DiagnosticCollection {
 }
 
 impl DiagnosticCollection {
-    pub(crate) fn clear_flycheck(&mut self, flycheck_id: usize) {
-        if let Some(check) = self.flycheck.get_mut(&flycheck_id) {
-            let drained_keys = check.drain().map(|(k, _)| k.to_owned());
-            self.changes.extend(drained_keys)
-        }
-    }
-
-    pub(crate) fn clear_flycheck_all(&mut self) {
-        for files_diags in self.flycheck.values_mut() {
-            let drained_keys = files_diags.drain().map(|(k, _)| k.to_owned());
-            self.changes.extend(drained_keys);
-        }
-    }
-
     pub(crate) fn clear_native_for(&mut self, file_id: FileId) {
         self.native_syntax.remove(&file_id);
         self.native_semantic.remove(&file_id);
-        self.changes.insert(file_id);
-    }
-
-    pub(crate) fn add_flycheck_diagnostic(
-        &mut self,
-        flycheck_id: usize,
-        file_id: FileId,
-        diagnostic: lsp_types::Diagnostic,
-    ) {
-        let existing_diagnostics = self
-            .flycheck
-            .entry(flycheck_id)
-            .or_default()
-            .entry(file_id)
-            .or_default();
-        for existing_diagnostic in existing_diagnostics.iter() {
-            if are_diagnostics_equal(existing_diagnostic, &diagnostic) {
-                return;
-            }
-        }
-
-        existing_diagnostics.push(diagnostic);
         self.changes.insert(file_id);
     }
 
@@ -123,12 +85,7 @@ impl DiagnosticCollection {
             .get(&file_id)
             .into_iter()
             .flat_map(|(_, d)| d);
-        let check = self
-            .flycheck
-            .values()
-            .filter_map(move |it| it.get(&file_id))
-            .flatten();
-        native_syntax.chain(native_semantic).chain(check)
+        native_syntax.chain(native_semantic)
     }
 
     pub(crate) fn take_changes(&mut self) -> Option<HashSet<FileId>> {

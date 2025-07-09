@@ -22,7 +22,6 @@ use vfs::AbsPathBuf;
 use crate::config::options::{DefaultConfigData, FullConfigInput};
 use crate::config::utils::find_movefmt_path;
 use crate::config::validation::ConfigErrors;
-use crate::flycheck::{AptosCliOptions, FlycheckConfig};
 use ide::inlay_hints::{InlayFieldsToResolve, InlayHintsConfig};
 use ide_db::assist_config::AssistConfig;
 use ide_diagnostics::config::DiagnosticsConfig;
@@ -250,28 +249,13 @@ impl Config {
     //         .and_then(|it| it.version.as_ref())
     // }
 
-    pub(crate) fn flycheck_config(&self) -> Option<FlycheckConfig> {
-        let cli_path = self.aptos_path()?;
-        let options = AptosCliOptions {
-            extra_args: self.extra_args().clone(),
-            ..AptosCliOptions::default()
-        };
-        let command = self.check_command();
-        Some(FlycheckConfig::new(
-            self.check_on_save(),
-            cli_path,
-            command,
-            options,
-        ))
-    }
+    // pub fn check_on_save(&self) -> bool {
+    //     *self.checkOnSave()
+    // }
 
-    pub fn check_on_save(&self) -> bool {
-        *self.checkOnSave()
-    }
-
-    pub fn extra_args(&self) -> &Vec<String> {
-        self.check_extraArgs()
-    }
+    // pub fn extra_args(&self) -> &Vec<String> {
+    //     self.check_extraArgs()
+    // }
 
     pub fn aptos_path(&self) -> Option<Utf8PathBuf> {
         self.aptosPath().clone()

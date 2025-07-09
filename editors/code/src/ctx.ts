@@ -445,12 +445,10 @@ export class Ctx {
             statusBar.tooltip.appendMarkdown("\n\n---\n\n");
         }
 
-        // const toggleCheckOnSave = this.config.checkOnSave ? "Disable" : "Enable";
         statusBar.tooltip.appendMarkdown(
             `[Extension Info](command:move-on-aptos.serverVersion "Show version and server binary info"): Version ${this.version}, Server Version ${this._serverVersion}\n\n` +
             `---\n\n` +
             `[$(terminal) Open Logs](command:move-on-aptos.openLogs "Open the server logs")\n\n` +
-            // `[$(settings) ${toggleCheckOnSave} Check on Save](command:move-on-aptos.toggleCheckOnSave "Temporarily ${toggleCheckOnSave.toLowerCase()} check on save functionality")\n\n` +
             // `[$(refresh) Reload Workspace](command:rust-analyzer.reloadWorkspace "Reload and rediscover workspaces")\n\n` +
             `[$(stop-circle) Stop server](command:move-on-aptos.stopServer "Stop the server")\n\n` +
             `[$(debug-restart) Restart server](command:move-on-aptos.restartServer "Restart the server")`,

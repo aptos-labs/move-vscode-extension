@@ -32,15 +32,6 @@ config_data! {
         /// Automatically refresh project info on `Move.toml` changes.
         aptos_autoreload: bool           = true,
 
-        /// Run the check command for diagnostics on save.
-        checkOnSave: bool                         = true,
-
-        /// Aptos command to use for `aptos move compile`.
-        check_command: String                      = "compile".to_owned(),
-
-        /// Extra arguments for `aptos move compile`.
-        check_extraArgs: Vec<String>             = vec![],
-
         /// Whether to show native aptos-language-server diagnostics.
         diagnostics_enable: bool                = true,
 

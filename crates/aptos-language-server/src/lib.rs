@@ -4,6 +4,8 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+#![allow(dead_code)]
+
 mod config;
 mod global_state;
 mod handlers;
@@ -17,9 +19,9 @@ mod version;
 
 pub mod cli;
 mod command;
+pub mod compiler_diagnostic;
 pub mod diagnostics;
 mod file_changes;
-mod flycheck;
 pub mod lsp;
 mod movefmt;
 pub mod toolchain;

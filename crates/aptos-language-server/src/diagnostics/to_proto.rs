@@ -4,7 +4,8 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::flycheck::compiler_diagnostic::DiagnosticLabel;
+use crate::compiler_diagnostic;
+use crate::compiler_diagnostic::DiagnosticLabel;
 use crate::global_state::GlobalStateSnapshot;
 use crate::lsp::to_proto::url_from_abs_path;
 use line_index::LineCol;
@@ -27,7 +28,7 @@ pub(crate) struct MappedAptosDiagnostic {
 ///
 /// If the diagnostic has no primary span this will return `None`
 pub(crate) fn map_aptos_diagnostic_to_lsp(
-    diag: &crate::flycheck::AptosDiagnostic,
+    diag: &compiler_diagnostic::AptosDiagnostic,
     snap: &GlobalStateSnapshot,
 ) -> anyhow::Result<MappedAptosDiagnostic> {
     let label = diag.labels.iter().find(|l| l.is_primary());
@@ -58,10 +59,7 @@ pub(crate) fn map_aptos_diagnostic_to_lsp(
             severity: Some(severity),
             code: code.clone().map(lsp_types::NumberOrString::String),
             code_description: None,
-            source: snap
-                .config
-                .flycheck_config()
-                .map(|it| format!("aptos move {}", it.command())),
+            source: None,
             message,
             related_information: None,
             tags: None,

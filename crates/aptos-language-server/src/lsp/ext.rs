@@ -33,33 +33,6 @@ impl Request for ReloadWorkspace {
     const METHOD: &'static str = "aptos-language-server/reloadWorkspace";
 }
 
-pub enum CancelFlycheck {}
-
-impl Notification for CancelFlycheck {
-    type Params = ();
-    const METHOD: &'static str = "aptos-language-server/cancelFlycheck";
-}
-
-pub enum RunFlycheck {}
-
-impl Notification for RunFlycheck {
-    type Params = RunFlycheckParams;
-    const METHOD: &'static str = "aptos-language-server/runFlycheck";
-}
-
-pub enum ClearFlycheck {}
-
-impl Notification for ClearFlycheck {
-    type Params = ();
-    const METHOD: &'static str = "aptos-language-server/clearFlycheck";
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct RunFlycheckParams {
-    pub text_document: Option<TextDocumentIdentifier>,
-}
-
 pub enum OpenServerLogs {}
 
 impl Notification for OpenServerLogs {
