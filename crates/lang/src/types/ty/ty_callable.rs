@@ -4,16 +4,20 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+use crate::loc::SyntaxLoc;
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::ty::Ty;
+use base_db::SourceDatabase;
 use std::iter;
 use std::ops::Deref;
+use syntax::ast;
+use syntax::files::InFile;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct TyCallable {
     pub param_types: Vec<Ty>,
     pub ret_type: Box<Ty>,
-    pub kind: CallKind,
+    pub kind: CallableKind,
 }
 
 impl From<TyCallable> for Ty {
@@ -28,14 +32,35 @@ impl TyCallable {
     }
 }
 
+pub enum Callable {
+    Fun(InFile<ast::AnyFun>),
+    LambdaExpr(InFile<ast::LambdaExpr>),
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum CallKind {
-    Lambda,
-    Fun,
+pub enum CallableKind {
+    Lambda(Option<SyntaxLoc>),
+    Fun(Option<SyntaxLoc>),
+}
+
+impl CallableKind {
+    pub fn callable(&self, db: &dyn SourceDatabase) -> Option<Callable> {
+        match self {
+            CallableKind::Fun(Some(fun_loc)) => {
+                let fun = fun_loc.to_ast::<ast::AnyFun>(db)?;
+                Some(Callable::Fun(fun))
+            }
+            CallableKind::Lambda(Some(lambda_expr_loc)) => {
+                let lambda_expr = lambda_expr_loc.to_ast::<ast::LambdaExpr>(db)?;
+                Some(Callable::LambdaExpr(lambda_expr))
+            }
+            _ => None,
+        }
+    }
 }
 
 impl TyCallable {
-    pub fn new(param_types: Vec<Ty>, ret_type: Ty, kind: CallKind) -> Self {
+    pub fn new(param_types: Vec<Ty>, ret_type: Ty, kind: CallableKind) -> Self {
         TyCallable {
             param_types,
             ret_type: Box::new(ret_type),
@@ -43,7 +68,7 @@ impl TyCallable {
         }
     }
 
-    pub fn fake(n_params: usize, kind: CallKind) -> Self {
+    pub fn fake(n_params: usize, kind: CallableKind) -> Self {
         TyCallable {
             param_types: iter::repeat_n(Ty::Unknown, n_params).collect(),
             ret_type: Box::new(Ty::Unknown),

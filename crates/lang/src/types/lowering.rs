@@ -6,6 +6,7 @@
 
 mod type_args;
 
+use crate::loc::SyntaxLocNodeExt;
 use crate::nameres;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
@@ -14,7 +15,7 @@ use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::reference::Mutability;
 use crate::types::ty::schema::TySchema;
 use crate::types::ty::tuple::TyTuple;
-use crate::types::ty::ty_callable::{CallKind, TyCallable};
+use crate::types::ty::ty_callable::{CallableKind, TyCallable};
 use crate::types::ty::type_param::TyTypeParameter;
 use base_db::SourceDatabase;
 use syntax::ast;
@@ -81,7 +82,11 @@ impl<'db> TyLowering<'db> {
                     .return_type()
                     .map(|it| self.lower_type(it.in_file(file_id)))
                     .unwrap_or(Ty::Unit);
-                Some(Ty::Callable(TyCallable::new(param_tys, ret_ty, CallKind::Lambda)))
+                Some(Ty::Callable(TyCallable::new(
+                    param_tys,
+                    ret_ty,
+                    CallableKind::Lambda(None),
+                )))
             }
         }
     }
@@ -157,7 +162,11 @@ impl<'db> TyLowering<'db> {
             })
             .collect();
         let ret_type = self.lower_ret_type(any_fun.ret_type().map(|t| t.in_file(file_id)));
-        TyCallable::new(param_types, ret_type, CallKind::Fun)
+        TyCallable::new(
+            param_types,
+            ret_type,
+            CallableKind::Fun(Some(any_fun.loc(file_id))),
+        )
     }
 
     fn lower_ret_type(&self, ret_type: Option<InFile<ast::RetType>>) -> Ty {

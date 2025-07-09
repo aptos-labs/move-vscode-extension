@@ -10,19 +10,15 @@ use ide::inlay_hints::{InlayFieldsToResolve, InlayHintsConfig};
 use test_utils::{SourceMark, apply_source_marks, fixtures, remove_marks};
 
 const DISABLED_CONFIG: InlayHintsConfig = InlayHintsConfig {
-    // discriminant_hints: DiscriminantHints::Never,
     render_colons: false,
     type_hints: false,
-    // parameter_hints: false,
-    // sized_bound: false,
+    parameter_hints: false,
     // generic_parameter_hints: GenericParameterHints {
     //     type_hints: false,
     //     lifetime_hints: false,
     //     const_hints: false,
     // },
     // chaining_hints: false,
-    // lifetime_elision_hints: LifetimeElisionHints::Never,
-    // closure_return_type_hints: ClosureReturnTypeHints::Never,
     // closure_capture_hints: false,
     // adjustment_hints: AdjustmentHints::Never,
     // adjustment_hints_mode: AdjustmentHintsMode::Prefix,
@@ -32,17 +28,15 @@ const DISABLED_CONFIG: InlayHintsConfig = InlayHintsConfig {
     // hide_closure_initialization_hints: false,
     hide_closure_parameter_hints: false,
     // closure_style: ClosureStyle::ImplFn,
-    // param_names_for_lifetime_elision_hints: false,
     // max_length: None,
     // closing_brace_hints_min_lines: None,
     fields_to_resolve: InlayFieldsToResolve::empty(),
-    // implicit_drop_hints: false,
     // range_exclusive_hints: false,
 };
 
 const TEST_CONFIG: InlayHintsConfig = InlayHintsConfig {
     type_hints: true,
-    // parameter_hints: true,
+    parameter_hints: true,
     // chaining_hints: true,
     // closure_return_type_hints: ClosureReturnTypeHints::WithBlock,
     // binding_mode_hints: true,

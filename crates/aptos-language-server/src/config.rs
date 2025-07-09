@@ -209,7 +209,7 @@ impl Config {
         InlayHintsConfig {
             render_colons: self.inlayHints_renderColons().to_owned(),
             type_hints: self.inlayHints_typeHints_enable().to_owned(),
-            // parameter_hints: self.inlayHints_parameterHints_enable().to_owned(),
+            parameter_hints: self.inlayHints_parameterHints_enable().to_owned(),
             // generic_parameter_hints: GenericParameterHints {
             //     type_hints: self.inlayHints_genericParameterHints_type_enable().to_owned(),
             //     lifetime_hints: self.inlayHints_genericParameterHints_lifetime_enable().to_owned(),

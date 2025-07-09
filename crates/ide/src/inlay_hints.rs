@@ -5,6 +5,7 @@
 // Modifications have been made to the original code.
 
 mod ident_pat;
+mod param_name;
 
 use crate::NavigationTarget;
 use ide_db::RootDatabase;
@@ -60,10 +61,8 @@ fn hints(
 ) {
     match_ast! {
         match node {
-            ast::IdentPat(it) => {
-                ident_pat::hints(hints, sema, config, &it.in_file(file_id));
-                Some(())
-            },
+            ast::IdentPat(it) => ident_pat::hints(hints, sema, config, &it.in_file(file_id)),
+            ast::AnyCallExpr(it) => param_name::hints(hints, sema, config, it),
             _ => Some(()),
         }
     };
@@ -102,7 +101,7 @@ pub(crate) fn inlay_hints_resolve(
 pub struct InlayHintsConfig {
     pub render_colons: bool,
     pub type_hints: bool,
-    // pub parameter_hints: bool,
+    pub parameter_hints: bool,
     // pub generic_parameter_hints: GenericParameterHints,
     // pub chaining_hints: bool,
     pub hide_closure_parameter_hints: bool,
@@ -186,20 +185,12 @@ impl InlayFieldsToResolve {
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum InlayKind {
-    Adjustment,
-    BindingMode,
     Chaining,
-    ClosingBrace,
-    ClosureCapture,
-    Discriminant,
     GenericParamList,
-    Lifetime,
     Parameter,
     GenericParameter,
     Type,
-    Drop,
     RangeExclusive,
-    ExternUnsafety,
 }
 
 #[derive(Debug, Hash)]

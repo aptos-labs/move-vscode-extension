@@ -17,7 +17,7 @@ use crate::types::lowering::TyLowering;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
-use crate::types::ty::ty_callable::{CallKind, TyCallable};
+use crate::types::ty::ty_callable::{CallableKind, TyCallable};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
 use crate::types::unification::UnificationTable;
 use base_db::SourceDatabase;
@@ -177,8 +177,8 @@ impl<'db> InferenceCtx<'db> {
             })
             .collect::<Vec<_>>();
         let ret_type = Ty::new_ty_adt(adt_item.clone());
-        let callable_ty =
-            TyCallable::new(param_types, ret_type, CallKind::Fun).substitute(&ty_adt.substitution);
+        let callable_ty = TyCallable::new(param_types, ret_type, CallableKind::Fun(None))
+            .substitute(&ty_adt.substitution);
 
         let ty_vars_subst = adt_item.ty_vars_subst(&self.ty_var_index);
         Some(callable_ty.substitute(&ty_vars_subst))
