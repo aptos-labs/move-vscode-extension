@@ -61,8 +61,8 @@ fn hints(
 ) {
     match_ast! {
         match node {
-            ast::IdentPat(it) => ident_pat::hints(hints, sema, config, &it.in_file(file_id)),
-            ast::AnyCallExpr(it) => param_name::hints(hints, sema, config, it),
+            ast::IdentPat(it) => ident_pat::hints(hints, sema, config, it.in_file(file_id)),
+            ast::AnyCallExpr(it) => param_name::hints(hints, sema, config, it.in_file(file_id)),
             _ => Some(()),
         }
     };

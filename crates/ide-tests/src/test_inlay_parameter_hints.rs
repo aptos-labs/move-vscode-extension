@@ -24,6 +24,37 @@ fn test_inlay_parameter_hints_for_literals_on_fun() {
 }
 
 #[test]
+fn test_inlay_parameter_hints_for_literals_on_method() {
+    // language=Move
+    check_inlay_hints(expect![[r#"
+        module 0x1::m {
+            struct S { val: u8 }
+            fun receiver(
+                self: &S,
+                min_size: u8,
+                mid_size: u8,
+                max_size: u8,
+                limit: u8
+            ) {
+                min_size + max_size + limit
+            }
+            fun max_size(): u8 { 1 }
+            fun main(s: &S) {
+                let limit: u8 = 1;
+                s.receiver(
+                    1,
+                  //^ self
+                    1 + 2,
+                  //^^^^^ min_size
+                    max_size(),
+                    limit
+                );
+            }
+        }
+    "#]]);
+}
+
+#[test]
 fn test_inlay_parameter_hints_for_literals_on_lambda() {
     // language=Move
     check_inlay_hints(expect![[r#"

@@ -17,17 +17,17 @@ pub(super) fn hints(
     acc: &mut Vec<InlayHint>,
     sema: &Semantics<'_, RootDatabase>,
     config: &InlayHintsConfig,
-    ident_pat: &InFile<ast::IdentPat>,
+    ident_pat: InFile<ast::IdentPat>,
 ) -> Option<()> {
     if !config.type_hints {
         return None;
     }
-    let ty = sema.get_ident_pat_type(ident_pat, false)?;
+    let ty = sema.get_ident_pat_type(&ident_pat, false)?;
     if ty.is_unknown() {
         return None;
     }
 
-    let (file_id, ident_pat) = ident_pat.unpack_ref();
+    let (file_id, ident_pat) = ident_pat.unpack();
     if ident_pat.name().is_some_and(|it| it.as_string().starts_with("_")) {
         return None;
     }

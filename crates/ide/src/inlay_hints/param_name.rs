@@ -8,30 +8,21 @@ use crate::inlay_hints::{InlayHint, InlayHintLabel, InlayHintPosition, InlayHint
 use ide_db::RootDatabase;
 use lang::Semantics;
 use lang::types::ty::ty_callable::Callable;
+use syntax::files::InFile;
 use syntax::{AstNode, ast};
 
 pub(super) fn hints(
     acc: &mut Vec<InlayHint>,
     sema: &Semantics<'_, RootDatabase>,
     config: &InlayHintsConfig,
-    call_expr: ast::AnyCallExpr,
+    call_expr: InFile<ast::AnyCallExpr>,
 ) -> Option<()> {
     if !config.parameter_hints {
         return None;
     }
 
-    let (callable_ty, arg_exprs) = match call_expr {
-        ast::AnyCallExpr::CallExpr(call_expr) => {
-            let callee_expr = call_expr.expr()?;
-            let callable_ty = sema
-                .get_expr_type(&sema.wrap_node_infile(callee_expr))?
-                .into_ty_callable()?;
-            (callable_ty, call_expr.arg_exprs())
-        }
-        _ => {
-            return None;
-        }
-    };
+    let callable_ty = sema.get_call_expr_type(&call_expr)?;
+    let arg_exprs = call_expr.value.arg_exprs();
 
     let callable = callable_ty.kind.callable(sema.db)?;
     let params = match callable {
