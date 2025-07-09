@@ -588,7 +588,7 @@ SpecPredicateProperty =
     'ident' '=' Literal
 
 QuantExpr =
-    ForallExpr | ExistsExpr | ChooseExpr
+    ForallExpr | ExistsExpr
 
 ForallExpr =
     'forall' QuantBindingList WhereExpr? ':' Expr
@@ -597,10 +597,7 @@ ExistsExpr =
     'exists' QuantBindingList WhereExpr? ':' Expr
 
 ChooseExpr =
-    'choose' 'min'? QuantBindingList WhereExpr?
-
-QuantBindingsOwner =
-    ForallExpr | ExistsExpr | ChooseExpr
+    'choose' 'min'? QuantBinding WhereExpr?
 
 QuantBindingList =
     bindings:(QuantBinding (',' QuantBinding)* ','?)?

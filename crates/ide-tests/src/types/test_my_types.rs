@@ -177,3 +177,66 @@ fn test_paren_pat() {
     "#,
     )
 }
+
+#[test]
+fn test_type_of_range_function_integer() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::main {
+            spec module {
+                let my_range = range(vector[1, 2]);
+                my_range;
+               //^ range<num>
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_type_of_range_function_bool() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::main {
+            spec module {
+                let my_range = range(vector[true]);
+                my_range;
+               //^ range<bool>
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_choose_index_type() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::main {
+            spec module {
+                let idx = choose min i in range(vector[0, 1, 2, 3]);
+                idx;
+               //^ num
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_choose_index_type_in_where() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::main {
+            spec module {
+                choose min i in range(vector[0, 1, 2, 3]) where i == 0;
+                                                              //^ num
+            }
+        }
+    "#,
+    )
+}

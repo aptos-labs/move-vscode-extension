@@ -540,18 +540,17 @@ SOURCE_FILE@0..1087
           CHOOSE_EXPR@756..818
             CHOOSE_KW@756..762 "choose"
             WHITESPACE@762..763 " "
-            QUANT_BINDING_LIST@763..773
-              QUANT_BINDING@763..773
-                IDENT_PAT@763..764
-                  NAME@763..764
-                    IDENT@763..764 "a"
-                COLON@764..765 ":"
-                WHITESPACE@765..766 " "
-                PATH_TYPE@766..773
-                  PATH@766..773
-                    PATH_SEGMENT@766..773
-                      NAME_REF@766..773
-                        IDENT@766..773 "address"
+            QUANT_BINDING@763..773
+              IDENT_PAT@763..764
+                NAME@763..764
+                  IDENT@763..764 "a"
+              COLON@764..765 ":"
+              WHITESPACE@765..766 " "
+              PATH_TYPE@766..773
+                PATH@766..773
+                  PATH_SEGMENT@766..773
+                    NAME_REF@766..773
+                      IDENT@766..773 "address"
             WHITESPACE@773..774 " "
             WHERE_EXPR@774..818
               WHERE_KW@774..779 "where"
@@ -626,18 +625,17 @@ SOURCE_FILE@0..1087
             WHITESPACE@834..835 " "
             MIN_KW@835..838 "min"
             WHITESPACE@838..839 " "
-            QUANT_BINDING_LIST@839..845
-              QUANT_BINDING@839..845
-                IDENT_PAT@839..840
-                  NAME@839..840
-                    IDENT@839..840 "i"
-                COLON@840..841 ":"
-                WHITESPACE@841..842 " "
-                PATH_TYPE@842..845
-                  PATH@842..845
-                    PATH_SEGMENT@842..845
-                      NAME_REF@842..845
-                        IDENT@842..845 "num"
+            QUANT_BINDING@839..845
+              IDENT_PAT@839..840
+                NAME@839..840
+                  IDENT@839..840 "i"
+              COLON@840..841 ":"
+              WHITESPACE@841..842 " "
+              PATH_TYPE@842..845
+                PATH@842..845
+                  PATH_SEGMENT@842..845
+                    NAME_REF@842..845
+                      IDENT@842..845 "num"
             WHITESPACE@845..846 " "
             WHERE_EXPR@846..879
               WHERE_KW@846..851 "where"
@@ -704,29 +702,28 @@ SOURCE_FILE@0..1087
             WHITESPACE@903..904 " "
             MIN_KW@904..907 "min"
             WHITESPACE@907..908 " "
-            QUANT_BINDING_LIST@908..927
-              QUANT_BINDING@908..927
-                IDENT_PAT@908..909
-                  NAME@908..909
-                    IDENT@908..909 "i"
-                WHITESPACE@909..910 " "
-                IN_KW@910..912 "in"
-                WHITESPACE@912..913 " "
-                CALL_EXPR@913..927
-                  PATH_EXPR@913..918
-                    PATH@913..918
-                      PATH_SEGMENT@913..918
-                        NAME_REF@913..918
-                          IDENT@913..918 "range"
-                  VALUE_ARG_LIST@918..927
-                    L_PAREN@918..919 "("
-                    VALUE_ARG@919..926
-                      PATH_EXPR@919..926
-                        PATH@919..926
-                          PATH_SEGMENT@919..926
-                            NAME_REF@919..926
-                              IDENT@919..926 "gallery"
-                    R_PAREN@926..927 ")"
+            QUANT_BINDING@908..927
+              IDENT_PAT@908..909
+                NAME@908..909
+                  IDENT@908..909 "i"
+              WHITESPACE@909..910 " "
+              IN_KW@910..912 "in"
+              WHITESPACE@912..913 " "
+              CALL_EXPR@913..927
+                PATH_EXPR@913..918
+                  PATH@913..918
+                    PATH_SEGMENT@913..918
+                      NAME_REF@913..918
+                        IDENT@913..918 "range"
+                VALUE_ARG_LIST@918..927
+                  L_PAREN@918..919 "("
+                  VALUE_ARG@919..926
+                    PATH_EXPR@919..926
+                      PATH@919..926
+                        PATH_SEGMENT@919..926
+                          NAME_REF@919..926
+                            IDENT@919..926 "gallery"
+                  R_PAREN@926..927 ")"
             WHITESPACE@927..928 " "
             WHERE_EXPR@928..953
               WHERE_KW@928..933 "where"
@@ -792,29 +789,28 @@ SOURCE_FILE@0..1087
         CHOOSE_EXPR@1026..1078
           CHOOSE_KW@1026..1032 "choose"
           WHITESPACE@1032..1033 " "
-          QUANT_BINDING_LIST@1033..1052
-            QUANT_BINDING@1033..1052
-              IDENT_PAT@1033..1034
-                NAME@1033..1034
-                  IDENT@1033..1034 "i"
-              WHITESPACE@1034..1035 " "
-              IN_KW@1035..1037 "in"
-              WHITESPACE@1037..1038 " "
-              CALL_EXPR@1038..1052
-                PATH_EXPR@1038..1043
-                  PATH@1038..1043
-                    PATH_SEGMENT@1038..1043
-                      NAME_REF@1038..1043
-                        IDENT@1038..1043 "range"
-                VALUE_ARG_LIST@1043..1052
-                  L_PAREN@1043..1044 "("
-                  VALUE_ARG@1044..1051
-                    PATH_EXPR@1044..1051
-                      PATH@1044..1051
-                        PATH_SEGMENT@1044..1051
-                          NAME_REF@1044..1051
-                            IDENT@1044..1051 "gallery"
-                  R_PAREN@1051..1052 ")"
+          QUANT_BINDING@1033..1052
+            IDENT_PAT@1033..1034
+              NAME@1033..1034
+                IDENT@1033..1034 "i"
+            WHITESPACE@1034..1035 " "
+            IN_KW@1035..1037 "in"
+            WHITESPACE@1037..1038 " "
+            CALL_EXPR@1038..1052
+              PATH_EXPR@1038..1043
+                PATH@1038..1043
+                  PATH_SEGMENT@1038..1043
+                    NAME_REF@1038..1043
+                      IDENT@1038..1043 "range"
+              VALUE_ARG_LIST@1043..1052
+                L_PAREN@1043..1044 "("
+                VALUE_ARG@1044..1051
+                  PATH_EXPR@1044..1051
+                    PATH@1044..1051
+                      PATH_SEGMENT@1044..1051
+                        NAME_REF@1044..1051
+                          IDENT@1044..1051 "gallery"
+                R_PAREN@1051..1052 ")"
           WHITESPACE@1052..1053 " "
           WHERE_EXPR@1053..1078
             WHERE_KW@1053..1058 "where"

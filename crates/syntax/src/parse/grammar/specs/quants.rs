@@ -68,7 +68,8 @@ pub(crate) fn choose_expr(p: &mut Parser) -> Option<CompletedMarker> {
     if p.at_contextual_kw_ident("min") {
         p.bump_remap(T![min]);
     }
-    quant_binding_list(p);
+    quant_binding(p);
+    // quant_binding_list(p);
     opt_where_expr(p);
     Some(m.complete(p, CHOOSE_EXPR))
 }

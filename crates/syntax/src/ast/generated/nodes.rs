@@ -360,7 +360,7 @@ pub struct ChooseExpr {
 }
 impl ChooseExpr {
     #[inline]
-    pub fn quant_binding_list(&self) -> Option<QuantBindingList> { support::child(&self.syntax) }
+    pub fn quant_binding(&self) -> Option<QuantBinding> { support::child(&self.syntax) }
     #[inline]
     pub fn where_expr(&self) -> Option<WhereExpr> { support::child(&self.syntax) }
     #[inline]
@@ -2322,15 +2322,7 @@ pub enum Pat {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum QuantBindingsOwner {
-    ChooseExpr(ChooseExpr),
-    ExistsExpr(ExistsExpr),
-    ForallExpr(ForallExpr),
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum QuantExpr {
-    ChooseExpr(ChooseExpr),
     ExistsExpr(ExistsExpr),
     ForallExpr(ForallExpr),
 }
@@ -7787,100 +7779,6 @@ impl AstNode for Pat {
         }
     }
 }
-impl From<ChooseExpr> for QuantBindingsOwner {
-    #[inline]
-    fn from(node: ChooseExpr) -> QuantBindingsOwner { QuantBindingsOwner::ChooseExpr(node) }
-}
-impl From<ExistsExpr> for QuantBindingsOwner {
-    #[inline]
-    fn from(node: ExistsExpr) -> QuantBindingsOwner { QuantBindingsOwner::ExistsExpr(node) }
-}
-impl From<ForallExpr> for QuantBindingsOwner {
-    #[inline]
-    fn from(node: ForallExpr) -> QuantBindingsOwner { QuantBindingsOwner::ForallExpr(node) }
-}
-impl From<QuantBindingsOwner> for Expr {
-    #[inline]
-    fn from(node: QuantBindingsOwner) -> Expr {
-        match node {
-            QuantBindingsOwner::ChooseExpr(it) => it.into(),
-            QuantBindingsOwner::ExistsExpr(it) => it.into(),
-            QuantBindingsOwner::ForallExpr(it) => it.into(),
-        }
-    }
-}
-impl From<QuantBindingsOwner> for QuantExpr {
-    #[inline]
-    fn from(node: QuantBindingsOwner) -> QuantExpr {
-        match node {
-            QuantBindingsOwner::ChooseExpr(it) => it.into(),
-            QuantBindingsOwner::ExistsExpr(it) => it.into(),
-            QuantBindingsOwner::ForallExpr(it) => it.into(),
-        }
-    }
-}
-impl QuantBindingsOwner {
-    pub fn choose_expr(self) -> Option<ChooseExpr> {
-        match (self) {
-            QuantBindingsOwner::ChooseExpr(item) => Some(item),
-            _ => None,
-        }
-    }
-    pub fn exists_expr(self) -> Option<ExistsExpr> {
-        match (self) {
-            QuantBindingsOwner::ExistsExpr(item) => Some(item),
-            _ => None,
-        }
-    }
-    pub fn forall_expr(self) -> Option<ForallExpr> {
-        match (self) {
-            QuantBindingsOwner::ForallExpr(item) => Some(item),
-            _ => None,
-        }
-    }
-    #[inline]
-    pub fn quant_binding_list(&self) -> Option<QuantBindingList> {
-        match self {
-            QuantBindingsOwner::ChooseExpr(it) => it.quant_binding_list(),
-            QuantBindingsOwner::ExistsExpr(it) => it.quant_binding_list(),
-            QuantBindingsOwner::ForallExpr(it) => it.quant_binding_list(),
-        }
-    }
-    #[inline]
-    pub fn where_expr(&self) -> Option<WhereExpr> {
-        match self {
-            QuantBindingsOwner::ChooseExpr(it) => it.where_expr(),
-            QuantBindingsOwner::ExistsExpr(it) => it.where_expr(),
-            QuantBindingsOwner::ForallExpr(it) => it.where_expr(),
-        }
-    }
-}
-impl AstNode for QuantBindingsOwner {
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, CHOOSE_EXPR | EXISTS_EXPR | FORALL_EXPR) }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        let res = match syntax.kind() {
-            CHOOSE_EXPR => QuantBindingsOwner::ChooseExpr(ChooseExpr { syntax }),
-            EXISTS_EXPR => QuantBindingsOwner::ExistsExpr(ExistsExpr { syntax }),
-            FORALL_EXPR => QuantBindingsOwner::ForallExpr(ForallExpr { syntax }),
-            _ => return None,
-        };
-        Some(res)
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode {
-        match self {
-            QuantBindingsOwner::ChooseExpr(it) => &it.syntax(),
-            QuantBindingsOwner::ExistsExpr(it) => &it.syntax(),
-            QuantBindingsOwner::ForallExpr(it) => &it.syntax(),
-        }
-    }
-}
-impl From<ChooseExpr> for QuantExpr {
-    #[inline]
-    fn from(node: ChooseExpr) -> QuantExpr { QuantExpr::ChooseExpr(node) }
-}
 impl From<ExistsExpr> for QuantExpr {
     #[inline]
     fn from(node: ExistsExpr) -> QuantExpr { QuantExpr::ExistsExpr(node) }
@@ -7893,29 +7791,12 @@ impl From<QuantExpr> for Expr {
     #[inline]
     fn from(node: QuantExpr) -> Expr {
         match node {
-            QuantExpr::ChooseExpr(it) => it.into(),
-            QuantExpr::ExistsExpr(it) => it.into(),
-            QuantExpr::ForallExpr(it) => it.into(),
-        }
-    }
-}
-impl From<QuantExpr> for QuantBindingsOwner {
-    #[inline]
-    fn from(node: QuantExpr) -> QuantBindingsOwner {
-        match node {
-            QuantExpr::ChooseExpr(it) => it.into(),
             QuantExpr::ExistsExpr(it) => it.into(),
             QuantExpr::ForallExpr(it) => it.into(),
         }
     }
 }
 impl QuantExpr {
-    pub fn choose_expr(self) -> Option<ChooseExpr> {
-        match (self) {
-            QuantExpr::ChooseExpr(item) => Some(item),
-            _ => None,
-        }
-    }
     pub fn exists_expr(self) -> Option<ExistsExpr> {
         match (self) {
             QuantExpr::ExistsExpr(item) => Some(item),
@@ -7931,7 +7812,6 @@ impl QuantExpr {
     #[inline]
     pub fn quant_binding_list(&self) -> Option<QuantBindingList> {
         match self {
-            QuantExpr::ChooseExpr(it) => it.quant_binding_list(),
             QuantExpr::ExistsExpr(it) => it.quant_binding_list(),
             QuantExpr::ForallExpr(it) => it.quant_binding_list(),
         }
@@ -7939,19 +7819,24 @@ impl QuantExpr {
     #[inline]
     pub fn where_expr(&self) -> Option<WhereExpr> {
         match self {
-            QuantExpr::ChooseExpr(it) => it.where_expr(),
             QuantExpr::ExistsExpr(it) => it.where_expr(),
             QuantExpr::ForallExpr(it) => it.where_expr(),
+        }
+    }
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> {
+        match self {
+            QuantExpr::ExistsExpr(it) => it.expr(),
+            QuantExpr::ForallExpr(it) => it.expr(),
         }
     }
 }
 impl AstNode for QuantExpr {
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, CHOOSE_EXPR | EXISTS_EXPR | FORALL_EXPR) }
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, EXISTS_EXPR | FORALL_EXPR) }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
-            CHOOSE_EXPR => QuantExpr::ChooseExpr(ChooseExpr { syntax }),
             EXISTS_EXPR => QuantExpr::ExistsExpr(ExistsExpr { syntax }),
             FORALL_EXPR => QuantExpr::ForallExpr(ForallExpr { syntax }),
             _ => return None,
@@ -7961,7 +7846,6 @@ impl AstNode for QuantExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
-            QuantExpr::ChooseExpr(it) => &it.syntax(),
             QuantExpr::ExistsExpr(it) => &it.syntax(),
             QuantExpr::ForallExpr(it) => &it.syntax(),
         }
@@ -9146,11 +9030,6 @@ impl std::fmt::Display for NamedElement {
     }
 }
 impl std::fmt::Display for Pat {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self.syntax(), f)
-    }
-}
-impl std::fmt::Display for QuantBindingsOwner {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

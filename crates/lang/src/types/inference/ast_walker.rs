@@ -424,7 +424,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
             ast::Expr::ForallExpr(it) => self.infer_quant_expr(&it.clone().into()).unwrap_or(Ty::Bool),
             ast::Expr::ExistsExpr(it) => self.infer_quant_expr(&it.clone().into()).unwrap_or(Ty::Bool),
-            ast::Expr::ChooseExpr(it) => self.infer_quant_expr(&it.clone().into()).unwrap_or(Ty::Bool),
+            ast::Expr::ChooseExpr(it) => self.infer_choose_expr(&it),
 
             ast::Expr::SpecBlockExpr(it) => {
                 if let Some(block_expr) = it.block_expr() {

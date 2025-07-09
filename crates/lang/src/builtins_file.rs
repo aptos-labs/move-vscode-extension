@@ -47,7 +47,7 @@ pub const BUILTINS_FILE: &str = r#"
         spec native fun len<T>(t: vector<T>): num;
         spec native fun contains<T>(v: vector<T>, e: T): bool;
         spec native fun index_of<T>(v: vector<T>, e: T): num;
-        spec native fun range<T>(v: vector<T>): range;
+        spec native fun range<T>(v: vector<T>): range<T>;
         spec native fun update<T>(v: vector<T>, i: num, t: T): vector<T>;
         spec native fun in_range<T>(v: vector<T>, i: num): bool;
 
