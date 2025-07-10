@@ -24,7 +24,6 @@ type PackageEntriesWithErrors = HashMap<ManifestPath, anyhow::Result<PackageEntr
 
 pub fn load_aptos_packages(manifests: Vec<DiscoveredManifest>) -> Vec<anyhow::Result<AptosPackage>> {
     let mut visited_package_roots = HashSet::new();
-    let mut visited_package_names = HashSet::new();
     let mut dedup = vec![];
     for manifest in manifests {
         let manifest_path = ManifestPath::new(manifest.move_toml_file.to_path_buf());
@@ -36,14 +35,6 @@ pub fn load_aptos_packages(manifests: Vec<DiscoveredManifest>) -> Vec<anyhow::Re
                     continue;
                 }
                 visited_package_roots.insert(package.content_root.clone());
-                // dedup based on package name
-                let package_name = package.package_name.clone();
-                if let Some(package_name) = package_name {
-                    if visited_package_names.contains(&package_name) {
-                        continue;
-                    }
-                    visited_package_names.insert(package_name);
-                }
             }
             dedup.push(package);
         }
@@ -94,12 +85,14 @@ fn load_reachable_aptos_packages(
                 visited_manifests.insert(manifest.clone());
 
                 let mut visited_transitive_manifests = HashSet::new();
+                let mut visited_dep_names = HashSet::new();
                 for dep in deps {
                     collect_transitive_deps(
                         dep.clone(),
                         &mut transitive_deps,
                         &valid_package_entries,
                         &mut visited_transitive_manifests,
+                        &mut visited_dep_names,
                     );
                 }
                 packages.push(Ok(AptosPackage::new(
@@ -121,19 +114,44 @@ fn collect_transitive_deps(
     transitive_deps: &mut Vec<(ManifestPath, PackageKind)>,
     package_entries: &HashMap<ManifestPath, PackageEntry>,
     visited_manifests: &mut HashSet<ManifestPath>,
+    visited_dep_names: &mut HashSet<String>,
 ) {
     if visited_manifests.contains(&current_dep.0) {
         return;
     }
     visited_manifests.insert(current_dep.0.clone());
 
-    transitive_deps.push(current_dep.clone());
-    let Some(PackageEntry { deps, .. }) = package_entries.get(&current_dep.0) else {
-        tracing::error!("cannot collect deps due to aptos package loading error");
-        return;
-    };
-    for dep in deps {
-        collect_transitive_deps(dep.clone(), transitive_deps, package_entries, visited_manifests);
+    match package_entries.get(&current_dep.0) {
+        Some(PackageEntry {
+            package_name: dep_package_name,
+            deps,
+            ..
+        }) => {
+            if let Some(dep_package_name) = dep_package_name {
+                if visited_dep_names.contains(dep_package_name) {
+                    return;
+                }
+                visited_dep_names.insert(dep_package_name.clone());
+            }
+            transitive_deps.push(current_dep.clone());
+            for dep in deps {
+                collect_transitive_deps(
+                    dep.clone(),
+                    transitive_deps,
+                    package_entries,
+                    visited_manifests,
+                    visited_dep_names,
+                );
+            }
+        }
+        None => {
+            tracing::error!(
+                "cannot collect deps due to invalid Move.toml file: {}",
+                current_dep.0
+            );
+            transitive_deps.push(current_dep.clone());
+            return;
+        }
     }
 }
 
