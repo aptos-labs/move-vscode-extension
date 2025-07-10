@@ -13,11 +13,9 @@ use paths::AbsPathBuf;
 use std::collections::{HashMap, HashSet};
 use std::fs;
 
-// #[derive(Debug, Clone)]
-// pub struct PackageEntry(pub PackageKind, pub Vec<(ManifestPath, PackageKind)>);
-
 #[derive(Debug, Clone)]
 pub struct PackageEntry {
+    package_name: Option<String>,
     kind: PackageKind,
     deps: Vec<(ManifestPath, PackageKind)>,
 }
@@ -26,16 +24,26 @@ type PackageEntriesWithErrors = HashMap<ManifestPath, anyhow::Result<PackageEntr
 
 pub fn load_aptos_packages(manifests: Vec<DiscoveredManifest>) -> Vec<anyhow::Result<AptosPackage>> {
     let mut visited_package_roots = HashSet::new();
+    let mut visited_package_names = HashSet::new();
     let mut dedup = vec![];
     for manifest in manifests {
         let manifest_path = ManifestPath::new(manifest.move_toml_file.to_path_buf());
         let packages = load_reachable_aptos_packages(&manifest_path, manifest.resolve_deps);
         for package in packages {
             if let Ok(package) = &package {
+                // dedup based on package root
                 if visited_package_roots.contains(&package.content_root) {
                     continue;
                 }
                 visited_package_roots.insert(package.content_root.clone());
+                // dedup based on package name
+                let package_name = package.package_name.clone();
+                if let Some(package_name) = package_name {
+                    if visited_package_names.contains(&package_name) {
+                        continue;
+                    }
+                    visited_package_names.insert(package_name);
+                }
             }
             dedup.push(package);
         }
@@ -57,8 +65,10 @@ fn load_reachable_aptos_packages(
         resolve_deps,
     );
 
-    let entries = package_entries_with_errors
+    let valid_package_entries = package_entries_with_errors
         .iter()
+        // error means that Move.toml is incorrect
+        // todo: notification?
         .filter_map(|(k, entry)| {
             if !entry.is_ok() {
                 return None;
@@ -74,7 +84,11 @@ fn load_reachable_aptos_packages(
             Err(err) => {
                 packages.push(Err(err));
             }
-            Ok(PackageEntry { kind, deps }) => {
+            Ok(PackageEntry {
+                package_name: name,
+                kind,
+                deps,
+            }) => {
                 let mut transitive_deps = vec![];
                 let mut visited_manifests = HashSet::new();
                 visited_manifests.insert(manifest.clone());
@@ -84,11 +98,12 @@ fn load_reachable_aptos_packages(
                     collect_transitive_deps(
                         dep.clone(),
                         &mut transitive_deps,
-                        &entries,
+                        &valid_package_entries,
                         &mut visited_transitive_manifests,
                     );
                 }
                 packages.push(Ok(AptosPackage::new(
+                    name,
                     &manifest,
                     kind,
                     transitive_deps,
@@ -124,7 +139,7 @@ fn collect_transitive_deps(
 
 /// reads package and dependencies, collect all (Root, Vec<Root>, SourcedFrom) for all the reachable packages
 fn load_package_entries(
-    entries: &mut PackageEntriesWithErrors,
+    package_entries: &mut PackageEntriesWithErrors,
     manifest_path: ManifestPath,
     kind: PackageKind,
     visited_manifests: &mut HashSet<ManifestPath>,
@@ -135,39 +150,39 @@ fn load_package_entries(
     }
     visited_manifests.insert(manifest_path.clone());
 
-    if resolve_deps {
-        match read_dependencies(&manifest_path, kind) {
-            Ok(dep_manifests) => {
-                entries.insert(
-                    manifest_path,
-                    Ok(PackageEntry {
-                        kind,
-                        deps: dep_manifests.clone(),
-                    }),
-                );
-                for (dep_manifest, dep_kind) in dep_manifests.clone() {
-                    load_package_entries(entries, dep_manifest, dep_kind, visited_manifests, true);
-                }
-            }
-            Err(err) => {
-                entries.insert(manifest_path, Err(err));
+    match read_manifest_from_fs(&manifest_path) {
+        Ok(move_toml) => {
+            let package_name = move_toml.package.as_ref().and_then(|it| it.name.clone());
+            let dep_manifests = if resolve_deps {
+                read_dependencies(manifest_path.content_root(), &move_toml, kind)
+            } else {
+                vec![]
+            };
+            package_entries.insert(
+                manifest_path,
+                Ok(PackageEntry {
+                    package_name,
+                    kind,
+                    deps: dep_manifests.clone(),
+                }),
+            );
+            for (dep_manifest, dep_kind) in dep_manifests.clone() {
+                load_package_entries(package_entries, dep_manifest, dep_kind, visited_manifests, true);
             }
         }
-    } else {
-        entries.insert(manifest_path, Ok(PackageEntry { kind, deps: vec![] }));
+        Err(manifest_parse_error) => {
+            package_entries.insert(manifest_path, Err(manifest_parse_error));
+        }
     }
 }
 
 /// goes into dependencies and loads them too
 fn read_dependencies(
-    manifest_path: &ManifestPath,
+    package_root: AbsPathBuf,
+    move_toml: &MoveToml,
     outer_kind: PackageKind,
-) -> anyhow::Result<Vec<(ManifestPath, PackageKind)>> {
-    let move_toml = read_manifest_from_fs(&manifest_path)?;
-
+) -> Vec<(ManifestPath, PackageKind)> {
     let mut dep_manifests = vec![];
-    let package_root = manifest_path.content_root();
-
     for toml_dep in move_toml.dependencies.clone() {
         if let Some(dep_root) = toml_dep.dep_root(&package_root) {
             let Some(move_toml_path) = find_move_toml_at(dep_root) else {
@@ -190,7 +205,7 @@ fn read_dependencies(
         }
     }
 
-    Ok(dep_manifests)
+    dep_manifests
 }
 
 fn find_move_toml_at(dep_root: AbsPathBuf) -> Option<AbsPathBuf> {

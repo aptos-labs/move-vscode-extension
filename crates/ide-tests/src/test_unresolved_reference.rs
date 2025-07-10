@@ -821,7 +821,7 @@ fn test_shorthand_with_struct_lit_field_and_schema_field() {
 }
 
 #[test]
-fn test_unresolved_reference_from_two_different_aptos_frameworks() {
+fn test_if_there_s_two_different_stdlibs_they_are_deduplicated_based_on_package_name() {
     let test_packages = vec![
         raw(
             "Std",
@@ -885,10 +885,8 @@ module std::main {
         expect![[r#"
             module std::main {
                 use std::vector::new;/*caret*/
-                       //^^^^^^ err: Unresolved reference `vector`: resolved to multiple elements from different packages. You have duplicate dependencies in your package manifest.
                 fun main() {
                     new();
-                  //^^^ err: Unresolved reference `new`: cannot resolve
                 }
             }
         "#]],

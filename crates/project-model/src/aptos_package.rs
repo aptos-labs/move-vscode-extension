@@ -46,6 +46,7 @@ pub enum PackageKind {
 
 #[derive(Clone, Eq, PartialEq)]
 pub struct AptosPackage {
+    pub package_name: Option<String>,
     content_root: AbsPathBuf,
     kind: PackageKind,
     transitive_dep_roots: Vec<(AbsPathBuf, PackageKind)>,
@@ -65,12 +66,14 @@ impl fmt::Debug for AptosPackage {
 
 impl AptosPackage {
     pub fn new(
+        package_name: Option<String>,
         manifest_path: &ManifestPath,
         kind: PackageKind,
         dep_roots: Vec<(ManifestPath, PackageKind)>,
         resolve_deps: bool,
     ) -> Self {
         AptosPackage {
+            package_name,
             content_root: manifest_path.content_root(),
             kind,
             transitive_dep_roots: dep_roots
