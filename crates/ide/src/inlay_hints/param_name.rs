@@ -42,7 +42,7 @@ pub(super) fn hints(
                     text_edit: None,
                     position: InlayHintPosition::Before,
                     pad_left: false,
-                    pad_right: true,
+                    pad_right: false,
                     resolve_parent: None,
                 });
             }

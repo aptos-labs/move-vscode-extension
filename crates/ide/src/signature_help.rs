@@ -164,7 +164,7 @@ fn signature_help_for_struct_lit(
             format_to!(
                 field_text,
                 ": {}",
-                sema.render_ty_truncated(&sema.lower_type(field_type, msl), file_id)
+                sema.render_ty_for_ui(&sema.lower_type(field_type, msl), file_id)
             );
         }
         res.push_param(&field_text);
@@ -211,7 +211,7 @@ fn signature_help_for_call(
             "{}",
             callable_param
                 .ty
-                .map(|it| sema.render_ty_truncated(&it, callable.file_id()))
+                .map(|it| sema.render_ty_for_ui(&it, callable.file_id()))
                 .unwrap_or_default()
         );
         res.push_param(&p);
