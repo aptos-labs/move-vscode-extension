@@ -139,20 +139,20 @@ fn generate_struct(buf: &mut String, struct_: ast::Struct) -> Option<()> {
 
 fn generate_field_list(buf: &mut String, field_list: ast::FieldList, verbose: bool) -> Option<()> {
     match field_list {
-        ast::FieldList::NamedFieldList(named_field_list) => {
-            if !verbose {
-                format_to!(buf, " {{ ... }}");
-            } else {
-                separated_list(
-                    buf,
-                    named_field_list.fields().collect(),
-                    " {",
-                    "}",
-                    ",",
-                    true,
-                    generate_field,
-                );
-            }
+        ast::FieldList::NamedFieldList(_) => {
+            format_to!(buf, " {{ ... }}");
+            // if !verbose {
+            // } else {
+            //     separated_list(
+            //         buf,
+            //         named_field_list.fields().collect(),
+            //         " {",
+            //         "}",
+            //         ",",
+            //         true,
+            //         generate_field,
+            //     );
+            // }
         }
         ast::FieldList::TupleFieldList(tuple_field_list) => {
             if !verbose {
@@ -183,7 +183,9 @@ fn generate_enum_variant(variant: ast::Variant, buf: &mut String, verbose: bool)
     format_to!(buf, "{}", variant.name()?.as_string());
 
     let field_list = variant.field_list()?;
-    generate_field_list(buf, field_list, verbose)
+    generate_field_list(buf, field_list, verbose);
+
+    Some(())
 }
 
 fn generate_ident_pat(
