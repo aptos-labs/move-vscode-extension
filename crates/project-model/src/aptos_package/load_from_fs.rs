@@ -24,16 +24,26 @@ type PackageEntriesWithErrors = HashMap<ManifestPath, anyhow::Result<PackageEntr
 
 pub fn load_aptos_packages(manifests: Vec<DiscoveredManifest>) -> Vec<anyhow::Result<AptosPackage>> {
     let mut visited_package_roots = HashSet::new();
+    let mut visited_package_names = HashSet::new();
     let mut dedup = vec![];
     for manifest in manifests {
         let manifest_path = ManifestPath::new(manifest.move_toml_file.to_path_buf());
         let packages = load_reachable_aptos_packages(&manifest_path, manifest.resolve_deps);
         for package in packages {
             if let Ok(package) = &package {
+                // dedup based on package root
                 if visited_package_roots.contains(&package.content_root) {
                     continue;
                 }
                 visited_package_roots.insert(package.content_root.clone());
+                // dedup based on package name
+                let package_name = package.package_name.clone();
+                if let Some(package_name) = package_name {
+                    if visited_package_names.contains(&package_name) {
+                        continue;
+                    }
+                    visited_package_names.insert(package_name);
+                }
             }
             dedup.push(package);
         }
@@ -55,8 +65,10 @@ fn load_reachable_aptos_packages(
         resolve_deps,
     );
 
-    let entries = package_entries_with_errors
+    let valid_package_entries = package_entries_with_errors
         .iter()
+        // error means that Move.toml is incorrect
+        // todo: notification?
         .filter_map(|(k, entry)| {
             if !entry.is_ok() {
                 return None;
@@ -86,7 +98,7 @@ fn load_reachable_aptos_packages(
                     collect_transitive_deps(
                         dep.clone(),
                         &mut transitive_deps,
-                        &entries,
+                        &valid_package_entries,
                         &mut visited_transitive_manifests,
                     );
                 }
