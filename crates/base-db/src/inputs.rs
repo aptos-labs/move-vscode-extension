@@ -52,14 +52,13 @@ pub struct PackageRootInput {
 
 #[derive(Clone, Eq, PartialEq)]
 pub struct PackageMetadata {
-    // todo: add package name
+    pub package_name: Option<String>,
     pub dep_manifest_ids: Arc<Vec<ManifestFileId>>,
     pub resolve_deps: bool,
 }
 
 #[salsa::input]
 pub struct PackageMetadataInput {
-    // todo: add package name
     pub metadata: PackageMetadata,
 }
 

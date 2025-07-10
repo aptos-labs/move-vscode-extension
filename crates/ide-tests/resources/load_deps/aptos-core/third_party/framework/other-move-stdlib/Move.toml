@@ -1,4 +1,5 @@
 [package]
 name = "OtherMoveStdlib"
 
-[invalid] toml
+[dependencies]
+MoveStdlib = { local = "../framework" }

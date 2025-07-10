@@ -8,17 +8,20 @@ use paths::{AbsPathBuf, Utf8PathBuf};
 use serde_derive::Deserialize;
 use std::collections::HashMap;
 
-#[derive(Default, Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct MoveToml {
     pub contents: String,
-    package: Option<Package>,
+    pub package: Option<Package>,
     pub dependencies: Vec<MoveTomlDependency>,
 }
 
 impl MoveToml {
     pub fn from_str(file_contents: &str) -> anyhow::Result<Self> {
-        let mut move_toml = MoveToml::default();
-        move_toml.contents = file_contents.to_string();
+        let mut move_toml = MoveToml {
+            contents: file_contents.to_string(),
+            package: None,
+            dependencies: vec![],
+        };
 
         let deserialized = toml::from_str::<HashMap<String, toml::Value>>(file_contents)?;
         if let Some(package_table) = deserialized.get("package") {
@@ -140,8 +143,8 @@ impl MoveTomlDependency {
 
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
 pub struct Package {
-    name: Option<String>,
-    version: Option<String>,
+    pub name: Option<String>,
+    pub version: Option<String>,
 }
 
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq)]
