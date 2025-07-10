@@ -20,7 +20,8 @@ import { spawn } from "node:child_process";
 // only those are in use. We use "Empty" to represent these scenarios
 // (r-a still somewhat works with Live Share, because commands are tunneled to the host)
 
-const MOVEFMT_REQUIRED_VERSION = "1.2.1";
+// note: required version is >1.2.1, and 1.2.4 is just latest at this time
+const MOVEFMT_REQUIRED_VERSION = "1.2.4";
 
 export type Workspace =
     | { kind: "Empty" }
