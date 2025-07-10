@@ -46,9 +46,7 @@ module 0x1::m {
             ```move
             0x1::m
 
-            struct S has key {
-                val: u8
-            }
+            struct S has key { ... }
             ```
             ---
             struct docs
@@ -197,9 +195,7 @@ module 0x1::m {
             ```move
             0x1::m::S
 
-            variant One {
-                val: u8
-            }
+            variant One { ... }
             ```
             ---
             my enum variant
