@@ -77,7 +77,7 @@ fn test_inlay_parameter_hints_for_literals_on_lambda() {
         module 0x1::m {
             fun main() {
                 let lambda:  = |a: u8, b: u8| a + b;
-                  //^^^^^^^ |u8, u8| -> <unknown>
+                  //^^^^^^^ |u8, u8| -> ?
                 lambda(
                     1,
                   //^ a

@@ -176,19 +176,19 @@ impl<'db> SemanticsImpl<'db> {
         ty.render(self.db, None)
     }
 
-    pub fn render_ty_truncated(&self, ty: &Ty, context_file_id: FileId) -> String {
+    pub fn render_ty_for_ui(&self, ty: &Ty, context_file_id: FileId) -> String {
         let mut out = String::new();
-        ty.render_to(self.db, Some(context_file_id), &mut out).unwrap();
+        ty.render_to_ui(self.db, Some(context_file_id), &mut out).unwrap();
         out
     }
 
-    pub fn render_ty_truncated_to(
+    pub fn render_ty_for_ui_to(
         &self,
         ty: &Ty,
         context_file_id: FileId,
         write_to: &mut dyn HirWrite,
     ) -> anyhow::Result<()> {
-        ty.render_to(self.db, Some(context_file_id), write_to)
+        ty.render_to_ui(self.db, Some(context_file_id), write_to)
     }
 
     pub fn render_ty_expected_form(&self, ty: &Ty) -> String {

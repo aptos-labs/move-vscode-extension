@@ -92,7 +92,7 @@ fn render_params(
 }
 
 pub(crate) fn render_ty(ctx: &CompletionContext<'_>, ty: &Ty) -> String {
-    ctx.sema.render_ty_truncated(ty, ctx.position.file_id)
+    ctx.sema.render_ty_for_ui(ty, ctx.position.file_id)
 }
 
 pub(crate) enum FunctionKind {

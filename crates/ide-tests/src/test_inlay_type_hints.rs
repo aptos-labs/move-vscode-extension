@@ -170,3 +170,28 @@ fn test_do_not_show_inlay_hint_for_underscored_params() {
         }
     "#]]);
 }
+
+#[test]
+fn test_inlay_hint_for_uninferred_vec() {
+    // language=Move
+    check_inlay_hints(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                let v = vector[];
+                  //^ vector<?>
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_inlay_hint_if_type_is_uninferred() {
+    // language=Move
+    check_inlay_hints(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                let v = unknown;
+            }
+        }
+    "#]]);
+}

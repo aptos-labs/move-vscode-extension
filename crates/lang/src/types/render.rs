@@ -36,6 +36,10 @@ pub struct TypeRenderer<'db> {
     db: &'db dyn SourceDatabase,
     current_file_id: Option<FileId>,
     sink: &'db mut dyn HirWrite,
+
+    unknown: &'db str,
+    never: &'db str,
+    unresolved: &'db str,
 }
 
 impl<'db> TypeRenderer<'db> {
@@ -43,11 +47,17 @@ impl<'db> TypeRenderer<'db> {
         db: &'db dyn SourceDatabase,
         context: Option<FileId>,
         sink: &'db mut dyn HirWrite,
+        unknown: &'db str,
+        never: &'db str,
+        unresolved: &'db str,
     ) -> Self {
         TypeRenderer {
             db,
             current_file_id: context,
             sink,
+            unknown,
+            never,
+            unresolved,
         }
     }
 
@@ -91,8 +101,8 @@ impl<'db> TypeRenderer<'db> {
             Ty::Bv => self.write_str("bv")?,
 
             Ty::Unit => self.write_str("()")?,
-            Ty::Unknown => self.sink.write_str(UNKNOWN)?,
-            Ty::Never => self.write_str(NEVER)?,
+            Ty::Unknown => self.sink.write_str(self.unknown)?,
+            Ty::Never => self.write_str(self.never)?,
         }
         Ok(())
     }
@@ -166,7 +176,7 @@ impl<'db> TypeRenderer<'db> {
 
     fn render_fq_name(&mut self, item: InFile<ast::NamedElement>) -> anyhow::Result<()> {
         let Some(fq_name) = item.fq_name(self.db) else {
-            self.write_str(UNRESOLVED)?;
+            self.write_str(self.unresolved)?;
             return Ok(());
         };
 
@@ -204,14 +214,6 @@ impl<'db> TypeRenderer<'db> {
             .to_ast::<ast::TypeParam>(self.db)
             .and_then(|tp| tp.value.name())
             .map(|tp_name| tp_name.as_string())
-            .unwrap_or(unresolved())
+            .unwrap_or(self.unresolved.to_string())
     }
-}
-
-const UNKNOWN: &str = "<unknown>";
-const NEVER: &str = "<never>";
-const UNRESOLVED: &str = "<anonymous>";
-
-fn unresolved() -> String {
-    UNRESOLVED.to_string()
 }

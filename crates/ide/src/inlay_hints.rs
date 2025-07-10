@@ -501,8 +501,7 @@ fn label_of_ty(
         result: InlayHintLabel::default(),
         client_can_lazy_resolve: config.fields_to_resolve.resolve_label_location,
     };
-    sema.render_ty_truncated_to(ty, file_id, &mut label_builder)
-        .ok()?;
+    sema.render_ty_for_ui_to(ty, file_id, &mut label_builder).ok()?;
     // label_builder
     //     .write_str(&sema.render_ty_truncated(ty, file_id))
     //     .unwrap();
