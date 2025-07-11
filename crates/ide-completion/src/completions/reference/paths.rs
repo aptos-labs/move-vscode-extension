@@ -17,10 +17,12 @@ use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variant
 use lang::nameres::scope::ScopeEntryListExt;
 use lang::nameres::{labels, path_kind};
 use std::cell::RefCell;
+use std::collections::HashSet;
 use syntax::SyntaxKind::*;
 use syntax::ast::idents::PRIMITIVE_TYPES;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, T, algo, ast};
 
@@ -38,6 +40,7 @@ pub(crate) fn add_path_completions(
     }
 
     let acc = &mut completions.borrow_mut();
+
     if let Some(completion_items) = add_completions_from_the_resolution_entries(ctx, &path_ctx) {
         acc.add_all(completion_items);
     }
@@ -92,7 +95,6 @@ fn add_completions_from_the_resolution_entries(
             if matches!(fake_path_kind, path_kind::PathKind::FieldShorthand { .. }) {
                 return None;
             }
-            // return None;
             fake_path_kind
         }
     };
@@ -116,9 +118,19 @@ fn add_completions_from_the_resolution_entries(
         start_at: original_start_at.clone(),
         is_completion: true,
     };
-    let entries = get_path_resolve_variants(ctx.db, &resolution_ctx, path_kind.clone())
+    let mut entries = get_path_resolve_variants(ctx.db, &resolution_ctx, path_kind.clone())
         .filter_by_visibility(ctx.db, &original_start_at.clone());
     tracing::debug!(completion_item_entries = ?entries);
+
+    // remove already present items in use group
+    if let Some(use_group) = path_ctx.original_use_group(&original_file) {
+        let speck_names = use_group
+            .use_specks()
+            .filter(|it| !it.syntax().text_range().contains_inclusive(ctx.original_offset()))
+            .filter_map(|it| it.path_name())
+            .collect::<HashSet<_>>();
+        entries.retain(|it| !speck_names.contains(&it.name));
+    }
 
     let mut completion_items = vec![];
     for entry in entries {
@@ -232,18 +244,35 @@ pub(crate) struct PathCompletionCtx {
 impl PathCompletionCtx {
     pub fn original_qualifier(&self, original_file: &ast::SourceFile) -> Option<ast::Path> {
         let fake_qualifier = self.fake_path.qualifier()?;
-        algo::find_node_at_offset::<ast::Path>(
-            original_file.syntax(),
-            fake_qualifier.syntax().text_range().start(),
-        )
+        self.find_original_node(original_file, fake_qualifier)
     }
 
     pub fn has_any_parens(&self) -> bool {
         self.has_call_parens || self.has_type_args
     }
 
+    pub fn original_use_group(&self, original_file: &ast::SourceFile) -> Option<ast::UseGroup> {
+        if !self.is_use_stmt() {
+            return None;
+        }
+        let fake_use_speck = self.fake_path.root_parent_of_type::<ast::UseSpeck>()?;
+        let fake_use_group = fake_use_speck.syntax().parent_of_type::<ast::UseGroup>()?;
+        self.find_original_node(original_file, fake_use_group)
+    }
+
     pub fn is_use_stmt(&self) -> bool {
         self.path_kind == PathKind::Use
+    }
+
+    fn find_original_node<Node: AstNode>(
+        &self,
+        original_file: &ast::SourceFile,
+        fake_node: Node,
+    ) -> Option<Node> {
+        algo::find_node_at_offset::<Node>(
+            original_file.syntax(),
+            fake_node.syntax().text_range().start(),
+        )
     }
 }
 

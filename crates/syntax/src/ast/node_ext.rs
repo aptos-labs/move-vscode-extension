@@ -80,6 +80,7 @@ mod tuple_struct_pat;
 pub mod type_;
 mod type_arg_list;
 mod type_param;
+mod use_speck;
 mod value_arg_list;
 mod vector_lit_expr;
 pub mod visibility;

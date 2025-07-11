@@ -1172,3 +1172,23 @@ module std::main {
     "#,
     );
 }
+
+#[test]
+fn test_items_already_present_in_the_use_group_not_in_completion() {
+    check_completions(
+        // language=Move
+        r#"
+module std::table {
+    public fun fun_1(): u8 {}
+    public fun fun_2(): u8 {}
+}
+module std::main {
+    use std::table::{fun_1, fu/*caret*/};
+}
+    "#,
+        expect![[r#"
+            [
+                "fun_2() -> u8",
+            ]"#]],
+    );
+}
