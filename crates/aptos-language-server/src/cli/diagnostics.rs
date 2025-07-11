@@ -190,17 +190,13 @@ impl Diagnostics {
                     }
 
                     let mut diagnostics_config = DiagnosticsConfig::test_sample();
+                    diagnostics_config.disabled = disabled_codes.clone().into_iter().collect();
                     if self.fix || !metadata.resolve_deps {
                         diagnostics_config = diagnostics_config.for_assists();
                     }
 
-                    let diagnostics = find_diagnostics_for_a_file(
-                        &db,
-                        file_id,
-                        &diag_kinds,
-                        &diagnostics_config,
-                        &disabled_codes,
-                    );
+                    let diagnostics =
+                        find_diagnostics_for_a_file(&db, file_id, &diag_kinds, &diagnostics_config);
 
                     let file_text = db.file_text(file_id).text(&db);
                     if !self.fix {
@@ -245,7 +241,6 @@ impl Diagnostics {
                                 file_id,
                                 &diag_kinds,
                                 &diagnostics_config,
-                                &disabled_codes,
                             );
                         }
                     }
@@ -276,7 +271,6 @@ fn find_diagnostics_for_a_file(
     file_id: FileId,
     diag_kinds: &Option<Vec<Severity>>,
     config: &DiagnosticsConfig,
-    disabled_codes: &Vec<String>,
 ) -> Vec<Diagnostic> {
     let analysis = Analysis::new(db.snapshot());
     let mut diagnostics = analysis
@@ -289,9 +283,6 @@ fn find_diagnostics_for_a_file(
             .collect();
     }
     diagnostics
-        .into_iter()
-        .filter(|diag| !disabled_codes.contains(&diag.code.as_str().to_string()))
-        .collect()
 }
 
 fn apply_first_fix(
