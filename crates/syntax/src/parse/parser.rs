@@ -52,7 +52,8 @@ impl Parser {
     }
 
     pub(crate) fn should_stop(&self, stop_at: &RecoverySet) -> bool {
-        stop_at.contains(self.current())
+        // stop_at.contains_current(self)
+        stop_at.token_set_contains(self.current())
     }
 
     pub(crate) fn at_same_pos_as(&self, last_pos: Option<usize>) -> bool {
@@ -123,6 +124,10 @@ impl Parser {
         self.token_source.current_text()
     }
 
+    pub(crate) fn nth_text(&self, n: usize) -> &str {
+        self.token_source.nth_text(n)
+    }
+
     /// How much whitespaces are skipped from prev to curr
     pub(crate) fn prev_ws_at(&self, n: usize) -> usize {
         let nth = self.token_source.curr_pos() + n;
@@ -174,7 +179,16 @@ impl Parser {
 
     pub(crate) fn nth_at_rset(&self, n: usize, rs: RecoverySet) -> bool {
         let nth_kind = self.nth(n);
-        rs.contains(nth_kind)
+        match nth_kind {
+            T![ident] => {
+                if rs.token_set_contains(T![ident]) {
+                    return true;
+                }
+                let text = self.nth_text(n);
+                rs.keywords.contains(text)
+            }
+            _ => rs.token_set_contains(nth_kind),
+        }
     }
 
     pub(crate) fn nth_at(&self, n: usize, kind: SyntaxKind) -> bool {

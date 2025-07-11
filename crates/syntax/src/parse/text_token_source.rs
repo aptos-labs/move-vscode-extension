@@ -110,15 +110,24 @@ impl TextTokenSource {
     }
 
     pub(crate) fn current_text(&self) -> &str {
-        self.raw_tokens_with_offsets
-            .get(self.curr.1)
-            .map(|(token, offset)| &self.text[TextRange::at(*offset, token.len)])
-            .unwrap_or_default()
+        self.nth_text(0)
+        // self.raw_tokens_with_offsets
+        //     .get(self.curr.1)
+        //     .map(|(token, offset)| &self.text[TextRange::at(*offset, token.len)])
+        //     .unwrap_or_default()
     }
 
     pub(crate) fn next_text(&self) -> &str {
+        self.nth_text(1)
+        // self.raw_tokens_with_offsets
+        //     .get(self.curr.1 + 1)
+        //     .map(|(token, offset)| &self.text[TextRange::at(*offset, token.len)])
+        //     .unwrap_or_default()
+    }
+
+    pub(crate) fn nth_text(&self, n: usize) -> &str {
         self.raw_tokens_with_offsets
-            .get(self.curr.1 + 1)
+            .get(self.curr.1 + n)
             .map(|(token, offset)| &self.text[TextRange::at(*offset, token.len)])
             .unwrap_or_default()
     }

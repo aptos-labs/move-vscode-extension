@@ -28,7 +28,7 @@ pub(crate) fn delimited_with_recovery(
         .without_recovery_token(delimiter.into());
     let at_list_end = |p: &Parser| p.at_ts(list_end_ts);
 
-    let outer_recovery_on_delimiter = outer_recovery_set.contains(delimiter);
+    let outer_recovery_on_delimiter = outer_recovery_set.token_set_contains(delimiter);
 
     let mut is_empty = true;
     while !p.at(EOF) && !at_list_end(p) {
