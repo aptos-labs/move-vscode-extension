@@ -117,6 +117,9 @@ pub fn semantic_diagnostics(
                 ast::TupleStructPat(it) => {
                     handlers::missing_fields::missing_fields_in_tuple_struct_pat(&mut acc, &ctx, it.in_file(file_id));
                 },
+                ast::CastExpr(it) => {
+                    handlers::redundant_integer_cast(&mut acc, &ctx, it.in_file(file_id));
+                },
                 _ => (),
             }
         }
