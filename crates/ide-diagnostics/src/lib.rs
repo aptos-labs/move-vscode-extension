@@ -32,10 +32,14 @@ struct DiagnosticsContext<'a> {
 /// Request parser level diagnostics for the given [`FileId`].
 pub fn syntax_diagnostics(
     db: &RootDatabase,
-    _config: &DiagnosticsConfig,
+    config: &DiagnosticsConfig,
     file_id: FileId,
 ) -> Vec<Diagnostic> {
     let _p = tracing::info_span!("syntax_diagnostics").entered();
+
+    if config.disabled.contains("syntax-error") {
+        return Vec::new();
+    }
 
     // [#3434] Only take first 128 errors to prevent slowing down editor/ide, the number 128 is chosen arbitrarily.
     source_db::parse_errors(db, file_id.intern(db))
@@ -124,6 +128,8 @@ pub fn semantic_diagnostics(
             }
         }
     }
+
+    acc.retain(|d| !ctx.config.disabled.contains(d.code.as_str()));
 
     acc
 }

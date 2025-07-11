@@ -95,20 +95,6 @@ To disable those, use:
 }
 ```
 
-### Diagnostics
-
-If there's any issue with missing go-to-definition, the "unresolved reference" diagnostic could be helpful:
-
-```
-    "move-on-aptos.diagnostics.enableUnresolvedReference": true
-```
-
-Same for type checking:
-
-```
-    "move-on-aptos.diagnostics.enableTypeChecking": true
-```
-
 ### Formatting (works with `movefmt` >= 1.2.1)
 
 Specify a path to the `movefmt` executable and extra args (like a `--config-path`) if necessary:

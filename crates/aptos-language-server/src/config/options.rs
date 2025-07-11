@@ -10,6 +10,7 @@ use crate::config::FilesWatcherDef;
 use camino::Utf8PathBuf;
 use macros::{config_data, default_str, default_val, impl_for_config_data};
 use serde::de::DeserializeOwned;
+use std::collections::HashSet;
 use std::iter;
 use stdx::format_to_acc;
 use stdx::itertools::Itertools;
@@ -32,14 +33,10 @@ config_data! {
         /// Automatically refresh project info on `Move.toml` changes.
         aptos_autoreload: bool           = true,
 
+        /// List of aptos-language-server diagnostics to disable.
+        diagnostics_disabled: HashSet<String> = HashSet::default(),
         /// Whether to show native aptos-language-server diagnostics.
         diagnostics_enable: bool                = true,
-
-        /// Whether to show "Unresolved reference" diagnostic.
-        diagnostics_enableUnresolvedReference: bool                = true,
-
-        /// Whether to show "Type Checking" diagnostic.
-        diagnostics_enableTypeChecking: bool                = true,
 
         /// These paths (file/directories) will be ignored by aptos-language-server. They are
         /// relative to the workspace root, and globs are not supported. You may
@@ -252,24 +249,24 @@ fn field_props(field: &str, ty: &str, doc: &[&str], default: &str) -> serde_json
             "type": "array",
             "items": { "type": "string" },
         },
-        "FxHashSet<String>" => set! {
+        "HashSet<String>" => set! {
             "type": "array",
             "items": { "type": "string" },
             "uniqueItems": true,
         },
-        "FxHashMap<Box<str>, Box<[Box<str>]>>" => set! {
+        "HashMap<Box<str>, Box<[Box<str>]>>" => set! {
             "type": "object",
         },
-        "FxHashMap<String, SnippetDef>" => set! {
+        "HashMap<String, SnippetDef>" => set! {
             "type": "object",
         },
-        "FxHashMap<String, String>" => set! {
+        "HashMap<String, String>" => set! {
             "type": "object",
         },
-        "FxHashMap<Box<str>, u16>" => set! {
+        "HashMap<Box<str>, u16>" => set! {
             "type": "object",
         },
-        "FxHashMap<String, Option<String>>" => set! {
+        "HashMap<String, Option<String>>" => set! {
             "type": "object",
         },
         "Option<usize>" => set! {

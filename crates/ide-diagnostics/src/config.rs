@@ -4,12 +4,13 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+use std::collections::HashSet;
+
 #[derive(Debug, Clone)]
 pub struct DiagnosticsConfig {
     /// Whether native diagnostics are enabled.
     pub enabled: bool,
-    pub unresolved_reference_enabled: bool,
-    pub type_checking_enabled: bool,
+    pub disabled: HashSet<String>,
     pub assists_only: bool,
 }
 
@@ -17,8 +18,7 @@ impl DiagnosticsConfig {
     pub fn test_sample() -> Self {
         Self {
             enabled: true,
-            unresolved_reference_enabled: true,
-            type_checking_enabled: true,
+            disabled: Default::default(),
             assists_only: false,
         }
     }

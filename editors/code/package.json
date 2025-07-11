@@ -231,28 +231,22 @@
             {
                 "title": "diagnostics",
                 "properties": {
+                    "move-on-aptos.diagnostics.disabled": {
+                        "markdownDescription": "List of aptos-language-server diagnostics to disable.",
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "uniqueItems": true
+                    }
+                }
+            },
+            {
+                "title": "diagnostics",
+                "properties": {
                     "move-on-aptos.diagnostics.enable": {
                         "markdownDescription": "Whether to show native aptos-language-server diagnostics.",
-                        "default": true,
-                        "type": "boolean"
-                    }
-                }
-            },
-            {
-                "title": "diagnostics",
-                "properties": {
-                    "move-on-aptos.diagnostics.enableTypeChecking": {
-                        "markdownDescription": "Whether to show \"Type Checking\" diagnostic.",
-                        "default": true,
-                        "type": "boolean"
-                    }
-                }
-            },
-            {
-                "title": "diagnostics",
-                "properties": {
-                    "move-on-aptos.diagnostics.enableUnresolvedReference": {
-                        "markdownDescription": "Whether to show \"Unresolved reference\" diagnostic.",
                         "default": true,
                         "type": "boolean"
                     }

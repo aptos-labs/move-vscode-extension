@@ -26,9 +26,6 @@ pub(crate) fn find_unresolved_references(
     ctx: &DiagnosticsContext<'_>,
     reference: InFile<ast::ReferenceElement>,
 ) -> Option<()> {
-    if !ctx.config.unresolved_reference_enabled {
-        return None;
-    }
     if ctx.config.assists_only {
         // short-circuit
         return None;

@@ -198,8 +198,7 @@ impl Config {
     pub fn diagnostics_config(&self) -> DiagnosticsConfig {
         DiagnosticsConfig {
             enabled: *self.diagnostics_enable(),
-            unresolved_reference_enabled: *self.diagnostics_enableUnresolvedReference(),
-            type_checking_enabled: *self.diagnostics_enableTypeChecking(),
+            disabled: self.diagnostics_disabled().clone(),
             assists_only: false,
         }
     }

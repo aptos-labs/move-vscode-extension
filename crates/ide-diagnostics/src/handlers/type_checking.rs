@@ -22,9 +22,6 @@ pub(crate) fn recursive_struct_check(
     ctx: &DiagnosticsContext<'_>,
     named_field: InFile<ast::NamedField>,
 ) -> Option<()> {
-    if !ctx.config.type_checking_enabled {
-        return None;
-    }
     if ctx.config.assists_only {
         return None;
     }
@@ -60,9 +57,6 @@ pub(crate) fn type_check(
     ctx: &DiagnosticsContext<'_>,
     inference_ctx_owner: &InFile<ast::InferenceCtxOwner>,
 ) -> Option<()> {
-    if !ctx.config.type_checking_enabled {
-        return None;
-    }
     if ctx.config.assists_only {
         // no assists for type checking
         return None;
