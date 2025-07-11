@@ -163,6 +163,13 @@ impl Ty {
         }
     }
 
+    pub fn into_ty_integer(self) -> Option<IntegerKind> {
+        match self {
+            Ty::Integer(kind) => Some(kind),
+            _ => None,
+        }
+    }
+
     pub fn refine_for_specs(self, msl: bool) -> Ty {
         let mut ty = self;
         if !msl {
