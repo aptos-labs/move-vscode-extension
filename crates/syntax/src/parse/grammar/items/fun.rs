@@ -222,13 +222,15 @@ pub(crate) fn opt_ret_type(p: &mut Parser) {
 
 pub(crate) fn on_function_modifiers_start(p: &Parser) -> bool {
     match p.current() {
-        // T![public] => true,
         T![native] => true,
-        // T![friend] => true,
         T![inline] => true,
-        // not a name of a function
-        IDENT if p.at_contextual_kw("entry") && !p.nth_at_ts(1, ITEM_BRACE_START) => true,
-        // IDENT if p.at_contextual_kw("package") && !p.nth_at_ts(1, ITEM_BRACE_START) => true,
+        IDENT
+            if p.at_contextual_kw("entry")
+            // not a name of a function
+            && !p.nth_at_ts(1, ITEM_BRACE_START) =>
+        {
+            true
+        }
         _ => false,
     }
 }

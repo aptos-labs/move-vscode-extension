@@ -71,7 +71,7 @@ pub(super) fn item(p: &mut Parser) {
     }
 }
 
-fn after_friend_item_rset() -> RecoverySet {
+fn after_vis_modifier_item_set() -> RecoverySet {
     RecoverySet::new()
         .with_token_set(T![fun] | T![struct])
         .with_kw("enum")
@@ -84,7 +84,7 @@ pub(super) fn opt_item(p: &mut Parser, m: Marker) -> Result<(), Marker> {
         T![const] => const_(p, m),
 
         // todo: does not handle `friend native myfun()` cases
-        T![friend] if !p.nth_at_rset(1, after_friend_item_rset()) => friend_decl(p, m),
+        T![friend] if !p.nth_at_rset(1, after_vis_modifier_item_set()) => friend_decl(p, m),
 
         // adt
         T![struct] => adt::struct_(p, m),

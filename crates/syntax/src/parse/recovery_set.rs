@@ -31,7 +31,7 @@ impl From<&str> for RecoveryToken {
 #[derive(Debug, Clone)]
 pub struct RecoverySet {
     pub token_set: TokenSet,
-    keywords: HashSet<String>,
+    pub keywords: HashSet<String>,
 }
 
 impl From<SyntaxKind> for RecoverySet {
@@ -100,7 +100,7 @@ impl RecoverySet {
         self
     }
 
-    pub(crate) fn contains(&self, t: SyntaxKind) -> bool {
+    pub(crate) fn token_set_contains(&self, t: SyntaxKind) -> bool {
         self.token_set.contains(t)
     }
 

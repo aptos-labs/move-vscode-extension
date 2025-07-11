@@ -1,0 +1,90 @@
+SOURCE_FILE@0..168
+  MODULE@0..167
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..25
+      IDENT@12..25 "public_struct"
+    WHITESPACE@25..26 " "
+    L_CURLY@26..27 "{"
+    WHITESPACE@27..32 "\n    "
+    STRUCT@32..51
+      VISIBILITY_MODIFIER@32..38
+        PUBLIC_KW@32..38 "public"
+      WHITESPACE@38..39 " "
+      STRUCT_KW@39..45 "struct"
+      WHITESPACE@45..46 " "
+      NAME@46..47
+        IDENT@46..47 "S"
+      WHITESPACE@47..48 " "
+      NAMED_FIELD_LIST@48..51
+        L_CURLY@48..49 "{"
+        WHITESPACE@49..50 " "
+        R_CURLY@50..51 "}"
+    WHITESPACE@51..56 "\n    "
+    STRUCT@56..83
+      VISIBILITY_MODIFIER@56..70
+        PUBLIC_KW@56..62 "public"
+        L_PAREN@62..63 "("
+        FRIEND_KW@63..69 "friend"
+        R_PAREN@69..70 ")"
+      WHITESPACE@70..71 " "
+      STRUCT_KW@71..77 "struct"
+      WHITESPACE@77..78 " "
+      NAME@78..79
+        IDENT@78..79 "S"
+      WHITESPACE@79..80 " "
+      NAMED_FIELD_LIST@80..83
+        L_CURLY@80..81 "{"
+        WHITESPACE@81..82 " "
+        R_CURLY@82..83 "}"
+    WHITESPACE@83..88 "\n    "
+    STRUCT@88..116
+      VISIBILITY_MODIFIER@88..103
+        PUBLIC_KW@88..94 "public"
+        L_PAREN@94..95 "("
+        PACKAGE_KW@95..102 "package"
+        R_PAREN@102..103 ")"
+      WHITESPACE@103..104 " "
+      STRUCT_KW@104..110 "struct"
+      WHITESPACE@110..111 " "
+      NAME@111..112
+        IDENT@111..112 "S"
+      WHITESPACE@112..113 " "
+      NAMED_FIELD_LIST@113..116
+        L_CURLY@113..114 "{"
+        WHITESPACE@114..115 " "
+        R_CURLY@115..116 "}"
+    WHITESPACE@116..121 "\n    "
+    STRUCT@121..141
+      VISIBILITY_MODIFIER@121..128
+        PACKAGE_KW@121..128 "package"
+      WHITESPACE@128..129 " "
+      STRUCT_KW@129..135 "struct"
+      WHITESPACE@135..136 " "
+      NAME@136..137
+        IDENT@136..137 "S"
+      WHITESPACE@137..138 " "
+      NAMED_FIELD_LIST@138..141
+        L_CURLY@138..139 "{"
+        WHITESPACE@139..140 " "
+        R_CURLY@140..141 "}"
+    WHITESPACE@141..146 "\n    "
+    STRUCT@146..165
+      VISIBILITY_MODIFIER@146..152
+        FRIEND_KW@146..152 "friend"
+      WHITESPACE@152..153 " "
+      STRUCT_KW@153..159 "struct"
+      WHITESPACE@159..160 " "
+      NAME@160..161
+        IDENT@160..161 "S"
+      WHITESPACE@161..162 " "
+      NAMED_FIELD_LIST@162..165
+        L_CURLY@162..163 "{"
+        WHITESPACE@163..164 " "
+        R_CURLY@164..165 "}"
+    WHITESPACE@165..166 "\n"
+    R_CURLY@166..167 "}"
+  WHITESPACE@167..168 "\n"

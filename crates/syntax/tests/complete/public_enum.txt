@@ -1,0 +1,90 @@
+SOURCE_FILE@0..156
+  MODULE@0..155
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..23
+      IDENT@12..23 "public_enum"
+    WHITESPACE@23..24 " "
+    L_CURLY@24..25 "{"
+    WHITESPACE@25..30 "\n    "
+    ENUM@30..47
+      VISIBILITY_MODIFIER@30..36
+        PUBLIC_KW@30..36 "public"
+      WHITESPACE@36..37 " "
+      ENUM_KW@37..41 "enum"
+      WHITESPACE@41..42 " "
+      NAME@42..43
+        IDENT@42..43 "S"
+      WHITESPACE@43..44 " "
+      VARIANT_LIST@44..47
+        L_CURLY@44..45 "{"
+        WHITESPACE@45..46 " "
+        R_CURLY@46..47 "}"
+    WHITESPACE@47..52 "\n    "
+    ENUM@52..77
+      VISIBILITY_MODIFIER@52..66
+        PUBLIC_KW@52..58 "public"
+        L_PAREN@58..59 "("
+        FRIEND_KW@59..65 "friend"
+        R_PAREN@65..66 ")"
+      WHITESPACE@66..67 " "
+      ENUM_KW@67..71 "enum"
+      WHITESPACE@71..72 " "
+      NAME@72..73
+        IDENT@72..73 "S"
+      WHITESPACE@73..74 " "
+      VARIANT_LIST@74..77
+        L_CURLY@74..75 "{"
+        WHITESPACE@75..76 " "
+        R_CURLY@76..77 "}"
+    WHITESPACE@77..82 "\n    "
+    ENUM@82..108
+      VISIBILITY_MODIFIER@82..97
+        PUBLIC_KW@82..88 "public"
+        L_PAREN@88..89 "("
+        PACKAGE_KW@89..96 "package"
+        R_PAREN@96..97 ")"
+      WHITESPACE@97..98 " "
+      ENUM_KW@98..102 "enum"
+      WHITESPACE@102..103 " "
+      NAME@103..104
+        IDENT@103..104 "S"
+      WHITESPACE@104..105 " "
+      VARIANT_LIST@105..108
+        L_CURLY@105..106 "{"
+        WHITESPACE@106..107 " "
+        R_CURLY@107..108 "}"
+    WHITESPACE@108..113 "\n    "
+    ENUM@113..131
+      VISIBILITY_MODIFIER@113..120
+        PACKAGE_KW@113..120 "package"
+      WHITESPACE@120..121 " "
+      ENUM_KW@121..125 "enum"
+      WHITESPACE@125..126 " "
+      NAME@126..127
+        IDENT@126..127 "S"
+      WHITESPACE@127..128 " "
+      VARIANT_LIST@128..131
+        L_CURLY@128..129 "{"
+        WHITESPACE@129..130 " "
+        R_CURLY@130..131 "}"
+    WHITESPACE@131..136 "\n    "
+    ENUM@136..153
+      VISIBILITY_MODIFIER@136..142
+        FRIEND_KW@136..142 "friend"
+      WHITESPACE@142..143 " "
+      ENUM_KW@143..147 "enum"
+      WHITESPACE@147..148 " "
+      NAME@148..149
+        IDENT@148..149 "S"
+      WHITESPACE@149..150 " "
+      VARIANT_LIST@150..153
+        L_CURLY@150..151 "{"
+        WHITESPACE@151..152 " "
+        R_CURLY@152..153 "}"
+    WHITESPACE@153..154 "\n"
+    R_CURLY@154..155 "}"
+  WHITESPACE@155..156 "\n"
