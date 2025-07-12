@@ -16,6 +16,7 @@ use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use base_db::inputs::InternFileId;
 use base_db::source_db;
 use ide_db::RootDatabase;
+use ide_db::assist_context::Assists;
 use ide_db::assists::AssistResolveStrategy;
 use lang::Semantics;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
@@ -27,6 +28,12 @@ struct DiagnosticsContext<'a> {
     config: &'a DiagnosticsConfig,
     sema: Semantics<'a, RootDatabase>,
     resolve: &'a AssistResolveStrategy,
+}
+
+impl DiagnosticsContext<'_> {
+    pub fn assists_for_file(&self, file_id: FileId) -> Assists {
+        Assists::new(file_id, self.resolve.clone())
+    }
 }
 
 /// Request parser level diagnostics for the given [`FileId`].
@@ -114,6 +121,15 @@ pub fn semantic_diagnostics(
                 },
                 ast::StructLit(it) => {
                     handlers::missing_fields::missing_fields_in_struct_lit(&mut acc, &ctx, it.in_file(file_id));
+                },
+                ast::StructLitField(it) => {
+                    handlers::field_shorthand::struct_lit_field_can_be_simplified(&mut acc, &ctx, it.in_file(file_id));
+                },
+                ast::StructPatField(it) => {
+                    handlers::field_shorthand::struct_pat_field_can_be_simplified(&mut acc, &ctx, it.in_file(file_id));
+                },
+                ast::SchemaLitField(it) => {
+                    handlers::field_shorthand::schema_lit_field_can_be_simplified(&mut acc, &ctx, it.in_file(file_id));
                 },
                 ast::StructPat(it) => {
                     handlers::missing_fields::missing_fields_in_struct_pat(&mut acc, &ctx, it.in_file(file_id));

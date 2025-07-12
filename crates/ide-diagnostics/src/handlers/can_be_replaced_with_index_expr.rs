@@ -139,6 +139,7 @@ fn fixes(
             let new_index_expr = make.index_expr(base_expr, arg_expr);
             editor.replace(deref_expr.syntax(), new_index_expr.syntax());
 
+            editor.add_mappings(make.finish_with_mappings());
             builder.add_file_edits(file_id, editor);
         },
     );
