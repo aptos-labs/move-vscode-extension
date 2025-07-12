@@ -35,8 +35,8 @@ pub(crate) fn add_reference_completions(
             original_path.map(|it| it.in_file(file_id)),
             fake_path,
         ),
-        ReferenceKind::DotExpr { receiver_expr } => {
-            add_method_or_field_completions(completions, ctx, receiver_expr.in_file(file_id))
+        ReferenceKind::DotExpr { original_receiver_expr } => {
+            add_method_or_field_completions(completions, ctx, original_receiver_expr.in_file(file_id))
         }
         ReferenceKind::Label { fake_label, source_range } => {
             add_label_completions(completions, ctx, fake_label, source_range)
@@ -46,6 +46,9 @@ pub(crate) fn add_reference_completions(
         }
         ReferenceKind::StructLitField { original_struct_lit } => {
             add_struct_lit_fields_completions(completions, ctx, original_struct_lit.in_file(file_id))
+        }
+        ReferenceKind::StructPatField { original_struct_pat } => {
+            add_struct_pat_fields_completions(completions, ctx, original_struct_pat.in_file(file_id))
         }
     }
 }
@@ -94,6 +97,36 @@ fn add_struct_lit_fields_completions(
     let fields_owner = ctx
         .sema
         .resolve_to_element::<ast::FieldsOwner>(original_struct_lit.map(|it| it.path()))?;
+    for named_field in fields_owner.flat_map(|it| it.named_fields()) {
+        let field_name = named_field.value.field_name().as_string();
+        if provided_field_names.contains(&field_name) {
+            continue;
+        }
+        let item = render_type_owner(ctx, &field_name, named_field.map_into());
+        acc.add(item.build(ctx.db));
+    }
+    Some(())
+}
+
+fn add_struct_pat_fields_completions(
+    completions: &RefCell<Completions>,
+    ctx: &CompletionContext<'_>,
+    original_struct_pat: InFile<ast::StructPat>,
+) -> Option<()> {
+    let acc = &mut completions.borrow_mut();
+
+    let provided_field_names = original_struct_pat
+        .value
+        .fields()
+        .iter()
+        // do not account for the current field
+        .filter(|it| !it.syntax().text_range().contains_inclusive(ctx.original_offset()))
+        .filter_map(|it| it.field_name())
+        .collect::<HashSet<_>>();
+
+    let fields_owner = ctx
+        .sema
+        .resolve_to_element::<ast::FieldsOwner>(original_struct_pat.map(|it| it.path()))?;
     for named_field in fields_owner.flat_map(|it| it.named_fields()) {
         let field_name = named_field.value.field_name().as_string();
         if provided_field_names.contains(&field_name) {

@@ -37,7 +37,7 @@ pub enum ReferenceKind {
         fake_path: ast::Path,
     },
     DotExpr {
-        receiver_expr: ast::Expr,
+        original_receiver_expr: ast::Expr,
     },
     Label {
         fake_label: ast::Label,
@@ -48,6 +48,9 @@ pub enum ReferenceKind {
     },
     StructLitField {
         original_struct_lit: ast::StructLit,
+    },
+    StructPatField {
+        original_struct_pat: ast::StructPat,
     },
 }
 
@@ -158,7 +161,7 @@ impl<'a> CompletionContext<'a> {
             expected: (expected_type, expected_name),
         } = completion_analysis(
             &sema,
-            original_file.syntax().clone(),
+            &original_file,
             file_with_fake_ident.syntax().clone(),
             offset,
             &original_token,

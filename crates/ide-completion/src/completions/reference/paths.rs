@@ -244,7 +244,7 @@ pub(crate) struct PathCompletionCtx {
 impl PathCompletionCtx {
     pub fn original_qualifier(&self, original_file: &ast::SourceFile) -> Option<ast::Path> {
         let fake_qualifier = self.fake_path.qualifier()?;
-        self.find_original_node(original_file, fake_qualifier)
+        original_file.find_original_node(fake_qualifier)
     }
 
     pub fn has_any_parens(&self) -> bool {
@@ -257,22 +257,11 @@ impl PathCompletionCtx {
         }
         let fake_use_speck = self.fake_path.root_parent_of_type::<ast::UseSpeck>()?;
         let fake_use_group = fake_use_speck.syntax().parent_of_type::<ast::UseGroup>()?;
-        self.find_original_node(original_file, fake_use_group)
+        original_file.find_original_node(fake_use_group)
     }
 
     pub fn is_use_stmt(&self) -> bool {
         self.path_kind == PathKind::Use
-    }
-
-    fn find_original_node<Node: AstNode>(
-        &self,
-        original_file: &ast::SourceFile,
-        fake_node: Node,
-    ) -> Option<Node> {
-        algo::find_node_at_offset::<Node>(
-            original_file.syntax(),
-            fake_node.syntax().text_range().start(),
-        )
     }
 }
 

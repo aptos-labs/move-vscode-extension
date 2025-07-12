@@ -28,6 +28,10 @@ impl ast::StructPatField {
         PatFieldKind::Invalid
     }
 
+    pub fn is_shorthand(&self) -> bool {
+        matches!(self.kind(), PatFieldKind::Shorthand { .. })
+    }
+
     pub fn for_field_name_ref(field_name: &ast::NameRef) -> Option<ast::StructPatField> {
         field_name.syntax().parent_of_type::<ast::StructPatField>()
     }
