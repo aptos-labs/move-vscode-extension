@@ -74,7 +74,6 @@ module 0x1::main {
 }
 
 #[test]
-#[ignore = "lambda body return type inference is not implemented yet"]
 fn test_infer_lambda_type_from_parameters() {
     // language=Move
     check_expr_type(
@@ -84,6 +83,22 @@ module 0x1::main {
         let lambda = |a: u8, b: u8| a + b;
         lambda;
          //^ |u8, u8| -> u8
+    }
+}
+"#,
+    )
+}
+
+#[test]
+fn test_infer_lambda_type_from_generic_parameters() {
+    // language=Move
+    check_expr_type(
+        r#"
+module 0x1::main {
+    fun main() {
+        let lambda = |a, b| a + b;
+        lambda;
+         //^ |<unknown>, <unknown>| -> <unknown>
     }
 }
 "#,

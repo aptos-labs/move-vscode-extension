@@ -96,6 +96,12 @@ impl<'db> InferenceCtx<'db> {
         }
     }
 
+    pub fn from_parent_ctx(ctx: &'db InferenceCtx) -> InferenceCtx<'db> {
+        let mut new_ctx = Self::new(ctx.db, ctx.file_id, ctx.msl);
+        new_ctx.pat_types = ctx.pat_types.clone();
+        new_ctx
+    }
+
     pub fn resolve_path_cached(
         &mut self,
         path: ast::Path,

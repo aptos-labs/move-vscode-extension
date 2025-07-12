@@ -420,7 +420,6 @@ module 0x1::main {
 }
 
 #[test]
-#[ignore = "lambda body return type inference is not implemented yet"]
 fn test_resolve_enum_field_from_one_of_variants_only_with_function_value() {
     check_resolve(
         // language=Move

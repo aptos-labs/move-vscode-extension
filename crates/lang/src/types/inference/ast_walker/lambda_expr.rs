@@ -6,6 +6,7 @@
 
 use crate::loc::SyntaxLocFileExt;
 use crate::types::expectation::Expected;
+use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::ty::Ty;
 use crate::types::ty::ty_callable::{TyCallable, TyCallableKind};
@@ -25,23 +26,22 @@ impl TypeAstWalker<'_, '_> {
             param_tys.push(param_ty);
         }
 
-        let lambda_call_ty = TyCallable::new(
-            param_tys,
-            Ty::new_ty_var(&self.ctx.ty_var_index),
-            TyCallableKind::Lambda(Some(lambda_expr.clone().in_file(self.ctx.file_id).loc())),
-        );
-
         // defer inference
         self.ctx.lambda_exprs.push(lambda_expr.clone());
 
-        // need to infer return type to proceed further
+        // // need to infer return type to proceed further
+        let lambda_return_ty = if let Some(body_expr) = lambda_expr.body_expr() {
+            let mut inner_ctx = InferenceCtx::from_parent_ctx(self.ctx);
+            TypeAstWalker::new(&mut inner_ctx, Ty::Unknown).infer_expr(&body_expr, Expected::NoValue)
+        } else {
+            Ty::Unit
+        };
 
-        // // Eagerly try to relate the closure type with the expected
-        // // type, otherwise we often won't have enough information to
-        // // infer the body.
-        // if let Some(t) = expected.ty(self.ctx) {
-        //     dbg!(&t);
-        // }
+        let lambda_call_ty = TyCallable::new(
+            param_tys,
+            lambda_return_ty,
+            TyCallableKind::Lambda(Some(lambda_expr.clone().in_file(self.ctx.file_id).loc())),
+        );
 
         self.ctx
             .lambda_expr_types
