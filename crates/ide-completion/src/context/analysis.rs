@@ -23,12 +23,12 @@ pub(crate) struct AnalysisResult {
 
 pub(crate) fn completion_analysis(
     sema: &Semantics<'_, RootDatabase>,
-    original_file: SyntaxNode,
+    original_file: &ast::SourceFile,
     fake_file: SyntaxNode,
     original_offset: TextSize,
     original_token: &SyntaxToken,
 ) -> Option<AnalysisResult> {
-    let expected = expected_type_and_name(&sema, &original_file, original_offset);
+    let expected = expected_type_and_name(&sema, original_file.syntax(), original_offset);
 
     // as we insert after the offset, right biased will *always* pick the identifier no matter
     // if there is an ident already typed or not
@@ -86,40 +86,19 @@ pub(crate) fn completion_analysis(
 
 fn analyze_ref(
     fake_ref: &ast::ReferenceElement,
-    original_file: SyntaxNode,
+    original_file: &ast::SourceFile,
     original_offset: TextSize,
 ) -> Option<CompletionAnalysis> {
     let reference_kind = match fake_ref {
         ast::ReferenceElement::Path(fake_path) => {
             // check for struct lit field
-            if let Some(fake_path_expr) = fake_path.root_path().path_expr()
-                && let Some(fake_struct_lit_field) =
-                fake_path_expr.syntax().parent_of_type::<ast::StructLitField>()
-                // S { val/*caret*/ }
-                && fake_struct_lit_field.is_shorthand()
-            {
-                let fake_struct_lit = fake_struct_lit_field.struct_lit();
-                let original_struct_lit = algo::find_node_at_offset(
-                    &original_file,
-                    fake_struct_lit.syntax().text_range().start(),
-                )?;
-                Some(ReferenceKind::StructLitField { original_struct_lit })
-            } else {
-                let original_path =
-                    algo::find_node_at_offset::<ast::Path>(&original_file, original_offset);
-                Some(ReferenceKind::Path {
-                    original_path,
-                    fake_path: fake_path.clone(),
-                })
-            }
+            analyze_path(fake_path, original_file, original_offset)
         }
         ast::ReferenceElement::DotExpr(_) => {
-            let original_receiver_expr =
-                algo::find_node_at_offset::<ast::DotExpr>(&original_file, original_offset)?
-                    .receiver_expr();
-            Some(ReferenceKind::DotExpr {
-                receiver_expr: original_receiver_expr,
-            })
+            let original_receiver_expr = original_file
+                .find_node_at_offset::<ast::DotExpr>(original_offset)?
+                .receiver_expr();
+            Some(ReferenceKind::DotExpr { original_receiver_expr })
         }
         ast::ReferenceElement::Label(fake_label) => {
             let fake_range = fake_label.syntax().text_range();
@@ -134,15 +113,47 @@ fn analyze_ref(
         ast::ReferenceElement::ItemSpecRef(fake_item_spec_ref) => {
             // spec keyword location will be the same in the original file
             let fake_spec_kw = fake_item_spec_ref.item_spec().spec_token()?;
-            let original_spec_kw = original_file
-                .token_at_offset(fake_spec_kw.text_range().start())
-                .right_biased()?;
+            let original_spec_kw = original_file.find_original_token(fake_spec_kw)?;
             let original_item_spec = original_spec_kw.parent()?.cast::<ast::ItemSpec>()?;
             Some(ReferenceKind::ItemSpecRef { original_item_spec })
+        }
+        ast::ReferenceElement::IdentPat(fake_ident_pat) => {
+            let fake_struct_pat_field =
+                fake_ident_pat.syntax().parent_of_type::<ast::StructPatField>()?;
+            if !fake_struct_pat_field.is_shorthand() {
+                return None;
+            }
+            let fake_struct_pat = fake_struct_pat_field.struct_pat();
+            let original_struct_pat = original_file.find_original_node(fake_struct_pat)?;
+            Some(ReferenceKind::StructPatField { original_struct_pat })
         }
         _ => None,
     };
     reference_kind.map(|kind| CompletionAnalysis::Reference(kind))
+}
+
+fn analyze_path(
+    fake_path: &ast::Path,
+    original_file: &ast::SourceFile,
+    original_offset: TextSize,
+) -> Option<ReferenceKind> {
+    // check for struct lit field
+    if let Some(fake_path_expr) = fake_path.root_path().path_expr()
+        && let Some(fake_struct_lit_field) =
+        fake_path_expr.syntax().parent_of_type::<ast::StructLitField>()
+        // S { val/*caret*/ }
+        && fake_struct_lit_field.is_shorthand()
+    {
+        let fake_struct_lit = fake_struct_lit_field.struct_lit();
+        let original_struct_lit = original_file.find_original_node(fake_struct_lit)?;
+        return Some(ReferenceKind::StructLitField { original_struct_lit });
+    }
+
+    let original_path = original_file.find_node_at_offset::<ast::Path>(original_offset);
+    Some(ReferenceKind::Path {
+        original_path,
+        fake_path: fake_path.clone(),
+    })
 }
 
 fn expected_type_and_name<'db>(

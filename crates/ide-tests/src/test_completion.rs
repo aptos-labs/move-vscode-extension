@@ -1192,3 +1192,57 @@ module std::main {
             ]"#]],
     );
 }
+
+#[test]
+fn test_struct_pat_field_completion() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    struct S { field_1: u8, field_2: u8 }
+    fun main() {
+        let S { fiel/*caret*/ };
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "field_1 -> u8",
+                "field_2 -> u8",
+            ]"#]],
+    );
+}
+
+#[test]
+fn test_struct_pat_field_completion_filter_existing_fields() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    struct S { field_1: u8, field_2: u8 }
+    fun main() {
+        let S { field_1, fiel/*caret*/ };
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "field_2 -> u8",
+            ]"#]],
+    );
+}
+
+#[test]
+fn test_no_fields_completion_in_expr() {
+    check_no_completions(
+        // language=Move
+        r#"
+module std::main {
+    struct S { field_1: u8, field_2: u8 }
+    fun main() {
+        let S { field_1: fi/*caret*/ };
+    }
+}
+    "#,
+    );
+}
