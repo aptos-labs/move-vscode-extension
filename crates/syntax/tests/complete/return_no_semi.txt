@@ -1,0 +1,37 @@
+SOURCE_FILE@0..86
+  MODULE@0..85
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..26
+      IDENT@12..26 "return_no_semi"
+    WHITESPACE@26..27 " "
+    L_CURLY@27..28 "{"
+    WHITESPACE@28..33 "\n    "
+    FUN@33..83
+      FUN_KW@33..36 "fun"
+      WHITESPACE@36..37 " "
+      NAME@37..41
+        IDENT@37..41 "main"
+      PARAM_LIST@41..43
+        L_PAREN@41..42 "("
+        R_PAREN@42..43 ")"
+      WHITESPACE@43..44 " "
+      BLOCK_EXPR@44..83
+        L_CURLY@44..45 "{"
+        WHITESPACE@45..54 "\n        "
+        RETURN_EXPR@54..77
+          RETURN_KW@54..60 "return"
+          WHITESPACE@60..69 "\n        "
+          ABORT_EXPR@69..77
+            ABORT_KW@69..74 "abort"
+            WHITESPACE@74..75 " "
+            LITERAL@75..77
+              INT_NUMBER@75..77 "61"
+        WHITESPACE@77..82 "\n    "
+        R_CURLY@82..83 "}"
+    WHITESPACE@83..84 "\n"
+    R_CURLY@84..85 "}"
+  WHITESPACE@85..86 "\n"
