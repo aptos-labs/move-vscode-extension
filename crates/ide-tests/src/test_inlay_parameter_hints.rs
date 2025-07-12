@@ -76,8 +76,8 @@ fn test_inlay_parameter_hints_for_literals_on_lambda() {
     check_inlay_hints(expect![[r#"
         module 0x1::m {
             fun main() {
-                let lambda:  = |a: u8, b: u8| a + b;
-                  //^^^^^^^ |u8, u8| -> ?
+                let lambda = |a: u8, b: u8| a + b;
+                  //^^^^^^ |u8, u8| -> u8
                 lambda(
                     1,
                   //^ a

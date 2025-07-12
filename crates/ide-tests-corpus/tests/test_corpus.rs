@@ -50,34 +50,24 @@ subdir = "aptos-framework"
         ),
     )]);
 
-    let mut disabled_codes = HashSet::new();
-    disabled_codes.insert("unused-variable".to_string());
-    disabled_codes.insert("replace-with-method-call".to_string());
-    disabled_codes.insert("replace-with-compound-expr".to_string());
-
     let (file_id, _) = test_state.file_with_caret("/*caret*/");
+
+    let mut diagnostics_config = DiagnosticsConfig::test_sample();
+    diagnostics_config.disabled = vec![
+        "unused-variable",
+        "replace-with-method-call",
+        "replace-with-compound-expr",
+        "replace-with-index-expr",
+        "redundant-cast",
+    ]
+    .into_iter()
+    .map(|it| it.to_string())
+    .collect();
 
     let diagnostics = test_state
         .analysis()
-        .full_diagnostics(
-            &DiagnosticsConfig::test_sample(),
-            AssistResolveStrategy::None,
-            file_id,
-        )
+        .full_diagnostics(&diagnostics_config, AssistResolveStrategy::None, file_id)
         .unwrap();
-
-    let diagnostics = diagnostics
-        .into_iter()
-        .filter(|diag| {
-            if disabled_codes.contains(&diag.code.as_str().to_string()) {
-                return false;
-            }
-            // if skipped_messages.iter().any(|it| diag.message.contains(it)) {
-            //     return false;
-            // }
-            true
-        })
-        .collect::<Vec<_>>();
     for diagnostic in diagnostics.clone() {
         print_diagnostic(
             &source,
@@ -96,7 +86,8 @@ subdir = "aptos-framework"
 fn main() {}
 
 // datatest_stable::harness! {
-//     { test = test_diagnostics, root = "/home/mkurnikov/code/move-fuzzing-llm", pattern = r"^.*\.move$" },
+//     { test = test_diagnostics, root = "/home/mkurnikov/code/move-fuzzing/old-sources", pattern = r"^.*\.move$" },
+//     // { test = test_diagnostics, root = "/home/mkurnikov/code/move-fuzzing-llm", pattern = r"^.*\.move$" },
 // }
 
 fn print_diagnostic(file_text: &str, file_path: &AbsPath, diagnostic: Diagnostic) {
