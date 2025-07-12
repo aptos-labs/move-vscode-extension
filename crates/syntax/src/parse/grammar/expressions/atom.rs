@@ -47,17 +47,19 @@ pub(crate) const LITERAL_FIRST: TokenSet =
     TokenSet::new(&[T![true], T![false], INT_NUMBER, T![@], BYTE_STRING, HEX_STRING]);
 
 pub(crate) const KW_EXPR_FIRST: TokenSet = TokenSet::new(&[
-    T![move],
     T![if],
-    T![while],
     T![loop],
+    T![while],
     T![for],
-    T![match],
+    // never matches
+    // T![match],
     T![return],
-    T![break],
     T![continue],
-    T![copy],
+    T![break],
     T![move],
+    T![copy],
+    T![abort],
+    // label
     QUOTE_IDENT,
 ]);
 
