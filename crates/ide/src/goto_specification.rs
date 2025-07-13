@@ -32,7 +32,12 @@ pub(crate) fn goto_specification(
 
     let navs = fun_item_specs
         .into_iter()
-        .filter_map(|loc| NavigationTarget::from_syntax_loc(db, "spec".into(), loc.clone()))
+        .filter_map(|loc| {
+            let item_spec_ref = loc
+                .to_ast::<ast::ItemSpec>(db)?
+                .and_then(|it| it.item_spec_ref())?;
+            NavigationTarget::from_syntax_loc(db, item_spec_ref.syntax_text(), loc.clone())
+        })
         .collect::<Vec<_>>();
 
     Some(RangeInfo { range, info: navs })
