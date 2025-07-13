@@ -10,7 +10,7 @@ use crate::{AstNode, SyntaxNode, TextRange, TextSize};
 use std::borrow::Borrow;
 use vfs::FileId;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
 pub struct FilePosition {
     pub file_id: FileId,
     pub offset: TextSize,

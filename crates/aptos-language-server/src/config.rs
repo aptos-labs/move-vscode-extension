@@ -22,12 +22,68 @@ use vfs::AbsPathBuf;
 use crate::config::options::{DefaultConfigData, FullConfigInput};
 use crate::config::utils::find_movefmt_path;
 use crate::config::validation::ConfigErrors;
+use crate::lsp_ext;
 use ide::inlay_hints::{InlayFieldsToResolve, InlayHintsConfig};
 use ide_db::assist_config::AssistConfig;
 use ide_diagnostics::config::DiagnosticsConfig;
 use project_model::DiscoveredManifest;
 use serde_derive::{Deserialize, Serialize};
 use stdx::itertools::Itertools;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ClientCommandsConfig {
+    // pub run_single: bool,
+    // pub debug_single: bool,
+    pub show_references: bool,
+    pub goto_location: bool,
+    // pub trigger_parameter_hints: bool,
+    // pub rename: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LensConfig {
+    // // runnables
+    // pub run: bool,
+    // pub debug: bool,
+    // pub update_test: bool,
+    // pub interpret: bool,
+    pub specifications: bool,
+
+    // // references
+    // pub method_refs: bool,
+    // pub refs_adt: bool,   // for Struct, Enum, Union and Trait
+    // pub refs_trait: bool, // for Struct, Enum, Union and Trait
+    // pub enum_variant_refs: bool,
+
+    // annotations
+    pub location: AnnotationLocation,
+}
+
+impl LensConfig {
+    pub fn any(&self) -> bool {
+        self.specifications
+    }
+
+    pub fn none(&self) -> bool {
+        !self.any()
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AnnotationLocation {
+    AboveName,
+    AboveWholeItem,
+}
+
+impl From<AnnotationLocation> for ide::annotations::AnnotationLocation {
+    fn from(location: AnnotationLocation) -> Self {
+        match location {
+            AnnotationLocation::AboveName => ide::annotations::AnnotationLocation::AboveName,
+            AnnotationLocation::AboveWholeItem => ide::annotations::AnnotationLocation::AboveWholeItem,
+        }
+    }
+}
 
 #[derive(Clone)]
 pub struct Config {
@@ -309,6 +365,28 @@ impl Config {
         AllowSnippets::new(self.snippet_text_edit())
     }
 
+    pub fn lens(&self) -> LensConfig {
+        LensConfig {
+            specifications: *self.lens_enable() && *self.lens_specifications_enable(),
+            location: *self.lens_location(),
+        }
+    }
+
+    pub fn commands(&self) -> Option<lsp_ext::ClientCommandOptions> {
+        self.experimental("commands")
+    }
+
+    pub fn client_commands(&self) -> ClientCommandsConfig {
+        let commands = self.commands().map(|it| it.commands).unwrap_or_default();
+
+        let get = |name: &str| commands.iter().any(|it| it == name);
+
+        ClientCommandsConfig {
+            show_references: get("move-on-aptos.showReferences"),
+            goto_location: get("move-on-aptos.gotoLocation"),
+        }
+    }
+
     pub fn main_loop_num_threads(&self) -> usize {
         num_cpus::get_physical()
     }
@@ -343,6 +421,10 @@ impl Config {
 
     pub fn caps(&self) -> &ClientCapabilities {
         &self.caps
+    }
+
+    fn experimental<T: serde::de::DeserializeOwned>(&self, index: &'static str) -> Option<T> {
+        serde_json::from_value(self.0.experimental.as_ref()?.get(index)?.clone()).ok()
     }
 }
 

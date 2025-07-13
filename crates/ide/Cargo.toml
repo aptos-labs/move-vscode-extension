@@ -10,6 +10,7 @@ vfs = { workspace = true }
 line-index = { workspace = true }
 tracing = { workspace = true }
 itertools = { workspace = true }
+indexmap.workspace = true
 
 salsa.workspace = true
 

@@ -36,6 +36,15 @@ impl ModuleItemExt for InFile<ast::AnyFun> {
     }
 }
 
+impl ModuleItemExt for InFile<ast::Fun> {
+    fn module(&self, _db: &dyn SourceDatabase) -> Option<InFile<ast::Module>> {
+        let module = self
+            .clone()
+            .and_then(|it| it.syntax().parent_of_type::<ast::Module>());
+        module
+    }
+}
+
 impl ModuleItemExt for InFile<ast::Schema> {
     fn module(&self, db: &dyn SourceDatabase) -> Option<InFile<ast::Module>> {
         let module = self

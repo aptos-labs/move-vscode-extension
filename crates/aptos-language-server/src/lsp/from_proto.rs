@@ -6,8 +6,10 @@
 
 use crate::global_state::GlobalStateSnapshot;
 use crate::line_index::{LineIndex, PositionEncoding};
+use crate::lsp_ext;
 use anyhow::format_err;
 use camino::Utf8PathBuf;
+use ide::annotations::{Annotation, AnnotationKind};
 use ide_db::assists::AssistKind;
 use line_index::{LineCol, TextRange, TextSize, WideLineCol};
 use syntax::files::{FilePosition, FileRange};
@@ -113,4 +115,30 @@ pub(crate) fn assist_kind(kind: lsp_types::CodeActionKind) -> Option<AssistKind>
     };
 
     Some(assist_kind)
+}
+
+/// Returns `None` if the file was excluded.
+pub(crate) fn annotation(
+    snap: &GlobalStateSnapshot,
+    range: lsp_types::Range,
+    data: lsp_ext::CodeLensResolveData,
+) -> anyhow::Result<Option<Annotation>> {
+    match data.kind {
+        lsp_ext::CodeLensResolveDataKind::Specs(params) => {
+            if snap.url_file_version(&params.text_document_position_params.text_document.uri)
+                != Some(data.version)
+            {
+                return Ok(None);
+            }
+            let pos @ FilePosition { file_id, .. } =
+                file_position(snap, params.text_document_position_params)?;
+            let line_index = snap.file_line_index(file_id)?;
+
+            Ok(Annotation {
+                range: text_range(&line_index, range)?,
+                kind: AnnotationKind::HasSpecs { pos, item_specs: None },
+            })
+        }
+    }
+    .map(Some)
 }

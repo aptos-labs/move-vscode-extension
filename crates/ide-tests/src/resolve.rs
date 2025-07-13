@@ -45,6 +45,7 @@ pub fn check_resolve(source: &str) {
         return;
     };
 
+    // skip item itself
     nav_items.retain(|it| it.focus_range.is_some_and(|range| !range.contains(ref_offset)));
 
     match nav_items.len() {
@@ -112,7 +113,7 @@ fn assert_resolves_to_target(
 }
 
 #[track_caller]
-fn assert_resolves_to_multiple_targets(
+pub fn assert_resolves_to_multiple_targets(
     analysis: &Analysis,
     nav_items: Vec<NavigationTarget>,
     target_file: (FileId, String),

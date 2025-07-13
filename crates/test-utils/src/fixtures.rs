@@ -20,7 +20,8 @@ use vfs::{FileId, VfsPath};
 
 const BUILTINS_FILE_ID: FileId = FileId::from_raw(0);
 
-pub fn from_single_file(text: String) -> (Analysis, FileId) {
+pub fn from_single_file(text: impl Into<String>) -> (Analysis, FileId) {
+    let text = text.into();
     let mut test_package = TestPackage::new();
 
     let mut changes = FileChanges::new();

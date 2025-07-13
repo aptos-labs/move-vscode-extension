@@ -6,7 +6,7 @@
 
 mod macros;
 
-use crate::config::FilesWatcherDef;
+use crate::config::{AnnotationLocation, FilesWatcherDef};
 use camino::Utf8PathBuf;
 use macros::{config_data, default_str, default_val, impl_for_config_data};
 use serde::de::DeserializeOwned;
@@ -91,6 +91,14 @@ config_data! {
         inlayHints_typeHints_hideClosureParameter: bool             = false,
         // /// Whether to hide inlay type hints for constructors.
         // inlayHints_typeHints_hideNamedConstructor: bool            = false,
+
+        /// Whether to show CodeLens in Move files.
+        lens_enable: bool           = true,
+        /// Whether to show `Specifications` lens. Only applies when
+        /// `#move-on-aptos.lens.enable#` is set.
+        lens_specifications_enable: bool  = true,
+        /// Where to render annotations.
+        lens_location: AnnotationLocation = AnnotationLocation::AboveName,
 
         /// Path to the `movefmt` executable.
         movefmt_path: Option<Utf8PathBuf>                         = None,
@@ -297,6 +305,14 @@ fn field_props(field: &str, ty: &str, doc: &[&str], default: &str) -> serde_json
             "enumDescriptions": [
                 "Use the client (editor) to watch files for changes",
                 "Use server-side file watching",
+            ],
+        },
+        "AnnotationLocation" => set! {
+            "type": "string",
+            "enum": ["above_name", "above_whole_item"],
+            "enumDescriptions": [
+                "Render annotations above the name of the item.",
+                "Render annotations above the whole item, including documentation comments and attributes."
             ],
         },
         _ => panic!("missing entry for {ty}: {default} (field {field})"),

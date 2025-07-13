@@ -10,6 +10,7 @@ use crate::lsp::utils::invalid_params_error;
 use crate::lsp::{LspError, semantic_tokens};
 use crate::{Config, lsp_ext};
 use camino::{Utf8Component, Utf8Prefix};
+use ide::annotations::{Annotation, AnnotationKind};
 use ide::inlay_hints::{
     InlayFieldsToResolve, InlayHint, InlayHintLabel, InlayHintLabelPart, InlayHintPosition, InlayKind,
     InlayTooltip, LazyProperty,
@@ -927,6 +928,134 @@ fn inlay_hint_label(
         }
     };
     Ok((label, tooltip))
+}
+
+pub(crate) fn code_lens(
+    acc: &mut Vec<lsp_types::CodeLens>,
+    snap: &GlobalStateSnapshot,
+    annotation: Annotation,
+) -> Cancellable<()> {
+    let client_commands_config = snap.config.client_commands();
+    match annotation.kind {
+        AnnotationKind::HasSpecs { pos, item_specs } => {
+            if !client_commands_config.show_references || !client_commands_config.goto_location {
+                return Ok(());
+            }
+            let line_index = snap.file_line_index(pos.file_id)?;
+            let annotation_range = lsp_range(&line_index, annotation.range);
+            let url = url(snap, pos.file_id);
+            let pos = lsp_position(&line_index, pos.offset);
+
+            let id = lsp_types::TextDocumentIdentifier { uri: url.clone() };
+
+            let doc_pos = lsp_types::TextDocumentPositionParams::new(id, pos);
+
+            let goto_params = lsp_types::request::GotoImplementationParams {
+                text_document_position_params: doc_pos,
+                work_done_progress_params: Default::default(),
+                partial_result_params: Default::default(),
+            };
+
+            let command = item_specs
+                .map(|mut nav_items| match nav_items.len() {
+                    0 => None,
+                    1 => {
+                        let nav_item = nav_items.pop().unwrap();
+                        command::goto_location(snap, "Has item specification", &nav_item)
+                    }
+                    items_len => {
+                        let locations: Vec<lsp_types::Location> = nav_items
+                            .into_iter()
+                            .filter_map(|target| {
+                                location(
+                                    snap,
+                                    FileRange {
+                                        file_id: target.file_id,
+                                        range: target.full_range,
+                                    },
+                                )
+                                .ok()
+                            })
+                            .collect();
+                        Some(command::show_references(
+                            format!("{items_len} specifications"),
+                            &url,
+                            pos,
+                            locations,
+                        ))
+                    }
+                })
+                .flatten();
+
+            acc.push(lsp_types::CodeLens {
+                range: annotation_range,
+                command,
+                data: (|| {
+                    let version = snap.url_file_version(&url)?;
+                    Some(
+                        serde_json::to_value(lsp_ext::CodeLensResolveData {
+                            version,
+                            kind: lsp_ext::CodeLensResolveDataKind::Specs(goto_params),
+                        })
+                        .unwrap(),
+                    )
+                })(),
+            })
+        }
+    }
+    Ok(())
+}
+
+pub(crate) mod command {
+    use crate::global_state::GlobalStateSnapshot;
+    use crate::lsp::to_proto::{location, location_link};
+    use ide::NavigationTarget;
+    use syntax::files::FileRange;
+
+    pub(crate) fn show_references(
+        title: String,
+        uri: &lsp_types::Url,
+        position: lsp_types::Position,
+        locations: Vec<lsp_types::Location>,
+    ) -> lsp_types::Command {
+        // We cannot use the 'editor.action.showReferences' command directly
+        // because that command requires vscode types which we convert in the handler
+        // on the client side.
+
+        lsp_types::Command {
+            title,
+            command: "move-on-aptos.showReferences".into(),
+            arguments: Some(vec![
+                serde_json::to_value(uri).unwrap(),
+                serde_json::to_value(position).unwrap(),
+                serde_json::to_value(locations).unwrap(),
+            ]),
+        }
+    }
+
+    pub(crate) fn goto_location(
+        snap: &GlobalStateSnapshot,
+        title: impl Into<String>,
+        nav: &NavigationTarget,
+    ) -> Option<lsp_types::Command> {
+        let value = if snap.config.location_link() {
+            let link = location_link(snap, None, nav.clone()).ok()?;
+            serde_json::to_value(link).ok()?
+        } else {
+            let range = FileRange {
+                file_id: nav.file_id,
+                range: nav.focus_or_full_range(),
+            };
+            let location = location(snap, range).ok()?;
+            serde_json::to_value(location).ok()?
+        };
+
+        Some(lsp_types::Command {
+            title: title.into(),
+            command: "move-on-aptos.gotoLocation".into(),
+            arguments: Some(vec![value]),
+        })
+    }
 }
 
 pub(crate) fn rename_error(err: RenameError) -> LspError {
