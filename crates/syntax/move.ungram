@@ -146,7 +146,7 @@ Const =
 Fun =
     Attr* VisibilityModifier?
     'native'? 'entry'? 'inline'?
-    'fun' Name TypeParamList? ParamList RetType?
+    'fun' Name TypeParamList? ParamList Acquires? RetType?
     (body:BlockExpr | ';')
 
 VisibilityModifier =
@@ -158,6 +158,9 @@ ParamList =
     '(' (Param (',' Param)* ','?)? ')'
 
 Param = (IdentPat | WildcardPat) (':' Type)?
+
+Acquires =
+    types:(PathType (',' PathType)* ','?)
 
 RetType =
   ':' Type

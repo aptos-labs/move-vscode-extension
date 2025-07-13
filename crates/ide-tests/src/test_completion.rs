@@ -1275,7 +1275,7 @@ module std::string {
 }
 module std::main {
     use std::string;
-    fun main() acquires string::/*caret*/ {
+    fun main() acquires string::S/*caret*/ {
     }
 }
     "#,

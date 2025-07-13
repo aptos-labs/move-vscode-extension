@@ -111,6 +111,15 @@ impl AbortsWithStmt {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Acquires {
+    pub(crate) syntax: SyntaxNode,
+}
+impl Acquires {
+    #[inline]
+    pub fn types(&self) -> AstChildren<PathType> { support::children(&self.syntax) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AddressDef {
     pub(crate) syntax: SyntaxNode,
 }
@@ -562,6 +571,8 @@ impl ast::HasAttrs for Fun {}
 impl ast::HasVisibility for Fun {}
 impl ast::HoverDocsOwner for Fun {}
 impl Fun {
+    #[inline]
+    pub fn acquires(&self) -> Option<Acquires> { support::child(&self.syntax) }
     #[inline]
     pub fn body(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
     #[inline]
@@ -2567,6 +2578,27 @@ impl AstNode for AbortsWithStmt {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == ABORTS_WITH_STMT }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for Acquires {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ACQUIRES
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == ACQUIRES }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -9095,6 +9127,11 @@ impl std::fmt::Display for AbortsIfWith {
     }
 }
 impl std::fmt::Display for AbortsWithStmt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for Acquires {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
