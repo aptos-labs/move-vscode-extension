@@ -1,0 +1,42 @@
+SOURCE_FILE@0..62
+  MODULE@0..61
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..29
+      IDENT@12..29 "type_arg_wildcard"
+    WHITESPACE@29..30 " "
+    L_CURLY@30..31 "{"
+    WHITESPACE@31..36 "\n    "
+    CONST@36..59
+      CONST_KW@36..41 "const"
+      WHITESPACE@41..42 " "
+      NAME@42..43
+        IDENT@42..43 "A"
+      COLON@43..44 ":"
+      WHITESPACE@44..45 " "
+      PATH_TYPE@45..54
+        PATH@45..54
+          PATH_SEGMENT@45..54
+            NAME_REF@45..51
+              IDENT@45..51 "vector"
+            TYPE_ARG_LIST@51..54
+              L_ANGLE@51..52 "<"
+              TYPE_ARG@52..53
+                PATH_TYPE@52..53
+                  PATH@52..53
+                    PATH_SEGMENT@52..53
+                      NAME_REF@52..53
+                        IDENT@52..53 "_"
+              R_ANGLE@53..54 ">"
+      WHITESPACE@54..55 " "
+      EQ@55..56 "="
+      WHITESPACE@56..57 " "
+      LITERAL@57..58
+        INT_NUMBER@57..58 "1"
+      SEMICOLON@58..59 ";"
+    WHITESPACE@59..60 "\n"
+    R_CURLY@60..61 "}"
+  WHITESPACE@61..62 "\n"

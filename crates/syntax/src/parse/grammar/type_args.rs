@@ -88,11 +88,10 @@ pub(crate) const TYPE_ARG_FIRST: TokenSet = TokenSet::new(&[IDENT]);
 pub(crate) fn type_arg(p: &mut Parser, is_type: bool) -> bool {
     match p.current() {
         IDENT => {
-            let m = p.start();
+            let type_arg_m = p.start();
             name_ref(p);
             opt_path_type_arg_list(p, PathMode::Type);
-
-            let path_segment_cm = m.complete(p, PATH_SEGMENT);
+            let path_segment_cm = type_arg_m.complete(p, PATH_SEGMENT);
 
             let path_m = path_segment_cm.precede(p);
             let path_cm = path_m.complete(p, PATH);
@@ -104,7 +103,7 @@ pub(crate) fn type_arg(p: &mut Parser, is_type: bool) -> bool {
             m.precede(p).complete(p, TYPE_ARG);
         }
         _ if p.at_ts(TYPE_FIRST) => {
-            let m = p.start();
+            let type_arg_m = p.start();
             let mut rec = vec![T![,]];
             let mut rec_token_set = TokenSet::from(T![,]);
             // can't recover at T![>] in expr due to ambiguity
@@ -114,12 +113,15 @@ pub(crate) fn type_arg(p: &mut Parser, is_type: bool) -> bool {
             let is_valid_type = p.with_recovery_token_set(rec_token_set, types::type_);
             if !is_type && !is_valid_type {
                 // have to be safe
-                m.abandon(p);
+                type_arg_m.abandon(p);
                 return false;
             }
-            m.complete(p, TYPE_ARG);
+            type_arg_m.complete(p, TYPE_ARG);
         }
-        _ => return false,
+        _ => {
+            // type_arg_m.abandon(p);
+            return false;
+        }
     }
     true
 }

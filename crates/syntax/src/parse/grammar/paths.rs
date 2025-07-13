@@ -12,7 +12,7 @@ use crate::parse::parser::{CompletedMarker, Parser};
 use crate::parse::token_set::TokenSet;
 use crate::{T, ts};
 
-pub(super) const PATH_FIRST: TokenSet = TokenSet::new(&[IDENT, INT_NUMBER]);
+pub(super) const PATH_FIRST: TokenSet = TokenSet::new(&[IDENT, INT_NUMBER, T!['_']]);
 
 pub(super) fn is_path_start(p: &Parser) -> bool {
     match p.current() {
@@ -43,26 +43,26 @@ pub(crate) fn path(p: &mut Parser, mode: Option<PathMode>) -> bool {
         m.abandon(p);
         return false;
     }
-    let qual = m.complete(p, PATH);
-    path_for_qualifier(p, mode, qual);
+    let qual_cm = m.complete(p, PATH);
+    path_for_qualifier(p, mode, qual_cm);
     true
 }
 
 pub(crate) fn path_for_qualifier(
     p: &mut Parser,
     mode: Option<PathMode>,
-    mut qual: CompletedMarker,
+    mut qual_cm: CompletedMarker,
 ) -> CompletedMarker {
     loop {
         let is_use_tree = matches!(p.nth(1), T!['{']);
         if p.at(T![::]) && !is_use_tree {
-            let path = qual.precede(p);
+            let path = qual_cm.precede(p);
             p.bump(T![::]);
             path_segment(p, mode, false);
             let path = path.complete(p, PATH);
-            qual = path;
+            qual_cm = path;
         } else {
-            return qual;
+            return qual_cm;
         }
     }
 }
@@ -72,10 +72,7 @@ fn path_segment(p: &mut Parser, type_args_kind: Option<PathMode>, is_first: bool
     let m = p.start();
     match p.current() {
         IDENT => {
-            let m = p.start();
-            p.bump(IDENT);
-            m.complete(p, NAME_REF);
-
+            name_ref(p);
             #[cfg(debug_assertions)]
             let _p =
                 stdx::panic_context::enter(format!("path_segment_type_args {:?}", p.current_text()));
