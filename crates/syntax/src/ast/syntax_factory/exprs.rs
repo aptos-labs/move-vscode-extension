@@ -87,6 +87,63 @@ impl SyntaxFactory {
         }
         method_call_expr
     }
+
+    pub fn lit_field_shorthand(&self, expr: ast::Expr) -> ast::StructLitField {
+        let new_lit_field = ast_from_text::<ast::StructLitField>(&format!(
+            "module 0x1::m {{ fun main() {{ S {{ {} }} }}",
+            expr.syntax().text()
+        ))
+        .clone_for_update();
+
+        if let Some(mut mapping) = self.mappings() {
+            let mut builder = SyntaxMappingBuilder::new(new_lit_field.syntax.clone());
+            builder.map_node(
+                expr.syntax().clone(),
+                new_lit_field.expr().unwrap().syntax().clone(),
+            );
+            builder.finish(&mut mapping);
+        }
+
+        new_lit_field
+    }
+
+    pub fn schema_lit_field_shorthand(&self, expr: ast::Expr) -> ast::SchemaLitField {
+        let new_lit_field = ast_from_text::<ast::SchemaLitField>(&format!(
+            "module 0x1::m {{ spec module {{ include S {{ {} }} }}",
+            expr.syntax().text()
+        ))
+        .clone_for_update();
+
+        if let Some(mut mapping) = self.mappings() {
+            let mut builder = SyntaxMappingBuilder::new(new_lit_field.syntax.clone());
+            builder.map_node(
+                expr.syntax().clone(),
+                new_lit_field.expr().unwrap().syntax().clone(),
+            );
+            builder.finish(&mut mapping);
+        }
+
+        new_lit_field
+    }
+
+    pub fn pat_field_shorthand(&self, ident_pat: ast::IdentPat) -> ast::StructPatField {
+        let new_pat_field = ast_from_text::<ast::StructPatField>(&format!(
+            "module 0x1::m {{ fun main() {{ let S {{ {} }} }}",
+            ident_pat.syntax.text()
+        ))
+        .clone_for_update();
+
+        if let Some(mut mapping) = self.mappings() {
+            let mut builder = SyntaxMappingBuilder::new(new_pat_field.syntax.clone());
+            builder.map_node(
+                ident_pat.syntax().clone(),
+                new_pat_field.ident_pat().unwrap().syntax().clone(),
+            );
+            builder.finish(&mut mapping);
+        }
+
+        new_pat_field
+    }
 }
 
 pub(super) fn expr_from_text<E: Into<ast::Expr> + AstNode>(text: &str) -> E {

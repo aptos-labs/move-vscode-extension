@@ -25,7 +25,7 @@ pub(crate) fn can_be_replaced_with_method_call(
     acc: &mut Vec<Diagnostic>,
     ctx: &DiagnosticsContext<'_>,
     call_expr: InFile<ast::CallExpr>,
-) -> Option<Diagnostic> {
+) -> Option<()> {
     let msl = call_expr.value.syntax().is_msl_context();
 
     let reference = call_expr
@@ -71,7 +71,7 @@ pub(crate) fn can_be_replaced_with_method_call(
         )
     }
 
-    None
+    Some(())
 }
 
 #[tracing::instrument(level = "trace", skip_all)]
@@ -134,6 +134,7 @@ fn fixes(
             let mut editor = builder.make_editor(&call_expr_parent);
             editor.replace(call_expr.syntax(), method_call_expr.syntax());
 
+            editor.add_mappings(make.finish_with_mappings());
             builder.add_file_edits(file_id, editor);
         },
     );

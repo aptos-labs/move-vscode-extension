@@ -14,7 +14,7 @@ impl ast::StructPatField {
             .expect("required by parser")
     }
 
-    pub fn kind(&self) -> PatFieldKind {
+    pub fn field_kind(&self) -> PatFieldKind {
         let ident_pat = self.ident_pat();
         if let (Some(pat), Some(name_ref)) = (self.pat(), self.name_ref()) {
             return PatFieldKind::Full { name_ref, pat };
@@ -29,7 +29,7 @@ impl ast::StructPatField {
     }
 
     pub fn is_shorthand(&self) -> bool {
-        matches!(self.kind(), PatFieldKind::Shorthand { .. })
+        matches!(self.field_kind(), PatFieldKind::Shorthand { .. })
     }
 
     pub fn for_field_name_ref(field_name: &ast::NameRef) -> Option<ast::StructPatField> {
@@ -43,7 +43,7 @@ impl ast::StructPatField {
     }
 
     pub fn field_name(&self) -> Option<String> {
-        match self.kind() {
+        match self.field_kind() {
             PatFieldKind::Full { name_ref, .. } => Some(name_ref.as_string()),
             PatFieldKind::Shorthand { ident_pat } => Some(ident_pat.name()?.as_string()),
             _ => None,

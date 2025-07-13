@@ -68,6 +68,7 @@ fn fixes(
                 let new_bin_expr = make.bin_expr(lhs_expr, compound_op, rhs_expr);
                 editor.replace(bin_expr.syntax(), new_bin_expr.syntax());
 
+                editor.add_mappings(make.finish_with_mappings());
                 builder.add_file_edits(file_id, editor);
             },
         );

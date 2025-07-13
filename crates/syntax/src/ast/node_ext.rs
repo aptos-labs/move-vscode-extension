@@ -64,7 +64,7 @@ mod ref_type;
 mod schema;
 mod schema_field;
 mod schema_lit;
-mod schema_lit_field;
+pub mod schema_lit_field;
 mod source_file;
 pub mod spec_predicate_stmt;
 mod struct_;

@@ -24,6 +24,7 @@ pub use self::{
     generated::{nodes::*, tokens::*},
     // expr_ext::{ArrayExprKind, BlockModifier, CallableExpr, ElseBranch, LiteralKind},
     node_ext::literal::LiteralKind,
+    node_ext::schema_lit_field::SchemaLitFieldKind,
     node_ext::struct_lit_field::StructLitFieldKind,
     node_ext::struct_pat_field::PatFieldKind,
     operators::{ArithOp, BinaryOp, CmpOp, LogicOp, Ordering, RangeOp, UnaryOp},

@@ -80,7 +80,7 @@ impl TypeAstWalker<'_, '_> {
 
                 for (pat_field, (named_field_entry, ty)) in pat_fields.into_iter().zip(pat_field_tys) {
                     let pat_field_ty = ty.substitute(&ty_adt_subst);
-                    match pat_field.kind() {
+                    match pat_field.field_kind() {
                         PatFieldKind::Full { pat, .. } => {
                             self.collect_pat_bindings(pat, pat_field_ty.clone(), pat_bm.clone());
                             self.ctx.pat_field_types.insert(pat_field, pat_field_ty);

@@ -314,7 +314,7 @@ impl<'db> InferenceCtx<'db> {
 
     pub fn get_binding_type(&self, ident_pat: ast::IdentPat) -> Option<Ty> {
         if let Some(pat_field) = ident_pat.syntax().parent_of_type::<ast::StructPatField>() {
-            if matches!(pat_field.kind(), PatFieldKind::Shorthand { .. }) {
+            if matches!(pat_field.field_kind(), PatFieldKind::Shorthand { .. }) {
                 return self.pat_field_types.get(&pat_field).map(|it| it.to_owned());
             }
         }

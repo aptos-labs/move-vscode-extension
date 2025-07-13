@@ -18,6 +18,7 @@ mod exprs;
 use crate::syntax_editor::mapping::SyntaxMapping;
 use crate::{AstNode, SourceFile, ast};
 use std::cell::{RefCell, RefMut};
+use std::thread::panicking;
 
 pub struct SyntaxFactory {
     // Stored in a refcell so that the factory methods can be &self
