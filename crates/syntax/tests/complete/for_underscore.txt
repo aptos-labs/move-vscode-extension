@@ -1,0 +1,53 @@
+SOURCE_FILE@0..93
+  MODULE@0..92
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..26
+      IDENT@12..26 "for_underscore"
+    WHITESPACE@26..27 " "
+    L_CURLY@27..28 "{"
+    WHITESPACE@28..33 "\n    "
+    FUN@33..90
+      FUN_KW@33..36 "fun"
+      WHITESPACE@36..37 " "
+      NAME@37..41
+        IDENT@37..41 "main"
+      PARAM_LIST@41..43
+        L_PAREN@41..42 "("
+        R_PAREN@42..43 ")"
+      WHITESPACE@43..44 " "
+      BLOCK_EXPR@44..90
+        L_CURLY@44..45 "{"
+        WHITESPACE@45..54 "\n        "
+        EXPR_STMT@54..84
+          FOR_EXPR@54..83
+            FOR_KW@54..57 "for"
+            WHITESPACE@57..58 " "
+            FOR_CONDITION@58..70
+              L_PAREN@58..59 "("
+              WILDCARD_PAT@59..60
+                UNDERSCORE@59..60 "_"
+              WHITESPACE@60..61 " "
+              IN_KW@61..63 "in"
+              WHITESPACE@63..64 " "
+              RANGE_EXPR@64..69
+                LITERAL@64..65
+                  INT_NUMBER@64..65 "0"
+                DOT_DOT@65..67 ".."
+                LITERAL@67..69
+                  INT_NUMBER@67..69 "10"
+              R_PAREN@69..70 ")"
+            WHITESPACE@70..71 " "
+            BLOCK_EXPR@71..83
+              L_CURLY@71..72 "{"
+              WHITESPACE@72..82 "\n\n        "
+              R_CURLY@82..83 "}"
+          SEMICOLON@83..84 ";"
+        WHITESPACE@84..89 "\n    "
+        R_CURLY@89..90 "}"
+    WHITESPACE@90..91 "\n"
+    R_CURLY@91..92 "}"
+  WHITESPACE@92..93 "\n"

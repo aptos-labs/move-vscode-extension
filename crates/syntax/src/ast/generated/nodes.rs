@@ -510,6 +510,8 @@ impl ForCondition {
     #[inline]
     pub fn ident_pat(&self) -> Option<IdentPat> { support::child(&self.syntax) }
     #[inline]
+    pub fn wildcard_pat(&self) -> Option<WildcardPat> { support::child(&self.syntax) }
+    #[inline]
     pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
     #[inline]
     pub fn r_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![')']) }
@@ -1331,6 +1333,8 @@ impl QuantBinding {
     pub fn ident_pat(&self) -> Option<IdentPat> { support::child(&self.syntax) }
     #[inline]
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
+    #[inline]
+    pub fn wildcard_pat(&self) -> Option<WildcardPat> { support::child(&self.syntax) }
     #[inline]
     pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
     #[inline]

@@ -95,7 +95,7 @@ pub(crate) fn quant_binding(p: &mut Parser) -> bool {
         return false;
     }
     let m = p.start();
-    patterns::ident_pat(p);
+    patterns::ident_pat_or_recover(p);
     match p.current() {
         T![:] => {
             types::type_annotation(p);

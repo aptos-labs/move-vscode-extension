@@ -345,7 +345,7 @@ ForExpr =
     LabelDecl? 'for' ForCondition loop_body_expr:BlockOrInlineExpr
 
 ForCondition =
-    '(' IdentPat 'in' Expr ')'
+    '(' (IdentPat | WildcardPat) 'in' Expr ')'
 
 LoopLike =
     LoopExpr | WhileExpr | ForExpr
@@ -606,7 +606,7 @@ QuantBindingList =
     bindings:(QuantBinding (',' QuantBinding)* ','?)?
 
 QuantBinding =
-    IdentPat ('in' Expr) | (':' Type)
+    (IdentPat | WildcardPat) ('in' Expr) | (':' Type)
 
 WhereExpr =
     'where' Expr
