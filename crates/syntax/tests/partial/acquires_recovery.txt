@@ -1,0 +1,109 @@
+SOURCE_FILE@0..164
+  MODULE@0..163
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..29
+      IDENT@12..29 "acquires_recovery"
+    WHITESPACE@29..30 " "
+    L_CURLY@30..31 "{"
+    WHITESPACE@31..36 "\n    "
+    FUN@36..60
+      FUN_KW@36..39 "fun"
+      WHITESPACE@39..40 " "
+      NAME@40..41
+        IDENT@40..41 "m"
+      PARAM_LIST@41..43
+        L_PAREN@41..42 "("
+        R_PAREN@42..43 ")"
+      WHITESPACE@43..44 " "
+      ACQUIRES@44..52
+        ACQUIRES_KW@44..52 "acquires"
+      WHITESPACE@52..53 " "
+      BLOCK_EXPR@53..60
+        L_CURLY@53..54 "{"
+        WHITESPACE@54..59 "\n    "
+        R_CURLY@59..60 "}"
+    WHITESPACE@60..65 "\n    "
+    FUN@65..82
+      FUN_KW@65..68 "fun"
+      WHITESPACE@68..69 " "
+      NAME@69..70
+        IDENT@69..70 "m"
+      PARAM_LIST@70..72
+        L_PAREN@70..71 "("
+        R_PAREN@71..72 ")"
+      WHITESPACE@72..73 " "
+      ACQUIRES@73..81
+        ACQUIRES_KW@73..81 "acquires"
+      SEMICOLON@81..82 ";"
+    WHITESPACE@82..87 "\n    "
+    FUN@87..108
+      FUN_KW@87..90 "fun"
+      WHITESPACE@90..91 " "
+      NAME@91..92
+        IDENT@91..92 "m"
+      PARAM_LIST@92..94
+        L_PAREN@92..93 "("
+        R_PAREN@93..94 ")"
+      WHITESPACE@94..95 " "
+      ACQUIRES@95..107
+        ACQUIRES_KW@95..103 "acquires"
+        WHITESPACE@103..104 " "
+        PATH_TYPE@104..107
+          PATH@104..107
+            PATH@104..105
+              PATH_SEGMENT@104..105
+                NAME_REF@104..105
+                  IDENT@104..105 "T"
+            COLON_COLON@105..107 "::"
+      SEMICOLON@107..108 ";"
+    WHITESPACE@108..113 "\n    "
+    FUN@113..133
+      FUN_KW@113..116 "fun"
+      WHITESPACE@116..117 " "
+      NAME@117..118
+        IDENT@117..118 "m"
+      PARAM_LIST@118..120
+        L_PAREN@118..119 "("
+        R_PAREN@119..120 ")"
+      WHITESPACE@120..121 " "
+      ACQUIRES@121..133
+        ACQUIRES_KW@121..129 "acquires"
+        WHITESPACE@129..130 " "
+        PATH_TYPE@130..133
+          PATH@130..133
+            PATH@130..131
+              PATH_SEGMENT@130..131
+                NAME_REF@130..131
+                  IDENT@130..131 "T"
+            COLON_COLON@131..133 "::"
+    WHITESPACE@133..138 "\n    "
+    FUN@138..161
+      FUN_KW@138..141 "fun"
+      WHITESPACE@141..142 " "
+      NAME@142..143
+        IDENT@142..143 "m"
+      PARAM_LIST@143..145
+        L_PAREN@143..144 "("
+        R_PAREN@144..145 ")"
+      WHITESPACE@145..146 " "
+      ACQUIRES@146..158
+        ACQUIRES_KW@146..154 "acquires"
+        WHITESPACE@154..155 " "
+        PATH_TYPE@155..156
+          PATH@155..156
+            PATH_SEGMENT@155..156
+              NAME_REF@155..156
+                IDENT@155..156 "T"
+        ERROR@156..158
+          COLON_COLON@156..158 "::"
+      WHITESPACE@158..159 " "
+      BLOCK_EXPR@159..161
+        L_CURLY@159..160 "{"
+        R_CURLY@160..161 "}"
+    WHITESPACE@161..162 "\n"
+    R_CURLY@162..163 "}"
+  WHITESPACE@163..164 "\n"

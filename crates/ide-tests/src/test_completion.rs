@@ -1246,3 +1246,42 @@ module std::main {
     "#,
     );
 }
+
+#[test]
+fn test_completion_for_acquires_type() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    struct String {}
+    fun main() acquires /*caret*/ {
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "String",
+            ]"#]],
+    );
+}
+
+#[test]
+fn test_completion_for_acquires_type_from_other_module() {
+    check_completions(
+        // language=Move
+        r#"
+module std::string {
+    struct String {}
+}
+module std::main {
+    use std::string;
+    fun main() acquires string::/*caret*/ {
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "String",
+            ]"#]],
+    );
+}

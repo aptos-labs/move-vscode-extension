@@ -15,10 +15,10 @@ use crate::parse::grammar::items::fun::{
     function_modifier_kws, function_modifier_recovery_set, function_modifier_tokens,
     on_function_modifiers_start, on_visibility_modifier_start, visibility_modifier,
 };
-use crate::parse::grammar::paths::use_path;
+use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::patterns::STMT_FIRST;
 use crate::parse::grammar::specs::schemas::schema;
-use crate::parse::grammar::{attributes, error_block, name_or_recover, types};
+use crate::parse::grammar::{attributes, error_block, name_or_recover, paths, types};
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
@@ -156,7 +156,7 @@ fn const_(p: &mut Parser, m: Marker) {
 
 pub(crate) fn friend_decl(p: &mut Parser, m: Marker) {
     p.bump(T![friend]);
-    use_path(p);
+    paths::path(p, None);
     p.expect(T![;]);
     m.complete(p, FRIEND);
 }

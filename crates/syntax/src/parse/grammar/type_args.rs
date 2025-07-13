@@ -6,16 +6,16 @@
 
 use super::*;
 use crate::TextSize;
-use crate::parse::grammar::paths::Mode;
-use crate::parse::grammar::types::{TYPE_FIRST, TYPE_FIRST_NO_LAMBDA};
+use crate::parse::grammar::paths::PathMode;
+use crate::parse::grammar::types::{TYPE_FIRST, TYPE_FIRST_NO_LAMBDA, path_type};
 use crate::parse::grammar::utils::delimited_with_recovery;
 use std::ops::ControlFlow::{Break, Continue};
 
-pub(crate) fn opt_path_type_arg_list(p: &mut Parser, mode: Mode) {
+pub(crate) fn opt_path_type_arg_list(p: &mut Parser, mode: PathMode) {
     match mode {
-        Mode::Use => {}
-        Mode::Type => opt_type_arg_list_for_type(p),
-        Mode::Expr => opt_type_arg_list_for_expr(p, false),
+        // TypeArgs::None => {}
+        PathMode::Type => opt_type_arg_list_for_type(p),
+        PathMode::Expr => opt_type_arg_list_for_expr(p, false),
     }
 }
 
@@ -82,24 +82,16 @@ pub(super) fn opt_type_arg_list_for_expr(p: &mut Parser, colon_colon_required: b
     m.complete(p, TYPE_ARG_LIST);
 }
 
-pub(crate) const TYPE_ARG_FIRST: TokenSet = TokenSet::new(&[IDENT]);
+pub(crate) const TYPE_ARG_FIRST: TokenSet = paths::PATH_FIRST;
 // .union(types::TYPE_FIRST);
 
 pub(crate) fn type_arg(p: &mut Parser, is_type: bool) -> bool {
+    let type_arg_m = p.start();
     match p.current() {
         IDENT => {
-            let m = p.start();
-            name_ref(p);
-            opt_path_type_arg_list(p, Mode::Type);
-
-            let m = m.complete(p, PATH_SEGMENT).precede(p).complete(p, PATH);
-            let m = paths::type_path_for_qualifier(p, m);
-
-            let m = m.precede(p).complete(p, PATH_TYPE);
-            m.precede(p).complete(p, TYPE_ARG);
+            path_type(p);
         }
         _ if p.at_ts(TYPE_FIRST) => {
-            let m = p.start();
             let mut rec = vec![T![,]];
             let mut rec_token_set = TokenSet::from(T![,]);
             // can't recover at T![>] in expr due to ambiguity
@@ -109,12 +101,15 @@ pub(crate) fn type_arg(p: &mut Parser, is_type: bool) -> bool {
             let is_valid_type = p.with_recovery_token_set(rec_token_set, types::type_);
             if !is_type && !is_valid_type {
                 // have to be safe
-                m.abandon(p);
+                type_arg_m.abandon(p);
                 return false;
             }
-            m.complete(p, TYPE_ARG);
         }
-        _ => return false,
+        _ => {
+            type_arg_m.abandon(p);
+            return false;
+        }
     }
+    type_arg_m.complete(p, TYPE_ARG);
     true
 }

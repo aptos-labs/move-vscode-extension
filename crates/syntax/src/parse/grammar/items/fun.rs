@@ -150,6 +150,7 @@ fn acquires(p: &mut Parser) {
                 return false;
             }
             path_type(p);
+            // p.with_recovery_token_set(T!['{'] | T![;], |p| path_type);
             true
         },
         T![,],

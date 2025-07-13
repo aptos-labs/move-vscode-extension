@@ -7,6 +7,7 @@
 use crate::SyntaxKind::*;
 use crate::T;
 use crate::parse::grammar::items::item_start_kws_only;
+use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{name, paths};
 use crate::parse::parser::Parser;
@@ -25,7 +26,8 @@ pub(crate) fn use_speck(p: &mut Parser, is_top_level: bool) -> bool {
         return true;
     }
     let m = p.start();
-    paths::use_path(p);
+    paths::path(p, None);
+    // paths::use_path(p);
     match p.current() {
         T![as] => use_alias(p),
         T![::] => {

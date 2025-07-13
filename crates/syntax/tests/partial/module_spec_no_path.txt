@@ -2,7 +2,6 @@ SOURCE_FILE@0..26
   MODULE_SPEC@0..26
     SPEC_KW@0..4 "spec"
     WHITESPACE@4..5 " "
-    PATH@5..5
     L_CURLY@5..6 "{"
     WHITESPACE@6..11 "\n    "
     ITEM_SPEC@11..24

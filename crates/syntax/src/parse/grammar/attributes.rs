@@ -5,7 +5,7 @@
 // Modifications have been made to the original code.
 
 use crate::SyntaxKind::*;
-use crate::parse::grammar::paths::PATH_FIRST;
+use crate::parse::grammar::paths::{PATH_FIRST, PathMode};
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{expressions, paths};
 use crate::parse::parser::{CompletedMarker, Parser};
@@ -41,7 +41,7 @@ fn attr(p: &mut Parser, inner: bool) -> CompletedMarker {
 
 pub(super) fn attr_item(p: &mut Parser) -> bool {
     let meta = p.start();
-    paths::use_path(p);
+    paths::path(p, None);
 
     match p.current() {
         T![=] => {

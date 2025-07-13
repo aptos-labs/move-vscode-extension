@@ -1,0 +1,53 @@
+SOURCE_FILE@0..84
+  MODULE@0..83
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..33
+      IDENT@12..33 "path_type_arg_fq_name"
+    WHITESPACE@33..34 " "
+    L_CURLY@34..35 "{"
+    WHITESPACE@35..40 "\n    "
+    CONST@40..81
+      CONST_KW@40..45 "const"
+      WHITESPACE@45..46 " "
+      NAME@46..47
+        IDENT@46..47 "S"
+      COLON@47..48 ":"
+      WHITESPACE@48..49 " "
+      PATH_TYPE@49..76
+        PATH@49..76
+          PATH_SEGMENT@49..76
+            NAME_REF@49..55
+              IDENT@49..55 "MyType"
+            TYPE_ARG_LIST@55..76
+              L_ANGLE@55..56 "<"
+              TYPE_ARG@56..75
+                PATH_TYPE@56..75
+                  PATH@56..75
+                    PATH@56..62
+                      PATH@56..59
+                        PATH_SEGMENT@56..59
+                          PATH_ADDRESS@56..59
+                            VALUE_ADDRESS@56..59
+                              INT_NUMBER@56..59 "0x1"
+                      COLON_COLON@59..61 "::"
+                      PATH_SEGMENT@61..62
+                        NAME_REF@61..62
+                          IDENT@61..62 "m"
+                    COLON_COLON@62..64 "::"
+                    PATH_SEGMENT@64..75
+                      NAME_REF@64..75
+                        IDENT@64..75 "MyInnerType"
+              R_ANGLE@75..76 ">"
+      WHITESPACE@76..77 " "
+      EQ@77..78 "="
+      WHITESPACE@78..79 " "
+      LITERAL@79..80
+        INT_NUMBER@79..80 "1"
+      SEMICOLON@80..81 ";"
+    WHITESPACE@81..82 "\n"
+    R_CURLY@82..83 "}"
+  WHITESPACE@83..84 "\n"
