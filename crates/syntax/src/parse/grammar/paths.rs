@@ -38,37 +38,34 @@ pub(crate) enum PathMode {
 
 pub(crate) fn path(p: &mut Parser, mode: Option<PathMode>) -> bool {
     let m = p.start();
-    let has_first_path = path_segment(p, mode, true);
-    if !has_first_path {
+    let has_first_segment = path_segment(p, mode, true).is_some();
+    if !has_first_segment {
         m.abandon(p);
         return false;
     }
-    let qual_cm = m.complete(p, PATH);
-    path_for_qualifier(p, mode, qual_cm);
+    let mut qual_path = m.complete(p, PATH);
+    loop {
+        if !p.at(T![::]) {
+            break;
+        }
+        // stop if next is use group
+        if p.nth_at(1, T!['{']) {
+            break;
+        }
+        let path = qual_path.precede(p);
+        p.bump(T![::]);
+        path_segment(p, mode, false);
+        qual_path = path.complete(p, PATH);
+    }
     true
 }
 
-pub(crate) fn path_for_qualifier(
-    p: &mut Parser,
-    mode: Option<PathMode>,
-    mut qual_cm: CompletedMarker,
-) -> CompletedMarker {
-    loop {
-        let is_use_tree = matches!(p.nth(1), T!['{']);
-        if p.at(T![::]) && !is_use_tree {
-            let path = qual_cm.precede(p);
-            p.bump(T![::]);
-            path_segment(p, mode, false);
-            let path = path.complete(p, PATH);
-            qual_cm = path;
-        } else {
-            return qual_cm;
-        }
-    }
-}
-
 // VALUE_ADDRESS | NAME_REF TYPE_ARGS? | '_'
-fn path_segment(p: &mut Parser, type_args_kind: Option<PathMode>, is_first: bool) -> bool {
+pub(crate) fn path_segment(
+    p: &mut Parser,
+    type_args_kind: Option<PathMode>,
+    is_first: bool,
+) -> Option<CompletedMarker> {
     let m = p.start();
     match p.current() {
         IDENT => {
@@ -93,9 +90,8 @@ fn path_segment(p: &mut Parser, type_args_kind: Option<PathMode>, is_first: bool
         _ => {
             p.error_and_recover("expected identifier", item_start_rec_set());
             m.abandon(p);
-            return false;
+            return None;
         }
     };
-    m.complete(p, PATH_SEGMENT);
-    true
+    Some(m.complete(p, PATH_SEGMENT))
 }

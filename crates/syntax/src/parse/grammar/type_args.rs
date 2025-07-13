@@ -7,7 +7,7 @@
 use super::*;
 use crate::TextSize;
 use crate::parse::grammar::paths::PathMode;
-use crate::parse::grammar::types::{TYPE_FIRST, TYPE_FIRST_NO_LAMBDA};
+use crate::parse::grammar::types::{TYPE_FIRST, TYPE_FIRST_NO_LAMBDA, path_type};
 use crate::parse::grammar::utils::delimited_with_recovery;
 use std::ops::ControlFlow::{Break, Continue};
 
@@ -82,28 +82,16 @@ pub(super) fn opt_type_arg_list_for_expr(p: &mut Parser, colon_colon_required: b
     m.complete(p, TYPE_ARG_LIST);
 }
 
-pub(crate) const TYPE_ARG_FIRST: TokenSet = TokenSet::new(&[IDENT]);
+pub(crate) const TYPE_ARG_FIRST: TokenSet = paths::PATH_FIRST;
 // .union(types::TYPE_FIRST);
 
 pub(crate) fn type_arg(p: &mut Parser, is_type: bool) -> bool {
+    let type_arg_m = p.start();
     match p.current() {
         IDENT => {
-            let type_arg_m = p.start();
-            name_ref(p);
-            opt_path_type_arg_list(p, PathMode::Type);
-            let path_segment_cm = type_arg_m.complete(p, PATH_SEGMENT);
-
-            let path_m = path_segment_cm.precede(p);
-            let path_cm = path_m.complete(p, PATH);
-
-            // let cm = m.complete(p, PATH_SEGMENT).precede(p).complete(p, PATH);
-            let cm = paths::path_for_qualifier(p, Some(PathMode::Type), path_cm);
-
-            let m = cm.precede(p).complete(p, PATH_TYPE);
-            m.precede(p).complete(p, TYPE_ARG);
+            path_type(p);
         }
         _ if p.at_ts(TYPE_FIRST) => {
-            let type_arg_m = p.start();
             let mut rec = vec![T![,]];
             let mut rec_token_set = TokenSet::from(T![,]);
             // can't recover at T![>] in expr due to ambiguity
@@ -116,12 +104,12 @@ pub(crate) fn type_arg(p: &mut Parser, is_type: bool) -> bool {
                 type_arg_m.abandon(p);
                 return false;
             }
-            type_arg_m.complete(p, TYPE_ARG);
         }
         _ => {
-            // type_arg_m.abandon(p);
+            type_arg_m.abandon(p);
             return false;
         }
     }
+    type_arg_m.complete(p, TYPE_ARG);
     true
 }
