@@ -125,8 +125,8 @@ module 0x1::m {
 }
 
 #[test]
-fn test_no_completions_on_completed_let_keyword() {
-    check_no_completions(
+fn test_on_let_keyword_only_let() {
+    check_completions(
         // language=Move
         r#"
 module 0x1::m {
@@ -135,6 +135,10 @@ module 0x1::m {
     }
 }
     "#,
+        expect![[r#"
+        [
+            "let",
+        ]"#]],
     );
 }
 
@@ -1282,6 +1286,24 @@ module std::main {
         expect![[r#"
             [
                 "String",
+            ]"#]],
+    );
+}
+
+#[test]
+fn test_complete_assert_from_as_keyword() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    fun main() {
+        as/*caret*/
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "assert!(_: bool, err: u64)",
             ]"#]],
     );
 }

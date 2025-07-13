@@ -124,7 +124,7 @@ impl CompletionContext<'_> {
 }
 
 impl<'a> CompletionContext<'a> {
-    pub(crate) fn new(
+    pub(crate) fn new_with_analysis(
         db: &'a RootDatabase,
         position @ FilePosition { file_id, offset }: FilePosition,
         config: &'a CompletionConfig,

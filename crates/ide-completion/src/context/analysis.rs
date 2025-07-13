@@ -33,14 +33,12 @@ pub(crate) fn completion_analysis(
     // as we insert after the offset, right biased will *always* pick the identifier no matter
     // if there is an ident already typed or not
     let fake_token = fake_file.token_at_offset(original_offset).right_biased()?;
-    if !original_token.kind().is_keyword() {
-        if let Some(fake_ref) = fake_token
-            .parent_ancestors()
-            .find_map(ast::ReferenceElement::cast)
-        {
-            let analysis = analyze_ref(&fake_ref, original_file, original_offset);
-            return analysis.map(|analysis| AnalysisResult { analysis, expected });
-        }
+    if let Some(fake_ref) = fake_token
+        .parent_ancestors()
+        .find_map(ast::ReferenceElement::cast)
+    {
+        let analysis = analyze_ref(&fake_ref, original_file, original_offset);
+        return analysis.map(|analysis| AnalysisResult { analysis, expected });
     }
 
     let ident = original_token.clone();
