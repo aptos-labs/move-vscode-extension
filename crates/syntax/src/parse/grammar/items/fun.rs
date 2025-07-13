@@ -142,21 +142,7 @@ fn opt_inner_public_modifier(p: &mut Parser) {
 fn acquires(p: &mut Parser) {
     let m = p.start();
     p.bump(T![acquires]);
-    delimited_with_recovery(
-        p,
-        |p| {
-            let is_path = paths::is_path_start(p);
-            if !is_path {
-                return false;
-            }
-            path_type(p);
-            // p.with_recovery_token_set(T!['{'] | T![;], |p| path_type);
-            true
-        },
-        T![,],
-        "expected type",
-        None,
-    );
+    delimited_with_recovery(p, path_type, T![,], "expected type", None);
     m.complete(p, ACQUIRES);
 }
 

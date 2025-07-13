@@ -48,16 +48,19 @@ pub(crate) fn add_path_completions(
     if path_ctx.qualifier.is_none() {
         match path_ctx.path_kind {
             PathKind::Type => {
-                for type_name in PRIMITIVE_TYPES.iter() {
-                    if *type_name == "vector" {
-                        let mut item = ctx.new_item(CompletionItemKind::BuiltinType, "vector");
-                        item.insert_snippet("vector<$0>");
-                        acc.add(item.build(ctx.db));
-                        continue;
+                if !path_ctx.is_acquires {
+                    for type_name in PRIMITIVE_TYPES.iter() {
+                        if *type_name == "vector" {
+                            let mut item = ctx.new_item(CompletionItemKind::BuiltinType, "vector");
+                            item.insert_snippet("vector<$0>");
+                            acc.add(item.build(ctx.db));
+                            continue;
+                        }
+                        acc.add(ctx.new_snippet_item(
+                            CompletionItemKind::BuiltinType,
+                            format!("{type_name}$0"),
+                        ));
                     }
-                    acc.add(
-                        ctx.new_snippet_item(CompletionItemKind::BuiltinType, format!("{type_name}$0")),
-                    );
                 }
             }
             PathKind::Expr => {
@@ -118,9 +121,10 @@ fn add_completions_from_the_resolution_entries(
         start_at: original_start_at.clone(),
         is_completion: true,
     };
-    let mut entries = get_path_resolve_variants(ctx.db, &resolution_ctx, path_kind.clone())
-        .filter_by_visibility(ctx.db, &original_start_at.clone());
-    tracing::debug!(completion_item_entries = ?entries);
+    let entries = get_path_resolve_variants(ctx.db, &resolution_ctx, path_kind.clone());
+
+    let mut visible_entries = entries.filter_by_visibility(ctx.db, &original_start_at.clone());
+    tracing::debug!(completion_item_entries = ?visible_entries);
 
     // remove already present items in use group
     if let Some(use_group) = path_ctx.original_use_group(&original_file) {
@@ -129,14 +133,20 @@ fn add_completions_from_the_resolution_entries(
             .filter(|it| !it.syntax().text_range().contains_inclusive(ctx.original_offset()))
             .filter_map(|it| it.path_name())
             .collect::<HashSet<_>>();
-        entries.retain(|it| !speck_names.contains(&it.name));
+        visible_entries.retain(|it| !speck_names.contains(&it.name));
     }
 
     let mut completion_items = vec![];
-    for entry in entries {
+    for entry in visible_entries {
         let name = entry.name.clone();
         let named_item = entry.cast_into::<ast::NamedElement>(ctx.db)?;
         let named_item_kind = named_item.kind();
+
+        // in acquires, only structs and enums are allowed
+        if path_ctx.is_acquires && !matches!(named_item_kind, STRUCT | ENUM) {
+            continue;
+        }
+
         match named_item_kind {
             FUN | SPEC_FUN | SPEC_INLINE_FUN => {
                 completion_items.push(
@@ -231,6 +241,7 @@ pub(crate) struct PathCompletionCtx {
     pub(crate) has_call_parens: bool,
     /// Whether the path segment has type args or not.
     pub(crate) has_type_args: bool,
+    pub(crate) is_acquires: bool,
     /// The qualifier of the current path.
     pub(crate) qualifier: Option<InFile<ast::Path>>,
     // /// The parent of the path we are completing.
@@ -310,9 +321,13 @@ fn path_completion_ctx(
         );
         qualifier = original_qualifier.map(|it| it.in_file(ctx.position.file_id));
     }
+    let is_acquires = fake_path_parent
+        .cast::<ast::PathType>()
+        .is_some_and(|it| it.syntax().parent_is::<ast::Acquires>());
     Some(PathCompletionCtx {
         has_call_parens,
         has_type_args,
+        is_acquires,
         path_kind,
         qualifier,
         fake_path,
