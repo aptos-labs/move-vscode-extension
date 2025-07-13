@@ -1,5 +1,5 @@
 spec {
-   //^ expected identifier
+  //^ expected identifier
     spec {
       //^ expected identifier
 

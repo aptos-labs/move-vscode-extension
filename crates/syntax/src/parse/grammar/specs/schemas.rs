@@ -9,11 +9,11 @@ use crate::T;
 use crate::parse::grammar::expressions::atom::{block_expr, condition};
 use crate::parse::grammar::expressions::{Restrictions, expr, expr_bp, opt_initializer_expr};
 use crate::parse::grammar::items::item_start_rec_set;
-use crate::parse::grammar::paths::type_path;
+use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::patterns::ident_pat;
 use crate::parse::grammar::specs::predicates::opt_predicate_property_list;
 use crate::parse::grammar::utils::delimited_with_recovery;
-use crate::parse::grammar::{name, name_or_recover, name_ref, type_params, types};
+use crate::parse::grammar::{name, name_or_recover, name_ref, paths, type_params, types};
 use crate::parse::parser::{CompletedMarker, Marker, Parser};
 use crate::parse::recovery_set::RecoveryToken;
 use crate::parse::token_set::TokenSet;
@@ -245,7 +245,8 @@ fn wildcard_ident(p: &mut Parser) -> bool {
 
 fn schema_lit(p: &mut Parser) -> CompletedMarker {
     let m = p.start();
-    type_path(p);
+    paths::path(p, Some(PathMode::Type));
+    // type_path(p);
 
     if p.at(T!['{']) {
         let m = p.start();

@@ -48,7 +48,7 @@ mod types;
 pub(crate) mod utils;
 
 use crate::parse::grammar::attributes::outer_attrs;
-use crate::parse::grammar::paths::{Mode, use_path};
+use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::parser::Marker;
 use crate::parse::recovery_set::RecoverySet;
@@ -123,7 +123,7 @@ pub(crate) fn address_def(p: &mut Parser, m: Marker) {
 
 pub(crate) fn module_spec(p: &mut Parser, m: Marker) {
     p.bump(T![spec]);
-    p.with_recovery_set(top_level_set().with_token_set(T!['{']), use_path);
+    p.with_recovery_set(top_level_set().with_token_set(T!['{']), |p| paths::path(p, None));
 
     if p.at(T!['{']) {
         items::item_list(p);
@@ -202,13 +202,15 @@ fn name_ref_or_recover(p: &mut Parser) -> bool {
     true
 }
 
-fn name_ref(p: &mut Parser) {
+fn name_ref(p: &mut Parser) -> bool {
     if p.at(IDENT) {
         let m = p.start();
         p.bump(IDENT);
         m.complete(p, NAME_REF);
+        true
     } else {
         p.error_and_bump("expected identifier");
+        false
     }
 }
 

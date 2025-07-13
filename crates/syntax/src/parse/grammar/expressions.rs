@@ -260,7 +260,6 @@ fn postfix_dot_expr(p: &mut Parser, lhs: CompletedMarker) -> Result<CompletedMar
 }
 
 fn method_call_expr(p: &mut Parser, lhs: CompletedMarker) -> CompletedMarker {
-    // assert!(p.at(T![.]) && p.nth_at(1, IDENT) && (p.nth(2) == T!['('] || p.nth_at(2, T![::])));
     let m = lhs.precede(p);
     p.bump(T![.]);
     name_ref(p);

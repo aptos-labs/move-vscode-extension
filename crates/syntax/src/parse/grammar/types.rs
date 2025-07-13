@@ -6,6 +6,7 @@
 
 use crate::SyntaxKind::*;
 use crate::parse::Parser;
+use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{paths, type_params, types};
 use crate::parse::recovery_set::RecoverySet;
@@ -13,13 +14,19 @@ use crate::parse::token_set::TokenSet;
 use crate::{T, ts};
 use std::ops::ControlFlow::{Break, Continue};
 
-pub(super) fn path_type(p: &mut Parser) {
-    assert!(paths::is_path_start(p));
-
+pub(super) fn path_type(p: &mut Parser) -> bool {
+    if !paths::is_path_start(p) {
+        return false;
+    }
     let m = p.start();
-    paths::type_path(p);
+    let is_path = paths::path(p, Some(PathMode::Type));
+    if !is_path {
+        m.abandon(p);
+        return false;
+    }
 
     m.complete(p, PATH_TYPE);
+    true
 }
 
 pub(crate) fn type_annotation(p: &mut Parser) {
@@ -37,7 +44,9 @@ pub(crate) fn type_or_recover(p: &mut Parser, extra: impl Into<RecoverySet>) -> 
         T!['('] => paren_or_tuple_or_unit_type(p),
         T![&] => ref_type(p),
         T![|] => lambda_type(p),
-        _ if paths::is_path_start(p) => path_type(p),
+        _ if paths::is_path_start(p) => {
+            return path_type(p);
+        }
         _ => {
             p.error_and_recover("expected type", extra.into());
             return false;
@@ -46,10 +55,6 @@ pub(crate) fn type_or_recover(p: &mut Parser, extra: impl Into<RecoverySet>) -> 
     true
 }
 
-// test reference_type;
-// type A = &();
-// type B = &'static ();
-// type C = &mut ();
 fn ref_type(p: &mut Parser) {
     assert!(p.at(T![&]));
     let m = p.start();
@@ -71,10 +76,7 @@ fn lambda_type(p: &mut Parser) {
         p,
         |p| {
             let m = p.start();
-            // let is_type = p.reset_recovery_set(type_);
-            // let is_type = type_or_recover(p, TokenSet::EMPTY);
             let is_type = type_or_recover(p, T![,] | T![|]);
-            // let is_type = type_or_recover_until(p, |p| p.at_ts(ts!(T![,], T![|])));
             if is_type {
                 m.complete(p, LAMBDA_TYPE_PARAM);
             } else {

@@ -5,7 +5,7 @@
 // Modifications have been made to the original code.
 
 use super::*;
-use crate::parse::grammar::paths::Mode;
+use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::patterns::pat;
 use crate::parse::grammar::specs::{opt_spec_block_expr, spec_block_expr};
 use crate::parse::grammar::{any_address, paths};
@@ -139,7 +139,7 @@ pub(crate) fn atom_expr(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> 
 
 fn path_expr(p: &mut Parser) -> CompletedMarker {
     let m = p.start();
-    paths::expr_path(p);
+    paths::path(p, Some(PathMode::Expr));
     let cm = match p.current() {
         T!['{'] /*if !r.forbid_structs*/ => {
             struct_lit_field_list(p);
@@ -154,7 +154,7 @@ fn vector_lit_expr(p: &mut Parser) -> CompletedMarker {
     // vector[1, 2]
     let m = p.start();
     p.bump(IDENT);
-    type_args::opt_path_type_arg_list(p, Mode::Type);
+    type_args::opt_path_type_arg_list(p, PathMode::Type);
     if p.at(T!['[']) {
         p.bump(T!['[']);
         delimited_with_recovery(p, expr, T![,], "expected expression", Some(T![']']));

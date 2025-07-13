@@ -32,9 +32,9 @@ module 0x1::item_recovery {
     script
         //^ expected `{`
     spec
+      //^ expected identifier
+      //^ expected '{'
     spec ref
-  //^ expected identifier
-  //^ expected '{'
           //^ expected '{'
     spec 0x1::ref
 

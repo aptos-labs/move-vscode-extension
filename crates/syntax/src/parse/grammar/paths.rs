@@ -19,43 +19,40 @@ pub(super) fn is_path_start(p: &Parser) -> bool {
         // addresses
         INT_NUMBER if p.nth_at(1, T![::]) => true,
         IDENT => true,
-        T![::] => true,
+        // T![::] => true,
         T!['_'] => true,
         _ => false,
     }
 }
 
-pub(super) fn use_path(p: &mut Parser) {
-    path(p, Mode::Use);
-}
-
-pub(crate) fn type_path(p: &mut Parser) {
-    path(p, Mode::Type);
-}
-
-pub(super) fn expr_path(p: &mut Parser) {
-    path(p, Mode::Expr);
-}
-
-pub(crate) fn type_path_for_qualifier(p: &mut Parser, qual: CompletedMarker) -> CompletedMarker {
-    path_for_qualifier(p, Mode::Type, qual)
-}
+// pub(crate) fn type_path_for_qualifier(p: &mut Parser, qual: CompletedMarker) -> CompletedMarker {
+//     path_for_qualifier(p, Some(PathMode::Type), qual)
+// }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub(crate) enum Mode {
-    Use,
+pub(crate) enum PathMode {
+    // None,
     Type,
     Expr,
 }
 
-pub(crate) fn path(p: &mut Parser, mode: Mode) {
-    let path = p.start();
-    path_segment(p, mode, true);
-    let qual = path.complete(p, PATH);
+pub(crate) fn path(p: &mut Parser, mode: Option<PathMode>) -> bool {
+    let m = p.start();
+    let has_first_path = path_segment(p, mode, true);
+    if !has_first_path {
+        m.abandon(p);
+        return false;
+    }
+    let qual = m.complete(p, PATH);
     path_for_qualifier(p, mode, qual);
+    true
 }
 
-fn path_for_qualifier(p: &mut Parser, mode: Mode, mut qual: CompletedMarker) -> CompletedMarker {
+pub(crate) fn path_for_qualifier(
+    p: &mut Parser,
+    mode: Option<PathMode>,
+    mut qual: CompletedMarker,
+) -> CompletedMarker {
     loop {
         let is_use_tree = matches!(p.nth(1), T!['{']);
         if p.at(T![::]) && !is_use_tree {
@@ -70,35 +67,38 @@ fn path_for_qualifier(p: &mut Parser, mode: Mode, mut qual: CompletedMarker) -> 
     }
 }
 
-fn path_segment(p: &mut Parser, mode: Mode, first: bool) {
+// VALUE_ADDRESS | NAME_REF TYPE_ARGS? | '_'
+fn path_segment(p: &mut Parser, type_args_kind: Option<PathMode>, is_first: bool) -> bool {
     let m = p.start();
-
-    let empty = if first { !p.eat(T![::]) } else { true };
     match p.current() {
+        IDENT => {
+            let m = p.start();
+            p.bump(IDENT);
+            m.complete(p, NAME_REF);
+
+            #[cfg(debug_assertions)]
+            let _p =
+                stdx::panic_context::enter(format!("path_segment_type_args {:?}", p.current_text()));
+            if let Some(type_args_kind) = type_args_kind {
+                opt_path_type_arg_list(p, type_args_kind);
+            }
+        }
         T!['_'] => {
             let m = p.start();
             p.bump_remap(IDENT);
             m.complete(p, NAME_REF);
         }
-        IDENT => {
-            #[cfg(debug_assertions)]
-            let _p = stdx::panic_context::enter(format!("path_segment {:?}", p.current_text()));
-            name_ref(p);
-            opt_path_type_arg_list(p, mode);
-        }
-        INT_NUMBER if first => {
+        INT_NUMBER if is_first => {
             let m = p.start();
             value_address(p);
             m.complete(p, PATH_ADDRESS);
         }
         _ => {
             p.error_and_recover("expected identifier", item_start_rec_set());
-            if empty {
-                m.abandon(p);
-                return;
-            }
+            m.abandon(p);
+            return false;
         }
     };
-
     m.complete(p, PATH_SEGMENT);
+    true
 }

@@ -121,7 +121,7 @@ pub fn path_kind(
             )));
         }
 
-        let ref_name = path.reference_name().expect("as `path_address` is None");
+        let ref_name = path.reference_name()?;
 
         // check whether it's a first element in use stmt, i.e. use [std]::module;
         if let Some(use_speck) = path.root_parent_of_type::<ast::UseSpeck>() {

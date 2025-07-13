@@ -6,16 +6,16 @@
 
 use super::*;
 use crate::TextSize;
-use crate::parse::grammar::paths::Mode;
+use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::types::{TYPE_FIRST, TYPE_FIRST_NO_LAMBDA};
 use crate::parse::grammar::utils::delimited_with_recovery;
 use std::ops::ControlFlow::{Break, Continue};
 
-pub(crate) fn opt_path_type_arg_list(p: &mut Parser, mode: Mode) {
+pub(crate) fn opt_path_type_arg_list(p: &mut Parser, mode: PathMode) {
     match mode {
-        Mode::Use => {}
-        Mode::Type => opt_type_arg_list_for_type(p),
-        Mode::Expr => opt_type_arg_list_for_expr(p, false),
+        // TypeArgs::None => {}
+        PathMode::Type => opt_type_arg_list_for_type(p),
+        PathMode::Expr => opt_type_arg_list_for_expr(p, false),
     }
 }
 
@@ -90,12 +90,17 @@ pub(crate) fn type_arg(p: &mut Parser, is_type: bool) -> bool {
         IDENT => {
             let m = p.start();
             name_ref(p);
-            opt_path_type_arg_list(p, Mode::Type);
+            opt_path_type_arg_list(p, PathMode::Type);
 
-            let m = m.complete(p, PATH_SEGMENT).precede(p).complete(p, PATH);
-            let m = paths::type_path_for_qualifier(p, m);
+            let path_segment_cm = m.complete(p, PATH_SEGMENT);
 
-            let m = m.precede(p).complete(p, PATH_TYPE);
+            let path_m = path_segment_cm.precede(p);
+            let path_cm = path_m.complete(p, PATH);
+
+            // let cm = m.complete(p, PATH_SEGMENT).precede(p).complete(p, PATH);
+            let cm = paths::path_for_qualifier(p, Some(PathMode::Type), path_cm);
+
+            let m = cm.precede(p).complete(p, PATH_TYPE);
             m.precede(p).complete(p, TYPE_ARG);
         }
         _ if p.at_ts(TYPE_FIRST) => {

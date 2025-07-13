@@ -1,0 +1,15 @@
+module 0x1::acquires_recovery {
+    fun m() acquires {
+                  //^ expected type
+    }
+    fun m() acquires;
+                  //^ expected type
+    fun m() acquires T::;
+                      //^ expected identifier
+    fun m() acquires T::
+                      //^ expected identifier
+                      //^ expected a block
+    fun m() acquires T:: {}
+                    //^^ expected COMMA
+                    //^^ expected type
+}

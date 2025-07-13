@@ -5,6 +5,7 @@
 // Modifications have been made to the original code.
 
 use crate::SyntaxKind::*;
+use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{expressions, name, name_ref, paths};
 use crate::parse::parser::{CompletedMarker, Parser};
@@ -54,7 +55,7 @@ fn path_pat(p: &mut Parser) -> CompletedMarker {
         T!['('] | T!['{'] | T![::] | T![<] => {
             assert!(paths::is_path_start(p));
             let m = p.start();
-            paths::type_path(p);
+            paths::path(p, Some(PathMode::Type));
             let kind = match p.current() {
                 T!['('] => {
                     tuple_pat_fields(p);
