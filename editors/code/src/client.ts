@@ -73,6 +73,12 @@ class ExperimentalFeatures implements lc.StaticFeature {
     fillClientCapabilities(capabilities: lc.ClientCapabilities): void {
         capabilities.experimental = {
             serverStatusNotification: true,
+            commands: {
+                commands: [
+                    "move-on-aptos.showReferences",
+                    "move-on-aptos.gotoLocation",
+                ],
+            },
             ...capabilities.experimental,
         };
     }

@@ -10,7 +10,7 @@ use crate::lsp::semantic_tokens;
 use ide::inlay_hints::InlayFieldsToResolve;
 use line_index::WideEncoding;
 use lsp_types::{
-    CodeActionKind, CodeActionOptions, CodeActionProviderCapability, CompletionOptions,
+    CodeActionKind, CodeActionOptions, CodeActionProviderCapability, CodeLensOptions, CompletionOptions,
     CompletionOptionsCompletionItem, HoverProviderCapability, InlayHintOptions,
     InlayHintServerCapabilities, OneOf, PositionEncodingKind, RenameOptions,
     SelectionRangeProviderCapability, SemanticTokensFullOptions, SemanticTokensLegend,
@@ -66,7 +66,7 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
         document_symbol_provider: Some(OneOf::Left(true)),
         workspace_symbol_provider: Some(OneOf::Left(true)),
         code_action_provider: Some(config.caps().code_action_capabilities()),
-        // code_lens_provider: Some(CodeLensOptions { resolve_provider: Some(true) }),
+        code_lens_provider: Some(CodeLensOptions { resolve_provider: Some(true) }),
         document_formatting_provider: Some(OneOf::Left(true)),
         // document_range_formatting_provider: match config.rustfmt(None) {
         //     RustfmtConfig::Rustfmt { enable_range_formatting: true, .. } => Some(OneOf::Left(true)),

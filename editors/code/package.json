@@ -306,6 +306,44 @@
                 }
             },
             {
+                "title": "lens",
+                "properties": {
+                    "move-on-aptos.lens.enable": {
+                        "markdownDescription": "Whether to show CodeLens in Move files.",
+                        "default": true,
+                        "type": "boolean"
+                    }
+                }
+            },
+            {
+                "title": "lens",
+                "properties": {
+                    "move-on-aptos.lens.location": {
+                        "markdownDescription": "Where to render annotations.",
+                        "default": "above_name",
+                        "type": "string",
+                        "enum": [
+                            "above_name",
+                            "above_whole_item"
+                        ],
+                        "enumDescriptions": [
+                            "Render annotations above the name of the item.",
+                            "Render annotations above the whole item, including documentation comments and attributes."
+                        ]
+                    }
+                }
+            },
+            {
+                "title": "lens",
+                "properties": {
+                    "move-on-aptos.lens.specifications.enable": {
+                        "markdownDescription": "Whether to show `Specifications` lens. Only applies when\n`#move-on-aptos.lens.enable#` is set.",
+                        "default": true,
+                        "type": "boolean"
+                    }
+                }
+            },
+            {
                 "title": "movefmt",
                 "properties": {
                     "move-on-aptos.movefmt.extraArgs": {

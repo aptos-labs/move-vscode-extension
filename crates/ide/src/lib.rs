@@ -16,9 +16,11 @@ use std::sync::Arc;
 use syntax::{SourceFile, TextRange, TextSize};
 use vfs::FileId;
 
+pub mod annotations;
 pub mod extend_selection;
 mod file_structure;
 mod goto_definition;
+mod goto_specification;
 mod highlight_related;
 mod hover;
 pub mod inlay_hints;
@@ -30,11 +32,13 @@ pub mod syntax_highlighting;
 mod type_info;
 mod view_syntax_tree;
 
+use crate::annotations::{Annotation, AnnotationConfig};
 use crate::file_structure::StructureNode;
 use crate::hover::HoverResult;
 use crate::inlay_hints::{InlayHint, InlayHintsConfig};
 pub use crate::navigation_target::NavigationTarget;
 use crate::references::ReferenceSearchResult;
+pub use crate::signature_help::SignatureHelp;
 pub use crate::syntax_highlighting::HlRange;
 use base_db::inputs::{InternFileId, PackageMetadata};
 use base_db::package_root::PackageId;
@@ -50,8 +54,6 @@ use ide_diagnostics::diagnostic::Diagnostic;
 use lang::Semantics;
 pub use salsa::Cancelled;
 use syntax::files::{FilePosition, FileRange};
-
-pub use crate::signature_help::SignatureHelp;
 
 pub type Cancellable<T> = Result<T, Cancelled>;
 
@@ -284,6 +286,14 @@ impl Analysis {
         position: FilePosition,
     ) -> Cancellable<Option<RangeInfo<Vec<NavigationTarget>>>> {
         self.with_db(|db| goto_definition::goto_definition_multi(db, position))
+    }
+
+    /// Returns the definitions from the symbol at `position`.
+    pub fn goto_specification(
+        &self,
+        position: FilePosition,
+    ) -> Cancellable<Option<RangeInfo<Vec<NavigationTarget>>>> {
+        self.with_db(|db| goto_specification::goto_specification(db, position))
     }
 
     // /// Returns the declaration from the symbol at `position`.
@@ -556,36 +566,18 @@ impl Analysis {
     // ) -> Cancellable<Option<SourceChange>> {
     //     self.with_db(|db| rename::will_rename_file(db, file_id, new_name_stem))
     // }
-    //
-    // pub fn structural_search_replace(
-    //     &self,
-    //     query: &str,
-    //     parse_only: bool,
-    //     resolve_context: FilePosition,
-    //     selections: Vec<FileRange>,
-    // ) -> Cancellable<Result<SourceChange, SsrError>> {
-    //     self.with_db(|db| {
-    //         let rule: ide_ssr::SsrRule = query.parse()?;
-    //         let mut match_finder =
-    //             ide_ssr::MatchFinder::in_context(db, resolve_context, selections)?;
-    //         match_finder.add_rule(rule)?;
-    //         let edits = if parse_only { Default::default() } else { match_finder.edits() };
-    //         Ok(SourceChange::from_iter(edits))
-    //     })
-    // }
-    //
-    // pub fn annotations(
-    //     &self,
-    //     config: &AnnotationConfig,
-    //     file_id: FileId,
-    // ) -> Cancellable<Vec<Annotation>> {
-    //     self.with_db(|db| annotations::annotations(db, config, file_id))
-    // }
-    //
-    // pub fn resolve_annotation(&self, annotation: Annotation) -> Cancellable<Annotation> {
-    //     self.with_db(|db| annotations::resolve_annotation(db, annotation))
-    // }
-    //
+
+    pub fn annotations(
+        &self,
+        config: &AnnotationConfig,
+        file_id: FileId,
+    ) -> Cancellable<Vec<Annotation>> {
+        self.with_db(|db| annotations::annotations(db, config, file_id))
+    }
+
+    pub fn resolve_annotation(&self, annotation: Annotation) -> Cancellable<Annotation> {
+        self.with_db(|db| annotations::resolve_annotation(db, annotation))
+    }
 
     pub fn file_offset_into_position(&self, file_id: FileId, offset: usize) -> Cancellable<LineCol> {
         self.with_db(|db| root_db::line_index(db, file_id).line_col(TextSize::new(offset as u32)))

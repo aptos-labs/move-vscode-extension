@@ -161,6 +161,11 @@ pub fn get_marked_position(source: &str, mark: &str) -> (u32, u32) {
     (ref_line, ref_col)
 }
 
+pub fn get_marked_position_offset(source: &str, mark: &str) -> TextSize {
+    let marked = get_first_marked_position(source, mark);
+    marked.item_offset
+}
+
 pub fn get_marked_position_offset_with_data(source: &str, mark: &str) -> (TextSize, String) {
     let marked = get_first_marked_position(source, mark);
     (marked.item_offset, marked.data)

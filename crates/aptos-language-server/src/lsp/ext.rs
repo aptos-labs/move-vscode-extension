@@ -118,3 +118,23 @@ pub struct InlayHintResolveData {
     #[serde(skip_serializing_if = "Option::is_none", default)]
     pub version: Option<i32>,
 }
+
+/// Information about CodeLens, that is to be resolved.
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CodeLensResolveData {
+    pub version: i32,
+    pub kind: CodeLensResolveDataKind,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum CodeLensResolveDataKind {
+    Specs(lsp_types::request::GotoImplementationParams),
+    // References(lsp_types::TextDocumentPositionParams),
+}
+
+#[derive(Debug, Deserialize, Default)]
+pub struct ClientCommandOptions {
+    pub commands: Vec<String>,
+}

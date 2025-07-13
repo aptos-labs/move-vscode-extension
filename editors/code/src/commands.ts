@@ -7,6 +7,8 @@
 import vscode from "vscode";
 import * as lsp_ext from "./lsp_ext";
 import { Cmd, Ctx, CtxInit } from "./ctx";
+import { LanguageClient } from "vscode-languageclient/node";
+import * as lc from "vscode-languageclient";
 
 export function analyzerStatus(ctx: CtxInit): Cmd {
     const tdcp = new (class implements vscode.TextDocumentContentProvider {
@@ -94,3 +96,36 @@ export function openLogs(ctx: CtxInit): Cmd {
     };
 }
 
+async function showReferencesImpl(
+    client: LanguageClient | undefined,
+    uri: string,
+    position: lc.Position,
+    locations: lc.Location[],
+) {
+    if (client) {
+        await vscode.commands.executeCommand(
+            "editor.action.showReferences",
+            vscode.Uri.parse(uri),
+            client.protocol2CodeConverter.asPosition(position),
+            locations.map(client.protocol2CodeConverter.asLocation),
+        );
+    }
+}
+
+export function showReferences(ctx: CtxInit): Cmd {
+    return async (uri: string, position: lc.Position, locations: lc.Location[]) => {
+        await showReferencesImpl(ctx.client, uri, position, locations);
+    };
+}
+
+export function gotoLocation(ctx: CtxInit): Cmd {
+    return async (locationLink: lc.LocationLink) => {
+        const client = ctx.client;
+        const uri = client.protocol2CodeConverter.asUri(locationLink.targetUri);
+        let range = client.protocol2CodeConverter.asRange(locationLink.targetSelectionRange);
+        // collapse the range to a cursor position
+        range = range.with({ end: range.start });
+
+        await vscode.window.showTextDocument(uri, { selection: range });
+    };
+}

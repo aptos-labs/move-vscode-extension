@@ -11,16 +11,17 @@ use crate::lsp::{LspError, from_proto, to_proto};
 use crate::movefmt::run_movefmt;
 use crate::{Config, lsp_ext, try_default};
 use ide::Cancellable;
+use ide::annotations::AnnotationConfig;
 use ide::inlay_hints::InlayFieldsToResolve;
 use ide_db::assists::{AssistKind, AssistResolveStrategy, SingleResolve};
 use ide_db::symbol_index::Query;
 use line_index::TextRange;
 use lsp_server::ErrorCode;
 use lsp_types::{
-    CodeActionOrCommand, DocumentHighlightKind, HoverContents, InlayHint, InlayHintParams, Location,
-    PrepareRenameResponse, RenameParams, ResourceOp, ResourceOperationKind, SemanticTokensParams,
-    SemanticTokensRangeParams, SemanticTokensRangeResult, SemanticTokensResult, SymbolInformation,
-    TextDocumentIdentifier, Url, WorkspaceEdit, WorkspaceSymbolParams,
+    CodeActionOrCommand, CodeLens, DocumentHighlightKind, HoverContents, InlayHint, InlayHintParams,
+    Location, PrepareRenameResponse, RenameParams, ResourceOp, ResourceOperationKind,
+    SemanticTokensParams, SemanticTokensRangeParams, SemanticTokensRangeResult, SemanticTokensResult,
+    SymbolInformation, TextDocumentIdentifier, Url, WorkspaceEdit, WorkspaceSymbolParams,
 };
 use std::hash::DefaultHasher;
 use stdx::format_to;
@@ -848,6 +849,63 @@ fn parse_action_id(action_id: &str) -> anyhow::Result<(usize, SingleResolve), St
         }
         _ => Err("Action id contains incorrect number of segments".to_owned()),
     }
+}
+
+pub(crate) fn handle_code_lens(
+    snap: GlobalStateSnapshot,
+    params: lsp_types::CodeLensParams,
+) -> anyhow::Result<Option<Vec<CodeLens>>> {
+    let _p = tracing::info_span!("handle_code_lens").entered();
+
+    let lens_config = snap.config.lens();
+    if lens_config.none() {
+        // early return before any db query!
+        return Ok(Some(Vec::default()));
+    }
+
+    let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
+    let annotations = snap.analysis.annotations(
+        &AnnotationConfig {
+            annotate_fun_specs: lens_config.specifications,
+            location: lens_config.location.into(),
+        },
+        file_id,
+    )?;
+
+    let mut res = Vec::new();
+    for a in annotations {
+        to_proto::code_lens(&mut res, &snap, a)?;
+    }
+
+    Ok(Some(res))
+}
+
+pub(crate) fn handle_code_lens_resolve(
+    snap: GlobalStateSnapshot,
+    mut code_lens: CodeLens,
+) -> anyhow::Result<CodeLens> {
+    let Some(data) = code_lens.data.take() else {
+        return Ok(code_lens);
+    };
+    let resolve = serde_json::from_value::<lsp_ext::CodeLensResolveData>(data)?;
+    let Some(annotation) = from_proto::annotation(&snap, code_lens.range, resolve)? else {
+        return Ok(code_lens);
+    };
+    let annotation = snap.analysis.resolve_annotation(annotation)?;
+
+    let mut acc = Vec::new();
+    to_proto::code_lens(&mut acc, &snap, annotation)?;
+
+    let mut res = match acc.pop() {
+        Some(it) if acc.is_empty() => it,
+        _ => {
+            stdx::never!();
+            code_lens
+        }
+    };
+    res.data = None;
+
+    Ok(res)
 }
 
 fn resource_ops_supported(config: &Config, kind: ResourceOperationKind) -> anyhow::Result<()> {

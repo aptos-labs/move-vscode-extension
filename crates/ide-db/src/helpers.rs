@@ -4,7 +4,10 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use syntax::{AstToken, SyntaxKind, SyntaxToken, TokenAtOffset};
+use crate::RootDatabase;
+use lang::Semantics;
+use syntax::{AstToken, SyntaxKind, SyntaxToken, TokenAtOffset, ast};
+use vfs::FileId;
 
 /// Picks the token with the highest rank returned by the passed in function.
 pub fn pick_best_token(
@@ -16,4 +19,18 @@ pub fn pick_best_token(
 
 pub fn pick_token<T: AstToken>(mut tokens: TokenAtOffset<SyntaxToken>) -> Option<T> {
     tokens.find_map(T::cast)
+}
+
+pub fn visit_file_defs(
+    sema: &Semantics<'_, RootDatabase>,
+    file_id: FileId,
+    cb: &mut dyn FnMut(ast::NamedElement) -> Option<()>,
+) {
+    let file = sema.parse(file_id);
+    for module in file.all_modules() {
+        let module_items = module.named_items();
+        for module_item in module_items {
+            cb(module_item);
+        }
+    }
 }

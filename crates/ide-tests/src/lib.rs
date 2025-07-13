@@ -14,6 +14,7 @@ mod test_syntax_highlighting;
 mod types;
 
 mod test_abilities_key;
+mod test_code_lens;
 mod test_completion_functions;
 mod test_completion_loops;
 mod test_completion_methods;
@@ -21,6 +22,7 @@ mod test_completion_relevance;
 mod test_diagnostics;
 mod test_error_const_docs;
 mod test_find_usages;
+mod test_goto_specification;
 mod test_inlay_parameter_hints;
 mod test_load_dependencies;
 mod test_rename;

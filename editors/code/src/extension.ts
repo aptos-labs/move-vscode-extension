@@ -138,10 +138,10 @@ function createCommands(): Record<string, CommandFactory> {
         // openWalkthrough: { enabled: commands.openWalkthrough },
         // // Internal commands which are invoked by the server.
         // debugSingle: { enabled: commands.debugSingle },
-        // gotoLocation: { enabled: commands.gotoLocation },
+        gotoLocation: { enabled: commands.gotoLocation },
         // hoverRefCommandProxy: { enabled: commands.hoverRefCommandProxy },
         // runSingle: { enabled: commands.runSingle },
-        // showReferences: { enabled: commands.showReferences },
+        showReferences: { enabled: commands.showReferences },
         // triggerParameterHints: { enabled: commands.triggerParameterHints },
         // rename: { enabled: commands.rename },
         openLogs: { enabled: commands.openLogs },

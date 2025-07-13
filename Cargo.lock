@@ -756,6 +756,7 @@ dependencies = [
  "ide-completion",
  "ide-db",
  "ide-diagnostics",
+ "indexmap",
  "itertools",
  "lang",
  "line-index",
