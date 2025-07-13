@@ -213,7 +213,7 @@ fn tuple_or_unit_or_paren_pat(p: &mut Parser) -> CompletedMarker {
     )
 }
 
-pub(crate) fn ident_pat(p: &mut Parser) -> CompletedMarker {
+fn ident_pat(p: &mut Parser) -> CompletedMarker {
     let m = p.start();
     name(p);
     m.complete(p, IDENT_PAT)

@@ -9,6 +9,7 @@ use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::patterns::pat;
 use crate::parse::grammar::specs::{opt_spec_block_expr, spec_block_expr};
 use crate::parse::grammar::{any_address, paths};
+use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
 use crate::ts;
 use std::ops::ControlFlow::Break;
@@ -296,7 +297,7 @@ fn for_condition(p: &mut Parser) {
     // todo: recovery
     let m = p.start();
     p.expect(T!['(']);
-    patterns::ident_pat(p);
+    patterns::ident_pat_or_recover(p);
     if p.at(IDENT) && p.at_contextual_kw("in") {
         p.bump_remap(T![in]);
         expr(p);

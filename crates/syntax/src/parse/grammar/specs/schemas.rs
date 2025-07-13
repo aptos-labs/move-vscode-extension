@@ -10,7 +10,7 @@ use crate::parse::grammar::expressions::atom::{block_expr, condition};
 use crate::parse::grammar::expressions::{Restrictions, expr, expr_bp, opt_initializer_expr};
 use crate::parse::grammar::items::item_start_rec_set;
 use crate::parse::grammar::paths::PathMode;
-use crate::parse::grammar::patterns::ident_pat;
+use crate::parse::grammar::patterns::ident_pat_or_recover;
 use crate::parse::grammar::specs::predicates::opt_predicate_property_list;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{name, name_or_recover, name_ref, paths, type_params, types};
@@ -42,8 +42,7 @@ pub(crate) fn schema_field(p: &mut Parser) -> bool {
     if p.at(IDENT) && p.at_contextual_kw("local") {
         p.bump_remap(T![local]);
     }
-    ident_pat(p);
-    // patterns::ident_pat(p);
+    ident_pat_or_recover(p);
     if p.at(T![:]) {
         types::type_annotation(p);
     } else {
