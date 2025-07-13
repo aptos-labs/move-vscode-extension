@@ -26,7 +26,7 @@ pub fn completions(
     position: FilePosition,
     _trigger_character: Option<char>,
 ) -> Option<Vec<CompletionItem>> {
-    let (ctx, analysis) = CompletionContext::new(db, position, config)?;
+    let (ctx, analysis) = CompletionContext::new_with_analysis(db, position, config)?;
 
     let completions = RefCell::new(Completions::default());
     {

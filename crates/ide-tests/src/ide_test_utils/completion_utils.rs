@@ -88,10 +88,14 @@ fn completions_at_offset(
 
     if filter_with_prefix {
         if let Some(t) = source_file.syntax().token_at_offset(caret_offset).left_biased() {
+            let mut prefix = String::new();
+            if t.kind().is_keyword() {
+                prefix = t.text().to_string();
+            }
             if let Some(ident_token) = ast::Ident::cast(t) {
-                let prefix = ident_token.text().to_string();
-                completion_items.retain(|item| item.label.primary.starts_with(&prefix))
+                prefix = ident_token.text().to_string();
             };
+            completion_items.retain(|item| item.label.primary.starts_with(&prefix))
         }
     }
 
