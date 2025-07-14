@@ -61,7 +61,7 @@ impl Diagnostic {
         self
     }
 
-    fn with_unused(mut self, unused: bool) -> Diagnostic {
+    pub(crate) fn with_unused(mut self, unused: bool) -> Diagnostic {
         self.unused = unused;
         self
     }

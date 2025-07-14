@@ -77,7 +77,7 @@ pub(crate) fn diagnostic_severity(severity: Severity) -> lsp_types::DiagnosticSe
         Severity::Warning => lsp_types::DiagnosticSeverity::WARNING,
         Severity::WeakWarning => lsp_types::DiagnosticSeverity::INFORMATION,
         // unreachable
-        Severity::Allow => lsp_types::DiagnosticSeverity::INFORMATION,
+        Severity::Hint => lsp_types::DiagnosticSeverity::HINT,
     }
 }
 

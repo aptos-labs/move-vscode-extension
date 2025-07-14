@@ -30,13 +30,13 @@ fn test_u64_to_u64() {
     // language=Move
     check_diagnostics_and_fix(
         expect![[r#"
-        module 0x1::main {
-            fun main() {
-                1u64 as u64;
-                   //^^^^^^ warn: No cast needed
+            module 0x1::main {
+                fun main() {
+                    1u64 as u64;
+                       //^^^^^^ hint: No cast needed
+                }
             }
-        }
-    "#]],
+        "#]],
         expect![[r#"
         module 0x1::main {
             fun main() {
