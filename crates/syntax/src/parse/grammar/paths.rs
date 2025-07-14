@@ -25,13 +25,8 @@ pub(super) fn is_path_start(p: &Parser) -> bool {
     }
 }
 
-// pub(crate) fn type_path_for_qualifier(p: &mut Parser, qual: CompletedMarker) -> CompletedMarker {
-//     path_for_qualifier(p, Some(PathMode::Type), qual)
-// }
-
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub(crate) enum PathMode {
-    // None,
     Type,
     Expr,
 }

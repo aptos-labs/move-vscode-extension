@@ -13,7 +13,6 @@ use std::ops::ControlFlow::{Break, Continue};
 
 pub(crate) fn opt_path_type_arg_list(p: &mut Parser, mode: PathMode) {
     match mode {
-        // TypeArgs::None => {}
         PathMode::Type => opt_type_arg_list_for_type(p),
         PathMode::Expr => {
             opt_type_arg_list_for_expr(p, false);
