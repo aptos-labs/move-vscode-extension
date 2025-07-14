@@ -310,7 +310,7 @@
                 "properties": {
                     "move-on-aptos.lens.enable": {
                         "markdownDescription": "Whether to show CodeLens in Move files.",
-                        "default": true,
+                        "default": false,
                         "type": "boolean"
                     }
                 }
