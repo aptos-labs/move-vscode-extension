@@ -1,17 +1,21 @@
 # Move on Aptos Language Extension
 
-This is the official extension for the [Move on Aptos smart-contract language](https://aptos.dev/en/build/smart-contracts).
+This is the official Visual Studio Code (and Cursor) extension for [developing smart contracts in the Move language on the Aptos blockchain](https://aptos.dev/en/build/smart-contracts).
+
+Built from the ground up, it delivers a modern and performant development experience, offering essential features like semantic highlighting, real-time diagnostics, auto-formatting and seamless integration with the rest of the Aptos toolchain — all designed to help developers build and test Move contracts with ease and confidence.
+
+Actively maintained by the Aptos team, this extension is designed to evolve alongside the Move language and supports both developers who are new to Move, and those building more complex applications.
 
 ## Features
 
-* semantic highlighting
-* go to definition
-* find all references, symbol renaming
-* types and documentation on hover
-* inlay hints for types
-* real-time diagnostics
-* quickfixes (code actions)
-* `movefmt` integration
+- Semantic Highlighting  
+- Go to Definition  
+- Find All References & Symbol Renaming  
+- Type and Documentation on Hover
+- Inlay Hints for Types  
+- Real-Time Diagnostics  
+- Quick Fixes (Code Actions)  
+- `movefmt` Integration  
 
 ## Installation
 
@@ -167,6 +171,13 @@ Next features planned are (roughly in the expected order of implementation):
 * Add "item is private" clarification to the "unresolved reference" diagnostic.
 * Unused imports (with quickfix).
 * Global auto-completion (auto-import).
+
+## Contributing
+We welcome feedback, bug reports, and contributions from the community!
+
+If you run into a bug, usability issue, or have a feature request, please don’t hesitate to [open an issue](../../issues). This will help us improve the experience for everyone.
+
+That said, this project is still in its early stages, and many parts of it are evolving quickly. If you're planning to work on a larger change or feature, we encourage you to start a discussion or open an issue first. This helps ensure alignment and avoid unnecessary rework.
 
 ## Acknowledgements
 This project is inspired by [rust-analyzer](https://github.com/rust-lang/rust-analyzer).
