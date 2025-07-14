@@ -8,14 +8,19 @@ Actively maintained by the Aptos team, this extension is designed to evolve alon
 
 ## Features
 
-- Semantic Highlighting  
+- Semantic Highlighting
 - Go to Definition  
-- Find All References & Symbol Renaming  
+- Find All References & Symbol Renaming
 - Type and Documentation on Hover
-- Inlay Hints for Types  
-- Real-Time Diagnostics  
-- Quick Fixes (Code Actions)  
-- `movefmt` Integration  
+- Inlay Hints for Types and Function Parameters
+
+<img src="docs/images/inlay_hints.png" alt="inlay_hints" width="650"/>
+
+- Real-Time Diagnostics
+- [Code suggestions](docs/quickfixes.md)
+- `movefmt` Integration
+
+<img src="docs/images/format.gif" alt="format.gif" width="650"/>
 
 ## Installation
 
