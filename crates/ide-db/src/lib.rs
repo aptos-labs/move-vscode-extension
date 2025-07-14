@@ -102,7 +102,7 @@ pub enum Severity {
     Error,
     Warning,
     WeakWarning,
-    Allow,
+    Hint,
 }
 
 impl Severity {
@@ -111,7 +111,7 @@ impl Severity {
             "err:" => Severity::Error,
             "warn:" => Severity::Warning,
             "weak:" => Severity::WeakWarning,
-            "allow:" => Severity::Allow,
+            "hint:" => Severity::Hint,
             _ => unreachable!("unknown severity {:?}", ident),
         };
         expected_severity
@@ -122,7 +122,7 @@ impl Severity {
             Severity::Error => "err:",
             Severity::Warning => "warn:",
             Severity::WeakWarning => "weak:",
-            Severity::Allow => "allow:",
+            Severity::Hint => "hint:",
         }
     }
 }

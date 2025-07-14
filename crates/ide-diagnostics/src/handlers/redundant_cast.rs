@@ -38,10 +38,11 @@ pub(crate) fn redundant_integer_cast(
         };
         acc.push(
             Diagnostic::new(
-                DiagnosticCode::Lsp("redundant-cast", Severity::Warning),
+                DiagnosticCode::Lsp("redundant-cast", Severity::Hint),
                 "No cast needed",
                 diagnostic_range,
             )
+            .with_unused(true)
             .with_fixes(fixes(ctx, cast_expr, diagnostic_range)),
         );
     }
