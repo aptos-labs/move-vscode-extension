@@ -93,7 +93,7 @@ config_data! {
         // inlayHints_typeHints_hideNamedConstructor: bool            = false,
 
         /// Whether to show CodeLens in Move files.
-        lens_enable: bool           = true,
+        lens_enable: bool           = false,
         /// Whether to show `Specifications` lens. Only applies when
         /// `#move-on-aptos.lens.enable#` is set.
         lens_specifications_enable: bool  = true,
