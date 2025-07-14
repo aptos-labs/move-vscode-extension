@@ -84,6 +84,20 @@ A bunch of symbols in the config value are the defaults, we're adding `b` and `x
 
 ## Configuration
 
+### Diagnostics
+
+Extension provides a number of diagnostics, from hard errors like "unresolved reference" to style lints. 
+Some of those might be less useful than others for different coding styles, so there's an escape hatch to disable those:
+
+```json5
+{
+    "move-on-aptos.diagnostics.disabled": [],
+}
+```
+where values are diagnostic codes from the error messages, like `unused-variable` here: 
+
+<img src="docs/images/diag_code.png" alt="diag_code.png" width="500"/>
+
 ### Inlay hints
 
 Type hints for the let statements and lambda parameters are supported. 
@@ -133,7 +147,9 @@ It's useful to enable INFO logging level, it's not very chatty and could provide
 
 ### `aptos-language-server diagnostics --fix`
 
-Run server diagnostics on the file (or package directory). If `--fix` is provided, automatically applies available autofixes:   
+Run server diagnostics on the file (or package directory). If `--fix` is provided, automatically applies available autofixes:
+
+[See available diagnostics with auto-fixes](docs/quickfixes.md)
 
 ```shell
   $ aptos-language-server diagnostics --fix ./aptos-stdlib/sources/cryptography/keyless.move 
@@ -152,23 +168,11 @@ note[replace-with-method-call]: Can be replaced with method call
 
 ```
 
-Available diagnostics with fixes:
-
-* change to receiver style function
-```move
-vector::push_back(v, 1); -> v.push_back(1); 
-```
-
-* change to compound assignment
-```move
-a = a + 1; -> a += 1;
-```
-
 ## Roadmap
 
 The end goal is to be at a feature parity with the Intellij-Move plugin. 
 
-Next features planned are (roughly in the expected order of implementation):
+Next features planned are:
 
 * More error highlighting: 
   - Not enough type params / missing fields.
@@ -176,6 +180,8 @@ Next features planned are (roughly in the expected order of implementation):
 * Add "item is private" clarification to the "unresolved reference" diagnostic.
 * Unused imports (with quickfix).
 * Global auto-completion (auto-import).
+* Integration with the `aptos-cli` commands.
+* AI integration (via MCP server). 
 
 ## Contributing
 We welcome feedback, bug reports, and contributions from the community!
