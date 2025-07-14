@@ -13,9 +13,10 @@ use std::ops::ControlFlow::{Break, Continue};
 
 pub(crate) fn opt_path_type_arg_list(p: &mut Parser, mode: PathMode) {
     match mode {
-        // TypeArgs::None => {}
         PathMode::Type => opt_type_arg_list_for_type(p),
-        PathMode::Expr => opt_type_arg_list_for_expr(p, false),
+        PathMode::Expr => {
+            opt_type_arg_list_for_expr(p, false);
+        }
     }
 }
 
@@ -39,25 +40,24 @@ pub(crate) fn opt_type_arg_list_for_type(p: &mut Parser) {
     m.complete(p, TYPE_ARG_LIST);
 }
 
-pub(super) fn opt_type_arg_list_for_expr(p: &mut Parser, colon_colon_required: bool) {
+pub(super) fn opt_type_arg_list_for_expr(p: &mut Parser, colon_colon_required: bool) -> bool {
     let m;
     if p.at(T![::]) && p.nth_at(1, T![<]) {
         m = p.start();
         p.bump(T![::]);
     } else {
         if !p.at(T![<]) {
-            return;
+            return true;
         }
         // '::' is optional if there's no whitespace between ident and '<'
-        if !colon_colon_required || p.prev_ws_at(0) == 0 {
+        if !colon_colon_required || p.prev_ws() == 0 {
             m = p.start();
         } else {
-            return;
+            return true;
         }
     }
 
     p.bump(T![<]);
-
     // NOTE: we cannot add recovery in type args for expr, it's ambiguous with the lt/gt expr
     let mut has_error = false;
     p.iterate_to_EOF(T![>] | T!['('] | T!['{'], |p| {
@@ -77,9 +77,10 @@ pub(super) fn opt_type_arg_list_for_expr(p: &mut Parser, colon_colon_required: b
     });
     if has_error || !p.eat(T![>]) {
         m.abandon_with_rollback(p);
-        return;
+        return false;
     }
     m.complete(p, TYPE_ARG_LIST);
+    true
 }
 
 pub(crate) const TYPE_ARG_FIRST: TokenSet = paths::PATH_FIRST;

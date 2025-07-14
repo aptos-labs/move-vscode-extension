@@ -232,13 +232,7 @@ fn postfix_expr(
         lhs = match p.current() {
             T!['('] if allow_calls => call_expr(p, lhs),
             T!['['] if allow_calls => index_expr(p, lhs),
-            T![.] => match postfix_dot_expr(p, lhs) {
-                Ok(it) => it,
-                Err(it) => {
-                    lhs = it;
-                    break;
-                }
-            },
+            T![.] => postfix_dot_expr(p, lhs),
             _ => break,
         };
         allow_calls = true;
@@ -247,50 +241,42 @@ fn postfix_expr(
     (lhs, block_like)
 }
 
-fn postfix_dot_expr(p: &mut Parser, lhs: CompletedMarker) -> Result<CompletedMarker, CompletedMarker> {
+fn postfix_dot_expr(p: &mut Parser, lhs: CompletedMarker) -> CompletedMarker {
     assert!(p.at(T![.]));
 
-    if p.nth_at(1, IDENT)
-        && (p.nth_at_ts(2, T!['('] | T![::]) || p.nth_at(2, T![<]) && p.prev_ws_at(2) == 0)
-    {
-        return Ok(method_call_expr(p, lhs));
-    }
-
-    dot_expr(p, lhs)
-}
-
-fn method_call_expr(p: &mut Parser, lhs: CompletedMarker) -> CompletedMarker {
     let m = lhs.precede(p);
     p.bump(T![.]);
-    name_ref(p);
-    type_args::opt_type_arg_list_for_expr(p, true);
-    if p.at(T!['(']) {
-        arg_list(p);
-    } else {
-        // emit an error when argument list is missing
-        p.error("expected argument list");
-    }
-    m.complete(p, METHOD_CALL_EXPR)
-}
 
-fn dot_expr(p: &mut Parser, lhs: CompletedMarker) -> Result<CompletedMarker, CompletedMarker> {
-    assert!(p.at(T![.]));
-    let m = lhs.precede(p);
-    p.bump(T![.]);
-    {
-        let m = p.start();
-        if p.at(IDENT) {
-            p.bump(IDENT);
+    match p.current() {
+        IDENT => {
+            name_ref(p);
+            'method_call: {
+                if p.at_ts(T!['('] | T![::]) || (p.at(T![<]) && p.prev_ws() == 0) {
+                    let is_error_in_type_args = !type_args::opt_type_arg_list_for_expr(p, true);
+                    if is_error_in_type_args {
+                        // cannot be a method
+                        break 'method_call;
+                    }
+                    if !p.at(T!['(']) {
+                        // cannot be a method
+                        break 'method_call;
+                    }
+                    value_arg_list(p);
+                    return m.complete(p, METHOD_CALL_EXPR);
+                }
+            }
+        }
+        INT_NUMBER => {
+            let m = p.start();
+            p.bump_any();
             m.complete(p, NAME_REF);
-        } else if p.at(INT_NUMBER) {
-            p.bump(INT_NUMBER);
-            m.complete(p, NAME_REF);
-        } else {
+        }
+        _ => {
             p.error("expected field name or number");
-            m.abandon(p);
         }
     }
-    Ok(m.complete(p, DOT_EXPR))
+
+    m.complete(p, DOT_EXPR)
 }
 
 fn index_expr(p: &mut Parser, lhs: CompletedMarker) -> CompletedMarker {
@@ -302,7 +288,7 @@ fn index_expr(p: &mut Parser, lhs: CompletedMarker) -> CompletedMarker {
     m.complete(p, INDEX_EXPR)
 }
 
-fn arg_list(p: &mut Parser) {
+fn value_arg_list(p: &mut Parser) {
     assert!(p.at(T!['(']));
     let m = p.start();
     p.bump(T!['(']);

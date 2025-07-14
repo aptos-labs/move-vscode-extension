@@ -1,0 +1,70 @@
+SOURCE_FILE@0..167
+  MODULE@0..166
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..35
+      IDENT@12..35 "dot_field_less_no_space"
+    WHITESPACE@35..36 " "
+    L_CURLY@36..37 "{"
+    WHITESPACE@37..42 "\n    "
+    FUN@42..164
+      FUN_KW@42..45 "fun"
+      WHITESPACE@45..46 " "
+      NAME@46..50
+        IDENT@46..50 "main"
+      PARAM_LIST@50..52
+        L_PAREN@50..51 "("
+        R_PAREN@51..52 ")"
+      WHITESPACE@52..53 " "
+      BLOCK_EXPR@53..164
+        L_CURLY@53..54 "{"
+        WHITESPACE@54..63 "\n        "
+        EXPR_STMT@63..98
+          BIN_EXPR@63..97
+            DOT_EXPR@63..82
+              PATH_EXPR@63..75
+                PATH@63..75
+                  PATH_SEGMENT@63..75
+                    NAME_REF@63..75
+                      IDENT@63..75 "staking_data"
+              DOT@75..76 "."
+              NAME_REF@76..82
+                IDENT@76..82 "amount"
+            L_ANGLE@82..83 "<"
+            PATH_EXPR@83..97
+              PATH@83..97
+                PATH_SEGMENT@83..97
+                  NAME_REF@83..97
+                    IDENT@83..97 "release_amount"
+          SEMICOLON@97..98 ";"
+        WHITESPACE@98..107 "\n        "
+        EXPR_STMT@107..158
+          BIN_EXPR@107..157
+            DOT_EXPR@107..132
+              PATH_EXPR@107..117
+                PATH@107..117
+                  PATH_SEGMENT@107..117
+                    NAME_REF@107..117
+                      IDENT@107..117 "ido_jujube"
+              DOT@117..118 "."
+              NAME_REF@118..132
+                IDENT@118..132 "cliamed_amount"
+            LT_EQ@132..134 "<="
+            DOT_EXPR@134..157
+              PATH_EXPR@134..144
+                PATH@134..144
+                  PATH_SEGMENT@134..144
+                    NAME_REF@134..144
+                      IDENT@134..144 "ido_jujube"
+              DOT@144..145 "."
+              NAME_REF@145..157
+                IDENT@145..157 "total_amount"
+          SEMICOLON@157..158 ";"
+        WHITESPACE@158..163 "\n    "
+        R_CURLY@163..164 "}"
+    WHITESPACE@164..165 "\n"
+    R_CURLY@165..166 "}"
+  WHITESPACE@166..167 "\n"

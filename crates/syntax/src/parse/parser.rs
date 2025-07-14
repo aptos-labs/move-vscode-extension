@@ -129,15 +129,15 @@ impl Parser {
     }
 
     /// How much whitespaces are skipped from prev to curr
-    pub(crate) fn prev_ws_at(&self, n: usize) -> usize {
-        let nth = self.token_source.curr_pos() + n;
-        if nth == 0 {
+    pub(crate) fn prev_ws(&self) -> usize {
+        let pos = self.token_source.curr_pos();
+        if pos == 0 {
             return 0;
         }
-        let Some(from_range) = self.token_source.token_range(nth - 1) else {
+        let Some(from_range) = self.token_source.token_range(pos - 1) else {
             return 0;
         };
-        let Some(to_range) = self.token_source.token_range(nth) else {
+        let Some(to_range) = self.token_source.token_range(pos) else {
             return 0;
         };
         (to_range.start() - from_range.end()).into()

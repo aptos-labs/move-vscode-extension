@@ -35,32 +35,32 @@ spec std::m {
 }
     "#,
         expect![[r#"
-        [
-            Annotation {
-                range: 25..29,
-                kind: HasSpecs {
-                    pos: FilePosition {
-                        file_id: FileId(
-                            1,
+            [
+                Annotation {
+                    range: 25..29,
+                    kind: HasSpecs {
+                        pos: FilePosition {
+                            file_id: FileId(
+                                1,
+                            ),
+                            offset: 25,
+                        },
+                        item_specs: Some(
+                            [
+                                NavigationTarget {
+                                    file_id: FileId(
+                                        1,
+                                    ),
+                                    full_range: 55..95,
+                                    focus_range: 60..64,
+                                    name: "main",
+                                    kind: Field,
+                                },
+                            ],
                         ),
-                        offset: 25,
                     },
-                    item_specs: Some(
-                        [
-                            NavigationTarget {
-                                file_id: FileId(
-                                    1,
-                                ),
-                                full_range: 55..95,
-                                focus_range: 60..64,
-                                name: "spec",
-                                kind: Field,
-                            },
-                        ],
-                    ),
                 },
-            },
-        ]
-    "#]],
+            ]
+        "#]],
     );
 }
