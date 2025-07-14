@@ -190,7 +190,7 @@ fn assert_macro_expr(p: &mut Parser) -> CompletedMarker {
     p.bump(IDENT);
     p.bump(T![!]);
     if p.at(T!['(']) {
-        arg_list(p);
+        value_arg_list(p);
     } else {
         // emit an error when argument list is missing
         p.error("expected argument list");
@@ -201,7 +201,7 @@ fn assert_macro_expr(p: &mut Parser) -> CompletedMarker {
 pub(crate) fn call_expr(p: &mut Parser, lhs: CompletedMarker) -> CompletedMarker {
     assert!(p.at(T!['(']));
     let m = lhs.precede(p);
-    arg_list(p);
+    value_arg_list(p);
     m.complete(p, CALL_EXPR)
 }
 
