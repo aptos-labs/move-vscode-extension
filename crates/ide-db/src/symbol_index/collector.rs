@@ -24,11 +24,11 @@ impl<'a> SymbolCollector<'a> {
         }
     }
 
-    pub fn new_module(db: &dyn SourceDatabase, module: InFile<ast::Module>) -> Box<[FileSymbol]> {
-        let mut symbol_collector = SymbolCollector::new(db);
-        symbol_collector.collect_module(module);
-        symbol_collector.finish()
-    }
+    // pub fn new_module(db: &dyn SourceDatabase, module: InFile<ast::Module>) -> Box<[FileSymbol]> {
+    //     let mut symbol_collector = SymbolCollector::new(db);
+    //     symbol_collector.collect_module(module);
+    //     symbol_collector.finish()
+    // }
 
     pub fn finish(self) -> Box<[FileSymbol]> {
         self.symbols.into_iter().collect()
@@ -55,7 +55,7 @@ impl<'a> SymbolCollector<'a> {
 
     pub(crate) fn collect_module(&mut self, module: InFile<ast::Module>) -> Option<()> {
         let module_name = module.value.name()?.as_string();
-        let named_items = module.flat_map(|it| it.named_items());
+        let named_items = module.flat_map(|it| it.named_items(true));
         for named_item in named_items {
             self.collect_named_item(Some(module_name.clone()), named_item);
         }

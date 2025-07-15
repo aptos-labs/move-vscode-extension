@@ -4,9 +4,10 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+use camino::Utf8PathBuf;
 use lsp_types::notification::Notification;
 use lsp_types::request::Request;
-use lsp_types::{CodeActionKind, Range, TextDocumentIdentifier};
+use lsp_types::{CodeActionKind, Position, Range, TextDocumentIdentifier};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ops;
@@ -137,4 +138,22 @@ pub enum CodeLensResolveDataKind {
 #[derive(Debug, Deserialize, Default)]
 pub struct ClientCommandOptions {
     pub commands: Vec<String>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct Runnable {
+    pub label: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub location: Option<lsp_types::LocationLink>,
+    pub args: AptosRunnableArgs,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct AptosRunnableArgs {
+    pub workspace_root: Utf8PathBuf,
+    pub args: Vec<String>,
+    #[serde(skip_serializing_if = "HashMap::is_empty")]
+    pub environment: HashMap<String, String>,
 }

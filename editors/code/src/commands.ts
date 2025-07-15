@@ -4,11 +4,12 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-import vscode from "vscode";
+import * as vscode from "vscode";
 import * as lsp_ext from "./lsp_ext";
 import { Cmd, Ctx, CtxInit } from "./ctx";
 import { LanguageClient } from "vscode-languageclient/node";
 import * as lc from "vscode-languageclient";
+import { createTaskFromRunnable } from "./run";
 
 export function analyzerStatus(ctx: CtxInit): Cmd {
     const tdcp = new (class implements vscode.TextDocumentContentProvider {
@@ -127,5 +128,22 @@ export function gotoLocation(ctx: CtxInit): Cmd {
         range = range.with({ end: range.start });
 
         await vscode.window.showTextDocument(uri, { selection: range });
+    };
+}
+
+export function runSingle(ctx: CtxInit): Cmd {
+    return async (runnable: lsp_ext.Runnable) => {
+        const editor = ctx.activeAptosEditor;
+        if (!editor) return;
+
+        const task = await createTaskFromRunnable(runnable);
+        task.group = vscode.TaskGroup.Build;
+        task.presentationOptions = {
+            reveal: vscode.TaskRevealKind.Always,
+            panel: vscode.TaskPanelKind.Dedicated,
+            clear: true,
+        };
+
+        return vscode.tasks.executeTask(task);
     };
 }

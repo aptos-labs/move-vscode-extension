@@ -336,6 +336,16 @@
             {
                 "title": "lens",
                 "properties": {
+                    "move-on-aptos.lens.run.enable": {
+                        "markdownDescription": "Whether to show `Run` lens. Only applies when\n`#move-on-aptos.lens.enable#` is set.",
+                        "default": true,
+                        "type": "boolean"
+                    }
+                }
+            },
+            {
+                "title": "lens",
+                "properties": {
                     "move-on-aptos.lens.specifications.enable": {
                         "markdownDescription": "Whether to show `Specifications` lens. Only applies when\n`#move-on-aptos.lens.enable#` is set.",
                         "default": true,
@@ -366,6 +376,19 @@
                             "null",
                             "string"
                         ]
+                    }
+                }
+            },
+            {
+                "title": "runnables",
+                "properties": {
+                    "move-on-aptos.runnables.extraArgs": {
+                        "markdownDescription": "Additional arguments to be passed to `aptos move` for runnables such as tests.\nFor example, it may be `--override-std`.",
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 }
             },

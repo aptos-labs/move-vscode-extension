@@ -15,7 +15,7 @@ use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use syntax::ast;
 
-pub fn package_symbols(db: &dyn SourceDatabase, package_id: PackageId) -> Arc<SymbolIndex> {
+pub fn world_symbols_in_package(db: &dyn SourceDatabase, package_id: PackageId) -> Arc<SymbolIndex> {
     let _p = tracing::info_span!("library_symbols").entered();
 
     let mut symbol_collector = SymbolCollector::new(db);

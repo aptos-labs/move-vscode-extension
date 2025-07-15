@@ -33,10 +33,10 @@ pub(crate) fn goto_specification(
     let navs = fun_item_specs
         .into_iter()
         .filter_map(|loc| {
-            let item_spec_ref = loc
-                .to_ast::<ast::ItemSpec>(db)?
-                .and_then(|it| it.item_spec_ref())?;
-            NavigationTarget::from_syntax_loc(db, item_spec_ref.syntax_text(), loc.clone())
+            let item_spec = loc.to_ast::<ast::ItemSpec>(db)?;
+            let item_spec_ref = item_spec.and_then(|it| it.item_spec_ref())?;
+            let name = item_spec_ref.value.name_ref()?.as_string();
+            NavigationTarget::from_syntax_loc(db, name, item_spec_ref.loc())
         })
         .collect::<Vec<_>>();
 

@@ -27,6 +27,7 @@ pub mod inlay_hints;
 mod navigation_target;
 mod references;
 mod rename;
+pub mod runnables;
 mod signature_help;
 pub mod syntax_highlighting;
 mod type_info;
@@ -38,6 +39,7 @@ use crate::hover::HoverResult;
 use crate::inlay_hints::{InlayHint, InlayHintsConfig};
 pub use crate::navigation_target::NavigationTarget;
 use crate::references::ReferenceSearchResult;
+use crate::runnables::Runnable;
 pub use crate::signature_help::SignatureHelp;
 pub use crate::syntax_highlighting::HlRange;
 use base_db::inputs::{InternFileId, PackageMetadata};
@@ -136,6 +138,10 @@ impl Analysis {
 
     pub fn package_id(&self, file_id: FileId) -> Cancellable<PackageId> {
         self.with_db(|db| db.file_package_id(file_id))
+    }
+
+    pub fn manifest_file_id(&self, package_id: PackageId) -> Cancellable<Option<FileId>> {
+        self.with_db(|db| db.package_root(package_id).data(db).manifest_file_id)
     }
 
     pub fn package_metadata(&self, file_id: FileId) -> Cancellable<Option<PackageMetadata>> {
@@ -391,38 +397,17 @@ impl Analysis {
     // ) -> Cancellable<Option<Vec<CallItem>>> {
     //     self.with_db(|db| call_hierarchy::outgoing_calls(db, config, position))
     // }
-    //
-    // /// Returns a `mod name;` declaration which created the current module.
-    // pub fn parent_module(&self, position: FilePosition) -> Cancellable<Vec<NavigationTarget>> {
-    //     self.with_db(|db| parent_module::parent_module(db, position))
-    // }
-
-    // /// Returns all transitive reverse dependencies of the given crate,
-    // /// including the crate itself.
-    // pub fn transitive_rev_deps(&self, crate_id: CrateId) -> Cancellable<Vec<CrateId>> {
-    //     self.with_db(|db| db.crate_graph().transitive_rev_deps(crate_id).collect())
-    // }
-
-    // /// Returns crates that this file *might* belong to.
-    // pub fn relevant_crates_for(&self, file_id: FileId) -> Cancellable<Vec<CrateId>> {
-    //     self.with_db(|db| db.relevant_crates(file_id).iter().copied().collect())
-    // }
-    //
-    // /// Returns the edition of the given crate.
-    // pub fn crate_edition(&self, crate_id: CrateId) -> Cancellable<Edition> {
-    //     self.with_db(|db| db.crate_graph()[crate_id].edition)
-    // }
 
     // /// Returns the root file of the given crate.
     // pub fn crate_root(&self, crate_id: CrateId) -> Cancellable<FileId> {
     //     self.with_db(|db| db.crate_graph()[crate_id].root_file_id)
     // }
 
-    // /// Returns the set of possible targets to run for the current file.
-    // pub fn runnables(&self, file_id: FileId) -> Cancellable<Vec<Runnable>> {
-    //     self.with_db(|db| runnables::runnables(db, file_id))
-    // }
-    //
+    /// Returns the set of possible targets to run for the current file.
+    pub fn runnables(&self, file_id: FileId) -> Cancellable<Vec<Runnable>> {
+        self.with_db(|db| runnables::runnables(db, file_id))
+    }
+
     // /// Returns the set of tests for the given file position.
     // pub fn related_tests(
     //     &self,

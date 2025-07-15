@@ -26,7 +26,7 @@ impl ModuleResolutionExt for InFile<ast::Module> {
         let (file_id, module) = self.unpack_ref();
 
         let mut entries = vec![];
-        for member in module.named_items() {
+        for member in module.named_items(false) {
             if let Some(struct_) = member.clone().struct_() {
                 if struct_.is_tuple_struct() {
                     if let Some(s_entry) = struct_.in_file(file_id).to_entry() {

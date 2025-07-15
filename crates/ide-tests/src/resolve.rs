@@ -143,8 +143,8 @@ pub fn assert_resolves_to_multiple_targets(
     let mut missing_targets = vec![];
     for target_ident in target_idents {
         let pos = nav_items.iter().position(|item| {
-            item.focus_range
-                .is_some_and(|range| range.contains_range(target_ident.text_range()))
+            item.focus_or_full_range()
+                .contains_range(target_ident.text_range())
         });
         match pos {
             Some(pos) => {

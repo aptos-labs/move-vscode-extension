@@ -32,7 +32,7 @@ use stdx::itertools::Itertools;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ClientCommandsConfig {
-    // pub run_single: bool,
+    pub run_single: bool,
     // pub debug_single: bool,
     pub show_references: bool,
     pub goto_location: bool,
@@ -40,13 +40,16 @@ pub struct ClientCommandsConfig {
     // pub rename: bool,
 }
 
+/// Configuration for runnable items, such as `main` function or tests.
+#[derive(Debug, Clone)]
+pub struct RunnablesConfig {
+    /// Additional arguments for the `aptos move`, e.g. `--override-std`.
+    pub extra_args: Vec<String>,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LensConfig {
-    // // runnables
-    // pub run: bool,
-    // pub debug: bool,
-    // pub update_test: bool,
-    // pub interpret: bool,
+    pub runnables: bool,
     pub specifications: bool,
 
     // // references
@@ -66,6 +69,10 @@ impl LensConfig {
 
     pub fn none(&self) -> bool {
         !self.any()
+    }
+
+    pub fn runnable(&self) -> bool {
+        self.runnables
     }
 }
 
@@ -355,18 +362,15 @@ impl Config {
         self.diagnostics_enable().to_owned()
     }
 
-    pub fn snippet_text_edit(&self) -> bool {
-        self.experimental_bool("snippetTextEdit")
-    }
-
-    pub fn snippet_cap(&self) -> Option<AllowSnippets> {
-        // FIXME: Also detect the proposed lsp version at caps.workspace.workspaceEdit.snippetEditSupport
-        // once lsp-types has it.
-        AllowSnippets::new(self.snippet_text_edit())
+    pub fn runnables(&self) -> RunnablesConfig {
+        RunnablesConfig {
+            extra_args: self.runnables_extraArgs().clone(),
+        }
     }
 
     pub fn lens(&self) -> LensConfig {
         LensConfig {
+            runnables: *self.lens_enable() && *self.lens_run_enable(),
             specifications: *self.lens_enable() && *self.lens_specifications_enable(),
             location: *self.lens_location(),
         }
@@ -382,6 +386,7 @@ impl Config {
         let get = |name: &str| commands.iter().any(|it| it == name);
 
         ClientCommandsConfig {
+            run_single: get("move-on-aptos.runSingle"),
             show_references: get("move-on-aptos.showReferences"),
             goto_location: get("move-on-aptos.gotoLocation"),
         }

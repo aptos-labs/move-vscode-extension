@@ -27,7 +27,7 @@ pub trait HasItems: AstNode {
     fn non_test_functions(&self) -> Vec<ast::Fun> {
         self.functions()
             .into_iter()
-            .filter(|fun| !fun.has_atom_attr("test"))
+            .filter(|fun| !fun.is_test())
             .collect()
     }
 

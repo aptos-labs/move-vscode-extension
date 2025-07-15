@@ -75,6 +75,7 @@ class ExperimentalFeatures implements lc.StaticFeature {
             serverStatusNotification: true,
             commands: {
                 commands: [
+                    "move-on-aptos.runSingle",
                     "move-on-aptos.showReferences",
                     "move-on-aptos.gotoLocation",
                 ],
