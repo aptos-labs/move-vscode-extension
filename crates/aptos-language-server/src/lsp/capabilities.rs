@@ -146,21 +146,6 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
                 resolve_provider: Some(config.caps().inlay_hints_resolve_provider()),
             },
         ))),
-        // experimental: Some(json!({
-        //     "externalDocs": true,
-        //     "hoverRange": true,
-        //     "joinLines": true,
-        //     "matchingBrace": true,
-        //     "moveItem": true,
-        //     "onEnter": true,
-        //     "openCargoToml": true,
-        //     "parentModule": true,
-        //     "runnables": {
-        //         "kinds": [ "cargo" ],
-        //     },
-        //     "ssr": true,
-        //     "workspaceSymbolScopeKindFiltering": true,
-        // })),
         diagnostic_provider: Some(lsp_types::DiagnosticServerCapabilities::Options(
             lsp_types::DiagnosticOptions {
                 identifier: None,

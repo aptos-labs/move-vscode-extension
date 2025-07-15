@@ -6,8 +6,8 @@
 
 use crate::SyntaxKind::*;
 use crate::ast;
-use crate::ast::NamedElement;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
+use crate::ast::{HasAttrs, NamedElement};
 use crate::parse::SyntaxKind;
 use std::collections::HashSet;
 
@@ -82,5 +82,9 @@ impl ast::Fun {
             return None;
         }
         Some(param)
+    }
+
+    pub fn is_test(&self) -> bool {
+        self.has_atom_attr("test")
     }
 }

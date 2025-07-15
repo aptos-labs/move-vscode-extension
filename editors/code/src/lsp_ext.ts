@@ -38,4 +38,23 @@ export type MovefmtVersionParams = {
     aptosPath: string | null;
 }
 
+export type Runnable = {
+    label: string;
+    location?: lc.LocationLink;
+    args: AptosRunnableArgs;
+};
 
+export type AptosRunnableArgs = {
+    /**
+     * The workspace root directory of the cargo project.
+     */
+    workspaceRoot: string;
+    /**
+     * Arguments to pass to the executable, these will be passed to the command after a `--` argument.
+     */
+    args: string[];
+    /**
+     * Environment variables to set before running the command.
+     */
+    environment?: Record<string, string>;
+};

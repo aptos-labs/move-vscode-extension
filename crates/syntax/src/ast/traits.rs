@@ -70,6 +70,10 @@ pub trait HasAttrs: AstNode {
         self.attrs().filter_map(|x| x.as_simple_atom())
     }
 
+    fn atom_attrs_set(&self) -> HashSet<String> {
+        self.atom_attrs().collect::<HashSet<_>>()
+    }
+
     fn has_atom_attr(&self, atom: &str) -> bool {
         self.atom_attrs().contains(atom)
     }

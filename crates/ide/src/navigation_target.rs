@@ -131,14 +131,13 @@ impl NavigationTarget {
             ));
         }
 
-        if let Some(item_spec) = syntax_loc.to_ast::<ast::ItemSpec>(db) {
-            let item_spec = item_spec.value;
-            let node_range = item_spec.item_spec_ref().map(|it| it.syntax().text_range());
-            let full_range = item_spec.syntax().text_range();
+        if let Some(item_spec_ref) = syntax_loc.to_ast::<ast::ItemSpecRef>(db) {
+            let item_spec_ref = item_spec_ref.value;
+            let full_range = item_spec_ref.syntax().text_range();
             return Some(NavigationTarget::from_syntax(
                 file_id,
                 element_name.into(),
-                node_range,
+                None,
                 full_range,
                 SymbolKind::Field,
             ));

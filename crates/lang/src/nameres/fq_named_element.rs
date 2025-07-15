@@ -60,11 +60,7 @@ impl ItemFQName {
 
     pub fn module_and_item_text(&self) -> String {
         match self {
-            ItemFQName::Module { address: _, name } => {
-                name.to_string()
-                // let address_text = address.identifier_text();
-                // format!("{}::{}", address_text, name)
-            }
+            ItemFQName::Module { address: _, name } => name.to_string(),
             ItemFQName::Item { module_fq_name, name } => {
                 let module_text = module_fq_name.module_and_item_text();
                 format!("{}::{}", module_text, name)

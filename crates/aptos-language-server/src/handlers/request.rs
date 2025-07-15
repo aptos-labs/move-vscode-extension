@@ -866,6 +866,7 @@ pub(crate) fn handle_code_lens(
     let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
     let annotations = snap.analysis.annotations(
         &AnnotationConfig {
+            annotate_runnables: lens_config.runnable(),
             annotate_fun_specs: lens_config.specifications,
             location: lens_config.location.into(),
         },

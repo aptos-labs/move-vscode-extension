@@ -5,7 +5,7 @@
 // Modifications have been made to the original code.
 
 import { strict as nativeAssert } from "assert";
-import vscode from "vscode";
+import * as vscode from "vscode";
 import { inspect } from "util";
 import { spawn, SpawnOptionsWithoutStdio } from "child_process";
 

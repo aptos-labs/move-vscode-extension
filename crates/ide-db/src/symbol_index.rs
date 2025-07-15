@@ -49,7 +49,7 @@ pub fn world_symbols(db: &RootDatabase, query: Query) -> Vec<FileSymbol> {
         .all_package_ids()
         .data(db)
         .iter()
-        .map(|package_id| sym_db::package_symbols(db, *package_id))
+        .map(|package_id| sym_db::world_symbols_in_package(db, *package_id))
         .collect::<Vec<_>>();
 
     let mut res = vec![];

@@ -4,12 +4,12 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-import vscode, { type Disposable, IndentAction } from "vscode";
+import * as vscode from "vscode";
+import { type Disposable, IndentAction } from "vscode";
 import * as Is from "vscode-languageclient/lib/common/utils/is";
-import os from "os";
-import Path from "path";
+import * as os from "os";
 import { Env, expectNotUndefined, log, unwrapUndefinable } from "./util";
-import path from "path";
+import * as path from "path";
 
 type ShowStatusBar = "always" | "never" | { documentSelector: vscode.DocumentSelector };
 
@@ -130,7 +130,7 @@ export class Config {
         if (process.platform === 'win32' && !serverPath.endsWith('.exe')) {
             serverPath = serverPath + '.exe';
         }
-        return Path.resolve(serverPath);
+        return path.resolve(serverPath);
     }
 
     get serverExtraEnv(): Env {
@@ -154,6 +154,9 @@ export class Config {
         return this.get<boolean>("checkOnSave") ?? false;
     }
 
+    get aptosPath() {
+        return this.get<string>("aptosPath");
+    }
 
     get statusBarClickAction() {
         return this.get<string>("statusBar.clickAction");

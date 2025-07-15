@@ -136,7 +136,7 @@ pub(crate) fn annotation(
 
             Ok(Annotation {
                 range: text_range(&line_index, range)?,
-                kind: AnnotationKind::HasSpecs { pos, item_specs: None },
+                kind: AnnotationKind::HasSpecs { pos, item_spec_refs: None },
             })
         }
     }

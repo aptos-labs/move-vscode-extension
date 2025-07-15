@@ -11,10 +11,10 @@ use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::ModuleLangExt;
 use crate::{hir_db, nameres};
 use base_db::SourceDatabase;
+use syntax::ast::HasVisibility;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::visibility::{Vis, VisLevel};
-use syntax::ast::{HasAttrs, HasVisibility};
 use syntax::files::{InFile, InFileExt, OptionInFileExt};
 use syntax::{AstNode, SyntaxNode, ast};
 
@@ -79,7 +79,7 @@ pub fn is_visible_in_context(
 
     // #[test] functions cannot be used from non-imports
     if let Some(fun) = ast::Fun::cast(item.syntax().clone()) {
-        if fun.has_atom_attr("test") {
+        if fun.is_test() {
             return false;
         }
     }

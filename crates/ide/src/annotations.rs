@@ -6,6 +6,7 @@
 
 use crate::NavigationTarget;
 use crate::goto_specification::goto_specification;
+use crate::runnables::{Runnable, runnables};
 use base_db::inputs::InternFileId;
 use ide_db::RootDatabase;
 use ide_db::helpers::visit_file_defs;
@@ -25,19 +26,22 @@ pub struct Annotation {
 
 #[derive(Debug, Hash, PartialEq, Eq)]
 pub enum AnnotationKind {
-    // Runnable(Runnable),
+    Runnable(Runnable),
     HasSpecs {
         pos: FilePosition,
-        item_specs: Option<Vec<NavigationTarget>>,
+        item_spec_refs: Option<Vec<NavigationTarget>>,
     },
     // HasReferences { pos: FilePosition, data: Option<Vec<FileRange>> },
 }
 
+#[derive(Debug)]
 pub struct AnnotationConfig {
+    pub annotate_runnables: bool,
     pub annotate_fun_specs: bool,
     pub location: AnnotationLocation,
 }
 
+#[derive(Debug)]
 pub enum AnnotationLocation {
     AboveName,
     AboveWholeItem,
@@ -49,6 +53,15 @@ pub(crate) fn annotations(
     file_id: FileId,
 ) -> Vec<Annotation> {
     let mut annotations: IndexSet<Annotation> = IndexSet::default();
+
+    if config.annotate_runnables {
+        for runnable in runnables(db, file_id) {
+            annotations.insert(Annotation {
+                range: runnable.nav_item.focus_or_full_range(),
+                kind: AnnotationKind::Runnable(runnable),
+            });
+        }
+    }
 
     visit_file_defs(&Semantics::new(db, file_id), file_id, &mut |module_item| {
         match module_item {
@@ -62,7 +75,7 @@ pub(crate) fn annotations(
                         range: annotation_range,
                         kind: AnnotationKind::HasSpecs {
                             pos: target_pos,
-                            item_specs: None,
+                            item_spec_refs: None,
                         },
                     });
                 }
@@ -82,12 +95,10 @@ pub(crate) fn annotations(
 
 pub(crate) fn resolve_annotation(db: &RootDatabase, mut annotation: Annotation) -> Annotation {
     match annotation.kind {
-        AnnotationKind::HasSpecs {
-            pos,
-            item_specs: ref mut item_spec,
-        } => {
-            *item_spec = goto_specification(db, pos).map(|range| range.info);
+        AnnotationKind::HasSpecs { pos, ref mut item_spec_refs } => {
+            *item_spec_refs = goto_specification(db, pos).map(|range| range.info);
         }
+        _ => (),
     };
     annotation
 }

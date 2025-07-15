@@ -43,57 +43,21 @@ config_data! {
         /// also need to add the folders to Code's `files.watcherExclude`.
         files_excludeDirs: Vec<Utf8PathBuf> = vec![],
 
-        // /// Whether to show inlay type hints for binding modes.
-        // inlayHints_bindingModeHints_enable: bool                   = false,
-        // /// Whether to show inlay type hints for method chains.
-        // inlayHints_chainingHints_enable: bool                      = true,
-        // /// Whether to show inlay hints after a closing `}` to indicate what item it belongs to.
-        // inlayHints_closingBraceHints_enable: bool                  = true,
-        // /// Minimum number of lines required before the `}` until the hint is shown (set to 0 or 1
-        // /// to always show them).
-        // inlayHints_closingBraceHints_minLines: usize               = 25,
-        // /// Whether to show inlay hints for closure captures.
-        // inlayHints_closureCaptureHints_enable: bool                          = false,
-        // /// Whether to show inlay type hints for return types of closures.
-        // inlayHints_closureReturnTypeHints_enable: ClosureReturnTypeHintsDef  = ClosureReturnTypeHintsDef::Never,
-        // /// Closure notation in type and chaining inlay hints.
-        // inlayHints_closureStyle: ClosureStyle                                = ClosureStyle::ImplFn,
-        // /// Whether to show enum variant discriminant hints.
-        // inlayHints_discriminantHints_enable: DiscriminantHintsDef            = DiscriminantHintsDef::Never,
-        // /// Whether to show inlay hints for type adjustments.
-        // inlayHints_expressionAdjustmentHints_enable: AdjustmentHintsDef = AdjustmentHintsDef::Never,
-        // /// Whether to hide inlay hints for type adjustments outside of `unsafe` blocks.
-        // inlayHints_expressionAdjustmentHints_hideOutsideUnsafe: bool = false,
-        // /// Whether to show inlay hints as postfix ops (`.*` instead of `*`, etc).
-        // inlayHints_expressionAdjustmentHints_mode: AdjustmentHintsModeDef = AdjustmentHintsModeDef::Prefix,
-        // /// Whether to show const generic parameter name inlay hints.
-        // inlayHints_genericParameterHints_const_enable: bool= true,
-        // /// Whether to show generic lifetime parameter name inlay hints.
-        // inlayHints_genericParameterHints_lifetime_enable: bool = false,
-        // /// Whether to show generic type parameter name inlay hints.
-        // inlayHints_genericParameterHints_type_enable: bool = false,
-        // /// Whether to show implicit drop hints.
-        // inlayHints_implicitDrops_enable: bool                      = false,
-        // /// Whether to show inlay hints for the implied type parameter `Sized` bound.
-        // inlayHints_implicitSizedBoundHints_enable: bool            = false,
-        // /// Maximum length for inlay hints. Set to null to have an unlimited length.
-        // inlayHints_maxLength: Option<usize>                        = Some(30),
         /// Whether to show function parameter name inlay hints at the call
         /// site.
         inlayHints_parameterHints_enable: bool                     = true,
-        // /// Whether to show exclusive range inlay hints.
-        // inlayHints_rangeExclusiveHints_enable: bool                = false,
         /// Whether to render leading colons for type hints, and trailing colons for parameter hints.
         inlayHints_renderColons: bool                              = true,
         /// Whether to show inlay type hints for variables.
         inlayHints_typeHints_enable: bool                          = true,
         /// Whether to hide inlay parameter type hints for closures.
         inlayHints_typeHints_hideClosureParameter: bool             = false,
-        // /// Whether to hide inlay type hints for constructors.
-        // inlayHints_typeHints_hideNamedConstructor: bool            = false,
 
         /// Whether to show CodeLens in Move files.
         lens_enable: bool           = false,
+        /// Whether to show `Run` lens. Only applies when
+        /// `#move-on-aptos.lens.enable#` is set.
+        lens_run_enable: bool              = true,
         /// Whether to show `Specifications` lens. Only applies when
         /// `#move-on-aptos.lens.enable#` is set.
         lens_specifications_enable: bool  = true,
@@ -105,6 +69,10 @@ config_data! {
 
         /// Additional arguments to `rustfmt`.
         movefmt_extraArgs: Vec<String>               = vec![],
+
+        /// Additional arguments to be passed to `aptos move` for runnables such as tests.
+        /// For example, it may be `--override-std`.
+        runnables_extraArgs: Vec<String>   = vec![],
     }
 }
 

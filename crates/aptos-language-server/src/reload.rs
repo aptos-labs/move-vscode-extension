@@ -61,6 +61,7 @@ impl GlobalState {
 
     pub(crate) fn update_configuration(&mut self, config: Config) {
         let _p = tracing::info_span!("GlobalState::update_configuration").entered();
+
         let old_config = mem::replace(&mut self.config, Arc::new(config));
 
         if self.config.discovered_manifests() != old_config.discovered_manifests() {

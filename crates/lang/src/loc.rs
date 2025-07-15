@@ -7,7 +7,6 @@
 use crate::item_scope::NamedItemScope;
 use base_db::inputs::InternFileId;
 use base_db::{SourceDatabase, source_db};
-use std::collections::HashSet;
 use std::fmt::Formatter;
 use std::{env, fmt};
 use syntax::algo::ancestors_at_offset;
@@ -165,8 +164,8 @@ impl<T: AstNode> SyntaxLocNodeExt for T {
     }
 }
 
-fn item_scope_from_attributes(has_attrs: impl ast::HasAttrs) -> Option<NamedItemScope> {
-    let atom_attrs = has_attrs.atom_attrs().collect::<HashSet<_>>();
+fn item_scope_from_attributes(attrs_owner: impl ast::HasAttrs) -> Option<NamedItemScope> {
+    let atom_attrs = attrs_owner.atom_attrs_set();
     if atom_attrs.is_empty() {
         return None;
     }

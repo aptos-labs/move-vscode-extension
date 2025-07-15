@@ -15,6 +15,7 @@ use ide::inlay_hints::{
     InlayFieldsToResolve, InlayHint, InlayHintLabel, InlayHintLabelPart, InlayHintPosition, InlayKind,
     InlayTooltip, LazyProperty,
 };
+use ide::runnables::Runnable;
 use ide::syntax_highlighting::tags::{Highlight, HlOperator, HlPunct, HlTag};
 use ide::{Cancellable, HlRange, NavigationTarget, SignatureHelp};
 use ide_completion::item::{CompletionItem, CompletionItemKind, CompletionRelevance};
@@ -930,6 +931,56 @@ fn inlay_hint_label(
     Ok((label, tooltip))
 }
 
+pub(crate) fn runnable(
+    snap: &GlobalStateSnapshot,
+    runnable: Runnable,
+) -> Cancellable<Option<lsp_ext::Runnable>> {
+    let package_id = snap.analysis.package_id(runnable.nav_item.file_id)?;
+    let package_manifest_file_id = match snap.analysis.manifest_file_id(package_id)? {
+        Some(file_id) => file_id,
+        None => {
+            return Ok(None);
+        }
+    };
+    let workspace_root = match snap
+        .file_id_to_file_path(package_manifest_file_id)
+        .parent()
+        .and_then(|it| it.into_abs_path())
+    {
+        Some(path) => path,
+        None => {
+            return Ok(None);
+        }
+    };
+
+    let config = snap.config.runnables();
+
+    let Some(path) = snap.file_id_to_file_path(runnable.nav_item.file_id).parent() else {
+        return Ok(None);
+    };
+    let mut aptos_args = vec!["move", "test", "--filter", &runnable.test_path]
+        .iter()
+        .map(|it| it.to_string())
+        .collect::<Vec<_>>();
+    for extra_arg in config.extra_args {
+        if !aptos_args.contains(&extra_arg) {
+            aptos_args.push(extra_arg);
+        }
+    }
+    let label = runnable.label();
+    let location = location_link(snap, None, runnable.nav_item)?;
+
+    Ok(Some(lsp_ext::Runnable {
+        label,
+        location: Some(location),
+        args: lsp_ext::AptosRunnableArgs {
+            workspace_root: workspace_root.into(),
+            args: aptos_args.iter().map(|it| it.to_string()).collect(),
+            environment: Default::default(),
+        },
+    }))
+}
+
 pub(crate) fn code_lens(
     acc: &mut Vec<lsp_types::CodeLens>,
     snap: &GlobalStateSnapshot,
@@ -937,7 +988,27 @@ pub(crate) fn code_lens(
 ) -> Cancellable<()> {
     let client_commands_config = snap.config.client_commands();
     match annotation.kind {
-        AnnotationKind::HasSpecs { pos, item_specs } => {
+        AnnotationKind::Runnable(run) => {
+            let line_index = snap.file_line_index(run.nav_item.file_id)?;
+            let annotation_range = lsp_range(&line_index, annotation.range);
+
+            let title = run.title();
+            let r = runnable(snap, run)?;
+
+            if let Some(r) = r {
+                let lens_config = snap.config.lens();
+
+                if lens_config.runnables && client_commands_config.run_single {
+                    let command = command::run_single(&r, &title);
+                    acc.push(lsp_types::CodeLens {
+                        range: annotation_range,
+                        command: Some(command),
+                        data: None,
+                    })
+                }
+            }
+        }
+        AnnotationKind::HasSpecs { pos, item_spec_refs } => {
             if !client_commands_config.show_references || !client_commands_config.goto_location {
                 return Ok(());
             }
@@ -956,12 +1027,12 @@ pub(crate) fn code_lens(
                 partial_result_params: Default::default(),
             };
 
-            let command = item_specs
+            let command = item_spec_refs
                 .map(|mut nav_items| match nav_items.len() {
                     0 => None,
                     1 => {
                         let nav_item = nav_items.pop().unwrap();
-                        command::goto_location(snap, "Has item specification", &nav_item)
+                        command::goto_location(snap, "1 specification", &nav_item)
                     }
                     items_len => {
                         let locations: Vec<lsp_types::Location> = nav_items
@@ -1009,8 +1080,17 @@ pub(crate) fn code_lens(
 pub(crate) mod command {
     use crate::global_state::GlobalStateSnapshot;
     use crate::lsp::to_proto::{location, location_link};
+    use crate::lsp_ext;
     use ide::NavigationTarget;
     use syntax::files::FileRange;
+
+    pub(crate) fn run_single(runnable: &lsp_ext::Runnable, title: &str) -> lsp_types::Command {
+        lsp_types::Command {
+            title: title.to_owned(),
+            command: "move-on-aptos.runSingle".into(),
+            arguments: Some(vec![serde_json::to_value(runnable).unwrap()]),
+        }
+    }
 
     pub(crate) fn show_references(
         title: String,
