@@ -21,7 +21,7 @@ impl Config {
         // let mut should_update = false;
 
         if let Some(json) = change.client_config_change {
-            // tracing::info!("updating config from JSON: {:#}", json);
+            tracing::info!("updating config from JSON: {:#}", json);
 
             if !(json.is_null() || json.as_object().is_some_and(|it| it.is_empty())) {
                 // note: can be copied and uncommented to support config migrations

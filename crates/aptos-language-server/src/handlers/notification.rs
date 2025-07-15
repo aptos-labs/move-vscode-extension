@@ -155,7 +155,7 @@ pub(crate) fn handle_did_change_configuration(
         lsp_types::ConfigurationParams {
             items: vec![lsp_types::ConfigurationItem {
                 scope_uri: None,
-                section: Some("aptos-language-server".to_owned()),
+                section: Some("move-on-aptos".to_owned()),
             }],
         },
         |this, resp| {
