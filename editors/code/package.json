@@ -1,6 +1,6 @@
 {
     "name": "move-on-aptos",
-    "displayName": "Move on Aptos (beta)",
+    "displayName": "Move on Aptos",
     "description": "Official VS Code extension for the Move language on Aptos — fast, modern, and reliably supported.",
     "version": "0.1.0-dev",
     "private": true,
