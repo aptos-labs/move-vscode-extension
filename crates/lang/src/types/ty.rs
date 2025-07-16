@@ -20,7 +20,7 @@ use crate::nameres::name_resolution::get_modules_as_entries;
 use crate::nameres::scope::{ScopeEntryListExt, VecExt};
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::inference::TyVarIndex;
-use crate::types::render::{HirWrite, TypeRenderer};
+use crate::types::render::{HirWrite, TypeRenderer, TypeRendererConfig};
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::range_like::TySequence;
@@ -197,7 +197,13 @@ impl Ty {
         context_file_id: Option<FileId>,
         sink: &'db mut dyn HirWrite,
     ) -> anyhow::Result<()> {
-        TypeRenderer::new(db, context_file_id, sink, "?", "!", "<unresolved>").render(self)
+        let config = TypeRendererConfig {
+            current_file_id: context_file_id,
+            unknown: "?",
+            never: "!",
+            unresolved: "<unresolved>",
+        };
+        TypeRenderer::new(db, config, sink).render(self)
     }
 
     pub fn render_to_tests<'db>(
@@ -206,7 +212,13 @@ impl Ty {
         context_file_id: Option<FileId>,
         sink: &'db mut dyn HirWrite,
     ) -> anyhow::Result<()> {
-        TypeRenderer::new(db, context_file_id, sink, "<unknown>", "<never>", "<unresolved>").render(self)
+        let config = TypeRendererConfig {
+            current_file_id: context_file_id,
+            unknown: "<unknown>",
+            never: "<never>",
+            unresolved: "<unresolved>",
+        };
+        TypeRenderer::new(db, config, sink).render(self)
     }
 
     pub fn render(&self, db: &dyn SourceDatabase, context_file_id: Option<FileId>) -> String {

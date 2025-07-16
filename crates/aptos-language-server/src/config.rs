@@ -272,19 +272,7 @@ impl Config {
             render_colons: self.inlayHints_renderColons().to_owned(),
             type_hints: self.inlayHints_typeHints_enable().to_owned(),
             parameter_hints: self.inlayHints_parameterHints_enable().to_owned(),
-            // generic_parameter_hints: GenericParameterHints {
-            //     type_hints: self.inlayHints_genericParameterHints_type_enable().to_owned(),
-            //     lifetime_hints: self.inlayHints_genericParameterHints_lifetime_enable().to_owned(),
-            //     const_hints: self.inlayHints_genericParameterHints_const_enable().to_owned(),
-            // },
-            // chaining_hints: self.inlayHints_chainingHints_enable().to_owned(),
             hide_closure_parameter_hints: self.inlayHints_typeHints_hideClosureParameter().to_owned(),
-            // max_length: self.inlayHints_maxLength().to_owned(),
-            // closing_brace_hints_min_lines: if self.inlayHints_closingBraceHints_enable().to_owned() {
-            //     Some(self.inlayHints_closingBraceHints_minLines().to_owned())
-            // } else {
-            //     None
-            // },
             fields_to_resolve: InlayFieldsToResolve::from_client_capabilities(&client_capability_fields),
         }
     }

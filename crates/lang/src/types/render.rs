@@ -32,33 +32,26 @@ impl HirWrite for String {}
 // `core::Formatter` will ignore metadata
 impl HirWrite for fmt::Formatter<'_> {}
 
+pub struct TypeRendererConfig<'db> {
+    pub current_file_id: Option<FileId>,
+    pub unknown: &'db str,
+    pub never: &'db str,
+    pub unresolved: &'db str,
+}
+
 pub struct TypeRenderer<'db> {
     db: &'db dyn SourceDatabase,
-    current_file_id: Option<FileId>,
     sink: &'db mut dyn HirWrite,
-
-    unknown: &'db str,
-    never: &'db str,
-    unresolved: &'db str,
+    config: TypeRendererConfig<'db>,
 }
 
 impl<'db> TypeRenderer<'db> {
     pub fn new(
         db: &'db dyn SourceDatabase,
-        context: Option<FileId>,
+        config: TypeRendererConfig<'db>,
         sink: &'db mut dyn HirWrite,
-        unknown: &'db str,
-        never: &'db str,
-        unresolved: &'db str,
     ) -> Self {
-        TypeRenderer {
-            db,
-            current_file_id: context,
-            sink,
-            unknown,
-            never,
-            unresolved,
-        }
+        TypeRenderer { db, config, sink }
     }
 
     pub fn write_str(&mut self, s: &str) -> fmt::Result {
@@ -101,8 +94,8 @@ impl<'db> TypeRenderer<'db> {
             Ty::Bv => self.write_str("bv")?,
 
             Ty::Unit => self.write_str("()")?,
-            Ty::Unknown => self.sink.write_str(self.unknown)?,
-            Ty::Never => self.write_str(self.never)?,
+            Ty::Unknown => self.sink.write_str(self.config.unknown)?,
+            Ty::Never => self.write_str(self.config.never)?,
         }
         Ok(())
     }
@@ -176,20 +169,23 @@ impl<'db> TypeRenderer<'db> {
 
     fn render_fq_name(&mut self, item: InFile<ast::NamedElement>) -> anyhow::Result<()> {
         let Some(fq_name) = item.fq_name(self.db) else {
-            self.write_str(self.unresolved)?;
+            self.write_str(self.config.unresolved)?;
             return Ok(());
         };
 
         self.sink.start_location_link(item.clone());
 
-        let Some(ctx_file_id) = self.current_file_id else {
+        let Some(ctx_file_id) = self.config.current_file_id else {
             self.write_str(&fq_name.fq_identifier_text())?;
             self.sink.end_location_link();
             return Ok(());
         };
 
         let addr_name = fq_name.address().identifier_text();
-        if matches!(addr_name.as_str(), "std" | "aptos_std") {
+        if matches!(
+            addr_name.as_str(),
+            "std" | "aptos_std" | "aptos_framework" | "aptos_token"
+        ) {
             self.write_str(&fq_name.name())?;
             self.sink.end_location_link();
             return Ok(());
@@ -214,6 +210,6 @@ impl<'db> TypeRenderer<'db> {
             .to_ast::<ast::TypeParam>(self.db)
             .and_then(|tp| tp.value.name())
             .map(|tp_name| tp_name.as_string())
-            .unwrap_or(self.unresolved.to_string())
+            .unwrap_or(self.config.unresolved.to_string())
     }
 }
