@@ -77,6 +77,14 @@ pub trait HasAttrs: AstNode {
     fn has_atom_attr(&self, atom: &str) -> bool {
         self.atom_attrs().contains(atom)
     }
+
+    fn is_test_only(&self) -> bool {
+        self.has_atom_attr("test_only")
+    }
+
+    fn is_verify_only(&self) -> bool {
+        self.has_atom_attr("verify_only")
+    }
 }
 
 // pub trait FieldsOwner: AstNode {
