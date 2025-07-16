@@ -56,7 +56,7 @@ config_data! {
         inlayHints_typeHints_showForTuples: bool             = true,
 
         /// Whether to show CodeLens in Move files.
-        lens_enable: bool           = false,
+        lens_enable: bool           = true,
         /// Whether to show `Run` lens. Only applies when
         /// `#move-on-aptos.lens.enable#` is set.
         lens_run_enable: bool              = true,
