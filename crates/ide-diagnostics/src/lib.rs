@@ -140,6 +140,12 @@ pub fn semantic_diagnostics(
                 ast::CastExpr(it) => {
                     handlers::redundant_integer_cast(&mut acc, &ctx, it.in_file(file_id));
                 },
+                ast::SpecFun(it) => {
+                    handlers::check_syntax::spec_fun_requires_return_type(&mut acc, &ctx, it.in_file(file_id));
+                },
+                ast::Fun(it) => {
+                    handlers::check_syntax::entry_fun_cannot_have_return_type(&mut acc, &ctx, it.in_file(file_id));
+                },
                 _ => (),
             }
         }
