@@ -227,7 +227,7 @@ fn initialization_handshake() -> anyhow::Result<(Connection, lsp_server::IoThrea
         .unwrap_or_else(|| vec![root_path.clone()]);
     tracing::info!(?workspace_roots);
 
-    let mut config = Config::new(root_path, capabilities, workspace_roots);
+    let mut config = Config::new(root_path, capabilities, workspace_roots, client_info);
     if let Some(json) = initialization_options {
         let mut change = ConfigChange::default();
         change.change_client_config(json);

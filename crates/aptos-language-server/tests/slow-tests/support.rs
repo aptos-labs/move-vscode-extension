@@ -170,6 +170,7 @@ impl Project {
                 ..Default::default()
             },
             roots,
+            None,
         );
 
         config.rediscover_packages();

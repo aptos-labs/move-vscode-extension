@@ -14,6 +14,7 @@ use camino::Utf8PathBuf;
 use ide_completion::config::CompletionConfig;
 use ide_db::AllowSnippets;
 use paths::AbsPath;
+use semver::Version;
 use std::collections::HashSet;
 use std::fmt;
 use std::sync::OnceLock;
@@ -92,6 +93,12 @@ impl From<AnnotationLocation> for ide::annotations::AnnotationLocation {
     }
 }
 
+#[derive(Clone, Debug)]
+struct ClientInfo {
+    name: String,
+    version: Option<Version>,
+}
+
 #[derive(Clone)]
 pub struct Config {
     /// Projects that have a Move.toml in a
@@ -103,6 +110,7 @@ pub struct Config {
     client_ws_roots: Vec<AbsPathBuf>,
     caps: ClientCapabilities,
     root_path: AbsPathBuf,
+    client_info: Option<ClientInfo>,
 
     default_config: &'static DefaultConfigData,
 
@@ -127,11 +135,8 @@ impl fmt::Debug for Config {
             .field("client_ws_roots", &self.client_ws_roots)
             .field("caps", &self.caps)
             .field("root_path", &self.root_path)
-            // .field("snippets", &self.snippets)
-            // .field("client_info", &self.client_info)
+            .field("client_info", &self.client_info)
             .field("client_config", &self.client_config)
-            // .field("user_config", &self.user_config)
-            // .field("source_root_parent_map", &self.source_root_parent_map)
             .field("validation_errors", &self.validation_errors)
             .finish()
     }
@@ -151,6 +156,7 @@ impl Config {
         root_path: AbsPathBuf,
         caps: lsp_types::ClientCapabilities,
         client_ws_roots: Vec<AbsPathBuf>,
+        client_info: Option<lsp_types::ClientInfo>,
     ) -> Self {
         static DEFAULT_CONFIG_DATA: OnceLock<&'static DefaultConfigData> = OnceLock::new();
 
@@ -159,6 +165,10 @@ impl Config {
             discovered_manifests_from_filesystem: Vec::new(),
             root_path,
             client_ws_roots,
+            client_info: client_info.map(|it| ClientInfo {
+                name: it.name,
+                version: it.version.as_deref().map(Version::parse).and_then(Result::ok),
+            }),
             client_config: (FullConfigInput::default(), ConfigErrors(vec![])),
             default_config: DEFAULT_CONFIG_DATA.get_or_init(|| Box::leak(Box::default())),
             validation_errors: Default::default(),
@@ -204,57 +214,8 @@ impl Config {
     }
 
     pub fn completion(&self) -> CompletionConfig {
-        // let client_capability_fields = self.completion_resolve_support_properties();
         CompletionConfig {
-            // enable_postfix_completions: self.completion_postfix_enable(source_root).to_owned(),
-            // enable_imports_on_the_fly: self.completion_autoimport_enable(source_root).to_owned()
-            //     && self.caps.completion_item_edit_resolve(),
-            // enable_self_on_the_fly: self.completion_autoself_enable(source_root).to_owned(),
-            // enable_private_editable: self.completion_privateEditable_enable(source_root).to_owned(),
-            // full_function_signatures: self
-            //     .completion_fullFunctionSignatures_enable(source_root)
-            //     .to_owned(),
-            // callable: match self.completion_callable_snippets(source_root) {
-            //     CallableCompletionDef::FillArguments => Some(CallableSnippets::FillArguments),
-            //     CallableCompletionDef::AddParentheses => Some(CallableSnippets::AddParentheses),
-            //     CallableCompletionDef::None => None,
-            // },
-            // add_semicolon_to_unit: *self.completion_addSemicolonToUnit(source_root),
             allow_snippets: AllowSnippets::new(self.completion_snippet()),
-            // insert_use: self.insert_use_config(source_root),
-            // prefer_no_std: self.imports_preferNoStd(source_root).to_owned(),
-            // prefer_prelude: self.imports_preferPrelude(source_root).to_owned(),
-            // prefer_absolute: self.imports_prefixExternPrelude(source_root).to_owned(),
-            // snippets: self.snippets.clone().to_vec(),
-            // limit: self.completion_limit(source_root).to_owned(),
-            // enable_term_search: self.completion_termSearch_enable(source_root).to_owned(),
-            // term_search_fuel: self.completion_termSearch_fuel(source_root).to_owned() as u64,
-            // fields_to_resolve: if self.client_is_neovim() {
-            //     CompletionFieldsToResolve::empty()
-            // } else {
-            //     CompletionFieldsToResolve::from_client_capabilities(&client_capability_fields)
-            // },
-            // exclude_flyimport: self
-            //     .completion_autoimport_exclude(source_root)
-            //     .iter()
-            //     .map(|it| match it {
-            //         AutoImportExclusion::Path(path) => {
-            //             (path.clone(), ide_completion::AutoImportExclusionType::Always)
-            //         }
-            //         AutoImportExclusion::Verbose { path, r#type } => (
-            //             path.clone(),
-            //             match r#type {
-            //                 AutoImportExclusionType::Always => {
-            //                     ide_completion::AutoImportExclusionType::Always
-            //                 }
-            //                 AutoImportExclusionType::Methods => {
-            //                     ide_completion::AutoImportExclusionType::Methods
-            //                 }
-            //             },
-            //         ),
-            //     })
-            //     .collect(),
-            // exclude_traits: self.completion_excludeTraits(source_root),
         }
     }
 
@@ -290,22 +251,12 @@ impl Config {
             .collect()
     }
 
-    // // VSCode is our reference implementation, so we allow ourselves to work around issues by
-    // // special casing certain versions
-    // pub fn visual_studio_code_version(&self) -> Option<&Version> {
-    //     self.client_info
-    //         .as_ref()
-    //         .filter(|it| it.name.starts_with("Visual Studio Code"))
-    //         .and_then(|it| it.version.as_ref())
-    // }
-
-    // pub fn check_on_save(&self) -> bool {
-    //     *self.checkOnSave()
-    // }
-
-    // pub fn extra_args(&self) -> &Vec<String> {
-    //     self.check_extraArgs()
-    // }
+    pub fn visual_studio_code_version(&self) -> Option<&Version> {
+        self.client_info
+            .as_ref()
+            .filter(|it| it.name.starts_with("Visual Studio Code"))
+            .and_then(|it| it.version.as_ref())
+    }
 
     pub fn aptos_path(&self) -> Option<Utf8PathBuf> {
         self.aptosPath().clone()
