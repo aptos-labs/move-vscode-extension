@@ -178,7 +178,7 @@ impl<'db> SemanticsImpl<'db> {
 
     pub fn render_ty_for_ui(&self, ty: &Ty, context_file_id: FileId) -> String {
         let mut out = String::new();
-        ty.render_to_ui(self.db, Some(context_file_id), &mut out).unwrap();
+        self.render_ty_for_ui_to(ty, context_file_id, &mut out).unwrap();
         out
     }
 

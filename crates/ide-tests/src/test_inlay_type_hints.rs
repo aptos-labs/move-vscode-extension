@@ -13,39 +13,18 @@ const DISABLED_CONFIG: InlayHintsConfig = InlayHintsConfig {
     render_colons: false,
     type_hints: false,
     parameter_hints: false,
-    // generic_parameter_hints: GenericParameterHints {
-    //     type_hints: false,
-    //     lifetime_hints: false,
-    //     const_hints: false,
-    // },
-    // chaining_hints: false,
-    // closure_capture_hints: false,
-    // adjustment_hints: AdjustmentHints::Never,
-    // adjustment_hints_mode: AdjustmentHintsMode::Prefix,
-    // adjustment_hints_hide_outside_unsafe: false,
-    // binding_mode_hints: false,
-    // hide_named_constructor_hints: false,
-    // hide_closure_initialization_hints: false,
     hide_closure_parameter_hints: false,
-    // closure_style: ClosureStyle::ImplFn,
-    // max_length: None,
-    // closing_brace_hints_min_lines: None,
     fields_to_resolve: InlayFieldsToResolve::empty(),
-    // range_exclusive_hints: false,
 };
 
 const TEST_CONFIG: InlayHintsConfig = InlayHintsConfig {
     type_hints: true,
     parameter_hints: true,
-    // chaining_hints: true,
-    // closure_return_type_hints: ClosureReturnTypeHints::WithBlock,
-    // binding_mode_hints: true,
-    // lifetime_elision_hints: LifetimeElisionHints::Always,
     ..DISABLED_CONFIG
 };
 
 #[track_caller]
-pub(crate) fn check_inlay_hints(expect: Expect) {
+pub(crate) fn check_inlay_hints_with_config(config: &InlayHintsConfig, expect: Expect) {
     init_tracing_for_test();
 
     let source = stdx::trim_indent(expect.data());
@@ -53,7 +32,7 @@ pub(crate) fn check_inlay_hints(expect: Expect) {
 
     let (analysis, file_id) = fixtures::from_single_file(trimmed_source.clone());
 
-    let inlay_hints = analysis.inlay_hints(&TEST_CONFIG, file_id, None).unwrap();
+    let inlay_hints = analysis.inlay_hints(config, file_id, None).unwrap();
 
     let markings = inlay_hints
         .into_iter()
@@ -69,6 +48,11 @@ pub(crate) fn check_inlay_hints(expect: Expect) {
         .collect();
     let res = apply_source_marks(trimmed_source.as_str(), markings);
     expect.assert_eq(res.as_str());
+}
+
+#[track_caller]
+pub(crate) fn check_inlay_hints(expect: Expect) {
+    check_inlay_hints_with_config(&TEST_CONFIG, expect);
 }
 
 #[test]

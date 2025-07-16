@@ -102,11 +102,7 @@ pub struct InlayHintsConfig {
     pub render_colons: bool,
     pub type_hints: bool,
     pub parameter_hints: bool,
-    // pub generic_parameter_hints: GenericParameterHints,
-    // pub chaining_hints: bool,
     pub hide_closure_parameter_hints: bool,
-    // pub max_length: Option<usize>,
-    // pub closing_brace_hints_min_lines: Option<usize>,
     pub fields_to_resolve: InlayFieldsToResolve,
 }
 
@@ -502,9 +498,6 @@ fn label_of_ty(
         client_can_lazy_resolve: config.fields_to_resolve.resolve_label_location,
     };
     sema.render_ty_for_ui_to(ty, file_id, &mut label_builder).ok()?;
-    // label_builder
-    //     .write_str(&sema.render_ty_truncated(ty, file_id))
-    //     .unwrap();
     Some(label_builder.finish())
 }
 
