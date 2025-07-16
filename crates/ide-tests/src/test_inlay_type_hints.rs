@@ -12,6 +12,7 @@ use test_utils::{SourceMark, apply_source_marks, fixtures, remove_marks};
 const DISABLED_CONFIG: InlayHintsConfig = InlayHintsConfig {
     render_colons: false,
     type_hints: false,
+    tuple_type_hints: false,
     parameter_hints: false,
     hide_closure_parameter_hints: false,
     fields_to_resolve: InlayFieldsToResolve::empty(),
@@ -19,6 +20,7 @@ const DISABLED_CONFIG: InlayHintsConfig = InlayHintsConfig {
 
 const TEST_CONFIG: InlayHintsConfig = InlayHintsConfig {
     type_hints: true,
+    tuple_type_hints: true,
     parameter_hints: true,
     ..DISABLED_CONFIG
 };
@@ -178,4 +180,41 @@ fn test_no_inlay_hint_if_type_is_uninferred() {
             }
         }
     "#]]);
+}
+
+#[test]
+fn test_inlay_hints_for_tuple() {
+    // language=Move
+    check_inlay_hints(expect![[r#"
+        module 0x1::m {
+            fun call(): (u8, u8) { (1, 1) }
+            fun main() {
+                let (a1, b1) = (1, 1);
+                   //^^ integer
+                       //^^ integer
+                let (a, b) = call();
+                   //^ u8
+                      //^ u8
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_inlay_hints_for_tuple_disabled() {
+    // language=Move
+    check_inlay_hints_with_config(
+        &InlayHintsConfig {
+            tuple_type_hints: false,
+            ..TEST_CONFIG
+        },
+        expect![[r#"
+            module 0x1::m {
+                fun call(): (u8, u8) { (1, 1) }
+                fun main() {
+                    let (a, b) = call();
+                }
+            }
+        "#]],
+    );
 }

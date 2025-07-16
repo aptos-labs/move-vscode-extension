@@ -306,6 +306,16 @@
                 }
             },
             {
+                "title": "inlayHints",
+                "properties": {
+                    "move-on-aptos.inlayHints.typeHints.showForTuples": {
+                        "markdownDescription": "Whether to show inlay type hints for tuples.",
+                        "default": true,
+                        "type": "boolean"
+                    }
+                }
+            },
+            {
                 "title": "lens",
                 "properties": {
                     "move-on-aptos.lens.enable": {

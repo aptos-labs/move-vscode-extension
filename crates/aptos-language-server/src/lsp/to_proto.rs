@@ -791,24 +791,7 @@ pub(crate) fn inlay_hint(
     });
 
     let mut something_to_resolve = false;
-    let text_edits = inlay_hint
-        .text_edit
-        .take()
-        .and_then(|it| match it {
-            LazyProperty::Computed(it) => Some(it),
-            LazyProperty::Lazy => {
-                something_to_resolve |=
-                    resolve_range_and_hash.is_some() && fields_to_resolve.resolve_text_edits;
-                something_to_resolve |= /*snap
-                    .config
-                    .visual_studio_code_version()
-                    .is_none_or(|version| VersionReq::parse(">=1.86.0").unwrap().matches(version))
-                    &&*/ resolve_range_and_hash.is_some()
-                    && fields_to_resolve.resolve_text_edits;
-                None
-            }
-        })
-        .map(|it| text_edit_vec(line_index, it));
+
     let (label, tooltip) = inlay_hint_label(
         snap,
         fields_to_resolve,
@@ -844,7 +827,7 @@ pub(crate) fn inlay_hint(
             InlayKind::Type | InlayKind::Chaining => Some(lsp_types::InlayHintKind::TYPE),
             _ => None,
         },
-        text_edits,
+        text_edits: None,
         data,
         tooltip,
         label,
