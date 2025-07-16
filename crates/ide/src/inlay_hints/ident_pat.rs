@@ -4,9 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::inlay_hints::{
-    InlayHint, InlayHintPosition, InlayHintsConfig, InlayKind, label_of_ty, ty_to_text_edit,
-};
+use crate::inlay_hints::{InlayHint, InlayHintPosition, InlayHintsConfig, InlayKind, label_of_ty};
 use ide_db::RootDatabase;
 use lang::Semantics;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
@@ -32,8 +30,8 @@ pub(super) fn hints(
         return None;
     }
 
-    let parent = ident_pat.syntax().parent()?.cast::<ast::IdentPatOwner>()?;
-    let type_ascriptable = match parent {
+    let ident_pat_owner = ident_pat.ident_owner()?;
+    let colon_token = match ident_pat_owner {
         ast::IdentPatOwner::LambdaParam(lambda_param) => {
             if lambda_param.type_().is_some() {
                 return None;
@@ -41,13 +39,16 @@ pub(super) fn hints(
             if config.hide_closure_parameter_hints {
                 return None;
             }
-            Some(lambda_param.colon_token())
+            lambda_param.colon_token()
         }
         ast::IdentPatOwner::LetStmt(let_stmt) => {
             if let_stmt.type_().is_some() {
                 return None;
             }
-            Some(let_stmt.colon_token())
+            if !config.tuple_type_hints && ident_pat.syntax().parent_is::<ast::TuplePat>() {
+                return None;
+            }
+            let_stmt.colon_token()
         }
         _ => {
             return None;
@@ -56,23 +57,7 @@ pub(super) fn hints(
 
     let mut label = label_of_ty(&sema, config, file_id, &ty)?;
 
-    let text_edit = if let Some(colon_token) = &type_ascriptable {
-        ty_to_text_edit(
-            &sema,
-            config,
-            ty,
-            colon_token
-                .as_ref()
-                .map_or_else(|| ident_pat.syntax().text_range(), |t| t.text_range())
-                .end(),
-            &|_| (),
-            if colon_token.is_some() { "" } else { ": " },
-        )
-    } else {
-        None
-    };
-
-    let render_colons = config.render_colons && !matches!(type_ascriptable, Some(Some(_)));
+    let render_colons = config.render_colons && !matches!(colon_token, Some(_));
     if render_colons {
         label.prepend_str(": ");
     }
@@ -83,13 +68,13 @@ pub(super) fn hints(
     };
 
     acc.push(InlayHint {
-        range: match type_ascriptable {
-            Some(Some(t)) => text_range.cover(t.text_range()),
+        range: match colon_token {
+            Some(t) => text_range.cover(t.text_range()),
             _ => text_range,
         },
         kind: InlayKind::Type,
         label,
-        text_edit,
+        text_edit: None,
         position: InlayHintPosition::After,
         pad_left: !render_colons,
         pad_right: false,

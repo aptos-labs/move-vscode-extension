@@ -52,6 +52,8 @@ config_data! {
         inlayHints_typeHints_enable: bool                          = true,
         /// Whether to hide inlay parameter type hints for closures.
         inlayHints_typeHints_hideClosureParameter: bool             = false,
+        /// Whether to show inlay type hints for tuples.
+        inlayHints_typeHints_showForTuples: bool             = true,
 
         /// Whether to show CodeLens in Move files.
         lens_enable: bool           = false,

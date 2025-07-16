@@ -9,7 +9,7 @@ mod param_name;
 
 use crate::NavigationTarget;
 use ide_db::RootDatabase;
-use ide_db::text_edit::{TextEdit, TextEditBuilder};
+use ide_db::text_edit::TextEdit;
 use itertools::Itertools;
 use lang::Semantics;
 use lang::types::render::HirWrite;
@@ -17,7 +17,7 @@ use lang::types::ty::Ty;
 use std::collections::HashSet;
 use std::{fmt, mem};
 use syntax::files::{FileRange, InFile, InFileExt};
-use syntax::{AstNode, SyntaxNode, TextRange, TextSize, WalkEvent, ast, match_ast};
+use syntax::{AstNode, SyntaxNode, TextRange, WalkEvent, ast, match_ast};
 use vfs::FileId;
 
 #[tracing::instrument(level = "info", skip_all)]
@@ -101,22 +101,13 @@ pub(crate) fn inlay_hints_resolve(
 pub struct InlayHintsConfig {
     pub render_colons: bool,
     pub type_hints: bool,
+    pub tuple_type_hints: bool,
     pub parameter_hints: bool,
     pub hide_closure_parameter_hints: bool,
     pub fields_to_resolve: InlayFieldsToResolve,
 }
 
 impl InlayHintsConfig {
-    fn lazy_text_edit(&self, finish: impl FnOnce() -> TextEdit) -> LazyProperty<TextEdit> {
-        if self.fields_to_resolve.resolve_text_edits {
-            LazyProperty::Lazy
-        } else {
-            let edit = finish();
-            stdx::never!(edit.is_empty(), "inlay hint produced an empty text edit");
-            LazyProperty::Computed(edit)
-        }
-    }
-
     fn lazy_tooltip(&self, finish: impl FnOnce() -> InlayTooltip) -> LazyProperty<InlayTooltip> {
         if self.fields_to_resolve.resolve_hint_tooltip && self.fields_to_resolve.resolve_label_tooltip {
             LazyProperty::Lazy
@@ -150,7 +141,6 @@ impl InlayHintsConfig {
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct InlayFieldsToResolve {
-    pub resolve_text_edits: bool,
     pub resolve_hint_tooltip: bool,
     pub resolve_label_tooltip: bool,
     pub resolve_label_location: bool,
@@ -160,7 +150,6 @@ pub struct InlayFieldsToResolve {
 impl InlayFieldsToResolve {
     pub fn from_client_capabilities(client_capability_fields: &HashSet<&str>) -> Self {
         Self {
-            resolve_text_edits: client_capability_fields.contains("textEdits"),
             resolve_hint_tooltip: client_capability_fields.contains("tooltip"),
             resolve_label_tooltip: client_capability_fields.contains("label.tooltip"),
             resolve_label_location: client_capability_fields.contains("label.location"),
@@ -170,7 +159,6 @@ impl InlayFieldsToResolve {
 
     pub const fn empty() -> Self {
         Self {
-            resolve_text_edits: false,
             resolve_hint_tooltip: false,
             resolve_label_tooltip: false,
             resolve_label_location: false,
@@ -501,23 +489,23 @@ fn label_of_ty(
     Some(label_builder.finish())
 }
 
-fn ty_to_text_edit(
-    sema: &Semantics<'_, RootDatabase>,
-    config: &InlayHintsConfig,
-    ty: Ty,
-    offset_to_insert_ty: TextSize,
-    additional_edits: &dyn Fn(&mut TextEditBuilder),
-    prefix: impl Into<String>,
-) -> Option<LazyProperty<TextEdit>> {
-    // FIXME: Limit the length and bail out on excess somehow?
-    let rendered = sema.render_ty(&ty);
-    Some(config.lazy_text_edit(|| {
-        let mut builder = TextEdit::builder();
-        builder.insert(offset_to_insert_ty, prefix.into());
-        builder.insert(offset_to_insert_ty, rendered);
-
-        additional_edits(&mut builder);
-
-        builder.finish()
-    }))
-}
+// fn ty_to_text_edit(
+//     sema: &Semantics<'_, RootDatabase>,
+//     config: &InlayHintsConfig,
+//     ty: Ty,
+//     offset_to_insert_ty: TextSize,
+//     additional_edits: &dyn Fn(&mut TextEditBuilder),
+//     prefix: impl Into<String>,
+// ) -> Option<LazyProperty<TextEdit>> {
+//     // FIXME: Limit the length and bail out on excess somehow?
+//     let rendered = sema.render_ty(&ty);
+//     Some(config.lazy_text_edit(|| {
+//         let mut builder = TextEdit::builder();
+//         builder.insert(offset_to_insert_ty, prefix.into());
+//         builder.insert(offset_to_insert_ty, rendered);
+//
+//         additional_edits(&mut builder);
+//
+//         builder.finish()
+//     }))
+// }
