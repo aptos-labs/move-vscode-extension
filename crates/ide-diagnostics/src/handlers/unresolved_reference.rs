@@ -56,9 +56,15 @@ fn unresolved_path(
     ctx: &DiagnosticsContext<'_>,
     reference: InFile<ast::Path>,
 ) -> Option<()> {
-    let (_, path) = reference.clone().unpack();
-    let path_name = path.reference_name()?;
+    let (file_id, path) = reference.clone().unpack();
 
+    let root_path = path.root_path();
+    if path != root_path {
+        // only check root_path itself
+        return None;
+    }
+
+    let path_name = path.reference_name()?;
     // (_, _) = (1, 1);
     if path_name == "_" {
         for ancestor in path.syntax().ancestors() {
@@ -83,30 +89,40 @@ fn unresolved_path(
         return None;
     }
 
-    let pkind = path_kind(path.qualifier(), path.clone(), false)?;
-    match pkind {
-        PathKind::NamedAddress(_)
-        | PathKind::NamedAddressOrUnqualifiedPath { .. }
-        | PathKind::ValueAddress(_) => (),
-        PathKind::FieldShorthand { .. } | PathKind::Unqualified { .. } => {
-            try_check_resolve(acc, ctx, reference.map_into());
-        }
-        PathKind::Qualified { qualifier, kind, .. } => {
-            match kind {
-                QualifiedKind::ModuleItemOrEnumVariant
-                | QualifiedKind::FQModuleItem
-                | QualifiedKind::UseGroupItem => {
-                    let resolved = ctx.sema.resolve(qualifier).single_or_none();
-                    // qualifier is unresolved, no need to resolve current path
-                    if resolved.is_none() {
-                        return None;
-                    }
+    // iterate over all qualifiers, stop if there's unresolved reference
+    let mut base_path = Some(root_path.base_path());
+    while let Some(path) = base_path {
+        let path_kind = path_kind(path.qualifier(), path.clone(), false)?;
+        match path_kind {
+            PathKind::NamedAddress(_)
+            | PathKind::NamedAddressOrUnqualifiedPath { .. }
+            | PathKind::ValueAddress(_) => (),
+            PathKind::FieldShorthand { .. } | PathKind::Unqualified { .. } => {
+                if let Some(_) = try_check_resolve(acc, ctx, path.reference().in_file(file_id)) {
+                    break;
                 }
-                _ => {}
-            };
-            try_check_resolve(acc, ctx, reference.map_into());
+            }
+            PathKind::Qualified { qualifier, kind, .. } => {
+                match kind {
+                    QualifiedKind::ModuleItemOrEnumVariant
+                    | QualifiedKind::FQModuleItem
+                    | QualifiedKind::UseGroupItem => {
+                        let resolved = ctx.sema.resolve(qualifier).single_or_none();
+                        // qualifier is unresolved, no need to resolve current path
+                        if resolved.is_none() {
+                            return None;
+                        }
+                    }
+                    _ => {}
+                };
+                if let Some(_) = try_check_resolve(acc, ctx, path.reference().in_file(file_id)) {
+                    break;
+                }
+            }
         }
+        base_path = path.syntax().parent_of_type::<ast::Path>();
     }
+
     Some(())
 }
 
@@ -182,6 +198,7 @@ fn try_check_resolve(
                 format!("Unresolved reference `{}`: cannot resolve", reference_name),
                 reference_node.file_range(),
             ));
+            return Some(());
         }
         1 => (),
         _ => {
@@ -198,7 +215,6 @@ fn try_check_resolve(
                     ),
                     reference_node.file_range(),
                 ));
-                return Some(());
             }
             acc.push(Diagnostic::new(
                 DiagnosticCode::Lsp("unresolved-reference", Severity::Error),
@@ -207,10 +223,11 @@ fn try_check_resolve(
                     reference_name
                 ),
                 reference_node.file_range(),
-            ))
+            ));
+            return Some(());
         }
     }
-    Some(())
+    None
 }
 
 fn is_entries_from_duplicate_dependencies(

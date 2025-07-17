@@ -820,17 +820,28 @@ fn test_shorthand_with_struct_lit_field_and_schema_field() {
     "#]])
 }
 
+// todo: when named addresses are available
 #[test]
-fn test_unresolved_vector_module() {
+fn test_unresolved_vector_module_in_expr() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                vector::push_back();
+            }
+        }
+    "#]])
+}
+
+// todo: when named addresses are available
+#[test]
+fn test_unresolved_vector_module_in_type_as_qualifier() {
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::m {
             fun main(
                 _s: vector::Vector,
-                _t: std::vector
-            ) {
-                vector::push_back();
-            }
+            ) {}
         }
     "#]])
 }
