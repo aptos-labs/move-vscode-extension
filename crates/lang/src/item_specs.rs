@@ -4,9 +4,8 @@ use crate::node_ext::item_spec::ItemSpecExt;
 use base_db::inputs::{FileIdInput, InternFileId};
 use base_db::{SourceDatabase, source_db};
 use std::collections::HashMap;
-use syntax::ast;
 use syntax::ast::HasItems;
-use syntax::files::{InFile, InFileExt};
+use syntax::files::InFileExt;
 
 pub fn get_item_specs_for_fun(db: &dyn SourceDatabase, fun_loc: SyntaxLoc) -> Vec<SyntaxLoc> {
     get_item_specs_for_items_in_file(db, fun_loc.file_id().intern(db))
