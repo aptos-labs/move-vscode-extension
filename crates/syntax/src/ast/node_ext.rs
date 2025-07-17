@@ -25,6 +25,7 @@ mod enum_;
 mod expr;
 mod field_list;
 mod fields_owner;
+mod for_condition;
 pub mod fun;
 mod generic_element;
 mod generic_spec_stmt;

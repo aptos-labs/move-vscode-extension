@@ -10,8 +10,8 @@ use base_db::{SourceDatabase, source_db};
 use std::fmt::Formatter;
 use std::{env, fmt};
 use syntax::algo::ancestors_at_offset;
-use syntax::files::InFile;
-use syntax::{AstNode, SourceFile, SyntaxNode, TextSize, ast};
+use syntax::files::{FileRange, InFile};
+use syntax::{AstNode, SourceFile, SyntaxNode, TextRange, TextSize, ast};
 use syntax::{SyntaxKind, SyntaxKind::*, SyntaxNodePtr};
 use vfs::FileId;
 
@@ -77,6 +77,17 @@ impl SyntaxLoc {
 
     pub fn file_id(&self) -> FileId {
         self.file_id
+    }
+
+    pub fn file_range(&self) -> FileRange {
+        FileRange {
+            file_id: self.file_id,
+            range: self.syntax_ptr.text_range(),
+        }
+    }
+
+    pub fn text_range(&self) -> TextRange {
+        self.syntax_ptr.text_range()
     }
 
     pub fn kind(&self) -> SyntaxKind {
