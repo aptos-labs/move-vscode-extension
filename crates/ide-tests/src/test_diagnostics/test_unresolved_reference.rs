@@ -887,6 +887,7 @@ module std::main {
                 use std::vector::new;/*caret*/
                 fun main() {
                     new();
+                  //^^^ err: Could not infer this type. Try adding a type annotation
                 }
             }
         "#]],

@@ -23,11 +23,7 @@ pub(crate) fn can_be_replaced_with_index_expr(
 
     let inference = ctx.sema.inference(&outer_deref_expr, outer_deref_expr.is_msl())?;
     // fail if any type errors
-    if inference
-        .type_errors
-        .iter()
-        .any(|it| deref_expr.syntax().text_range().contains_range(it.text_range()))
-    {
+    if inference.has_type_error_inside_range(deref_expr.syntax().text_range()) {
         return None;
     }
 

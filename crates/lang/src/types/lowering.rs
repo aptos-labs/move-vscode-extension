@@ -8,6 +8,7 @@ mod type_args;
 
 use crate::loc::SyntaxLocNodeExt;
 use crate::nameres;
+use crate::types::has_type_params_ext::GenericItemExt;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
@@ -152,6 +153,7 @@ impl<'db> TyLowering<'db> {
     }
 
     pub fn lower_any_function(&self, any_fun: InFile<ast::AnyFun>) -> TyCallable {
+        let item_subst = any_fun.ty_type_params_subst();
         let (file_id, any_fun) = any_fun.unpack();
         let param_types = any_fun
             .params()
@@ -166,7 +168,7 @@ impl<'db> TyLowering<'db> {
         TyCallable::new(
             param_types,
             ret_type,
-            TyCallableKind::Named(Some(any_fun.loc(file_id))),
+            TyCallableKind::named(item_subst, Some(any_fun.loc(file_id))),
         )
     }
 

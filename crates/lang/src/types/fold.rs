@@ -27,6 +27,9 @@ pub trait TypeFoldable<T> {
     fn has_ty_unknown(&self) -> bool {
         self.visit_with(HasTyUnknownVisitor::default())
     }
+    fn has_ty_infer(&self) -> bool {
+        self.visit_with(HasTyInferVisitor::default())
+    }
 }
 
 pub trait TypeFolder: Clone {
@@ -168,6 +171,18 @@ impl TypeVisitor for HasTyUnknownVisitor {
     fn visit_ty(&self, ty: &Ty) -> bool {
         match ty {
             Ty::Unknown => true,
+            _ => ty.deep_visit_with(self.clone()),
+        }
+    }
+}
+
+#[derive(Clone, Default)]
+struct HasTyInferVisitor {}
+
+impl TypeVisitor for HasTyInferVisitor {
+    fn visit_ty(&self, ty: &Ty) -> bool {
+        match ty {
+            Ty::Infer(_) => true,
             _ => ty.deep_visit_with(self.clone()),
         }
     }

@@ -6,6 +6,7 @@
 
 use crate::loc::SyntaxLoc;
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
+use crate::types::substitution::Substitution;
 use crate::types::ty::Ty;
 use std::iter;
 use std::ops::Deref;
@@ -19,8 +20,18 @@ pub struct TyCallable {
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum TyCallableKind {
-    Named(Option<SyntaxLoc>),
+    Named(Substitution, Option<SyntaxLoc>),
     Lambda(Option<SyntaxLoc>),
+}
+
+impl TyCallableKind {
+    pub fn named(subst: Substitution, loc: Option<SyntaxLoc>) -> Self {
+        TyCallableKind::Named(subst, loc)
+    }
+
+    pub fn fake() -> Self {
+        TyCallableKind::Named(Substitution::default(), None)
+    }
 }
 
 impl From<TyCallable> for Ty {
@@ -53,13 +64,35 @@ impl TyCallable {
     }
 }
 
-impl TypeFoldable<TyCallable> for TyCallable {
-    fn deep_fold_with(self, folder: impl TypeFolder) -> TyCallable {
-        let TyCallable { param_types, ret_type, kind } = self;
-        TyCallable::new(folder.fold_tys(param_types), folder.fold_ty(*ret_type), kind)
+impl TypeFoldable<TyCallableKind> for TyCallableKind {
+    fn deep_fold_with(self, folder: impl TypeFolder) -> TyCallableKind {
+        match self {
+            TyCallableKind::Named(subst, loc) => TyCallableKind::Named(subst.fold_with(folder), loc),
+            TyCallableKind::Lambda(loc) => TyCallableKind::Lambda(loc),
+        }
     }
 
     fn deep_visit_with(&self, visitor: impl TypeVisitor) -> bool {
-        visitor.visit_tys(&self.param_types) || visitor.visit_ty(&self.ret_type)
+        match self {
+            TyCallableKind::Named(subst, _) => subst.visit_with(visitor),
+            TyCallableKind::Lambda(_) => false,
+        }
+    }
+}
+
+impl TypeFoldable<TyCallable> for TyCallable {
+    fn deep_fold_with(self, folder: impl TypeFolder) -> TyCallable {
+        let TyCallable { param_types, ret_type, kind } = self;
+        TyCallable::new(
+            folder.fold_tys(param_types),
+            folder.fold_ty(*ret_type),
+            kind.fold_with(folder),
+        )
+    }
+
+    fn deep_visit_with(&self, visitor: impl TypeVisitor) -> bool {
+        visitor.visit_tys(&self.param_types)
+            || visitor.visit_ty(&self.ret_type)
+            || self.kind.visit_with(visitor)
     }
 }

@@ -12,4 +12,8 @@ impl ast::TypeArgList {
             }
         }
     }
+
+    pub fn type_args(&self) -> Vec<ast::TypeArg> {
+        self.type_arguments().collect()
+    }
 }

@@ -15,6 +15,7 @@ use crate::types::ty::ty_var::{TyInfer, TyVar, TyVarKind};
 use crate::types::ty::type_param::TyTypeParameter;
 use base_db::SourceDatabase;
 use std::fmt;
+use std::fmt::Write;
 use syntax::ast;
 use syntax::files::InFile;
 use vfs::FileId;
@@ -33,10 +34,34 @@ impl HirWrite for String {}
 impl HirWrite for fmt::Formatter<'_> {}
 
 pub struct TypeRendererConfig<'db> {
-    pub current_file_id: Option<FileId>,
-    pub unknown: &'db str,
-    pub never: &'db str,
-    pub unresolved: &'db str,
+    current_file_id: Option<FileId>,
+    ty_var_origin: bool,
+    unknown: &'db str,
+    never: &'db str,
+}
+
+impl<'db> TypeRendererConfig<'db> {
+    pub fn for_tests(context_file_id: Option<FileId>) -> Self {
+        Self::new(context_file_id, "<unknown>", "<never>", false)
+    }
+
+    pub fn for_inlay_hints(context_file_id: FileId) -> Self {
+        Self::new(Some(context_file_id), "?", "!", true)
+    }
+
+    fn new(
+        current_file_id: Option<FileId>,
+        unknown: &'db str,
+        never: &'db str,
+        ty_var_origin: bool,
+    ) -> Self {
+        TypeRendererConfig {
+            current_file_id,
+            ty_var_origin,
+            unknown,
+            never,
+        }
+    }
 }
 
 pub struct TypeRenderer<'db> {
@@ -94,8 +119,8 @@ impl<'db> TypeRenderer<'db> {
             Ty::Bv => self.write_str("bv")?,
 
             Ty::Unit => self.write_str("()")?,
-            Ty::Unknown => self.sink.write_str(self.config.unknown)?,
-            Ty::Never => self.write_str(self.config.never)?,
+            Ty::Unknown => self.write_str(&self.config.unknown)?,
+            Ty::Never => self.write_str(&self.config.never)?,
         }
         Ok(())
     }
@@ -109,14 +134,18 @@ impl<'db> TypeRenderer<'db> {
             TyVarKind::Anonymous(index) => write!(self.sink, "?_{index}"),
             TyVarKind::WithOrigin { origin_loc, index } => {
                 let origin = self.origin_loc_name(origin_loc);
-                write!(self.sink, "?{origin}_{index}")
+                if self.config.ty_var_origin {
+                    write!(self.sink, "{origin}")
+                } else {
+                    write!(self.sink, "?{origin}_{index}")
+                }
             }
         }
     }
 
     fn render_ty_callable(&mut self, ty_callable: &TyCallable) -> anyhow::Result<()> {
         match ty_callable.kind {
-            TyCallableKind::Named(_) => {
+            TyCallableKind::Named(_, _) => {
                 self.render_type_list("fn(", &ty_callable.param_types, ")")?;
                 let ret_type = ty_callable.ret_type();
                 if !matches!(ret_type, Ty::Unit) {
@@ -169,7 +198,7 @@ impl<'db> TypeRenderer<'db> {
 
     fn render_fq_name(&mut self, item: InFile<ast::NamedElement>) -> anyhow::Result<()> {
         let Some(fq_name) = item.fq_name(self.db) else {
-            self.write_str(self.config.unresolved)?;
+            self.write_str(&self.config.unknown)?;
             return Ok(());
         };
 
@@ -210,6 +239,6 @@ impl<'db> TypeRenderer<'db> {
             .to_ast::<ast::TypeParam>(self.db)
             .and_then(|tp| tp.value.name())
             .map(|tp_name| tp_name.as_string())
-            .unwrap_or(self.config.unresolved.to_string())
+            .unwrap_or(self.config.unknown.to_string())
     }
 }

@@ -372,6 +372,10 @@ impl Analysis {
         self.with_db(|db| type_info::expr_type_info(db, position))
     }
 
+    pub fn call_expr_type_info(&self, position: FilePosition) -> Cancellable<Option<String>> {
+        self.with_db(|db| type_info::call_expr_type_info(db, position))
+    }
+
     // /// Computes call hierarchy candidates for the given file position.
     // pub fn call_hierarchy(
     //     &self,

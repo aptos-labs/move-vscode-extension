@@ -171,6 +171,20 @@ fn test_inlay_hint_for_uninferred_vec() {
 }
 
 #[test]
+fn test_inlay_hint_for_uninferred_struct() {
+    // language=Move
+    check_inlay_hints(expect![[r#"
+        module 0x1::m {
+            struct S<phantom T> {}
+            fun main() {
+                let v = S {};
+                  //^ S<?>
+            }
+        }
+    "#]]);
+}
+
+#[test]
 fn test_no_inlay_hint_if_type_is_uninferred() {
     // language=Move
     check_inlay_hints(expect![[r#"

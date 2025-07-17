@@ -12,6 +12,7 @@ pub(crate) mod check_syntax;
 pub(crate) mod error_const_docs;
 pub(crate) mod field_shorthand;
 pub(crate) mod missing_fields;
+pub(crate) mod missing_type_arguments;
 mod redundant_cast;
 mod type_checking;
 mod unresolved_reference;

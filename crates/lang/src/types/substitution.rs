@@ -42,8 +42,8 @@ impl TypeFoldable<Substitution> for Substitution {
         Substitution { mapping: folded_mapping }
     }
 
-    fn deep_visit_with(&self, _visitor: impl TypeVisitor) -> bool {
-        false
+    fn deep_visit_with(&self, visitor: impl TypeVisitor) -> bool {
+        self.mapping.values().any(|it| it.visit_with(visitor.clone()))
     }
 }
 

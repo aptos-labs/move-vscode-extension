@@ -191,39 +191,11 @@ impl Ty {
         }
     }
 
-    pub fn render_to_ui<'db>(
-        &self,
-        db: &'db dyn SourceDatabase,
-        context_file_id: Option<FileId>,
-        sink: &'db mut dyn HirWrite,
-    ) -> anyhow::Result<()> {
-        let config = TypeRendererConfig {
-            current_file_id: context_file_id,
-            unknown: "?",
-            never: "!",
-            unresolved: "<unresolved>",
-        };
-        TypeRenderer::new(db, config, sink).render(self)
-    }
-
-    pub fn render_to_tests<'db>(
-        &self,
-        db: &'db dyn SourceDatabase,
-        context_file_id: Option<FileId>,
-        sink: &'db mut dyn HirWrite,
-    ) -> anyhow::Result<()> {
-        let config = TypeRendererConfig {
-            current_file_id: context_file_id,
-            unknown: "<unknown>",
-            never: "<never>",
-            unresolved: "<unresolved>",
-        };
-        TypeRenderer::new(db, config, sink).render(self)
-    }
-
     pub fn render(&self, db: &dyn SourceDatabase, context_file_id: Option<FileId>) -> String {
         let mut out = String::new();
-        self.render_to_tests(db, context_file_id, &mut out).unwrap();
+        let mut renderer =
+            TypeRenderer::new(db, TypeRendererConfig::for_tests(context_file_id), &mut out);
+        renderer.render(self).unwrap();
         out
     }
 }

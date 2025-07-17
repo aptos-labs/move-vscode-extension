@@ -8,6 +8,7 @@ use crate::init_tracing_for_test;
 use syntax::files::FilePosition;
 use test_utils::{fixtures, get_marked_position_offset_with_data};
 
+mod test_call_expr_types;
 mod test_function_values;
 mod test_lambda_param_types;
 mod test_my_types;

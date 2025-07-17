@@ -7,6 +7,8 @@ mod test_missing_value_arguments;
 
 mod test_check_syntax;
 mod test_field_shorthand;
+mod test_missing_type_arguments;
+mod test_needs_type_annotation;
 mod test_redundant_cast;
 mod test_type_checking;
 mod test_unresolved_reference;
