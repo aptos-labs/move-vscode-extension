@@ -67,9 +67,7 @@ pub(crate) fn annotations(
         match module_item {
             ast::NamedElement::Fun(fun) if config.annotate_fun_specs => {
                 let fun = fun.in_file(file_id);
-                if let Some(_) =
-                    item_specs::get_item_specs_for_items_in_file(db, file_id.intern(db)).get(&fun.loc())
-                {
+                if !item_specs::get_item_specs_for_fun(db, fun.loc()).is_empty() {
                     let (annotation_range, target_pos) = make_ranges(config, fun);
                     annotations.insert(Annotation {
                         range: annotation_range,

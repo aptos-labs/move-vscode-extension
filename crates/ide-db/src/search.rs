@@ -8,16 +8,18 @@ use crate::RootDatabase;
 use crate::defs::{Definition, NameClass, NameRefClass};
 use base_db::SourceDatabase;
 use base_db::package_root::PackageId;
+use lang::loc::SyntaxLocFileExt;
 use lang::nameres::node_ext::ModuleResolutionExt;
-use lang::{Semantics, hir_db};
+use lang::{Semantics, hir_db, item_specs};
 use memchr::memmem::Finder;
 use std::cell::LazyCell;
 use std::collections::HashMap;
+use std::collections::btree_map::Entry;
 use std::sync::Arc;
 use std::{iter, mem};
 use syntax::ast::IdentPatOwner;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
-use syntax::files::{FileRange, InFile};
+use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, SyntaxElement, SyntaxNode, TextRange, TextSize, ast};
 use vfs::FileId;
 
@@ -126,21 +128,40 @@ pub fn item_search_scope(db: &RootDatabase, named_item: &InFile<ast::NamedElemen
 }
 
 fn ident_pat_search_scope(db: &RootDatabase, ident_pat: InFile<ast::IdentPat>) -> Option<SearchScope> {
+    let file_id = ident_pat.file_id;
     let module = ident_pat.and_then_ref(|it| it.syntax().containing_module())?;
     let owner_kind = ident_pat.value.ident_owner()?;
     match owner_kind {
-        IdentPatOwner::Param(_) => Some(SearchScope::from_module_and_module_spec(db, module)),
+        IdentPatOwner::Param(param) => {
+            let fun = param.any_fun()?;
+            let mut search_scope = SearchScope::empty();
+            if let Some(block_expr) = fun.block_expr() {
+                search_scope.add_range(file_id, block_expr.syntax().text_range());
+            }
+            for item_spec_loc in item_specs::get_item_specs_for_fun(db, fun.in_file(file_id).loc()) {
+                search_scope.add_file_range(item_spec_loc.file_range());
+            }
+            Some(search_scope)
+        }
         IdentPatOwner::LambdaParam(lambda_param) => {
             let lambda_expr = lambda_param.lambda_expr();
-            Some(SearchScope::from_file_range(FileRange {
-                file_id: ident_pat.file_id,
-                range: lambda_expr.syntax().text_range(),
-            }))
+            Some(SearchScope::from_file_range(
+                lambda_expr.in_file(file_id).file_range(),
+            ))
         }
         IdentPatOwner::LetStmt(_) => {
             let fun = ident_pat.and_then(|it| it.syntax().containing_function())?;
             Some(SearchScope::from_file_range(fun.syntax().file_range()))
         }
+        IdentPatOwner::ForCondition(for_condition) => {
+            let for_body_expr = for_condition.for_expr().loop_body_expr()?;
+            Some(SearchScope::from_file_range(
+                for_body_expr.in_file(file_id).file_range(),
+            ))
+        }
+        IdentPatOwner::MatchArm(match_arm) => Some(SearchScope::from_file_range(
+            match_arm.in_file(file_id).file_range(),
+        )),
         _ => Some(SearchScope::from_module_and_module_spec(db, module)),
     }
 }
@@ -160,24 +181,24 @@ pub fn item_usages<'a>(
 /// For `pub(crate)` things it's a crate, for `pub` things it's a crate and dependant crates.
 /// In some cases, the location of the references is known to within a `TextRange`,
 /// e.g. for things like local variables.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct SearchScope {
-    entries: HashMap<FileId, Option<TextRange>>,
+    entries: HashMap<FileId, Option<Vec<TextRange>>>,
 }
 
 impl SearchScope {
-    fn new(entries: HashMap<FileId, Option<TextRange>>) -> SearchScope {
+    fn new(entries: HashMap<FileId, Option<Vec<TextRange>>>) -> SearchScope {
         SearchScope { entries }
     }
 
     /// Build an empty search scope.
     pub fn empty() -> SearchScope {
-        SearchScope::new(HashMap::default())
+        SearchScope::default()
     }
 
     /// Build a empty search scope spanning the text range of the given file.
     pub fn from_file_range(range: FileRange) -> SearchScope {
-        SearchScope::new(iter::once((range.file_id, Some(range.range))).collect())
+        SearchScope::new(iter::once((range.file_id, Some(vec![range.range]))).collect())
     }
 
     /// Build a empty search scope spanning the given file.
@@ -192,12 +213,13 @@ impl SearchScope {
 
     /// Build a search scope spanning all the reverse dependencies of the given crate.
     pub fn from_reverse_dependencies(db: &RootDatabase, of: PackageId) -> SearchScope {
-        let mut entries = HashMap::default();
+        let mut entries = vec![];
         for rev_dep in hir_db::reverse_transitive_dep_package_ids(db, of) {
             let file_ids = hir_db::source_file_ids_in_package(db, rev_dep);
             entries.extend(file_ids.iter().map(|file_id| (*file_id, None)));
         }
-        SearchScope { entries }
+        // SearchScope { entries:  }
+        SearchScope::new(entries.into_iter().collect())
     }
 
     /// Build a search scope spanning the given crate.
@@ -227,34 +249,53 @@ impl SearchScope {
     pub fn files<'db>(
         &'db self,
         db: &'db RootDatabase,
-    ) -> impl Iterator<Item = (Arc<str>, FileId, TextRange)> + 'db {
-        self.entries.iter().map(|(&file_id, &search_range)| {
-            let text = db.file_text(file_id).text(db);
-            let search_range = search_range.unwrap_or_else(|| TextRange::up_to(TextSize::of(&*text)));
-
-            (text, file_id, search_range)
+    ) -> impl Iterator<Item = (Arc<str>, FileId, Vec<TextRange>)> + 'db {
+        self.entries.iter().map(|(file_id, search_ranges)| {
+            let text = db.file_text(*file_id).text(db);
+            let search_ranges = search_ranges
+                .clone()
+                .unwrap_or_else(|| vec![TextRange::up_to(TextSize::of(&*text))]);
+            (text, *file_id, search_ranges)
         })
     }
 
-    pub fn intersection(&self, other: &SearchScope) -> SearchScope {
+    pub fn add_file(&mut self, file_id: FileId) {
+        self.entries
+            .entry(file_id)
+            .and_modify(|val| {
+                if val.is_some() {
+                    *val = None;
+                }
+            })
+            .or_insert(None);
+    }
+
+    pub fn add_range(&mut self, file_id: FileId, text_range: TextRange) {
+        self.entries
+            .entry(file_id)
+            .and_modify(|val| {
+                if let Some(ranges) = val {
+                    ranges.push(text_range);
+                }
+            })
+            .or_insert(Some(vec![text_range]));
+    }
+
+    pub fn add_file_range(&mut self, file_range: FileRange) {
+        self.add_range(file_range.file_id, file_range.range);
+    }
+
+    pub fn intersect(&self, other: &SearchScope) -> SearchScope {
         let (mut small, mut large) = (&self.entries, &other.entries);
         if small.len() > large.len() {
             mem::swap(&mut small, &mut large)
         }
-
-        let intersect_ranges =
-            |r1: Option<TextRange>, r2: Option<TextRange>| -> Option<Option<TextRange>> {
-                match (r1, r2) {
-                    (None, r) | (r, None) => Some(r),
-                    (Some(r1), Some(r2)) => r1.intersect(r2).map(Some),
-                }
-            };
         let res = small
             .iter()
-            .filter_map(|(&file_id, &r1)| {
-                let &r2 = large.get(&file_id)?;
-                let r = intersect_ranges(r1, r2)?;
-                Some((file_id, r))
+            .filter_map(|(file_id, left_ranges)| {
+                let right_ranges = large.get(file_id)?;
+                let intersect = intersect_ranges(left_ranges.clone(), right_ranges.clone());
+                Some((*file_id, intersect))
             })
             .collect();
 
@@ -262,12 +303,29 @@ impl SearchScope {
     }
 }
 
-impl IntoIterator for SearchScope {
-    type Item = (FileId, Option<TextRange>);
-    type IntoIter = std::collections::hash_map::IntoIter<FileId, Option<TextRange>>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.entries.into_iter()
+fn intersect_ranges(
+    left_ranges: Option<Vec<TextRange>>,
+    right_ranges: Option<Vec<TextRange>>,
+) -> Option<Vec<TextRange>> {
+    match (left_ranges, right_ranges) {
+        (None, None) => None,
+        (Some(r), None) => Some(r),
+        (None, Some(r)) => Some(r),
+        (Some(left_ranges), Some(right_ranges)) => {
+            let mut intersect_ranges = vec![];
+            for left_range in left_ranges {
+                let mut intersect_range = None;
+                for right_range in &right_ranges {
+                    if let Some(intersect) = right_range.clone().intersect(left_range) {
+                        intersect_range = Some(intersect);
+                    }
+                }
+                if let Some(intersect_range) = intersect_range {
+                    intersect_ranges.push(intersect_range);
+                }
+            }
+            Some(intersect_ranges)
+        }
     }
 }
 
@@ -313,11 +371,11 @@ impl<'a> FindUsages<'a> {
     fn find_matches<'b>(
         text: &'b str,
         finder: &'b Finder<'b>,
-        search_range: TextRange,
+        search_range: Vec<TextRange>,
     ) -> impl Iterator<Item = TextSize> + 'b {
         finder.find_iter(text.as_bytes()).filter_map(move |idx| {
             let offset: TextSize = idx.try_into().unwrap();
-            if !search_range.contains_inclusive(offset) {
+            if !search_range.iter().any(|it| it.contains_inclusive(offset)) {
                 return None;
             }
             // If this is not a word boundary, that means this is only part of an identifier,
@@ -357,7 +415,7 @@ impl<'a> FindUsages<'a> {
             let base = item_search_scope(sema.db, &self.named_item);
             match &self.scope {
                 None => base,
-                Some(scope) => base.intersection(scope),
+                Some(scope) => base.intersect(scope),
             }
         };
 

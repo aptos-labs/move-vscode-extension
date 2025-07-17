@@ -41,6 +41,14 @@ impl ast::AnyFun {
         self.ret_type()?.type_()
     }
 
+    pub fn block_expr(&self) -> Option<ast::BlockExpr> {
+        match self {
+            ast::AnyFun::Fun(fun) => fun.body(),
+            ast::AnyFun::SpecFun(fun) => fun.spec_block(),
+            ast::AnyFun::SpecInlineFun(fun) => fun.spec_block(),
+        }
+    }
+
     pub fn to_generic_element(&self) -> ast::GenericElement {
         match self.clone() {
             ast::AnyFun::Fun(it) => it.into(),
