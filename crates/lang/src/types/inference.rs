@@ -60,8 +60,9 @@ pub struct InferenceCtx<'db> {
     pub pat_types: HashMap<ast::Pat, Ty>,
     pub pat_field_types: HashMap<ast::StructPatField, Ty>,
     pub expr_types: HashMap<ast::Expr, Ty>,
-    pub call_expr_types: HashMap<ast::AnyCallExpr, Ty>,
     pub expected_expr_types: HashMap<ast::Expr, Ty>,
+
+    pub call_expr_types: HashMap<ast::AnyCallExpr, TyCallable>,
 
     pub resolved_paths: HashMap<ast::Path, Vec<ScopeEntry>>,
     pub resolved_method_calls: HashMap<ast::MethodCallExpr, Option<ScopeEntry>>,
@@ -188,7 +189,7 @@ impl<'db> InferenceCtx<'db> {
         let callable_ty = TyCallable::new(
             param_types,
             ret_type,
-            TyCallableKind::Named(Some(fields_owner_loc)),
+            TyCallableKind::named(adt_item.ty_type_params_subst(), Some(fields_owner_loc)),
         )
         .substitute(&ty_adt.substitution);
 

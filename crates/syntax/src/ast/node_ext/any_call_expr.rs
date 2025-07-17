@@ -8,4 +8,12 @@ impl ast::AnyCallExpr {
             ast::AnyCallExpr::AssertMacroExpr(call_expr) => call_expr.arg_exprs(),
         }
     }
+
+    pub fn n_provided_args(&self) -> usize {
+        match self {
+            ast::AnyCallExpr::CallExpr(call_expr) => call_expr.arg_exprs().len(),
+            ast::AnyCallExpr::AssertMacroExpr(call_expr) => call_expr.arg_exprs().len(),
+            ast::AnyCallExpr::MethodCallExpr(call_expr) => call_expr.arg_exprs().len() + 1,
+        }
+    }
 }

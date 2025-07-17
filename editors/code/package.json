@@ -253,6 +253,16 @@
                 }
             },
             {
+                "title": "diagnostics",
+                "properties": {
+                    "move-on-aptos.diagnostics.needsTypeAnnotation": {
+                        "markdownDescription": "Enable \"needs type annotation\" diagnostic, which is known to produce\na lot of false-positives.",
+                        "default": false,
+                        "type": "boolean"
+                    }
+                }
+            },
+            {
                 "title": "files",
                 "properties": {
                     "move-on-aptos.files.excludeDirs": {

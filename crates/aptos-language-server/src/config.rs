@@ -222,7 +222,8 @@ impl Config {
     pub fn diagnostics_config(&self) -> DiagnosticsConfig {
         DiagnosticsConfig {
             enabled: *self.diagnostics_enable(),
-            disabled: self.diagnostics_disabled().clone(),
+            disabled: self.diagnostics_disabled().to_owned(),
+            needs_type_annotation: self.diagnostics_needsTypeAnnotation().to_owned(),
             assists_only: false,
         }
     }

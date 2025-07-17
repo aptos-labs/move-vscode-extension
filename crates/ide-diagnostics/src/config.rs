@@ -11,6 +11,7 @@ pub struct DiagnosticsConfig {
     /// Whether native diagnostics are enabled.
     pub enabled: bool,
     pub disabled: HashSet<String>,
+    pub needs_type_annotation: bool,
     pub assists_only: bool,
 }
 
@@ -19,6 +20,7 @@ impl DiagnosticsConfig {
         Self {
             enabled: true,
             disabled: Default::default(),
+            needs_type_annotation: true,
             assists_only: false,
         }
     }

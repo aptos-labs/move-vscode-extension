@@ -96,6 +96,13 @@ pub fn semantic_diagnostics(
         if let Some(any_call_expr) = node.clone().cast::<ast::AnyCallExpr>() {
             handlers::call_params::check_value_arguments(&mut acc, &ctx, any_call_expr.in_file(file_id));
         }
+        if let Some(method_or_path) = node.clone().cast::<ast::MethodOrPath>() {
+            handlers::missing_type_arguments::missing_type_arguments(
+                &mut acc,
+                &ctx,
+                method_or_path.in_file(file_id),
+            );
+        }
         match_ast! {
             match node {
                 ast::CallExpr(it) => {

@@ -37,7 +37,7 @@ impl Callable {
 
         let callable_ty = callable_ty?;
         let (file_id, callable_item) = match &callable_ty.kind {
-            TyCallableKind::Named(Some(callable_loc)) => {
+            TyCallableKind::Named(_, Some(callable_loc)) => {
                 let (file_id, named_element) = callable_loc.to_ast::<ast::NamedElement>(db)?.unpack();
                 match named_element {
                     ast::NamedElement::Fun(fun) => Some(CallableItem::Function(fun.into())),

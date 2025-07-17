@@ -518,6 +518,7 @@ fn test_do_not_crash_type_checking_invalid_number_of_type_params_or_call_params(
             fun call(_a: u8) {}
             fun m() {
                 let _s = S<u8, u8>{ val: 1 };
+                             //^^ err: Invalid instantiation of '0x1::M::S'. Expected 1 type argument(s), but got 2
                 call(1, 2, 3);
                       //^ err: This function takes 1 parameters, but 3 parameters were supplied
             }
@@ -922,6 +923,7 @@ fn test_no_error_unpacking_struct_from_move_from() {
             struct Container has key { val: u8 }
             fun main() {
                 let Container { val: _ } = move_from(@0x1);
+                                         //^^^^^^^^^ err: Could not infer this type. Try adding a type annotation
             }
         }
     "#]]);
@@ -988,21 +990,21 @@ fn test_option_none_is_compatible_with_any_option() {
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::option {
-            struct Option<Element: copy + drop + store> has copy, drop, store {
+            struct Option<Element> {
                 vec: vector<Element>
             }
-            public fun none<Element: copy + drop + store>(): Option<Element> {
+            public fun none<Element>(): Option<Element> {
                 Option { vec: vector[] }
             }
         }
         module 0x1::main {
             use 0x1::option;
-            struct IterableValue<K: copy + store + drop> has store {
+            struct IterableValue<K> {
                 prev: option::Option<K>,
-                next: option::Option<K>,
             }
             public fun new() {
-                IterableValue { prev: option::none(), next: option::none() };
+                IterableValue { prev: option::none() };
+                                            //^^^^ err: Could not infer this type. Try adding a type annotation
             }
         }
     "#]]);

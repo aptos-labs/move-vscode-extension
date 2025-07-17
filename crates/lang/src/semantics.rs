@@ -17,7 +17,7 @@ use crate::semantics::source_to_def::SourceToDefCache;
 use crate::types::inference::InferenceCtx;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::lowering::TyLowering;
-use crate::types::render::HirWrite;
+use crate::types::render::{HirWrite, TypeRenderer, TypeRendererConfig};
 use crate::types::ty::Ty;
 use crate::types::ty::ty_callable::TyCallable;
 use base_db::inputs::InternFileId;
@@ -159,7 +159,7 @@ impl<'db> SemanticsImpl<'db> {
     pub fn get_call_expr_type(&self, expr: &InFile<ast::AnyCallExpr>) -> Option<TyCallable> {
         let msl = expr.value.syntax().is_msl_context();
         let inference = self.inference(expr, msl)?;
-        inference.get_call_expr_type(&expr.loc())?.into_ty_callable()
+        inference.get_call_expr_type(&expr.loc())
     }
 
     pub fn get_ident_pat_type(&self, ident_pat: &InFile<ast::IdentPat>, msl: bool) -> Option<Ty> {
@@ -176,6 +176,10 @@ impl<'db> SemanticsImpl<'db> {
         ty.render(self.db, None)
     }
 
+    pub fn render_ty_fq(&self, ty: &Ty) -> String {
+        ty.render(self.db, None)
+    }
+
     pub fn render_ty_for_ui(&self, ty: &Ty, context_file_id: FileId) -> String {
         let mut out = String::new();
         self.render_ty_for_ui_to(ty, context_file_id, &mut out).unwrap();
@@ -188,7 +192,12 @@ impl<'db> SemanticsImpl<'db> {
         context_file_id: FileId,
         write_to: &mut dyn HirWrite,
     ) -> anyhow::Result<()> {
-        ty.render_to_ui(self.db, Some(context_file_id), write_to)
+        let mut renderer = TypeRenderer::new(
+            self.db,
+            TypeRendererConfig::for_inlay_hints(context_file_id),
+            write_to,
+        );
+        renderer.render(ty)
     }
 
     pub fn render_ty_expected_form(&self, ty: &Ty) -> String {

@@ -10,10 +10,12 @@ use crate::types::inference::InferenceCtx;
 use crate::types::inference::combine_types::TypeError;
 use crate::types::ty::Ty;
 use crate::types::ty::integer::IntegerKind;
+use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::TyInfer;
 use std::cell::RefCell;
 use std::collections::HashMap;
-use syntax::{AstNode, ast};
+use std::ops::Deref;
+use syntax::{AstNode, TextRange, ast};
 use vfs::FileId;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -23,7 +25,7 @@ pub struct InferenceResult {
 
     pat_types: HashMap<SyntaxLoc, Ty>,
     expr_types: HashMap<SyntaxLoc, Ty>,
-    call_expr_types: HashMap<SyntaxLoc, Ty>,
+    call_expr_types: HashMap<SyntaxLoc, TyCallable>,
 
     resolved_paths: HashMap<SyntaxLoc, Vec<ScopeEntry>>,
     resolved_method_calls: HashMap<SyntaxLoc, Option<ScopeEntry>>,
@@ -44,8 +46,25 @@ impl InferenceResult {
 
         let pat_types = fully_resolve_map_values(ctx.pat_types.clone(), &ctx);
         let expr_types = fully_resolve_map_values(ctx.expr_types.clone(), &ctx);
-        let call_expr_types =
-            fully_resolve_map_values_fallback_to_origin(ctx.call_expr_types.clone(), &ctx);
+
+        // for call expressions, we need to leave ty vars in substitution intact to determine
+        // whether an explicit type annotation required
+        let call_expr_types = ctx
+            .call_expr_types
+            .clone()
+            .into_iter()
+            .map(|(any_call_expr, callable_ty)| {
+                let TyCallable { param_types, ret_type, kind } = callable_ty;
+                let param_tys = param_types
+                    .into_iter()
+                    .map(|it| ctx.fully_resolve_vars_fallback_to_origin(it))
+                    .collect();
+                let return_ty = ctx.fully_resolve_vars_fallback_to_origin(*ret_type);
+                let res_ty =
+                    TyCallable::new(param_tys, return_ty, ctx.resolve_ty_vars_if_possible(kind));
+                (any_call_expr.loc(ctx.file_id), res_ty)
+            })
+            .collect();
 
         let file_id = ctx.file_id;
         let resolved_paths = keys_into_syntax_loc(ctx.resolved_paths, file_id);
@@ -92,7 +111,7 @@ impl InferenceResult {
         self.expr_types.get(&expr_loc).cloned()
     }
 
-    pub fn get_call_expr_type(&self, call_expr_loc: &SyntaxLoc) -> Option<Ty> {
+    pub fn get_call_expr_type(&self, call_expr_loc: &SyntaxLoc) -> Option<TyCallable> {
         self.call_expr_types.get(call_expr_loc).cloned()
     }
 
@@ -126,6 +145,12 @@ impl InferenceResult {
             .and_then(|ident_pat| ident_pat.to_owned())
     }
 
+    pub fn has_type_error_inside_range(&self, range: TextRange) -> bool {
+        self.type_errors
+            .iter()
+            .any(|it| range.contains_range(it.text_range()))
+    }
+
     fn get_resolved_path_entries(&self, path: &ast::Path) -> Vec<ScopeEntry> {
         let loc = path.loc(self.file_id);
         self.resolved_paths
@@ -156,6 +181,7 @@ fn fully_resolve_map_values(
         .collect()
 }
 
+#[allow(unused)]
 fn fully_resolve_map_values_fallback_to_origin(
     ty_map: HashMap<impl AstNode, Ty>,
     ctx: &InferenceCtx,

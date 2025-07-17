@@ -78,7 +78,6 @@ impl FileChanges {
         }
 
         if let Some((builtins_file_id, builtins_text)) = self.builtins_file {
-            tracing::info!(?builtins_file_id, "set builtins file");
             db.set_builtins_file_id(Some(builtins_file_id));
             db.set_file_text_with_durability(builtins_file_id, builtins_text.as_str(), Durability::HIGH);
             db.set_spec_related_files(builtins_file_id, vec![]);

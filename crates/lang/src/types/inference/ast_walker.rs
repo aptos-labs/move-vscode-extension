@@ -7,6 +7,7 @@
 mod infer_specs;
 mod lambda_expr;
 
+use crate::nameres;
 use crate::nameres::name_resolution::get_entries_from_walking_scopes;
 use crate::nameres::namespaces::NAMES;
 use crate::nameres::path_resolution::get_method_resolve_variants;
@@ -284,6 +285,21 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         Some(())
     }
 
+    #[allow(unused)]
+    fn get_explicit_ty_from_pat(&self, pat: ast::Pat) -> Option<Ty> {
+        let path = match pat {
+            ast::Pat::StructPat(struct_pat) => struct_pat.path(),
+            ast::Pat::TupleStructPat(tuple_struct_pat) => tuple_struct_pat.path(),
+            _ => {
+                return None;
+            }
+        };
+        let path = path.in_file(self.ctx.file_id);
+        let struct_ = nameres::resolve_no_inf_cast::<ast::Struct>(self.ctx.db, path.clone())?;
+        let path_ty = self.ctx.ty_lowering().lower_path(path.map_into(), struct_);
+        Some(path_ty)
+    }
+
     // returns inferred
     fn infer_expr_coerceable_to(&mut self, expr: &ast::Expr, expected_ty: Ty) -> Ty {
         let actual_ty = self.infer_expr(expr, Expected::ExpectType(expected_ty.clone()));
@@ -341,7 +357,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
 
             ast::Expr::MethodCallExpr(method_call_expr) => {
-                self.infer_method_call_expr(method_call_expr, Expected::NoValue)
+                self.infer_method_call_expr(method_call_expr, expected)
             }
             ast::Expr::VectorLitExpr(vector_lit_expr) => {
                 self.infer_vector_lit_expr(vector_lit_expr, expected)
@@ -580,15 +596,12 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 .instantiate_path_for_fun(method_call_expr.to_owned().into(), method.map_into()),
             None => {
                 // add 1 for `self` parameter
-                TyCallable::fake(
-                    1 + method_call_expr.arg_exprs().len(),
-                    TyCallableKind::Named(None),
-                )
+                TyCallable::fake(1 + method_call_expr.arg_exprs().len(), TyCallableKind::fake())
             }
         };
-        let method_ty = self.ctx.resolve_ty_vars_if_possible(method_ty);
+        let method_call_ty = self.ctx.resolve_ty_vars_if_possible(method_ty);
 
-        let expected_arg_tys = self.infer_expected_call_arg_tys(&method_ty, expected);
+        let expected_arg_tys = self.infer_expected_call_arg_tys(&method_call_ty, expected);
         let args = iter::once(CallArg::Self_ { self_ty })
             .chain(
                 method_call_expr
@@ -597,13 +610,13 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     .map(|arg_expr| CallArg::Arg { expr: arg_expr }),
             )
             .collect();
-        self.coerce_call_arg_types(args, method_ty.param_types.clone(), expected_arg_tys);
+        self.coerce_call_arg_types(args, method_call_ty.param_types.clone(), expected_arg_tys);
 
         self.ctx
             .call_expr_types
-            .insert(method_call_expr.clone().into(), method_ty.clone().into());
+            .insert(method_call_expr.clone().into(), method_call_ty.clone().into());
 
-        method_ty.ret_type()
+        method_call_ty.ret_type()
     }
 
     fn infer_call_expr(&mut self, call_expr: &ast::CallExpr, expected: Expected) -> Option<Ty> {
@@ -616,7 +629,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 let callable_ty = self.ctx.instantiate_adt_item_as_callable(path, ty_adt)?;
                 callable_ty
             }
-            _ => TyCallable::fake(call_expr.arg_exprs().len(), TyCallableKind::Named(None)),
+            _ => TyCallable::fake(call_expr.arg_exprs().len(), TyCallableKind::fake()),
         };
         let expected_arg_tys = self.infer_expected_call_arg_tys(&callable_ty, expected);
         let args = call_expr
@@ -711,7 +724,6 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 let binding = get_entries_from_walking_scopes(
                     self.ctx.db,
                     lit_field.syntax().clone().in_file(self.ctx.file_id),
-                    // lit_field.clone().in_file(self.ctx.file_id).map_into(),
                     NAMES,
                 )
                 .filter_by_name(lit_field_name)
@@ -824,11 +836,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
         let vec_ty = Ty::new_vector(arg_ty_var);
 
-        let lit_call_ty = TyCallable::new(
-            declared_arg_tys.clone(),
-            vec_ty.clone(),
-            TyCallableKind::Named(None),
-        );
+        let lit_call_ty =
+            TyCallable::new(declared_arg_tys.clone(), vec_ty.clone(), TyCallableKind::fake());
         let expected_arg_tys = self.infer_expected_call_arg_tys(&lit_call_ty, expected);
         let args = arg_exprs
             .into_iter()
@@ -1311,27 +1320,40 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     fn coerce_call_arg_types(
         &mut self,
         args: Vec<CallArg>,
-        declared_tys: Vec<Ty>,
-        expected_tys: Vec<Ty>,
+        declared_param_tys: Vec<Ty>,
+        expected_param_tys: Vec<Ty>,
     ) {
-        for (i, arg) in args.into_iter().enumerate() {
-            let declared_ty = declared_tys.get(i).unwrap_or(&Ty::Unknown).to_owned();
-            let expected_ty = self
-                .ctx
-                .resolve_ty_vars_if_possible(expected_tys.get(i).unwrap_or(&declared_ty).to_owned());
+        for (i, declared_ty) in declared_param_tys.iter().enumerate() {
+            let expected_ty = self.ctx.resolve_ty_vars_if_possible(
+                expected_param_tys.get(i).unwrap_or(declared_ty).to_owned(),
+            );
+            let arg = args.get(i).cloned();
             match arg {
-                CallArg::Self_ { self_ty } => {
-                    let actual_self_ty = autoborrow(self_ty, &expected_ty)
-                        .expect("method call won't be resolved if autoborrow fails");
-                    let _ = self.ctx.combine_types(actual_self_ty, expected_ty);
+                Some(arg) => self.coerce_arg(arg, expected_ty),
+                None => {
+                    // missing parameter, combine expected type with Ty::Unknown
+                    // let _ = self.ctx.combine_types(Ty::Unknown, expected_ty);
                 }
-                CallArg::Arg { expr } => {
-                    if let Some(expr) = expr {
-                        let arg_expr_ty =
-                            self.infer_expr(&expr, Expected::ExpectType(expected_ty.clone()));
-                        self.ctx
-                            .coerce_types(expr.node_or_token(), arg_expr_ty, expected_ty);
-                    }
+            }
+        }
+        // extra arguments
+        for arg in args.into_iter().skip(declared_param_tys.len()) {
+            self.coerce_arg(arg, Ty::Unknown);
+        }
+    }
+
+    fn coerce_arg(&mut self, arg: CallArg, expected_ty: Ty) {
+        match arg {
+            CallArg::Self_ { self_ty } => {
+                let actual_self_ty = autoborrow(self_ty, &expected_ty)
+                    .expect("method call won't be resolved if autoborrow fails");
+                let _ = self.ctx.combine_types(actual_self_ty, expected_ty);
+            }
+            CallArg::Arg { expr } => {
+                if let Some(expr) = expr {
+                    let arg_expr_ty = self.infer_expr(&expr, Expected::ExpectType(expected_ty.clone()));
+                    self.ctx
+                        .coerce_types(expr.node_or_token(), arg_expr_ty, expected_ty);
                 }
             }
         }
@@ -1365,6 +1387,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
 static TUPLE_RESULT_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^result_([1-9])$").unwrap());
 
+#[derive(Clone)]
 enum CallArg {
     Self_ { self_ty: Ty },
     Arg { expr: Option<ast::Expr> },
