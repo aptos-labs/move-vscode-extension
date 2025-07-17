@@ -13,6 +13,7 @@ pub struct MoveToml {
     pub contents: String,
     pub package: Option<Package>,
     pub dependencies: Vec<MoveTomlDependency>,
+    pub dev_dependencies: Vec<MoveTomlDependency>,
 }
 
 impl MoveToml {
@@ -21,6 +22,7 @@ impl MoveToml {
             contents: file_contents.to_string(),
             package: None,
             dependencies: vec![],
+            dev_dependencies: vec![],
         };
 
         let deserialized = toml::from_str::<HashMap<String, toml::Value>>(file_contents)?;
@@ -35,6 +37,17 @@ impl MoveToml {
                     Self::parse_dependency_table(dep_name.to_string(), deps_inner_table.to_owned())
                 {
                     move_toml.dependencies.push(dep);
+                }
+            }
+        }
+
+        // covers both [dev-dependencies] table with inner tables and [dev-dependencies.AptosFramework]
+        if let Some(deps_table) = deserialized.get("dev-dependencies").and_then(|d| d.as_table()) {
+            for (dep_name, deps_inner_table) in deps_table {
+                if let Some(dep) =
+                    Self::parse_dependency_table(dep_name.to_string(), deps_inner_table.to_owned())
+                {
+                    move_toml.dev_dependencies.push(dep);
                 }
             }
         }
