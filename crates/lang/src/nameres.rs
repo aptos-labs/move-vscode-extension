@@ -202,7 +202,7 @@ fn resolve_multi_with_inf(
 
 #[tracing::instrument(level = "debug", skip_all)]
 fn fallback_resolve_multi_for_path(db: &dyn SourceDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry> {
-    let entries = path_resolution::resolve_path(db, path, None);
+    let entries = hir_db::resolve_path_multi(db, path);
     let filtered_entries = remove_variant_ident_pats(db, entries, |ident_pat| resolve(db, ident_pat));
     filtered_entries
 }

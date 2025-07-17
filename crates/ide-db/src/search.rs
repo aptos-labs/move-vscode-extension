@@ -14,7 +14,6 @@ use lang::{Semantics, hir_db, item_specs};
 use memchr::memmem::Finder;
 use std::cell::LazyCell;
 use std::collections::HashMap;
-use std::collections::btree_map::Entry;
 use std::sync::Arc;
 use std::{iter, mem};
 use syntax::ast::IdentPatOwner;

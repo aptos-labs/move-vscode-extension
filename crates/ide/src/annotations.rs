@@ -7,7 +7,6 @@
 use crate::NavigationTarget;
 use crate::goto_specification::goto_specification;
 use crate::runnables::{Runnable, runnables};
-use base_db::inputs::InternFileId;
 use ide_db::RootDatabase;
 use ide_db::helpers::visit_file_defs;
 use indexmap::IndexSet;
