@@ -329,3 +329,39 @@ module std::mem_tests {
     )];
     check_resolve_tmpfs(test_packages);
 }
+
+#[test]
+fn test_resolve_from_dev_dependency() {
+    check_resolve_tmpfs(vec![
+        named_with_deps(
+            "main",
+            // language=TOML
+            r#"
+[dev-dependencies]
+M = { local = "../m"}
+        "#,
+            // language=Move
+            r#"
+//- /main.move
+module std::main {
+    use std::m::call;
+    public fun main() {
+        call();
+       //^
+    }
+}
+"#,
+        ),
+        named(
+            "m",
+            // language=Move
+            r#"
+//- /m.move
+module std::m {
+    public fun call() {}
+              //X
+}
+"#,
+        ),
+    ])
+}

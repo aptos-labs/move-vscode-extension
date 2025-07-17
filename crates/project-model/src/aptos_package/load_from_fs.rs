@@ -201,7 +201,11 @@ fn read_dependencies(
     outer_kind: PackageKind,
 ) -> Vec<(ManifestPath, PackageKind)> {
     let mut dep_manifests = vec![];
-    for toml_dep in move_toml.dependencies.clone() {
+    let all_toml_deps = move_toml
+        .dependencies
+        .iter()
+        .chain(move_toml.dev_dependencies.iter());
+    for toml_dep in all_toml_deps {
         if let Some(dep_root) = toml_dep.dep_root(&package_root) {
             let Some(move_toml_path) = find_move_toml_at(dep_root) else {
                 continue;
