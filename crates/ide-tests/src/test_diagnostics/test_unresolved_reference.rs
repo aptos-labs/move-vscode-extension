@@ -821,6 +821,21 @@ fn test_shorthand_with_struct_lit_field_and_schema_field() {
 }
 
 #[test]
+fn test_unresolved_vector_module() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main(
+                _s: vector::Vector,
+                _t: std::vector
+            ) {
+                vector::push_back();
+            }
+        }
+    "#]])
+}
+
+#[test]
 fn test_if_there_s_two_different_stdlibs_they_are_deduplicated_based_on_package_name() {
     let test_packages = vec![
         raw(

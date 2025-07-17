@@ -14,7 +14,6 @@ use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::TyInfer;
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::ops::Deref;
 use syntax::{AstNode, TextRange, ast};
 use vfs::FileId;
 
