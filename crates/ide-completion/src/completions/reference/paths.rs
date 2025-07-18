@@ -19,6 +19,7 @@ use lang::nameres::{labels, path_kind};
 use std::cell::RefCell;
 use std::collections::HashSet;
 use syntax::SyntaxKind::*;
+use syntax::ast::HasAttrs;
 use syntax::ast::idents::PRIMITIVE_TYPES;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
@@ -149,13 +150,17 @@ fn add_completions_from_the_resolution_entries(
 
         match named_item_kind {
             FUN | SPEC_FUN | SPEC_INLINE_FUN => {
+                let fun = named_item.cast_into::<ast::AnyFun>()?;
+                if fun.value.has_atom_attr("test") {
+                    continue;
+                }
                 completion_items.push(
                     render_function(
                         ctx,
                         path_ctx.is_use_stmt(),
                         path_ctx.has_any_parens(),
                         name,
-                        named_item.cast_into::<ast::AnyFun>()?,
+                        fun,
                         FunctionKind::Fun,
                         None,
                     )

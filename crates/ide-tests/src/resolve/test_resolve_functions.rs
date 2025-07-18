@@ -633,16 +633,17 @@ module 0x1::main {
 
 // language=Move
 #[test]
-fn test_unittest_functions_are_not_accessible_as_items() {
+fn test_test_function_can_be_used_if_inside_test_only_module() {
     check_resolve(
         r#"
 #[test_only]    
 module 0x1::M {
     #[test]
     fun test_a() {}
+        //X
     fun main() {
         test_a();
-       //^ unresolved 
+       //^
     }
 }    
 "#,
@@ -1217,12 +1218,13 @@ module 0x1::m {
 
 // language=Move
 #[test]
-fn test_test_function_cannot_be_used() {
+fn test_test_function_can_be_used_from_test_only() {
     check_resolve(
         r#"
 module 0x1::m1 {
     #[test]
     public fun test_a() {}
+              //X
 }  
 module 0x1::m2 {
     use 0x1::m1::test_a;
@@ -1230,7 +1232,7 @@ module 0x1::m2 {
     #[test_only]
     fun main() {
         test_a();
-        //^ unresolved
+        //^
     }
 }    
 "#,
@@ -1308,16 +1310,17 @@ module 0x1::main {
 
 // language=Move
 #[test]
-fn test_public_test_function_still_cannot_be_imported() {
+fn test_import_public_test_function() {
     check_resolve(
         r#"
 module 0x1::m1 {
     #[test]
     public fun test_a() {}
+                //X
 }  
 module 0x1::m2 {
     use 0x1::m1::test_a;
-               //^ unresolved
+               //^
 }    
 "#,
     )

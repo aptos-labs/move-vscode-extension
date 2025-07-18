@@ -20,7 +20,7 @@ pub trait ModuleResolutionExt {
         let (file_id, module) = self.module().unpack();
 
         let mut entries = vec![];
-        for member in module.named_items(false) {
+        for member in module.named_items() {
             if let Some(struct_) = member.clone().struct_() {
                 if struct_.is_tuple_struct() {
                     if let Some(s_entry) = struct_.in_file(file_id).to_entry() {

@@ -29,7 +29,7 @@ pub fn visit_file_defs(
     let file = sema.parse(file_id);
     for module in file.all_modules() {
         cb(module.clone().into());
-        let module_items = module.named_items(true);
+        let module_items = module.named_items();
         for module_item in module_items {
             cb(module_item);
         }
