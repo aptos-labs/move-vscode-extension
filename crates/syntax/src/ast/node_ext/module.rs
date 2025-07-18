@@ -26,7 +26,7 @@ impl ast::Module {
             .collect()
     }
 
-    pub fn named_items(&self, include_tests: bool) -> Vec<ast::NamedElement> {
+    pub fn named_items(&self) -> Vec<ast::NamedElement> {
         let mut items: Vec<ast::NamedElement> = vec![];
         // consts
         items.extend(into_named_elements(self.consts()));
@@ -37,11 +37,7 @@ impl ast::Module {
         items.extend(into_named_elements(self.schemas()));
 
         // callables
-        if include_tests {
-            items.extend(into_named_elements(self.functions()));
-        } else {
-            items.extend(into_named_elements(self.non_test_functions()));
-        }
+        items.extend(into_named_elements(self.functions()));
 
         // spec callables
         items.extend(into_named_elements(self.spec_functions()));

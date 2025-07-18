@@ -55,7 +55,7 @@ impl<'a> SymbolCollector<'a> {
 
     pub(crate) fn collect_module(&mut self, module: InFile<ast::Module>) -> Option<()> {
         let module_name = module.value.name()?.as_string();
-        let named_items = module.flat_map(|it| it.named_items(true));
+        let named_items = module.flat_map(|it| it.named_items());
         for named_item in named_items {
             self.collect_named_item(Some(module_name.clone()), named_item);
         }

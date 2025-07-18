@@ -1307,3 +1307,41 @@ module std::main {
             ]"#]],
     );
 }
+
+#[test]
+fn test_no_completions_for_test_functions() {
+    check_no_completions(
+        // language=Move
+        r#"
+module std::main {
+    #[test]
+    fun test_main() {
+    }
+    #[test]
+    fun test_main_2() {
+        test_/*caret*/
+    }
+}"#,
+    )
+}
+
+#[test]
+fn test_completions_for_test_only_functions() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    #[test_only]
+    fun test_main() {
+    }
+    #[test]
+    fun test_main_2() {
+        test_/*caret*/
+    }
+}"#,
+        expect![[r#"
+            [
+                "test_main()",
+            ]"#]],
+    )
+}

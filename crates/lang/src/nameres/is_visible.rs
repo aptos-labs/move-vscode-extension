@@ -77,13 +77,6 @@ pub fn is_visible_in_context(
         }
     }
 
-    // #[test] functions cannot be used from non-imports
-    if let Some(fun) = ast::Fun::cast(item.syntax().clone()) {
-        if fun.is_test() {
-            return false;
-        }
-    }
-
     let item_module = item.syntax().containing_module();
     // 0x0::builtins module functions are always visible
     if item.syntax().kind() == FUN && item_module.clone().is_some_and(|m| m.is_builtins()) {

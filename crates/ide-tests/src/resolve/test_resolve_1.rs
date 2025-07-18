@@ -436,3 +436,58 @@ module 0x1::main {
 "#,
     )
 }
+
+#[test]
+fn test_resolve_test_function_from_another_test_function() {
+    check_resolve(
+        // language=Move
+        r#"
+module std::main {
+    #[test]
+    fun test_main() {
+        //X
+    }
+    #[test]
+    fun test_main_2() {
+        test_main();
+         //^
+    }
+}"#,
+    )
+}
+
+#[test]
+fn test_resolve_test_function_from_test_only_function() {
+    check_resolve(
+        // language=Move
+        r#"
+module std::main {
+    #[test]
+    fun test_main() {
+        //X
+    }
+    #[test_only]
+    fun test_main_2() {
+        test_main();
+         //^
+    }
+}"#,
+    )
+}
+
+#[test]
+fn test_cannot_resolve_test_function_from_non_test_only_function() {
+    check_resolve(
+        // language=Move
+        r#"
+module std::main {
+    #[test]
+    fun test_main() {
+    }
+    fun test_main_2() {
+        test_main();
+         //^ unresolved
+    }
+}"#,
+    )
+}
