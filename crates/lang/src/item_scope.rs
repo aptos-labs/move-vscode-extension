@@ -4,12 +4,10 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::loc::SyntaxLoc;
-use base_db::inputs::{FileIdInput, InternFileId};
+use base_db::inputs::FileIdInput;
 use base_db::{SourceDatabase, source_db};
 use std::collections::HashMap;
-use syntax::{AstNode, NodeOrToken, SourceFile, SyntaxNode, SyntaxNodePtr, WalkEvent, ast};
-use vfs::FileId;
+use syntax::{AstNode, NodeOrToken, SyntaxNode, SyntaxNodePtr, WalkEvent, ast};
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
 pub enum NamedItemScope {

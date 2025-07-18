@@ -8,7 +8,7 @@ use crate::SourceDatabase;
 use crate::inputs::PackageMetadata;
 use crate::package_root::{PackageId, PackageKind, PackageRoot};
 use salsa::Durability;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::sync::Arc;
 use vfs::FileId;
@@ -108,7 +108,7 @@ impl FileChanges {
 }
 
 fn find_spec_file_set(file_id: FileId, root: PackageRoot) -> Option<Vec<FileId>> {
-    // simplification for now: only use MODULE_NAME.spec.move in the immediate vicinity
+    // simplification for now: only use MODULE_NAME.spec.move files
     // todo: fix later, requires refactoring into one pass on the upper level
     let file_path = root.file_set.path_for_file(&file_id)?;
     let (file_name, ext) = file_path.name_and_extension()?;
@@ -116,19 +116,24 @@ fn find_spec_file_set(file_id: FileId, root: PackageRoot) -> Option<Vec<FileId>>
         // shouldn't really happen
         return None;
     }
-    let parent_dir = file_path.parent()?;
-    let candidate = match file_name.strip_suffix(".spec") {
-        None => {
-            // MODULE_NAME.move, searching for MODULE_NAME.spec.move
-            parent_dir.join(&format!("{file_name}.spec.move"))
+
+    let prefix_name = file_name.strip_suffix(".spec").unwrap_or(file_name);
+    let expected_file_names =
+        HashSet::from([format!("{prefix_name}.move"), format!("{prefix_name}.spec.move")]);
+
+    let mut spec_file_ids = vec![];
+    // search through the package files for the files with
+    for file_id in root.file_set.iter() {
+        if let Some(file_path) = root.path_for_file(&file_id)
+            && let Some(candidate_file_name) = file_path.as_path().and_then(|it| it.file_name())
+        {
+            if expected_file_names.contains(candidate_file_name) {
+                spec_file_ids.push(file_id);
+            }
         }
-        Some(truncated_file_name) => {
-            // MODULE_NAME.spec.move -> MODULE_NAME.move
-            parent_dir.join(&format!("{truncated_file_name}.move"))
-        }
-    }?;
-    let candidate_file_id = root.file_for_path(&candidate)?;
-    Some(vec![*candidate_file_id])
+    }
+
+    Some(spec_file_ids)
 }
 
 fn package_root_durability(package_root: &PackageRoot) -> Durability {

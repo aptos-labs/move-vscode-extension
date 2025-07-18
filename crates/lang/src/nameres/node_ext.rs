@@ -9,7 +9,6 @@ use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryExt};
 use crate::node_ext::item::ModuleItemExt;
 use base_db::inputs::InternFileId;
 use base_db::{SourceDatabase, source_db};
-use std::iter;
 use syntax::ast;
 use syntax::ast::HasItems;
 use syntax::files::{InFile, InFileExt};
@@ -46,10 +45,9 @@ pub trait ModuleResolutionExt {
 
     fn related_module_specs(&self, db: &dyn SourceDatabase) -> Vec<InFile<ast::ModuleSpec>> {
         let module = self.module();
-        let related_file_ids =
-            iter::once(module.file_id).chain(db.spec_related_files(module.file_id).data(db));
+        let spec_file_set = source_db::spec_union_file_set(db, module.file_id);
         let mut module_specs = vec![];
-        for spec_related_file_id in related_file_ids {
+        for spec_related_file_id in spec_file_set {
             let source_file = source_db::parse(db, spec_related_file_id.intern(db)).tree();
             for module_spec in source_file.module_specs() {
                 let module_spec = module_spec.in_file(spec_related_file_id);

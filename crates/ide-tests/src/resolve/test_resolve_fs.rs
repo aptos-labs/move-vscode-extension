@@ -365,3 +365,28 @@ module std::m {
         ),
     ])
 }
+
+#[test]
+fn test_resolve_spec_fun_from_tests_directory() {
+    check_resolve_tmpfs(vec![named(
+        "m",
+        // language=Move
+        r#"
+//- /sources/m.move
+module std::m {
+    fun call() {}
+    spec call {
+        spec_stable_address();
+            //^
+    }
+}
+//- /tests/m.spec.move
+spec std::m {
+    spec fun spec_stable_address(): address {
+             //X
+        @0x1
+    }
+}
+"#,
+    )])
+}
