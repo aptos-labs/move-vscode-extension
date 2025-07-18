@@ -4,14 +4,12 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::item_scope::{NamedItemScope, item_scopes};
 use base_db::inputs::InternFileId;
 use base_db::{SourceDatabase, source_db};
 use std::fmt::Formatter;
 use std::{env, fmt};
-use syntax::algo::ancestors_at_offset;
 use syntax::files::{FileRange, InFile};
-use syntax::{AstNode, SourceFile, SyntaxNode, TextRange, TextSize, ast};
+use syntax::{AstNode, SourceFile, SyntaxNode, TextRange, TextSize};
 use syntax::{SyntaxKind, SyntaxKind::*, SyntaxNodePtr};
 use vfs::FileId;
 
