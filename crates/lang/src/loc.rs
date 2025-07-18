@@ -4,7 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::item_scope::NamedItemScope;
+use crate::item_scope::{NamedItemScope, item_scopes};
 use base_db::inputs::InternFileId;
 use base_db::{SourceDatabase, source_db};
 use std::fmt::Formatter;
@@ -56,27 +56,12 @@ impl SyntaxLoc {
             .map(|ast_node| InFile::new(self.file_id, ast_node))
     }
 
-    pub fn item_scope(&self, db: &dyn SourceDatabase) -> Option<NamedItemScope> {
-        let file = self.get_source_file(db)?;
-        let ancestors = ancestors_at_offset(file.syntax(), self.node_offset());
-        for ancestor in ancestors {
-            if matches!(
-                ancestor.kind(),
-                SCHEMA | SPEC_FUN | SPEC_INLINE_FUN | ITEM_SPEC | MODULE_SPEC | SPEC_BLOCK_EXPR
-            ) {
-                return Some(NamedItemScope::Verify);
-            }
-            if let Some(has_attrs) = ast::AnyHasAttrs::cast(ancestor) {
-                if let Some(ancestor_scope) = item_scope_from_attributes(has_attrs) {
-                    return Some(ancestor_scope);
-                }
-            }
-        }
-        Some(NamedItemScope::Main)
-    }
-
     pub fn file_id(&self) -> FileId {
         self.file_id
+    }
+
+    pub fn syntax_ptr(&self) -> SyntaxNodePtr {
+        self.syntax_ptr
     }
 
     pub fn file_range(&self) -> FileRange {
@@ -173,18 +158,4 @@ impl<T: AstNode> SyntaxLocNodeExt for T {
     fn loc(&self, file_id: FileId) -> SyntaxLoc {
         SyntaxLoc::from_ast_node(file_id, self)
     }
-}
-
-fn item_scope_from_attributes(attrs_owner: impl ast::HasAttrs) -> Option<NamedItemScope> {
-    let atom_attrs = attrs_owner.atom_attrs_set();
-    if atom_attrs.is_empty() {
-        return None;
-    }
-    if atom_attrs.contains("test_only") || atom_attrs.contains("test") {
-        return Some(NamedItemScope::Test);
-    }
-    if atom_attrs.contains("verify_only") {
-        return Some(NamedItemScope::Verify);
-    }
-    None
 }

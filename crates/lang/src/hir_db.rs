@@ -6,7 +6,6 @@
 
 use crate::item_scope::NamedItemScope;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt, SyntaxLocInput};
-use crate::nameres;
 use crate::nameres::address::{Address, AddressInput};
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::path_resolution;
@@ -16,6 +15,7 @@ use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::ty::Ty;
+use crate::{item_scope, nameres};
 use base_db::inputs::{FileIdInput, InternFileId};
 use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
@@ -251,15 +251,11 @@ pub(crate) fn module_importable_entries_from_related(
 }
 
 pub fn item_scope(db: &dyn SourceDatabase, syntax_loc: SyntaxLoc) -> NamedItemScope {
-    #[salsa_macros::tracked]
-    pub fn item_scope_tracked<'db>(
-        db: &'db dyn SourceDatabase,
-        loc: SyntaxLocInput<'db>,
-    ) -> NamedItemScope {
-        loc.syntax_loc(db).item_scope(db).unwrap_or(NamedItemScope::Main)
-    }
-
-    item_scope_tracked(db, SyntaxLocInput::new(db, syntax_loc))
+    let file_item_scopes = item_scope::item_scopes(db, syntax_loc.file_id().intern(db));
+    file_item_scopes
+        .get(&syntax_loc.syntax_ptr())
+        .cloned()
+        .unwrap_or(NamedItemScope::Main)
 }
 
 pub(crate) fn get_modules_in_file(
