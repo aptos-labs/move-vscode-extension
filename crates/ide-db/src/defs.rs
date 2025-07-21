@@ -24,6 +24,17 @@ static BUILTIN_TYPE_IDENTS: LazyLock<HashSet<&str>> = LazyLock::new(|| {
     set
 });
 
+pub static BUILTIN_RESOURCE_FUNCTIONS: LazyLock<HashSet<&str>> = LazyLock::new(|| {
+    HashSet::from([
+        "borrow_global",
+        "borrow_global_mut",
+        "move_to",
+        "move_from",
+        "freeze",
+        "exists",
+    ])
+});
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Definition {
     NamedItem(SymbolKind, InFile<ast::NamedElement>),
