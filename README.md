@@ -59,13 +59,17 @@ Then install it from the editor using the `"Install from VSIX..."` command.
 
 ## Configuration
 
-See the [configuration docs](docs/configuration.md) for the various ways to customize the extension 
-and improve your experience. 
-
 > [!NOTE]
-> Extension by itself won't download your dependencies from the network. 
-> If you see `unresolved reference` errors on the `AptosFramework` imports, which ain't supposed to be 
-> there - run `aptos move compile` once on your project to download your remote dependencies into the filesystem.
+> Extension by itself won't download your dependencies from the network.
+>
+> If you see `unresolved reference` errors on the `AptosFramework` imports -
+> try running `aptos move compile` once on your project to download your remote dependencies.
+
+This extension provides configurations through VSCode's configuration settings.
+All configurations are under `move-on-aptos.*`.
+
+See the [configuration docs](https://github.com/aptos-labs/move-vscode-extension/blob/main/docs/configuration.md)
+for more information.
 
 ## Roadmap
 
