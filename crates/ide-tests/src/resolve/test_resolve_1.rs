@@ -491,3 +491,35 @@ module std::main {
 }"#,
     )
 }
+
+#[test]
+fn test_resolve_field_without_expr_in_struct_lit() {
+    check_resolve(
+        // language=Move
+        r#"
+module std::main {
+    struct Any<T> { val: T }
+                  //X
+    fun test_main_2() {
+        Any { val: };
+             //^
+    }
+}"#,
+    )
+}
+
+#[test]
+fn test_resolve_field_without_expr_in_struct_pat() {
+    check_resolve(
+        // language=Move
+        r#"
+module std::main {
+    struct Any<T> { val: T }
+                  //X
+    fun test_main_2() {
+        let Any { val: };
+                 //^
+    }
+}"#,
+    )
+}
