@@ -12,6 +12,7 @@ use crate::render::new_named_item;
 use crate::render::struct_or_enum::render_struct_or_enum;
 use crate::render::type_owner::{render_ident_pat, render_type_owner};
 use ide_db::SymbolKind;
+use ide_db::defs::BUILTIN_RESOURCE_FUNCTIONS;
 use lang::nameres::path_kind::path_kind;
 use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variants};
 use lang::nameres::scope::ScopeEntryListExt;
@@ -142,6 +143,11 @@ fn add_completions_from_the_resolution_entries(
         visible_entries.retain(|it| !speck_names.contains(&it.name));
     }
 
+    // remove resource builtin functions in specs
+    if path_ctx.is_msl() {
+        visible_entries.retain(|it| !BUILTIN_RESOURCE_FUNCTIONS.contains(it.name.as_str()));
+    }
+
     let mut completion_items = vec![];
     for entry in visible_entries {
         let name = entry.name.clone();
@@ -224,6 +230,7 @@ pub(crate) fn add_expr_keywords(
             MslContext::CodeSpec => {
                 acc.add(ctx.new_snippet_keyword("assume $0"));
                 acc.add(ctx.new_snippet_keyword("assert $0"));
+                acc.add(ctx.new_snippet_keyword("invariant $0"));
             }
             MslContext::ItemSpec => {
                 acc.add(ctx.new_snippet_keyword("pragma $0"));
@@ -236,10 +243,12 @@ pub(crate) fn add_expr_keywords(
                 acc.add(ctx.new_snippet_keyword("aborts_if $0"));
                 acc.add(ctx.new_snippet_keyword("aborts_with $0"));
                 acc.add(ctx.new_snippet_keyword("emits $0"));
+                acc.add(ctx.new_snippet_keyword("invariant $0"));
             }
             MslContext::ModuleItemSpec => {
                 acc.add(ctx.new_snippet_keyword("pragma $0"));
                 acc.add(ctx.new_snippet_keyword("axiom $0"));
+                acc.add(ctx.new_snippet_keyword("invariant $0"));
             }
             _ => (),
         }
