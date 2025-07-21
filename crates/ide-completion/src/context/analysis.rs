@@ -47,6 +47,16 @@ pub(crate) fn completion_analysis(
         ident_parent = ident_parent.parent().unwrap();
     }
 
+    // phantom keyword
+    if let Some(type_param) = ident_parent.parent_of_type::<ast::TypeParam>()
+        && let Some(generic_element) = type_param.generic_element()
+    {
+        return Some(AnalysisResult {
+            analysis: CompletionAnalysis::TypeParam { generic_element },
+            expected,
+        });
+    }
+
     let ident_in_parent = ident_parent.child_or_token_at_range(ident.text_range()).unwrap();
     let ident_prev_sibling = ident_in_parent
         .prev_sibling_or_token_no_trivia()

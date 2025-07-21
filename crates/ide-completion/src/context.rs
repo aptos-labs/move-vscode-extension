@@ -28,6 +28,7 @@ const COMPLETION_MARKER: &str = "raCompletionMarker";
 pub(crate) enum CompletionAnalysis {
     Item(ItemListKind),
     Reference(ReferenceKind),
+    TypeParam { generic_element: ast::GenericElement },
 }
 
 #[derive(Debug)]

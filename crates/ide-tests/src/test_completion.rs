@@ -1551,3 +1551,46 @@ module std::main {
         "#]],
     )
 }
+
+#[test]
+fn test_phantom_keyword_completion() {
+    do_single_completion(
+        // language=Move
+        r#"
+module std::main {
+    struct Any<ph/*caret*/> { val: T }
+}"#,
+        expect![[r#"
+            module std::main {
+                struct Any<phantom /*caret*/> { val: T }
+            }
+        "#]],
+    )
+}
+
+#[test]
+fn test_phantom_keyword_completion_with_type() {
+    do_single_completion(
+        // language=Move
+        r#"
+module std::main {
+    struct Any<ph/*caret*/T> { val: T }
+}"#,
+        expect![[r#"
+            module std::main {
+                struct Any<phantom /*caret*/T> { val: T }
+            }
+        "#]],
+    )
+}
+
+#[test]
+fn test_no_phantom_kw_in_functions() {
+    check_no_completions(
+        // language=Move
+        r#"
+module std::main {
+    fun main<ph/*caret*/>() {}
+}"#,
+    )
+}
