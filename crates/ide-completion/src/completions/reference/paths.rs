@@ -40,7 +40,7 @@ pub(crate) fn add_path_completions(
     let path_ctx = path_completion_ctx(ctx, &original_path, fake_path.clone())?;
 
     if !path_ctx.has_qualifier && path_ctx.path_kind == PathKind::Expr {
-        add_expr_keywords(completions, ctx, &fake_path);
+        add_expr_keywords(completions, ctx, &path_ctx);
     }
 
     let acc = &mut completions.borrow_mut();
@@ -70,15 +70,16 @@ pub(crate) fn add_path_completions(
             PathKind::Expr => {
                 // vector literal
                 acc.add(ctx.new_snippet_item(CompletionItemKind::Keyword, "vector[$0]"));
-
-                // assert!
-                let mut assert_item = ctx.new_item(
-                    CompletionItemKind::SymbolKind(SymbolKind::Assert),
-                    "assert!(_: bool, err: u64)",
-                );
-                assert_item.insert_snippet("assert!($0)");
-                assert_item.lookup_by("assert");
-                acc.add(assert_item.build(ctx.db));
+                if !path_ctx.is_msl_context() {
+                    // assert!
+                    let mut assert_item = ctx.new_item(
+                        CompletionItemKind::SymbolKind(SymbolKind::Assert),
+                        "assert!(_: bool, err: u64)",
+                    );
+                    assert_item.insert_snippet("assert!($0)");
+                    assert_item.lookup_by("assert");
+                    acc.add(assert_item.build(ctx.db));
+                }
             }
             _ => (),
         }
@@ -198,7 +199,7 @@ fn add_completions_from_the_resolution_entries(
 pub(crate) fn add_expr_keywords(
     completions: &RefCell<Completions>,
     ctx: &CompletionContext<'_>,
-    fake_path: &ast::Path,
+    path_ctx: &PathCompletionCtx,
 ) -> Option<()> {
     let mut acc = completions.borrow_mut();
 
@@ -217,27 +218,32 @@ pub(crate) fn add_expr_keywords(
         acc.add(ctx.new_snippet_keyword("break$0"));
     }
 
-    let is_msl_expr = fake_path.syntax().is_msl_context();
-    if !is_msl_expr {
-        return Some(());
-    }
-
-    // only direct path of ExprStmt / BlockExpr
-    let parent = fake_path.path_expr()?.syntax().parent()?.kind();
-    if matches!(parent, EXPR_STMT | BLOCK_EXPR) {
-        acc.add(ctx.new_snippet_keyword("assert $0"));
-        acc.add(ctx.new_snippet_keyword("assume $0"));
-        acc.add(ctx.new_snippet_keyword("requires $0"));
-        acc.add(ctx.new_snippet_keyword("decreases $0"));
-        acc.add(ctx.new_snippet_keyword("ensures $0"));
-        acc.add(ctx.new_snippet_keyword("modifies $0"));
-        acc.add(ctx.new_snippet_keyword("include $0"));
-        acc.add(ctx.new_snippet_keyword("apply $0"));
-        acc.add(ctx.new_snippet_keyword("aborts_if $0"));
-        acc.add(ctx.new_snippet_keyword("aborts_with $0"));
-        acc.add(ctx.new_snippet_keyword("emits $0"));
-        acc.add(ctx.new_snippet_keyword("axiom $0"));
-        acc.add(ctx.new_snippet_keyword("pragma $0"));
+    if path_ctx.is_msl_context() {
+        let path_expr_parent = path_ctx.fake_path.path_expr()?.syntax().parent()?;
+        // only direct path of ExprStmt / BlockExpr
+        if matches!(path_expr_parent.kind(), EXPR_STMT | BLOCK_EXPR) {
+            // if we're inside `spec {}` block
+            if path_expr_parent.has_ancestor_strict::<ast::SpecBlockExpr>() {
+                acc.add(ctx.new_snippet_keyword("assume $0"));
+                acc.add(ctx.new_snippet_keyword("assert $0"));
+            }
+            if let Some(item_spec) = path_expr_parent.ancestor_strict::<ast::ItemSpec>() {
+                acc.add(ctx.new_snippet_keyword("pragma $0"));
+                if item_spec.item_spec_ref().is_some() {
+                    acc.add(ctx.new_snippet_keyword("requires $0"));
+                    acc.add(ctx.new_snippet_keyword("decreases $0"));
+                    acc.add(ctx.new_snippet_keyword("ensures $0"));
+                    acc.add(ctx.new_snippet_keyword("modifies $0"));
+                    acc.add(ctx.new_snippet_keyword("include $0"));
+                    acc.add(ctx.new_snippet_keyword("apply $0"));
+                    acc.add(ctx.new_snippet_keyword("aborts_if $0"));
+                    acc.add(ctx.new_snippet_keyword("aborts_with $0"));
+                    acc.add(ctx.new_snippet_keyword("emits $0"));
+                } else {
+                    acc.add(ctx.new_snippet_keyword("axiom $0"));
+                }
+            }
+        }
     }
 
     Some(())
@@ -283,6 +289,10 @@ impl PathCompletionCtx {
 
     pub fn is_use_stmt(&self) -> bool {
         self.path_kind == PathKind::Use
+    }
+
+    pub fn is_msl_context(&self) -> bool {
+        self.fake_path.syntax().is_msl_context()
     }
 }
 
