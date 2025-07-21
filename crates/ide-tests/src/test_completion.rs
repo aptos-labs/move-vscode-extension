@@ -1529,3 +1529,25 @@ module std::main {
             ]"#]],
     )
 }
+
+#[test]
+fn test_no_angle_brackets_for_struct_expr() {
+    do_single_completion(
+        // language=Move
+        r#"
+module std::main {
+    struct Any<T> { val: T }
+    fun main() {
+        let a = An/*caret*/
+    }
+}"#,
+        expect![[r#"
+            module std::main {
+                struct Any<T> { val: T }
+                fun main() {
+                    let a = Any/*caret*/
+                }
+            }
+        "#]],
+    )
+}

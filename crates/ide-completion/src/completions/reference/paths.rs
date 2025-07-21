@@ -180,8 +180,13 @@ fn add_completions_from_the_resolution_entries(
             }
             STRUCT | ENUM => {
                 completion_items.push(
-                    render_struct_or_enum(ctx, name, named_item.cast_into::<ast::StructOrEnum>()?)
-                        .build(ctx.db),
+                    render_struct_or_enum(
+                        ctx,
+                        name,
+                        path_ctx,
+                        named_item.cast_into::<ast::StructOrEnum>()?,
+                    )
+                    .build(ctx.db),
                 );
             }
             SCHEMA => {
