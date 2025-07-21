@@ -81,7 +81,7 @@ impl TypeAstWalker<'_, '_> {
                 for (pat_field, (named_field_entry, ty)) in pat_fields.into_iter().zip(pat_field_tys) {
                     let pat_field_ty = ty.substitute(&ty_adt_subst);
                     match pat_field.field_kind() {
-                        PatFieldKind::Full { pat, .. } => {
+                        PatFieldKind::Full { pat: Some(pat), .. } => {
                             self.collect_pat_bindings(pat, pat_field_ty.clone(), pat_bm.clone());
                             self.ctx.pat_field_types.insert(pat_field, pat_field_ty);
                         }
@@ -210,22 +210,24 @@ impl TypeAstWalker<'_, '_> {
         }
         let fields_owner = fields_owner.unwrap();
         let (item_file_id, fields_owner) = fields_owner.unpack();
+        let ty_lowering = self.ctx.ty_lowering();
         let named_fields_map = fields_owner.named_fields_map();
         let mut tys = vec![];
         for pat_field in pat_fields {
-            let Some(named_field) = pat_field
+            match pat_field
                 .field_name()
                 .and_then(|field_name| named_fields_map.get(&field_name))
-            else {
-                tys.push((None, Ty::Unknown));
-                continue;
-            };
-            let field_ty = self
-                .ctx
-                .ty_lowering()
-                .lower_type_owner(named_field.to_owned().in_file(item_file_id).map_into())
-                .unwrap_or(Ty::Unknown);
-            tys.push((named_field.to_owned().in_file(item_file_id).to_entry(), field_ty));
+            {
+                Some(named_field) => {
+                    let field_ty = ty_lowering
+                        .lower_type_owner(named_field.to_owned().in_file(item_file_id).map_into())
+                        .unwrap_or(Ty::Unknown);
+                    tys.push((named_field.to_owned().in_file(item_file_id).to_entry(), field_ty));
+                }
+                None => {
+                    tys.push((None, Ty::Unknown));
+                }
+            }
         }
         tys
     }

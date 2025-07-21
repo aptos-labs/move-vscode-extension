@@ -44,24 +44,23 @@ pub(crate) fn struct_pat_field_can_be_simplified(
     ctx: &DiagnosticsContext<'_>,
     struct_pat_field: InFile<ast::StructPatField>,
 ) -> Option<()> {
-    if let ast::PatFieldKind::Full { name_ref, pat, .. } = struct_pat_field.as_ref().value.field_kind() {
-        if let ast::Pat::IdentPat(ident_pat) = pat
-            && name_ref.as_string() == ident_pat.syntax().text().to_string()
-        {
-            let fix_file_range = struct_pat_field.file_range();
-            acc.push(
-                Diagnostic::new(
-                    DiagnosticCode::Lsp("pat-field-init-shorthand", Severity::WeakWarning),
-                    "Expression can be simplified",
-                    fix_file_range,
-                )
-                .with_fixes(pat_field_fix(
-                    ctx,
-                    struct_pat_field.as_ref(),
-                    fix_file_range,
-                )),
+    let pat_field_kind = struct_pat_field.as_ref().value.field_kind();
+    if let ast::PatFieldKind::Full {
+        name_ref,
+        pat: Some(ast::Pat::IdentPat(ident_pat)),
+        ..
+    } = pat_field_kind
+        && name_ref.as_string() == ident_pat.syntax().text().to_string()
+    {
+        let fix_file_range = struct_pat_field.file_range();
+        acc.push(
+            Diagnostic::new(
+                DiagnosticCode::Lsp("pat-field-init-shorthand", Severity::WeakWarning),
+                "Expression can be simplified",
+                fix_file_range,
             )
-        }
+            .with_fixes(pat_field_fix(ctx, struct_pat_field.as_ref(), fix_file_range)),
+        );
     }
     Some(())
 }

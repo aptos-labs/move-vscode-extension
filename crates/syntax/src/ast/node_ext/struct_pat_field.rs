@@ -15,9 +15,9 @@ impl ast::StructPatField {
     }
 
     pub fn field_kind(&self) -> PatFieldKind {
-        let ident_pat = self.ident_pat();
-        if let (Some(pat), Some(name_ref)) = (self.pat(), self.name_ref()) {
-            return PatFieldKind::Full { name_ref, pat };
+        if let Some(name_ref) = self.name_ref() {
+            // at least `NAME_REF:` is available
+            return PatFieldKind::Full { name_ref, pat: self.pat() };
         }
         if let Some(ident_pat) = self.ident_pat() {
             return PatFieldKind::Shorthand { ident_pat };
@@ -51,9 +51,15 @@ impl ast::StructPatField {
     }
 }
 
+#[derive(Debug)]
 pub enum PatFieldKind {
-    Full { name_ref: ast::NameRef, pat: ast::Pat },
-    Shorthand { ident_pat: ast::IdentPat },
+    Full {
+        name_ref: ast::NameRef,
+        pat: Option<ast::Pat>,
+    },
+    Shorthand {
+        ident_pat: ast::IdentPat,
+    },
     Rest,
     Invalid,
 }
