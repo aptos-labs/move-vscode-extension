@@ -1,0 +1,69 @@
+SOURCE_FILE@0..113
+  MODULE@0..112
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..38
+      IDENT@12..38 "missing_expr_in_struc ..."
+    WHITESPACE@38..39 " "
+    L_CURLY@39..40 "{"
+    WHITESPACE@40..45 "\n    "
+    FUN@45..110
+      FUN_KW@45..48 "fun"
+      WHITESPACE@48..49 " "
+      NAME@49..53
+        IDENT@49..53 "main"
+      PARAM_LIST@53..55
+        L_PAREN@53..54 "("
+        R_PAREN@54..55 ")"
+      WHITESPACE@55..56 " "
+      BLOCK_EXPR@56..110
+        L_CURLY@56..57 "{"
+        WHITESPACE@57..66 "\n        "
+        EXPR_STMT@66..79
+          STRUCT_LIT@66..78
+            PATH@66..69
+              PATH_SEGMENT@66..69
+                NAME_REF@66..69
+                  IDENT@66..69 "Any"
+            WHITESPACE@69..70 " "
+            STRUCT_LIT_FIELD_LIST@70..78
+              L_CURLY@70..71 "{"
+              WHITESPACE@71..72 " "
+              STRUCT_LIT_FIELD@72..76
+                NAME_REF@72..75
+                  IDENT@72..75 "val"
+                COLON@75..76 ":"
+              WHITESPACE@76..77 " "
+              R_CURLY@77..78 "}"
+          SEMICOLON@78..79 ";"
+        WHITESPACE@79..88 "\n        "
+        EXPR_STMT@88..104
+          STRUCT_LIT@88..103
+            PATH@88..91
+              PATH_SEGMENT@88..91
+                NAME_REF@88..91
+                  IDENT@88..91 "Any"
+            WHITESPACE@91..92 " "
+            STRUCT_LIT_FIELD_LIST@92..103
+              L_CURLY@92..93 "{"
+              WHITESPACE@93..94 " "
+              STRUCT_LIT_FIELD@94..101
+                NAME_REF@94..97
+                  IDENT@94..97 "val"
+                COLON@97..98 ":"
+                WHITESPACE@98..99 " "
+                BIN_EXPR@99..101
+                  LITERAL@99..100
+                    INT_NUMBER@99..100 "1"
+                  PLUS@100..101 "+"
+              WHITESPACE@101..102 " "
+              R_CURLY@102..103 "}"
+          SEMICOLON@103..104 ";"
+        WHITESPACE@104..109 "\n    "
+        R_CURLY@109..110 "}"
+    WHITESPACE@110..111 "\n"
+    R_CURLY@111..112 "}"
+  WHITESPACE@112..113 "\n"

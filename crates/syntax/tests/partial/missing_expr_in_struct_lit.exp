@@ -1,0 +1,8 @@
+module 0x1::missing_expr_in_struct_lit {
+    fun main() {
+        Any { val: };
+                //^ expected expression
+        Any { val: 1+ };
+                   //^ expected expression
+    }
+}

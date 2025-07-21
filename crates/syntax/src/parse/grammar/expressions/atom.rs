@@ -142,11 +142,11 @@ fn path_expr(p: &mut Parser) -> CompletedMarker {
     let m = p.start();
     paths::path(p, Some(PathMode::Expr));
     let cm = match p.current() {
-        T!['{'] /*if !r.forbid_structs*/ => {
+        T!['{'] => {
             struct_lit_field_list(p);
             m.complete(p, STRUCT_LIT)
         }
-        _ => { m.complete(p, PATH_EXPR) }
+        _ => m.complete(p, PATH_EXPR),
     };
     cm
 }
