@@ -1,3 +1,4 @@
+use crate::completions::reference::paths::{PathCompletionCtx, PathKind};
 use crate::context::CompletionContext;
 use crate::item::CompletionItemBuilder;
 use crate::render::new_named_item;
@@ -8,15 +9,21 @@ use syntax::files::InFile;
 pub(crate) fn render_struct_or_enum(
     ctx: &CompletionContext<'_>,
     item_name: String,
+    path_ctx: &PathCompletionCtx,
     struct_or_enum: InFile<ast::StructOrEnum>,
 ) -> CompletionItemBuilder {
     let mut item_builder = new_named_item(ctx, &item_name, struct_or_enum.kind());
 
     let has_type_params = !struct_or_enum.ty_type_params().is_empty();
-    let snippet = if has_type_params {
-        format!("{item_name}<$0>")
-    } else {
-        format!("{item_name}$0")
+    let snippet = match path_ctx.path_kind {
+        PathKind::Type => {
+            if has_type_params {
+                format!("{item_name}<$0>")
+            } else {
+                format!("{item_name}$0")
+            }
+        }
+        _ => format!("{item_name}$0"),
     };
     item_builder.insert_snippet(snippet);
 
