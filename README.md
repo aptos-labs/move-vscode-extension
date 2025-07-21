@@ -62,6 +62,11 @@ Then install it from the editor using the `"Install from VSIX..."` command.
 See the [configuration docs](docs/configuration.md) for the various ways to customize the extension 
 and improve your experience. 
 
+> [!NOTE]
+> Extension by itself won't download your dependencies from the network. 
+> If you see `unresolved reference` errors on the `AptosFramework` imports, which ain't supposed to be 
+> there - run `aptos move compile` once on your project to download your remote dependencies into the filesystem.
+
 ## Roadmap
 
 * More error highlighting:

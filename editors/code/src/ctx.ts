@@ -436,7 +436,7 @@ export class Ctx {
                     "statusBarItem.warningBackground",
                 );
                 statusBar.command = "move-on-aptos.startServer";
-                statusBar.text = "$(stop-circle) move-on-aptos";
+                statusBar.text = "$(stop-circle) Move on Aptos";
                 return;
         }
         if (status.message) {
@@ -455,7 +455,7 @@ export class Ctx {
             `[$(debug-restart) Restart server](command:move-on-aptos.restartServer "Restart the server")`,
         );
         if (!status.quiescent) icon = "$(loading~spin) ";
-        statusBar.text = `${icon}move-on-aptos`;
+        statusBar.text = `${icon}Move on Aptos`;
     }
 
     private updateStatusBarVisibility(editor: vscode.TextEditor | undefined) {
