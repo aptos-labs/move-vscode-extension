@@ -70,7 +70,7 @@ pub(crate) fn add_path_completions(
             PathKind::Expr => {
                 // vector literal
                 acc.add(ctx.new_snippet_item(CompletionItemKind::Keyword, "vector[$0]"));
-                if !path_ctx.is_msl_context() {
+                if !path_ctx.is_msl() {
                     // assert!
                     let mut assert_item = ctx.new_item(
                         CompletionItemKind::SymbolKind(SymbolKind::Assert),
@@ -208,8 +208,9 @@ pub(crate) fn add_expr_keywords(
     acc.add(ctx.new_snippet_keyword("loop $0"));
     acc.add(ctx.new_snippet_keyword("while $0"));
     acc.add(ctx.new_snippet_keyword("for $0"));
-    acc.add(ctx.new_snippet_keyword("let $0"));
-
+    if path_ctx.is_stmt_start {
+        acc.add(ctx.new_snippet_keyword("let $0"));
+    }
     acc.add(ctx.new_snippet_keyword("true$0"));
     acc.add(ctx.new_snippet_keyword("false$0"));
 
@@ -218,31 +219,29 @@ pub(crate) fn add_expr_keywords(
         acc.add(ctx.new_snippet_keyword("break$0"));
     }
 
-    if path_ctx.is_msl_context() {
-        let path_expr_parent = path_ctx.fake_path.path_expr()?.syntax().parent()?;
-        // only direct path of ExprStmt / BlockExpr
-        if matches!(path_expr_parent.kind(), EXPR_STMT | BLOCK_EXPR) {
-            // if we're inside `spec {}` block
-            if path_expr_parent.has_ancestor_strict::<ast::SpecBlockExpr>() {
+    if path_ctx.is_stmt_start {
+        match path_ctx.msl_context {
+            MslContext::CodeSpec => {
                 acc.add(ctx.new_snippet_keyword("assume $0"));
                 acc.add(ctx.new_snippet_keyword("assert $0"));
             }
-            if let Some(item_spec) = path_expr_parent.ancestor_strict::<ast::ItemSpec>() {
+            MslContext::ItemSpec => {
                 acc.add(ctx.new_snippet_keyword("pragma $0"));
-                if item_spec.item_spec_ref().is_some() {
-                    acc.add(ctx.new_snippet_keyword("requires $0"));
-                    acc.add(ctx.new_snippet_keyword("decreases $0"));
-                    acc.add(ctx.new_snippet_keyword("ensures $0"));
-                    acc.add(ctx.new_snippet_keyword("modifies $0"));
-                    acc.add(ctx.new_snippet_keyword("include $0"));
-                    acc.add(ctx.new_snippet_keyword("apply $0"));
-                    acc.add(ctx.new_snippet_keyword("aborts_if $0"));
-                    acc.add(ctx.new_snippet_keyword("aborts_with $0"));
-                    acc.add(ctx.new_snippet_keyword("emits $0"));
-                } else {
-                    acc.add(ctx.new_snippet_keyword("axiom $0"));
-                }
+                acc.add(ctx.new_snippet_keyword("requires $0"));
+                acc.add(ctx.new_snippet_keyword("decreases $0"));
+                acc.add(ctx.new_snippet_keyword("ensures $0"));
+                acc.add(ctx.new_snippet_keyword("modifies $0"));
+                acc.add(ctx.new_snippet_keyword("include $0"));
+                acc.add(ctx.new_snippet_keyword("apply $0"));
+                acc.add(ctx.new_snippet_keyword("aborts_if $0"));
+                acc.add(ctx.new_snippet_keyword("aborts_with $0"));
+                acc.add(ctx.new_snippet_keyword("emits $0"));
             }
+            MslContext::ModuleItemSpec => {
+                acc.add(ctx.new_snippet_keyword("pragma $0"));
+                acc.add(ctx.new_snippet_keyword("axiom $0"));
+            }
+            _ => (),
         }
     }
 
@@ -266,6 +265,8 @@ pub(crate) struct PathCompletionCtx {
     /// The path of which we are completing the segment
     pub(crate) original_path: Option<InFile<ast::Path>>,
     pub(crate) path_kind: PathKind,
+    pub(crate) is_stmt_start: bool,
+    pub(crate) msl_context: MslContext,
 }
 
 impl PathCompletionCtx {
@@ -291,9 +292,18 @@ impl PathCompletionCtx {
         self.path_kind == PathKind::Use
     }
 
-    pub fn is_msl_context(&self) -> bool {
-        self.fake_path.syntax().is_msl_context()
+    pub fn is_msl(&self) -> bool {
+        self.msl_context != MslContext::None
     }
+}
+
+#[derive(Debug, Eq, PartialEq)]
+pub(crate) enum MslContext {
+    None,
+    CodeSpec,
+    ItemSpec,
+    ModuleItemSpec,
+    SpecFun,
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -335,6 +345,30 @@ fn path_completion_ctx(
     let is_acquires = fake_path_parent
         .cast::<ast::PathType>()
         .is_some_and(|it| it.syntax().parent_is::<ast::Acquires>());
+
+    let pkind = fake_path
+        .syntax()
+        .parent_of_type::<ast::PathExpr>()
+        .and_then(|it| it.syntax().parent().map(|p| p.kind()));
+    let is_stmt_start = matches!(pkind, Some(EXPR_STMT | BLOCK_EXPR));
+
+    let mut msl_context = MslContext::None;
+    if fake_path.syntax().is_msl_context() {
+        if let Some(item_spec) = fake_path.syntax().ancestor_strict::<ast::ItemSpec>() {
+            if item_spec.item_spec_ref().is_some() {
+                msl_context = MslContext::ItemSpec;
+            } else {
+                msl_context = MslContext::ModuleItemSpec;
+            }
+        } else {
+            if fake_path.syntax().has_ancestor_strict::<ast::SpecBlockExpr>() {
+                msl_context = MslContext::CodeSpec;
+            } else {
+                msl_context = MslContext::SpecFun;
+            }
+        }
+    }
+
     Some(PathCompletionCtx {
         has_call_parens,
         has_type_args,
@@ -343,5 +377,7 @@ fn path_completion_ctx(
         has_qualifier: fake_path.qualifier().is_some(),
         fake_path,
         original_path: original_path.clone(),
+        is_stmt_start,
+        msl_context,
     })
 }
