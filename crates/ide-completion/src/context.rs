@@ -33,7 +33,6 @@ pub(crate) enum CompletionAnalysis {
 #[derive(Debug)]
 pub enum ReferenceKind {
     Path {
-        original_path: Option<ast::Path>,
         fake_path: ast::Path,
     },
     DotExpr {

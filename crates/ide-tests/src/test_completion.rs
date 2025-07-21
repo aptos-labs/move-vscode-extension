@@ -1345,3 +1345,41 @@ module std::main {
             ]"#]],
     )
 }
+
+#[test]
+fn test_no_self_in_module_completion_outside_use_stmt() {
+    check_no_completions(
+        // language=Move
+        r#"
+module std::string {
+}
+module std::main {
+    use std::string;
+    fun main() {
+        string::/*caret*/
+    }
+}"#,
+    )
+}
+
+#[test]
+fn test_completion_for_fq_name_if_next_is_fq_name() {
+    check_completions(
+        // language=Move
+        r#"
+module std::string {
+    public fun call() {}
+}
+module std::main {
+    use std::string;
+    fun main() {
+        string::/*caret*/
+        string::call();
+    }
+}"#,
+        expect![[r#"
+            [
+                "call()",
+            ]"#]],
+    )
+}

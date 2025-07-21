@@ -184,8 +184,8 @@ pub fn get_qualified_path_entries(
     qualifier: ast::Path,
 ) -> Vec<ScopeEntry> {
     let qualifier = ctx.wrap_in_file(qualifier);
-    let qualifier_item = nameres::resolve_no_inf(db, qualifier.clone());
-    if qualifier_item.is_none() {
+    let qualifier_resolved = nameres::resolve_no_inf(db, qualifier.clone());
+    if qualifier_resolved.is_none() {
         if let Some(qualifier_name) = qualifier.value.reference_name() {
             let _p = tracing::debug_span!(
                 "qualifier is unresolved",
@@ -197,28 +197,29 @@ pub fn get_qualified_path_entries(
         }
         return vec![];
     }
-    let qualifier_item = qualifier_item.unwrap();
+    let qualifier_resolved = qualifier_resolved.unwrap();
+
     let mut entries = vec![];
-    match qualifier_item.node_loc.kind() {
+    match qualifier_resolved.node_loc.kind() {
         SyntaxKind::MODULE => {
+            let module_loc = &qualifier_resolved.node_loc;
             // Self::call() as an expression
-            entries.push(ScopeEntry {
-                name: "Self".to_string(),
-                node_loc: qualifier_item.node_loc.clone(),
-                ns: Ns::MODULE,
-                scope_adjustment: None,
-            });
-            entries.extend(hir_db::module_importable_entries(
-                db,
-                qualifier_item.node_loc.clone(),
-            ));
+            if ctx.is_use_speck() {
+                entries.push(ScopeEntry {
+                    name: "Self".to_string(),
+                    node_loc: module_loc.clone(),
+                    ns: Ns::MODULE,
+                    scope_adjustment: None,
+                });
+            }
+            entries.extend(hir_db::module_importable_entries(db, module_loc.clone()));
             entries.extend(hir_db::module_importable_entries_from_related(
                 db,
-                qualifier_item.node_loc,
+                module_loc.clone(),
             ));
         }
         SyntaxKind::ENUM => {
-            let Some(enum_) = qualifier_item.node_loc.to_ast::<ast::Enum>(db) else {
+            let Some(enum_) = qualifier_resolved.node_loc.to_ast::<ast::Enum>(db) else {
                 return vec![];
             };
             entries.extend(enum_.value.variants().to_entries(enum_.file_id));

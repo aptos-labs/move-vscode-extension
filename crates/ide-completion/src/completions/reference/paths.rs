@@ -31,12 +31,15 @@ use syntax::{AstNode, T, algo, ast};
 pub(crate) fn add_path_completions(
     completions: &RefCell<Completions>,
     ctx: &CompletionContext<'_>,
-    original_path: Option<InFile<ast::Path>>,
     fake_path: ast::Path,
 ) -> Option<()> {
+    let original_path = ctx
+        .original_file()?
+        .find_node_at_offset::<ast::Path>(ctx.position.offset)
+        .map(|it| it.in_file(ctx.position.file_id));
     let path_ctx = path_completion_ctx(ctx, &original_path, fake_path.clone())?;
 
-    if path_ctx.qualifier.is_none() && path_ctx.path_kind == PathKind::Expr {
+    if !path_ctx.has_qualifier && path_ctx.path_kind == PathKind::Expr {
         add_expr_keywords(completions, ctx, &fake_path);
     }
 
@@ -46,7 +49,7 @@ pub(crate) fn add_path_completions(
         acc.add_all(completion_items);
     }
 
-    if path_ctx.qualifier.is_none() {
+    if !path_ctx.has_qualifier {
         match path_ctx.path_kind {
             PathKind::Type => {
                 if !path_ctx.is_acquires {
@@ -248,7 +251,8 @@ pub(crate) struct PathCompletionCtx {
     pub(crate) has_type_args: bool,
     pub(crate) is_acquires: bool,
     /// The qualifier of the current path.
-    pub(crate) qualifier: Option<InFile<ast::Path>>,
+    pub(crate) has_qualifier: bool,
+    // pub(crate) qualifier: Option<InFile<ast::Path>>,
     // /// The parent of the path we are completing.
     // pub(crate) parent: Option<ast::Path>,
     pub(crate) fake_path: ast::Path,
@@ -289,7 +293,7 @@ pub(crate) enum PathKind {
 }
 
 fn path_completion_ctx(
-    ctx: &CompletionContext<'_>,
+    _ctx: &CompletionContext<'_>,
     original_path: &Option<InFile<ast::Path>>,
     fake_path: ast::Path,
 ) -> Option<PathCompletionCtx> {
@@ -317,15 +321,6 @@ fn path_completion_ctx(
             return None;
         }
     };
-    let mut qualifier: Option<InFile<ast::Path>> = None;
-    if let Some(fake_path_qualifier) = fake_path.qualifier() {
-        let original_file = ctx.original_file()?;
-        let original_qualifier = algo::find_node_at_offset::<ast::Path>(
-            original_file.syntax(),
-            fake_path_qualifier.syntax().text_range().start(),
-        );
-        qualifier = original_qualifier.map(|it| it.in_file(ctx.position.file_id));
-    }
     let is_acquires = fake_path_parent
         .cast::<ast::PathType>()
         .is_some_and(|it| it.syntax().parent_is::<ast::Acquires>());
@@ -334,7 +329,7 @@ fn path_completion_ctx(
         has_type_args,
         is_acquires,
         path_kind,
-        qualifier,
+        has_qualifier: fake_path.qualifier().is_some(),
         fake_path,
         original_path: original_path.clone(),
     })
