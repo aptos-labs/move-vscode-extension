@@ -764,7 +764,7 @@ module std::option {
 }
 
 #[test]
-fn test_spec_predicate_keywords_in_spec_block() {
+fn test_spec_predicate_keywords_in_spec_module_block() {
     check_completions(
         // language=Move
         r#"
@@ -784,19 +784,8 @@ module std::option {
                 "let",
                 "true",
                 "false",
-                "assert",
-                "assume",
-                "requires",
-                "decreases",
-                "ensures",
-                "modifies",
-                "include",
-                "apply",
-                "aborts_if",
-                "aborts_with",
-                "emits",
-                "axiom",
                 "pragma",
+                "axiom",
                 "Self",
                 "max_u8() -> num",
                 "max_u64() -> num",
@@ -828,8 +817,89 @@ module std::option {
                 "exists(addr: address) -> bool",
                 "freeze(mut_ref: &mut S) -> &S",
                 "vector[]",
-                "assert!(_: bool, err: u64)",
             ]"#]],
+    );
+}
+
+#[test]
+fn test_spec_predicate_keywords_in_item_spec_block() {
+    check_completions(
+        // language=Move
+        r#"
+module std::option {
+    fun main() {}
+    spec main {
+        /*caret*/
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "if",
+                "match",
+                "loop",
+                "while",
+                "for",
+                "let",
+                "true",
+                "false",
+                "pragma",
+                "requires",
+                "decreases",
+                "ensures",
+                "modifies",
+                "include",
+                "apply",
+                "aborts_if",
+                "aborts_with",
+                "emits",
+                "Self",
+                "max_u8() -> num",
+                "max_u64() -> num",
+                "max_u128() -> num",
+                "global(addr: address) -> T",
+                "old(t: T) -> T",
+                "update_field(s: S, fname: F, val: V) -> S",
+                "TRACE(t: T) -> T",
+                "concat(v1: vector<T>, v2: vector<T>) -> vector<T>",
+                "vec(t: T) -> vector<T>",
+                "len(t: vector<T>) -> num",
+                "contains(v: vector<T>, e: T) -> bool",
+                "index_of(v: vector<T>, e: T) -> num",
+                "range(v: vector<T>) -> range<num>",
+                "update(v: vector<T>, i: num, t: T) -> vector<T>",
+                "in_range(v: vector<T>, i: num) -> bool",
+                "int2bv(i: num) -> bv",
+                "bv2int(b: bv) -> num",
+                "MAX_U8",
+                "MAX_U16",
+                "MAX_U32",
+                "MAX_U64",
+                "MAX_U128",
+                "MAX_U256",
+                "main()",
+                "move_from(addr: address) -> T",
+                "move_to(acc: &signer, res: T)",
+                "borrow_global(addr: address) -> &T",
+                "borrow_global_mut(addr: address) -> &mut T",
+                "exists(addr: address) -> bool",
+                "freeze(mut_ref: &mut S) -> &S",
+                "vector[]",
+            ]"#]],
+    );
+}
+
+#[test]
+fn test_no_spec_predicates_in_spec_fun() {
+    check_no_completions(
+        // language=Move
+        r#"
+module std::option {
+    spec fun main(): u8 {
+        a/*caret*/
+    }
+}
+    "#,
     );
 }
 
@@ -839,16 +909,20 @@ fn test_spec_predicate_keywords_in_spec_block_assume() {
         // language=Move
         r#"
 module std::option {
-    spec module {
-        assu/*caret*/
+    fun main() {
+        spec {
+            assu/*caret*/
+        }
     }
 }
     "#,
         // language=Move
         expect![[r#"
             module std::option {
-                spec module {
-                    assume /*caret*/
+                fun main() {
+                    spec {
+                        assume /*caret*/
+                    }
                 }
             }
         "#]],
@@ -878,19 +952,8 @@ module std::option {
                 "let",
                 "true",
                 "false",
-                "assert",
-                "assume",
-                "requires",
-                "decreases",
-                "ensures",
-                "modifies",
-                "include",
-                "apply",
-                "aborts_if",
-                "aborts_with",
-                "emits",
-                "axiom",
                 "pragma",
+                "axiom",
                 "Self",
                 "max_u8() -> num",
                 "max_u64() -> num",
@@ -922,7 +985,6 @@ module std::option {
                 "exists(addr: address) -> bool",
                 "freeze(mut_ref: &mut S) -> &S",
                 "vector[]",
-                "assert!(_: bool, err: u64)",
             ]"#]],
     );
 }
@@ -1394,5 +1456,25 @@ module std::main {
         bool/*caret*/
     }
 }"#,
+    )
+}
+
+#[test]
+fn test_spec_keywords_in_spec_blocks() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    fun main() {
+        spec {
+            a/*caret*/
+        }
+    }
+}"#,
+        expect![[r#"
+            [
+                "assume",
+                "assert",
+            ]"#]],
     )
 }
