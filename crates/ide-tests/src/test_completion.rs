@@ -1594,3 +1594,14 @@ module std::main {
 }"#,
     )
 }
+
+#[test]
+fn test_no_phantom_kw_if_already_there() {
+    check_no_completions(
+        // language=Move
+        r#"
+module std::main {
+    struct Any<phantom ph/*caret*/> { val: T }
+}"#,
+    )
+}

@@ -10,7 +10,9 @@ use ide_db::active_parameter::ActiveParameterInfo;
 use ide_db::{RootDatabase, active_parameter};
 use lang::Semantics;
 use lang::types::ty::Ty;
-use syntax::SyntaxKind::{FUN, MODULE, SOURCE_FILE, STRUCT_LIT, VALUE_ARG_LIST, VISIBILITY_MODIFIER};
+use syntax::SyntaxKind::{
+    FUN, MODULE, PHANTOM_KW, SOURCE_FILE, STRUCT_LIT, VALUE_ARG_LIST, VISIBILITY_MODIFIER,
+};
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
@@ -51,10 +53,13 @@ pub(crate) fn completion_analysis(
     if let Some(type_param) = ident_parent.parent_of_type::<ast::TypeParam>()
         && let Some(generic_element) = type_param.generic_element()
     {
-        return Some(AnalysisResult {
-            analysis: CompletionAnalysis::TypeParam { generic_element },
-            expected,
-        });
+        let prev_sibling = &ident_parent.prev_sibling_or_token_no_trivia();
+        if prev_sibling.as_ref().is_none_or(|it| it.kind() != PHANTOM_KW) {
+            return Some(AnalysisResult {
+                analysis: CompletionAnalysis::TypeParam { generic_element },
+                expected,
+            });
+        }
     }
 
     let ident_in_parent = ident_parent.child_or_token_at_range(ident.text_range()).unwrap();
