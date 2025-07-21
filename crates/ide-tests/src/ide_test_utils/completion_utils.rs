@@ -95,7 +95,7 @@ fn completions_at_offset(
             if let Some(ident_token) = ast::Ident::cast(t) {
                 prefix = ident_token.text().to_string();
             };
-            completion_items.retain(|item| item.label.primary.starts_with(&prefix))
+            completion_items.retain(|item| item.lookup().split(" ").any(|it| it.starts_with(&prefix)))
         }
     }
 
