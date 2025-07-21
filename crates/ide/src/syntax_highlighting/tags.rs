@@ -108,6 +108,7 @@ impl HlTag {
                 SymbolKind::GlobalVariableDecl => "global",
                 SymbolKind::Vector => "vector",
                 SymbolKind::Assert => "assert",
+                SymbolKind::Schema => "schema",
             },
             HlTag::AttributeBracket => "attribute_bracket",
             HlTag::BoolLiteral => "bool_literal",

@@ -9,7 +9,7 @@ use crate::context::CompletionContext;
 use crate::item::{CompletionItem, CompletionItemKind};
 use crate::render::function::{FunctionKind, render_function};
 use crate::render::new_named_item;
-use crate::render::struct_or_enum::render_struct_or_enum;
+use crate::render::struct_or_enum::{render_schema, render_struct_or_enum};
 use crate::render::type_owner::{render_ident_pat, render_type_owner};
 use ide_db::SymbolKind;
 use ide_db::defs::BUILTIN_RESOURCE_FUNCTIONS;
@@ -184,6 +184,11 @@ fn add_completions_from_the_resolution_entries(
                         .build(ctx.db),
                 );
             }
+            SCHEMA => {
+                completion_items.push(
+                    render_schema(ctx, name, named_item.cast_into::<ast::Schema>()?).build(ctx.db),
+                );
+            }
             IDENT_PAT => {
                 let ident_pat = named_item.cast_into::<ast::IdentPat>()?;
                 completion_items.push(render_ident_pat(ctx, &name, ident_pat).build(ctx.db));
@@ -320,6 +325,7 @@ pub(crate) enum PathKind {
     Expr,
     Type,
     Use,
+    SchemaLit,
 }
 
 fn path_completion_ctx(
@@ -347,6 +353,7 @@ fn path_completion_ctx(
         USE_SPECK => PathKind::Use,
         PATH_TYPE => PathKind::Type,
         PATH_EXPR => PathKind::Expr,
+        SCHEMA_LIT => PathKind::SchemaLit,
         _ => {
             return None;
         }

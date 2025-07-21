@@ -1463,3 +1463,69 @@ module std::main {
             ]"#]],
     )
 }
+
+#[test]
+fn test_add_schemas_for_include_completion() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    fun main() {
+    }
+    spec schema MySchema {}
+    spec main {
+        include My/*caret*/
+    }
+}"#,
+        expect![[r#"
+            [
+                "MySchema",
+            ]"#]],
+    )
+}
+
+#[test]
+fn test_add_schemas_for_include_completion_with_generic_params() {
+    do_single_completion(
+        // language=Move
+        r#"
+module std::main {
+    fun main() {
+    }
+    spec schema MySchema<T> {}
+    spec main {
+        include My/*caret*/
+    }
+}"#,
+        expect![[r#"
+            module std::main {
+                fun main() {
+                }
+                spec schema MySchema<T> {}
+                spec main {
+                    include MySchema</*caret*/>
+                }
+            }
+        "#]],
+    )
+}
+
+#[test]
+fn test_add_schemas_for_include_and_completion() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    fun main() {
+    }
+    spec schema MySchema {}
+    spec main {
+        include MySchema && My/*caret*/
+    }
+}"#,
+        expect![[r#"
+            [
+                "MySchema",
+            ]"#]],
+    )
+}
