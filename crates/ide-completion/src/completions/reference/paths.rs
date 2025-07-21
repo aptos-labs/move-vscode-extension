@@ -72,12 +72,13 @@ pub(crate) fn add_path_completions(
                 acc.add(ctx.new_snippet_item(CompletionItemKind::Keyword, "vector[$0]"));
 
                 // assert!
-                let mut item = ctx.new_item(
+                let mut assert_item = ctx.new_item(
                     CompletionItemKind::SymbolKind(SymbolKind::Assert),
                     "assert!(_: bool, err: u64)",
                 );
-                item.insert_snippet("assert!($0)");
-                acc.add(item.build(ctx.db));
+                assert_item.insert_snippet("assert!($0)");
+                assert_item.lookup_by("assert");
+                acc.add(assert_item.build(ctx.db));
             }
             _ => (),
         }

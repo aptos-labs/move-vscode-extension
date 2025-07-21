@@ -1383,3 +1383,16 @@ module std::main {
             ]"#]],
     )
 }
+
+#[test]
+fn test_no_completion_of_assert_if_bool() {
+    check_no_completions(
+        // language=Move
+        r#"
+module std::main {
+    fun main() {
+        bool/*caret*/
+    }
+}"#,
+    )
+}
