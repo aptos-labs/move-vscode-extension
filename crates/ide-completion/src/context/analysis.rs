@@ -41,12 +41,25 @@ pub(crate) fn completion_analysis(
         return analysis.map(|analysis| AnalysisResult { analysis, expected });
     }
 
+    let fake_ident = fake_token.clone();
+    // phantom keyword
+    if let Some(fake_type_param) = fake_ident
+        .parent()
+        .and_then(|it| it.parent_of_type::<ast::TypeParam>())
+    {
+        if fake_type_param.phantom_token().is_none() {
+            return Some(AnalysisResult {
+                analysis: CompletionAnalysis::TypeParam,
+                expected,
+            });
+        }
+    }
+
     let ident = original_token.clone();
     let mut ident_parent = ident.parent().unwrap();
     if ident_parent.kind().is_error() {
         ident_parent = ident_parent.parent().unwrap();
     }
-
     let ident_in_parent = ident_parent.child_or_token_at_range(ident.text_range()).unwrap();
     let ident_prev_sibling = ident_in_parent
         .prev_sibling_or_token_no_trivia()

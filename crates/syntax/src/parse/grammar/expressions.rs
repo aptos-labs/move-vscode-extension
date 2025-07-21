@@ -118,18 +118,18 @@ pub(crate) fn struct_lit_field_list(p: &mut Parser) {
     p.iterate_to_EOF(T!['}'], |p| {
         let m = p.start();
         match p.current() {
-            IDENT => {
-                if p.nth_at(1, T![:]) {
-                    name_ref(p);
-                    p.expect(T![:]);
+            IDENT if p.nth_at(1, T![:]) => {
+                name_ref(p);
+                p.bump(T![:]);
+                if !expr(p) {
+                    p.error("expected expression");
                 }
+                m.complete(p, STRUCT_LIT_FIELD);
+            }
+            IDENT => {
                 expr(p);
                 m.complete(p, STRUCT_LIT_FIELD);
             }
-            // T!['{'] => {
-            //     error_block(p, "expected a field");
-            //     m.abandon(p);
-            // }
             _ => {
                 p.error_and_bump("expected identifier");
                 m.abandon(p);
