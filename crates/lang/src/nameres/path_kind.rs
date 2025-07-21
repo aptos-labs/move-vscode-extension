@@ -263,7 +263,14 @@ fn path_namespaces(
     match path_parent.kind() {
         // mod::foo::bar
         //      ^
-        PATH if qualifier.is_some() => enum_set!(Ns::MODULE | Ns::ENUM),
+        PATH if qualifier.is_some() => {
+            if is_completion {
+                // if completion, then we need to ignore the trailing ::
+                IMPORTABLE_NS | Ns::MODULE
+            } else {
+                enum_set!(Ns::MODULE | Ns::ENUM)
+            }
+        }
         // foo::bar
         //  ^
         PATH => {

@@ -90,7 +90,7 @@ fn analyze_ref(
     let reference_kind = match fake_ref {
         ast::ReferenceElement::Path(fake_path) => {
             // check for struct lit field
-            analyze_path(fake_path, original_file, original_offset)
+            analyze_path(fake_path, original_file)
         }
         ast::ReferenceElement::DotExpr(_) => {
             let original_receiver_expr = original_file
@@ -130,11 +130,7 @@ fn analyze_ref(
     reference_kind.map(|kind| CompletionAnalysis::Reference(kind))
 }
 
-fn analyze_path(
-    fake_path: &ast::Path,
-    original_file: &ast::SourceFile,
-    original_offset: TextSize,
-) -> Option<ReferenceKind> {
+fn analyze_path(fake_path: &ast::Path, original_file: &ast::SourceFile) -> Option<ReferenceKind> {
     // check for struct lit field
     if let Some(fake_path_expr) = fake_path.root_path().path_expr()
         && let Some(fake_struct_lit_field) =
@@ -147,11 +143,7 @@ fn analyze_path(
         return Some(ReferenceKind::StructLitField { original_struct_lit });
     }
 
-    let original_path = original_file.find_node_at_offset::<ast::Path>(original_offset);
-    Some(ReferenceKind::Path {
-        original_path,
-        fake_path: fake_path.clone(),
-    })
+    Some(ReferenceKind::Path { fake_path: fake_path.clone() })
 }
 
 fn expected_type_and_name<'db>(

@@ -29,12 +29,7 @@ pub(crate) fn add_reference_completions(
 ) -> Option<()> {
     let file_id = ctx.position.file_id;
     match reference_kind {
-        ReferenceKind::Path { original_path, fake_path } => add_path_completions(
-            completions,
-            ctx,
-            original_path.map(|it| it.in_file(file_id)),
-            fake_path,
-        ),
+        ReferenceKind::Path { fake_path } => add_path_completions(completions, ctx, fake_path),
         ReferenceKind::DotExpr { original_receiver_expr } => {
             add_method_or_field_completions(completions, ctx, original_receiver_expr.in_file(file_id))
         }

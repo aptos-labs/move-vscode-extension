@@ -282,6 +282,10 @@ impl ResolutionContext {
         // path_expr.is_some_and(|it| it.syntax().parent_is::<ast::CallExpr>())
     }
 
+    pub fn is_use_speck(&self) -> bool {
+        self.start_at.value.has_ancestor_strict::<ast::UseSpeck>()
+    }
+
     pub fn package_id(&self, db: &dyn SourceDatabase) -> PackageId {
         db.file_package_id(self.file_id())
     }
