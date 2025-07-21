@@ -22,3 +22,21 @@ pub(crate) fn render_struct_or_enum(
 
     item_builder
 }
+
+pub(crate) fn render_schema(
+    ctx: &CompletionContext<'_>,
+    item_name: String,
+    schema: InFile<ast::Schema>,
+) -> CompletionItemBuilder {
+    let mut item_builder = new_named_item(ctx, &item_name, schema.kind());
+
+    let has_type_params = !schema.ty_type_params().is_empty();
+    let snippet = if has_type_params {
+        format!("{item_name}<$0>")
+    } else {
+        format!("{item_name}$0")
+    };
+    item_builder.insert_snippet(snippet);
+
+    item_builder
+}

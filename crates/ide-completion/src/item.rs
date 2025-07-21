@@ -223,6 +223,7 @@ impl CompletionItemKind {
                 SymbolKind::GlobalVariableDecl => "gv",
                 SymbolKind::Vector => "vc",
                 SymbolKind::Assert => "as",
+                SymbolKind::Schema => "sc",
             },
             CompletionItemKind::Binding => "bn",
             CompletionItemKind::BuiltinType => "bt",

@@ -69,6 +69,7 @@ pub(crate) fn symbol_kind(symbol_kind: SymbolKind) -> lsp_types::SymbolKind {
         | SymbolKind::GlobalVariableDecl => lsp_types::SymbolKind::VARIABLE,
         SymbolKind::Vector => lsp_types::SymbolKind::FUNCTION,
         SymbolKind::Assert => lsp_types::SymbolKind::FUNCTION,
+        SymbolKind::Schema => lsp_types::SymbolKind::STRUCT,
     }
 }
 
@@ -108,6 +109,7 @@ pub(crate) fn completion_item_kind(
             SymbolKind::GlobalVariableDecl => lsp_types::CompletionItemKind::VARIABLE,
             SymbolKind::Vector => lsp_types::CompletionItemKind::FUNCTION,
             SymbolKind::Assert => lsp_types::CompletionItemKind::FUNCTION,
+            SymbolKind::Schema => lsp_types::CompletionItemKind::STRUCT,
         },
     }
 }
@@ -362,6 +364,7 @@ fn semantic_token_type(highlight: Highlight) -> lsp_types::SemanticTokenType {
             SymbolKind::GlobalVariableDecl => types::VARIABLE,
             SymbolKind::Vector => types::MACRO,
             SymbolKind::Assert => types::MACRO,
+            SymbolKind::Schema => types::STRUCT,
         },
         HlTag::AttributeBracket => types::ATTRIBUTE_BRACKET,
         HlTag::BoolLiteral => types::BOOLEAN,

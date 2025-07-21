@@ -46,7 +46,7 @@ pub enum SymbolKind {
     Assert,
     // SpecFunction,
     // SpecInlineFunction,
-    // Schema,
+    Schema,
     // ModuleSpec,
     // ItemSpec,
     GlobalVariableDecl,
