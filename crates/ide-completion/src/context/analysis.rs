@@ -10,9 +10,7 @@ use ide_db::active_parameter::ActiveParameterInfo;
 use ide_db::{RootDatabase, active_parameter};
 use lang::Semantics;
 use lang::types::ty::Ty;
-use syntax::SyntaxKind::{
-    FUN, MODULE, PHANTOM_KW, SOURCE_FILE, STRUCT_LIT, VALUE_ARG_LIST, VISIBILITY_MODIFIER,
-};
+use syntax::SyntaxKind::{FUN, MODULE, SOURCE_FILE, STRUCT_LIT, VALUE_ARG_LIST, VISIBILITY_MODIFIER};
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
@@ -43,25 +41,25 @@ pub(crate) fn completion_analysis(
         return analysis.map(|analysis| AnalysisResult { analysis, expected });
     }
 
-    let ident = original_token.clone();
-    let mut ident_parent = ident.parent().unwrap();
-    if ident_parent.kind().is_error() {
-        ident_parent = ident_parent.parent().unwrap();
-    }
-
+    let fake_ident = fake_token.clone();
     // phantom keyword
-    if let Some(type_param) = ident_parent.parent_of_type::<ast::TypeParam>()
-        && let Some(generic_element) = type_param.generic_element()
+    if let Some(fake_type_param) = fake_ident
+        .parent()
+        .and_then(|it| it.parent_of_type::<ast::TypeParam>())
     {
-        let prev_sibling = &ident_parent.prev_sibling_or_token_no_trivia();
-        if prev_sibling.as_ref().is_none_or(|it| it.kind() != PHANTOM_KW) {
+        if fake_type_param.phantom_token().is_none() {
             return Some(AnalysisResult {
-                analysis: CompletionAnalysis::TypeParam { generic_element },
+                analysis: CompletionAnalysis::TypeParam,
                 expected,
             });
         }
     }
 
+    let ident = original_token.clone();
+    let mut ident_parent = ident.parent().unwrap();
+    if ident_parent.kind().is_error() {
+        ident_parent = ident_parent.parent().unwrap();
+    }
     let ident_in_parent = ident_parent.child_or_token_at_range(ident.text_range()).unwrap();
     let ident_prev_sibling = ident_in_parent
         .prev_sibling_or_token_no_trivia()

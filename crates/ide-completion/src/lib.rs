@@ -38,7 +38,11 @@ pub fn completions(
             CompletionAnalysis::Reference(reference_kind) => {
                 reference::add_reference_completions(&completions, &ctx, reference_kind);
             }
-            CompletionAnalysis::TypeParam { generic_element } => {
+            CompletionAnalysis::TypeParam => {
+                let type_param_list = ctx
+                    .original_file()?
+                    .find_node_at_offset::<ast::TypeParamList>(position.offset)?;
+                let generic_element = type_param_list.generic_element()?;
                 if matches!(
                     generic_element,
                     ast::GenericElement::Struct(_) | ast::GenericElement::Enum(_)

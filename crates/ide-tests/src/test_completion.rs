@@ -1558,13 +1558,13 @@ fn test_phantom_keyword_completion() {
         // language=Move
         r#"
 module std::main {
-    struct Any<ph/*caret*/> { val: T }
+    struct Any</*caret*/> { val: T }
 }"#,
         expect![[r#"
-            module std::main {
-                struct Any<phantom /*caret*/> { val: T }
-            }
-        "#]],
+        module std::main {
+            struct Any<phantom /*caret*/> { val: T }
+        }
+    "#]],
     )
 }
 
