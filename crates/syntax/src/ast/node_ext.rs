@@ -5,6 +5,7 @@
 // Modifications have been made to the original code.
 
 mod abort_expr;
+mod acquires;
 mod address_ref;
 mod and_include_expr;
 mod any_call_expr;

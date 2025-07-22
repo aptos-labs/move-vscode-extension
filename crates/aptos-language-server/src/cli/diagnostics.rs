@@ -34,9 +34,13 @@ pub struct Diagnostics {
     #[clap(long, value_parser = ["error", "warn", "note"], value_delimiter = ',', num_args=1..)]
     pub kinds: Option<Vec<String>>,
 
-    /// Only show diagnostics of kinds (comma separated)
+    /// Codes for disabled diagnostics (comma separated)
     #[clap(long, value_delimiter = ',', num_args=1..)]
     pub disable: Option<Vec<String>>,
+
+    /// Disable all diagnostics, except for ones provided by this flag (comma separated)
+    #[clap(long, value_delimiter = ',', num_args=1..)]
+    pub enable_only: Option<Vec<String>>,
 
     #[clap(long)]
     pub verbose: bool,
@@ -99,8 +103,21 @@ impl Diagnostics {
         ws_root: AbsPathBuf,
         specific_fpath: Option<AbsPathBuf>,
     ) -> anyhow::Result<ExitCode> {
-        let disabled_codes = self.disable.clone().unwrap_or_default();
-        println!("disabled diagnostics: {:?}", disabled_codes);
+        let mut diagnostics_config = DiagnosticsConfig::test_sample();
+
+        let enable_only = self.enable_only.clone().unwrap_or_default();
+        if !enable_only.is_empty() {
+            println!("enabled diagnostics: {:?}", enable_only);
+            diagnostics_config.enable_only = enable_only.into_iter().collect();
+        } else {
+            let disabled_codes = self.disable.clone().unwrap_or_default();
+            println!("disabled diagnostics: {:?}", disabled_codes);
+            diagnostics_config.disabled = disabled_codes.into_iter().collect();
+        }
+
+        if self.fix {
+            diagnostics_config = diagnostics_config.for_assists();
+        }
 
         let all_packages = load_from_fs::load_aptos_packages(ws_manifests)
             .into_iter()
@@ -189,14 +206,14 @@ impl Diagnostics {
                         println!("{}", abs_file_path);
                     }
 
-                    let mut diagnostics_config = DiagnosticsConfig::test_sample();
-                    diagnostics_config.disabled = disabled_codes.clone().into_iter().collect();
-                    if self.fix || !metadata.resolve_deps {
-                        diagnostics_config = diagnostics_config.for_assists();
+                    let mut package_config = diagnostics_config.clone();
+                    if !metadata.resolve_deps {
+                        // disables most of the diagnostics
+                        package_config = package_config.for_assists();
                     }
 
                     let diagnostics =
-                        find_diagnostics_for_a_file(&db, file_id, &diag_kinds, &diagnostics_config);
+                        find_diagnostics_for_a_file(&db, file_id, &diag_kinds, &package_config);
 
                     let file_text = db.file_text(file_id).text(&db);
                     if !self.fix {
@@ -236,12 +253,8 @@ impl Diagnostics {
                                     break;
                                 }
                             }
-                            diagnostics_with_fixes = find_diagnostics_for_a_file(
-                                &db,
-                                file_id,
-                                &diag_kinds,
-                                &diagnostics_config,
-                            );
+                            diagnostics_with_fixes =
+                                find_diagnostics_for_a_file(&db, file_id, &diag_kinds, &package_config);
                         }
                     }
                 }
