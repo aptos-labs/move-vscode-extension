@@ -11,6 +11,7 @@ pub struct DiagnosticsConfig {
     /// Whether native diagnostics are enabled.
     pub enabled: bool,
     pub disabled: HashSet<String>,
+    pub enable_only: HashSet<String>,
     pub needs_type_annotation: bool,
     pub assists_only: bool,
 }
@@ -20,9 +21,17 @@ impl DiagnosticsConfig {
         Self {
             enabled: true,
             disabled: Default::default(),
+            enable_only: Default::default(),
             needs_type_annotation: true,
             assists_only: false,
         }
+    }
+
+    pub fn is_diagnostic_enabled(&self, code: &str) -> bool {
+        if !self.enable_only.is_empty() {
+            return self.enable_only.contains(code);
+        }
+        !self.disabled.contains(code)
     }
 
     pub fn for_assists(mut self) -> Self {

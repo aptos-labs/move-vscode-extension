@@ -44,7 +44,8 @@ pub fn syntax_diagnostics(
 ) -> Vec<Diagnostic> {
     let _p = tracing::info_span!("syntax_diagnostics").entered();
 
-    if config.disabled.contains("syntax-error") {
+    if !config.is_diagnostic_enabled("syntax_error") {
+        // if config.disabled.contains("syntax-error") {
         return Vec::new();
     }
 
@@ -151,14 +152,17 @@ pub fn semantic_diagnostics(
                     handlers::check_syntax::spec_fun_requires_return_type(&mut acc, &ctx, it.in_file(file_id));
                 },
                 ast::Fun(it) => {
-                    handlers::check_syntax::entry_fun_cannot_have_return_type(&mut acc, &ctx, it.in_file(file_id));
+                    let fun = it.in_file(file_id);
+                    handlers::check_syntax::entry_fun_cannot_have_return_type(&mut acc, &ctx, fun.clone());
+                    handlers::unused_acquires::unused_acquires_on_inline_function(&mut acc, &ctx, fun.clone());
                 },
                 _ => (),
             }
         }
     }
 
-    acc.retain(|d| !ctx.config.disabled.contains(d.code.as_str()));
+    acc.retain(|d| ctx.config.is_diagnostic_enabled(d.code.as_str()));
+    // acc.retain(|d| !ctx.config.disabled.contains(d.code.as_str()));
 
     acc
 }

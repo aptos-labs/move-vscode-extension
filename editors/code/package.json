@@ -255,6 +255,20 @@
             {
                 "title": "diagnostics",
                 "properties": {
+                    "move-on-aptos.diagnostics.enableOnly": {
+                        "markdownDescription": "Disable all diagnostic codes except for the ones specified. Ignored if empty.\nTo disable all diagnostics, use `move-on-aptos.diagnostics.enable` instead.",
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "uniqueItems": true
+                    }
+                }
+            },
+            {
+                "title": "diagnostics",
+                "properties": {
                     "move-on-aptos.diagnostics.needsTypeAnnotation": {
                         "markdownDescription": "Enable \"needs type annotation\" diagnostic, which is known to produce\na lot of false-positives.",
                         "default": false,

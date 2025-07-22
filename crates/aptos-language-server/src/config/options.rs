@@ -37,6 +37,9 @@ config_data! {
         diagnostics_disabled: HashSet<String> = HashSet::default(),
         /// Whether to show native aptos-language-server diagnostics.
         diagnostics_enable: bool                = true,
+        /// Disable all diagnostic codes except for the ones specified. Ignored if empty.
+        /// To disable all diagnostics, use `move-on-aptos.diagnostics.enable` instead.
+        diagnostics_enableOnly: HashSet<String> = HashSet::default(),
         /// Enable "needs type annotation" diagnostic, which is known to produce
         /// a lot of false-positives.
         diagnostics_needsTypeAnnotation: bool   = false,

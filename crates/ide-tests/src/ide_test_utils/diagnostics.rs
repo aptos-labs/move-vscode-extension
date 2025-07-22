@@ -21,7 +21,19 @@ pub fn check_diagnostics(expect: Expect) {
     let source = stdx::trim_indent(expect.data());
     let trimmed_source = remove_marks(&source, "//^");
 
-    let (_, _, diagnostics) = get_diagnostics(trimmed_source.as_str());
+    let (_, _, diagnostics) = get_diagnostics(trimmed_source.as_str(), DiagnosticsConfig::test_sample());
+
+    let actual = apply_diagnostics_to_file(&trimmed_source, &diagnostics);
+    expect.assert_eq(stdx::trim_indent(&actual).as_str());
+}
+
+pub fn check_diagnostics_with_config(config: DiagnosticsConfig, expect: Expect) {
+    init_tracing_for_test();
+
+    let source = stdx::trim_indent(expect.data());
+    let trimmed_source = remove_marks(&source, "//^");
+
+    let (_, _, diagnostics) = get_diagnostics(trimmed_source.as_str(), config);
 
     let actual = apply_diagnostics_to_file(&trimmed_source, &diagnostics);
     expect.assert_eq(stdx::trim_indent(&actual).as_str());
@@ -49,7 +61,7 @@ pub fn check_diagnostics_in_file(expect: ExpectFile, disabled_codes: HashSet<Str
     let source = stdx::trim_indent(&expect.data());
     let trimmed_source = remove_marks(&source, "//^");
 
-    let (_, _, diagnostics) = get_diagnostics(trimmed_source.as_str());
+    let (_, _, diagnostics) = get_diagnostics(trimmed_source.as_str(), DiagnosticsConfig::test_sample());
     let diagnostics = diagnostics
         .into_iter()
         .filter(|diag| !disabled_codes.contains(&diag.code.as_str().to_string()))
@@ -65,7 +77,8 @@ pub fn check_diagnostics_and_fix(before: Expect, after: Expect) {
     let before_source = stdx::trim_indent(before.data());
     let trimmed_before_source = remove_marks(&before_source, "//^");
 
-    let (_, _, mut diagnostics) = get_diagnostics(trimmed_before_source.as_str());
+    let (_, _, mut diagnostics) =
+        get_diagnostics(trimmed_before_source.as_str(), DiagnosticsConfig::test_sample());
 
     let diagnostic = diagnostics.pop().expect("no diagnostics found");
     assert_no_extra_diagnostics(&trimmed_before_source, diagnostics);
@@ -89,10 +102,9 @@ pub fn check_diagnostics_and_fix(before: Expect, after: Expect) {
     after.assert_eq(&stdx::trim_indent(&actual_after).as_str());
 }
 
-fn get_diagnostics(source: &str) -> (Analysis, FileId, Vec<Diagnostic>) {
+fn get_diagnostics(source: &str, config: DiagnosticsConfig) -> (Analysis, FileId, Vec<Diagnostic>) {
     let (analysis, file_id) = fixtures::from_single_file(source.to_string());
 
-    let config = DiagnosticsConfig::test_sample();
     let frange = analysis.full_file_range(file_id).unwrap();
     let diagnostics = analysis
         .semantic_diagnostics(&config, AssistResolveStrategy::All, frange)

@@ -16,6 +16,7 @@ pub(crate) mod missing_type_arguments;
 mod redundant_cast;
 mod type_checking;
 mod unresolved_reference;
+pub(crate) mod unused_acquires;
 pub(crate) mod unused_variables;
 
 pub(crate) use can_be_replaced_with_compound_expr::can_be_replaced_with_compound_expr;

@@ -223,6 +223,7 @@ impl Config {
         DiagnosticsConfig {
             enabled: *self.diagnostics_enable(),
             disabled: self.diagnostics_disabled().to_owned(),
+            enable_only: self.diagnostics_enableOnly().to_owned(),
             needs_type_annotation: self.diagnostics_needsTypeAnnotation().to_owned(),
             assists_only: false,
         }
