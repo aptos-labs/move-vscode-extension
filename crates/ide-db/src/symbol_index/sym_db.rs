@@ -130,11 +130,9 @@ impl SymbolIndex {
 pub struct FileSymbol {
     pub name: String,
     pub syntax_loc: SyntaxLoc,
-    // pub loc: DeclarationLocation,
     pub container_name: Option<String>,
     // /// Whether this symbol is a doc alias for the original symbol.
     // pub is_alias: bool,
-    // pub is_assoc: bool,
     // pub is_import: bool,
     // pub do_not_complete: Complete,
 }
