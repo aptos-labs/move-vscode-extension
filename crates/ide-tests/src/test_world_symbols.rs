@@ -36,6 +36,7 @@ module 0x1::main {
         // language=Move
         expect![[r#"
             module 0x1::main {
+                      //^^^^
                 struct SMain { val: u8 }
                      //^^^^^
                 enum Main { One, Two }
@@ -44,7 +45,7 @@ module 0x1::main {
                   //^^^^
                 }
             }
-    "#]],
+        "#]],
     );
     check_symbols(
         source,
@@ -93,12 +94,13 @@ module 0x1::main {
         // language=Move
         expect![[r#"
             module 0x1::main {
+                      //^^^^
                 struct SMain { val: u8 }
                 enum Main { One, Two }
                 fun main() {
                   //^^^^
                 }
             }
-    "#]],
+        "#]],
     );
 }

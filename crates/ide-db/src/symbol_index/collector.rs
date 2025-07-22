@@ -8,6 +8,7 @@ use crate::symbol_index::sym_db::FileSymbol;
 use base_db::SourceDatabase;
 use indexmap::IndexSet;
 use lang::loc::SyntaxLocFileExt;
+use lang::node_ext::ModuleLangExt;
 use syntax::ast;
 use syntax::files::InFile;
 
@@ -55,33 +56,38 @@ impl<'a> SymbolCollector<'a> {
 
     pub(crate) fn collect_module(&mut self, module: InFile<ast::Module>) -> Option<()> {
         let module_name = module.value.name()?.as_string();
-        let named_items = module.flat_map(|it| it.named_items());
-        for named_item in named_items {
+
+        let module_address_name = module.value.address().map(|it| it.identifier_text());
+        self.collect_named_item(module_address_name, module.clone());
+
+        let module_items = module.flat_map(|it| it.named_items());
+        for named_item in module_items {
             self.collect_named_item(Some(module_name.clone()), named_item);
         }
+
         Some(())
     }
 
     fn collect_named_item(
         &mut self,
         container_name: Option<String>,
-        named_item: InFile<ast::NamedElement>,
+        named_item: InFile<impl Into<ast::NamedElement>>,
     ) -> Option<()> {
         self.db.unwind_if_revision_cancelled();
+        let named_item = named_item.map(|it| it.into());
         let item_name = named_item.value.name()?.as_string();
         if let Some(struct_) = named_item.cast_into_ref::<ast::Struct>() {
             // collect fields
             for named_field in struct_.flat_map(|it| it.named_fields()) {
-                self.collect_named_item(Some(item_name.clone()), named_field.map_into());
+                self.collect_named_item(Some(item_name.clone()), named_field);
             }
         }
         if let Some(enum_) = named_item.cast_into_ref::<ast::Enum>() {
             // collect variants
-            // collect fields for variants
-            // let enum_name = enum_.value.name()?.as_string();
             for variant in enum_.flat_map(|it| it.variants()) {
                 self.collect_enum_variant(item_name.clone(), variant);
             }
+            // collect fields for variants
         }
         self.symbols.insert(FileSymbol {
             name: item_name,
@@ -94,10 +100,10 @@ impl<'a> SymbolCollector<'a> {
     fn collect_enum_variant(&mut self, enum_name: String, variant: InFile<ast::Variant>) -> Option<()> {
         let variant_name = variant.value.name()?.as_string();
 
-        self.collect_named_item(Some(enum_name), variant.clone().map_into());
+        self.collect_named_item(Some(enum_name), variant.clone());
 
         for named_field in variant.flat_map(|it| it.named_fields()) {
-            self.collect_named_item(Some(variant_name.clone()), named_field.map_into());
+            self.collect_named_item(Some(variant_name.clone()), named_field);
         }
         Some(())
     }
