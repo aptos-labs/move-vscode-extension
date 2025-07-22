@@ -19,14 +19,14 @@ fn test_unused_acquires_on_inline_fun() {
     // language=Move
     check_diagnostics_and_fix(
         expect![[r#"
-        module 0x1::m {
-            struct S has key { val: u8 }
-            inline fun main() acquires S {
-                            //^^^^^^^^^^ weak: Acquires on inline functions are not checked by the compiler and can be safely removed.
-                move_from<S>(@0x1);
+            module 0x1::m {
+                struct S has key { val: u8 }
+                inline fun main() acquires S {
+                                //^^^^^^^^^^ weak: Acquires declarations are not applicable to inline functions and should be removed
+                    move_from<S>(@0x1);
+                }
             }
-        }
-    "#]],
+        "#]],
         expect![[r#"
         module 0x1::m {
             struct S has key { val: u8 }

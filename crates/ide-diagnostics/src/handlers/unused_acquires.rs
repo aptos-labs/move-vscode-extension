@@ -25,7 +25,7 @@ pub(crate) fn unused_acquires_on_inline_function(
     acc.push(
         Diagnostic::new(
             DiagnosticCode::Lsp("unused-acquires", Severity::WeakWarning),
-            "Acquires on inline functions are not checked by the compiler and can be safely removed.",
+            "Acquires declarations are not applicable to inline functions and should be removed",
             diag_range,
         )
         // .with_unused(true)
