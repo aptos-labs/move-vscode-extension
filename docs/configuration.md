@@ -37,7 +37,7 @@ Some of those might be less useful than others for different coding styles, so t
 ```
 where values are diagnostic codes from the error messages, like `unused-variable` here:
 
-<img src="docs/images/diag_code.png" alt="diag_code.png" width="500"/>
+<img src="images/diag_code.png" alt="diag_code.png" width="500"/>
 
 ### Inlay hints
 
