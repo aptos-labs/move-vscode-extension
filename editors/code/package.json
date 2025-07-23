@@ -5,7 +5,7 @@
     "version": "0.1.0-dev",
     "private": true,
     "publisher": "aptoslabs",
-    "icon": "./icons/move_on_aptos.jpeg",
+    "icon": "./icons/aptos_move_logo.png",
     "releaseTag": null,
     "homepage": "https://github.com/aptos-labs/move-vscode-extension",
     "repository": {
