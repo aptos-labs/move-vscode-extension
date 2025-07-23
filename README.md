@@ -77,15 +77,18 @@ for more information.
   - Implement more errors from the Aptos Move compiler (like ability checking)
   - Implement lints from the `aptos move lint` with extension-provided quickfixes.
 
-* Working with use statements:
+* Working with imports:
   - Detect unused imports and remove them with "Organize Imports" VSCode feature. 
   - Show completion items not imported in the current module, create `use` statements for those automatically.
 
 * Integration with the `aptos-cli` commands: publishing modules, running tests and executing transactions. 
 
+* `Move.toml` support.
+
 * AI integration (via MCP server). 
 
 ## Contributing
+
 We welcome feedback, bug reports, and contributions from the community!
 
 If you run into a bug, usability issue, or have a feature request, please don’t hesitate to [open an issue](../../issues). This will help us improve the experience for everyone.
@@ -93,6 +96,7 @@ If you run into a bug, usability issue, or have a feature request, please don’
 That said, this project is still in its early stages, and many parts of it are evolving quickly. If you're planning to work on a larger change or feature, we encourage you to start a discussion or open an issue first. This helps ensure alignment and avoid unnecessary rework.
 
 ## Acknowledgements
+
 This project is inspired by [rust-analyzer](https://github.com/rust-lang/rust-analyzer).
 
 Portions of the code in this project are derived from rust-analyzer and are used under 
