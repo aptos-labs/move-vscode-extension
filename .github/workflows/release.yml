@@ -133,12 +133,20 @@ jobs:
 
       - run: ls -al ./dist
 
-      - name: Publish Release
+      - name: Publish Release to Github Nightly tag
         uses: ./.github/actions/github-release
         with:
           files: "dist/*"
           name: ${{ env.TAG }}
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: npm ci
+        working-directory: ./editors/code
+
+      - name: Publish Extension (Code Marketplace, nightly)
+        if: github.ref != 'refs/heads/release' && github.repository == 'aptos-labs/move-vscode-extension'
+        working-directory: ./editors/code
+        run: npx vsce publish --pat ${{ secrets.MARKETPLACE_TOKEN }} --packagePath ../../dist/move-on-aptos-*.vsix --pre-release
 
 
 
