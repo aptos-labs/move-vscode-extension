@@ -78,6 +78,7 @@ fn test_ident_pat_in_lambda_param() {
             fun for_each(v: vector<u8>, f: |u8| u8) {}
             fun main() {
                 for_each(vector[], |elem| elem);
+                                 //^^^^^^^^^^^ f
                                   //^^^^ u8
             }
         }
@@ -152,6 +153,7 @@ fn test_do_not_show_inlay_hint_for_underscored_params() {
             fun for_each(v: vector<u8>, f: |u8| u8) {}
             fun main() {
                 for_each(vector[], |_elem| 1);
+                                 //^^^^^^^^^ f
             }
         }
     "#]]);
