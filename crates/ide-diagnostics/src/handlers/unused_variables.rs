@@ -26,6 +26,15 @@ pub(crate) fn check_unused_ident_pat<'db>(
         return None;
     }
 
+    // if it's resolved to enum variant, then it can't be unused
+    if ctx
+        .sema
+        .resolve_to_element::<ast::Variant>(ident_pat.clone())
+        .is_some()
+    {
+        return None;
+    }
+
     let ident_owner = ident_pat.value.ident_owner()?;
     if let ast::IdentPatOwner::Param(fun_param) = &ident_owner {
         let any_fun = fun_param.any_fun()?;
