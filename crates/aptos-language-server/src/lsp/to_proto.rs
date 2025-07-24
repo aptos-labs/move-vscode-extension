@@ -5,7 +5,7 @@
 // Modifications have been made to the original code.
 
 use crate::global_state::GlobalStateSnapshot;
-use crate::line_index::{LineEndings, LineIndex, PositionEncoding};
+use crate::line_index::{LineIndex, PositionEncoding};
 use crate::lsp::utils::invalid_params_error;
 use crate::lsp::{LspError, semantic_tokens};
 use crate::{Config, lsp_ext};
@@ -20,6 +20,7 @@ use ide::syntax_highlighting::tags::{Highlight, HlOperator, HlPunct, HlTag};
 use ide::{Cancellable, HlRange, NavigationTarget, SignatureHelp};
 use ide_completion::item::{CompletionItem, CompletionItemKind, CompletionRelevance};
 use ide_db::assists::{Assist, AssistKind};
+use ide_db::line_endings::LineEndings;
 use ide_db::rename::RenameError;
 use ide_db::source_change::{FileSystemEdit, SourceChange};
 use ide_db::text_edit::{TextChange, TextEdit};

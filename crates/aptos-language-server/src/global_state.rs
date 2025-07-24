@@ -7,7 +7,7 @@
 use crate::config::Config;
 use crate::config::validation::ConfigErrors;
 use crate::diagnostics::DiagnosticCollection;
-use crate::line_index::{LineEndings, LineIndex};
+use crate::line_index::LineIndex;
 use crate::lsp::from_proto;
 use crate::lsp::to_proto::url_from_abs_path;
 use crate::lsp_ext;
@@ -19,6 +19,7 @@ use crate::task_pool::TaskPool;
 use camino::Utf8PathBuf;
 use crossbeam_channel::{Receiver, Sender, unbounded};
 use ide::{Analysis, AnalysisHost, Cancellable};
+use ide_db::line_endings::LineEndings;
 use lang::builtins_file;
 use lsp_types::Url;
 use lsp_types::notification::Notification;

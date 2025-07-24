@@ -7,9 +7,10 @@
 //! Utilities for LSP-related boilerplate code.
 
 use crate::global_state::GlobalState;
-use crate::line_index::{LineEndings, LineIndex, PositionEncoding};
+use crate::line_index::{LineIndex, PositionEncoding};
 use crate::lsp::{LspError, from_proto};
 use crate::lsp_ext;
+use ide_db::line_endings::LineEndings;
 use lsp_server::Notification;
 use lsp_types::request::Request;
 use std::mem;
