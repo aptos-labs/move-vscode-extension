@@ -42,6 +42,10 @@ impl PackageRoot {
         self.kind == PackageKind::Library
     }
 
+    pub fn is_builtin(&self) -> bool {
+        self.manifest_file_id == None
+    }
+
     pub fn root_dir(&self, vfs: &Vfs) -> Option<AbsPathBuf> {
         let manifest_file_id = self.manifest_file_id?;
         if !vfs.exists(manifest_file_id) {
