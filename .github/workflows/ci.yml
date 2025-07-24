@@ -76,6 +76,12 @@ jobs:
           version: "7.6.1"
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Cache ~/.move directory
+        uses: actions/cache@v4
+        with:
+          path: ~/.move
+          key: ${{ runner.os }}-dot-move
+
       - name: Fetch liquidswap dependencies
         working-directory: ./liquidswap
         run: aptos move compile --fetch-deps-only
