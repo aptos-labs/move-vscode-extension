@@ -200,3 +200,19 @@ fn test_unused_variable_in_match_with_shorthand() {
         }
     "#]]);
 }
+
+#[test]
+fn test_no_unused_variable_for_enum_variant_no_fields() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            enum Num { One }
+
+            fun main(s: Num) {
+                match (s) {
+                    One => true
+                };
+            }
+        }
+    "#]]);
+}
