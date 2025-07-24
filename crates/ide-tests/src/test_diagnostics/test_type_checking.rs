@@ -2474,3 +2474,36 @@ fn test_no_error_if_expr_return_value_is_not_consumed() {
         }
     "#]])
 }
+
+#[test]
+fn test_type_error_for_const_initializer() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            const MY_CONST: u8 = true;
+                               //^^^^ err: Incompatible type 'bool', expected 'u8'
+            const MY_CONST_2: u8 = 1u16;
+                                 //^^^^ err: Incompatible type 'u16', expected 'u8'
+            const MY_CONST_3: u8 = 1;
+            const MY_CONST_4: u8 = 1 + 1;
+        }
+    "#]])
+}
+
+#[test]
+fn test_type_error_for_abort_code() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            #[test(abort_code = 1)]
+            fun test_main() {
+
+            }
+            #[test(abort_code = true)]
+                              //^^^^ err: Incompatible type 'bool', expected 'integer'
+            fun test_main2() {
+
+            }
+        }
+    "#]])
+}

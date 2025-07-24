@@ -146,7 +146,8 @@ impl<'db> TyLowering<'db> {
         path_ty
     }
 
-    pub fn lower_type_owner(&self, type_owner: InFile<ast::TypeOwner>) -> Option<Ty> {
+    pub fn lower_type_owner(&self, type_owner: InFile<impl Into<ast::TypeOwner>>) -> Option<Ty> {
+        let type_owner = type_owner.map(|it| it.into());
         type_owner
             .and_then(|it| it.type_())
             .map(|type_| self.lower_type(type_))

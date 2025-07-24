@@ -43,10 +43,11 @@ SOURCE_FILE@0..84
                         IDENT@64..75 "MyInnerType"
               R_ANGLE@75..76 ">"
       WHITESPACE@76..77 " "
-      EQ@77..78 "="
-      WHITESPACE@78..79 " "
-      LITERAL@79..80
-        INT_NUMBER@79..80 "1"
+      INITIALIZER@77..80
+        EQ@77..78 "="
+        WHITESPACE@78..79 " "
+        LITERAL@79..80
+          INT_NUMBER@79..80 "1"
       SEMICOLON@80..81 ";"
     WHITESPACE@81..82 "\n"
     R_CURLY@82..83 "}"

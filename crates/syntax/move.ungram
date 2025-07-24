@@ -69,7 +69,7 @@ ReferenceElement =
     | Label
 
 InferenceCtxOwner =
-    Fun | SpecFun | SpecInlineFun | ItemSpec | Schema
+    Fun | SpecFun | SpecInlineFun | ItemSpec | Schema | Initializer
 
 IdentPatOwner =
     LetStmt | Param | LambdaParam | SchemaField | QuantBinding | ItemSpecParam | ForCondition | MatchArm
@@ -126,7 +126,7 @@ NamedFieldList =
     '{' fields:(NamedField (',' NamedField)* ','?)? '}'
 
 TypeOwner =
-    NamedField | TupleField | SchemaField | GlobalVariableDecl
+    NamedField | TupleField | SchemaField | GlobalVariableDecl | Const
 
 AnyField =
     NamedField | TupleField
@@ -141,7 +141,7 @@ TupleField =
     Attr* Type
 
 Const =
-    Attr* 'const' Name ':' Type '=' body:Expr ';'
+    Attr* 'const' Name ':' Type Initializer ';'
 
 Fun =
     Attr* VisibilityModifier?
@@ -459,10 +459,18 @@ TypeArg =
     Type
 
 Attr =
-  '#' '!'? '[' AttrItem ']'
+  '#' '[' attr_items:(AttrItem (',' AttrItem)* ','?)? ']'
 
 AttrItem =
-    Path '=' Expr
+    Path (Initializer | AttrItemList)
+
+AttrItemList =
+  '(' attr_items:(AttrItem (',' AttrItem)* ','?)? ')'
+
+InitializerOwner =
+    AttrItem | Const
+
+Initializer = '=' Expr
 
 NameLike =
     Name | NameRef

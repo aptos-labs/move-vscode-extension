@@ -23,10 +23,11 @@ SOURCE_FILE@0..155
             NAME_REF@36..38
               IDENT@36..38 "u8"
       WHITESPACE@38..39 " "
-      EQ@39..40 "="
-      WHITESPACE@40..41 " "
-      LITERAL@41..42
-        INT_NUMBER@41..42 "1"
+      INITIALIZER@39..42
+        EQ@39..40 "="
+        WHITESPACE@40..41 " "
+        LITERAL@41..42
+          INT_NUMBER@41..42 "1"
       SEMICOLON@42..43 ";"
     WHITESPACE@43..48 "\n    "
     CONST@48..83
@@ -51,18 +52,19 @@ SOURCE_FILE@0..155
                         IDENT@64..66 "u8"
               R_ANGLE@66..67 ">"
       WHITESPACE@67..68 " "
-      EQ@68..69 "="
-      WHITESPACE@69..70 " "
-      VECTOR_LIT_EXPR@70..82
-        IDENT@70..76 "vector"
-        L_BRACK@76..77 "["
-        LITERAL@77..78
-          INT_NUMBER@77..78 "1"
-        COMMA@78..79 ","
-        WHITESPACE@79..80 " "
-        LITERAL@80..81
-          INT_NUMBER@80..81 "2"
-        R_BRACK@81..82 "]"
+      INITIALIZER@68..82
+        EQ@68..69 "="
+        WHITESPACE@69..70 " "
+        VECTOR_LIT_EXPR@70..82
+          IDENT@70..76 "vector"
+          L_BRACK@76..77 "["
+          LITERAL@77..78
+            INT_NUMBER@77..78 "1"
+          COMMA@78..79 ","
+          WHITESPACE@79..80 " "
+          LITERAL@80..81
+            INT_NUMBER@80..81 "2"
+          R_BRACK@81..82 "]"
       SEMICOLON@82..83 ";"
     WHITESPACE@83..88 "\n    "
     CONST@88..117
@@ -87,10 +89,11 @@ SOURCE_FILE@0..155
                         IDENT@104..106 "u8"
               R_ANGLE@106..107 ">"
       WHITESPACE@107..108 " "
-      EQ@108..109 "="
-      WHITESPACE@109..110 " "
-      LITERAL@110..116
-        BYTE_STRING@110..116 "b\"123\""
+      INITIALIZER@108..116
+        EQ@108..109 "="
+        WHITESPACE@109..110 " "
+        LITERAL@110..116
+          BYTE_STRING@110..116 "b\"123\""
       SEMICOLON@116..117 ";"
     WHITESPACE@117..122 "\n    "
     CONST@122..152
@@ -115,10 +118,11 @@ SOURCE_FILE@0..155
                         IDENT@138..140 "u8"
               R_ANGLE@140..141 ">"
       WHITESPACE@141..142 " "
-      EQ@142..143 "="
-      WHITESPACE@143..144 " "
-      LITERAL@144..151
-        HEX_STRING@144..151 "x\"ff11\""
+      INITIALIZER@142..151
+        EQ@142..143 "="
+        WHITESPACE@143..144 " "
+        LITERAL@144..151
+          HEX_STRING@144..151 "x\"ff11\""
       SEMICOLON@151..152 ";"
     WHITESPACE@152..153 "\n"
     R_CURLY@153..154 "}"

@@ -67,7 +67,7 @@ pub trait HasAttrs: AstNode {
     }
 
     fn atom_attrs(&self) -> impl Iterator<Item = String> {
-        self.attrs().filter_map(|x| x.as_simple_atom())
+        self.attrs().filter_map(|x| x.single_attr_item_name())
     }
 
     fn atom_attrs_set(&self) -> HashSet<String> {

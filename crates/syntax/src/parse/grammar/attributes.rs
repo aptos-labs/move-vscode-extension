@@ -5,6 +5,7 @@
 // Modifications have been made to the original code.
 
 use crate::SyntaxKind::*;
+use crate::parse::grammar::items::initializer_expr;
 use crate::parse::grammar::paths::{PATH_FIRST, PathMode};
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{expressions, paths};
@@ -15,20 +16,16 @@ use crate::{SyntaxKind, T};
 pub(super) fn outer_attrs(p: &mut Parser) -> Vec<CompletedMarker> {
     let mut attrs = vec![];
     while p.at(T![#]) {
-        attrs.push(attr(p, false));
+        attrs.push(attr(p));
     }
     attrs
 }
 
-fn attr(p: &mut Parser, inner: bool) -> CompletedMarker {
+fn attr(p: &mut Parser) -> CompletedMarker {
     assert!(p.at(T![#]));
 
     let attr = p.start();
     p.bump(T![#]);
-
-    if inner {
-        p.bump(T![!]);
-    }
 
     if p.at(T!['[']) {
         attr_item_list(p, T!['['], T![']']);
@@ -40,21 +37,31 @@ fn attr(p: &mut Parser, inner: bool) -> CompletedMarker {
 }
 
 pub(super) fn attr_item(p: &mut Parser) -> bool {
-    let meta = p.start();
+    let m = p.start();
     paths::path(p, None);
 
     match p.current() {
         T![=] => {
-            p.bump(T![=]);
-            if !expressions::expr(p) {
-                p.error("expected expression");
-            }
+            initializer_expr(p);
+            // p.bump(T![=]);
+            // let m = p.start();
+            // let is_expr = expressions::expr(p);
+            // if !is_expr {
+            //     p.error("expected expression");
+            //     m.abandon(p);
+            // } else {
+            //     m.complete(p, INITIALIZER);
+            // }
         }
-        T!['('] => attr_item_list(p, T!['('], T![')']),
-        _ => {}
+        T!['('] => {
+            let m = p.start();
+            attr_item_list(p, T!['('], T![')']);
+            m.complete(p, ATTR_ITEM_LIST);
+        }
+        _ => (),
     }
 
-    meta.complete(p, ATTR_ITEM);
+    m.complete(p, ATTR_ITEM);
     true
 }
 
