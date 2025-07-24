@@ -104,7 +104,7 @@ fn walk_and_discover_manifests(ws_root: &AbsPathBuf) -> Vec<DiscoveredManifest> 
     {
         let path = entry.path();
         let resolve_deps = aptos_core_dirs
-            .clone()
+            .as_ref()
             .is_none_or(|dirs| dirs.iter().any(|dir| path.starts_with(dir)));
         if let Some(move_toml_file) = find_move_toml(path) {
             manifests.push(DiscoveredManifest { move_toml_file, resolve_deps });

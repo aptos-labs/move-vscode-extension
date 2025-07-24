@@ -129,10 +129,16 @@ impl Diagnostics {
         let mut visited_files: HashSet<FileId> = HashSet::default();
 
         let mut local_package_roots = vec![];
+        let canonical_ws_root = AbsPathBuf::assert_utf8(fs::canonicalize(ws_root)?);
         for package_id in db.all_package_ids().data(&db) {
             let package_root = db.package_root(package_id).data(&db);
+            if package_root.is_builtin() {
+                continue;
+            }
             let root_dir = package_root.root_dir(&vfs).clone();
-            if root_dir.is_some_and(|it| it.starts_with(&ws_root)) && !package_root.is_library() {
+            if root_dir.is_some_and(|it| it.starts_with(&canonical_ws_root))
+                && !package_root.is_library()
+            {
                 local_package_roots.push(package_root);
             }
         }
