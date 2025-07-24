@@ -32,10 +32,11 @@ SOURCE_FILE@0..62
                         IDENT@52..53 "_"
               R_ANGLE@53..54 ">"
       WHITESPACE@54..55 " "
-      EQ@55..56 "="
-      WHITESPACE@56..57 " "
-      LITERAL@57..58
-        INT_NUMBER@57..58 "1"
+      INITIALIZER@55..58
+        EQ@55..56 "="
+        WHITESPACE@56..57 " "
+        LITERAL@57..58
+          INT_NUMBER@57..58 "1"
       SEMICOLON@58..59 ";"
     WHITESPACE@59..60 "\n"
     R_CURLY@60..61 "}"

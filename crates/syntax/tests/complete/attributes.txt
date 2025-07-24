@@ -47,23 +47,24 @@ SOURCE_FILE@0..624
               NAME_REF@67..83
                 IDENT@67..83 "expected_failure"
           WHITESPACE@83..84 " "
-          EQ@84..85 "="
-          WHITESPACE@85..86 " "
-          PATH_EXPR@86..116
-            PATH@86..116
-              PATH@86..100
-                PATH@86..89
-                  PATH_SEGMENT@86..89
-                    NAME_REF@86..89
-                      IDENT@86..89 "std"
-                COLON_COLON@89..91 "::"
-                PATH_SEGMENT@91..100
-                  NAME_REF@91..100
-                    IDENT@91..100 "type_name"
-              COLON_COLON@100..102 "::"
-              PATH_SEGMENT@102..116
-                NAME_REF@102..116
-                  IDENT@102..116 "ENonModuleType"
+          INITIALIZER@84..116
+            EQ@84..85 "="
+            WHITESPACE@85..86 " "
+            PATH_EXPR@86..116
+              PATH@86..116
+                PATH@86..100
+                  PATH@86..89
+                    PATH_SEGMENT@86..89
+                      NAME_REF@86..89
+                        IDENT@86..89 "std"
+                  COLON_COLON@89..91 "::"
+                  PATH_SEGMENT@91..100
+                    NAME_REF@91..100
+                      IDENT@91..100 "type_name"
+                COLON_COLON@100..102 "::"
+                PATH_SEGMENT@102..116
+                  NAME_REF@102..116
+                    IDENT@102..116 "ENonModuleType"
         R_BRACK@116..117 "]"
       WHITESPACE@117..122 "\n    "
       ATTR@122..137
@@ -91,51 +92,55 @@ SOURCE_FILE@0..624
             PATH_SEGMENT@144..148
               NAME_REF@144..148
                 IDENT@144..148 "test"
-          L_PAREN@148..149 "("
-          ATTR_ITEM@149..157
-            PATH@149..150
-              PATH_SEGMENT@149..150
-                NAME_REF@149..150
-                  IDENT@149..150 "a"
-            WHITESPACE@150..151 " "
-            EQ@151..152 "="
-            WHITESPACE@152..153 " "
-            LITERAL@153..157
-              ADDRESS_LIT@153..157
-                AT@153..154 "@"
-                VALUE_ADDRESS@154..157
-                  INT_NUMBER@154..157 "0x1"
-          COMMA@157..158 ","
-          WHITESPACE@158..159 " "
-          ATTR_ITEM@159..167
-            PATH@159..160
-              PATH_SEGMENT@159..160
-                NAME_REF@159..160
-                  IDENT@159..160 "b"
-            WHITESPACE@160..161 " "
-            EQ@161..162 "="
-            WHITESPACE@162..163 " "
-            LITERAL@163..167
-              ADDRESS_LIT@163..167
-                AT@163..164 "@"
-                VALUE_ADDRESS@164..167
-                  INT_NUMBER@164..167 "0x2"
-          COMMA@167..168 ","
-          WHITESPACE@168..169 " "
-          ATTR_ITEM@169..177
-            PATH@169..170
-              PATH_SEGMENT@169..170
-                NAME_REF@169..170
-                  IDENT@169..170 "c"
-            WHITESPACE@170..171 " "
-            EQ@171..172 "="
-            WHITESPACE@172..173 " "
-            LITERAL@173..177
-              ADDRESS_LIT@173..177
-                AT@173..174 "@"
-                NAMED_ADDRESS@174..177
-                  IDENT@174..177 "Std"
-          R_PAREN@177..178 ")"
+          ATTR_ITEM_LIST@148..178
+            L_PAREN@148..149 "("
+            ATTR_ITEM@149..157
+              PATH@149..150
+                PATH_SEGMENT@149..150
+                  NAME_REF@149..150
+                    IDENT@149..150 "a"
+              WHITESPACE@150..151 " "
+              INITIALIZER@151..157
+                EQ@151..152 "="
+                WHITESPACE@152..153 " "
+                LITERAL@153..157
+                  ADDRESS_LIT@153..157
+                    AT@153..154 "@"
+                    VALUE_ADDRESS@154..157
+                      INT_NUMBER@154..157 "0x1"
+            COMMA@157..158 ","
+            WHITESPACE@158..159 " "
+            ATTR_ITEM@159..167
+              PATH@159..160
+                PATH_SEGMENT@159..160
+                  NAME_REF@159..160
+                    IDENT@159..160 "b"
+              WHITESPACE@160..161 " "
+              INITIALIZER@161..167
+                EQ@161..162 "="
+                WHITESPACE@162..163 " "
+                LITERAL@163..167
+                  ADDRESS_LIT@163..167
+                    AT@163..164 "@"
+                    VALUE_ADDRESS@164..167
+                      INT_NUMBER@164..167 "0x2"
+            COMMA@167..168 ","
+            WHITESPACE@168..169 " "
+            ATTR_ITEM@169..177
+              PATH@169..170
+                PATH_SEGMENT@169..170
+                  NAME_REF@169..170
+                    IDENT@169..170 "c"
+              WHITESPACE@170..171 " "
+              INITIALIZER@171..177
+                EQ@171..172 "="
+                WHITESPACE@172..173 " "
+                LITERAL@173..177
+                  ADDRESS_LIT@173..177
+                    AT@173..174 "@"
+                    NAMED_ADDRESS@174..177
+                      IDENT@174..177 "Std"
+            R_PAREN@177..178 ")"
         R_BRACK@178..179 "]"
       WHITESPACE@179..184 "\n    "
       ATTR@184..193
@@ -146,8 +151,9 @@ SOURCE_FILE@0..624
             PATH_SEGMENT@186..190
               NAME_REF@186..190
                 IDENT@186..190 "test"
-          L_PAREN@190..191 "("
-          R_PAREN@191..192 ")"
+          ATTR_ITEM_LIST@190..192
+            L_PAREN@190..191 "("
+            R_PAREN@191..192 ")"
         R_BRACK@192..193 "]"
       WHITESPACE@193..198 "\n    "
       ATTR@198..245
@@ -158,20 +164,21 @@ SOURCE_FILE@0..624
             PATH_SEGMENT@200..204
               NAME_REF@200..204
                 IDENT@200..204 "show"
-          L_PAREN@204..205 "("
-          ATTR_ITEM@205..220
-            PATH@205..220
-              PATH_SEGMENT@205..220
-                NAME_REF@205..220
-                  IDENT@205..220 "book_orders_sdk"
-          COMMA@220..221 ","
-          WHITESPACE@221..222 " "
-          ATTR_ITEM@222..243
-            PATH@222..243
-              PATH_SEGMENT@222..243
-                NAME_REF@222..243
-                  IDENT@222..243 "book_price_levels_sdk"
-          R_PAREN@243..244 ")"
+          ATTR_ITEM_LIST@204..244
+            L_PAREN@204..205 "("
+            ATTR_ITEM@205..220
+              PATH@205..220
+                PATH_SEGMENT@205..220
+                  NAME_REF@205..220
+                    IDENT@205..220 "book_orders_sdk"
+            COMMA@220..221 ","
+            WHITESPACE@221..222 " "
+            ATTR_ITEM@222..243
+              PATH@222..243
+                PATH_SEGMENT@222..243
+                  NAME_REF@222..243
+                    IDENT@222..243 "book_price_levels_sdk"
+            R_PAREN@243..244 ")"
         R_BRACK@244..245 "]"
       WHITESPACE@245..250 "\n    "
       ATTR@250..351
@@ -182,50 +189,53 @@ SOURCE_FILE@0..624
             PATH_SEGMENT@252..268
               NAME_REF@252..268
                 IDENT@252..268 "expected_failure"
-          L_PAREN@268..269 "("
-          ATTR_ITEM@269..319
-            PATH@269..279
-              PATH_SEGMENT@269..279
-                NAME_REF@269..279
-                  IDENT@269..279 "abort_code"
-            WHITESPACE@279..280 " "
-            EQ@280..281 "="
-            WHITESPACE@281..282 " "
-            PATH_EXPR@282..319
-              PATH@282..319
-                PATH@282..308
-                  PATH@282..292
-                    PATH_SEGMENT@282..292
-                      NAME_REF@282..292
-                        IDENT@282..292 "liquidswap"
-                  COLON_COLON@292..294 "::"
-                  PATH_SEGMENT@294..308
-                    NAME_REF@294..308
-                      IDENT@294..308 "liquidity_pool"
-                COLON_COLON@308..310 "::"
-                PATH_SEGMENT@310..319
-                  NAME_REF@310..319
-                    IDENT@310..319 "ERR_ADMIN"
-          COMMA@319..320 ","
-          WHITESPACE@320..321 " "
-          ATTR_ITEM@321..349
-            PATH@321..329
-              PATH_SEGMENT@321..329
-                NAME_REF@321..329
-                  IDENT@321..329 "location"
-            EQ@329..330 "="
-            PATH_EXPR@330..349
-              PATH@330..349
-                PATH@330..333
-                  PATH_SEGMENT@330..333
-                    PATH_ADDRESS@330..333
-                      VALUE_ADDRESS@330..333
-                        INT_NUMBER@330..333 "0x1"
-                COLON_COLON@333..335 "::"
-                PATH_SEGMENT@335..349
-                  NAME_REF@335..349
-                    IDENT@335..349 "liquidity_pool"
-          R_PAREN@349..350 ")"
+          ATTR_ITEM_LIST@268..350
+            L_PAREN@268..269 "("
+            ATTR_ITEM@269..319
+              PATH@269..279
+                PATH_SEGMENT@269..279
+                  NAME_REF@269..279
+                    IDENT@269..279 "abort_code"
+              WHITESPACE@279..280 " "
+              INITIALIZER@280..319
+                EQ@280..281 "="
+                WHITESPACE@281..282 " "
+                PATH_EXPR@282..319
+                  PATH@282..319
+                    PATH@282..308
+                      PATH@282..292
+                        PATH_SEGMENT@282..292
+                          NAME_REF@282..292
+                            IDENT@282..292 "liquidswap"
+                      COLON_COLON@292..294 "::"
+                      PATH_SEGMENT@294..308
+                        NAME_REF@294..308
+                          IDENT@294..308 "liquidity_pool"
+                    COLON_COLON@308..310 "::"
+                    PATH_SEGMENT@310..319
+                      NAME_REF@310..319
+                        IDENT@310..319 "ERR_ADMIN"
+            COMMA@319..320 ","
+            WHITESPACE@320..321 " "
+            ATTR_ITEM@321..349
+              PATH@321..329
+                PATH_SEGMENT@321..329
+                  NAME_REF@321..329
+                    IDENT@321..329 "location"
+              INITIALIZER@329..349
+                EQ@329..330 "="
+                PATH_EXPR@330..349
+                  PATH@330..349
+                    PATH@330..333
+                      PATH_SEGMENT@330..333
+                        PATH_ADDRESS@330..333
+                          VALUE_ADDRESS@330..333
+                            INT_NUMBER@330..333 "0x1"
+                    COLON_COLON@333..335 "::"
+                    PATH_SEGMENT@335..349
+                      NAME_REF@335..349
+                        IDENT@335..349 "liquidity_pool"
+            R_PAREN@349..350 ")"
         R_BRACK@350..351 "]"
       WHITESPACE@351..356 "\n    "
       ATTR@356..385
@@ -236,20 +246,22 @@ SOURCE_FILE@0..624
             PATH_SEGMENT@358..363
               NAME_REF@358..363
                 IDENT@358..363 "allow"
-          L_PAREN@363..364 "("
-          ATTR_ITEM@364..383
-            PATH@364..368
-              PATH_SEGMENT@364..368
-                NAME_REF@364..368
-                  IDENT@364..368 "lint"
-            L_PAREN@368..369 "("
-            ATTR_ITEM@369..382
-              PATH@369..382
-                PATH_SEGMENT@369..382
-                  NAME_REF@369..382
-                    IDENT@369..382 "self_transfer"
-            R_PAREN@382..383 ")"
-          R_PAREN@383..384 ")"
+          ATTR_ITEM_LIST@363..384
+            L_PAREN@363..364 "("
+            ATTR_ITEM@364..383
+              PATH@364..368
+                PATH_SEGMENT@364..368
+                  NAME_REF@364..368
+                    IDENT@364..368 "lint"
+              ATTR_ITEM_LIST@368..383
+                L_PAREN@368..369 "("
+                ATTR_ITEM@369..382
+                  PATH@369..382
+                    PATH_SEGMENT@369..382
+                      NAME_REF@369..382
+                        IDENT@369..382 "self_transfer"
+                R_PAREN@382..383 ")"
+            R_PAREN@383..384 ")"
         R_BRACK@384..385 "]"
       WHITESPACE@385..390 "\n    "
       ATTR@390..566
@@ -260,74 +272,78 @@ SOURCE_FILE@0..624
             PATH_SEGMENT@392..408
               NAME_REF@392..408
                 IDENT@392..408 "expected_failure"
-          L_PAREN@408..409 "("
-          WHITESPACE@409..418 "\n        "
-          ATTR_ITEM@418..456
-            PATH@418..428
-              PATH_SEGMENT@418..428
-                NAME_REF@418..428
-                  IDENT@418..428 "abort_code"
-            WHITESPACE@428..429 " "
-            EQ@429..430 "="
-            WHITESPACE@430..431 " "
-            PATH_EXPR@431..456
-              PATH@431..456
-                PATH@431..445
-                  PATH_SEGMENT@431..445
-                    NAME_REF@431..445
-                      IDENT@431..445 "liquidity_pool"
-                COLON_COLON@445..447 "::"
-                PATH_SEGMENT@447..456
-                  NAME_REF@447..456
-                    IDENT@447..456 "ERR_ADMIN"
-          COMMA@456..457 ","
-          WHITESPACE@457..466 "\n        "
-          ATTR_ITEM@466..501
-            PATH@466..474
-              PATH_SEGMENT@466..474
-                NAME_REF@466..474
-                  IDENT@466..474 "location"
-            WHITESPACE@474..475 " "
-            EQ@475..476 "="
-            WHITESPACE@476..477 " "
-            PATH_EXPR@477..501
-              PATH@477..501
-                PATH@477..492
-                  PATH_SEGMENT@477..492
-                    NAME_REF@477..492
-                      IDENT@477..492 "aptos_framework"
-                COLON_COLON@492..494 "::"
-                PATH_SEGMENT@494..501
-                  NAME_REF@494..501
-                    IDENT@494..501 "ed25519"
-          COMMA@501..502 ","
-          WHITESPACE@502..511 "\n        "
-          ATTR_ITEM@511..558
-            PATH@511..519
-              PATH_SEGMENT@511..519
-                NAME_REF@511..519
-                  IDENT@511..519 "location"
-            WHITESPACE@519..520 " "
-            EQ@520..521 "="
-            WHITESPACE@521..522 " "
-            PATH_EXPR@522..558
-              PATH@522..558
-                PATH@522..546
-                  PATH@522..537
-                    PATH_SEGMENT@522..537
-                      NAME_REF@522..537
-                        IDENT@522..537 "aptos_framework"
-                  COLON_COLON@537..539 "::"
-                  PATH_SEGMENT@539..546
-                    NAME_REF@539..546
-                      IDENT@539..546 "ed25519"
-                COLON_COLON@546..548 "::"
-                PATH_SEGMENT@548..558
-                  NAME_REF@548..558
-                    IDENT@548..558 "myfunction"
-          COMMA@558..559 ","
-          WHITESPACE@559..564 "\n    "
-          R_PAREN@564..565 ")"
+          ATTR_ITEM_LIST@408..565
+            L_PAREN@408..409 "("
+            WHITESPACE@409..418 "\n        "
+            ATTR_ITEM@418..456
+              PATH@418..428
+                PATH_SEGMENT@418..428
+                  NAME_REF@418..428
+                    IDENT@418..428 "abort_code"
+              WHITESPACE@428..429 " "
+              INITIALIZER@429..456
+                EQ@429..430 "="
+                WHITESPACE@430..431 " "
+                PATH_EXPR@431..456
+                  PATH@431..456
+                    PATH@431..445
+                      PATH_SEGMENT@431..445
+                        NAME_REF@431..445
+                          IDENT@431..445 "liquidity_pool"
+                    COLON_COLON@445..447 "::"
+                    PATH_SEGMENT@447..456
+                      NAME_REF@447..456
+                        IDENT@447..456 "ERR_ADMIN"
+            COMMA@456..457 ","
+            WHITESPACE@457..466 "\n        "
+            ATTR_ITEM@466..501
+              PATH@466..474
+                PATH_SEGMENT@466..474
+                  NAME_REF@466..474
+                    IDENT@466..474 "location"
+              WHITESPACE@474..475 " "
+              INITIALIZER@475..501
+                EQ@475..476 "="
+                WHITESPACE@476..477 " "
+                PATH_EXPR@477..501
+                  PATH@477..501
+                    PATH@477..492
+                      PATH_SEGMENT@477..492
+                        NAME_REF@477..492
+                          IDENT@477..492 "aptos_framework"
+                    COLON_COLON@492..494 "::"
+                    PATH_SEGMENT@494..501
+                      NAME_REF@494..501
+                        IDENT@494..501 "ed25519"
+            COMMA@501..502 ","
+            WHITESPACE@502..511 "\n        "
+            ATTR_ITEM@511..558
+              PATH@511..519
+                PATH_SEGMENT@511..519
+                  NAME_REF@511..519
+                    IDENT@511..519 "location"
+              WHITESPACE@519..520 " "
+              INITIALIZER@520..558
+                EQ@520..521 "="
+                WHITESPACE@521..522 " "
+                PATH_EXPR@522..558
+                  PATH@522..558
+                    PATH@522..546
+                      PATH@522..537
+                        PATH_SEGMENT@522..537
+                          NAME_REF@522..537
+                            IDENT@522..537 "aptos_framework"
+                      COLON_COLON@537..539 "::"
+                      PATH_SEGMENT@539..546
+                        NAME_REF@539..546
+                          IDENT@539..546 "ed25519"
+                    COLON_COLON@546..548 "::"
+                    PATH_SEGMENT@548..558
+                      NAME_REF@548..558
+                        IDENT@548..558 "myfunction"
+            COMMA@558..559 ","
+            WHITESPACE@559..564 "\n    "
+            R_PAREN@564..565 ")"
         R_BRACK@565..566 "]"
       WHITESPACE@566..571 "\n    "
       ATTR@571..603

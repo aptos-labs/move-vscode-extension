@@ -123,10 +123,11 @@ SOURCE_FILE@0..621
             NAME_REF@184..186
               IDENT@184..186 "u8"
       WHITESPACE@186..187 " "
-      EQ@187..188 "="
-      WHITESPACE@188..189 " "
-      LITERAL@189..190
-        INT_NUMBER@189..190 "1"
+      INITIALIZER@187..190
+        EQ@187..188 "="
+        WHITESPACE@188..189 " "
+        LITERAL@189..190
+          INT_NUMBER@189..190 "1"
       SEMICOLON@190..191 ";"
     WHITESPACE@191..196 "\n    "
     FRIEND@196..227

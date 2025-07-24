@@ -142,16 +142,24 @@ fn const_(p: &mut Parser, m: Marker) {
                 p.error("missing type annotation");
             }
         });
-        if p.expect(T![=]) {
-            let is_expr = expr(p);
-            if !is_expr {
-                p.error("expected expression");
-            }
-        }
+        initializer_expr(p);
     });
 
     p.expect(T![;]);
     m.complete(p, CONST);
+}
+
+pub(crate) fn initializer_expr(p: &mut Parser) {
+    let m = p.start();
+    if !p.expect(T![=]) {
+        m.abandon(p);
+        return;
+    }
+    let is_expr = expr(p);
+    if !is_expr {
+        p.error("expected expression");
+    }
+    m.complete(p, INITIALIZER);
 }
 
 pub(crate) fn friend_decl(p: &mut Parser, m: Marker) {

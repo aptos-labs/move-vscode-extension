@@ -14,6 +14,7 @@ mod any_reference_element;
 mod apply_schema;
 mod assert_macro_expr;
 pub mod attr;
+mod attr_item;
 mod axiom_stmt;
 pub mod bin_expr;
 mod block_expr;

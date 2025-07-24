@@ -78,7 +78,8 @@ SOURCE_FILE@0..184
             NAME_REF@139..141
               IDENT@139..141 "u8"
       WHITESPACE@141..142 " "
-      EQ@142..143 "="
+      INITIALIZER@142..143
+        EQ@142..143 "="
       SEMICOLON@143..144 ";"
     WHITESPACE@144..149 "\n    "
     CONST@149..163
@@ -94,7 +95,8 @@ SOURCE_FILE@0..184
             NAME_REF@159..161
               IDENT@159..161 "u8"
       WHITESPACE@161..162 " "
-      EQ@162..163 "="
+      INITIALIZER@162..163
+        EQ@162..163 "="
     WHITESPACE@163..168 "\n    "
     FUN@168..181
       FUN_KW@168..171 "fun"

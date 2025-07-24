@@ -31,10 +31,11 @@ SOURCE_FILE@0..61
                       NAME_REF@46..48
                         IDENT@46..48 "u8"
       WHITESPACE@48..49 " "
-      EQ@49..50 "="
-      WHITESPACE@50..51 " "
-      LITERAL@51..57
-        BYTE_STRING@51..57 "b\"123\""
+      INITIALIZER@49..57
+        EQ@49..50 "="
+        WHITESPACE@50..51 " "
+        LITERAL@51..57
+          BYTE_STRING@51..57 "b\"123\""
       SEMICOLON@57..58 ";"
     WHITESPACE@58..59 "\n"
     R_CURLY@59..60 "}"

@@ -238,9 +238,7 @@ pub struct Attr {
 }
 impl Attr {
     #[inline]
-    pub fn attr_item(&self) -> Option<AttrItem> { support::child(&self.syntax) }
-    #[inline]
-    pub fn excl_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![!]) }
+    pub fn attr_items(&self) -> AstChildren<AttrItem> { support::children(&self.syntax) }
     #[inline]
     pub fn pound_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![#]) }
     #[inline]
@@ -255,11 +253,24 @@ pub struct AttrItem {
 }
 impl AttrItem {
     #[inline]
-    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    pub fn attr_item_list(&self) -> Option<AttrItemList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn initializer(&self) -> Option<Initializer> { support::child(&self.syntax) }
     #[inline]
     pub fn path(&self) -> Option<Path> { support::child(&self.syntax) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AttrItemList {
+    pub(crate) syntax: SyntaxNode,
+}
+impl AttrItemList {
     #[inline]
-    pub fn eq_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![=]) }
+    pub fn attr_items(&self) -> AstChildren<AttrItem> { support::children(&self.syntax) }
+    #[inline]
+    pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
+    #[inline]
+    pub fn r_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![')']) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -400,7 +411,7 @@ impl ast::HasVisibility for Const {}
 impl ast::HoverDocsOwner for Const {}
 impl Const {
     #[inline]
-    pub fn body(&self) -> Option<Expr> { support::child(&self.syntax) }
+    pub fn initializer(&self) -> Option<Initializer> { support::child(&self.syntax) }
     #[inline]
     pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
     #[inline]
@@ -409,8 +420,6 @@ impl Const {
     pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
     #[inline]
     pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
-    #[inline]
-    pub fn eq_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![=]) }
     #[inline]
     pub fn const_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![const]) }
 }
@@ -698,6 +707,17 @@ impl IndexExpr {
     pub fn l_brack_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['[']) }
     #[inline]
     pub fn r_brack_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![']']) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Initializer {
+    pub(crate) syntax: SyntaxNode,
+}
+impl Initializer {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn eq_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![=]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -2260,12 +2280,18 @@ pub enum IncludeExpr {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum InferenceCtxOwner {
     Fun(Fun),
+    Initializer(Initializer),
     ItemSpec(ItemSpec),
     Schema(Schema),
     SpecFun(SpecFun),
     SpecInlineFun(SpecInlineFun),
 }
-impl ast::HasAttrs for InferenceCtxOwner {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum InitializerOwner {
+    AttrItem(AttrItem),
+    Const(Const),
+}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Item {
@@ -2393,6 +2419,7 @@ pub enum Type {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TypeOwner {
+    Const(Const),
     GlobalVariableDecl(GlobalVariableDecl),
     NamedField(NamedField),
     SchemaField(SchemaField),
@@ -2813,6 +2840,27 @@ impl AstNode for AttrItem {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == ATTR_ITEM }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for AttrItemList {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        ATTR_ITEM_LIST
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == ATTR_ITEM_LIST }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -3422,6 +3470,27 @@ impl AstNode for IndexExpr {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == INDEX_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for Initializer {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        INITIALIZER
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == INITIALIZER }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -6984,6 +7053,10 @@ impl From<Fun> for InferenceCtxOwner {
     #[inline]
     fn from(node: Fun) -> InferenceCtxOwner { InferenceCtxOwner::Fun(node) }
 }
+impl From<Initializer> for InferenceCtxOwner {
+    #[inline]
+    fn from(node: Initializer) -> InferenceCtxOwner { InferenceCtxOwner::Initializer(node) }
+}
 impl From<ItemSpec> for InferenceCtxOwner {
     #[inline]
     fn from(node: ItemSpec) -> InferenceCtxOwner { InferenceCtxOwner::ItemSpec(node) }
@@ -7000,22 +7073,16 @@ impl From<SpecInlineFun> for InferenceCtxOwner {
     #[inline]
     fn from(node: SpecInlineFun) -> InferenceCtxOwner { InferenceCtxOwner::SpecInlineFun(node) }
 }
-impl From<InferenceCtxOwner> for AnyHasAttrs {
-    #[inline]
-    fn from(node: InferenceCtxOwner) -> AnyHasAttrs {
-        match node {
-            InferenceCtxOwner::Fun(it) => it.into(),
-            InferenceCtxOwner::ItemSpec(it) => it.into(),
-            InferenceCtxOwner::Schema(it) => it.into(),
-            InferenceCtxOwner::SpecFun(it) => it.into(),
-            InferenceCtxOwner::SpecInlineFun(it) => it.into(),
-        }
-    }
-}
 impl InferenceCtxOwner {
     pub fn fun(self) -> Option<Fun> {
         match (self) {
             InferenceCtxOwner::Fun(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn initializer(self) -> Option<Initializer> {
+        match (self) {
+            InferenceCtxOwner::Initializer(item) => Some(item),
             _ => None,
         }
     }
@@ -7047,12 +7114,16 @@ impl InferenceCtxOwner {
 impl AstNode for InferenceCtxOwner {
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(kind, FUN | ITEM_SPEC | SCHEMA | SPEC_FUN | SPEC_INLINE_FUN)
+        matches!(
+            kind,
+            FUN | INITIALIZER | ITEM_SPEC | SCHEMA | SPEC_FUN | SPEC_INLINE_FUN
+        )
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
             FUN => InferenceCtxOwner::Fun(Fun { syntax }),
+            INITIALIZER => InferenceCtxOwner::Initializer(Initializer { syntax }),
             ITEM_SPEC => InferenceCtxOwner::ItemSpec(ItemSpec { syntax }),
             SCHEMA => InferenceCtxOwner::Schema(Schema { syntax }),
             SPEC_FUN => InferenceCtxOwner::SpecFun(SpecFun { syntax }),
@@ -7065,10 +7136,53 @@ impl AstNode for InferenceCtxOwner {
     fn syntax(&self) -> &SyntaxNode {
         match self {
             InferenceCtxOwner::Fun(it) => &it.syntax(),
+            InferenceCtxOwner::Initializer(it) => &it.syntax(),
             InferenceCtxOwner::ItemSpec(it) => &it.syntax(),
             InferenceCtxOwner::Schema(it) => &it.syntax(),
             InferenceCtxOwner::SpecFun(it) => &it.syntax(),
             InferenceCtxOwner::SpecInlineFun(it) => &it.syntax(),
+        }
+    }
+}
+impl From<AttrItem> for InitializerOwner {
+    #[inline]
+    fn from(node: AttrItem) -> InitializerOwner { InitializerOwner::AttrItem(node) }
+}
+impl From<Const> for InitializerOwner {
+    #[inline]
+    fn from(node: Const) -> InitializerOwner { InitializerOwner::Const(node) }
+}
+impl InitializerOwner {
+    pub fn attr_item(self) -> Option<AttrItem> {
+        match (self) {
+            InitializerOwner::AttrItem(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn const_(self) -> Option<Const> {
+        match (self) {
+            InitializerOwner::Const(item) => Some(item),
+            _ => None,
+        }
+    }
+}
+impl AstNode for InitializerOwner {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, ATTR_ITEM | CONST) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            ATTR_ITEM => InitializerOwner::AttrItem(AttrItem { syntax }),
+            CONST => InitializerOwner::Const(Const { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            InitializerOwner::AttrItem(it) => &it.syntax(),
+            InitializerOwner::Const(it) => &it.syntax(),
         }
     }
 }
@@ -8441,6 +8555,10 @@ impl AstNode for Type {
         }
     }
 }
+impl From<Const> for TypeOwner {
+    #[inline]
+    fn from(node: Const) -> TypeOwner { TypeOwner::Const(node) }
+}
 impl From<GlobalVariableDecl> for TypeOwner {
     #[inline]
     fn from(node: GlobalVariableDecl) -> TypeOwner { TypeOwner::GlobalVariableDecl(node) }
@@ -8461,6 +8579,7 @@ impl From<TypeOwner> for AnyHasAttrs {
     #[inline]
     fn from(node: TypeOwner) -> AnyHasAttrs {
         match node {
+            TypeOwner::Const(it) => it.into(),
             TypeOwner::GlobalVariableDecl(it) => it.into(),
             TypeOwner::NamedField(it) => it.into(),
             TypeOwner::SchemaField(it) => it.into(),
@@ -8469,6 +8588,12 @@ impl From<TypeOwner> for AnyHasAttrs {
     }
 }
 impl TypeOwner {
+    pub fn const_(self) -> Option<Const> {
+        match (self) {
+            TypeOwner::Const(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn global_variable_decl(self) -> Option<GlobalVariableDecl> {
         match (self) {
             TypeOwner::GlobalVariableDecl(item) => Some(item),
@@ -8496,6 +8621,7 @@ impl TypeOwner {
     #[inline]
     pub fn type_(&self) -> Option<Type> {
         match self {
+            TypeOwner::Const(it) => it.type_(),
             TypeOwner::GlobalVariableDecl(it) => it.type_(),
             TypeOwner::NamedField(it) => it.type_(),
             TypeOwner::SchemaField(it) => it.type_(),
@@ -8508,12 +8634,13 @@ impl AstNode for TypeOwner {
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            GLOBAL_VARIABLE_DECL | NAMED_FIELD | SCHEMA_FIELD | TUPLE_FIELD
+            CONST | GLOBAL_VARIABLE_DECL | NAMED_FIELD | SCHEMA_FIELD | TUPLE_FIELD
         )
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
+            CONST => TypeOwner::Const(Const { syntax }),
             GLOBAL_VARIABLE_DECL => TypeOwner::GlobalVariableDecl(GlobalVariableDecl { syntax }),
             NAMED_FIELD => TypeOwner::NamedField(NamedField { syntax }),
             SCHEMA_FIELD => TypeOwner::SchemaField(SchemaField { syntax }),
@@ -8525,6 +8652,7 @@ impl AstNode for TypeOwner {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
+            TypeOwner::Const(it) => &it.syntax(),
             TypeOwner::GlobalVariableDecl(it) => &it.syntax(),
             TypeOwner::NamedField(it) => &it.syntax(),
             TypeOwner::SchemaField(it) => &it.syntax(),
@@ -9035,6 +9163,11 @@ impl std::fmt::Display for InferenceCtxOwner {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for InitializerOwner {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for Item {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -9190,6 +9323,11 @@ impl std::fmt::Display for AttrItem {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for AttrItemList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for AxiomStmt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -9331,6 +9469,11 @@ impl std::fmt::Display for IncludeSchema {
     }
 }
 impl std::fmt::Display for IndexExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for Initializer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

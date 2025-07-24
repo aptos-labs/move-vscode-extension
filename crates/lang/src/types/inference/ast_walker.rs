@@ -30,6 +30,7 @@ use std::ops::Deref;
 use std::sync::LazyLock;
 use syntax::ast::HasStmts;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, IntoNodeOrToken, ast, pretty_print};
 
@@ -82,6 +83,24 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::InferenceCtxOwner::Schema(schema) => {
                 if let Some(block_expr) = schema.spec_block() {
                     self.process_msl_block_expr(&block_expr, Expected::NoValue, false);
+                }
+            }
+            ast::InferenceCtxOwner::Initializer(initializer) => {
+                let initializer_owner = initializer
+                    .syntax()
+                    .parent_of_type::<ast::InitializerOwner>()
+                    .unwrap();
+                let expected_ty = match initializer_owner {
+                    ast::InitializerOwner::Const(const_) => self
+                        .ctx
+                        .ty_lowering()
+                        .lower_type_owner(const_.in_file(self.ctx.file_id)),
+                    ast::InitializerOwner::AttrItem(attr_item) => attr_item
+                        .is_abort_code()
+                        .then_some(Ty::Integer(IntegerKind::Integer)),
+                };
+                if let Some(expr) = initializer.expr() {
+                    self.infer_expr_coerceable_to(&expr, expected_ty.unwrap_or(Ty::Unknown));
                 }
             }
         }
@@ -274,7 +293,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     let ty = self
                         .ctx
                         .ty_lowering()
-                        .lower_type_owner(schema_field.in_file(self.ctx.file_id).map_into())
+                        .lower_type_owner(schema_field.in_file(self.ctx.file_id))
                         .unwrap_or(Ty::Unknown);
                     self.collect_pat_bindings(ident_pat.into(), ty, BindingMode::BindByValue);
                 }
@@ -493,7 +512,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
             NAMED_FIELD => {
                 let named_field = named_element.cast_into::<ast::NamedField>()?;
-                ty_lowering.lower_type_owner(named_field.map_into())
+                ty_lowering.lower_type_owner(named_field)
             }
             STRUCT | ENUM => {
                 let path = path_expr.path().in_file(file_id);
@@ -518,7 +537,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
             GLOBAL_VARIABLE_DECL => {
                 let global_variable_decl = named_element.cast_into::<ast::GlobalVariableDecl>()?;
-                ty_lowering.lower_type_owner(global_variable_decl.map_into())
+                ty_lowering.lower_type_owner(global_variable_decl)
             }
             _ => None,
         }
@@ -713,7 +732,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 .and_then(|field| {
                     self.ctx
                         .ty_lowering()
-                        .lower_type_owner(field.to_owned().in_file(item_file_id).map_into())
+                        .lower_type_owner(field.to_owned().in_file(item_file_id))
                 })
                 .unwrap_or(Ty::Unknown);
             let field_ty = declared_field_ty.substitute(&ty_adt.substitution);
