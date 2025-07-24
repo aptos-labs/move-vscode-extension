@@ -5,9 +5,9 @@
 // Modifications have been made to the original code.
 
 use crate::global_state::{GlobalState, LoadPackagesRequest};
-use crate::line_index::LineEndings;
 use crate::reload;
 use base_db::change::FileChanges;
+use ide_db::line_endings::LineEndings;
 use parking_lot::{RwLockUpgradableReadGuard, RwLockWriteGuard};
 use paths::AbsPathBuf;
 
@@ -65,18 +65,20 @@ impl GlobalState {
         let mut changes = FileChanges::new();
 
         let mut vfs_lock = self.vfs.write();
+
         // fetch latest file changes
-        let changed_files = vfs_lock.0.take_changes();
+        let vfs = &mut vfs_lock.0;
+        let changed_files = vfs.take_changes();
         if changed_files.is_empty() {
             return None;
         }
 
         // downgrade to read lock to allow more readers while we are normalizing text
         let vfs_lock = RwLockWriteGuard::downgrade_to_upgradable(vfs_lock);
-        let vfs: &vfs::Vfs = &vfs_lock.0;
+        let vfs = &vfs_lock.0;
 
         let mut notable_changes = WorkspaceStructureChanges::default();
-        let mut line_endings_changes = vec![];
+        let mut files_with_text = vec![];
 
         for changed_file in changed_files.into_values() {
             if let Some(changed_file_path) = vfs.file_path(changed_file.file_id).as_path() {
@@ -104,14 +106,14 @@ impl GlobalState {
 
             // delay `line_endings_map` changes until we are done normalizing the text
             // this allows delaying the re-acquisition of the write lock
-            line_endings_changes.push((
+            files_with_text.push((
                 changed_file.file_id,
                 file_text.map(|it| LineEndings::normalize(it)),
             ));
         }
 
         let (_, line_endings_map) = &mut *RwLockUpgradableReadGuard::upgrade(vfs_lock);
-        for (file_id, text_with_line_endings) in line_endings_changes {
+        for (file_id, text_with_line_endings) in files_with_text {
             let text = match text_with_line_endings {
                 Some((text, line_endings)) => {
                     line_endings_map.insert(file_id, line_endings);

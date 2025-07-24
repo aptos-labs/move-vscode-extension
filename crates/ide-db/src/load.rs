@@ -5,6 +5,7 @@
 // Modifications have been made to the original code.
 
 use crate::RootDatabase;
+use crate::line_endings::LineEndings;
 use base_db::change::FileChanges;
 use crossbeam_channel::unbounded;
 use lang::builtins_file;
@@ -38,7 +39,7 @@ pub fn load_db(packages: &[AptosPackage]) -> anyhow::Result<(RootDatabase, vfs::
 
     let mut analysis_change = FileChanges::new();
 
-    // wait until Vfs has loaded all roots
+    // wait until Vfs has loaded all roots into the `vfs.changes`
     for task in receiver {
         match task {
             vfs::loader::Message::Progress { n_done, .. } => {
@@ -48,6 +49,7 @@ pub fn load_db(packages: &[AptosPackage]) -> anyhow::Result<(RootDatabase, vfs::
             }
             vfs::loader::Message::Loaded { files } => {
                 let _p = tracing::info_span!("load_cargo::load_crate_craph/LoadedChanged").entered();
+                // this load packages files and dependencies
                 for (path, contents) in files {
                     vfs.set_file_contents(path.into(), contents);
                 }
@@ -57,11 +59,13 @@ pub fn load_db(packages: &[AptosPackage]) -> anyhow::Result<(RootDatabase, vfs::
             }
         }
     }
+    // extract `vfs.changes` and load them into the database
     let changes = vfs.take_changes();
-    for (_, file) in changes {
-        if let vfs::Change::Create(v, _) /*| vfs::Change::Modify(v, _)*/ = file.change {
-            if let Ok(text) = String::from_utf8(v) {
-                analysis_change.change_file(file.file_id, Some(text))
+    for (_, changed_file) in changes {
+        if let vfs::Change::Create(file_bytes, _) /*| vfs::Change::Modify(v, _)*/ = changed_file.change {
+            if let Ok(file_text) = String::from_utf8(file_bytes) {
+                let (file_text, _) = LineEndings::normalize(file_text);
+                analysis_change.change_file(changed_file.file_id, Some(file_text))
             }
         }
     }
