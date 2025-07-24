@@ -161,6 +161,16 @@ pub enum CallableItem {
     LambdaType(ast::LambdaType),
 }
 
+impl CallableItem {
+    pub fn name(&self) -> Option<String> {
+        match self {
+            CallableItem::Function(any_fun) => any_fun.name().map(|it| it.as_string()),
+            CallableItem::AssertMacro => Some("assert!".into()),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct CallableParam {
     pub name: Option<String>,

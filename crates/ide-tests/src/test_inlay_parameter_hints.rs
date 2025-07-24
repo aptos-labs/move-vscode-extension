@@ -88,3 +88,64 @@ fn test_inlay_parameter_hints_for_literals_on_lambda() {
         }
     "#]]);
 }
+
+#[test]
+fn test_no_inlay_parameter_hint_if_only_one_parameter() {
+    // language=Move
+    check_inlay_hints(expect![[r#"
+        module 0x1::m {
+            fun call(a: u8) {}
+            fun main() {
+                call(1);
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_inlay_hint_if_variable_has_the_same_name_as_parameter() {
+    // language=Move
+    check_inlay_hints(expect![[r#"
+        module 0x1::m {
+            fun call(limit: u8, max_size: u8) {}
+            fun main() {
+                let limit = 1;
+                  //^^^^^ u8
+                let vector_len = 1;
+                  //^^^^^^^^^^ u8
+                call(limit, vector_len);
+                          //^^^^^^^^^^ max_size
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_inlay_hint_if_variable_has_the_same_name_param_with_underscore() {
+    // language=Move
+    check_inlay_hints(expect![[r#"
+        module 0x1::m {
+            fun call(_limit: u8, max_size: u8) {}
+            fun main() {
+                let limit = 1;
+                  //^^^^^ u8
+                let vector_len = 1;
+                  //^^^^^^^^^^ u8
+                call(limit, vector_len);
+                          //^^^^^^^^^^ max_size
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_inlay_hints_for_builtins() {
+    // language=Move
+    check_inlay_hints(expect![[r#"
+        module 0x1::m {
+            fun main(s: &signer) {
+                move_to(s, vector[1]);
+            }
+        }
+    "#]]);
+}
