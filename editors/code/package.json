@@ -608,7 +608,6 @@
         "typecheck": "tsc"
     },
     "dependencies": {
-        "@vscode/vsce": "=3.6.0",
         "command-exists": "^1.2.9",
         "vscode-languageclient": "^9.0.1"
     },
@@ -619,6 +618,8 @@
         "@types/command-exists": "^1.2.3",
         "@types/node": "20.x",
         "@types/vscode": "^1.96.0",
+        "@vscode/vsce": "=3.6.0",
+        "ovsx": "0.10.1",
         "esbuild": "^0.25.0",
         "typescript": "^5.7.3"
     }

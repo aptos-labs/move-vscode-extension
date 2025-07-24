@@ -162,7 +162,11 @@ jobs:
         working-directory: ./editors/code
         run: npx vsce publish --pat ${{ secrets.MARKETPLACE_PAT_TOKEN }} --packagePath ../../dist/move-on-aptos-*.vsix --pre-release
 
-
+      - name: Publish Extension (OpenVSX, nightly)
+        if: github.ref != 'refs/heads/release' && github.repository == 'aptos-labs/move-vscode-extension'
+        working-directory: ./editors/code
+        run: npx ovsx publish --pat ${{ secrets.OPENVSX_TOKEN }} --packagePath ../../dist/move-on-aptos-*.vsix
+        timeout-minutes: 2
 
 
 
