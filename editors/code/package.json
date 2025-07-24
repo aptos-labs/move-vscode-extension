@@ -17,7 +17,7 @@
         "email": "maksim@aptoslabs.com"
     },
     "engines": {
-        "vscode": "^1.96.0"
+        "vscode": "^1.93.0"
     },
     "activationEvents": [
         "workspaceContains:Move.toml",
@@ -617,7 +617,7 @@
     "devDependencies": {
         "@types/command-exists": "^1.2.3",
         "@types/node": "20.x",
-        "@types/vscode": "^1.96.0",
+        "@types/vscode": "^1.93.0",
         "@vscode/vsce": "=3.6.0",
         "ovsx": "0.10.1",
         "esbuild": "^0.25.0",
