@@ -110,9 +110,9 @@ impl<'db> SemanticsImpl<'db> {
 
     pub fn resolve_element_to_element<Named: AstNode>(
         &self,
-        reference: ast::ReferenceElement,
+        reference: impl Into<ast::ReferenceElement>,
     ) -> Option<InFile<Named>> {
-        let reference = self.wrap_node_infile(reference);
+        let reference = self.wrap_node_infile(reference.into());
         self.resolve_to_element(reference)
     }
 

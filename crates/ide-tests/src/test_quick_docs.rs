@@ -387,3 +387,35 @@ spec 0x1::m {
         "#]],
     )
 }
+
+#[test]
+fn test_docs_for_enum_variant_from_match_arm() {
+    check_hover(
+        // language=Move
+        r#"
+module 0x1::m {
+    enum Num {
+        /// Num::One
+        One
+    }
+
+    fun main(s: Num) {
+        match (s) {
+            One => true
+            //^
+        };
+    }
+}
+    "#,
+        // language=Markdown
+        expect![[r#"
+            ```move
+            0x1::m::Num
+
+            variant One
+            ```
+            ---
+
+        "#]],
+    )
+}

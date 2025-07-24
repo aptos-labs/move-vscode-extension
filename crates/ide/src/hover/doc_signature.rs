@@ -6,6 +6,7 @@
 
 use ide_db::RootDatabase;
 use lang::Semantics;
+use lang::nameres::scope::ScopeEntryExt;
 use std::fmt::Write;
 use stdx::format_to;
 use syntax::{AstNode, ast, match_ast};
@@ -25,8 +26,11 @@ impl DocSignatureOwner for ast::NamedElement {
                 ast::NamedField(it) => sema.fq_name_for_item(it.fields_owner())?.fq_identifier_text(),
                 ast::Variant(it) => sema.fq_name_for_item(it.enum_())?.fq_identifier_text(),
                 ast::Const(it) => sema.fq_name_for_item(it)?.module_identifier_text(),
-                ast::IdentPat(_) => {
-                    // no header
+                ast::IdentPat(it) => {
+                    // IdentPat has header only if it's a enum variant
+                    if let Some(enum_variant) = sema.resolve_element_to_element::<ast::Variant>(it) {
+                        enum_variant.named_element().value.header(sema, buffer);
+                    }
                     return None;
                 },
                 _ => {
@@ -53,7 +57,8 @@ impl DocSignatureOwner for ast::NamedElement {
                 },
                 ast::Variant(it) => {
                     format_to!(buf, "variant ");
-                    generate_enum_variant(it, buf, true)
+                    generate_name(buf, it.clone());
+                    generate_field_list(buf, it, false)
                 },
                 ast::IdentPat(it) => generate_ident_pat(buf, sema, it),
                 _ => {
@@ -115,7 +120,8 @@ fn generate_enum(buf: &mut String, enum_: ast::Enum) -> Option<()> {
     }
 
     separated_list(buf, enum_.variants(), " {", "}", ",", true, |buf, variant| {
-        generate_enum_variant(variant, buf, false)
+        generate_name(buf, variant.clone())?;
+        generate_field_list(buf, variant, true)
     });
 
     Some(())
@@ -131,13 +137,29 @@ fn generate_struct(buf: &mut String, struct_: ast::Struct) -> Option<()> {
         // format_to!(buf, " ");
     }
 
-    let field_list = struct_.field_list()?;
-    generate_field_list(buf, field_list, true);
+    generate_field_list(buf, struct_, false);
 
     Some(())
 }
 
-fn generate_field_list(buf: &mut String, field_list: ast::FieldList, verbose: bool) -> Option<()> {
+fn generate_field(buf: &mut String, field: ast::NamedField) -> Option<()> {
+    format_to!(buf, "{}", field.field_name().as_string());
+    generate_type_annotation(buf, field.type_())?;
+    Some(())
+}
+
+fn generate_name(buf: &mut String, named_element: impl Into<ast::NamedElement>) -> Option<()> {
+    let named_element = named_element.into();
+    format_to!(buf, "{}", named_element.name()?.as_string());
+    Some(())
+}
+
+fn generate_field_list(
+    buf: &mut String,
+    fields_owner: impl Into<ast::FieldsOwner>,
+    fold: bool,
+) -> Option<()> {
+    let field_list = fields_owner.into().field_list()?;
     match field_list {
         ast::FieldList::NamedFieldList(_) => {
             format_to!(buf, " {{ ... }}");
@@ -155,7 +177,7 @@ fn generate_field_list(buf: &mut String, field_list: ast::FieldList, verbose: bo
             // }
         }
         ast::FieldList::TupleFieldList(tuple_field_list) => {
-            if !verbose {
+            if fold {
                 format_to!(buf, "(...)");
             } else {
                 separated_list(
@@ -173,26 +195,17 @@ fn generate_field_list(buf: &mut String, field_list: ast::FieldList, verbose: bo
     Some(())
 }
 
-fn generate_field(buf: &mut String, field: ast::NamedField) -> Option<()> {
-    format_to!(buf, "{}", field.field_name().as_string());
-    generate_type_annotation(buf, field.type_())?;
-    Some(())
-}
-
-fn generate_enum_variant(variant: ast::Variant, buf: &mut String, verbose: bool) -> Option<()> {
-    format_to!(buf, "{}", variant.name()?.as_string());
-
-    let field_list = variant.field_list()?;
-    generate_field_list(buf, field_list, verbose);
-
-    Some(())
-}
-
 fn generate_ident_pat(
     buf: &mut String,
     sema: &Semantics<'_, RootDatabase>,
     ident_pat: ast::IdentPat,
 ) -> Option<()> {
+    // try resolving to enum variant
+    if let Some(enum_variant) = sema.resolve_element_to_element::<ast::Variant>(ident_pat.clone()) {
+        enum_variant.named_element().value.signature(sema, buf);
+        return Some(());
+    }
+
     let ident_kind = ident_pat.ident_owner()?.kind();
     let ident_name = ident_pat.name()?.as_string();
     format_to!(buf, "{ident_kind} {ident_name}");
