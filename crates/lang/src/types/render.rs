@@ -212,7 +212,7 @@ impl<'db> TypeRenderer<'db> {
         let addr_name = fq_name.address().identifier_text();
         if matches!(
             addr_name.as_str(),
-            "std" | "aptos_std" | "aptos_framework" | "aptos_token"
+            "std" | "aptos_std" | "aptos_framework" | "aptos_token" | "aptos_experimental"
         ) {
             self.write_str(&fq_name.name())?;
             self.sink.end_location_link();
