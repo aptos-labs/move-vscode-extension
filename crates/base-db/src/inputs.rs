@@ -50,7 +50,7 @@ pub struct PackageRootInput {
     pub data: Arc<PackageRoot>,
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct PackageMetadata {
     pub package_name: Option<String>,
     pub dep_manifest_ids: Arc<Vec<ManifestFileId>>,

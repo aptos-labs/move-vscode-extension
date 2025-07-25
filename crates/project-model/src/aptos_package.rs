@@ -44,7 +44,7 @@ pub enum PackageKind {
     Git,
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone)]
 pub struct AptosPackage {
     pub package_name: Option<String>,
     content_root: AbsPathBuf,
@@ -56,6 +56,7 @@ pub struct AptosPackage {
 impl fmt::Debug for AptosPackage {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("AptosPackage")
+            .field("package_name", &self.package_name)
             .field("content_root", &self.content_root().to_string())
             .field("sourced_from", &self.kind)
             .field("deps", &self.transitive_dep_roots)
