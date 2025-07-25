@@ -12,135 +12,109 @@ use anyhow::Context;
 use paths::AbsPathBuf;
 use std::collections::{HashMap, HashSet};
 use std::fs;
+use std::io::Read;
 
 #[derive(Debug, Clone)]
-pub struct PackageEntry {
+pub struct ManifestEntry {
     package_name: Option<String>,
     kind: PackageKind,
-    deps: Vec<(ManifestPath, PackageKind)>,
-}
-
-type PackageEntriesWithErrors = HashMap<ManifestPath, anyhow::Result<PackageEntry>>;
-
-pub fn load_aptos_packages(manifests: Vec<DiscoveredManifest>) -> Vec<anyhow::Result<AptosPackage>> {
-    let mut visited_package_roots = HashSet::new();
-    let mut dedup = vec![];
-    for manifest in manifests {
-        let manifest_path = ManifestPath::new(manifest.move_toml_file.to_path_buf());
-        let packages = load_reachable_aptos_packages(&manifest_path, manifest.resolve_deps);
-        for package in packages {
-            if let Ok(package) = &package {
-                // dedup based on package root
-                if visited_package_roots.contains(&package.content_root) {
-                    continue;
-                }
-                visited_package_roots.insert(package.content_root.clone());
-            }
-            dedup.push(package);
-        }
-    }
-    dedup
-}
-
-fn load_reachable_aptos_packages(
-    starting_manifest: &ManifestPath,
+    declared_deps: Vec<(ManifestPath, PackageKind)>,
     resolve_deps: bool,
-) -> Vec<anyhow::Result<AptosPackage>> {
-    let mut package_entries_with_errors = HashMap::new();
-    let mut visited_manifests = HashSet::new();
-    load_package_entries(
-        &mut package_entries_with_errors,
-        starting_manifest.clone(),
-        PackageKind::Local,
-        &mut visited_manifests,
-        resolve_deps,
-    );
+}
 
-    let valid_package_entries = package_entries_with_errors
+pub fn load_aptos_packages(ws_manifests: Vec<DiscoveredManifest>) -> Vec<anyhow::Result<AptosPackage>> {
+    let mut all_reachable_manifests = HashMap::new();
+    for ws_manifest in ws_manifests.clone() {
+        let manifest_path = ManifestPath::new(ws_manifest.move_toml_file.to_path_buf());
+        let mut visited_manifests = HashSet::new();
+        collect_reachable_manifests(
+            manifest_path,
+            &mut all_reachable_manifests,
+            PackageKind::Local,
+            &mut visited_manifests,
+            ws_manifest.resolve_deps,
+        );
+    }
+
+    let valid_manifests = all_reachable_manifests
         .iter()
-        // error means that Move.toml is incorrect
-        // todo: notification?
-        .filter_map(|(k, entry)| {
-            if !entry.is_ok() {
-                return None;
-            }
-            let package_entry = entry.as_ref().cloned().unwrap();
-            Some((k.clone(), package_entry))
+        .filter_map(|(path, manifest_entry)| match manifest_entry {
+            Ok(manifest_entry) => Some((path.clone(), manifest_entry.clone())),
+            Err(_) => None,
         })
-        .collect::<HashMap<_, _>>();
+        .collect();
 
-    let mut packages: Vec<anyhow::Result<AptosPackage>> = vec![];
-    for (manifest, res) in package_entries_with_errors {
-        match res {
-            Err(err) => {
-                packages.push(Err(err));
-            }
-            Ok(PackageEntry {
-                package_name: name,
+    let mut all_reachable_aptos_packages = vec![];
+    for (manifest_path, manifest_entry) in all_reachable_manifests {
+        match manifest_entry {
+            Ok(ManifestEntry {
+                package_name,
                 kind,
-                deps,
+                declared_deps,
+                resolve_deps,
             }) => {
-                let mut transitive_deps = vec![];
-                let mut visited_manifests = HashSet::new();
-                visited_manifests.insert(manifest.clone());
-
-                let mut visited_transitive_manifests = HashSet::new();
+                // for every reachable package in the workspace, we need to build it's dependencies
+                let mut collected_deps = vec![];
+                let mut visited_dep_manifests = HashSet::new();
                 let mut visited_dep_names = HashSet::new();
-                for dep in deps {
+                for dep in declared_deps {
                     collect_transitive_deps(
                         dep.clone(),
-                        &mut transitive_deps,
-                        &valid_package_entries,
-                        &mut visited_transitive_manifests,
+                        &mut collected_deps,
+                        &valid_manifests,
+                        &mut visited_dep_manifests,
                         &mut visited_dep_names,
                     );
                 }
-                packages.push(Ok(AptosPackage::new(
-                    name,
-                    &manifest,
-                    kind,
-                    transitive_deps,
-                    resolve_deps,
+                all_reachable_aptos_packages.push(Ok(AptosPackage::new(
+                    package_name.clone(),
+                    &manifest_path,
+                    kind.clone(),
+                    collected_deps,
+                    resolve_deps.clone(),
                 )));
+            }
+            Err(manifest_parse_error) => {
+                all_reachable_aptos_packages.push(Err(manifest_parse_error));
             }
         }
     }
 
-    packages
+    all_reachable_aptos_packages
 }
 
 fn collect_transitive_deps(
     current_dep: (ManifestPath, PackageKind),
-    transitive_deps: &mut Vec<(ManifestPath, PackageKind)>,
-    package_entries: &HashMap<ManifestPath, PackageEntry>,
-    visited_manifests: &mut HashSet<ManifestPath>,
-    visited_dep_names: &mut HashSet<String>,
+    collected_transitive_deps: &mut Vec<(ManifestPath, PackageKind)>,
+    package_entries: &HashMap<ManifestPath, ManifestEntry>,
+    visited_dep_manifests: &mut HashSet<ManifestPath>,
+    visited_package_names: &mut HashSet<String>,
 ) {
-    if visited_manifests.contains(&current_dep.0) {
+    if visited_dep_manifests.contains(&current_dep.0) {
         return;
     }
-    visited_manifests.insert(current_dep.0.clone());
+    visited_dep_manifests.insert(current_dep.0.clone());
 
     match package_entries.get(&current_dep.0) {
-        Some(PackageEntry {
-            package_name: dep_package_name,
-            deps,
+        Some(ManifestEntry {
+            package_name: current_dep_package_name,
+            declared_deps,
             ..
         }) => {
-            if let Some(dep_package_name) = dep_package_name {
-                if visited_dep_names.contains(dep_package_name) {
+            if let Some(current_dep_package_name) = current_dep_package_name {
+                if visited_package_names.contains(current_dep_package_name) {
                     return;
                 }
-                visited_dep_names.insert(dep_package_name.clone());
+                visited_package_names.insert(current_dep_package_name.clone());
             }
-            transitive_deps.push(current_dep.clone());
-            for dep in deps {
+            collected_transitive_deps.push(current_dep.clone());
+            for dep in declared_deps {
                 collect_transitive_deps(
                     dep.clone(),
-                    transitive_deps,
+                    collected_transitive_deps,
                     package_entries,
-                    visited_manifests,
-                    visited_dep_names,
+                    visited_dep_manifests,
+                    visited_package_names,
                 );
             }
         }
@@ -149,17 +123,17 @@ fn collect_transitive_deps(
                 "cannot collect deps due to invalid Move.toml file: {}",
                 current_dep.0
             );
-            transitive_deps.push(current_dep.clone());
+            collected_transitive_deps.push(current_dep.clone());
             return;
         }
     }
 }
 
 /// reads package and dependencies, collect all (Root, Vec<Root>, SourcedFrom) for all the reachable packages
-fn load_package_entries(
-    package_entries: &mut PackageEntriesWithErrors,
+fn collect_reachable_manifests(
     manifest_path: ManifestPath,
-    kind: PackageKind,
+    manifest_entries: &mut HashMap<ManifestPath, anyhow::Result<ManifestEntry>>,
+    package_kind: PackageKind,
     visited_manifests: &mut HashSet<ManifestPath>,
     resolve_deps: bool,
 ) {
@@ -169,27 +143,43 @@ fn load_package_entries(
     visited_manifests.insert(manifest_path.clone());
 
     match read_manifest_from_fs(&manifest_path) {
+        Err(err) => {
+            manifest_entries.insert(manifest_path, Err(err));
+        }
         Ok(move_toml) => {
             let package_name = move_toml.package.as_ref().and_then(|it| it.name.clone());
-            let dep_manifests = if resolve_deps {
-                read_dependencies(manifest_path.content_root(), &move_toml, kind)
-            } else {
-                vec![]
-            };
-            package_entries.insert(
+            if !resolve_deps {
+                manifest_entries.insert(
+                    manifest_path,
+                    Ok(ManifestEntry {
+                        package_name,
+                        kind: package_kind,
+                        declared_deps: vec![],
+                        resolve_deps: false,
+                    }),
+                );
+                return;
+            }
+            let dep_manifests =
+                read_dependencies(manifest_path.content_root(), &move_toml, package_kind);
+            manifest_entries.insert(
                 manifest_path,
-                Ok(PackageEntry {
+                Ok(ManifestEntry {
                     package_name,
-                    kind,
-                    deps: dep_manifests.clone(),
+                    kind: package_kind,
+                    declared_deps: dep_manifests.clone(),
+                    resolve_deps: true,
                 }),
             );
             for (dep_manifest, dep_kind) in dep_manifests.clone() {
-                load_package_entries(package_entries, dep_manifest, dep_kind, visited_manifests, true);
+                collect_reachable_manifests(
+                    dep_manifest,
+                    manifest_entries,
+                    dep_kind,
+                    visited_manifests,
+                    true,
+                );
             }
-        }
-        Err(manifest_parse_error) => {
-            package_entries.insert(manifest_path, Err(manifest_parse_error));
         }
     }
 }

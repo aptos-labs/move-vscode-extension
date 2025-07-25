@@ -17,16 +17,16 @@ pub fn prepare_directories(ws_root: &Utf8Path, test_packages: Vec<TestPackageFil
     let _ = fs::create_dir(ws_root);
 
     for test_package in test_packages {
-        let package_root = ws_root.join(test_package.root_dir);
-        fs::create_dir(&package_root).unwrap();
+        let package_root_dir = ws_root.join(test_package.root_dir);
+        fs::create_dir(&package_root_dir).expect(&format!("Package root {package_root_dir} exists"));
 
-        let move_toml_file = package_root.join("Move.toml");
+        let move_toml_file = package_root_dir.join("Move.toml");
         let move_toml_contents = test_package.move_toml;
         fs::write(&move_toml_file, move_toml_contents).unwrap();
 
-        let sources_dir = package_root.join("sources");
+        let sources_dir = package_root_dir.join("sources");
         fs::create_dir(&sources_dir).unwrap();
-        let tests_dir = package_root.join("tests");
+        let tests_dir = package_root_dir.join("tests");
         fs::create_dir(&tests_dir).unwrap();
 
         let SourceFiles { sources, tests } = parse_files_from_source(&test_package.source_files);
