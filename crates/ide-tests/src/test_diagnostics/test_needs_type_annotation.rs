@@ -160,7 +160,6 @@ fn test_method_type_args_inferrable() {
         module 0x1::main {
             struct S<T> { field: T }
             fun receiver<T, U>(self: &S<T>, param: U): U {
-                             //^^^^ warn: Unused parameter 'self'
                 param
             }
             fun main(s: S<u8>) {

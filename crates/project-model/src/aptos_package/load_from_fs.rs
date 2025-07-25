@@ -12,7 +12,6 @@ use anyhow::Context;
 use paths::AbsPathBuf;
 use std::collections::{HashMap, HashSet};
 use std::fs;
-use std::io::Read;
 
 #[derive(Debug, Clone)]
 pub struct ManifestEntry {
