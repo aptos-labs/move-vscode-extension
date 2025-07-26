@@ -37,6 +37,9 @@ pub(crate) fn check_unused_ident_pat<'db>(
 
     let ident_owner = ident_pat.value.ident_owner()?;
     if let ast::IdentPatOwner::Param(fun_param) = &ident_owner {
+        if fun_param.is_self() {
+            return None;
+        }
         let any_fun = fun_param.any_fun()?;
         if any_fun.is_native() || any_fun.is_uninterpreted() {
             return None;

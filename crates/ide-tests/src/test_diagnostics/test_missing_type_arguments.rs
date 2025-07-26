@@ -256,7 +256,6 @@ fn test_method_missing_type_arguments() {
         module 0x1::main {
             struct S<T> { field: T }
             fun receiver<T, U>(self: &S<T>, param: U): U {
-                             //^^^^ warn: Unused parameter 'self'
                 param
             }
             fun main(s: S<u8>) {
@@ -274,7 +273,6 @@ fn test_method_missing_type_arguments_without_colon_colon() {
         module 0x1::main {
             struct S<T> { field: T }
             fun receiver<T, U>(self: &S<T>, param: U): U {
-                             //^^^^ warn: Unused parameter 'self'
                 param
             }
             fun main(s: S<u8>) {

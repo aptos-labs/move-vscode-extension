@@ -216,3 +216,16 @@ fn test_no_unused_variable_for_enum_variant_no_fields() {
         }
     "#]]);
 }
+
+#[test]
+fn test_no_unused_variable_for_self() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            struct S { val: u8 }
+            fun get_val(self: S): u8 {
+                1
+            }
+        }
+    "#]]);
+}

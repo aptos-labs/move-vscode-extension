@@ -25,4 +25,20 @@ impl ast::Param {
         let ident_pat = self.ident_pat().unwrap();
         ident_pat.name().unwrap().as_string()
     }
+
+    pub fn is_self(&self) -> bool {
+        if self.ident_name() != "self" {
+            return false;
+        }
+        if let Some(param_list) = self.param_list() {
+            if param_list
+                .params()
+                .position(|it| &it == self)
+                .is_some_and(|pos| pos == 0)
+            {
+                return true;
+            }
+        }
+        false
+    }
 }
