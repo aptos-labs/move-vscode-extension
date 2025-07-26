@@ -181,3 +181,49 @@ module std::main {
             ]"#]],
     );
 }
+
+#[test]
+fn test_spec_predicate_expected_type() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    fun get_u8(): u8 { 1 }
+    fun get_bool(): bool { true }
+    fun main() {
+        spec {
+            assume get/*caret*/
+        }
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "get_bool() -> bool",
+                "get_u8() -> num",
+            ]"#]],
+    );
+}
+
+#[test]
+fn test_aborts_if_expected_type() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    fun get_u8(): u8 { 1 }
+    fun get_bool(): bool { true }
+    fun main() {
+    }
+    spec main {
+        aborts_if get/*caret*/
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "get_bool() -> bool",
+                "get_u8() -> num",
+            ]"#]],
+    );
+}
