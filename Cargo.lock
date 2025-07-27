@@ -2555,6 +2555,7 @@ dependencies = [
  "stdx",
  "time",
  "ungrammar",
+ "walkdir",
  "xshell",
  "zip",
 ]

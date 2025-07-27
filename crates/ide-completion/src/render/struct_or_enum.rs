@@ -1,3 +1,6 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::completions::reference::paths::{PathCompletionCtx, PathKind};
 use crate::context::CompletionContext;
 use crate::item::CompletionItemBuilder;

@@ -1,3 +1,6 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::ast;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 

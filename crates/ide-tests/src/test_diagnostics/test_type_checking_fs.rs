@@ -1,3 +1,6 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
 // todo: two different version of the AptosFramework in the same dependency tree
 // #[test]
 // fn test_types_from_two_different_aptos_framework_dependencies_are_compatible() {

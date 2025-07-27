@@ -1,3 +1,6 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::resolve::assert_resolves_to_multiple_targets;
 use syntax::files::FilePosition;
 use test_utils::{fixtures, get_marked_position_offset};

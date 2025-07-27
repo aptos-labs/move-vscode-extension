@@ -1,3 +1,6 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::node_ext::item_spec::ItemSpecExt;

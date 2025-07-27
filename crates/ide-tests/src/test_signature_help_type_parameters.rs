@@ -1,3 +1,6 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::ide_test_utils::check_signature_info;
 use expect_test::expect;
 

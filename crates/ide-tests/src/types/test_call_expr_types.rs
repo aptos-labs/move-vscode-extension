@@ -1,3 +1,6 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
 use syntax::files::FilePosition;
 use test_utils::tracing::init_tracing_for_test;
 use test_utils::{fixtures, get_marked_position_offset_with_data};
