@@ -1,7 +1,7 @@
 {
     "name": "move-on-aptos",
     "displayName": "Move on Aptos",
-    "description": "Fast, modern Move language development on Aptos — directly in VS Code.",
+    "description": "Fast, modern Move language development on Aptos - directly in VS Code.",
     "version": "0.1.0-dev",
     "private": true,
     "publisher": "aptoslabs",
