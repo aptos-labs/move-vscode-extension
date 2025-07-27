@@ -1,3 +1,6 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::test_inlay_type_hints::check_inlay_hints;
 use expect_test::expect;
 

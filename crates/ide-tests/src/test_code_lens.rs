@@ -1,3 +1,6 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
 use expect_test::{Expect, expect};
 use ide::annotations::{AnnotationConfig, AnnotationKind, AnnotationLocation};
 use syntax::pretty_print::{SourceMark, apply_source_marks};

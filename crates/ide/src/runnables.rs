@@ -1,3 +1,9 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
+// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
+// Modifications have been made to the original code.
+
 use crate::NavigationTarget;
 use ide_db::helpers::{visit_file_defs, visit_item_specs};
 use ide_db::{RootDatabase, SymbolKind};
