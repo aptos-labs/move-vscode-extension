@@ -7,6 +7,7 @@
 #![allow(dead_code)]
 
 mod codegen;
+mod copyright;
 mod dist;
 mod install;
 mod testgen;
@@ -36,6 +37,7 @@ enum Command {
         #[clap(long)]
         client_patch_version: Option<String>,
     },
+    Copyright,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -48,6 +50,7 @@ fn main() -> anyhow::Result<()> {
             install::install(client, server)?;
         }
         Command::Dist { client_patch_version } => dist::dist(client_patch_version)?,
+        Command::Copyright => copyright::enforce(),
     }
 
     Ok(())
