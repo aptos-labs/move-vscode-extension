@@ -104,8 +104,8 @@ impl SourceDatabase for RootDatabase {
         self.builtins_file_id = file_id.map(|it| it.intern(self));
     }
 
-    fn package_metadata(&self, package_id: ManifestFileId) -> PackageMetadataInput {
-        self.files.package_metadata(package_id)
+    fn package_metadata(&self, manifest_file_id: ManifestFileId) -> PackageMetadataInput {
+        self.files.package_metadata(manifest_file_id)
     }
 
     fn set_package_metadata(&mut self, package_id: ManifestFileId, package_metadata: PackageMetadata) {

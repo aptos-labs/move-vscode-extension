@@ -150,7 +150,7 @@ impl Analysis {
             db.package_root(package_id)
                 .data(db)
                 .manifest_file_id
-                .map(|file_id| db.package_metadata(file_id).metadata(db))
+                .map(|manifest_file_id| db.package_metadata(manifest_file_id).metadata(db))
         })
     }
 

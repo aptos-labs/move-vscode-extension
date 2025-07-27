@@ -46,7 +46,7 @@ pub trait SourceDatabase: salsa::Database {
 
     fn set_builtins_file_id(&mut self, id: Option<FileId>);
 
-    fn package_metadata(&self, package_file_id: ManifestFileId) -> PackageMetadataInput;
+    fn package_metadata(&self, manifest_file_id: ManifestFileId) -> PackageMetadataInput;
 
     fn set_package_metadata(
         &mut self,

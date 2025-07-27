@@ -107,6 +107,11 @@ impl<T: AstNode> InFile<T> {
         Some(InFile::new(*file_id, value))
     }
 
+    pub fn unpack_if<IntoT: AstNode>(self) -> Option<(FileId, IntoT)> {
+        let InFile { file_id, value } = self;
+        IntoT::cast(value.syntax().clone()).map(|it| (file_id, it))
+    }
+
     pub fn file_range(&self) -> FileRange {
         self.map_ref(|it| it.syntax().to_owned()).file_range()
     }

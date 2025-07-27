@@ -15,7 +15,7 @@ use ide::inlay_hints::{
     InlayFieldsToResolve, InlayHint, InlayHintLabel, InlayHintLabelPart, InlayHintPosition, InlayKind,
     InlayTooltip, LazyProperty,
 };
-use ide::runnables::Runnable;
+use ide::runnables::{Runnable, RunnableKind};
 use ide::syntax_highlighting::tags::{Highlight, HlOperator, HlPunct, HlTag};
 use ide::{Cancellable, HlRange, NavigationTarget, SignatureHelp};
 use ide_completion::item::{CompletionItem, CompletionItemKind, CompletionRelevance};
@@ -945,15 +945,33 @@ pub(crate) fn runnable(
     let Some(path) = snap.file_id_to_file_path(runnable.nav_item.file_id).parent() else {
         return Ok(None);
     };
-    let mut aptos_args = vec!["move", "test", "--filter", &runnable.test_path]
-        .iter()
-        .map(|it| it.to_string())
-        .collect::<Vec<_>>();
-    for extra_arg in config.extra_args {
-        if !aptos_args.contains(&extra_arg) {
-            aptos_args.push(extra_arg);
+    let aptos_args = match &runnable.kind {
+        RunnableKind::Test { test_path } => {
+            let mut args = vec!["move", "test", "--filter", test_path.as_str()]
+                .iter()
+                .map(|it| it.to_string())
+                .collect::<Vec<_>>();
+            for extra_arg in config.tests_extra_args {
+                if !args.contains(&extra_arg) {
+                    args.push(extra_arg);
+                }
+            }
+            args
         }
-    }
+        RunnableKind::Prove { item_path } => {
+            let mut args = vec!["move", "prove", "--only", item_path.as_str()]
+                .iter()
+                .map(|it| it.to_string())
+                .collect::<Vec<_>>();
+            for extra_arg in config.prover_extra_args {
+                if !args.contains(&extra_arg) {
+                    args.push(extra_arg);
+                }
+            }
+            args
+        }
+    };
+
     let label = runnable.label();
     let location = location_link(snap, None, runnable.nav_item)?;
 

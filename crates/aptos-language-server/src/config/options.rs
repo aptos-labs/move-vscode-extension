@@ -74,13 +74,13 @@ config_data! {
 
         /// Path to the `movefmt` executable.
         movefmt_path: Option<Utf8PathBuf>                         = None,
-
-        /// Additional arguments to `rustfmt`.
+        /// Additional arguments to `movefmt`.
         movefmt_extraArgs: Vec<String>               = vec![],
 
-        /// Additional arguments to be passed to `aptos move` for runnables such as tests.
-        /// For example, it may be `--override-std`.
-        runnables_extraArgs: Vec<String>   = vec![],
+        /// Additional arguments to be passed to `aptos move test`. For example, it may be `--override-std`.
+        tests_extraArgs: Vec<String>   = vec![],
+        /// Additional arguments to be passed to `aptos move prove`. For example, it may be `--shards 4`.
+        prover_extraArgs: Vec<String>   = vec![],
     }
 }
 
@@ -103,8 +103,7 @@ pub(crate) struct DefaultConfigData {
 }
 
 /// All of the config levels, all fields `Option<T>`, to describe fields that are actually set by
-/// some rust-analyzer.toml file or JSON blob. An empty rust-analyzer.toml corresponds to
-/// all fields being None.
+/// some rust-analyzer.toml file or JSON blob.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub(crate) struct FullConfigInput {
     global: GlobalConfigInput,

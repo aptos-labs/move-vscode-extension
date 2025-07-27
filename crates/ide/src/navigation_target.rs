@@ -98,6 +98,21 @@ impl NavigationTarget {
         Self::from_syntax_loc(sema.db, scope_entry.name, scope_entry.node_loc)
     }
 
+    pub(crate) fn from_item_spec_ref(
+        element_name: String,
+        item_spec_ref: InFile<ast::ItemSpecRef>,
+    ) -> Option<NavigationTarget> {
+        let (file_id, item_spec_ref) = item_spec_ref.unpack();
+        let full_range = item_spec_ref.syntax().text_range();
+        Some(NavigationTarget::from_syntax(
+            file_id,
+            element_name.into(),
+            None,
+            full_range,
+            SymbolKind::Field,
+        ))
+    }
+
     pub(crate) fn from_syntax_loc(
         db: &RootDatabase,
         element_name: String,
@@ -131,17 +146,17 @@ impl NavigationTarget {
             ));
         }
 
-        if let Some(item_spec_ref) = syntax_loc.to_ast::<ast::ItemSpecRef>(db) {
-            let item_spec_ref = item_spec_ref.value;
-            let full_range = item_spec_ref.syntax().text_range();
-            return Some(NavigationTarget::from_syntax(
-                file_id,
-                element_name.into(),
-                None,
-                full_range,
-                SymbolKind::Field,
-            ));
-        }
+        // if let Some(item_spec_ref) = syntax_loc.to_ast::<ast::ItemSpecRef>(db) {
+        //     let item_spec_ref = item_spec_ref.value;
+        //     let full_range = item_spec_ref.syntax().text_range();
+        //     return Some(NavigationTarget::from_syntax(
+        //         file_id,
+        //         element_name.into(),
+        //         None,
+        //         full_range,
+        //         SymbolKind::Field,
+        //     ));
+        // }
 
         let named_item = syntax_loc.to_ast::<ast::NamedElement>(db)?.value;
         let name_range = named_item.name().map(|name| name.ident_token().text_range());
@@ -159,7 +174,6 @@ impl NavigationTarget {
 
     /// Allows `NavigationTarget` to be created from a `NameOwner`
     pub(crate) fn from_named_item<'db>(
-        // _sema: &'db Semantics<'db, RootDatabase>,
         named_item: InFile<ast::NamedElement>,
     ) -> Option<NavigationTarget> {
         let (file_id, named_item) = named_item.unpack();

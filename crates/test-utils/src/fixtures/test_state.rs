@@ -7,11 +7,11 @@
 use crate::fixtures::{SourceFiles, parse_files_from_source};
 use crate::testdir;
 use ide::{Analysis, AnalysisHost};
-use paths::Utf8Path;
+use paths::{Utf8Path, Utf8PathBuf};
 use project_model::DiscoveredManifest;
 use project_model::aptos_package::load_from_fs;
 use std::fs;
-use vfs::{AbsPathBuf, FileId, Vfs};
+use vfs::{AbsPathBuf, FileId, Vfs, VfsPath};
 
 pub fn prepare_directories(ws_root: &Utf8Path, test_packages: Vec<TestPackageFiles>) {
     let _ = fs::create_dir(ws_root);
@@ -47,7 +47,7 @@ pub fn from_multiple_files_on_tmpfs(test_packages: Vec<TestPackageFiles>) -> Tes
     let ws_root = tmp.path().to_path_buf();
     prepare_directories(&ws_root, test_packages);
 
-    let discovered_manifests = DiscoveredManifest::discover_all(&[AbsPathBuf::assert(ws_root)]);
+    let discovered_manifests = DiscoveredManifest::discover_all(&[AbsPathBuf::assert(ws_root.clone())]);
     let all_packages = load_from_fs::load_aptos_packages(discovered_manifests)
         .into_iter()
         .filter_map(|it| it.ok())
@@ -56,7 +56,7 @@ pub fn from_multiple_files_on_tmpfs(test_packages: Vec<TestPackageFiles>) -> Tes
     let (db, vfs) = ide_db::load::load_db(all_packages.as_slice()).unwrap();
 
     let analysis_host = AnalysisHost::with_database(db);
-    TestState { vfs, analysis_host }
+    TestState { ws_root, vfs, analysis_host }
 }
 
 #[derive(Debug)]
@@ -66,7 +66,7 @@ pub struct TestPackageFiles {
     source_files: String,
 }
 
-pub fn named(name: &str, source_files: &str) -> TestPackageFiles {
+pub fn named(name: &str, source_files: impl Into<String>) -> TestPackageFiles {
     // language=TOML
     TestPackageFiles {
         root_dir: name.to_string(),
@@ -77,7 +77,7 @@ name = "{name}"
 version = "0.1.0"
         "#
         )),
-        source_files: source_files.to_string(),
+        source_files: source_files.into(),
     }
 }
 
@@ -114,6 +114,7 @@ version = "0.1.0"
 }
 
 pub struct TestState {
+    pub ws_root: Utf8PathBuf,
     vfs: Vfs,
     analysis_host: AnalysisHost,
 }
@@ -121,6 +122,49 @@ pub struct TestState {
 impl TestState {
     pub fn analysis(&self) -> Analysis {
         self.analysis_host.analysis()
+    }
+
+    pub fn relpath(&self, file_id: FileId) -> String {
+        let file_path = self.vfs.file_path(file_id);
+        if file_path.name_and_extension() == Some(("builtins", Some("move"))) {
+            return "/builtins.move".into();
+        }
+        let file_path = file_path.as_path().unwrap();
+        let package_metadata = self.analysis().package_metadata(file_id).unwrap().unwrap();
+        let package_name = package_metadata.package_name.unwrap();
+        let sources_dir = self.ws_root.join(package_name).join("sources");
+        let relpath = file_path
+            .strip_prefix(AbsPathBuf::assert(sources_dir).as_path())
+            .unwrap()
+            .as_str();
+        format!("/{relpath}")
+    }
+
+    pub fn all_move_files(&self) -> Vec<(FileId, String)> {
+        let analysis = self.analysis_host.analysis();
+        let mut res = vec![];
+        for (file_id, file_path) in self.vfs.iter() {
+            if file_path.name_and_extension() == Some(("builtins", Some("move"))) {
+                continue;
+            }
+            let file_text = analysis.file_text(file_id).unwrap().to_string();
+            if analysis.package_metadata(file_id).unwrap().is_none() {
+                // builtin
+                continue;
+            }
+            if file_path
+                .name_and_extension()
+                .is_none_or(|(_, ext)| ext.is_none_or(|it| it != "move"))
+            {
+                continue;
+            }
+            res.push((file_id, file_text));
+        }
+        res
+    }
+
+    pub fn file_path(&self, file_id: FileId) -> &VfsPath {
+        self.vfs.file_path(file_id)
     }
 
     pub fn file_with_caret(&self, caret: &str) -> (FileId, String) {
