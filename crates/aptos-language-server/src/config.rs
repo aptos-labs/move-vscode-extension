@@ -44,8 +44,9 @@ pub struct ClientCommandsConfig {
 /// Configuration for runnable items, such as `main` function or tests.
 #[derive(Debug, Clone)]
 pub struct RunnablesConfig {
-    /// Additional arguments for the `aptos move`, e.g. `--override-std`.
-    pub extra_args: Vec<String>,
+    /// Additional arguments for the `aptos move test`, e.g. `--override-std`.
+    pub tests_extra_args: Vec<String>,
+    pub prover_extra_args: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -306,7 +307,8 @@ impl Config {
 
     pub fn runnables(&self) -> RunnablesConfig {
         RunnablesConfig {
-            extra_args: self.runnables_extraArgs().clone(),
+            tests_extra_args: self.tests_extraArgs().clone(),
+            prover_extra_args: self.prover_extraArgs().clone(),
         }
     }
 

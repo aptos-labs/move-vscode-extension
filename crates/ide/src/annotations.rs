@@ -30,7 +30,6 @@ pub enum AnnotationKind {
         pos: FilePosition,
         item_spec_refs: Option<Vec<NavigationTarget>>,
     },
-    // HasReferences { pos: FilePosition, data: Option<Vec<FileRange>> },
 }
 
 #[derive(Debug)]

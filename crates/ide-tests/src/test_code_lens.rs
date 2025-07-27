@@ -1,6 +1,8 @@
 use expect_test::{Expect, expect};
-use ide::annotations::{Annotation, AnnotationConfig, AnnotationLocation};
-use test_utils::fixtures;
+use ide::annotations::{AnnotationConfig, AnnotationKind, AnnotationLocation};
+use syntax::pretty_print::{SourceMark, apply_source_marks};
+use test_utils::fixtures::test_state::named;
+use test_utils::{fixtures, remove_marks};
 
 const DEFAULT_CONFIG: AnnotationConfig = AnnotationConfig {
     annotate_runnables: true,
@@ -8,70 +10,60 @@ const DEFAULT_CONFIG: AnnotationConfig = AnnotationConfig {
     location: AnnotationLocation::AboveName,
 };
 
-fn check_code_lens(source: &str, expect: Expect) {
-    let (analysis, file_id) = fixtures::from_single_file(source.to_string());
+fn check_code_lens(expect: Expect) {
+    let source = stdx::trim_indent(expect.data());
+    let trimmed_source = remove_marks(&source, "//^");
 
-    let annotations: Vec<Annotation> = analysis
-        .annotations(&DEFAULT_CONFIG, file_id)
-        .unwrap()
-        .into_iter()
-        .map(|annotation| analysis.resolve_annotation(annotation).unwrap())
-        .collect();
+    let test_state = fixtures::from_multiple_files_on_tmpfs(vec![named("TestPackage", trimmed_source)]);
 
-    expect.assert_debug_eq(&annotations);
+    let mut res = String::new();
+    for (file_id, file_text) in test_state.all_move_files() {
+        let annotations = test_state
+            .analysis()
+            .annotations(&DEFAULT_CONFIG, file_id)
+            .unwrap()
+            .into_iter()
+            .map(|annotation| test_state.analysis().resolve_annotation(annotation).unwrap())
+            .collect::<Vec<_>>();
+        let mut marks = vec![];
+        for annotation in annotations {
+            let label = match annotation.kind {
+                AnnotationKind::Runnable(runnable) => runnable.label(),
+                AnnotationKind::HasSpecs { .. } => "has specs".to_string(),
+            };
+            marks.push(SourceMark::at_range(annotation.range, label));
+        }
+        let file_text_with_marks = apply_source_marks(&file_text, marks);
+        res.push_str("//- ");
+        res.push_str(&test_state.relpath(file_id));
+        res.push_str("\n");
+        res.push_str(&file_text_with_marks);
+    }
+
+    expect.assert_eq(&res);
 }
 
 #[test]
 fn test_annotate_specified_fun() {
     check_code_lens(
         // language=Move
-        r#"
-module std::m {
-    fun main() {}
-}
-spec std::m {
-    spec main() {
-        assert 1 == 1;
-    }
-    spec main() {
-        assert 2 == 2;
-    }
-}
-    "#,
         expect![[r#"
-            [
-                Annotation {
-                    range: 25..29,
-                    kind: HasSpecs {
-                        pos: FilePosition {
-                            file_id: FileId(
-                                1,
-                            ),
-                            offset: 25,
-                        },
-                        item_spec_refs: Some(
-                            [
-                                NavigationTarget {
-                                    file_id: FileId(
-                                        1,
-                                    ),
-                                    full_range: 60..64,
-                                    name: "main",
-                                    kind: Field,
-                                },
-                                NavigationTarget {
-                                    file_id: FileId(
-                                        1,
-                                    ),
-                                    full_range: 107..111,
-                                    name: "main",
-                                    kind: Field,
-                                },
-                            ],
-                        ),
-                    },
-                },
-            ]
+            //- /main.spec.move
+            spec std::m {
+                spec main() {
+                   //^^^^ prove m::main
+                    assert 1 == 1;
+                }
+                spec main() {
+                   //^^^^ prove m::main
+                    assert 2 == 2;
+                }
+            }
+            //- /main.move
+            module std::m {
+                fun main() {}
+                  //^^^^ has specs
+            }
         "#]],
     );
 }
@@ -80,34 +72,54 @@ spec std::m {
 fn test_annotate_test_fun() {
     check_code_lens(
         // language=Move
-        r#"
-module std::m {
-    #[test]
-    fun test_main() {
-
-    }
-}
-    "#,
         expect![[r#"
-            [
-                Annotation {
-                    range: 37..46,
-                    kind: Runnable(
-                        Runnable {
-                            nav_item: NavigationTarget {
-                                file_id: FileId(
-                                    1,
-                                ),
-                                full_range: 21..57,
-                                focus_range: 37..46,
-                                name: "test_main",
-                                kind: Function,
-                            },
-                            test_path: "m::test_main",
-                        },
-                    ),
-                },
-            ]
+            //- /main.move
+            module std::m {
+                #[test]
+                fun test_main() {
+                  //^^^^^^^^^ test m::test_main
+
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_annotate_item_spec_for_function() {
+    check_code_lens(
+        // language=Move
+        expect![[r#"
+            //- /main.move
+            module std::m {
+                fun main() {
+                  //^^^^ has specs
+                }
+                spec main {
+                   //^^^^ prove m::main
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_annotate_item_spec_for_function_in_module_spec() {
+    check_code_lens(
+        // language=Move
+        expect![[r#"
+            //- /main.spec.move
+            spec std::m {
+                spec main {
+                   //^^^^ prove m::main
+                }
+            }
+            //- /main.move
+            module std::m {
+                fun main() {
+                  //^^^^ has specs
+                }
+            }
         "#]],
     );
 }

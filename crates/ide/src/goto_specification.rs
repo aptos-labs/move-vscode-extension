@@ -36,7 +36,7 @@ pub(crate) fn goto_specification(
             let item_spec = loc.to_ast::<ast::ItemSpec>(db)?;
             let item_spec_ref = item_spec.and_then(|it| it.item_spec_ref())?;
             let name = item_spec_ref.value.name_ref()?.as_string();
-            NavigationTarget::from_syntax_loc(db, name, item_spec_ref.loc())
+            NavigationTarget::from_item_spec_ref(name, item_spec_ref)
         })
         .collect::<Vec<_>>();
 

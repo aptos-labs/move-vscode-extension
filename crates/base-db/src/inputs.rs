@@ -139,11 +139,10 @@ impl Files {
         };
     }
 
-    pub fn file_package_id(&self, id: FileId) -> PackageId {
-        let file_package_id = self
-            .file_package_ids
-            .get(&id)
-            .expect("Unable to fetch PackageId; this is a bug");
+    pub fn file_package_id(&self, file_id: FileId) -> PackageId {
+        let file_package_id = self.file_package_ids.get(&file_id).expect(&format!(
+            "Unable to fetch PackageId for {file_id:?}; this is a bug"
+        ));
         *file_package_id
     }
 
@@ -151,10 +150,10 @@ impl Files {
         self.file_package_ids.insert(file_id, package_id);
     }
 
-    pub fn package_metadata(&self, package_id: ManifestFileId) -> PackageMetadataInput {
+    pub fn package_metadata(&self, manifest_file_id: ManifestFileId) -> PackageMetadataInput {
         let metadata = self
             .package_metadata
-            .get(&package_id)
+            .get(&manifest_file_id)
             .expect("Unable to fetch package dependencies");
         *metadata
     }

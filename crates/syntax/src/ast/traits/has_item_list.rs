@@ -39,6 +39,7 @@ pub trait HasItems: AstNode {
         self.items().into_iter().filter_map(|it| it.struct_()).collect()
     }
 
+    /// returns both `spec ITEM {}` and `spec module {}`
     fn all_item_specs(&self) -> Vec<ast::ItemSpec> {
         self.items().into_iter().filter_map(|it| it.item_spec()).collect()
     }

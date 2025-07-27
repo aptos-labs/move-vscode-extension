@@ -391,7 +391,7 @@
                 "title": "movefmt",
                 "properties": {
                     "move-on-aptos.movefmt.extraArgs": {
-                        "markdownDescription": "Additional arguments to `rustfmt`.",
+                        "markdownDescription": "Additional arguments to `movefmt`.",
                         "default": [],
                         "type": "array",
                         "items": {
@@ -414,10 +414,23 @@
                 }
             },
             {
-                "title": "runnables",
+                "title": "prover",
                 "properties": {
-                    "move-on-aptos.runnables.extraArgs": {
-                        "markdownDescription": "Additional arguments to be passed to `aptos move` for runnables such as tests.\nFor example, it may be `--override-std`.",
+                    "move-on-aptos.prover.extraArgs": {
+                        "markdownDescription": "Additional arguments to be passed to `aptos move prove`. For example, it may be `--shards 4`.",
+                        "default": [],
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "title": "tests",
+                "properties": {
+                    "move-on-aptos.tests.extraArgs": {
+                        "markdownDescription": "Additional arguments to be passed to `aptos move test`. For example, it may be `--override-std`.",
                         "default": [],
                         "type": "array",
                         "items": {
