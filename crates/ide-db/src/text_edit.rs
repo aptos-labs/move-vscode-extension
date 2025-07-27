@@ -4,19 +4,13 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-//! Representation of a `TextEdit`.
-//!
-//! `rust-analyzer` never mutates text itself and only sends diffs to clients,
-//! so `TextEdit` is the ultimate representation of the work done by
-//! rust-analyzer.
-
 use itertools::Itertools;
 use std::cmp::max;
 use syntax::{TextRange, TextSize};
 
-/// `ReplaceText` -- a single "atomic" change to text
+/// `TextChange` -- a single "atomic" change to text
 ///
-/// Must not overlap with other `ReplaceText`s
+/// Must not overlap with other `TextChange`s
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TextChange {
     pub new_text: String,

@@ -22,6 +22,3 @@ itertools.workspace = true
 
 stdx.workspace = true
 
-[lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(trick_rust_analyzer_into_highlighting_interpolated_bits)'] }
-
