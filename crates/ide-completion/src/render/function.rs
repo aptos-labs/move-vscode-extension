@@ -57,7 +57,6 @@ pub(crate) fn render_function(
         item_builder.insert_snippet(format!("{function_name}{snippet_parens}"));
     }
 
-    // match call_ty.ret_type().unwrap_all_refs() {
     let ret_type = call_ty.ret_type();
     match &ret_type {
         Ty::Unit => (),
