@@ -21,7 +21,7 @@ pub fn use_speck_entries(
 ) -> Vec<ScopeEntry> {
     let use_items = use_stmts_owner.use_stmt_items(db);
 
-    let mut entries = vec![];
+    let mut entries = Vec::with_capacity(use_items.len());
     for use_item in use_items {
         if let Some(entry) = resolve_use_item(db, use_item, use_stmts_owner.file_id) {
             entries.push(entry);

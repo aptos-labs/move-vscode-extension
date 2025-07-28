@@ -23,7 +23,7 @@ pub fn get_entries_in_scope(
 ) -> Vec<ScopeEntry> {
     let mut entries = vec![];
     if let Some(use_stmts_owner) = scope.syntax_cast::<ast::AnyHasUseStmts>() {
-        entries.extend(hir_db::use_speck_entries(db, use_stmts_owner));
+        entries.extend(hir_db::use_speck_entries(db, &use_stmts_owner));
     }
     entries.extend(get_entries_in_blocks(scope.clone(), prev));
     entries.extend(get_entries_from_owner(db, scope));

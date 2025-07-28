@@ -19,8 +19,10 @@ pub trait ModuleResolutionExt {
     fn item_entries(&self) -> Vec<ScopeEntry> {
         let (file_id, module) = self.module().unpack();
 
-        let mut entries = vec![];
-        for member in module.named_items() {
+        let module_named_items = module.named_items();
+
+        let mut entries = Vec::with_capacity(module_named_items.len());
+        for member in module_named_items {
             if let Some(struct_) = member.clone().struct_() {
                 if struct_.is_tuple_struct() {
                     if let Some(s_entry) = struct_.in_file(file_id).to_entry() {
@@ -74,35 +76,8 @@ pub trait ModuleResolutionExt {
     }
 }
 
-pub trait FileResolutionExt {
-    fn file(&self) -> InFile<&ast::SourceFile>;
-
-    fn importable_entries(&self) -> Vec<ScopeEntry> {
-        let mut entries = vec![];
-        let modules = self.file().flat_map(|it| it.all_modules().collect());
-        for module in modules {
-            if let Some(module_entry) = module.clone().to_entry() {
-                entries.push(module_entry);
-            }
-            entries.extend(module.importable_entries());
-        }
-        let module_specs = self.file().flat_map(|it| it.module_specs().collect());
-        for module_spec in module_specs {
-            let items = module_spec.flat_map(|it| it.importable_items());
-            entries.extend(items.to_entries());
-        }
-        entries
-    }
-}
-
 impl ModuleResolutionExt for InFile<ast::Module> {
     fn module(&self) -> InFile<&ast::Module> {
-        self.as_ref()
-    }
-}
-
-impl FileResolutionExt for InFile<ast::SourceFile> {
-    fn file(&self) -> InFile<&ast::SourceFile> {
         self.as_ref()
     }
 }
