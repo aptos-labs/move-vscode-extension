@@ -49,7 +49,7 @@ fn resolve_path_multi_tracked<'db>(
 
 pub(crate) fn use_speck_entries(
     db: &dyn SourceDatabase,
-    stmts_owner: InFile<ast::AnyHasUseStmts>,
+    stmts_owner: &InFile<impl ast::HasUseStmts>,
 ) -> Vec<ScopeEntry> {
     use_speck_entries_tracked(db, SyntaxLocInput::new(db, stmts_owner.loc()))
 }

@@ -10,12 +10,12 @@ use crate::nameres::namespaces::{Ns, NsSet};
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::path_resolution::ResolutionContext;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
-use crate::nameres::scope_entries_owner::get_entries_in_scope;
+use crate::nameres::scope_entries_owner;
 use crate::node_ext::item::ModuleItemExt;
 use crate::{hir_db, nameres};
 use base_db::SourceDatabase;
 use base_db::package_root::PackageId;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::SyntaxKind;
@@ -118,39 +118,32 @@ pub fn get_entries_from_walking_scopes(
 
     let resolve_scopes = get_resolve_scopes(db, start_at);
 
-    let mut visited_names = HashMap::<String, NsSet>::new();
+    let mut visited_names = HashSet::new();
     let mut entries = vec![];
     for ResolveScope { scope, prev } in resolve_scopes {
-        let scope_entries = get_entries_in_scope(db, scope.clone(), prev);
+        let scope_entries = scope_entries_owner::get_entries_in_scope(db, scope.clone(), prev);
         if scope_entries.is_empty() {
             continue;
         }
-        let mut visited_names_in_scope = HashMap::<String, NsSet>::new();
-        for scope_entry in scope_entries {
-            let entry_name = scope_entry.name.clone();
-            let entry_ns = scope_entry.ns;
+        let prev_visited_names = visited_names.clone();
 
+        entries.reserve(scope_entries.len());
+        visited_names.reserve(scope_entries.len());
+
+        for scope_entry in scope_entries {
+            let entry_ns = scope_entry.ns;
             if !ns.contains(entry_ns) {
                 continue;
             }
 
-            if let Some(visited_ns) = visited_names.get(&entry_name) {
-                if visited_ns.contains(entry_ns) {
-                    // this (name, ns) is already visited in the previous scope
-                    continue;
-                }
+            let ns_pair = (entry_ns, scope_entry.name.clone());
+            if prev_visited_names.contains(&ns_pair) {
+                continue;
             }
-
-            let combined_ns = visited_names
-                .get(&entry_name)
-                .cloned()
-                .unwrap_or_default()
-                .union(NsSet::from(entry_ns));
-            visited_names_in_scope.insert(entry_name, combined_ns);
+            visited_names.insert(ns_pair);
 
             entries.push(scope_entry);
         }
-        visited_names.extend(visited_names_in_scope);
     }
     entries
 }
