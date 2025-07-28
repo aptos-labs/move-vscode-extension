@@ -195,15 +195,3 @@ impl<T: AstNode> OptionInFileExt for Option<T> {
         Some(InFile::new(file_id, v))
     }
 }
-
-pub trait InFileVecExt {
-    type Node;
-    fn wrapped_in_file(self, file_id: FileId) -> Vec<InFile<Self::Node>>;
-}
-
-impl<T: AstNode> InFileVecExt for Vec<T> {
-    type Node = T;
-    fn wrapped_in_file(self, file_id: FileId) -> Vec<InFile<T>> {
-        self.into_iter().map(|node| node.in_file(file_id)).collect()
-    }
-}

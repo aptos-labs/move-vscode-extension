@@ -4,12 +4,12 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::nameres::scope::{NamedItemsExt, ScopeEntry};
+use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use stdx::itertools::Itertools;
 use syntax::ast::HasStmts;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
-use syntax::files::{InFile, InFileVecExt};
+use syntax::files::InFile;
 use syntax::{AstNode, SyntaxNode, ast};
 
 pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: SyntaxNode) -> Vec<ScopeEntry> {
@@ -54,12 +54,8 @@ pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: SyntaxNode) -> Vec
             // coming from rhs, use pat bindings from lhs
             if !prev.is::<ast::Pat>() {
                 let (file_id, match_arm) = scope.map(|it| it.cast::<ast::MatchArm>().unwrap()).unpack();
-                let ident_pats = match_arm
-                    .pat()
-                    .map(|it| it.bindings())
-                    .unwrap_or_default()
-                    .wrapped_in_file(file_id);
-                entries.extend(ident_pats.to_entries());
+                let ident_pats = match_arm.pat().map(|it| it.bindings()).unwrap_or_default();
+                entries.extend(ident_pats.to_entries(file_id));
             }
         }
         _ => {}
@@ -74,7 +70,7 @@ fn let_stmts_with_bindings(block: InFile<ast::BlockExpr>) -> Vec<(ast::LetStmt, 
         .let_stmts()
         .map(|let_stmt| {
             let bindings = let_stmt.pat().map(|pat| pat.bindings()).unwrap_or_default();
-            (let_stmt, bindings.wrapped_in_file(block.file_id).to_entries())
+            (let_stmt, bindings.to_entries(block.file_id))
         })
         .collect()
 }

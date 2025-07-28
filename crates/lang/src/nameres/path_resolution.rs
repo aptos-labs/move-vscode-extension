@@ -146,15 +146,13 @@ pub fn get_method_resolve_variants(
     method_entries
 }
 
-#[tracing::instrument(
-    level = "debug",
-    skip(db, path, expected_type),
-    fields(path = ?path.syntax_text(), file_id = ?path.file_id))]
 pub fn resolve_path(
     db: &dyn SourceDatabase,
     path: InFile<ast::Path>,
     expected_type: Option<Ty>,
 ) -> Vec<ScopeEntry> {
+    let _p = tracing::debug_span!("resolve_path").entered();
+
     let Some(path_name) = path.value.reference_name() else {
         return vec![];
     };

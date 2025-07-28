@@ -5,7 +5,7 @@
 // Modifications have been made to the original code.
 
 use crate::nameres::namespaces::Ns;
-use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryExt};
+use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::node_ext::item::ModuleItemExt;
 use base_db::inputs::InternFileId;
 use base_db::{SourceDatabase, source_db};
@@ -41,14 +41,16 @@ pub trait ModuleResolutionExt {
 
     fn importable_entries(&self) -> Vec<ScopeEntry> {
         let mut entries = self.item_entries();
-        entries.extend(self.module().flat_map(|it| it.global_variables()).to_entries());
+
+        let (file_id, module) = self.module().unpack();
+        entries.extend(module.global_variables().to_entries(file_id));
+
         entries
     }
 
     fn related_module_specs(&self, db: &dyn SourceDatabase) -> Vec<InFile<ast::ModuleSpec>> {
-        let module = self.module();
-        let spec_file_set = source_db::spec_union_file_set(db, module.file_id);
-        let mut module_specs = vec![];
+        let spec_file_set = source_db::spec_union_file_set(db, self.module().file_id);
+        let mut module_specs = Vec::with_capacity(spec_file_set.len());
         for spec_related_file_id in spec_file_set {
             let source_file = source_db::parse(db, spec_related_file_id.intern(db)).tree();
             for module_spec in source_file.module_specs() {
@@ -67,10 +69,13 @@ pub trait ModuleResolutionExt {
     fn importable_entries_from_related(&self, db: &dyn SourceDatabase) -> Vec<ScopeEntry> {
         let mut entries = vec![];
         for related_module_spec in self.related_module_specs(db) {
-            let module_spec_entries = related_module_spec
-                .flat_map(|it| it.importable_items())
-                .to_entries();
-            entries.extend(module_spec_entries);
+            let spec_importable_items = related_module_spec.value.importable_items();
+            entries.reserve(spec_importable_items.len());
+            for importable_item in spec_importable_items {
+                if let Some(entry) = importable_item.in_file(related_module_spec.file_id).to_entry() {
+                    entries.push(entry);
+                }
+            }
         }
         entries
     }

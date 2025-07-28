@@ -21,7 +21,12 @@ pub trait HasItems: AstNode {
     }
 
     fn enum_variants(&self) -> Vec<ast::Variant> {
-        self.enums().into_iter().flat_map(|e| e.variants()).collect()
+        let enums = self.enums();
+        let mut res = Vec::with_capacity(enums.len() * 2);
+        for enum_ in enums {
+            res.extend(enum_.variants());
+        }
+        res
     }
 
     fn non_test_functions(&self) -> Vec<ast::Fun> {
