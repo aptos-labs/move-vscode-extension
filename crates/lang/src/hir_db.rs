@@ -64,22 +64,22 @@ fn use_speck_entries_tracked<'db>(
     entries
 }
 
+// #[tracing::instrument(level = "debug", skip_all)]
+// pub(crate) fn inference(
+//     db: &dyn SourceDatabase,
+//     inference_owner: InFile<ast::InferenceCtxOwner>,
+//     msl: bool,
+// ) -> Arc<InferenceResult> {
+//     inference_tracked(db, SyntaxLocInput::new(db, inference_owner.loc()), msl)
+// }
+
 #[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn inference(
     db: &dyn SourceDatabase,
-    inference_owner: InFile<ast::InferenceCtxOwner>,
+    owner_loc: SyntaxLoc,
     msl: bool,
 ) -> Arc<InferenceResult> {
-    inference_tracked(db, SyntaxLocInput::new(db, inference_owner.loc()), msl)
-}
-
-#[tracing::instrument(level = "debug", skip_all)]
-pub(crate) fn inference_loc(
-    db: &dyn SourceDatabase,
-    owner_loc: SyntaxLocInput,
-    msl: bool,
-) -> Arc<InferenceResult> {
-    inference_tracked(db, owner_loc, msl)
+    inference_tracked(db, SyntaxLocInput::new(db, owner_loc), msl)
 }
 
 #[tracing::instrument(level = "debug", skip(db))]

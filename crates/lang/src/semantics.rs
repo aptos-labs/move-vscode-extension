@@ -6,9 +6,7 @@
 
 mod source_to_def;
 
-use crate::hir_db::inference_loc;
-use crate::loc::{SyntaxLocFileExt, SyntaxLocInput};
-use crate::nameres;
+use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::nameres::fq_named_element::{ItemFQName, ItemFQNameOwner};
 use crate::nameres::scope::{ScopeEntry, VecExt};
 use crate::node_ext::callable::Callable;
@@ -20,6 +18,7 @@ use crate::types::lowering::TyLowering;
 use crate::types::render::{HirWrite, TypeRenderer, TypeRendererConfig};
 use crate::types::ty::Ty;
 use crate::types::ty::ty_callable::TyCallable;
+use crate::{hir_db, nameres};
 use base_db::inputs::InternFileId;
 use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
@@ -45,7 +44,7 @@ pub struct SemanticsImpl<'db> {
     db: &'db dyn SourceDatabase,
     ws_root: PackageId,
     s2d_cache: RefCell<SourceToDefCache>,
-    inference_cache: RefCell<HashMap<(SyntaxLocInput<'db>, bool), Arc<InferenceResult>>>,
+    inference_cache: RefCell<HashMap<(SyntaxLoc, bool), Arc<InferenceResult>>>,
 }
 
 impl<DB> fmt::Debug for Semantics<'_, DB> {
@@ -249,15 +248,15 @@ impl<'db> SemanticsImpl<'db> {
     pub fn inference<T: AstNode>(&self, node: &InFile<T>, msl: bool) -> Option<Arc<InferenceResult>> {
         let ctx_owner = node.and_then_ref(|it| it.syntax().inference_ctx_owner())?;
 
-        let owner_loc = SyntaxLocInput::new(self.db, ctx_owner.loc());
-        let cache_key = (owner_loc, msl);
+        let owner_loc = ctx_owner.loc();
 
+        let cache_key = (owner_loc.clone(), msl);
         let mut cache = self.inference_cache.borrow_mut();
         if cache.contains_key(&cache_key) {
             return Some(Arc::clone(cache.get(&cache_key).unwrap()));
         }
 
-        let inf = inference_loc(self.db, owner_loc, msl);
+        let inf = hir_db::inference(self.db, owner_loc, msl);
         cache.insert(cache_key, Arc::clone(&inf));
 
         Some(inf)

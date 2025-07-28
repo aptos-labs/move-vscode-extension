@@ -5,6 +5,7 @@
 // Modifications have been made to the original code.
 
 use crate::hir_db;
+use crate::loc::SyntaxLocFileExt;
 use crate::nameres::labels::get_loop_labels_resolve_variants;
 use crate::nameres::path_resolution::remove_variant_ident_pats;
 use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryListExt, VecExt};
@@ -86,7 +87,7 @@ pub fn resolve_multi(
         inference = ref_element
             .syntax()
             .and_then(|it| it.inference_ctx_owner())
-            .map(|ctx_owner| hir_db::inference(db, ctx_owner, msl));
+            .map(|ctx_owner| hir_db::inference(db, ctx_owner.loc(), msl));
     }
 
     match inference {
