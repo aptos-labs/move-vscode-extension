@@ -113,12 +113,13 @@ impl<'db> InferenceCtx<'db> {
             .and_then(|it| it.cast_into::<ast::NamedElement>(self.db))
     }
 
-    #[tracing::instrument(level = "debug", skip_all, fields(ctx_file_id = ?self.file_id))]
     pub fn resolve_path_cached_multi(
         &mut self,
         path: ast::Path,
         expected_ty: Option<Ty>,
     ) -> Vec<ScopeEntry> {
+        let _p = tracing::debug_span!("resolve_path_cached_multi").entered();
+
         let path_entries =
             path_resolution::resolve_path(self.db, path.clone().in_file(self.file_id), expected_ty);
 
