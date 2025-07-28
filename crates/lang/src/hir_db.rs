@@ -74,21 +74,17 @@ fn use_speck_entries_tracked<'db>(
 // }
 
 #[tracing::instrument(level = "debug", skip_all)]
-pub(crate) fn inference(
-    db: &dyn SourceDatabase,
-    owner_loc: SyntaxLoc,
-    msl: bool,
-) -> Arc<InferenceResult> {
+pub(crate) fn inference(db: &dyn SourceDatabase, owner_loc: SyntaxLoc, msl: bool) -> &InferenceResult {
     inference_tracked(db, SyntaxLocInput::new(db, owner_loc), msl)
 }
 
 #[tracing::instrument(level = "debug", skip(db))]
-#[salsa_macros::tracked]
+#[salsa_macros::tracked(returns(ref))]
 fn inference_tracked<'db>(
     db: &'db dyn SourceDatabase,
     ctx_owner_loc: SyntaxLocInput<'db>,
     msl: bool,
-) -> Arc<InferenceResult> {
+) -> InferenceResult {
     let (file_id, ctx_owner) = ctx_owner_loc
         .to_ast::<ast::InferenceCtxOwner>(db)
         .unwrap()
@@ -108,7 +104,8 @@ fn inference_tracked<'db>(
     let mut type_walker = TypeAstWalker::new(&mut ctx, return_ty);
     type_walker.walk(ctx_owner);
 
-    Arc::new(InferenceResult::from_ctx(ctx))
+    InferenceResult::from_ctx(ctx)
+    // Arc::new(InferenceResult::from_ctx(ctx))
 }
 
 pub(crate) fn file_ids_by_module_address(

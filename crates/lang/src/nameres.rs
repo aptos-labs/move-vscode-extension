@@ -43,7 +43,7 @@ pub fn resolve(
 pub fn resolve_multi(
     db: &dyn SourceDatabase,
     ref_element: InFile<impl Into<ast::ReferenceElement>>,
-    cached_inference: Option<Arc<InferenceResult>>,
+    cached_inference: Option<&InferenceResult>,
 ) -> Option<Vec<ScopeEntry>> {
     let ref_element = ref_element.map(|it| it.into());
     {
@@ -139,7 +139,7 @@ fn resolve_multi_no_inf(
 
 fn resolve_multi_with_inf(
     db: &dyn SourceDatabase,
-    inference: Arc<InferenceResult>,
+    inference: &InferenceResult,
     ref_element: InFile<ast::ReferenceElement>,
 ) -> Option<Vec<ScopeEntry>> {
     let (file_id, ref_element) = ref_element.unpack();

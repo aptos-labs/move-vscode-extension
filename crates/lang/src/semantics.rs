@@ -44,7 +44,7 @@ pub struct SemanticsImpl<'db> {
     db: &'db dyn SourceDatabase,
     ws_root: PackageId,
     s2d_cache: RefCell<SourceToDefCache>,
-    inference_cache: RefCell<HashMap<(SyntaxLoc, bool), Arc<InferenceResult>>>,
+    inference_cache: RefCell<HashMap<(SyntaxLoc, bool), &'db InferenceResult>>,
 }
 
 impl<DB> fmt::Debug for Semantics<'_, DB> {
@@ -245,7 +245,7 @@ impl<'db> SemanticsImpl<'db> {
         }
     }
 
-    pub fn inference<T: AstNode>(&self, node: &InFile<T>, msl: bool) -> Option<Arc<InferenceResult>> {
+    pub fn inference<T: AstNode>(&self, node: &InFile<T>, msl: bool) -> Option<&InferenceResult> {
         let ctx_owner = node.and_then_ref(|it| it.syntax().inference_ctx_owner())?;
 
         let owner_loc = ctx_owner.loc();
@@ -253,11 +253,12 @@ impl<'db> SemanticsImpl<'db> {
         let cache_key = (owner_loc.clone(), msl);
         let mut cache = self.inference_cache.borrow_mut();
         if cache.contains_key(&cache_key) {
-            return Some(Arc::clone(cache.get(&cache_key).unwrap()));
+            return cache.get(&cache_key).map(|it| *it);
+            // return Some(Arc::clone(cache.get(&cache_key).unwrap()));
         }
 
         let inf = hir_db::inference(self.db, owner_loc, msl);
-        cache.insert(cache_key, Arc::clone(&inf));
+        cache.insert(cache_key, &inf);
 
         Some(inf)
     }
