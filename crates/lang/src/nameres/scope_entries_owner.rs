@@ -49,16 +49,12 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: InFile<SyntaxNode>
         MODULE => {
             let module = scope.syntax_cast::<ast::Module>().unwrap();
             entries.extend(hir_db::module_importable_entries(db, module.loc()));
-
             entries.extend(module.value.enum_variants().to_entries(file_id));
-
             entries.extend(builtin_functions(db).to_entries());
         }
         MODULE_SPEC => {
-            let module_spec = scope.syntax_cast::<ast::ModuleSpec>().unwrap();
-
-            let importable_entries = module_spec.flat_map(|it| it.importable_items()).to_entries();
-            entries.extend(importable_entries);
+            let (file_id, module_spec) = scope.syntax_cast::<ast::ModuleSpec>().unwrap().unpack();
+            entries.extend(module_spec.importable_items().to_entries(file_id));
         }
         SCRIPT => {
             let script = scope.syntax_cast::<ast::Script>().unwrap();
@@ -129,7 +125,7 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: InFile<SyntaxNode>
                 entries.extend(wildcard.type_params().to_entries(file_id));
             }
         }
-        _ => {}
+        _ => (),
     }
 
     entries

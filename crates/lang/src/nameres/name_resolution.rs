@@ -21,7 +21,7 @@ use std::fmt::Formatter;
 use syntax::SyntaxKind;
 use syntax::SyntaxKind::MODULE_SPEC;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
-use syntax::files::{InFile, InFileExt, InFileVecExt};
+use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, SyntaxNode, ast};
 
 pub struct ResolveScope {
@@ -160,7 +160,7 @@ pub fn get_modules_as_entries(
     let mut module_entries = Vec::with_capacity(interesting_file_ids.len());
     for source_file_id in interesting_file_ids {
         let modules = get_modules_in_file(db, source_file_id, address.clone());
-        module_entries.extend(modules.wrapped_in_file(source_file_id).to_entries());
+        module_entries.extend(modules.to_entries(source_file_id));
     }
     tracing::debug!(?module_entries);
 

@@ -14,7 +14,7 @@ use std::fmt;
 use std::fmt::Formatter;
 use stdx::itertools::Itertools;
 use syntax::SyntaxKind::{IDENT_PAT, NAMED_FIELD};
-use syntax::files::{InFile, InFileVecExt};
+use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, SyntaxKind, SyntaxNode, ast};
 use vfs::FileId;
 
@@ -77,19 +77,6 @@ impl<Named: Into<ast::NamedElement>> ScopeEntryExt for InFile<Named> {
     fn named_element(self) -> InFile<ast::NamedElement> {
         self.map(|it| it.into())
     }
-    // fn to_entry(self) -> Option<ScopeEntry> {
-    //     let named_element = self.value;
-    //     let name = self.value.into().name()?.as_string();
-    //     let item_loc = self.loc();
-    //     let item_ns = named_item_ns(item_loc.kind());
-    //     let entry = ScopeEntry {
-    //         name,
-    //         node_loc: item_loc,
-    //         ns: item_ns,
-    //         scope_adjustment: None,
-    //     };
-    //     Some(entry)
-    // }
 }
 
 pub trait NamedItemsExt {
@@ -98,7 +85,13 @@ pub trait NamedItemsExt {
 
 impl<Named: Into<ast::NamedElement>> NamedItemsExt for Vec<InFile<Named>> {
     fn to_entries(self) -> Vec<ScopeEntry> {
-        self.into_iter().filter_map(|item| item.to_entry()).collect()
+        let mut res = Vec::with_capacity(self.len());
+        for item in self.into_iter() {
+            if let Some(entry) = item.to_entry() {
+                res.push(entry);
+            }
+        }
+        res
     }
 }
 
@@ -108,8 +101,14 @@ pub trait NamedItemsInFileExt {
 
 impl<Named: Into<ast::NamedElement>> NamedItemsInFileExt for Vec<Named> {
     fn to_entries(self, file_id: FileId) -> Vec<ScopeEntry> {
-        let items = self.into_iter().map(|it| it.into()).collect::<Vec<_>>();
-        items.wrapped_in_file(file_id).to_entries()
+        let mut entries = Vec::with_capacity(self.len());
+        for item in self.into_iter() {
+            let named_element = item.into().in_file(file_id);
+            if let Some(entry) = named_element.to_entry() {
+                entries.push(entry);
+            }
+        }
+        entries
     }
 }
 
