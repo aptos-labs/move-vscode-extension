@@ -157,7 +157,7 @@ pub fn get_modules_as_entries(
     let interesting_file_ids = hir_db::file_ids_by_module_address(db, package_id, address.clone());
     tracing::debug!(?interesting_file_ids);
 
-    let mut module_entries = vec![];
+    let mut module_entries = Vec::with_capacity(interesting_file_ids.len());
     for source_file_id in interesting_file_ids {
         let modules = get_modules_in_file(db, source_file_id, address.clone());
         module_entries.extend(modules.wrapped_in_file(source_file_id).to_entries());
