@@ -36,10 +36,7 @@ fn test_if_inside_aptos_core_only_load_deps_from_aptos_move() {
     let ws_roots = vec![AbsPathBuf::assert_utf8(root)];
     let discovered_manifests = DiscoveredManifest::discover_all(&ws_roots);
 
-    let packages = load_aptos_packages(discovered_manifests)
-        .into_iter()
-        .map(|it| it.unwrap())
-        .collect::<Vec<_>>();
+    let packages = load_aptos_packages(discovered_manifests).valid_packages();
     assert_eq!(packages.len(), 4);
 
     let other_movestdlib_package = packages

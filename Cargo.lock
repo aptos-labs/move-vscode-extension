@@ -1383,6 +1383,7 @@ dependencies = [
  "paths",
  "serde",
  "serde_derive",
+ "stdx",
  "toml",
  "tracing",
  "vfs",

@@ -25,6 +25,7 @@ use lsp_types::Url;
 use lsp_types::notification::Notification;
 use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard};
 use project_model::aptos_package::AptosPackage;
+use project_model::aptos_package::load_from_fs::LoadedPackages;
 use project_model::project_folders::PackageRootConfig;
 use std::collections::HashMap;
 use std::ops::Deref;
@@ -39,7 +40,7 @@ pub(crate) struct LoadPackagesRequest {
 }
 
 pub(crate) struct LoadPackagesResponse {
-    pub(crate) packages_from_fs: Vec<anyhow::Result<AptosPackage>>,
+    pub(crate) packages_from_fs: LoadedPackages,
     pub(crate) force_reload_package_deps: bool,
 }
 

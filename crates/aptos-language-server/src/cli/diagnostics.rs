@@ -119,10 +119,7 @@ impl Diagnostics {
             diagnostics_config = diagnostics_config.for_assists();
         }
 
-        let all_packages = load_from_fs::load_aptos_packages(ws_manifests)
-            .into_iter()
-            .filter_map(|it| it.ok())
-            .collect::<Vec<_>>();
+        let all_packages = load_from_fs::load_aptos_packages(ws_manifests).valid_packages();
         let (mut db, mut vfs) = ide_db::load::load_db(&all_packages)?;
 
         let mut found_error = false;

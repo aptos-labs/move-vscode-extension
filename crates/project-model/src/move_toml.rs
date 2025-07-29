@@ -77,6 +77,10 @@ impl MoveToml {
         }
         None
     }
+
+    pub(crate) fn declared_dependencies(&self) -> impl Iterator<Item = &MoveTomlDependency> {
+        self.dependencies.iter().chain(self.dev_dependencies.iter())
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -133,13 +137,20 @@ pub enum MoveTomlDependency {
 }
 
 impl MoveTomlDependency {
-    pub fn local(self) -> Option<LocalDependency> {
+    pub fn name(&self) -> String {
+        match self {
+            MoveTomlDependency::Local(local) => local.name.clone(),
+            MoveTomlDependency::Git(git) => git.name.clone(),
+        }
+    }
+
+    pub fn into_local(self) -> Option<LocalDependency> {
         match self {
             MoveTomlDependency::Local(local) => Some(local),
             _ => None,
         }
     }
-    pub fn git(self) -> Option<GitDependency> {
+    pub fn into_git(self) -> Option<GitDependency> {
         match self {
             MoveTomlDependency::Git(git) => Some(git),
             _ => None,
@@ -197,14 +208,14 @@ rev = "main"
         let local_dep = move_toml
             .dependencies
             .iter()
-            .find_map(|dep| dep.clone().local())
+            .find_map(|dep| dep.clone().into_local())
             .unwrap();
         assert_eq!(local_dep.name, "MoveStdlib");
 
         let git_dep = move_toml
             .dependencies
             .iter()
-            .find_map(|dep| dep.clone().git())
+            .find_map(|dep| dep.clone().into_git())
             .unwrap();
         assert_eq!(git_dep.name, "AptosFramework");
 
@@ -226,7 +237,7 @@ local = "./liquidswap_init/"
         let local_dep = move_toml
             .dependencies
             .iter()
-            .find_map(|dep| dep.clone().local())
+            .find_map(|dep| dep.clone().into_local())
             .unwrap();
         assert_eq!(local_dep.name, "LiquidswapInit");
         assert_eq!(local_dep.path, "./liquidswap_init/")

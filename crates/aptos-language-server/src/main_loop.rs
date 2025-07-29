@@ -410,8 +410,7 @@ impl GlobalState {
             } else if let (health @ (lsp_ext::Health::Warning | lsp_ext::Health::Error), Some(message)) =
                 (status.health, &status.message)
             {
-                let open_log_button =
-                    tracing::enabled!(Level::ERROR) && self.load_packages_error().is_err();
+                let open_log_button = tracing::enabled!(Level::ERROR) && self.is_package_loading_error();
                 self.show_message(
                     match health {
                         lsp_ext::Health::Ok => lsp_types::MessageType::INFO,
@@ -444,8 +443,8 @@ impl GlobalState {
                             packages_from_fs,
                             force_reload_package_deps,
                         });
-                        if let Err(fetch_err) = self.load_packages_error() {
-                            tracing::error!("FetchWorkspaceError: {fetch_err}");
+                        if let Some(loading_error) = self.load_packages_error() {
+                            tracing::error!(?loading_error);
                         }
                         self.reason_to_state_refresh = Some("loaded aptos packages from fs".to_owned());
                         (Progress::End, None)
