@@ -10,7 +10,7 @@ use crate::manifest_path::ManifestPath;
 use crate::move_toml::{MoveToml, MoveTomlDependency};
 use anyhow::Context;
 use paths::AbsPathBuf;
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs;
 
 #[derive(Debug, Clone)]
@@ -24,15 +24,17 @@ pub struct ManifestEntry {
 pub fn load_aptos_packages(ws_manifests: Vec<DiscoveredManifest>) -> Vec<anyhow::Result<AptosPackage>> {
     let mut all_reachable_manifests = HashMap::new();
     for ws_manifest in ws_manifests.clone() {
-        let manifest_path = ManifestPath::new(ws_manifest.move_toml_file.to_path_buf());
-        let mut visited_manifests = HashSet::new();
-        collect_reachable_manifests(
-            manifest_path,
-            &mut all_reachable_manifests,
-            PackageKind::Local,
-            &mut visited_manifests,
-            ws_manifest.resolve_deps,
-        );
+        let reachable_manifests = collect_reachable_manifests_with_queue(ws_manifest);
+        all_reachable_manifests.extend(reachable_manifests);
+        // let manifest_path = ManifestPath::new(ws_manifest.move_toml_file.to_path_buf());
+        // let mut visited_manifests = HashSet::new();
+        // collect_reachable_manifests(
+        //     manifest_path,
+        //     &mut all_reachable_manifests,
+        //     PackageKind::Local,
+        //     &mut visited_manifests,
+        //     ws_manifest.resolve_deps,
+        // );
     }
 
     let valid_manifests = all_reachable_manifests
@@ -128,6 +130,58 @@ fn collect_transitive_deps(
     }
 }
 
+fn collect_reachable_manifests_with_queue(
+    ws_manifest: DiscoveredManifest,
+) -> HashMap<ManifestPath, anyhow::Result<ManifestEntry>> {
+    let mut packages_queue = VecDeque::new();
+    packages_queue.push_back((
+        ManifestPath::new(ws_manifest.move_toml_file.to_path_buf()),
+        PackageKind::Local,
+        ws_manifest.resolve_deps,
+    ));
+    let mut res = HashMap::new();
+    while let Some((manifest_path, package_kind, resolve_deps)) = packages_queue.pop_front() {
+        if res.contains_key(&manifest_path) {
+            continue;
+        }
+        match read_manifest_from_fs(&manifest_path) {
+            Err(invalid_toml_err) => {
+                res.insert(manifest_path, Err(invalid_toml_err));
+            }
+            Ok(move_toml) => {
+                let package_name = move_toml.package.as_ref().and_then(|it| it.name.clone());
+                if !resolve_deps {
+                    res.insert(
+                        manifest_path,
+                        Ok(ManifestEntry {
+                            package_name,
+                            kind: package_kind,
+                            declared_deps: vec![],
+                            resolve_deps: false,
+                        }),
+                    );
+                    continue;
+                }
+                let dep_manifests =
+                    read_dependencies(manifest_path.content_root(), &move_toml, package_kind);
+                res.insert(
+                    manifest_path,
+                    Ok(ManifestEntry {
+                        package_name,
+                        kind: package_kind,
+                        declared_deps: dep_manifests.clone(),
+                        resolve_deps: true,
+                    }),
+                );
+                for (dep_manifest, dep_kind) in dep_manifests.clone() {
+                    packages_queue.push_back((dep_manifest, dep_kind, true));
+                }
+            }
+        }
+    }
+    res
+}
+
 /// reads package and dependencies, collect all (Root, Vec<Root>, SourcedFrom) for all the reachable packages
 fn collect_reachable_manifests(
     manifest_path: ManifestPath,
@@ -142,8 +196,8 @@ fn collect_reachable_manifests(
     visited_manifests.insert(manifest_path.clone());
 
     match read_manifest_from_fs(&manifest_path) {
-        Err(err) => {
-            manifest_entries.insert(manifest_path, Err(err));
+        Err(invalid_toml_err) => {
+            manifest_entries.insert(manifest_path, Err(invalid_toml_err));
         }
         Ok(move_toml) => {
             let package_name = move_toml.package.as_ref().and_then(|it| it.name.clone());
