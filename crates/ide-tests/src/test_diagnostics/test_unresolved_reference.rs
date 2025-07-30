@@ -275,6 +275,19 @@ module 0x1::M {
 }
 
 #[test]
+fn test_no_error_for_self_variable_in_spec() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+module 0x1::M {
+    struct S { }
+    spec S {
+        self;
+    }
+}
+"#]]);
+}
+
+#[test]
 fn test_unresolved_reference_for_schema_field() {
     // language=Move
     check_diagnostics(expect![[r#"

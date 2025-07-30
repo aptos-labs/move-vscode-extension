@@ -57,9 +57,18 @@ impl ast::Fun {
     }
 
     pub fn params(&self) -> Vec<ast::Param> {
+        // self.to_any_fun().params()
         self.param_list()
             .map(|list| list.params().collect())
             .unwrap_or_default()
+    }
+
+    pub fn params_as_bindings(&self) -> Vec<ast::IdentPat> {
+        // self.to_any_fun().params_as_bindings()
+        self.params()
+            .into_iter()
+            .filter_map(|param| param.ident_pat())
+            .collect()
     }
 
     pub fn return_type(&self) -> Option<ast::Type> {

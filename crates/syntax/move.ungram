@@ -504,6 +504,9 @@ ModuleSpec =
 ItemSpec =
     Attr* 'spec' ('module' | (ItemSpecRef ItemSpecTypeParamList? ItemSpecParamList?)) spec_block:BlockExpr
 
+ItemSpecItem =
+    Fun | StructOrEnum
+
 ItemSpecRef = NameRef
 
 ItemSpecTypeParamList =

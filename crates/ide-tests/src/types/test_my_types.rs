@@ -224,3 +224,35 @@ fn test_choose_index_type_in_where() {
     "#,
     )
 }
+
+#[test]
+fn test_self_variable_in_spec_struct() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::main {
+            struct S { val: u8 }
+            spec S {
+                self;
+               //^ 0x1::main::S
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_self_variable_in_spec_enum() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::main {
+            enum S { One, Two }
+            spec S {
+                self;
+               //^ 0x1::main::S
+            }
+        }
+    "#,
+    )
+}

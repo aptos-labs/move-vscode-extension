@@ -24,10 +24,8 @@ use crate::types::ty::range_like::TySequence;
 use crate::types::ty::reference::{Mutability, autoborrow};
 use crate::types::ty::ty_callable::{TyCallable, TyCallableKind};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar};
-use regex::Regex;
 use std::iter;
 use std::ops::Deref;
-use std::sync::LazyLock;
 use syntax::ast::HasStmts;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
@@ -139,10 +137,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 let item = item_spec.clone().in_file(self.ctx.file_id).item(self.ctx.db)?;
                 self.collect_item_spec_signature_bindings(item_spec, item.clone());
                 binding_file_id = item.file_id;
-                let item = item.value;
-                match item {
-                    ast::Item::Fun(fun) => fun.to_any_fun().params_as_bindings(),
-                    ast::Item::SpecFun(fun) => fun.to_any_fun().params_as_bindings(),
+                match item.value {
+                    ast::ItemSpecItem::Fun(fun) => fun.params_as_bindings(),
                     _ => vec![],
                 }
             }
@@ -478,9 +474,15 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     fn infer_path_expr(&mut self, path_expr: &ast::PathExpr, expected: Expected) -> Option<Ty> {
         use syntax::SyntaxKind::*;
 
-        if self.ctx.msl && path_expr.syntax().text().to_string().starts_with("result") {
-            if let Some(result_ty) = self.infer_path_expr_for_msl_result(&path_expr) {
-                return Some(result_ty);
+        if self.ctx.msl {
+            if let Some(path_expr_ty) = item_spec::infer_special_path_expr_for_item_spec(
+                self.ctx.db,
+                path_expr.in_file(self.ctx.file_id),
+            ) {
+                self.ctx
+                    .expr_types
+                    .insert(path_expr.to_owned().into(), path_expr_ty.clone());
+                return Some(path_expr_ty);
             }
         }
 
@@ -1377,34 +1379,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
         }
     }
-
-    fn infer_path_expr_for_msl_result(&mut self, path_expr: &ast::PathExpr) -> Option<Ty> {
-        // check if the parent is item spec of function, then retrieve it's return type
-        let item_spec_fun =
-            item_spec::get_item_spec_function(self.ctx.db, path_expr.in_file(self.ctx.file_id))?;
-        let result_ty = item_spec_fun
-            .and_then(|it| it.return_type())
-            .map(|t| self.ctx.ty_lowering().lower_type(t))
-            .unwrap_or(Ty::Unit);
-        let path_expr_text = path_expr.syntax().text().to_string();
-        if path_expr_text == "result" {
-            self.ctx
-                .expr_types
-                .insert(path_expr.clone().into(), result_ty.clone());
-            return Some(result_ty);
-        }
-
-        let (_, [index]) = TUPLE_RESULT_REGEX.captures(&path_expr_text)?.extract();
-        let tuple_index = index.parse::<usize>().unwrap();
-        let member_ty = result_ty
-            .into_ty_tuple()
-            .and_then(|ty_tuple| ty_tuple.types.get(tuple_index - 1).cloned());
-
-        Some(member_ty.unwrap_or(Ty::Unknown))
-    }
 }
-
-static TUPLE_RESULT_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^result_([1-9])$").unwrap());
 
 #[derive(Clone)]
 enum CallArg {

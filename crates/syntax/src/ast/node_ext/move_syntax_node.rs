@@ -27,6 +27,10 @@ pub trait MoveSyntaxElementExt {
         algo::containing_file_for_node(self.node().clone())
     }
 
+    fn containing_item_spec(&self) -> Option<ast::ItemSpec> {
+        self.node().ancestor_strict::<ast::ItemSpec>()
+    }
+
     fn is<T: AstNode>(&self) -> bool {
         T::can_cast(self.node().kind())
     }

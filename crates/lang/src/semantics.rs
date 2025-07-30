@@ -25,7 +25,6 @@ use base_db::{SourceDatabase, source_db};
 use itertools::{Itertools, repeat_n};
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::sync::Arc;
 use std::{fmt, ops};
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{FileRange, InFile};

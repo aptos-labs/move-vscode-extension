@@ -151,12 +151,9 @@ fn is_special_msl_path(
         return Some(());
     }
 
-    let (file_id, reference) = reference.unpack();
+    let path_expr = reference.and_then(|it| it.clone().path().and_then(|it| it.path_expr()))?;
 
-    let path_expr = reference.clone().path()?.path_expr()?.in_file(file_id);
-    if item_spec::get_item_spec_function(db, path_expr.as_ref()).is_some()
-        && path_expr.syntax_text().starts_with("result")
-    {
+    if item_spec::infer_special_path_expr_for_item_spec(db, path_expr.as_ref()).is_some() {
         return Some(());
     }
 
