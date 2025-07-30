@@ -7,9 +7,7 @@
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use ide_db::Severity;
-use ide_db::assist_context::Assists;
-use ide_db::assists::AssistId;
-use ide_db::label::Label;
+use ide_db::assist_context::LocalAssists;
 use lang::types::fold::TypeFoldable;
 use lang::types::has_type_params_ext::GenericItemExt;
 use lang::types::inference::TyVarIndex;
@@ -67,7 +65,7 @@ pub(crate) fn can_be_replaced_with_method_call(
                 "Can be replaced with method call",
                 call_expr.file_range(),
             )
-            .with_fixes(fixes(ctx, call_expr.clone(), call_expr.file_range())),
+            .with_local_fixes(fixes(ctx, call_expr.clone(), call_expr.file_range())),
         )
     }
 
@@ -79,10 +77,10 @@ fn fixes(
     ctx: &DiagnosticsContext<'_>,
     call_expr: InFile<ast::CallExpr>,
     diagnostic_range: FileRange,
-) -> Option<Assists> {
-    let (file_id, call_expr) = call_expr.unpack();
+) -> Option<LocalAssists> {
+    let mut assists = ctx.local_assists_for_node(call_expr.as_ref())?;
 
-    let call_expr_parent = call_expr.syntax().parent()?;
+    let call_expr = call_expr.value;
 
     let mut receiver_expr = call_expr.arg_exprs().first()?.to_owned()?;
     if receiver_expr.syntax().kind() == BORROW_EXPR {
@@ -103,12 +101,11 @@ fn fixes(
     }
     let method_args = method_args.into_iter().map(|it| it.unwrap()).collect::<Vec<_>>();
 
-    let mut assists = Assists::new(file_id, ctx.resolve.clone());
-    assists.add(
-        AssistId::quick_fix("replace-with-method-call"),
-        Label::new("Replace with method call".to_string()),
+    assists.add_fix(
+        "replace-with-method-call",
+        "Replace with method call",
         diagnostic_range.range,
-        |builder| {
+        |editor| {
             use syntax::SyntaxKind::*;
 
             let make = SyntaxFactory::new();
@@ -130,12 +127,9 @@ fn fixes(
                 type_arg_list,
                 method_arg_list,
             );
-
-            let mut editor = builder.make_editor(&call_expr_parent);
             editor.replace(call_expr.syntax(), method_call_expr.syntax());
 
             editor.add_mappings(make.finish_with_mappings());
-            builder.add_file_edits(file_id, editor);
         },
     );
 

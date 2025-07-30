@@ -16,11 +16,11 @@ use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use base_db::inputs::InternFileId;
 use base_db::source_db;
 use ide_db::RootDatabase;
-use ide_db::assist_context::Assists;
+use ide_db::assist_context::LocalAssists;
 use ide_db::assists::AssistResolveStrategy;
 use lang::Semantics;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
-use syntax::files::{FileRange, InFileExt};
+use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, ast, match_ast};
 use vfs::FileId;
 
@@ -31,8 +31,8 @@ struct DiagnosticsContext<'a> {
 }
 
 impl DiagnosticsContext<'_> {
-    pub fn assists_for_file(&self, file_id: FileId) -> Assists {
-        Assists::new(file_id, self.resolve.clone())
+    pub fn local_assists_for_node(&self, node: InFile<&impl AstNode>) -> Option<LocalAssists> {
+        LocalAssists::new(node.map(|it| it.syntax()), self.resolve.clone())
     }
 }
 

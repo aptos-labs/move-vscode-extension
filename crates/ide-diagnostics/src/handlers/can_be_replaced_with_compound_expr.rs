@@ -7,9 +7,7 @@
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use ide_db::Severity;
-use ide_db::assist_context::Assists;
-use ide_db::assists::AssistId;
-use ide_db::label::Label;
+use ide_db::assist_context::LocalAssists;
 use syntax::ast::syntax_factory::SyntaxFactory;
 use syntax::files::{FileRange, InFile};
 use syntax::{AstNode, ast};
@@ -32,7 +30,7 @@ pub(crate) fn can_be_replaced_with_compound_expr(
                     "Can be replaced with compound assignment",
                     bin_expr.file_range(),
                 )
-                .with_fixes(fixes(ctx, bin_expr.clone(), bin_expr.file_range())),
+                .with_local_fixes(fixes(ctx, bin_expr.clone(), bin_expr.file_range())),
             );
         }
     }
@@ -44,32 +42,30 @@ fn fixes(
     ctx: &DiagnosticsContext<'_>,
     bin_expr: InFile<ast::BinExpr>,
     diagnostic_range: FileRange,
-) -> Option<Assists> {
-    let (file_id, bin_expr) = bin_expr.unpack();
-    let (lhs_expr, _, rhs_expr) = bin_expr.clone().unpack()?;
-    let initializer_expr = rhs_expr?.bin_expr()?;
+) -> Option<LocalAssists> {
+    let mut assists = ctx.local_assists_for_node(bin_expr.as_ref())?;
 
+    let (_, bin_expr) = bin_expr.unpack();
+    let (lhs_expr, _, rhs_expr) = bin_expr.clone().unpack()?;
+
+    let initializer_expr = rhs_expr?.bin_expr()?;
     let (_, (_, rhs_op), rhs_expr) = initializer_expr.unpack()?;
     let rhs_expr = rhs_expr?;
 
-    let mut assists = Assists::new(file_id, ctx.resolve.clone());
     if let ast::BinaryOp::ArithOp(arith_op) = rhs_op {
         let compound_op = ast::BinaryOp::Assignment { op: Some(arith_op) };
 
-        let expr_parent = bin_expr.syntax().parent()?;
-        assists.add(
-            AssistId::quick_fix("replace-with-compound-expr"),
-            Label::new("Replace with compound assignment expr".to_string()),
+        assists.add_fix(
+            "replace-with-compound-expr",
+            "Replace with compound assignment expr",
             diagnostic_range.range,
-            |builder| {
+            |editor| {
                 let make = SyntaxFactory::new();
-                let mut editor = builder.make_editor(&expr_parent);
 
                 let new_bin_expr = make.bin_expr(lhs_expr, compound_op, rhs_expr);
                 editor.replace(bin_expr.syntax(), new_bin_expr.syntax());
 
                 editor.add_mappings(make.finish_with_mappings());
-                builder.add_file_edits(file_id, editor);
             },
         );
     }

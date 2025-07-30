@@ -3,9 +3,7 @@
 
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
-use ide_db::assist_context::Assists;
-use ide_db::assists::AssistId;
-use ide_db::label::Label;
+use ide_db::assist_context::LocalAssists;
 use ide_db::{RootDatabase, Severity};
 use lang::Semantics;
 use lang::loc::SyntaxLocNodeExt;
@@ -80,7 +78,7 @@ pub(crate) fn can_be_replaced_with_index_expr(
             "Can be replaced with index expr",
             file_range,
         )
-        .with_fixes(fixes(ctx, outer_deref_expr, any_call_expr, file_range)),
+        .with_local_fixes(fixes(ctx, outer_deref_expr, any_call_expr, file_range)),
     );
 
     Some(())
@@ -91,9 +89,7 @@ fn fixes(
     deref_expr: InFile<ast::DerefExpr>,
     any_call_expr: ast::AnyCallExpr,
     diagnostic_range: FileRange,
-) -> Option<Assists> {
-    let (file_id, deref_expr) = deref_expr.unpack();
-    let edit_root = deref_expr.syntax().parent()?;
+) -> Option<LocalAssists> {
     let (receiver_expr, arg_expr) = match any_call_expr {
         ast::AnyCallExpr::CallExpr(call_expr) => {
             let mut args = call_expr.arg_exprs().into_iter();
@@ -122,15 +118,15 @@ fn fixes(
         }
     };
 
-    let mut assists = Assists::new(file_id, ctx.resolve.clone());
-    assists.add(
-        AssistId::quick_fix("replace-with-index-expr"),
-        Label::new("Replace with vector index expr".to_string()),
+    let mut assists = ctx.local_assists_for_node(deref_expr.as_ref())?;
+    assists.add_fix(
+        "replace-with-index-expr",
+        "Replace with vector index expr",
         diagnostic_range.range,
-        |builder| {
-            let make = SyntaxFactory::new();
-            let mut editor = builder.make_editor(&edit_root);
+        |editor| {
+            let deref_expr = deref_expr.value;
 
+            let make = SyntaxFactory::new();
             let mut base_expr = base_expr;
             if with_parens {
                 base_expr = make.paren_expr(base_expr).into();
@@ -139,7 +135,6 @@ fn fixes(
             editor.replace(deref_expr.syntax(), new_index_expr.syntax());
 
             editor.add_mappings(make.finish_with_mappings());
-            builder.add_file_edits(file_id, editor);
         },
     );
 
