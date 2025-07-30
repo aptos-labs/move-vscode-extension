@@ -1602,9 +1602,10 @@ fn test_abort_expr_requires_integer() {
             fun main() {
                 abort 1;
                 abort 1u8;
+                    //^^^ err: Incompatible type 'u8', expected 'u64'
                 abort 1u64;
                 abort false;
-                    //^^^^^ err: Incompatible type 'bool', expected 'integer'
+                    //^^^^^ err: Incompatible type 'bool', expected 'u64'
             }
         }
     "#]]);
@@ -2500,9 +2501,35 @@ fn test_type_error_for_abort_code() {
 
             }
             #[test(abort_code = true)]
-                              //^^^^ err: Incompatible type 'bool', expected 'integer'
+                              //^^^^ err: Incompatible type 'bool', expected 'u64'
             fun test_main2() {
 
+            }
+        }
+    "#]])
+}
+
+#[test]
+fn test_type_error_assert_u64() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main() {
+                assert!(true, 1u8);
+                            //^^^ err: Incompatible type 'u8', expected 'u64'
+            }
+        }
+    "#]])
+}
+
+#[test]
+fn test_type_error_abort_u64() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main() {
+                abort 1u8;
+                    //^^^ err: Incompatible type 'u8', expected 'u64'
             }
         }
     "#]])
