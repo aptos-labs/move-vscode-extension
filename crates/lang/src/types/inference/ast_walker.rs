@@ -93,9 +93,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                         .ctx
                         .ty_lowering()
                         .lower_type_owner(const_.in_file(self.ctx.file_id)),
-                    ast::InitializerOwner::AttrItem(attr_item) => attr_item
-                        .is_abort_code()
-                        .then_some(Ty::Integer(IntegerKind::Integer)),
+                    ast::InitializerOwner::AttrItem(attr_item) => {
+                        attr_item.is_abort_code().then_some(Ty::Integer(IntegerKind::U64))
+                    }
                 };
                 if let Some(expr) = initializer.expr() {
                     self.infer_expr_coerceable_to(&expr, expected_ty.unwrap_or(Ty::Unknown));
@@ -431,7 +431,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::Expr::IsExpr(is_expr) => self.infer_is_expr(is_expr),
             ast::Expr::AbortExpr(abort_expr) => {
                 if let Some(inner_expr) = abort_expr.expr() {
-                    self.infer_expr_coerceable_to(&inner_expr, Ty::Integer(IntegerKind::Integer));
+                    self.infer_expr_coerceable_to(&inner_expr, Ty::Integer(IntegerKind::U64));
                 }
                 Ty::Never
             }
@@ -670,7 +670,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     }
 
     fn infer_assert_macro_expr(&mut self, assert_macro_expr: &ast::AssertMacroExpr) -> Ty {
-        let declared_input_tys = vec![Ty::Bool, Ty::Integer(IntegerKind::Integer)];
+        let declared_input_tys = vec![Ty::Bool, Ty::Integer(IntegerKind::U64)];
         let args = assert_macro_expr
             .arg_exprs()
             .into_iter()
