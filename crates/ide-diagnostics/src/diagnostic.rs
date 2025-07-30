@@ -5,7 +5,7 @@
 // Modifications have been made to the original code.
 
 use ide_db::Severity;
-use ide_db::assist_context::Assists;
+use ide_db::assist_context::LocalAssists;
 use ide_db::assists::Assist;
 use syntax::files::FileRange;
 use vfs::FileId;
@@ -32,16 +32,11 @@ impl Diagnostic {
             message,
             range: range.into(),
             severity: match code {
-                /*DiagnosticCode::RustcHardError(_) |*/
                 DiagnosticCode::SyntaxError => Severity::Error,
-                // FIXME: Rustc lints are not always warning, but the ones that are currently implemented are all warnings.
-                // DiagnosticCode::RustcLint(_) => Severity::Warning,
                 DiagnosticCode::Lsp(_, s) => s,
             },
             unused: false,
-            // experimental: false,
             fixes: None,
-            // main_node: None,
         }
     }
 
@@ -56,7 +51,7 @@ impl Diagnostic {
         )
     }
 
-    pub(crate) fn with_fixes(mut self, fixes: Option<Assists>) -> Diagnostic {
+    pub(crate) fn with_local_fixes(mut self, fixes: Option<LocalAssists>) -> Diagnostic {
         self.fixes = fixes.map(|it| it.assists());
         self
     }

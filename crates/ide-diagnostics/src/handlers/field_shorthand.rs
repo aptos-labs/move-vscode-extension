@@ -4,9 +4,7 @@
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use ide_db::Severity;
-use ide_db::assist_context::Assists;
-use ide_db::assists::AssistId;
-use ide_db::label::Label;
+use ide_db::assist_context::LocalAssists;
 use syntax::ast::syntax_factory::SyntaxFactory;
 use syntax::files::{FileRange, InFile};
 use syntax::{AstNode, ast};
@@ -30,7 +28,7 @@ pub(crate) fn struct_lit_field_can_be_simplified(
                     "Expression can be simplified",
                     fix_file_range,
                 )
-                .with_fixes(lit_field_fix(
+                .with_local_fixes(lit_field_fix(
                     ctx,
                     struct_lit_field.as_ref(),
                     fix_file_range,
@@ -62,7 +60,7 @@ pub(crate) fn struct_pat_field_can_be_simplified(
                 "Expression can be simplified",
                 fix_file_range,
             )
-            .with_fixes(pat_field_fix(ctx, struct_pat_field.as_ref(), fix_file_range)),
+            .with_local_fixes(pat_field_fix(ctx, struct_pat_field.as_ref(), fix_file_range)),
         );
     }
     Some(())
@@ -87,7 +85,7 @@ pub(crate) fn schema_lit_field_can_be_simplified(
                     "Expression can be simplified",
                     fix_file_range,
                 )
-                .with_fixes(schema_lit_field_fix(
+                .with_local_fixes(schema_lit_field_fix(
                     ctx,
                     schema_lit_field.as_ref(),
                     fix_file_range,
@@ -98,57 +96,53 @@ pub(crate) fn schema_lit_field_can_be_simplified(
     Some(())
 }
 
-#[tracing::instrument(level = "trace", skip_all)]
 fn lit_field_fix(
     ctx: &DiagnosticsContext<'_>,
     struct_lit_field: InFile<&ast::StructLitField>,
     diagnostic_range: FileRange,
-) -> Option<Assists> {
-    let (file_id, lit_field) = struct_lit_field.unpack();
-    let struct_field_expr = lit_field.expr()?;
+) -> Option<LocalAssists> {
+    let mut assists = ctx.local_assists_for_node(struct_lit_field)?;
 
-    let mut assists = ctx.assists_for_file(file_id);
-    assists.add(
-        AssistId::quick_fix("use-struct-lit-field-shorthand"),
-        Label::new("Use initialization shorthand".to_string()),
+    let lit_field = struct_lit_field.value;
+
+    let struct_field_expr = lit_field.expr()?;
+    assists.add_fix(
+        "use-struct-lit-field-shorthand",
+        "Use initialization shorthand",
         diagnostic_range.range,
-        |builder| {
+        |editor| {
             let make = SyntaxFactory::new();
             let new_lit_field = make.lit_field_shorthand(struct_field_expr);
 
-            let mut edits = builder.make_editor(lit_field.struct_lit().syntax());
-            edits.replace(lit_field.syntax(), new_lit_field.syntax());
+            editor.replace(lit_field.syntax(), new_lit_field.syntax());
 
-            edits.add_mappings(make.finish_with_mappings());
-            builder.add_file_edits(file_id, edits);
+            editor.add_mappings(make.finish_with_mappings());
         },
     );
     Some(assists)
 }
 
-#[tracing::instrument(level = "trace", skip_all)]
 fn pat_field_fix(
     ctx: &DiagnosticsContext<'_>,
     struct_pat_field: InFile<&ast::StructPatField>,
     diagnostic_range: FileRange,
-) -> Option<Assists> {
-    let (file_id, pat_field) = struct_pat_field.unpack();
+) -> Option<LocalAssists> {
+    let mut assists = ctx.local_assists_for_node(struct_pat_field)?;
+
+    let pat_field = struct_pat_field.value;
     let field_ident_pat = pat_field.pat()?.ident_pat()?;
 
-    let mut assists = ctx.assists_for_file(file_id);
-    assists.add(
-        AssistId::quick_fix("use-struct-pat-field-shorthand"),
-        Label::new("Use initialization shorthand".to_string()),
+    assists.add_fix(
+        "use-struct-pat-field-shorthand",
+        "Use initialization shorthand",
         diagnostic_range.range,
-        |builder| {
+        |editor| {
             let make = SyntaxFactory::new();
             let new_pat_field = make.pat_field_shorthand(field_ident_pat);
 
-            let mut edits = builder.make_editor(pat_field.struct_pat().syntax());
-            edits.replace(pat_field.syntax(), new_pat_field.syntax());
+            editor.replace(pat_field.syntax(), new_pat_field.syntax());
 
-            edits.add_mappings(make.finish_with_mappings());
-            builder.add_file_edits(file_id, edits);
+            editor.add_mappings(make.finish_with_mappings());
         },
     );
     Some(assists)
@@ -159,25 +153,22 @@ fn schema_lit_field_fix(
     ctx: &DiagnosticsContext<'_>,
     schema_lit_field: InFile<&ast::SchemaLitField>,
     diagnostic_range: FileRange,
-) -> Option<Assists> {
-    let (file_id, lit_field) = schema_lit_field.unpack();
-    let struct_field_expr = lit_field.expr()?;
-    let schema_lit = lit_field.schema_lit()?;
+) -> Option<LocalAssists> {
+    let mut assists = ctx.local_assists_for_node(schema_lit_field)?;
 
-    let mut assists = ctx.assists_for_file(file_id);
-    assists.add(
-        AssistId::quick_fix("use-schema-lit-field-shorthand"),
-        Label::new("Use initialization shorthand".to_string()),
+    let lit_field = schema_lit_field.value;
+    let struct_field_expr = lit_field.expr()?;
+    assists.add_fix(
+        "use-schema-lit-field-shorthand",
+        "Use initialization shorthand",
         diagnostic_range.range,
-        |builder| {
+        |edits| {
             let make = SyntaxFactory::new();
             let new_lit_field = make.schema_lit_field_shorthand(struct_field_expr);
 
-            let mut edits = builder.make_editor(schema_lit.syntax());
             edits.replace(lit_field.syntax(), new_lit_field.syntax());
 
             edits.add_mappings(make.finish_with_mappings());
-            builder.add_file_edits(file_id, edits);
         },
     );
     Some(assists)

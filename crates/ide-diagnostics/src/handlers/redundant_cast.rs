@@ -4,9 +4,7 @@
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use ide_db::Severity;
-use ide_db::assist_context::Assists;
-use ide_db::assists::AssistId;
-use ide_db::label::Label;
+use ide_db::assist_context::LocalAssists;
 use lang::types::ty::integer::IntegerKind;
 use syntax::files::{FileRange, InFile};
 use syntax::{AstNode, TextRange, ast};
@@ -46,7 +44,7 @@ pub(crate) fn redundant_integer_cast(
                 diagnostic_range,
             )
             .with_unused(true)
-            .with_fixes(fixes(ctx, cast_expr, diagnostic_range)),
+            .with_local_fixes(fixes(ctx, cast_expr, diagnostic_range)),
         );
     }
     Some(())
@@ -56,19 +54,15 @@ fn fixes(
     ctx: &DiagnosticsContext<'_>,
     cast_expr: InFile<ast::CastExpr>,
     diagnostic_range: FileRange,
-) -> Option<Assists> {
-    let (file_id, cast_expr) = cast_expr.unpack();
-    let cast_expr_parent = cast_expr.syntax().parent()?;
-    let mut assists = Assists::new(file_id, ctx.resolve.clone());
-    assists.add(
-        AssistId::quick_fix("remove-redundant-cast"),
-        Label::new("Remove redundant cast".to_string()),
+) -> Option<LocalAssists> {
+    let mut assists = ctx.local_assists_for_node(cast_expr.as_ref())?;
+    assists.add_fix(
+        "remove-redundant-cast",
+        "Remove redundant cast",
         diagnostic_range.range,
-        |builder| {
-            let mut file_edits = builder.make_editor(&cast_expr_parent);
-            let inner_cast_expr = cast_expr.expr();
-            file_edits.replace(cast_expr.syntax(), inner_cast_expr.syntax());
-            builder.add_file_edits(file_id, file_edits);
+        |editor| {
+            let cast_expr = cast_expr.value;
+            editor.replace(cast_expr.syntax(), cast_expr.expr().syntax());
         },
     );
     Some(assists)

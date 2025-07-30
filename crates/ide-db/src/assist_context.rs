@@ -7,67 +7,56 @@
 use crate::assists::{Assist, AssistId, AssistResolveStrategy};
 use crate::label::Label;
 use crate::source_change::SourceChangeBuilder;
-use syntax::TextRange;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::files::InFile;
+use syntax::syntax_editor::SyntaxEditor;
+use syntax::{AstNode, SyntaxNode, TextRange, ast};
 use vfs::FileId;
 
-pub struct Assists {
-    file: FileId,
+// todo: use Assists from rust-analyzer if we ever need multi-file assists
+pub struct LocalAssists {
+    file_id: FileId,
+    source_file: ast::SourceFile,
+    assists: Vec<Assist>,
     resolve: AssistResolveStrategy,
-    buf: Vec<Assist>,
-    // allowed: Option<Vec<AssistKind>>,
 }
 
-impl Assists {
-    pub fn new(file_id: FileId, resolve: AssistResolveStrategy) -> Assists {
-        Assists {
+impl LocalAssists {
+    pub fn new(context_node: InFile<&SyntaxNode>, resolve: AssistResolveStrategy) -> Option<Self> {
+        let (file_id, containing_file) = context_node.and_then(|it| it.containing_file())?.unpack();
+        Some(LocalAssists {
+            file_id,
+            source_file: containing_file,
+            assists: Vec::new(),
             resolve,
-            file: file_id,
-            buf: Vec::new(),
-            // allowed: ctx.config.allowed.clone(),
-        }
+        })
     }
 
     pub fn assists(self) -> Vec<Assist> {
-        self.buf
+        self.assists
     }
 
-    pub fn add(
+    pub fn add_fix(
         &mut self,
-        id: AssistId,
+        id: &'static str,
         label: impl Into<String>,
         target: TextRange,
-        f: impl FnOnce(&mut SourceChangeBuilder),
+        f: impl FnOnce(&mut SyntaxEditor),
     ) -> Option<()> {
-        let mut f = Some(f);
-        self.add_impl(id, label.into(), target, &mut |it| f.take().unwrap()(it))
-    }
-
-    fn add_impl(
-        &mut self,
-        id: AssistId,
-        label: String,
-        target: TextRange,
-        f: &mut dyn FnMut(&mut SourceChangeBuilder),
-    ) -> Option<()> {
-        // if !self.is_allowed(&id) {
-        //     return None;
-        // }
-
-        // let mut command = None;
+        let id = AssistId::quick_fix(id);
+        let label = label.into();
         let source_change = if self.resolve.should_resolve(&id) {
-            let mut builder = SourceChangeBuilder::new(self.file);
-            f(&mut builder);
-            // command = builder.command.take();
+            let mut builder = SourceChangeBuilder::new(self.file_id);
+            let mut editor = builder.make_editor(self.source_file.syntax());
+            f(&mut editor);
+            builder.add_file_edits(self.file_id, editor);
             Some(builder.finish())
         } else {
             None
         };
-
-        let label = Label::new(label);
-        self.buf.push(Assist {
+        self.assists.push(Assist {
             id,
-            label,
-            // group,
+            label: Label::new(label),
             target,
             source_change,
             command: None,
