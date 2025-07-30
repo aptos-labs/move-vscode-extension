@@ -14,7 +14,7 @@ use base_db::{SourceDatabase, source_db};
 use syntax::ast::HasItems;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, SyntaxNode, ast, match_ast};
+use syntax::{AstNode, SyntaxNode, ast};
 
 pub fn get_entries_in_scope(
     db: &dyn SourceDatabase,
@@ -65,17 +65,14 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: InFile<SyntaxNode>
             let item_spec = scope.syntax_cast::<ast::ItemSpec>().unwrap();
             if let Some(item) = item_spec.item(db) {
                 let (fid, item) = item.unpack();
-                match_ast! {
-                    match (item.syntax()) {
-                        ast::Fun(fun) => {
-                            let any_fun = fun.clone().to_any_fun();
-                            entries.extend(any_fun.to_generic_element().type_params().to_entries(fid));
-                            entries.extend(any_fun.params_as_bindings().to_entries(fid));
-                        },
-                        ast::Struct(struct_) => {
-                            entries.extend(struct_.named_fields().to_entries(fid));
-                        },
-                        _ => ()
+                match item {
+                    ast::ItemSpecItem::Fun(fun) => {
+                        let fun = fun.to_any_fun();
+                        entries.extend(fun.to_generic_element().type_params().to_entries(fid));
+                        entries.extend(fun.params_as_bindings().to_entries(fid));
+                    }
+                    ast::ItemSpecItem::StructOrEnum(struct_or_enum) => {
+                        entries.extend(struct_or_enum.named_fields().to_entries(fid));
                     }
                 }
             }

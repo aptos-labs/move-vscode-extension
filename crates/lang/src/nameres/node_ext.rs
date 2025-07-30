@@ -5,7 +5,7 @@
 // Modifications have been made to the original code.
 
 use crate::nameres::namespaces::Ns;
-use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
+use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::node_ext::item::ModuleItemExt;
 use base_db::inputs::InternFileId;
 use base_db::{SourceDatabase, source_db};

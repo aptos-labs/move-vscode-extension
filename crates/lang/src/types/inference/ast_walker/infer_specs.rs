@@ -167,11 +167,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     pub(crate) fn collect_item_spec_signature_bindings(
         &mut self,
         item_spec: &ast::ItemSpec,
-        item: InFile<ast::Item>,
+        item: InFile<ast::ItemSpecItem>,
     ) {
         let (file_id, item) = item.unpack();
         match item {
-            ast::Item::Fun(fun) => {
+            ast::ItemSpecItem::Fun(fun) => {
                 let fun_params = fun.to_any_fun().params_as_bindings();
                 let param_ident_pats = item_spec.param_ident_pats();
                 for (param_ident_pat, fun_param) in zip(param_ident_pats, fun_params.clone()) {

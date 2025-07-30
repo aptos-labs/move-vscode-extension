@@ -57,3 +57,9 @@ impl TypeFoldable<TyAdt> for TyAdt {
         self.substitution.deep_visit_with(visitor.clone()) || visitor.visit_tys(&self.type_args)
     }
 }
+
+impl From<TyAdt> for Ty {
+    fn from(value: TyAdt) -> Self {
+        Ty::Adt(value)
+    }
+}

@@ -523,3 +523,54 @@ module std::main {
 }"#,
     )
 }
+
+#[test]
+fn test_self_variable_in_spec_field() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            struct S { val: u8 }
+                       //X
+            spec S {
+                self.val;
+                    //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_spec_enum_variant_field() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            enum S { One, Two { val: u8 } }
+                               //X
+            spec S {
+                val;
+               //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_self_variable_in_spec_enum_variant_field() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            enum S { One, Two { val: u8 } }
+                               //X
+            spec S {
+                self.val;
+                    //^
+            }
+        }
+    "#,
+    )
+}

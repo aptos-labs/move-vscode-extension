@@ -2307,6 +2307,15 @@ pub enum Item {
 impl ast::HasAttrs for Item {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum ItemSpecItem {
+    Fun(Fun),
+    StructOrEnum(StructOrEnum),
+}
+impl ast::HasAttrs for ItemSpecItem {}
+impl ast::HasVisibility for ItemSpecItem {}
+impl ast::HoverDocsOwner for ItemSpecItem {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum LoopLike {
     ForExpr(ForExpr),
     LoopExpr(LoopExpr),
@@ -7320,6 +7329,84 @@ impl AstNode for Item {
         }
     }
 }
+impl From<Fun> for ItemSpecItem {
+    #[inline]
+    fn from(node: Fun) -> ItemSpecItem { ItemSpecItem::Fun(node) }
+}
+impl From<StructOrEnum> for ItemSpecItem {
+    #[inline]
+    fn from(node: StructOrEnum) -> ItemSpecItem { ItemSpecItem::StructOrEnum(node) }
+}
+impl From<Struct> for ItemSpecItem {
+    #[inline]
+    fn from(node: Struct) -> ItemSpecItem { ItemSpecItem::StructOrEnum(StructOrEnum::Struct(node)) }
+}
+impl From<Enum> for ItemSpecItem {
+    #[inline]
+    fn from(node: Enum) -> ItemSpecItem { ItemSpecItem::StructOrEnum(StructOrEnum::Enum(node)) }
+}
+impl From<ItemSpecItem> for AnyHasAttrs {
+    #[inline]
+    fn from(node: ItemSpecItem) -> AnyHasAttrs {
+        match node {
+            ItemSpecItem::Fun(it) => it.into(),
+            ItemSpecItem::StructOrEnum(it) => it.into(),
+        }
+    }
+}
+impl From<ItemSpecItem> for AnyHasVisibility {
+    #[inline]
+    fn from(node: ItemSpecItem) -> AnyHasVisibility {
+        match node {
+            ItemSpecItem::Fun(it) => it.into(),
+            ItemSpecItem::StructOrEnum(it) => it.into(),
+        }
+    }
+}
+impl From<ItemSpecItem> for AnyHoverDocsOwner {
+    #[inline]
+    fn from(node: ItemSpecItem) -> AnyHoverDocsOwner {
+        match node {
+            ItemSpecItem::Fun(it) => it.into(),
+            ItemSpecItem::StructOrEnum(it) => it.into(),
+        }
+    }
+}
+impl ItemSpecItem {
+    pub fn fun(self) -> Option<Fun> {
+        match (self) {
+            ItemSpecItem::Fun(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn struct_or_enum(self) -> Option<StructOrEnum> {
+        match (self) {
+            ItemSpecItem::StructOrEnum(item) => Some(item),
+            _ => None,
+        }
+    }
+}
+impl AstNode for ItemSpecItem {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, FUN | ENUM | STRUCT) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            FUN => ItemSpecItem::Fun(Fun { syntax }),
+            ENUM => ItemSpecItem::StructOrEnum(StructOrEnum::Enum(Enum { syntax })),
+            STRUCT => ItemSpecItem::StructOrEnum(StructOrEnum::Struct(Struct { syntax })),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            ItemSpecItem::Fun(it) => &it.syntax(),
+            ItemSpecItem::StructOrEnum(it) => &it.syntax(),
+        }
+    }
+}
 impl From<ForExpr> for LoopLike {
     #[inline]
     fn from(node: ForExpr) -> LoopLike { LoopLike::ForExpr(node) }
@@ -9169,6 +9256,11 @@ impl std::fmt::Display for InitializerOwner {
     }
 }
 impl std::fmt::Display for Item {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for ItemSpecItem {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

@@ -67,7 +67,7 @@ pub(crate) fn runnables(db: &RootDatabase, file_id: FileId) -> Vec<Runnable> {
 
     visit_item_specs(&sema, file_id, &mut |item_spec| {
         let item_spec_ref = item_spec.as_ref().and_then(|it| it.item_spec_ref())?;
-        let fun = item_spec.item(sema.db)?.cast_into::<ast::Fun>()?;
+        let fun = item_spec.item(sema.db)?.and_then(|it| it.fun())?;
         if let Some(runnable) = runnable_for_fun_item_spec(&sema, item_spec_ref, fun) {
             res.push(runnable);
         }
