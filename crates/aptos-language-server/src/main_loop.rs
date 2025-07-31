@@ -282,12 +282,10 @@ impl GlobalState {
             }
         }
 
-        if self.config.autorefresh_on_move_toml_changes() {
-            if let Some((cause, LoadPackagesRequest { force_reload_package_deps })) =
-                self.load_aptos_packages_queue.should_start_op()
-            {
-                self.load_aptos_packages_from_fs(cause, force_reload_package_deps);
-            }
+        if let Some((cause, LoadPackagesRequest { force_reload_package_deps })) =
+            self.load_aptos_packages_queue.should_start_op()
+        {
+            self.load_aptos_packages_from_fs(cause, force_reload_package_deps);
         }
 
         self.update_status_or_notify();
