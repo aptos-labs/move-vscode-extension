@@ -49,6 +49,8 @@ config_data! {
         /// Whether to show function parameter name inlay hints at the call
         /// site.
         inlayHints_parameterHints_enable: bool                     = true,
+        /// Whether to show exclusive range inlay hints.
+        inlayHints_rangeExclusiveHints_enable: bool                = true,
         /// Whether to render leading colons for type hints, and trailing colons for parameter hints.
         inlayHints_renderColons: bool                              = true,
         /// Whether to show inlay type hints for variables.

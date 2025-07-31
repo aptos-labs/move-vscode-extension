@@ -14,6 +14,7 @@ const DISABLED_CONFIG: InlayHintsConfig = InlayHintsConfig {
     type_hints: false,
     tuple_type_hints: false,
     parameter_hints: false,
+    range_exclusive_hints: false,
     hide_closure_parameter_hints: false,
     fields_to_resolve: InlayFieldsToResolve::empty(),
 };
@@ -22,6 +23,7 @@ const TEST_CONFIG: InlayHintsConfig = InlayHintsConfig {
     type_hints: true,
     tuple_type_hints: true,
     parameter_hints: true,
+    range_exclusive_hints: true,
     ..DISABLED_CONFIG
 };
 

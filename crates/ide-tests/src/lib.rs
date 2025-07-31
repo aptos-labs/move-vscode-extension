@@ -23,6 +23,7 @@ mod test_diagnostics;
 mod test_error_const_docs;
 mod test_find_usages;
 mod test_goto_specification;
+mod test_inlay_hints;
 mod test_inlay_parameter_hints;
 mod test_load_dependencies;
 mod test_rename;
