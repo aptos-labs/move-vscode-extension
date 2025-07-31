@@ -958,8 +958,20 @@ pub(crate) fn runnable(
             }
             args
         }
-        RunnableKind::Prove { item_path } => {
-            let mut args = vec!["move", "prove", "--only", item_path.as_str()]
+        RunnableKind::ProveFun { only } => {
+            let mut args = vec!["move", "prove", "--only", only.as_str()]
+                .iter()
+                .map(|it| it.to_string())
+                .collect::<Vec<_>>();
+            for extra_arg in config.prover_extra_args {
+                if !args.contains(&extra_arg) {
+                    args.push(extra_arg);
+                }
+            }
+            args
+        }
+        RunnableKind::ProveModule { filter } => {
+            let mut args = vec!["move", "prove", "--filter", filter.as_str()]
                 .iter()
                 .map(|it| it.to_string())
                 .collect::<Vec<_>>();

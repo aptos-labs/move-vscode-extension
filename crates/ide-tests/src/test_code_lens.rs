@@ -53,12 +53,13 @@ fn test_annotate_specified_fun() {
         expect![[r#"
             //- /main.spec.move
             spec std::m {
+               //^^^^^^ prove mod m
                 spec main() {
-                   //^^^^ prove m::main
+                   //^^^^ prove fun m::main
                     assert 1 == 1;
                 }
                 spec main() {
-                   //^^^^ prove m::main
+                   //^^^^ prove fun m::main
                     assert 2 == 2;
                 }
             }
@@ -114,7 +115,7 @@ fn test_annotate_item_spec_for_function() {
                   //^^^^ has specs
                 }
                 spec main {
-                   //^^^^ prove m::main
+                   //^^^^ prove fun m::main
                 }
             }
         "#]],
@@ -128,8 +129,9 @@ fn test_annotate_item_spec_for_function_in_module_spec() {
         expect![[r#"
             //- /main.spec.move
             spec std::m {
+               //^^^^^^ prove mod m
                 spec main {
-                   //^^^^ prove m::main
+                   //^^^^ prove fun m::main
                 }
             }
             //- /main.move
