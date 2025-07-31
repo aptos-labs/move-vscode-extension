@@ -24,14 +24,16 @@ pub struct Runnable {
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum RunnableKind {
     Test { test_path: String },
-    Prove { item_path: String },
+    ProveFun { only: String },
+    ProveModule { filter: String },
 }
 
 impl Runnable {
     pub fn label(&self) -> String {
         match &self.kind {
             RunnableKind::Test { test_path } => format!("test {test_path}"),
-            RunnableKind::Prove { item_path } => format!("prove {item_path}"),
+            RunnableKind::ProveFun { only } => format!("prove fun {only}"),
+            RunnableKind::ProveModule { filter } => format!("prove module {filter}"),
         }
     }
 
@@ -46,7 +48,9 @@ impl Runnable {
                 }
                 s
             }
-            RunnableKind::Prove { .. } => String::from("▶\u{fe0e} Check with Prover"),
+            RunnableKind::ProveFun { .. } | RunnableKind::ProveModule { .. } => {
+                String::from("▶\u{fe0e} Check with Prover")
+            }
         }
     }
 }
@@ -66,6 +70,13 @@ pub(crate) fn runnables(db: &RootDatabase, file_id: FileId) -> Vec<Runnable> {
         res.push(runnable);
         Some(())
     });
+
+    let file = sema.parse(file_id);
+    for module_spec in file.module_specs() {
+        if let Some(runnable) = runnable_for_module_spec(&sema, module_spec.in_file(file_id)) {
+            res.push(runnable);
+        }
+    }
 
     visit_item_specs(&sema, file_id, &mut |item_spec| {
         let item_spec_ref = item_spec.as_ref().and_then(|it| it.item_spec_ref())?;
@@ -111,6 +122,18 @@ pub(crate) fn runnable_for_module_with_test_funs(
     })
 }
 
+pub(crate) fn runnable_for_module_spec(
+    sema: &Semantics<'_, RootDatabase>,
+    module_spec: InFile<ast::ModuleSpec>,
+) -> Option<Runnable> {
+    let nav_item = NavigationTarget::from_module_spec(sema, module_spec)?;
+    let module_name = nav_item.name.clone();
+    Some(Runnable {
+        nav_item,
+        kind: RunnableKind::ProveModule { filter: module_name },
+    })
+}
+
 pub(crate) fn runnable_for_fun_item_spec(
     sema: &Semantics<'_, RootDatabase>,
     item_spec_ref: InFile<ast::ItemSpecRef>,
@@ -118,10 +141,10 @@ pub(crate) fn runnable_for_fun_item_spec(
 ) -> Option<Runnable> {
     let fq_name = fun.fq_name(sema.db)?;
     let nav_item = NavigationTarget::from_item_spec_ref(fq_name.name(), item_spec_ref)?;
-    let item_path = fq_name.module_and_item_text();
+    let fq_item_path = fq_name.module_and_item_text();
     Some(Runnable {
         nav_item,
-        kind: RunnableKind::Prove { item_path },
+        kind: RunnableKind::ProveFun { only: fq_item_path },
     })
 }
 

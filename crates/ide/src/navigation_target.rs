@@ -98,6 +98,24 @@ impl NavigationTarget {
         Self::from_syntax_loc(sema.db, scope_entry.name, scope_entry.node_loc)
     }
 
+    pub(crate) fn from_module_spec(
+        sema: &Semantics<'_, RootDatabase>,
+        module_spec: InFile<ast::ModuleSpec>,
+    ) -> Option<NavigationTarget> {
+        let module_spec_path = module_spec.and_then(|it| it.path())?;
+        let module = sema.resolve_to_element::<ast::Module>(module_spec_path.clone())?;
+        let element_name = module.value.name()?.as_string();
+
+        let (file_id, module_spec_path) = module_spec_path.unpack();
+        Some(NavigationTarget::from_syntax(
+            file_id,
+            element_name.into(),
+            None,
+            module_spec_path.syntax().text_range(),
+            SymbolKind::Field,
+        ))
+    }
+
     pub(crate) fn from_item_spec_ref(
         element_name: String,
         item_spec_ref: InFile<ast::ItemSpecRef>,
