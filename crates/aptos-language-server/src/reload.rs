@@ -156,7 +156,7 @@ impl GlobalState {
     }
 
     #[tracing::instrument(level = "info", skip(self))]
-    pub(crate) fn switch_packages(&mut self, cause: Cause) {
+    pub(crate) fn switch_workspaces(&mut self, cause: Cause) {
         let Some(LoadPackagesResponse {
             packages_from_fs,
             force_reload_package_deps,
