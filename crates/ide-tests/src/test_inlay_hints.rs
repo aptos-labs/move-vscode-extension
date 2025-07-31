@@ -11,6 +11,7 @@ fn test_inlay_range_expr_hint() {
         module 0x1::m {
             fun main() {
                 for (i in 0..10) {
+                         //^^ <
                     i;
                 }
             }
