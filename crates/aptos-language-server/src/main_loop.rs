@@ -5,28 +5,22 @@
 // Modifications have been made to the original code.
 
 use crate::config::Config;
-use crate::diagnostics::{DiagnosticsGeneration, NativeDiagnosticsFetchKind, fetch_native_diagnostics};
-use crate::global_state::{GlobalState, LoadPackagesRequest, LoadPackagesResponse, file_id_to_url};
+use crate::global_state::{GlobalState, LoadPackagesRequest, LoadPackagesResponse};
 use crate::handlers::dispatch::{NotificationDispatcher, RequestDispatcher};
 use crate::handlers::request;
-use crate::lsp::from_proto;
 use crate::lsp::utils::{Progress, notification_is};
 use crate::lsp_ext;
 use crate::reload::FetchPackagesProgress;
-use base_db::SourceDatabase;
 use crossbeam_channel::Receiver;
 use lsp_server::Connection;
 use lsp_types::notification::Notification;
 use paths::AbsPathBuf;
 use std::fmt;
-use std::ops::Div;
-use std::panic::AssertUnwindSafe;
 use std::time::{Duration, Instant};
 use stdx::always;
-use stdx::thread::ThreadIntent;
 use tracing::{Level, span};
+use vfs::VfsPath;
 use vfs::loader::LoadingProgress;
-use vfs::{FileId, VfsPath};
 
 pub fn main_loop(config: Config, connection: Connection) -> anyhow::Result<()> {
     // Windows scheduler implements priority boosts: if thread waits for an
@@ -103,16 +97,9 @@ impl fmt::Debug for Event {
 }
 
 #[derive(Debug)]
-pub(crate) enum DiagnosticsTaskKind {
-    Syntax(DiagnosticsGeneration, Vec<(FileId, Vec<lsp_types::Diagnostic>)>),
-    Semantic(DiagnosticsGeneration, Vec<(FileId, Vec<lsp_types::Diagnostic>)>),
-}
-
-#[derive(Debug)]
 pub(crate) enum Task {
     Response(lsp_server::Response),
     Retry(lsp_server::Request),
-    Diagnostics(DiagnosticsTaskKind),
     FetchPackagesProgress(FetchPackagesProgress),
 }
 
@@ -121,10 +108,6 @@ impl fmt::Display for Task {
         match self {
             Task::Response(_) => write!(f, "Task::Response"),
             Task::Retry(_) => write!(f, "Task::Retry"),
-            Task::Diagnostics(kind) => match kind {
-                DiagnosticsTaskKind::Syntax(..) => write!(f, "Task::Diagnostics(Syntax)"),
-                DiagnosticsTaskKind::Semantic(..) => write!(f, "Task::Diagnostics(Semantic)"),
-            },
             Task::FetchPackagesProgress(progress) => {
                 write!(f, "Task::FetchPackagesProgress({progress})")
             }
@@ -207,7 +190,7 @@ impl GlobalState {
             }
         }
 
-        let was_fully_loaded = self.is_projects_fully_loaded();
+        let was_fully_loaded = self.is_project_fully_loaded();
         match event {
             Event::Lsp(msg) => match msg {
                 lsp_server::Message::Request(req) => self.on_new_request(loop_start, req),
@@ -233,16 +216,29 @@ impl GlobalState {
         }
         let event_handling_duration = loop_start.elapsed();
 
-        let (any_file_changed, memdocs_added_or_removed) = if self.vfs_done {
-            if let Some(refresh_cause) = self.reason_to_state_refresh.take() {
-                self.switch_packages(refresh_cause);
-            }
-            (self.process_pending_file_changes(), self.mem_docs.take_changes())
-        } else {
-            (false, false)
-        };
+        self.after_handle_event(was_fully_loaded);
 
-        if self.is_projects_fully_loaded() {
+        let loop_duration = loop_start.elapsed();
+        if loop_duration > Duration::from_millis(100) && was_fully_loaded {
+            tracing::warn!(
+                "overly long loop turn took {loop_duration:?} (event handling took {event_handling_duration:?}): {event_dbg_msg}"
+            );
+            self.poke_aptos_language_server_developer(format!(
+                "overly long loop turn took {loop_duration:?} (event handling took {event_handling_duration:?}): {event_dbg_msg}"
+            ));
+        }
+    }
+
+    fn after_handle_event(&mut self, was_fully_loaded: bool) {
+        let mut any_file_changed = false;
+        if !self.vfs_sync_in_progress {
+            if let Some(switch_cause) = self.scheduled_switch.take() {
+                self.switch_workspaces(switch_cause);
+            }
+            any_file_changed = self.process_pending_file_changes()
+        }
+
+        if self.is_project_fully_loaded() {
             let became_fully_loaded = !was_fully_loaded;
 
             let ask_for_client_refresh = became_fully_loaded || any_file_changed;
@@ -268,137 +264,15 @@ impl GlobalState {
                 self.send_request::<lsp_types::request::WorkspaceDiagnosticRefresh>((), |_, _| ());
                 // }
             }
-
-            let project_or_mem_docs_changed =
-                became_fully_loaded || any_file_changed || memdocs_added_or_removed;
-            if project_or_mem_docs_changed
-                && !self.config.text_document_diagnostic_pull_enabled()
-                && self.config.diagnostics_enabled()
-            {
-                self.update_diagnostics();
-            }
         }
 
-        if let Some(diagnostic_changes) = self.diagnostics.take_changes() {
-            for file_id in diagnostic_changes {
-                let uri = { file_id_to_url(&self.vfs.read().0, file_id) };
-                let version = from_proto::vfs_path(&uri)
-                    .ok()
-                    .and_then(|path| self.mem_docs.get(&path).map(|it| it.version));
-
-                let diagnostics = self
-                    .diagnostics
-                    .diagnostics_for(file_id)
-                    .cloned()
-                    .collect::<Vec<_>>();
-                self.publish_diagnostics(uri, version, diagnostics);
-            }
-        }
-
-        if self.config.autorefresh_on_move_toml_changes() {
-            if let Some((cause, LoadPackagesRequest { force_reload_package_deps })) =
-                self.load_aptos_packages_queue.should_start_op()
-            {
-                self.load_aptos_packages_from_fs(cause, force_reload_package_deps);
-            }
+        if let Some((cause, LoadPackagesRequest { force_reload_package_deps })) =
+            self.load_aptos_packages_queue.should_start_op()
+        {
+            self.load_aptos_packages_from_fs(cause, force_reload_package_deps);
         }
 
         self.update_status_or_notify();
-
-        let loop_duration = loop_start.elapsed();
-        if loop_duration > Duration::from_millis(100) && was_fully_loaded {
-            tracing::warn!(
-                "overly long loop turn took {loop_duration:?} (event handling took {event_handling_duration:?}): {event_dbg_msg}"
-            );
-            self.poke_aptos_language_server_developer(format!(
-                "overly long loop turn took {loop_duration:?} (event handling took {event_handling_duration:?}): {event_dbg_msg}"
-            ));
-        }
-    }
-
-    fn update_diagnostics(&mut self) {
-        let db = self.analysis_host.raw_database();
-        let generation = self.diagnostics.next_generation();
-        let subscriptions = {
-            let vfs = &self.vfs.read().0;
-            self.mem_docs
-                .iter()
-                .map(|path| vfs.file_id(path).unwrap().0)
-                .filter(|&file_id| {
-                    let package_id = db.file_package_id(file_id);
-                    // Only publish diagnostics for files in the workspace, not from crates.io deps
-                    // or the sysroot.
-                    // While theoretically these should never have errors, we have quite a few false
-                    // positives particularly in the stdlib, and those diagnostics would stay around
-                    // forever if we emitted them here.
-                    !db.package_root(package_id).data(db).is_library()
-                })
-                .collect::<std::sync::Arc<_>>()
-        };
-        tracing::trace!("updating notifications for {:?}", subscriptions);
-        // Split up the work on multiple threads, but we don't wanna fill the entire task pool with
-        // diagnostic tasks, so we limit the number of tasks to a quarter of the total thread pool.
-        let max_tasks = self.config.main_loop_num_threads().div(4).max(1);
-        let chunk_length = subscriptions.len() / max_tasks;
-        let remainder = subscriptions.len() % max_tasks;
-
-        let mut start = 0;
-        for task_idx in 0..max_tasks {
-            let extra = if task_idx < remainder { 1 } else { 0 };
-            let end = start + chunk_length + extra;
-            let slice = start..end;
-            if slice.is_empty() {
-                break;
-            }
-            // Diagnostics are triggered by the user typing
-            // so we run them on a latency sensitive thread.
-            let snapshot = self.snapshot();
-            self.task_pool
-                .handle
-                .spawn_with_sender(ThreadIntent::LatencySensitive, {
-                    let subscriptions = subscriptions.clone();
-                    // Do not fetch semantic diagnostics (and populate query results) if we haven't even
-                    // loaded the initial workspace yet.
-                    let fetch_semantic =
-                        self.vfs_done && self.load_aptos_packages_queue.last_op_result().is_some();
-                    move |sender| {
-                        // We aren't observing the semantics token cache here
-                        let snapshot = AssertUnwindSafe(&snapshot);
-                        let Ok(diags) = std::panic::catch_unwind(|| {
-                            fetch_native_diagnostics(
-                                &snapshot,
-                                subscriptions.clone(),
-                                slice.clone(),
-                                NativeDiagnosticsFetchKind::Syntax,
-                            )
-                        }) else {
-                            return;
-                        };
-                        sender
-                            .send(Task::Diagnostics(DiagnosticsTaskKind::Syntax(generation, diags)))
-                            .unwrap();
-
-                        if fetch_semantic {
-                            let Ok(sema_diags) = std::panic::catch_unwind(|| {
-                                fetch_native_diagnostics(
-                                    &snapshot,
-                                    subscriptions.clone(),
-                                    slice.clone(),
-                                    NativeDiagnosticsFetchKind::Semantic,
-                                )
-                            }) else {
-                                return;
-                            };
-                            sender
-                                .send(Task::Diagnostics(DiagnosticsTaskKind::Semantic(
-                                    generation, sema_diags,
-                                )))
-                                .unwrap();
-                        }
-                    }
-                });
-            start = end;
-        }
     }
 
     fn update_status_or_notify(&mut self) {
@@ -433,9 +307,6 @@ impl GlobalState {
             // Only retry requests that haven't been cancelled. Otherwise we do unnecessary work.
             Task::Retry(req) if !self.is_completed(&req) => self.on_request(req),
             Task::Retry(_) => (),
-            Task::Diagnostics(kind) => {
-                self.diagnostics.set_native_diagnostics(kind);
-            }
             Task::FetchPackagesProgress(progress) => {
                 let (state, msg) = match progress {
                     FetchPackagesProgress::Begin => (Progress::Begin, None),
@@ -448,7 +319,7 @@ impl GlobalState {
                         if let Err(fetch_err) = self.load_packages_error() {
                             tracing::error!("FetchWorkspaceError: {fetch_err}");
                         }
-                        self.reason_to_state_refresh = Some("loaded aptos packages from fs".to_owned());
+                        self.scheduled_switch = Some("loaded aptos packages from fs".to_owned());
                         (Progress::End, None)
                     }
                 };
@@ -479,24 +350,18 @@ impl GlobalState {
                 always!(config_version <= self.vfs_config_version);
 
                 let (n_done, state) = match n_done {
-                    LoadingProgress::Started => {
-                        self.vfs_span = Some(span!(Level::INFO, "vfs_load", total = n_total).entered());
-                        (0, Progress::Begin)
-                    }
+                    LoadingProgress::Started => (0, Progress::Begin),
                     LoadingProgress::Progress(n_done) => (n_done.min(n_total), Progress::Report),
-                    LoadingProgress::Finished => {
-                        self.vfs_span = None;
-                        (n_total, Progress::End)
-                    }
+                    LoadingProgress::Finished => (n_total, Progress::End),
                 };
                 self.vfs_progress_config_version = config_version;
 
                 let is_vfs_load_ended = state == Progress::End;
 
-                if !self.vfs_initialized && is_vfs_load_ended {
-                    self.vfs_initialized = true;
+                if !self.vfs_synced_once && is_vfs_load_ended {
+                    self.vfs_synced_once = true;
                 }
-                self.vfs_done = is_vfs_load_ended;
+                self.vfs_sync_in_progress = !is_vfs_load_ended;
 
                 if is_vfs_load_ended {
                     self.recreate_package_graph("after vfs_refresh".to_string() /*, false*/);
@@ -531,7 +396,7 @@ impl GlobalState {
             let path = VfsPath::from(path);
             // if the file is in mem docs, it's managed by the client via notifications
             // so only set it if its not in there
-            if !self.mem_docs.contains(&path) && (is_changed || vfs.file_id(&path).is_none()) {
+            if !self.opened_files.contains(&path) && (is_changed || vfs.file_id(&path).is_none()) {
                 vfs.set_file_contents(path, contents);
             }
         }

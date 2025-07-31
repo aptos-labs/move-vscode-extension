@@ -206,10 +206,6 @@ impl Config {
         }
     }
 
-    pub fn autorefresh_on_move_toml_changes(&self) -> bool {
-        self.aptos_autoreload().to_owned()
-    }
-
     pub fn assist(&self) -> AssistConfig {
         AssistConfig { allowed: None }
     }

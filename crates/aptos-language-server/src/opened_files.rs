@@ -7,7 +7,6 @@
 //! In-memory document information.
 
 use std::collections::HashMap;
-use std::mem;
 
 use vfs::VfsPath;
 
@@ -16,48 +15,37 @@ use vfs::VfsPath;
 /// For these document, their true contents is maintained by the client. It
 /// might be different from what's on disk.
 #[derive(Default, Clone)]
-pub(crate) struct MemDocs {
-    mem_docs: HashMap<VfsPath, DocumentData>,
-    added_or_removed: bool,
+pub(crate) struct OpenedFiles {
+    files: HashMap<VfsPath, DocumentData>,
 }
 
-impl MemDocs {
+impl OpenedFiles {
     pub(crate) fn contains(&self, path: &VfsPath) -> bool {
-        self.mem_docs.contains_key(path)
+        self.files.contains_key(path)
     }
 
     pub(crate) fn insert(&mut self, path: VfsPath, data: DocumentData) -> Result<(), ()> {
-        self.added_or_removed = true;
-        match self.mem_docs.insert(path, data) {
+        match self.files.insert(path, data) {
             Some(_) => Err(()),
             None => Ok(()),
         }
     }
 
     pub(crate) fn remove(&mut self, path: &VfsPath) -> Result<(), ()> {
-        self.added_or_removed = true;
-        match self.mem_docs.remove(path) {
+        match self.files.remove(path) {
             Some(_) => Ok(()),
             None => Err(()),
         }
     }
 
     pub(crate) fn get(&self, path: &VfsPath) -> Option<&DocumentData> {
-        self.mem_docs.get(path)
+        self.files.get(path)
     }
 
     pub(crate) fn get_mut(&mut self, path: &VfsPath) -> Option<&mut DocumentData> {
         // NB: don't set `self.added_or_removed` here, as that purposefully only
         // tracks changes to the key set.
-        self.mem_docs.get_mut(path)
-    }
-
-    pub(crate) fn iter(&self) -> impl Iterator<Item = &VfsPath> {
-        self.mem_docs.keys()
-    }
-
-    pub(crate) fn take_changes(&mut self) -> bool {
-        mem::replace(&mut self.added_or_removed, false)
+        self.files.get_mut(path)
     }
 }
 

@@ -6,15 +6,14 @@
 
 use crate::config::Config;
 use crate::config::validation::ConfigErrors;
-use crate::diagnostics::DiagnosticCollection;
 use crate::line_index::LineIndex;
 use crate::lsp::from_proto;
 use crate::lsp::to_proto::url_from_abs_path;
 use crate::lsp_ext;
 use crate::lsp_ext::{MovefmtVersionError, MovefmtVersionErrorParams};
 use crate::main_loop::Task;
-use crate::mem_docs::MemDocs;
 use crate::op_queue::{Cause, OpQueue};
+use crate::opened_files::OpenedFiles;
 use crate::task_pool::TaskPool;
 use camino::Utf8PathBuf;
 use crossbeam_channel::{Receiver, Sender, unbounded};
@@ -69,8 +68,7 @@ pub(crate) struct GlobalState {
     pub(crate) config: Arc<Config>,
     pub(crate) config_errors: Option<ConfigErrors>,
     pub(crate) analysis_host: AnalysisHost,
-    pub(crate) diagnostics: DiagnosticCollection,
-    pub(crate) mem_docs: MemDocs,
+    pub(crate) opened_files: OpenedFiles,
     pub(crate) package_root_config: PackageRootConfig,
 
     // status
@@ -82,12 +80,10 @@ pub(crate) struct GlobalState {
     pub(crate) vfs: Arc<RwLock<(vfs::Vfs, HashMap<FileId, LineEndings>)>>,
     pub(crate) vfs_config_version: u32,
     pub(crate) vfs_progress_config_version: u32,
-    pub(crate) vfs_done: bool,
-    pub(crate) vfs_initialized: bool,
-    // used to track how long VFS loading takes. this can't be on `vfs::loader::Handle`,
-    // as that handle's lifetime is the same as `GlobalState` itself.
-    pub(crate) vfs_span: Option<tracing::span::EnteredSpan>,
-    pub(crate) reason_to_state_refresh: Option<Cause>,
+    pub(crate) vfs_sync_in_progress: bool,
+    pub(crate) vfs_synced_once: bool,
+
+    pub(crate) scheduled_switch: Option<Cause>,
 
     pub(crate) all_packages: Arc<Vec<AptosPackage>>,
     // op queues
@@ -98,7 +94,7 @@ pub(crate) struct GlobalState {
 pub(crate) struct GlobalStateSnapshot {
     pub(crate) config: Arc<Config>,
     pub(crate) analysis: Analysis,
-    mem_docs: MemDocs,
+    opened_files: OpenedFiles,
     vfs: Arc<RwLock<(vfs::Vfs, HashMap<FileId, LineEndings>)>>,
     pub(crate) all_packages: Arc<Vec<AptosPackage>>,
     sender: Sender<lsp_server::Message>,
@@ -145,8 +141,7 @@ impl GlobalState {
             fmt_pool,
             config: Arc::new(config.clone()),
             analysis_host,
-            diagnostics: Default::default(),
-            mem_docs: MemDocs::default(),
+            opened_files: OpenedFiles::default(),
             shutdown_requested: false,
             last_reported_status: lsp_ext::ServerStatusParams {
                 health: lsp_ext::Health::Ok,
@@ -160,10 +155,9 @@ impl GlobalState {
             vfs,
             vfs_config_version: 0,
             vfs_progress_config_version: 0,
-            vfs_done: true,
-            vfs_initialized: false,
-            vfs_span: None,
-            reason_to_state_refresh: None,
+            vfs_sync_in_progress: false,
+            vfs_synced_once: false,
+            scheduled_switch: None,
 
             all_packages: Arc::from(Vec::new()),
             load_aptos_packages_queue: OpQueue::default(),
@@ -174,7 +168,7 @@ impl GlobalState {
     }
 
     pub fn vfs_initialized_and_loaded(&self) -> bool {
-        self.vfs_initialized && self.vfs_done
+        self.vfs_synced_once && !self.vfs_sync_in_progress
     }
 
     pub(crate) fn snapshot(&self) -> GlobalStateSnapshot {
@@ -183,7 +177,7 @@ impl GlobalState {
             all_packages: Arc::clone(&self.all_packages),
             analysis: self.analysis_host.analysis(),
             vfs: Arc::clone(&self.vfs),
-            mem_docs: self.mem_docs.clone(),
+            opened_files: self.opened_files.clone(),
             // semantic_tokens_cache: Arc::clone(&self.semantic_tokens_cache),
             sender: self.sender.clone(),
         }
@@ -258,51 +252,6 @@ impl GlobalState {
     fn send(&self, message: lsp_server::Message) {
         self.sender.send(message).unwrap();
     }
-
-    pub(crate) fn publish_diagnostics(
-        &mut self,
-        uri: Url,
-        version: Option<i32>,
-        mut diagnostics: Vec<lsp_types::Diagnostic>,
-    ) {
-        // We put this on a separate thread to avoid blocking the main thread with serialization work
-        self.task_pool
-            .handle
-            .spawn_with_sender(stdx::thread::ThreadIntent::Worker, {
-                let sender = self.sender.clone();
-                move |_| {
-                    // VSCode assumes diagnostic messages to be non-empty strings, so we need to patch
-                    // empty diagnostics. Neither the docs of VSCode nor the LSP spec say whether
-                    // diagnostic messages are actually allowed to be empty or not and patching this
-                    // in the VSCode client does not work as the assertion happens in the protocol
-                    // conversion. So this hack is here to stay, and will be considered a hack
-                    // until the LSP decides to state that empty messages are allowed.
-
-                    // See https://github.com/rust-lang/rust-analyzer/issues/11404
-                    // See https://github.com/rust-lang/rust-analyzer/issues/13130
-                    let patch_empty = |message: &mut String| {
-                        if message.is_empty() {
-                            " ".clone_into(message);
-                        }
-                    };
-
-                    for d in &mut diagnostics {
-                        patch_empty(&mut d.message);
-                        if let Some(dri) = &mut d.related_information {
-                            for dri in dri {
-                                patch_empty(&mut dri.message);
-                            }
-                        }
-                    }
-
-                    let not = lsp_server::Notification::new(
-                        <lsp_types::notification::PublishDiagnostics as Notification>::METHOD.to_owned(),
-                        lsp_types::PublishDiagnosticsParams { uri, diagnostics, version },
-                    );
-                    _ = sender.send(not.into());
-                }
-            });
-    }
 }
 
 impl Drop for GlobalState {
@@ -349,12 +298,12 @@ impl GlobalStateSnapshot {
     }
 
     pub(crate) fn file_version(&self, file_id: FileId) -> Option<i32> {
-        Some(self.mem_docs.get(self.vfs_read().file_path(file_id))?.version)
+        Some(self.opened_files.get(self.vfs_read().file_path(file_id))?.version)
     }
 
     pub(crate) fn url_file_version(&self, url: &Url) -> Option<i32> {
         let path = from_proto::vfs_path(url).ok()?;
-        Some(self.mem_docs.get(&path)?.version)
+        Some(self.opened_files.get(&path)?.version)
     }
 
     pub(crate) fn anchored_path(&self, path: &AnchoredPathBuf) -> Url {

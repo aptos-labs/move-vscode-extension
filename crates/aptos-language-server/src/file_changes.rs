@@ -93,11 +93,6 @@ impl GlobalState {
                 }
             }
 
-            // Clear native diagnostics when their file gets deleted
-            if !changed_file.exists() {
-                self.diagnostics.clear_native_for(changed_file.file_id);
-            }
-
             let file_text = match changed_file.change {
                 vfs::Change::Create(bytes, _) => String::from_utf8(bytes).ok(),
                 vfs::Change::Modify(bytes, _) => String::from_utf8(bytes).ok(),

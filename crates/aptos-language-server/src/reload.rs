@@ -53,8 +53,8 @@ impl GlobalState {
     ///
     /// This indicates that we've fully loaded the projects and
     /// are ready to do semantic work.
-    pub(crate) fn is_projects_fully_loaded(&self) -> bool {
-        self.vfs_done
+    pub(crate) fn is_project_fully_loaded(&self) -> bool {
+        !self.vfs_sync_in_progress
             && !self.load_aptos_packages_queue.op_in_progress()
             && self.vfs_progress_config_version >= self.vfs_config_version
     }
@@ -76,18 +76,10 @@ impl GlobalState {
     pub(crate) fn current_status(&self) -> lsp_ext::ServerStatusParams {
         let mut status = lsp_ext::ServerStatusParams {
             health: lsp_ext::Health::Ok,
-            quiescent: self.is_projects_fully_loaded(),
+            quiescent: self.is_project_fully_loaded(),
             message: None,
         };
         let mut message = String::new();
-
-        if !self.config.autorefresh_on_move_toml_changes()
-            && self.is_projects_fully_loaded()
-            && self.load_aptos_packages_queue.op_requested()
-        {
-            status.health |= lsp_ext::Health::Warning;
-            message.push_str("Auto-reloading is disabled and the workspace has changed, a manual workspace reload is required.\n\n");
-        }
 
         if let Some(err) = &self.config_errors {
             status.health |= lsp_ext::Health::Warning;
@@ -156,7 +148,7 @@ impl GlobalState {
     }
 
     #[tracing::instrument(level = "info", skip(self))]
-    pub(crate) fn switch_packages(&mut self, cause: Cause) {
+    pub(crate) fn switch_workspaces(&mut self, cause: Cause) {
         let Some(LoadPackagesResponse {
             packages_from_fs,
             force_reload_package_deps,
