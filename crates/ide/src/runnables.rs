@@ -10,6 +10,7 @@ use ide_db::{RootDatabase, SymbolKind};
 use lang::Semantics;
 use lang::nameres::fq_named_element::ItemFQNameOwner;
 use lang::node_ext::item_spec::ItemSpecExt;
+use syntax::ast::HasItems;
 use syntax::files::{InFile, InFileExt};
 use syntax::{TextSize, ast};
 use vfs::FileId;
@@ -39,7 +40,7 @@ impl Runnable {
             RunnableKind::Test { .. } => {
                 let mut s = String::from("▶\u{fe0e} Run ");
                 if self.nav_item.kind == Some(SymbolKind::Module) {
-                    s.push_str("Module Tests");
+                    s.push_str("Tests");
                 } else {
                     s.push_str("Test");
                 }
@@ -56,8 +57,9 @@ pub(crate) fn runnables(db: &RootDatabase, file_id: FileId) -> Vec<Runnable> {
     let mut res = Vec::new();
     visit_file_defs(&sema, file_id, &mut |named_item| {
         let runnable = match named_item {
-            ast::NamedElement::Fun(fun) if fun.is_test() => {
-                runnable_for_test_fun(&sema, fun.in_file(file_id))
+            ast::NamedElement::Fun(fun) => runnable_for_test_fun(&sema, fun.in_file(file_id)),
+            ast::NamedElement::Module(module) => {
+                runnable_for_module_with_test_funs(&sema, module.in_file(file_id))
             }
             _ => None,
         }?;
@@ -82,9 +84,27 @@ pub(crate) fn runnable_for_test_fun(
     sema: &Semantics<'_, RootDatabase>,
     fun: InFile<ast::Fun>,
 ) -> Option<Runnable> {
+    if !fun.value.is_test() {
+        return None;
+    }
     let fq_name = fun.fq_name(sema.db)?;
-    let nav_item = NavigationTarget::from_named_item(fun.map_into())?;
+    let nav_item = NavigationTarget::from_named_item(fun)?;
     let test_path = fq_name.module_and_item_text();
+    Some(Runnable {
+        nav_item,
+        kind: RunnableKind::Test { test_path },
+    })
+}
+
+pub(crate) fn runnable_for_module_with_test_funs(
+    _sema: &Semantics<'_, RootDatabase>,
+    module: InFile<ast::Module>,
+) -> Option<Runnable> {
+    if !module.value.functions().iter().any(|it| it.is_test()) {
+        return None;
+    }
+    let nav_item = NavigationTarget::from_named_item(module)?;
+    let test_path = format!("{}::", &nav_item.name);
     Some(Runnable {
         nav_item,
         kind: RunnableKind::Test { test_path },
