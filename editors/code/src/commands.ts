@@ -136,8 +136,8 @@ export function runSingle(ctx: CtxInit): Cmd {
         const editor = ctx.activeAptosEditor;
         if (!editor) return;
 
-        const task = await createTaskFromRunnable(runnable);
-        task.group = vscode.TaskGroup.Build;
+        const task = await createTaskFromRunnable(runnable, ctx.config);
+        task.group = vscode.TaskGroup.Test;
         task.presentationOptions = {
             reveal: vscode.TaskRevealKind.Always,
             panel: vscode.TaskPanelKind.Dedicated,
