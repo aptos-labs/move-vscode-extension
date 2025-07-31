@@ -263,9 +263,10 @@ impl GlobalState {
                     self.send_request::<lsp_types::request::InlayHintRefreshRequest>((), |_, _| ());
                 }
 
-                if self.config.diagnostics_refresh() {
-                    self.send_request::<lsp_types::request::WorkspaceDiagnosticRefresh>((), |_, _| ());
-                }
+                // todo: lsp-types does not support this
+                // if self.config.diagnostics_refresh() {
+                self.send_request::<lsp_types::request::WorkspaceDiagnosticRefresh>((), |_, _| ());
+                // }
             }
 
             let project_or_mem_docs_changed =
