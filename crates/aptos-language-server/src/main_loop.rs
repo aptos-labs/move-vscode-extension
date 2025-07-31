@@ -259,9 +259,10 @@ impl GlobalState {
                     self.send_request::<lsp_types::request::InlayHintRefreshRequest>((), |_, _| ());
                 }
 
-                if self.config.diagnostics_refresh() {
-                    self.send_request::<lsp_types::request::WorkspaceDiagnosticRefresh>((), |_, _| ());
-                }
+                // todo: can't filter correctly, lsp-types has wrong signature
+                // if self.config.diagnostics_refresh() {
+                self.send_request::<lsp_types::request::WorkspaceDiagnosticRefresh>((), |_, _| ());
+                // }
             }
         }
 
