@@ -6,6 +6,7 @@
 
 mod ident_pat;
 mod param_name;
+mod range_exclusive;
 
 use crate::NavigationTarget;
 use ide_db::RootDatabase;
@@ -63,6 +64,7 @@ fn hints(
         match node {
             ast::IdentPat(it) => ident_pat::hints(hints, sema, config, it.in_file(file_id)),
             ast::AnyCallExpr(it) => param_name::hints(hints, sema, config, it.in_file(file_id)),
+            ast::RangeExpr(it) => range_exclusive::hints(hints, sema, config, it),
             _ => Some(()),
         }
     };
@@ -103,6 +105,7 @@ pub struct InlayHintsConfig {
     pub type_hints: bool,
     pub tuple_type_hints: bool,
     pub parameter_hints: bool,
+    pub range_exclusive_hints: bool,
     pub hide_closure_parameter_hints: bool,
     pub fields_to_resolve: InlayFieldsToResolve,
 }

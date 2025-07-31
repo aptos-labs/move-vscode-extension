@@ -233,6 +233,7 @@ impl Config {
             type_hints: self.inlayHints_typeHints_enable().to_owned(),
             tuple_type_hints: self.inlayHints_typeHints_showForTuples().to_owned(),
             parameter_hints: self.inlayHints_parameterHints_enable().to_owned(),
+            range_exclusive_hints: self.inlayHints_rangeExclusiveHints_enable().to_owned(),
             hide_closure_parameter_hints: self.inlayHints_typeHints_hideClosureParameter().to_owned(),
             fields_to_resolve: InlayFieldsToResolve::from_client_capabilities(&client_capability_fields),
         }

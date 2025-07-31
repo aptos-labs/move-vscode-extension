@@ -292,6 +292,16 @@
             {
                 "title": "inlayHints",
                 "properties": {
+                    "move-on-aptos.inlayHints.rangeExclusiveHints.enable": {
+                        "markdownDescription": "Whether to show exclusive range inlay hints.",
+                        "default": true,
+                        "type": "boolean"
+                    }
+                }
+            },
+            {
+                "title": "inlayHints",
+                "properties": {
                     "move-on-aptos.inlayHints.renderColons": {
                         "markdownDescription": "Whether to render leading colons for type hints, and trailing colons for parameter hints.",
                         "default": true,
