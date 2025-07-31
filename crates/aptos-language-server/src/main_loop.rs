@@ -270,7 +270,7 @@ impl GlobalState {
                 let uri = { file_id_to_url(&self.vfs.read().0, file_id) };
                 let version = from_proto::vfs_path(&uri)
                     .ok()
-                    .and_then(|path| self.mem_docs.get(&path).map(|it| it.version));
+                    .and_then(|path| self.opened_files.get(&path).map(|it| it.version));
 
                 let diagnostics = self
                     .diagnostics
@@ -430,7 +430,7 @@ impl GlobalState {
             let path = VfsPath::from(path);
             // if the file is in mem docs, it's managed by the client via notifications
             // so only set it if its not in there
-            if !self.mem_docs.contains(&path) && (is_changed || vfs.file_id(&path).is_none()) {
+            if !self.opened_files.contains(&path) && (is_changed || vfs.file_id(&path).is_none()) {
                 vfs.set_file_contents(path, contents);
             }
         }

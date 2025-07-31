@@ -13,8 +13,8 @@ use crate::lsp::to_proto::url_from_abs_path;
 use crate::lsp_ext;
 use crate::lsp_ext::{MovefmtVersionError, MovefmtVersionErrorParams};
 use crate::main_loop::Task;
-use crate::mem_docs::MemDocs;
 use crate::op_queue::{Cause, OpQueue};
+use crate::opened_files::OpenedFiles;
 use crate::task_pool::TaskPool;
 use camino::Utf8PathBuf;
 use crossbeam_channel::{Receiver, Sender, unbounded};
@@ -70,7 +70,7 @@ pub(crate) struct GlobalState {
     pub(crate) config_errors: Option<ConfigErrors>,
     pub(crate) analysis_host: AnalysisHost,
     pub(crate) diagnostics: DiagnosticCollection,
-    pub(crate) mem_docs: MemDocs,
+    pub(crate) opened_files: OpenedFiles,
     pub(crate) package_root_config: PackageRootConfig,
 
     // status
@@ -98,7 +98,7 @@ pub(crate) struct GlobalState {
 pub(crate) struct GlobalStateSnapshot {
     pub(crate) config: Arc<Config>,
     pub(crate) analysis: Analysis,
-    mem_docs: MemDocs,
+    opened_files: OpenedFiles,
     vfs: Arc<RwLock<(vfs::Vfs, HashMap<FileId, LineEndings>)>>,
     pub(crate) all_packages: Arc<Vec<AptosPackage>>,
     sender: Sender<lsp_server::Message>,
@@ -146,7 +146,7 @@ impl GlobalState {
             config: Arc::new(config.clone()),
             analysis_host,
             diagnostics: Default::default(),
-            mem_docs: MemDocs::default(),
+            opened_files: OpenedFiles::default(),
             shutdown_requested: false,
             last_reported_status: lsp_ext::ServerStatusParams {
                 health: lsp_ext::Health::Ok,
@@ -183,7 +183,7 @@ impl GlobalState {
             all_packages: Arc::clone(&self.all_packages),
             analysis: self.analysis_host.analysis(),
             vfs: Arc::clone(&self.vfs),
-            mem_docs: self.mem_docs.clone(),
+            opened_files: self.opened_files.clone(),
             // semantic_tokens_cache: Arc::clone(&self.semantic_tokens_cache),
             sender: self.sender.clone(),
         }
@@ -349,12 +349,12 @@ impl GlobalStateSnapshot {
     }
 
     pub(crate) fn file_version(&self, file_id: FileId) -> Option<i32> {
-        Some(self.mem_docs.get(self.vfs_read().file_path(file_id))?.version)
+        Some(self.opened_files.get(self.vfs_read().file_path(file_id))?.version)
     }
 
     pub(crate) fn url_file_version(&self, url: &Url) -> Option<i32> {
         let path = from_proto::vfs_path(url).ok()?;
-        Some(self.mem_docs.get(&path)?.version)
+        Some(self.opened_files.get(&path)?.version)
     }
 
     pub(crate) fn anchored_path(&self, path: &AnchoredPathBuf) -> Url {

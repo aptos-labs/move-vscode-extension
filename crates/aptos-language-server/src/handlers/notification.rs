@@ -8,7 +8,7 @@ use crate::config::config_change::ConfigChange;
 use crate::global_state::{GlobalState, LoadPackagesRequest};
 use crate::lsp::from_proto;
 use crate::lsp::utils::apply_document_changes;
-use crate::mem_docs::DocumentData;
+use crate::opened_files::DocumentData;
 use crate::{Config, reload};
 use camino::Utf8PathBuf;
 use lsp_types::{
@@ -50,7 +50,7 @@ pub(crate) fn handle_did_open_text_document(
 ) -> anyhow::Result<()> {
     if let Ok(path) = from_proto::vfs_path(&params.text_document.uri) {
         let already_exists = state
-            .mem_docs
+            .opened_files
             .insert(
                 path.clone(),
                 DocumentData::new(
@@ -78,7 +78,7 @@ pub(crate) fn handle_did_change_text_document(
     params: DidChangeTextDocumentParams,
 ) -> anyhow::Result<()> {
     if let Ok(path) = from_proto::vfs_path(&params.text_document.uri) {
-        let Some(DocumentData { version, data }) = state.mem_docs.get_mut(&path) else {
+        let Some(DocumentData { version, data }) = state.opened_files.get_mut(&path) else {
             tracing::error!(?path, "unexpected DidChangeTextDocument");
             return Ok(());
         };
@@ -106,7 +106,7 @@ pub(crate) fn handle_did_close_text_document(
     params: DidCloseTextDocumentParams,
 ) -> anyhow::Result<()> {
     if let Ok(path) = from_proto::vfs_path(&params.text_document.uri) {
-        if state.mem_docs.remove(&path).is_err() {
+        if state.opened_files.remove(&path).is_err() {
             tracing::error!("orphan DidCloseTextDocument: {}", path);
         }
 
