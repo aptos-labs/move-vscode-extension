@@ -82,8 +82,8 @@ pub(crate) struct GlobalState {
     pub(crate) vfs: Arc<RwLock<(vfs::Vfs, HashMap<FileId, LineEndings>)>>,
     pub(crate) vfs_config_version: u32,
     pub(crate) vfs_progress_config_version: u32,
-    pub(crate) vfs_done: bool,
-    pub(crate) vfs_initialized: bool,
+    pub(crate) vfs_sync_in_progress: bool,
+    pub(crate) vfs_synced_once: bool,
 
     pub(crate) scheduled_switch: Option<Cause>,
 
@@ -158,8 +158,8 @@ impl GlobalState {
             vfs,
             vfs_config_version: 0,
             vfs_progress_config_version: 0,
-            vfs_done: true,
-            vfs_initialized: false,
+            vfs_sync_in_progress: false,
+            vfs_synced_once: false,
             scheduled_switch: None,
 
             all_packages: Arc::from(Vec::new()),
@@ -171,7 +171,7 @@ impl GlobalState {
     }
 
     pub fn vfs_initialized_and_loaded(&self) -> bool {
-        self.vfs_initialized && self.vfs_done
+        self.vfs_synced_once && !self.vfs_sync_in_progress
     }
 
     pub(crate) fn snapshot(&self) -> GlobalStateSnapshot {

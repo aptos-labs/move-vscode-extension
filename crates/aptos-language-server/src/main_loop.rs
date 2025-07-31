@@ -229,7 +229,7 @@ impl GlobalState {
         }
         let event_handling_duration = loop_start.elapsed();
 
-        let any_file_changed = if self.vfs_done {
+        let any_file_changed = if !self.vfs_sync_in_progress {
             if let Some(switch_cause) = self.scheduled_switch.take() {
                 self.switch_workspaces(switch_cause);
             }
@@ -386,10 +386,10 @@ impl GlobalState {
 
                 let is_vfs_load_ended = state == Progress::End;
 
-                if !self.vfs_initialized && is_vfs_load_ended {
-                    self.vfs_initialized = true;
+                if !self.vfs_synced_once && is_vfs_load_ended {
+                    self.vfs_synced_once = true;
                 }
-                self.vfs_done = is_vfs_load_ended;
+                self.vfs_sync_in_progress = !is_vfs_load_ended;
 
                 if is_vfs_load_ended {
                     self.recreate_package_graph("after vfs_refresh".to_string() /*, false*/);
