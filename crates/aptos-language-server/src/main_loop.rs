@@ -203,7 +203,7 @@ impl GlobalState {
             }
         }
 
-        let was_fully_loaded = self.is_projects_fully_loaded();
+        let was_fully_loaded = self.is_project_fully_loaded();
         match event {
             Event::Lsp(msg) => match msg {
                 lsp_server::Message::Request(req) => self.on_new_request(loop_start, req),
@@ -229,16 +229,29 @@ impl GlobalState {
         }
         let event_handling_duration = loop_start.elapsed();
 
-        let any_file_changed = if !self.vfs_sync_in_progress {
+        self.after_handle_event(was_fully_loaded);
+
+        let loop_duration = loop_start.elapsed();
+        if loop_duration > Duration::from_millis(100) && was_fully_loaded {
+            tracing::warn!(
+                "overly long loop turn took {loop_duration:?} (event handling took {event_handling_duration:?}): {event_dbg_msg}"
+            );
+            self.poke_aptos_language_server_developer(format!(
+                "overly long loop turn took {loop_duration:?} (event handling took {event_handling_duration:?}): {event_dbg_msg}"
+            ));
+        }
+    }
+
+    fn after_handle_event(&mut self, was_fully_loaded: bool) {
+        let mut any_file_changed = false;
+        if !self.vfs_sync_in_progress {
             if let Some(switch_cause) = self.scheduled_switch.take() {
                 self.switch_workspaces(switch_cause);
             }
-            self.process_pending_file_changes()
-        } else {
-            false
-        };
+            any_file_changed = self.process_pending_file_changes()
+        }
 
-        if self.is_projects_fully_loaded() {
+        if self.is_project_fully_loaded() {
             let became_fully_loaded = !was_fully_loaded;
 
             let ask_for_client_refresh = became_fully_loaded || any_file_changed;
@@ -288,16 +301,6 @@ impl GlobalState {
         }
 
         self.update_status_or_notify();
-
-        let loop_duration = loop_start.elapsed();
-        if loop_duration > Duration::from_millis(100) && was_fully_loaded {
-            tracing::warn!(
-                "overly long loop turn took {loop_duration:?} (event handling took {event_handling_duration:?}): {event_dbg_msg}"
-            );
-            self.poke_aptos_language_server_developer(format!(
-                "overly long loop turn took {loop_duration:?} (event handling took {event_handling_duration:?}): {event_dbg_msg}"
-            ));
-        }
     }
 
     fn update_status_or_notify(&mut self) {

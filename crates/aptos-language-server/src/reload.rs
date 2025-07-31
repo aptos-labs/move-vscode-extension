@@ -53,7 +53,7 @@ impl GlobalState {
     ///
     /// This indicates that we've fully loaded the projects and
     /// are ready to do semantic work.
-    pub(crate) fn is_projects_fully_loaded(&self) -> bool {
+    pub(crate) fn is_project_fully_loaded(&self) -> bool {
         !self.vfs_sync_in_progress
             && !self.load_aptos_packages_queue.op_in_progress()
             && self.vfs_progress_config_version >= self.vfs_config_version
@@ -76,7 +76,7 @@ impl GlobalState {
     pub(crate) fn current_status(&self) -> lsp_ext::ServerStatusParams {
         let mut status = lsp_ext::ServerStatusParams {
             health: lsp_ext::Health::Ok,
-            quiescent: self.is_projects_fully_loaded(),
+            quiescent: self.is_project_fully_loaded(),
             message: None,
         };
         let mut message = String::new();
