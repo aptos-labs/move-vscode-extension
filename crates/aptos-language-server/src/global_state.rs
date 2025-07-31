@@ -84,9 +84,7 @@ pub(crate) struct GlobalState {
     pub(crate) vfs_progress_config_version: u32,
     pub(crate) vfs_done: bool,
     pub(crate) vfs_initialized: bool,
-    // used to track how long VFS loading takes. this can't be on `vfs::loader::Handle`,
-    // as that handle's lifetime is the same as `GlobalState` itself.
-    pub(crate) vfs_span: Option<tracing::span::EnteredSpan>,
+
     pub(crate) scheduled_switch: Option<Cause>,
 
     pub(crate) all_packages: Arc<Vec<AptosPackage>>,
@@ -162,7 +160,6 @@ impl GlobalState {
             vfs_progress_config_version: 0,
             vfs_done: true,
             vfs_initialized: false,
-            vfs_span: None,
             scheduled_switch: None,
 
             all_packages: Arc::from(Vec::new()),

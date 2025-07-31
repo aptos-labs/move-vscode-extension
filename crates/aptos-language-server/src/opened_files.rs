@@ -7,7 +7,6 @@
 //! In-memory document information.
 
 use std::collections::HashMap;
-use std::mem;
 
 use vfs::VfsPath;
 

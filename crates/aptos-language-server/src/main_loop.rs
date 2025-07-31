@@ -378,15 +378,9 @@ impl GlobalState {
                 always!(config_version <= self.vfs_config_version);
 
                 let (n_done, state) = match n_done {
-                    LoadingProgress::Started => {
-                        self.vfs_span = Some(span!(Level::INFO, "vfs_load", total = n_total).entered());
-                        (0, Progress::Begin)
-                    }
+                    LoadingProgress::Started => (0, Progress::Begin),
                     LoadingProgress::Progress(n_done) => (n_done.min(n_total), Progress::Report),
-                    LoadingProgress::Finished => {
-                        self.vfs_span = None;
-                        (n_total, Progress::End)
-                    }
+                    LoadingProgress::Finished => (n_total, Progress::End),
                 };
                 self.vfs_progress_config_version = config_version;
 
