@@ -5,11 +5,9 @@
 // Modifications have been made to the original code.
 
 use crate::config::Config;
-use crate::diagnostics::DiagnosticsGeneration;
-use crate::global_state::{GlobalState, LoadPackagesRequest, LoadPackagesResponse, file_id_to_url};
+use crate::global_state::{GlobalState, LoadPackagesRequest, LoadPackagesResponse};
 use crate::handlers::dispatch::{NotificationDispatcher, RequestDispatcher};
 use crate::handlers::request;
-use crate::lsp::from_proto;
 use crate::lsp::utils::{Progress, notification_is};
 use crate::lsp_ext;
 use crate::reload::FetchPackagesProgress;
@@ -21,8 +19,8 @@ use std::fmt;
 use std::time::{Duration, Instant};
 use stdx::always;
 use tracing::{Level, span};
+use vfs::VfsPath;
 use vfs::loader::LoadingProgress;
-use vfs::{FileId, VfsPath};
 
 pub fn main_loop(config: Config, connection: Connection) -> anyhow::Result<()> {
     // Windows scheduler implements priority boosts: if thread waits for an
@@ -99,16 +97,9 @@ impl fmt::Debug for Event {
 }
 
 #[derive(Debug)]
-pub(crate) enum DiagnosticsTaskKind {
-    Syntax(DiagnosticsGeneration, Vec<(FileId, Vec<lsp_types::Diagnostic>)>),
-    Semantic(DiagnosticsGeneration, Vec<(FileId, Vec<lsp_types::Diagnostic>)>),
-}
-
-#[derive(Debug)]
 pub(crate) enum Task {
     Response(lsp_server::Response),
     Retry(lsp_server::Request),
-    Diagnostics(DiagnosticsTaskKind),
     FetchPackagesProgress(FetchPackagesProgress),
 }
 
@@ -117,10 +108,6 @@ impl fmt::Display for Task {
         match self {
             Task::Response(_) => write!(f, "Task::Response"),
             Task::Retry(_) => write!(f, "Task::Retry"),
-            Task::Diagnostics(kind) => match kind {
-                DiagnosticsTaskKind::Syntax(..) => write!(f, "Task::Diagnostics(Syntax)"),
-                DiagnosticsTaskKind::Semantic(..) => write!(f, "Task::Diagnostics(Semantic)"),
-            },
             Task::FetchPackagesProgress(progress) => {
                 write!(f, "Task::FetchPackagesProgress({progress})")
             }
@@ -278,22 +265,6 @@ impl GlobalState {
             }
         }
 
-        if let Some(diagnostic_changes) = self.diagnostics.take_changes() {
-            for file_id in diagnostic_changes {
-                let uri = { file_id_to_url(&self.vfs.read().0, file_id) };
-                let version = from_proto::vfs_path(&uri)
-                    .ok()
-                    .and_then(|path| self.opened_files.get(&path).map(|it| it.version));
-
-                let diagnostics = self
-                    .diagnostics
-                    .diagnostics_for(file_id)
-                    .cloned()
-                    .collect::<Vec<_>>();
-                self.publish_diagnostics(uri, version, diagnostics);
-            }
-        }
-
         if let Some((cause, LoadPackagesRequest { force_reload_package_deps })) =
             self.load_aptos_packages_queue.should_start_op()
         {
@@ -335,9 +306,6 @@ impl GlobalState {
             // Only retry requests that haven't been cancelled. Otherwise we do unnecessary work.
             Task::Retry(req) if !self.is_completed(&req) => self.on_request(req),
             Task::Retry(_) => (),
-            Task::Diagnostics(kind) => {
-                self.diagnostics.set_native_diagnostics(kind);
-            }
             Task::FetchPackagesProgress(progress) => {
                 let (state, msg) = match progress {
                     FetchPackagesProgress::Begin => (Progress::Begin, None),

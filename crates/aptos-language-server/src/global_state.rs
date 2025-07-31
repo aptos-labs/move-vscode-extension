@@ -6,7 +6,6 @@
 
 use crate::config::Config;
 use crate::config::validation::ConfigErrors;
-use crate::diagnostics::DiagnosticCollection;
 use crate::line_index::LineIndex;
 use crate::lsp::from_proto;
 use crate::lsp::to_proto::url_from_abs_path;
@@ -69,7 +68,6 @@ pub(crate) struct GlobalState {
     pub(crate) config: Arc<Config>,
     pub(crate) config_errors: Option<ConfigErrors>,
     pub(crate) analysis_host: AnalysisHost,
-    pub(crate) diagnostics: DiagnosticCollection,
     pub(crate) opened_files: OpenedFiles,
     pub(crate) package_root_config: PackageRootConfig,
 
@@ -143,7 +141,6 @@ impl GlobalState {
             fmt_pool,
             config: Arc::new(config.clone()),
             analysis_host,
-            diagnostics: Default::default(),
             opened_files: OpenedFiles::default(),
             shutdown_requested: false,
             last_reported_status: lsp_ext::ServerStatusParams {
@@ -254,51 +251,6 @@ impl GlobalState {
     #[track_caller]
     fn send(&self, message: lsp_server::Message) {
         self.sender.send(message).unwrap();
-    }
-
-    pub(crate) fn publish_diagnostics(
-        &mut self,
-        uri: Url,
-        version: Option<i32>,
-        mut diagnostics: Vec<lsp_types::Diagnostic>,
-    ) {
-        // We put this on a separate thread to avoid blocking the main thread with serialization work
-        self.task_pool
-            .handle
-            .spawn_with_sender(stdx::thread::ThreadIntent::Worker, {
-                let sender = self.sender.clone();
-                move |_| {
-                    // VSCode assumes diagnostic messages to be non-empty strings, so we need to patch
-                    // empty diagnostics. Neither the docs of VSCode nor the LSP spec say whether
-                    // diagnostic messages are actually allowed to be empty or not and patching this
-                    // in the VSCode client does not work as the assertion happens in the protocol
-                    // conversion. So this hack is here to stay, and will be considered a hack
-                    // until the LSP decides to state that empty messages are allowed.
-
-                    // See https://github.com/rust-lang/rust-analyzer/issues/11404
-                    // See https://github.com/rust-lang/rust-analyzer/issues/13130
-                    let patch_empty = |message: &mut String| {
-                        if message.is_empty() {
-                            " ".clone_into(message);
-                        }
-                    };
-
-                    for d in &mut diagnostics {
-                        patch_empty(&mut d.message);
-                        if let Some(dri) = &mut d.related_information {
-                            for dri in dri {
-                                patch_empty(&mut dri.message);
-                            }
-                        }
-                    }
-
-                    let not = lsp_server::Notification::new(
-                        <lsp_types::notification::PublishDiagnostics as Notification>::METHOD.to_owned(),
-                        lsp_types::PublishDiagnosticsParams { uri, diagnostics, version },
-                    );
-                    _ = sender.send(not.into());
-                }
-            });
     }
 }
 
