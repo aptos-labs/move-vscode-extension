@@ -54,7 +54,7 @@ impl GlobalState {
     /// This indicates that we've fully loaded the projects and
     /// are ready to do semantic work.
     pub(crate) fn is_projects_fully_loaded(&self) -> bool {
-        self.vfs_done
+        !self.vfs_sync_in_progress
             && !self.load_aptos_packages_queue.op_in_progress()
             && self.vfs_progress_config_version >= self.vfs_config_version
     }
