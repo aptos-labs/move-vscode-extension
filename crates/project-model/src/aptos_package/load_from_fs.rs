@@ -128,13 +128,8 @@ fn collect_package_from_manifest_entry(
     // for every reachable package in the workspace, we need to build it's dependencies
     let collected_deps = collect_deps_transitively(declared_deps, valid_manifest_entries);
 
-    let aptos_package = AptosPackage::new(
-        package_name.clone(),
-        &manifest_path,
-        kind.clone(),
-        collected_deps,
-        resolve_deps.clone(),
-    );
+    let aptos_package =
+        AptosPackage::new(package_name, &manifest_path, kind, collected_deps, resolve_deps);
     if !missing_dependencies.is_empty() {
         LoadedPackage::PackageWithMissingDeps(aptos_package, missing_dependencies)
     } else {
@@ -144,7 +139,7 @@ fn collect_package_from_manifest_entry(
 
 fn collect_deps_transitively(
     declared_deps: Vec<(ManifestPath, PackageKind)>,
-    valid_package_entries: &HashMap<ManifestPath, ManifestEntry>,
+    valid_manifest_entries: &HashMap<ManifestPath, ManifestEntry>,
 ) -> Vec<(ManifestPath, PackageKind)> {
     let mut visited_dep_manifests = HashSet::new();
     let mut visited_dep_names = HashSet::new();
@@ -159,7 +154,7 @@ fn collect_deps_transitively(
         }
         visited_dep_manifests.insert(current_dep.0.clone());
 
-        match valid_package_entries.get(&current_dep.0) {
+        match valid_manifest_entries.get(&current_dep.0) {
             Some(ManifestEntry {
                 package_name: current_dep_package_name,
                 declared_deps: transitive_declared_deps,
