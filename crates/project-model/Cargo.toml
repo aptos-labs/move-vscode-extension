@@ -19,6 +19,7 @@ serde_derive = { workspace = true }
 anyhow = { workspace = true }
 tracing = { workspace = true }
 
+stdx.workspace = true
 paths = { workspace = true }
 vfs = { workspace = true }
 

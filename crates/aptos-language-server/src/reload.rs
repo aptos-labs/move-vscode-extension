@@ -12,13 +12,13 @@ use crate::op_queue::Cause;
 use crate::{Config, lsp_ext};
 use base_db::change::{FileChanges, ManifestFileId, PackageGraph};
 use lsp_types::FileSystemWatcher;
+use project_model::aptos_package::load_from_fs::{LoadedPackage, LoadedPackages};
 use project_model::aptos_package::{AptosPackage, load_from_fs};
 use project_model::dep_graph::collect;
 use project_model::project_folders::ProjectFolders;
 use std::fmt::Formatter;
 use std::sync::Arc;
 use std::{fmt, mem};
-use stdx::format_to;
 use stdx::thread::ThreadIntent;
 use vfs::loader::Handle;
 use vfs::{AbsPath, Vfs};
@@ -28,7 +28,7 @@ pub(crate) enum FetchPackagesProgress {
     Begin,
     #[allow(unused)]
     Report(String),
-    End(Vec<anyhow::Result<AptosPackage>>, bool),
+    End(LoadedPackages, bool),
 }
 
 impl fmt::Display for FetchPackagesProgress {
@@ -40,7 +40,7 @@ impl fmt::Display for FetchPackagesProgress {
                 write!(
                     f,
                     "FetchPackagesProgress::End(n_packages={}, force_reload={})",
-                    ps.len(),
+                    ps.packages.len(),
                     force_reload
                 )
             }
@@ -83,14 +83,14 @@ impl GlobalState {
 
         if let Some(err) = &self.config_errors {
             status.health |= lsp_ext::Health::Warning;
-            format_to!(message, "{err}\n");
+            stdx::format_to!(message, "{err}\n");
         }
 
         if self.config.discovered_manifests().is_empty() {
             status.health |= lsp_ext::Health::Warning;
             message.push_str("Failed to discover Aptos packages in the current folder.");
         }
-        if self.load_packages_error().is_err() {
+        if self.is_package_loading_error() {
             status.health |= lsp_ext::Health::Error;
             message.push_str("Failed to load some of the Aptos packages.");
             message.push_str("\n\n");
@@ -137,10 +137,10 @@ impl GlobalState {
                     .unwrap();
                 tracing::info!("load {} packages", discovered_manifests.len());
                 // ACTUAL WORK: hits the filesystem directly
-                let fetched_packages = load_from_fs::load_aptos_packages(discovered_manifests);
+                let loaded_packages = load_from_fs::load_aptos_packages(discovered_manifests);
                 sender
                     .send(Task::FetchPackagesProgress(FetchPackagesProgress::End(
-                        fetched_packages,
+                        loaded_packages,
                         force_reload_package_deps,
                     )))
                     .unwrap();
@@ -160,8 +160,8 @@ impl GlobalState {
         let switching_from_empty_workspace = self.all_packages.is_empty();
         tracing::info!(%switching_from_empty_workspace, %force_reload_package_deps);
 
-        if let Err(load_packages_error) = self.load_packages_error() {
-            tracing::info!(%load_packages_error);
+        if self.is_package_loading_error() {
+            // tracing::info!(%load_packages_error);
             // already have a workspace, let's keep it instead of loading invalid state
             if !switching_from_empty_workspace {
                 if *force_reload_package_deps {
@@ -174,10 +174,7 @@ impl GlobalState {
             }
         }
 
-        let packages_from_fs = packages_from_fs
-            .iter()
-            .filter_map(|res| res.as_ref().ok().cloned())
-            .collect::<Vec<_>>();
+        let packages_from_fs = packages_from_fs.valid_packages();
         tracing::info!(
             "switch to packages: {:#?}",
             packages_from_fs
@@ -221,7 +218,7 @@ impl GlobalState {
             version: self.vfs_config_version,
         });
         self.package_root_config = project_folders.package_root_config;
-        self.all_packages = Arc::new(packages_from_fs);
+        self.all_packages = Arc::new(packages_from_fs.to_vec());
 
         tracing::info!("vfs_refresh scheduled");
     }
@@ -348,33 +345,22 @@ impl GlobalState {
         self.analysis_host.apply_change(changes);
     }
 
-    pub(super) fn load_packages_error(&self) -> Result<(), String> {
-        let mut buf = String::new();
-
-        let Some(LoadPackagesResponse { packages_from_fs, .. }) =
+    pub(crate) fn is_package_loading_error(&self) -> bool {
+        if let Some(LoadPackagesResponse { packages_from_fs, .. }) =
             self.load_aptos_packages_queue.last_op_result()
-        else {
-            return Ok(());
-        };
-
-        if packages_from_fs.is_empty() {
-            format_to!(buf, "aptos-language-server failed to find any packages");
-        } else {
-            for package_from_fs in packages_from_fs {
-                if let Err(load_err) = package_from_fs {
-                    format_to!(
-                        buf,
-                        "aptos-language-server failed to load package: {:#}\n",
-                        load_err
-                    );
-                }
-            }
+        {
+            return packages_from_fs
+                .packages
+                .iter()
+                .any(|it| matches!(it, LoadedPackage::ManifestParseError(_)));
         }
+        false
+    }
 
-        if buf.is_empty() {
-            return Ok(());
-        }
-        Err(buf)
+    pub(super) fn load_packages_error(&self) -> Option<String> {
+        let LoadPackagesResponse { packages_from_fs, .. } =
+            self.load_aptos_packages_queue.last_op_result()?;
+        packages_from_fs.display_error_for_tracing()
     }
 }
 

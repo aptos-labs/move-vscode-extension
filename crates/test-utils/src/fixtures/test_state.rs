@@ -48,10 +48,7 @@ pub fn from_multiple_files_on_tmpfs(test_packages: Vec<TestPackageFiles>) -> Tes
     prepare_directories(&ws_root, test_packages);
 
     let discovered_manifests = DiscoveredManifest::discover_all(&[AbsPathBuf::assert(ws_root.clone())]);
-    let all_packages = load_from_fs::load_aptos_packages(discovered_manifests)
-        .into_iter()
-        .filter_map(|it| it.ok())
-        .collect::<Vec<_>>();
+    let all_packages = load_from_fs::load_aptos_packages(discovered_manifests).valid_packages();
 
     let (db, vfs) = ide_db::load::load_db(all_packages.as_slice()).unwrap();
 
