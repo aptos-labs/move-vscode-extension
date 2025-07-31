@@ -174,9 +174,9 @@ impl NavigationTarget {
 
     /// Allows `NavigationTarget` to be created from a `NameOwner`
     pub(crate) fn from_named_item<'db>(
-        named_item: InFile<ast::NamedElement>,
+        named_item: InFile<impl Into<ast::NamedElement>>,
     ) -> Option<NavigationTarget> {
-        let (file_id, named_item) = named_item.unpack();
+        let (file_id, named_item) = named_item.map(|it| it.into()).unpack();
 
         let name = named_item.name()?;
 

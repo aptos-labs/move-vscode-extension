@@ -72,16 +72,31 @@ fn test_annotate_specified_fun() {
 }
 
 #[test]
-fn test_annotate_test_fun() {
+fn test_annotate_test_module_and_test_fun() {
     check_code_lens(
         // language=Move
         expect![[r#"
             //- /main.move
             module std::m {
+                      //^ test m::
                 #[test]
                 fun test_main() {
                   //^^^^^^^^^ test m::test_main
 
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_no_test_module_annotation_if_no_test_functions() {
+    check_code_lens(
+        // language=Move
+        expect![[r#"
+            //- /main.move
+            module std::m {
+                fun main() {
                 }
             }
         "#]],
