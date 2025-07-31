@@ -81,7 +81,7 @@ impl LoadedPackages {
 pub fn load_aptos_packages(ws_manifests: Vec<DiscoveredManifest>) -> LoadedPackages {
     let mut all_reachable_manifests = HashMap::new();
     for ws_manifest in ws_manifests.clone() {
-        let reachable_manifests = collect_reachable_manifests_with_queue(&ws_manifest);
+        let reachable_manifests = collect_reachable_manifests(&ws_manifest);
         all_reachable_manifests.extend(reachable_manifests);
     }
 
@@ -126,18 +126,8 @@ fn collect_package_from_manifest_entry(
         missing_dependencies,
     } = manifest_entry;
     // for every reachable package in the workspace, we need to build it's dependencies
-    let mut collected_deps = vec![];
-    let mut visited_dep_manifests = HashSet::new();
-    let mut visited_dep_names = HashSet::new();
-    for dep in declared_deps {
-        collect_transitive_deps(
-            dep.clone(),
-            &mut collected_deps,
-            &valid_manifest_entries,
-            &mut visited_dep_manifests,
-            &mut visited_dep_names,
-        );
-    }
+    let collected_deps = collect_deps_transitively(declared_deps, valid_manifest_entries);
+
     let aptos_package = AptosPackage::new(
         package_name.clone(),
         &manifest_path,
@@ -152,53 +142,53 @@ fn collect_package_from_manifest_entry(
     }
 }
 
-fn collect_transitive_deps(
-    current_dep: (ManifestPath, PackageKind),
-    collected_transitive_deps: &mut Vec<(ManifestPath, PackageKind)>,
-    package_entries: &HashMap<ManifestPath, ManifestEntry>,
-    visited_dep_manifests: &mut HashSet<ManifestPath>,
-    visited_package_names: &mut HashSet<String>,
-) {
-    if visited_dep_manifests.contains(&current_dep.0) {
-        return;
-    }
-    visited_dep_manifests.insert(current_dep.0.clone());
+fn collect_deps_transitively(
+    declared_deps: Vec<(ManifestPath, PackageKind)>,
+    valid_package_entries: &HashMap<ManifestPath, ManifestEntry>,
+) -> Vec<(ManifestPath, PackageKind)> {
+    let mut visited_dep_manifests = HashSet::new();
+    let mut visited_dep_names = HashSet::new();
 
-    match package_entries.get(&current_dep.0) {
-        Some(ManifestEntry {
-            package_name: current_dep_package_name,
-            declared_deps,
-            ..
-        }) => {
-            if let Some(current_dep_package_name) = current_dep_package_name {
-                if visited_package_names.contains(current_dep_package_name) {
-                    return;
-                }
-                visited_package_names.insert(current_dep_package_name.clone());
-            }
-            collected_transitive_deps.push(current_dep.clone());
-            for dep in declared_deps {
-                collect_transitive_deps(
-                    dep.clone(),
-                    collected_transitive_deps,
-                    package_entries,
-                    visited_dep_manifests,
-                    visited_package_names,
-                );
-            }
+    let mut deps_queue = VecDeque::new();
+    deps_queue.extend(declared_deps);
+
+    let mut res = vec![];
+    while let Some(current_dep) = deps_queue.pop_front() {
+        if visited_dep_manifests.contains(&current_dep.0) {
+            continue;
         }
-        None => {
-            tracing::error!(
-                "cannot collect deps due to invalid Move.toml file: {}",
-                current_dep.0
-            );
-            collected_transitive_deps.push(current_dep.clone());
-            return;
+        visited_dep_manifests.insert(current_dep.0.clone());
+
+        match valid_package_entries.get(&current_dep.0) {
+            Some(ManifestEntry {
+                package_name: current_dep_package_name,
+                declared_deps: transitive_declared_deps,
+                ..
+            }) => {
+                if let Some(current_dep_package_name) = current_dep_package_name {
+                    if visited_dep_names.contains(current_dep_package_name) {
+                        continue;
+                    }
+                    visited_dep_names.insert(current_dep_package_name.clone());
+                }
+                res.push(current_dep);
+                for transitive_dep in transitive_declared_deps {
+                    deps_queue.push_back(transitive_dep.clone());
+                }
+            }
+            None => {
+                tracing::error!(
+                    "cannot collect deps due to invalid Move.toml file: {}",
+                    current_dep.0
+                );
+                res.push(current_dep);
+            }
         }
     }
+    res
 }
 
-fn collect_reachable_manifests_with_queue(
+fn collect_reachable_manifests(
     ws_manifest: &DiscoveredManifest,
 ) -> HashMap<ManifestPath, anyhow::Result<ManifestEntry>> {
     let mut packages_queue = VecDeque::new();
