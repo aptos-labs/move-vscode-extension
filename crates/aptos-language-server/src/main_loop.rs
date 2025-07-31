@@ -5,7 +5,7 @@
 // Modifications have been made to the original code.
 
 use crate::config::Config;
-use crate::diagnostics::{DiagnosticsGeneration, NativeDiagnosticsFetchKind, fetch_native_diagnostics};
+use crate::diagnostics::DiagnosticsGeneration;
 use crate::global_state::{GlobalState, LoadPackagesRequest, LoadPackagesResponse, file_id_to_url};
 use crate::handlers::dispatch::{NotificationDispatcher, RequestDispatcher};
 use crate::handlers::request;
@@ -13,17 +13,13 @@ use crate::lsp::from_proto;
 use crate::lsp::utils::{Progress, notification_is};
 use crate::lsp_ext;
 use crate::reload::FetchPackagesProgress;
-use base_db::SourceDatabase;
 use crossbeam_channel::Receiver;
 use lsp_server::Connection;
 use lsp_types::notification::Notification;
 use paths::AbsPathBuf;
 use std::fmt;
-use std::ops::Div;
-use std::panic::AssertUnwindSafe;
 use std::time::{Duration, Instant};
 use stdx::always;
-use stdx::thread::ThreadIntent;
 use tracing::{Level, span};
 use vfs::loader::LoadingProgress;
 use vfs::{FileId, VfsPath};
@@ -233,13 +229,13 @@ impl GlobalState {
         }
         let event_handling_duration = loop_start.elapsed();
 
-        let (any_file_changed, memdocs_added_or_removed) = if self.vfs_done {
-            if let Some(refresh_cause) = self.reason_to_state_refresh.take() {
-                self.switch_packages(refresh_cause);
+        let any_file_changed = if self.vfs_done {
+            if let Some(switch_cause) = self.scheduled_switch.take() {
+                self.switch_workspaces(switch_cause);
             }
-            (self.process_pending_file_changes(), self.mem_docs.take_changes())
+            self.process_pending_file_changes()
         } else {
-            (false, false)
+            false
         };
 
         if self.is_projects_fully_loaded() {
@@ -266,15 +262,6 @@ impl GlobalState {
                 if self.config.diagnostics_refresh() {
                     self.send_request::<lsp_types::request::WorkspaceDiagnosticRefresh>((), |_, _| ());
                 }
-            }
-
-            let project_or_mem_docs_changed =
-                became_fully_loaded || any_file_changed || memdocs_added_or_removed;
-            if project_or_mem_docs_changed
-                && !self.config.text_document_diagnostic_pull_enabled()
-                && self.config.diagnostics_enabled()
-            {
-                self.update_diagnostics();
             }
         }
 
@@ -312,91 +299,6 @@ impl GlobalState {
             self.poke_aptos_language_server_developer(format!(
                 "overly long loop turn took {loop_duration:?} (event handling took {event_handling_duration:?}): {event_dbg_msg}"
             ));
-        }
-    }
-
-    fn update_diagnostics(&mut self) {
-        let db = self.analysis_host.raw_database();
-        let generation = self.diagnostics.next_generation();
-        let subscriptions = {
-            let vfs = &self.vfs.read().0;
-            self.mem_docs
-                .iter()
-                .map(|path| vfs.file_id(path).unwrap().0)
-                .filter(|&file_id| {
-                    let package_id = db.file_package_id(file_id);
-                    // Only publish diagnostics for files in the workspace, not from crates.io deps
-                    // or the sysroot.
-                    // While theoretically these should never have errors, we have quite a few false
-                    // positives particularly in the stdlib, and those diagnostics would stay around
-                    // forever if we emitted them here.
-                    !db.package_root(package_id).data(db).is_library()
-                })
-                .collect::<std::sync::Arc<_>>()
-        };
-        tracing::trace!("updating notifications for {:?}", subscriptions);
-        // Split up the work on multiple threads, but we don't wanna fill the entire task pool with
-        // diagnostic tasks, so we limit the number of tasks to a quarter of the total thread pool.
-        let max_tasks = self.config.main_loop_num_threads().div(4).max(1);
-        let chunk_length = subscriptions.len() / max_tasks;
-        let remainder = subscriptions.len() % max_tasks;
-
-        let mut start = 0;
-        for task_idx in 0..max_tasks {
-            let extra = if task_idx < remainder { 1 } else { 0 };
-            let end = start + chunk_length + extra;
-            let slice = start..end;
-            if slice.is_empty() {
-                break;
-            }
-            // Diagnostics are triggered by the user typing
-            // so we run them on a latency sensitive thread.
-            let snapshot = self.snapshot();
-            self.task_pool
-                .handle
-                .spawn_with_sender(ThreadIntent::LatencySensitive, {
-                    let subscriptions = subscriptions.clone();
-                    // Do not fetch semantic diagnostics (and populate query results) if we haven't even
-                    // loaded the initial workspace yet.
-                    let fetch_semantic =
-                        self.vfs_done && self.load_aptos_packages_queue.last_op_result().is_some();
-                    move |sender| {
-                        // We aren't observing the semantics token cache here
-                        let snapshot = AssertUnwindSafe(&snapshot);
-                        let Ok(diags) = std::panic::catch_unwind(|| {
-                            fetch_native_diagnostics(
-                                &snapshot,
-                                subscriptions.clone(),
-                                slice.clone(),
-                                NativeDiagnosticsFetchKind::Syntax,
-                            )
-                        }) else {
-                            return;
-                        };
-                        sender
-                            .send(Task::Diagnostics(DiagnosticsTaskKind::Syntax(generation, diags)))
-                            .unwrap();
-
-                        if fetch_semantic {
-                            let Ok(sema_diags) = std::panic::catch_unwind(|| {
-                                fetch_native_diagnostics(
-                                    &snapshot,
-                                    subscriptions.clone(),
-                                    slice.clone(),
-                                    NativeDiagnosticsFetchKind::Semantic,
-                                )
-                            }) else {
-                                return;
-                            };
-                            sender
-                                .send(Task::Diagnostics(DiagnosticsTaskKind::Semantic(
-                                    generation, sema_diags,
-                                )))
-                                .unwrap();
-                        }
-                    }
-                });
-            start = end;
         }
     }
 
@@ -447,7 +349,7 @@ impl GlobalState {
                         if let Err(fetch_err) = self.load_packages_error() {
                             tracing::error!("FetchWorkspaceError: {fetch_err}");
                         }
-                        self.reason_to_state_refresh = Some("loaded aptos packages from fs".to_owned());
+                        self.scheduled_switch = Some("loaded aptos packages from fs".to_owned());
                         (Progress::End, None)
                     }
                 };
