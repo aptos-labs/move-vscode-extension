@@ -81,14 +81,6 @@ impl GlobalState {
         };
         let mut message = String::new();
 
-        if !self.config.autorefresh_on_move_toml_changes()
-            && self.is_projects_fully_loaded()
-            && self.load_aptos_packages_queue.op_requested()
-        {
-            status.health |= lsp_ext::Health::Warning;
-            message.push_str("Auto-reloading is disabled and the workspace has changed, a manual workspace reload is required.\n\n");
-        }
-
         if let Some(err) = &self.config_errors {
             status.health |= lsp_ext::Health::Warning;
             format_to!(message, "{err}\n");

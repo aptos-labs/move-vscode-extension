@@ -219,16 +219,6 @@
                 }
             },
             {
-                "title": "aptos",
-                "properties": {
-                    "move-on-aptos.aptos.autoreload": {
-                        "markdownDescription": "Automatically refresh project info on `Move.toml` changes.",
-                        "default": true,
-                        "type": "boolean"
-                    }
-                }
-            },
-            {
                 "title": "diagnostics",
                 "properties": {
                     "move-on-aptos.diagnostics.disabled": {

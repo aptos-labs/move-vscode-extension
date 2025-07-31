@@ -30,9 +30,6 @@ config_data! {
         /// Path to the `aptos-cli` executable.
         aptosPath: Option<Utf8PathBuf>                         = None,
 
-        /// Automatically refresh project info on `Move.toml` changes.
-        aptos_autoreload: bool           = true,
-
         /// List of aptos-language-server diagnostics to disable.
         diagnostics_disabled: HashSet<String> = HashSet::default(),
         /// Whether to show native aptos-language-server diagnostics.
