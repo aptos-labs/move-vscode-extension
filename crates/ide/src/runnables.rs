@@ -33,7 +33,7 @@ impl Runnable {
         match &self.kind {
             RunnableKind::Test { test_path } => format!("test {test_path}"),
             RunnableKind::ProveFun { only } => format!("prove fun {only}"),
-            RunnableKind::ProveModule { filter } => format!("prove module {filter}"),
+            RunnableKind::ProveModule { filter } => format!("prove mod {filter}"),
         }
     }
 
