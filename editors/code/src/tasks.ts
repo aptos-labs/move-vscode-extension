@@ -30,14 +30,6 @@ export async function buildAptosTask(
     );
 }
 
-export async function newProcessExecution(
-    task: AptosTaskDefinition,
-    options: vscode.ProcessExecutionOptions,
-): Promise<vscode.ProcessExecution | vscode.ShellExecution> {
-    const args = [task.subcommand].concat(task.args || []);
-    return new vscode.ProcessExecution("aptos", args, options);
-}
-
 
 
 

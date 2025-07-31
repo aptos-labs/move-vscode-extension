@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import * as lsp_ext from "./lsp_ext";
 import * as tasks from "./tasks";
 import { unwrapUndefinable } from "./util";
+import { Config } from "./config";
 
 export function prepareEnv(): Record<string, string> {
     const env: Record<string, string> = { RUST_BACKTRACE: "short" };
@@ -11,7 +12,7 @@ export function prepareEnv(): Record<string, string> {
     return env;
 }
 
-export async function createTaskFromRunnable(runnable: lsp_ext.Runnable): Promise<vscode.Task> {
+export async function createTaskFromRunnable(runnable: lsp_ext.Runnable, extConfig: Config): Promise<vscode.Task> {
     const target = vscode.workspace.workspaceFolders?.[0];
 
     const runnableArgs = runnable.args;
@@ -27,7 +28,13 @@ export async function createTaskFromRunnable(runnable: lsp_ext.Runnable): Promis
         env: prepareEnv(),
     };
 
-    const exec = await tasks.newProcessExecution(definition, options);
+    const aptos = extConfig.aptosPath ?? "aptos";
+    const exec = new vscode.ProcessExecution(
+        aptos,
+        [definition.subcommand].concat(definition.args || []),
+        options
+    );
+
     const task = await tasks.buildAptosTask(
         target,
         definition,
