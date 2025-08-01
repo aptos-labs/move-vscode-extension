@@ -811,6 +811,7 @@ module std::option {
                 "MAX_U64",
                 "MAX_U128",
                 "MAX_U256",
+                "exists(addr: address) -> bool",
                 "vector[]",
             ]"#]],
     );
@@ -874,6 +875,7 @@ module std::option {
                 "MAX_U128",
                 "MAX_U256",
                 "main()",
+                "exists(addr: address) -> bool",
                 "vector[]",
             ]"#]],
     );
@@ -969,6 +971,7 @@ module std::option {
                 "MAX_U64",
                 "MAX_U128",
                 "MAX_U256",
+                "exists(addr: address) -> bool",
                 "vector[]",
             ]"#]],
     );
@@ -1603,5 +1606,67 @@ fn test_no_phantom_kw_if_already_there() {
 module std::main {
     struct Any<phantom ph/*caret*/> { val: T }
 }"#,
+    )
+}
+
+#[test]
+fn test_no_builtin_storage_functions_in_specs_for_module() {
+    check_no_completions(
+        // language=Move
+        r#"
+module std::main {
+    fun main() {
+    }
+    spec main {
+        ensures borr/*caret*/
+    }
+}"#,
+    )
+}
+
+#[test]
+fn test_no_builtin_storage_functions_in_specs_for_module_spec() {
+    check_no_completions(
+        // language=Move
+        r#"
+module std::main {
+    fun main() {
+    }
+}
+spec std::main {
+    spec main {
+        ensures borr/*caret*/
+    }
+}
+"#,
+    )
+}
+
+#[test]
+fn test_exists_function_is_available_in_spec_completion() {
+    do_single_completion(
+        // language=Move
+        r#"
+module std::main {
+    fun main() {
+    }
+}
+spec std::main {
+    spec main {
+        ensures exist/*caret*/
+    }
+}
+"#,
+        expect![[r#"
+        module std::main {
+            fun main() {
+            }
+        }
+        spec std::main {
+            spec main {
+                ensures exists(/*caret*/)
+            }
+        }
+    "#]],
     )
 }

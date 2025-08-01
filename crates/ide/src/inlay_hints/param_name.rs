@@ -6,7 +6,7 @@
 
 use crate::inlay_hints::{InlayHint, InlayHintLabel, InlayHintPosition, InlayHintsConfig, InlayKind};
 use ide_db::RootDatabase;
-use ide_db::defs::BUILTIN_RESOURCE_FUNCTIONS;
+use ide_db::defs::BUILTIN_MUT_RESOURCE_FUNCTIONS;
 use lang::Semantics;
 use std::collections::HashSet;
 use std::sync::LazyLock;
@@ -74,7 +74,7 @@ pub(super) fn hints(
 
 static KNOWN_CALLABLES: LazyLock<HashSet<&str>> = LazyLock::new(|| {
     let mut res = HashSet::new();
-    res.extend(BUILTIN_RESOURCE_FUNCTIONS.clone());
+    res.extend(BUILTIN_MUT_RESOURCE_FUNCTIONS.clone());
     res.insert("assert!");
     res.insert("exists");
     res
