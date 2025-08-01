@@ -12,7 +12,7 @@ use crate::render::new_named_item;
 use crate::render::struct_or_enum::{render_schema, render_struct_or_enum};
 use crate::render::type_owner::{render_ident_pat, render_type_owner};
 use ide_db::SymbolKind;
-use ide_db::defs::BUILTIN_RESOURCE_FUNCTIONS;
+use ide_db::defs::BUILTIN_MUT_RESOURCE_FUNCTIONS;
 use lang::nameres::path_kind::path_kind;
 use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variants};
 use lang::nameres::scope::ScopeEntryListExt;
@@ -145,7 +145,7 @@ fn add_completions_from_the_resolution_entries(
 
     // remove resource builtin functions in specs
     if path_ctx.is_msl() {
-        visible_entries.retain(|it| !BUILTIN_RESOURCE_FUNCTIONS.contains(it.name.as_str()));
+        visible_entries.retain(|it| !BUILTIN_MUT_RESOURCE_FUNCTIONS.contains(it.name.as_str()));
     }
 
     let mut completion_items = vec![];
