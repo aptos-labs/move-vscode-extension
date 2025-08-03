@@ -24,10 +24,7 @@ Actively maintained by the Aptos team, this extension is designed to evolve alon
 
 ## Installation
 
-We publish nightly pre-compiled VSCode extensions for Linux, MacOS (x86 and arm) and Windows. 
-Download a `.vsix` bundle for your platform from https://github.com/aptos-labs/move-vscode-extension/releases/tag/nightly, 
-then install it in your editor with 
-`"Install from VSIX..."`([reference](https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_install-from-a-vsix)) command.
+Install the extension from the VSCode Marketplace (https://marketplace.visualstudio.com/items?itemName=AptosLabs.move-on-aptos) or OpenVSX (https://open-vsx.org/extension/aptoslabs/move-on-aptos).  
 
 ### Build from sources
 
