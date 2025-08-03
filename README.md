@@ -12,6 +12,7 @@ Actively maintained by the Aptos team, this extension is designed to evolve alon
 - Go to Definition  
 - Find All References & Symbol Renaming
 - Type and Documentation on Hover
+- Contextual Auto-Completion
 - Inlay Hints for Types and Function Parameters
 
 <img src="docs/images/inlay_hints.png" alt="inlay_hints" width="650"/>
@@ -21,6 +22,9 @@ Actively maintained by the Aptos team, this extension is designed to evolve alon
 - `movefmt` Integration
 
 <img src="docs/images/format.gif" alt="format.gif" width="650"/>
+
+- Run `#[test]` functions
+- Check modules and functions with Move Prover
 
 ## Installation
 
@@ -49,9 +53,7 @@ Put
 
 to your `settings.json` to point the extension to your locally built language server.
 
-Now, open any Move file to instantiate the extension. Disable other VSCode extensions for `.move` files if needed.
-
-### Cursor AI editor
+### Build from sources: Cursor AI editor
 
 If you use https://www.cursor.com/ AI editor, you need to do a bit more work.
 
@@ -82,7 +84,7 @@ for more information.
   - Detect unused imports and remove them with "Organize Imports" VSCode feature. 
   - Show completion items not imported in the current module, create `use` statements for those automatically.
 
-* Integration with the `aptos-cli` commands: publishing modules, running tests and executing transactions. 
+* Integration with the `aptos-cli` commands: compile packages, publishing modules and executing transactions. 
 
 * `Move.toml` support.
 
