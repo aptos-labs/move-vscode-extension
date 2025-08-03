@@ -12,6 +12,7 @@ Actively maintained by the Aptos team, this extension is designed to evolve alon
 - Go to Definition  
 - Find All References & Symbol Renaming
 - Type and Documentation on Hover
+- Contextual Auto-Completion
 - Inlay Hints for Types and Function Parameters
 
 <img src="docs/images/inlay_hints.png" alt="inlay_hints" width="650"/>
@@ -22,12 +23,16 @@ Actively maintained by the Aptos team, this extension is designed to evolve alon
 
 <img src="docs/images/format.gif" alt="format.gif" width="650"/>
 
+- Run `#[test]` functions
+- Check modules and functions with Move Prover
+
 ## Installation
 
-We publish nightly pre-compiled VSCode extensions for Linux, MacOS (x86 and arm) and Windows. 
-Download a `.vsix` bundle for your platform from https://github.com/aptos-labs/move-vscode-extension/releases/tag/nightly, 
-then install it in your editor with 
-`"Install from VSIX..."`([reference](https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_install-from-a-vsix)) command.
+We publish releases both on [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=AptosLabs.move-on-aptos) and [OpenVSX](https://open-vsx.org/extension/aptoslabs/move-on-aptos).
+
+We also publish `nightly` pre-releases, which are built from `main` branch every night. To use those, select **Switch to Pre-Release Version** from your editor's Extensions View.
+
+<img src="docs/images/pre-releases.png" alt="pre-releases.png" width="650"/>
 
 ### Build from sources
 
@@ -48,9 +53,7 @@ Put
 
 to your `settings.json` to point the extension to your locally built language server.
 
-Now, open any Move file to instantiate the extension. Disable other VSCode extensions for `.move` files if needed.
-
-### Cursor AI editor
+### Build from sources: Cursor AI editor
 
 If you use https://www.cursor.com/ AI editor, you need to do a bit more work.
 
@@ -81,7 +84,7 @@ for more information.
   - Detect unused imports and remove them with "Organize Imports" VSCode feature. 
   - Show completion items not imported in the current module, create `use` statements for those automatically.
 
-* Integration with the `aptos-cli` commands: publishing modules, running tests and executing transactions. 
+* Integration with the `aptos-cli` commands: compile packages, publishing modules and executing transactions. 
 
 * `Move.toml` support.
 
