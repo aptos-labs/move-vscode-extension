@@ -24,7 +24,11 @@ Actively maintained by the Aptos team, this extension is designed to evolve alon
 
 ## Installation
 
-Install the extension from the VSCode Marketplace (https://marketplace.visualstudio.com/items?itemName=AptosLabs.move-on-aptos) or OpenVSX (https://open-vsx.org/extension/aptoslabs/move-on-aptos).  
+We publish releases both on [VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=AptosLabs.move-on-aptos) and [OpenVSX](https://open-vsx.org/extension/aptoslabs/move-on-aptos).
+
+We also publish `nightly` pre-releases, which are built from `main` branch every night. To use those, select **Switch to Pre-Release Version** from inside your editor.
+
+<img src="docs/images/pre-releases.png" alt="pre-releases.png" width="650"/>
 
 ### Build from sources
 
