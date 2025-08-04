@@ -6,9 +6,11 @@
 
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
+use ide_db::assist_context::LocalAssists;
 use ide_db::{Severity, search};
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
-use syntax::files::InFile;
+use syntax::ast::syntax_factory::SyntaxFactory;
+use syntax::files::{FileRange, InFile};
 use syntax::{AstNode, ast};
 
 #[tracing::instrument(level = "debug", skip_all)]
@@ -47,13 +49,38 @@ pub(crate) fn check_unused_ident_pat<'db>(
     }
 
     if !search::item_usages(&ctx.sema, ident_pat.clone().map_into()).at_least_one() {
+        let ident_range = ident_pat.file_range();
         let ident_kind = ident_owner.kind();
-        acc.push(Diagnostic::new(
-            DiagnosticCode::Lsp("unused-variable", Severity::Warning),
-            format!("Unused {ident_kind} '{ident_name}'"),
-            ident_pat.file_range(),
-        ));
+        acc.push(
+            Diagnostic::new(
+                DiagnosticCode::Lsp("unused-variable", Severity::Warning),
+                format!("Unused {ident_kind} '{ident_name}'"),
+                ident_range,
+            )
+            .with_local_fixes(fixes(ctx, ident_pat, ident_range)),
+        );
     }
 
     Some(())
+}
+
+fn fixes(
+    ctx: &DiagnosticsContext<'_>,
+    ident_pat: InFile<ast::IdentPat>,
+    diagnostic_range: FileRange,
+) -> Option<LocalAssists> {
+    let mut assists = ctx.local_assists_for_node(ident_pat.as_ref())?;
+    let new_ident_name = format!("_{}", ident_pat.value.name()?.as_string());
+    assists.add_fix(
+        "rename-with-underscore-prefix",
+        format!("Rename to {new_ident_name}"),
+        diagnostic_range.range,
+        |editor| {
+            let make = SyntaxFactory::new();
+            let new_ident_pat = make.ident_pat(&new_ident_name);
+            editor.replace(ident_pat.value.syntax(), new_ident_pat.syntax());
+            editor.add_mappings(make.finish_with_mappings());
+        },
+    );
+    Some(assists)
 }

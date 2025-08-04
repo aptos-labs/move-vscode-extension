@@ -17,7 +17,15 @@ impl SyntaxFactory {
     pub fn arg_list(&self, args: impl IntoIterator<Item = ast::Expr>) -> ast::ValueArgList {
         let (args, input) = iterator_input(args);
         let args = args.into_iter().format(", ");
-        ast_from_text(&format!("module 0x1::m {{ fun main() {{ call({args}) }} }}"))
+        ast_from_text::<ast::ValueArgList>(&format!("module 0x1::m {{ fun main() {{ call({args}) }} }}"))
+            .clone_for_update()
+    }
+
+    pub fn ident_pat(&self, ident_name: &str) -> ast::IdentPat {
+        ast_from_text::<ast::IdentPat>(&format!(
+            "module 0x1::m {{ fun main() {{ let {ident_name}; }} }}"
+        ))
+        .clone_for_update()
     }
 
     pub fn name(&self, name: &str) -> ast::Name {
