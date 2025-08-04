@@ -4,15 +4,17 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+mod fixes;
+
+use crate::cli::diagnostics::fixes::FixCodes;
 use base_db::SourceDatabase;
-use base_db::change::FileChanges;
 use camino::Utf8PathBuf;
 use clap::Args;
 use codespan_reporting::diagnostic::{Label, LabelStyle};
 use codespan_reporting::term;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
 use ide::Analysis;
-use ide_db::assists::{Assist, AssistResolveStrategy};
+use ide_db::assists::AssistResolveStrategy;
 use ide_db::{RootDatabase, Severity};
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
@@ -23,7 +25,6 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::PathBuf;
 use std::process::ExitCode;
-use syntax::TextRange;
 use vfs::FileId;
 
 #[derive(Debug, Args)]
@@ -48,8 +49,9 @@ pub struct Diagnostics {
     #[clap(short, long)]
     pub quiet: bool,
 
-    #[clap(long)]
-    pub fix: bool,
+    /// Codes for quickfixes to apply (comma separated). Specify 'all' as value to apply everything.
+    #[clap(long, value_delimiter = ',', num_args=1..)]
+    pub apply_fixes: Option<Vec<String>>,
 }
 
 impl Diagnostics {
@@ -115,7 +117,8 @@ impl Diagnostics {
             diagnostics_config.disabled = disabled_codes.into_iter().collect();
         }
 
-        if self.fix {
+        let allowed_fix_codes = FixCodes::from_cli(self.apply_fixes.as_ref());
+        if allowed_fix_codes != FixCodes::None {
             diagnostics_config = diagnostics_config.for_assists();
         }
 
@@ -176,6 +179,12 @@ impl Diagnostics {
                 }
             }
 
+            let mut package_config = diagnostics_config.clone();
+            if !metadata.resolve_deps {
+                // disables most of the diagnostics
+                package_config = package_config.for_assists();
+            }
+
             let file_ids = package_root.file_set.iter().collect::<Vec<_>>();
             for file_id in file_ids {
                 let file_path = vfs.file_path(file_id).clone();
@@ -209,56 +218,39 @@ impl Diagnostics {
                         println!("{}", abs_file_path);
                     }
 
-                    let mut package_config = diagnostics_config.clone();
-                    if !metadata.resolve_deps {
-                        // disables most of the diagnostics
-                        package_config = package_config.for_assists();
-                    }
-
-                    let diagnostics =
+                    let mut diagnostics =
                         find_diagnostics_for_a_file(&db, file_id, &diag_kinds, &package_config);
 
                     let file_text = db.file_text(file_id).text(&db);
-                    if !self.fix {
+                    if !allowed_fix_codes.to_apply() {
                         for diagnostic in diagnostics.clone() {
                             if diagnostic.severity == Severity::Error {
                                 found_error = true;
                             }
                             print_diagnostic(&file_text, &abs_file_path, diagnostic, false);
                         }
+                        continue;
                     }
 
-                    let mut diagnostics_with_fixes = diagnostics
-                        .into_iter()
-                        .filter(|diag| diag.fixes.as_ref().is_some_and(|it| !it.is_empty()))
-                        .collect::<Vec<_>>();
-                    if self.fix && !diagnostics_with_fixes.is_empty() {
-                        let mut file_text = file_text.to_string();
-                        loop {
-                            match apply_first_fix(
-                                &file_text,
-                                abs_file_path.as_path(),
-                                diagnostics_with_fixes,
-                            ) {
-                                Some(new_file_text) => {
-                                    let mut change = FileChanges::new();
-                                    change.change_file(file_id, Some(new_file_text.clone()));
-                                    db.apply_change(change);
-
-                                    vfs.set_file_contents(
-                                        file_path.to_owned(),
-                                        Some(new_file_text.clone().into_bytes()),
-                                    );
-                                    fs::write(&abs_file_path, new_file_text.clone())?;
-                                    file_text = new_file_text;
-                                }
-                                None => {
-                                    break;
-                                }
+                    let mut current_file_text = file_text.to_string();
+                    // apply fixes one-by-one
+                    loop {
+                        match fixes::find_diagnostic_with_fix(diagnostics, &allowed_fix_codes) {
+                            Some((diagnostic, fix)) => {
+                                print_diagnostic(
+                                    &current_file_text,
+                                    abs_file_path.as_path(),
+                                    diagnostic,
+                                    true,
+                                );
+                                (current_file_text, _) =
+                                    fixes::apply_fix(&fix, current_file_text.as_ref());
+                                fixes::write_file_text(&mut vfs, &mut db, file_id, &current_file_text);
                             }
-                            diagnostics_with_fixes =
-                                find_diagnostics_for_a_file(&db, file_id, &diag_kinds, &package_config);
+                            None => break,
                         }
+                        diagnostics =
+                            find_diagnostics_for_a_file(&db, file_id, &diag_kinds, &package_config);
                     }
                 }
 
@@ -301,35 +293,6 @@ fn find_diagnostics_for_a_file(
     diagnostics
 }
 
-fn apply_first_fix(
-    file_text: &str,
-    file_path: &AbsPath,
-    diagnostics: Vec<Diagnostic>,
-) -> Option<String> {
-    for diagnostic in diagnostics {
-        let fixes = diagnostic.fixes.clone().unwrap_or_default();
-        if !fixes.is_empty() {
-            print_diagnostic(file_text, file_path, diagnostic, true);
-            let fix = fixes.first().unwrap();
-            let (new_file_text, _) = apply_fix(fix, file_text.as_ref());
-            return Some(new_file_text);
-        }
-    }
-    None
-}
-
-fn apply_fix(fix: &Assist, before: &str) -> (String, Vec<TextRange>) {
-    let source_change = fix.source_change.as_ref().unwrap();
-    let mut after = before.to_string();
-    let mut new_text_ranges = vec![];
-    for text_edit in source_change.source_file_edits.values() {
-        new_text_ranges.extend(text_edit.iter().map(|it| it.new_range()));
-        text_edit.apply(&mut after);
-    }
-
-    (after, new_text_ranges)
-}
-
 fn print_diagnostic(file_text: &str, file_path: &AbsPath, diagnostic: Diagnostic, show_fix: bool) {
     let Diagnostic {
         code,
@@ -360,7 +323,7 @@ fn print_diagnostic(file_text: &str, file_path: &AbsPath, diagnostic: Diagnostic
     if show_fix {
         let fixes = fixes.unwrap_or_default();
         if let Some(fix) = fixes.first() {
-            let (new_file_text, new_file_ranges) = apply_fix(fix, &file_text);
+            let (new_file_text, new_file_ranges) = fixes::apply_fix(fix, &file_text);
             let file_id = files.add(file_path.to_string(), new_file_text);
             for new_file_range in new_file_ranges {
                 codespan_diagnostic = codespan_diagnostic.with_label(

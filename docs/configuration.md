@@ -86,14 +86,14 @@ It's useful to enable INFO logging level, it's not very chatty and could provide
 
 ## Additional commands
 
-### `aptos-language-server diagnostics --fix`
+### `aptos-language-server diagnostics`
 
-Run server diagnostics on the file (or package directory). If `--fix` is provided, automatically applies available autofixes:
+Run server diagnostics on the file (or package directory). If `--apply-fixes` is provided, automatically applies available autofixes:
 
 [See available diagnostics with auto-fixes](quickfixes.md)
 
 ```shell
-  $ aptos-language-server diagnostics --fix ./aptos-stdlib/sources/cryptography/keyless.move 
+  $ aptos-language-server diagnostics --apply-fixes replace-with-method-call ./aptos-stdlib/sources/cryptography/keyless.move 
 processing package 'aptos-stdlib', file: /home/mkurnikov/code/aptos-core/aptos-move/framework/aptos-stdlib/sources/cryptography/keyless.move
 note[replace-with-method-call]: Can be replaced with method call
    ┌─ /home/mkurnikov/code/aptos-core/aptos-move/framework/aptos-stdlib/sources/cryptography/keyless.move:67:17
