@@ -4,7 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::ide_test_utils::diagnostics::check_diagnostics;
+use crate::ide_test_utils::diagnostics::{check_diagnostics, check_diagnostics_and_fix};
 use expect_test::expect;
 
 #[test]
@@ -228,4 +228,46 @@ fn test_no_unused_variable_for_self() {
             }
         }
     "#]]);
+}
+
+#[test]
+fn test_unused_variable_rename() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+        module 0x1::M {
+            fun main() {
+                let i = 0;
+                  //^ warn: Unused variable 'i'
+            }
+        }
+    "#]],
+        expect![[r#"
+        module 0x1::M {
+            fun main() {
+                let _i = 0;
+            }
+        }
+    "#]],
+    );
+}
+
+#[test]
+fn test_unused_function_parameter_rename() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+        module 0x1::M {
+            fun main(i: u8) {
+                   //^ warn: Unused parameter 'i'
+            }
+        }
+    "#]],
+        expect![[r#"
+        module 0x1::M {
+            fun main(_i: u8) {
+            }
+        }
+    "#]],
+    );
 }
