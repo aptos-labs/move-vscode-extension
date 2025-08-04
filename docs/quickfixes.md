@@ -46,7 +46,9 @@ Detects expressions like `number as u8`, where `number` is already of type it's 
 
 **Code**: `rename-with-underscore-prefix`
 
-Quickfix available for unused variables, prefixes it with `_`. 
+Prefixes unused variable with `_`.
+
+<img src="images/rename_fix.gif" alt="rename_fix.gif" width="650"/>
 
 
 
