@@ -5,7 +5,6 @@ use lang::hir_db;
 use lang::item_scope::NamedItemScope;
 use lang::loc::SyntaxLocNodeExt;
 use lang::nameres::use_speck_entries::{UseItem, UseItemType, use_items_for_stmt};
-use lang::node_ext::has_item_list::HasUseStmtsInFileExt;
 use std::collections::HashSet;
 use syntax::ast::HasUseStmts;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;

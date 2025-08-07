@@ -10,9 +10,8 @@ use crate::nameres::address::{Address, AddressInput};
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::path_resolution;
 use crate::nameres::scope::ScopeEntry;
-use crate::nameres::use_speck_entries::UseItem;
+use crate::nameres::use_speck_entries::{UseItem, use_items_for_stmt};
 use crate::node_ext::ModuleLangExt;
-use crate::node_ext::has_item_list::HasUseStmtsInFileExt;
 use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
@@ -21,6 +20,7 @@ use crate::{item_scope, nameres};
 use base_db::inputs::{FileIdInput, InternFileId};
 use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
+use syntax::ast::HasUseStmts;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
@@ -264,7 +264,13 @@ fn use_items_tracked<'db>(
 ) -> Vec<UseItem> {
     use_stmts_owner
         .to_ast::<ast::AnyHasUseStmts>(db)
-        .map(|it| it.use_items(db))
+        .map(|use_stmts_owner| {
+            let use_stmts = use_stmts_owner.flat_map(|it| it.use_stmts().collect());
+            use_stmts
+                .into_iter()
+                .flat_map(|stmt| use_items_for_stmt(db, stmt).unwrap_or_default())
+                .collect()
+        })
         .unwrap_or_default()
 }
 
