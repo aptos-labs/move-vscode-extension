@@ -56,18 +56,18 @@ fn test_no_warning_if_references_are_incompatible() {
 fn test_no_warning_if_self_parameter_struct_is_from_another_module() {
     // language=Move
     check_diagnostics(expect![[r#"
-module 0x1::m {
-    struct S { field: u8 }
-}
-module 0x1::main {
-    use 0x1::m::S;
-    fun get_field(self: S): u8 { self.field }
-                                    //^^^^^ err: Unresolved reference `field`: cannot resolve
-    fun main(s: S) {
-        get_field(s);
-    }
-}
-"#]]);
+        module 0x1::m {
+            struct S { field: u8 }
+        }
+        module 0x1::main {
+            use 0x1::m::S;
+            fun get_field(self: S): u8 { self.field }
+                                            //^^^^^ err: Unresolved reference `field`: cannot resolve
+            fun main(s: S) {
+                get_field(s);
+            }
+        }
+    "#]]);
 }
 
 #[test]

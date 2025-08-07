@@ -69,6 +69,7 @@ fn find_unused_imports_for_item_scope(
             };
             if let Some(use_item_hit) = use_item_hit {
                 use_items_hit.insert(use_item_hit);
+                break;
             }
         }
     }

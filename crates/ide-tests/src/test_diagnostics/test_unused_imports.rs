@@ -508,3 +508,271 @@ fn test_unused_main_import_in_presence_of_unresolved_test_only_usage() {
         }
     "#]]);
 }
+
+#[test]
+fn test_no_error_with_used_alias() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            public fun call() {}
+        }
+        module 0x1::main {
+            use 0x1::string::call as mycall;
+
+            fun main() {
+                mycall();
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_error_with_used_module_alias() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            public fun call() {}
+        }
+        module 0x1::main {
+            use 0x1::string::call as mycall;
+
+            fun main() {
+                mycall();
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_error_with_unused_alias() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            public fun call() {}
+        }
+        module 0x1::main {
+            use 0x1::string::call as mycall;
+          //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ warn: Unused use item
+            fun main() {
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_error_with_unused_module_alias() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            public fun call() {}
+        }
+        module 0x1::main {
+            use 0x1::string as mystring;
+          //^^^^^^^^^^^^^^^^^^^^^^^^^^^^ warn: Unused use item
+            fun main() {
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_error_with_self_module_alias_used_in_type_position() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            public fun call() {}
+        }
+        module 0x1::main {
+            use 0x1::string::Self as mystring;
+          //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ warn: Unused use item
+            fun main(_s: mystring) {
+                       //^^^^^^^^ err: Unresolved reference `mystring`: cannot resolve
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_error_with_self_module_alias_in_group() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            public fun call() {}
+        }
+        module 0x1::main {
+            use 0x1::string::{Self as mystring};
+
+            fun main() {
+                mystring::call();
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_unused_import_for_function_return_type() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            struct String {}
+        }
+        module 0x1::main {
+            use 0x1::string;
+            public native fun type_name<T>(): string::String;
+        }
+    "#]]);
+}
+
+#[test]
+fn test_unused_top_import_with_local_present() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            public fun call() {}
+        }
+        module 0x1::main {
+            use 0x1::string;
+          //^^^^^^^^^^^^^^^^ warn: Unused use item
+            fun main() {
+                use 0x1::string;
+                string::call();
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_unused_local_import() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            public fun call() {}
+        }
+        module 0x1::main {
+            fun main() {
+                use 0x1::string;
+              //^^^^^^^^^^^^^^^^ warn: Unused use item
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_unused_import_if_used_in_two_local_places() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            public fun call() {}
+        }
+        module 0x1::main {
+            use 0x1::string;
+            fun a() {
+                string::call();
+            }
+            fun b() {
+                use 0x1::string;
+                string::call();
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_unused_import_if_imported_locally_test_only() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            public fun call() {}
+        }
+        module 0x1::main {
+            use 0x1::string;
+          //^^^^^^^^^^^^^^^^ warn: Unused use item
+            #[test_only]
+            fun main() {
+                use 0x1::string;
+                string::call();
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_unused_import_used_both_in_main_and_test_scopes_expr() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            struct String {}
+            public fun call() {}
+        }
+        module 0x1::main {
+            use 0x1::string;
+            fun d() {
+                string::call();
+            }
+            #[test_only]
+            fun main() {
+                string::call();
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_unused_import_used_both_in_main_and_test_scopes_type() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            struct String {}
+            public fun call() {}
+        }
+        module 0x1::main {
+            use 0x1::string;
+            struct S { val: string::String }
+            #[test_only]
+            fun main() {
+                string::call();
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_unused_import_with_dot_expr_with_same_name_as_module() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            #[view]
+            public fun call(): bool { true }
+        }
+        module 0x1::main {
+            use 0x1::m;
+            public entry fun main() {
+                if (m::call()) m::call();
+            }
+        }
+        spec 0x1::main {
+            spec main {
+                let m = 1;
+                m.addr = 1;
+                //^^^^ err: Unresolved reference `addr`: cannot resolve
+            }
+        }
+    "#]]);
+}
+
+// #[test]
+// fn test_no_unused_import_for_spec_fun_usage() {
+//     // language=Move
+//     check_diagnostics(expect![[r#"
+//         module 0x1::string {
+//             public fun id(): u128 { 1 }
+//         }
+//         module 0x1::m {
+//             use 0x1::string;
+//           //^^^^^^^^^^^^^^^^ warn: Unused use item
+//             spec fun call(): u128 {
+//                 string::id()
+//             }
+//         }
+//     "#]]);
+// }
