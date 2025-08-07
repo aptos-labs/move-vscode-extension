@@ -19,7 +19,7 @@ pub fn use_speck_entries(
     db: &dyn SourceDatabase,
     use_stmts_owner: &InFile<impl ast::HasUseStmts>,
 ) -> Vec<ScopeEntry> {
-    let use_items = use_stmts_owner.use_stmt_items(db);
+    let use_items = use_stmts_owner.use_items(db);
 
     let mut entries = Vec::with_capacity(use_items.len());
     for use_item in use_items {
@@ -46,23 +46,26 @@ fn resolve_use_item(db: &dyn SourceDatabase, use_item: UseItem, file_id: FileId)
     })
 }
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone, Hash)]
 pub enum UseItemType {
     Module,
     SelfModule,
     Item,
 }
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone, Hash)]
 pub struct UseItem {
-    use_speck: ast::UseSpeck,
+    pub use_speck: ast::UseSpeck,
     use_alias: Option<ast::UseAlias>,
-    alias_or_name: String,
-    type_: UseItemType,
+    pub alias_or_name: String,
+    pub type_: UseItemType,
     scope: NamedItemScope,
 }
 
-pub fn use_stmt_items(db: &dyn SourceDatabase, use_stmt: InFile<ast::UseStmt>) -> Option<Vec<UseItem>> {
+pub fn use_items_for_stmt(
+    db: &dyn SourceDatabase,
+    use_stmt: InFile<ast::UseStmt>,
+) -> Option<Vec<UseItem>> {
     let root_use_speck = use_stmt.value.use_speck()?;
     let use_stmt_scope = hir_db::item_scope(db, use_stmt.loc());
 

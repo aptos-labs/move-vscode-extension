@@ -104,6 +104,9 @@ pub fn semantic_diagnostics(
                 method_or_path.in_file(file_id),
             );
         }
+        if let Some(has_use_stmts) = node.clone().cast::<ast::AnyHasUseStmts>() {
+            handlers::unused_import::find_unused_imports(&mut acc, &ctx, has_use_stmts.in_file(file_id));
+        }
         match_ast! {
             match node {
                 ast::CallExpr(it) => {

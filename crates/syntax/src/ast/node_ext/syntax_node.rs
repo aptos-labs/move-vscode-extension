@@ -27,6 +27,8 @@ pub trait SyntaxNodeExt {
     fn ancestor_strict_of_kind(&self, kind: SyntaxKind) -> Option<SyntaxNode>;
 
     fn ancestor_of_type<Ast: AstNode>(&self, strict: bool) -> Option<Ast>;
+    fn ancestors_of_type<N: AstNode>(&self, strict: bool) -> Vec<N>;
+
     fn ancestor_or_self<Ast: AstNode>(&self) -> Option<Ast>;
     fn ancestor_strict<Ast: AstNode>(&self) -> Option<Ast>;
 
@@ -75,6 +77,13 @@ impl SyntaxNodeExt for SyntaxNode {
             return Ast::cast(self.to_owned());
         }
         self.ancestors().find_map(Ast::cast)
+    }
+
+    fn ancestors_of_type<N: AstNode>(&self, strict: bool) -> Vec<N> {
+        // if !strict && N::can_cast(self.kind()) {
+        //     return N::cast(self.to_owned());
+        // }
+        self.ancestors().filter_map(N::cast).collect()
     }
 
     fn ancestor_or_self<Ast: AstNode>(&self) -> Option<Ast> {
