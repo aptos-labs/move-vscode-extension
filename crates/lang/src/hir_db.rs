@@ -10,7 +10,9 @@ use crate::nameres::address::{Address, AddressInput};
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::path_resolution;
 use crate::nameres::scope::ScopeEntry;
+use crate::nameres::use_speck_entries::UseItem;
 use crate::node_ext::ModuleLangExt;
+use crate::node_ext::has_item_list::HasUseStmtsInFileExt;
 use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
@@ -59,7 +61,7 @@ fn use_speck_entries_tracked<'db>(
     stmts_owner_loc: SyntaxLocInput<'db>,
 ) -> Vec<ScopeEntry> {
     let use_stmts_owner = stmts_owner_loc.to_ast::<ast::AnyHasUseStmts>(db).unwrap();
-    let entries = nameres::use_speck_entries::use_speck_entries(db, &use_stmts_owner);
+    let entries = nameres::use_speck_entries::use_speck_entries(db, use_stmts_owner);
     entries
 }
 
@@ -243,6 +245,27 @@ pub fn item_scope(db: &dyn SourceDatabase, syntax_loc: SyntaxLoc) -> NamedItemSc
         .get(&syntax_loc.syntax_ptr())
         .cloned()
         .unwrap_or(NamedItemScope::Main)
+}
+
+pub fn use_items(
+    db: &dyn SourceDatabase,
+    use_stmts_owner: InFile<impl Into<ast::AnyHasUseStmts>>,
+) -> Vec<UseItem> {
+    use_items_tracked(
+        db,
+        SyntaxLocInput::new(db, use_stmts_owner.map(|it| it.into()).loc()),
+    )
+}
+
+#[salsa_macros::tracked]
+fn use_items_tracked<'db>(
+    db: &'db dyn SourceDatabase,
+    use_stmts_owner: SyntaxLocInput<'db>,
+) -> Vec<UseItem> {
+    use_stmts_owner
+        .to_ast::<ast::AnyHasUseStmts>(db)
+        .map(|it| it.use_items(db))
+        .unwrap_or_default()
 }
 
 pub(crate) fn get_modules_in_file(

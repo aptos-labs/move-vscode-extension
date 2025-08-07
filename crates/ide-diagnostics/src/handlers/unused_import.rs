@@ -55,11 +55,10 @@ fn find_unused_imports_for_item_scope(
         let base_path_type = base_path_type.unwrap();
         let use_item_owners = path.syntax().ancestors_of_type::<ast::AnyHasUseStmts>(true);
         for use_item_owner in use_item_owners {
-            let mut reachable_use_items = use_item_owner
-                .in_file(file_id)
-                .use_items(ctx.sema.db)
-                .into_iter()
-                .filter(|it| it.scope == item_scope);
+            let mut reachable_use_items =
+                hir_db::use_items(ctx.sema.db, use_item_owner.in_file(file_id))
+                    .into_iter()
+                    .filter(|it| it.scope == item_scope);
             let use_item_hit = match &base_path_type {
                 BasePathType::Item { item_name } => reachable_use_items
                     .find(|it| it.type_ == UseItemType::Item && it.alias_or_name.eq(item_name)),
@@ -121,12 +120,11 @@ fn check_unused_use_speck(
         );
     } else {
         for use_item in unused_use_items {
-            let use_speck = use_item.use_speck.in_file(use_stmt.file_id);
             acc.push(
                 Diagnostic::new(
                     DiagnosticCode::Lsp("unused-import", Severity::Warning),
                     "Unused use item",
-                    use_speck.file_range(),
+                    use_item.use_speck_loc.file_range(),
                 ),
                 // .with_unused(true)
             );
