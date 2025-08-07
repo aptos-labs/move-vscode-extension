@@ -446,3 +446,65 @@ fn test_no_unused_import_for_type_with_same_name_as_module_and_self() {
         }
     "#]]);
 }
+
+#[test]
+fn test_unused_main_import_in_presence_of_test_only_usage() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            public fun call() {}
+        }
+        module 0x1::main {
+            use 0x1::string::call;
+          //^^^^^^^^^^^^^^^^^^^^^^ warn: Unused use item
+            #[test_only]
+            use 0x1::string::call;
+
+            #[test_only]
+            fun main() {
+                call();
+              //^^^^ err: Unresolved reference `call`: resolved to multiple elements
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_unused_main_import_in_presence_of_test_usage() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            public fun call() {}
+        }
+        module 0x1::main {
+            use 0x1::string::call;
+          //^^^^^^^^^^^^^^^^^^^^^^ warn: Unused use item
+            #[test_only]
+            use 0x1::string::call;
+
+            #[test]
+            fun main() {
+                call();
+              //^^^^ err: Unresolved reference `call`: resolved to multiple elements
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_unused_main_import_in_presence_of_unresolved_test_only_usage() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            public fun call() {}
+        }
+        module 0x1::main {
+            use 0x1::string::call;
+          //^^^^^^^^^^^^^^^^^^^^^^ warn: Unused use item
+            #[test_only]
+            fun main() {
+                call();
+            }
+        }
+    "#]]);
+}

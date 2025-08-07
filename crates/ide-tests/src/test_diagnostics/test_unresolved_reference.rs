@@ -748,7 +748,7 @@ fn test_no_error_for_const_in_spec() {
                 true
             }
         }
-"#]]);
+    "#]]);
 }
 
 #[test]

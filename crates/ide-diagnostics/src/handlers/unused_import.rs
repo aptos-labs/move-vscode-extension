@@ -1,6 +1,9 @@
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use ide_db::Severity;
+use lang::hir_db;
+use lang::item_scope::NamedItemScope;
+use lang::loc::SyntaxLocNodeExt;
 use lang::nameres::use_speck_entries::{UseItem, UseItemType, use_items_for_stmt};
 use lang::node_ext::has_item_list::HasUseStmtsInFileExt;
 use std::collections::HashSet;
@@ -14,7 +17,18 @@ pub(crate) fn find_unused_imports(
     ctx: &DiagnosticsContext<'_>,
     use_stmts_owner: InFile<impl HasUseStmts>,
 ) -> Option<()> {
-    // let use_items = module.use_items(ctx.sema.db);
+    for item_scope in vec![NamedItemScope::Main, NamedItemScope::Verify, NamedItemScope::Test] {
+        find_unused_imports_for_item_scope(acc, ctx, use_stmts_owner.clone(), item_scope);
+    }
+    Some(())
+}
+
+fn find_unused_imports_for_item_scope(
+    acc: &mut Vec<Diagnostic>,
+    ctx: &DiagnosticsContext<'_>,
+    use_stmts_owner: InFile<impl HasUseStmts>,
+    item_scope: NamedItemScope,
+) -> Option<()> {
     let (file_id, use_stmts_owner) = use_stmts_owner.unpack();
 
     let mut reachable_paths = vec![];
@@ -23,6 +37,9 @@ pub(crate) fn find_unused_imports(
             continue;
         }
         if path.syntax().has_ancestor_strict::<ast::UseSpeck>() {
+            continue;
+        }
+        if hir_db::item_scope(ctx.sema.db, path.loc(file_id)) != item_scope {
             continue;
         }
         reachable_paths.push(path);
@@ -38,12 +55,15 @@ pub(crate) fn find_unused_imports(
         let base_path_type = base_path_type.unwrap();
         let use_item_owners = path.syntax().ancestors_of_type::<ast::AnyHasUseStmts>(true);
         for use_item_owner in use_item_owners {
-            let reachable_use_items = use_item_owner.in_file(file_id).use_items(ctx.sema.db);
+            let mut reachable_use_items = use_item_owner
+                .in_file(file_id)
+                .use_items(ctx.sema.db)
+                .into_iter()
+                .filter(|it| it.scope == item_scope);
             let use_item_hit = match &base_path_type {
                 BasePathType::Item { item_name } => reachable_use_items
-                    .into_iter()
                     .find(|it| it.type_ == UseItemType::Item && it.alias_or_name.eq(item_name)),
-                BasePathType::Module { module_name } => reachable_use_items.into_iter().find(|it| {
+                BasePathType::Module { module_name } => reachable_use_items.find(|it| {
                     matches!(it.type_, UseItemType::Module | UseItemType::SelfModule)
                         && it.alias_or_name.eq(module_name)
                 }),
@@ -56,7 +76,10 @@ pub(crate) fn find_unused_imports(
     }
 
     let use_stmts = use_stmts_owner.use_stmts();
-    for use_stmt in use_stmts {
+    for use_stmt in use_stmts
+        .into_iter()
+        .filter(|it| hir_db::item_scope(ctx.sema.db, it.loc(file_id)) == item_scope)
+    {
         check_unused_use_speck(acc, ctx, use_stmt.in_file(file_id), &use_items_hit);
     }
 

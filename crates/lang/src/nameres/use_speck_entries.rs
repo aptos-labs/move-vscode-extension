@@ -59,7 +59,7 @@ pub struct UseItem {
     use_alias: Option<ast::UseAlias>,
     pub alias_or_name: String,
     pub type_: UseItemType,
-    scope: NamedItemScope,
+    pub scope: NamedItemScope,
 }
 
 pub fn use_items_for_stmt(
