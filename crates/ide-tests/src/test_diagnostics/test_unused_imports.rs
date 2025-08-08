@@ -760,19 +760,116 @@ fn test_no_unused_import_with_dot_expr_with_same_name_as_module() {
     "#]]);
 }
 
-// #[test]
-// fn test_no_unused_import_for_spec_fun_usage() {
-//     // language=Move
-//     check_diagnostics(expect![[r#"
-//         module 0x1::string {
-//             public fun id(): u128 { 1 }
-//         }
-//         module 0x1::m {
-//             use 0x1::string;
-//           //^^^^^^^^^^^^^^^^ warn: Unused use item
-//             spec fun call(): u128 {
-//                 string::id()
-//             }
-//         }
-//     "#]]);
-// }
+#[test]
+fn test_unused_test_only_import() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            public fun call() {}
+        }
+        module 0x1::main {
+            use 0x1::string::call;
+            #[test_only]
+            use 0x1::string::call;
+
+            fun main() {
+                call();
+            }
+            #[test]
+            fun test_main() {
+                call();
+              //^^^^ err: Unresolved reference `call`: resolved to multiple elements
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_error_if_main_import_used_only_in_spec_fun() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            public fun id(): u128 { 1 }
+        }
+        module 0x1::m {
+            use 0x1::string;
+          //^^^^^^^^^^^^^^^^ warn: Unused use item
+            spec fun call(): u128 {
+                string::id()
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_import_duplicate_inside_spec() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            public fun id(): u128 { 1 }
+        }
+        module 0x1::m {
+            use 0x1::string;
+          //^^^^^^^^^^^^^^^^ warn: Unused use item
+        }
+        spec 0x1::m {
+            use 0x1::string;
+            spec module {
+                string::id();
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_error_if_verify_only_and_used_inside_spec_fun() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            public fun id(): u128 { 1 }
+        }
+        module 0x1::m {
+            #[verify_only]
+            use 0x1::string;
+            spec fun main(): u128 { string::id() }
+         }
+    "#]]);
+}
+
+#[test]
+fn test_no_error_if_verify_only_and_used_inside_module_spec() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            public fun id(): u128 { 1 }
+        }
+        module 0x1::m {
+            #[verify_only]
+            use 0x1::string;
+        }
+        spec 0x1::m {
+            spec module {
+                string::id();
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_error_if_only_used_inside_spec() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            public fun id(): u128 { 1 }
+        }
+        module 0x1::m {
+            use 0x1::string;
+          //^^^^^^^^^^^^^^^^ warn: Unused use item
+        }
+        spec 0x1::m {
+            spec module {
+                string::id();
+            }
+        }
+    "#]]);
+}

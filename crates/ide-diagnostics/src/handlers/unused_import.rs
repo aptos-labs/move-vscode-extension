@@ -3,21 +3,21 @@ use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use ide_db::Severity;
 use lang::hir_db;
 use lang::item_scope::NamedItemScope;
-use lang::loc::SyntaxLocNodeExt;
+use lang::loc::SyntaxLocFileExt;
 use lang::nameres::use_speck_entries::{UseItem, UseItemType, use_items_for_stmt};
 use std::collections::HashSet;
-use syntax::ast::HasUseStmts;
+use syntax::ast::UseStmtsOwner;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
-use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, ast};
+use syntax::files::InFile;
+use syntax::{AstNode, SyntaxNode, ast};
 
 pub(crate) fn find_unused_imports(
     acc: &mut Vec<Diagnostic>,
     ctx: &DiagnosticsContext<'_>,
-    use_stmts_owner: InFile<impl HasUseStmts>,
+    use_stmts_owner: InFile<ast::AnyUseStmtsOwner>,
 ) -> Option<()> {
-    for item_scope in vec![NamedItemScope::Main, NamedItemScope::Verify, NamedItemScope::Test] {
-        find_unused_imports_for_item_scope(acc, ctx, use_stmts_owner.clone(), item_scope);
+    for scope in vec![NamedItemScope::Main, NamedItemScope::Verify, NamedItemScope::Test] {
+        find_unused_imports_for_item_scope(acc, ctx, use_stmts_owner.clone().map_into(), scope);
     }
     Some(())
 }
@@ -25,37 +25,37 @@ pub(crate) fn find_unused_imports(
 fn find_unused_imports_for_item_scope(
     acc: &mut Vec<Diagnostic>,
     ctx: &DiagnosticsContext<'_>,
-    use_stmts_owner: InFile<impl HasUseStmts>,
+    stmts_owner: InFile<ast::AnyUseStmtsOwner>,
     item_scope: NamedItemScope,
 ) -> Option<()> {
-    let (file_id, use_stmts_owner) = use_stmts_owner.unpack();
+    let db = ctx.sema.db;
+    let stmts_owner_with_siblings =
+        hir_db::use_stmts_owner_with_siblings(db, stmts_owner.clone().map_into());
 
-    let mut reachable_paths = vec![];
-    for path in use_stmts_owner.syntax().descendants_of_type::<ast::Path>() {
-        if path.base_path() != path {
-            continue;
-        }
-        if path.syntax().has_ancestor_strict::<ast::UseSpeck>() {
-            continue;
-        }
-        if hir_db::item_scope(ctx.sema.db, path.loc(file_id)) != item_scope {
-            continue;
-        }
-        reachable_paths.push(path);
-    }
+    let reachable_paths = stmts_owner_with_siblings
+        .iter()
+        .flat_map(|it| {
+            it.as_ref()
+                .flat_map(|stmts_owner| descendant_paths(stmts_owner.syntax()).collect())
+        })
+        .filter(|it| hir_db::item_scope(db, it.loc()) == item_scope)
+        .collect::<Vec<_>>();
 
     let mut use_items_hit = HashSet::new();
     for path in reachable_paths {
-        let base_path_type = BasePathType::for_path(&path);
+        let base_path_type = BasePathType::for_path(&path.value);
         if base_path_type.is_none() {
             // fq path
             continue;
         }
         let base_path_type = base_path_type.unwrap();
-        let use_item_owners = path.syntax().ancestors_of_type::<ast::AnyHasUseStmts>(true);
-        for use_item_owner in use_item_owners {
+
+        let use_item_owner_ancestors = path
+            .as_ref()
+            .flat_map(|it| it.syntax().ancestors_of_type::<ast::AnyUseStmtsOwner>(true));
+        for use_item_owner_ans in use_item_owner_ancestors {
             let mut reachable_use_items =
-                hir_db::use_items(ctx.sema.db, use_item_owner.in_file(file_id))
+                hir_db::use_items_from_self_and_siblings(db, use_item_owner_ans)
                     .into_iter()
                     .filter(|it| it.scope == item_scope);
             let use_item_hit = match &base_path_type {
@@ -74,15 +74,23 @@ fn find_unused_imports_for_item_scope(
         }
     }
 
-    let use_stmts = use_stmts_owner.use_stmts();
-    for use_stmt in use_stmts
-        .into_iter()
-        .filter(|it| hir_db::item_scope(ctx.sema.db, it.loc(file_id)) == item_scope)
-    {
-        check_unused_use_speck(acc, ctx, use_stmt.in_file(file_id), &use_items_hit);
+    for use_stmt_owner in stmts_owner_with_siblings {
+        let use_stmts = use_stmt_owner.flat_map(|it| it.use_stmts().collect());
+        for use_stmt in use_stmts
+            .into_iter()
+            .filter(|stmt| hir_db::item_scope(db, stmt.loc()) == item_scope)
+        {
+            check_unused_use_speck(acc, ctx, use_stmt, &use_items_hit);
+        }
     }
 
     None
+}
+
+fn descendant_paths(node: &SyntaxNode) -> impl Iterator<Item = ast::Path> {
+    node.descendants_of_type::<ast::Path>()
+        .filter(|path| &path.base_path() == path)
+        .filter(|path| !path.syntax().has_ancestor_strict::<ast::UseSpeck>())
 }
 
 fn check_unused_use_speck(

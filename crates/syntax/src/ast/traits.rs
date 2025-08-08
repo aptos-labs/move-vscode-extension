@@ -13,7 +13,7 @@ use crate::ast::{AstChildren, Stmt, support};
 use crate::{AstNode, ast};
 pub use docs::HoverDocsOwner;
 pub use has_item_list::HasItems;
-pub use has_use_stmts::HasUseStmts;
+pub use has_use_stmts::UseStmtsOwner;
 use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
 use std::fmt;

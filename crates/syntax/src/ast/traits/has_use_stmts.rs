@@ -7,7 +7,7 @@
 use crate::ast::{AstChildren, UseStmt, support};
 use crate::{AstNode, ast};
 
-pub trait HasUseStmts: AstNode {
+pub trait UseStmtsOwner: AstNode {
     #[inline]
     fn use_stmts(&self) -> AstChildren<UseStmt> {
         support::children(&self.syntax())

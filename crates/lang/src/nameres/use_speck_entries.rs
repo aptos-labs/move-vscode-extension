@@ -16,7 +16,7 @@ use vfs::FileId;
 
 pub fn use_speck_entries(
     db: &dyn SourceDatabase,
-    use_stmts_owner: InFile<ast::AnyHasUseStmts>,
+    use_stmts_owner: InFile<ast::AnyUseStmtsOwner>,
 ) -> Vec<ScopeEntry> {
     let use_items = hir_db::use_items(db, use_stmts_owner.clone());
     let mut entries = Vec::with_capacity(use_items.len());

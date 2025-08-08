@@ -30,7 +30,7 @@ pub use self::{
     node_ext::struct_pat_field::PatFieldKind,
     operators::{ArithOp, BinaryOp, CmpOp, LogicOp, Ordering, RangeOp, UnaryOp},
     token_ext::{CommentKind, CommentPlacement, CommentShape, IsString, QuoteOffsets},
-    traits::{HasAttrs, HasItems, HasStmts, HasUseStmts, HoverDocsOwner, MslOnly},
+    traits::{HasAttrs, HasItems, HasStmts, HoverDocsOwner, MslOnly, UseStmtsOwner},
     visibility::HasVisibility,
 };
 use crate::SyntaxKind::{CONST, ERROR};
