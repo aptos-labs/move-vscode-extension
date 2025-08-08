@@ -74,6 +74,22 @@ module std::table {
               "range": {
                 "start": {
                   "line": 2,
+                  "character": 4
+                },
+                "end": {
+                  "line": 2,
+                  "character": 28
+                }
+              },
+              "severity": 2,
+              "code": "unused-import",
+              "source": "aptos-language-server",
+              "message": "Unused use item"
+            },
+            {
+              "range": {
+                "start": {
+                  "line": 2,
                   "character": 20
                 },
                 "end": {

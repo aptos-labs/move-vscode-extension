@@ -10,7 +10,9 @@ use crate::nameres::address::{Address, AddressInput};
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::path_resolution;
 use crate::nameres::scope::ScopeEntry;
+use crate::nameres::use_speck_entries::{UseItem, use_items_for_stmt};
 use crate::node_ext::ModuleLangExt;
+use crate::node_ext::item::ModuleItemExt;
 use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
@@ -19,6 +21,7 @@ use crate::{item_scope, nameres};
 use base_db::inputs::{FileIdInput, InternFileId};
 use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
+use syntax::ast::UseStmtsOwner;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
@@ -48,7 +51,7 @@ fn resolve_path_multi_tracked<'db>(
 
 pub(crate) fn use_speck_entries(
     db: &dyn SourceDatabase,
-    stmts_owner: &InFile<impl ast::HasUseStmts>,
+    stmts_owner: &InFile<impl ast::UseStmtsOwner>,
 ) -> Vec<ScopeEntry> {
     use_speck_entries_tracked(db, SyntaxLocInput::new(db, stmts_owner.loc()))
 }
@@ -58,8 +61,8 @@ fn use_speck_entries_tracked<'db>(
     db: &'db dyn SourceDatabase,
     stmts_owner_loc: SyntaxLocInput<'db>,
 ) -> Vec<ScopeEntry> {
-    let use_stmts_owner = stmts_owner_loc.to_ast::<ast::AnyHasUseStmts>(db).unwrap();
-    let entries = nameres::use_speck_entries::use_speck_entries(db, &use_stmts_owner);
+    let use_stmts_owner = stmts_owner_loc.to_ast::<ast::AnyUseStmtsOwner>(db).unwrap();
+    let entries = nameres::use_speck_entries::use_speck_entries(db, use_stmts_owner);
     entries
 }
 
@@ -243,6 +246,75 @@ pub fn item_scope(db: &dyn SourceDatabase, syntax_loc: SyntaxLoc) -> NamedItemSc
         .get(&syntax_loc.syntax_ptr())
         .cloned()
         .unwrap_or(NamedItemScope::Main)
+}
+
+pub fn use_items_from_self_and_siblings(
+    db: &dyn SourceDatabase,
+    use_stmts_owner: InFile<ast::AnyUseStmtsOwner>,
+) -> Vec<UseItem> {
+    use_items_from_self_and_siblings_tracked(db, SyntaxLocInput::new(db, use_stmts_owner.loc()))
+}
+
+fn use_items_from_self_and_siblings_tracked<'db>(
+    db: &'db dyn SourceDatabase,
+    use_stmts_owner_loc: SyntaxLocInput<'db>,
+) -> Vec<UseItem> {
+    let owner_with_siblings = use_stmts_owner_loc
+        .to_ast::<ast::AnyUseStmtsOwner>(db)
+        .map(|use_stmts_owner| use_stmts_owner_with_siblings(db, use_stmts_owner))
+        .unwrap_or_default();
+    owner_with_siblings
+        .into_iter()
+        .flat_map(|it| use_items(db, it))
+        .collect()
+}
+
+pub fn use_stmts_owner_with_siblings(
+    db: &dyn SourceDatabase,
+    use_stmts_owner: InFile<ast::AnyUseStmtsOwner>,
+) -> Vec<InFile<ast::AnyUseStmtsOwner>> {
+    let mut with_siblings = vec![use_stmts_owner.clone()];
+    if let Some(module) = use_stmts_owner.cast_into_ref::<ast::Module>() {
+        with_siblings.extend(
+            module
+                .related_module_specs(db)
+                .into_iter()
+                .map(|it| it.map_into()),
+        );
+    }
+    if let Some(module_spec) = use_stmts_owner.cast_into_ref::<ast::ModuleSpec>() {
+        if let Some(module) = module_spec.module(db) {
+            with_siblings.push(module.clone().map_into());
+        }
+    }
+    with_siblings
+}
+
+pub fn use_items(
+    db: &dyn SourceDatabase,
+    use_stmts_owner: InFile<impl Into<ast::AnyUseStmtsOwner>>,
+) -> Vec<UseItem> {
+    use_items_tracked(
+        db,
+        SyntaxLocInput::new(db, use_stmts_owner.map(|it| it.into()).loc()),
+    )
+}
+
+#[salsa_macros::tracked]
+fn use_items_tracked<'db>(
+    db: &'db dyn SourceDatabase,
+    use_stmts_owner: SyntaxLocInput<'db>,
+) -> Vec<UseItem> {
+    use_stmts_owner
+        .to_ast::<ast::AnyUseStmtsOwner>(db)
+        .map(|use_stmts_owner| {
+            let use_stmts = use_stmts_owner.flat_map(|it| it.use_stmts().collect());
+            use_stmts
+                .into_iter()
+                .flat_map(|stmt| use_items_for_stmt(db, stmt).unwrap_or_default())
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 pub(crate) fn get_modules_in_file(

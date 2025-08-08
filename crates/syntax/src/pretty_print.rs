@@ -95,7 +95,7 @@ fn line_with_mark(line_index: &LineIndex, mark: SourceMark) -> (u32, String) {
     };
 
     let line = format!("{prefix}//{mark_range} {message}").trim_end().to_string();
-    (lc_start.line, line)
+    (lc_end.line, line)
 }
 
 fn repeated(s: &str, n: u32) -> String {

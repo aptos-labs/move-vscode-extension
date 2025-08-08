@@ -316,7 +316,7 @@ pub(crate) const TRAITS: &[(&str, &[&str])] = &[
     // ("GenericElement", &["type_param_list"]),
     // ("HasGenericArgs", &["generic_arg_list"]),
     // ("HasTypeBounds", &["type_bound_list", "colon_token"]),
-    ("HasUseStmts", &["use_stmts"]),
+    ("UseStmtsOwner", &["use_stmts"]),
     ("HasItems", &["items"]),
     ("HasStmts", &["stmts"]),
     // ("LoopLike", &[/*"label", */"loop_body"]),

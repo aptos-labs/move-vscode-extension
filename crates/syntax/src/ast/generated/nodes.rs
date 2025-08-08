@@ -314,7 +314,7 @@ pub struct BlockExpr {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HasStmts for BlockExpr {}
-impl ast::HasUseStmts for BlockExpr {}
+impl ast::UseStmtsOwner for BlockExpr {}
 impl BlockExpr {
     #[inline]
     pub fn tail_expr(&self) -> Option<Expr> { support::child(&self.syntax) }
@@ -1080,8 +1080,8 @@ pub struct Module {
 }
 impl ast::HasAttrs for Module {}
 impl ast::HasItems for Module {}
-impl ast::HasUseStmts for Module {}
 impl ast::HoverDocsOwner for Module {}
+impl ast::UseStmtsOwner for Module {}
 impl Module {
     #[inline]
     pub fn address_ref(&self) -> Option<AddressRef> { support::child(&self.syntax) }
@@ -1103,8 +1103,8 @@ pub struct ModuleSpec {
 }
 impl ast::HasAttrs for ModuleSpec {}
 impl ast::HasItems for ModuleSpec {}
-impl ast::HasUseStmts for ModuleSpec {}
 impl ast::MslOnly for ModuleSpec {}
+impl ast::UseStmtsOwner for ModuleSpec {}
 impl ModuleSpec {
     #[inline]
     pub fn path(&self) -> Option<Path> { support::child(&self.syntax) }
@@ -1527,7 +1527,7 @@ pub struct Script {
 }
 impl ast::HasAttrs for Script {}
 impl ast::HasItems for Script {}
-impl ast::HasUseStmts for Script {}
+impl ast::UseStmtsOwner for Script {}
 impl Script {
     #[inline]
     pub fn l_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['{']) }
@@ -2448,20 +2448,14 @@ pub struct AnyHasItems {
 }
 impl ast::HasItems for AnyHasItems {}
 impl ast::HasAttrs for AnyHasItems {}
-impl ast::HasUseStmts for AnyHasItems {}
+impl ast::UseStmtsOwner for AnyHasItems {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyHasStmts {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::HasStmts for AnyHasStmts {}
-impl ast::HasUseStmts for AnyHasStmts {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct AnyHasUseStmts {
-    pub(crate) syntax: SyntaxNode,
-}
-impl ast::HasUseStmts for AnyHasUseStmts {}
+impl ast::UseStmtsOwner for AnyHasStmts {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct AnyHasVisibility {
@@ -2482,6 +2476,12 @@ pub struct AnyMslOnly {
     pub(crate) syntax: SyntaxNode,
 }
 impl ast::MslOnly for AnyMslOnly {}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct AnyUseStmtsOwner {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::UseStmtsOwner for AnyUseStmtsOwner {}
 impl AstNode for Ability {
     #[inline]
     fn kind() -> SyntaxKind
@@ -8937,54 +8937,6 @@ impl From<BlockExpr> for AnyHasStmts {
     #[inline]
     fn from(node: BlockExpr) -> AnyHasStmts { AnyHasStmts { syntax: node.syntax } }
 }
-impl AnyHasUseStmts {
-    #[inline]
-    pub fn new<T: ast::HasUseStmts>(node: T) -> AnyHasUseStmts {
-        AnyHasUseStmts {
-            syntax: node.syntax().clone(),
-        }
-    }
-    #[inline]
-    pub fn cast_from<T: ast::HasUseStmts>(t: T) -> AnyHasUseStmts {
-        AnyHasUseStmts::cast(t.syntax().to_owned()).expect("required by code generator")
-    }
-    #[inline]
-    pub fn cast_into<T: ast::HasUseStmts>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
-}
-impl AstNode for AnyHasUseStmts {
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, BLOCK_EXPR | MODULE | MODULE_SPEC | SCRIPT) }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        Self::can_cast(syntax.kind()).then_some(AnyHasUseStmts { syntax })
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode { &self.syntax }
-}
-impl From<BlockExpr> for AnyHasUseStmts {
-    #[inline]
-    fn from(node: BlockExpr) -> AnyHasUseStmts { AnyHasUseStmts { syntax: node.syntax } }
-}
-impl From<Module> for AnyHasUseStmts {
-    #[inline]
-    fn from(node: Module) -> AnyHasUseStmts { AnyHasUseStmts { syntax: node.syntax } }
-}
-impl From<ModuleSpec> for AnyHasUseStmts {
-    #[inline]
-    fn from(node: ModuleSpec) -> AnyHasUseStmts { AnyHasUseStmts { syntax: node.syntax } }
-}
-impl From<Script> for AnyHasUseStmts {
-    #[inline]
-    fn from(node: Script) -> AnyHasUseStmts { AnyHasUseStmts { syntax: node.syntax } }
-}
-impl From<AnyHasItems> for AnyHasUseStmts {
-    #[inline]
-    fn from(node: AnyHasItems) -> AnyHasUseStmts { AnyHasUseStmts { syntax: node.syntax } }
-}
-impl From<AnyHasStmts> for AnyHasUseStmts {
-    #[inline]
-    fn from(node: AnyHasStmts) -> AnyHasUseStmts { AnyHasUseStmts { syntax: node.syntax } }
-}
 impl AnyHasVisibility {
     #[inline]
     pub fn new<T: ast::HasVisibility>(node: T) -> AnyHasVisibility {
@@ -9184,6 +9136,54 @@ impl From<SpecFun> for AnyMslOnly {
 impl From<SpecInlineFun> for AnyMslOnly {
     #[inline]
     fn from(node: SpecInlineFun) -> AnyMslOnly { AnyMslOnly { syntax: node.syntax } }
+}
+impl AnyUseStmtsOwner {
+    #[inline]
+    pub fn new<T: ast::UseStmtsOwner>(node: T) -> AnyUseStmtsOwner {
+        AnyUseStmtsOwner {
+            syntax: node.syntax().clone(),
+        }
+    }
+    #[inline]
+    pub fn cast_from<T: ast::UseStmtsOwner>(t: T) -> AnyUseStmtsOwner {
+        AnyUseStmtsOwner::cast(t.syntax().to_owned()).expect("required by code generator")
+    }
+    #[inline]
+    pub fn cast_into<T: ast::UseStmtsOwner>(&self) -> Option<T> { T::cast(self.syntax().to_owned()) }
+}
+impl AstNode for AnyUseStmtsOwner {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, BLOCK_EXPR | MODULE | MODULE_SPEC | SCRIPT) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        Self::can_cast(syntax.kind()).then_some(AnyUseStmtsOwner { syntax })
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl From<BlockExpr> for AnyUseStmtsOwner {
+    #[inline]
+    fn from(node: BlockExpr) -> AnyUseStmtsOwner { AnyUseStmtsOwner { syntax: node.syntax } }
+}
+impl From<Module> for AnyUseStmtsOwner {
+    #[inline]
+    fn from(node: Module) -> AnyUseStmtsOwner { AnyUseStmtsOwner { syntax: node.syntax } }
+}
+impl From<ModuleSpec> for AnyUseStmtsOwner {
+    #[inline]
+    fn from(node: ModuleSpec) -> AnyUseStmtsOwner { AnyUseStmtsOwner { syntax: node.syntax } }
+}
+impl From<Script> for AnyUseStmtsOwner {
+    #[inline]
+    fn from(node: Script) -> AnyUseStmtsOwner { AnyUseStmtsOwner { syntax: node.syntax } }
+}
+impl From<AnyHasItems> for AnyUseStmtsOwner {
+    #[inline]
+    fn from(node: AnyHasItems) -> AnyUseStmtsOwner { AnyUseStmtsOwner { syntax: node.syntax } }
+}
+impl From<AnyHasStmts> for AnyUseStmtsOwner {
+    #[inline]
+    fn from(node: AnyHasStmts) -> AnyUseStmtsOwner { AnyUseStmtsOwner { syntax: node.syntax } }
 }
 impl std::fmt::Display for AddressRef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

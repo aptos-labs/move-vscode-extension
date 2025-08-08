@@ -104,6 +104,20 @@ pub fn semantic_diagnostics(
                 method_or_path.in_file(file_id),
             );
         }
+        if let Some(module) = node.clone().cast::<ast::Module>() {
+            handlers::unused_import::find_unused_imports(
+                &mut acc,
+                &ctx,
+                module.in_file(file_id).map_into(),
+            );
+        }
+        if let Some(block_expr) = node.clone().cast::<ast::BlockExpr>() {
+            handlers::unused_import::find_unused_imports(
+                &mut acc,
+                &ctx,
+                block_expr.in_file(file_id).map_into(),
+            );
+        }
         match_ast! {
             match node {
                 ast::CallExpr(it) => {

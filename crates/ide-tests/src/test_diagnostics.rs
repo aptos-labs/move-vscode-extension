@@ -22,6 +22,7 @@ mod test_type_checking;
 mod test_type_checking_fs;
 mod test_unresolved_reference;
 mod test_unused_acquires;
+mod test_unused_imports;
 mod test_unused_variables;
 
 #[test]
@@ -40,6 +41,7 @@ fn test_disable_unresolved_reference() {
         expect![[r#"
             module std::main {
                 use std::unresolved;
+              //^^^^^^^^^^^^^^^^^^^^ warn: Unused use item
                 fun main() {
                     1 + true;
                       //^^^^ err: Invalid argument to '+': expected integer type, but found 'bool'

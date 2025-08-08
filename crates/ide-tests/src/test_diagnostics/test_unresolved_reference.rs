@@ -390,6 +390,7 @@ fn test_unresolved_module_import() {
     check_diagnostics(expect![[r#"
         module 0x1::main {
             use 0x1::M1;
+          //^^^^^^^^^^^^ warn: Unused use item
                    //^^ err: Unresolved reference `M1`: cannot resolve
         }
     "#]]);
@@ -401,6 +402,7 @@ fn test_unresolved_module_import_in_item_import() {
     check_diagnostics(expect![[r#"
         module 0x1::main {
             use 0x1::M1::call;
+          //^^^^^^^^^^^^^^^^^^ warn: Unused use item
                    //^^ err: Unresolved reference `M1`: cannot resolve
         }
     "#]]);
@@ -413,6 +415,7 @@ fn test_unresolved_item_import() {
         module 0x1::M1 {}
         module 0x1::Main {
             use 0x1::M1::call;
+          //^^^^^^^^^^^^^^^^^^ warn: Unused use item
                        //^^^^ err: Unresolved reference `call`: cannot resolve
         }
     "#]]);
@@ -544,12 +547,13 @@ module 0x1::m {
 fn test_no_unresolved_for_named_address_in_use() {
     // language=Move
     check_diagnostics(expect![[r#"
-module std::m {
-}
-module std::main {
-    use std::m;
-}
-"#]]);
+        module std::m {
+        }
+        module std::main {
+            use std::m;
+          //^^^^^^^^^^^ warn: Unused use item
+        }
+    "#]]);
 }
 
 #[test]
@@ -744,7 +748,7 @@ fn test_no_error_for_const_in_spec() {
                 true
             }
         }
-"#]]);
+    "#]]);
 }
 
 #[test]

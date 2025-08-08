@@ -18,7 +18,7 @@ module 0x1::assert_in_lambda {
                                                      //^ expected an item, got COMMA
     ) {
   //^ expected an item, got R_PAREN
-    //^ expected an item, got a block
 
     }
+    //^ expected an item, got a block
 }

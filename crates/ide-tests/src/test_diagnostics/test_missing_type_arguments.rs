@@ -340,6 +340,7 @@ fn test_type_position_argument_error_in_presence_of_vector_module() {
         module 0x1::vector {}
         module 0x1::m {
             use 0x1::vector;
+          //^^^^^^^^^^^^^^^^ warn: Unused use item
             fun main(_s: vector) {}
                        //^^^^^^ err: Invalid instantiation of 'vector'. Expected 1 type argument(s), but got 0
         }

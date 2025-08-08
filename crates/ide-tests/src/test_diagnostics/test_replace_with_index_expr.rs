@@ -8,40 +8,40 @@ use expect_test::expect;
 fn test_no_error_if_argument_types_are_incorrect() {
     // language=Move
     check_diagnostics(expect![[r#"
-            module 0x1::vector {
-                native public fun borrow<Element>(v: &vector<Element>, i: u64): &Element;
-            }
-            module 0x1::m {
-                use 0x1::vector;
+        module 0x1::vector {
+            native public fun borrow<Element>(v: &vector<Element>, i: u64): &Element;
+        }
+        module 0x1::m {
+            use 0x1::vector;
 
-                fun main() {
-                    let v = vector[1, 2];
-                    *vector::borrow(0, &v);
-                                  //^ err: Incompatible type 'integer', expected '&vector<Element>'
-                                     //^^ err: Incompatible type '&vector<integer>', expected 'u64'
-                    *vector::borrow(v, 0);
-                                  //^ err: Incompatible type 'vector<integer>', expected '&vector<Element>'
-                }
+            fun main() {
+                let v = vector[1, 2];
+                *vector::borrow(0, &v);
+                              //^ err: Incompatible type 'integer', expected '&vector<Element>'
+                                 //^^ err: Incompatible type '&vector<integer>', expected 'u64'
+                *vector::borrow(v, 0);
+                              //^ err: Incompatible type 'vector<integer>', expected '&vector<Element>'
             }
-        "#]]);
+        }
+    "#]]);
 }
 
 #[test]
 fn test_no_error_vector_address_is_0x2() {
     // language=Move
     check_diagnostics(expect![[r#"
-            module 0x2::vector {
-                native public fun borrow<Element>(v: &vector<Element>, i: u64): &Element;
-            }
-            module 0x1::m {
-                use 0x2::vector;
+        module 0x2::vector {
+            native public fun borrow<Element>(v: &vector<Element>, i: u64): &Element;
+        }
+        module 0x1::m {
+            use 0x2::vector;
 
-                fun main() {
-                    let v = vector[1, 2];
-                    *vector::borrow(&v, 0);
-                }
+            fun main() {
+                let v = vector[1, 2];
+                *vector::borrow(&v, 0);
             }
-        "#]]);
+        }
+    "#]]);
 }
 
 #[test]
