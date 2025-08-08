@@ -16,6 +16,19 @@ pub(crate) fn find_unused_imports(
     ctx: &DiagnosticsContext<'_>,
     use_stmts_owner: InFile<ast::AnyUseStmtsOwner>,
 ) -> Option<()> {
+    let _p = tracing::debug_span!("find_unused_imports").entered();
+    if ctx.config.assists_only {
+        // no assists
+        return None;
+    }
+    // special-case frequent path
+    if use_stmts_owner
+        .value
+        .cast_into::<ast::BlockExpr>()
+        .is_some_and(|it| it.use_stmts().collect::<Vec<_>>().is_empty())
+    {
+        return Some(());
+    }
     for scope in vec![NamedItemScope::Main, NamedItemScope::Verify, NamedItemScope::Test] {
         find_unused_imports_for_item_scope(acc, ctx, use_stmts_owner.clone().map_into(), scope);
     }
