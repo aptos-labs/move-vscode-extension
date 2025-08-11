@@ -2534,3 +2534,47 @@ fn test_type_error_abort_u64() {
         }
     "#]])
 }
+
+#[test]
+fn test_object_wrapped_item_with_match_arms_with_enum_struct() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::mod {
+            struct Object<T> {
+                val: T
+            }
+            enum Relationship<phantom RelSource> {
+                V1 {
+                    source: Object<RelSource>
+                }
+            }
+            // This function triggers the false positive error
+            public fun get_source<FunSource: key>(relationship: Relationship<FunSource>): Object<FunSource> {
+                match(&relationship) {
+                    Relationship::V1 { source } => *source
+                }
+            }
+        }
+    "#]])
+}
+
+#[test]
+fn test_object_wrapped_item_with_match_arms_with_enum_tuple_struct() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::mod {
+            struct Object<T> {
+                val: T
+            }
+            enum Relationship<phantom RelSource> {
+                V1(Object<RelSource>)
+            }
+            // This function triggers the false positive error
+            public fun get_source<FunSource: key>(relationship: Relationship<FunSource>): Object<FunSource> {
+                match(&relationship) {
+                    Relationship::V1(source) => *source
+                }
+            }
+        }
+    "#]])
+}
