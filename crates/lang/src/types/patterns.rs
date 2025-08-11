@@ -63,7 +63,7 @@ impl TypeAstWalker<'_, '_> {
                             .ctx
                             .instantiate_path(struct_pat.path().into(), struct_.in_file(file_id))
                             .into_ty_adt()?;
-                        if !self.ctx.is_tys_compatible(expected, Ty::Adt(pat_ty)) {
+                        if !self.ctx.is_tys_compatible(expected.clone(), Ty::Adt(pat_ty)) {
                             self.ctx
                                 .type_errors
                                 .push(TypeError::invalid_unpacking(pat, ty.clone()));
@@ -73,7 +73,7 @@ impl TypeAstWalker<'_, '_> {
 
                 let pat_fields = struct_pat.fields();
                 let pat_field_tys = self.get_pat_field_tys(fields_owner, &pat_fields);
-                let ty_adt_subst = ty
+                let ty_adt_subst = expected
                     .into_ty_adt()
                     .map(|it| it.substitution)
                     .unwrap_or(empty_substitution());
