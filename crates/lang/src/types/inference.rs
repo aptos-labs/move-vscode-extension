@@ -255,7 +255,7 @@ impl<'db> InferenceCtx<'db> {
         }
     }
 
-    pub fn var_resolver(&self) -> TyVarResolver {
+    pub fn var_resolver(&self) -> TyVarResolver<'_> {
         TyVarResolver::new(self)
     }
 
