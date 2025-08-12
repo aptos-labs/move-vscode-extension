@@ -1,5 +1,6 @@
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
+use base_db::SourceDatabase;
 use ide_db::Severity;
 use lang::hir_db;
 use lang::item_scope::NamedItemScope;
@@ -29,22 +30,38 @@ pub(crate) fn find_unused_imports(
     {
         return Some(());
     }
-    for scope in vec![NamedItemScope::Main, NamedItemScope::Verify, NamedItemScope::Test] {
-        find_unused_imports_for_item_scope(acc, ctx, use_stmts_owner.clone().map_into(), scope);
+
+    let db = ctx.sema.db;
+    let stmts_owner_with_siblings =
+        hir_db::use_stmts_owner_with_siblings(db, use_stmts_owner.clone().map_into());
+
+    for item_scope in vec![NamedItemScope::Main, NamedItemScope::Verify, NamedItemScope::Test] {
+        let unused_use_items =
+            find_unused_use_items_for_item_scope(ctx.sema.db, &stmts_owner_with_siblings, item_scope);
+        if let Some(unused_use_items) = unused_use_items {
+            for use_stmt_owner in stmts_owner_with_siblings.iter() {
+                let use_stmts = use_stmt_owner.as_ref().flat_map(|it| it.use_stmts().collect());
+                for use_stmt in use_stmts
+                    .into_iter()
+                    .filter(|stmt| hir_db::item_scope(db, stmt.loc()) == item_scope)
+                {
+                    let stmt_use_items = unused_use_items
+                        .iter()
+                        .filter(|it| use_stmt.loc().contains(&it.use_speck_loc))
+                        .collect::<Vec<_>>();
+                    highlight_unused_use_items(db, acc, use_stmt, stmt_use_items);
+                }
+            }
+        }
     }
     Some(())
 }
 
-fn find_unused_imports_for_item_scope(
-    acc: &mut Vec<Diagnostic>,
-    ctx: &DiagnosticsContext<'_>,
-    stmts_owner: InFile<ast::AnyUseStmtsOwner>,
+fn find_unused_use_items_for_item_scope(
+    db: &dyn SourceDatabase,
+    stmts_owner_with_siblings: &Vec<InFile<ast::AnyUseStmtsOwner>>,
     item_scope: NamedItemScope,
-) -> Option<()> {
-    let db = ctx.sema.db;
-    let stmts_owner_with_siblings =
-        hir_db::use_stmts_owner_with_siblings(db, stmts_owner.clone().map_into());
-
+) -> Option<Vec<UseItem>> {
     let reachable_paths = stmts_owner_with_siblings
         .iter()
         .flat_map(|it| {
@@ -87,17 +104,22 @@ fn find_unused_imports_for_item_scope(
         }
     }
 
+    let mut all_unused_use_items = vec![];
     for use_stmt_owner in stmts_owner_with_siblings {
-        let use_stmts = use_stmt_owner.flat_map(|it| it.use_stmts().collect());
+        let use_stmts = use_stmt_owner.as_ref().flat_map(|it| it.use_stmts().collect());
         for use_stmt in use_stmts
             .into_iter()
             .filter(|stmt| hir_db::item_scope(db, stmt.loc()) == item_scope)
         {
-            check_unused_use_speck(acc, ctx, use_stmt, &use_items_hit);
+            for use_item in use_items_for_stmt(db, use_stmt.clone())? {
+                if !use_items_hit.contains(&use_item) {
+                    all_unused_use_items.push(use_item);
+                }
+            }
         }
     }
 
-    None
+    Some(all_unused_use_items)
 }
 
 fn descendant_paths(node: &SyntaxNode) -> impl Iterator<Item = ast::Path> {
@@ -106,15 +128,12 @@ fn descendant_paths(node: &SyntaxNode) -> impl Iterator<Item = ast::Path> {
         .filter(|path| !path.syntax().has_ancestor_strict::<ast::UseSpeck>())
 }
 
-fn check_unused_use_speck(
+fn highlight_unused_use_items(
+    db: &dyn SourceDatabase,
     acc: &mut Vec<Diagnostic>,
-    ctx: &DiagnosticsContext<'_>,
     use_stmt: InFile<ast::UseStmt>,
-    use_items_hit: &HashSet<UseItem>,
+    unused_use_items: Vec<&UseItem>,
 ) -> Option<()> {
-    let mut unused_use_items = use_items_for_stmt(ctx.sema.db, use_stmt.clone())?;
-    unused_use_items.retain(|it| !use_items_hit.contains(it));
-
     let module_use_items = unused_use_items.iter().find(|it| it.type_ == UseItemType::Module);
     if module_use_items.is_some() {
         acc.push(
@@ -128,7 +147,7 @@ fn check_unused_use_speck(
         return Some(());
     }
 
-    let use_items = use_items_for_stmt(ctx.sema.db, use_stmt.clone())?;
+    let use_items = use_items_for_stmt(db, use_stmt.clone())?;
     if use_items.len() == unused_use_items.len() {
         // all inner speck types are covered, highlight complete useStmt
         acc.push(
