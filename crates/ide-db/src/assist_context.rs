@@ -32,6 +32,19 @@ impl LocalAssists {
         })
     }
 
+    pub fn new_for_file(
+        file_id: FileId,
+        file: ast::SourceFile,
+        resolve: AssistResolveStrategy,
+    ) -> Option<Self> {
+        Some(LocalAssists {
+            file_id,
+            source_file: file,
+            assists: Vec::new(),
+            resolve,
+        })
+    }
+
     pub fn assists(self) -> Vec<Assist> {
         self.assists
     }

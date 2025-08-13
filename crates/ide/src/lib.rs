@@ -53,6 +53,7 @@ use ide_db::source_change::SourceChange;
 use ide_db::symbol_index::Query;
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
+use ide_diagnostics::handlers;
 use lang::Semantics;
 pub use salsa::Cancelled;
 use syntax::files::{FilePosition, FileRange};
@@ -546,6 +547,10 @@ impl Analysis {
         position: FilePosition,
     ) -> Cancellable<Result<RangeInfo<()>, RenameError>> {
         self.with_db(|db| rename::prepare_rename(db, position))
+    }
+
+    pub fn organize_imports(&self, file_id: FileId) -> Cancellable<Option<Assist>> {
+        self.with_db(|db| handlers::organize_imports::organize_imports_in_file(db, file_id))
     }
 
     // pub fn will_rename_file(

@@ -23,6 +23,7 @@ mod test_type_checking_fs;
 mod test_unresolved_reference;
 mod test_unused_acquires;
 mod test_unused_imports;
+mod test_unused_imports_organize;
 mod test_unused_variables;
 
 #[test]

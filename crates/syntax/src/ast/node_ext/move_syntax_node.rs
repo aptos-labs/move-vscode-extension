@@ -6,7 +6,8 @@
 
 use crate::SyntaxKind::*;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
-use crate::{AstNode, SyntaxNode, algo, ast};
+use crate::{AstNode, SyntaxElement, SyntaxNode, algo, ast};
+use rowan::Direction;
 
 pub trait MoveSyntaxElementExt {
     fn node(&self) -> &SyntaxNode;
@@ -68,6 +69,14 @@ pub trait MoveSyntaxElementExt {
 
     fn inference_ctx_owner(&self) -> Option<ast::InferenceCtxOwner> {
         self.node().ancestor_or_self::<ast::InferenceCtxOwner>()
+    }
+
+    fn next_siblings_with_tokens(&self) -> impl Iterator<Item = SyntaxElement> {
+        self.node().siblings_with_tokens(Direction::Next).skip(1)
+    }
+
+    fn prev_siblings_with_tokens(&self) -> impl Iterator<Item = SyntaxElement> {
+        self.node().siblings_with_tokens(Direction::Prev).skip(1)
     }
 }
 

@@ -1,10 +1,12 @@
+pub mod organize_imports;
+
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use base_db::SourceDatabase;
-use ide_db::Severity;
+use ide_db::{RootDatabase, Severity};
 use lang::hir_db;
 use lang::item_scope::NamedItemScope;
-use lang::loc::SyntaxLocFileExt;
+use lang::loc::{SyntaxLoc, SyntaxLocFileExt};
 use lang::nameres::use_speck_entries::{UseItem, UseItemType, use_items_for_stmt};
 use std::collections::HashSet;
 use syntax::ast::UseStmtsOwner;
@@ -49,7 +51,8 @@ pub(crate) fn find_unused_imports(
                         .iter()
                         .filter(|it| use_stmt.loc().contains(&it.use_speck_loc))
                         .collect::<Vec<_>>();
-                    highlight_unused_use_items(db, acc, use_stmt, stmt_use_items);
+                    let unused_import_kind = unused_import_kind(db, use_stmt, stmt_use_items)?;
+                    highlight_unused_use_items(acc, unused_import_kind);
                 }
             }
         }
@@ -57,7 +60,7 @@ pub(crate) fn find_unused_imports(
     Some(())
 }
 
-fn find_unused_use_items_for_item_scope(
+pub(crate) fn find_unused_use_items_for_item_scope(
     db: &dyn SourceDatabase,
     stmts_owner_with_siblings: &Vec<InFile<ast::AnyUseStmtsOwner>>,
     item_scope: NamedItemScope,
@@ -128,59 +131,83 @@ fn descendant_paths(node: &SyntaxNode) -> impl Iterator<Item = ast::Path> {
         .filter(|path| !path.syntax().has_ancestor_strict::<ast::UseSpeck>())
 }
 
-fn highlight_unused_use_items(
+pub(crate) enum UnusedImportKind {
+    UseStmt { use_stmt: InFile<ast::UseStmt> },
+    UseSpeck { use_speck_locs: Vec<SyntaxLoc> },
+}
+
+pub(crate) fn unused_import_kind(
     db: &dyn SourceDatabase,
-    acc: &mut Vec<Diagnostic>,
     use_stmt: InFile<ast::UseStmt>,
-    unused_use_items: Vec<&UseItem>,
-) -> Option<()> {
-    let module_use_items = unused_use_items.iter().find(|it| it.type_ == UseItemType::Module);
+    unused_stmt_use_items: Vec<&UseItem>,
+) -> Option<UnusedImportKind> {
+    let module_use_items = unused_stmt_use_items
+        .iter()
+        .find(|it| it.type_ == UseItemType::Module);
+    // use 0x1::unused_m;
     if module_use_items.is_some() {
-        acc.push(
-            Diagnostic::new(
-                DiagnosticCode::Lsp("unused-import", Severity::Warning),
-                "Unused use item",
-                use_stmt.file_range(),
-            ),
-            // .with_unused(true)
-        );
-        return Some(());
+        return Some(UnusedImportKind::UseStmt { use_stmt });
     }
 
-    let use_items = use_items_for_stmt(db, use_stmt.clone())?;
-    if use_items.len() == unused_use_items.len() {
+    let actual_stmt_use_items = use_items_for_stmt(db, use_stmt.clone())?;
+    // use 0x1::m::{};
+    if actual_stmt_use_items.is_empty() {
+        return Some(UnusedImportKind::UseStmt { use_stmt });
+    }
+
+    // use 0x1::m::{unused_a, unused_b};
+    if actual_stmt_use_items.len() == unused_stmt_use_items.len() {
         // all inner speck types are covered, highlight complete useStmt
-        acc.push(
-            Diagnostic::new(
-                DiagnosticCode::Lsp("unused-import", Severity::Warning),
-                "Unused use item",
-                use_stmt.file_range(),
-            ),
-            // .with_unused(true)
-        );
-    } else {
-        for use_item in unused_use_items {
+        return Some(UnusedImportKind::UseStmt { use_stmt });
+    }
+
+    Some(UnusedImportKind::UseSpeck {
+        use_speck_locs: unused_stmt_use_items
+            .iter()
+            .map(|it| it.use_speck_loc.clone())
+            .collect(),
+    })
+}
+
+fn highlight_unused_use_items(
+    acc: &mut Vec<Diagnostic>,
+    unused_import_kind: UnusedImportKind,
+) -> Option<()> {
+    match unused_import_kind {
+        UnusedImportKind::UseStmt { use_stmt } => {
             acc.push(
                 Diagnostic::new(
                     DiagnosticCode::Lsp("unused-import", Severity::Warning),
                     "Unused use item",
-                    use_item.use_speck_loc.file_range(),
+                    use_stmt.file_range(),
                 ),
                 // .with_unused(true)
             );
+        }
+        UnusedImportKind::UseSpeck { use_speck_locs: use_specks } => {
+            for use_speck_loc in use_specks {
+                acc.push(
+                    Diagnostic::new(
+                        DiagnosticCode::Lsp("unused-import", Severity::Warning),
+                        "Unused use item",
+                        use_speck_loc.file_range(),
+                    ),
+                    // .with_unused(true)
+                );
+            }
         }
     }
     Some(())
 }
 
-pub(crate) enum BasePathType {
+enum BasePathType {
     Address,
     Module { module_name: String },
     Item { item_name: String },
 }
 
 impl BasePathType {
-    pub(crate) fn for_path(path: &ast::Path) -> Option<BasePathType> {
+    fn for_path(path: &ast::Path) -> Option<BasePathType> {
         let root_path = path.root_path();
         let qualifier = root_path.qualifier();
         match qualifier {

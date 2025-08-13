@@ -86,7 +86,7 @@ pub fn check_diagnostics_and_fix(before: Expect, after: Expect) {
     let actual = apply_diagnostics_to_file(&trimmed_before_source, &vec![diagnostic.clone()]);
     before.assert_eq(stdx::trim_indent(&actual).as_str());
 
-    let fix = &diagnostic
+    let assist = &diagnostic
         .fixes
         .unwrap_or_else(|| panic!("{:?} diagnostic misses fixes", diagnostic.code))[0];
 
@@ -97,7 +97,7 @@ pub fn check_diagnostics_and_fix(before: Expect, after: Expect) {
     lines.remove(line_idx as usize);
     let before_no_error_line = lines.join("\n");
 
-    let mut actual_after = apply_fix(fix, &before_no_error_line);
+    let mut actual_after = apply_assist(assist, &before_no_error_line);
     actual_after.push_str("\n");
     after.assert_eq(&stdx::trim_indent(&actual_after).as_str());
 }
@@ -113,7 +113,7 @@ fn get_diagnostics(source: &str, config: DiagnosticsConfig) -> (Analysis, FileId
     (analysis, file_id, diagnostics)
 }
 
-fn apply_fix(fix: &Assist, before: &str) -> String {
+pub fn apply_assist(fix: &Assist, before: &str) -> String {
     let source_change = fix.source_change.as_ref().unwrap();
     let mut after = before.to_string();
 

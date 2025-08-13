@@ -4,6 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+use crate::DiagnosticsContext;
 use ide_db::Severity;
 use ide_db::assist_context::LocalAssists;
 use ide_db::assists::Assist;
