@@ -133,6 +133,7 @@ fn descendant_paths(node: &SyntaxNode) -> impl Iterator<Item = ast::Path> {
         .filter(|path| !path.syntax().has_ancestor_strict::<ast::UseSpeck>())
 }
 
+#[derive(Debug)]
 pub(crate) enum UnusedImportKind {
     UseStmt { use_stmt: InFile<ast::UseStmt> },
     UseSpeck { use_speck_locs: Vec<SyntaxLoc> },

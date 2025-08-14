@@ -4,7 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use super::{SyntaxFactory, ast_from_text, expr_item_from_text};
+use super::{SyntaxFactory, ast_from_text, expr_item_from_text, module_item_from_text};
 use crate::ast::make::quote::quote;
 use crate::parse::SyntaxKind;
 use crate::syntax_editor::mapping::SyntaxMappingBuilder;
@@ -44,9 +44,13 @@ impl SyntaxFactory {
         expr_item_from_text(&segments)
     }
 
-    pub fn use_speck(&self, path: ast::Path) -> ast::UseSpeck {
-        let root_path_text = path.syntax().to_string();
-        ast_from_text(&format!("module 0x1::m {{ use {root_path_text}; }}"))
+    pub fn use_speck(&self, path: ast::Path, alias: Option<ast::UseAlias>) -> ast::UseSpeck {
+        let mut buf = "use ".to_string();
+        buf += &path.syntax().to_string();
+        if let Some(alias) = alias {
+            stdx::format_to!(buf, " {alias}");
+        }
+        module_item_from_text::<ast::UseSpeck>(&buf).clone_for_update()
     }
 
     pub fn ident_pat(&self, ident_name: &str) -> ast::IdentPat {

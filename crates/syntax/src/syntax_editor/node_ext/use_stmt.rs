@@ -13,6 +13,24 @@ impl ast::UseStmt {
         editor.delete(self.syntax());
     }
 
+    pub fn simplify_root_self(&self, editor: &mut SyntaxEditor) -> Option<()> {
+        let root_use_speck = self.use_speck()?;
+        // cannot be used with groups
+        // if root_use_speck.use_group().is_some() {
+        //     return None;
+        // }
+        if root_use_speck.is_root_self() {
+            let module_path = root_use_speck.path()?.qualifier()?;
+            let make = SyntaxFactory::new();
+            let alias = root_use_speck.use_alias().map(|it| it.clone_for_update());
+            editor.replace(
+                root_use_speck.syntax(),
+                make.use_speck(module_path.clone_for_update(), alias).syntax(),
+            );
+        }
+        Some(())
+    }
+
     pub fn delete_group_use_specks(
         &self,
         unused_use_specks: Vec<ast::UseSpeck>,
@@ -45,24 +63,19 @@ impl ast::UseStmt {
         let root_path = root_use_speck.path()?;
 
         let make = SyntaxFactory::new();
-        if use_speck.is_self() {
-            editor.replace(
-                root_use_speck.syntax(),
-                make.use_speck(root_path).syntax().clone_for_update(),
-            );
-            editor.add_mappings(make.finish_with_mappings());
-            return Some(());
-        }
+        let new_root_path = if use_speck.is_group_self() {
+            root_path
+        } else {
+            let mut segments = root_path.segments();
+            let use_speck_segment = use_speck.path().and_then(|it| it.segment())?;
+            segments.push(use_speck_segment);
+            make.path_from_segments(segments)
+        };
 
-        let mut segments = root_path.segments();
-        let use_speck_segment = use_speck.path().and_then(|it| it.segment())?;
-        segments.push(use_speck_segment);
-
+        let alias = use_speck.use_alias().map(|it| it.clone_for_update());
         editor.replace(
             root_use_speck.syntax(),
-            make.use_speck(make.path_from_segments(segments))
-                .syntax()
-                .clone_for_update(),
+            make.use_speck(new_root_path, alias).syntax(),
         );
         editor.add_mappings(make.finish_with_mappings());
         Some(())
