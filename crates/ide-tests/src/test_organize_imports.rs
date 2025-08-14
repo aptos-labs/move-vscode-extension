@@ -13,7 +13,10 @@ fn check_organize_imports(before: &str, after: Expect) {
         .organize_imports(file_id)
         .unwrap()
         .expect("no assist found");
-    let actual_after = apply_assist(&organize_assist, &before_source);
+    let mut actual_after = apply_assist(&organize_assist, &before_source)
+        .trim_end()
+        .to_string();
+    actual_after.push_str("\n");
 
     after.assert_eq(&stdx::trim_indent(&actual_after).as_str());
 }
