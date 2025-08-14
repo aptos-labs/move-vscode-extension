@@ -514,7 +514,7 @@ impl GlobalState {
             // All other request handlers (lsp extension)
             .on::<RETRY, lsp_ext::AnalyzerStatus>(handlers::handle_analyzer_status)
             .on::<NO_RETRY, lsp_ext::ViewSyntaxTree>(request::handle_view_syntax_tree)
-            // .on::<NO_RETRY, lsp_ext::RelatedTests>(handlers::handle_related_tests)
+            .on::<NO_RETRY, lsp_ext::OrganizeImports>(handlers::handle_organize_imports)
             .finish();
     }
 

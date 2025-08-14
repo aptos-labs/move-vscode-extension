@@ -58,3 +58,11 @@ export type AptosRunnableArgs = {
      */
     environment?: Record<string, string>;
 };
+
+export const organizeImports = new lc.RequestType<OrganizeImportsParams, lc.TextEdit[], void>(
+    "experimental/organizeImports",
+);
+
+export type OrganizeImportsParams = {
+    textDocument: lc.TextDocumentIdentifier;
+};

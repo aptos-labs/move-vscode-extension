@@ -19,7 +19,7 @@ use line_index::TextRange;
 use lsp_server::ErrorCode;
 use lsp_types::{
     CodeActionOrCommand, CodeLens, DocumentHighlightKind, HoverContents, InlayHint, InlayHintParams,
-    Location, PrepareRenameResponse, RenameParams, ResourceOp, ResourceOperationKind,
+    Location, OneOf, PrepareRenameResponse, RenameParams, ResourceOp, ResourceOperationKind,
     SemanticTokensParams, SemanticTokensRangeParams, SemanticTokensRangeResult, SemanticTokensResult,
     SymbolInformation, TextDocumentIdentifier, Url, WorkspaceEdit, WorkspaceSymbolParams,
 };
@@ -676,6 +676,36 @@ pub(crate) fn handle_inlay_hints_resolve(
         .filter(|hint| hint.position == original_hint.position)
         .filter(|hint| hint.kind == original_hint.kind)
         .unwrap_or(original_hint))
+}
+
+pub(crate) fn handle_organize_imports(
+    snap: GlobalStateSnapshot,
+    params: lsp_ext::OrganizeImportsParams,
+) -> anyhow::Result<Vec<lsp_types::TextEdit>> {
+    let _p = tracing::info_span!("handle_organize_imports").entered();
+    let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
+
+    let file_edit = snap
+        .analysis
+        .organize_imports(file_id)?
+        .and_then(|it| it.source_change)
+        .and_then(|it| it.get_source_edit(file_id).cloned());
+
+    match file_edit {
+        Some(file_edit) => {
+            let text_document_edit = to_proto::text_document_edit(&snap, file_id, file_edit)?;
+            let text_edits = text_document_edit
+                .edits
+                .into_iter()
+                .filter_map(|it| match it {
+                    OneOf::Left(text_edit) => Some(text_edit),
+                    _ => None,
+                })
+                .collect();
+            Ok(text_edits)
+        }
+        None => Ok(vec![]),
+    }
 }
 
 pub(crate) fn handle_code_action(

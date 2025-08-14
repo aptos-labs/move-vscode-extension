@@ -23,6 +23,16 @@ Add the following to your `settings.json`:
 
 A bunch of symbols in the config value are the defaults, we're adding `b` and `x` symbols for the string prefixes.
 
+### Set `Organize Imports` command to a keyboard shortcut
+
+```json5
+    {
+        "key": "ctrl+alt+o",
+        "command": "move-on-aptos.organizeImports",
+        "when": "editorTextFocus && !editorReadonly"
+    }
+```
+
 ## Configuration
 
 ### Diagnostics
