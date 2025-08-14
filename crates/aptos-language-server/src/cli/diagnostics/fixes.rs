@@ -1,3 +1,6 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
 use base_db::change::FileChanges;
 use ide_db::RootDatabase;
 use ide_db::assists::Assist;

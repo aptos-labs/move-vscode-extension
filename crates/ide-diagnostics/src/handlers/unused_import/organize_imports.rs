@@ -1,3 +1,6 @@
+// Copyright © Aptos Foundation
+// SPDX-License-Identifier: Apache-2.0
+
 use crate::handlers::unused_import::{
     UnusedImportKind, find_unused_use_items_for_item_scope, unused_import_kind,
 };
