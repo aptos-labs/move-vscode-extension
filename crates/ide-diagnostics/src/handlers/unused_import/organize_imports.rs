@@ -43,7 +43,9 @@ fn organize_imports_in_stmts_owner(
     let stmts_owner_with_siblings =
         hir_db::use_stmts_owner_with_siblings(db, use_stmts_owner.clone().map_into());
 
+    // todo: other scopes
     let item_scope = NamedItemScope::Main;
+
     let unused_use_items =
         find_unused_use_items_for_item_scope(db, &stmts_owner_with_siblings, item_scope)?;
 
