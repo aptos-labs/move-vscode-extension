@@ -21,9 +21,11 @@ const COPYRIGHT_NOTICE_WITH_RUST_ANALYZER: &str = r#"
 const ORIGINAL_FILE_PATTERNS: &[&str] = &[
     "ide-tests/",
     "syntax/src/ast/node_ext",
+    "syntax/src/syntax_editor/node_ext",
     "ide-diagnostics/src/handlers",
     "ide-completion/src/render",
     "lang/",
+    "aptos-language-server/src/cli/",
 ];
 
 pub fn enforce() {
