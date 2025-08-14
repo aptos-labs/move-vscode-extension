@@ -20,10 +20,6 @@ pub(crate) fn find_unused_imports(
     use_stmts_owner: InFile<ast::AnyUseStmtsOwner>,
 ) -> Option<()> {
     let _p = tracing::debug_span!("find_unused_imports").entered();
-    if ctx.config.assists_only {
-        // no assists
-        return None;
-    }
     // special-case frequent path
     if use_stmts_owner
         .value
