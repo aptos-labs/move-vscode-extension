@@ -197,17 +197,17 @@ fn test_remove_redundant_group_curly_braces_with_self() {
     // language=Move
     check_organize_imports(
         r#"
-        module 0x1::M {
-            struct MyStruct {}
-            public fun call() {}
-        }
-        script {
-            use 0x1::M::{Self};
-
-            fun main() {
-                let a = M::call();
+            module 0x1::M {
+                struct MyStruct {}
+                public fun call() {}
             }
-        }
+            script {
+                use 0x1::M::{Self};
+
+                fun main() {
+                    let a = M::call();
+                }
+            }
     "#,
         expect![[r#"
             module 0x1::M {
@@ -221,6 +221,110 @@ fn test_remove_redundant_group_curly_braces_with_self() {
                     let a = M::call();
                 }
             }
+        "#]],
+    )
+}
+
+#[test]
+fn test_remove_unused_module_import() {
+    // language=Move
+    check_organize_imports(
+        r#"
+            module 0x1::M {}
+            module 0x1::M2 {
+                use 0x1::M;
+            }
+    "#,
+        expect![[r#"
+            module 0x1::M {}
+            module 0x1::M2 {
+                }
+        "#]],
+    )
+}
+
+#[test]
+fn test_remove_unused_import_group_with_two_imports() {
+    // language=Move
+    check_organize_imports(
+        r#"
+            module 0x1::M {
+                struct BTC {}
+                struct USDT {}
+            }
+            module 0x1::Main {
+                use 0x1::M::{BTC, USDT};
+            }
+    "#,
+        expect![[r#"
+            module 0x1::M {
+                struct BTC {}
+                struct USDT {}
+            }
+            module 0x1::Main {
+                }
+        "#]],
+    )
+}
+
+#[test]
+fn test_remove_all_imports_if_not_needed() {
+    // language=Move
+    check_organize_imports(
+        r#"
+            module Std::Errors {}
+            module Std::Signer {}
+            module AAA::M1 {
+                struct S1 {}
+                struct SS1 {}
+            }
+            module BBB::M2 {
+                struct S2 {}
+            }
+            module 0x1::Main {
+                use Std::Errors;
+                use Std::Signer;
+
+                use AAA::M1::S1;
+                use AAA::M1::SS1;
+                use BBB::M2::S2;
+
+                #[test]
+                fun call() {}
+            }
+    "#,
+        expect![[r#"
+            module Std::Errors {}
+            module Std::Signer {}
+            module AAA::M1 {
+                struct S1 {}
+                struct SS1 {}
+            }
+            module BBB::M2 {
+                struct S2 {}
+            }
+            module 0x1::Main {
+                #[test]
+                fun call() {}
+            }
+        "#]],
+    )
+}
+
+#[test]
+fn test_remove_empty_group() {
+    // language=Move
+    check_organize_imports(
+        r#"
+            module 0x1::M1 {}
+            module 0x1::Main {
+                use 0x1::M1::{};
+            }
+    "#,
+        expect![[r#"
+            module 0x1::M1 {}
+            module 0x1::Main {
+                }
         "#]],
     )
 }
