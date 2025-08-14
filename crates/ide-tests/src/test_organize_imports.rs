@@ -158,3 +158,69 @@ fn test_remove_unused_import_from_group_in_the_end() {
     "#]],
     )
 }
+
+#[test]
+fn test_remove_redundant_group_curly_braces() {
+    // language=Move
+    check_organize_imports(
+        r#"
+        module 0x1::M {
+            struct MyStruct {}
+            public fun call() {}
+        }
+        script {
+            use 0x1::M::{call};
+
+            fun main() {
+                let a = call();
+            }
+        }
+    "#,
+        expect![[r#"
+            module 0x1::M {
+                struct MyStruct {}
+                public fun call() {}
+            }
+            script {
+                use 0x1::M::call;
+
+                fun main() {
+                    let a = call();
+                }
+            }
+        "#]],
+    )
+}
+
+#[test]
+fn test_remove_redundant_group_curly_braces_with_self() {
+    // language=Move
+    check_organize_imports(
+        r#"
+        module 0x1::M {
+            struct MyStruct {}
+            public fun call() {}
+        }
+        script {
+            use 0x1::M::{Self};
+
+            fun main() {
+                let a = M::call();
+            }
+        }
+    "#,
+        expect![[r#"
+            module 0x1::M {
+                struct MyStruct {}
+                public fun call() {}
+            }
+            script {
+                use 0x1::M;
+
+                fun main() {
+                    let a = M::call();
+                }
+            }
+        "#]],
+    )
+}

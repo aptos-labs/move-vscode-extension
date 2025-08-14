@@ -51,7 +51,6 @@ use ide_db::rename::RenameError;
 use ide_db::search::SearchScope;
 use ide_db::source_change::SourceChange;
 use ide_db::symbol_index::Query;
-use ide_db::text_edit::TextEdit;
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 use ide_diagnostics::handlers;

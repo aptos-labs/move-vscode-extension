@@ -47,8 +47,14 @@ pub(crate) fn find_unused_imports(
                         .iter()
                         .filter(|it| use_stmt.loc().contains(&it.use_speck_loc))
                         .collect::<Vec<_>>();
-                    let unused_import_kind = unused_import_kind(db, use_stmt, stmt_use_items)?;
-                    highlight_unused_use_items(ctx, &use_stmts_owner, acc, unused_import_kind);
+                    let unused_import_kind = unused_import_kind(db, use_stmt.clone(), stmt_use_items)?;
+                    highlight_unused_use_items(
+                        ctx,
+                        &use_stmts_owner,
+                        use_stmt.value,
+                        acc,
+                        unused_import_kind,
+                    );
                 }
             }
         }
@@ -181,6 +187,7 @@ pub(crate) fn unused_import_kind(
 fn highlight_unused_use_items(
     ctx: &DiagnosticsContext<'_>,
     use_stmts_owner: &InFile<ast::AnyUseStmtsOwner>,
+    use_stmt: ast::UseStmt,
     acc: &mut Vec<Diagnostic>,
     unused_import_kind: UnusedImportKind,
 ) -> Option<()> {
@@ -204,7 +211,6 @@ fn highlight_unused_use_items(
             );
         }
         UnusedImportKind::UseSpeck { ref use_speck_locs } => {
-            let use_stmt = unused_import_kind.use_stmt(ctx.sema.db)?.value;
             for use_speck_loc in use_speck_locs {
                 let diag_range = use_speck_loc.file_range();
                 if let Some(use_speck) = use_speck_loc.to_ast::<ast::UseSpeck>(ctx.sema.db) {
