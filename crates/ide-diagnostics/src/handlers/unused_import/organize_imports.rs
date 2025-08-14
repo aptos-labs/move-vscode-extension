@@ -43,23 +43,22 @@ fn organize_imports_in_stmts_owner(
     let stmts_owner_with_siblings =
         hir_db::use_stmts_owner_with_siblings(db, use_stmts_owner.clone().map_into());
 
-    // todo: other scopes
-    let item_scope = NamedItemScope::Main;
+    for item_scope in NamedItemScope::all() {
+        let unused_use_items =
+            find_unused_use_items_for_item_scope(db, &stmts_owner_with_siblings, item_scope)?;
 
-    let unused_use_items =
-        find_unused_use_items_for_item_scope(db, &stmts_owner_with_siblings, item_scope)?;
-
-    let use_stmts = use_stmts_owner.as_ref().flat_map(|it| it.use_stmts().collect());
-    for use_stmt in use_stmts
-        .into_iter()
-        .filter(|stmt| hir_db::item_scope(db, stmt.loc()) == item_scope)
-    {
-        let unused_stmt_use_items = unused_use_items
-            .iter()
-            .filter(|it| use_stmt.loc().contains(&it.use_speck_loc))
-            .collect::<Vec<_>>();
-        let unused_import_kind = unused_import_kind(db, use_stmt.clone(), unused_stmt_use_items)?;
-        delete_unused_use_items(db, use_stmt.value, unused_import_kind, editor);
+        let use_stmts = use_stmts_owner.as_ref().flat_map(|it| it.use_stmts().collect());
+        for use_stmt in use_stmts
+            .into_iter()
+            .filter(|stmt| hir_db::item_scope(db, stmt.loc()) == item_scope)
+        {
+            let unused_stmt_use_items = unused_use_items
+                .iter()
+                .filter(|it| use_stmt.loc().contains(&it.use_speck_loc))
+                .collect::<Vec<_>>();
+            let unused_import_kind = unused_import_kind(db, use_stmt.clone(), unused_stmt_use_items)?;
+            delete_unused_use_items(db, use_stmt.value, unused_import_kind, editor);
+        }
     }
 
     Some(())

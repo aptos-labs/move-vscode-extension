@@ -328,3 +328,21 @@ fn test_remove_empty_group() {
         "#]],
     )
 }
+
+#[test]
+fn test_module_spec() {
+    // language=Move
+    check_organize_imports(
+        r#"
+            module 0x1::string {}
+            spec 0x1::main {
+                use 0x1::string;
+            }
+    "#,
+        expect![[r#"
+            module 0x1::string {}
+            spec 0x1::main {
+                }
+        "#]],
+    )
+}

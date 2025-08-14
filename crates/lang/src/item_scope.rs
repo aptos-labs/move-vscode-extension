@@ -17,6 +17,10 @@ pub enum NamedItemScope {
 }
 
 impl NamedItemScope {
+    pub fn all() -> Vec<NamedItemScope> {
+        vec![NamedItemScope::Main, NamedItemScope::Test, NamedItemScope::Verify]
+    }
+
     pub fn is_test(self) -> bool {
         self == NamedItemScope::Test
     }

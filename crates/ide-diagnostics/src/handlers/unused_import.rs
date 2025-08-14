@@ -33,7 +33,7 @@ pub(crate) fn find_unused_imports(
     let stmts_owner_with_siblings =
         hir_db::use_stmts_owner_with_siblings(db, use_stmts_owner.clone().map_into());
 
-    for item_scope in vec![NamedItemScope::Main, NamedItemScope::Verify, NamedItemScope::Test] {
+    for item_scope in NamedItemScope::all() {
         let unused_use_items =
             find_unused_use_items_for_item_scope(ctx.sema.db, &stmts_owner_with_siblings, item_scope);
         if let Some(unused_use_items) = unused_use_items {
