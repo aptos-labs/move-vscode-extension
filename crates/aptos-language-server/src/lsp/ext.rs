@@ -7,7 +7,7 @@
 use camino::Utf8PathBuf;
 use lsp_types::notification::Notification;
 use lsp_types::request::Request;
-use lsp_types::{CodeActionKind, Position, Range, TextDocumentIdentifier};
+use lsp_types::{CodeActionKind, Position, Range, TextDocumentIdentifier, TextEdit};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ops;
@@ -156,4 +156,18 @@ pub struct AptosRunnableArgs {
     pub args: Vec<String>,
     #[serde(skip_serializing_if = "HashMap::is_empty")]
     pub environment: HashMap<String, String>,
+}
+
+pub enum OrganizeImports {}
+
+impl Request for OrganizeImports {
+    type Params = OrganizeImportsParams;
+    type Result = Vec<TextEdit>;
+    const METHOD: &'static str = "experimental/organizeImports";
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct OrganizeImportsParams {
+    pub text_document: TextDocumentIdentifier,
 }

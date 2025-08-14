@@ -4,8 +4,9 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+use crate::SyntaxKind::COMMA;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
-use crate::{SyntaxElement, SyntaxToken};
+use crate::{SyntaxElement, SyntaxKind, SyntaxToken};
 use itertools::Itertools;
 use rowan::NodeOrToken;
 
@@ -14,22 +15,22 @@ pub trait SyntaxElementExt {
 
     fn prev_sibling_or_token_no_trivia(&self) -> Option<SyntaxElement> {
         let prev = self.to_syntax_element().prev_sibling_or_token();
-        if let Some(prev) = prev {
-            if prev.kind().is_trivia() {
-                return prev.prev_sibling_or_token();
-            }
+        if let Some(prev) = &prev
+            && prev.kind().is_trivia()
+        {
+            return prev.prev_sibling_or_token_no_trivia();
         }
-        None
+        prev
     }
 
     fn next_sibling_or_token_no_trivia(&self) -> Option<SyntaxElement> {
         let next = self.to_syntax_element().next_sibling_or_token();
-        if let Some(next) = next {
-            if next.kind().is_trivia() {
-                return next.next_sibling_or_token();
-            }
+        if let Some(next) = &next
+            && next.kind().is_trivia()
+        {
+            return next.next_sibling_or_token_no_trivia();
         }
-        None
+        next
     }
 
     /// walks up over the tree if needed
@@ -55,6 +56,34 @@ pub trait SyntaxElementExt {
             }
         }
         None
+    }
+
+    fn following_comma(&self) -> Option<SyntaxToken> {
+        self.to_syntax_element()
+            .next_sibling_or_token_no_trivia()
+            .and_then(|it| it.into_token())
+            .filter(|it| it.kind() == COMMA)
+    }
+
+    fn following_ws(&self) -> Option<SyntaxToken> {
+        self.to_syntax_element()
+            .next_sibling_or_token()
+            .and_then(|it| it.into_token())
+            .filter(|it| it.kind() == SyntaxKind::WHITESPACE)
+    }
+
+    fn preceding_comma(&self) -> Option<SyntaxToken> {
+        self.to_syntax_element()
+            .prev_sibling_or_token_no_trivia()
+            .and_then(|it| it.into_token())
+            .filter(|it| it.kind() == COMMA)
+    }
+
+    fn preceding_ws(&self) -> Option<SyntaxToken> {
+        self.to_syntax_element()
+            .prev_sibling_or_token()
+            .and_then(|it| it.into_token())
+            .filter(|it| it.kind() == SyntaxKind::WHITESPACE)
     }
 }
 

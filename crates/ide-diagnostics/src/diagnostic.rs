@@ -56,6 +56,11 @@ impl Diagnostic {
         self
     }
 
+    pub(crate) fn with_local_fix(mut self, fix: Option<Assist>) -> Diagnostic {
+        self.fixes = Some(fix.into_iter().collect());
+        self
+    }
+
     pub(crate) fn with_unused(mut self, unused: bool) -> Diagnostic {
         self.unused = unused;
         self

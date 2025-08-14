@@ -10,6 +10,7 @@ import { Cmd, Ctx, CtxInit } from "./ctx";
 import { LanguageClient } from "vscode-languageclient/node";
 import * as lc from "vscode-languageclient";
 import { createTaskFromRunnable } from "./run";
+import { applyTextEdits } from "./snippets";
 
 export function analyzerStatus(ctx: CtxInit): Cmd {
     const tdcp = new (class implements vscode.TextDocumentContentProvider {
@@ -145,5 +146,21 @@ export function runSingle(ctx: CtxInit): Cmd {
         };
 
         return vscode.tasks.executeTask(task);
+    };
+}
+
+export function organizeImports(ctx: CtxInit): Cmd {
+    return async () => {
+        const editor = ctx.activeAptosEditor;
+        if (!editor) return;
+        const client = ctx.client;
+
+        const lcEdits = await client.sendRequest(lsp_ext.organizeImports, {
+            textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(editor.document),
+        });
+        if (!lcEdits) return;
+
+        const edits = await client.protocol2CodeConverter.asTextEdits(lcEdits);
+        await applyTextEdits(editor, edits);
     };
 }

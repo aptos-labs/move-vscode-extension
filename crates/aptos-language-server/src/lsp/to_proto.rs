@@ -520,20 +520,13 @@ pub(crate) fn text_document_edit(
     edit: TextEdit,
 ) -> Cancellable<lsp_types::TextDocumentEdit> {
     let text_document = optional_versioned_text_document_identifier(snap, file_id);
+
     let line_index = snap.file_line_index(file_id)?;
-    // let client_supports_annotations = snap.config.change_annotation_support();
     let edits = {
-        // let annotation = edit.change_annotation();
         edit.into_iter()
             .map(|it| OneOf::Left(lsp_text_edit(&line_index, it)))
             .collect::<Vec<_>>()
     };
-
-    // if snap.analysis.is_library_file(file_id)? && snap.config.change_annotation_support() {
-    //     for edit in &mut edits {
-    //         edit.annotation_id = Some(outside_workspace_annotation_id())
-    //     }
-    // }
 
     Ok(lsp_types::TextDocumentEdit { text_document, edits })
 }
@@ -558,8 +551,6 @@ pub(crate) fn text_document_ops(
                 let text_edit = lsp_types::TextEdit {
                     range: lsp_types::Range::default(),
                     new_text: initial_contents,
-                    // insert_text_format: Some(lsp_types::InsertTextFormat::PLAIN_TEXT),
-                    // annotation_id: None,
                 };
                 let edit_file = lsp_types::TextDocumentEdit {
                     text_document,
@@ -568,42 +559,6 @@ pub(crate) fn text_document_ops(
                 ops.push(lsp_types::DocumentChangeOperation::Edit(edit_file));
             }
         }
-        // FileSystemEdit::MoveFile { src, dst } => {
-        //     let old_uri = snap.file_id_to_url(src);
-        //     let new_uri = snap.anchored_path(&dst);
-        //     let rename_file = lsp_types::RenameFile {
-        //         old_uri,
-        //         new_uri,
-        //         options: None,
-        //         annotation_id: None,
-        //     };
-        //     // if snap.analysis.is_library_file(src).ok() == Some(true)
-        //     //     && snap.config.change_annotation_support()
-        //     // {
-        //     //     rename_file.annotation_id = Some(outside_workspace_annotation_id())
-        //     // }
-        //     ops.push(lsp_ext::SnippetDocumentChangeOperation::Op(
-        //         lsp_types::ResourceOp::Rename(rename_file),
-        //     ))
-        // }
-        // FileSystemEdit::MoveDir { src, src_id, dst } => {
-        //     let old_uri = snap.anchored_path(&src);
-        //     let new_uri = snap.anchored_path(&dst);
-        //     let rename_file = lsp_types::RenameFile {
-        //         old_uri,
-        //         new_uri,
-        //         options: None,
-        //         annotation_id: None,
-        //     };
-        //     // if snap.analysis.is_library_file(src_id).ok() == Some(true)
-        //     //     && snap.config.change_annotation_support()
-        //     // {
-        //     //     rename_file.annotation_id = Some(outside_workspace_annotation_id())
-        //     // }
-        //     ops.push(lsp_ext::SnippetDocumentChangeOperation::Op(
-        //         lsp_types::ResourceOp::Rename(rename_file),
-        //     ))
-        // }
         _ => (),
     }
     Ok(ops)
@@ -630,43 +585,12 @@ pub(crate) fn workspace_edit(
         let edit = text_document_edit(snap, file_id, edit)?;
         document_changes.push(lsp_types::DocumentChangeOperation::Edit(edit));
     }
-    // for op in source_change.file_system_edits {
-    //     if !matches!(op, FileSystemEdit::CreateFile { .. }) {
-    //         let ops = text_document_ops(snap, op)?;
-    //         document_changes.extend_from_slice(&ops);
-    //     }
-    // }
-    let workspace_edit = lsp_types::WorkspaceEdit {
+
+    Ok(lsp_types::WorkspaceEdit {
         changes: None,
         document_changes: Some(DocumentChanges::Operations(document_changes)),
         change_annotations: None,
-    };
-    // if snap.config.change_annotation_support() {
-    //     workspace_edit.change_annotations = Some(
-    //         once((
-    //             outside_workspace_annotation_id(),
-    //             lsp_types::ChangeAnnotation {
-    //                 label: String::from("Edit outside of the workspace"),
-    //                 needs_confirmation: Some(true),
-    //                 description: Some(String::from(
-    //                     "This edit lies outside of the workspace and may affect dependencies",
-    //                 )),
-    //             },
-    //         ))
-    //             .chain(source_change.annotations.into_iter().map(|(id, annotation)| {
-    //                 (
-    //                     id.to_string(),
-    //                     lsp_types::ChangeAnnotation {
-    //                         label: annotation.label,
-    //                         description: annotation.description,
-    //                         needs_confirmation: Some(annotation.needs_confirmation),
-    //                     },
-    //                 )
-    //             }))
-    //             .collect(),
-    //     )
-    // }
-    Ok(workspace_edit)
+    })
 }
 
 pub(crate) fn code_action_kind(kind: AssistKind) -> lsp_types::CodeActionKind {

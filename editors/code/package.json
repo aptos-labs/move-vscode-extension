@@ -80,6 +80,11 @@
                 "title": "Show Whitespace",
                 "icon": "$(filter-filled)",
                 "category": "move-on-aptos (syntax tree)"
+            },
+            {
+                "command": "move-on-aptos.organizeImports",
+                "title": "Organize Imports in the Current File",
+                "category": "move-on-aptos"
             }
         ],
         "configuration": [

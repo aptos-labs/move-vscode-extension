@@ -6,14 +6,17 @@
 
 mod edit_algo;
 pub mod mapping;
+mod node_ext;
 
+use crate::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use crate::ast::node_ext::syntax_element::SyntaxElementExt;
+use crate::syntax_editor::mapping::SyntaxMapping;
+use crate::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken, TextRange};
+use rowan::Direction;
 use std::collections::HashMap;
 use std::num::NonZeroU32;
 use std::ops::RangeInclusive;
 use std::sync::atomic::{AtomicU32, Ordering};
-
-use crate::syntax_editor::mapping::SyntaxMapping;
-use crate::{SyntaxElement, SyntaxNode, SyntaxToken, TextRange};
 
 #[derive(Debug)]
 pub struct SyntaxEditor {
@@ -63,6 +66,28 @@ impl SyntaxEditor {
             "should not delete root node"
         );
         self.changes.push(Change::Replace(element.syntax_element(), None));
+    }
+
+    pub fn delete_comma_sep_list_element(&mut self, node: &SyntaxNode) {
+        // delete surrounding trivia
+        for trivia_sibling in node
+            .next_siblings_with_tokens()
+            .take_while(|it| it.kind().is_trivia())
+            .chain(
+                node.prev_siblings_with_tokens()
+                    .take_while(|it| it.kind().is_trivia()),
+            )
+        {
+            self.delete(trivia_sibling);
+        }
+        // delete surrounding comma
+        let syntax_element = node.syntax_element();
+        if let Some(following_comma) = &syntax_element.following_comma() {
+            self.delete(following_comma);
+        } else if let Some(preceding_comma) = &syntax_element.preceding_comma() {
+            self.delete(preceding_comma);
+        }
+        self.delete(node)
     }
 
     pub fn replace(&mut self, old: impl Element, new: impl Element) {

@@ -4,6 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+use crate::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::{AstNode, SyntaxKind, ast};
 
@@ -65,5 +66,17 @@ impl ast::Path {
 
     pub fn ident_token(&self) -> Option<ast::SyntaxToken> {
         self.segment()?.name_ref().and_then(|it| it.ident_token())
+    }
+
+    pub fn segments(&self) -> Vec<ast::PathSegment> {
+        let mut segments = vec![];
+        let mut current_path = Some(self.base_path());
+        while let Some(path) = current_path {
+            if let Some(segment) = path.segment() {
+                segments.push(segment);
+            }
+            current_path = path.syntax.parent_of_type::<ast::Path>();
+        }
+        segments
     }
 }

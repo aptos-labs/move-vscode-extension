@@ -62,6 +62,12 @@ pub struct UseItem {
     pub scope: NamedItemScope,
 }
 
+impl UseItem {
+    pub fn use_speck(&self, db: &dyn SourceDatabase) -> Option<InFile<ast::UseSpeck>> {
+        self.use_speck_loc.to_ast(db)
+    }
+}
+
 pub fn use_items_for_stmt(
     db: &dyn SourceDatabase,
     use_stmt: InFile<ast::UseStmt>,

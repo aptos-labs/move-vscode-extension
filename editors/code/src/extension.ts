@@ -128,6 +128,7 @@ function createCommands(): Record<string, CommandFactory> {
         // openExternalDocs: { enabled: commands.openExternalDocs },
         // openCargoToml: { enabled: commands.openCargoToml },
         // peekTests: { enabled: commands.peekTests },
+        organizeImports: { enabled: commands.organizeImports },
         // moveItemUp: { enabled: commands.moveItemUp },
         // moveItemDown: { enabled: commands.moveItemDown },
         // ssr: { enabled: commands.ssr },

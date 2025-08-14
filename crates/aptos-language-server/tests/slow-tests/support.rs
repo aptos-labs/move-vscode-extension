@@ -166,6 +166,7 @@ impl Project {
                 }),
                 experimental: Some(json!({
                     "serverStatusNotification": true,
+                    "organizeImports": true,
                 })),
                 ..Default::default()
             },

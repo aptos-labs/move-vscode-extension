@@ -85,6 +85,14 @@ impl SyntaxLoc {
         self.node_name.to_owned()
     }
 
+    pub fn contains(&self, other_loc: &SyntaxLoc) -> bool {
+        self.file_id == other_loc.file_id
+            && self
+                .syntax_ptr
+                .text_range()
+                .contains_range(other_loc.syntax_ptr.text_range())
+    }
+
     fn get_source_file(&self, db: &dyn SourceDatabase) -> Option<SourceFile> {
         let file = source_db::parse(db, self.file_id.intern(db)).tree();
         if !file.syntax().text_range().contains_inclusive(self.node_offset()) {

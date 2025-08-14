@@ -17,11 +17,12 @@ use base_db::inputs::InternFileId;
 use base_db::source_db;
 use ide_db::RootDatabase;
 use ide_db::assist_context::LocalAssists;
-use ide_db::assists::AssistResolveStrategy;
+use ide_db::assists::{Assist, AssistResolveStrategy};
 use lang::Semantics;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{FileRange, InFile, InFileExt};
-use syntax::{AstNode, ast, match_ast};
+use syntax::syntax_editor::SyntaxEditor;
+use syntax::{AstNode, TextRange, ast, match_ast};
 use vfs::FileId;
 
 struct DiagnosticsContext<'a> {
@@ -33,6 +34,19 @@ struct DiagnosticsContext<'a> {
 impl DiagnosticsContext<'_> {
     pub fn local_assists_for_node(&self, node: InFile<&impl AstNode>) -> Option<LocalAssists> {
         LocalAssists::new(node.map(|it| it.syntax()), self.resolve.clone())
+    }
+
+    pub fn local_fix(
+        &self,
+        parent_node: InFile<&impl AstNode>,
+        id: &'static str,
+        label: impl Into<String>,
+        target: TextRange,
+        f: impl FnOnce(&mut SyntaxEditor),
+    ) -> Option<Assist> {
+        let mut fixes = self.local_assists_for_node(parent_node)?;
+        fixes.add_fix(id, label, target, f);
+        fixes.assists().pop()
     }
 }
 

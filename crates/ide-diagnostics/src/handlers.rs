@@ -26,3 +26,4 @@ pub(crate) use can_be_replaced_with_method_call::can_be_replaced_with_method_cal
 pub(crate) use redundant_cast::redundant_integer_cast;
 pub(crate) use type_checking::{recursive_struct_check, type_check};
 pub(crate) use unresolved_reference::find_unresolved_references;
+pub use unused_import::organize_imports;

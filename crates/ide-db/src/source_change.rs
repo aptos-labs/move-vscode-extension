@@ -157,6 +157,7 @@ impl SourceChangeBuilder {
     }
 
     pub fn edit_file(&mut self, file_id: impl Into<FileId>) {
+        self.commit();
         self.file_id = file_id.into();
     }
 
