@@ -9,7 +9,15 @@ impl ast::UseSpeck {
         self.path()?.reference_name()
     }
 
+    pub fn is_self(&self) -> bool {
+        self.path_name().is_some_and(|it| it == "Self")
+    }
+
     pub fn parent_use_group(&self) -> Option<ast::UseGroup> {
+        self.syntax.parent_of_type()
+    }
+
+    pub fn use_stmt(&self) -> Option<ast::UseStmt> {
         self.syntax.parent_of_type()
     }
 }

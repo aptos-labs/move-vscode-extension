@@ -12,11 +12,9 @@
 //! we pull the common definitions upstream, to this crate.
 
 use crate::label::Label;
-use crate::source_change::{SourceChange, SourceChangeBuilder};
+use crate::source_change::SourceChange;
 use std::str::FromStr;
 use syntax::TextRange;
-use syntax::files::FileRange;
-use syntax::syntax_editor::SyntaxEditor;
 
 #[derive(Debug, Clone)]
 pub struct Assist {

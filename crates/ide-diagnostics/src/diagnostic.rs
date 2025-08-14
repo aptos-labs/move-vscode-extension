@@ -4,7 +4,6 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::DiagnosticsContext;
 use ide_db::Severity;
 use ide_db::assist_context::LocalAssists;
 use ide_db::assists::Assist;
@@ -54,6 +53,11 @@ impl Diagnostic {
 
     pub(crate) fn with_local_fixes(mut self, fixes: Option<LocalAssists>) -> Diagnostic {
         self.fixes = fixes.map(|it| it.assists());
+        self
+    }
+
+    pub(crate) fn with_local_fix(mut self, fix: Option<Assist>) -> Diagnostic {
+        self.fixes = Some(fix.into_iter().collect());
         self
     }
 

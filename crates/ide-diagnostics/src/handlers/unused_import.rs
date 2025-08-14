@@ -3,7 +3,7 @@ pub mod organize_imports;
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use base_db::SourceDatabase;
-use ide_db::{RootDatabase, Severity};
+use ide_db::Severity;
 use lang::hir_db;
 use lang::item_scope::NamedItemScope;
 use lang::loc::{SyntaxLoc, SyntaxLocFileExt};
@@ -52,7 +52,7 @@ pub(crate) fn find_unused_imports(
                         .filter(|it| use_stmt.loc().contains(&it.use_speck_loc))
                         .collect::<Vec<_>>();
                     let unused_import_kind = unused_import_kind(db, use_stmt, stmt_use_items)?;
-                    highlight_unused_use_items(acc, unused_import_kind);
+                    highlight_unused_use_items(ctx, &use_stmts_owner, acc, unused_import_kind);
                 }
             }
         }
@@ -136,6 +136,19 @@ pub(crate) enum UnusedImportKind {
     UseSpeck { use_speck_locs: Vec<SyntaxLoc> },
 }
 
+impl UnusedImportKind {
+    pub fn use_stmt(&self, db: &dyn SourceDatabase) -> Option<InFile<ast::UseStmt>> {
+        match self {
+            UnusedImportKind::UseStmt { use_stmt } => Some(use_stmt.clone()),
+            UnusedImportKind::UseSpeck { use_speck_locs } => use_speck_locs
+                .first()
+                .and_then(|it| it.to_ast::<ast::UseSpeck>(db))?
+                .and_then(|it| it.parent_use_group())?
+                .and_then(|it| it.use_stmt()),
+        }
+    }
+}
+
 pub(crate) fn unused_import_kind(
     db: &dyn SourceDatabase,
     use_stmt: InFile<ast::UseStmt>,
@@ -170,6 +183,8 @@ pub(crate) fn unused_import_kind(
 }
 
 fn highlight_unused_use_items(
+    ctx: &DiagnosticsContext<'_>,
+    use_stmts_owner: &InFile<ast::AnyUseStmtsOwner>,
     acc: &mut Vec<Diagnostic>,
     unused_import_kind: UnusedImportKind,
 ) -> Option<()> {
@@ -180,20 +195,40 @@ fn highlight_unused_use_items(
                     DiagnosticCode::Lsp("unused-import", Severity::Warning),
                     "Unused use item",
                     use_stmt.file_range(),
-                ),
-                // .with_unused(true)
+                )
+                .with_local_fix(ctx.local_fix(
+                    use_stmts_owner.as_ref(),
+                    "remove-unused-import",
+                    "Remove unused use stmt",
+                    use_stmt.file_range().range,
+                    |editor| {
+                        use_stmt.value.delete(editor);
+                    },
+                )),
             );
         }
-        UnusedImportKind::UseSpeck { use_speck_locs: use_specks } => {
-            for use_speck_loc in use_specks {
-                acc.push(
-                    Diagnostic::new(
-                        DiagnosticCode::Lsp("unused-import", Severity::Warning),
-                        "Unused use item",
-                        use_speck_loc.file_range(),
-                    ),
-                    // .with_unused(true)
-                );
+        UnusedImportKind::UseSpeck { ref use_speck_locs } => {
+            let use_stmt = unused_import_kind.use_stmt(ctx.sema.db)?.value;
+            for use_speck_loc in use_speck_locs {
+                let diag_range = use_speck_loc.file_range();
+                if let Some(use_speck) = use_speck_loc.to_ast::<ast::UseSpeck>(ctx.sema.db) {
+                    acc.push(
+                        Diagnostic::new(
+                            DiagnosticCode::Lsp("unused-import", Severity::Warning),
+                            "Unused use item",
+                            use_speck.file_range(),
+                        )
+                        .with_local_fix(ctx.local_fix(
+                            use_stmts_owner.as_ref(),
+                            "remove-unused-import",
+                            "Remove unused use item",
+                            diag_range.range,
+                            |editor| {
+                                use_stmt.delete_group_use_specks(vec![use_speck.value], editor);
+                            },
+                        )),
+                    );
+                }
             }
         }
     }

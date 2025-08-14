@@ -4,9 +4,10 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use super::{SyntaxFactory, ast_from_text};
+use super::{SyntaxFactory, ast_from_text, expr_item_from_text};
 use crate::ast::make::quote::quote;
 use crate::parse::SyntaxKind;
+use crate::syntax_editor::mapping::SyntaxMappingBuilder;
 use crate::{
     AstNode, SourceFile, SyntaxNode, SyntaxToken,
     ast::{self, make},
@@ -19,6 +20,33 @@ impl SyntaxFactory {
         let args = args.into_iter().format(", ");
         ast_from_text::<ast::ValueArgList>(&format!("module 0x1::m {{ fun main() {{ call({args}) }} }}"))
             .clone_for_update()
+    }
+
+    pub fn path_segment(&self, name_ref: ast::NameRef) -> ast::PathSegment {
+        let ast = ast_from_text::<ast::PathSegment>(&format!(
+            "module 0x1::m {{ fun main() {{ let _ = {name_ref}; }}}}"
+        ));
+
+        if let Some(mut mapping) = self.mappings() {
+            let mut builder = SyntaxMappingBuilder::new(ast.syntax().clone());
+            builder.map_node(
+                name_ref.syntax().clone(),
+                ast.name_ref().unwrap().syntax().clone(),
+            );
+            builder.finish(&mut mapping);
+        }
+
+        ast
+    }
+
+    pub fn path_from_segments(&self, segments: impl IntoIterator<Item = ast::PathSegment>) -> ast::Path {
+        let segments = segments.into_iter().map(|it| it.syntax().clone()).join("::");
+        expr_item_from_text(&segments)
+    }
+
+    pub fn use_speck(&self, path: ast::Path) -> ast::UseSpeck {
+        let root_path_text = path.syntax().to_string();
+        ast_from_text(&format!("module 0x1::m {{ use {root_path_text}; }}"))
     }
 
     pub fn ident_pat(&self, ident_name: &str) -> ast::IdentPat {

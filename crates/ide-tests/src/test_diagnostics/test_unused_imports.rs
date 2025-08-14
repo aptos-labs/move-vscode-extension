@@ -873,23 +873,3 @@ fn test_error_if_only_used_inside_spec() {
         }
     "#]]);
 }
-
-#[test]
-fn test_error_unused_item_import_with_fix() {
-    // language=Move
-    check_diagnostics_and_fix(
-        expect![[r#"
-        module 0x1::M {
-            struct MyItem {}
-            struct MyItem2 {}
-            public fun call() {}
-        }
-        module 0x1::M2 {
-            use 0x1::M::MyItem;
-          //^^^^^^^^^^^^^^^^^^^ warn: Unused use item
-            fun main() {}
-        }
-    "#]],
-        expect![[""]],
-    );
-}

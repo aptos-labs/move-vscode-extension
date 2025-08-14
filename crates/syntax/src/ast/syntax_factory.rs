@@ -58,6 +58,10 @@ fn type_from_text(text: &str) -> ast::Type {
     ast_from_text(&format!("module 0x1::m {{ const M: {}; }}", text))
 }
 
+fn expr_item_from_text<T: AstNode>(text: &str) -> T {
+    ast_from_text(&format!("module 0x1::m {{ fun main() {{ let _ = {text} }} }}"))
+}
+
 #[track_caller]
 fn ast_from_text<N: AstNode>(text: &str) -> N {
     let parse = SourceFile::parse(text);

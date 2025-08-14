@@ -57,27 +57,27 @@ fn organize_imports_in_stmts_owner(
             .filter(|it| use_stmt.loc().contains(&it.use_speck_loc))
             .collect::<Vec<_>>();
         let unused_import_kind = unused_import_kind(db, use_stmt, stmt_use_items)?;
-        remove_use_items_in_use_stmt(db, unused_import_kind, editor);
+        delete_unused_use_items(db, unused_import_kind, editor);
     }
 
     Some(())
 }
 
-fn remove_use_items_in_use_stmt(
+fn delete_unused_use_items(
     db: &dyn SourceDatabase,
     unused_import_kind: UnusedImportKind,
     editor: &mut SyntaxEditor,
 ) -> Option<()> {
-    match unused_import_kind {
-        UnusedImportKind::UseStmt { use_stmt } => {
-            use_stmt.value.delete(editor);
-        }
+    match &unused_import_kind {
+        UnusedImportKind::UseStmt { use_stmt } => use_stmt.value.delete(editor),
         UnusedImportKind::UseSpeck { use_speck_locs } => {
-            for use_speck_loc in use_speck_locs {
-                if let Some(use_speck) = use_speck_loc.to_ast::<ast::UseSpeck>(db) {
-                    use_speck.value.delete(editor);
-                }
-            }
+            let use_stmt = unused_import_kind.use_stmt(db)?;
+            let use_specks = use_speck_locs
+                .iter()
+                .filter_map(|it| it.to_ast::<ast::UseSpeck>(db))
+                .map(|it| it.value)
+                .collect();
+            use_stmt.value.delete_group_use_specks(use_specks, editor);
         }
     }
     Some(())
