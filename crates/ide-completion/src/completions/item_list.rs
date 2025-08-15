@@ -8,6 +8,7 @@ use crate::completions::Completions;
 use crate::context::CompletionContext;
 use std::cell::RefCell;
 use std::collections::HashSet;
+use syntax::ast;
 
 /// The kind of item list a [`PathKind::Item`] belongs to.
 #[derive(Debug, PartialEq, Eq)]
@@ -15,6 +16,7 @@ pub(crate) enum ItemListKind {
     SourceFile,
     Module,
     Function { existing_modifiers: HashSet<String> },
+    Ability { existing_abilities: HashSet<String> },
 }
 
 pub(crate) fn complete_item_list(
@@ -23,25 +25,18 @@ pub(crate) fn complete_item_list(
     kind: &ItemListKind,
 ) {
     let _p = tracing::info_span!("complete_item_list", ?kind).entered();
-
-    add_keywords(acc, ctx, Some(kind));
+    add_keywords(acc, ctx, kind);
 }
 
-fn add_keywords(
-    acc: &RefCell<Completions>,
-    ctx: &CompletionContext,
-    kind: Option<&ItemListKind>,
-) -> Option<()> {
+fn add_keywords(acc: &RefCell<Completions>, ctx: &CompletionContext, kind: &ItemListKind) -> Option<()> {
     let add_keyword = |kw: &str| {
         acc.borrow_mut()
             .add_keyword_snippet(ctx, kw, format!("{} $0", kw).leak())
     };
-    let add_keyword_s = |kw: String| {
+    let add_keyword_no_space = |kw: &str| {
         acc.borrow_mut()
-            .add_keyword_snippet(ctx, kw.as_str(), format!("{} $0", kw).leak())
+            .add_keyword_snippet(ctx, kw, format!("{}$0", kw).leak())
     };
-
-    let kind = kind?;
 
     match kind {
         ItemListKind::SourceFile => {
@@ -62,7 +57,14 @@ fn add_keywords(
                 if function_modifier == "friend" {
                     continue;
                 }
-                add_keyword_s(function_modifier);
+                add_keyword(&function_modifier);
+            }
+
+            if let Some(struct_) = ctx.prev_ast_node::<ast::Struct>()
+                && struct_.field_list().is_none()
+                && struct_.ability_list().is_none()
+            {
+                add_keyword("has");
             }
         }
         ItemListKind::Function { existing_modifiers } => {
@@ -70,9 +72,18 @@ fn add_keywords(
                 if existing_modifiers.contains(&function_modifier) {
                     continue;
                 }
-                add_keyword_s(function_modifier);
+                add_keyword(&function_modifier);
             }
             add_keyword("fun");
+        }
+        ItemListKind::Ability { existing_abilities } => {
+            let all_abilities = vec!["key", "store", "copy", "drop"]
+                .into_iter()
+                .map(|it| it.to_string())
+                .filter(|it| !existing_abilities.contains(it));
+            for ability in all_abilities {
+                add_keyword_no_space(&ability);
+            }
         }
     }
 

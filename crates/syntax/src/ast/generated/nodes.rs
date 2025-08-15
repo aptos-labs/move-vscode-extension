@@ -2150,6 +2150,12 @@ impl WildcardPatternModifier {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum AbilityContainer {
+    AbilityBoundList(AbilityBoundList),
+    AbilityList(AbilityList),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AddressRef {
     NamedAddress(NamedAddress),
     ValueAddress(ValueAddress),
@@ -5652,6 +5658,48 @@ impl AstNode for WildcardPatternModifier {
     }
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl From<AbilityBoundList> for AbilityContainer {
+    #[inline]
+    fn from(node: AbilityBoundList) -> AbilityContainer { AbilityContainer::AbilityBoundList(node) }
+}
+impl From<AbilityList> for AbilityContainer {
+    #[inline]
+    fn from(node: AbilityList) -> AbilityContainer { AbilityContainer::AbilityList(node) }
+}
+impl AbilityContainer {
+    pub fn ability_bound_list(self) -> Option<AbilityBoundList> {
+        match (self) {
+            AbilityContainer::AbilityBoundList(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn ability_list(self) -> Option<AbilityList> {
+        match (self) {
+            AbilityContainer::AbilityList(item) => Some(item),
+            _ => None,
+        }
+    }
+}
+impl AstNode for AbilityContainer {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, ABILITY_BOUND_LIST | ABILITY_LIST) }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        let res = match syntax.kind() {
+            ABILITY_BOUND_LIST => AbilityContainer::AbilityBoundList(AbilityBoundList { syntax }),
+            ABILITY_LIST => AbilityContainer::AbilityList(AbilityList { syntax }),
+            _ => return None,
+        };
+        Some(res)
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode {
+        match self {
+            AbilityContainer::AbilityBoundList(it) => &it.syntax(),
+            AbilityContainer::AbilityList(it) => &it.syntax(),
+        }
+    }
 }
 impl From<NamedAddress> for AddressRef {
     #[inline]
@@ -9184,6 +9232,11 @@ impl From<AnyHasItems> for AnyUseStmtsOwner {
 impl From<AnyHasStmts> for AnyUseStmtsOwner {
     #[inline]
     fn from(node: AnyHasStmts) -> AnyUseStmtsOwner { AnyUseStmtsOwner { syntax: node.syntax } }
+}
+impl std::fmt::Display for AbilityContainer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
 }
 impl std::fmt::Display for AddressRef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
