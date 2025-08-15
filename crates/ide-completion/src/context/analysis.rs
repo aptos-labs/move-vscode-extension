@@ -71,7 +71,6 @@ pub(crate) fn completion_analysis(
             });
         }
     }
-    if fake_ident.parent().is_some_and(|it| it.is::<ast::Ability>()) {}
 
     let ident = original_token.clone();
     let mut ident_parent = ident.parent().unwrap();
