@@ -1670,3 +1670,91 @@ spec std::main {
     "#]],
     )
 }
+
+#[test]
+fn test_has_keyword_after_struct() {
+    check_completions(
+        // language=Move
+        r#"
+module 0x1::m {
+    struct S ha/*caret*/
+}
+"#,
+        expect![[r#"
+            [
+                "has",
+            ]"#]],
+    )
+}
+
+#[test]
+fn test_abilities_after_has() {
+    check_completions(
+        // language=Move
+        r#"
+module 0x1::m {
+    struct S has /*caret*/
+}
+"#,
+        expect![[r#"
+            [
+                "key",
+                "store",
+                "copy",
+                "drop",
+            ]"#]],
+    )
+}
+
+#[test]
+fn test_no_ability_in_completion_if_already_present() {
+    check_completions(
+        // language=Move
+        r#"
+module 0x1::m {
+    struct S has store, drop, /*caret*/
+}
+"#,
+        expect![[r#"
+            [
+                "key",
+                "copy",
+            ]"#]],
+    )
+}
+
+#[test]
+fn test_abilities_after_type_bounds() {
+    check_completions(
+        // language=Move
+        r#"
+module 0x1::m {
+    fun main<T: /*caret*/>() {}
+}
+"#,
+        expect![[r#"
+            [
+                "key",
+                "store",
+                "copy",
+                "drop",
+            ]"#]],
+    )
+}
+
+#[test]
+fn test_no_ability_in_completion_if_already_present_type_bounds() {
+    check_completions(
+        // language=Move
+        r#"
+module 0x1::m {
+    fun main<T: store + drop + /*caret*/>() {}
+}
+"#,
+        expect![[r#"
+            [
+                "key",
+                "copy",
+            ]"#]],
+    )
+}

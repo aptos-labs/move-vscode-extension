@@ -18,8 +18,9 @@ use lang::types::ty::Ty;
 use syntax::SyntaxKind::*;
 use syntax::ast::NameLike;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::FilePosition;
-use syntax::{AstNode, SourceFile, SyntaxToken, T, TextRange, TextSize, algo, ast};
+use syntax::{AstNode, SourceFile, SyntaxElement, SyntaxToken, T, TextRange, TextSize, algo, ast};
 
 const COMPLETION_MARKER: &str = "raCompletionMarker";
 
@@ -81,6 +82,16 @@ impl CompletionContext<'_> {
 
     pub(crate) fn original_offset(&self) -> TextSize {
         self.position.offset
+    }
+
+    pub(crate) fn prev_syntax_element(&self) -> Option<SyntaxElement> {
+        self.original_token
+            .error_node_or_self()
+            .prev_sibling_or_token_no_trivia()
+    }
+
+    pub(crate) fn prev_ast_node<T: AstNode>(&self) -> Option<T> {
+        self.prev_syntax_element()?.into_node()?.cast::<T>()
     }
 
     /// The range of the identifier that is being completed.

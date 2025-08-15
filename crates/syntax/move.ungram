@@ -115,9 +115,12 @@ Variant =
     Attr* Name FieldList?
 
 AbilityList =
-    'has' (Ability (',' Ability)* ','?)?
+    'has' abilities:(Ability (',' Ability)* ','?)?
 
 Ability = 'ident'
+
+AbilityContainer =
+    AbilityList | AbilityBoundList
 
 FieldList =
     NamedFieldList | TupleFieldList
@@ -450,7 +453,7 @@ TypeParam =
     'phantom'? Name AbilityBoundList?
 
 AbilityBoundList =
-    ':' abilities:(Ability (',' Ability)* ','?)?
+    ':' abilities:(Ability ('+' Ability)*)?
 
 TypeArgList =
     '<' type_arguments:(TypeArg (',' TypeArg)* ','?)? '>'

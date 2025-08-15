@@ -4,7 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::SyntaxKind::COMMA;
+use crate::SyntaxKind::{COMMA, ERROR};
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::{SyntaxElement, SyntaxKind, SyntaxToken};
 use itertools::Itertools;
@@ -84,6 +84,17 @@ pub trait SyntaxElementExt {
             .prev_sibling_or_token()
             .and_then(|it| it.into_token())
             .filter(|it| it.kind() == SyntaxKind::WHITESPACE)
+    }
+
+    fn error_node_or_self(&self) -> SyntaxElement {
+        let mut element = self.to_syntax_element();
+        if let Some(parent) = element.parent()
+            && parent.kind().is_error()
+        {
+            parent.into()
+        } else {
+            element
+        }
     }
 }
 
