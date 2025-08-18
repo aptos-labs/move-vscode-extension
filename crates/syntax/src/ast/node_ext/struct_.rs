@@ -31,4 +31,10 @@ impl ast::Struct {
             _ => None,
         }
     }
+
+    pub fn abilities(&self) -> Vec<ast::Ability> {
+        self.ability_list()
+            .map(|it| it.abilities().collect())
+            .unwrap_or_default()
+    }
 }

@@ -16,12 +16,12 @@ use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, ast};
 use vfs::FileId;
 
-#[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn recursive_struct_check(
     acc: &mut Vec<Diagnostic>,
     ctx: &DiagnosticsContext<'_>,
     named_field: InFile<ast::NamedField>,
 ) -> Option<()> {
+    let _p = tracing::debug_span!("recursive_struct_check").entered();
     if ctx.config.assists_only {
         return None;
     }
@@ -51,12 +51,12 @@ pub(crate) fn recursive_struct_check(
     Some(())
 }
 
-#[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn type_check(
     acc: &mut Vec<Diagnostic>,
     ctx: &DiagnosticsContext<'_>,
     inference_ctx_owner: &InFile<ast::InferenceCtxOwner>,
 ) -> Option<()> {
+    let _p = tracing::debug_span!("type_check").entered();
     if ctx.config.assists_only {
         // no assists for type checking
         return None;
