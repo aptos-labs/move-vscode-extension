@@ -56,15 +56,11 @@ pub(crate) fn completion_analysis(
     }
     if let Some(ability) = fake_ident.parent().and_then(|it| it.cast::<ast::Ability>()) {
         if let Some(container) = ability.syntax().parent_of_type::<ast::AbilityContainer>() {
-            let existing_abilities = match container {
-                ast::AbilityContainer::AbilityBoundList(ability_bound_list) => {
-                    ability_bound_list.abilities()
-                }
-                ast::AbilityContainer::AbilityList(ability_list) => ability_list.abilities(),
-            }
-            .filter(|it| !it.syntax().text_range().contains(fake_ident.text_range().start()))
-            .map(|it| it.ident_token().text().to_string())
-            .collect();
+            let existing_abilities = container
+                .abilities()
+                .filter(|it| !it.syntax().text_range().contains(fake_ident.text_range().start()))
+                .map(|it| it.ident_token().text().to_string())
+                .collect();
             return Some(AnalysisResult {
                 analysis: CompletionAnalysis::Item(ItemListKind::Ability { existing_abilities }),
                 expected,

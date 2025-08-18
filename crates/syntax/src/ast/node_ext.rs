@@ -4,6 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+mod ability_container;
 mod abort_expr;
 mod acquires;
 mod address_ref;
