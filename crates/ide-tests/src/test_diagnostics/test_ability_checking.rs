@@ -46,7 +46,7 @@ fn test_error_no_required_ability_on_concrete_type() {
 }
 
 #[test]
-fn test_error_if_specified_concrete_type_for_generic_struct_does_not_have_required_abilities_explicit() {
+fn test_ability_error_with_explicit_type_args() {
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::m {
@@ -55,6 +55,36 @@ fn test_error_if_specified_concrete_type_for_generic_struct_does_not_have_requir
             fun main(r: R) {
                 let _s = S<R> { t: r };
                          //^ err: Type `0x1::m::R` does not have required ability `copy`
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_ability_error_with_explicit_type_args_in_index_expr() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct R { val: u8 }
+            struct S<T: copy> has key { t: T }
+            fun main() {
+                let _s = S<R>[@0x1];
+                         //^ err: Type `0x1::m::R` does not have required ability `copy`
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_ability_error_with_inferred_type_args() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct R { val: u8 }
+            struct S<ST: copy> { t: ST }
+            fun main(r: R) {
+                let _s = S { t: r };
+                              //^ err: Type `0x1::m::R` does not have required ability `copy`
             }
         }
     "#]]);
@@ -70,21 +100,6 @@ fn test_error_missing_multiple_abilities() {
             fun main(r: R) {
                 let _s = S<R> { t: r };
                          //^ err: Type `0x1::m::R` does not have required abilities `[Copy, Drop]`
-            }
-        }
-    "#]]);
-}
-
-#[test]
-fn test_error_if_specified_concrete_type_for_generic_struct_does_not_have_required_abilities_implicit() {
-    // language=Move
-    check_diagnostics(expect![[r#"
-        module 0x1::m {
-            struct R { val: u8 }
-            struct S<ST: copy> { t: ST }
-            fun main(r: R) {
-                let _s = S { t: r };
-                              //^ err: Type `0x1::m::R` does not have required ability `copy`
             }
         }
     "#]]);

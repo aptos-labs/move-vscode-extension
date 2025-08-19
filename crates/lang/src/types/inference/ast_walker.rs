@@ -501,7 +501,6 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 .cast_into::<ast::NamedElement>(self.ctx.db)?
         };
 
-        let file_id = self.ctx.file_id;
         let ty_lowering = self.ctx.ty_lowering();
 
         match named_element.kind() {
@@ -520,9 +519,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 ty_lowering.lower_type_owner(named_field)
             }
             STRUCT | ENUM => {
-                let path = path_expr.path().in_file(file_id);
-                let index_base_ty = ty_lowering.lower_path_ignore_errors(path.map_into(), named_element);
-                Some(index_base_ty)
+                let struct_or_enum = named_element.cast_into::<ast::StructOrEnum>().unwrap();
+                let adt_ty = self
+                    .ctx
+                    .instantiate_path_with_ty_vars(path_expr.path().into(), struct_or_enum);
+                Some(adt_ty)
             }
             VARIANT => {
                 // MyEnum::MyVariant
@@ -530,7 +531,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 let enum_path = path_expr.path().qualifier().unwrap_or(path_expr.path());
                 let variant_ty = self
                     .ctx
-                    .instantiate_path(enum_path.into(), variant.map(|it| it.enum_()));
+                    .instantiate_path_with_ty_vars(enum_path.into(), variant.map(|it| it.enum_()));
                 let variant_ty_adt = variant_ty.into_ty_adt()?;
                 Some(Ty::Adt(variant_ty_adt))
             }
@@ -704,7 +705,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let struct_or_enum = fields_owner.struct_or_enum();
         let explicit_ty_adt = self
             .ctx
-            .instantiate_path(path.into(), struct_or_enum.in_file(item_file_id))
+            .instantiate_path_with_ty_vars(path.into(), struct_or_enum.in_file(item_file_id))
             .into_ty_adt()?;
 
         let mut ty_adt = explicit_ty_adt.clone();
