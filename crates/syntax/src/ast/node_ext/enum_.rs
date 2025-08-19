@@ -14,6 +14,12 @@ impl ast::Enum {
             .map(|list| list.variants().collect())
             .unwrap_or_default()
     }
+
+    pub fn abilities(&self) -> Vec<ast::Ability> {
+        self.ability_list()
+            .map(|it| it.abilities().collect())
+            .unwrap_or_default()
+    }
 }
 
 impl ast::Variant {

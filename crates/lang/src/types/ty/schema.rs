@@ -39,10 +39,10 @@ impl TySchema {
 }
 
 impl TypeFoldable<TySchema> for TySchema {
-    fn deep_fold_with(self, folder: impl TypeFolder) -> TySchema {
+    fn deep_fold_with(self, folder: &impl TypeFolder) -> TySchema {
         TySchema {
             schema_loc: self.schema_loc,
-            substitution: self.substitution.deep_fold_with(folder.clone()),
+            substitution: self.substitution.deep_fold_with(folder),
             type_args: folder.fold_tys(self.type_args),
         }
     }

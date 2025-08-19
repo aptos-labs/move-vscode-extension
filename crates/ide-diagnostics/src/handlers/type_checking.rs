@@ -16,12 +16,12 @@ use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, ast};
 use vfs::FileId;
 
-#[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn recursive_struct_check(
     acc: &mut Vec<Diagnostic>,
     ctx: &DiagnosticsContext<'_>,
     named_field: InFile<ast::NamedField>,
 ) -> Option<()> {
+    let _p = tracing::debug_span!("recursive_struct_check").entered();
     if ctx.config.assists_only {
         return None;
     }
@@ -51,12 +51,12 @@ pub(crate) fn recursive_struct_check(
     Some(())
 }
 
-#[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn type_check(
     acc: &mut Vec<Diagnostic>,
     ctx: &DiagnosticsContext<'_>,
     inference_ctx_owner: &InFile<ast::InferenceCtxOwner>,
 ) -> Option<()> {
+    let _p = tracing::debug_span!("type_check").entered();
     if ctx.config.assists_only {
         // no assists for type checking
         return None;
@@ -179,6 +179,34 @@ fn register_type_error(
             acc.push(Diagnostic::new(
                 DiagnosticCode::Lsp("type-error", Severity::Error),
                 format!("Invalid dereference. Expected '&_' but found '{ty}'"),
+                FileRange { file_id, range: *text_range },
+            ))
+        }
+        TypeError::MissingAbilities {
+            text_range,
+            actual_ty,
+            abilities,
+        } => {
+            let message = match abilities.len() {
+                0 => unreachable!(),
+                1 => {
+                    format!(
+                        "Type `{}` does not have required ability `{}`",
+                        ctx.sema.render_ty(actual_ty),
+                        abilities.first().unwrap()
+                    )
+                }
+                _ => {
+                    format!(
+                        "Type `{}` does not have required abilities `{:?}`",
+                        ctx.sema.render_ty(actual_ty),
+                        abilities,
+                    )
+                }
+            };
+            acc.push(Diagnostic::new(
+                DiagnosticCode::Lsp("missing-ability-on-type-arg", Severity::Error),
+                message,
                 FileRange { file_id, range: *text_range },
             ))
         }

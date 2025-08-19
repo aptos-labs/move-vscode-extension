@@ -78,6 +78,7 @@ fn test_resource_type_could_be_inferred_for_move_to() {
         module 0x1::M {
             fun main(s: signer) {
                 let _a = move_to(&s, 1);
+                                   //^ err: Type `integer` does not have required ability `key`
             }
         }
     "#]]);

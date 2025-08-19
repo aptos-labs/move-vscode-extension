@@ -74,16 +74,7 @@ impl Ty {
                     .collect::<Vec<_>>();
                 Some(abilities)
             }
-            Ty::TypeParam(ty_type_param) => {
-                let type_param = ty_type_param.origin_type_param(db)?;
-                let abilities = type_param
-                    .value
-                    .ability_bounds()
-                    .into_iter()
-                    .filter_map(|it| Ability::from_ast(&it))
-                    .collect::<Vec<_>>();
-                Some(abilities)
-            }
+            Ty::TypeParam(ty_type_param) => ty_type_param.abilities(db),
             Ty::Seq(TySequence::Vector(item_ty)) => item_ty.abilities(db),
             Ty::Infer(TyInfer::Var(_)) => Some(Ability::all()),
             Ty::Reference(_) => Some(vec![Ability::Drop, Ability::Copy]),

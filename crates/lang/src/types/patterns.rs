@@ -61,7 +61,10 @@ impl TypeAstWalker<'_, '_> {
                     if let StructOrEnum::Struct(struct_) = fields_owner.struct_or_enum() {
                         let pat_ty = self
                             .ctx
-                            .instantiate_path(struct_pat.path().into(), struct_.in_file(file_id))
+                            .instantiate_path_with_ty_vars(
+                                struct_pat.path().into(),
+                                struct_.in_file(file_id),
+                            )
                             .into_ty_adt()?;
                         if !self.ctx.is_tys_compatible(expected.clone(), Ty::Adt(pat_ty)) {
                             self.ctx

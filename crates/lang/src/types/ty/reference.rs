@@ -39,7 +39,7 @@ impl TyReference {
 }
 
 impl TypeFoldable<TyReference> for TyReference {
-    fn deep_fold_with(self, folder: impl TypeFolder) -> TyReference {
+    fn deep_fold_with(self, folder: &impl TypeFolder) -> TyReference {
         TyReference::new(folder.fold_ty(self.referenced()), self.mutability)
     }
 

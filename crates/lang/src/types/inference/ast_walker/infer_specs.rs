@@ -75,7 +75,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         };
         let ty_schema = self
             .ctx
-            .instantiate_path(path.into(), schema.clone())
+            .instantiate_path_with_ty_vars(path.into(), schema.clone())
             .into_ty_schema()?;
         for schema_lit_field in schema_lit.fields() {
             let expected_field_ty = self

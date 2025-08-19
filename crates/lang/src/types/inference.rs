@@ -203,7 +203,7 @@ impl<'db> InferenceCtx<'db> {
         method_or_path: ast::MethodOrPath,
         any_fun: InFile<ast::AnyFun>,
     ) -> TyCallable {
-        let ty = self.instantiate_path(method_or_path, any_fun);
+        let ty = self.instantiate_path_with_ty_vars(method_or_path, any_fun);
         match ty {
             Ty::Callable(ty_callable) => ty_callable,
             _ => unreachable!(
@@ -213,21 +213,33 @@ impl<'db> InferenceCtx<'db> {
         }
     }
 
-    pub fn instantiate_path(
+    pub fn instantiate_path_with_ty_vars(
         &mut self,
         method_or_path: ast::MethodOrPath,
         generic_item: InFile<impl Into<ast::GenericElement>>,
     ) -> Ty {
-        let ctx_file_id = self.file_id;
         let generic_item = generic_item.map(|it| it.into());
 
-        let mut path_ty = self
-            .ty_lowering()
-            .lower_path(method_or_path.in_file(ctx_file_id), generic_item.clone());
-
         let ty_vars_subst = generic_item.ty_vars_subst(&self.ty_var_index);
-        path_ty = path_ty.substitute(&ty_vars_subst);
+        // let mut path_ty = self.instantiate_path(method_or_path, generic_item.clone());
+        // path_ty = path_ty.substitute(&ty_vars_subst);
+        self.instantiate_path(method_or_path, generic_item.clone())
+            .substitute(&ty_vars_subst)
 
+        // path_ty
+    }
+
+    pub fn instantiate_path(
+        &mut self,
+        method_or_path: ast::MethodOrPath,
+        named_item: InFile<impl Into<ast::NamedElement>>,
+    ) -> Ty {
+        let (path_ty, ability_type_errors) = self
+            .ty_lowering()
+            .lower_path(method_or_path.in_file(self.file_id), named_item);
+        for ability_type_error in ability_type_errors {
+            self.push_type_error(ability_type_error);
+        }
         path_ty
     }
 
@@ -276,15 +288,15 @@ impl<'db> InferenceCtx<'db> {
     }
 
     pub fn resolve_ty_vars_if_possible<T: TypeFoldable<T>>(&self, ty: T) -> T {
-        ty.fold_with(self.var_resolver())
+        ty.fold_with(&self.var_resolver())
     }
 
     pub fn fully_resolve_vars<T: TypeFoldable<T>>(&self, foldable: T) -> T {
-        foldable.fold_with(FullTyVarResolver::new(&self, Fallback::Unknown))
+        foldable.fold_with(&FullTyVarResolver::new(&self, Fallback::Unknown))
     }
 
     pub fn fully_resolve_vars_fallback_to_origin<T: TypeFoldable<T>>(&self, foldable: T) -> T {
-        foldable.fold_with(FullTyVarResolver::new(&self, Fallback::Origin))
+        foldable.fold_with(&FullTyVarResolver::new(&self, Fallback::Origin))
     }
 
     fn resolve_ty_infer_shallow(&self, ty: Ty) -> Ty {

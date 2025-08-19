@@ -13,6 +13,7 @@ mod test_replace_with_method_call;
 mod test_missing_fields;
 mod test_missing_value_arguments;
 
+mod test_ability_checking;
 mod test_check_syntax;
 mod test_field_shorthand;
 mod test_missing_type_arguments;

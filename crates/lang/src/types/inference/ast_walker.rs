@@ -7,7 +7,6 @@
 mod infer_specs;
 mod lambda_expr;
 
-use crate::nameres;
 use crate::nameres::name_resolution::get_entries_from_walking_scopes;
 use crate::nameres::namespaces::NAMES;
 use crate::nameres::path_resolution::get_method_resolve_variants;
@@ -300,21 +299,6 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         Some(())
     }
 
-    #[allow(unused)]
-    fn get_explicit_ty_from_pat(&self, pat: ast::Pat) -> Option<Ty> {
-        let path = match pat {
-            ast::Pat::StructPat(struct_pat) => struct_pat.path(),
-            ast::Pat::TupleStructPat(tuple_struct_pat) => tuple_struct_pat.path(),
-            _ => {
-                return None;
-            }
-        };
-        let path = path.in_file(self.ctx.file_id);
-        let struct_ = nameres::resolve_no_inf_cast::<ast::Struct>(self.ctx.db, path.clone())?;
-        let path_ty = self.ctx.ty_lowering().lower_path(path.map_into(), struct_);
-        Some(path_ty)
-    }
-
     // returns inferred
     fn infer_expr_coerceable_to(&mut self, expr: &ast::Expr, expected_ty: Ty) -> Ty {
         let actual_ty = self.infer_expr(expr, Expected::ExpectType(expected_ty.clone()));
@@ -498,7 +482,6 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 .cast_into::<ast::NamedElement>(self.ctx.db)?
         };
 
-        let file_id = self.ctx.file_id;
         let ty_lowering = self.ctx.ty_lowering();
 
         match named_element.kind() {
@@ -517,9 +500,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 ty_lowering.lower_type_owner(named_field)
             }
             STRUCT | ENUM => {
-                let path = path_expr.path().in_file(file_id);
-                let index_base_ty = ty_lowering.lower_path(path.map_into(), named_element);
-                Some(index_base_ty)
+                let struct_or_enum = named_element.cast_into::<ast::StructOrEnum>().unwrap();
+                let adt_ty = self
+                    .ctx
+                    .instantiate_path_with_ty_vars(path_expr.path().into(), struct_or_enum);
+                Some(adt_ty)
             }
             VARIANT => {
                 // MyEnum::MyVariant
@@ -527,7 +512,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 let enum_path = path_expr.path().qualifier().unwrap_or(path_expr.path());
                 let variant_ty = self
                     .ctx
-                    .instantiate_path(enum_path.into(), variant.map(|it| it.enum_()));
+                    .instantiate_path_with_ty_vars(enum_path.into(), variant.map(|it| it.enum_()));
                 let variant_ty_adt = variant_ty.into_ty_adt()?;
                 Some(Ty::Adt(variant_ty_adt))
             }
@@ -701,20 +686,22 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let struct_or_enum = fields_owner.struct_or_enum();
         let explicit_ty_adt = self
             .ctx
-            .instantiate_path(path.into(), struct_or_enum.in_file(item_file_id))
+            .instantiate_path_with_ty_vars(path.into(), struct_or_enum.in_file(item_file_id))
             .into_ty_adt()?;
 
         let mut ty_adt = explicit_ty_adt.clone();
         if let Some(Ty::Adt(expected_ty_adt)) = expected_ty {
             let expected_subst = expected_ty_adt.substitution;
-            for (type_param, subst_ty) in explicit_ty_adt.substitution.entries() {
+            for (type_param, explicit_subst_ty) in explicit_ty_adt.substitution.entries() {
                 // skip type parameters as we have no ability check
-                if matches!(subst_ty, &Ty::TypeParam(_)) {
+                if matches!(explicit_subst_ty, &Ty::TypeParam(_)) {
                     continue;
                 }
                 if let Some(expected_subst_ty) = expected_subst.get_ty(&type_param) {
                     // unifies if `substTy` is TyVar, performs type check if `substTy` is real type
-                    let _ = self.ctx.combine_types(subst_ty.to_owned(), expected_subst_ty);
+                    let _ = self
+                        .ctx
+                        .combine_types(explicit_subst_ty.to_owned(), expected_subst_ty);
                 }
             }
             // resolved tyAdt inner TyVars after combining with expectedTy

@@ -55,12 +55,13 @@ fn test_unresolved_module_member_with_unresolved_module() {
 fn test_no_unresolved_reference_for_builtin() {
     // language=Move
     check_diagnostics(expect![[r#"
-module 0x1::m {
-    fun main() {
-        move_from<u8>(@0x1);
-    }
-}
-"#]]);
+        module 0x1::m {
+            struct S has key {}
+            fun main() {
+                move_from<S>(@0x1);
+            }
+        }
+    "#]]);
 }
 
 #[test]

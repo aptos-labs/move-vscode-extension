@@ -5,8 +5,11 @@
 // Modifications have been made to the original code.
 
 use crate::loc::SyntaxLoc;
+use base_db::SourceDatabase;
 use std::fmt;
 use std::fmt::Formatter;
+use syntax::ast;
+use syntax::files::InFile;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum TyInfer {
@@ -29,6 +32,13 @@ impl TyVar {
     pub fn new_with_origin(origin_loc: SyntaxLoc, index: usize) -> Self {
         TyVar {
             kind: TyVarKind::WithOrigin { origin_loc, index },
+        }
+    }
+
+    pub fn origin_type_param(&self, db: &dyn SourceDatabase) -> Option<InFile<ast::TypeParam>> {
+        match &self.kind {
+            TyVarKind::WithOrigin { origin_loc, index: _ } => origin_loc.to_ast::<ast::TypeParam>(db),
+            _ => None,
         }
     }
 }

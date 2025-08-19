@@ -9,6 +9,7 @@ mod type_args;
 use crate::loc::SyntaxLocNodeExt;
 use crate::nameres;
 use crate::types::has_type_params_ext::GenericItemExt;
+use crate::types::inference::TypeError;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
@@ -49,10 +50,13 @@ impl<'db> TyLowering<'db> {
                         // can be primitive type
                         self.lower_primitive_type(path)
                     }
-                    Some(named_item_entry) => named_item_entry
-                        .node_loc
-                        .to_ast::<ast::NamedElement>(self.db)
-                        .map(|named_item| self.lower_path(path.map_into(), named_item)),
+                    Some(named_item_entry) => {
+                        let named_element =
+                            named_item_entry.node_loc.to_ast::<ast::NamedElement>(self.db)?;
+                        let (path_type_ty, _) = self.lower_path(path.map_into(), named_element);
+                        // todo: ability checks in types
+                        Some(path_type_ty)
+                    }
                 }
             }
             ast::Type::RefType(ref_type) => {
@@ -97,7 +101,7 @@ impl<'db> TyLowering<'db> {
         &self,
         method_or_path: InFile<ast::MethodOrPath>,
         named_item: InFile<impl Into<ast::NamedElement>>,
-    ) -> Ty {
+    ) -> (Ty, Vec<TypeError>) {
         use syntax::SyntaxKind::*;
 
         let named_item = named_item.map(|it| it.into());
@@ -128,9 +132,11 @@ impl<'db> TyLowering<'db> {
                     .expect("MethodCallExpr cannot be resolved to Variant")
                     .qualifier()
                 else {
-                    return Ty::Unknown;
+                    return (Ty::Unknown, vec![]);
                 };
-                self.lower_path(enum_path.in_file(file_id).map_into(), enum_)
+                let (variant_path_ty, _) = self.lower_path(enum_path.in_file(file_id).map_into(), enum_);
+                // todo: ability checks for enum variants
+                variant_path_ty
             }
             _ => Ty::Unknown,
         };
@@ -139,11 +145,12 @@ impl<'db> TyLowering<'db> {
         // Option<u8>: ?Element -> u8
         // Option: ?Element -> ?Element
         if let Some(generic_item) = named_item.cast_into::<ast::GenericElement>() {
-            let type_args_subst = self.type_args_substitution(method_or_path, generic_item);
-            return path_ty.substitute(&type_args_subst);
+            let (type_args_subst, type_errors) =
+                self.type_args_substitution(self.db, method_or_path.as_ref(), generic_item.as_ref());
+            return (path_ty.substitute(&type_args_subst), type_errors);
         }
 
-        path_ty
+        (path_ty, vec![])
     }
 
     pub fn lower_type_owner(&self, type_owner: InFile<impl Into<ast::TypeOwner>>) -> Option<Ty> {

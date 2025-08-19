@@ -78,8 +78,9 @@ impl ast::StructOrEnum {
     }
 
     pub fn abilities(&self) -> Vec<ast::Ability> {
-        self.ability_list()
-            .map(|it| it.abilities().collect())
-            .unwrap_or_default()
+        match self {
+            ast::StructOrEnum::Struct(s) => s.abilities(),
+            ast::StructOrEnum::Enum(e) => e.abilities(),
+        }
     }
 }
