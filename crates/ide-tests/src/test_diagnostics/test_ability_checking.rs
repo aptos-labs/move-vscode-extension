@@ -75,6 +75,20 @@ fn test_ability_error_with_explicit_type_args_in_index_expr() {
     "#]]);
 }
 
+// todo: ability checks in types
+// #[test]
+// fn test_ability_error_with_explicit_type_args_in_type() {
+//     // language=Move
+//     check_diagnostics(expect![[r#"
+//         module 0x1::m {
+//             struct R { val: u8 }
+//             struct S<T: copy> has key { t: T }
+//             fun main(_s: S<R>) {
+//             }
+//         }
+//     "#]]);
+// }
+
 #[test]
 fn test_ability_error_with_inferred_type_args() {
     // language=Move

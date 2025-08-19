@@ -50,10 +50,13 @@ impl<'db> TyLowering<'db> {
                         // can be primitive type
                         self.lower_primitive_type(path)
                     }
-                    Some(named_item_entry) => named_item_entry
-                        .node_loc
-                        .to_ast::<ast::NamedElement>(self.db)
-                        .map(|named_item| self.lower_path_ignore_errors(path.map_into(), named_item)),
+                    Some(named_item_entry) => {
+                        let named_element =
+                            named_item_entry.node_loc.to_ast::<ast::NamedElement>(self.db)?;
+                        let (path_type_ty, _) = self.lower_path(path.map_into(), named_element);
+                        // todo: ability checks in types
+                        Some(path_type_ty)
+                    }
                 }
             }
             ast::Type::RefType(ref_type) => {
@@ -94,15 +97,6 @@ impl<'db> TyLowering<'db> {
         }
     }
 
-    pub fn lower_path_ignore_errors(
-        &self,
-        method_or_path: InFile<ast::MethodOrPath>,
-        named_item: InFile<impl Into<ast::NamedElement>>,
-    ) -> Ty {
-        let (path_ty, _) = self.lower_path(method_or_path, named_item);
-        path_ty
-    }
-
     pub fn lower_path(
         &self,
         method_or_path: InFile<ast::MethodOrPath>,
@@ -140,7 +134,9 @@ impl<'db> TyLowering<'db> {
                 else {
                     return (Ty::Unknown, vec![]);
                 };
-                self.lower_path_ignore_errors(enum_path.in_file(file_id).map_into(), enum_)
+                let (variant_path_ty, _) = self.lower_path(enum_path.in_file(file_id).map_into(), enum_);
+                // todo: ability checks for enum variants
+                variant_path_ty
             }
             _ => Ty::Unknown,
         };

@@ -7,7 +7,6 @@
 mod infer_specs;
 mod lambda_expr;
 
-use crate::nameres;
 use crate::nameres::name_resolution::get_entries_from_walking_scopes;
 use crate::nameres::namespaces::NAMES;
 use crate::nameres::path_resolution::get_method_resolve_variants;
@@ -298,24 +297,6 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         }
 
         Some(())
-    }
-
-    #[allow(unused)]
-    fn get_explicit_ty_from_pat(&self, pat: ast::Pat) -> Option<Ty> {
-        let path = match pat {
-            ast::Pat::StructPat(struct_pat) => struct_pat.path(),
-            ast::Pat::TupleStructPat(tuple_struct_pat) => tuple_struct_pat.path(),
-            _ => {
-                return None;
-            }
-        };
-        let path = path.in_file(self.ctx.file_id);
-        let struct_ = nameres::resolve_no_inf_cast::<ast::Struct>(self.ctx.db, path.clone())?;
-        let path_ty = self
-            .ctx
-            .ty_lowering()
-            .lower_path_ignore_errors(path.map_into(), struct_);
-        Some(path_ty)
     }
 
     // returns inferred
