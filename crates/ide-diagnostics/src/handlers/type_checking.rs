@@ -182,5 +182,21 @@ fn register_type_error(
                 FileRange { file_id, range: *text_range },
             ))
         }
+        TypeError::MissingAbilities { text_range, abilities } => {
+            let message = match abilities.len() {
+                0 => unreachable!(),
+                1 => {
+                    format!("Missing ability `{}`", abilities.first().unwrap())
+                }
+                _ => {
+                    format!("Missing abilities {:?}", abilities)
+                }
+            };
+            acc.push(Diagnostic::new(
+                DiagnosticCode::Lsp("missing-ability-on-type-arg", Severity::Error),
+                message,
+                FileRange { file_id, range: *text_range },
+            ))
+        }
     }
 }

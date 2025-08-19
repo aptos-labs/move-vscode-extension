@@ -33,11 +33,11 @@ pub fn empty_substitution() -> Substitution {
 }
 
 impl TypeFoldable<Substitution> for Substitution {
-    fn deep_fold_with(self, folder: impl TypeFolder) -> Substitution {
+    fn deep_fold_with(self, folder: &impl TypeFolder) -> Substitution {
         let folded_mapping = self
             .mapping
             .into_iter()
-            .map(|(k, v)| (k, v.fold_with(folder.clone())))
+            .map(|(k, v)| (k, v.fold_with(folder)))
             .collect();
         Substitution { mapping: folded_mapping }
     }
@@ -62,7 +62,7 @@ impl TypeFolder for SubstitutionApplier<'_> {
     fn fold_ty(&self, ty: Ty) -> Ty {
         match ty {
             Ty::TypeParam(ty_tp) => self.subst.get_ty(&ty_tp).unwrap_or(Ty::TypeParam(ty_tp)),
-            _ => ty.deep_fold_with(self.to_owned()),
+            _ => ty.deep_fold_with(self),
         }
     }
 }
@@ -71,6 +71,6 @@ impl<T: TypeFoldable<T>> ApplySubstitution for T {
     type Item = T;
 
     fn substitute(self, subst: &Substitution) -> T {
-        self.fold_with(SubstitutionApplier { subst })
+        self.fold_with(&SubstitutionApplier { subst })
     }
 }

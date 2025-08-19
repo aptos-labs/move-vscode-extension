@@ -514,7 +514,7 @@ fn test_do_not_crash_type_checking_invalid_number_of_type_params_or_call_params(
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::M {
-            struct S<R: key> { val: R }
+            struct S<R> { val: R }
             fun call(_a: u8) {}
             fun m() {
                 let _s = S<u8, u8>{ val: 1 };

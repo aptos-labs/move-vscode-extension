@@ -10,7 +10,7 @@ use crate::types::ty::ty_var::{TyInfer, TyVar, TyVarKind};
 use crate::types::ty::type_param::TyTypeParameter;
 
 pub trait TypeFoldable<T> {
-    fn fold_with(self, folder: impl TypeFolder) -> T
+    fn fold_with(self, folder: &impl TypeFolder) -> T
     where
         Self: Sized,
     {
@@ -21,7 +21,7 @@ pub trait TypeFoldable<T> {
         self.deep_visit_with(visitor)
     }
 
-    fn deep_fold_with(self, folder: impl TypeFolder) -> T;
+    fn deep_fold_with(self, folder: &impl TypeFolder) -> T;
     fn deep_visit_with(&self, visitor: impl TypeVisitor) -> bool;
 
     fn has_ty_unknown(&self) -> bool {
@@ -72,7 +72,7 @@ impl TypeFolder for TyVarResolver<'_> {
         if let Ty::Infer(ty_infer) = t {
             res_ty = self.ctx.resolve_ty_infer(&ty_infer);
         }
-        res_ty.deep_fold_with(self.to_owned())
+        res_ty.deep_fold_with(self)
     }
 }
 
@@ -113,7 +113,7 @@ impl TypeFolder for FullTyVarResolver<'_> {
                 _ => resolved_ty,
             };
         }
-        res_ty.deep_fold_with(self.to_owned())
+        res_ty.deep_fold_with(self)
     }
 }
 
@@ -132,7 +132,7 @@ impl<F: Fn(TyTypeParameter) -> Ty + Clone> TypeFolder for TyTypeParameterFolder<
     fn fold_ty(&self, ty: Ty) -> Ty {
         match ty {
             Ty::TypeParam(ty_type_param) => (self.folder)(ty_type_param),
-            _ => ty.deep_fold_with(self.clone()),
+            _ => ty.deep_fold_with(self),
         }
     }
 }

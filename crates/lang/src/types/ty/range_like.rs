@@ -24,7 +24,7 @@ impl TySequence {
 }
 
 impl TypeFoldable<TySequence> for TySequence {
-    fn deep_fold_with(self, folder: impl TypeFolder) -> TySequence {
+    fn deep_fold_with(self, folder: &impl TypeFolder) -> TySequence {
         match self {
             TySequence::Vector(item_ty) => {
                 let item_ty = item_ty.deref().to_owned();

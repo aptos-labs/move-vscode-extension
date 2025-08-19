@@ -201,7 +201,7 @@ impl Ty {
 }
 
 impl TypeFoldable<Ty> for Ty {
-    fn fold_with(self, folder: impl TypeFolder) -> Ty {
+    fn fold_with(self, folder: &impl TypeFolder) -> Ty {
         folder.fold_ty(self)
     }
 
@@ -209,7 +209,7 @@ impl TypeFoldable<Ty> for Ty {
         visitor.visit_ty(self)
     }
 
-    fn deep_fold_with(self, folder: impl TypeFolder) -> Ty {
+    fn deep_fold_with(self, folder: &impl TypeFolder) -> Ty {
         match self {
             Ty::Adt(ty_adt) => Ty::Adt(ty_adt.deep_fold_with(folder)),
             Ty::Seq(ty_seq) => Ty::Seq(ty_seq.deep_fold_with(folder)),

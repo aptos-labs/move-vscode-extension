@@ -24,7 +24,7 @@ impl TyTuple {
 }
 
 impl TypeFoldable<TyTuple> for TyTuple {
-    fn deep_fold_with(self, folder: impl TypeFolder) -> TyTuple {
+    fn deep_fold_with(self, folder: &impl TypeFolder) -> TyTuple {
         TyTuple {
             types: folder.fold_tys(self.types),
         }

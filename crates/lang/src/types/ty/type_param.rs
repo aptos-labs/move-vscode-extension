@@ -5,6 +5,7 @@
 // Modifications have been made to the original code.
 
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
+use crate::types::abilities::Ability;
 use base_db::SourceDatabase;
 use syntax::ast;
 use syntax::files::InFile;
@@ -25,5 +26,16 @@ impl TyTypeParameter {
 
     pub fn origin_type_param(&self, db: &dyn SourceDatabase) -> Option<InFile<ast::TypeParam>> {
         self.origin_loc.to_ast::<ast::TypeParam>(db)
+    }
+
+    pub fn abilities(&self, db: &dyn SourceDatabase) -> Option<Vec<Ability>> {
+        let type_param = self.origin_type_param(db)?;
+        let abilities = type_param
+            .value
+            .ability_bounds()
+            .into_iter()
+            .filter_map(|it| Ability::from_ast(&it))
+            .collect::<Vec<_>>();
+        Some(abilities)
     }
 }

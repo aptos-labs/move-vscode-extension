@@ -45,10 +45,10 @@ impl TyAdt {
 }
 
 impl TypeFoldable<TyAdt> for TyAdt {
-    fn deep_fold_with(self, folder: impl TypeFolder) -> TyAdt {
+    fn deep_fold_with(self, folder: &impl TypeFolder) -> TyAdt {
         TyAdt {
             adt_item_loc: self.adt_item_loc,
-            substitution: self.substitution.deep_fold_with(folder.clone()),
+            substitution: self.substitution.deep_fold_with(folder),
             type_args: folder.fold_tys(self.type_args),
         }
     }

@@ -9,6 +9,7 @@ mod type_args;
 use crate::loc::SyntaxLocNodeExt;
 use crate::nameres;
 use crate::types::has_type_params_ext::GenericItemExt;
+use crate::types::inference::TypeError;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
@@ -52,7 +53,7 @@ impl<'db> TyLowering<'db> {
                     Some(named_item_entry) => named_item_entry
                         .node_loc
                         .to_ast::<ast::NamedElement>(self.db)
-                        .map(|named_item| self.lower_path(path.map_into(), named_item)),
+                        .map(|named_item| self.lower_path_ignore_errors(path.map_into(), named_item)),
                 }
             }
             ast::Type::RefType(ref_type) => {
@@ -93,11 +94,20 @@ impl<'db> TyLowering<'db> {
         }
     }
 
-    pub fn lower_path(
+    pub fn lower_path_ignore_errors(
         &self,
         method_or_path: InFile<ast::MethodOrPath>,
         named_item: InFile<impl Into<ast::NamedElement>>,
     ) -> Ty {
+        let (path_ty, _) = self.lower_path(method_or_path, named_item);
+        path_ty
+    }
+
+    pub fn lower_path(
+        &self,
+        method_or_path: InFile<ast::MethodOrPath>,
+        named_item: InFile<impl Into<ast::NamedElement>>,
+    ) -> (Ty, Vec<TypeError>) {
         use syntax::SyntaxKind::*;
 
         let named_item = named_item.map(|it| it.into());
@@ -128,9 +138,9 @@ impl<'db> TyLowering<'db> {
                     .expect("MethodCallExpr cannot be resolved to Variant")
                     .qualifier()
                 else {
-                    return Ty::Unknown;
+                    return (Ty::Unknown, vec![]);
                 };
-                self.lower_path(enum_path.in_file(file_id).map_into(), enum_)
+                self.lower_path_ignore_errors(enum_path.in_file(file_id).map_into(), enum_)
             }
             _ => Ty::Unknown,
         };
@@ -139,11 +149,12 @@ impl<'db> TyLowering<'db> {
         // Option<u8>: ?Element -> u8
         // Option: ?Element -> ?Element
         if let Some(generic_item) = named_item.cast_into::<ast::GenericElement>() {
-            let type_args_subst = self.type_args_substitution(method_or_path, generic_item);
-            return path_ty.substitute(&type_args_subst);
+            let (type_args_subst, type_errors) =
+                self.type_args_substitution(self.db, method_or_path.as_ref(), generic_item.as_ref());
+            return (path_ty.substitute(&type_args_subst), type_errors);
         }
 
-        path_ty
+        (path_ty, vec![])
     }
 
     pub fn lower_type_owner(&self, type_owner: InFile<impl Into<ast::TypeOwner>>) -> Option<Ty> {

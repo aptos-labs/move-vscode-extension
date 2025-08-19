@@ -221,9 +221,12 @@ impl<'db> InferenceCtx<'db> {
         let ctx_file_id = self.file_id;
         let generic_item = generic_item.map(|it| it.into());
 
-        let mut path_ty = self
+        let (mut path_ty, ability_type_errors) = self
             .ty_lowering()
             .lower_path(method_or_path.in_file(ctx_file_id), generic_item.clone());
+        for ability_type_error in ability_type_errors {
+            self.push_type_error(ability_type_error);
+        }
 
         let ty_vars_subst = generic_item.ty_vars_subst(&self.ty_var_index);
         path_ty = path_ty.substitute(&ty_vars_subst);
@@ -276,15 +279,15 @@ impl<'db> InferenceCtx<'db> {
     }
 
     pub fn resolve_ty_vars_if_possible<T: TypeFoldable<T>>(&self, ty: T) -> T {
-        ty.fold_with(self.var_resolver())
+        ty.fold_with(&self.var_resolver())
     }
 
     pub fn fully_resolve_vars<T: TypeFoldable<T>>(&self, foldable: T) -> T {
-        foldable.fold_with(FullTyVarResolver::new(&self, Fallback::Unknown))
+        foldable.fold_with(&FullTyVarResolver::new(&self, Fallback::Unknown))
     }
 
     pub fn fully_resolve_vars_fallback_to_origin<T: TypeFoldable<T>>(&self, foldable: T) -> T {
-        foldable.fold_with(FullTyVarResolver::new(&self, Fallback::Origin))
+        foldable.fold_with(&FullTyVarResolver::new(&self, Fallback::Origin))
     }
 
     fn resolve_ty_infer_shallow(&self, ty: Ty) -> Ty {

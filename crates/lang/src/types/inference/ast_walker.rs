@@ -311,7 +311,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         };
         let path = path.in_file(self.ctx.file_id);
         let struct_ = nameres::resolve_no_inf_cast::<ast::Struct>(self.ctx.db, path.clone())?;
-        let path_ty = self.ctx.ty_lowering().lower_path(path.map_into(), struct_);
+        let path_ty = self
+            .ctx
+            .ty_lowering()
+            .lower_path_ignore_errors(path.map_into(), struct_);
         Some(path_ty)
     }
 
@@ -518,7 +521,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
             STRUCT | ENUM => {
                 let path = path_expr.path().in_file(file_id);
-                let index_base_ty = ty_lowering.lower_path(path.map_into(), named_element);
+                let index_base_ty = ty_lowering.lower_path_ignore_errors(path.map_into(), named_element);
                 Some(index_base_ty)
             }
             VARIANT => {

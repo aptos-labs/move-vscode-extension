@@ -44,3 +44,32 @@ fn test_error_no_required_ability_on_concrete_type() {
         }
     "#]]);
 }
+
+#[test]
+fn test_error_if_specified_concrete_type_for_generic_struct_does_not_have_required_abilities_explicit() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct R { val: u8 }
+            struct S<T: copy> { t: T }
+            fun main(r: R) {
+                let _s = S<R> { t: r };
+                         //^ err: Missing ability `copy`
+            }
+        }
+    "#]]);
+}
+
+// #[test]
+// fn test_error_if_specified_concrete_type_for_generic_struct_does_not_have_required_abilities_implicit() {
+//     // language=Move
+//     check_diagnostics(expect![[r#"
+//         module 0x1::m {
+//             struct R { val: u8 }
+//             struct S<T: copy> { t: T }
+//             fun main(r: R) {
+//                 let _s = S { t: r };
+//             }
+//         }
+//     "#]]);
+// }

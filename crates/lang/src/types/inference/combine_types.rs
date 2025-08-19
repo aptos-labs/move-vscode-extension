@@ -4,6 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+use crate::types::abilities::Ability;
 use crate::types::fold::{TypeFoldable, TypeFolder, TypeVisitor};
 use crate::types::inference::InferenceCtx;
 use crate::types::substitution::ApplySubstitution;
@@ -345,6 +346,10 @@ pub enum TypeError {
         text_range: TextRange,
         actual_ty: Ty,
     },
+    MissingAbilities {
+        text_range: TextRange,
+        abilities: Vec<Ability>,
+    },
 }
 
 impl TypeError {
@@ -357,6 +362,7 @@ impl TypeError {
             TypeError::CircularType { text_range, .. } => text_range.clone(),
             TypeError::WrongArgumentToBorrowExpr { text_range, .. } => text_range.clone(),
             TypeError::InvalidDereference { text_range, .. } => text_range.clone(),
+            TypeError::MissingAbilities { text_range, .. } => text_range.clone(),
         }
     }
 
@@ -421,7 +427,7 @@ impl TypeError {
 }
 
 impl TypeFoldable<TypeError> for TypeError {
-    fn deep_fold_with(self, folder: impl TypeFolder) -> TypeError {
+    fn deep_fold_with(self, folder: &impl TypeFolder) -> TypeError {
         match self {
             TypeError::TypeMismatch {
                 text_range,
@@ -429,7 +435,7 @@ impl TypeFoldable<TypeError> for TypeError {
                 actual_ty,
             } => TypeError::TypeMismatch {
                 text_range,
-                expected_ty: expected_ty.fold_with(folder.clone()),
+                expected_ty: expected_ty.fold_with(folder),
                 actual_ty: actual_ty.fold_with(folder),
             },
             TypeError::UnsupportedOp { text_range, ty, op } => TypeError::UnsupportedOp {
@@ -444,7 +450,7 @@ impl TypeFoldable<TypeError> for TypeError {
                 op,
             } => TypeError::WrongArgumentsToBinExpr {
                 text_range,
-                left_ty: left_ty.fold_with(folder.clone()),
+                left_ty: left_ty.fold_with(folder),
                 right_ty: right_ty.fold_with(folder),
                 op,
             },
@@ -468,6 +474,9 @@ impl TypeFoldable<TypeError> for TypeError {
                 text_range,
                 actual_ty: actual_ty.fold_with(folder),
             },
+            TypeError::MissingAbilities { text_range, abilities } => {
+                TypeError::MissingAbilities { text_range, abilities }
+            }
         }
     }
 
@@ -484,6 +493,7 @@ impl TypeFoldable<TypeError> for TypeError {
             TypeError::CircularType { .. } => false,
             TypeError::WrongArgumentToBorrowExpr { actual_ty, .. } => visitor.visit_ty(actual_ty),
             TypeError::InvalidDereference { actual_ty, .. } => visitor.visit_ty(actual_ty),
+            TypeError::MissingAbilities { .. } => false,
         }
     }
 }
