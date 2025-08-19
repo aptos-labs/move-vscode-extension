@@ -710,14 +710,16 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let mut ty_adt = explicit_ty_adt.clone();
         if let Some(Ty::Adt(expected_ty_adt)) = expected_ty {
             let expected_subst = expected_ty_adt.substitution;
-            for (type_param, subst_ty) in explicit_ty_adt.substitution.entries() {
+            for (type_param, explicit_subst_ty) in explicit_ty_adt.substitution.entries() {
                 // skip type parameters as we have no ability check
-                if matches!(subst_ty, &Ty::TypeParam(_)) {
+                if matches!(explicit_subst_ty, &Ty::TypeParam(_)) {
                     continue;
                 }
                 if let Some(expected_subst_ty) = expected_subst.get_ty(&type_param) {
                     // unifies if `substTy` is TyVar, performs type check if `substTy` is real type
-                    let _ = self.ctx.combine_types(subst_ty.to_owned(), expected_subst_ty);
+                    let _ = self
+                        .ctx
+                        .combine_types(explicit_subst_ty.to_owned(), expected_subst_ty);
                 }
             }
             // resolved tyAdt inner TyVars after combining with expectedTy

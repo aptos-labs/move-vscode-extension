@@ -182,14 +182,26 @@ fn register_type_error(
                 FileRange { file_id, range: *text_range },
             ))
         }
-        TypeError::MissingAbilities { text_range, abilities } => {
+        TypeError::MissingAbilities {
+            text_range,
+            actual_ty,
+            abilities,
+        } => {
             let message = match abilities.len() {
                 0 => unreachable!(),
                 1 => {
-                    format!("Missing ability `{}`", abilities.first().unwrap())
+                    format!(
+                        "Type `{}` does not have required ability `{}`",
+                        ctx.sema.render_ty(actual_ty),
+                        abilities.first().unwrap()
+                    )
                 }
                 _ => {
-                    format!("Missing abilities {:?}", abilities)
+                    format!(
+                        "Type `{}` does not have required abilities `{:?}`",
+                        ctx.sema.render_ty(actual_ty),
+                        abilities,
+                    )
                 }
             };
             acc.push(Diagnostic::new(

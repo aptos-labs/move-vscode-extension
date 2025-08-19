@@ -37,8 +37,8 @@ impl InferenceCtx<'_> {
         let combined = self.combine_types(expected.clone(), actual.clone());
         match combined {
             Ok(()) => true,
-            Err(error_tys) => {
-                self.report_type_mismatch(error_tys, node_or_token, actual, expected);
+            Err(combine_error) => {
+                self.report_combine_error(combine_error, node_or_token, actual, expected);
                 false
             }
         }
@@ -88,7 +88,7 @@ impl InferenceCtx<'_> {
                 if expected_kind.is_default() || actual_kind.is_default() {
                     return Ok(());
                 }
-                Err(MismatchErrorTypes::new(expected_ty, actual_ty))
+                Err(CombineError::type_mismatch(expected_ty, actual_ty))
             }
             (Ty::Seq(expected_seq_ty), Ty::Seq(actual_seq_ty)) => {
                 self.combine_types(expected_seq_ty.item(), actual_seq_ty.item())
@@ -103,7 +103,7 @@ impl InferenceCtx<'_> {
                 {
                     return combine_result;
                 }
-                Err(MismatchErrorTypes::new(expected_ty, actual_ty))
+                Err(CombineError::type_mismatch(expected_ty, actual_ty))
             }
             (Ty::Callable(expected_call_ty), Ty::Callable(actual_call_ty)) => {
                 self.combine_ty_callables(expected_call_ty, actual_call_ty)
@@ -112,7 +112,7 @@ impl InferenceCtx<'_> {
             (Ty::Adt(ty_adt1), Ty::Adt(ty_adt2)) => self.combine_ty_adts(ty_adt1, ty_adt2),
             (Ty::Tuple(ty_tuple1), Ty::Tuple(ty_tuple2)) => self.combine_ty_tuples(ty_tuple1, ty_tuple2),
 
-            _ => Err(MismatchErrorTypes::new(expected_ty, actual_ty)),
+            _ => Err(CombineError::type_mismatch(expected_ty, actual_ty)),
         }
     }
 
@@ -132,6 +132,24 @@ impl InferenceCtx<'_> {
     }
 
     fn unify_ty_var(&mut self, var: &TyVar, ty: Ty) -> CombineResult {
+        let mut res = Ok(());
+        if let (Some(origin_type_param), Some(ty_abilities)) =
+            (var.origin_type_param(self.db), ty.abilities(self.db))
+        {
+            // check abilities
+            let mut origin_ability_bounds = origin_type_param
+                .value
+                .ability_bounds()
+                .iter()
+                .filter_map(|it| Ability::from_ast(it))
+                .collect::<Vec<_>>();
+            let missing_abilities = origin_ability_bounds
+                .extract_if(.., |it| !ty_abilities.contains(it))
+                .collect::<Vec<_>>();
+            if !missing_abilities.is_empty() {
+                res = Err(CombineError::ability_mismatch(missing_abilities));
+            }
+        }
         match ty {
             Ty::Infer(TyInfer::Var(ty_var)) => self.var_table.unify_var_var(var, &ty_var),
             _ => {
@@ -144,7 +162,7 @@ impl InferenceCtx<'_> {
                 self.var_table.unify_var_value(&root_ty_var, ty);
             }
         };
-        Ok(())
+        res
     }
 
     fn ty_contains_ty_var(&self, ty: &Ty, ty_var: &TyVar) -> bool {
@@ -164,7 +182,10 @@ impl InferenceCtx<'_> {
                 // do nothing, unknown should not influence IntVar
             }
             _ => {
-                return Err(MismatchErrorTypes::new(Ty::Infer(TyInfer::IntVar(int_var)), ty));
+                return Err(CombineError::type_mismatch(
+                    Ty::Infer(TyInfer::IntVar(int_var)),
+                    ty,
+                ));
             }
         }
         Ok(())
@@ -180,7 +201,7 @@ impl InferenceCtx<'_> {
             // combine inner types ignoring any errors, to have better type errors and later inference,
             // incompat error will still be reported
             let _ = self.combine_types(expected_ref.referenced(), actual_ref.referenced());
-            return Err(MismatchErrorTypes::new(
+            return Err(CombineError::type_mismatch(
                 expected_ref.to_owned().into(),
                 actual_ref.to_owned().into(),
             ));
@@ -223,7 +244,7 @@ impl InferenceCtx<'_> {
 
     fn combine_ty_adts(&mut self, ty1: &TyAdt, ty2: &TyAdt) -> CombineResult {
         if ty1.adt_item_loc != ty2.adt_item_loc {
-            return Err(MismatchErrorTypes::new(
+            return Err(CombineError::type_mismatch(
                 Ty::Adt(ty1.to_owned()),
                 Ty::Adt(ty2.to_owned()),
             ));
@@ -233,7 +254,7 @@ impl InferenceCtx<'_> {
 
     fn combine_ty_tuples(&mut self, ty1: &TyTuple, ty2: &TyTuple) -> CombineResult {
         if ty1.types.len() != ty2.types.len() {
-            return Err(MismatchErrorTypes::new(
+            return Err(CombineError::type_mismatch(
                 Ty::Tuple(ty1.to_owned()),
                 Ty::Tuple(ty2.to_owned()),
             ));
@@ -285,29 +306,38 @@ impl InferenceCtx<'_> {
         }
     }
 
-    fn report_type_mismatch(
+    fn report_combine_error(
         &mut self,
-        _mismatch_error_tys: MismatchErrorTypes,
+        combine_error: CombineError,
         node_or_token: SyntaxNodeOrToken,
         actual: Ty,
         expected: Ty,
     ) {
-        let type_error = TypeError::type_mismatch(node_or_token, expected, actual);
+        let type_error = match combine_error {
+            CombineError::TypeMismatch { .. } => {
+                TypeError::type_mismatch(node_or_token, expected, actual)
+            }
+            CombineError::AbilityMismatch { missing_abilities } => {
+                TypeError::missing_abilities(node_or_token, actual, missing_abilities)
+            }
+        };
         self.push_type_error(type_error);
     }
 }
 
-pub type CombineResult = Result<(), MismatchErrorTypes>;
-
-#[derive(Debug)]
-pub struct MismatchErrorTypes {
-    _ty1: Ty,
-    _ty2: Ty,
+pub type CombineResult = Result<(), CombineError>;
+pub enum CombineError {
+    TypeMismatch { _ty1: Ty, _ty2: Ty },
+    AbilityMismatch { missing_abilities: Vec<Ability> },
 }
 
-impl MismatchErrorTypes {
-    pub fn new(ty1: Ty, ty2: Ty) -> Self {
-        MismatchErrorTypes { _ty1: ty1, _ty2: ty2 }
+impl CombineError {
+    pub fn type_mismatch(ty1: Ty, ty2: Ty) -> Self {
+        CombineError::TypeMismatch { _ty1: ty1, _ty2: ty2 }
+    }
+
+    pub fn ability_mismatch(missing_abilities: Vec<Ability>) -> Self {
+        CombineError::AbilityMismatch { missing_abilities }
     }
 }
 
@@ -348,6 +378,7 @@ pub enum TypeError {
     },
     MissingAbilities {
         text_range: TextRange,
+        actual_ty: Ty,
         abilities: Vec<Ability>,
     },
 }
@@ -424,6 +455,18 @@ impl TypeError {
             type_name,
         }
     }
+
+    pub fn missing_abilities(
+        node_or_token: SyntaxNodeOrToken,
+        actual_ty: Ty,
+        missing_abilities: Vec<Ability>,
+    ) -> Self {
+        TypeError::MissingAbilities {
+            text_range: node_or_token.text_range(),
+            actual_ty,
+            abilities: missing_abilities,
+        }
+    }
 }
 
 impl TypeFoldable<TypeError> for TypeError {
@@ -474,9 +517,15 @@ impl TypeFoldable<TypeError> for TypeError {
                 text_range,
                 actual_ty: actual_ty.fold_with(folder),
             },
-            TypeError::MissingAbilities { text_range, abilities } => {
-                TypeError::MissingAbilities { text_range, abilities }
-            }
+            TypeError::MissingAbilities {
+                text_range,
+                actual_ty,
+                abilities,
+            } => TypeError::MissingAbilities {
+                text_range,
+                actual_ty: actual_ty.fold_with(folder),
+                abilities,
+            },
         }
     }
 

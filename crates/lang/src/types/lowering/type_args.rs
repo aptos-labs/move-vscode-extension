@@ -45,10 +45,11 @@ impl TyLowering<'_> {
                         }
                     }
                     if !missing_abilities.is_empty() {
-                        missing_ability_errors.push(TypeError::MissingAbilities {
-                            text_range: type_.syntax().text_range(),
-                            abilities: missing_abilities,
-                        });
+                        missing_ability_errors.push(TypeError::missing_abilities(
+                            type_.syntax().clone().into(),
+                            explicit_ty.clone(),
+                            missing_abilities,
+                        ));
                     }
                     explicit_ty
                 }

@@ -54,22 +54,38 @@ fn test_error_if_specified_concrete_type_for_generic_struct_does_not_have_requir
             struct S<T: copy> { t: T }
             fun main(r: R) {
                 let _s = S<R> { t: r };
-                         //^ err: Missing ability `copy`
+                         //^ err: Type `0x1::m::R` does not have required ability `copy`
             }
         }
     "#]]);
 }
 
-// #[test]
-// fn test_error_if_specified_concrete_type_for_generic_struct_does_not_have_required_abilities_implicit() {
-//     // language=Move
-//     check_diagnostics(expect![[r#"
-//         module 0x1::m {
-//             struct R { val: u8 }
-//             struct S<T: copy> { t: T }
-//             fun main(r: R) {
-//                 let _s = S { t: r };
-//             }
-//         }
-//     "#]]);
-// }
+#[test]
+fn test_error_missing_multiple_abilities() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct R { val: u8 }
+            struct S<T: copy + drop> { t: T }
+            fun main(r: R) {
+                let _s = S<R> { t: r };
+                         //^ err: Type `0x1::m::R` does not have required abilities `[Copy, Drop]`
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_error_if_specified_concrete_type_for_generic_struct_does_not_have_required_abilities_implicit() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct R { val: u8 }
+            struct S<ST: copy> { t: ST }
+            fun main(r: R) {
+                let _s = S { t: r };
+                              //^ err: Type `0x1::m::R` does not have required ability `copy`
+            }
+        }
+    "#]]);
+}
