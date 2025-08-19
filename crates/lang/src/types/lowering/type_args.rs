@@ -37,6 +37,7 @@ impl TyLowering<'_> {
 
                     if let (Some(required_abilities), Some(type_arg_abilities)) =
                         (type_param_ty.abilities(db), explicit_ty.abilities(db))
+                        && !self.msl
                     {
                         for required_ability in required_abilities.iter() {
                             if !type_arg_abilities.contains(required_ability) {

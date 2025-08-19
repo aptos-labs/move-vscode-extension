@@ -89,3 +89,20 @@ fn test_error_if_specified_concrete_type_for_generic_struct_does_not_have_requir
         }
     "#]]);
 }
+
+#[test]
+fn test_no_ability_errors_in_spec() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct R { val: u8 }
+            struct S<T: copy + drop> { t: T }
+            fun main(r: R) {
+            }
+            spec main {
+                let _s = S<R> { t: r };
+                let _s = S { t: r };
+            }
+        }
+    "#]]);
+}

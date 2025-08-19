@@ -135,6 +135,7 @@ impl InferenceCtx<'_> {
         let mut res = Ok(());
         if let (Some(origin_type_param), Some(ty_abilities)) =
             (var.origin_type_param(self.db), ty.abilities(self.db))
+            && !self.msl
         {
             // check abilities
             let mut origin_ability_bounds = origin_type_param
