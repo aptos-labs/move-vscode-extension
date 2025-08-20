@@ -2496,12 +2496,18 @@ fn test_type_error_for_abort_code() {
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::main {
-            #[test(abort_code = 1)]
+            #[test, expected_failure(abort_code = 1)]
             fun test_main() {
 
             }
-            #[test(abort_code = true)]
-                              //^^^^ err: Incompatible type 'bool', expected 'u64'
+            #[test, expected_failure(abort_code = true)]
+                                                //^^^^ err: Incompatible type 'bool', expected 'u64'
+            fun test_main3() {
+
+            }
+            #[test]
+            #[expected_failure(abort_code = true)]
+                                          //^^^^ err: Incompatible type 'bool', expected 'u64'
             fun test_main2() {
 
             }
