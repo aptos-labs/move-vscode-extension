@@ -162,7 +162,7 @@ fn add_completions_from_the_resolution_entries(
         match named_item_kind {
             FUN | SPEC_FUN | SPEC_INLINE_FUN => {
                 let fun = named_item.cast_into::<ast::AnyFun>()?;
-                if fun.value.has_atom_attr("test") {
+                if fun.value.has_atom_attr_item("test") {
                     continue;
                 }
                 completion_items.push(

@@ -94,6 +94,6 @@ impl ast::Fun {
     }
 
     pub fn is_test(&self) -> bool {
-        self.has_atom_attr("test")
+        self.has_atom_attr_item("test")
     }
 }

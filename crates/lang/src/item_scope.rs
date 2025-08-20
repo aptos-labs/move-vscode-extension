@@ -6,7 +6,7 @@
 
 use base_db::inputs::FileIdInput;
 use base_db::{SourceDatabase, source_db};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use syntax::{AstNode, NodeOrToken, SyntaxNode, SyntaxNodePtr, WalkEvent, ast};
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
@@ -95,7 +95,7 @@ fn node_item_scope(node: SyntaxNode) -> NamedItemScope {
 }
 
 fn item_scope_from_attributes(attrs_owner: impl ast::HasAttrs) -> Option<NamedItemScope> {
-    let atom_attrs = attrs_owner.atom_attrs_set();
+    let atom_attrs = attrs_owner.atom_attr_item_names().collect::<HashSet<_>>();
     if atom_attrs.is_empty() {
         return None;
     }

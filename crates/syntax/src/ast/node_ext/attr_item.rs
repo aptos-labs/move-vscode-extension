@@ -1,12 +1,16 @@
 // Copyright © Aptos Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::ast;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
+use crate::{AstNode, ast};
 
 impl ast::AttrItem {
     pub fn attr(&self) -> Option<ast::Attr> {
         self.syntax.parent_of_type::<ast::Attr>()
+    }
+
+    pub fn is_top_level(&self) -> bool {
+        self.attr().is_some()
     }
 
     pub fn parent_attr_item(&self) -> Option<ast::AttrItem> {
@@ -19,8 +23,20 @@ impl ast::AttrItem {
         self.syntax.parent_of_type::<ast::AttrItemList>()
     }
 
-    pub fn is_name_only(&self) -> bool {
+    pub fn is_atom(&self) -> bool {
         self.initializer().is_none() && self.attr_item_list().is_none()
+    }
+
+    pub fn atom_name(&self) -> Option<String> {
+        if !self.is_atom() {
+            return None;
+        }
+        self.no_qual_name()
+    }
+
+    pub fn path_text(&self) -> Option<String> {
+        let path = self.path()?;
+        Some(path.syntax().text().to_string())
     }
 
     pub fn no_qual_name(&self) -> Option<String> {
@@ -32,16 +48,16 @@ impl ast::AttrItem {
     }
 
     pub fn is_abort_code(&self) -> bool {
-        if self.no_qual_name().is_none_or(|it| it != "abort_code") {
+        if self.path_text().is_none_or(|it| it != "abort_code") {
             return false;
         }
         // confirm that the position is correct
         if let Some(parent_attr_item) = self.parent_attr_item()
-            && let Some(attr) = parent_attr_item.attr()
+            && parent_attr_item.is_top_level()
         {
-            return attr
-                .single_attr_item_name()
-                .is_some_and(|it| it.as_str() == "test");
+            return parent_attr_item
+                .path_text()
+                .is_some_and(|name| name == "expected_failure");
         };
         false
     }
