@@ -5,7 +5,7 @@
 // Modifications have been made to the original code.
 
 use crate::ast;
-use crate::ast::HasVisibility;
+use crate::ast::{HasAttrs, HasVisibility};
 
 impl ast::AnyFun {
     pub fn is_native(&self) -> bool {

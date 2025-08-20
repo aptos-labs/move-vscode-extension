@@ -23,28 +23,13 @@ impl ast::AttrItem {
         self.syntax.parent_of_type::<ast::AttrItemList>()
     }
 
-    pub fn is_atom(&self) -> bool {
+    pub fn is_name_only(&self) -> bool {
         self.initializer().is_none() && self.attr_item_list().is_none()
-    }
-
-    pub fn atom_name(&self) -> Option<String> {
-        if !self.is_atom() {
-            return None;
-        }
-        self.no_qual_name()
     }
 
     pub fn path_text(&self) -> Option<String> {
         let path = self.path()?;
         Some(path.syntax().text().to_string())
-    }
-
-    pub fn no_qual_name(&self) -> Option<String> {
-        let path = self.path()?;
-        if !path.is_local() {
-            return None;
-        }
-        path.reference_name()
     }
 
     pub fn is_abort_code(&self) -> bool {

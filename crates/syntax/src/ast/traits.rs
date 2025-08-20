@@ -58,24 +58,23 @@ pub trait HasAttrs: AstNode {
         self.attrs().flat_map(|it| it.attr_items())
     }
 
-    fn atom_attr_items(&self) -> impl Iterator<Item = ast::AttrItem> {
-        self.attr_items().filter(|it| it.is_atom())
+    fn has_attr_item(&self, path_text: &str) -> bool {
+        self.attr_items()
+            .any(|it| it.path_text().is_some_and(|text| text == path_text))
     }
 
-    fn atom_attr_item_names(&self) -> impl Iterator<Item = String> {
-        self.atom_attr_items().filter_map(|it| it.no_qual_name())
-    }
-
-    fn has_atom_attr_item(&self, atom_name: &str) -> bool {
-        self.atom_attr_item_names().contains(atom_name)
+    fn has_attr_item_with_name_only(&self, path_text: &str) -> bool {
+        self.attr_items()
+            .filter(|it| it.is_name_only())
+            .any(|it| it.path_text().is_some_and(|text| text == path_text))
     }
 
     fn is_test_only(&self) -> bool {
-        self.has_atom_attr_item("test_only")
+        self.has_attr_item_with_name_only("test_only")
     }
 
     fn is_verify_only(&self) -> bool {
-        self.has_atom_attr_item("verify_only")
+        self.has_attr_item_with_name_only("verify_only")
     }
 }
 

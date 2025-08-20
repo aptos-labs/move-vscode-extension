@@ -593,3 +593,22 @@ fn test_functions_with_test_attribute_and_one_liner_expected_failure_as_test_onl
     "#,
     )
 }
+
+#[test]
+fn test_resolve_test_only_under_test_with_addresses() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            #[test_only]
+            fun test_only_fun() {}
+                //X
+            #[test(fx = @std)]
+            fun test_main() {
+                test_only_fun();
+                  //^
+            }
+        }
+    "#,
+    )
+}
