@@ -116,13 +116,8 @@ pub struct LocalDependency {
 }
 
 impl LocalDependency {
-    pub fn dep_root(&self, move_toml_root: &AbsPathBuf) -> Option<AbsPathBuf> {
-        let root = move_toml_root.join(self.path.clone());
-        if !std::fs::metadata(&root).is_ok() {
-            tracing::warn!("Dependency content root does not exist: {:?}", root.to_string());
-            return None;
-        }
-        Some(root)
+    pub fn dep_root(&self, move_toml_root: &AbsPathBuf) -> AbsPathBuf {
+        move_toml_root.join(self.path.clone())
     }
 }
 
@@ -186,7 +181,7 @@ impl MoveTomlDependency {
     pub fn dep_root(&self, current_pkg_root: &AbsPathBuf) -> Option<AbsPathBuf> {
         match self {
             MoveTomlDependency::Git(git_dep) => git_dep.dep_root(),
-            MoveTomlDependency::Local(local_dep) => local_dep.dep_root(current_pkg_root),
+            MoveTomlDependency::Local(local_dep) => Some(local_dep.dep_root(current_pkg_root)),
         }
     }
 }

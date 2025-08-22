@@ -36,6 +36,7 @@ pub fn collect(aptos_packages: &[AptosPackage], load: VfsLoader<'_>) -> Option<P
                 dep_manifest_ids: Arc::new(dep_ids),
                 resolve_deps: aptos_package.resolve_deps,
                 named_addresses: aptos_package.named_addresses.clone(),
+                missing_dependencies: aptos_package.missing_dependencies.clone(),
             },
         );
     }

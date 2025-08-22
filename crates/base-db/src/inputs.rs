@@ -56,6 +56,7 @@ pub struct PackageMetadata {
     pub dep_manifest_ids: Arc<Vec<ManifestFileId>>,
     pub resolve_deps: bool,
     pub named_addresses: Vec<String>,
+    pub missing_dependencies: Vec<String>,
 }
 
 #[salsa::input]

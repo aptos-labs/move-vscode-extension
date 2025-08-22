@@ -21,6 +21,7 @@ use crate::{item_scope, nameres};
 use base_db::inputs::{FileIdInput, InternFileId};
 use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
+use itertools::Itertools;
 use std::collections::HashSet;
 use syntax::ast::UseStmtsOwner;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
@@ -190,6 +191,17 @@ pub fn transitive_dep_package_ids(db: &dyn SourceDatabase, package_id: PackageId
             entries
         }
     }
+}
+
+pub fn missing_dependencies(db: &dyn SourceDatabase, package_id: PackageId) -> Vec<String> {
+    let all_package_ids = self::transitive_dep_package_ids(db, package_id);
+    let mut missing_dependencies = HashSet::new();
+    for package_id in all_package_ids {
+        if let Some(package_metadata) = source_db::metadata_for_package_id(db, *package_id) {
+            missing_dependencies.extend(package_metadata.missing_dependencies);
+        }
+    }
+    missing_dependencies.into_iter().sorted().collect()
 }
 
 /// returns reverse package dependencies, including package itself

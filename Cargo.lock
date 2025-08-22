@@ -809,6 +809,7 @@ dependencies = [
  "base-db",
  "ide-db",
  "lang",
+ "stdx",
  "syntax",
  "tracing",
  "vfs",

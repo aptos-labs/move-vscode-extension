@@ -8,11 +8,11 @@ use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use base_db::SourceDatabase;
 use ide_db::{RootDatabase, Severity};
-use lang::Semantics;
 use lang::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use lang::nameres::scope::{ScopeEntry, VecExt, into_field_shorthand_items};
 use lang::node_ext::item_spec;
 use lang::types::ty::Ty;
+use lang::{Semantics, hir_db};
 use std::collections::HashSet;
 use syntax::ast::idents::PRIMITIVE_TYPES;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
@@ -190,9 +190,20 @@ fn try_check_resolve(
     let reference_name = reference.value.reference_name()?;
     match entries.len() {
         0 => {
+            let db = ctx.sema.db;
+            let package_id = db.file_package_id(reference.file_id);
+            let package_missing_deps = hir_db::missing_dependencies(db, package_id);
+            let mut error_message = format!("Unresolved reference `{}`: cannot resolve", reference_name);
+            if !package_missing_deps.is_empty() {
+                stdx::format_to!(
+                    &mut error_message,
+                    " (note: `{}` declared dependency packages are not found on the filesystem, `aptos move compile` might help)",
+                    package_missing_deps.join(", "),
+                );
+            }
             acc.push(Diagnostic::new(
                 DiagnosticCode::Lsp("unresolved-reference", Severity::Error),
-                format!("Unresolved reference `{}`: cannot resolve", reference_name),
+                error_message,
                 reference_node.file_range(),
             ));
             return Some(());
