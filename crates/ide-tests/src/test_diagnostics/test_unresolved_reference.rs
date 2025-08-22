@@ -993,3 +993,87 @@ module aptos_token_objects::m {
     "#]],
     );
 }
+
+#[test]
+fn test_mention_missing_dependencies_in_the_error_message() {
+    let test_state = fixtures::from_multiple_files_on_tmpfs(vec![named_with_deps(
+        "main",
+        // language=TOML
+        r#"
+[dependencies]
+M = { local = "../M"}
+        "#,
+        // language=Move
+        r#"
+//- /main.move
+module std::main {
+    use aptos_token_objects::m;
+    public fun main() {
+        m::call();/*caret*/
+    }
+}
+"#,
+    )]);
+    // language=Move
+    check_diagnostics_on_tmpfs(
+        test_state,
+        expect![[r#"
+            module std::main {
+                use aptos_token_objects::m;
+                                       //^ err: Unresolved reference `m`: cannot resolve (note: `M` declared dependency packages are not found on the filesystem, `aptos move compile` might help)
+                public fun main() {
+                    m::call();/*caret*/
+                  //^ err: Unresolved reference `m`: cannot resolve (note: `M` declared dependency packages are not found on the filesystem, `aptos move compile` might help)
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_mention_missing_transitive_dependencies_in_the_error_message() {
+    let test_state = fixtures::from_multiple_files_on_tmpfs(vec![
+        named_with_deps(
+            "main",
+            // language=TOML
+            r#"
+[dev-dependencies]
+Dep = { local = "../Dep"}
+        "#,
+            // language=Move
+            r#"
+//- /main.move
+module std::main {
+    use aptos_token_objects::m;
+    public fun main() {
+        m::call();/*caret*/
+    }
+}
+"#,
+        ),
+        named_with_deps(
+            "Dep",
+            // language=TOML
+            r#"
+[dev-dependencies]
+M = { local = "../m"}
+        "#,
+            // language=Move
+            r#""#,
+        ),
+    ]);
+    // language=Move
+    check_diagnostics_on_tmpfs(
+        test_state,
+        expect![[r#"
+            module std::main {
+                use aptos_token_objects::m;
+                                       //^ err: Unresolved reference `m`: cannot resolve (note: `M` declared dependency packages are not found on the filesystem, `aptos move compile` might help)
+                public fun main() {
+                    m::call();/*caret*/
+                  //^ err: Unresolved reference `m`: cannot resolve (note: `M` declared dependency packages are not found on the filesystem, `aptos move compile` might help)
+                }
+            }
+        "#]],
+    );
+}

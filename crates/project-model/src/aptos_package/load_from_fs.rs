@@ -27,7 +27,7 @@ pub struct ManifestEntry {
 pub enum LoadedPackage {
     /// package is still valid, but some of the dependencies is not
     Package(AptosPackage),
-    PackageWithMissingDeps(AptosPackage, Vec<String>),
+    // PackageWithMissingDeps(AptosPackage, Vec<String>),
     ManifestParseError(anyhow::Error),
 }
 
@@ -42,7 +42,7 @@ impl LoadedPackages {
             .iter()
             .filter_map(|it| match it {
                 LoadedPackage::Package(package) => Some(package.clone()),
-                LoadedPackage::PackageWithMissingDeps(package, _) => Some(package.clone()),
+                // LoadedPackage::PackageWithMissingDeps(package, _) => Some(package.clone()),
                 LoadedPackage::ManifestParseError(_) => None,
             })
             .collect()
@@ -137,12 +137,13 @@ fn collect_package_from_manifest_entry(
         collected_deps,
         resolve_deps,
         named_addresses,
+        missing_dependencies,
     );
-    if !missing_dependencies.is_empty() {
-        LoadedPackage::PackageWithMissingDeps(aptos_package, missing_dependencies)
-    } else {
-        LoadedPackage::Package(aptos_package)
-    }
+    LoadedPackage::Package(aptos_package)
+    // if !missing_dependencies.is_empty() {
+    //     LoadedPackage::PackageWithMissingDeps(aptos_package, missing_dependencies)
+    // } else {
+    // }
 }
 
 fn collect_deps_transitively(

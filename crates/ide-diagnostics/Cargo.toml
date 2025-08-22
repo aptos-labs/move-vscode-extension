@@ -9,6 +9,7 @@ license.workspace = true
 tracing = { workspace = true }
 
 vfs = { workspace = true }
+stdx.workspace = true
 
 syntax = { path = "../syntax" }
 base-db = { path = "../base-db" }

@@ -52,6 +52,7 @@ pub struct AptosPackage {
     transitive_dep_roots: Vec<(AbsPathBuf, PackageKind)>,
     pub resolve_deps: bool,
     pub named_addresses: Vec<String>,
+    pub missing_dependencies: Vec<String>,
 }
 
 impl fmt::Debug for AptosPackage {
@@ -62,6 +63,7 @@ impl fmt::Debug for AptosPackage {
             .field("sourced_from", &self.kind)
             .field("deps", &self.transitive_dep_roots)
             .field("resolve_deps", &self.resolve_deps)
+            .field("missing_dependencies", &self.missing_dependencies)
             .finish()
     }
 }
@@ -74,6 +76,7 @@ impl AptosPackage {
         dep_roots: Vec<(ManifestPath, PackageKind)>,
         resolve_deps: bool,
         named_addresses: Vec<String>,
+        missing_dependencies: Vec<String>,
     ) -> Self {
         AptosPackage {
             package_name,
@@ -85,6 +88,7 @@ impl AptosPackage {
                 .collect(),
             resolve_deps,
             named_addresses,
+            missing_dependencies,
         }
     }
 
