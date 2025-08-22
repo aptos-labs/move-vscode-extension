@@ -92,7 +92,7 @@ jobs:
       - name: Fetch daily-move repository
         uses: actions/checkout@v4
         with:
-          repository: aptos-core/daily-move
+          repository: aptos-labs/daily-move
           path: daily-move
 
       - name: Fetch dependencies
