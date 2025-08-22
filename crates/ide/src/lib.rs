@@ -554,12 +554,8 @@ impl Analysis {
         self.with_db(|db| handlers::organize_imports::organize_imports_in_file(db, file_id))
     }
 
-    pub fn named_addresses(&self, file_id: FileId) -> Cancellable<HashSet<String>> {
-        self.with_db(|db| {
-            let package_id = db.file_package_id(file_id);
-            let named_addresses = hir_db::named_addresses(db, Some(package_id));
-            named_addresses.clone()
-        })
+    pub fn named_addresses(&self) -> Cancellable<HashSet<String>> {
+        self.with_db(|db| hir_db::named_addresses(db).clone())
     }
 
     // pub fn will_rename_file(

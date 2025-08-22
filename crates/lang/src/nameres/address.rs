@@ -9,7 +9,6 @@ use crate::hir_db::APTOS_FRAMEWORK_ADDRESSES;
 use base_db::SourceDatabase;
 use std::fmt;
 use std::fmt::Formatter;
-use vfs::FileId;
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum Address {
@@ -26,15 +25,9 @@ impl Address {
         Address::Value(ValueAddr::new(value.to_string()))
     }
 
-    pub fn resolve_to_numeric_address(
-        &self,
-        db: &dyn SourceDatabase,
-        file_id: FileId,
-    ) -> Option<NumericAddress> {
+    pub fn resolve_to_numeric_address(&self, db: &dyn SourceDatabase) -> Option<NumericAddress> {
         match self {
-            Address::Named(named_addr) => {
-                resolve_named_address(db, Some(file_id), named_addr.name.as_str())
-            }
+            Address::Named(named_addr) => resolve_named_address(db, named_addr.name.as_str()),
             Address::Value(value_addr) => Some(value_addr.numeric_address.clone()),
         }
     }
@@ -63,19 +56,15 @@ impl Address {
     pub fn equals_to(
         &self,
         db: &dyn SourceDatabase,
-        file_id: FileId,
         candidate_address: &Address,
         is_completion: bool,
     ) -> bool {
-        // let Some(self_address) = self else {
-        //     return false;
-        // };
         if self == candidate_address {
             return true;
         }
 
-        let self_numeric = self.resolve_to_numeric_address(db, file_id);
-        let candidate_numeric = candidate_address.resolve_to_numeric_address(db, file_id);
+        let self_numeric = self.resolve_to_numeric_address(db);
+        let candidate_numeric = candidate_address.resolve_to_numeric_address(db);
 
         let same_values = match (self_numeric, candidate_numeric) {
             (Some(left), Some(right)) => left.short() == right.short(),
@@ -113,16 +102,11 @@ pub struct AddressInput {
     pub data: Address,
 }
 
-pub fn resolve_named_address(
-    db: &dyn SourceDatabase,
-    file_id: Option<FileId>,
-    name: &str,
-) -> Option<NumericAddress> {
+pub fn resolve_named_address(db: &dyn SourceDatabase, name: &str) -> Option<NumericAddress> {
     if APTOS_FRAMEWORK_ADDRESSES.contains(&name) {
         return Some(NumericAddress { value: "0x1".to_string() });
     }
-    let package_id = file_id.map(|it| db.file_package_id(it));
-    let named_addresses = hir_db::named_addresses(db, package_id);
+    let named_addresses = hir_db::named_addresses(db);
     if named_addresses.contains(name) {
         Some(NumericAddress { value: "_".to_string() })
     } else {

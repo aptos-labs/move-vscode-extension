@@ -17,7 +17,7 @@ use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::ty::Ty;
-use crate::{hir_db, item_scope, nameres};
+use crate::{item_scope, nameres};
 use base_db::inputs::{FileIdInput, InternFileId};
 use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
@@ -215,28 +215,25 @@ pub const APTOS_FRAMEWORK_ADDRESSES: [&str; 5] = [
     "aptos_experimental",
 ];
 
-pub fn named_addresses(db: &dyn SourceDatabase, package_id: Option<PackageId>) -> HashSet<String> {
+pub fn named_addresses(db: &dyn SourceDatabase) -> HashSet<String> {
     let mut all_addresses = HashSet::new();
 
     // add default addresses
     for std_address in APTOS_FRAMEWORK_ADDRESSES.map(|it| it.to_string()) {
         all_addresses.insert(std_address);
     }
-
-    if let Some(package_id) = package_id {
-        all_addresses.extend(named_addresses_tracked(db, package_id));
-    }
+    all_addresses.extend(named_addresses_tracked(db));
 
     all_addresses
 }
 
 #[salsa_macros::tracked()]
-pub fn named_addresses_tracked(db: &dyn SourceDatabase, package_id: PackageId) -> HashSet<String> {
+pub fn named_addresses_tracked(db: &dyn SourceDatabase) -> HashSet<String> {
     let mut all_addresses = HashSet::new();
 
-    let all_package_ids = hir_db::transitive_dep_package_ids(db, package_id);
-    for package_id in all_package_ids {
-        if let Some(package_metadata) = source_db::metadata_for_package_id(db, *package_id) {
+    let all_package_ids = db.all_package_ids();
+    for package_id in all_package_ids.data(db) {
+        if let Some(package_metadata) = source_db::metadata_for_package_id(db, package_id) {
             all_addresses.extend(package_metadata.named_addresses);
         }
     }
@@ -364,17 +361,12 @@ pub(crate) fn get_modules_in_file(
     let mut module_candidates = vec![];
     for module in source_file.all_modules() {
         if let Some(module_address) = module.address() {
-            if module_address.equals_to(db, file_id, &address, false) {
+            if module_address.equals_to(db, &address, false) {
                 module_candidates.push(module);
             }
         }
     }
     module_candidates
-    // let modules = source_file
-    //     .all_modules()
-    //     .filter(|m| m.address_equals_to(db, file_id, address.clone(), false))
-    //     .collect::<Vec<_>>();
-    // modules
 }
 
 #[salsa_macros::tracked]

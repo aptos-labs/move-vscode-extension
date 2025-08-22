@@ -7,7 +7,7 @@
 use crate::ide_test_utils::diagnostics::{check_diagnostics, check_diagnostics_on_tmpfs};
 use expect_test::expect;
 use test_utils::fixtures;
-use test_utils::fixtures::test_state::{named_with_deps, raw};
+use test_utils::fixtures::test_state::{named_with_deps, package, raw};
 
 #[test]
 fn test_unresolved_variable() {
@@ -938,5 +938,58 @@ module std::main {
                 }
             }
         "#]],
+    );
+}
+
+#[test]
+fn test_resolve_with_fq_path_and_named_address_from_dependency() {
+    let test_state = fixtures::from_multiple_files_on_tmpfs(vec![
+        named_with_deps(
+            "main",
+            // language=TOML
+            r#"
+[dev-dependencies]
+M = { local = "../m"}
+        "#,
+            // language=Move
+            r#"
+//- /main.move
+module std::main {
+    public fun main() {
+        aptos_token_objects::m::call();/*caret*/
+    }
+}
+"#,
+        ),
+        package(
+            "m",
+            // language=TOML
+            r#"
+[package]
+name = "M"
+version = "0.1.0"
+
+[addresses]
+aptos_token_objects = "0x4"
+            "#,
+            // language=Move
+            r#"
+//- /m.move
+module aptos_token_objects::m {
+    public fun call() {}
+}
+"#,
+        ),
+    ]);
+    // language=Move
+    check_diagnostics_on_tmpfs(
+        test_state,
+        expect![[r#"
+        module std::main {
+            public fun main() {
+                aptos_token_objects::m::call();/*caret*/
+            }
+        }
+    "#]],
     );
 }
