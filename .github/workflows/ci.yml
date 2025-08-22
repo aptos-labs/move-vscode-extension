@@ -64,16 +64,10 @@ jobs:
       - name: Check diagnostics on aptos-core:framework
         run: aptos-language-server diagnostics --kinds error -- ./aptos-core/aptos-move/framework
 
-      - name: Fetch liquidswap repository
-        uses: actions/checkout@v4
-        with:
-          repository: pontem-network/liquidswap
-          path: liquidswap
-
       - name: Install aptos-cli
         uses: WGB5445/aptos-cli-setup@v1
         with:
-          version: "7.6.1"
+          version: "7.7.0"
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cache ~/.move directory
@@ -82,12 +76,35 @@ jobs:
           path: ~/.move
           key: ${{ runner.os }}-dot-move
 
+      - name: Fetch liquidswap repository
+        uses: actions/checkout@v4
+        with:
+          repository: pontem-network/liquidswap
+          path: liquidswap
+
       - name: Fetch liquidswap dependencies
         working-directory: ./liquidswap
         run: aptos move compile --fetch-deps-only
 
       - name: Check diagnostics on liquidswap
         run: aptos-language-server diagnostics --kinds error -- ./liquidswap
+
+      - name: Fetch daily-move repository
+        uses: actions/checkout@v4
+        with:
+          repository: aptos-labs/daily-move
+          path: daily-move
+
+      - name: Fetch daily-move dependencies (1)
+        working-directory: ./daily-move/snippets/fractional-token
+        run: aptos move compile --fetch-deps-only --dev
+
+      - name: Fetch daily-move dependencies (2)
+        working-directory: ./daily-move/snippets/liquid-nfts
+        run: aptos move compile --fetch-deps-only --dev
+
+      - name: Check diagnostics on daily-move
+        run: aptos-language-server diagnostics --kinds error -- ./daily-move
 
   build_vsix:
     name: Build .vsix extension
