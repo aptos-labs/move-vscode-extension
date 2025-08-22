@@ -158,7 +158,7 @@ pub fn resolve_path(
     };
     let context_element = path.clone();
 
-    let Some(path_kind) = path_kind(path.value.qualifier(), path.clone().value, false) else {
+    let Some(path_kind) = path_kind(db, None, path.value.qualifier(), path.clone().value, false) else {
         return vec![];
     };
     tracing::debug!(?path_kind);

@@ -82,6 +82,7 @@ pub fn use_items_for_stmt(
     if let Some(use_group) = use_group {
         for child_use_speck in use_group.use_specks() {
             let use_item = collect_child_use_speck(
+                db,
                 root_use_speck.clone(),
                 child_use_speck,
                 file_id,
@@ -103,7 +104,7 @@ pub fn use_items_for_stmt(
         .and_then(|alias| alias.name())
         .map(|it| it.as_string());
 
-    let root_path_kind = path_kind(root_path.qualifier(), root_path, false)?;
+    let root_path_kind = path_kind(db, None, root_path.qualifier(), root_path, false)?;
 
     if let PathKind::Qualified { qualifier, kind, .. } = root_path_kind {
         match kind {
@@ -146,6 +147,7 @@ pub fn use_items_for_stmt(
 }
 
 fn collect_child_use_speck(
+    db: &dyn SourceDatabase,
     root_use_speck: ast::UseSpeck,
     child_use_speck: ast::UseSpeck,
     file_id: FileId,
@@ -170,7 +172,7 @@ fn collect_child_use_speck(
         });
     }
 
-    let qualifier_kind = path_kind(qualifier_path.qualifier(), qualifier_path, false)?;
+    let qualifier_kind = path_kind(db, None, qualifier_path.qualifier(), qualifier_path, false)?;
     // tracing::debug!(qualifier_kind = ?qualifier_kind);
 
     if let PathKind::Qualified { .. } = qualifier_kind {

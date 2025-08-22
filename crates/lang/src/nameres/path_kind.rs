@@ -10,6 +10,7 @@ use crate::nameres::namespaces::{
     SCHEMAS, TYPES_N_ENUMS, TYPES_N_ENUMS_N_ENUM_VARIANTS, TYPES_N_ENUMS_N_MODULES,
     TYPES_N_ENUMS_N_NAMES,
 };
+use base_db::SourceDatabase;
 use enumset::enum_set;
 use std::fmt;
 use std::fmt::Formatter;
@@ -17,6 +18,7 @@ use syntax::SyntaxKind::*;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::{SyntaxNodeExt, SyntaxTokenExt};
 use syntax::{AstNode, SyntaxNode, T, ast};
+use vfs::FileId;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum PathKind {
@@ -85,6 +87,8 @@ pub enum QualifiedKind {
 
 /// can return None on deeply invalid trees
 pub fn path_kind(
+    db: &dyn SourceDatabase,
+    file_id: Option<FileId>,
     qualifier: Option<ast::Path>,
     path: ast::Path,
     is_completion: bool,
@@ -142,13 +146,12 @@ pub fn path_kind(
                 return Some(PathKind::NamedAddress(NamedAddr::new(ref_name)));
             }
 
-            // todo: add resolve back when we have named addresses parsed, it improves unresolved reference a lot
-            // if resolve_named_address(&ref_name).is_some() {
-            return Some(PathKind::NamedAddressOrUnqualifiedPath {
-                address: NamedAddr::new(ref_name),
-                ns,
-            });
-            // }
+            if resolve_named_address(db, file_id, &ref_name).is_some() {
+                return Some(PathKind::NamedAddressOrUnqualifiedPath {
+                    address: NamedAddr::new(ref_name),
+                    ns,
+                });
+            }
         }
 
         if let Some(path_name_ref) = path.segment().and_then(|it| it.name_ref()) {
@@ -198,7 +201,7 @@ pub fn path_kind(
             });
         }
 
-        let named_address = resolve_named_address(&qualifier_ref_name);
+        let named_address = resolve_named_address(db, file_id, &qualifier_ref_name);
         if let Some(_) = named_address {
             // known named address, can be module path, or module item path too
             return Some(PathKind::Qualified {

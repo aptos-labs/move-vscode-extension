@@ -124,6 +124,7 @@ fn test_duplicate_self_import() {
 
             fun main(_a: S) {
                 M::call();
+              //^ err: Unresolved reference `M`: resolved to multiple elements
             }
         }
     "#]]);
@@ -155,6 +156,7 @@ fn test_no_error_if_unresolved_but_used() {
                    //^ err: Unresolved reference `M`: cannot resolve
             fun call() {
                 M::call();
+              //^ err: Unresolved reference `M`: cannot resolve
             }
             fun main() {
                 call();
@@ -218,7 +220,9 @@ fn test_unused_self_import() {
           //^^^^^^^^^^^^^^^^^^^^ warn: Unused use item
 
             fun call(): Coin::Coin {
+                      //^^^^ err: Unresolved reference `Coin`: resolved to multiple elements
                 Coin::get_coin()
+              //^^^^ err: Unresolved reference `Coin`: resolved to multiple elements
             }
         }
     "#]]);
@@ -239,6 +243,7 @@ fn test_unused_self_in_group() {
 
             fun call(): Coin {
                 Coin::get_coin()
+              //^^^^ err: Unresolved reference `Coin`: resolved to multiple elements
             }
         }
     "#]]);
@@ -258,6 +263,7 @@ fn test_incomplete_alias_considered_absent_for_module() {
 
             fun call(): Coin {
                 coin::get_coin()
+              //^^^^ err: Unresolved reference `coin`: resolved to multiple elements
             }
         }
     "#]]);

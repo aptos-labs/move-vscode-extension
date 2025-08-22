@@ -20,6 +20,7 @@ pub struct ManifestEntry {
     declared_deps: Vec<(ManifestPath, PackageKind)>,
     resolve_deps: bool,
     missing_dependencies: Vec<String>,
+    named_addresses: Vec<String>,
 }
 
 #[derive(Debug)]
@@ -124,12 +125,19 @@ fn collect_package_from_manifest_entry(
         declared_deps,
         resolve_deps,
         missing_dependencies,
+        named_addresses,
     } = manifest_entry;
     // for every reachable package in the workspace, we need to build it's dependencies
     let collected_deps = collect_deps_transitively(declared_deps, valid_manifest_entries);
 
-    let aptos_package =
-        AptosPackage::new(package_name, &manifest_path, kind, collected_deps, resolve_deps);
+    let aptos_package = AptosPackage::new(
+        package_name,
+        &manifest_path,
+        kind,
+        collected_deps,
+        resolve_deps,
+        named_addresses,
+    );
     if !missing_dependencies.is_empty() {
         LoadedPackage::PackageWithMissingDeps(aptos_package, missing_dependencies)
     } else {
@@ -212,6 +220,7 @@ fn collect_reachable_manifests(
                             declared_deps: vec![],
                             resolve_deps: false,
                             missing_dependencies: vec![],
+                            named_addresses: move_toml.declared_named_addresses(),
                         }),
                     );
                     continue;
@@ -248,6 +257,7 @@ fn collect_reachable_manifests(
                         declared_deps: dep_manifests.clone(),
                         resolve_deps: true,
                         missing_dependencies,
+                        named_addresses: move_toml.declared_named_addresses(),
                     }),
                 );
                 for (dep_manifest, dep_kind) in dep_manifests.clone() {

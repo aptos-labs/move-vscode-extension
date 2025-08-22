@@ -170,6 +170,7 @@ fn test_unresolved_module() {
         module 0x1::M {
             fun main() {
                 let _t = transaction::create();
+                       //^^^^^^^^^^^ err: Unresolved reference `transaction`: cannot resolve
             }
         }
     "#]]);
@@ -846,6 +847,7 @@ fn test_unresolved_vector_module_in_expr() {
         module 0x1::m {
             fun main() {
                 vector::push_back();
+              //^^^^^^ err: Unresolved reference `vector`: cannot resolve
             }
         }
     "#]])
@@ -859,6 +861,7 @@ fn test_unresolved_vector_module_in_type_as_qualifier() {
         module 0x1::m {
             fun main(
                 _s: vector::Vector,
+                  //^^^^^^ err: Unresolved reference `vector`: cannot resolve
             ) {}
         }
     "#]])

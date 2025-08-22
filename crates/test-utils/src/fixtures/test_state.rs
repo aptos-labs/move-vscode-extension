@@ -93,6 +93,15 @@ version = "0.1.0"
     }
 }
 
+pub fn package(root_dir: &str, move_toml: &str, source_files: &str) -> TestPackageFiles {
+    // language=TOML
+    TestPackageFiles {
+        root_dir: root_dir.to_string(),
+        move_toml: stdx::trim_indent(move_toml),
+        source_files: source_files.to_string(),
+    }
+}
+
 pub fn named_with_deps(name: &str, deps: &str, source_files: &str) -> TestPackageFiles {
     // language=TOML
     TestPackageFiles {
