@@ -18,7 +18,6 @@ use syntax::SyntaxKind::*;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::{SyntaxNodeExt, SyntaxTokenExt};
 use syntax::{AstNode, SyntaxNode, T, ast};
-use vfs::FileId;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum PathKind {
@@ -88,7 +87,6 @@ pub enum QualifiedKind {
 /// can return None on deeply invalid trees
 pub fn path_kind(
     db: &dyn SourceDatabase,
-    file_id: Option<FileId>,
     qualifier: Option<ast::Path>,
     path: ast::Path,
     is_completion: bool,
@@ -146,7 +144,7 @@ pub fn path_kind(
                 return Some(PathKind::NamedAddress(NamedAddr::new(ref_name)));
             }
 
-            if resolve_named_address(db, file_id, &ref_name).is_some() {
+            if resolve_named_address(db, &ref_name).is_some() {
                 return Some(PathKind::NamedAddressOrUnqualifiedPath {
                     address: NamedAddr::new(ref_name),
                     ns,
@@ -201,7 +199,7 @@ pub fn path_kind(
             });
         }
 
-        let named_address = resolve_named_address(db, file_id, &qualifier_ref_name);
+        let named_address = resolve_named_address(db, &qualifier_ref_name);
         if let Some(_) = named_address {
             // known named address, can be module path, or module item path too
             return Some(PathKind::Qualified {

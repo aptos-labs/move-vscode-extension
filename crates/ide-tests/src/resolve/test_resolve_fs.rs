@@ -5,7 +5,7 @@
 // Modifications have been made to the original code.
 
 use crate::resolve::check_resolve_tmpfs;
-use test_utils::fixtures::test_state::{named, named_with_deps};
+use test_utils::fixtures::test_state::{named, named_with_deps, package};
 
 #[test]
 fn test_module_item_cross_tmpfs() {
@@ -389,4 +389,48 @@ spec std::m {
 }
 "#,
     )])
+}
+
+#[test]
+fn test_resolve_with_fq_path_and_named_address_from_dependency() {
+    check_resolve_tmpfs(vec![
+        named_with_deps(
+            "main",
+            // language=TOML
+            r#"
+[dev-dependencies]
+M = { local = "../m"}
+        "#,
+            // language=Move
+            r#"
+//- /main.move
+module std::main {
+    public fun main() {
+        aptos_token_objects::m::call();
+                               //^
+    }
+}
+"#,
+        ),
+        package(
+            "m",
+            // language=TOML
+            r#"
+[package]
+name = "M"
+version = "0.1.0"
+
+[addresses]
+aptos_token_objects = "0x4"
+            "#,
+            // language=Move
+            r#"
+//- /m.move
+module aptos_token_objects::m {
+    public fun call() {}
+              //X
+}
+"#,
+        ),
+    ])
 }

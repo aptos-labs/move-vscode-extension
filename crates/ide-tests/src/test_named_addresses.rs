@@ -16,6 +16,7 @@ fn test_collect_named_addresses_from_packages() {
 
             [dependencies]
             MyDep = { local = "../MyDep" }
+            AptosTokenObjects = { local = "../AptosTokenObjects" }
 
             [addresses]
             my_app_address = "_"
@@ -56,12 +57,26 @@ fn test_collect_named_addresses_from_packages() {
             "#,
             r#""#,
         ),
-    ]);
-    let (file_id, _) = test_state.file_with_caret("/*caret*/");
+        package(
+            "AptosTokenObjects",
+            // language=TOML
+            r#"
+            [package]
+            name = "AptosTokenObjects"
+            version = "0.1.0"
 
+            [addresses]
+            std = "0x1"
+            aptos_std = "0x1"
+            aptos_framework = "0x1"
+            aptos_token_objects = "0x4"
+            "#,
+            r#""#,
+        ),
+    ]);
     let named_addresses = test_state
         .analysis()
-        .named_addresses(file_id)
+        .named_addresses()
         .unwrap()
         .into_iter()
         .sorted()
@@ -72,6 +87,7 @@ fn test_collect_named_addresses_from_packages() {
             "aptos_framework",
             "aptos_std",
             "aptos_token",
+            "aptos_token_objects",
             "my_app_address",
             "my_dep_address",
             "my_source_dep_address",

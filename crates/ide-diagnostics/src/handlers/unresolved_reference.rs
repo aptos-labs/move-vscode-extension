@@ -92,7 +92,7 @@ fn unresolved_path(
     // iterate over all qualifiers, stop if there's unresolved reference
     let mut base_path = Some(root_path.base_path());
     while let Some(path) = base_path {
-        let path_kind = path_kind(ctx.sema.db, None, path.qualifier(), path.clone(), false)?;
+        let path_kind = path_kind(ctx.sema.db, path.qualifier(), path.clone(), false)?;
         match path_kind {
             PathKind::NamedAddress(_)
             | PathKind::NamedAddressOrUnqualifiedPath { .. }

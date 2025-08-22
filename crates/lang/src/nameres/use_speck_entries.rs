@@ -104,7 +104,7 @@ pub fn use_items_for_stmt(
         .and_then(|alias| alias.name())
         .map(|it| it.as_string());
 
-    let root_path_kind = path_kind(db, None, root_path.qualifier(), root_path, false)?;
+    let root_path_kind = path_kind(db, root_path.qualifier(), root_path, false)?;
 
     if let PathKind::Qualified { qualifier, kind, .. } = root_path_kind {
         match kind {
@@ -172,7 +172,7 @@ fn collect_child_use_speck(
         });
     }
 
-    let qualifier_kind = path_kind(db, None, qualifier_path.qualifier(), qualifier_path, false)?;
+    let qualifier_kind = path_kind(db, qualifier_path.qualifier(), qualifier_path, false)?;
     // tracing::debug!(qualifier_kind = ?qualifier_kind);
 
     if let PathKind::Qualified { .. } = qualifier_kind {
