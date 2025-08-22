@@ -11,6 +11,7 @@ use base_db::{SourceDatabase, source_db};
 use ide_completion::item::CompletionItem;
 use ide_db::{RootDatabase, root_db, symbol_index};
 use line_index::{LineCol, LineIndex};
+use std::collections::HashSet;
 use std::panic::UnwindSafe;
 use std::sync::Arc;
 use syntax::{SourceFile, TextRange, TextSize};
@@ -54,7 +55,7 @@ use ide_db::symbol_index::Query;
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 use ide_diagnostics::handlers;
-use lang::Semantics;
+use lang::{Semantics, hir_db};
 pub use salsa::Cancelled;
 use syntax::files::{FilePosition, FileRange};
 
@@ -551,6 +552,14 @@ impl Analysis {
 
     pub fn organize_imports(&self, file_id: FileId) -> Cancellable<Option<Assist>> {
         self.with_db(|db| handlers::organize_imports::organize_imports_in_file(db, file_id))
+    }
+
+    pub fn named_addresses(&self, file_id: FileId) -> Cancellable<HashSet<String>> {
+        self.with_db(|db| {
+            let package_id = db.file_package_id(file_id);
+            let named_addresses = hir_db::named_addresses(db, Some(package_id));
+            named_addresses.clone()
+        })
     }
 
     // pub fn will_rename_file(

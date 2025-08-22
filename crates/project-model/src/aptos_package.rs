@@ -51,6 +51,7 @@ pub struct AptosPackage {
     kind: PackageKind,
     transitive_dep_roots: Vec<(AbsPathBuf, PackageKind)>,
     pub resolve_deps: bool,
+    pub named_addresses: Vec<String>,
 }
 
 impl fmt::Debug for AptosPackage {
@@ -72,6 +73,7 @@ impl AptosPackage {
         kind: PackageKind,
         dep_roots: Vec<(ManifestPath, PackageKind)>,
         resolve_deps: bool,
+        named_addresses: Vec<String>,
     ) -> Self {
         AptosPackage {
             package_name,
@@ -82,6 +84,7 @@ impl AptosPackage {
                 .map(|(manifest, kind)| (manifest.content_root(), kind))
                 .collect(),
             resolve_deps,
+            named_addresses,
         }
     }
 

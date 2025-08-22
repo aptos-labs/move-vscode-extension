@@ -14,6 +14,8 @@ pub struct MoveToml {
     pub package: Option<Package>,
     pub dependencies: Vec<MoveTomlDependency>,
     pub dev_dependencies: Vec<MoveTomlDependency>,
+    pub addresses: Vec<String>,
+    pub dev_addresses: Vec<String>,
 }
 
 impl MoveToml {
@@ -23,11 +25,20 @@ impl MoveToml {
             package: None,
             dependencies: vec![],
             dev_dependencies: vec![],
+            addresses: vec![],
+            dev_addresses: vec![],
         };
 
         let deserialized = toml::from_str::<HashMap<String, toml::Value>>(file_contents)?;
         if let Some(package_table) = deserialized.get("package") {
             move_toml.package = package_table.to_owned().try_into().ok();
+        }
+
+        if let Some(addresses_table) = deserialized.get("addresses").and_then(|d| d.as_table()) {
+            move_toml.addresses = Self::parse_addresses_table(addresses_table);
+        }
+        if let Some(dev_addresses_table) = deserialized.get("dev-addresses").and_then(|d| d.as_table()) {
+            move_toml.dev_addresses = Self::parse_addresses_table(dev_addresses_table);
         }
 
         // covers both [dependencies] table with inner tables and [dependencies.AptosFramework]
@@ -40,7 +51,6 @@ impl MoveToml {
                 }
             }
         }
-
         // covers both [dev-dependencies] table with inner tables and [dev-dependencies.AptosFramework]
         if let Some(deps_table) = deserialized.get("dev-dependencies").and_then(|d| d.as_table()) {
             for (dep_name, deps_inner_table) in deps_table {
@@ -78,8 +88,24 @@ impl MoveToml {
         None
     }
 
+    fn parse_addresses_table(addresses_table: &toml::Table) -> Vec<String> {
+        let mut addresses = vec![];
+        for (address_name, _) in addresses_table {
+            addresses.push(address_name.to_owned());
+        }
+        addresses
+    }
+
     pub(crate) fn declared_dependencies(&self) -> impl Iterator<Item = &MoveTomlDependency> {
         self.dependencies.iter().chain(self.dev_dependencies.iter())
+    }
+
+    pub(crate) fn declared_named_addresses(&self) -> Vec<String> {
+        self.addresses
+            .iter()
+            .chain(self.dev_addresses.iter())
+            .cloned()
+            .collect()
     }
 }
 

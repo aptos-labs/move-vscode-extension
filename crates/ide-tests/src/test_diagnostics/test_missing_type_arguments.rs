@@ -288,12 +288,13 @@ fn test_method_missing_type_arguments_without_colon_colon() {
 }
 
 #[test]
-fn test_no_error_for_vector_in_module_position_and_unresolved() {
+fn test_error_for_vector_in_module_position_and_unresolved() {
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::m {
             fun main() {
                 vector::push_back();
+              //^^^^^^ err: Unresolved reference `vector`: cannot resolve
             }
         }
     "#]]);
@@ -313,11 +314,12 @@ fn test_no_error_for_vector_in_local_path_expr() {
 }
 
 #[test]
-fn test_no_error_for_vector_in_type_position() {
+fn test_error_for_vector_in_type_position() {
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::m {
             fun main(_s: vector::Vector) {
+                       //^^^^^^ err: Unresolved reference `vector`: cannot resolve
             }
         }
     "#]]);
