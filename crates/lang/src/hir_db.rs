@@ -9,7 +9,7 @@ use crate::loc::{SyntaxLoc, SyntaxLocFileExt, SyntaxLocInput};
 use crate::nameres::address::{Address, AddressInput};
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::path_resolution;
-use crate::nameres::scope::ScopeEntry;
+use crate::nameres::scope::{ScopeEntry, ScopeEntryExt};
 use crate::nameres::use_speck_entries::{UseItem, use_items_for_stmt};
 use crate::node_ext::ModuleLangExt;
 use crate::node_ext::item::ModuleItemExt;
@@ -17,7 +17,7 @@ use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::ty::Ty;
-use crate::{item_scope, nameres};
+use crate::{hir_db, item_scope, nameres};
 use base_db::inputs::{FileIdInput, InternFileId};
 use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
@@ -144,6 +144,28 @@ pub fn modules_for_package_id<'db>(
         all_locs.extend(module_locs);
     }
     all_locs
+}
+
+pub fn import_candidates(db: &dyn SourceDatabase, file_id: FileId) -> &Vec<ScopeEntry> {
+    import_candidates_tracked(db, file_id.intern(db))
+}
+
+#[salsa_macros::tracked(returns(ref))]
+pub fn import_candidates_tracked(db: &dyn SourceDatabase, file_id: FileIdInput) -> Vec<ScopeEntry> {
+    let _p = tracing::debug_span!("import_candidates_tracked").entered();
+    let current_package_id = db.file_package_id(file_id.data(db));
+    let all_package_ids = hir_db::transitive_dep_package_ids(db, current_package_id);
+    let mut all_candidates = vec![];
+    for package_id in all_package_ids {
+        let modules = hir_db::modules_for_package_id(db, *package_id)
+            .into_iter()
+            .filter_map(|it| it.to_ast::<ast::Module>(db));
+        for module in modules {
+            all_candidates.extend(module.clone().to_entry());
+            all_candidates.extend(module.importable_entries());
+        }
+    }
+    all_candidates
 }
 
 // #[salsa_macros::tracked(returns(ref))]

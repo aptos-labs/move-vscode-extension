@@ -7,7 +7,7 @@
 mod ability_container;
 mod abort_expr;
 mod acquires;
-mod address_ref;
+pub mod address_ref;
 mod and_include_expr;
 mod any_call_expr;
 mod any_fun;
@@ -56,6 +56,7 @@ mod module_spec;
 pub mod move_syntax_node;
 mod name_like;
 pub mod name_ref;
+mod named_address;
 pub mod named_field;
 mod param;
 mod pat;

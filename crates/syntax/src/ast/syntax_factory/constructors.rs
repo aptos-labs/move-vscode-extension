@@ -6,10 +6,11 @@
 
 use super::{SyntaxFactory, ast_from_text, expr_item_from_text, module_item_from_text};
 use crate::ast::make::quote::quote;
+use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::parse::SyntaxKind;
 use crate::syntax_editor::mapping::SyntaxMappingBuilder;
 use crate::{
-    AstNode, SourceFile, SyntaxNode, SyntaxToken,
+    AstNode, SourceFile, SyntaxElement, SyntaxNode, SyntaxToken,
     ast::{self, make},
 };
 use stdx::itertools::Itertools;
@@ -20,6 +21,27 @@ impl SyntaxFactory {
         let args = args.into_iter().format(", ");
         ast_from_text::<ast::ValueArgList>(&format!("module 0x1::m {{ fun main() {{ call({args}) }} }}"))
             .clone_for_update()
+    }
+
+    pub fn path_segment_from_text(&self, name: impl Into<String>) -> ast::PathSegment {
+        let name = name.into();
+        ast_from_text::<ast::PathSegment>(&format!(
+            "module 0x1::m {{ fun main() {{ let _ = {name}; }}}}"
+        ))
+    }
+
+    pub fn path_segment_from_value_address(&self, value_address: impl Into<String>) -> ast::PathSegment {
+        let value_address = value_address.into();
+        let path = ast_from_text::<ast::Path>(&format!(
+            "module 0x1::m {{ const MY_CONST: {value_address}::my_path = 1; }}"
+        ));
+        let qualifier = path.qualifier().unwrap();
+        qualifier
+            .path_address()
+            .unwrap()
+            .syntax()
+            .parent_of_type()
+            .unwrap()
     }
 
     pub fn path_segment(&self, name_ref: ast::NameRef) -> ast::PathSegment {
@@ -42,6 +64,11 @@ impl SyntaxFactory {
     pub fn path_from_segments(&self, segments: impl IntoIterator<Item = ast::PathSegment>) -> ast::Path {
         let segments = segments.into_iter().map(|it| it.syntax().clone()).join("::");
         expr_item_from_text(&segments)
+    }
+
+    pub fn use_stmt(&self, path: ast::Path) -> ast::UseStmt {
+        let path_text = path.syntax().text();
+        module_item_from_text::<ast::UseStmt>(&format!("use {path_text};")).clone_for_update()
     }
 
     pub fn use_speck(&self, path: ast::Path, alias: Option<ast::UseAlias>) -> ast::UseSpeck {
@@ -93,6 +120,10 @@ impl SyntaxFactory {
             .unwrap()
             .into_token()
             .unwrap()
+    }
+
+    pub fn newline(&self) -> SyntaxToken {
+        self.whitespace("\n")
     }
 }
 

@@ -22,6 +22,7 @@ mod test_redundant_cast;
 mod test_type_checking;
 mod test_type_checking_fs;
 mod test_unresolved_reference;
+mod test_unresolved_reference_auto_import;
 mod test_unused_acquires;
 mod test_unused_imports;
 mod test_unused_imports_fix;

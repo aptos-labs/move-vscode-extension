@@ -99,13 +99,12 @@ fn add_completions_from_the_resolution_entries(
         Some(original_path) => path_kind(
             ctx.db,
             original_path.value.qualifier(),
-            original_path.value.clone(),
+            &original_path.value,
             true,
         )?,
         None => {
             let original_qualifier = path_ctx.original_qualifier(&original_file);
-            let fake_path_kind =
-                path_kind(ctx.db, original_qualifier, path_ctx.fake_path.clone(), true)?;
+            let fake_path_kind = path_kind(ctx.db, original_qualifier, &path_ctx.fake_path, true)?;
             if matches!(fake_path_kind, path_kind::PathKind::FieldShorthand { .. }) {
                 return None;
             }

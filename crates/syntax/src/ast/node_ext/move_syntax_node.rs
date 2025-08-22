@@ -16,6 +16,10 @@ pub trait MoveSyntaxElementExt {
         self.node().ancestor_strict::<ast::Module>()
     }
 
+    fn containing_items_owner(&self) -> Option<ast::AnyHasItems> {
+        self.node().ancestor_strict::<ast::AnyHasItems>()
+    }
+
     fn containing_function(&self) -> Option<ast::Fun> {
         self.node().ancestor_strict::<ast::Fun>()
     }

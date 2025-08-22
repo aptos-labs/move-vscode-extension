@@ -4,6 +4,8 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+mod auto_import;
+
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use base_db::SourceDatabase;
@@ -26,10 +28,6 @@ pub(crate) fn find_unresolved_references(
     ctx: &DiagnosticsContext<'_>,
     reference: InFile<ast::ReferenceElement>,
 ) -> Option<()> {
-    if ctx.config.assists_only {
-        // short-circuit
-        return None;
-    }
     let msl = reference.value.syntax().is_msl_context();
     if msl && is_special_msl_path(ctx.sema.db, reference.as_ref()).is_some() {
         return None;
@@ -92,7 +90,7 @@ fn unresolved_path(
     // iterate over all qualifiers, stop if there's unresolved reference
     let mut base_path = Some(root_path.base_path());
     while let Some(path) = base_path {
-        let path_kind = path_kind(ctx.sema.db, path.qualifier(), path.clone(), false)?;
+        let path_kind = path_kind(ctx.sema.db, path.qualifier(), &path, false)?;
         match path_kind {
             PathKind::NamedAddress(_)
             | PathKind::NamedAddressOrUnqualifiedPath { .. }
@@ -188,6 +186,12 @@ fn try_check_resolve(
     let entries = ctx.sema.resolve_in_file(reference.clone());
     let reference_node = reference.and_then_ref(|it| it.reference_node())?;
     let reference_name = reference.value.reference_name()?;
+
+    let fixes = reference
+        .clone()
+        .and_then(|it| it.path())
+        .and_then(|path| auto_import::auto_import_fixes(ctx, path));
+
     match entries.len() {
         0 => {
             let db = ctx.sema.db;
@@ -201,11 +205,14 @@ fn try_check_resolve(
                     package_missing_deps.join(", "),
                 );
             }
-            acc.push(Diagnostic::new(
-                DiagnosticCode::Lsp("unresolved-reference", Severity::Error),
-                error_message,
-                reference_node.file_range(),
-            ));
+            acc.push(
+                Diagnostic::new(
+                    DiagnosticCode::Lsp("unresolved-reference", Severity::Error),
+                    error_message,
+                    reference_node.file_range(),
+                )
+                .with_local_fixes(fixes),
+            );
             return Some(());
         }
         1 => (),
@@ -213,25 +220,26 @@ fn try_check_resolve(
             if into_field_shorthand_items(ctx.sema.db, entries.clone()).is_some() {
                 return None;
             }
-            if is_entries_from_duplicate_dependencies(&ctx.sema, entries) {
-                acc.push(Diagnostic::new(
-                    DiagnosticCode::Lsp("unresolved-reference", Severity::Error),
-                    format!(
-                        "Unresolved reference `{}`: resolved to multiple elements from different packages. \
+            let error_message = if is_entries_from_duplicate_dependencies(&ctx.sema, entries) {
+                format!(
+                    "Unresolved reference `{}`: resolved to multiple elements from different packages. \
                         You have duplicate dependencies in your package manifest.",
-                        reference_name
-                    ),
-                    reference_node.file_range(),
-                ));
-            }
-            acc.push(Diagnostic::new(
-                DiagnosticCode::Lsp("unresolved-reference", Severity::Error),
+                    reference_name
+                )
+            } else {
                 format!(
                     "Unresolved reference `{}`: resolved to multiple elements",
                     reference_name
-                ),
-                reference_node.file_range(),
-            ));
+                )
+            };
+            acc.push(
+                Diagnostic::new(
+                    DiagnosticCode::Lsp("unresolved-reference", Severity::Error),
+                    error_message,
+                    reference_node.file_range(),
+                )
+                .with_local_fixes(fixes),
+            );
             return Some(());
         }
     }

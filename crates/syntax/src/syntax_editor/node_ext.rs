@@ -6,5 +6,7 @@
 
 use crate::syntax_editor::Element;
 
+mod module;
+mod path;
 mod use_speck;
 mod use_stmt;
