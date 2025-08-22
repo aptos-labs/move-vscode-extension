@@ -95,8 +95,12 @@ jobs:
           repository: aptos-labs/daily-move
           path: daily-move
 
-      - name: Fetch dependencies
+      - name: Fetch dependencies (1)
         working-directory: ./daily-move/snippets/fractional-token
+        run: aptos move compile --fetch-deps-only --dev
+
+      - name: Fetch dependencies (2)
+        working-directory: ./daily-move/snippets/liquid-nfts
         run: aptos move compile --fetch-deps-only --dev
 
       - name: Check diagnostics on daily-move
