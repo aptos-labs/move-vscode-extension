@@ -30,6 +30,6 @@ impl ast::AnyHasItems {
         {
             has_extra_newline_at_the_end = true;
         }
-        anchor.map(|it| (Position::after(it), has_extra_newline_at_the_end))
+        anchor.map(|it| (Position::after(it), !has_extra_newline_at_the_end))
     }
 }

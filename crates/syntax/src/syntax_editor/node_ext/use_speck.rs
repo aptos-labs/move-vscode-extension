@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::ast::node_ext::syntax_element::SyntaxElementExt;
+use crate::ast::syntax_factory::SyntaxFactory;
 use crate::syntax_editor::{Element, SyntaxEditor};
 use crate::{AstNode, ast};
 

@@ -23,63 +23,6 @@ impl SyntaxFactory {
             .clone_for_update()
     }
 
-    pub fn path_segment_from_text(&self, name: impl Into<String>) -> ast::PathSegment {
-        let name = name.into();
-        ast_from_text::<ast::PathSegment>(&format!(
-            "module 0x1::m {{ fun main() {{ let _ = {name}; }}}}"
-        ))
-    }
-
-    pub fn path_segment_from_value_address(&self, value_address: impl Into<String>) -> ast::PathSegment {
-        let value_address = value_address.into();
-        let path = ast_from_text::<ast::Path>(&format!(
-            "module 0x1::m {{ const MY_CONST: {value_address}::my_path = 1; }}"
-        ));
-        let qualifier = path.qualifier().unwrap();
-        qualifier
-            .path_address()
-            .unwrap()
-            .syntax()
-            .parent_of_type()
-            .unwrap()
-    }
-
-    pub fn path_segment(&self, name_ref: ast::NameRef) -> ast::PathSegment {
-        let ast = ast_from_text::<ast::PathSegment>(&format!(
-            "module 0x1::m {{ fun main() {{ let _ = {name_ref}; }}}}"
-        ));
-
-        if let Some(mut mapping) = self.mappings() {
-            let mut builder = SyntaxMappingBuilder::new(ast.syntax().clone());
-            builder.map_node(
-                name_ref.syntax().clone(),
-                ast.name_ref().unwrap().syntax().clone(),
-            );
-            builder.finish(&mut mapping);
-        }
-
-        ast
-    }
-
-    pub fn path_from_segments(&self, segments: impl IntoIterator<Item = ast::PathSegment>) -> ast::Path {
-        let segments = segments.into_iter().map(|it| it.syntax().clone()).join("::");
-        expr_item_from_text(&segments)
-    }
-
-    pub fn use_stmt(&self, path: ast::Path) -> ast::UseStmt {
-        let path_text = path.syntax().text();
-        module_item_from_text::<ast::UseStmt>(&format!("use {path_text};")).clone_for_update()
-    }
-
-    pub fn use_speck(&self, path: ast::Path, alias: Option<ast::UseAlias>) -> ast::UseSpeck {
-        let mut buf = "use ".to_string();
-        buf += &path.syntax().to_string();
-        if let Some(alias) = alias {
-            stdx::format_to!(buf, " {alias}");
-        }
-        module_item_from_text::<ast::UseSpeck>(&buf).clone_for_update()
-    }
-
     pub fn ident_pat(&self, ident_name: &str) -> ast::IdentPat {
         ast_from_text::<ast::IdentPat>(&format!(
             "module 0x1::m {{ fun main() {{ let {ident_name}; }} }}"

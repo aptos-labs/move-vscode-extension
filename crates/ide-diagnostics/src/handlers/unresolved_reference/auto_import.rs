@@ -5,13 +5,14 @@ use lang::hir_db;
 use lang::nameres::fq_named_element::ItemFQNameOwner;
 use lang::nameres::path_kind::path_kind;
 use lang::nameres::scope::ScopeEntry;
+use syntax::ast::UseStmtsOwner;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::syntax_factory::SyntaxFactory;
 use syntax::files::InFile;
-use syntax::syntax_editor::Element;
+use syntax::syntax_editor::SyntaxEditor;
 use syntax::{AstNode, TextRange, ast};
 
-pub(crate) fn auto_import_fixes(
+pub(crate) fn auto_import_fix(
     ctx: &DiagnosticsContext<'_>,
     path: InFile<ast::Path>,
 ) -> Option<LocalAssists> {
@@ -58,30 +59,50 @@ fn add_autoimport_fix_for_import_candidate(
 ) -> Option<()> {
     let candidate_named_element = import_candidate.cast_into::<ast::NamedElement>(db)?;
     let candidate_fq_name = candidate_named_element.fq_name(db)?;
-    assists.add_fix(
+    assists.add_fix_with_make(
         "add-import",
         format!("Add import for `{}`", candidate_fq_name.fq_identifier_text()),
         reference_range,
-        |editor| {
-            if let Some(candidate_path) = candidate_named_element.value.use_path(editor) {
-                let make = SyntaxFactory::new();
-                if let Some((anchor, has_extra_newline_at_the_end)) =
-                    current_use_items_owner.pos_after_last_use_stmt()
-                {
-                    let use_stmt = make.use_stmt(candidate_path);
-                    let mut elements_to_add = vec![
-                        make.newline().into(),
-                        make.whitespace("    ").into(),
-                        use_stmt.syntax().syntax_element(),
-                    ];
-                    if !has_extra_newline_at_the_end {
-                        elements_to_add.push(make.newline().into());
-                    }
-                    editor.insert_all(anchor, elements_to_add);
-                }
-                editor.add_mappings(make.finish_with_mappings());
-            }
-        },
+        add_import_for_named_element(current_use_items_owner, candidate_named_element.value),
     );
     Some(())
+}
+
+fn add_import_for_named_element(
+    items_owner: &ast::AnyHasItems,
+    named_element: ast::NamedElement,
+) -> impl FnOnce(&mut SyntaxEditor, &SyntaxFactory) -> Option<()> {
+    move |editor, make| {
+        let (item_module_path, item_name_ref) = make.item_path(named_element)?;
+
+        // try to find existing use stmt for the module path first
+        let existing_use_stmt = items_owner
+            .use_stmts()
+            .filter(|it| {
+                it.module_path()
+                    .is_some_and(|use_mod_path| use_mod_path.syntax_eq(&item_module_path))
+            })
+            .last();
+        if let Some(use_stmt) = existing_use_stmt {
+            let new_name_ref = match item_name_ref {
+                Some(item_name_ref) => item_name_ref,
+                None => make.name_ref("Self"),
+            };
+            use_stmt.add_group_item((new_name_ref, None), editor);
+            return Some(());
+        }
+
+        let make = SyntaxFactory::new();
+        let use_speck_path = match item_name_ref {
+            Some(item_name_ref) => {
+                make.path_from_qualifier_and_name_ref(item_module_path, item_name_ref)
+            }
+            None => item_module_path,
+        };
+        let use_stmt = make.use_stmt(use_speck_path);
+
+        items_owner.add_use_stmt(use_stmt, editor);
+
+        Some(())
+    }
 }

@@ -86,7 +86,7 @@ mod type_arg_list;
 mod type_param;
 mod type_param_list;
 mod use_group;
-mod use_speck;
+pub mod use_speck;
 mod use_stmt;
 mod value_arg_list;
 mod vector_lit_expr;

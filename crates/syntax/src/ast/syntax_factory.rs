@@ -14,6 +14,8 @@
 
 mod constructors;
 mod exprs;
+mod paths;
+mod uses;
 
 use crate::syntax_editor::mapping::SyntaxMapping;
 use crate::{AstNode, SourceFile, ast};

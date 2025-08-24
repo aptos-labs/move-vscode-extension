@@ -190,7 +190,7 @@ fn try_check_resolve(
     let fixes = reference
         .clone()
         .and_then(|it| it.path())
-        .and_then(|path| auto_import::auto_import_fixes(ctx, path));
+        .and_then(|path| auto_import::auto_import_fix(ctx, path));
 
     match entries.len() {
         0 => {

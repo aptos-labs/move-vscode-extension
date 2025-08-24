@@ -209,3 +209,139 @@ module std::vector {
     "#]],
     );
 }
+
+#[test]
+fn test_merge_new_auto_import_with_the_existing_group_1() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+            module 0x1::M {
+                struct S {}
+                public fun call() {}
+            }
+            module 0x1::Main {
+                use 0x1::M::S;
+
+                fun main(_s: S) {
+                    call();
+                  //^^^^ err: Unresolved reference `call`: cannot resolve
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::M {
+                struct S {}
+                public fun call() {}
+            }
+            module 0x1::Main {
+                use 0x1::M::{S, call};
+
+                fun main(_s: S) {
+                    call();
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_merge_new_auto_import_with_the_existing_group_2() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+            module 0x1::M {
+                struct S {}
+                public fun call() {}
+            }
+            module 0x1::Main {
+                use 0x1::M::{S};
+
+                fun main(_s: S) {
+                    call();
+                  //^^^^ err: Unresolved reference `call`: cannot resolve
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::M {
+                struct S {}
+                public fun call() {}
+            }
+            module 0x1::Main {
+                use 0x1::M::{S, call};
+
+                fun main(_s: S) {
+                    call();
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_merge_new_auto_import_with_the_existing_group_3() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+            module 0x1::M {
+                struct S {}
+                public fun call() {}
+            }
+            module 0x1::Main {
+                use 0x1::M;
+
+                fun main(_s: M::S) {
+                    call();
+                  //^^^^ err: Unresolved reference `call`: cannot resolve
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::M {
+                struct S {}
+                public fun call() {}
+            }
+            module 0x1::Main {
+                use 0x1::M::{Self, call};
+
+                fun main(_s: M::S) {
+                    call();
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_merge_new_auto_import_with_the_existing_group_with_alias() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+            module 0x1::M {
+                struct S {}
+                public fun call() {}
+            }
+            module 0x1::Main {
+                use 0x1::M::S as MyS;
+
+                fun main(_s: MyS) {
+                    call();
+                  //^^^^ err: Unresolved reference `call`: cannot resolve
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::M {
+                struct S {}
+                public fun call() {}
+            }
+            module 0x1::Main {
+                use 0x1::M::{S as MyS, call};
+
+                fun main(_s: MyS) {
+                    call();
+                }
+            }
+        "#]],
+    );
+}
