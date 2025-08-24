@@ -15,10 +15,10 @@ impl ast::ReferenceElement {
     //     }
     // }
 
-    pub fn reference_node(&self) -> Option<SyntaxNode> {
+    pub fn reference_name_node(&self) -> Option<SyntaxNode> {
         match_ast! {
             match (self.syntax()) {
-                ast::Path(it) => it.segment().map(|n| n.syntax),
+                ast::Path(it) => it.segment()?.name_ref().map(|n| n.syntax),
                 ast::MethodCallExpr(it) => it.name_ref().map(|n| n.syntax),
                 ast::DotExpr(it) => it.name_ref().map(|n| n.syntax),
                 ast::StructLitField(it) => {

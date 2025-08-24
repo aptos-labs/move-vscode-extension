@@ -15,6 +15,7 @@ use syntax::{AstNode, TextRange, ast};
 pub(crate) fn auto_import_fix(
     ctx: &DiagnosticsContext<'_>,
     path: InFile<ast::Path>,
+    reference_range: TextRange,
 ) -> Option<LocalAssists> {
     // find scope entries with this name from all importable entries in all reachable modules
     let db = ctx.sema.db;
@@ -44,7 +45,7 @@ pub(crate) fn auto_import_fix(
             &mut assists,
             import_candidate,
             &current_items_owner,
-            path.syntax().text_range(),
+            reference_range,
         );
     }
     Some(assists)

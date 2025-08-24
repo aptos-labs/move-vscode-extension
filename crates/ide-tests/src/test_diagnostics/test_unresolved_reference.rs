@@ -1077,3 +1077,44 @@ M = { local = "../m"}
         "#]],
     );
 }
+
+#[test]
+fn test_unresolved_path_with_generics_only_highlights_name() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main() {
+                call<u8, u8>();
+              //^^^^ err: Unresolved reference `call`: cannot resolve
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_unresolved_method_with_generics_only_highlights_name() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct S { }
+            fun main(s: S) {
+                s.call::<u8, u8>();
+                //^^^^ err: Unresolved reference `call`: cannot resolve
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_unresolved_method_with_generics_only_highlights_name_no_colon_colon() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            struct S { }
+            fun main(s: S) {
+                s.call<u8, u8>();
+                //^^^^ err: Unresolved reference `call`: cannot resolve
+            }
+        }
+    "#]]);
+}
