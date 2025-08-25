@@ -324,6 +324,7 @@ pub fn use_items_from_self_and_siblings(
     use_items_from_self_and_siblings_tracked(db, SyntaxLocInput::new(db, use_stmts_owner.loc()))
 }
 
+#[salsa_macros::tracked]
 fn use_items_from_self_and_siblings_tracked<'db>(
     db: &'db dyn SourceDatabase,
     use_stmts_owner_loc: SyntaxLocInput<'db>,

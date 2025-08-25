@@ -84,21 +84,16 @@ pub(crate) fn find_unused_use_items(
     Some(all_unused_use_items)
 }
 
-#[inline]
 fn find_use_item_hit_for_path(db: &dyn SourceDatabase, path: InFile<ast::Path>) -> Option<UseItem> {
+    let _p = tracing::debug_span!("find_use_item_hit_for_path").entered();
+
     let path_scope = hir_db::item_scope(db, path.loc());
     let specific_item_scope = if path_scope != NamedItemScope::Main {
         Some(path_scope)
     } else {
         None
     };
-
-    let base_path_type = BasePathType::for_path(&path.value);
-    if base_path_type.is_none() {
-        // fq path
-        return None;
-    }
-    let base_path_type = base_path_type.unwrap();
+    let base_path_type = BasePathType::for_path(&path.value)?;
 
     let use_item_owner_ancestors = path
         .as_ref()
