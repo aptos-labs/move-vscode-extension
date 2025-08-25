@@ -36,90 +36,44 @@ pub(crate) fn find_unused_imports(
     let stmts_owner_with_siblings =
         hir_db::use_stmts_owner_with_siblings(db, use_stmts_owner.clone().map_into());
 
-    for item_scope in NamedItemScope::all() {
-        let unused_use_items =
-            find_unused_use_items_for_item_scope(ctx.sema.db, &stmts_owner_with_siblings, item_scope);
-        if let Some(unused_use_items) = unused_use_items {
-            for use_stmt_owner in stmts_owner_with_siblings.iter() {
-                let use_stmts = use_stmt_owner.as_ref().flat_map(|it| it.use_stmts().collect());
-                for use_stmt in use_stmts
-                    .into_iter()
-                    .filter(|stmt| hir_db::item_scope(db, stmt.loc()) == item_scope)
-                {
-                    let stmt_use_items = unused_use_items
-                        .iter()
-                        .filter(|it| use_stmt.loc().contains(&it.use_speck_loc))
-                        .collect::<Vec<_>>();
-                    let unused_import_kind = unused_import_kind(db, use_stmt.clone(), stmt_use_items)?;
-                    highlight_unused_use_items(
-                        ctx,
-                        &use_stmts_owner,
-                        use_stmt.value,
-                        acc,
-                        unused_import_kind,
-                    );
-                }
-            }
+    let unused_use_items_in_scope =
+        find_unused_use_items(db, &stmts_owner_with_siblings).unwrap_or_default();
+    for use_stmt_owner in stmts_owner_with_siblings.iter() {
+        let use_stmts = use_stmt_owner.as_ref().flat_map(|it| it.use_stmts().collect());
+        for use_stmt in use_stmts {
+            let stmt_use_items = unused_use_items_in_scope
+                .iter()
+                .filter(|it| use_stmt.loc().contains(&it.use_speck_loc))
+                .collect::<Vec<_>>();
+            let unused_import_kind = unused_import_kind(db, use_stmt.clone(), stmt_use_items)?;
+            highlight_unused_use_items(ctx, &use_stmts_owner, use_stmt.value, acc, unused_import_kind);
         }
     }
     Some(())
 }
 
-pub(crate) fn find_unused_use_items_for_item_scope(
+pub(crate) fn find_unused_use_items(
     db: &dyn SourceDatabase,
     stmts_owner_with_siblings: &Vec<InFile<ast::AnyUseStmtsOwner>>,
-    item_scope: NamedItemScope,
 ) -> Option<Vec<UseItem>> {
-    let reachable_paths = stmts_owner_with_siblings
-        .iter()
-        .flat_map(|it| {
-            it.as_ref()
-                .flat_map(|stmts_owner| descendant_paths(stmts_owner.syntax()).collect())
-        })
-        .filter(|it| hir_db::item_scope(db, it.loc()) == item_scope)
-        .collect::<Vec<_>>();
+    let _p = tracing::debug_span!("find_unused_use_items").entered();
 
+    let reachable_paths = stmts_owner_with_siblings.iter().flat_map(|it| {
+        it.as_ref()
+            .flat_map(|stmts_owner| descendant_paths(stmts_owner.syntax()).collect())
+    });
     let mut use_items_hit = HashSet::new();
     for path in reachable_paths {
-        let base_path_type = BasePathType::for_path(&path.value);
-        if base_path_type.is_none() {
-            // fq path
-            continue;
-        }
-        let base_path_type = base_path_type.unwrap();
-
-        let use_item_owner_ancestors = path
-            .as_ref()
-            .flat_map(|it| it.syntax().ancestors_of_type::<ast::AnyUseStmtsOwner>(true));
-        for use_item_owner_ans in use_item_owner_ancestors {
-            let mut reachable_use_items =
-                hir_db::use_items_from_self_and_siblings(db, use_item_owner_ans)
-                    .into_iter()
-                    .filter(|it| it.scope == item_scope);
-            let use_item_hit = match &base_path_type {
-                BasePathType::Item { item_name } => reachable_use_items
-                    .find(|it| it.type_ == UseItemType::Item && it.alias_or_name.eq(item_name)),
-                BasePathType::Module { module_name } => reachable_use_items.find(|it| {
-                    matches!(it.type_, UseItemType::Module | UseItemType::SelfModule)
-                        && it.alias_or_name.eq(module_name)
-                }),
-                _ => None,
-            };
-            if let Some(use_item_hit) = use_item_hit {
-                use_items_hit.insert(use_item_hit);
-                break;
-            }
+        if let Some(use_item) = find_use_item_hit_for_path(db, path) {
+            use_items_hit.insert(use_item);
         }
     }
 
     let mut all_unused_use_items = vec![];
     for use_stmt_owner in stmts_owner_with_siblings {
         let use_stmts = use_stmt_owner.as_ref().flat_map(|it| it.use_stmts().collect());
-        for use_stmt in use_stmts
-            .into_iter()
-            .filter(|stmt| hir_db::item_scope(db, stmt.loc()) == item_scope)
-        {
-            for use_item in use_items_for_stmt(db, use_stmt.clone())? {
+        for use_stmt in use_stmts {
+            for use_item in use_items_for_stmt(db, use_stmt)? {
                 if !use_items_hit.contains(&use_item) {
                     all_unused_use_items.push(use_item);
                 }
@@ -128,6 +82,66 @@ pub(crate) fn find_unused_use_items_for_item_scope(
     }
 
     Some(all_unused_use_items)
+}
+
+#[inline]
+fn find_use_item_hit_for_path(db: &dyn SourceDatabase, path: InFile<ast::Path>) -> Option<UseItem> {
+    let path_scope = hir_db::item_scope(db, path.loc());
+    let specific_item_scope = if path_scope != NamedItemScope::Main {
+        Some(path_scope)
+    } else {
+        None
+    };
+
+    let base_path_type = BasePathType::for_path(&path.value);
+    if base_path_type.is_none() {
+        // fq path
+        return None;
+    }
+    let base_path_type = base_path_type.unwrap();
+
+    let use_item_owner_ancestors = path
+        .as_ref()
+        .flat_map(|it| it.syntax().ancestors_of_type::<ast::AnyUseStmtsOwner>(true));
+    for use_item_owner_ans in use_item_owner_ancestors {
+        let owner_use_items = hir_db::use_items_from_self_and_siblings(db, use_item_owner_ans)
+            .into_iter()
+            .filter(|use_item| {
+                use_item.scope == NamedItemScope::Main
+                    || specific_item_scope.is_some_and(|it| use_item.scope == it)
+            });
+        let use_items_hit_in_owner = match &base_path_type {
+            BasePathType::Item { item_name } => owner_use_items
+                .filter(|it| it.type_ == UseItemType::Item && it.alias_or_name.eq(item_name))
+                .collect(),
+            BasePathType::Module { module_name } => owner_use_items
+                .filter(|it| {
+                    matches!(it.type_, UseItemType::Module | UseItemType::SelfModule)
+                        && it.alias_or_name.eq(module_name)
+                })
+                .collect(),
+            _ => vec![],
+        };
+
+        // first try to find a candidate in main scope
+        let mut use_item_hit = use_items_hit_in_owner
+            .iter()
+            .find(|item| item.scope == NamedItemScope::Main)
+            .cloned();
+        // then if we can't find it there, check specialized scope
+        if use_item_hit.is_none()
+            && let Some(specific_item_scope) = specific_item_scope
+        {
+            use_item_hit = use_items_hit_in_owner
+                .into_iter()
+                .find(|item| item.scope == specific_item_scope);
+        }
+
+        if use_item_hit.is_some() {
+            return use_item_hit;
+        }
+    }
+    None
 }
 
 fn descendant_paths(node: &SyntaxNode) -> impl Iterator<Item = ast::Path> {

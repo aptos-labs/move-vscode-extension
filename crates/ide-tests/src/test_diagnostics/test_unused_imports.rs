@@ -465,9 +465,9 @@ fn test_unused_main_import_in_presence_of_test_only_usage() {
         }
         module 0x1::main {
             use 0x1::string::call;
-          //^^^^^^^^^^^^^^^^^^^^^^ warn: Unused use item
             #[test_only]
             use 0x1::string::call;
+          //^^^^^^^^^^^^^^^^^^^^^^ warn: Unused use item
 
             #[test_only]
             fun main() {
@@ -487,9 +487,9 @@ fn test_unused_main_import_in_presence_of_test_usage() {
         }
         module 0x1::main {
             use 0x1::string::call;
-          //^^^^^^^^^^^^^^^^^^^^^^ warn: Unused use item
             #[test_only]
             use 0x1::string::call;
+          //^^^^^^^^^^^^^^^^^^^^^^ warn: Unused use item
 
             #[test]
             fun main() {
@@ -509,7 +509,6 @@ fn test_unused_main_import_in_presence_of_unresolved_test_only_usage() {
         }
         module 0x1::main {
             use 0x1::string::call;
-          //^^^^^^^^^^^^^^^^^^^^^^ warn: Unused use item
             #[test_only]
             fun main() {
                 call();
@@ -780,6 +779,7 @@ fn test_unused_test_only_import() {
             use 0x1::string::call;
             #[test_only]
             use 0x1::string::call;
+          //^^^^^^^^^^^^^^^^^^^^^^ warn: Unused use item
 
             fun main() {
                 call();
@@ -802,7 +802,6 @@ fn test_error_if_main_import_used_only_in_spec_fun() {
         }
         module 0x1::m {
             use 0x1::string;
-          //^^^^^^^^^^^^^^^^ warn: Unused use item
             spec fun call(): u128 {
                 string::id()
             }
@@ -819,10 +818,10 @@ fn test_import_duplicate_inside_spec() {
         }
         module 0x1::m {
             use 0x1::string;
-          //^^^^^^^^^^^^^^^^ warn: Unused use item
         }
         spec 0x1::m {
             use 0x1::string;
+          //^^^^^^^^^^^^^^^^ warn: Unused use item
             spec module {
                 string::id();
             }
@@ -873,11 +872,30 @@ fn test_error_if_only_used_inside_spec() {
         }
         module 0x1::m {
             use 0x1::string;
-          //^^^^^^^^^^^^^^^^ warn: Unused use item
         }
         spec 0x1::m {
             spec module {
                 string::id();
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_no_unused_self_import_for_module_fq_path_in_test_only_function() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::string {
+            struct S {}
+            public fun id(): u128 { 1 }
+        }
+        module 0x1::m {
+            use 0x1::string::{S, Self};
+            fun main(_s: S) {
+            }
+            #[test]
+            fun test_main() {
+                let _a = string::id();
             }
         }
     "#]]);

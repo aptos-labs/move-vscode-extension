@@ -1,14 +1,11 @@
 // Copyright © Aptos Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::handlers::unused_import::{
-    UnusedImportKind, find_unused_use_items_for_item_scope, unused_import_kind,
-};
+use crate::handlers::unused_import::{UnusedImportKind, find_unused_use_items, unused_import_kind};
 use base_db::SourceDatabase;
 use ide_db::RootDatabase;
 use ide_db::assist_context::LocalAssists;
 use ide_db::assists::{Assist, AssistResolveStrategy};
-use lang::item_scope::NamedItemScope;
 use lang::loc::SyntaxLocFileExt;
 use lang::{Semantics, hir_db};
 use syntax::ast::UseStmtsOwner;
@@ -46,22 +43,15 @@ fn organize_imports_in_stmts_owner(
     let stmts_owner_with_siblings =
         hir_db::use_stmts_owner_with_siblings(db, use_stmts_owner.clone().map_into());
 
-    for item_scope in NamedItemScope::all() {
-        let unused_use_items =
-            find_unused_use_items_for_item_scope(db, &stmts_owner_with_siblings, item_scope)?;
-
-        let use_stmts = use_stmts_owner.as_ref().flat_map(|it| it.use_stmts().collect());
-        for use_stmt in use_stmts
-            .into_iter()
-            .filter(|stmt| hir_db::item_scope(db, stmt.loc()) == item_scope)
-        {
-            let unused_stmt_use_items = unused_use_items
-                .iter()
-                .filter(|it| use_stmt.loc().contains(&it.use_speck_loc))
-                .collect::<Vec<_>>();
-            let unused_import_kind = unused_import_kind(db, use_stmt.clone(), unused_stmt_use_items)?;
-            organize_imports_in_use_stmt(db, use_stmt.value, unused_import_kind, editor);
-        }
+    let unused_use_items = find_unused_use_items(db, &stmts_owner_with_siblings)?;
+    let use_stmts = use_stmts_owner.as_ref().flat_map(|it| it.use_stmts().collect());
+    for use_stmt in use_stmts {
+        let unused_stmt_use_items = unused_use_items
+            .iter()
+            .filter(|it| use_stmt.loc().contains(&it.use_speck_loc))
+            .collect::<Vec<_>>();
+        let unused_import_kind = unused_import_kind(db, use_stmt.clone(), unused_stmt_use_items)?;
+        organize_imports_in_use_stmt(db, use_stmt.value, unused_import_kind, editor);
     }
 
     Some(())
