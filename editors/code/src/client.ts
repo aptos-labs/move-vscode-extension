@@ -11,6 +11,7 @@ import { prepareVSCodeConfig } from "./config";
 export async function createClient(
     traceOutputChannel: vscode.OutputChannel,
     outputChannel: vscode.OutputChannel,
+    initializationOptions: vscode.WorkspaceConfiguration,
     serverOptions: lc.ServerOptions,
 ): Promise<lc.LanguageClient> {
 
@@ -46,6 +47,7 @@ export async function createClient(
         documentSelector: [{ scheme: 'file', language: 'move' }],
         traceOutputChannel,
         outputChannel,
+        initializationOptions,
         middleware: lspMiddleware,
         markdown: {
             supportHtml: true,
