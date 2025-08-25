@@ -184,18 +184,20 @@ fn try_check_resolve(
     reference: InFile<ast::ReferenceElement>,
 ) -> Option<()> {
     let entries = ctx.sema.resolve_in_file(reference.clone());
-    let reference_node = reference.and_then_ref(|it| it.reference_node())?;
-    let reference_name = reference.value.reference_name()?;
+
+    let (file_id, reference) = reference.unpack();
+
+    let reference_name = reference.reference_name()?;
+    let reference_range = reference.reference_name_node()?.in_file(file_id).file_range();
 
     let fixes = reference
-        .clone()
-        .and_then(|it| it.path())
-        .and_then(|path| auto_import::auto_import_fix(ctx, path));
+        .path()
+        .and_then(|it| auto_import::auto_import_fix(ctx, it.in_file(file_id), reference_range.range));
 
     match entries.len() {
         0 => {
             let db = ctx.sema.db;
-            let package_id = db.file_package_id(reference.file_id);
+            let package_id = db.file_package_id(file_id);
             let package_missing_deps = hir_db::missing_dependencies(db, package_id);
             let mut error_message = format!("Unresolved reference `{}`: cannot resolve", reference_name);
             if !package_missing_deps.is_empty() {
@@ -209,7 +211,7 @@ fn try_check_resolve(
                 Diagnostic::new(
                     DiagnosticCode::Lsp("unresolved-reference", Severity::Error),
                     error_message,
-                    reference_node.file_range(),
+                    reference_range,
                 )
                 .with_local_fixes(fixes),
             );
@@ -236,7 +238,7 @@ fn try_check_resolve(
                 Diagnostic::new(
                     DiagnosticCode::Lsp("unresolved-reference", Severity::Error),
                     error_message,
-                    reference_node.file_range(),
+                    reference_range,
                 )
                 .with_local_fixes(fixes),
             );
