@@ -154,7 +154,7 @@ pub(crate) fn handle_did_change_configuration(
                 section: Some("move-on-aptos".to_owned()),
             }],
         },
-        |this, resp| {
+        |global_state, resp| {
             tracing::debug!("config update response: '{:?}", resp);
             let lsp_server::Response { error, result, .. } = resp;
 
@@ -164,15 +164,14 @@ pub(crate) fn handle_did_change_configuration(
                 }
                 (None, Some(mut configs)) => {
                     if let Some(json) = configs.get_mut(0) {
-                        let config = Config::clone(&*this.config);
+                        let config = Config::clone(&*global_state.config);
+
                         let mut change = ConfigChange::default();
                         change.change_client_config(json.take());
-
                         let (config, errors) = config.apply_change(change);
-                        this.config_errors = errors.is_empty().not().then_some(errors);
 
-                        // Client config changes neccesitates .update_config method to be called.
-                        this.update_configuration(config);
+                        global_state.update_configuration(config);
+                        global_state.config_errors = errors.is_empty().not().then_some(errors);
                     }
                 }
                 (None, None) => {

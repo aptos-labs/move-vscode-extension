@@ -135,7 +135,7 @@ impl GlobalState {
             analysis_host.apply_change(change);
         };
 
-        let mut this = GlobalState {
+        GlobalState {
             sender,
             req_queue: ReqQueue::default(),
             task_pool,
@@ -162,10 +162,7 @@ impl GlobalState {
 
             all_packages: Arc::from(Vec::new()),
             load_aptos_packages_queue: OpQueue::default(),
-        };
-        // Apply any required database inputs from the config.
-        this.update_configuration(config);
-        this
+        }
     }
 
     pub fn vfs_initialized_and_loaded(&self) -> bool {

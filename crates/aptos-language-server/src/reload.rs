@@ -69,7 +69,15 @@ impl GlobalState {
                 force_reload_package_deps: false,
             };
             self.load_aptos_packages_queue
-                .request_op("discovered projects changed".to_owned(), req)
+                .request_op("client configuration changed".to_owned(), req)
+        }
+
+        if self.config.diagnostics_config() != old_config.diagnostics_config() {
+            self.ask_client_for_diagnostics_refresh();
+        }
+
+        if self.config.inlay_hints_config() != old_config.inlay_hints_config() {
+            self.ask_for_inlay_hints_refresh();
         }
     }
 
