@@ -4,8 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::ast::make;
-use crate::{AstToken, SyntaxElement, SyntaxNode, SyntaxToken, ast, ted};
+use crate::{AstToken, SyntaxElement, SyntaxNode, SyntaxToken, ast};
 use rowan::NodeOrToken;
 use std::{fmt, iter, ops};
 
@@ -49,8 +48,8 @@ impl IndentLevel {
     }
     pub fn from_element(element: &SyntaxElement) -> IndentLevel {
         match element {
-            rowan::NodeOrToken::Node(it) => IndentLevel::from_node(it),
-            rowan::NodeOrToken::Token(it) => IndentLevel::from_token(it),
+            NodeOrToken::Node(it) => IndentLevel::from_node(it),
+            NodeOrToken::Token(it) => IndentLevel::from_token(it),
         }
     }
 
@@ -70,46 +69,6 @@ impl IndentLevel {
             }
         }
         IndentLevel(0)
-    }
-
-    /// XXX: this intentionally doesn't change the indent of the very first token.
-    /// Ie, in something like
-    /// ```text
-    /// fn foo() {
-    ///    92
-    /// }
-    /// ```
-    /// if you indent the block, the `{` token would stay put.
-    pub(super) fn increase_indent(self, node: &SyntaxNode) {
-        let tokens = node.preorder_with_tokens().filter_map(|event| match event {
-            rowan::WalkEvent::Leave(NodeOrToken::Token(it)) => Some(it),
-            _ => None,
-        });
-        for token in tokens {
-            if let Some(ws) = ast::Whitespace::cast(token) {
-                if ws.text().contains('\n') {
-                    let new_ws = make::tokens::whitespace(&format!("{}{self}", ws.syntax()));
-                    ted::replace(ws.syntax(), &new_ws);
-                }
-            }
-        }
-    }
-
-    pub(super) fn decrease_indent(self, node: &SyntaxNode) {
-        let tokens = node.preorder_with_tokens().filter_map(|event| match event {
-            rowan::WalkEvent::Leave(NodeOrToken::Token(it)) => Some(it),
-            _ => None,
-        });
-        for token in tokens {
-            if let Some(ws) = ast::Whitespace::cast(token) {
-                if ws.text().contains('\n') {
-                    let new_ws = make::tokens::whitespace(
-                        &ws.syntax().text().replace(&format!("\n{self}"), "\n"),
-                    );
-                    ted::replace(ws.syntax(), &new_ws);
-                }
-            }
-        }
     }
 }
 

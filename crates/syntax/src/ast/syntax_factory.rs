@@ -14,6 +14,8 @@
 
 mod constructors;
 mod exprs;
+mod paths;
+mod uses;
 
 use crate::syntax_editor::mapping::SyntaxMapping;
 use crate::{AstNode, SourceFile, ast};
@@ -29,7 +31,7 @@ impl SyntaxFactory {
     /// Creates a new [`SyntaxFactory`], generating mappings between input nodes and generated nodes.
     pub fn new() -> Self {
         Self {
-            mappings: Some(RefCell::new(SyntaxMapping::new())),
+            mappings: Some(RefCell::new(SyntaxMapping::default())),
         }
     }
 
@@ -43,7 +45,15 @@ impl SyntaxFactory {
         self.mappings.unwrap_or_default().into_inner()
     }
 
-    fn mappings(&self) -> Option<RefMut<'_, SyntaxMapping>> {
+    /// Take all of the tracked syntax mappings, leaving `SyntaxMapping::default()` in its place, if any.
+    pub fn take(&self) -> SyntaxMapping {
+        self.mappings
+            .as_ref()
+            .map(|mappings| mappings.take())
+            .unwrap_or_default()
+    }
+
+    pub(crate) fn mappings(&self) -> Option<RefMut<'_, SyntaxMapping>> {
         self.mappings.as_ref().map(|it| it.borrow_mut())
     }
 }

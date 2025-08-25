@@ -34,6 +34,11 @@ impl SyntaxKind {
     }
 
     #[inline]
+    pub fn is_whitespace(self) -> bool {
+        matches!(self, SyntaxKind::WHITESPACE)
+    }
+
+    #[inline]
     pub fn is_error(self) -> bool {
         matches!(self, SyntaxKind::ERROR | SyntaxKind::BAD_CHARACTER)
     }

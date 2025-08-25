@@ -190,7 +190,10 @@ impl Position {
         let elem = elem.syntax_element();
         let repr = match elem.prev_sibling_or_token() {
             Some(it) => PositionRepr::After(it),
-            None => PositionRepr::FirstChild(elem.parent().unwrap()),
+            None => PositionRepr::FirstChild(
+                elem.parent()
+                    .expect(&format!("{:?}.parent() is None", elem.kind())),
+            ),
         };
         Position { repr }
     }

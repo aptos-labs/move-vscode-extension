@@ -16,7 +16,6 @@ pub mod syntax_editor;
 mod syntax_error;
 mod syntax_kind;
 mod syntax_node;
-mod ted;
 mod token_text;
 mod validation;
 

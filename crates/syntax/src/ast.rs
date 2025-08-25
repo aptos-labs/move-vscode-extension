@@ -73,6 +73,10 @@ pub trait AstNode: std::fmt::Debug + Clone {
     {
         Self::cast(self.syntax().clone_subtree()).unwrap()
     }
+
+    fn syntax_eq(&self, other: &impl AstNode) -> bool {
+        self.syntax().text() == other.syntax().text()
+    }
 }
 
 /// Like `AstNode`, but wraps tokens rather than interior nodes.

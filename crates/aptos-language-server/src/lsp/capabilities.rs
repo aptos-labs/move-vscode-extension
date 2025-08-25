@@ -461,4 +461,24 @@ impl ClientCapabilities {
     pub fn experimental_bool(&self, index: &'static str) -> bool {
         || -> _ { self.0.experimental.as_ref()?.get(index)?.as_bool() }().unwrap_or_default()
     }
+
+    #[allow(non_snake_case)]
+    pub fn has_completion_item_resolve_additionalTextEdits(&self) -> bool {
+        (|| {
+            Some(
+                self.0
+                    .text_document
+                    .as_ref()?
+                    .completion
+                    .as_ref()?
+                    .completion_item
+                    .as_ref()?
+                    .resolve_support
+                    .as_ref()?
+                    .properties
+                    .iter()
+                    .any(|cap_string| cap_string.as_str() == "additionalTextEdits"),
+            )
+        })() == Some(true)
+    }
 }

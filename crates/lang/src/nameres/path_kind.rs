@@ -48,6 +48,15 @@ pub enum PathKind {
     },
 }
 
+impl PathKind {
+    pub fn unqualified_ns(&self) -> Option<NsSet> {
+        match self {
+            PathKind::Unqualified { ns, .. } => Some(ns.clone()),
+            _ => None,
+        }
+    }
+}
+
 impl fmt::Debug for PathKind {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
@@ -88,7 +97,7 @@ pub enum QualifiedKind {
 pub fn path_kind(
     db: &dyn SourceDatabase,
     qualifier: Option<ast::Path>,
-    path: ast::Path,
+    path: &ast::Path,
     is_completion: bool,
 ) -> Option<PathKind> {
     if let Some(use_group) = path.syntax().ancestor_strict::<ast::UseGroup>() {

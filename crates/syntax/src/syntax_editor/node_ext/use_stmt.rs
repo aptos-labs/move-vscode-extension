@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::ast::node_ext::syntax_element::SyntaxElementExt;
+use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
+use crate::ast::node_ext::use_speck::UseSpeckKind;
 use crate::ast::syntax_factory::SyntaxFactory;
-use crate::syntax_editor::SyntaxEditor;
+use crate::syntax_editor::{Position, SyntaxEditor};
 use crate::{AstNode, ast};
 use itertools::Itertools;
 use vfs::FileId;
@@ -31,6 +33,42 @@ impl ast::UseStmt {
                 make.use_speck(module_path.clone_for_update(), alias).syntax(),
             );
         }
+        Some(())
+    }
+
+    pub fn add_group_item(
+        &self,
+        name_ref_with_alias: (ast::NameRef, Option<ast::UseAlias>),
+        editor: &mut SyntaxEditor,
+    ) -> Option<()> {
+        let root_use_speck = self.use_speck()?;
+        let root_use_speck_kind = root_use_speck.kind()?;
+        let make = SyntaxFactory::new();
+        let new_use_speck = match root_use_speck_kind {
+            UseSpeckKind::Module { path, alias } => make
+                .use_speck_with_group(path, vec![(make.name_ref("Self"), alias), name_ref_with_alias]),
+            UseSpeckKind::Item {
+                module_path,
+                item_name_ref,
+                alias,
+            } => {
+                let mut name_refs = vec![];
+                if let Some(item_name_ref) = item_name_ref {
+                    name_refs.push((item_name_ref, alias));
+                }
+                name_refs.push(name_ref_with_alias);
+                make.use_speck_with_group(module_path, name_refs)
+            }
+            UseSpeckKind::Group { module_path, mut name_refs } => {
+                name_refs.push(name_ref_with_alias);
+                make.use_speck_with_group(module_path, name_refs)
+            }
+            _ => {
+                return None;
+            }
+        };
+        editor.replace(root_use_speck.syntax(), new_use_speck.syntax());
+        editor.add_mappings(make.finish_with_mappings());
         Some(())
     }
 
