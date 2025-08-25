@@ -6,7 +6,7 @@
 
 import * as vscode from 'vscode';
 import * as lc from "vscode-languageclient/node";
-import { Config } from "./config";
+import { Config, prepareVSCodeConfig } from "./config";
 import { AptosEditor, isAptosDocument, isAptosEditor, isMoveTomlEditor, LazyOutputChannel, log } from "./util";
 import { SyntaxElement, SyntaxTreeProvider } from "./syntax_tree_provider";
 import { createClient } from "./client";
@@ -196,7 +196,10 @@ export class Ctx {
                 run,
                 debug: run,
             };
-            this._client = await createClient(this.traceOutputChannel, this.outputChannel, serverOptions)
+
+            const initializationOptions = prepareVSCodeConfig(vscode.workspace.getConfiguration("move-on-aptos"));
+
+            this._client = await createClient(this.traceOutputChannel, this.outputChannel, initializationOptions, serverOptions)
             this.pushClientCleanup(
                 this._client.onNotification(lsp_ext.serverStatus, (params) =>
                     this.setServerStatus(params),
