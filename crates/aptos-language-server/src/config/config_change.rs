@@ -21,7 +21,7 @@ impl Config {
         // let mut should_update = false;
 
         if let Some(json) = change.client_config_change {
-            tracing::info!("updating config from JSON: {:#}", json);
+            tracing::info!("updated extension config: {:#}", json);
 
             if !(json.is_null() || json.as_object().is_some_and(|it| it.is_empty())) {
                 // note: can be copied and uncommented to support config migrations
@@ -29,9 +29,6 @@ impl Config {
 
                 let mut json_errors = vec![];
                 let full_config_input = FullConfigInput::from_json(json.clone(), &mut json_errors);
-                if config.client_config.0 != full_config_input {
-                    tracing::info!("updating config from JSON: {:#}", json);
-                }
 
                 let config_errors = ConfigErrors(
                     json_errors

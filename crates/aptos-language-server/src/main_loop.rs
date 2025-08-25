@@ -127,10 +127,11 @@ impl GlobalState {
                 force_reload_package_deps: false,
             },
         );
-        if let Some((cause, LoadPackagesRequest { force_reload_package_deps })) =
+        if let Some((cause, LoadPackagesRequest { force_reload_package_deps: _ })) =
             self.load_aptos_packages_queue.should_start_op()
         {
-            self.load_aptos_packages_from_fs(cause, force_reload_package_deps);
+            // force_reload_package_deps = false because it's the same one from above
+            self.load_aptos_packages_from_fs(cause, false);
         }
 
         while let Ok(event) = self.next_event(&inbox) {
@@ -243,26 +244,10 @@ impl GlobalState {
 
             let ask_for_client_refresh = became_fully_loaded || any_file_changed;
             if ask_for_client_refresh {
-                // Refresh semantic tokens if the client supports it.
-                if self.config.semantic_tokens_refresh() {
-                    // self.semantic_tokens_cache.lock().clear();
-                    self.send_request::<lsp_types::request::SemanticTokensRefresh>((), |_, _| ());
-                }
-
-                // Refresh code lens if the client supports it.
-                if self.config.code_lens_refresh() {
-                    self.send_request::<lsp_types::request::CodeLensRefresh>((), |_, _| ());
-                }
-
-                // Refresh inlay hints if the client supports it.
-                if self.config.inlay_hints_refresh() {
-                    self.send_request::<lsp_types::request::InlayHintRefreshRequest>((), |_, _| ());
-                }
-
-                // todo: lsp-types does not support this
-                // if self.config.diagnostics_refresh() {
-                self.send_request::<lsp_types::request::WorkspaceDiagnosticRefresh>((), |_, _| ());
-                // }
+                self.ask_for_semantic_tokens_refresh();
+                self.ask_for_codelens_refresh();
+                self.ask_for_inlay_hints_refresh();
+                self.ask_client_for_diagnostics_refresh();
             }
         }
 
@@ -297,6 +282,37 @@ impl GlobalState {
                 );
             }
         }
+    }
+
+    /// Refresh semantic tokens if the client supports it.
+    pub(crate) fn ask_for_semantic_tokens_refresh(&mut self) {
+        if self.config.semantic_tokens_refresh() {
+            // self.semantic_tokens_cache.lock().clear();
+            self.send_request::<lsp_types::request::SemanticTokensRefresh>((), |_, _| ());
+        }
+    }
+
+    /// Refresh code lens if the client supports it.
+    pub(crate) fn ask_for_codelens_refresh(&mut self) {
+        if self.config.code_lens_refresh() {
+            self.send_request::<lsp_types::request::CodeLensRefresh>((), |_, _| ());
+        }
+    }
+
+    /// Refresh inlay hints if the client supports it.
+    pub(crate) fn ask_for_inlay_hints_refresh(&mut self) {
+        if self.config.inlay_hints_refresh() {
+            tracing::info!("ask client to refresh inlay hints");
+            self.send_request::<lsp_types::request::InlayHintRefreshRequest>((), |_, _| ());
+        }
+    }
+
+    pub(crate) fn ask_client_for_diagnostics_refresh(&mut self) {
+        // todo: lsp-types does not support this
+        // if self.config.diagnostics_refresh() {
+        tracing::info!("ask client to refresh diagnostics");
+        self.send_request::<lsp_types::request::WorkspaceDiagnosticRefresh>((), |_, _| ());
+        // }
     }
 
     fn handle_task(&mut self, task: Task) {

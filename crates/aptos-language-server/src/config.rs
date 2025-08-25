@@ -226,7 +226,7 @@ impl Config {
         }
     }
 
-    pub fn inlay_hints(&self) -> InlayHintsConfig {
+    pub fn inlay_hints_config(&self) -> InlayHintsConfig {
         let client_capability_fields = self.inlay_hint_resolve_support_properties();
         InlayHintsConfig {
             render_colons: self.inlayHints_renderColons().to_owned(),
