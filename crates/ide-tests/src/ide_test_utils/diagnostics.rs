@@ -7,10 +7,11 @@
 use crate::init_tracing_for_test;
 use expect_test::{Expect, ExpectFile};
 use ide::Analysis;
-use ide_db::assists::{Assist, AssistResolveStrategy};
+use ide_db::assists::{Assist, AssistId, AssistResolveStrategy};
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 use std::collections::HashSet;
+use stdx::itertools::Itertools;
 use test_utils::fixtures::TestState;
 use test_utils::{SourceMark, apply_source_marks, fixtures, get_first_marked_position, remove_marks};
 use vfs::FileId;
@@ -97,7 +98,59 @@ pub fn check_diagnostics_and_fix(before: Expect, after: Expect) {
     lines.remove(line_idx as usize);
     let before_no_error_line = lines.join("\n");
 
-    let mut actual_after = apply_assist(assist, &before_no_error_line);
+    let mut actual_after = apply_fix(assist, &before_no_error_line);
+    actual_after.push_str("\n");
+    after.assert_eq(&stdx::trim_indent(&actual_after).as_str());
+}
+
+pub fn check_diagnostics_and_fix_with_id(fix_id: AssistId, before: Expect, after: Expect) {
+    init_tracing_for_test();
+
+    let before_source = remove_marks(&stdx::trim_indent(before.data()), "//^");
+    let mut diagnostics = check_diagnostics_for_fixes(before);
+
+    // let before_source = stdx::trim_indent(before.data());
+    // let trimmed_before_source = remove_marks(&before_source, "//^");
+    //
+    // let (_, _, mut diagnostics) =
+    //     get_diagnostics(trimmed_before_source.as_str(), DiagnosticsConfig::test_sample());
+
+    let fix = diagnostics
+        .into_iter()
+        .filter_map(|it| it.fixes)
+        .flatten()
+        .filter(|it| it.id == fix_id)
+        .exactly_one()
+        .ok()
+        .unwrap_or_else(|| panic!("No fixes with id `{}` available", fix_id.0));
+
+    // let diagnostics_with_fixes = diagnostics
+    //     .into_iter()
+    //     .filter(|it| !it.fixes.as_ref().is_some_and(|it| !it.is_empty()))
+    //     .collect::<Vec<_>>();
+    // assert!(
+    //     !diagnostics_with_fixes.is_empty(),
+    //     "no diagnostics with fixes found"
+    // );
+
+    // let diagnostic = diagnostics.pop().expect("no diagnostics found");
+    // assert_no_extra_diagnostics_for_fixes(&source, diagnostics);
+
+    // let actual = apply_diagnostics_to_file(&trimmed_before_source, &vec![diagnostic.clone()]);
+    // before.assert_eq(stdx::trim_indent(&actual).as_str());
+    //
+    // let assist = &diagnostic
+    //     .fixes
+    //     .unwrap_or_else(|| panic!("{:?} diagnostic misses fixes", diagnostic.code))[0];
+
+    // let line_idx = get_first_marked_position(&before_source, "//^")
+    //     .mark_line_col
+    //     .line;
+    // let mut lines = before_source.lines().collect::<Vec<_>>();
+    // lines.remove(line_idx as usize);
+    // let before_no_error_line = lines.join("\n");
+
+    let mut actual_after = apply_fix(&fix, &before_source);
     actual_after.push_str("\n");
     after.assert_eq(&stdx::trim_indent(&actual_after).as_str());
 }
@@ -134,6 +187,18 @@ pub fn check_diagnostics_no_fix(before: Expect) {
     // after.assert_eq(&stdx::trim_indent(&actual_after).as_str());
 }
 
+fn check_diagnostics_for_fixes(before: Expect) -> Vec<Diagnostic> {
+    let trimmed_before_source = remove_marks(&stdx::trim_indent(before.data()), "//^");
+
+    let (_, _, mut diagnostics) =
+        get_diagnostics(trimmed_before_source.as_str(), DiagnosticsConfig::test_sample());
+
+    let actual = apply_diagnostics_to_file(&trimmed_before_source, &diagnostics);
+    before.assert_eq(stdx::trim_indent(&actual).as_str());
+
+    diagnostics
+}
+
 pub fn check_diagnostics_on_tmpfs_and_fix(test_state: TestState, before_fix: Expect, after_fix: Expect) {
     init_tracing_for_test();
 
@@ -164,7 +229,7 @@ pub fn check_diagnostics_on_tmpfs_and_fix(test_state: TestState, before_fix: Exp
     lines.remove(line_idx as usize);
     let before_no_error_line = lines.join("\n");
 
-    let mut actual_after = apply_assist(assist, &before_no_error_line);
+    let mut actual_after = apply_fix(assist, &before_no_error_line);
     actual_after.push_str("\n");
     after_fix.assert_eq(&stdx::trim_indent(&actual_after).as_str());
 }
@@ -180,7 +245,7 @@ fn get_diagnostics(source: &str, config: DiagnosticsConfig) -> (Analysis, FileId
     (analysis, file_id, diagnostics)
 }
 
-pub fn apply_assist(fix: &Assist, before: &str) -> String {
+pub fn apply_fix(fix: &Assist, before: &str) -> String {
     let source_change = fix.source_change.as_ref().unwrap();
     let mut after = before.to_string();
 
@@ -195,10 +260,28 @@ fn assert_no_extra_diagnostics(source: &str, diags: Vec<Diagnostic>) {
     if diags.is_empty() {
         return;
     }
-
+    println!();
+    println!("======================================");
     println!("Extra diagnostics:");
     for d in diags {
         let s = apply_diagnostics_to_file(source, &vec![d]);
+        println!("{}", s);
+    }
+    println!("======================================");
+
+    panic!("Extra diagnostics available");
+}
+
+fn assert_no_extra_diagnostics_for_fixes(source: impl Into<String>, diags: Vec<Diagnostic>) {
+    if diags.is_empty() {
+        return;
+    }
+    let source = remove_marks(&stdx::trim_indent(&source.into()), "//^");
+    println!();
+    println!("======================================");
+    println!("Extra diagnostics:");
+    for d in diags {
+        let s = apply_diagnostics_to_file(&source, &vec![d]);
         println!("{}", s);
     }
     println!("======================================");

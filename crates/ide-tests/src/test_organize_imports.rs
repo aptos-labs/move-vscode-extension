@@ -1,7 +1,7 @@
 // Copyright © Aptos Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::ide_test_utils::diagnostics::apply_assist;
+use crate::ide_test_utils::diagnostics::apply_fix;
 use expect_test::{Expect, expect};
 use test_utils::fixtures;
 use test_utils::tracing::init_tracing_for_test;
@@ -16,9 +16,7 @@ fn check_organize_imports(before: &str, after: Expect) {
         .organize_imports(file_id)
         .unwrap()
         .expect("no assist found");
-    let mut actual_after = apply_assist(&organize_assist, &before_source)
-        .trim_end()
-        .to_string();
+    let mut actual_after = apply_fix(&organize_assist, &before_source).trim_end().to_string();
     actual_after.push_str("\n");
 
     after.assert_eq(&stdx::trim_indent(&actual_after).as_str());

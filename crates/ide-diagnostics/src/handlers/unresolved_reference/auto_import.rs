@@ -43,7 +43,7 @@ pub(crate) fn auto_import_fix(
 
     let path_scope = hir_db::item_scope(db, path.loc(file_id));
     let items_owner_scope = hir_db::item_scope(db, current_items_owner.loc(file_id));
-    let add_test_only = path_scope == NamedItemScope::Test && items_owner_scope != NamedItemScope::Test;
+    let add_test_only = path_scope == NamedItemScope::Test && items_owner_scope == NamedItemScope::Main;
 
     for import_candidate in import_candidates {
         add_autoimport_fix_for_import_candidate(
@@ -84,7 +84,7 @@ fn add_autoimport_fix_for_import_candidate(
 fn add_import_for_named_element(
     items_owner: &ast::AnyHasItems,
     named_element: ast::NamedElement,
-    add_test_only: bool,
+    with_test_only: bool,
 ) -> impl FnOnce(&mut SyntaxEditor, &SyntaxFactory) -> Option<()> {
     move |editor, make| {
         let (item_module_path, item_name_ref) = make.item_path(named_element)?;
@@ -96,7 +96,7 @@ fn add_import_for_named_element(
                 it.module_path()
                     .is_some_and(|use_mod_path| use_mod_path.syntax_eq(&item_module_path))
             })
-            .filter(|it| !add_test_only || it.has_attr_item("test_only"))
+            .filter(|it| it.is_test_only() == with_test_only)
             .last();
         if let Some(use_stmt) = existing_use_stmt {
             let new_name_ref = match item_name_ref {
@@ -114,7 +114,7 @@ fn add_import_for_named_element(
             }
             None => item_module_path,
         };
-        let use_stmt = make.use_stmt(use_speck_path, add_test_only);
+        let use_stmt = make.use_stmt(use_speck_path, with_test_only);
 
         items_owner.add_use_stmt(&use_stmt, editor);
 
