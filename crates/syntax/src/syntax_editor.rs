@@ -48,7 +48,12 @@ impl SyntaxEditor {
     }
 
     pub fn insert(&mut self, position: Position, element: impl Element) {
-        debug_assert!(is_ancestor_or_self(&position.parent(), &self.root));
+        debug_assert!(
+            is_ancestor_or_self(&position.parent(), &self.root),
+            "position {:?} is not a child of {:?}",
+            position.place(),
+            self.root
+        );
         self.changes
             .push(Change::Insert(position, element.syntax_element()))
     }

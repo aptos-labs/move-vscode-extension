@@ -2,12 +2,14 @@ use crate::DiagnosticsContext;
 use base_db::SourceDatabase;
 use ide_db::assist_context::LocalAssists;
 use lang::hir_db;
+use lang::item_scope::NamedItemScope;
+use lang::loc::SyntaxLocNodeExt;
 use lang::nameres::fq_named_element::ItemFQNameOwner;
 use lang::nameres::path_kind::path_kind;
 use lang::nameres::scope::ScopeEntry;
-use syntax::ast::UseStmtsOwner;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::syntax_factory::SyntaxFactory;
+use syntax::ast::{HasAttrs, UseStmtsOwner};
 use syntax::files::InFile;
 use syntax::syntax_editor::SyntaxEditor;
 use syntax::{AstNode, TextRange, ast};
@@ -39,6 +41,10 @@ pub(crate) fn auto_import_fix(
     let current_items_owner = path.syntax().containing_items_owner()?;
     let mut assists = ctx.local_assists_for_node(InFile::new(file_id, &path))?;
 
+    let path_scope = hir_db::item_scope(db, path.loc(file_id));
+    let items_owner_scope = hir_db::item_scope(db, current_items_owner.loc(file_id));
+    let add_test_only = path_scope == NamedItemScope::Test && items_owner_scope == NamedItemScope::Main;
+
     for import_candidate in import_candidates {
         add_autoimport_fix_for_import_candidate(
             db,
@@ -46,6 +52,7 @@ pub(crate) fn auto_import_fix(
             import_candidate,
             &current_items_owner,
             reference_range,
+            add_test_only,
         );
     }
     Some(assists)
@@ -57,6 +64,7 @@ fn add_autoimport_fix_for_import_candidate(
     import_candidate: ScopeEntry,
     current_use_items_owner: &ast::AnyHasItems,
     reference_range: TextRange,
+    add_test_only: bool,
 ) -> Option<()> {
     let candidate_named_element = import_candidate.cast_into::<ast::NamedElement>(db)?;
     let candidate_fq_name = candidate_named_element.fq_name(db)?;
@@ -64,7 +72,11 @@ fn add_autoimport_fix_for_import_candidate(
         "add-import",
         format!("Add import for `{}`", candidate_fq_name.fq_identifier_text()),
         reference_range,
-        add_import_for_named_element(current_use_items_owner, candidate_named_element.value),
+        add_import_for_named_element(
+            current_use_items_owner,
+            candidate_named_element.value,
+            add_test_only,
+        ),
     );
     Some(())
 }
@@ -72,6 +84,7 @@ fn add_autoimport_fix_for_import_candidate(
 fn add_import_for_named_element(
     items_owner: &ast::AnyHasItems,
     named_element: ast::NamedElement,
+    with_test_only: bool,
 ) -> impl FnOnce(&mut SyntaxEditor, &SyntaxFactory) -> Option<()> {
     move |editor, make| {
         let (item_module_path, item_name_ref) = make.item_path(named_element)?;
@@ -83,6 +96,7 @@ fn add_import_for_named_element(
                 it.module_path()
                     .is_some_and(|use_mod_path| use_mod_path.syntax_eq(&item_module_path))
             })
+            .filter(|it| it.is_test_only() == with_test_only)
             .last();
         if let Some(use_stmt) = existing_use_stmt {
             let new_name_ref = match item_name_ref {
@@ -100,9 +114,9 @@ fn add_import_for_named_element(
             }
             None => item_module_path,
         };
-        let use_stmt = make.use_stmt(use_speck_path);
+        let use_stmt = make.use_stmt(use_speck_path, with_test_only);
 
-        items_owner.add_use_stmt(use_stmt, editor);
+        items_owner.add_use_stmt(&use_stmt, editor);
 
         Some(())
     }

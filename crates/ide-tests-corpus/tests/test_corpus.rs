@@ -14,7 +14,7 @@ use ide_db::Severity;
 use ide_db::assists::AssistResolveStrategy;
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
-use ide_tests::ide_test_utils::diagnostics::{check_diagnostics, check_diagnostics_in_file};
+use ide_tests::ide_test_utils::diagnostics::check_diagnostics;
 use ide_tests::init_tracing_for_test;
 use paths::{AbsPath, AbsPathBuf};
 use std::collections::HashSet;
