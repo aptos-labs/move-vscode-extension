@@ -1,5 +1,5 @@
 use crate::ide_test_utils::diagnostics::{
-    check_diagnostics, check_diagnostics_and_fix, check_diagnostics_on_tmpfs,
+    check_diagnostics, check_diagnostics_and_fix, check_diagnostics_no_fix, check_diagnostics_on_tmpfs,
     check_diagnostics_on_tmpfs_and_fix,
 };
 use expect_test::expect;
@@ -340,6 +340,160 @@ fn test_merge_new_auto_import_with_the_existing_group_with_alias() {
 
                 fun main(_s: MyS) {
                     call();
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_no_struct_in_module_context() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+            module 0x1::Token {
+                struct Token {}
+                struct MintCapability {}
+                public fun call() {}
+            }
+            module 0x1::Main {
+                fun main(_a: Token::MintCapability) {}
+                           //^^^^^ err: Unresolved reference `Token`: cannot resolve
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::Token {
+                struct Token {}
+                struct MintCapability {}
+                public fun call() {}
+            }
+            module 0x1::Main {
+                use 0x1::Token;
+
+                fun main(_a: Token::MintCapability) {}
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_struct_with_the_same_name_as_module() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+            module 0x1::Token {
+                struct Token {}
+                public fun call() {}
+            }
+            module 0x1::Main {
+                use 0x1::Token;
+
+                fun main(_a: Token) {
+                           //^^^^^ err: Unresolved reference `Token`: cannot resolve
+                    Token::call();
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::Token {
+                struct Token {}
+                public fun call() {}
+            }
+            module 0x1::Main {
+                use 0x1::Token::{Self, Token};
+
+                fun main(_a: Token) {
+                    Token::call();
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_unresolved_function_on_module_should_not_have_a_fix() {
+    // language=Move
+    check_diagnostics_no_fix(expect![[r#"
+            module 0x1::Coin {
+                public fun initialize() {}
+            }
+            module 0x1::AnotherCoin {}
+            module 0x1::Main {
+                use 0x1::AnotherCoin;
+
+                fun call() {
+                    AnotherCoin::initialize();
+                               //^^^^^^^^^^ err: Unresolved reference `initialize`: cannot resolve
+                }
+            }
+        "#]]);
+}
+
+#[test]
+fn test_test_only_function_inside_test_only_module() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+            module 0x1::Minter {
+                #[test_only]
+                public fun get_weekly_emission(): u64 { 0 }
+            }
+            #[test_only]
+            module 0x1::MinterTests {
+                #[test]
+                fun test_a() {
+                    get_weekly_emission();
+                  //^^^^^^^^^^^^^^^^^^^ err: Unresolved reference `get_weekly_emission`: cannot resolve
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::Minter {
+                #[test_only]
+                public fun get_weekly_emission(): u64 { 0 }
+            }
+            #[test_only]
+            module 0x1::MinterTests {
+                use 0x1::Minter::get_weekly_emission;
+
+                #[test]
+                fun test_a() {
+                    get_weekly_emission();
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_test_only_function_in_test_with_test_only_import() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+            module 0x1::Minter {
+                #[test_only]
+                public fun get_weekly_emission(): u64 { 0 }
+            }
+            module 0x1::MinterTests {
+                #[test]
+                fun my_fun() {
+                    get_weekly_emission();
+                  //^^^^^^^^^^^^^^^^^^^ err: Unresolved reference `get_weekly_emission`: cannot resolve
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::Minter {
+                #[test_only]
+                public fun get_weekly_emission(): u64 { 0 }
+            }
+            module 0x1::MinterTests {
+                #[test_only]
+                use 0x1::Minter::get_weekly_emission;
+
+                #[test]
+                fun my_fun() {
+                    get_weekly_emission();
                 }
             }
         "#]],

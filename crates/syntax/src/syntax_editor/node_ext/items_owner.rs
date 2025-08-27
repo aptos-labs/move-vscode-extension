@@ -3,7 +3,7 @@ use crate::syntax_editor::{Element, SyntaxEditor};
 use crate::{AstNode, ast};
 
 impl ast::AnyHasItems {
-    pub fn add_use_stmt(&self, use_stmt: ast::UseStmt, editor: &mut SyntaxEditor) -> Option<()> {
+    pub fn add_use_stmt(&self, use_stmt: &ast::UseStmt, editor: &mut SyntaxEditor) -> Option<()> {
         let (anchor, needs_newline_at_the_end) = self.pos_after_last_use_stmt()?;
 
         let make = SyntaxFactory::new();

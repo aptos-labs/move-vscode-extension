@@ -54,8 +54,8 @@ impl TreeDiff {
 /// such that applying this map on `from` will result in `to`.
 ///
 /// This function tries to find a fine-grained diff.
-#[tracing::instrument(level = "trace", skip_all)]
 pub fn tree_diff(from: &SyntaxNode, to: &SyntaxNode) -> TreeDiff {
+    let _p = tracing::debug_span!("tree_diff").entered();
     let mut diff = TreeDiff {
         replacements: HashMap::default(),
         insertions: IndexMap::default(),

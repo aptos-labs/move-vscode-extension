@@ -102,6 +102,38 @@ pub fn check_diagnostics_and_fix(before: Expect, after: Expect) {
     after.assert_eq(&stdx::trim_indent(&actual_after).as_str());
 }
 
+pub fn check_diagnostics_no_fix(before: Expect) {
+    init_tracing_for_test();
+
+    let before_source = stdx::trim_indent(before.data());
+    let trimmed_before_source = remove_marks(&before_source, "//^");
+
+    let (_, _, mut diagnostics) =
+        get_diagnostics(trimmed_before_source.as_str(), DiagnosticsConfig::test_sample());
+
+    let diagnostic = diagnostics.pop().expect("no diagnostics found");
+    assert_no_extra_diagnostics(&trimmed_before_source, diagnostics);
+
+    let actual = apply_diagnostics_to_file(&trimmed_before_source, &vec![diagnostic.clone()]);
+    before.assert_eq(stdx::trim_indent(&actual).as_str());
+
+    assert!(diagnostic.fixes.is_none(), "extra fixes");
+    // let assist = &diagnostic
+    //     .fixes
+    //     .unwrap_or_else(|| panic!("{:?} diagnostic misses fixes", diagnostic.code))[0];
+    //
+    // let line_idx = get_first_marked_position(&before_source, "//^")
+    //     .mark_line_col
+    //     .line;
+    // let mut lines = before_source.lines().collect::<Vec<_>>();
+    // lines.remove(line_idx as usize);
+    // let before_no_error_line = lines.join("\n");
+
+    // let mut actual_after = apply_assist(assist, &before_no_error_line);
+    // actual_after.push_str("\n");
+    // after.assert_eq(&stdx::trim_indent(&actual_after).as_str());
+}
+
 pub fn check_diagnostics_on_tmpfs_and_fix(test_state: TestState, before_fix: Expect, after_fix: Expect) {
     init_tracing_for_test();
 
