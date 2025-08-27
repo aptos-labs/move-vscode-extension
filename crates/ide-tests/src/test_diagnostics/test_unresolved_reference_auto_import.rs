@@ -1,11 +1,19 @@
 use crate::ide_test_utils::diagnostics::{
-    check_diagnostics, check_diagnostics_and_fix, check_diagnostics_and_fix_with_id,
-    check_diagnostics_no_fix, check_diagnostics_on_tmpfs, check_diagnostics_on_tmpfs_and_fix,
+    check_diagnostics_and_fix, check_diagnostics_and_fix_with_id, check_diagnostics_no_fix,
+    check_diagnostics_on_tmpfs_and_fix,
 };
-use expect_test::expect;
+use expect_test::{Expect, expect};
 use ide_db::assists::AssistId;
 use test_utils::fixtures;
 use test_utils::fixtures::test_state::{named, named_with_deps};
+
+fn check_diagnostics_apply_import_fix(before: Expect, after: Expect) {
+    check_diagnostics_and_fix_with_id(AssistId::quick_fix("add-import"), before, after);
+}
+
+fn check_diagnostics_no_import_fix(before: Expect) {
+    check_diagnostics_no_fix(AssistId::quick_fix("add-import"), before);
+}
 
 #[test]
 fn test_import_unresolved_type() {
@@ -201,13 +209,14 @@ module std::vector {
         }
     "#]],
         expect![[r#"
-        module 0x1::main {
-            use std::vector;
+            module 0x1::main {
+                use std::vector;
 
-            fun main() {
-                let _ = vector::empty();/*caret*/
+                fun main() {
+                    let _ = vector::empty();/*caret*/
+                }
             }
-    "#]],
+        "#]],
     );
 }
 
@@ -414,7 +423,7 @@ fn test_struct_with_the_same_name_as_module() {
 #[test]
 fn test_unresolved_function_on_module_should_not_have_a_fix() {
     // language=Move
-    check_diagnostics_no_fix(expect![[r#"
+    check_diagnostics_no_import_fix(expect![[r#"
             module 0x1::Coin {
                 public fun initialize() {}
             }
@@ -631,8 +640,7 @@ fn test_auto_import_test_function() {
 #[test]
 fn test_add_import_into_existing_empty_group() {
     // language=Move
-    check_diagnostics_and_fix_with_id(
-        AssistId::quick_fix("add-import"),
+    check_diagnostics_apply_import_fix(
         expect![[r#"
             module 0x1::Token {
                 struct Token {}
