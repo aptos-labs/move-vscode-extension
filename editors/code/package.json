@@ -224,6 +224,16 @@
                 }
             },
             {
+                "title": "completion",
+                "properties": {
+                    "move-on-aptos.completion.autoimport.enable": {
+                        "markdownDescription": "Show completions that automatically add imports when completed.\n\nNote that your client must specify the `additionalTextEdits` LSP client capability to\ntruly have this feature enabled.",
+                        "default": false,
+                        "type": "boolean"
+                    }
+                }
+            },
+            {
                 "title": "diagnostics",
                 "properties": {
                     "move-on-aptos.diagnostics.disabled": {

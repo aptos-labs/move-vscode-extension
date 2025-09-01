@@ -10,10 +10,14 @@ use crate::completions::{Completions, item_list, reference};
 use crate::config::CompletionConfig;
 use crate::context::{CompletionAnalysis, CompletionContext};
 use crate::item::CompletionItem;
-use ide_db::RootDatabase;
+use ide_db::source_change::SourceChangeBuilder;
+use ide_db::text_edit::TextEdit;
+use ide_db::{RootDatabase, imports};
+use lang::Semantics;
 use std::cell::RefCell;
-use syntax::ast;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::FilePosition;
+use syntax::{AstNode, ast};
 
 pub mod completions;
 pub mod config;
@@ -56,4 +60,34 @@ pub fn completions(
 
     let completions = completions.into_inner();
     Some(completions.into())
+}
+
+/// Resolves additional completion data at the position given.
+/// This is used for import insertion done via completions like flyimport and custom user snippets.
+pub fn resolve_completion_edits(
+    db: &RootDatabase,
+    FilePosition { file_id, offset }: FilePosition,
+    import_to_add: String,
+) -> Option<Vec<TextEdit>> {
+    let _p = tracing::info_span!("resolve_completion_edits").entered();
+    let sema = Semantics::new(db, file_id);
+
+    let original_file = sema.parse(file_id);
+    let original_token = syntax::AstNode::syntax(&original_file)
+        .token_at_offset(offset)
+        .left_biased()?;
+    let position_for_import = &original_token.parent()?;
+
+    let items_owner = position_for_import.containing_items_owner()?;
+
+    let mut builder = SourceChangeBuilder::new(file_id);
+
+    let mut editor = builder.make_editor(items_owner.syntax());
+    let add_imports = imports::add_import_for_import_path(&items_owner, import_to_add, false);
+    add_imports(&mut editor);
+    builder.add_file_edits(file_id, editor);
+
+    let source_change = builder.finish();
+    let text_edit = source_change.get_source_edit(file_id)?.clone();
+    Some(vec![text_edit])
 }

@@ -73,11 +73,11 @@ impl GlobalState {
         }
 
         if self.config.diagnostics_config() != old_config.diagnostics_config() {
-            self.ask_client_for_diagnostics_refresh();
+            self.ask_client_for_diagnostics_refresh("update configuration");
         }
 
         if self.config.inlay_hints_config() != old_config.inlay_hints_config() {
-            self.ask_for_inlay_hints_refresh();
+            self.ask_for_inlay_hints_refresh("update configuration");
         }
     }
 

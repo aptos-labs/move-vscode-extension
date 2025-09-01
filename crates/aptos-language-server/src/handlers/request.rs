@@ -6,7 +6,7 @@
 
 use crate::diagnostics::to_proto_diagnostic;
 use crate::global_state::GlobalStateSnapshot;
-use crate::lsp::utils::invalid_params_error;
+use crate::lsp::utils::{all_edits_are_disjoint, invalid_params_error};
 use crate::lsp::{LspError, from_proto, to_proto};
 use crate::movefmt::run_movefmt;
 use crate::{Config, lsp_ext, try_default};
@@ -26,7 +26,7 @@ use lsp_types::{
 use std::hash::DefaultHasher;
 use stdx::format_to;
 use stdx::itertools::Itertools;
-use syntax::files::FileRange;
+use syntax::files::{FilePosition, FileRange};
 use vfs::FileId;
 // pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
 //     let req = FetchPackagesRequest { force_reload_deps: false };
@@ -204,7 +204,7 @@ pub(crate) fn handle_workspace_symbol(
                     .unwrap_or(lsp_types::SymbolKind::VARIABLE),
                 tags: None,
                 container_name,
-                location: lsp_types::OneOf::Left(to_proto::location_from_nav(snap, nav)?),
+                location: OneOf::Left(to_proto::location_from_nav(snap, nav)?),
                 data: None,
             };
             res.push(info);
@@ -269,6 +269,105 @@ pub(crate) fn handle_completion(
 
     let completion_list = lsp_types::CompletionList { is_incomplete: true, items };
     Ok(Some(completion_list.into()))
+}
+
+pub(crate) fn handle_completion_resolve(
+    snap: GlobalStateSnapshot,
+    mut original_completion: lsp_types::CompletionItem,
+) -> anyhow::Result<lsp_types::CompletionItem> {
+    let _p = tracing::info_span!("handle_completion_resolve").entered();
+
+    if !all_edits_are_disjoint(&original_completion, &[]) {
+        return Err(invalid_params_error(
+            "Received a completion with overlapping edits, this is not LSP-compliant".to_owned(),
+        )
+        .into());
+    }
+
+    let Some(data) = original_completion.data.take() else {
+        return Ok(original_completion);
+    };
+
+    let resolve_data: lsp_ext::CompletionResolveData = serde_json::from_value(data)?;
+
+    let file_id = from_proto::file_id(&snap, &resolve_data.position.text_document.uri)?;
+    let line_index = snap.file_line_index(file_id)?;
+    // FIXME: We should fix up the position when retrying the cancelled request instead
+    let Ok(offset) = from_proto::offset(&line_index, resolve_data.position.position) else {
+        return Ok(original_completion);
+    };
+
+    let forced_resolve_completions_config = snap.config.completion();
+
+    let position = FilePosition { file_id, offset };
+    let Some(completions) = snap.analysis.completions(
+        &forced_resolve_completions_config,
+        position,
+        resolve_data.trigger_character,
+    )?
+    else {
+        return Ok(original_completion);
+    };
+    // let Ok(resolve_data_hash) = BASE64_STANDARD.decode(resolve_data.hash) else {
+    //     return Ok(original_completion);
+    // };
+
+    let Some(corresponding_completion) = completions.into_iter().find(|completion_item| {
+        // Avoid computing hashes for items that obviously do not match
+        // r-a might append a detail-based suffix to the label, so we cannot check for equality
+        original_completion
+            .label
+            .starts_with(completion_item.label.primary.as_str())
+        // && resolve_data_hash == completion_item_hash(completion_item, resolve_data.for_ref)
+    }) else {
+        return Ok(original_completion);
+    };
+
+    let mut resolved_completions = to_proto::completion_items(
+        &snap.config,
+        // &forced_resolve_completions_config.fields_to_resolve,
+        &line_index,
+        snap.file_version(position.file_id),
+        resolve_data.position,
+        resolve_data.trigger_character,
+        vec![corresponding_completion],
+    );
+    let Some(mut resolved_completion) = resolved_completions.pop() else {
+        return Ok(original_completion);
+    };
+
+    let additional_edits = snap
+        .analysis
+        .resolve_completion_edits(
+            &forced_resolve_completions_config,
+            position,
+            resolve_data.import.full_import_path,
+        )?
+        .into_iter()
+        .flat_map(|edit| {
+            edit.into_iter()
+                .map(|indel| to_proto::lsp_text_edit(&line_index, indel))
+        })
+        .collect::<Vec<_>>();
+
+    if !all_edits_are_disjoint(&resolved_completion, &additional_edits) {
+        return Err(LspError::new(
+            ErrorCode::InternalError as i32,
+            "Import edit overlaps with the original completion edits, this is not LSP-compliant".into(),
+        )
+        .into());
+    }
+
+    if let Some(original_additional_edits) = resolved_completion.additional_text_edits.as_mut() {
+        original_additional_edits.extend(additional_edits)
+    } else {
+        resolved_completion.additional_text_edits = Some(additional_edits);
+    }
+    //
+    // if let Some(import_to_add) = resolve_data.import {
+    // }
+
+    Ok(resolved_completion)
 }
 
 pub(crate) fn handle_document_diagnostics(

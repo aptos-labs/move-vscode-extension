@@ -38,8 +38,8 @@ impl ast::UseStmt {
 
     pub fn add_group_item(
         &self,
-        name_ref_with_alias: (ast::NameRef, Option<ast::UseAlias>),
         editor: &mut SyntaxEditor,
+        name_ref_with_alias: (ast::NameRef, Option<ast::UseAlias>),
     ) -> Option<()> {
         let root_use_speck = self.use_speck()?;
         let root_use_speck_kind = root_use_speck.kind()?;

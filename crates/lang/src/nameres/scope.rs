@@ -18,12 +18,18 @@ use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, SyntaxKind, SyntaxNode, ast};
 use vfs::FileId;
 
-#[derive(Clone, Eq, PartialEq, Hash)]
+#[derive(Clone, Eq, Hash)]
 pub struct ScopeEntry {
     pub name: String,
     pub node_loc: SyntaxLoc,
     pub ns: Ns,
     pub scope_adjustment: Option<NamedItemScope>,
+}
+
+impl PartialEq for ScopeEntry {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.node_loc == other.node_loc
+    }
 }
 
 impl ScopeEntry {

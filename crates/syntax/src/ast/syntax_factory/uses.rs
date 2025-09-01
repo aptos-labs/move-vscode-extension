@@ -1,17 +1,17 @@
-use crate::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use crate::ast::syntax_factory::{SyntaxFactory, module_item_from_text};
-use crate::syntax_editor::SyntaxEditor;
 use crate::{AstNode, ast};
 use itertools::Itertools;
 
 impl SyntaxFactory {
-    pub fn use_stmt(&self, use_speck_path: ast::Path, with_test_only: bool) -> ast::UseStmt {
-        let path_text = use_speck_path.syntax().text();
-        module_item_from_text::<ast::UseStmt>(&format!(
-            "{}use {path_text};",
-            if with_test_only { "#[test_only]\n    " } else { "" }
-        ))
-        .clone_for_update()
+    pub fn use_stmt(
+        &self,
+        attrs: impl IntoIterator<Item = ast::Attr>,
+        use_speck: ast::UseSpeck,
+    ) -> ast::UseStmt {
+        #[rustfmt::skip]
+        let attrs =
+            attrs.into_iter().fold(String::new(), |mut acc, attr| stdx::format_to_acc!(acc, "{}\n", attr));
+        module_item_from_text::<ast::UseStmt>(&format!("{attrs}use {use_speck};")).clone_for_update()
     }
 
     pub fn use_speck(&self, path: ast::Path, alias: Option<ast::UseAlias>) -> ast::UseSpeck {

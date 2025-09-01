@@ -4,12 +4,12 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::ast::{AstChildren, UseStmt, support};
+use crate::ast::{AstChildren, support};
 use crate::{AstNode, ast};
 
 pub trait UseStmtsOwner: AstNode {
     #[inline]
-    fn use_stmts(&self) -> AstChildren<UseStmt> {
+    fn use_stmts(&self) -> AstChildren<ast::UseStmt> {
         support::children(&self.syntax())
     }
 
@@ -27,5 +27,12 @@ pub trait UseStmtsOwner: AstNode {
                 }
             })
             .collect()
+    }
+
+    fn use_stmts_for_module_path(&self, module_path: &ast::Path) -> impl Iterator<Item = ast::UseStmt> {
+        self.use_stmts().filter(|it| {
+            it.module_path()
+                .is_some_and(|use_mod_path| use_mod_path.syntax_eq(module_path))
+        })
     }
 }

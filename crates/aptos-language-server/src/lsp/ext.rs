@@ -11,6 +11,7 @@ use lsp_types::{CodeActionKind, Position, Range, TextDocumentIdentifier, TextEdi
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ops;
+use syntax::{SyntaxKind, TextRange};
 
 pub enum AnalyzerStatus {}
 
@@ -170,4 +171,26 @@ impl Request for OrganizeImports {
 #[serde(rename_all = "camelCase")]
 pub struct OrganizeImportsParams {
     pub text_document: TextDocumentIdentifier,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CompletionResolveData {
+    pub position: lsp_types::TextDocumentPositionParams,
+    pub import: CompletionImport,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub version: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub trigger_character: Option<char>,
+    // #[serde(default)]
+    // pub for_ref: bool,
+    // pub hash: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CompletionImport {
+    pub full_import_path: String,
+    // pub file_id: u32,
+    // pub kind: u16,
+    // pub range_start: u32,
+    // pub range_end: u32,
 }

@@ -58,6 +58,9 @@ pub struct CompletionItem {
     /// all possible items, and then separately build an ordered completion list
     /// based on relevance and fuzzy matching with the already typed identifier.
     pub relevance: CompletionRelevance,
+
+    /// The import data to add to completion's edits.
+    pub import_to_add: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -251,6 +254,7 @@ impl CompletionItem {
             kind: kind.into(),
             text_edit: None,
             relevance: CompletionRelevance::default(),
+            import_to_add: None,
         }
     }
 
@@ -273,6 +277,7 @@ pub(crate) struct CompletionItemBuilder {
     kind: CompletionItemKind,
     text_edit: Option<TextEdit>,
     relevance: CompletionRelevance,
+    import_to_add: Option<String>,
 }
 
 impl CompletionItemBuilder {
@@ -301,6 +306,7 @@ impl CompletionItemBuilder {
             detail: self.detail,
             lookup,
             relevance: self.relevance,
+            import_to_add: self.import_to_add,
         }
     }
     pub(crate) fn lookup_by(&mut self, lookup: impl Into<String>) -> &mut CompletionItemBuilder {
@@ -321,6 +327,10 @@ impl CompletionItemBuilder {
     }
     pub(crate) fn text_edit(&mut self, edit: TextEdit) -> &mut CompletionItemBuilder {
         self.text_edit = Some(edit);
+        self
+    }
+    pub(crate) fn add_import(&mut self, import_to_add: String) -> &mut CompletionItemBuilder {
+        self.import_to_add = Some(import_to_add);
         self
     }
     pub(crate) fn detail(&mut self, detail: impl Into<String>) -> &mut CompletionItemBuilder {

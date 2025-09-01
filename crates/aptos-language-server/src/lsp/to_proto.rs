@@ -402,7 +402,7 @@ pub(crate) fn completion_items(
     config: &Config,
     line_index: &LineIndex,
     version: Option<i32>,
-    params: lsp_types::TextDocumentPositionParams,
+    tdpp: lsp_types::TextDocumentPositionParams,
     completion_trigger_character: Option<char>,
     items: Vec<CompletionItem>,
 ) -> Vec<lsp_types::CompletionItem> {
@@ -413,7 +413,15 @@ pub(crate) fn completion_items(
         .max()
         .unwrap_or_default();
     for item in items {
-        completion_item(&mut res, config, line_index, &params, max_relevance, item);
+        completion_item(
+            &mut res,
+            config,
+            line_index,
+            &tdpp,
+            max_relevance,
+            completion_trigger_character,
+            item,
+        );
     }
     res
 }
@@ -422,8 +430,9 @@ fn completion_item(
     acc: &mut Vec<lsp_types::CompletionItem>,
     config: &Config,
     line_index: &LineIndex,
-    params: &lsp_types::TextDocumentPositionParams,
+    tdpp: &lsp_types::TextDocumentPositionParams,
     max_relevance: u32,
+    completion_trigger_character: Option<char>,
     item: CompletionItem,
 ) {
     let filter_text = item.lookup().to_owned();
@@ -432,7 +441,7 @@ fn completion_item(
 
     // LSP does not allow arbitrary edits in completion, so we have to do a
     // non-trivial mapping here.
-    let insert_replace_at = config.insert_replace_support().then_some(params.position);
+    let insert_replace_at = config.insert_replace_support().then_some(tdpp.position);
     let mut text_edit = None;
     let mut additional_text_edits = Vec::new();
     let ident_range = item.source_range;
@@ -488,6 +497,26 @@ fn completion_item(
     }
 
     set_score(&mut lsp_item, max_relevance, item.relevance);
+
+    let resolve_data = if config.completion().enable_imports_on_the_fly
+        && let Some(import_path) = item.import_to_add
+    {
+        let resolve_data = lsp_ext::CompletionResolveData {
+            position: tdpp.clone(),
+            version: None,
+            import: lsp_ext::CompletionImport {
+                full_import_path: import_path,
+            },
+            trigger_character: completion_trigger_character,
+            // for_ref: false,
+            // hash: BASE64_STANDARD.encode(completion_item_hash(&item, false)),
+        };
+        Some(serde_json::to_value(resolve_data).unwrap())
+    } else {
+        None
+    };
+
+    lsp_item.data = resolve_data;
 
     acc.push(lsp_item);
 }

@@ -21,7 +21,7 @@ pub mod address;
 pub mod binding;
 mod blocks;
 pub mod fq_named_element;
-mod is_visible;
+pub mod is_visible;
 pub mod labels;
 pub mod name_resolution;
 pub mod namespaces;

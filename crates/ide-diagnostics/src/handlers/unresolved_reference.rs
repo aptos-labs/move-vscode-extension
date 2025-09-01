@@ -192,7 +192,7 @@ fn try_check_resolve(
 
     let fixes = reference
         .path()
-        .and_then(|it| auto_import::auto_import_fix(ctx, it.in_file(file_id), reference_range.range));
+        .and_then(|it| auto_import::auto_import_fix(ctx, it.in_file(file_id), reference_range));
 
     match entries.len() {
         0 => {

@@ -9,4 +9,5 @@ use ide_db::AllowSnippets;
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct CompletionConfig {
     pub allow_snippets: Option<AllowSnippets>,
+    pub enable_imports_on_the_fly: bool,
 }
