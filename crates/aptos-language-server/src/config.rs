@@ -213,6 +213,8 @@ impl Config {
     pub fn completion(&self) -> CompletionConfig {
         CompletionConfig {
             allow_snippets: AllowSnippets::new(self.completion_snippet()),
+            enable_imports_on_the_fly: self.completion_autoimport_enable().to_owned()
+                && self.caps.has_completion_item_resolve_additionalTextEdits(),
         }
     }
 

@@ -6,16 +6,19 @@
 
 use crate::completions::Completions;
 use crate::context::CompletionContext;
-use crate::item::{CompletionItem, CompletionItemKind};
+use crate::item::{CompletionItem, CompletionItemBuilder, CompletionItemKind};
 use crate::render::function::{FunctionKind, render_function};
 use crate::render::new_named_item;
 use crate::render::struct_or_enum::{render_schema, render_struct_or_enum};
 use crate::render::type_owner::{render_ident_pat, render_type_owner};
 use ide_db::SymbolKind;
 use ide_db::defs::BUILTIN_MUT_RESOURCE_FUNCTIONS;
+use lang::hir_db;
+use lang::nameres::fq_named_element::ItemFQNameOwner;
+use lang::nameres::is_visible::is_visible_in_context;
 use lang::nameres::path_kind::path_kind;
 use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variants};
-use lang::nameres::scope::ScopeEntryListExt;
+use lang::nameres::scope::{ScopeEntry, ScopeEntryListExt};
 use lang::nameres::{labels, path_kind};
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -133,7 +136,7 @@ fn add_completions_from_the_resolution_entries(
     };
     let entries = get_path_resolve_variants(ctx.db, &resolution_ctx, path_kind.clone());
 
-    let mut visible_entries = entries.filter_by_visibility(ctx.db, &original_start_at.clone());
+    let mut visible_entries = entries.filter_by_visibility(ctx.db, &original_start_at);
     tracing::debug!(completion_item_entries = ?visible_entries);
 
     // remove already present items in use group
@@ -152,67 +155,87 @@ fn add_completions_from_the_resolution_entries(
     }
 
     let mut completion_items = vec![];
-    for entry in visible_entries {
-        let name = entry.name.clone();
-        let named_item = entry.cast_into::<ast::NamedElement>(ctx.db)?;
-        let named_item_kind = named_item.kind();
-
-        // in acquires, only structs and enums are allowed
-        if path_ctx.is_acquires && !matches!(named_item_kind, STRUCT | ENUM) {
-            continue;
+    for entry in visible_entries.clone() {
+        if let Some(completion_item) = render_scope_entry(ctx, path_ctx, entry) {
+            completion_items.push(completion_item.build(ctx.db));
         }
+    }
 
-        match named_item_kind {
-            FUN | SPEC_FUN | SPEC_INLINE_FUN => {
-                let fun = named_item.cast_into::<ast::AnyFun>()?;
-                if fun.value.has_attr_item("test") {
-                    continue;
+    if ctx.config.enable_imports_on_the_fly
+        && !path_ctx.is_use_stmt()
+        && !path_ctx.is_acquires
+        && let Some(unqualified_nsset) = path_kind.unqualified_ns()
+    {
+        let import_candidate_entries = hir_db::import_candidates(ctx.db, original_start_at.file_id)
+            .into_iter()
+            .filter(|it| unqualified_nsset.contains(it.ns))
+            .filter(|it| is_visible_in_context(ctx.db, it, &original_start_at));
+        for import_candidate_entry in import_candidate_entries {
+            if !visible_entries.contains(import_candidate_entry) {
+                if let Some(mut completion_item) =
+                    render_scope_entry(ctx, path_ctx, import_candidate_entry.clone())
+                {
+                    if let Some(fq_name) = import_candidate_entry
+                        .node_loc
+                        .to_ast::<ast::NamedElement>(ctx.db)
+                        .and_then(|it| it.fq_name(ctx.db))
+                    {
+                        completion_item.add_import(fq_name.fq_identifier_text());
+                        completion_items.push(completion_item.build(ctx.db));
+                    }
                 }
-                completion_items.push(
-                    render_function(
-                        ctx,
-                        path_ctx.is_use_stmt(),
-                        path_ctx.has_any_parens(),
-                        name,
-                        fun,
-                        FunctionKind::Fun,
-                        None,
-                    )
-                    .build(ctx.db),
-                );
-            }
-            STRUCT | ENUM => {
-                completion_items.push(
-                    render_struct_or_enum(
-                        ctx,
-                        name,
-                        path_ctx,
-                        named_item.cast_into::<ast::StructOrEnum>()?,
-                    )
-                    .build(ctx.db),
-                );
-            }
-            SCHEMA => {
-                completion_items.push(
-                    render_schema(ctx, name, named_item.cast_into::<ast::Schema>()?).build(ctx.db),
-                );
-            }
-            IDENT_PAT => {
-                let ident_pat = named_item.cast_into::<ast::IdentPat>()?;
-                completion_items.push(render_ident_pat(ctx, &name, ident_pat).build(ctx.db));
-            }
-            GLOBAL_VARIABLE_DECL => {
-                let global_var = named_item.cast_into::<ast::GlobalVariableDecl>()?;
-                let item = render_type_owner(ctx, &name, global_var.map_into());
-                completion_items.push(item.build(ctx.db));
-            }
-            _ => {
-                let item = new_named_item(ctx, &name, named_item_kind);
-                completion_items.push(item.build(ctx.db));
             }
         }
     }
+
     Some(completion_items)
+}
+
+fn render_scope_entry(
+    ctx: &CompletionContext<'_>,
+    path_ctx: &PathCompletionCtx,
+    entry: ScopeEntry,
+) -> Option<CompletionItemBuilder> {
+    let name = entry.name.clone();
+    let named_item = entry.cast_into::<ast::NamedElement>(ctx.db)?;
+    let named_item_kind = named_item.kind();
+
+    // in acquires, only structs and enums are allowed
+    if path_ctx.is_acquires && !matches!(named_item_kind, STRUCT | ENUM) {
+        return None;
+    }
+
+    let comp_item = match named_item_kind {
+        FUN | SPEC_FUN | SPEC_INLINE_FUN => {
+            let fun = named_item.cast_into::<ast::AnyFun>()?;
+            if fun.value.has_attr_item("test") {
+                return None;
+            }
+            render_function(
+                ctx,
+                path_ctx.is_use_stmt(),
+                path_ctx.has_any_parens(),
+                name,
+                fun,
+                FunctionKind::Fun,
+                None,
+            )
+        }
+        STRUCT | ENUM => {
+            render_struct_or_enum(ctx, name, path_ctx, named_item.cast_into::<ast::StructOrEnum>()?)
+        }
+        SCHEMA => render_schema(ctx, name, named_item.cast_into::<ast::Schema>()?),
+        IDENT_PAT => {
+            let ident_pat = named_item.cast_into::<ast::IdentPat>()?;
+            render_ident_pat(ctx, &name, ident_pat)
+        }
+        GLOBAL_VARIABLE_DECL => {
+            let global_var = named_item.cast_into::<ast::GlobalVariableDecl>()?;
+            render_type_owner(ctx, &name, global_var.map_into())
+        }
+        _ => new_named_item(ctx, &name, named_item_kind),
+    };
+    Some(comp_item)
 }
 
 pub(crate) fn add_expr_keywords(

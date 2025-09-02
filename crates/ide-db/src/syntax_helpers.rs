@@ -4,4 +4,4 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-pub(crate) mod tree_diff;
+pub mod tree_diff;

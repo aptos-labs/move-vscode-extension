@@ -52,6 +52,7 @@ use ide_db::rename::RenameError;
 use ide_db::search::SearchScope;
 use ide_db::source_change::SourceChange;
 use ide_db::symbol_index::Query;
+use ide_db::text_edit::TextEdit;
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 use ide_diagnostics::handlers;
@@ -460,17 +461,17 @@ impl Analysis {
         self.with_db(|db| ide_completion::completions(db, config, position, trigger_character))
     }
 
-    // /// Resolves additional completion data at the position given.
-    // pub fn resolve_completion_edits(
-    //     &self,
-    //     config: &CompletionConfig<'_>,
-    //     position: FilePosition,
-    //     imports: impl IntoIterator<Item = (String, String)> + std::panic::UnwindSafe,
-    // ) -> Cancellable<Vec<TextEdit>> {
-    //     Ok(self
-    //         .with_db(|db| ide_completion::resolve_completion_edits(db, config, position, imports))?
-    //         .unwrap_or_default())
-    // }
+    /// Resolves additional completion data at the position given.
+    pub fn resolve_completion_edits(
+        &self,
+        _config: &CompletionConfig,
+        position: FilePosition,
+        import_to_add: String,
+    ) -> Cancellable<Vec<TextEdit>> {
+        Ok(self
+            .with_db(|db| ide_completion::resolve_completion_edits(db, position, import_to_add))?
+            .unwrap_or_default())
+    }
 
     /// Computes the set of parser level diagnostics for the given file.
     pub fn syntax_diagnostics(

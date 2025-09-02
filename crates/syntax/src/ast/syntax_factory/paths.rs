@@ -49,6 +49,33 @@ impl SyntaxFactory {
         Some(module_path)
     }
 
+    pub fn path_from_import_path(&self, import_path: String) -> ast::Path {
+        let path_segments = import_path
+            .split("::")
+            .map(|it| {
+                if it.starts_with("0x") {
+                    self.path_segment_from_value_address(it)
+                } else {
+                    self.path_segment_from_name(it)
+                }
+            })
+            .collect::<Vec<_>>();
+        self.path_from_segments(path_segments)
+    }
+
+    pub fn fq_path_from_import_path(
+        &self,
+        import_path: String,
+    ) -> Option<(ast::Path, Option<ast::NameRef>)> {
+        let full_item_path = self.path_from_import_path(import_path);
+        let qualifier = full_item_path.qualifier()?;
+        let res = match qualifier.qualifier() {
+            Some(_) => (qualifier, full_item_path.segment()?.name_ref()),
+            None => (full_item_path, None),
+        };
+        Some(res)
+    }
+
     pub fn path_from_segments(&self, segments: impl IntoIterator<Item = ast::PathSegment>) -> ast::Path {
         let segments = segments.into_iter().map(|it| it.syntax().clone()).join("::");
         expr_item_from_text(&segments)

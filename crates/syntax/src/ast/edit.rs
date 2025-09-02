@@ -4,7 +4,11 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::{AstToken, SyntaxElement, SyntaxNode, SyntaxToken, ast};
+use crate::ast::make;
+use crate::ast::syntax_factory::SyntaxFactory;
+use crate::syntax_editor::SyntaxEditor;
+use crate::syntax_editor::mapping::SyntaxMappingBuilder;
+use crate::{AstNode, AstToken, SyntaxElement, SyntaxNode, SyntaxToken, ast};
 use rowan::NodeOrToken;
 use std::{fmt, iter, ops};
 
@@ -70,8 +74,78 @@ impl IndentLevel {
         }
         IndentLevel(0)
     }
+
+    pub(super) fn clone_increase_indent(self, node: &SyntaxNode) -> SyntaxNode {
+        let node = node.clone_subtree();
+        let mut editor = SyntaxEditor::new(node.clone());
+        let tokens = node
+            .preorder_with_tokens()
+            .filter_map(|event| match event {
+                rowan::WalkEvent::Leave(NodeOrToken::Token(it)) => Some(it),
+                _ => None,
+            })
+            .filter_map(ast::Whitespace::cast)
+            .filter(|ws| ws.text().contains('\n'));
+        for ws in tokens {
+            let new_ws = make::tokens::whitespace(&format!("{}{self}", ws.syntax()));
+            editor.replace(ws.syntax(), &new_ws);
+        }
+        editor.finish().new_root().clone()
+    }
+
+    pub(super) fn clone_decrease_indent(self, node: &SyntaxNode) -> SyntaxNode {
+        let node = node.clone_subtree();
+        let mut editor = SyntaxEditor::new(node.clone());
+        let tokens = node
+            .preorder_with_tokens()
+            .filter_map(|event| match event {
+                rowan::WalkEvent::Leave(NodeOrToken::Token(it)) => Some(it),
+                _ => None,
+            })
+            .filter_map(ast::Whitespace::cast)
+            .filter(|ws| ws.text().contains('\n'));
+        for ws in tokens {
+            let new_ws =
+                make::tokens::whitespace(&ws.syntax().text().replace(&format!("\n{self}"), "\n"));
+            editor.replace(ws.syntax(), &new_ws);
+        }
+        editor.finish().new_root().clone()
+    }
 }
 
 fn prev_tokens(token: SyntaxToken) -> impl Iterator<Item = SyntaxToken> {
     iter::successors(Some(token), |token| token.prev_token())
 }
+
+pub trait AstNodeEdit: AstNode + Clone + Sized {
+    fn indent_level(&self) -> IndentLevel {
+        IndentLevel::from_node(self.syntax())
+    }
+    #[must_use]
+    fn indent_inner(&self, level: IndentLevel) -> Self {
+        Self::cast(level.clone_increase_indent(self.syntax())).unwrap()
+    }
+    #[must_use]
+    fn indent_inner_with_mapping(&self, level: IndentLevel, make: &SyntaxFactory) -> Self {
+        let new_node = self.indent_inner(level);
+        if let Some(mut mapping) = make.mappings() {
+            let mut builder = SyntaxMappingBuilder::new(new_node.syntax().clone());
+            for (old, new) in self.syntax().children().zip(new_node.syntax().children()) {
+                builder.map_node(old, new);
+            }
+            builder.finish(&mut mapping);
+        }
+        new_node
+    }
+    #[must_use]
+    fn dedent_inner(&self, level: IndentLevel) -> Self {
+        Self::cast(level.clone_decrease_indent(self.syntax())).unwrap()
+    }
+    #[must_use]
+    fn reset_indent(&self) -> Self {
+        let level = IndentLevel::from_node(self.syntax());
+        self.dedent_inner(level)
+    }
+}
+
+impl<N: AstNode + Clone> AstNodeEdit for N {}

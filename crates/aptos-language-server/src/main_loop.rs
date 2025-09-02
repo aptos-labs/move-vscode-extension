@@ -246,8 +246,8 @@ impl GlobalState {
             if ask_for_client_refresh {
                 self.ask_for_semantic_tokens_refresh();
                 self.ask_for_codelens_refresh();
-                self.ask_for_inlay_hints_refresh();
-                self.ask_client_for_diagnostics_refresh();
+                self.ask_for_inlay_hints_refresh("after event");
+                self.ask_client_for_diagnostics_refresh("after event");
             }
         }
 
@@ -300,17 +300,17 @@ impl GlobalState {
     }
 
     /// Refresh inlay hints if the client supports it.
-    pub(crate) fn ask_for_inlay_hints_refresh(&mut self) {
+    pub(crate) fn ask_for_inlay_hints_refresh(&mut self, reason: impl Into<String>) {
         if self.config.inlay_hints_refresh() {
-            tracing::info!("ask client to refresh inlay hints");
+            tracing::info!("ask client to refresh inlay hints (reason = {:?})", reason.into());
             self.send_request::<lsp_types::request::InlayHintRefreshRequest>((), |_, _| ());
         }
     }
 
-    pub(crate) fn ask_client_for_diagnostics_refresh(&mut self) {
+    pub(crate) fn ask_client_for_diagnostics_refresh(&mut self, reason: impl Into<String>) {
         // todo: lsp-types does not support this
         // if self.config.diagnostics_refresh() {
-        tracing::info!("ask client to refresh diagnostics");
+        tracing::info!("ask client to refresh diagnostics (reason = {:?})", reason.into());
         self.send_request::<lsp_types::request::WorkspaceDiagnosticRefresh>((), |_, _| ());
         // }
     }
@@ -483,7 +483,7 @@ impl GlobalState {
             // FIXME: Retrying can make the result of this stale?
             .on_latency_sensitive::<RETRY, lsp_request::Completion>(handlers::handle_completion)
             // FIXME: Retrying can make the result of this stale
-            // .on_latency_sensitive::<RETRY, lsp_request::ResolveCompletionItem>(handlers::handle_completion_resolve)
+            .on_latency_sensitive::<RETRY, lsp_request::ResolveCompletionItem>(handlers::handle_completion_resolve)
             .on_latency_sensitive::<RETRY, lsp_request::SemanticTokensFullRequest>(handlers::handle_semantic_tokens_full)
             // .on_latency_sensitive::<RETRY, lsp_request::SemanticTokensFullDeltaRequest>(handlers::handle_semantic_tokens_full_delta)
             .on_latency_sensitive::<NO_RETRY, lsp_request::SemanticTokensRangeRequest>(handlers::handle_semantic_tokens_range)

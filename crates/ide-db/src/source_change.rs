@@ -165,11 +165,11 @@ impl SourceChangeBuilder {
         SyntaxEditor::new(node.ancestors().last().unwrap_or_else(|| node.clone()))
     }
 
-    pub fn add_file_edits(&mut self, file_id: impl Into<FileId>, edits: SyntaxEditor) {
+    pub fn add_file_edits(&mut self, file_id: impl Into<FileId>, editor: SyntaxEditor) {
         match self.file_editors.entry(file_id.into()) {
-            Entry::Occupied(mut entry) => entry.get_mut().merge(edits),
+            Entry::Occupied(mut entry) => entry.get_mut().merge(editor),
             Entry::Vacant(entry) => {
-                entry.insert(edits);
+                entry.insert(editor);
             }
         }
     }

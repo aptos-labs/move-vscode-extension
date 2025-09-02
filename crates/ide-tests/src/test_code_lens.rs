@@ -3,6 +3,7 @@
 
 use expect_test::{Expect, expect};
 use ide::annotations::{AnnotationConfig, AnnotationKind, AnnotationLocation};
+use stdx::itertools::Itertools;
 use syntax::pretty_print::{SourceMark, apply_source_marks};
 use test_utils::fixtures::test_state::named;
 use test_utils::{fixtures, remove_marks};
@@ -20,7 +21,11 @@ fn check_code_lens(expect: Expect) {
     let test_state = fixtures::from_multiple_files_on_tmpfs(vec![named("TestPackage", trimmed_source)]);
 
     let mut res = String::new();
-    for (file_id, file_text) in test_state.all_move_files() {
+    for (file_id, file_text) in test_state
+        .all_move_files()
+        .into_iter()
+        .sorted_by_key(|it| test_state.relpath(it.0))
+    {
         let annotations = test_state
             .analysis()
             .annotations(&DEFAULT_CONFIG, file_id)
@@ -51,6 +56,11 @@ fn test_annotate_specified_fun() {
     check_code_lens(
         // language=Move
         expect![[r#"
+            //- /main.move
+            module std::m {
+                fun main() {}
+                  //^^^^ has specs
+            }
             //- /main.spec.move
             spec std::m {
                //^^^^^^ prove mod m
@@ -62,11 +72,6 @@ fn test_annotate_specified_fun() {
                    //^^^^ prove fun m::main
                     assert 2 == 2;
                 }
-            }
-            //- /main.move
-            module std::m {
-                fun main() {}
-                  //^^^^ has specs
             }
         "#]],
     );
@@ -127,17 +132,17 @@ fn test_annotate_item_spec_for_function_in_module_spec() {
     check_code_lens(
         // language=Move
         expect![[r#"
+            //- /main.move
+            module std::m {
+                fun main() {
+                  //^^^^ has specs
+                }
+            }
             //- /main.spec.move
             spec std::m {
                //^^^^^^ prove mod m
                 spec main {
                    //^^^^ prove fun m::main
-                }
-            }
-            //- /main.move
-            module std::m {
-                fun main() {
-                  //^^^^ has specs
                 }
             }
         "#]],

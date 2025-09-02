@@ -39,8 +39,8 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
         // })),
         hover_provider: Some(HoverProviderCapability::Simple(true)),
         completion_provider: Some(CompletionOptions {
-            resolve_provider: None,
-            // resolve_provider: Some(config.caps().completions_resolve_provider()),
+            // resolve_provider: None,
+            resolve_provider: Some(config.caps().completions_resolve_provider()),
             trigger_characters: Some(vec![
                 ":".to_owned(),
                 ".".to_owned(),
@@ -167,6 +167,14 @@ pub struct ClientCapabilities(pub lsp_types::ClientCapabilities);
 impl ClientCapabilities {
     pub fn new(caps: lsp_types::ClientCapabilities) -> Self {
         Self(caps)
+    }
+
+    fn completions_resolve_provider(&self) -> bool {
+        // let client_capabilities = self.completion_resolve_support_properties();
+        // let fields_to_resolve =
+        //     CompletionFieldsToResolve::from_client_capabilities(&client_capabilities);
+        // fields_to_resolve != CompletionFieldsToResolve::empty()
+        true
     }
 
     pub fn inlay_hint_resolve_support_properties(&self) -> HashSet<&str> {

@@ -43,6 +43,10 @@ impl SyntaxFactory {
         .clone_for_update()
     }
 
+    pub fn attr(&self, attr_text: &str) -> ast::Attr {
+        ast_from_text::<ast::Attr>(&format!("#[{attr_text}]module 0x1::m {{}}")).clone_for_update()
+    }
+
     pub fn token(&self, kind: SyntaxKind) -> SyntaxToken {
         make::tokens::SOURCE_FILE
             .tree()

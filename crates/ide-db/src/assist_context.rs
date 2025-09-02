@@ -8,7 +8,6 @@ use crate::assists::{Assist, AssistId, AssistResolveStrategy};
 use crate::label::Label;
 use crate::source_change::SourceChangeBuilder;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
-use syntax::ast::syntax_factory::SyntaxFactory;
 use syntax::files::InFile;
 use syntax::syntax_editor::SyntaxEditor;
 use syntax::{AstNode, SyntaxNode, TextRange, ast};
@@ -57,29 +56,25 @@ impl LocalAssists {
         target: TextRange,
         f: impl FnOnce(&mut SyntaxEditor),
     ) -> Option<()> {
-        self.add_fix_with_make(id, label, target, |editor, _| {
+        self.add_fix_fallible(id, label, target, |editor| {
             f(editor);
             Some(())
         })
     }
 
-    pub fn add_fix_with_make(
+    pub fn add_fix_fallible(
         &mut self,
         id: &'static str,
         label: impl Into<String>,
         target: TextRange,
-        f: impl FnOnce(&mut SyntaxEditor, &SyntaxFactory) -> Option<()>,
+        f: impl FnOnce(&mut SyntaxEditor) -> Option<()>,
     ) -> Option<()> {
         let id = AssistId::quick_fix(id);
         let label = label.into();
         let source_change = if self.resolve.should_resolve(&id) {
             let mut builder = SourceChangeBuilder::new(self.file_id);
             let mut editor = builder.make_editor(self.source_file.syntax());
-
-            let make = SyntaxFactory::new();
-            f(&mut editor, &make);
-            editor.add_mappings(make.finish_with_mappings());
-
+            f(&mut editor)?;
             builder.add_file_edits(self.file_id, editor);
             Some(builder.finish())
         } else {

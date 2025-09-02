@@ -70,13 +70,16 @@ impl ast::Path {
 
     pub fn segments(&self) -> Vec<ast::PathSegment> {
         let mut segments = vec![];
-        let mut current_path = Some(self.base_path());
+        // let mut current_path = Some(self.base_path());
+        let mut current_path = Some(self.clone());
         while let Some(path) = current_path {
             if let Some(segment) = path.segment() {
                 segments.push(segment);
             }
-            current_path = path.syntax.parent_of_type::<ast::Path>();
+            current_path = path.qualifier();
+            // current_path = path.syntax.parent_of_type::<ast::Path>();
         }
+        segments.reverse();
         segments
     }
 }

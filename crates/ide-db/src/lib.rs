@@ -13,6 +13,7 @@ pub mod assist_context;
 pub mod assists;
 pub mod defs;
 pub mod helpers;
+pub mod imports;
 pub mod label;
 pub mod line_endings;
 pub mod load;
@@ -21,7 +22,7 @@ pub mod root_db;
 pub mod search;
 pub mod source_change;
 pub mod symbol_index;
-mod syntax_helpers;
+pub mod syntax_helpers;
 pub mod text_edit;
 
 use syntax::{AstNode, SyntaxKind, ast};

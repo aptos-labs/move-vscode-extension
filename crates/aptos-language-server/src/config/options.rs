@@ -30,6 +30,12 @@ config_data! {
         /// Path to the `aptos-cli` executable.
         aptosPath: Option<Utf8PathBuf>                         = None,
 
+        /// Show completions that automatically add imports when completed.
+        ///
+        /// Note that your client must specify the `additionalTextEdits` LSP client capability to
+        /// truly have this feature enabled.
+        completion_autoimport_enable: bool = false,
+
         /// List of aptos-language-server diagnostics to disable.
         diagnostics_disabled: HashSet<String> = HashSet::default(),
         /// Whether to show native aptos-language-server diagnostics.
