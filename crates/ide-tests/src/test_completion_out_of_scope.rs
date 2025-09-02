@@ -1,6 +1,5 @@
 use crate::ide_test_utils::completion_utils::{
-    check_completions, check_completions_with_config, do_single_completion,
-    do_single_completion_with_config,
+    check_completions_with_config, do_single_completion_with_config,
 };
 use expect_test::{Expect, expect};
 use ide_completion::config::CompletionConfig;
