@@ -29,7 +29,7 @@ use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, T, algo, ast};
+use syntax::{AstNode, SyntaxNode, T, algo, ast};
 
 #[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn add_path_completions(
@@ -96,6 +96,7 @@ fn add_completions_from_the_resolution_entries(
     ctx: &CompletionContext<'_>,
     path_ctx: &PathCompletionCtx,
 ) -> Option<Vec<CompletionItem>> {
+    let file_id = ctx.position.file_id;
     let original_file = ctx.original_file()?;
 
     let path_kind = match path_ctx.original_path.clone() {
@@ -116,20 +117,7 @@ fn add_completions_from_the_resolution_entries(
     };
     tracing::debug!(?path_kind);
 
-    let original_start_at = path_ctx
-        .original_path
-        .as_ref()
-        .map(|it| it.syntax())
-        .or_else(|| {
-            let original_start_at_from_fake = algo::ancestors_at_offset(
-                original_file.syntax(),
-                path_ctx.fake_path.syntax().text_range().start(),
-            )
-            .next()?
-            .in_file(ctx.position.file_id);
-            Some(original_start_at_from_fake)
-        })?;
-
+    let original_start_at = path_ctx.original_start_at(&original_file)?.in_file(file_id);
     let resolution_ctx = ResolutionContext {
         start_at: original_start_at.clone(),
         is_completion: true,
@@ -161,33 +149,48 @@ fn add_completions_from_the_resolution_entries(
         }
     }
 
-    if ctx.config.enable_imports_on_the_fly
-        && !path_ctx.is_use_stmt()
-        && !path_ctx.is_acquires
-        && let Some(unqualified_nsset) = path_kind.unqualified_ns()
-    {
-        let import_candidate_entries = hir_db::import_candidates(ctx.db, original_start_at.file_id)
-            .into_iter()
-            .filter(|it| unqualified_nsset.contains(it.ns))
-            .filter(|it| is_visible_in_context(ctx.db, it, &original_start_at));
-        for import_candidate_entry in import_candidate_entries {
-            if !visible_entries.contains(import_candidate_entry) {
-                if let Some(mut completion_item) =
-                    render_scope_entry(ctx, path_ctx, import_candidate_entry.clone())
+    if ctx.config.enable_imports_on_the_fly {
+        let out_of_scope_items =
+            out_of_scope_completion_items(ctx, path_ctx, path_kind, original_start_at, &visible_entries)
+                .unwrap_or_default();
+        completion_items.extend(out_of_scope_items);
+    }
+
+    Some(completion_items)
+}
+
+fn out_of_scope_completion_items(
+    ctx: &CompletionContext<'_>,
+    path_ctx: &PathCompletionCtx,
+    path_kind: path_kind::PathKind,
+    original_start_at: InFile<SyntaxNode>,
+    existing_entries: &Vec<ScopeEntry>,
+) -> Option<Vec<CompletionItem>> {
+    if path_ctx.is_use_stmt() || path_ctx.is_acquires {
+        return None;
+    }
+    let unqualified_nsset = path_kind.unqualified_ns()?;
+    let import_candidate_entries = hir_db::import_candidates(ctx.db, original_start_at.file_id)
+        .into_iter()
+        .filter(|it| unqualified_nsset.contains(it.ns))
+        .filter(|it| is_visible_in_context(ctx.db, it, &original_start_at));
+    let mut completion_items = vec![];
+    for import_candidate_entry in import_candidate_entries {
+        if !existing_entries.contains(import_candidate_entry) {
+            if let Some(mut completion_item) =
+                render_scope_entry(ctx, path_ctx, import_candidate_entry.clone())
+            {
+                if let Some(fq_name) = import_candidate_entry
+                    .node_loc
+                    .to_ast::<ast::NamedElement>(ctx.db)
+                    .and_then(|it| it.fq_name(ctx.db))
                 {
-                    if let Some(fq_name) = import_candidate_entry
-                        .node_loc
-                        .to_ast::<ast::NamedElement>(ctx.db)
-                        .and_then(|it| it.fq_name(ctx.db))
-                    {
-                        completion_item.add_import(fq_name.fq_identifier_text());
-                        completion_items.push(completion_item.build(ctx.db));
-                    }
+                    completion_item.add_import(fq_name.fq_identifier_text());
+                    completion_items.push(completion_item.build(ctx.db));
                 }
             }
         }
     }
-
     Some(completion_items)
 }
 
@@ -320,8 +323,18 @@ impl PathCompletionCtx {
         original_file.find_original_node(fake_qualifier)
     }
 
-    pub fn has_any_parens(&self) -> bool {
-        self.has_call_parens || self.has_type_args
+    pub fn original_start_at(&self, original_file: &ast::SourceFile) -> Option<SyntaxNode> {
+        self.original_path
+            .as_ref()
+            .map(|it| it.value.syntax().clone())
+            .or_else(|| {
+                let original_start_at_from_fake = algo::ancestors_at_offset(
+                    original_file.syntax(),
+                    self.fake_path.syntax().text_range().start(),
+                )
+                .next();
+                original_start_at_from_fake
+            })
     }
 
     pub fn original_use_group(&self, original_file: &ast::SourceFile) -> Option<ast::UseGroup> {
@@ -331,6 +344,10 @@ impl PathCompletionCtx {
         let fake_use_speck = self.fake_path.root_parent_of_type::<ast::UseSpeck>()?;
         let fake_use_group = fake_use_speck.syntax().parent_of_type::<ast::UseGroup>()?;
         original_file.find_original_node(fake_use_group)
+    }
+
+    pub fn has_any_parens(&self) -> bool {
+        self.has_call_parens || self.has_type_args
     }
 
     pub fn is_use_stmt(&self) -> bool {

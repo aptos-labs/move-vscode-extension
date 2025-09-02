@@ -83,7 +83,7 @@ pub fn resolve_completion_edits(
     let mut builder = SourceChangeBuilder::new(file_id);
 
     let mut editor = builder.make_editor(items_owner.syntax());
-    let add_imports = imports::add_import_for_import_path(&items_owner, import_to_add, false);
+    let add_imports = imports::add_import_for_import_path(&items_owner, import_to_add, None);
     add_imports(&mut editor);
     builder.add_file_edits(file_id, editor);
 
