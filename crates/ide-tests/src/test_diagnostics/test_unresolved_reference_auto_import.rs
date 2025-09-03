@@ -671,3 +671,135 @@ fn test_add_import_into_existing_empty_group() {
         "#]],
     );
 }
+
+#[test]
+fn test_add_import_into_existing_empty_group_with_verify_only_stmt_present() {
+    // language=Move
+    check_diagnostics_apply_import_fix(
+        expect![[r#"
+            module 0x1::a {
+                struct String {}
+                public fun test_call() {}
+            }
+            module 0x1::m {
+                struct S {}
+            }
+            module 0x1::main {
+                use 0x1::a::String;
+                #[verify_only]
+                use 0x1::a::test_call;
+
+                fun main(_a: String, _b: S) {
+                                       //^ err: Unresolved reference `S`: cannot resolve
+                }
+
+                #[verify_only]
+                fun test() {
+                    test_call();
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::a {
+                struct String {}
+                public fun test_call() {}
+            }
+            module 0x1::m {
+                struct S {}
+            }
+            module 0x1::main {
+                use 0x1::a::String;
+                #[verify_only]
+                use 0x1::a::test_call;
+                use 0x1::m::S;
+
+                fun main(_a: String, _b: S) {
+                }
+
+                #[verify_only]
+                fun test() {
+                    test_call();
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_add_import_into_existing_empty_group_with_verify_only_stmt_present_for_the_same_module() {
+    // language=Move
+    check_diagnostics_apply_import_fix(
+        expect![[r#"
+            module 0x1::a {
+                struct S {}
+                public fun test_call() {}
+            }
+            module 0x1::main {
+                #[verify_only]
+                use 0x1::a::test_call;
+
+                fun main(_b: S) {
+                           //^ err: Unresolved reference `S`: cannot resolve
+                }
+
+                #[verify_only]
+                fun test() {
+                    test_call();
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::a {
+                struct S {}
+                public fun test_call() {}
+            }
+            module 0x1::main {
+                #[verify_only]
+                use 0x1::a::test_call;
+                use 0x1::a::S;
+
+                fun main(_b: S) {
+                }
+
+                #[verify_only]
+                fun test() {
+                    test_call();
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_auto_import_in_spec() {
+    // language=Move
+    check_diagnostics_apply_import_fix(
+        expect![[r#"
+            module 0x1::bcs {
+                native public fun to_bytes<MoveValue>(v: &MoveValue): vector<u8>;
+            }
+            module 0x1::m {
+            }
+            spec 0x1::m {
+                spec module {
+                    to_bytes();
+                  //^^^^^^^^ err: Unresolved reference `to_bytes`: cannot resolve
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::bcs {
+                native public fun to_bytes<MoveValue>(v: &MoveValue): vector<u8>;
+            }
+            module 0x1::m {
+            }
+            spec 0x1::m {
+                use 0x1::bcs::to_bytes;
+
+                spec module {
+                    to_bytes();
+                }
+            }
+        "#]],
+    );
+}

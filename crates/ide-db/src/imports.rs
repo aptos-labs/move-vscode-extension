@@ -1,3 +1,4 @@
+use lang::item_scope::NamedItemScope;
 use syntax::ast::edit::{AstNodeEdit, IndentLevel};
 use syntax::ast::syntax_factory::SyntaxFactory;
 use syntax::ast::{HasAttrs, UseStmtsOwner};
@@ -7,8 +8,9 @@ use syntax::{AstNode, ast};
 pub fn add_import_for_import_path(
     items_owner: &ast::AnyHasItems,
     import_path: String,
-    with_test_only: bool,
+    add_scope: Option<NamedItemScope>,
 ) -> impl FnOnce(&mut SyntaxEditor) -> Option<()> {
+    let add_test_only = add_scope.is_some_and(|it| it.is_test());
     move |editor| {
         let make = SyntaxFactory::new();
         let (module_path, item_name_ref) = make.fq_path_from_import_path(import_path)?;
@@ -16,7 +18,7 @@ pub fn add_import_for_import_path(
         // // try to find existing use stmt for the module path first
         let existing_use_stmt = items_owner
             .use_stmts_for_module_path(&module_path)
-            .filter(|it| it.is_test_only() == with_test_only)
+            .filter(|it| !it.is_verify_only() && it.is_test_only() == add_test_only)
             .last();
 
         match existing_use_stmt {
@@ -35,7 +37,7 @@ pub fn add_import_for_import_path(
                     None => module_path,
                 };
                 let indent = IndentLevel::from_node(items_owner.syntax()) + 1;
-                let attrs = with_test_only.then_some(make.attr("test_only"));
+                let attrs = add_test_only.then_some(make.attr("test_only"));
                 let use_speck = make.use_speck(use_speck_path, None);
                 let new_use_stmt = make.use_stmt(attrs, use_speck).indent_inner(indent);
 

@@ -41,7 +41,15 @@ pub(crate) fn auto_import_fix(
 
     let path_scope = hir_db::item_scope(db, path.loc(file_id));
     let items_owner_scope = hir_db::item_scope(db, current_items_owner.loc(file_id));
-    let add_test_only = path_scope == NamedItemScope::Test && items_owner_scope == NamedItemScope::Main;
+
+    let mut add_scope: Option<NamedItemScope> = None;
+    if items_owner_scope == NamedItemScope::Main {
+        // todo: #[verify_only] ?
+        add_scope = match path_scope {
+            NamedItemScope::Test => Some(NamedItemScope::Test),
+            NamedItemScope::Main | NamedItemScope::Verify => None,
+        }
+    }
 
     for import_candidate in import_candidates {
         add_autoimport_fix_for_import_candidate(
@@ -50,7 +58,7 @@ pub(crate) fn auto_import_fix(
             import_candidate,
             &current_items_owner,
             reference_range,
-            add_test_only,
+            add_scope,
         );
     }
     Some(assists)
@@ -62,7 +70,7 @@ fn add_autoimport_fix_for_import_candidate(
     import_candidate: ScopeEntry,
     current_use_items_owner: &ast::AnyHasItems,
     reference_range: FileRange,
-    add_test_only: bool,
+    add_scope: Option<NamedItemScope>,
 ) -> Option<()> {
     let candidate_named_element = import_candidate.cast_into::<ast::NamedElement>(db)?;
     let candidate_fq_name = candidate_named_element.fq_name(db)?;
@@ -71,7 +79,7 @@ fn add_autoimport_fix_for_import_candidate(
         "add-import",
         format!("Add import for `{}`", fq_import_path),
         reference_range.range,
-        imports::add_import_for_import_path(current_use_items_owner, fq_import_path, add_test_only),
+        imports::add_import_for_import_path(current_use_items_owner, fq_import_path, add_scope),
     );
     Some(())
 }
