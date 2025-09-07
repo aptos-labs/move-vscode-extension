@@ -138,10 +138,11 @@ impl TestState {
         let file_path = file_path.as_path().unwrap();
         let package_metadata = self.analysis().package_metadata(file_id).unwrap().unwrap();
         let package_name = package_metadata.package_name.unwrap();
-        let sources_dir = self.ws_root.join(package_name).join("sources");
+        let sources_dir = AbsPathBuf::assert(self.ws_root.join(package_name).join("sources"));
+        // let sources_dir_abspath = AbsPathBuf::assert(sources_dir).as_path();
         let relpath = file_path
-            .strip_prefix(AbsPathBuf::assert(sources_dir).as_path())
-            .unwrap()
+            .strip_prefix(sources_dir.as_path())
+            .expect(&format!("{sources_dir} is not a prefix of {file_path}"))
             .as_str();
         format!("/{relpath}")
     }

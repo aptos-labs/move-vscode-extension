@@ -9,7 +9,6 @@ use crate::global_state::GlobalStateSnapshot;
 use crate::lsp::{LspError, from_proto, to_proto};
 use crate::toolchain;
 use anyhow::Context;
-use ide_db::line_endings::LineEndings;
 use ide_db::text_edit::TextEdit;
 use lsp_types::TextDocumentIdentifier;
 use regex::Regex;
@@ -17,6 +16,7 @@ use std::io;
 use std::io::{ErrorKind, Write};
 use std::process::{Command, Stdio};
 use std::sync::LazyLock;
+use stdext::line_endings::LineEndings;
 use syntax::{TextRange, TextSize};
 
 pub(crate) fn run_movefmt(

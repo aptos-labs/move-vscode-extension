@@ -45,7 +45,19 @@ module std::table {
         ),
     ]);
     let main_document = server.doc_id("MyPackage/sources/main.move");
-    let main_document_contents = fs::read_to_string(main_document.uri.path()).unwrap();
+
+    let main_document_path = main_document
+        .uri
+        .to_file_path()
+        .expect(&format!("Cannot convert {:?} to file path", main_document.uri));
+    assert!(
+        main_document_path.exists(),
+        "{:?} does not exist",
+        main_document_path
+    );
+
+    let main_document_contents = fs::read_to_string(&main_document_path)
+        .expect(&format!("Cannot read {:?}", &main_document_path));
     server.notification::<DidOpenTextDocument>(DidOpenTextDocumentParams {
         text_document: TextDocumentItem::new(
             main_document.uri.clone(),

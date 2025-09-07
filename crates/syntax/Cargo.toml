@@ -26,4 +26,5 @@ pretty_assertions = "1.4.1"
 
 rand = "0.9.1"
 
+stdext = { path = "../stdext" }
 test-utils = { path = "../test-utils" }

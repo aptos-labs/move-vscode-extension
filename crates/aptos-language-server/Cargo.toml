@@ -46,6 +46,7 @@ vfs = { workspace = true }
 vfs-notify = { workspace = true }
 paths = { workspace = true }
 
+stdext = { path = "../stdext" }
 base-db = { path = "../base-db" }
 syntax = { path = "../syntax" }
 ide-db = { path = "../ide-db" }

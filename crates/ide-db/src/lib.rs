@@ -15,7 +15,6 @@ pub mod defs;
 pub mod helpers;
 pub mod imports;
 pub mod label;
-pub mod line_endings;
 pub mod load;
 pub mod rename;
 pub mod root_db;

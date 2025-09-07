@@ -1,0 +1,11 @@
+[package]
+name = "dep1"
+version = "1.0.0"
+authors = []
+
+[addresses]
+dep1 = "0x12343253"
+
+[dev-addresses]
+
+[dev-dependencies]

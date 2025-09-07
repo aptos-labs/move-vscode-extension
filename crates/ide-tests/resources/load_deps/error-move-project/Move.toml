@@ -1,0 +1,14 @@
+[package]
+name = "test"
+version = "1.0.0"
+authors = []
+
+[addresses]
+test = "0x1234"
+
+[dev-addresses]
+
+[dependencies.dep1]
+local = "./dep1"
+
+[dev-dependencies]

@@ -20,8 +20,9 @@ jobs:
 
   rust_tests:
     strategy:
+      fail-fast: false
       matrix:
-        platform: [ ubuntu-latest, macos-latest ]
+        platform: [ ubuntu-latest, macos-latest, windows-latest ]
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout repository
@@ -35,7 +36,7 @@ jobs:
         with:
           tool: nextest@0.9.98
 
-      - run: cargo nextest run --hide-progress-bar --no-fail-fast
+      - run: cargo nextest run --hide-progress-bar --no-fail-fast --failure-output=immediate-final
 
   check_diagnostics:
     strategy:

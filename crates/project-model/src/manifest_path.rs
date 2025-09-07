@@ -6,12 +6,37 @@
 
 use paths::{AbsPath, AbsPathBuf};
 use std::borrow::Borrow;
+use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
 use std::{fmt, fs, ops};
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd)]
+pub fn is_move_toml(file_name: &str) -> bool {
+    file_name.to_lowercase() == "move.toml"
+}
+
+#[derive(Debug, Clone, Eq, Ord, PartialOrd)]
 pub struct ManifestPath {
     pub file: AbsPathBuf,
+}
+
+impl Hash for ManifestPath {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        if cfg!(target_os = "macos") || cfg!(target_os = "windows") {
+            self.file.to_string().to_lowercase().hash(state)
+        } else {
+            self.file.hash(state)
+        }
+    }
+}
+
+impl PartialEq for ManifestPath {
+    fn eq(&self, other: &Self) -> bool {
+        if cfg!(target_os = "macos") || cfg!(target_os = "windows") {
+            self.file.to_string().to_lowercase() == other.file.to_string().to_lowercase()
+        } else {
+            self.file == other.file
+        }
+    }
 }
 
 impl TryFrom<AbsPathBuf> for ManifestPath {
@@ -34,9 +59,9 @@ impl From<ManifestPath> for AbsPathBuf {
 
 impl ManifestPath {
     pub fn new(move_toml_file: AbsPathBuf) -> ManifestPath {
-        assert_eq!(
-            move_toml_file.file_name().unwrap_or_default(),
-            "Move.toml",
+        let file_name = move_toml_file.file_name().unwrap_or_default();
+        assert!(
+            is_move_toml(file_name),
             "project root must point to a Move.toml file: {move_toml_file}"
         );
         Self { file: move_toml_file }

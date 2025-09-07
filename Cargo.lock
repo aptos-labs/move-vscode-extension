@@ -113,6 +113,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "shellexpand",
+ "stdext",
  "stdx",
  "strip-ansi-escapes",
  "syntax",
@@ -795,6 +796,7 @@ dependencies = [
  "project-model",
  "salsa",
  "salsa-macros",
+ "stdext",
  "stdx",
  "syntax",
  "tracing",
@@ -1761,6 +1763,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 
 [[package]]
+name = "stdext"
+version = "0.1.0"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
 name = "stdx"
 version = "0.0.0"
 source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2025-07-07#0ac65592a833bf40238831dd10e15283d63c46d5"
@@ -1824,6 +1833,7 @@ dependencies = [
  "rand 0.9.1",
  "regex",
  "rowan",
+ "stdext",
  "stdx",
  "test-utils",
  "tracing",

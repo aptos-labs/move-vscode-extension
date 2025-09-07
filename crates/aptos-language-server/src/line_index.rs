@@ -11,8 +11,8 @@
 //! This module does line ending conversion and detection (so that we can
 //! convert back to `\r\n` on the way out).
 
-use ide_db::line_endings::LineEndings;
 use std::sync::Arc;
+use stdext::line_endings::LineEndings;
 
 #[derive(Clone, Copy)]
 pub enum PositionEncoding {

@@ -20,7 +20,6 @@ use ide::syntax_highlighting::tags::{Highlight, HlOperator, HlPunct, HlTag};
 use ide::{Cancellable, HlRange, NavigationTarget, SignatureHelp};
 use ide_completion::item::{CompletionItem, CompletionItemKind, CompletionRelevance};
 use ide_db::assists::{Assist, AssistKind};
-use ide_db::line_endings::LineEndings;
 use ide_db::rename::RenameError;
 use ide_db::source_change::{FileSystemEdit, SourceChange};
 use ide_db::text_edit::{TextChange, TextEdit};
@@ -31,6 +30,7 @@ use std::hash::{DefaultHasher, Hasher};
 use std::mem;
 use std::ops::Not;
 use std::sync::atomic::{AtomicU32, Ordering};
+use stdext::line_endings::LineEndings;
 use stdx::itertools::Itertools;
 use syntax::files::FileRange;
 use vfs::{AbsPath, FileId};
@@ -117,11 +117,10 @@ pub(crate) fn completion_item_kind(
 
 pub(crate) fn lsp_text_edit(line_index: &LineIndex, change: TextChange) -> lsp_types::TextEdit {
     let range = lsp_range(line_index, change.range);
-    let new_text = match line_index.endings {
-        LineEndings::Unix => change.new_text,
-        LineEndings::Dos => change.new_text.replace('\n', "\r\n"),
-    };
-    lsp_types::TextEdit { range, new_text }
+    lsp_types::TextEdit {
+        range,
+        new_text: line_index.endings.map(change.new_text),
+    }
 }
 
 pub(crate) fn lsp_completion_text_edit(

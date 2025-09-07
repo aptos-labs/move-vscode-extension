@@ -5,9 +5,9 @@
 // Modifications have been made to the original code.
 
 use crate::aptos_package::PackageFolderRoot;
+use crate::aptos_package::load_from_fs::try_find_move_toml_at_root;
 use paths::AbsPathBuf;
 use std::fs;
-use std::path::Path;
 
 pub mod aptos_package;
 pub mod dep_graph;
@@ -22,6 +22,13 @@ pub struct DiscoveredManifest {
 }
 
 impl DiscoveredManifest {
+    pub fn new(path: AbsPathBuf, resolve_deps: bool) -> Self {
+        DiscoveredManifest {
+            move_toml_file: path,
+            resolve_deps,
+        }
+    }
+
     pub fn discover_all(ws_roots: &[AbsPathBuf]) -> Vec<DiscoveredManifest> {
         let mut all_manifests = vec![];
         for ws_root in ws_roots {
@@ -36,11 +43,8 @@ impl DiscoveredManifest {
     pub fn discover_for_file(fpath: &AbsPathBuf) -> Option<DiscoveredManifest> {
         let mut candidate_dir = fpath.parent()?;
         let candidate_manifest = loop {
-            if let Some(move_toml) = find_move_toml(candidate_dir) {
-                break DiscoveredManifest {
-                    move_toml_file: move_toml,
-                    resolve_deps: true,
-                };
+            if let Some(move_toml_file) = try_find_move_toml_at_root(candidate_dir) {
+                break DiscoveredManifest::new(move_toml_file, true);
             }
             candidate_dir = candidate_dir.parent()?;
         };
@@ -102,23 +106,15 @@ fn walk_and_discover_manifests(ws_root: &AbsPathBuf) -> Vec<DiscoveredManifest> 
         .into_iter()
         .filter_map(|it| it.ok())
     {
-        let path = entry.path();
+        let path = AbsPathBuf::assert_utf8(entry.into_path());
         let resolve_deps = aptos_core_dirs
             .as_ref()
             .is_none_or(|dirs| dirs.iter().any(|dir| path.starts_with(dir)));
-        if let Some(move_toml_file) = find_move_toml(path) {
-            manifests.push(DiscoveredManifest { move_toml_file, resolve_deps });
+        if let Some(move_toml_file) = try_find_move_toml_at_root(path.as_path()) {
+            manifests.push(DiscoveredManifest::new(move_toml_file, resolve_deps));
         }
     }
     manifests
-}
-
-fn find_move_toml(path: impl AsRef<Path>) -> Option<AbsPathBuf> {
-    let move_toml_file = path.as_ref().join("Move.toml");
-    if move_toml_file.exists() {
-        return Some(AbsPathBuf::assert_utf8(move_toml_file));
-    }
-    None
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
