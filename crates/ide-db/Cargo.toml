@@ -24,6 +24,7 @@ vfs = { workspace = true }
 vfs-notify = { workspace = true }
 stdx.workspace = true
 
+stdext = { path = "../stdext" }
 base-db = { path = "../base-db" }
 lang = { path = "../lang" }
 syntax = { path = "../syntax" }

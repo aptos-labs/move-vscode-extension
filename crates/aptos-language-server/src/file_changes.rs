@@ -7,9 +7,9 @@
 use crate::global_state::{GlobalState, LoadPackagesRequest};
 use crate::reload;
 use base_db::change::FileChanges;
-use ide_db::line_endings::LineEndings;
 use parking_lot::{RwLockUpgradableReadGuard, RwLockWriteGuard};
 use paths::AbsPathBuf;
+use stdext::line_endings::LineEndings;
 
 impl GlobalState {
     #[tracing::instrument(level = "info", skip(self))]

@@ -5,13 +5,13 @@
 // Modifications have been made to the original code.
 
 use crate::RootDatabase;
-use crate::line_endings::LineEndings;
 use base_db::change::FileChanges;
 use crossbeam_channel::unbounded;
 use lang::builtins_file;
 use project_model::aptos_package::AptosPackage;
 use project_model::dep_graph::collect_initial;
 use project_model::project_folders::ProjectFolders;
+use stdext::line_endings::LineEndings;
 use vfs::loader::{Handle, LoadingProgress};
 
 pub fn load_db(packages: &[AptosPackage]) -> anyhow::Result<(RootDatabase, vfs::Vfs)> {
