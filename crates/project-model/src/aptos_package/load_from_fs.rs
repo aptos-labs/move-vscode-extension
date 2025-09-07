@@ -9,7 +9,7 @@ use crate::aptos_package::{AptosPackage, PackageKind};
 use crate::manifest_path::ManifestPath;
 use crate::move_toml::{MoveToml, MoveTomlDependency};
 use anyhow::Context;
-use paths::AbsPathBuf;
+use paths::{AbsPath, AbsPathBuf};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs;
 
@@ -231,13 +231,17 @@ fn collect_reachable_manifests(
                 let mut dep_manifests = vec![];
                 for declared_toml_dep in move_toml.declared_dependencies() {
                     if let Some(dep_root) = declared_toml_dep.dep_root(&package_root) {
-                        let dep_manifest_path = match find_move_toml_at(dep_root) {
+                        let dep_manifest_path = match try_find_move_toml_at_root(dep_root.as_path()) {
+                            Some(move_toml_path) => ManifestPath::new(move_toml_path),
                             None => {
+                                tracing::error!(
+                                    ?dep_root,
+                                    "cannot find Move.toml file in dependency root",
+                                );
                                 // record that fact to show notification to the user
                                 missing_dependencies.push(declared_toml_dep.name());
                                 continue;
                             }
-                            Some(move_toml_path) => ManifestPath::new(move_toml_path),
                         };
                         // local dependency of remote git package is still a git dependency
                         let dep_package_kind = match declared_toml_dep {
@@ -270,19 +274,13 @@ fn collect_reachable_manifests(
     res
 }
 
-fn find_move_toml_at(dep_root: AbsPathBuf) -> Option<AbsPathBuf> {
-    let raw_move_toml_path = dep_root.join("Move.toml");
-    let move_toml_path = match fs::canonicalize(&raw_move_toml_path) {
-        Ok(path) => Some(AbsPathBuf::assert_utf8(path)),
-        Err(_) => {
-            tracing::error!(
-                ?raw_move_toml_path,
-                "dependency resolution error: path does not exist",
-            );
-            return None;
-        }
-    };
-    move_toml_path
+pub fn try_find_move_toml_at_root(dep_root: &AbsPath) -> Option<AbsPathBuf> {
+    let raw_move_toml_path = dep_root.join("Move.toml").normalize();
+    if fs::metadata(&raw_move_toml_path).is_ok() {
+        Some(raw_move_toml_path)
+    } else {
+        None
+    }
 }
 
 fn read_manifest_from_fs(path: &ManifestPath) -> anyhow::Result<MoveToml> {

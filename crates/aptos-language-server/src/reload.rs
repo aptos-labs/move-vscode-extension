@@ -15,6 +15,7 @@ use lsp_types::FileSystemWatcher;
 use project_model::aptos_package::load_from_fs::{LoadedPackage, LoadedPackages};
 use project_model::aptos_package::{AptosPackage, load_from_fs};
 use project_model::dep_graph::collect;
+use project_model::manifest_path::is_move_toml;
 use project_model::project_folders::ProjectFolders;
 use std::fmt::Formatter;
 use std::sync::Arc;
@@ -377,7 +378,7 @@ pub(crate) fn is_manifest_file(changed_file_path: &AbsPath) -> bool {
         Some(it) => it,
         None => return false,
     };
-    changed_file_name == "Move.toml"
+    is_move_toml(changed_file_name)
 }
 
 fn trace_dependencies(package_entries: &PackageGraph, vfs: &Vfs) {

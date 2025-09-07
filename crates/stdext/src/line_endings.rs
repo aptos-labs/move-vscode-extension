@@ -48,6 +48,13 @@ impl LineEndings {
         };
         (src, LineEndings::Dos)
     }
+
+    pub fn map(&self, text: String) -> String {
+        match self {
+            LineEndings::Unix => text,
+            LineEndings::Dos => text.replace('\n', "\r\n"),
+        }
+    }
 }
 
 #[cfg(test)]

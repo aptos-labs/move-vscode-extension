@@ -1833,6 +1833,7 @@ dependencies = [
  "rand 0.9.1",
  "regex",
  "rowan",
+ "stdext",
  "stdx",
  "test-utils",
  "tracing",

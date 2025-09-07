@@ -117,11 +117,10 @@ pub(crate) fn completion_item_kind(
 
 pub(crate) fn lsp_text_edit(line_index: &LineIndex, change: TextChange) -> lsp_types::TextEdit {
     let range = lsp_range(line_index, change.range);
-    let new_text = match line_index.endings {
-        LineEndings::Unix => change.new_text,
-        LineEndings::Dos => change.new_text.replace('\n', "\r\n"),
-    };
-    lsp_types::TextEdit { range, new_text }
+    lsp_types::TextEdit {
+        range,
+        new_text: line_index.endings.map(change.new_text),
+    }
 }
 
 pub(crate) fn lsp_completion_text_edit(

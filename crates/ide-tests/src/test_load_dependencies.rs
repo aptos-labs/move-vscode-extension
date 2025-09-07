@@ -19,12 +19,10 @@ fn load_deps_dir() -> PathBuf {
 fn test_circular_dependencies() {
     init_tracing_for_test();
 
-    let manifest = DiscoveredManifest {
-        move_toml_file: AbsPathBuf::assert_utf8(
-            load_deps_dir().join("circular_dependencies").join("Move.toml"),
-        ),
-        resolve_deps: true,
-    };
+    let manifest = DiscoveredManifest::new(
+        AbsPathBuf::assert_utf8(load_deps_dir().join("circular_dependencies").join("Move.toml")),
+        true,
+    );
     load_aptos_packages(vec![manifest]);
 }
 
@@ -37,7 +35,12 @@ fn test_if_inside_aptos_core_only_load_deps_from_aptos_move() {
     let discovered_manifests = DiscoveredManifest::discover_all(&ws_roots);
 
     let packages = load_aptos_packages(discovered_manifests).valid_packages();
-    assert_eq!(packages.len(), 4);
+    assert_eq!(
+        packages.len(),
+        4,
+        "Loaded packages are: {:#?}",
+        packages.iter().map(|it| it.content_root()).collect::<Vec<_>>()
+    );
 
     let other_movestdlib_package = packages
         .iter()
@@ -56,4 +59,40 @@ fn test_if_inside_aptos_core_only_load_deps_from_aptos_move() {
         .find(|it| it.content_root().to_string().contains("my-package"))
         .unwrap();
     assert_eq!(my_package.dep_roots().len(), 1);
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn test_lowercase_move_toml_not_allowed_on_unix() {
+    init_tracing_for_test();
+
+    let root = load_deps_dir().join("error-move-project");
+    let ws_roots = vec![AbsPathBuf::assert_utf8(root)];
+    let discovered_manifests = DiscoveredManifest::discover_all(&ws_roots);
+
+    let packages = load_aptos_packages(discovered_manifests).valid_packages();
+    assert_eq!(
+        packages.len(),
+        1,
+        "Loaded packages are: {:#?}",
+        packages.iter().map(|it| it.content_root()).collect::<Vec<_>>()
+    );
+}
+
+#[cfg(not(target_os = "linux"))]
+#[test]
+fn test_lowercase_move_toml_allowed_on_case_insensitive_oses() {
+    init_tracing_for_test();
+
+    let root = load_deps_dir().join("error-move-project");
+    let ws_roots = vec![AbsPathBuf::assert_utf8(root)];
+    let discovered_manifests = DiscoveredManifest::discover_all(&ws_roots);
+
+    let packages = load_aptos_packages(discovered_manifests).valid_packages();
+    assert_eq!(
+        packages.len(),
+        2,
+        "Loaded packages are: {:#?}",
+        packages.iter().map(|it| it.content_root()).collect::<Vec<_>>()
+    );
 }

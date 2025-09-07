@@ -6,11 +6,13 @@
 
 use std::path::Path;
 use std::{env, fs, panic};
+use stdext::line_endings::LineEndings;
 use syntax::{AstNode, SourceFile, algo, ast};
 use test_utils::{SourceMark, apply_source_marks, fixtures};
 
-fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<()> {
-    let input = fs::read_to_string(fpath).unwrap();
+fn test_parse_file(input_fpath: &Path, allow_errors: bool) -> datatest_stable::Result<()> {
+    let (input, line_endings) = fs_read_file(input_fpath).unwrap();
+    // let (input, line_endings) = LineEndings::normalize(input);
 
     let parse = SourceFile::parse(&input);
     let file = parse.tree();
@@ -22,10 +24,8 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
         }
     }
 
-    let actual_output = format!("{:#?}", file.syntax());
-    let output_fpath = fpath.with_extension("").with_extension("txt");
-    let errors_fpath = fpath.with_extension("").with_extension("exp");
-    // let html_fpath = fpath.with_extension("").with_extension("html");
+    let output_fpath = input_fpath.with_extension("").with_extension("txt");
+    let errors_fpath = input_fpath.with_extension("").with_extension("exp");
 
     let syntax_errors = parse.errors();
 
@@ -45,34 +45,24 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
             syntax_error.to_string(),
         ));
     }
-
-    // let marks = errors
-    //     .iter()
-    //     .map(|it| ErrorMark {
-    //         text_range: it.range(),
-    //         message: it.to_string(),
-    //         custom_symbol: None,
-    //     })
-    //     .collect();
     let error_output = apply_source_marks(&input, error_marks);
 
+    let actual_output = format!("{:#?}", file.syntax());
     let expected_output = if output_fpath.exists() {
-        let existing = fs::read_to_string(&output_fpath).unwrap();
-        Some(existing)
+        let (existing_expected_output, _) = fs_read_file(&output_fpath).unwrap();
+        Some(existing_expected_output)
     } else {
         None
     };
 
-    let expected_errors_output = fs::read_to_string(&errors_fpath).ok();
-    // let expected_html_output = fs::read_to_string(&html_fpath).ok();
+    let expected_errors_output = fs_read_file(&errors_fpath);
 
     if env::var("UB").is_ok() {
         // generate new files
-        fs::write(&output_fpath, &actual_output).unwrap();
+        fs_write_file(&output_fpath, &actual_output, line_endings).unwrap();
         if allow_errors {
-            fs::write(errors_fpath, error_output.clone()).unwrap();
+            fs_write_file(errors_fpath, &error_output, line_endings).unwrap();
         }
-        // fs::write(&html_fpath, &html_output).unwrap();
     }
 
     // check whether it can be highlighted without crashes
@@ -80,12 +70,12 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
 
     pretty_assertions::assert_eq!(&expected_output.unwrap_or("".to_string()), &actual_output);
 
-    // pretty_assertions::assert_eq!(&expected_html_output.unwrap_or("".to_string()), &html_output);
-
     if !syntax_errors.is_empty() {
         if allow_errors {
             pretty_assertions::assert_eq!(
-                &expected_errors_output.unwrap_or("".to_string()),
+                &expected_errors_output
+                    .unwrap_or(("".to_string(), LineEndings::Unix))
+                    .0,
                 &error_output
             );
         } else {
@@ -94,6 +84,17 @@ fn test_parse_file(fpath: &Path, allow_errors: bool) -> datatest_stable::Result<
     }
 
     Ok(())
+}
+
+fn fs_read_file(fpath: impl AsRef<Path>) -> Option<(String, LineEndings)> {
+    fs::read_to_string(&fpath)
+        .ok()
+        .map(|it| LineEndings::normalize(it))
+}
+
+fn fs_write_file(fpath: impl AsRef<Path>, contents: &String, line_endings: LineEndings) -> Option<()> {
+    let contents = line_endings.map(contents.clone());
+    fs::write(&fpath, contents).ok()
 }
 
 fn run_fuzzer_once(modified_input: &mut String) {

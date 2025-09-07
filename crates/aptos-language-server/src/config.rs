@@ -407,6 +407,7 @@ mod tests {
     use camino::Utf8PathBuf;
     use std::fs;
     use std::path::{Path, PathBuf};
+    use stdext::line_endings::LineEndings;
     use stdx::is_ci;
 
     /// Returns the path to the root directory of `rust-analyzer` project.
@@ -430,8 +431,12 @@ mod tests {
     /// case, updates the file and return an Error.
     pub fn try_ensure_file_contents(file: &Path, contents: &str) -> Result<(), ()> {
         match fs::read_to_string(file) {
-            Ok(old_contents) if normalize_newlines(&old_contents) == normalize_newlines(contents) => {
-                return Ok(());
+            Ok(old_contents) => {
+                let (old_contents, _) = LineEndings::normalize(old_contents);
+                let (contents, _) = LineEndings::normalize(contents.to_string());
+                if old_contents == contents {
+                    return Ok(());
+                }
             }
             _ => (),
         }
@@ -454,6 +459,7 @@ mod tests {
         s.replace("\r\n", "\n")
     }
 
+    #[cfg(not(windows))]
     #[test]
     fn generate_package_json_config() {
         let s = Config::json_schema();
