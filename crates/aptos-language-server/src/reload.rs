@@ -378,7 +378,7 @@ pub(crate) fn is_manifest_file(changed_file_path: &AbsPath) -> bool {
         Some(it) => it,
         None => return false,
     };
-    is_move_toml(changed_file_name)
+    is_move_toml(changed_file_name.into())
 }
 
 fn trace_dependencies(package_entries: &PackageGraph, vfs: &Vfs) {
