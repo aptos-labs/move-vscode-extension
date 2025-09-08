@@ -49,7 +49,7 @@ impl DiscoveredManifest {
             candidate_dir = candidate_dir.parent()?;
         };
         let folder_root = PackageFolderRoot {
-            content_root: candidate_manifest.content_root(),
+            manifest_file: candidate_manifest.move_toml_file.clone(),
             is_local: true,
         };
         if folder_root

@@ -275,6 +275,7 @@ fn collect_reachable_manifests(
 }
 
 pub fn try_find_move_toml_at_root(dep_root: &AbsPath) -> Option<AbsPathBuf> {
+    // handles case-insensitivity
     let raw_move_toml_path = dep_root.join("Move.toml").normalize();
     if fs::metadata(&raw_move_toml_path).is_ok() {
         Some(raw_move_toml_path)

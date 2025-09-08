@@ -13,7 +13,7 @@ use vfs::{FileId, VfsPath};
 
 #[derive(Default)]
 pub struct PackageRootConfig {
-    pub file_set_roots: Vec<VfsPath>,
+    pub fileset_root_manifests: Vec<VfsPath>,
     pub fsc: FileSetConfig,
     pub local_filesets: Vec<u64>,
 }
@@ -30,11 +30,8 @@ impl PackageRootConfig {
                 PackageKind::Library
             };
             let mut package_manifest_file_id: Option<FileId> = None;
-            for candidate_root in self.file_set_roots.iter() {
-                let candidate_manifest = candidate_root.join("Move.toml");
-                if let Some(manifest_file_id) =
-                    candidate_manifest.and_then(|it| package_file_set.file_for_path(&it))
-                {
+            for candidate_manifest in self.fileset_root_manifests.iter() {
+                if let Some(manifest_file_id) = package_file_set.file_for_path(&candidate_manifest) {
                     package_manifest_file_id = Some(*manifest_file_id);
                 }
             }
@@ -47,7 +44,7 @@ impl PackageRootConfig {
 impl fmt::Debug for PackageRootConfig {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("PackageRootConfig")
-            .field("root_dirs", &self.file_set_roots)
+            .field("root_dirs", &self.fileset_root_manifests)
             .finish()
     }
 }
@@ -74,7 +71,7 @@ impl ProjectFolders {
         all_folder_roots.sort();
         all_folder_roots.dedup();
 
-        let mut file_set_roots = vec![];
+        let mut fileset_root_manifests = vec![];
         for package_folder_root in all_folder_roots {
             for dir_entry in folder_root_to_dir_entries(package_folder_root.clone()) {
                 if package_folder_root.is_local {
@@ -87,15 +84,16 @@ impl ProjectFolders {
                 local_filesets.push(fsc.len() as u64);
             }
 
-            let file_set_root = VfsPath::from(package_folder_root.content_root.clone());
-            file_set_roots.push(file_set_root.clone());
+            let fileset_root_manifest = VfsPath::from(package_folder_root.manifest_file.clone());
+            fileset_root_manifests.push(fileset_root_manifest.clone());
 
-            fsc.add_file_set(vec![file_set_root])
+            let fileset_root = fileset_root_manifest.parent().unwrap();
+            fsc.add_file_set(vec![fileset_root])
         }
 
         let fsc = fsc.build();
         folders.package_root_config = PackageRootConfig {
-            file_set_roots,
+            fileset_root_manifests,
             fsc,
             local_filesets,
         };
@@ -107,7 +105,9 @@ impl ProjectFolders {
 fn folder_root_to_dir_entries(folder_root: PackageFolderRoot) -> Vec<vfs::loader::Entry> {
     let mut toml_dirs = vfs::loader::Directories::default();
     toml_dirs.extensions.push("toml".into());
-    toml_dirs.include.extend(vec![folder_root.content_root.clone()]);
+    toml_dirs
+        .include
+        .extend(vec![folder_root.content_root().to_path_buf()]);
 
     let mut move_dirs = vfs::loader::Directories::default();
     move_dirs.extensions.push("move".into());

@@ -166,10 +166,10 @@ impl Files {
     pub fn set_package_metadata(
         &self,
         db: &mut dyn SourceDatabase,
-        package_id: ManifestFileId,
+        package_manifest_id: ManifestFileId,
         metadata: PackageMetadata,
     ) {
-        match self.package_metadata.entry(package_id) {
+        match self.package_metadata.entry(package_manifest_id) {
             Entry::Occupied(mut occupied) => {
                 occupied
                     .get_mut()
