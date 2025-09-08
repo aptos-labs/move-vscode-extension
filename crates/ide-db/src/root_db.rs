@@ -108,9 +108,13 @@ impl SourceDatabase for RootDatabase {
         self.files.package_metadata(manifest_file_id)
     }
 
-    fn set_package_metadata(&mut self, package_id: ManifestFileId, package_metadata: PackageMetadata) {
+    fn set_package_metadata(
+        &mut self,
+        package_manifest_id: ManifestFileId,
+        package_metadata: PackageMetadata,
+    ) {
         let files = Arc::clone(&self.files);
-        files.set_package_metadata(self, package_id, package_metadata)
+        files.set_package_metadata(self, package_manifest_id, package_metadata)
     }
 
     fn spec_related_files(&self, file_id: FileId) -> FileIdSet {

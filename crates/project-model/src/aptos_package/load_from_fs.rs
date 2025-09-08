@@ -6,7 +6,7 @@
 
 use crate::DiscoveredManifest;
 use crate::aptos_package::{AptosPackage, PackageKind};
-use crate::manifest_path::ManifestPath;
+use crate::manifest_path::{ManifestPath, is_move_toml};
 use crate::move_toml::{MoveToml, MoveTomlDependency};
 use anyhow::Context;
 use paths::{AbsPath, AbsPathBuf};
@@ -275,12 +275,17 @@ fn collect_reachable_manifests(
 }
 
 pub fn try_find_move_toml_at_root(dep_root: &AbsPath) -> Option<AbsPathBuf> {
-    let raw_move_toml_path = dep_root.join("Move.toml").normalize();
-    if fs::metadata(&raw_move_toml_path).is_ok() {
-        Some(raw_move_toml_path)
-    } else {
-        None
+    // needed to handle case-insensitivity on MacOS / Windows
+    for dir_entry in fs::read_dir(dep_root).ok()?.filter_map(|it| it.ok()) {
+        let file_path = dir_entry.path();
+        if file_path.is_file()
+            && let Some(file_name) = file_path.file_name()
+            && is_move_toml(file_name.into())
+        {
+            return Some(AbsPathBuf::assert_utf8(file_path).normalize());
+        }
     }
+    None
 }
 
 fn read_manifest_from_fs(path: &ManifestPath) -> anyhow::Result<MoveToml> {

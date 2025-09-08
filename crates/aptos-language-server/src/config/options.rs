@@ -47,10 +47,10 @@ config_data! {
         /// a lot of false-positives.
         diagnostics_needsTypeAnnotation: bool   = false,
 
-        /// These paths (file/directories) will be ignored by aptos-language-server. They are
-        /// relative to the workspace root, and globs are not supported. You may
-        /// also need to add the folders to Code's `files.watcherExclude`.
-        files_excludeDirs: Vec<Utf8PathBuf> = vec![],
+        // /// These paths (file/directories) will be ignored by aptos-language-server. They are
+        // /// relative to the workspace root, and globs are not supported. You may
+        // /// also need to add the folders to Code's `files.watcherExclude`.
+        // files_excludeDirs: Vec<Utf8PathBuf> = vec![],
 
         /// Whether to show function parameter name inlay hints at the call
         /// site.

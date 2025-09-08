@@ -821,6 +821,7 @@ dependencies = [
 name = "ide-tests"
 version = "0.1.0"
 dependencies = [
+ "base-db",
  "datatest-stable",
  "expect-test",
  "ide",

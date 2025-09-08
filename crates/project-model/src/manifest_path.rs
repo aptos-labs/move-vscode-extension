@@ -6,12 +6,17 @@
 
 use paths::{AbsPath, AbsPathBuf};
 use std::borrow::Borrow;
+use std::ffi::OsString;
 use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
 use std::{fmt, fs, ops};
 
-pub fn is_move_toml(file_name: &str) -> bool {
-    file_name.to_lowercase() == "move.toml"
+pub fn is_move_toml(file_name: OsString) -> bool {
+    if cfg!(target_os = "macos") || cfg!(target_os = "windows") {
+        file_name.to_ascii_lowercase() == "move.toml"
+    } else {
+        file_name == "Move.toml"
+    }
 }
 
 #[derive(Debug, Clone, Eq, Ord, PartialOrd)]
@@ -61,7 +66,7 @@ impl ManifestPath {
     pub fn new(move_toml_file: AbsPathBuf) -> ManifestPath {
         let file_name = move_toml_file.file_name().unwrap_or_default();
         assert!(
-            is_move_toml(file_name),
+            is_move_toml(file_name.into()),
             "project root must point to a Move.toml file: {move_toml_file}"
         );
         Self { file: move_toml_file }

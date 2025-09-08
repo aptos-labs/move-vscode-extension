@@ -153,10 +153,12 @@ impl Files {
     }
 
     pub fn package_metadata(&self, manifest_file_id: ManifestFileId) -> PackageMetadataInput {
-        let metadata = self
-            .package_metadata
-            .get(&manifest_file_id)
-            .expect("Unable to fetch package dependencies");
+        let metadata = self.package_metadata.get(&manifest_file_id).unwrap_or_else(|| {
+            panic!(
+                "Unable to fetch package metadata for manifest_file_id = {}",
+                manifest_file_id.index()
+            );
+        });
         *metadata
     }
 
@@ -164,10 +166,10 @@ impl Files {
     pub fn set_package_metadata(
         &self,
         db: &mut dyn SourceDatabase,
-        package_id: ManifestFileId,
+        package_manifest_id: ManifestFileId,
         metadata: PackageMetadata,
     ) {
-        match self.package_metadata.entry(package_id) {
+        match self.package_metadata.entry(package_manifest_id) {
             Entry::Occupied(mut occupied) => {
                 occupied
                     .get_mut()

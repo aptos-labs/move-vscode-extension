@@ -282,19 +282,6 @@
                 }
             },
             {
-                "title": "files",
-                "properties": {
-                    "move-on-aptos.files.excludeDirs": {
-                        "markdownDescription": "These paths (file/directories) will be ignored by aptos-language-server. They are\nrelative to the workspace root, and globs are not supported. You may\nalso need to add the folders to Code's `files.watcherExclude`.",
-                        "default": [],
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    }
-                }
-            },
-            {
                 "title": "inlayHints",
                 "properties": {
                     "move-on-aptos.inlayHints.parameterHints.enable": {

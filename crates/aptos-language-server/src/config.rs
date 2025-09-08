@@ -281,23 +281,23 @@ impl Config {
     }
 
     pub fn discovered_manifests(&self) -> Vec<DiscoveredManifest> {
-        let exclude_dirs = self
-            .files_excludeDirs()
-            .iter()
-            .map(|p| self.root_path.join(p))
-            .collect::<Vec<_>>();
-
-        let mut manifests = vec![];
-        for discovered_manifest in &self.discovered_manifests_from_filesystem {
-            if exclude_dirs
-                .iter()
-                .any(|p| discovered_manifest.move_toml_file.starts_with(p))
-            {
-                continue;
-            }
-            manifests.push(discovered_manifest.clone());
-        }
-        manifests
+        // let exclude_dirs = self
+        //     .files_excludeDirs()
+        //     .iter()
+        //     .map(|p| self.root_path.join(p))
+        //     .collect::<Vec<_>>();
+        // let mut manifests = vec![];
+        // for discovered_manifest in &self.discovered_manifests_from_filesystem {
+        //     if exclude_dirs
+        //         .iter()
+        //         .any(|p| discovered_manifest.move_toml_file.starts_with(p))
+        //     {
+        //         continue;
+        //     }
+        //     manifests.push(discovered_manifest.clone());
+        // }
+        // manifests
+        self.discovered_manifests_from_filesystem.clone()
     }
 
     pub fn diagnostics_enabled(&self) -> bool {

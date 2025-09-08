@@ -4,6 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+use crate::aptos_package::load_from_fs::try_find_move_toml_at_root;
 use crate::aptos_package::{AptosPackage, VfsLoader};
 use base_db::change::{ManifestFileId, PackageGraph};
 use base_db::inputs::PackageMetadata;
@@ -46,11 +47,12 @@ pub fn collect(aptos_packages: &[AptosPackage], load: VfsLoader<'_>) -> Option<P
 
 impl AptosPackage {
     fn dep_graph_entry(&self, load: VfsLoader<'_>) -> Option<(ManifestFileId, Vec<ManifestFileId>)> {
-        let package_file_id = load_package_file_id(self.content_root(), load)?;
+        let package_file_id = load_package_file_id(self.manifest_path(), load)?;
 
         let mut dep_ids = vec![];
         for (dep_root, _) in self.dep_roots() {
-            let dep_file_id = load_package_file_id(dep_root, load)?;
+            let dep_manifest_path = try_find_move_toml_at_root(dep_root)?;
+            let dep_file_id = load_package_file_id(dep_manifest_path.as_path(), load)?;
             dep_ids.push(dep_file_id);
         }
 
@@ -58,12 +60,14 @@ impl AptosPackage {
     }
 }
 
-fn load_package_file_id(dep_root: &AbsPath, load_from_vfs: VfsLoader<'_>) -> Option<ManifestFileId> {
-    let move_toml_file = dep_root.join("Move.toml");
-    match load_from_vfs(&move_toml_file) {
+fn load_package_file_id(
+    move_toml_path: &AbsPath,
+    load_from_vfs: VfsLoader<'_>,
+) -> Option<ManifestFileId> {
+    match load_from_vfs(&move_toml_path) {
         Some(file_id) => Some(file_id),
         None => {
-            tracing::info!(?move_toml_file, "cannot load from filesystem");
+            tracing::info!(?move_toml_path, "cannot load from filesystem");
             None
         }
     }
