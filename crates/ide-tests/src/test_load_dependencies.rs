@@ -84,12 +84,12 @@ fn test_lowercase_move_toml_not_allowed_on_unix() {
 fn test_lowercase_move_toml_allowed_on_case_insensitive_oses() {
     use base_db::SourceDatabase;
     use ide_db::load::load_db;
-    use vfs::{Vfs, VfsPath};
+    use vfs::VfsPath;
 
     init_tracing_for_test();
 
     let root = load_deps_dir().join("error-move-project");
-    let ws_roots = vec![AbsPathBuf::assert_utf8(root)];
+    let ws_roots = vec![AbsPathBuf::assert_utf8(root.clone())];
     let discovered_manifests = DiscoveredManifest::discover_all(&ws_roots);
 
     let packages = load_aptos_packages(discovered_manifests).valid_packages();
