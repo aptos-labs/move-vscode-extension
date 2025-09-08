@@ -153,10 +153,12 @@ impl Files {
     }
 
     pub fn package_metadata(&self, manifest_file_id: ManifestFileId) -> PackageMetadataInput {
-        let metadata = self
-            .package_metadata
-            .get(&manifest_file_id)
-            .expect("Unable to fetch package dependencies");
+        let metadata = self.package_metadata.get(&manifest_file_id).unwrap_or_else(|| {
+            panic!(
+                "Unable to fetch package metadata for manifest file_id {:?}",
+                manifest_file_id
+            );
+        });
         *metadata
     }
 
