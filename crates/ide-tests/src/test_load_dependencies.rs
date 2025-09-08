@@ -67,7 +67,7 @@ fn test_lowercase_move_toml_not_allowed_on_unix() {
     init_tracing_for_test();
 
     let root = load_deps_dir().join("error-move-project");
-    let ws_roots = vec![AbsPathBuf::assert_utf8(root)];
+    let ws_roots = vec![AbsPathBuf::assert_utf8(root.clone())];
     let discovered_manifests = DiscoveredManifest::discover_all(&ws_roots);
 
     let packages = load_aptos_packages(discovered_manifests).valid_packages();
@@ -82,6 +82,10 @@ fn test_lowercase_move_toml_not_allowed_on_unix() {
 #[cfg(not(target_os = "linux"))]
 #[test]
 fn test_lowercase_move_toml_allowed_on_case_insensitive_oses() {
+    use base_db::SourceDatabase;
+    use ide_db::load::load_db;
+    use vfs::{Vfs, VfsPath};
+
     init_tracing_for_test();
 
     let root = load_deps_dir().join("error-move-project");
@@ -95,4 +99,11 @@ fn test_lowercase_move_toml_allowed_on_case_insensitive_oses() {
         "Loaded packages are: {:#?}",
         packages.iter().map(|it| it.content_root()).collect::<Vec<_>>()
     );
+
+    let (db, vfs) = load_db(&packages).unwrap();
+    let lowercase_movetoml =
+        VfsPath::new_real_path(root.join("dep1").join("move.toml").to_string_lossy().to_string());
+    let (manifest_file_id, _) = vfs.file_id(&lowercase_movetoml).unwrap();
+
+    db.package_metadata(manifest_file_id);
 }

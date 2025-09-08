@@ -15,6 +15,7 @@ vfs.workspace = true
 
 syntax = { path = "../syntax" }
 test-utils = { path = "../test-utils" }
+base-db = { path = "../base-db" }
 lang = { path = "../lang" }
 project-model = { path = "../project-model" }
 ide = { path = "../ide" }
