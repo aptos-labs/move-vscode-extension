@@ -100,6 +100,10 @@ fn register_type_error(
         } => {
             let actual = ctx.sema.render_ty(actual_ty);
             let expected = ctx.sema.render_ty(expected_ty);
+            // handle duplicate AptosFramework dependencies
+            if actual == expected {
+                return;
+            }
             acc.push(Diagnostic::new(
                 DiagnosticCode::Lsp("type-error", Severity::Error),
                 format!("Incompatible type '{actual}', expected '{expected}'"),
