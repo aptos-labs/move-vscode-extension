@@ -32,10 +32,9 @@ pub fn get_entries_from_walking_scopes(
     let mut visited_names = HashSet::new();
     let mut entries = vec![];
 
-    let mut prev_scope = start_at.value;
     for resolve_scope in resolve_scopes {
         let scope_entries = {
-            let mut entries = get_entries_in_blocks(&resolve_scope, prev_scope);
+            let mut entries = get_entries_in_blocks(&resolve_scope, &start_at.value);
             entries.extend(get_entries_in_scope(db, &resolve_scope));
             entries
         };
@@ -61,8 +60,6 @@ pub fn get_entries_from_walking_scopes(
                 entries.push(scope_entry);
             }
         }
-
-        prev_scope = resolve_scope.scope().value.clone();
     }
     entries
 }

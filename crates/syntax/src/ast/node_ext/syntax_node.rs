@@ -7,7 +7,7 @@
 use crate::ast::node_ext::syntax_element::SyntaxElementExt;
 use crate::parse::SyntaxKind;
 use crate::syntax_editor::Element;
-use crate::{AstNode, AstToken, SyntaxElement, SyntaxNode, SyntaxToken, TextSize, ast};
+use crate::{AstNode, AstToken, SyntaxElement, SyntaxNode, SyntaxToken, TextRange, TextSize, ast};
 use rowan::TokenAtOffset;
 use std::cmp::Ordering;
 
@@ -40,6 +40,8 @@ pub trait SyntaxNodeExt {
     fn descendants_of_type<Ast: AstNode>(&self) -> impl Iterator<Item = Ast>;
 
     fn strictly_before(&self, other: &SyntaxNode) -> bool;
+
+    fn strictly_before_offset(&self, offset: TextSize) -> bool;
 }
 
 impl SyntaxNodeExt for SyntaxNode {
@@ -115,6 +117,11 @@ impl SyntaxNodeExt for SyntaxNode {
         let left_range = self.text_range();
         let right_range = other.text_range();
         left_range.ordering(right_range) == Ordering::Less
+    }
+
+    fn strictly_before_offset(&self, offset: TextSize) -> bool {
+        let left_range = self.text_range();
+        left_range.ordering(TextRange::empty(offset)) == Ordering::Less
     }
 }
 
