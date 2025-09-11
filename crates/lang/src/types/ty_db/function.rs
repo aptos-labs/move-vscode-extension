@@ -1,4 +1,5 @@
 use crate::loc::{SyntaxLocFileExt, SyntaxLocInput};
+use crate::types::has_type_params_ext::GenericItemExt;
 use crate::types::ty::Ty;
 use crate::types::ty::ty_callable::{TyCallable, TyCallableKind};
 use crate::types::ty_db::lower_type;
