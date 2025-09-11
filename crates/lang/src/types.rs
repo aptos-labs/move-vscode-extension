@@ -10,6 +10,7 @@ pub mod inference;
 pub mod lowering;
 pub mod substitution;
 pub mod ty;
+pub mod ty_db;
 
 pub mod render;
 

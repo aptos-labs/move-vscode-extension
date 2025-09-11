@@ -49,7 +49,7 @@ pub(crate) fn add_path_completions(
 
     let acc = &mut completions.borrow_mut();
 
-    if let Some(completion_items) = add_completions_from_the_resolution_entries(ctx, &path_ctx) {
+    if let Some(completion_items) = add_path_completions_from_the_resolution_entries(ctx, &path_ctx) {
         acc.add_all(completion_items);
     }
 
@@ -92,10 +92,12 @@ pub(crate) fn add_path_completions(
     Some(())
 }
 
-fn add_completions_from_the_resolution_entries(
+fn add_path_completions_from_the_resolution_entries(
     ctx: &CompletionContext<'_>,
     path_ctx: &PathCompletionCtx,
 ) -> Option<Vec<CompletionItem>> {
+    let _p = tracing::debug_span!("add_path_completions_from_the_resolution_entries").entered();
+
     let file_id = ctx.position.file_id;
     let original_file = ctx.original_file()?;
 
@@ -150,28 +152,34 @@ fn add_completions_from_the_resolution_entries(
     }
 
     if ctx.config.enable_imports_on_the_fly {
-        let out_of_scope_items =
-            out_of_scope_completion_items(ctx, path_ctx, path_kind, original_start_at, &visible_entries)
-                .unwrap_or_default();
+        let out_of_scope_items = add_out_of_scope_completion_items(
+            ctx,
+            path_ctx,
+            path_kind,
+            original_start_at,
+            &visible_entries,
+        )
+        .unwrap_or_default();
         completion_items.extend(out_of_scope_items);
     }
 
     Some(completion_items)
 }
 
-fn out_of_scope_completion_items(
+fn add_out_of_scope_completion_items(
     ctx: &CompletionContext<'_>,
     path_ctx: &PathCompletionCtx,
     path_kind: path_kind::PathKind,
     original_start_at: InFile<SyntaxNode>,
     existing_entries: &Vec<ScopeEntry>,
 ) -> Option<Vec<CompletionItem>> {
+    let _p = tracing::debug_span!("add_out_of_scope_completion_items").entered();
+
     if path_ctx.is_use_stmt() || path_ctx.is_acquires {
         return None;
     }
     let unqualified_nsset = path_kind.unqualified_ns()?;
     let import_candidate_entries = hir_db::import_candidates(ctx.db, original_start_at.file_id)
-        .into_iter()
         .filter(|it| unqualified_nsset.contains(it.ns))
         .filter(|it| is_visible_in_context(ctx.db, it, &original_start_at));
     let mut completion_items = vec![];
@@ -199,6 +207,8 @@ fn render_scope_entry(
     path_ctx: &PathCompletionCtx,
     entry: ScopeEntry,
 ) -> Option<CompletionItemBuilder> {
+    let _p = tracing::debug_span!("render_scope_entry").entered();
+
     let name = entry.name.clone();
     let named_item = entry.cast_into::<ast::NamedElement>(ctx.db)?;
     let named_item_kind = named_item.kind();

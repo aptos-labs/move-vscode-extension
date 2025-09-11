@@ -121,7 +121,7 @@ impl TypeAstWalker<'_, '_> {
                     .map(|field| {
                         self.ctx
                             .ty_lowering()
-                            .lower_type_owner(field)
+                            .lower_type_of_type_owner(field)
                             .unwrap_or(Ty::Unknown)
                     })
                     .collect::<Vec<_>>();
@@ -223,7 +223,7 @@ impl TypeAstWalker<'_, '_> {
             {
                 Some(named_field) => {
                     let field_ty = ty_lowering
-                        .lower_type_owner(named_field.to_owned().in_file(item_file_id))
+                        .lower_type_of_type_owner(named_field.to_owned().in_file(item_file_id))
                         .unwrap_or(Ty::Unknown);
                     tys.push((named_field.to_owned().in_file(item_file_id).to_entry(), field_ty));
                 }

@@ -18,6 +18,7 @@ use crate::types::lowering::TyLowering;
 use crate::types::render::{HirWrite, TypeRenderer, TypeRendererConfig};
 use crate::types::ty::Ty;
 use crate::types::ty::ty_callable::TyCallable;
+use crate::types::ty_db;
 use crate::{hir_db, nameres};
 use base_db::inputs::InternFileId;
 use base_db::package_root::PackageId;
@@ -231,7 +232,8 @@ impl<'db> SemanticsImpl<'db> {
     }
 
     pub fn lower_type(&self, type_: InFile<ast::Type>, msl: bool) -> Ty {
-        TyLowering::new(self.db, msl).lower_type(type_)
+        // TyLowering::new(self.db, msl).lower_type(type_)
+        ty_db::lower_type(self.db, type_, msl)
     }
 
     pub fn is_tys_compatible(&self, ty: Ty, into_ty: Ty, with_autoborrow: bool) -> bool {

@@ -25,7 +25,6 @@ pub(crate) fn auto_import_fix(
 
     let expected_ns = path_kind(db, path.qualifier(), &path, false)?.unqualified_ns()?;
     let import_candidates = hir_db::import_candidates(db, file_id)
-        .iter()
         .filter(|it| expected_ns.contains(it.ns))
         .filter(|it| it.name == reference_name)
         .cloned()

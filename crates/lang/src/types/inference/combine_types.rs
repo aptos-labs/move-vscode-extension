@@ -222,8 +222,8 @@ impl InferenceCtx<'_> {
         )?;
         // todo: resolve variables?
         self.combine_types(
-            expected_call_ty.ret_type().unwrap_all_refs(),
-            actual_call_ty.ret_type().unwrap_all_refs(),
+            expected_call_ty.ret_type_ty().unwrap_all_refs(),
+            actual_call_ty.ret_type_ty().unwrap_all_refs(),
         )
     }
 

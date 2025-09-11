@@ -14,9 +14,9 @@ use lang::types::has_type_params_ext::GenericItemExt;
 use lang::types::inference::{InferenceCtx, TyVarIndex};
 use lang::types::lowering::TyLowering;
 use lang::types::substitution::ApplySubstitution;
-use lang::types::ty;
 use lang::types::ty::Ty;
 use lang::types::ty::adt::TyAdt;
+use lang::types::{ty, ty_db};
 use std::cell::RefCell;
 use syntax::ast;
 use syntax::files::{InFile, InFileExt};
@@ -64,7 +64,7 @@ fn add_field_completion_items(
 
         let mut completion_item = new_named_item(ctx, &name, named_field.kind());
 
-        if let Some(field_ty) = ty_lowering.lower_type_owner(named_field) {
+        if let Some(field_ty) = ty_lowering.lower_type_of_type_owner(named_field) {
             let field_detail = field_ty.substitute(&ty_adt.substitution).render(ctx.db, None);
             completion_item.set_detail(Some(field_detail));
         }
@@ -80,19 +80,17 @@ fn add_method_completion_items(
     ctx: &CompletionContext<'_>,
     receiver_ty: Ty,
 ) -> Option<()> {
-    let hir_db = ctx.db;
+    let db = ctx.db;
     let acc = &mut completions.borrow_mut();
 
-    let method_entries =
-        get_method_resolve_variants(hir_db, &receiver_ty, ctx.position.file_id, ctx.msl);
+    let method_entries = get_method_resolve_variants(db, &receiver_ty, ctx.position.file_id, ctx.msl);
     for method_entry in method_entries {
         let method_name = method_entry.name.clone();
-        let method = method_entry.cast_into::<ast::Fun>(hir_db)?;
+        let method = method_entry.cast_into::<ast::Fun>(db)?;
 
         let subst = method.ty_vars_subst(&TyVarIndex::default());
-        let callable_ty = TyLowering::new(hir_db, ctx.msl)
-            .lower_any_function(method.clone().map_into())
-            .substitute(&subst);
+        let callable_ty =
+            ty_db::lower_function(db, method.clone().map_into(), ctx.msl).substitute(&subst);
         let self_ty = callable_ty
             .param_types
             .first()
@@ -100,7 +98,7 @@ fn add_method_completion_items(
         let coerced_receiver_ty =
             ty::reference::autoborrow(receiver_ty.clone(), self_ty).expect("should be compatible");
 
-        let mut inference_ctx = InferenceCtx::new(hir_db, method.file_id, false);
+        let mut inference_ctx = InferenceCtx::new(db, method.file_id, false);
         let _ = inference_ctx.combine_types(self_ty.clone(), coerced_receiver_ty);
 
         let apply_subst = inference_ctx.fully_resolve_vars_fallback_to_origin(subst);

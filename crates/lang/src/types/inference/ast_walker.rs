@@ -91,7 +91,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     ast::InitializerOwner::Const(const_) => self
                         .ctx
                         .ty_lowering()
-                        .lower_type_owner(const_.in_file(self.ctx.file_id)),
+                        .lower_type_of_type_owner(const_.in_file(self.ctx.file_id)),
                     ast::InitializerOwner::AttrItem(attr_item) => {
                         attr_item.is_abort_code().then_some(Ty::Integer(IntegerKind::U64))
                     }
@@ -118,7 +118,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 .ctx
                 .lambda_expr_types
                 .get(&lambda_expr)
-                .map(|it| it.ret_type());
+                .map(|it| it.ret_type_ty());
             if let Some(body_expr) = lambda_expr.body_expr() {
                 // todo: add coerce here
                 self.infer_expr(&body_expr, Expected::from_ty(lambda_ret_ty));
@@ -288,7 +288,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     let ty = self
                         .ctx
                         .ty_lowering()
-                        .lower_type_owner(schema_field.in_file(self.ctx.file_id))
+                        .lower_type_of_type_owner(schema_field.in_file(self.ctx.file_id))
                         .unwrap_or(Ty::Unknown);
                     self.collect_pat_bindings(ident_pat.into(), ty, BindingMode::BindByValue);
                 }
@@ -497,7 +497,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
             NAMED_FIELD => {
                 let named_field = named_element.cast_into::<ast::NamedField>()?;
-                ty_lowering.lower_type_owner(named_field)
+                ty_lowering.lower_type_of_type_owner(named_field)
             }
             STRUCT | ENUM => {
                 let struct_or_enum = named_element.cast_into::<ast::StructOrEnum>().unwrap();
@@ -524,7 +524,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
             GLOBAL_VARIABLE_DECL => {
                 let global_variable_decl = named_element.cast_into::<ast::GlobalVariableDecl>()?;
-                ty_lowering.lower_type_owner(global_variable_decl)
+                ty_lowering.lower_type_of_type_owner(global_variable_decl)
             }
             _ => None,
         }
@@ -622,7 +622,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             .call_expr_types
             .insert(method_call_expr.clone().into(), method_call_ty.clone().into());
 
-        method_call_ty.ret_type()
+        method_call_ty.ret_type_ty()
     }
 
     fn infer_call_expr(&mut self, call_expr: &ast::CallExpr, expected: Expected) -> Option<Ty> {
@@ -650,7 +650,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             .insert(call_expr.clone().into(), callable_ty.clone().into());
 
         // resolve after applying all parameters
-        let ret_ty = self.ctx.resolve_ty_vars_if_possible(callable_ty.ret_type());
+        let ret_ty = self.ctx.resolve_ty_vars_if_possible(callable_ty.ret_type_ty());
         Some(ret_ty)
     }
 
@@ -721,7 +721,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 .and_then(|field| {
                     self.ctx
                         .ty_lowering()
-                        .lower_type_owner(field.to_owned().in_file(item_file_id))
+                        .lower_type_of_type_owner(field.to_owned().in_file(item_file_id))
                 })
                 .unwrap_or(Ty::Unknown);
             let field_ty = declared_field_ty.substitute(&ty_adt.substitution);
@@ -1311,7 +1311,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let Some(expected_ret_ty) = expected.ty(self.ctx) else {
             return vec![];
         };
-        let declared_ret_ty = self.ctx.resolve_ty_vars_if_possible(ty_callable.ret_type());
+        let declared_ret_ty = self.ctx.resolve_ty_vars_if_possible(ty_callable.ret_type_ty());
 
         // unify return types and check if they are compatible
         let combined = self.ctx.combine_types(expected_ret_ty, declared_ret_ty);

@@ -20,9 +20,9 @@ use crate::types::ty::schema::TySchema;
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::{TyCallable, TyCallableKind};
 use crate::types::ty::type_param::TyTypeParameter;
+use crate::types::ty_db;
 use base_db::SourceDatabase;
 use syntax::ast;
-use syntax::ast::idents::INTEGER_IDENTS;
 use syntax::files::{InFile, InFileExt};
 
 pub struct TyLowering<'db> {
@@ -36,10 +36,10 @@ impl<'db> TyLowering<'db> {
     }
 
     pub fn lower_type(&self, type_: InFile<ast::Type>) -> Ty {
-        self.lower_type_inner(type_).unwrap_or(Ty::Unknown)
+        ty_db::lower_type(self.db, type_, self.msl)
     }
 
-    fn lower_type_inner(&self, type_: InFile<ast::Type>) -> Option<Ty> {
+    pub fn lower_type_inner(&self, type_: InFile<ast::Type>) -> Option<Ty> {
         let (file_id, type_) = type_.unpack();
         match type_ {
             ast::Type::PathType(path_type) => {
@@ -47,8 +47,8 @@ impl<'db> TyLowering<'db> {
                 let named_item = nameres::resolve_no_inf(self.db, path.clone());
                 match named_item {
                     None => {
-                        // can be primitive type
-                        self.lower_primitive_type(path)
+                        // can still be primitive type
+                        ty_db::lower_primitive_type(self.db, path, self.msl)
                     }
                     Some(named_item_entry) => {
                         let named_element =
@@ -63,30 +63,31 @@ impl<'db> TyLowering<'db> {
                 let is_mut = ref_type.is_mut();
                 let inner_ty = ref_type
                     .type_()
-                    .map(|inner_type| self.lower_type(inner_type.in_file(file_id)))
+                    .map(|inner_type| ty_db::lower_type(self.db, inner_type.in_file(file_id), self.msl))
                     .unwrap_or(Ty::Unknown);
                 Some(Ty::new_reference(inner_ty, Mutability::new(is_mut)))
             }
             ast::Type::TupleType(tuple_type) => {
                 let inner_tys = tuple_type
                     .types()
-                    .map(|it| self.lower_type(it.in_file(file_id)))
+                    .map(|inner_type| ty_db::lower_type(self.db, inner_type.in_file(file_id), self.msl))
                     .collect::<Vec<_>>();
                 Some(Ty::Tuple(TyTuple::new(inner_tys)))
             }
             ast::Type::UnitType(_) => Some(Ty::Unit),
             ast::Type::ParenType(paren_type) => {
-                self.lower_type_inner(paren_type.type_()?.in_file(file_id))
+                let paren_ty = paren_type.type_()?.in_file(file_id);
+                ty_db::lower_type_inner(self.db, paren_ty, self.msl)
             }
             ast::Type::LambdaType(lambda_type) => {
                 let param_tys = lambda_type
                     .param_types()
                     .into_iter()
-                    .map(|it| self.lower_type(it.in_file(file_id)))
+                    .map(|it| ty_db::lower_type(self.db, it.in_file(file_id), self.msl))
                     .collect();
                 let ret_ty = lambda_type
                     .return_type()
-                    .map(|it| self.lower_type(it.in_file(file_id)))
+                    .map(|it| ty_db::lower_type(self.db, it.in_file(file_id), self.msl))
                     .unwrap_or(Ty::Unit);
                 Some(Ty::Callable(TyCallable::new(
                     param_tys,
@@ -102,6 +103,8 @@ impl<'db> TyLowering<'db> {
         method_or_path: InFile<ast::MethodOrPath>,
         named_item: InFile<impl Into<ast::NamedElement>>,
     ) -> (Ty, Vec<TypeError>) {
+        let _p = tracing::debug_span!("lower_path").entered();
+
         use syntax::SyntaxKind::*;
 
         let named_item = named_item.map(|it| it.into());
@@ -120,7 +123,7 @@ impl<'db> TyLowering<'db> {
             }
             FUN | SPEC_FUN | SPEC_INLINE_FUN => {
                 let fun = named_item.clone().cast_into::<ast::AnyFun>().unwrap();
-                let ty_callable = self.lower_any_function(fun);
+                let ty_callable = ty_db::lower_function(self.db, fun, self.msl);
                 Ty::Callable(ty_callable)
             }
             VARIANT => {
@@ -153,79 +156,10 @@ impl<'db> TyLowering<'db> {
         (path_ty, vec![])
     }
 
-    pub fn lower_type_owner(&self, type_owner: InFile<impl Into<ast::TypeOwner>>) -> Option<Ty> {
+    pub fn lower_type_of_type_owner(&self, type_owner: InFile<impl Into<ast::TypeOwner>>) -> Option<Ty> {
         let type_owner = type_owner.map(|it| it.into());
         type_owner
             .and_then(|it| it.type_())
-            .map(|type_| self.lower_type(type_))
-    }
-
-    pub fn lower_any_function(&self, any_fun: InFile<ast::AnyFun>) -> TyCallable {
-        let item_subst = any_fun.ty_type_params_subst();
-        let (file_id, any_fun) = any_fun.unpack();
-        let param_types = any_fun
-            .params()
-            .into_iter()
-            .map(|it| {
-                it.type_()
-                    .map(|t| self.lower_type(t.in_file(file_id)))
-                    .unwrap_or(Ty::Unknown)
-            })
-            .collect();
-        let ret_type = self.lower_ret_type(any_fun.ret_type().map(|t| t.in_file(file_id)));
-        TyCallable::new(
-            param_types,
-            ret_type,
-            TyCallableKind::named(item_subst, Some(any_fun.loc(file_id))),
-        )
-    }
-
-    fn lower_ret_type(&self, ret_type: Option<InFile<ast::RetType>>) -> Ty {
-        let Some(ret_type) = ret_type else {
-            return Ty::Unit;
-        };
-        ret_type
-            .and_then(|it| it.type_())
-            .map(|t| self.lower_type(t))
-            .unwrap_or(Ty::Unknown)
-    }
-
-    fn lower_primitive_type(&self, path: InFile<ast::Path>) -> Option<Ty> {
-        let (file_id, path) = path.unpack();
-        let path_name = path.reference_name()?;
-        if self.msl && INTEGER_IDENTS.contains(&path_name.as_str()) {
-            return Some(Ty::Num);
-        }
-        let ty = match path_name.as_str() {
-            "u8" => Ty::Integer(IntegerKind::U8),
-            "u16" => Ty::Integer(IntegerKind::U16),
-            "u32" => Ty::Integer(IntegerKind::U32),
-            "u64" => Ty::Integer(IntegerKind::U64),
-            "u128" => Ty::Integer(IntegerKind::U128),
-            "u256" => Ty::Integer(IntegerKind::U256),
-            "num" => Ty::Num,
-            "bv" => Ty::Bv,
-            "bool" => Ty::Bool,
-            "signer" => Ty::Signer,
-            "address" => Ty::Address,
-            "vector" => {
-                let first_arg_type = path.type_args().first().and_then(|it| it.type_());
-                let first_arg_ty = first_arg_type
-                    .map(|it| self.lower_type(it.in_file(file_id)))
-                    .unwrap_or(Ty::Unknown);
-                Ty::new_vector(first_arg_ty)
-            }
-            "range" => {
-                let first_arg_type = path.type_args().first().and_then(|it| it.type_());
-                let first_arg_ty = first_arg_type
-                    .map(|it| self.lower_type(it.in_file(file_id)))
-                    .unwrap_or(Ty::Unknown);
-                Ty::Seq(TySequence::Range(Box::new(first_arg_ty)))
-            }
-            _ => {
-                return None;
-            }
-        };
-        Some(ty)
+            .map(|type_| ty_db::lower_type(self.db, type_, self.msl))
     }
 }

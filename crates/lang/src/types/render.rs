@@ -146,7 +146,7 @@ impl<'db> TypeRenderer<'db> {
         match ty_callable.kind {
             TyCallableKind::Named(_, _) => {
                 self.render_type_list("fn(", &ty_callable.param_types, ")")?;
-                let ret_type = ty_callable.ret_type();
+                let ret_type = ty_callable.ret_type_ty();
                 if !matches!(ret_type, Ty::Unit) {
                     self.write_str(" -> ")?;
                     self.render(&ret_type)?;
@@ -154,7 +154,7 @@ impl<'db> TypeRenderer<'db> {
             }
             TyCallableKind::Lambda(_) => {
                 self.render_type_list("|", &ty_callable.param_types, "|")?;
-                let ret_type = ty_callable.ret_type();
+                let ret_type = ty_callable.ret_type_ty();
                 self.write_str(" -> ")?;
                 self.render(&ret_type)?;
             }

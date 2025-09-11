@@ -182,7 +182,7 @@ impl<'db> InferenceCtx<'db> {
             .into_iter()
             .map(|it| {
                 self.ty_lowering()
-                    .lower_type_owner(it.in_file(adt_item_file_id))
+                    .lower_type_of_type_owner(it.in_file(adt_item_file_id))
                     .unwrap_or(Ty::Unknown)
             })
             .collect::<Vec<_>>();
