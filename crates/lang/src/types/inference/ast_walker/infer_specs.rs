@@ -10,6 +10,7 @@ use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::schema::TySchema;
+use crate::types::ty_db;
 use std::iter::zip;
 use syntax::ast;
 use syntax::ast::node_ext::spec_predicate_stmt::SpecPredicateKind;
@@ -99,12 +100,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             .iter()
             .find(|it| it.value.name().map(|n| n.as_string()) == Some(field_name.clone()))?
             .to_owned();
-        let type_ = schema_field.and_then(|it| it.type_())?;
         Some(
-            self.ctx
-                .ty_lowering()
-                .lower_type(type_)
-                .substitute(&ty_schema.substitution),
+            ty_db::lower_type_owner_for_ctx(self.ctx, schema_field)?.substitute(&ty_schema.substitution),
         )
     }
 
@@ -145,7 +142,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             seq_ty.item().refine_for_specs(true)
         } else {
             let type_ = quant_binding.type_()?;
-            self.ctx.ty_lowering().lower_type(type_.in_file(self.ctx.file_id))
+            ty_db::lower_type_for_ctx(self.ctx, type_.in_file(self.ctx.file_id))
         };
         Some(ty)
     }

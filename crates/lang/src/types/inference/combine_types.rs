@@ -14,6 +14,7 @@ use crate::types::ty::reference::TyReference;
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
+use crate::types::ty_db;
 use std::cell::RefCell;
 use std::iter::zip;
 use syntax::{AstNode, SyntaxKind, SyntaxNodeOrToken, TextRange, ast};
@@ -222,8 +223,8 @@ impl InferenceCtx<'_> {
         )?;
         // todo: resolve variables?
         self.combine_types(
-            expected_call_ty.ret_type().unwrap_all_refs(),
-            actual_call_ty.ret_type().unwrap_all_refs(),
+            expected_call_ty.ret_type_ty().unwrap_all_refs(),
+            actual_call_ty.ret_type_ty().unwrap_all_refs(),
         )
     }
 
@@ -235,9 +236,7 @@ impl InferenceCtx<'_> {
         let struct_inner_lambda_type = expected_ty_adt
             .adt_item(self.db)?
             .and_then(|item| item.struct_()?.wrapped_lambda_type())?;
-        let expected_lambda_ty = self
-            .ty_lowering()
-            .lower_type(struct_inner_lambda_type.map_into())
+        let expected_lambda_ty = ty_db::lower_type_for_ctx(self, struct_inner_lambda_type.map_into())
             .into_ty_callable()?
             .substitute(&expected_ty_adt.substitution);
         Some(self.combine_ty_callables(&expected_lambda_ty, actual_callable_ty))

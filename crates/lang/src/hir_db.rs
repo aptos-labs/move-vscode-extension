@@ -17,16 +17,16 @@ use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::inference::inference_result::InferenceResult;
 use crate::types::ty::Ty;
+use crate::types::ty_db;
 use crate::{hir_db, item_scope, nameres};
 use base_db::inputs::{FileIdInput, InternFileId};
 use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
 use itertools::Itertools;
 use std::collections::HashSet;
+use syntax::ast;
 use syntax::ast::UseStmtsOwner;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, ast};
 use vfs::FileId;
 
 pub(crate) fn resolve_path_multi(db: &dyn SourceDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry> {
@@ -53,7 +53,7 @@ fn resolve_path_multi_tracked<'db>(
 
 pub(crate) fn use_speck_entries(
     db: &dyn SourceDatabase,
-    stmts_owner: &InFile<impl ast::UseStmtsOwner>,
+    stmts_owner: &InFile<impl UseStmtsOwner>,
 ) -> Vec<ScopeEntry> {
     use_speck_entries_tracked(db, SyntaxLocInput::new(db, stmts_owner.loc()))
 }
@@ -81,22 +81,16 @@ fn inference_tracked<'db>(
 ) -> InferenceResult {
     let _p = tracing::debug_span!("inference_tracked").entered();
 
-    let (file_id, ctx_owner) = ctx_owner_loc
-        .to_ast::<ast::InferenceCtxOwner>(db)
-        .unwrap()
-        .unpack();
-    let mut ctx = InferenceCtx::new(db, file_id, msl);
+    let ctx_owner = ctx_owner_loc.to_ast::<ast::InferenceCtxOwner>(db).unwrap();
+    // .unpack();
 
-    let return_ty = if let Some(any_fun) = ctx_owner.syntax().clone().cast::<ast::AnyFun>() {
-        let ret_ty = ctx
-            .ty_lowering()
-            .lower_any_function(any_fun.in_file(file_id).map_into())
-            .ret_type();
-        ret_ty
-    } else {
-        Ty::Unknown
+    let return_ty = match ctx_owner.syntax().syntax_cast::<ast::AnyFun>() {
+        Some(fun) => ty_db::lower_function(db, fun, msl).ret_type_ty(),
+        None => Ty::Unknown,
     };
 
+    let (file_id, ctx_owner) = ctx_owner.unpack();
+    let mut ctx = InferenceCtx::new(db, file_id, msl);
     let mut type_walker = TypeAstWalker::new(&mut ctx, return_ty);
     type_walker.walk(ctx_owner);
 
@@ -122,7 +116,7 @@ fn file_ids_by_module_address_tracked<'db>(
     let mut files_with_modules = vec![];
     let dep_package_ids = transitive_dep_package_ids(db, package_id);
     for dep_package_id in dep_package_ids {
-        let source_file_ids = source_file_ids_in_package(db, *dep_package_id);
+        let source_file_ids = source_file_ids_in_package(db, dep_package_id);
         for source_file_id in source_file_ids {
             let modules = get_modules_in_file(db, *source_file_id, address.clone());
             if !modules.is_empty() {
@@ -133,62 +127,49 @@ fn file_ids_by_module_address_tracked<'db>(
     files_with_modules
 }
 
-pub fn modules_for_package_id<'db>(
-    db: &'db dyn SourceDatabase,
+pub fn get_all_modules_for_package_id(
+    db: &dyn SourceDatabase,
+    package_id: PackageId,
+) -> impl Iterator<Item = InFile<ast::Module>> {
+    get_all_modules_for_package_id_tracked(db, package_id)
+        .iter()
+        .filter_map(|it| it.to_ast::<ast::Module>(db))
+}
+
+#[salsa_macros::tracked(returns(ref))]
+fn get_all_modules_for_package_id_tracked(
+    db: &dyn SourceDatabase,
     package_id: PackageId,
 ) -> Vec<SyntaxLoc> {
     let source_file_ids = source_file_ids_in_package(db, package_id);
-    let mut all_locs = vec![];
+    // average is one module per file
+    let mut all_module_locs = Vec::with_capacity(source_file_ids.len());
     for source_file_id in source_file_ids {
         let module_locs = get_all_modules_in_file(db, source_file_id.intern(db));
-        all_locs.extend(module_locs);
+        all_module_locs.extend(module_locs);
     }
-    all_locs
+    all_module_locs
 }
 
-pub fn import_candidates(db: &dyn SourceDatabase, file_id: FileId) -> &Vec<ScopeEntry> {
-    import_candidates_tracked(db, file_id.intern(db))
+pub fn import_candidates(db: &dyn SourceDatabase, file_id: FileId) -> impl Iterator<Item = &ScopeEntry> {
+    import_candidates_tracked(db, file_id.intern(db)).iter()
 }
 
 #[salsa_macros::tracked(returns(ref))]
 pub fn import_candidates_tracked(db: &dyn SourceDatabase, file_id: FileIdInput) -> Vec<ScopeEntry> {
     let _p = tracing::debug_span!("import_candidates_tracked").entered();
+
     let current_package_id = db.file_package_id(file_id.data(db));
     let all_package_ids = hir_db::transitive_dep_package_ids(db, current_package_id);
     let mut all_candidates = vec![];
     for package_id in all_package_ids {
-        let modules = hir_db::modules_for_package_id(db, *package_id)
-            .into_iter()
-            .filter_map(|it| it.to_ast::<ast::Module>(db));
-        for module in modules {
+        for module in get_all_modules_for_package_id(db, package_id) {
             all_candidates.extend(module.clone().to_entry());
             all_candidates.extend(module.importable_entries());
         }
     }
     all_candidates
 }
-
-// #[salsa_macros::tracked(returns(ref))]
-// pub fn all_package_file_ids(db: &dyn SourceDatabase, package_id: PackageId) -> Vec<FileId> {
-//     let dep_package_ids = transitive_dep_package_ids(db, package_id);
-//     let file_ids = vec![];
-//     let file_sets = dep_package_ids
-//         .iter()
-//         .map(|it| db.package_root(*it).data(db).file_set.clone())
-//         .collect();
-//     // let file_sets = iter::once(package_id)
-//     //     .chain(dep_package_idsids)
-//     //     .map(|id| db.package_root(id).data(db).file_set.clone())
-//     //     .collect::<Vec<_>>();
-//
-//     let mut source_file_ids = vec![];
-//     for file_set in file_sets.clone() {
-//         for source_file_id in file_set.iter() {
-//             source_file_ids.push(source_file_id);
-//         }
-//     }
-//     source_file_ids
-// }
 
 #[salsa_macros::tracked(returns(ref))]
 pub fn source_file_ids_in_package(db: &dyn SourceDatabase, package_id: PackageId) -> Vec<FileId> {
@@ -197,7 +178,7 @@ pub fn source_file_ids_in_package(db: &dyn SourceDatabase, package_id: PackageId
 }
 
 /// returns packages dependencies, including package itself
-#[salsa_macros::tracked(returns(ref))]
+#[salsa_macros::tracked]
 pub fn transitive_dep_package_ids(db: &dyn SourceDatabase, package_id: PackageId) -> Vec<PackageId> {
     let metadata = source_db::metadata_for_package_id(db, package_id);
     match metadata {
@@ -219,7 +200,7 @@ pub fn missing_dependencies(db: &dyn SourceDatabase, package_id: PackageId) -> V
     let all_package_ids = self::transitive_dep_package_ids(db, package_id);
     let mut missing_dependencies = HashSet::new();
     for package_id in all_package_ids {
-        if let Some(package_metadata) = source_db::metadata_for_package_id(db, *package_id) {
+        if let Some(package_metadata) = source_db::metadata_for_package_id(db, package_id) {
             missing_dependencies.extend(package_metadata.missing_dependencies);
         }
     }
@@ -404,13 +385,13 @@ pub(crate) fn get_modules_in_file(
     module_candidates
 }
 
-#[salsa_macros::tracked]
 pub(crate) fn get_all_modules_in_file(db: &dyn SourceDatabase, file_id: FileIdInput) -> Vec<SyntaxLoc> {
     let source_file = source_db::parse(db, file_id).tree();
-    let modules = source_file.all_modules().collect::<Vec<_>>();
-    let module_locs = modules
+    let file_id = file_id.data(db);
+    let module_locs = source_file
+        .all_modules()
         .into_iter()
-        .map(|it| it.in_file(file_id.data(db)).loc())
+        .map(|it| it.in_file(file_id).loc())
         .collect::<Vec<_>>();
     module_locs
 }

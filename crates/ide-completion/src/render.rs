@@ -22,6 +22,8 @@ pub(crate) fn new_named_item(
     item_name: &str,
     item_kind: SyntaxKind,
 ) -> CompletionItemBuilder {
+    let _p = tracing::debug_span!("render::new_named_item").entered();
+
     let completion_item_kind = item_to_kind(item_kind);
 
     let mut item = CompletionItem::new(completion_item_kind, ctx.source_range(), item_name);
@@ -62,6 +64,8 @@ pub(crate) fn compute_type_match(
     ctx: &CompletionContext<'_>,
     item_ty: Ty,
 ) -> Option<CompletionRelevanceTypeMatch> {
+    let _p = tracing::debug_span!("render::compute_type_match").entered();
+
     let expected_ty = ctx.expected_type.as_ref()?;
 
     // We don't ever consider unit type to be an exact type match, since

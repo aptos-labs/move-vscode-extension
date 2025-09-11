@@ -14,8 +14,8 @@ use crate::nameres::namespaces::{FUNCTIONS, NAMES, Ns};
 use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use crate::nameres::scope::{ScopeEntry, ScopeEntryExt, ScopeEntryListExt};
 use crate::types::inference::{InferenceCtx, TyVarIndex};
-use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
+use crate::types::ty_db;
 use base_db::SourceDatabase;
 use base_db::package_root::PackageId;
 use syntax::SyntaxKind::VARIANT;
@@ -120,13 +120,11 @@ pub fn get_method_resolve_variants(
     };
 
     let mut method_entries = vec![];
-    let ty_lowering = TyLowering::new(db, msl);
-
     for function in receiver_item_module.non_test_functions() {
         let Some(self_param_ty) = function
             .self_param()
             .and_then(|self_param| self_param.type_())
-            .map(|self_param_type| ty_lowering.lower_type(self_param_type.in_file(file_id)))
+            .map(|self_param_type| ty_db::lower_type(db, self_param_type.in_file(file_id), msl))
         else {
             continue;
         };

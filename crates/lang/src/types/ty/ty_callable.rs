@@ -41,7 +41,7 @@ impl From<TyCallable> for Ty {
 }
 
 impl TyCallable {
-    pub fn ret_type(&self) -> Ty {
+    pub fn ret_type_ty(&self) -> Ty {
         self.ret_type.deref().to_owned()
     }
 }

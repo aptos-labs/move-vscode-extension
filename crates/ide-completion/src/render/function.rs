@@ -7,10 +7,10 @@
 use crate::context::CompletionContext;
 use crate::item::{CompletionItemBuilder, CompletionRelevance};
 use crate::render::{compute_type_match, new_named_item};
-use lang::types::lowering::TyLowering;
 use lang::types::substitution::{ApplySubstitution, Substitution};
 use lang::types::ty::Ty;
 use lang::types::ty::ty_callable::TyCallable;
+use lang::types::ty_db;
 use syntax::ast;
 use syntax::files::InFile;
 
@@ -23,13 +23,18 @@ pub(crate) fn render_function(
     kind: FunctionKind,
     apply_subst: Option<Substitution>,
 ) -> CompletionItemBuilder {
+    let _p = tracing::debug_span!("render_function").entered();
+
     let mut item_builder = new_named_item(ctx, &fun_name, fun.kind());
 
-    let ty_lowering = TyLowering::new(ctx.db, ctx.msl);
-    let mut call_ty = ty_lowering.lower_any_function(fun.clone().map_into());
-    if let Some(apply_subst) = apply_subst {
-        call_ty = call_ty.substitute(&apply_subst);
-    }
+    let call_ty = {
+        let _p = tracing::debug_span!("render_function::call_ty").entered();
+        let mut call_ty = ty_db::lower_function(ctx.db, fun.clone().map_into(), ctx.msl);
+        if let Some(apply_subst) = apply_subst {
+            call_ty = call_ty.substitute(&apply_subst);
+        }
+        call_ty
+    };
 
     let (_, fun) = fun.unpack();
 
@@ -57,7 +62,7 @@ pub(crate) fn render_function(
         item_builder.insert_snippet(format!("{function_name}{snippet_parens}"));
     }
 
-    let ret_type = call_ty.ret_type();
+    let ret_type = call_ty.ret_type_ty();
     match &ret_type {
         Ty::Unit => (),
         ret_ty => {

@@ -13,7 +13,6 @@ use crate::nameres::path_resolution;
 use crate::nameres::scope::{ScopeEntry, VecExt};
 use crate::types::fold::{Fallback, FullTyVarResolver, TyVarResolver, TypeFoldable};
 use crate::types::has_type_params_ext::GenericItemExt;
-use crate::types::lowering::TyLowering;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
@@ -31,6 +30,7 @@ use vfs::FileId;
 
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres::path_resolution::remove_variant_ident_pats;
+use crate::types::ty_db;
 pub use combine_types::TypeError;
 use syntax::SyntaxKind::{STRUCT, VARIANT};
 use syntax::ast::node_ext::struct_pat_field::PatFieldKind;
@@ -160,10 +160,8 @@ impl<'db> InferenceCtx<'db> {
         // if it's resolved to anything other than struct or enum variant, then it could only be a wrapped lambda
         if !matches!(resolved_to.kind(), STRUCT | VARIANT) {
             let wrapped_lambda_type = adt_item.and_then(|it| it.struct_()?.wrapped_lambda_type())?;
-            let lambda_ty = self
-                .ty_lowering()
-                .lower_type(wrapped_lambda_type.map_into())
-                .into_ty_callable()?;
+            let lambda_ty =
+                ty_db::lower_type_for_ctx(self, wrapped_lambda_type.map_into()).into_ty_callable()?;
             return Some(lambda_ty);
         }
 
@@ -181,8 +179,7 @@ impl<'db> InferenceCtx<'db> {
         let param_types = tuple_fields
             .into_iter()
             .map(|it| {
-                self.ty_lowering()
-                    .lower_type_owner(it.in_file(adt_item_file_id))
+                ty_db::lower_type_owner_for_ctx(self, it.in_file(adt_item_file_id))
                     .unwrap_or(Ty::Unknown)
             })
             .collect::<Vec<_>>();
@@ -221,12 +218,8 @@ impl<'db> InferenceCtx<'db> {
         let generic_item = generic_item.map(|it| it.into());
 
         let ty_vars_subst = generic_item.ty_vars_subst(&self.ty_var_index);
-        // let mut path_ty = self.instantiate_path(method_or_path, generic_item.clone());
-        // path_ty = path_ty.substitute(&ty_vars_subst);
         self.instantiate_path(method_or_path, generic_item.clone())
             .substitute(&ty_vars_subst)
-
-        // path_ty
     }
 
     pub fn instantiate_path(
@@ -234,17 +227,16 @@ impl<'db> InferenceCtx<'db> {
         method_or_path: ast::MethodOrPath,
         named_item: InFile<impl Into<ast::NamedElement>>,
     ) -> Ty {
-        let (path_ty, ability_type_errors) = self
-            .ty_lowering()
-            .lower_path(method_or_path.in_file(self.file_id), named_item);
+        let (path_ty, ability_type_errors) = ty_db::lower_path(
+            self.db,
+            method_or_path.in_file(self.file_id),
+            named_item,
+            self.msl,
+        );
         for ability_type_error in ability_type_errors {
             self.push_type_error(ability_type_error);
         }
         path_ty
-    }
-
-    pub fn ty_lowering(&self) -> TyLowering<'db> {
-        TyLowering::new(self.db, self.msl)
     }
 
     pub fn resolve_ty_infer(&self, ty_infer: &TyInfer) -> Ty {

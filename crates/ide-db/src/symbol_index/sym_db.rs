@@ -13,18 +13,13 @@ use std::cmp::Ordering;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
-use syntax::ast;
 
 pub fn world_symbols_in_package(db: &dyn SourceDatabase, package_id: PackageId) -> Arc<SymbolIndex> {
     let _p = tracing::info_span!("library_symbols").entered();
 
     let mut symbol_collector = SymbolCollector::new(db);
 
-    let modules = hir_db::modules_for_package_id(db, package_id)
-        .iter()
-        .filter_map(|it| it.to_ast::<ast::Module>(db))
-        .collect::<Vec<_>>();
-    for module in modules {
+    for module in hir_db::get_all_modules_for_package_id(db, package_id) {
         symbol_collector.collect_module(module);
     }
 

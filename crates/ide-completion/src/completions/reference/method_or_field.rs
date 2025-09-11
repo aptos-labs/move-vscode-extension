@@ -12,14 +12,13 @@ use lang::loc::SyntaxLocFileExt;
 use lang::nameres::path_resolution::get_method_resolve_variants;
 use lang::types::has_type_params_ext::GenericItemExt;
 use lang::types::inference::{InferenceCtx, TyVarIndex};
-use lang::types::lowering::TyLowering;
 use lang::types::substitution::ApplySubstitution;
-use lang::types::ty;
 use lang::types::ty::Ty;
 use lang::types::ty::adt::TyAdt;
+use lang::types::{ty, ty_db};
 use std::cell::RefCell;
-use syntax::ast;
 use syntax::files::{InFile, InFileExt};
+use syntax::{AstNode, ast};
 
 pub(crate) fn add_method_or_field_completions(
     completions: &RefCell<Completions>,
@@ -50,25 +49,27 @@ fn add_field_completion_items(
 ) -> Option<()> {
     let acc = &mut completions.borrow_mut();
 
+    let db = ctx.db;
+    let msl = ctx.msl;
+
     // if we're not in the module where struct/enum are declared
-    if !ctx.msl && ctx.containing_module() != ty_adt.adt_item_module(ctx.db) {
+    if !msl && ctx.containing_module() != ty_adt.adt_item_module(db) {
         return None;
     }
 
-    let (file_id, adt_item) = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(ctx.db)?.unpack();
+    let (file_id, adt_item) = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(db)?.unpack();
     let named_fields = adt_item.named_fields();
-    let ty_lowering = TyLowering::new(ctx.db, ctx.msl);
     for named_field in named_fields {
         let name = named_field.field_name().as_string();
+
+        let mut completion_item = new_named_item(ctx, &name, named_field.syntax().kind());
+
         let named_field = named_field.in_file(file_id);
-
-        let mut completion_item = new_named_item(ctx, &name, named_field.kind());
-
-        if let Some(field_ty) = ty_lowering.lower_type_owner(named_field) {
-            let field_detail = field_ty.substitute(&ty_adt.substitution).render(ctx.db, None);
+        if let Some(field_ty) = ty_db::lower_type_owner(db, named_field, msl) {
+            let field_detail = field_ty.substitute(&ty_adt.substitution).render(db, None);
             completion_item.set_detail(Some(field_detail));
         }
-        acc.add(completion_item.build(ctx.db));
+        acc.add(completion_item.build(db));
     }
 
     Some(())
@@ -80,19 +81,17 @@ fn add_method_completion_items(
     ctx: &CompletionContext<'_>,
     receiver_ty: Ty,
 ) -> Option<()> {
-    let hir_db = ctx.db;
+    let db = ctx.db;
     let acc = &mut completions.borrow_mut();
 
-    let method_entries =
-        get_method_resolve_variants(hir_db, &receiver_ty, ctx.position.file_id, ctx.msl);
+    let method_entries = get_method_resolve_variants(db, &receiver_ty, ctx.position.file_id, ctx.msl);
     for method_entry in method_entries {
         let method_name = method_entry.name.clone();
-        let method = method_entry.cast_into::<ast::Fun>(hir_db)?;
+        let method = method_entry.cast_into::<ast::Fun>(db)?;
 
         let subst = method.ty_vars_subst(&TyVarIndex::default());
-        let callable_ty = TyLowering::new(hir_db, ctx.msl)
-            .lower_any_function(method.clone().map_into())
-            .substitute(&subst);
+        let callable_ty =
+            ty_db::lower_function(db, method.clone().map_into(), ctx.msl).substitute(&subst);
         let self_ty = callable_ty
             .param_types
             .first()
@@ -100,7 +99,7 @@ fn add_method_completion_items(
         let coerced_receiver_ty =
             ty::reference::autoborrow(receiver_ty.clone(), self_ty).expect("should be compatible");
 
-        let mut inference_ctx = InferenceCtx::new(hir_db, method.file_id, false);
+        let mut inference_ctx = InferenceCtx::new(db, method.file_id, false);
         let _ = inference_ctx.combine_types(self_ty.clone(), coerced_receiver_ty);
 
         let apply_subst = inference_ctx.fully_resolve_vars_fallback_to_origin(subst);

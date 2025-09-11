@@ -10,6 +10,7 @@ use crate::types::inference::InferenceCtx;
 use crate::types::inference::ast_walker::TypeAstWalker;
 use crate::types::ty::Ty;
 use crate::types::ty::ty_callable::{TyCallable, TyCallableKind};
+use crate::types::ty_db;
 use syntax::files::InFileExt;
 use syntax::{IntoNodeOrToken, ast};
 
@@ -19,7 +20,7 @@ impl TypeAstWalker<'_, '_> {
         for (lambda_param, ident_pat) in lambda_expr.params_with_ident_pats() {
             let file_id = self.ctx.file_id;
             let param_ty = match lambda_param.type_() {
-                Some(type_) => self.ctx.ty_lowering().lower_type(type_.in_file(file_id)),
+                Some(type_) => ty_db::lower_type_for_ctx(self.ctx, type_.in_file(file_id)),
                 None => Ty::new_ty_var(&self.ctx.ty_var_index),
             };
             self.ctx.pat_types.insert(ident_pat.into(), param_ty.clone());
