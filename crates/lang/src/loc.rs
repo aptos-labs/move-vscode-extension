@@ -26,6 +26,11 @@ impl SyntaxLoc {
         Self::from_syntax_node(file_id, ast_node.syntax())
     }
 
+    pub fn from_file_syntax_node(syntax_node: &InFile<SyntaxNode>) -> Self {
+        let n = syntax_node.as_ref();
+        Self::from_syntax_node(n.file_id, n.value)
+    }
+
     pub fn from_syntax_node(file_id: FileId, syntax_node: &SyntaxNode) -> Self {
         let mut node_name: Option<String> = None;
         if env::var("APT_SYNTAXLOC_DEBUG").is_ok() {
@@ -51,6 +56,13 @@ impl SyntaxLoc {
         self.syntax_ptr
             .try_to_node(file.syntax())
             .and_then(|node| T::cast(node))
+            .map(|ast_node| InFile::new(self.file_id, ast_node))
+    }
+
+    pub fn to_syntax_node(&self, db: &dyn SourceDatabase) -> Option<InFile<SyntaxNode>> {
+        let file = self.get_source_file(db)?;
+        self.syntax_ptr
+            .try_to_node(file.syntax())
             .map(|ast_node| InFile::new(self.file_id, ast_node))
     }
 
