@@ -6,10 +6,12 @@
 
 use crate::hir_db::get_modules_in_file;
 use crate::nameres::address::Address;
+use crate::nameres::blocks::get_entries_in_blocks;
 use crate::nameres::namespaces::{Ns, NsSet};
 use crate::nameres::path_resolution::ResolutionContext;
 use crate::nameres::resolve_scopes::ResolveScope;
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry};
+use crate::nameres::scope_entries_owner::{get_entries_from_owner, get_entries_in_scope};
 use crate::nameres::{resolve_scopes, scope_entries_owner};
 use crate::{hir_db, nameres};
 use base_db::SourceDatabase;
@@ -31,7 +33,11 @@ pub fn get_entries_from_walking_scopes(
     let mut visited_names = HashSet::new();
     let mut entries = vec![];
     for ResolveScope { scope, prev } in resolve_scopes {
-        let scope_entries = scope_entries_owner::get_entries_in_scope(db, scope.clone(), prev);
+        let scope_entries = {
+            let mut entries = get_entries_in_scope(db, scope.clone());
+            entries.extend(get_entries_in_blocks(&scope, prev));
+            entries
+        };
         if scope_entries.is_empty() {
             continue;
         }

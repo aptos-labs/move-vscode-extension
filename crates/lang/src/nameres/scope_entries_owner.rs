@@ -16,19 +16,12 @@ use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, SyntaxNode, ast};
 
-pub fn get_entries_in_scope(
-    db: &dyn SourceDatabase,
-    scope: InFile<SyntaxNode>,
-    prev: SyntaxNode,
-) -> Vec<ScopeEntry> {
+pub fn get_entries_in_scope(db: &dyn SourceDatabase, scope: InFile<SyntaxNode>) -> Vec<ScopeEntry> {
     let mut entries = vec![];
-
     if let Some(use_stmts_owner) = scope.syntax_cast::<ast::AnyUseStmtsOwner>() {
         entries.extend(hir_db::use_speck_entries(db, &use_stmts_owner));
     }
     entries.extend(get_entries_from_owner(db, scope.clone()));
-
-    entries.extend(get_entries_in_blocks(&scope, prev));
     entries
 }
 
