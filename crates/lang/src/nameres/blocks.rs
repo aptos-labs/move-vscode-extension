@@ -12,7 +12,7 @@ use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::InFile;
 use syntax::{AstNode, SyntaxNode, ast};
 
-pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: SyntaxNode) -> Vec<ScopeEntry> {
+pub fn get_entries_in_blocks(scope: &InFile<SyntaxNode>, prev: SyntaxNode) -> Vec<ScopeEntry> {
     use syntax::SyntaxKind::*;
 
     let mut entries = vec![];
@@ -53,7 +53,7 @@ pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: SyntaxNode) -> Vec
         MATCH_ARM => {
             // coming from rhs, use pat bindings from lhs
             if !prev.is::<ast::Pat>() {
-                let (file_id, match_arm) = scope.map(|it| it.cast::<ast::MatchArm>().unwrap()).unpack();
+                let (file_id, match_arm) = scope.syntax_cast::<ast::MatchArm>().unwrap().unpack();
                 let ident_pats = match_arm.pat().map(|it| it.bindings()).unwrap_or_default();
                 entries.extend(ident_pats.to_entries(file_id));
             }
