@@ -6,7 +6,6 @@
 
 use crate::hir_db;
 use crate::loc::SyntaxLocFileExt;
-use crate::nameres::blocks::get_entries_in_blocks;
 use crate::nameres::get_schema_field_entries;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::node_ext::item_spec::ItemSpecExt;

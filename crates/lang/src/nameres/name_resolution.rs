@@ -9,10 +9,10 @@ use crate::nameres::address::Address;
 use crate::nameres::blocks::get_entries_in_blocks;
 use crate::nameres::namespaces::{Ns, NsSet};
 use crate::nameres::path_resolution::ResolutionContext;
+use crate::nameres::resolve_scopes;
 use crate::nameres::resolve_scopes::ResolveScope;
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry};
-use crate::nameres::scope_entries_owner::{get_entries_from_owner, get_entries_in_scope};
-use crate::nameres::{resolve_scopes, scope_entries_owner};
+use crate::nameres::scope_entries_owner::get_entries_in_scope;
 use crate::{hir_db, nameres};
 use base_db::SourceDatabase;
 use base_db::package_root::PackageId;
@@ -28,38 +28,42 @@ pub fn get_entries_from_walking_scopes(
 ) -> Vec<ScopeEntry> {
     let _p = tracing::debug_span!("get_entries_from_walking_scopes").entered();
 
-    let resolve_scopes = resolve_scopes::get_resolve_scopes(db, start_at);
+    let resolve_scopes = resolve_scopes::get_resolve_scopes(db, start_at.clone());
 
     let mut visited_names = HashSet::new();
     let mut entries = vec![];
-    for ResolveScope { scope, prev } in resolve_scopes {
+
+    let mut prev_scope = start_at.value;
+    for ResolveScope { scope } in resolve_scopes {
         let scope_entries = {
             let mut entries = get_entries_in_scope(db, scope.clone());
-            entries.extend(get_entries_in_blocks(&scope, prev));
+            entries.extend(get_entries_in_blocks(&scope, prev_scope.clone()));
             entries
         };
-        if scope_entries.is_empty() {
-            continue;
-        }
-        let prev_visited_names = visited_names.clone();
 
-        entries.reserve(scope_entries.len());
-        visited_names.reserve(scope_entries.len());
+        if !scope_entries.is_empty() {
+            let prev_visited_names = visited_names.clone();
 
-        for scope_entry in scope_entries {
-            let entry_ns = scope_entry.ns;
-            if !ns.contains(entry_ns) {
-                continue;
+            entries.reserve(scope_entries.len());
+            visited_names.reserve(scope_entries.len());
+
+            for scope_entry in scope_entries {
+                let entry_ns = scope_entry.ns;
+                if !ns.contains(entry_ns) {
+                    continue;
+                }
+
+                let ns_pair = (entry_ns, scope_entry.name.clone());
+                if prev_visited_names.contains(&ns_pair) {
+                    continue;
+                }
+                visited_names.insert(ns_pair);
+
+                entries.push(scope_entry);
             }
-
-            let ns_pair = (entry_ns, scope_entry.name.clone());
-            if prev_visited_names.contains(&ns_pair) {
-                continue;
-            }
-            visited_names.insert(ns_pair);
-
-            entries.push(scope_entry);
         }
+
+        prev_scope = scope.value;
     }
     entries
 }

@@ -18,17 +18,14 @@ pub fn get_resolve_scopes(db: &dyn SourceDatabase, start_at: InFile<SyntaxNode>)
     while let Some(ref scope) = opt_scope {
         scopes.push(ResolveScope {
             scope: InFile::new(file_id, scope.clone()),
-            prev: prev_scope.clone(),
         });
 
         if scope.kind() == SyntaxKind::MODULE {
             let module = ast::Module::cast(scope.clone()).unwrap().in_file(file_id);
-            scopes.extend(module_inner_spec_scopes(module.clone(), prev_scope));
+            scopes.extend(module_inner_spec_scopes(module.clone()));
 
-            let prev = module.value.syntax().clone();
             for related_module_spec in module.related_module_specs(db) {
                 scopes.push(ResolveScope {
-                    prev: prev.clone(),
                     scope: related_module_spec.syntax(),
                 });
             }
@@ -42,12 +39,10 @@ pub fn get_resolve_scopes(db: &dyn SourceDatabase, start_at: InFile<SyntaxNode>)
                 break;
             }
             if let Some(module) = module_spec.clone().in_file(file_id).module(db) {
-                let prev = module_spec.syntax().clone();
                 scopes.push(ResolveScope {
                     scope: module.clone().map(|it| it.syntax().clone()),
-                    prev: prev.clone(),
                 });
-                scopes.extend(module_inner_spec_scopes(module, prev.clone()));
+                scopes.extend(module_inner_spec_scopes(module));
             }
             break;
         }
@@ -62,23 +57,16 @@ pub fn get_resolve_scopes(db: &dyn SourceDatabase, start_at: InFile<SyntaxNode>)
 
 pub struct ResolveScope {
     pub scope: InFile<SyntaxNode>,
-    pub prev: SyntaxNode,
 }
 
 impl fmt::Debug for ResolveScope {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_set()
-            .entry(&self.scope.value.kind())
-            .entry(&self.prev.kind())
-            .finish()
+        f.debug_set().entry(&self.scope.value.kind()).finish()
     }
 }
 
 // all `spec module {}` in item container
-fn module_inner_spec_scopes(
-    item_container: InFile<impl ast::HasItems>,
-    prev: SyntaxNode,
-) -> Vec<ResolveScope> {
+fn module_inner_spec_scopes(item_container: InFile<impl ast::HasItems>) -> Vec<ResolveScope> {
     let (file_id, module) = item_container.unpack();
     let mut inner_scopes = vec![];
     for module_item_spec in module.module_item_specs() {
@@ -86,7 +74,6 @@ fn module_inner_spec_scopes(
             let scope = module_item_spec_block.syntax().to_owned();
             inner_scopes.push(ResolveScope {
                 scope: InFile::new(file_id, scope),
-                prev: prev.clone(),
             })
         }
     }
