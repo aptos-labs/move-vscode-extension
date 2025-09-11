@@ -28,7 +28,6 @@ pub(crate) fn try_lower_type(
     type_: InFile<ast::Type>,
     msl: bool,
 ) -> Option<Ty> {
-    let _p = tracing::debug_span!("ty_db::try_lower_type").entered();
     let type_loc = SyntaxLocInput::new(db, type_.loc());
     try_lower_type_tracked(db, type_loc, msl)
 }

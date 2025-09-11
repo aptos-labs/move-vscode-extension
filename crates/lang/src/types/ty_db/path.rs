@@ -8,7 +8,7 @@ use crate::types::ty_db;
 use base_db::SourceDatabase;
 use std::collections::HashMap;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, ast};
+use syntax::{AstNode, SyntaxKind::*, ast};
 
 pub fn lower_path(
     db: &dyn SourceDatabase,
@@ -16,10 +16,6 @@ pub fn lower_path(
     named_item: InFile<impl Into<ast::NamedElement>>,
     msl: bool,
 ) -> (Ty, Vec<TypeError>) {
-    let _p = tracing::debug_span!("lower_path").entered();
-
-    use syntax::SyntaxKind::*;
-
     let named_item = named_item.map(|it| it.into());
     let path_ty = match named_item.kind() {
         TYPE_PARAM => {

@@ -107,21 +107,22 @@ impl<T: AstNode> InFile<T> {
         Some(InFile::new(*file_id, value))
     }
 
-    pub fn unpack_if<IntoT: AstNode>(self) -> Option<(FileId, IntoT)> {
-        let InFile { file_id, value } = self;
-        IntoT::cast(value.syntax().clone()).map(|it| (file_id, it))
-    }
-
     pub fn file_range(&self) -> FileRange {
-        self.map_ref(|it| it.syntax().to_owned()).file_range()
+        FileRange {
+            file_id: self.file_id,
+            range: self.value.syntax().text_range(),
+        }
     }
 }
 
 impl InFile<SyntaxNode> {
     pub fn syntax_cast<T: AstNode>(&self) -> Option<InFile<T>> {
-        let InFile { file_id, value } = self.clone();
-        let value = T::cast(value)?;
-        Some(InFile::new(file_id, value))
+        if T::can_cast(self.value.kind()) {
+            let value = T::cast(self.value.clone()).expect("checked with can_cast()");
+            Some(InFile { file_id: self.file_id, value })
+        } else {
+            None
+        }
     }
 
     pub fn file_range(&self) -> FileRange {
