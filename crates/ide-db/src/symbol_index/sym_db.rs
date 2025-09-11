@@ -13,7 +13,6 @@ use std::cmp::Ordering;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
-use syntax::ast;
 
 pub fn world_symbols_in_package(db: &dyn SourceDatabase, package_id: PackageId) -> Arc<SymbolIndex> {
     let _p = tracing::info_span!("library_symbols").entered();

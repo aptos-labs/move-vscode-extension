@@ -14,7 +14,6 @@ use crate::node_ext::item::ModuleItemExt;
 use crate::semantics::source_to_def::SourceToDefCache;
 use crate::types::inference::InferenceCtx;
 use crate::types::inference::inference_result::InferenceResult;
-use crate::types::lowering::TyLowering;
 use crate::types::render::{HirWrite, TypeRenderer, TypeRendererConfig};
 use crate::types::ty::Ty;
 use crate::types::ty::ty_callable::TyCallable;

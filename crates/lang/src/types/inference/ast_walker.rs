@@ -490,7 +490,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 let const_type = named_element
                     .cast_into::<ast::Const>()?
                     .and_then(|it| it.type_())?;
-                Some(ty_db::lower_type(self.ctx.db, const_type, self.ctx.msl))
+                Some(ty_db::lower_type_for_ctx(self.ctx, const_type))
             }
             NAMED_FIELD => {
                 let named_field = named_element.cast_into::<ast::NamedField>()?;

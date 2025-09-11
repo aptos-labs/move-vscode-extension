@@ -5,7 +5,6 @@ use crate::context::CompletionContext;
 use crate::item::{CompletionItemBuilder, CompletionRelevance};
 use crate::render::function::render_ty;
 use crate::render::{compute_type_match, new_named_item};
-use lang::types::lowering::TyLowering;
 use lang::types::ty_db;
 use syntax::ast;
 use syntax::files::InFile;

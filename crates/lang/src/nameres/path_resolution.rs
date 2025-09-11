@@ -14,7 +14,6 @@ use crate::nameres::namespaces::{FUNCTIONS, NAMES, Ns};
 use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use crate::nameres::scope::{ScopeEntry, ScopeEntryExt, ScopeEntryListExt};
 use crate::types::inference::{InferenceCtx, TyVarIndex};
-use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
 use crate::types::ty_db;
 use base_db::SourceDatabase;

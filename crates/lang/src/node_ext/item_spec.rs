@@ -5,7 +5,6 @@
 // Modifications have been made to the original code.
 
 use crate::nameres;
-use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
 use crate::types::ty_db;

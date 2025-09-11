@@ -24,10 +24,9 @@ use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
 use itertools::Itertools;
 use std::collections::HashSet;
+use syntax::ast;
 use syntax::ast::UseStmtsOwner;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, ast};
 use vfs::FileId;
 
 pub(crate) fn resolve_path_multi(db: &dyn SourceDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry> {

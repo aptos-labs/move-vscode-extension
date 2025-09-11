@@ -1,15 +1,16 @@
-use crate::loc::{SyntaxLoc, SyntaxLocFileExt, SyntaxLocInput, SyntaxLocNodeExt};
+mod function;
+mod path;
+
+use crate::loc::{SyntaxLocFileExt, SyntaxLocInput, SyntaxLocNodeExt};
 use crate::nameres;
 use crate::types::has_type_params_ext::GenericItemExt;
 use crate::types::inference::InferenceCtx;
-use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::range_like::TySequence;
 use crate::types::ty::reference::Mutability;
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::{TyCallable, TyCallableKind};
-use crate::types::ty_db;
 use base_db::SourceDatabase;
 use syntax::ast;
 use syntax::ast::idents::INTEGER_IDENTS;
@@ -30,19 +31,70 @@ pub(crate) fn try_lower_type(
 ) -> Option<Ty> {
     let _p = tracing::debug_span!("ty_db::try_lower_type").entered();
     let type_loc = SyntaxLocInput::new(db, type_.loc());
-    lower_type_tracked(db, type_loc, msl)
+    try_lower_type_tracked(db, type_loc, msl)
 }
 
 #[salsa_macros::tracked]
-fn lower_type_tracked<'db>(
+fn try_lower_type_tracked<'db>(
     db: &'db dyn SourceDatabase,
     type_loc: SyntaxLocInput<'db>,
     msl: bool,
 ) -> Option<Ty> {
-    let type_ = type_loc.to_ast::<ast::Type>(db)?;
-    let lowering = TyLowering::new(db, msl);
-
-    lowering.lower_type_inner(type_)
+    let (file_id, type_) = type_loc.to_ast::<ast::Type>(db)?.unpack();
+    match type_ {
+        ast::Type::PathType(path_type) => {
+            let path = path_type.path().in_file(file_id);
+            let named_item = nameres::resolve_no_inf(db, path.clone());
+            match named_item {
+                None => {
+                    // can still be primitive type
+                    lower_primitive_type(db, path, msl)
+                }
+                Some(named_item_entry) => {
+                    let named_element = named_item_entry.node_loc.to_ast::<ast::NamedElement>(db)?;
+                    let (path_type_ty, _) = lower_path(db, path.map_into(), named_element, msl);
+                    // todo: ability checks in types
+                    Some(path_type_ty)
+                }
+            }
+        }
+        ast::Type::RefType(ref_type) => {
+            let is_mut = ref_type.is_mut();
+            let inner_ty = ref_type
+                .type_()
+                .map(|inner_type| lower_type(db, inner_type.in_file(file_id), msl))
+                .unwrap_or(Ty::Unknown);
+            Some(Ty::new_reference(inner_ty, Mutability::new(is_mut)))
+        }
+        ast::Type::TupleType(tuple_type) => {
+            let inner_tys = tuple_type
+                .types()
+                .map(|inner_type| lower_type(db, inner_type.in_file(file_id), msl))
+                .collect::<Vec<_>>();
+            Some(Ty::Tuple(TyTuple::new(inner_tys)))
+        }
+        ast::Type::UnitType(_) => Some(Ty::Unit),
+        ast::Type::ParenType(paren_type) => {
+            let paren_ty = paren_type.type_()?.in_file(file_id);
+            try_lower_type(db, paren_ty, msl)
+        }
+        ast::Type::LambdaType(lambda_type) => {
+            let param_tys = lambda_type
+                .param_types()
+                .into_iter()
+                .map(|it| lower_type(db, it.in_file(file_id), msl))
+                .collect();
+            let ret_ty = lambda_type
+                .return_type()
+                .map(|it| lower_type(db, it.in_file(file_id), msl))
+                .unwrap_or(Ty::Unit);
+            Some(Ty::Callable(TyCallable::new(
+                param_tys,
+                ret_ty,
+                TyCallableKind::Lambda(Some(lambda_type.loc(file_id))),
+            )))
+        }
+    }
 }
 
 pub fn lower_type_owner_for_ctx(
@@ -66,46 +118,8 @@ pub fn lower_type_owner(
         .map(|type_| lower_type(db, type_, msl))
 }
 
-pub fn lower_function(db: &dyn SourceDatabase, fun: InFile<ast::AnyFun>, msl: bool) -> TyCallable {
-    let fun_loc = SyntaxLocInput::new(db, fun.loc());
-    lower_function_tracked(db, fun_loc, msl)
-}
-
-#[salsa_macros::tracked]
-fn lower_function_tracked<'db>(
-    db: &'db dyn SourceDatabase,
-    fun_loc: SyntaxLocInput<'db>,
-    msl: bool,
-) -> TyCallable {
-    let any_fun = fun_loc
-        .to_ast::<ast::AnyFun>(db)
-        .expect("might be a stale cache issue");
-
-    let item_subst = any_fun.ty_type_params_subst();
-    let (file_id, any_fun) = any_fun.unpack();
-    let param_types = any_fun
-        .params()
-        .into_iter()
-        .map(|it| {
-            it.type_()
-                .map(|t| lower_type(db, t.in_file(file_id), msl))
-                .unwrap_or(Ty::Unknown)
-        })
-        .collect();
-    let ret_type = any_fun.ret_type().map(|t| t.in_file(file_id));
-    let ret_type_ty = match ret_type {
-        Some(ret_type) => ret_type
-            .and_then(|it| it.type_())
-            .map(|t| lower_type(db, t, msl))
-            .unwrap_or(Ty::Unknown),
-        None => Ty::Unit,
-    };
-    TyCallable::new(
-        param_types,
-        ret_type_ty,
-        TyCallableKind::named(item_subst, Some(any_fun.loc(file_id))),
-    )
-}
+pub use function::lower_function;
+pub use path::lower_path;
 
 pub fn lower_primitive_type(db: &dyn SourceDatabase, path: InFile<ast::Path>, msl: bool) -> Option<Ty> {
     let path_loc = SyntaxLocInput::new(db, path.loc());

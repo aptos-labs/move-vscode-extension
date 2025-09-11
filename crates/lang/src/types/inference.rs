@@ -13,7 +13,6 @@ use crate::nameres::path_resolution;
 use crate::nameres::scope::{ScopeEntry, VecExt};
 use crate::types::fold::{Fallback, FullTyVarResolver, TyVarResolver, TypeFoldable};
 use crate::types::has_type_params_ext::GenericItemExt;
-use crate::types::lowering::TyLowering;
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
@@ -228,17 +227,16 @@ impl<'db> InferenceCtx<'db> {
         method_or_path: ast::MethodOrPath,
         named_item: InFile<impl Into<ast::NamedElement>>,
     ) -> Ty {
-        let (path_ty, ability_type_errors) = self
-            .ty_lowering()
-            .lower_path(method_or_path.in_file(self.file_id), named_item);
+        let (path_ty, ability_type_errors) = ty_db::lower_path(
+            self.db,
+            method_or_path.in_file(self.file_id),
+            named_item,
+            self.msl,
+        );
         for ability_type_error in ability_type_errors {
             self.push_type_error(ability_type_error);
         }
         path_ty
-    }
-
-    pub fn ty_lowering(&self) -> TyLowering<'db> {
-        TyLowering::new(self.db, self.msl)
     }
 
     pub fn resolve_ty_infer(&self, ty_infer: &TyInfer) -> Ty {
