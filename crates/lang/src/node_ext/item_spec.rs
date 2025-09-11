@@ -8,6 +8,7 @@ use crate::nameres;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
 use crate::types::ty::adt::TyAdt;
+use crate::types::ty_db;
 use base_db::SourceDatabase;
 use regex::Regex;
 use std::sync::LazyLock;
@@ -42,10 +43,9 @@ pub fn infer_special_path_expr_for_item_spec(
     if path_name.starts_with("result")
         && let Some(fun) = item_spec_item.clone().cast_into::<ast::Fun>()
     {
-        let ty_lowering = TyLowering::new(db, true);
         let fun_return_type = fun
             .and_then_ref(|it| it.return_type())
-            .map(|it| ty_lowering.lower_type(it))
+            .map(|it| ty_db::lower_type(db, it, true))
             .unwrap_or(Ty::Unit);
         if path_name == "result" {
             return Some(fun_return_type);

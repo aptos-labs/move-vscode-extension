@@ -1,6 +1,7 @@
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt, SyntaxLocInput, SyntaxLocNodeExt};
 use crate::nameres;
 use crate::types::has_type_params_ext::GenericItemExt;
+use crate::types::inference::InferenceCtx;
 use crate::types::lowering::TyLowering;
 use crate::types::ty::Ty;
 use crate::types::ty::integer::IntegerKind;
@@ -14,16 +15,20 @@ use syntax::ast;
 use syntax::ast::idents::INTEGER_IDENTS;
 use syntax::files::{InFile, InFileExt};
 
-pub(crate) fn lower_type(db: &dyn SourceDatabase, type_: InFile<ast::Type>, msl: bool) -> Ty {
-    let _p = tracing::debug_span!("ty_db::lower_type").entered();
-    lower_type_inner(db, type_, msl).unwrap_or(Ty::Unknown)
+pub(crate) fn lower_type_for_ctx(ctx: &InferenceCtx, type_: InFile<ast::Type>) -> Ty {
+    try_lower_type(ctx.db, type_, ctx.msl).unwrap_or(Ty::Unknown)
 }
 
-pub(crate) fn lower_type_inner(
+pub(crate) fn lower_type(db: &dyn SourceDatabase, type_: InFile<ast::Type>, msl: bool) -> Ty {
+    try_lower_type(db, type_, msl).unwrap_or(Ty::Unknown)
+}
+
+pub(crate) fn try_lower_type(
     db: &dyn SourceDatabase,
     type_: InFile<ast::Type>,
     msl: bool,
 ) -> Option<Ty> {
+    let _p = tracing::debug_span!("ty_db::try_lower_type").entered();
     let type_loc = SyntaxLocInput::new(db, type_.loc());
     lower_type_tracked(db, type_loc, msl)
 }
@@ -34,17 +39,34 @@ fn lower_type_tracked<'db>(
     type_loc: SyntaxLocInput<'db>,
     msl: bool,
 ) -> Option<Ty> {
-    let _p = tracing::debug_span!("ty_db::lower_type_tracked").entered();
-
     let type_ = type_loc.to_ast::<ast::Type>(db)?;
     let lowering = TyLowering::new(db, msl);
 
     lowering.lower_type_inner(type_)
 }
 
-pub fn lower_function(db: &dyn SourceDatabase, fun: InFile<ast::AnyFun>, msl: bool) -> TyCallable {
-    let _p = tracing::debug_span!("ty_db::lower_function").entered();
+pub fn lower_type_owner_for_ctx(
+    ctx: &InferenceCtx,
+    type_owner: InFile<impl Into<ast::TypeOwner>>,
+) -> Option<Ty> {
+    let type_owner = type_owner.map(|it| it.into());
+    type_owner
+        .and_then(|it| it.type_())
+        .map(|type_| lower_type(ctx.db, type_, ctx.msl))
+}
 
+pub fn lower_type_owner(
+    db: &dyn SourceDatabase,
+    type_owner: InFile<impl Into<ast::TypeOwner>>,
+    msl: bool,
+) -> Option<Ty> {
+    let type_owner = type_owner.map(|it| it.into());
+    type_owner
+        .and_then(|it| it.type_())
+        .map(|type_| lower_type(db, type_, msl))
+}
+
+pub fn lower_function(db: &dyn SourceDatabase, fun: InFile<ast::AnyFun>, msl: bool) -> TyCallable {
     let fun_loc = SyntaxLocInput::new(db, fun.loc());
     lower_function_tracked(db, fun_loc, msl)
 }
@@ -55,8 +77,6 @@ fn lower_function_tracked<'db>(
     fun_loc: SyntaxLocInput<'db>,
     msl: bool,
 ) -> TyCallable {
-    let _p = tracing::debug_span!("ty_db::lower_function_tracked").entered();
-
     let any_fun = fun_loc
         .to_ast::<ast::AnyFun>(db)
         .expect("might be a stale cache issue");
@@ -88,8 +108,6 @@ fn lower_function_tracked<'db>(
 }
 
 pub fn lower_primitive_type(db: &dyn SourceDatabase, path: InFile<ast::Path>, msl: bool) -> Option<Ty> {
-    let _p = tracing::debug_span!("ty_db::lower_primitive_type").entered();
-
     let path_loc = SyntaxLocInput::new(db, path.loc());
     lower_primitive_type_tracked(db, path_loc, msl)
 }
@@ -100,8 +118,6 @@ fn lower_primitive_type_tracked<'db>(
     path_loc: SyntaxLocInput<'db>,
     msl: bool,
 ) -> Option<Ty> {
-    let _p = tracing::debug_span!("ty_db::lower_primitive_type_tracked").entered();
-
     let (file_id, path) = path_loc.to_ast::<ast::Path>(db)?.unpack();
 
     let path_name = path.reference_name()?;

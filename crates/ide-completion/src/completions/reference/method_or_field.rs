@@ -12,14 +12,13 @@ use lang::loc::SyntaxLocFileExt;
 use lang::nameres::path_resolution::get_method_resolve_variants;
 use lang::types::has_type_params_ext::GenericItemExt;
 use lang::types::inference::{InferenceCtx, TyVarIndex};
-use lang::types::lowering::TyLowering;
 use lang::types::substitution::ApplySubstitution;
 use lang::types::ty::Ty;
 use lang::types::ty::adt::TyAdt;
 use lang::types::{ty, ty_db};
 use std::cell::RefCell;
-use syntax::ast;
 use syntax::files::{InFile, InFileExt};
+use syntax::{AstNode, ast};
 
 pub(crate) fn add_method_or_field_completions(
     completions: &RefCell<Completions>,
@@ -50,25 +49,27 @@ fn add_field_completion_items(
 ) -> Option<()> {
     let acc = &mut completions.borrow_mut();
 
+    let db = ctx.db;
+    let msl = ctx.msl;
+
     // if we're not in the module where struct/enum are declared
-    if !ctx.msl && ctx.containing_module() != ty_adt.adt_item_module(ctx.db) {
+    if !msl && ctx.containing_module() != ty_adt.adt_item_module(db) {
         return None;
     }
 
-    let (file_id, adt_item) = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(ctx.db)?.unpack();
+    let (file_id, adt_item) = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(db)?.unpack();
     let named_fields = adt_item.named_fields();
-    let ty_lowering = TyLowering::new(ctx.db, ctx.msl);
     for named_field in named_fields {
         let name = named_field.field_name().as_string();
+
+        let mut completion_item = new_named_item(ctx, &name, named_field.syntax().kind());
+
         let named_field = named_field.in_file(file_id);
-
-        let mut completion_item = new_named_item(ctx, &name, named_field.kind());
-
-        if let Some(field_ty) = ty_lowering.lower_type_of_type_owner(named_field) {
-            let field_detail = field_ty.substitute(&ty_adt.substitution).render(ctx.db, None);
+        if let Some(field_ty) = ty_db::lower_type_owner(db, named_field, msl) {
+            let field_detail = field_ty.substitute(&ty_adt.substitution).render(db, None);
             completion_item.set_detail(Some(field_detail));
         }
-        acc.add(completion_item.build(ctx.db));
+        acc.add(completion_item.build(db));
     }
 
     Some(())

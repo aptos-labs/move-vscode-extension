@@ -232,7 +232,6 @@ impl<'db> SemanticsImpl<'db> {
     }
 
     pub fn lower_type(&self, type_: InFile<ast::Type>, msl: bool) -> Ty {
-        // TyLowering::new(self.db, msl).lower_type(type_)
         ty_db::lower_type(self.db, type_, msl)
     }
 

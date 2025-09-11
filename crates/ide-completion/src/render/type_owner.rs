@@ -6,6 +6,7 @@ use crate::item::{CompletionItemBuilder, CompletionRelevance};
 use crate::render::function::render_ty;
 use crate::render::{compute_type_match, new_named_item};
 use lang::types::lowering::TyLowering;
+use lang::types::ty_db;
 use syntax::ast;
 use syntax::files::InFile;
 
@@ -35,10 +36,12 @@ pub(crate) fn render_type_owner(
     type_owner: InFile<ast::TypeOwner>,
 ) -> CompletionItemBuilder {
     let mut item = new_named_item(ctx, &item_name, type_owner.kind());
-    if let Some(item_type) = type_owner.and_then(|it| it.type_()) {
-        // todo: apply subst from struct / schema
-        let ty = TyLowering::new(ctx.db, ctx.msl).lower_type(item_type);
-        item.set_detail(Some(render_ty(ctx, &ty)));
+
+    // todo: apply subst from struct / schema
+    let item_ty = ty_db::lower_type_owner(ctx.db, type_owner, ctx.msl);
+    if let Some(item_ty) = item_ty {
+        item.set_detail(Some(render_ty(ctx, &item_ty)));
     }
+
     item
 }

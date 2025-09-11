@@ -31,6 +31,7 @@ use vfs::FileId;
 
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres::path_resolution::remove_variant_ident_pats;
+use crate::types::ty_db;
 pub use combine_types::TypeError;
 use syntax::SyntaxKind::{STRUCT, VARIANT};
 use syntax::ast::node_ext::struct_pat_field::PatFieldKind;
@@ -160,10 +161,8 @@ impl<'db> InferenceCtx<'db> {
         // if it's resolved to anything other than struct or enum variant, then it could only be a wrapped lambda
         if !matches!(resolved_to.kind(), STRUCT | VARIANT) {
             let wrapped_lambda_type = adt_item.and_then(|it| it.struct_()?.wrapped_lambda_type())?;
-            let lambda_ty = self
-                .ty_lowering()
-                .lower_type(wrapped_lambda_type.map_into())
-                .into_ty_callable()?;
+            let lambda_ty =
+                ty_db::lower_type_for_ctx(self, wrapped_lambda_type.map_into()).into_ty_callable()?;
             return Some(lambda_ty);
         }
 
@@ -181,8 +180,7 @@ impl<'db> InferenceCtx<'db> {
         let param_types = tuple_fields
             .into_iter()
             .map(|it| {
-                self.ty_lowering()
-                    .lower_type_of_type_owner(it.in_file(adt_item_file_id))
+                ty_db::lower_type_owner_for_ctx(self, it.in_file(adt_item_file_id))
                     .unwrap_or(Ty::Unknown)
             })
             .collect::<Vec<_>>();
@@ -221,12 +219,8 @@ impl<'db> InferenceCtx<'db> {
         let generic_item = generic_item.map(|it| it.into());
 
         let ty_vars_subst = generic_item.ty_vars_subst(&self.ty_var_index);
-        // let mut path_ty = self.instantiate_path(method_or_path, generic_item.clone());
-        // path_ty = path_ty.substitute(&ty_vars_subst);
         self.instantiate_path(method_or_path, generic_item.clone())
             .substitute(&ty_vars_subst)
-
-        // path_ty
     }
 
     pub fn instantiate_path(

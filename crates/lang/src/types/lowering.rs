@@ -35,10 +35,6 @@ impl<'db> TyLowering<'db> {
         TyLowering { db, msl }
     }
 
-    pub fn lower_type(&self, type_: InFile<ast::Type>) -> Ty {
-        ty_db::lower_type(self.db, type_, self.msl)
-    }
-
     pub fn lower_type_inner(&self, type_: InFile<ast::Type>) -> Option<Ty> {
         let (file_id, type_) = type_.unpack();
         match type_ {
@@ -77,7 +73,7 @@ impl<'db> TyLowering<'db> {
             ast::Type::UnitType(_) => Some(Ty::Unit),
             ast::Type::ParenType(paren_type) => {
                 let paren_ty = paren_type.type_()?.in_file(file_id);
-                ty_db::lower_type_inner(self.db, paren_ty, self.msl)
+                ty_db::try_lower_type(self.db, paren_ty, self.msl)
             }
             ast::Type::LambdaType(lambda_type) => {
                 let param_tys = lambda_type
@@ -148,18 +144,15 @@ impl<'db> TyLowering<'db> {
         // Option<u8>: ?Element -> u8
         // Option: ?Element -> ?Element
         if let Some(generic_item) = named_item.cast_into::<ast::GenericElement>() {
-            let (type_args_subst, type_errors) =
-                self.type_args_substitution(self.db, method_or_path.as_ref(), generic_item.as_ref());
+            let (type_args_subst, type_errors) = type_args::type_args_substitution(
+                self.db,
+                self.msl,
+                method_or_path.as_ref(),
+                generic_item.as_ref(),
+            );
             return (path_ty.substitute(&type_args_subst), type_errors);
         }
 
         (path_ty, vec![])
-    }
-
-    pub fn lower_type_of_type_owner(&self, type_owner: InFile<impl Into<ast::TypeOwner>>) -> Option<Ty> {
-        let type_owner = type_owner.map(|it| it.into());
-        type_owner
-            .and_then(|it| it.type_())
-            .map(|type_| ty_db::lower_type(self.db, type_, self.msl))
     }
 }

@@ -12,6 +12,7 @@ use crate::types::substitution::{ApplySubstitution, empty_substitution};
 use crate::types::ty::Ty;
 use crate::types::ty::reference::Mutability;
 use crate::types::ty::tuple::TyTuple;
+use crate::types::ty_db;
 use std::{cmp, iter};
 use syntax::SyntaxKind;
 use syntax::ast::StructOrEnum;
@@ -119,10 +120,11 @@ impl TypeAstWalker<'_, '_> {
                 let tuple_field_types = tuple_fields
                     .into_iter()
                     .map(|field| {
-                        self.ctx
-                            .ty_lowering()
-                            .lower_type_of_type_owner(field)
-                            .unwrap_or(Ty::Unknown)
+                        ty_db::lower_type_owner_for_ctx(self.ctx, field).unwrap_or(Ty::Unknown)
+                        // self.ctx
+                        //     .ty_lowering()
+                        //     .lower_type_of_type_owner(field)
+                        //     .unwrap_or(Ty::Unknown)
                     })
                     .collect::<Vec<_>>();
                 let ty_adt_subst = expected
@@ -213,7 +215,6 @@ impl TypeAstWalker<'_, '_> {
         }
         let fields_owner = fields_owner.unwrap();
         let (item_file_id, fields_owner) = fields_owner.unpack();
-        let ty_lowering = self.ctx.ty_lowering();
         let named_fields_map = fields_owner.named_fields_map();
         let mut tys = vec![];
         for pat_field in pat_fields {
@@ -222,10 +223,10 @@ impl TypeAstWalker<'_, '_> {
                 .and_then(|field_name| named_fields_map.get(&field_name))
             {
                 Some(named_field) => {
-                    let field_ty = ty_lowering
-                        .lower_type_of_type_owner(named_field.to_owned().in_file(item_file_id))
+                    let named_field = named_field.to_owned().in_file(item_file_id);
+                    let field_ty = ty_db::lower_type_owner_for_ctx(self.ctx, named_field.clone())
                         .unwrap_or(Ty::Unknown);
-                    tys.push((named_field.to_owned().in_file(item_file_id).to_entry(), field_ty));
+                    tys.push((named_field.to_entry(), field_ty));
                 }
                 None => {
                     tys.push((None, Ty::Unknown));
