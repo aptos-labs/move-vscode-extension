@@ -6,7 +6,7 @@
 
 use crate::completions::Completions;
 use crate::context::CompletionContext;
-use crate::item::{CompletionItem, CompletionItemBuilder, CompletionItemKind};
+use crate::item::{CompletionItem, CompletionItemBuilder, CompletionItemKind, CompletionRelevance};
 use crate::render::function::{FunctionKind, render_function};
 use crate::render::new_named_item;
 use crate::render::struct_or_enum::{render_schema, render_struct_or_enum};
@@ -194,6 +194,8 @@ fn add_out_of_scope_completion_items(
                     .and_then(|it| it.fq_name(ctx.db))
                 {
                     completion_item.add_import(fq_name.fq_identifier_text());
+                    completion_item
+                        .with_relevance(|r| CompletionRelevance { is_out_of_scope: true, ..r });
                     completion_items.push(completion_item.build(ctx.db));
                 }
             }

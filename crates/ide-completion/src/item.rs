@@ -120,6 +120,7 @@ pub struct CompletionRelevance {
     /// }
     /// ```
     pub is_local: bool,
+    pub is_out_of_scope: bool,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -164,11 +165,17 @@ impl CompletionRelevance {
             exact_name_match,
             type_match,
             is_local,
+            is_out_of_scope,
         } = self;
 
         // slightly prefer locals
         if is_local {
             score += 1;
+        }
+
+        // sort out of scope items to the end
+        if !is_out_of_scope {
+            score += 100;
         }
 
         if exact_name_match {
