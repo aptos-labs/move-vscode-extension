@@ -5,9 +5,11 @@
 // Modifications have been made to the original code.
 
 use crate::ide_test_utils::completion_utils::{
-    check_completions, check_no_completions, do_single_completion,
+    check_completions, check_no_completions, do_single_completion, do_single_completion_with_config,
 };
 use expect_test::expect;
+use ide_completion::config::CompletionConfig;
+use ide_db::AllowSnippets;
 
 #[test]
 fn test_function_call_zero_args() {
@@ -338,32 +340,42 @@ fn test_do_not_insert_parens_if_angle_brackets_exist() {
     )
 }
 
-// todo: auto-import
-// #[test]
-// fn test_function_in_path_position_with_auto_import() {
-//     do_single_completion(
-//         // language=Move
-//         r#"
-//     module 0x1::signer {
-//         public fun address_of(s: &signer): address { @0x1 }
-//     }
-//     module 0x1::m {
-//         fun call() {
-//             let a = 1;
-//             address_o/*caret*/
-//         }
-//     }
-//     "#,
-//         // language=Move
-//         expect![[r#"
-//             module 0x1::m {
-//                 fun m() {
-//                     borrow_global_mut/*caret*/<u8>(@0x1);
-//                 }
-//             }
-//         "#]],
-//     )
-// }
+#[test]
+fn test_function_in_path_position_with_auto_import() {
+    let config = CompletionConfig {
+        allow_snippets: AllowSnippets::new(true),
+        enable_imports_on_the_fly: true,
+    };
+    do_single_completion_with_config(
+        config,
+        // language=Move
+        r#"
+    module 0x1::signer {
+        public fun address_of(s: &signer): address { @0x1 }
+    }
+    module 0x1::m {
+        fun call() {
+            let a = 1;
+            address_o/*caret*/
+        }
+    }
+    "#,
+        // language=Move
+        expect![[r#"
+            module 0x1::signer {
+                public fun address_of(s: &signer): address { @0x1 }
+            }
+            module 0x1::m {
+                use 0x1::signer::address_of;
+
+                fun call() {
+                    let a = 1;
+                    address_of(/*caret*/)
+                }
+            }
+        "#]],
+    )
+}
 
 #[test]
 fn test_test_only_function_completion_in_test_only_scope() {

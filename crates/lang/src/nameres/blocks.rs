@@ -4,6 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+use crate::nameres::resolve_scopes::ResolveScope;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use stdx::itertools::Itertools;
 use syntax::ast::HasStmts;
@@ -12,11 +13,12 @@ use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::InFile;
 use syntax::{AstNode, SyntaxNode, ast};
 
-pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: SyntaxNode) -> Vec<ScopeEntry> {
+pub fn get_entries_in_blocks(resolve_scope: &ResolveScope, prev: SyntaxNode) -> Vec<ScopeEntry> {
     use syntax::SyntaxKind::*;
 
-    let mut entries = vec![];
+    let scope = resolve_scope.scope();
 
+    let mut entries = vec![];
     match scope.value.kind() {
         BLOCK_EXPR => {
             let block_expr = scope.syntax_cast::<ast::BlockExpr>().unwrap();
@@ -53,7 +55,7 @@ pub fn get_entries_in_blocks(scope: InFile<SyntaxNode>, prev: SyntaxNode) -> Vec
         MATCH_ARM => {
             // coming from rhs, use pat bindings from lhs
             if !prev.is::<ast::Pat>() {
-                let (file_id, match_arm) = scope.map(|it| it.cast::<ast::MatchArm>().unwrap()).unpack();
+                let (file_id, match_arm) = scope.syntax_cast::<ast::MatchArm>().unwrap().unpack();
                 let ident_pats = match_arm.pat().map(|it| it.bindings()).unwrap_or_default();
                 entries.extend(ident_pats.to_entries(file_id));
             }
