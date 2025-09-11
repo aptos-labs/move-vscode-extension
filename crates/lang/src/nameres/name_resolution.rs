@@ -27,7 +27,7 @@ pub fn get_entries_from_walking_scopes(
 ) -> Vec<ScopeEntry> {
     let _p = tracing::debug_span!("get_entries_from_walking_scopes").entered();
 
-    let resolve_scopes = resolve_scopes::get_resolve_scopes(db, start_at.clone());
+    let resolve_scopes = resolve_scopes::get_resolve_scopes(db, &start_at);
 
     let mut visited_names = HashSet::new();
     let mut entries = vec![];

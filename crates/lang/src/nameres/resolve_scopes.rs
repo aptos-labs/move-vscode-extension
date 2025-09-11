@@ -8,12 +8,11 @@ use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, SyntaxKind, SyntaxNode, ast};
 
-pub fn get_resolve_scopes(db: &dyn SourceDatabase, start_at: InFile<SyntaxNode>) -> Vec<ResolveScope> {
-    let (file_id, start_at) = start_at.unpack();
+pub fn get_resolve_scopes(db: &dyn SourceDatabase, start_at: &InFile<SyntaxNode>) -> Vec<ResolveScope> {
+    let (file_id, start_at) = start_at.as_ref().unpack();
 
     let mut scopes = vec![];
     let mut opt_scope = start_at.parent();
-    let mut prev_scope = start_at.to_owned();
 
     while let Some(ref scope) = opt_scope {
         scopes.push(ResolveScope {
@@ -34,7 +33,10 @@ pub fn get_resolve_scopes(db: &dyn SourceDatabase, start_at: InFile<SyntaxNode>)
 
         if scope.kind() == MODULE_SPEC {
             let module_spec = scope.clone().cast::<ast::ModuleSpec>().unwrap();
-            if module_spec.path().is_none_or(|it| it.syntax() == &prev_scope) {
+            if module_spec
+                .path()
+                .is_none_or(|it| it.syntax().text_range().contains(start_at.text_range().start()))
+            {
                 // skip if we're resolving module path for the module spec
                 break;
             }
@@ -48,7 +50,6 @@ pub fn get_resolve_scopes(db: &dyn SourceDatabase, start_at: InFile<SyntaxNode>)
         }
 
         let parent_scope = scope.parent();
-        prev_scope = scope.clone();
         opt_scope = parent_scope;
     }
 
