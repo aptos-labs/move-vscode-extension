@@ -3,10 +3,10 @@ use crate::node_ext::item::ModuleItemExt;
 use base_db::SourceDatabase;
 use std::fmt;
 use std::fmt::Formatter;
-use syntax::SyntaxKind::MODULE_SPEC;
+use syntax::ast::HasItems;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, SyntaxKind, SyntaxNode, ast};
+use syntax::{AstNode, SyntaxNode, ast};
 
 pub fn get_resolve_scopes(db: &dyn SourceDatabase, start_at: &InFile<SyntaxNode>) -> Vec<ResolveScope> {
     let (file_id, start_at) = start_at.as_ref().unpack();
@@ -19,10 +19,8 @@ pub fn get_resolve_scopes(db: &dyn SourceDatabase, start_at: &InFile<SyntaxNode>
             scope: InFile::new(file_id, scope.clone()),
         });
 
-        if scope.kind() == SyntaxKind::MODULE {
-            let module = ast::Module::cast(scope.clone()).unwrap().in_file(file_id);
-            scopes.extend(module_inner_spec_scopes(module.clone()));
-
+        if let Some(module) = scope.cast::<ast::Module>().map(|it| it.in_file(file_id)) {
+            scopes.extend(module_inner_spec_scopes(&module));
             for related_module_spec in module.related_module_specs(db) {
                 scopes.push(ResolveScope {
                     scope: related_module_spec.syntax(),
@@ -31,8 +29,7 @@ pub fn get_resolve_scopes(db: &dyn SourceDatabase, start_at: &InFile<SyntaxNode>
             break;
         }
 
-        if scope.kind() == MODULE_SPEC {
-            let module_spec = scope.clone().cast::<ast::ModuleSpec>().unwrap();
+        if let Some(module_spec) = scope.cast::<ast::ModuleSpec>() {
             if module_spec
                 .path()
                 .is_none_or(|it| it.syntax().text_range().contains(start_at.text_range().start()))
@@ -44,7 +41,7 @@ pub fn get_resolve_scopes(db: &dyn SourceDatabase, start_at: &InFile<SyntaxNode>
                 scopes.push(ResolveScope {
                     scope: module.clone().map(|it| it.syntax().clone()),
                 });
-                scopes.extend(module_inner_spec_scopes(module));
+                scopes.extend(module_inner_spec_scopes(&module));
             }
             break;
         }
@@ -73,8 +70,8 @@ impl fmt::Debug for ResolveScope {
 }
 
 // all `spec module {}` in item container
-fn module_inner_spec_scopes(item_container: InFile<impl ast::HasItems>) -> Vec<ResolveScope> {
-    let (file_id, module) = item_container.unpack();
+fn module_inner_spec_scopes(item_container: &InFile<ast::Module>) -> Vec<ResolveScope> {
+    let (file_id, module) = item_container.as_ref().unpack();
     let mut inner_scopes = vec![];
     for module_item_spec in module.module_item_specs() {
         if let Some(module_item_spec_block) = module_item_spec.spec_block() {
