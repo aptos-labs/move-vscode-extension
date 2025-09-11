@@ -7,107 +7,17 @@
 use crate::hir_db::get_modules_in_file;
 use crate::nameres::address::Address;
 use crate::nameres::namespaces::{Ns, NsSet};
-use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::path_resolution::ResolutionContext;
+use crate::nameres::resolve_scopes::ResolveScope;
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry};
-use crate::nameres::scope_entries_owner;
-use crate::node_ext::item::ModuleItemExt;
+use crate::nameres::{resolve_scopes, scope_entries_owner};
 use crate::{hir_db, nameres};
 use base_db::SourceDatabase;
 use base_db::package_root::PackageId;
 use std::collections::HashSet;
-use std::fmt;
-use std::fmt::Formatter;
 use syntax::SyntaxKind;
-use syntax::SyntaxKind::MODULE_SPEC;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
-use syntax::files::{InFile, InFileExt};
+use syntax::files::InFile;
 use syntax::{AstNode, SyntaxNode, ast};
-
-pub struct ResolveScope {
-    scope: InFile<SyntaxNode>,
-    prev: SyntaxNode,
-}
-
-impl fmt::Debug for ResolveScope {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_set()
-            .entry(&self.scope.value.kind())
-            .entry(&self.prev.kind())
-            .finish()
-    }
-}
-
-pub fn get_resolve_scopes(db: &dyn SourceDatabase, start_at: InFile<SyntaxNode>) -> Vec<ResolveScope> {
-    let (file_id, start_at) = start_at.unpack();
-
-    let mut scopes = vec![];
-    let mut opt_scope = start_at.parent();
-    let mut prev_scope = start_at.to_owned();
-
-    while let Some(ref scope) = opt_scope {
-        scopes.push(ResolveScope {
-            scope: InFile::new(file_id, scope.clone()),
-            prev: prev_scope.clone(),
-        });
-
-        if scope.kind() == SyntaxKind::MODULE {
-            let module = ast::Module::cast(scope.clone()).unwrap().in_file(file_id);
-            scopes.extend(module_inner_spec_scopes(module.clone(), prev_scope));
-
-            let prev = module.value.syntax().clone();
-            for related_module_spec in module.related_module_specs(db) {
-                scopes.push(ResolveScope {
-                    prev: prev.clone(),
-                    scope: related_module_spec.syntax(),
-                });
-            }
-            break;
-        }
-
-        if scope.kind() == MODULE_SPEC {
-            let module_spec = scope.clone().cast::<ast::ModuleSpec>().unwrap();
-            if module_spec.path().is_none_or(|it| it.syntax() == &prev_scope) {
-                // skip if we're resolving module path for the module spec
-                break;
-            }
-            if let Some(module) = module_spec.clone().in_file(file_id).module(db) {
-                let prev = module_spec.syntax().clone();
-                scopes.push(ResolveScope {
-                    scope: module.clone().map(|it| it.syntax().clone()),
-                    prev: prev.clone(),
-                });
-                scopes.extend(module_inner_spec_scopes(module, prev.clone()));
-            }
-            break;
-        }
-
-        let parent_scope = scope.parent();
-        prev_scope = scope.clone();
-        opt_scope = parent_scope;
-    }
-
-    scopes
-}
-
-// all `spec module {}` in item container
-fn module_inner_spec_scopes(
-    item_container: InFile<impl ast::HasItems>,
-    prev: SyntaxNode,
-) -> Vec<ResolveScope> {
-    let (file_id, module) = item_container.unpack();
-    let mut inner_scopes = vec![];
-    for module_item_spec in module.module_item_specs() {
-        if let Some(module_item_spec_block) = module_item_spec.spec_block() {
-            let scope = module_item_spec_block.syntax().to_owned();
-            inner_scopes.push(ResolveScope {
-                scope: InFile::new(file_id, scope),
-                prev: prev.clone(),
-            })
-        }
-    }
-    inner_scopes
-}
 
 pub fn get_entries_from_walking_scopes(
     db: &dyn SourceDatabase,
@@ -116,7 +26,7 @@ pub fn get_entries_from_walking_scopes(
 ) -> Vec<ScopeEntry> {
     let _p = tracing::debug_span!("get_entries_from_walking_scopes").entered();
 
-    let resolve_scopes = get_resolve_scopes(db, start_at);
+    let resolve_scopes = resolve_scopes::get_resolve_scopes(db, start_at);
 
     let mut visited_names = HashSet::new();
     let mut entries = vec![];

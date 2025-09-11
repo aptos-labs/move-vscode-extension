@@ -28,6 +28,7 @@ pub mod namespaces;
 pub mod node_ext;
 pub mod path_kind;
 pub mod path_resolution;
+mod resolve_scopes;
 pub mod scope;
 mod scope_entries_owner;
 pub mod use_speck_entries;

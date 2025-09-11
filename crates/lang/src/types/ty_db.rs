@@ -3,7 +3,6 @@ mod path;
 
 use crate::loc::{SyntaxLocFileExt, SyntaxLocInput, SyntaxLocNodeExt};
 use crate::nameres;
-use crate::types::has_type_params_ext::GenericItemExt;
 use crate::types::inference::InferenceCtx;
 use crate::types::ty::Ty;
 use crate::types::ty::integer::IntegerKind;
