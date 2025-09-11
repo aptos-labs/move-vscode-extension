@@ -56,7 +56,13 @@ pub fn get_resolve_scopes(db: &dyn SourceDatabase, start_at: InFile<SyntaxNode>)
 }
 
 pub struct ResolveScope {
-    pub scope: InFile<SyntaxNode>,
+    scope: InFile<SyntaxNode>,
+}
+
+impl ResolveScope {
+    pub fn scope(&self) -> &InFile<SyntaxNode> {
+        &self.scope
+    }
 }
 
 impl fmt::Debug for ResolveScope {

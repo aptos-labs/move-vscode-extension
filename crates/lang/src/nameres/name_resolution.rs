@@ -10,7 +10,6 @@ use crate::nameres::blocks::get_entries_in_blocks;
 use crate::nameres::namespaces::{Ns, NsSet};
 use crate::nameres::path_resolution::ResolutionContext;
 use crate::nameres::resolve_scopes;
-use crate::nameres::resolve_scopes::ResolveScope;
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry};
 use crate::nameres::scope_entries_owner::get_entries_in_scope;
 use crate::{hir_db, nameres};
@@ -34,10 +33,10 @@ pub fn get_entries_from_walking_scopes(
     let mut entries = vec![];
 
     let mut prev_scope = start_at.value;
-    for ResolveScope { scope } in resolve_scopes {
+    for resolve_scope in resolve_scopes {
         let scope_entries = {
-            let mut entries = get_entries_in_scope(db, scope.clone());
-            entries.extend(get_entries_in_blocks(&scope, prev_scope.clone()));
+            let mut entries = get_entries_in_blocks(&resolve_scope, prev_scope);
+            entries.extend(get_entries_in_scope(db, &resolve_scope));
             entries
         };
 
@@ -63,7 +62,7 @@ pub fn get_entries_from_walking_scopes(
             }
         }
 
-        prev_scope = scope.value;
+        prev_scope = resolve_scope.scope().value.clone();
     }
     entries
 }
