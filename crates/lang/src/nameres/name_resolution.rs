@@ -78,12 +78,13 @@ pub fn get_entries_from_walking_scopes(
     entries
 }
 
-#[tracing::instrument(level = "debug", skip_all)]
 pub fn get_modules_as_entries(
     db: &dyn SourceDatabase,
     package_id: PackageId,
     address: Address,
 ) -> Vec<ScopeEntry> {
+    let _p = tracing::debug_span!("get_modules_as_entries").entered();
+
     let interesting_file_ids = hir_db::file_ids_by_module_address(db, package_id, address.clone());
     tracing::debug!(?interesting_file_ids);
 
