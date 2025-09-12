@@ -11,6 +11,7 @@ use vfs::FileId;
 pub fn get_resolve_scopes(db: &dyn SourceDatabase, start_at: &InFile<SyntaxNode>) -> Vec<ResolveScope> {
     let (file_id, start_at) = start_at.as_ref().unpack();
 
+    // NOTE: caching top-down file traverse making perf worse
     let mut scopes = start_at
         .ancestors()
         // skip the current node
