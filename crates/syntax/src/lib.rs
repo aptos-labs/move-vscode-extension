@@ -164,7 +164,36 @@ macro_rules! match_ast {
         $( $( $path:ident )::+ ($it:pat) => $res:expr, )*
         _ => $catch_all:expr $(,)?
     }) => {{
-        $( if let Some($it) = $($path::)+cast($node.clone()) { $res } else )*
-        { $catch_all }
+        $(
+            if $($path::)+can_cast($node.kind()) {
+                let $it = $($path::)+cast($node.clone()).expect("checked with can_cast()");
+                $res
+            } else
+        )*
+        {
+            $catch_all
+        }
+    }};
+}
+
+#[macro_export]
+macro_rules! match_file_ast {
+    (match $node:ident { $($tt:tt)* }) => { $crate::match_ast!(match ($node) { $($tt)* }) };
+
+    (match ($node:expr) {
+        $( $( $path:ident )::+ ($it:pat) => $res:expr, )*
+        _ => $catch_all:expr $(,)?
+    }) => {{
+        $(
+            if $($path::)+can_cast($node.value.kind()) {
+                let $it = $node.with_value(
+                    $($path::)+cast($node.value.clone()).expect("checked with can_cast()")
+                );
+                $res
+            } else
+        )*
+        {
+            $catch_all
+        }
     }};
 }
