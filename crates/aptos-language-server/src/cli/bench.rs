@@ -1,5 +1,4 @@
-use base_db::inputs::InternFileId;
-use base_db::{SourceDatabase, source_db};
+use base_db::SourceDatabase;
 use camino::Utf8PathBuf;
 use clap::Args;
 use ide::Analysis;
