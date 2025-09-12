@@ -7,28 +7,32 @@
 use crate::loc::{SyntaxLocFileExt, SyntaxLocInput};
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use base_db::SourceDatabase;
+use itertools::chain;
 use std::cell::LazyCell;
+use std::iter;
 use stdx::itertools::Itertools;
 use syntax::ast::HasStmts;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::InFile;
 use syntax::{AstNode, SyntaxNode, TextRange, TextSize, ast};
 
-pub fn get_entries_in_block(
-    db: &dyn SourceDatabase,
+pub fn get_entries_in_block<'db>(
+    db: &'db dyn SourceDatabase,
     block_expr: InFile<ast::BlockExpr>,
     start_at: &SyntaxNode,
-) -> Vec<ScopeEntry> {
+) -> Vec<&'db ScopeEntry> {
     let mut entries = vec![];
     let start_at_offset = start_at.text_range().start();
 
     let is_msl = block_expr.is_msl();
+
+    let block_loc = SyntaxLocInput::new(db, block_expr.loc());
     if is_msl {
-        let spec_inline_funs = block_expr.map_ref(|it| it.spec_inline_functions()).flatten();
-        entries.extend(spec_inline_funs.to_entries());
+        entries.extend(block_inline_functions(db, block_loc).iter());
     }
 
-    let let_stmts = let_stmts_with_bindings(db, block_expr);
+    let let_stmts = let_stmts_with_bindings_tracked(db, block_loc);
+
     // make it lazy to not call it in non-msl case (most common)
     let current_let_stmt = LazyCell::new(|| start_at.ancestor_of_type::<ast::LetStmt>(false));
     let bindings = let_stmts.iter().filter(|(let_stmt_info, _)| {
@@ -47,9 +51,20 @@ pub fn get_entries_in_block(
         .flat_map(|(_, bindings)| bindings)
         // shadowing
         .unique_by(|e| e.name.clone());
-    entries.extend(binding_entries_with_shadowing.cloned());
+    entries.extend(binding_entries_with_shadowing);
 
     entries
+}
+
+#[salsa_macros::tracked(returns(ref))]
+fn block_inline_functions(db: &dyn SourceDatabase, block_loc: SyntaxLocInput<'_>) -> Vec<ScopeEntry> {
+    let Some(block_expr) = block_loc.to_ast::<ast::BlockExpr>(db) else {
+        return vec![];
+    };
+    block_expr
+        .map_ref(|it| it.spec_inline_functions())
+        .flatten()
+        .to_entries()
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]

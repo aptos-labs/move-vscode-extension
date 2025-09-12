@@ -60,7 +60,7 @@ pub fn get_entries_from_walking_scopes(
         entries.reserve(scope_entries_len);
         visited_names.reserve(scope_entries_len);
 
-        let scope_entries = block_entries.iter().chain(resolve_scope_entries.iter());
+        let scope_entries = block_entries.into_iter().chain(resolve_scope_entries.iter());
         for scope_entry in scope_entries {
             let entry_ns = scope_entry.ns;
             if !ns.contains(entry_ns) {
