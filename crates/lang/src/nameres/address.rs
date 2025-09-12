@@ -63,11 +63,16 @@ impl Address {
             return true;
         }
 
-        let self_numeric = self.resolve_to_numeric_address(db);
-        let candidate_numeric = candidate_address.resolve_to_numeric_address(db);
+        let self_val = self.resolve_to_numeric_address(db);
+        let candidate_val = candidate_address.resolve_to_numeric_address(db);
 
-        let same_values = match (self_numeric, candidate_numeric) {
-            (Some(left), Some(right)) => left.short() == right.short(),
+        let same_values = match (self_val, candidate_val) {
+            (Some(self_val), Some(cand_val)) => {
+                // if any of the addresses is '_', then only equal if names are the same (checked before)
+                !self_val.is_underscore()
+                    && !cand_val.is_underscore()
+                    && self_val.short() == cand_val.short()
+            }
             _ => false,
         };
 
@@ -120,6 +125,9 @@ pub struct NumericAddress {
 }
 
 impl NumericAddress {
+    pub fn is_underscore(&self) -> bool {
+        self.value == "_"
+    }
     pub fn original(&self) -> String {
         self.value.to_string()
     }

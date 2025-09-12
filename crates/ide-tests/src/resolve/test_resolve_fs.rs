@@ -434,3 +434,67 @@ module aptos_token_objects::m {
         ),
     ])
 }
+
+#[test]
+fn test_resolve_modules_with_same_name_but_different_named_address_from_different_dependency_packages() {
+    check_resolve_tmpfs(vec![
+        named_with_deps(
+            "main",
+            // language=TOML
+            r#"
+        [dev-dependencies]
+        m1 = { local = "../m1"}
+        m2 = { local = "../m2"}
+                "#,
+            // language=Move
+            r#"
+        //- /main.move
+        module std::main {
+            public fun main() {
+                m1addr::m::call();
+                           //^
+            }
+        }
+        "#,
+        ),
+        package(
+            "m1",
+            // language=TOML
+            r#"
+[package]
+name = "m1"
+version = "0.1.0"
+
+[addresses]
+m1addr = "0x11"
+            "#,
+            // language=Move
+            r#"
+//- /m1.move
+module m1addr::m {
+    public fun call() {}
+              //X
+}
+"#,
+        ),
+        package(
+            "m2",
+            // language=TOML
+            r#"
+[package]
+name = "m2"
+version = "0.1.0"
+
+[addresses]
+m2addr = "0x12"
+            "#,
+            // language=Move
+            r#"
+//- /m2.move
+module m2addr::m {
+    public fun call() {}
+}
+"#,
+        ),
+    ])
+}
