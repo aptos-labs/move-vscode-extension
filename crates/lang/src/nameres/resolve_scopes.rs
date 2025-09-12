@@ -1,10 +1,8 @@
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::node_ext::item::ModuleItemExt;
 use base_db::SourceDatabase;
-use itertools::Itertools;
 use std::fmt;
 use std::fmt::Formatter;
-use syntax::SyntaxKind::SOURCE_FILE;
 use syntax::ast::HasItems;
 use syntax::files::InFile;
 use syntax::{AstNode, SyntaxNode, ast};
