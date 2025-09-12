@@ -6,7 +6,7 @@
 
 use crate::hir_db::get_modules_in_file;
 use crate::nameres::address::Address;
-use crate::nameres::blocks::get_entries_in_blocks;
+use crate::nameres::blocks::get_entries_in_block;
 use crate::nameres::namespaces::{Ns, NsSet};
 use crate::nameres::path_resolution::ResolutionContext;
 use crate::nameres::resolve_scopes;
@@ -29,7 +29,8 @@ pub fn get_entries_from_walking_scopes(
     let _p = tracing::debug_span!("get_entries_from_walking_scopes").entered();
 
     let resolve_scopes = resolve_scopes::get_resolve_scopes(db, &start_at);
-    let start_at_offset = start_at.value.text_range().start();
+    let start_at = start_at.value;
+    let start_at_offset = start_at.text_range().start();
 
     let mut visited_names = HashSet::new();
     let mut entries = vec![];
@@ -44,7 +45,11 @@ pub fn get_entries_from_walking_scopes(
                 continue;
             }
 
-            let mut entries = get_entries_in_blocks(&resolve_scope, &start_at.value);
+            let mut entries = resolve_scope
+                .scope()
+                .syntax_cast::<ast::BlockExpr>()
+                .map(|block_expr| get_entries_in_block(block_expr, &start_at))
+                .unwrap_or_default();
             entries.extend(get_entries_in_scope(db, &resolve_scope));
             entries
         };
