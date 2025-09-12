@@ -17,6 +17,7 @@ use base_db::SourceDatabase;
 use base_db::package_root::PackageId;
 use std::collections::HashSet;
 use syntax::SyntaxKind;
+use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::InFile;
 use syntax::{AstNode, SyntaxNode, ast};
 
@@ -28,12 +29,21 @@ pub fn get_entries_from_walking_scopes(
     let _p = tracing::debug_span!("get_entries_from_walking_scopes").entered();
 
     let resolve_scopes = resolve_scopes::get_resolve_scopes(db, &start_at);
+    let start_at_offset = start_at.value.text_range().start();
 
     let mut visited_names = HashSet::new();
     let mut entries = vec![];
 
     for resolve_scope in resolve_scopes {
         let scope_entries = {
+            if let Some(match_arm) = resolve_scope.scope().value.cast::<ast::MatchArm>()
+                && match_arm
+                    .pat()
+                    .is_some_and(|it| it.syntax().text_range().contains(start_at_offset))
+            {
+                continue;
+            }
+
             let mut entries = get_entries_in_blocks(&resolve_scope, &start_at.value);
             entries.extend(get_entries_in_scope(db, &resolve_scope));
             entries

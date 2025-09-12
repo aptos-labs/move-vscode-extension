@@ -55,17 +55,6 @@ pub fn get_entries_in_blocks(resolve_scope: &ResolveScope, start_at: &SyntaxNode
 
             entries.extend(binding_entries_with_shadowing);
         }
-        MATCH_ARM => {
-            // coming from rhs, use pat bindings from lhs
-            let (file_id, match_arm) = scope.syntax_cast::<ast::MatchArm>().unwrap().unpack();
-            if match_arm
-                .pat()
-                .is_none_or(|it| !it.syntax().text_range().contains(start_at_offset))
-            {
-                let ident_pats = match_arm.pat().map(|it| it.bindings()).unwrap_or_default();
-                entries.extend(ident_pats.to_entries(file_id));
-            }
-        }
         _ => {}
     }
 
