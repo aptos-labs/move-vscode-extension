@@ -118,6 +118,12 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: &InFile<SyntaxNode
                 entries.extend(wildcard.type_params().to_entries(file_id));
             }
         }
+        MATCH_ARM => {
+            // coming from rhs, use pat bindings from lhs
+            let (file_id, match_arm) = scope.syntax_cast::<ast::MatchArm>().unwrap().unpack();
+            let ident_pats = match_arm.pat().map(|it| it.bindings()).unwrap_or_default();
+            entries.extend(ident_pats.to_entries(file_id));
+        }
         _ => (),
     }
 

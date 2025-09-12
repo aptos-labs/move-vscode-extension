@@ -38,10 +38,6 @@ pub trait SyntaxNodeExt {
     fn parent_of_type<Ast: AstNode>(&self) -> Option<Ast>;
 
     fn descendants_of_type<Ast: AstNode>(&self) -> impl Iterator<Item = Ast>;
-
-    fn strictly_before(&self, other: &SyntaxNode) -> bool;
-
-    fn strictly_before_offset(&self, offset: TextSize) -> bool;
 }
 
 impl SyntaxNodeExt for SyntaxNode {
@@ -111,17 +107,6 @@ impl SyntaxNodeExt for SyntaxNode {
 
     fn descendants_of_type<Ast: AstNode>(&self) -> impl Iterator<Item = Ast> {
         self.descendants().filter_map(Ast::cast)
-    }
-
-    fn strictly_before(&self, other: &SyntaxNode) -> bool {
-        let left_range = self.text_range();
-        let right_range = other.text_range();
-        left_range.ordering(right_range) == Ordering::Less
-    }
-
-    fn strictly_before_offset(&self, offset: TextSize) -> bool {
-        let left_range = self.text_range();
-        left_range.ordering(TextRange::empty(offset)) == Ordering::Less
     }
 }
 
