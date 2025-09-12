@@ -29,51 +29,50 @@ pub fn get_entries_from_walking_scopes(
     let _p = tracing::debug_span!("get_entries_from_walking_scopes").entered();
 
     let resolve_scopes = resolve_scopes::get_resolve_scopes(db, &start_at);
-    let start_at = start_at.value;
+    let start_at = &start_at.value;
     let start_at_offset = start_at.text_range().start();
 
-    let mut visited_names = HashSet::new();
+    let mut visited_names: HashSet<(Ns, &str)> = HashSet::new();
     let mut entries = vec![];
 
     for resolve_scope in resolve_scopes {
-        let scope_entries = {
-            if let Some(match_arm) = resolve_scope.scope().value.cast::<ast::MatchArm>()
-                && match_arm
-                    .pat()
-                    .is_some_and(|it| it.syntax().text_range().contains(start_at_offset))
-            {
+        if let Some(match_arm) = resolve_scope.value.cast::<ast::MatchArm>()
+            && match_arm
+                .pat()
+                .is_some_and(|it| it.syntax().text_range().contains(start_at_offset))
+        {
+            continue;
+        }
+
+        let block_entries = resolve_scope
+            .syntax_cast::<ast::BlockExpr>()
+            .map(|block_expr| get_entries_in_block(db, block_expr, start_at))
+            .unwrap_or_default();
+        let resolve_scope_entries = get_entries_in_scope(db, &resolve_scope);
+
+        let scope_entries_len = block_entries.len() + resolve_scope_entries.len();
+        if scope_entries_len == 0 {
+            continue;
+        }
+
+        let prev_visited_names = visited_names.clone();
+        entries.reserve(scope_entries_len);
+        visited_names.reserve(scope_entries_len);
+
+        let scope_entries = block_entries.into_iter().chain(resolve_scope_entries.iter());
+        for scope_entry in scope_entries {
+            let entry_ns = scope_entry.ns;
+            if !ns.contains(entry_ns) {
                 continue;
             }
 
-            let mut entries = resolve_scope
-                .scope()
-                .syntax_cast::<ast::BlockExpr>()
-                .map(|block_expr| get_entries_in_block(db, block_expr, &start_at))
-                .unwrap_or_default();
-            entries.extend(get_entries_in_scope(db, &resolve_scope));
-            entries
-        };
-
-        if !scope_entries.is_empty() {
-            let prev_visited_names = visited_names.clone();
-
-            entries.reserve(scope_entries.len());
-            visited_names.reserve(scope_entries.len());
-
-            for scope_entry in scope_entries {
-                let entry_ns = scope_entry.ns;
-                if !ns.contains(entry_ns) {
-                    continue;
-                }
-
-                let ns_pair = (entry_ns, scope_entry.name.clone());
-                if prev_visited_names.contains(&ns_pair) {
-                    continue;
-                }
-                visited_names.insert(ns_pair);
-
-                entries.push(scope_entry);
+            let ns_pair = (entry_ns, scope_entry.name.as_str());
+            if prev_visited_names.contains(&ns_pair) {
+                continue;
             }
+            visited_names.insert(ns_pair);
+
+            entries.push(scope_entry.clone());
         }
     }
     entries

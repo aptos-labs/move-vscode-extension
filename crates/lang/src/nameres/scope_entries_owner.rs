@@ -5,9 +5,8 @@
 // Modifications have been made to the original code.
 
 use crate::hir_db;
-use crate::loc::SyntaxLocFileExt;
+use crate::loc::{SyntaxLoc, SyntaxLocFileExt, SyntaxLocInput};
 use crate::nameres::get_schema_field_entries;
-use crate::nameres::resolve_scopes::ResolveScope;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::node_ext::item_spec::ItemSpecExt;
 use base_db::{SourceDatabase, source_db};
@@ -16,13 +15,30 @@ use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, SyntaxNode, ast};
 
-pub fn get_entries_in_scope(db: &dyn SourceDatabase, resolve_scope: &ResolveScope) -> Vec<ScopeEntry> {
-    let scope = resolve_scope.scope();
+pub fn get_entries_in_scope<'db>(
+    db: &'db dyn SourceDatabase,
+    scope: &InFile<SyntaxNode>,
+) -> &'db Vec<ScopeEntry> {
+    let scope_loc = SyntaxLoc::from_file_syntax_node(scope);
+
+    get_entries_in_scope_tracked(db, SyntaxLocInput::new(db, scope_loc))
+}
+
+#[salsa_macros::tracked(returns(ref))]
+fn get_entries_in_scope_tracked(
+    db: &dyn SourceDatabase,
+    scope_loc: SyntaxLocInput<'_>,
+) -> Vec<ScopeEntry> {
+    let Some(scope) = scope_loc.syntax_loc(db).to_syntax_node(db) else {
+        return vec![];
+    };
+
     let mut entries = vec![];
     if let Some(use_stmts_owner) = scope.syntax_cast::<ast::AnyUseStmtsOwner>() {
         entries.extend(hir_db::use_speck_entries(db, &use_stmts_owner));
     }
-    entries.extend(get_entries_from_owner(db, scope));
+    entries.extend(get_entries_from_owner(db, &scope));
+
     entries
 }
 
