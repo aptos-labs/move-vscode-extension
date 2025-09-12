@@ -117,8 +117,8 @@ impl Bench {
             for file_id in file_ids {
                 let file_path = vfs.file_path(file_id);
 
-                // fill parsing cache, we don't want to benchmark those
-                let _ = analysis.parse(file_id).unwrap();
+                // // fill parsing cache, we don't want to benchmark those
+                // let _ = analysis.parse(file_id).unwrap();
 
                 if file_path.as_path().unwrap().to_path_buf() == specific_fpath {
                     target_file_id = Some(file_id);
