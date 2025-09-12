@@ -48,7 +48,7 @@ pub fn get_entries_from_walking_scopes(
             let mut entries = resolve_scope
                 .scope()
                 .syntax_cast::<ast::BlockExpr>()
-                .map(|block_expr| get_entries_in_block(block_expr, &start_at))
+                .map(|block_expr| get_entries_in_block(db, block_expr, &start_at))
                 .unwrap_or_default();
             entries.extend(get_entries_in_scope(db, &resolve_scope));
             entries
