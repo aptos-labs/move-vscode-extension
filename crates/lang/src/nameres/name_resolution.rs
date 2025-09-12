@@ -49,19 +49,18 @@ pub fn get_entries_from_walking_scopes(
             .syntax_cast::<ast::BlockExpr>()
             .map(|block_expr| get_entries_in_block(db, block_expr, start_at))
             .unwrap_or_default();
+        let resolve_scope_entries = get_entries_in_scope(db, &resolve_scope);
 
-        let scope_entries = block_entries
-            .iter()
-            .chain(get_entries_in_scope(db, &resolve_scope).iter());
-
-        let (size_hint_lower, size_hint_upper) = scope_entries.size_hint();
-        let len_hint = size_hint_upper.unwrap_or(size_hint_lower * 2);
+        let scope_entries_len = block_entries.len() + resolve_scope_entries.len();
+        if scope_entries_len == 0 {
+            continue;
+        }
 
         let prev_visited_names = visited_names.clone();
+        entries.reserve(scope_entries_len);
+        visited_names.reserve(scope_entries_len);
 
-        entries.reserve(len_hint);
-        visited_names.reserve(len_hint);
-
+        let scope_entries = block_entries.iter().chain(resolve_scope_entries.iter());
         for scope_entry in scope_entries {
             let entry_ns = scope_entry.ns;
             if !ns.contains(entry_ns) {
@@ -76,9 +75,6 @@ pub fn get_entries_from_walking_scopes(
 
             entries.push(scope_entry.clone());
         }
-        //
-        // if !scope_entries.is_empty() {
-        // }
     }
     entries
 }
