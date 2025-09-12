@@ -89,7 +89,7 @@ fn install_client(sh: &Shell) -> anyhow::Result<()> {
 
 fn install_server(sh: &Shell, offline: bool) -> anyhow::Result<()> {
     let profile = "release";
-    let cmd = if offline {
+    let cmd = if !offline {
         cmd!(
             sh,
             "cargo install --path crates/aptos-language-server --profile={profile} --locked --force"

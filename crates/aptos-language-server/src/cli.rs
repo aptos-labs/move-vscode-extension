@@ -4,8 +4,10 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+mod bench;
 mod diagnostics;
 
+use crate::cli::bench::Bench;
 use crate::cli::diagnostics::Diagnostics;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
@@ -27,4 +29,5 @@ pub struct CliArgs {
 pub enum AptosAnalyzerCmd {
     LspServer,
     Diagnostics(Diagnostics),
+    Bench(Bench),
 }

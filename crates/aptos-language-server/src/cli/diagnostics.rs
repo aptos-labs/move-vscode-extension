@@ -274,7 +274,7 @@ impl Diagnostics {
     }
 }
 
-fn find_diagnostics_for_a_file(
+pub(crate) fn find_diagnostics_for_a_file(
     db: &RootDatabase,
     file_id: FileId,
     diag_kinds: &Option<Vec<Severity>>,
