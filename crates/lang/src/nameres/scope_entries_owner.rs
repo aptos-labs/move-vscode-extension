@@ -16,26 +16,24 @@ use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, SyntaxNode, ast};
 
-pub fn get_entries_in_scope(db: &dyn SourceDatabase, resolve_scope: &ResolveScope) -> Vec<ScopeEntry> {
+pub fn get_entries_in_scope<'db>(
+    db: &'db dyn SourceDatabase,
+    resolve_scope: &ResolveScope,
+) -> &'db Vec<ScopeEntry> {
     let scope = resolve_scope.scope();
     let scope_loc = SyntaxLoc::from_file_syntax_node(scope);
 
-    let entries =
-        get_entries_in_scope_tracked(db, SyntaxLocInput::new(db, scope_loc)).unwrap_or_default();
-    // let mut entries = vec![];
-    // if let Some(use_stmts_owner) = scope.syntax_cast::<ast::AnyUseStmtsOwner>() {
-    //     entries.extend(hir_db::use_speck_entries(db, &use_stmts_owner));
-    // }
-    // entries.extend(get_entries_from_owner(db, scope));
-    entries
+    get_entries_in_scope_tracked(db, SyntaxLocInput::new(db, scope_loc))
 }
 
-#[salsa_macros::tracked]
+#[salsa_macros::tracked(returns(ref))]
 fn get_entries_in_scope_tracked(
     db: &dyn SourceDatabase,
     scope_loc: SyntaxLocInput<'_>,
-) -> Option<Vec<ScopeEntry>> {
-    let scope = scope_loc.syntax_loc(db).to_syntax_node(db)?;
+) -> Vec<ScopeEntry> {
+    let Some(scope) = scope_loc.syntax_loc(db).to_syntax_node(db) else {
+        return vec![];
+    };
 
     let mut entries = vec![];
     if let Some(use_stmts_owner) = scope.syntax_cast::<ast::AnyUseStmtsOwner>() {
@@ -43,7 +41,7 @@ fn get_entries_in_scope_tracked(
     }
     entries.extend(get_entries_from_owner(db, &scope));
 
-    Some(entries)
+    entries
 }
 
 pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: &InFile<SyntaxNode>) -> Vec<ScopeEntry> {

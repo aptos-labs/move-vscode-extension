@@ -36,45 +36,49 @@ pub fn get_entries_from_walking_scopes(
     let mut entries = vec![];
 
     for resolve_scope in resolve_scopes {
-        let scope_entries = {
-            if let Some(match_arm) = resolve_scope.scope().value.cast::<ast::MatchArm>()
-                && match_arm
-                    .pat()
-                    .is_some_and(|it| it.syntax().text_range().contains(start_at_offset))
-            {
+        if let Some(match_arm) = resolve_scope.scope().value.cast::<ast::MatchArm>()
+            && match_arm
+                .pat()
+                .is_some_and(|it| it.syntax().text_range().contains(start_at_offset))
+        {
+            continue;
+        }
+
+        let block_entries = resolve_scope
+            .scope()
+            .syntax_cast::<ast::BlockExpr>()
+            .map(|block_expr| get_entries_in_block(db, block_expr, start_at))
+            .unwrap_or_default();
+
+        let scope_entries = block_entries
+            .iter()
+            .chain(get_entries_in_scope(db, &resolve_scope).iter());
+
+        let (size_hint_lower, size_hint_upper) = scope_entries.size_hint();
+        let len_hint = size_hint_upper.unwrap_or(size_hint_lower * 2);
+
+        let prev_visited_names = visited_names.clone();
+
+        entries.reserve(len_hint);
+        visited_names.reserve(len_hint);
+
+        for scope_entry in scope_entries {
+            let entry_ns = scope_entry.ns;
+            if !ns.contains(entry_ns) {
                 continue;
             }
 
-            let mut entries = resolve_scope
-                .scope()
-                .syntax_cast::<ast::BlockExpr>()
-                .map(|block_expr| get_entries_in_block(db, block_expr, start_at))
-                .unwrap_or_default();
-            entries.extend(get_entries_in_scope(db, &resolve_scope));
-            entries
-        };
-
-        if !scope_entries.is_empty() {
-            let prev_visited_names = visited_names.clone();
-
-            entries.reserve(scope_entries.len());
-            visited_names.reserve(scope_entries.len());
-
-            for scope_entry in scope_entries {
-                let entry_ns = scope_entry.ns;
-                if !ns.contains(entry_ns) {
-                    continue;
-                }
-
-                let ns_pair = (entry_ns, scope_entry.name.clone());
-                if prev_visited_names.contains(&ns_pair) {
-                    continue;
-                }
-                visited_names.insert(ns_pair);
-
-                entries.push(scope_entry);
+            let ns_pair = (entry_ns, scope_entry.name.clone());
+            if prev_visited_names.contains(&ns_pair) {
+                continue;
             }
+            visited_names.insert(ns_pair);
+
+            entries.push(scope_entry.clone());
         }
+        //
+        // if !scope_entries.is_empty() {
+        // }
     }
     entries
 }
