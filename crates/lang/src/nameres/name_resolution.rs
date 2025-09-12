@@ -32,7 +32,7 @@ pub fn get_entries_from_walking_scopes(
     let start_at = &start_at.value;
     let start_at_offset = start_at.text_range().start();
 
-    let mut visited_names = HashSet::new();
+    let mut visited_names: HashSet<(Ns, &str)> = HashSet::new();
     let mut entries = vec![];
 
     for resolve_scope in resolve_scopes {
@@ -67,7 +67,7 @@ pub fn get_entries_from_walking_scopes(
                 continue;
             }
 
-            let ns_pair = (entry_ns, scope_entry.name.clone());
+            let ns_pair = (entry_ns, scope_entry.name.as_str());
             if prev_visited_names.contains(&ns_pair) {
                 continue;
             }
