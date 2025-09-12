@@ -29,7 +29,7 @@ pub fn get_entries_from_walking_scopes(
     let _p = tracing::debug_span!("get_entries_from_walking_scopes").entered();
 
     let resolve_scopes = resolve_scopes::get_resolve_scopes(db, &start_at);
-    let start_at = start_at.value;
+    let start_at = &start_at.value;
     let start_at_offset = start_at.text_range().start();
 
     let mut visited_names = HashSet::new();
@@ -48,7 +48,7 @@ pub fn get_entries_from_walking_scopes(
             let mut entries = resolve_scope
                 .scope()
                 .syntax_cast::<ast::BlockExpr>()
-                .map(|block_expr| get_entries_in_block(db, block_expr, &start_at))
+                .map(|block_expr| get_entries_in_block(db, block_expr, start_at))
                 .unwrap_or_default();
             entries.extend(get_entries_in_scope(db, &resolve_scope));
             entries
