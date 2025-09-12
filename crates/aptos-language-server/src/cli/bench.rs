@@ -1,4 +1,5 @@
-use base_db::SourceDatabase;
+use base_db::inputs::InternFileId;
+use base_db::{SourceDatabase, source_db};
 use camino::Utf8PathBuf;
 use clap::Args;
 use ide::Analysis;
@@ -109,16 +110,23 @@ impl Bench {
             }
         }
 
-        let target_file_id = local_package_roots
-            .iter()
-            .flat_map(|it| it.file_set.iter())
-            .find(|file_id| {
-                let file_path = vfs.file_path(*file_id);
-                file_path.as_path().unwrap().to_path_buf() == specific_fpath
-            })
-            .expect("file should belong to one of the package roots");
-
         let analysis = Analysis::new(db);
+
+        let mut target_file_id = None;
+        for local_package_root in local_package_roots {
+            let file_ids = local_package_root.file_set.iter();
+            for file_id in file_ids {
+                let file_path = vfs.file_path(file_id);
+
+                // fill parsing cache, we don't want to benchmark those
+                let _ = analysis.parse(file_id).unwrap();
+
+                if file_path.as_path().unwrap().to_path_buf() == specific_fpath {
+                    target_file_id = Some(file_id);
+                }
+            }
+        }
+        let target_file_id = target_file_id.unwrap();
         let frange = analysis.full_file_range(target_file_id).unwrap();
 
         let before = time::Instant::now();
