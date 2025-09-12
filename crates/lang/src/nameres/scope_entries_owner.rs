@@ -7,7 +7,6 @@
 use crate::hir_db;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt, SyntaxLocInput};
 use crate::nameres::get_schema_field_entries;
-use crate::nameres::resolve_scopes::ResolveScope;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::node_ext::item_spec::ItemSpecExt;
 use base_db::{SourceDatabase, source_db};
@@ -18,9 +17,8 @@ use syntax::{AstNode, SyntaxNode, ast};
 
 pub fn get_entries_in_scope<'db>(
     db: &'db dyn SourceDatabase,
-    resolve_scope: &ResolveScope,
+    scope: &InFile<SyntaxNode>,
 ) -> &'db Vec<ScopeEntry> {
-    let scope = resolve_scope.scope();
     let scope_loc = SyntaxLoc::from_file_syntax_node(scope);
 
     get_entries_in_scope_tracked(db, SyntaxLocInput::new(db, scope_loc))

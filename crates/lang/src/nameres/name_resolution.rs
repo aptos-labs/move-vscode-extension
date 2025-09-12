@@ -36,7 +36,7 @@ pub fn get_entries_from_walking_scopes(
     let mut entries = vec![];
 
     for resolve_scope in resolve_scopes {
-        if let Some(match_arm) = resolve_scope.scope().value.cast::<ast::MatchArm>()
+        if let Some(match_arm) = resolve_scope.value.cast::<ast::MatchArm>()
             && match_arm
                 .pat()
                 .is_some_and(|it| it.syntax().text_range().contains(start_at_offset))
@@ -45,7 +45,6 @@ pub fn get_entries_from_walking_scopes(
         }
 
         let block_entries = resolve_scope
-            .scope()
             .syntax_cast::<ast::BlockExpr>()
             .map(|block_expr| get_entries_in_block(db, block_expr, start_at))
             .unwrap_or_default();
