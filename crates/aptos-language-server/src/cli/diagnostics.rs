@@ -218,11 +218,17 @@ impl Diagnostics {
                         println!("{}", abs_file_path);
                     }
 
-                    let mut diagnostics =
-                        find_diagnostics_for_a_file(&db, file_id, &diag_kinds, &package_config);
+                    let apply_assists = allowed_fix_codes.has_codes_to_apply();
+                    let mut diagnostics = find_diagnostics_for_a_file(
+                        &db,
+                        file_id,
+                        &diag_kinds,
+                        &package_config,
+                        apply_assists,
+                    );
 
                     let file_text = db.file_text(file_id).text(&db);
-                    if !allowed_fix_codes.to_apply() {
+                    if !apply_assists {
                         for diagnostic in diagnostics.clone() {
                             if diagnostic.severity == Severity::Error {
                                 found_error = true;
@@ -249,8 +255,13 @@ impl Diagnostics {
                             }
                             None => break,
                         }
-                        diagnostics =
-                            find_diagnostics_for_a_file(&db, file_id, &diag_kinds, &package_config);
+                        diagnostics = find_diagnostics_for_a_file(
+                            &db,
+                            file_id,
+                            &diag_kinds,
+                            &package_config,
+                            true,
+                        );
                     }
                 }
 
@@ -279,10 +290,16 @@ pub(crate) fn find_diagnostics_for_a_file(
     file_id: FileId,
     diag_kinds: &Option<Vec<Severity>>,
     config: &DiagnosticsConfig,
+    with_assists: bool,
 ) -> Vec<Diagnostic> {
     let analysis = Analysis::new(db.snapshot());
+    let resolve_assists = if with_assists {
+        AssistResolveStrategy::All
+    } else {
+        AssistResolveStrategy::None
+    };
     let mut diagnostics = analysis
-        .full_diagnostics(config, AssistResolveStrategy::All, file_id)
+        .full_diagnostics(config, resolve_assists, file_id)
         .unwrap();
     if let Some(sevs) = diag_kinds {
         diagnostics = diagnostics

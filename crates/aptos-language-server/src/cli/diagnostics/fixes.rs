@@ -25,7 +25,7 @@ impl FixCodes {
         }
     }
 
-    pub(super) fn to_apply(&self) -> bool {
+    pub(super) fn has_codes_to_apply(&self) -> bool {
         matches!(self, FixCodes::Codes(_) | FixCodes::All)
     }
 }
