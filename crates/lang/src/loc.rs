@@ -6,8 +6,8 @@
 
 use base_db::inputs::InternFileId;
 use base_db::{SourceDatabase, source_db};
+use std::fmt;
 use std::fmt::Formatter;
-use std::{env, fmt};
 use syntax::files::{FileRange, InFile};
 use syntax::{AstNode, SourceFile, SyntaxNode, TextRange, TextSize};
 use syntax::{SyntaxKind, SyntaxKind::*, SyntaxNodePtr};
@@ -33,7 +33,7 @@ impl SyntaxLoc {
 
     pub fn from_syntax_node(file_id: FileId, syntax_node: &SyntaxNode) -> Self {
         let mut node_name: Option<String> = None;
-        if env::var("APT_SYNTAXLOC_DEBUG").is_ok() {
+        if cfg!(debug_assertions) {
             let _p = tracing::debug_span!("SyntaxLoc::from_ast_node::node_name").entered();
             node_name = syntax_node
                 .children_with_tokens()

@@ -7,9 +7,7 @@
 use crate::loc::{SyntaxLocFileExt, SyntaxLocInput};
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry};
 use base_db::SourceDatabase;
-use itertools::chain;
 use std::cell::LazyCell;
-use std::iter;
 use stdx::itertools::Itertools;
 use syntax::ast::HasStmts;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
@@ -67,26 +65,6 @@ fn block_inline_functions(db: &dyn SourceDatabase, block_loc: SyntaxLocInput<'_>
         .to_entries()
 }
 
-#[derive(Clone, Copy, Eq, PartialEq)]
-struct LetStmtInfo {
-    text_range: TextRange,
-    is_post: bool,
-}
-
-impl LetStmtInfo {
-    fn strictly_before(&self, offset: TextSize) -> bool {
-        self.text_range.end() <= offset
-    }
-}
-
-fn let_stmts_with_bindings(
-    db: &dyn SourceDatabase,
-    block: InFile<ast::BlockExpr>,
-) -> &Vec<(LetStmtInfo, Vec<ScopeEntry>)> {
-    let block_loc = SyntaxLocInput::new(db, block.loc());
-    let_stmts_with_bindings_tracked(db, block_loc)
-}
-
 #[salsa_macros::tracked(returns(ref))]
 fn let_stmts_with_bindings_tracked(
     db: &dyn SourceDatabase,
@@ -108,4 +86,16 @@ fn let_stmts_with_bindings_tracked(
         })
         .collect::<Vec<_>>();
     let_stmts_infos
+}
+
+#[derive(Clone, Copy, Eq, PartialEq)]
+struct LetStmtInfo {
+    text_range: TextRange,
+    is_post: bool,
+}
+
+impl LetStmtInfo {
+    fn strictly_before(&self, offset: TextSize) -> bool {
+        self.text_range.end() <= offset
+    }
 }
