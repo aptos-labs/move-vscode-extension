@@ -9,7 +9,7 @@ use stdx::itertools::Itertools;
 use syntax::ast::HasStmts;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::InFile;
-use syntax::{AstNode, SyntaxNode, ast};
+use syntax::{AstNode, SyntaxNode, TextRange, TextSize, ast};
 
 pub fn get_entries_in_block(
     block_expr: InFile<ast::BlockExpr>,
@@ -29,13 +29,13 @@ pub fn get_entries_in_block(
 
     let bindings = let_stmts
         .into_iter()
-        .filter(|(let_stmt, _)| {
+        .filter(|(let_stmt_info, _)| {
             if !is_msl {
-                return let_stmt.syntax().strictly_before_offset(start_at_offset);
+                return let_stmt_info.strictly_before(start_at_offset);
             }
             if let Some(current_let_stmt) = current_let_stmt.as_ref() {
-                let is_post_visible = current_let_stmt.is_post() || !let_stmt.is_post();
-                return is_post_visible && let_stmt.syntax().strictly_before_offset(start_at_offset);
+                let is_post_visible = current_let_stmt.is_post() || !let_stmt_info.is_post;
+                return is_post_visible && let_stmt_info.strictly_before(start_at_offset);
             }
             true
         })
@@ -50,13 +50,28 @@ pub fn get_entries_in_block(
     entries
 }
 
-fn let_stmts_with_bindings(block: InFile<ast::BlockExpr>) -> Vec<(ast::LetStmt, Vec<ScopeEntry>)> {
+struct LetStmtInfo {
+    is_post: bool,
+    text_range: TextRange,
+}
+
+impl LetStmtInfo {
+    fn strictly_before(&self, offset: TextSize) -> bool {
+        self.text_range.end() <= offset
+    }
+}
+
+fn let_stmts_with_bindings(block: InFile<ast::BlockExpr>) -> Vec<(LetStmtInfo, Vec<ScopeEntry>)> {
     block
         .value
         .let_stmts()
         .map(|let_stmt| {
             let bindings = let_stmt.pat().map(|pat| pat.bindings()).unwrap_or_default();
-            (let_stmt, bindings.to_entries(block.file_id))
+            let let_stmt_info = LetStmtInfo {
+                is_post: let_stmt.is_post(),
+                text_range: let_stmt.syntax().text_range(),
+            };
+            (let_stmt_info, bindings.to_entries(block.file_id))
         })
         .collect()
 }
