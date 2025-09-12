@@ -64,7 +64,7 @@ impl Bench {
         let iterations = self.n_iterations;
         let mut res = vec![];
         for n in 0..iterations {
-            println!("run: {n}");
+            println!("iteration: {n}");
             let elapsed = self.run_bench_once(
                 manifest.clone(),
                 canonical_ws_root.clone(),
