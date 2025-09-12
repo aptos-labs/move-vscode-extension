@@ -32,6 +32,8 @@ enum Command {
         server: bool,
         #[clap(long)]
         client: bool,
+        #[clap(long)]
+        offline: bool,
     },
     Dist {
         #[clap(long)]
@@ -46,8 +48,8 @@ fn main() -> anyhow::Result<()> {
     match cli.command {
         Command::Codegen => codegen::generate(),
         Command::Testgen => testgen::generate(),
-        Command::Install { client, server } => {
-            install::install(client, server)?;
+        Command::Install { client, server, offline } => {
+            install::install(client, server, offline)?;
         }
         Command::Dist { client_patch_version } => dist::dist(client_patch_version)?,
         Command::Copyright => copyright::enforce(),

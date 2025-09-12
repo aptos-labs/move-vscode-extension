@@ -9,13 +9,13 @@ use std::env;
 use std::path::PathBuf;
 use xshell::{Shell, cmd};
 
-pub(crate) fn install(client: bool, server: bool) -> anyhow::Result<()> {
+pub(crate) fn install(client: bool, server: bool, offline: bool) -> anyhow::Result<()> {
     let sh = Shell::new()?;
     if cfg!(target_os = "macos") {
         fix_path_for_mac(&sh).context("Fix path for mac")?;
     }
     if server {
-        install_server(&sh).context("install server")?;
+        install_server(&sh, offline).context("install server")?;
     }
     if client {
         install_client(&sh).context("install client")?;
@@ -87,11 +87,12 @@ fn install_client(sh: &Shell) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn install_server(sh: &Shell) -> anyhow::Result<()> {
+fn install_server(sh: &Shell, offline: bool) -> anyhow::Result<()> {
     let profile = "release";
+    let is_offline = if offline { "--offline" } else { "" };
     let cmd = cmd!(
         sh,
-        "cargo install --path crates/aptos-language-server --profile={profile} --locked --force"
+        "cargo install --path crates/aptos-language-server --profile={profile} {is_offline} --locked --force"
     );
     cmd.run()?;
     Ok(())
