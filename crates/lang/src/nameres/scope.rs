@@ -43,7 +43,7 @@ impl ScopeEntry {
         self.node_loc.kind()
     }
 
-    pub fn cast_into<T: AstNode>(self, db: &dyn SourceDatabase) -> Option<InFile<T>> {
+    pub fn cast_into<T: AstNode>(&self, db: &dyn SourceDatabase) -> Option<InFile<T>> {
         self.node_loc.to_ast(db)
     }
 }

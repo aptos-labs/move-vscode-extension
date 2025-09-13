@@ -148,8 +148,8 @@ fn get_all_modules_for_package_id_tracked(
     all_module_locs
 }
 
-pub fn import_candidates(db: &dyn SourceDatabase, file_id: FileId) -> impl Iterator<Item = &ScopeEntry> {
-    import_candidates_tracked(db, file_id.intern(db)).iter()
+pub fn import_candidates(db: &dyn SourceDatabase, file_id: FileId) -> &Vec<ScopeEntry> {
+    import_candidates_tracked(db, file_id.intern(db))
 }
 
 #[salsa_macros::tracked(returns(ref))]

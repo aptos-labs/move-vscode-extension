@@ -146,7 +146,7 @@ fn add_path_completions_from_the_resolution_entries(
 
     let mut completion_items = vec![];
     for entry in visible_entries.clone() {
-        if let Some(completion_item) = render_scope_entry(ctx, path_ctx, entry) {
+        if let Some(completion_item) = render_scope_entry(ctx, path_ctx, &entry) {
             completion_items.push(completion_item.build(ctx.db));
         }
     }
@@ -179,18 +179,16 @@ fn add_out_of_scope_completion_items(
         return None;
     }
     let unqualified_nsset = path_kind.unqualified_ns()?;
-    let import_candidate_entries = hir_db::import_candidates(ctx.db, original_start_at.file_id)
+    let import_candidates = hir_db::import_candidates(ctx.db, original_start_at.file_id)
+        .iter()
         .filter(|it| unqualified_nsset.contains(it.ns))
         .filter(|it| is_visible_in_context(ctx.db, it, &original_start_at));
     let mut completion_items = vec![];
-    for import_candidate_entry in import_candidate_entries {
-        if !existing_entries.contains(import_candidate_entry) {
-            if let Some(mut completion_item) =
-                render_scope_entry(ctx, path_ctx, import_candidate_entry.clone())
-            {
-                if let Some(fq_name) = import_candidate_entry
-                    .node_loc
-                    .to_ast::<ast::NamedElement>(ctx.db)
+    for import_candidate in import_candidates {
+        if !existing_entries.contains(import_candidate) {
+            if let Some(mut completion_item) = render_scope_entry(ctx, path_ctx, import_candidate) {
+                if let Some(fq_name) = import_candidate
+                    .cast_into::<ast::NamedElement>(ctx.db)
                     .and_then(|it| it.fq_name(ctx.db))
                 {
                     completion_item.add_import(fq_name.fq_identifier_text());
@@ -207,12 +205,12 @@ fn add_out_of_scope_completion_items(
 fn render_scope_entry(
     ctx: &CompletionContext<'_>,
     path_ctx: &PathCompletionCtx,
-    entry: ScopeEntry,
+    scope_entry: &ScopeEntry,
 ) -> Option<CompletionItemBuilder> {
     let _p = tracing::debug_span!("render_scope_entry").entered();
 
-    let name = entry.name.clone();
-    let named_item = entry.cast_into::<ast::NamedElement>(ctx.db)?;
+    let name = scope_entry.name.clone();
+    let named_item = scope_entry.cast_into::<ast::NamedElement>(ctx.db)?;
     let named_item_kind = named_item.kind();
 
     // in acquires, only structs and enums are allowed
