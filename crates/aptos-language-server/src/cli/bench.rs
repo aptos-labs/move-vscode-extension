@@ -58,7 +58,7 @@ impl Bench {
         let iterations = self.n_iterations;
         let mut res = vec![];
         for n in 0..iterations {
-            println!("iteration: {n}");
+            println!("iteration: {}", n + 1);
             let elapsed = self.run_bench_once(manifest.clone(), specific_fpath.clone());
             res.push(elapsed);
         }
