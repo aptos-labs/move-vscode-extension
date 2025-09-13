@@ -10,6 +10,7 @@ ignored = ["salsa"]
 
 [dependencies]
 enumset = "1.1.5"
+rustc-hash = "2.1.1"
 
 anyhow.workspace = true
 regex.workspace = true

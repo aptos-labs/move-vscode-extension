@@ -974,6 +974,7 @@ dependencies = [
  "enumset",
  "itertools",
  "regex",
+ "rustc-hash 2.1.1",
  "salsa",
  "salsa-macros",
  "stdx",

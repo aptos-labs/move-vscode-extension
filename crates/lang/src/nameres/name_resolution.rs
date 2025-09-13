@@ -15,7 +15,7 @@ use crate::nameres::scope_entries_owner::get_entries_in_scope;
 use crate::{hir_db, nameres};
 use base_db::SourceDatabase;
 use base_db::package_root::PackageId;
-use std::collections::HashSet;
+use rustc_hash::FxHashSet;
 use syntax::SyntaxKind;
 use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::InFile;
@@ -30,7 +30,7 @@ pub fn get_entries_from_walking_scopes(
     let start_at = &start_at.value;
     let start_at_offset = start_at.text_range().start();
 
-    let mut visited_names: HashSet<(Ns, &str)> = HashSet::new();
+    let mut visited_names: FxHashSet<(Ns, &str)> = FxHashSet::default();
     let mut entries = vec![];
 
     for resolve_scope in resolve_scopes {
