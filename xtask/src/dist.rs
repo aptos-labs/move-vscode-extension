@@ -100,10 +100,12 @@ fn dist_server(sh: &Shell, release: &str, target: &Target) -> anyhow::Result<()>
     Ok(())
 }
 
+const PROFILE: &str = "dist";
+
 fn build_command<'a>(sh: &'a Shell, target_name: &str) -> Cmd<'a> {
     cmd!(
         sh,
-        "cargo build --manifest-path ./crates/aptos-language-server/Cargo.toml --bin aptos-language-server --target {target_name} --release"
+        "cargo build --manifest-path ./crates/aptos-language-server/Cargo.toml --bin aptos-language-server --target {target_name} --profile={PROFILE}"
     )
 }
 
@@ -177,7 +179,7 @@ impl Target {
             Some((l, r)) => (l.to_owned(), Some(r.to_owned())),
             None => (name, None),
         };
-        let out_path = project_root.join("target").join(&name).join("release");
+        let out_path = project_root.join("target").join(&name).join(PROFILE);
         let (exe_suffix, symbols_path) = if name.contains("-windows-") {
             (".exe".into(), Some(out_path.join("aptos_language_server.pdb")))
         } else {
