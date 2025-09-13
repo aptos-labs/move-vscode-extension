@@ -216,7 +216,7 @@ pub(crate) fn remove_variant_ident_pats(
         .into_iter()
         .filter(|entry| {
             // filter out bindings which are itself resolved to enum variants
-            if let Some(ident_pat) = entry.clone().cast_into::<ast::IdentPat>(db) {
+            if let Some(ident_pat) = entry.cast_into::<ast::IdentPat>(db) {
                 let resolved_to = resolve_ident_pat(ident_pat);
                 if resolved_to.is_some_and(|it| it.node_loc.kind() == VARIANT) {
                     return false;

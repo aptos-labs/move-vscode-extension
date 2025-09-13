@@ -56,7 +56,7 @@ pub fn get_ident_pat_resolve_variants(
 
     let binding_entries = get_entries_from_walking_scopes(db, ident_pat.in_file(file_id).syntax(), ns);
     for binding_entry in binding_entries {
-        if let Some(named_item) = binding_entry.clone().cast_into::<ast::NamedElement>(db) {
+        if let Some(named_item) = binding_entry.cast_into::<ast::NamedElement>(db) {
             let is_constant_like = is_constant_like(&named_item);
             let is_path_or_destructuble = matches!(named_item.kind(), ENUM | VARIANT | STRUCT);
             if is_constant_like || (is_completion && is_path_or_destructuble) {

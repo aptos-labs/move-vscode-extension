@@ -25,9 +25,9 @@ pub(crate) fn auto_import_fix(
 
     let expected_ns = path_kind(db, path.qualifier(), &path, false)?.unqualified_ns()?;
     let import_candidates = hir_db::import_candidates(db, file_id)
+        .iter()
         .filter(|it| expected_ns.contains(it.ns))
         .filter(|it| it.name == reference_name)
-        .cloned()
         .collect::<Vec<_>>();
 
     // limit to 3 autofixes, otherwise just bail out
@@ -66,7 +66,7 @@ pub(crate) fn auto_import_fix(
 fn add_autoimport_fix_for_import_candidate(
     db: &dyn SourceDatabase,
     assists: &mut LocalAssists,
-    import_candidate: ScopeEntry,
+    import_candidate: &ScopeEntry,
     current_use_items_owner: &ast::AnyHasItems,
     reference_range: FileRange,
     add_scope: Option<NamedItemScope>,
