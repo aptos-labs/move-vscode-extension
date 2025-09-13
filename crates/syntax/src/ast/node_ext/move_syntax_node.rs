@@ -68,7 +68,12 @@ pub trait MoveSyntaxElementExt {
     }
 
     fn cast<T: AstNode>(&self) -> Option<T> {
-        T::cast(self.node().clone())
+        let node = self.node();
+        if T::can_cast(node.kind()) {
+            T::cast(node.clone())
+        } else {
+            None
+        }
     }
 
     fn inference_ctx_owner(&self) -> Option<ast::InferenceCtxOwner> {

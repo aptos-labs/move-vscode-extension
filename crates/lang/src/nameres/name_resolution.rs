@@ -26,8 +26,6 @@ pub fn get_entries_from_walking_scopes(
     start_at: InFile<SyntaxNode>,
     ns: NsSet,
 ) -> Vec<ScopeEntry> {
-    let _p = tracing::debug_span!("get_entries_from_walking_scopes").entered();
-
     let resolve_scopes = resolve_scopes::get_resolve_scopes(db, &start_at);
     let start_at = &start_at.value;
     let start_at_offset = start_at.text_range().start();

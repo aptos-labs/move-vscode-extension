@@ -79,10 +79,7 @@ fn inference_tracked<'db>(
     ctx_owner_loc: SyntaxLocInput<'db>,
     msl: bool,
 ) -> InferenceResult {
-    let _p = tracing::debug_span!("inference_tracked").entered();
-
     let ctx_owner = ctx_owner_loc.to_ast::<ast::InferenceCtxOwner>(db).unwrap();
-    // .unpack();
 
     let return_ty = match ctx_owner.syntax().syntax_cast::<ast::AnyFun>() {
         Some(fun) => ty_db::lower_function(db, fun, msl).ret_type_ty(),

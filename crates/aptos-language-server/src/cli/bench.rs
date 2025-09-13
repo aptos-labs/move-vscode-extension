@@ -95,36 +95,31 @@ impl Bench {
 
         let (db, vfs) = ide_db::load::load_db(&aptos_packages).unwrap();
 
-        let mut local_package_roots = vec![];
-        for package_id in db.all_package_ids().data(&db) {
-            let package_root = db.package_root(package_id).data(&db);
-            if package_root.is_builtin() {
-                continue;
-            }
-            let root_dir = package_root.root_dir(&vfs).clone();
-            if root_dir.is_some_and(|it| it.starts_with(&canonical_ws_root))
-                && !package_root.is_library()
-            {
-                local_package_roots.push(package_root);
-            }
-        }
-
-        let analysis = Analysis::new(db);
+        let all_package_roots = db
+            .all_package_ids()
+            .data(&db)
+            .into_iter()
+            .map(|it| db.package_root(it).data(&db))
+            .filter(|it| !it.is_builtin())
+            .collect::<Vec<_>>();
 
         let mut target_file_id = None;
-        for local_package_root in local_package_roots {
-            let file_ids = local_package_root.file_set.iter();
+        let analysis = Analysis::new(db);
+
+        for package_root in all_package_roots {
+            let file_ids = package_root.file_set.iter();
             for file_id in file_ids {
                 let file_path = vfs.file_path(file_id);
 
                 // // fill parsing cache, we don't want to benchmark those
-                // let _ = analysis.parse(file_id).unwrap();
+                let _ = analysis.parse(file_id).unwrap();
 
                 if file_path.as_path().unwrap().to_path_buf() == specific_fpath {
                     target_file_id = Some(file_id);
                 }
             }
         }
+
         let target_file_id = target_file_id.unwrap();
         let frange = analysis.full_file_range(target_file_id).unwrap();
 

@@ -149,8 +149,6 @@ pub fn resolve_path(
     path: InFile<ast::Path>,
     expected_type: Option<Ty>,
 ) -> Vec<ScopeEntry> {
-    let _p = tracing::debug_span!("resolve_path").entered();
-
     let Some(path_name) = path.value.reference_name() else {
         return vec![];
     };
