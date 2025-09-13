@@ -9,8 +9,8 @@ use project_model::DiscoveredManifest;
 use project_model::aptos_package::load_from_fs;
 use std::path::PathBuf;
 use std::process::ExitCode;
+use std::time;
 use std::time::Duration;
-use std::{fs, time};
 
 #[derive(Debug, Args)]
 pub struct Bench {
@@ -41,9 +41,8 @@ impl Bench {
         let provided_file_path = AbsPathBuf::assert(provided_path);
         let manifest = DiscoveredManifest::discover_for_file(&provided_file_path)
             .expect("cannot find manifest for provided path");
-        let ws_root = manifest.content_root();
 
-        self.run_diagnostics_bench(manifest, ws_root, provided_file_path)?;
+        self.run_diagnostics_bench(manifest, provided_file_path)?;
 
         Ok(ExitCode::SUCCESS)
     }
@@ -51,25 +50,16 @@ impl Bench {
     fn run_diagnostics_bench(
         &self,
         manifest: DiscoveredManifest,
-        ws_root: AbsPathBuf,
         specific_fpath: AbsPathBuf,
     ) -> anyhow::Result<()> {
-        let canonical_ws_root = AbsPathBuf::assert_utf8(fs::canonicalize(ws_root.clone())?);
         // CPU warm-up
-        self.run_bench_once(
-            manifest.clone(),
-            canonical_ws_root.clone(),
-            specific_fpath.clone(),
-        );
+        self.run_bench_once(manifest.clone(), specific_fpath.clone());
+
         let iterations = self.n_iterations;
         let mut res = vec![];
         for n in 0..iterations {
-            println!("iteration: {n}");
-            let elapsed = self.run_bench_once(
-                manifest.clone(),
-                canonical_ws_root.clone(),
-                specific_fpath.clone(),
-            );
+            println!("iteration: {}", n + 1);
+            let elapsed = self.run_bench_once(manifest.clone(), specific_fpath.clone());
             res.push(elapsed);
         }
 
@@ -81,12 +71,7 @@ impl Bench {
         Ok(())
     }
 
-    fn run_bench_once(
-        &self,
-        manifest: DiscoveredManifest,
-        canonical_ws_root: AbsPathBuf,
-        specific_fpath: AbsPathBuf,
-    ) -> Duration {
+    fn run_bench_once(&self, manifest: DiscoveredManifest, specific_fpath: AbsPathBuf) -> Duration {
         let diagnostics_config = DiagnosticsConfig {
             needs_type_annotation: false,
             ..DiagnosticsConfig::test_sample()
@@ -95,36 +80,31 @@ impl Bench {
 
         let (db, vfs) = ide_db::load::load_db(&aptos_packages).unwrap();
 
-        let mut local_package_roots = vec![];
-        for package_id in db.all_package_ids().data(&db) {
-            let package_root = db.package_root(package_id).data(&db);
-            if package_root.is_builtin() {
-                continue;
-            }
-            let root_dir = package_root.root_dir(&vfs).clone();
-            if root_dir.is_some_and(|it| it.starts_with(&canonical_ws_root))
-                && !package_root.is_library()
-            {
-                local_package_roots.push(package_root);
-            }
-        }
-
-        let analysis = Analysis::new(db);
+        let all_package_roots = db
+            .all_package_ids()
+            .data(&db)
+            .into_iter()
+            .map(|it| db.package_root(it).data(&db))
+            .filter(|it| !it.is_builtin())
+            .collect::<Vec<_>>();
 
         let mut target_file_id = None;
-        for local_package_root in local_package_roots {
-            let file_ids = local_package_root.file_set.iter();
+        let analysis = Analysis::new(db);
+
+        for package_root in all_package_roots {
+            let file_ids = package_root.file_set.iter();
             for file_id in file_ids {
                 let file_path = vfs.file_path(file_id);
 
                 // // fill parsing cache, we don't want to benchmark those
-                // let _ = analysis.parse(file_id).unwrap();
+                let _ = analysis.parse(file_id).unwrap();
 
                 if file_path.as_path().unwrap().to_path_buf() == specific_fpath {
                     target_file_id = Some(file_id);
                 }
             }
         }
+
         let target_file_id = target_file_id.unwrap();
         let frange = analysis.full_file_range(target_file_id).unwrap();
 

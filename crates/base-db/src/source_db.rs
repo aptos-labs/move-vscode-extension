@@ -62,14 +62,14 @@ pub trait SourceDatabase: salsa::Database {
 }
 
 /// Parses the file into the syntax tree.
-#[salsa::tracked]
+#[salsa_macros::tracked(returns(ref))]
 pub fn parse(db: &dyn SourceDatabase, file_id: FileIdInput) -> Parse {
     let _p = tracing::info_span!("source_db::parse", ?file_id).entered();
     let text = db.file_text(file_id.data(db)).text(db);
     ast::SourceFile::parse(&text)
 }
 
-#[salsa::tracked(returns(ref))]
+#[salsa_macros::tracked(returns(ref))]
 pub fn parse_errors(db: &dyn SourceDatabase, file_id: FileIdInput) -> Option<Box<[SyntaxError]>> {
     let errors = parse(db, file_id).errors();
     match &*errors {
