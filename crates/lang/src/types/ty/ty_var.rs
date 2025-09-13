@@ -47,11 +47,13 @@ impl fmt::Debug for TyVar {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match &self.kind {
             TyVarKind::Anonymous(indx) => f.write_str(&format!("?_{}", indx)),
-            TyVarKind::WithOrigin { origin_loc, index } => f.write_str(&format!(
-                "?{}_{}",
-                origin_loc.node_name().unwrap_or("".to_string()),
-                index
-            )),
+            TyVarKind::WithOrigin { origin_loc, index } => {
+                let ident = match origin_loc.node_name() {
+                    Some(node_name) => format!("?{node_name}_{index}"),
+                    None => format!("?_{index}"),
+                };
+                f.write_str(&ident)
+            }
         }
     }
 }

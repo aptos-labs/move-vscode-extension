@@ -51,7 +51,7 @@ impl ScopeEntry {
 impl fmt::Debug for ScopeEntry {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let mut t = f.debug_tuple("ScopeEntry");
-        if self.node_loc.node_name().is_none_or(|it| it != self.name) {
+        if self.node_loc.node_name().is_none_or(|it| it != &self.name) {
             return t.field(&self.name).field(&self.node_loc).finish();
         }
         t.field(&self.node_loc).finish()

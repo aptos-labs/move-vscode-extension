@@ -10,42 +10,49 @@ use std::fmt;
 use std::fmt::Formatter;
 use syntax::files::{FileRange, InFile};
 use syntax::{AstNode, SourceFile, SyntaxNode, TextRange, TextSize};
-use syntax::{SyntaxKind, SyntaxKind::*, SyntaxNodePtr};
+use syntax::{SyntaxKind, SyntaxNodePtr};
 use vfs::FileId;
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct SyntaxLoc {
     file_id: FileId,
     syntax_ptr: SyntaxNodePtr,
-    // only for debugging here, might be removed in the future
+
+    // adds location name (as available) for debugging
+    #[cfg(debug_assertions)]
     node_name: Option<String>,
 }
 
 impl SyntaxLoc {
     pub fn from_ast_node(file_id: FileId, ast_node: &impl AstNode) -> Self {
-        Self::from_syntax_node(file_id, ast_node.syntax())
+        Self::new(file_id, ast_node.syntax())
     }
 
     pub fn from_file_syntax_node(syntax_node: &InFile<SyntaxNode>) -> Self {
         let n = syntax_node.as_ref();
-        Self::from_syntax_node(n.file_id, n.value)
+        Self::new(n.file_id, n.value)
     }
 
-    pub fn from_syntax_node(file_id: FileId, syntax_node: &SyntaxNode) -> Self {
-        let mut node_name: Option<String> = None;
-        if cfg!(debug_assertions) {
-            let _p = tracing::debug_span!("SyntaxLoc::from_ast_node::node_name").entered();
-            node_name = syntax_node
-                .children_with_tokens()
-                .find(|child| {
-                    let kind = child.kind();
-                    kind == NAME || kind == NAME_REF || kind == PATH_SEGMENT || kind == QUOTE_IDENT
-                })
-                .map(|it| it.to_string());
-        }
-
+    #[cfg(not(debug_assertions))]
+    #[inline]
+    pub fn new(file_id: FileId, syntax_node: &SyntaxNode) -> Self {
         SyntaxLoc {
-            file_id: file_id.to_owned(),
+            file_id,
+            syntax_ptr: SyntaxNodePtr::new(syntax_node),
+        }
+    }
+    #[cfg(debug_assertions)]
+    pub fn new(file_id: FileId, syntax_node: &SyntaxNode) -> Self {
+        use syntax::SyntaxKind::*;
+        let node_name = syntax_node
+            .children_with_tokens()
+            .find(|child| {
+                let kind = child.kind();
+                kind == NAME || kind == NAME_REF || kind == PATH_SEGMENT || kind == QUOTE_IDENT
+            })
+            .map(|it| it.to_string());
+        SyntaxLoc {
+            file_id,
             syntax_ptr: SyntaxNodePtr::new(syntax_node),
             node_name,
         }
@@ -93,8 +100,15 @@ impl SyntaxLoc {
         self.syntax_ptr.text_range().end()
     }
 
-    pub fn node_name(&self) -> Option<String> {
-        self.node_name.to_owned()
+    pub fn node_name(&self) -> Option<&String> {
+        #[cfg(debug_assertions)]
+        {
+            self.node_name.as_ref()
+        }
+        #[cfg(not(debug_assertions))]
+        {
+            None
+        }
     }
 
     pub fn contains(&self, other_loc: &SyntaxLoc) -> bool {
@@ -121,7 +135,7 @@ impl SyntaxLoc {
 
 impl fmt::Debug for SyntaxLoc {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match &self.node_name {
+        match self.node_name() {
             Some(name) => f
                 .debug_tuple("Loc")
                 .field(&format!(

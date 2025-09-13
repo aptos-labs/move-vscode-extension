@@ -48,8 +48,7 @@ pub fn is_visible_in_context(
     let item_ns = scope_entry.ns;
     let opt_visible_item = ast::AnyHasVisibility::cast(item.syntax().clone());
 
-    let context_usage_scope =
-        hir_db::item_scope(db, SyntaxLoc::from_syntax_node(context_file_id, context));
+    let context_usage_scope = hir_db::item_scope(db, SyntaxLoc::new(context_file_id, context));
     let context_opt_path = ast::Path::cast(context.to_owned());
     if let Some(path) = context_opt_path.clone() {
         if path.root_parent_of_type::<ast::UseSpeck>().is_some() {
