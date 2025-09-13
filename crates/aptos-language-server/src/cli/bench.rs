@@ -9,8 +9,8 @@ use project_model::DiscoveredManifest;
 use project_model::aptos_package::load_from_fs;
 use std::path::PathBuf;
 use std::process::ExitCode;
+use std::time;
 use std::time::Duration;
-use std::{fs, time};
 
 #[derive(Debug, Args)]
 pub struct Bench {
@@ -41,9 +41,8 @@ impl Bench {
         let provided_file_path = AbsPathBuf::assert(provided_path);
         let manifest = DiscoveredManifest::discover_for_file(&provided_file_path)
             .expect("cannot find manifest for provided path");
-        let ws_root = manifest.content_root();
 
-        self.run_diagnostics_bench(manifest, ws_root, provided_file_path)?;
+        self.run_diagnostics_bench(manifest, provided_file_path)?;
 
         Ok(ExitCode::SUCCESS)
     }
@@ -51,25 +50,16 @@ impl Bench {
     fn run_diagnostics_bench(
         &self,
         manifest: DiscoveredManifest,
-        ws_root: AbsPathBuf,
         specific_fpath: AbsPathBuf,
     ) -> anyhow::Result<()> {
-        let canonical_ws_root = AbsPathBuf::assert_utf8(fs::canonicalize(ws_root.clone())?);
         // CPU warm-up
-        self.run_bench_once(
-            manifest.clone(),
-            canonical_ws_root.clone(),
-            specific_fpath.clone(),
-        );
+        self.run_bench_once(manifest.clone(), specific_fpath.clone());
+
         let iterations = self.n_iterations;
         let mut res = vec![];
         for n in 0..iterations {
             println!("iteration: {n}");
-            let elapsed = self.run_bench_once(
-                manifest.clone(),
-                canonical_ws_root.clone(),
-                specific_fpath.clone(),
-            );
+            let elapsed = self.run_bench_once(manifest.clone(), specific_fpath.clone());
             res.push(elapsed);
         }
 
@@ -81,12 +71,7 @@ impl Bench {
         Ok(())
     }
 
-    fn run_bench_once(
-        &self,
-        manifest: DiscoveredManifest,
-        canonical_ws_root: AbsPathBuf,
-        specific_fpath: AbsPathBuf,
-    ) -> Duration {
+    fn run_bench_once(&self, manifest: DiscoveredManifest, specific_fpath: AbsPathBuf) -> Duration {
         let diagnostics_config = DiagnosticsConfig {
             needs_type_annotation: false,
             ..DiagnosticsConfig::test_sample()
