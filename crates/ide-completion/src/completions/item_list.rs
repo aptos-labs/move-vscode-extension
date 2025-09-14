@@ -30,12 +30,16 @@ pub(crate) fn complete_item_list(
 
 fn add_keywords(acc: &RefCell<Completions>, ctx: &CompletionContext, kind: &ItemListKind) -> Option<()> {
     let add_keyword = |kw: &str| {
-        acc.borrow_mut()
-            .add_keyword_snippet(ctx, kw, format!("{} $0", kw).leak())
+        let snippet = if ctx.next_char_is(' ') {
+            format!("{kw}$0")
+        } else {
+            format!("{kw} $0")
+        };
+        acc.borrow_mut().add_keyword_snippet(ctx, kw, snippet.leak());
     };
     let add_keyword_no_space = |kw: &str| {
-        acc.borrow_mut()
-            .add_keyword_snippet(ctx, kw, format!("{}$0", kw).leak())
+        let snippet = format!("{}$0", kw);
+        acc.borrow_mut().add_keyword_snippet(ctx, kw, snippet.leak())
     };
 
     match kind {

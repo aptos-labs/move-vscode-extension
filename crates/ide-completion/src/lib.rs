@@ -43,16 +43,18 @@ pub fn completions(
                 reference::add_reference_completions(&completions, &ctx, reference_kind);
             }
             CompletionAnalysis::TypeParam => {
-                let type_param_list = ctx
+                let generic_item = ctx
                     .original_file()?
-                    .find_node_at_offset::<ast::TypeParamList>(position.offset)?;
-                let generic_element = type_param_list.generic_element()?;
+                    .find_node_at_offset::<ast::TypeParamList>(position.offset)?
+                    .generic_element()?;
+                // let generic_element = type_param_list.generic_element()?;
                 if matches!(
-                    generic_element,
+                    generic_item,
                     ast::GenericElement::Struct(_) | ast::GenericElement::Enum(_)
                 ) {
-                    let acc = &mut completions.borrow_mut();
-                    acc.add_keyword_snippet(&ctx, "phantom", "phantom $0");
+                    completions
+                        .borrow_mut()
+                        .add_keyword_snippet(&ctx, "phantom", "phantom $0");
                 }
             }
         }

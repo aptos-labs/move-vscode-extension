@@ -1758,3 +1758,64 @@ module 0x1::m {
             ]"#]],
     )
 }
+
+#[test]
+fn test_no_extra_space_after_public_if_fun_is_present() {
+    do_single_completion(
+        // language=Move
+        r#"
+module 0x1::m {
+    pub/*caret*/ fun main() {
+
+    }
+}
+"#,
+        expect![[r#"
+            module 0x1::m {
+                public/*caret*/ fun main() {
+
+                }
+            }
+        "#]],
+    )
+}
+
+#[test]
+fn test_no_extra_space_after_public_if_fun_is_present_two_spaces() {
+    do_single_completion(
+        // language=Move
+        r#"
+module 0x1::m {
+    pub/*caret*/  fun main() {
+
+    }
+}
+"#,
+        expect![[r#"
+            module 0x1::m {
+                public/*caret*/  fun main() {
+
+                }
+            }
+        "#]],
+    )
+}
+
+#[test]
+fn test_package_friend_inside_public_modifier() {
+    check_completions(
+        // language=Move
+        r#"
+module 0x1::m {
+    public(/*caret*/) fun main() {
+
+    }
+}
+"#,
+        expect![[r#"
+            [
+                "friend",
+                "package",
+            ]"#]],
+    )
+}
