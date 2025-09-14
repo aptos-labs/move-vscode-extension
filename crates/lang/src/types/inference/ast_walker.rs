@@ -7,6 +7,7 @@
 mod infer_specs;
 mod lambda_expr;
 
+use crate::nameres::is_visible::is_visible_in_context;
 use crate::nameres::name_resolution::{WalkScopesCtx, get_entries_from_walking_scopes};
 use crate::nameres::namespaces::NAMES;
 use crate::nameres::path_resolution::get_method_resolve_variants;
@@ -24,6 +25,7 @@ use crate::types::ty::reference::{Mutability, autoborrow};
 use crate::types::ty::ty_callable::{TyCallable, TyCallableKind};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar};
 use crate::types::ty_db;
+use itertools::Itertools;
 use std::iter;
 use std::ops::Deref;
 use syntax::ast::HasStmts;
@@ -577,14 +579,15 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let self_ty = self.infer_expr(&method_call_expr.receiver_expr(), Expected::NoValue);
         let self_ty = self.ctx.resolve_ty_vars_if_possible(self_ty);
 
+        let vis_ctx = InFile::new(self.ctx.file_id, method_call_expr.syntax().clone());
+        let method_ref_name = method_call_expr.reference_name();
         let method_entry =
             get_method_resolve_variants(self.ctx.db, &self_ty, self.ctx.file_id, self.ctx.msl)
-                .filter_by_name(method_call_expr.reference_name())
-                .filter_by_visibility(
-                    self.ctx.db,
-                    &method_call_expr.clone().in_file(self.ctx.file_id).syntax(),
-                )
-                .single_or_none();
+                .into_iter()
+                .filter(|e| e.name == method_ref_name)
+                .filter(|e| is_visible_in_context(self.ctx.db, e, vis_ctx.clone()))
+                .exactly_one()
+                .ok();
         self.ctx
             .resolved_method_calls
             .insert(method_call_expr.to_owned(), method_entry.clone());

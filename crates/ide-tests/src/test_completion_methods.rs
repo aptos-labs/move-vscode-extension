@@ -81,10 +81,9 @@ module std::main {
 }
     "#,
         expect![[r#"
-        [
-            "method()",
-            "method_test_only()",
-        ]"#]],
+            [
+                "method()",
+            ]"#]],
     )
 }
 
@@ -106,10 +105,9 @@ module std::main {
 }
     "#,
         expect![[r#"
-        [
-            "method()",
-            "method_private()",
-        ]"#]],
+            [
+                "method()",
+            ]"#]],
     )
 }
 

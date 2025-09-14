@@ -12,10 +12,11 @@ use crate::types::ty::Ty;
 use base_db::SourceDatabase;
 use std::fmt;
 use std::fmt::Formatter;
+use std::vec::IntoIter;
 use stdx::itertools::Itertools;
 use syntax::SyntaxKind::{IDENT_PAT, NAMED_FIELD};
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, SyntaxKind, SyntaxNode, ast};
+use syntax::{AstNode, SyntaxElement, SyntaxKind, SyntaxNode, ast};
 use vfs::FileId;
 
 #[derive(Clone, Eq, Hash)]
@@ -133,11 +134,6 @@ impl<T> VecExt for Vec<T> {
 pub trait ScopeEntryListExt {
     fn filter_by_ns(self, ns: NsSet) -> Vec<ScopeEntry>;
     fn filter_by_name(self, name: String) -> Vec<ScopeEntry>;
-    fn filter_by_visibility(
-        self,
-        db: &dyn SourceDatabase,
-        context: &InFile<SyntaxNode>,
-    ) -> Vec<ScopeEntry>;
     fn filter_by_expected_type(
         self,
         db: &dyn SourceDatabase,
@@ -154,16 +150,6 @@ impl ScopeEntryListExt for Vec<ScopeEntry> {
 
     fn filter_by_name(self, name: String) -> Vec<ScopeEntry> {
         self.into_iter().filter(|entry| entry.name == name).collect()
-    }
-
-    fn filter_by_visibility(
-        self,
-        db: &dyn SourceDatabase,
-        context: &InFile<SyntaxNode>,
-    ) -> Vec<ScopeEntry> {
-        self.into_iter()
-            .filter(|entry| is_visible_in_context(db, entry, context.clone()))
-            .collect()
     }
 
     fn filter_by_expected_type(

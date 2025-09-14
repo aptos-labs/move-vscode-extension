@@ -132,7 +132,10 @@ fn add_path_completions_from_the_resolution_entries(
     };
     let entries = get_path_resolve_variants(ctx.db, &resolution_ctx, path_kind.clone(), walk_ctx);
 
-    let mut visible_entries = entries.filter_by_visibility(ctx.db, &original_start_at);
+    let mut visible_entries = entries
+        .into_iter()
+        .filter(|it| is_visible_in_context(ctx.db, it, original_start_at.clone()))
+        .collect::<Vec<_>>();
     tracing::debug!(completion_item_entries = ?visible_entries);
 
     // remove already present items in use group

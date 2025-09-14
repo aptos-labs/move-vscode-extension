@@ -6,6 +6,7 @@
 
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres;
+use crate::nameres::is_visible::is_visible_in_context;
 use crate::nameres::name_resolution::{
     WalkScopesCtx, get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
@@ -107,13 +108,14 @@ pub fn get_path_resolve_variants(
     }
 }
 
-#[tracing::instrument(level = "debug", skip(db, current_file_id))]
 pub fn get_method_resolve_variants(
     db: &dyn SourceDatabase,
     self_ty: &Ty,
     current_file_id: FileId,
     msl: bool,
 ) -> Vec<ScopeEntry> {
+    let _p = tracing::debug_span!("get_method_resolve_variants").entered();
+
     let package_id = db.file_package_id(current_file_id);
     let Some(InFile {
         file_id,
@@ -181,20 +183,20 @@ pub fn resolve_path(
     let expected_type = refine_path_expected_type(db, ctx.file_id(), path_kind, expected_type);
     let entries_by_expected_type = entries_filtered_by_name.filter_by_expected_type(db, expected_type);
 
-    let entries_by_visibility =
-        entries_by_expected_type.filter_by_visibility(db, &context_element.syntax());
-    tracing::debug!(?entries_by_visibility);
+    let visible_entries = entries_by_expected_type
+        .into_iter()
+        .filter(|e| is_visible_in_context(db, e, context_element.syntax()))
+        .collect::<Vec<_>>();
+    tracing::debug!(?visible_entries);
 
-    filter_by_function_namespace_special_case(entries_by_visibility, &ctx)
+    filter_by_function_namespace_special_case(visible_entries, &ctx)
 }
 
 fn filter_by_function_namespace_special_case(
     entries: Vec<ScopeEntry>,
     ctx: &ResolutionContext,
 ) -> Vec<ScopeEntry> {
-    // let path_expr = ctx.parent_path_expr();
     if ctx.is_call_expr() {
-        // if path_expr.is_some_and(|it| it.syntax().parent_of_type::<ast::CallExpr>().is_some()) {
         let function_entries = entries.clone().filter_by_ns(FUNCTIONS);
         return if !function_entries.is_empty() {
             function_entries
