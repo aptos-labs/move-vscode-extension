@@ -7,10 +7,10 @@
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres;
 use crate::nameres::name_resolution::{
-    get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
+    WalkScopesCtx, get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
 use crate::nameres::namespaces::Ns::FUNCTION;
-use crate::nameres::namespaces::{FUNCTIONS, NAMES, Ns};
+use crate::nameres::namespaces::{FUNCTIONS, NAMES, NONE, Ns};
 use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use crate::nameres::scope::{ScopeEntry, ScopeEntryExt, ScopeEntryListExt};
 use crate::types::inference::{InferenceCtx, TyVarIndex};
@@ -56,6 +56,7 @@ pub fn get_path_resolve_variants(
     db: &dyn SourceDatabase,
     ctx: &ResolutionContext,
     path_kind: PathKind,
+    walk_ctx: WalkScopesCtx,
 ) -> Vec<ScopeEntry> {
     match path_kind {
         PathKind::NamedAddress(_) | PathKind::ValueAddress(_) => {
@@ -65,7 +66,10 @@ pub fn get_path_resolve_variants(
 
         PathKind::FieldShorthand { struct_field } => {
             let mut entries = vec![];
-            entries.extend(get_entries_from_walking_scopes(db, ctx.start_at.clone(), NAMES));
+            entries.extend(get_entries_from_walking_scopes(
+                db,
+                walk_ctx.with_allowed_ns(NAMES),
+            ));
 
             let lit_field = ctx.wrap_in_file(struct_field);
             let lit_field_entries = nameres::resolve_multi_no_inf(db, lit_field).unwrap_or_default();
@@ -86,7 +90,7 @@ pub fn get_path_resolve_variants(
                     })
                 }
             }
-            entries.extend(get_entries_from_walking_scopes(db, ctx.start_at.clone(), ns));
+            entries.extend(get_entries_from_walking_scopes(db, walk_ctx.with_allowed_ns(ns)));
             entries
         }
 
@@ -163,7 +167,12 @@ pub fn resolve_path(
         start_at: path.syntax(),
         is_completion: false,
     };
-    let entries = get_path_resolve_variants(db, &ctx, path_kind.clone());
+    let walk_ctx = WalkScopesCtx {
+        allowed_ns: NONE,
+        start_at: path.syntax(),
+        expected_name: Some(path_name.clone()),
+    };
+    let entries = get_path_resolve_variants(db, &ctx, path_kind.clone(), walk_ctx);
     tracing::debug!(path_resolve_variants = ?entries);
 
     let entries_filtered_by_name = entries.filter_by_name(path_name.clone());

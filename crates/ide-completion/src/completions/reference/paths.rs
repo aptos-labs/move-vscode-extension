@@ -16,6 +16,8 @@ use ide_db::defs::BUILTIN_MUT_RESOURCE_FUNCTIONS;
 use lang::hir_db;
 use lang::nameres::fq_named_element::ItemFQNameOwner;
 use lang::nameres::is_visible::is_visible_in_context;
+use lang::nameres::name_resolution::WalkScopesCtx;
+use lang::nameres::namespaces::NONE;
 use lang::nameres::path_kind::path_kind;
 use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variants};
 use lang::nameres::scope::{ScopeEntry, ScopeEntryListExt};
@@ -124,7 +126,12 @@ fn add_path_completions_from_the_resolution_entries(
         start_at: original_start_at.clone(),
         is_completion: true,
     };
-    let entries = get_path_resolve_variants(ctx.db, &resolution_ctx, path_kind.clone());
+    let walk_ctx = WalkScopesCtx {
+        allowed_ns: NONE,
+        start_at: original_start_at.clone(),
+        expected_name: None,
+    };
+    let entries = get_path_resolve_variants(ctx.db, &resolution_ctx, path_kind.clone(), walk_ctx);
 
     let mut visible_entries = entries.filter_by_visibility(ctx.db, &original_start_at);
     tracing::debug!(completion_item_entries = ?visible_entries);

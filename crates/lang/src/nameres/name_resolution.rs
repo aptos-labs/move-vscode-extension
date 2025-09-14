@@ -21,13 +21,26 @@ use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::files::InFile;
 use syntax::{AstNode, SyntaxNode, ast};
 
+pub struct WalkScopesCtx {
+    pub allowed_ns: NsSet,
+    pub start_at: InFile<SyntaxNode>,
+    pub expected_name: Option<String>,
+}
+
+impl WalkScopesCtx {
+    pub fn with_allowed_ns(mut self, ns: NsSet) -> Self {
+        self.allowed_ns = ns;
+        self
+    }
+}
+
 pub fn get_entries_from_walking_scopes(
     db: &dyn SourceDatabase,
-    start_at: InFile<SyntaxNode>,
-    ns: NsSet,
+    walk_ctx: WalkScopesCtx,
 ) -> Vec<ScopeEntry> {
-    let resolve_scopes = resolve_scopes::get_resolve_scopes(db, &start_at);
-    let start_at = &start_at.value;
+    let resolve_scopes = resolve_scopes::get_resolve_scopes(db, &walk_ctx.start_at);
+
+    let start_at = &walk_ctx.start_at.value;
     let start_at_offset = start_at.text_range().start();
 
     let mut visited_names: FxHashSet<(Ns, &str)> = FxHashSet::default();
@@ -59,8 +72,16 @@ pub fn get_entries_from_walking_scopes(
 
         let scope_entries = block_entries.into_iter().chain(resolve_scope_entries.iter());
         for scope_entry in scope_entries {
+            if walk_ctx
+                .expected_name
+                .as_ref()
+                .is_some_and(|it| it != &scope_entry.name)
+            {
+                continue;
+            }
+
             let entry_ns = scope_entry.ns;
-            if !ns.contains(entry_ns) {
+            if !walk_ctx.allowed_ns.contains(entry_ns) {
                 continue;
             }
 

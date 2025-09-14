@@ -1,26 +1,58 @@
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::node_ext::item::ModuleItemExt;
 use base_db::SourceDatabase;
+use std::collections::HashSet;
+use std::sync::LazyLock;
+use syntax::SyntaxKind::*;
 use syntax::ast::HasItems;
-use syntax::files::InFile;
-use syntax::{AstNode, SyntaxNode, ast};
+use syntax::files::{InFile, InFileExt};
+use syntax::{AstNode, SyntaxKind, SyntaxNode, ast};
 
-pub fn get_resolve_scopes(
+static VALID_RESOLVE_SCOPES: LazyLock<HashSet<SyntaxKind>> = LazyLock::new(|| {
+    vec![
+        MODULE,
+        MODULE_SPEC,
+        SCRIPT,
+        ITEM_SPEC,
+        FUN,
+        SPEC_FUN,
+        SPEC_INLINE_FUN,
+        LAMBDA_EXPR,
+        SCHEMA,
+        FOR_EXPR,
+        FORALL_EXPR,
+        EXISTS_EXPR,
+        CHOOSE_EXPR,
+        AXIOM_STMT,
+        INVARIANT_STMT,
+        APPLY_SCHEMA,
+        MATCH_ARM,
+        BLOCK_EXPR,
+        GLOBAL_VARIABLE_DECL,
+        ENUM,
+        STRUCT,
+        SPEC_BLOCK_EXPR,
+    ]
+    .into_iter()
+    .collect()
+});
+
+// NOTE: caching top-down file traverse making perf worse
+pub(crate) fn get_resolve_scopes(
     db: &dyn SourceDatabase,
     start_at: &InFile<SyntaxNode>,
 ) -> Vec<InFile<SyntaxNode>> {
     let (file_id, start_at) = start_at.as_ref().unpack();
 
-    // NOTE: caching top-down file traverse making perf worse
-    let mut scopes = start_at
-        .ancestors()
-        // skip the current node
-        .skip(1)
-        .map(|scope| InFile::new(file_id, scope))
-        .collect::<Vec<_>>();
+    let mut scopes = Vec::with_capacity(8);
+    let mut opt_scope = start_at.parent();
 
-    // drop SOURCE_FILE
-    scopes.pop();
+    while let Some(scope) = opt_scope.take() {
+        opt_scope = scope.parent();
+        if VALID_RESOLVE_SCOPES.contains(&scope.kind()) {
+            scopes.push(scope.in_file(file_id));
+        }
+    }
 
     let last_scope = scopes.last().cloned();
     if let Some(last_scope) = last_scope {
@@ -50,7 +82,7 @@ pub fn get_resolve_scopes(
 }
 
 // all `spec module {}` in item container
-pub(crate) fn module_inner_spec_scopes(item_container: &InFile<ast::Module>) -> Vec<InFile<SyntaxNode>> {
+fn module_inner_spec_scopes(item_container: &InFile<ast::Module>) -> Vec<InFile<SyntaxNode>> {
     let (file_id, module) = item_container.as_ref().unpack();
     let mut inner_scopes = vec![];
     for module_item_spec in module.module_item_specs() {

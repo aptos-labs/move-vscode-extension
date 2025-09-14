@@ -19,9 +19,8 @@ pub fn get_entries_in_scope<'db>(
     db: &'db dyn SourceDatabase,
     scope: &InFile<SyntaxNode>,
 ) -> &'db Vec<ScopeEntry> {
-    let scope_loc = SyntaxLoc::from_file_syntax_node(scope);
-
-    get_entries_in_scope_tracked(db, SyntaxLocInput::new(db, scope_loc))
+    let scope_loc = SyntaxLocInput::new(db, SyntaxLoc::from_file_syntax_node(scope));
+    get_entries_in_scope_tracked(db, scope_loc)
 }
 
 #[salsa_macros::tracked(returns(ref))]

@@ -7,7 +7,7 @@
 mod infer_specs;
 mod lambda_expr;
 
-use crate::nameres::name_resolution::get_entries_from_walking_scopes;
+use crate::nameres::name_resolution::{WalkScopesCtx, get_entries_from_walking_scopes};
 use crate::nameres::namespaces::NAMES;
 use crate::nameres::path_resolution::get_method_resolve_variants;
 use crate::nameres::scope::{ScopeEntryListExt, VecExt, into_field_shorthand_items};
@@ -721,14 +721,15 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             if let Some(lit_field_expr) = lit_field.expr() {
                 self.infer_expr_coerceable_to(&lit_field_expr, field_ty);
             } else {
-                let binding = get_entries_from_walking_scopes(
-                    self.ctx.db,
-                    lit_field.syntax().clone().in_file(self.ctx.file_id),
-                    NAMES,
-                )
-                .filter_by_name(lit_field_name)
-                .single_or_none()
-                .and_then(|it| it.cast_into::<ast::IdentPat>(self.ctx.db));
+                let walk_ctx = WalkScopesCtx {
+                    start_at: lit_field.syntax().clone().in_file(self.ctx.file_id),
+                    allowed_ns: NAMES,
+                    expected_name: Some(lit_field_name.clone()),
+                };
+                let binding = get_entries_from_walking_scopes(self.ctx.db, walk_ctx)
+                    .filter_by_name(lit_field_name)
+                    .single_or_none()
+                    .and_then(|it| it.cast_into::<ast::IdentPat>(self.ctx.db));
                 let binding_ty = binding
                     .and_then(|it| self.ctx.get_binding_type(it.value))
                     .unwrap_or(Ty::Unknown);
