@@ -6,7 +6,7 @@
 
 use crate::nameres;
 use crate::nameres::get_named_field_entries;
-use crate::nameres::name_resolution::get_entries_from_walking_scopes;
+use crate::nameres::name_resolution::{WalkScopesCtx, get_entries_from_walking_scopes};
 use crate::nameres::namespaces::{ENUM_VARIANTS, TYPES_N_ENUMS_N_ENUM_VARIANTS_N_MODULES};
 use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::types::ty::Ty;
@@ -54,7 +54,12 @@ pub fn get_ident_pat_resolve_variants(
         ENUM_VARIANTS
     };
 
-    let binding_entries = get_entries_from_walking_scopes(db, ident_pat.in_file(file_id).syntax(), ns);
+    let walk_ctx = WalkScopesCtx {
+        allowed_ns: ns,
+        start_at: ident_pat.in_file(file_id).syntax(),
+        expected_name: None,
+    };
+    let binding_entries = get_entries_from_walking_scopes(db, walk_ctx);
     for binding_entry in binding_entries {
         if let Some(named_item) = binding_entry.cast_into::<ast::NamedElement>(db) {
             let is_constant_like = is_constant_like(&named_item);
