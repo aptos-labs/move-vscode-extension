@@ -87,7 +87,7 @@ impl ast::StructLitField {
 
     pub fn struct_lit(&self) -> ast::StructLit {
         self.syntax()
-            .ancestor_of_type::<ast::StructLit>(true)
+            .ancestor_strict::<ast::StructLit>()
             .expect("required by parser")
     }
 }

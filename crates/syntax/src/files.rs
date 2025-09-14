@@ -69,7 +69,11 @@ impl<T> InFile<T> {
         InFile::new(self.file_id, f(self.value))
     }
 
-    pub fn flat_map<F: Fn(T) -> Vec<U>, U>(self, f: F) -> Vec<InFile<U>> {
+    pub fn flat_map<Iter, F, U>(self, f: F) -> Vec<InFile<U>>
+    where
+        F: Fn(T) -> Iter,
+        Iter: IntoIterator<Item = U>,
+    {
         self.map(f).flatten()
     }
 
@@ -133,7 +137,7 @@ impl InFile<SyntaxNode> {
     }
 }
 
-impl<T> InFile<Vec<T>> {
+impl<T, Iter: IntoIterator<Item = T>> InFile<Iter> {
     pub fn flatten(self) -> Vec<InFile<T>> {
         let (file_id, vec) = self.unpack();
         vec.into_iter().map(|it| it.in_file(file_id)).collect()

@@ -23,11 +23,7 @@ pub trait SyntaxNodeExt {
 
     fn is_ancestor_of(&self, node: &SyntaxNode) -> bool;
 
-    fn ancestor_of_kind(&self, kind: SyntaxKind, strict: bool) -> Option<SyntaxNode>;
-    fn ancestor_strict_of_kind(&self, kind: SyntaxKind) -> Option<SyntaxNode>;
-
-    fn ancestor_of_type<Ast: AstNode>(&self, strict: bool) -> Option<Ast>;
-    fn ancestors_of_type<N: AstNode>(&self, strict: bool) -> Vec<N>;
+    fn ancestors_of_type<N: AstNode>(&self) -> impl Iterator<Item = N>;
 
     fn ancestor_or_self<Ast: AstNode>(&self) -> Option<Ast>;
     fn ancestor_strict<Ast: AstNode>(&self) -> Option<Ast>;
@@ -59,37 +55,16 @@ impl SyntaxNodeExt for SyntaxNode {
         node.ancestors().any(|it| &it == self)
     }
 
-    fn ancestor_of_kind(&self, kind: SyntaxKind, strict: bool) -> Option<SyntaxNode> {
-        if !strict && self.kind() == kind {
-            return Some(self.to_owned());
-        }
-        self.ancestors().find(|ans| ans.kind() == kind)
-    }
-
-    fn ancestor_strict_of_kind(&self, kind: SyntaxKind) -> Option<SyntaxNode> {
-        self.ancestor_of_kind(kind, true)
-    }
-
-    fn ancestor_of_type<Ast: AstNode>(&self, strict: bool) -> Option<Ast> {
-        if !strict && Ast::can_cast(self.kind()) {
-            return Ast::cast(self.to_owned());
-        }
-        self.ancestors().find_map(Ast::cast)
-    }
-
-    fn ancestors_of_type<N: AstNode>(&self, strict: bool) -> Vec<N> {
-        // if !strict && N::can_cast(self.kind()) {
-        //     return N::cast(self.to_owned());
-        // }
-        self.ancestors().filter_map(N::cast).collect()
+    fn ancestors_of_type<N: AstNode>(&self) -> impl Iterator<Item = N> {
+        self.ancestors().filter_map(N::cast)
     }
 
     fn ancestor_or_self<Ast: AstNode>(&self) -> Option<Ast> {
-        self.ancestor_of_type(false)
+        self.ancestors().find_map(Ast::cast)
     }
 
     fn ancestor_strict<Ast: AstNode>(&self) -> Option<Ast> {
-        self.ancestor_of_type(true)
+        self.ancestors().skip(1).find_map(Ast::cast)
     }
 
     fn has_ancestor_strict<Ast: AstNode>(&self) -> bool {

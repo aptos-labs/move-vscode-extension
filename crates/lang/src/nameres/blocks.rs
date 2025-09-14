@@ -32,7 +32,7 @@ pub fn get_entries_in_block<'db>(
     let let_stmts = let_stmts_with_bindings_tracked(db, block_loc);
 
     // make it lazy to not call it in non-msl case (most common)
-    let current_let_stmt = LazyCell::new(|| start_at.ancestor_of_type::<ast::LetStmt>(false));
+    let current_let_stmt = LazyCell::new(|| start_at.ancestor_or_self::<ast::LetStmt>());
     let bindings = let_stmts.iter().filter(|(let_stmt_info, _)| {
         if !is_msl {
             return let_stmt_info.strictly_before(start_at_offset);

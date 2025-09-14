@@ -356,7 +356,7 @@ fn use_items_tracked<'db>(
     use_stmts_owner
         .to_ast::<ast::AnyUseStmtsOwner>(db)
         .map(|use_stmts_owner| {
-            let use_stmts = use_stmts_owner.flat_map(|it| it.use_stmts().collect());
+            let use_stmts = use_stmts_owner.flat_map(|it| it.use_stmts());
             use_stmts
                 .into_iter()
                 .flat_map(|stmt| use_items_for_stmt(db, stmt).unwrap_or_default())
