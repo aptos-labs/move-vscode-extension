@@ -235,7 +235,7 @@ fn render_scope_entry(
                 ctx,
                 path_ctx.is_use_stmt(),
                 path_ctx.has_any_parens(),
-                name,
+                &name,
                 fun,
                 FunctionKind::Fun,
                 None,
