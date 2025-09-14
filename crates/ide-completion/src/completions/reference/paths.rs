@@ -188,7 +188,7 @@ fn add_out_of_scope_completion_items(
     let import_candidates = hir_db::import_candidates(ctx.db, original_start_at.file_id)
         .iter()
         .filter(|it| unqualified_nsset.contains(it.ns))
-        .filter(|it| is_visible_in_context(ctx.db, it, &original_start_at));
+        .filter(|it| is_visible_in_context(ctx.db, it, original_start_at.clone()));
     let mut completion_items = vec![];
     for import_candidate in import_candidates {
         if !existing_entries.contains(import_candidate) {

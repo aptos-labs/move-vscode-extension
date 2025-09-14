@@ -162,7 +162,7 @@ impl ScopeEntryListExt for Vec<ScopeEntry> {
         context: &InFile<SyntaxNode>,
     ) -> Vec<ScopeEntry> {
         self.into_iter()
-            .filter(|entry| is_visible_in_context(db, entry, &context))
+            .filter(|entry| is_visible_in_context(db, entry, context.clone()))
             .collect()
     }
 

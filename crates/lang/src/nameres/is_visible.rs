@@ -13,18 +13,19 @@ use crate::{hir_db, nameres};
 use base_db::SourceDatabase;
 use syntax::ast::HasVisibility;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::visibility::{Vis, VisLevel};
 use syntax::files::{InFile, InFileExt, OptionInFileExt};
-use syntax::{AstNode, SyntaxNode, ast};
+use syntax::{AstNode, SyntaxElement, ast};
 
 pub fn is_visible_in_context(
     db: &dyn SourceDatabase,
     scope_entry: &ScopeEntry,
-    context: &InFile<SyntaxNode>,
+    context: InFile<impl Into<SyntaxElement>>,
 ) -> bool {
     use syntax::SyntaxKind::*;
 
-    let (context_file_id, context) = context.unpack_ref();
+    let (context_file_id, context) = context.map(|it| it.into()).unpack();
 
     // inside msl everything is visible
     if context.is_msl_context() {
@@ -47,9 +48,11 @@ pub fn is_visible_in_context(
     let item_ns = scope_entry.ns;
     let opt_visible_item = ast::AnyHasVisibility::cast(item.syntax().clone());
 
-    let context_usage_scope = hir_db::item_scope(db, SyntaxLoc::new(context_file_id, context));
-    let context_opt_path = ast::Path::cast(context.to_owned());
-    if let Some(path) = context_opt_path.clone() {
+    let context_loc = SyntaxLoc::from_file_syntax_node(&context.loc_node().in_file(context_file_id));
+    let context_item_scope = hir_db::item_scope(db, context_loc);
+
+    let context_opt_path = context.as_node().and_then(|it| it.cast::<ast::Path>());
+    if let Some(path) = &context_opt_path {
         if path.root_parent_of_type::<ast::UseSpeck>().is_some() {
             // those are always public in use specks
             if matches!(item_kind, MODULE | STRUCT | ENUM) {
@@ -69,7 +72,7 @@ pub fn is_visible_in_context(
             }
 
             // consts are importable in tests
-            if context_usage_scope.is_test() && item_ns == Ns::NAME {
+            if context_item_scope.is_test() && item_ns == Ns::NAME {
                 return true;
             }
         }
@@ -90,7 +93,7 @@ pub fn is_visible_in_context(
     // i.e. #[test_only] items in non-test-only scope
     if item_scope != NamedItemScope::Main {
         // cannot be used everywhere, need to check for scope compatibility
-        if item_scope != context_usage_scope {
+        if item_scope != context_item_scope {
             return false;
         }
     }

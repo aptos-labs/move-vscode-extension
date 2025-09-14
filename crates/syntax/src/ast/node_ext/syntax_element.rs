@@ -172,6 +172,13 @@ pub trait SyntaxElementExt {
         }
         false
     }
+
+    fn loc_node(&self) -> SyntaxNode {
+        match self.to_syntax_element() {
+            NodeOrToken::Node(node) => node,
+            NodeOrToken::Token(token) => token.parent().expect("should have at least one parent"),
+        }
+    }
 }
 
 impl SyntaxElementExt for SyntaxElement {

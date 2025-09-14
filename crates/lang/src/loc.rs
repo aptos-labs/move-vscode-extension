@@ -9,7 +9,7 @@ use base_db::{SourceDatabase, source_db};
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::files::{FileRange, InFile};
-use syntax::{AstNode, SourceFile, SyntaxNode, TextRange, TextSize};
+use syntax::{AstNode, NodeOrToken, SourceFile, SyntaxElement, SyntaxNode, TextRange, TextSize};
 use syntax::{SyntaxKind, SyntaxNodePtr};
 use vfs::FileId;
 
