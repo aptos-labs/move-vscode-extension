@@ -17,7 +17,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::{iter, mem};
 use syntax::ast::IdentPatOwner;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, SyntaxElement, SyntaxNode, TextRange, TextSize, ast};
 use vfs::FileId;

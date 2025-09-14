@@ -10,7 +10,7 @@ use lang::nameres::scope::{VecExt, into_field_shorthand_items};
 use std::collections::HashSet;
 use std::sync::LazyLock;
 use syntax::SyntaxKind::*;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::InFile;
 use syntax::{AstNode, SyntaxNode, SyntaxToken, ast, match_ast};

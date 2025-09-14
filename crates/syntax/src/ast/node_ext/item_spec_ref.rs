@@ -5,6 +5,7 @@
 // Modifications have been made to the original code.
 
 use crate::ast;
+use crate::ast::node_ext::syntax_element::SyntaxElementExt;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 
 impl ast::ItemSpecRef {

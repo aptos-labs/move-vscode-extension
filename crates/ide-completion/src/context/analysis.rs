@@ -11,7 +11,6 @@ use ide_db::{RootDatabase, active_parameter};
 use lang::Semantics;
 use lang::types::ty::Ty;
 use syntax::SyntaxKind::*;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::{AstNode, SyntaxNode, SyntaxToken, TextRange, TextSize, algo, ast};

@@ -17,7 +17,7 @@ use lang::types::ty::Ty;
 use lang::{Semantics, hir_db};
 use std::collections::HashSet;
 use syntax::ast::idents::PRIMITIVE_TYPES;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};

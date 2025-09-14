@@ -17,7 +17,7 @@ use base_db::SourceDatabase;
 use base_db::package_root::PackageId;
 use rustc_hash::FxHashSet;
 use syntax::SyntaxKind;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::InFile;
 use syntax::{AstNode, SyntaxNode, ast};
 

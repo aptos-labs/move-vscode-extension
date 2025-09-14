@@ -27,7 +27,7 @@ use crate::types::ty_db;
 use std::iter;
 use std::ops::Deref;
 use syntax::ast::HasStmts;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, IntoNodeOrToken, ast, pretty_print};

@@ -15,8 +15,8 @@ use enumset::enum_set;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::SyntaxKind::*;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
-use syntax::ast::node_ext::syntax_node::{SyntaxNodeExt, SyntaxTokenExt};
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::{AstNode, SyntaxNode, T, ast};
 
 #[derive(Clone, PartialEq, Eq)]
@@ -119,7 +119,7 @@ pub fn path_kind(
     let has_trailing_colon_colon = path
         .ident_token()
         .and_then(|it| it.next_token())
-        .is_some_and(|token| token.is(T![::]));
+        .is_some_and(|token| token.is_kind(T![::]));
 
     let ns = path_namespaces(qualifier.as_ref(), path_parent, is_completion);
 

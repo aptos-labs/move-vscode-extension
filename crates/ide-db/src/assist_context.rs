@@ -7,7 +7,7 @@
 use crate::assists::{Assist, AssistId, AssistResolveStrategy};
 use crate::label::Label;
 use crate::source_change::SourceChangeBuilder;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::InFile;
 use syntax::syntax_editor::SyntaxEditor;
 use syntax::{AstNode, SyntaxNode, TextRange, ast};

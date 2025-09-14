@@ -18,7 +18,7 @@ use vfs::FileId;
 
 use crate::syntax_highlighting::tags::HlTag;
 pub(crate) use html::{highlight_as_html, highlight_as_html_no_style};
-use syntax::ast::node_ext::syntax_node::SyntaxTokenExt;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 pub(crate) use tags::Highlight;
 
 #[derive(Debug, Clone, Copy)]
@@ -81,7 +81,7 @@ fn traverse(
         }
 
         let element = match walk_event {
-            Enter(NodeOrToken::Token(token)) if token.is(WHITESPACE) => continue,
+            Enter(NodeOrToken::Token(token)) if token.is_kind(WHITESPACE) => continue,
             Enter(it) => it,
             Leave(NodeOrToken::Token(_)) => continue,
             Leave(NodeOrToken::Node(_)) => continue,

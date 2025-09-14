@@ -4,7 +4,8 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use crate::ast::node_ext::syntax_element::SyntaxElementExt;
+use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::parse::SyntaxKind;
 use crate::{AstNode, SyntaxNode, TextRange, TextSize};
 use std::borrow::Borrow;

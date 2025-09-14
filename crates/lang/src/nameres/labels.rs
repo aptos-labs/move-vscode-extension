@@ -8,7 +8,7 @@ use crate::loc::SyntaxLocFileExt;
 use crate::nameres::namespaces::Ns;
 use crate::nameres::scope::ScopeEntry;
 use syntax::SyntaxKind::*;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 use syntax::{SyntaxElement, SyntaxKind};

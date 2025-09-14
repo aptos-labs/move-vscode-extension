@@ -4,10 +4,10 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::SyntaxKind::{COMMA, ERROR};
+use crate::SyntaxKind::*;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
-use crate::{SyntaxElement, SyntaxKind, SyntaxToken};
-use itertools::Itertools;
+use crate::syntax_editor::Element;
+use crate::{AstNode, SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken, ast};
 use rowan::NodeOrToken;
 
 pub trait SyntaxElementExt {
@@ -69,7 +69,7 @@ pub trait SyntaxElementExt {
         self.to_syntax_element()
             .next_sibling_or_token()
             .and_then(|it| it.into_token())
-            .filter(|it| it.kind() == SyntaxKind::WHITESPACE)
+            .filter(|it| it.kind() == WHITESPACE)
     }
 
     fn preceding_comma(&self) -> Option<SyntaxToken> {
@@ -83,7 +83,7 @@ pub trait SyntaxElementExt {
         self.to_syntax_element()
             .prev_sibling_or_token()
             .and_then(|it| it.into_token())
-            .filter(|it| it.kind() == SyntaxKind::WHITESPACE)
+            .filter(|it| it.kind() == WHITESPACE)
     }
 
     fn error_node_or_self(&self) -> SyntaxElement {
@@ -96,10 +96,98 @@ pub trait SyntaxElementExt {
             element
         }
     }
+
+    fn ancestors_of_type<N: AstNode>(&self) -> impl Iterator<Item = N> {
+        self.to_syntax_element().ancestors().filter_map(N::cast)
+    }
+
+    fn parent_of_type<Ast: AstNode>(&self) -> Option<Ast> {
+        let parent_node = self.to_syntax_element().parent()?;
+        Ast::cast(parent_node)
+    }
+
+    fn ancestor_strict<Ast: AstNode>(&self) -> Option<Ast> {
+        self.to_syntax_element().ancestors().skip(1).find_map(Ast::cast)
+    }
+
+    fn has_ancestor_strict<Ast: AstNode>(&self) -> bool {
+        self.to_syntax_element().ancestor_strict::<Ast>().is_some()
+    }
+
+    fn is<T: AstNode>(&self) -> bool {
+        T::can_cast(self.to_syntax_element().kind())
+    }
+
+    fn parent_is<T: AstNode>(&self) -> bool {
+        self.to_syntax_element().parent().is_some_and(|it| it.is::<T>())
+    }
+
+    fn is_msl_only_item(&self) -> bool {
+        self.is::<ast::AnyMslOnly>()
+    }
+
+    fn is_kind(&self, kind: SyntaxKind) -> bool {
+        self.to_syntax_element().kind() == kind
+    }
+
+    fn containing_module(&self) -> Option<ast::Module> {
+        self.ancestor_strict::<ast::Module>()
+    }
+
+    fn containing_items_owner(&self) -> Option<ast::AnyHasItems> {
+        self.ancestor_strict::<ast::AnyHasItems>()
+    }
+
+    fn containing_function(&self) -> Option<ast::Fun> {
+        self.ancestor_strict::<ast::Fun>()
+    }
+
+    fn containing_script(&self) -> Option<ast::Script> {
+        self.ancestor_strict::<ast::Script>()
+    }
+
+    fn containing_file(&self) -> Option<ast::SourceFile> {
+        // let mut syntax_element = self.to_syntax_element();
+        self.to_syntax_element().ancestor_strict::<ast::SourceFile>()
+        // while syntax_element.kind() != SOURCE_FILE {
+        //     syntax_element = syntax_element.parent()?.syntax_element();
+        // }
+        // ast::SourceFile::cast(syntax_element)
+        //
+        // algo::containing_file_for_node(self.to_syntax_element())
+    }
+
+    fn containing_item_spec(&self) -> Option<ast::ItemSpec> {
+        self.ancestor_strict::<ast::ItemSpec>()
+    }
+
+    fn is_msl_context(&self) -> bool {
+        for ancestor in self.to_syntax_element().ancestors() {
+            if matches!(ancestor.kind(), MODULE | FUN | STRUCT | ENUM) {
+                return false;
+            }
+            if ancestor.is_msl_only_item() {
+                return true;
+            }
+        }
+        false
+    }
 }
 
 impl SyntaxElementExt for SyntaxElement {
     fn to_syntax_element(&self) -> SyntaxElement {
         self.clone()
+    }
+}
+
+impl SyntaxElementExt for SyntaxNode {
+    fn to_syntax_element(&self) -> SyntaxElement {
+        self.syntax_element()
+    }
+}
+
+impl SyntaxElementExt for SyntaxToken {
+    fn to_syntax_element(&self) -> SyntaxElement {
+        self.syntax_element()
     }
 }
