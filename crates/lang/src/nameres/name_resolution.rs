@@ -72,6 +72,14 @@ pub fn get_entries_from_walking_scopes(
 
         let scope_entries = block_entries.into_iter().chain(resolve_scope_entries.iter());
         for scope_entry in scope_entries {
+            if walk_ctx
+                .expected_name
+                .as_ref()
+                .is_some_and(|it| it != &scope_entry.name)
+            {
+                continue;
+            }
+
             let entry_ns = scope_entry.ns;
             if !walk_ctx.allowed_ns.contains(entry_ns) {
                 continue;

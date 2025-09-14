@@ -56,8 +56,8 @@ pub fn get_ident_pat_resolve_variants(
 
     let walk_ctx = WalkScopesCtx {
         allowed_ns: ns,
+        expected_name: Some(ident_pat.to_string()),
         start_at: ident_pat.in_file(file_id).syntax(),
-        expected_name: None,
     };
     let binding_entries = get_entries_from_walking_scopes(db, walk_ctx);
     for binding_entry in binding_entries {

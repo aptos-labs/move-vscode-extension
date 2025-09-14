@@ -170,7 +170,7 @@ pub fn resolve_path(
     let walk_ctx = WalkScopesCtx {
         allowed_ns: NONE,
         start_at: path.syntax(),
-        expected_name: None,
+        expected_name: Some(path_name.clone()),
     };
     let entries = get_path_resolve_variants(db, &ctx, path_kind.clone(), walk_ctx);
     tracing::debug!(path_resolve_variants = ?entries);

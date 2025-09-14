@@ -17,7 +17,7 @@ use lang::hir_db;
 use lang::nameres::fq_named_element::ItemFQNameOwner;
 use lang::nameres::is_visible::is_visible_in_context;
 use lang::nameres::name_resolution::WalkScopesCtx;
-use lang::nameres::namespaces::{NAMES, NONE};
+use lang::nameres::namespaces::NONE;
 use lang::nameres::path_kind::path_kind;
 use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variants};
 use lang::nameres::scope::{ScopeEntry, ScopeEntryListExt};
