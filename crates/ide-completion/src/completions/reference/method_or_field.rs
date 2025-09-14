@@ -11,7 +11,6 @@ use crate::render::new_named_item;
 use lang::loc::SyntaxLocFileExt;
 use lang::nameres::is_visible::is_visible_in_context;
 use lang::nameres::path_resolution::get_method_resolve_variants;
-use lang::nameres::scope::ScopeEntryListExt;
 use lang::types::has_type_params_ext::GenericItemExt;
 use lang::types::inference::{InferenceCtx, TyVarIndex};
 use lang::types::substitution::ApplySubstitution;

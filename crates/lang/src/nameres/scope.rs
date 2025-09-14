@@ -6,17 +6,15 @@
 
 use crate::item_scope::NamedItemScope;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
-use crate::nameres::is_visible::is_visible_in_context;
 use crate::nameres::namespaces::{Ns, NsSet, named_item_ns};
 use crate::types::ty::Ty;
 use base_db::SourceDatabase;
 use std::fmt;
 use std::fmt::Formatter;
-use std::vec::IntoIter;
 use stdx::itertools::Itertools;
 use syntax::SyntaxKind::{IDENT_PAT, NAMED_FIELD};
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, SyntaxElement, SyntaxKind, SyntaxNode, ast};
+use syntax::{AstNode, SyntaxKind, ast};
 use vfs::FileId;
 
 #[derive(Clone, Eq, Hash)]

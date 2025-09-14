@@ -20,7 +20,7 @@ use lang::nameres::name_resolution::WalkScopesCtx;
 use lang::nameres::namespaces::NONE;
 use lang::nameres::path_kind::path_kind;
 use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variants};
-use lang::nameres::scope::{ScopeEntry, ScopeEntryListExt};
+use lang::nameres::scope::ScopeEntry;
 use lang::nameres::{labels, path_kind};
 use std::cell::RefCell;
 use std::collections::HashSet;
