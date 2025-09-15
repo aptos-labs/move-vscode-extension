@@ -134,7 +134,7 @@ fn add_path_completions_from_the_resolution_entries(
 
     let mut visible_entries = entries
         .into_iter()
-        .filter(|it| is_visible_in_context(ctx.db, it, original_start_at.clone()))
+        .filter(|it| is_visible_in_context(ctx.db, it, original_start_at.clone()).is_none())
         .collect::<Vec<_>>();
     tracing::debug!(completion_item_entries = ?visible_entries);
 
@@ -191,7 +191,7 @@ fn add_out_of_scope_completion_items(
     let import_candidates = hir_db::import_candidates(ctx.db, original_start_at.file_id)
         .iter()
         .filter(|it| unqualified_nsset.contains(it.ns))
-        .filter(|it| is_visible_in_context(ctx.db, it, original_start_at.clone()));
+        .filter(|it| is_visible_in_context(ctx.db, it, original_start_at.clone()).is_none());
     let mut completion_items = vec![];
     for import_candidate in import_candidates {
         if !existing_entries.contains(import_candidate) {

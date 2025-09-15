@@ -6,7 +6,7 @@
 
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres;
-use crate::nameres::is_visible::is_visible_in_context;
+use crate::nameres::is_visible::{ResolvedEntry, check_if_visible, is_visible_in_context};
 use crate::nameres::name_resolution::{
     WalkScopesCtx, get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
@@ -183,13 +183,14 @@ pub fn resolve_path(
     let expected_type = refine_path_expected_type(db, ctx.file_id(), path_kind, expected_type);
     let entries_by_expected_type = entries_filtered_by_name.filter_by_expected_type(db, expected_type);
 
-    let visible_entries = entries_by_expected_type
+    let resolved_entries = entries_by_expected_type
         .into_iter()
-        .filter(|e| is_visible_in_context(db, e, context_element.syntax()))
+        // .map(|e| check_if_visible(db, e, context_element.syntax()))
+        .filter(|e| is_visible_in_context(db, e, context_element.syntax()).is_none())
         .collect::<Vec<_>>();
-    tracing::debug!(?visible_entries);
+    tracing::debug!(?resolved_entries);
 
-    filter_by_function_namespace_special_case(visible_entries, &ctx)
+    filter_by_function_namespace_special_case(resolved_entries, &ctx)
 }
 
 fn filter_by_function_namespace_special_case(
@@ -197,7 +198,11 @@ fn filter_by_function_namespace_special_case(
     ctx: &ResolutionContext,
 ) -> Vec<ScopeEntry> {
     if ctx.is_call_expr() {
-        let function_entries = entries.clone().filter_by_ns(FUNCTIONS);
+        let function_entries = entries
+            .clone()
+            .into_iter()
+            .filter(|it| it.ns == FUNCTION)
+            .collect::<Vec<_>>();
         return if !function_entries.is_empty() {
             function_entries
         } else {

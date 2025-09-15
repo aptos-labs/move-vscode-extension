@@ -114,22 +114,27 @@ impl InferenceResult {
         self.call_expr_types.get(call_expr_loc).cloned()
     }
 
+    pub fn get_resolve_method_or_path(&self, method_or_path: ast::MethodOrPath) -> Option<ScopeEntry> {
+        self.get_resolve_method_or_path_entries(method_or_path)
+            .single_or_none()
+    }
+
     pub fn get_resolve_method_or_path_entries(
         &self,
         method_or_path: ast::MethodOrPath,
     ) -> Vec<ScopeEntry> {
+        let loc = method_or_path.loc(self.file_id);
         match method_or_path {
-            ast::MethodOrPath::MethodCallExpr(method_call) => self
-                .get_resolved_method_call(&method_call)
-                .map(|e| vec![e])
+            ast::MethodOrPath::MethodCallExpr(_) => {
+                let resolved_entry = self.resolved_method_calls.get(&loc).cloned().unwrap_or_default();
+                resolved_entry.map(|e| vec![e]).unwrap_or_default()
+            }
+            ast::MethodOrPath::Path(_) => self
+                .resolved_paths
+                .get(&loc)
+                .map(|entries| entries.clone())
                 .unwrap_or_default(),
-            ast::MethodOrPath::Path(path) => self.get_resolved_path_entries(&path),
         }
-    }
-
-    pub fn get_resolve_method_or_path(&self, method_or_path: ast::MethodOrPath) -> Option<ScopeEntry> {
-        self.get_resolve_method_or_path_entries(method_or_path)
-            .single_or_none()
     }
 
     pub fn get_resolved_field(&self, field_name_ref: &ast::NameRef) -> Option<ScopeEntry> {
@@ -150,21 +155,20 @@ impl InferenceResult {
             .any(|it| range.contains_range(it.text_range()))
     }
 
-    fn get_resolved_path_entries(&self, path: &ast::Path) -> Vec<ScopeEntry> {
-        let loc = path.loc(self.file_id);
-        self.resolved_paths
-            .get(&loc)
-            .map(|entries| entries.clone())
-            .unwrap_or_default()
-        // .and_then(|entries| entries.clone().single_or_none())
-    }
+    // fn get_resolved_path_entries(&self, path: &ast::Path) -> Vec<ScopeEntry> {
+    //     let loc = path.loc(self.file_id);
+    //     self.resolved_paths
+    //         .get(&loc)
+    //         .map(|entries| entries.clone())
+    //         .unwrap_or_default()
+    // }
 
-    fn get_resolved_method_call(&self, method_call_expr: &ast::MethodCallExpr) -> Option<ScopeEntry> {
-        let loc = method_call_expr.loc(self.file_id);
-        self.resolved_method_calls
-            .get(&loc)
-            .and_then(|method| method.to_owned())
-    }
+    // fn get_resolved_method_call(&self, method_call_expr: &ast::MethodCallExpr) -> Option<ScopeEntry> {
+    //     let loc = method_call_expr.loc(self.file_id);
+    //     self.resolved_method_calls
+    //         .get(&loc)
+    //         .and_then(|method| method.to_owned())
+    // }
 }
 
 fn fully_resolve_map_values(

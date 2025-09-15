@@ -18,23 +18,45 @@ use syntax::ast::visibility::{Vis, VisLevel};
 use syntax::files::{InFile, InFileExt, OptionInFileExt};
 use syntax::{AstNode, SyntaxElement, ast};
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum ItemInvisibleReason {
+    Private,
+    WrongItemScope,
+    Unknown,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ResolvedEntry {
+    scope_entry: ScopeEntry,
+    invis_reason: Option<ItemInvisibleReason>,
+}
+
+pub fn check_if_visible(
+    db: &dyn SourceDatabase,
+    scope_entry: ScopeEntry,
+    context: InFile<impl Into<SyntaxElement>>,
+) -> ResolvedEntry {
+    let invis_reason = is_visible_in_context(db, &scope_entry, context);
+    ResolvedEntry { scope_entry, invis_reason }
+}
+
 pub fn is_visible_in_context(
     db: &dyn SourceDatabase,
     scope_entry: &ScopeEntry,
     context: InFile<impl Into<SyntaxElement>>,
-) -> bool {
+) -> Option<ItemInvisibleReason> {
     use syntax::SyntaxKind::*;
 
     let (context_file_id, context) = context.map(|it| it.into()).unpack();
 
     // inside msl everything is visible
     if context.is_msl_context() {
-        return true;
+        return None;
     }
 
     // if inside MvAttrItem like abort_code=
     if context.ancestor_strict::<ast::AttrItem>().is_some() {
-        return true;
+        return None;
     }
 
     let Some(InFile {
@@ -42,7 +64,7 @@ pub fn is_visible_in_context(
         value: item,
     }) = scope_entry.node_loc.to_ast::<ast::NamedElement>(db)
     else {
-        return false;
+        return Some(ItemInvisibleReason::Unknown);
     };
     let item_kind = item.syntax().kind();
     let item_ns = scope_entry.ns;
@@ -56,24 +78,24 @@ pub fn is_visible_in_context(
         if path.root_parent_of_type::<ast::UseSpeck>().is_some() {
             // those are always public in use specks
             if matches!(item_kind, MODULE | STRUCT | ENUM) {
-                return true;
+                return None;
             }
 
             // items needs to be non-public to be visible, no other rules apply in use specks
             if let Some(visible_item) = opt_visible_item.clone() {
                 if visible_item.vis() != Vis::Private {
-                    return true;
+                    return None;
                 }
             }
 
             // msl-only items are available from imports
             if item.syntax().is_msl_only_item() {
-                return true;
+                return None;
             }
 
             // consts are importable in tests
             if context_item_scope.is_test() && item_ns == Ns::NAME {
-                return true;
+                return None;
             }
         }
     }
@@ -81,7 +103,7 @@ pub fn is_visible_in_context(
     let item_module = item.syntax().containing_module();
     // 0x0::builtins module functions are always visible
     if item.syntax().kind() == FUN && item_module.clone().is_some_and(|m| m.is_builtins()) {
-        return true;
+        return None;
     }
 
     let item_loc = item.clone().in_file(item_file_id).loc();
@@ -94,19 +116,19 @@ pub fn is_visible_in_context(
     if item_scope != NamedItemScope::Main {
         // cannot be used everywhere, need to check for scope compatibility
         if item_scope != context_item_scope {
-            return false;
+            return Some(ItemInvisibleReason::WrongItemScope);
         }
     }
 
     // we're in non-msl scope at this point, msl only items aren't accessible
     if item.syntax().is_msl_only_item() {
-        return false;
+        return Some(ItemInvisibleReason::WrongItemScope);
     }
 
     // local methods, Self::method - everything is visible
     let context_module = context.containing_module();
     if item_module.is_some() && context_module.is_some() && item_module == context_module {
-        return true;
+        return None;
     }
 
     // local items in script
@@ -116,7 +138,7 @@ pub fn is_visible_in_context(
             .containing_script()
             .is_some_and(|it| context_script == it)
         {
-            return true;
+            return None;
         }
     }
 
@@ -127,7 +149,7 @@ pub fn is_visible_in_context(
             .and_then(|it| it.syntax().parent());
         if let Some(path_parent) = opt_path_parent {
             if path_parent.kind() == PATH_TYPE {
-                return true;
+                return None;
             }
         }
     }
@@ -135,8 +157,8 @@ pub fn is_visible_in_context(
         .map(|visible_item| visible_item.vis())
         .unwrap_or(Vis::Public);
     match vis {
-        Vis::Private => false,
-        Vis::Public => true,
+        Vis::Private => Some(ItemInvisibleReason::Private),
+        Vis::Public => None,
         Vis::Restricted(vis_level) => match vis_level {
             VisLevel::Friend => {
                 if let (Some(item_module), Some(context_module)) = (item_module, context_module) {
@@ -149,15 +171,19 @@ pub fn is_visible_in_context(
                             continue;
                         };
                         if friend_module.value == context_module {
-                            return true;
+                            return None;
                         }
                     }
                 }
-                false
+                Some(ItemInvisibleReason::Private)
             }
             VisLevel::Package => {
                 // check for the same source root
-                db.file_package_id(context_file_id) == db.file_package_id(item_file_id)
+                if db.file_package_id(context_file_id) == db.file_package_id(item_file_id) {
+                    None
+                } else {
+                    Some(ItemInvisibleReason::Private)
+                }
             }
         },
     }
