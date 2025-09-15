@@ -7,6 +7,7 @@
 use base_db::inputs::FileIdInput;
 use base_db::{SourceDatabase, source_db};
 use std::collections::{HashMap, HashSet};
+use std::fmt::{Display, Formatter};
 use syntax::{AstNode, NodeOrToken, SyntaxNode, SyntaxNodePtr, WalkEvent, ast};
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
@@ -14,6 +15,16 @@ pub enum NamedItemScope {
     Main,
     Test,
     Verify,
+}
+
+impl Display for NamedItemScope {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            NamedItemScope::Main => write!(f, "main"),
+            NamedItemScope::Test => write!(f, "test_only"),
+            NamedItemScope::Verify => write!(f, "verify_only"),
+        }
+    }
 }
 
 impl NamedItemScope {

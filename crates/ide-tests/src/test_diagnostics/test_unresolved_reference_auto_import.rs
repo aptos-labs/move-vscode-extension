@@ -524,7 +524,7 @@ fn test_add_non_test_only_import_with_test_only_existing() {
 
                 public fun main() {
                     mint();
-                  //^^^^ err: Unresolved reference `mint`: cannot resolve
+                  //^^^^ err: Unresolved reference `mint`: cannot resolve (note: item defined as `#[test_only]` and cannot be used here)
                 }
 
                 #[test_only]
@@ -570,7 +570,7 @@ fn test_add_non_test_only_import_with_test_only_group_existing() {
 
                 public fun main() {
                     mint();
-                  //^^^^ err: Unresolved reference `mint`: cannot resolve
+                  //^^^^ err: Unresolved reference `mint`: cannot resolve (note: item defined as `#[test_only]` and cannot be used here)
                 }
 
                 #[test_only]

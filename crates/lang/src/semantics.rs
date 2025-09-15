@@ -8,6 +8,7 @@ mod source_to_def;
 
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::nameres::fq_named_element::{ItemFQName, ItemFQNameOwner};
+use crate::nameres::is_visible::ResolvedScopeEntry;
 use crate::nameres::scope::{ScopeEntry, VecExt};
 use crate::node_ext::callable::Callable;
 use crate::node_ext::item::ModuleItemExt;
@@ -142,6 +143,20 @@ impl<'db> SemanticsImpl<'db> {
         let reference = reference.map(|it| it.into());
         let msl = reference.syntax().value.is_msl_context();
         let inference = self.inference(&reference, msl);
+        nameres::resolve_multi(self.db, reference, inference)
+            .unwrap_or_default()
+            .into_iter()
+            .filter_map(|it| it.into_entry_if_visible())
+            .collect()
+    }
+
+    pub fn resolve_in_file_with_reason(
+        &self,
+        reference: InFile<impl Into<ast::ReferenceElement>>,
+    ) -> Vec<ResolvedScopeEntry> {
+        let reference = reference.map(|it| it.into());
+        let msl = reference.syntax().value.is_msl_context();
+        let inference = self.inference(&reference, msl);
         nameres::resolve_multi(self.db, reference, inference).unwrap_or_default()
     }
 
@@ -219,6 +234,12 @@ impl<'db> SemanticsImpl<'db> {
     pub fn fq_name_for_item(&self, item: impl AstNode) -> Option<ItemFQName> {
         let file_item = self.wrap_node_infile(item);
         self.fq_name_for_file_item(file_item)
+    }
+
+    pub fn fq_name_for_scope_entry(&self, scope_entry: &ScopeEntry) -> Option<ItemFQName> {
+        scope_entry
+            .cast_into::<ast::NamedElement>(self.db)
+            .and_then(|it| it.fq_name(self.db))
     }
 
     #[inline]

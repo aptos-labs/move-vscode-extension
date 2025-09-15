@@ -585,7 +585,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             get_method_resolve_variants(self.ctx.db, &self_ty, self.ctx.file_id, self.ctx.msl)
                 .into_iter()
                 .filter(|e| e.name == method_ref_name)
-                .filter(|e| is_visible_in_context(self.ctx.db, e, vis_ctx.clone()))
+                .filter(|e| is_visible_in_context(self.ctx.db, e, vis_ctx.clone()).is_none())
                 .exactly_one()
                 .ok();
         self.ctx

@@ -6,11 +6,13 @@
 
 use crate::item_scope::NamedItemScope;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
+use crate::nameres::is_visible::ResolvedScopeEntry;
 use crate::nameres::namespaces::{Ns, NsSet, named_item_ns};
 use crate::types::ty::Ty;
 use base_db::SourceDatabase;
 use std::fmt;
 use std::fmt::Formatter;
+use std::vec::IntoIter;
 use stdx::itertools::Itertools;
 use syntax::SyntaxKind::{IDENT_PAT, NAMED_FIELD};
 use syntax::files::{InFile, InFileExt};
@@ -130,6 +132,9 @@ impl<T> VecExt for Vec<T> {
 }
 
 pub trait ScopeEntryListExt {
+    fn into_iterator(self) -> IntoIter<ScopeEntry>
+    where
+        Self: Sized;
     fn filter_by_ns(self, ns: NsSet) -> Vec<ScopeEntry>;
     fn filter_by_name(self, name: String) -> Vec<ScopeEntry>;
     fn filter_by_expected_type(
@@ -137,9 +142,19 @@ pub trait ScopeEntryListExt {
         db: &dyn SourceDatabase,
         expected_type: Option<Ty>,
     ) -> Vec<ScopeEntry>;
+    fn into_resolved_list(self) -> Vec<ResolvedScopeEntry>
+    where
+        Self: Sized,
+    {
+        self.into_iterator().map(|it| it.into_resolved()).collect()
+    }
 }
 
 impl ScopeEntryListExt for Vec<ScopeEntry> {
+    fn into_iterator(self) -> IntoIter<ScopeEntry> {
+        self.into_iter()
+    }
+
     fn filter_by_ns(self, ns: NsSet) -> Vec<ScopeEntry> {
         self.into_iter()
             .filter(move |entry| ns.contains(entry.ns))

@@ -89,7 +89,7 @@ fn add_method_completion_items(
     let original_token_ctx = InFile::new(ctx.position.file_id, ctx.original_token.clone());
     let method_entries = get_method_resolve_variants(db, &receiver_ty, ctx.position.file_id, ctx.msl)
         .into_iter()
-        .filter(|e| is_visible_in_context(ctx.db, e, original_token_ctx.clone()));
+        .filter(|e| is_visible_in_context(ctx.db, e, original_token_ctx.clone()).is_none());
 
     for method_entry in method_entries {
         let method_name = method_entry.name.as_str();

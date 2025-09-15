@@ -6,13 +6,15 @@
 
 use crate::hir_db;
 use crate::loc::SyntaxLocFileExt;
+use crate::nameres::is_visible::ResolvedScopeEntry;
 use crate::nameres::labels::get_loop_labels_resolve_variants;
 use crate::nameres::path_resolution::remove_variant_ident_pats;
-use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryListExt, VecExt};
+use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryListExt};
 use crate::node_ext::item::ModuleItemExt;
 use crate::node_ext::item_spec::ItemSpecExt;
 use crate::types::inference::inference_result::InferenceResult;
 use base_db::SourceDatabase;
+use itertools::Itertools;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
@@ -38,26 +40,32 @@ pub fn resolve(
     db: &dyn SourceDatabase,
     ref_element: InFile<impl Into<ast::ReferenceElement>>,
 ) -> Option<ScopeEntry> {
-    resolve_multi(db, ref_element, None)?.single_or_none()
+    resolve_multi(db, ref_element, None)?
+        .into_iter()
+        .filter_map(|it| it.into_entry_if_visible())
+        .exactly_one()
+        .ok()
 }
 
 pub fn resolve_multi(
     db: &dyn SourceDatabase,
     ref_element: InFile<impl Into<ast::ReferenceElement>>,
     cached_inference: Option<&InferenceResult>,
-) -> Option<Vec<ScopeEntry>> {
+) -> Option<Vec<ResolvedScopeEntry>> {
     let ref_element = ref_element.map(|it| it.into());
     {
         let (file_id, ref_element) = ref_element.clone().unpack();
         match ref_element.clone() {
             ast::ReferenceElement::ItemSpecRef(item_spec_ref) => {
-                return get_item_spec_entries(db, item_spec_ref.in_file(file_id));
+                return get_item_spec_entries(db, item_spec_ref.in_file(file_id))
+                    .map(|it| it.into_resolved_list());
             }
             ast::ReferenceElement::Label(loop_label) => {
                 let label = loop_label.in_file(file_id);
                 let label_name = label.value.name_as_string();
-                let loop_label_entries =
-                    get_loop_labels_resolve_variants(label).filter_by_name(label_name);
+                let loop_label_entries = get_loop_labels_resolve_variants(label)
+                    .filter_by_name(label_name)
+                    .into_resolved_list();
                 return Some(loop_label_entries);
             }
             ast::ReferenceElement::ItemSpecTypeParam(item_spec_type_param) => {
@@ -68,7 +76,8 @@ pub fn resolve_multi(
                     .cast_into::<ast::Fun>()?;
                 let entries = item_spec_fun
                     .flat_map(|it| it.to_any_fun().to_generic_element().type_params())
-                    .to_entries();
+                    .to_entries()
+                    .into_resolved_list();
                 return Some(entries);
             }
             _ => (),
@@ -101,23 +110,30 @@ pub fn resolve_no_inf_cast<N: Into<ast::NamedElement> + AstNode>(
     db: &dyn SourceDatabase,
     ref_element: InFile<impl Into<ast::ReferenceElement>>,
 ) -> Option<InFile<N>> {
-    resolve_multi_no_inf(db, ref_element)?
-        .single_or_none()?
-        .cast_into(db)
+    resolve_no_inf(db, ref_element)?.cast_into(db)
+    // resolve_multi_no_inf(db, ref_element)?
+    //     .single_or_none()?
+    //     .cast_into(db)
 }
 
 pub fn resolve_no_inf(
     db: &dyn SourceDatabase,
     ref_element: InFile<impl Into<ast::ReferenceElement>>,
 ) -> Option<ScopeEntry> {
-    resolve_multi_no_inf(db, ref_element)?.single_or_none()
+    resolve_multi_no_inf(db, ref_element).and_then(|entries| {
+        entries
+            .into_iter()
+            .filter_map(|it| it.into_entry_if_visible())
+            .exactly_one()
+            .ok()
+    })
 }
 
 /// resolve outside of the `ast::InferenceCtxOwner`
 fn resolve_multi_no_inf(
     db: &dyn SourceDatabase,
     ref_element: InFile<impl Into<ast::ReferenceElement>>,
-) -> Option<Vec<ScopeEntry>> {
+) -> Option<Vec<ResolvedScopeEntry>> {
     let (file_id, ref_element) = ref_element.map(|it| it.into()).unpack();
     match ref_element {
         ast::ReferenceElement::Path(path) => Some(hir_db::resolve_path_multi(db, path.in_file(file_id))),
@@ -126,7 +142,11 @@ fn resolve_multi_no_inf(
             let fields_owner =
                 resolve_no_inf_cast::<ast::FieldsOwner>(db, struct_path.in_file(file_id))?;
             let field_name = struct_lit_field.field_name_ref()?.as_string();
-            Some(get_named_field_entries(fields_owner).filter_by_name(field_name))
+            Some(
+                get_named_field_entries(fields_owner)
+                    .filter_by_name(field_name)
+                    .into_resolved_list(),
+            )
         }
         _ => {
             tracing::debug!(
@@ -142,7 +162,7 @@ fn resolve_multi_with_inf(
     db: &dyn SourceDatabase,
     inference: &InferenceResult,
     ref_element: InFile<ast::ReferenceElement>,
-) -> Option<Vec<ScopeEntry>> {
+) -> Option<Vec<ResolvedScopeEntry>> {
     let (file_id, ref_element) = ref_element.unpack();
     let entries = match ref_element {
         ast::ReferenceElement::MethodCallExpr(method_call) => {
@@ -164,7 +184,9 @@ fn resolve_multi_with_inf(
                 .cast_into::<ast::FieldsOwner>(db)?;
 
             let field_name = struct_pat_field.field_name()?;
-            get_named_field_entries(fields_owner).filter_by_name(field_name)
+            get_named_field_entries(fields_owner)
+                .filter_by_name(field_name)
+                .into_resolved_list()
         }
         ast::ReferenceElement::StructLitField(struct_lit_field) => {
             let struct_path = struct_lit_field.struct_lit().path();
@@ -173,7 +195,9 @@ fn resolve_multi_with_inf(
                 .cast_into::<ast::FieldsOwner>(db)?;
 
             let field_name = struct_lit_field.field_name_ref()?.as_string();
-            get_named_field_entries(fields_owner).filter_by_name(field_name)
+            get_named_field_entries(fields_owner)
+                .filter_by_name(field_name)
+                .into_resolved_list()
         }
         ast::ReferenceElement::SchemaLitField(schema_lit_field) => {
             let schema_lit_path = schema_lit_field.schema_lit()?.path()?;
@@ -182,7 +206,9 @@ fn resolve_multi_with_inf(
                 .cast_into::<ast::Schema>(db)?;
 
             let field_name = schema_lit_field.field_name()?;
-            get_schema_field_entries(schema).filter_by_name(field_name)
+            get_schema_field_entries(schema)
+                .filter_by_name(field_name)
+                .into_resolved_list()
         }
         ast::ReferenceElement::DotExpr(dot_expr) => {
             let field_name_ref = dot_expr.name_ref()?;
@@ -190,11 +216,13 @@ fn resolve_multi_with_inf(
                 .get_resolved_field(&field_name_ref)
                 .map(|it| vec![it])
                 .unwrap_or_default()
+                .into_resolved_list()
         }
         ast::ReferenceElement::IdentPat(ident_pat) => inference
             .get_resolved_ident_pat(&ident_pat)
             .map(|it| vec![it])
-            .unwrap_or_default(),
+            .unwrap_or_default()
+            .into_resolved_list(),
 
         // should be unreachable
         _ => vec![],
@@ -202,7 +230,10 @@ fn resolve_multi_with_inf(
     Some(entries)
 }
 
-fn fallback_resolve_multi_for_path(db: &dyn SourceDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry> {
+fn fallback_resolve_multi_for_path(
+    db: &dyn SourceDatabase,
+    path: InFile<ast::Path>,
+) -> Vec<ResolvedScopeEntry> {
     let entries = hir_db::resolve_path_multi(db, path);
     let filtered_entries = remove_variant_ident_pats(db, entries, |ident_pat| resolve(db, ident_pat));
     filtered_entries
