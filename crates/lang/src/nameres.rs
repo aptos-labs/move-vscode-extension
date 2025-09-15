@@ -9,7 +9,7 @@ use crate::loc::SyntaxLocFileExt;
 use crate::nameres::is_visible::ResolvedScopeEntry;
 use crate::nameres::labels::get_loop_labels_resolve_variants;
 use crate::nameres::path_resolution::remove_variant_ident_pats;
-use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryListExt, VecExt};
+use crate::nameres::scope::{NamedItemsExt, ScopeEntry, ScopeEntryListExt};
 use crate::node_ext::item::ModuleItemExt;
 use crate::node_ext::item_spec::ItemSpecExt;
 use crate::types::inference::inference_result::InferenceResult;

@@ -23,7 +23,6 @@ use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::visibility::Vis;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
-use vfs::FileId;
 
 #[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn find_unresolved_references(
@@ -263,7 +262,7 @@ fn try_check_resolve(
             let error_message = if is_entries_from_duplicate_dependencies(&ctx.sema, &visible_entries) {
                 format!(
                     "Unresolved reference `{}`: resolved to multiple elements from different packages. \
-                        You have duplicate dependencies in your package manifest.",
+                        You have duplicate dependencies in your Move.toml",
                     reference_name
                 )
             } else {

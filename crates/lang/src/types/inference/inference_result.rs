@@ -6,7 +6,7 @@
 
 use crate::loc::{SyntaxLoc, SyntaxLocNodeExt};
 use crate::nameres::is_visible::ResolvedScopeEntry;
-use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt, VecExt};
+use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt};
 use crate::types::inference::InferenceCtx;
 use crate::types::inference::combine_types::TypeError;
 use crate::types::ty::Ty;

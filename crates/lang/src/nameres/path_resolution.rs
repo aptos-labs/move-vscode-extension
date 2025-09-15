@@ -6,12 +6,12 @@
 
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres;
-use crate::nameres::is_visible::{ResolvedScopeEntry, check_if_visible, is_visible_in_context};
+use crate::nameres::is_visible::{ResolvedScopeEntry, check_if_visible};
 use crate::nameres::name_resolution::{
     WalkScopesCtx, get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
 use crate::nameres::namespaces::Ns::FUNCTION;
-use crate::nameres::namespaces::{FUNCTIONS, NAMES, NONE, Ns};
+use crate::nameres::namespaces::{NAMES, NONE, Ns};
 use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use crate::nameres::scope::{ScopeEntry, ScopeEntryExt, ScopeEntryListExt};
 use crate::types::inference::{InferenceCtx, TyVarIndex};
