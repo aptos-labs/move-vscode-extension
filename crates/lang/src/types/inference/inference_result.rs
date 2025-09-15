@@ -5,13 +5,15 @@
 // Modifications have been made to the original code.
 
 use crate::loc::{SyntaxLoc, SyntaxLocNodeExt};
-use crate::nameres::scope::{ScopeEntry, VecExt};
+use crate::nameres::is_visible::ResolvedScopeEntry;
+use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::types::inference::InferenceCtx;
 use crate::types::inference::combine_types::TypeError;
 use crate::types::ty::Ty;
 use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::TyInfer;
+use itertools::Itertools;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use syntax::{AstNode, TextRange, ast};
@@ -26,7 +28,7 @@ pub struct InferenceResult {
     expr_types: HashMap<SyntaxLoc, Ty>,
     call_expr_types: HashMap<SyntaxLoc, TyCallable>,
 
-    resolved_paths: HashMap<SyntaxLoc, Vec<ScopeEntry>>,
+    resolved_paths: HashMap<SyntaxLoc, Vec<ResolvedScopeEntry>>,
     resolved_method_calls: HashMap<SyntaxLoc, Option<ScopeEntry>>,
     resolved_fields: HashMap<SyntaxLoc, Option<ScopeEntry>>,
     resolved_ident_pats: HashMap<SyntaxLoc, Option<ScopeEntry>>,
@@ -116,18 +118,24 @@ impl InferenceResult {
 
     pub fn get_resolve_method_or_path(&self, method_or_path: ast::MethodOrPath) -> Option<ScopeEntry> {
         self.get_resolve_method_or_path_entries(method_or_path)
-            .single_or_none()
+            .into_iter()
+            .filter_map(|it| it.into_entry_if_visible())
+            .exactly_one()
+            .ok()
     }
 
     pub fn get_resolve_method_or_path_entries(
         &self,
         method_or_path: ast::MethodOrPath,
-    ) -> Vec<ScopeEntry> {
+    ) -> Vec<ResolvedScopeEntry> {
         let loc = method_or_path.loc(self.file_id);
         match method_or_path {
             ast::MethodOrPath::MethodCallExpr(_) => {
                 let resolved_entry = self.resolved_method_calls.get(&loc).cloned().unwrap_or_default();
-                resolved_entry.map(|e| vec![e]).unwrap_or_default()
+                resolved_entry
+                    .map(|e| vec![e])
+                    .unwrap_or_default()
+                    .into_resolved_list()
             }
             ast::MethodOrPath::Path(_) => self
                 .resolved_paths

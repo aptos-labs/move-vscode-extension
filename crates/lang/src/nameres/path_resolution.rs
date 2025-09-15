@@ -6,7 +6,7 @@
 
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres;
-use crate::nameres::is_visible::{ResolvedEntry, check_if_visible, is_visible_in_context};
+use crate::nameres::is_visible::{ResolvedScopeEntry, check_if_visible, is_visible_in_context};
 use crate::nameres::name_resolution::{
     WalkScopesCtx, get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
@@ -73,7 +73,10 @@ pub fn get_path_resolve_variants(
             ));
 
             let lit_field = ctx.wrap_in_file(struct_field);
-            let lit_field_entries = nameres::resolve_multi_no_inf(db, lit_field).unwrap_or_default();
+            let lit_field_entries = nameres::resolve_multi_no_inf(db, lit_field)
+                .unwrap_or_default()
+                .into_iter()
+                .filter_map(|it| it.into_entry_if_visible());
             entries.extend(lit_field_entries);
             entries
         }
@@ -154,7 +157,7 @@ pub fn resolve_path(
     db: &dyn SourceDatabase,
     path: InFile<ast::Path>,
     expected_type: Option<Ty>,
-) -> Vec<ScopeEntry> {
+) -> Vec<ResolvedScopeEntry> {
     let Some(path_name) = path.value.reference_name() else {
         return vec![];
     };
@@ -185,8 +188,8 @@ pub fn resolve_path(
 
     let resolved_entries = entries_by_expected_type
         .into_iter()
-        // .map(|e| check_if_visible(db, e, context_element.syntax()))
-        .filter(|e| is_visible_in_context(db, e, context_element.syntax()).is_none())
+        .map(|e| check_if_visible(db, e, context_element.syntax()))
+        // .filter(|e| is_visible_in_context(db, e, context_element.syntax()).is_none())
         .collect::<Vec<_>>();
     tracing::debug!(?resolved_entries);
 
@@ -194,14 +197,14 @@ pub fn resolve_path(
 }
 
 fn filter_by_function_namespace_special_case(
-    entries: Vec<ScopeEntry>,
+    entries: Vec<ResolvedScopeEntry>,
     ctx: &ResolutionContext,
-) -> Vec<ScopeEntry> {
+) -> Vec<ResolvedScopeEntry> {
     if ctx.is_call_expr() {
         let function_entries = entries
             .clone()
             .into_iter()
-            .filter(|it| it.ns == FUNCTION)
+            .filter(|it| it.scope_entry.ns == FUNCTION)
             .collect::<Vec<_>>();
         return if !function_entries.is_empty() {
             function_entries
@@ -214,7 +217,7 @@ fn filter_by_function_namespace_special_case(
         let non_function_entries = entries
             .clone()
             .into_iter()
-            .filter(|it| it.ns != FUNCTION)
+            .filter(|it| it.scope_entry.ns != FUNCTION)
             .collect::<Vec<_>>();
         if non_function_entries.len() == 1 {
             return non_function_entries;
@@ -225,14 +228,14 @@ fn filter_by_function_namespace_special_case(
 
 pub(crate) fn remove_variant_ident_pats(
     db: &dyn SourceDatabase,
-    entries: Vec<ScopeEntry>,
+    entries: Vec<ResolvedScopeEntry>,
     resolve_ident_pat: impl Fn(InFile<ast::IdentPat>) -> Option<ScopeEntry>,
-) -> Vec<ScopeEntry> {
+) -> Vec<ResolvedScopeEntry> {
     entries
         .into_iter()
         .filter(|entry| {
             // filter out bindings which are itself resolved to enum variants
-            if let Some(ident_pat) = entry.cast_into::<ast::IdentPat>(db) {
+            if let Some(ident_pat) = entry.scope_entry.cast_into::<ast::IdentPat>(db) {
                 let resolved_to = resolve_ident_pat(ident_pat);
                 if resolved_to.is_some_and(|it| it.node_loc.kind() == VARIANT) {
                     return false;

@@ -26,18 +26,37 @@ pub enum ItemInvisibleReason {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ResolvedEntry {
-    scope_entry: ScopeEntry,
-    invis_reason: Option<ItemInvisibleReason>,
+pub struct ResolvedScopeEntry {
+    pub scope_entry: ScopeEntry,
+    pub invis_reason: Option<ItemInvisibleReason>,
+}
+
+impl ResolvedScopeEntry {
+    pub fn is_visible(&self) -> bool {
+        self.invis_reason.is_none()
+    }
+
+    pub fn into_entry_if_visible(self) -> Option<ScopeEntry> {
+        self.is_visible().then_some(self.scope_entry)
+    }
+}
+
+impl ScopeEntry {
+    pub fn into_resolved(self) -> ResolvedScopeEntry {
+        ResolvedScopeEntry {
+            scope_entry: self,
+            invis_reason: None,
+        }
+    }
 }
 
 pub fn check_if_visible(
     db: &dyn SourceDatabase,
     scope_entry: ScopeEntry,
     context: InFile<impl Into<SyntaxElement>>,
-) -> ResolvedEntry {
+) -> ResolvedScopeEntry {
     let invis_reason = is_visible_in_context(db, &scope_entry, context);
-    ResolvedEntry { scope_entry, invis_reason }
+    ResolvedScopeEntry { scope_entry, invis_reason }
 }
 
 pub fn is_visible_in_context(

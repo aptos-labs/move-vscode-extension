@@ -7,6 +7,7 @@
 use crate::item_scope::NamedItemScope;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt, SyntaxLocInput};
 use crate::nameres::address::{Address, AddressInput};
+use crate::nameres::is_visible::ResolvedScopeEntry;
 use crate::nameres::node_ext::ModuleResolutionExt;
 use crate::nameres::path_resolution;
 use crate::nameres::scope::{ScopeEntry, ScopeEntryExt};
@@ -29,7 +30,10 @@ use syntax::ast::UseStmtsOwner;
 use syntax::files::{InFile, InFileExt};
 use vfs::FileId;
 
-pub(crate) fn resolve_path_multi(db: &dyn SourceDatabase, path: InFile<ast::Path>) -> Vec<ScopeEntry> {
+pub(crate) fn resolve_path_multi(
+    db: &dyn SourceDatabase,
+    path: InFile<ast::Path>,
+) -> Vec<ResolvedScopeEntry> {
     resolve_path_multi_tracked(db, SyntaxLocInput::new(db, path.loc()))
 }
 
@@ -37,7 +41,7 @@ pub(crate) fn resolve_path_multi(db: &dyn SourceDatabase, path: InFile<ast::Path
 fn resolve_path_multi_tracked<'db>(
     db: &'db dyn SourceDatabase,
     path_loc: SyntaxLocInput<'db>,
-) -> Vec<ScopeEntry> {
+) -> Vec<ResolvedScopeEntry> {
     let path = path_loc.to_ast::<ast::Path>(db);
     match path {
         Some(path) => path_resolution::resolve_path(db, path, None),

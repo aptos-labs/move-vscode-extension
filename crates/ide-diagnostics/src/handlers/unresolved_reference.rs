@@ -183,18 +183,24 @@ fn try_check_resolve(
     ctx: &DiagnosticsContext<'_>,
     reference: InFile<ast::ReferenceElement>,
 ) -> Option<()> {
-    let entries = ctx.sema.resolve_in_file(reference.clone());
-
     let (file_id, reference) = reference.unpack();
 
     let reference_name = reference.reference_name()?;
     let reference_range = reference.reference_name_node()?.in_file(file_id).file_range();
 
     let fixes = reference
+        .clone()
         .path()
         .and_then(|it| auto_import::auto_import_fix(ctx, it.in_file(file_id), reference_range));
 
-    match entries.len() {
+    let resolved_entries = ctx.sema.resolve_in_file_with_reason(reference.in_file(file_id));
+    let visible_entries = resolved_entries
+        .clone()
+        .into_iter()
+        .filter_map(|it| it.into_entry_if_visible())
+        .collect::<Vec<_>>();
+
+    match visible_entries.len() {
         0 => {
             let db = ctx.sema.db;
             let package_id = db.file_package_id(file_id);
@@ -219,10 +225,10 @@ fn try_check_resolve(
         }
         1 => (),
         _ => {
-            if into_field_shorthand_items(ctx.sema.db, entries.clone()).is_some() {
+            if into_field_shorthand_items(ctx.sema.db, visible_entries.clone()).is_some() {
                 return None;
             }
-            let error_message = if is_entries_from_duplicate_dependencies(&ctx.sema, entries) {
+            let error_message = if is_entries_from_duplicate_dependencies(&ctx.sema, visible_entries) {
                 format!(
                     "Unresolved reference `{}`: resolved to multiple elements from different packages. \
                         You have duplicate dependencies in your package manifest.",
