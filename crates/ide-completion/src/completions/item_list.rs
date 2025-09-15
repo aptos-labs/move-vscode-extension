@@ -17,6 +17,7 @@ pub(crate) enum ItemListKind {
     Module,
     Function { existing_modifiers: HashSet<String> },
     Ability { existing_abilities: HashSet<String> },
+    PublicModifier,
 }
 
 pub(crate) fn complete_item_list(
@@ -30,12 +31,16 @@ pub(crate) fn complete_item_list(
 
 fn add_keywords(acc: &RefCell<Completions>, ctx: &CompletionContext, kind: &ItemListKind) -> Option<()> {
     let add_keyword = |kw: &str| {
-        acc.borrow_mut()
-            .add_keyword_snippet(ctx, kw, format!("{} $0", kw).leak())
+        let snippet = if ctx.next_char_is(' ') {
+            format!("{kw}$0")
+        } else {
+            format!("{kw} $0")
+        };
+        acc.borrow_mut().add_keyword_snippet(ctx, kw, snippet.leak());
     };
     let add_keyword_no_space = |kw: &str| {
-        acc.borrow_mut()
-            .add_keyword_snippet(ctx, kw, format!("{}$0", kw).leak())
+        let snippet = format!("{}$0", kw);
+        acc.borrow_mut().add_keyword_snippet(ctx, kw, snippet.leak())
     };
 
     match kind {
@@ -84,6 +89,10 @@ fn add_keywords(acc: &RefCell<Completions>, ctx: &CompletionContext, kind: &Item
             for ability in all_abilities {
                 add_keyword_no_space(&ability);
             }
+        }
+        ItemListKind::PublicModifier => {
+            add_keyword_no_space("friend");
+            add_keyword_no_space("package");
         }
     }
 

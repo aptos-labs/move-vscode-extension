@@ -98,10 +98,20 @@ impl CompletionContext<'_> {
     pub(crate) fn source_range(&self) -> TextRange {
         let kind = self.original_token.kind();
         if matches!(kind, UNDERSCORE | INT_NUMBER | IDENT | QUOTE_IDENT) || kind.is_keyword() {
-            self.original_token.text_range()
+            // completion might be called in the middle of the token,
+            // this way we can't use just `self.original_token.text_range()`
+            TextRange::new(self.original_token.text_range().start(), self.original_offset())
         } else {
             TextRange::empty(self.position.offset)
         }
+    }
+
+    pub(crate) fn next_char_is(&self, chr: char) -> bool {
+        let next_char = self
+            .original_token
+            .next_token()
+            .and_then(|it| it.text().chars().next());
+        next_char.is_some_and(|it| it == chr)
     }
 
     pub(crate) fn containing_module(&self) -> Option<ast::Module> {

@@ -11,7 +11,7 @@ use ide_completion::config::CompletionConfig;
 use ide_completion::item::CompletionItem;
 use ide_db::AllowSnippets;
 use syntax::files::FilePosition;
-use syntax::{AstNode, AstToken, TextSize, ast};
+use syntax::{AstNode, T, TextSize};
 use test_utils::{fixtures, get_and_replace_caret};
 use vfs::FileId;
 
@@ -35,7 +35,7 @@ pub fn do_single_completion_with_config(
     let (source, offset) = get_and_replace_caret(&trimmed_before, "/*caret*/");
 
     let (analysis, file_id, mut completion_items) =
-        completions_at_offset(&trimmed_before, offset, &completion_config, true);
+        completions_at_offset(&source, offset, &completion_config, true);
     match completion_items.len() {
         0 => {
             panic!("no completions returned")
@@ -147,13 +147,14 @@ fn completions_at_offset(
         .unwrap_or_default();
 
     if filter_with_prefix {
-        if let Some(t) = source_file.syntax().token_at_offset(caret_offset).left_biased() {
-            let mut prefix = String::new();
-            if t.kind().is_keyword() {
-                prefix = t.text().to_string();
-            }
-            if let Some(ident_token) = ast::Ident::cast(t) {
-                prefix = ident_token.text().to_string();
+        let token_at_offset = source_file.syntax().token_at_offset(caret_offset).left_biased();
+        if let Some(token_at_offset) = token_at_offset {
+            let is_word = token_at_offset.kind().is_keyword() || token_at_offset.kind() == T![ident];
+            let prefix = if is_word {
+                let rel_offset = caret_offset - token_at_offset.text_range().start();
+                token_at_offset.text()[0..rel_offset.into()].to_string()
+            } else {
+                "".to_string()
             };
             completion_items.retain(|item| item.lookup().split(" ").any(|it| it.starts_with(&prefix)))
         }

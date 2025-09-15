@@ -46,11 +46,6 @@ impl Completions {
         }
     }
 
-    pub(crate) fn add_keyword(&mut self, ctx: &CompletionContext, kw: &'static str) {
-        let item = CompletionItem::new(CompletionItemKind::Keyword, ctx.source_range(), kw);
-        item.add_to(self, ctx.db);
-    }
-
     pub(crate) fn add_keyword_snippet(&mut self, ctx: &CompletionContext<'_>, kw: &str, snippet: &str) {
         let mut item = CompletionItem::new(CompletionItemKind::Keyword, ctx.source_range(), kw);
         match ctx.config.allow_snippets {

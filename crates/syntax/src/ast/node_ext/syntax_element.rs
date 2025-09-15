@@ -49,13 +49,19 @@ pub trait SyntaxElementExt {
     }
 
     fn next_token_no_trivia(&self) -> Option<SyntaxToken> {
-        let next_token = self.next_token();
-        if let Some(next_token) = next_token {
-            if next_token.kind().is_trivia() {
-                return next_token.next_token();
-            }
+        let next_token = self.next_token()?;
+        if next_token.kind().is_trivia() {
+            next_token.next_token_no_trivia()
+        } else {
+            Some(next_token)
         }
-        None
+        // if let Some(next_token) = next_token {
+        //     if next_token.kind().is_trivia() {
+        //         return next_token.next_token_no_trivia();
+        //     }
+        //     next_token
+        // }
+        // None
     }
 
     fn following_comma(&self) -> Option<SyntaxToken> {
