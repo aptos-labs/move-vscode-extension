@@ -19,7 +19,7 @@ use ide_db::RootDatabase;
 use ide_db::assist_context::LocalAssists;
 use ide_db::assists::{Assist, AssistResolveStrategy};
 use lang::Semantics;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::syntax_editor::SyntaxEditor;
 use syntax::{AstNode, TextRange, ast, match_ast};

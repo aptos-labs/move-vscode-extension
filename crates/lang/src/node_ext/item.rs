@@ -6,7 +6,7 @@
 
 use crate::nameres;
 use base_db::SourceDatabase;
-use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast, match_ast};
 

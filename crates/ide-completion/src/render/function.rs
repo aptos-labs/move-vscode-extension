@@ -18,14 +18,14 @@ pub(crate) fn render_function(
     ctx: &CompletionContext<'_>,
     is_use_stmt: bool,
     has_any_parens: bool,
-    fun_name: String,
+    fun_name: &str,
     fun: InFile<ast::AnyFun>,
     kind: FunctionKind,
     apply_subst: Option<Substitution>,
 ) -> CompletionItemBuilder {
     let _p = tracing::debug_span!("render_function").entered();
 
-    let mut item_builder = new_named_item(ctx, &fun_name, fun.kind());
+    let mut item_builder = new_named_item(ctx, fun_name, fun.kind());
 
     let call_ty = {
         let _p = tracing::debug_span!("render_function::call_ty").entered();

@@ -7,7 +7,7 @@
 use crate::inlay_hints::{InlayHint, InlayHintPosition, InlayHintsConfig, InlayKind, label_of_ty};
 use ide_db::RootDatabase;
 use lang::Semantics;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::InFile;
 use syntax::{AstNode, ast};
 

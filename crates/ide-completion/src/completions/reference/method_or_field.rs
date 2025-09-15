@@ -9,6 +9,7 @@ use crate::context::CompletionContext;
 use crate::render::function::{FunctionKind, render_function};
 use crate::render::new_named_item;
 use lang::loc::SyntaxLocFileExt;
+use lang::nameres::is_visible::is_visible_in_context;
 use lang::nameres::path_resolution::get_method_resolve_variants;
 use lang::types::has_type_params_ext::GenericItemExt;
 use lang::types::inference::{InferenceCtx, TyVarIndex};
@@ -75,18 +76,23 @@ fn add_field_completion_items(
     Some(())
 }
 
-#[tracing::instrument(level = "debug", skip_all)]
 fn add_method_completion_items(
     completions: &RefCell<Completions>,
     ctx: &CompletionContext<'_>,
     receiver_ty: Ty,
 ) -> Option<()> {
+    let _p = tracing::debug_span!("add_method_completion_items").entered();
+
     let db = ctx.db;
     let acc = &mut completions.borrow_mut();
 
-    let method_entries = get_method_resolve_variants(db, &receiver_ty, ctx.position.file_id, ctx.msl);
+    let original_token_ctx = InFile::new(ctx.position.file_id, ctx.original_token.clone());
+    let method_entries = get_method_resolve_variants(db, &receiver_ty, ctx.position.file_id, ctx.msl)
+        .into_iter()
+        .filter(|e| is_visible_in_context(ctx.db, e, original_token_ctx.clone()));
+
     for method_entry in method_entries {
-        let method_name = method_entry.name.clone();
+        let method_name = method_entry.name.as_str();
         let method = method_entry.cast_into::<ast::Fun>(db)?;
 
         let subst = method.ty_vars_subst(&TyVarIndex::default());
@@ -108,7 +114,7 @@ fn add_method_completion_items(
                 ctx,
                 false,
                 false,
-                method_name,
+                &method_name,
                 method.map_into(),
                 FunctionKind::Method,
                 Some(apply_subst),

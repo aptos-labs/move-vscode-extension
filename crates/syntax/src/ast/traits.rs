@@ -8,7 +8,6 @@ mod docs;
 pub mod has_item_list;
 pub mod has_use_stmts;
 
-use crate::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use crate::ast::{AstChildren, Stmt, support};
 use crate::{AstNode, ast};
 pub use docs::HoverDocsOwner;

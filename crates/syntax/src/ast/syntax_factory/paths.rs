@@ -1,7 +1,6 @@
-use crate::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use crate::ast::node_ext::syntax_element::SyntaxElementExt;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::ast::syntax_factory::{SyntaxFactory, ast_from_text, expr_item_from_text};
-use crate::syntax_editor::SyntaxEditor;
 use crate::syntax_editor::mapping::SyntaxMappingBuilder;
 use crate::{AstNode, ast};
 use itertools::Itertools;

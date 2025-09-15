@@ -4,45 +4,17 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+use crate::SyntaxKind::*;
 use crate::ast::node_ext::syntax_element::SyntaxElementExt;
-use crate::parse::SyntaxKind;
 use crate::syntax_editor::Element;
-use crate::{AstNode, AstToken, SyntaxElement, SyntaxNode, SyntaxToken, TextRange, TextSize, ast};
-use rowan::TokenAtOffset;
-use std::cmp::Ordering;
-
-impl SyntaxElementExt for SyntaxNode {
-    fn to_syntax_element(&self) -> SyntaxElement {
-        self.syntax_element()
-    }
-}
+use crate::{AstNode, AstToken, SyntaxElement, SyntaxNode, SyntaxToken, TextSize, ast};
+use rowan::{Direction, TokenAtOffset};
 
 pub trait SyntaxNodeExt {
-    fn token_at_offset_exact(&self, offset: TextSize) -> Option<SyntaxToken>;
-    fn ident_at_offset(&self, offset: TextSize) -> Option<ast::Ident>;
+    fn syntax_node(&self) -> &SyntaxNode;
 
-    fn is_ancestor_of(&self, node: &SyntaxNode) -> bool;
-
-    fn ancestor_of_kind(&self, kind: SyntaxKind, strict: bool) -> Option<SyntaxNode>;
-    fn ancestor_strict_of_kind(&self, kind: SyntaxKind) -> Option<SyntaxNode>;
-
-    fn ancestor_of_type<Ast: AstNode>(&self, strict: bool) -> Option<Ast>;
-    fn ancestors_of_type<N: AstNode>(&self, strict: bool) -> Vec<N>;
-
-    fn ancestor_or_self<Ast: AstNode>(&self) -> Option<Ast>;
-    fn ancestor_strict<Ast: AstNode>(&self) -> Option<Ast>;
-
-    fn has_ancestor_strict<Ast: AstNode>(&self) -> bool;
-    fn has_ancestor_or_self<Ast: AstNode>(&self) -> bool;
-
-    fn parent_of_type<Ast: AstNode>(&self) -> Option<Ast>;
-
-    fn descendants_of_type<Ast: AstNode>(&self) -> impl Iterator<Item = Ast>;
-}
-
-impl SyntaxNodeExt for SyntaxNode {
     fn token_at_offset_exact(&self, offset: TextSize) -> Option<SyntaxToken> {
-        let token_at_offset = self.token_at_offset(offset);
+        let token_at_offset = self.syntax_node().token_at_offset(offset);
         match token_at_offset {
             TokenAtOffset::None => None,
             TokenAtOffset::Single(token) => Some(token),
@@ -56,66 +28,63 @@ impl SyntaxNodeExt for SyntaxNode {
     }
 
     fn is_ancestor_of(&self, node: &SyntaxNode) -> bool {
-        node.ancestors().any(|it| &it == self)
-    }
-
-    fn ancestor_of_kind(&self, kind: SyntaxKind, strict: bool) -> Option<SyntaxNode> {
-        if !strict && self.kind() == kind {
-            return Some(self.to_owned());
-        }
-        self.ancestors().find(|ans| ans.kind() == kind)
-    }
-
-    fn ancestor_strict_of_kind(&self, kind: SyntaxKind) -> Option<SyntaxNode> {
-        self.ancestor_of_kind(kind, true)
-    }
-
-    fn ancestor_of_type<Ast: AstNode>(&self, strict: bool) -> Option<Ast> {
-        if !strict && Ast::can_cast(self.kind()) {
-            return Ast::cast(self.to_owned());
-        }
-        self.ancestors().find_map(Ast::cast)
-    }
-
-    fn ancestors_of_type<N: AstNode>(&self, strict: bool) -> Vec<N> {
-        // if !strict && N::can_cast(self.kind()) {
-        //     return N::cast(self.to_owned());
-        // }
-        self.ancestors().filter_map(N::cast).collect()
+        let self_node = self.syntax_node();
+        node.ancestors().any(|it| &it == self_node)
     }
 
     fn ancestor_or_self<Ast: AstNode>(&self) -> Option<Ast> {
-        self.ancestor_of_type(false)
-    }
-
-    fn ancestor_strict<Ast: AstNode>(&self) -> Option<Ast> {
-        self.ancestor_of_type(true)
-    }
-
-    fn has_ancestor_strict<Ast: AstNode>(&self) -> bool {
-        self.ancestor_strict::<Ast>().is_some()
+        self.syntax_node().ancestors().find_map(Ast::cast)
     }
 
     fn has_ancestor_or_self<Ast: AstNode>(&self) -> bool {
         self.ancestor_or_self::<Ast>().is_some()
     }
 
-    fn parent_of_type<Ast: AstNode>(&self) -> Option<Ast> {
-        let parent_node = self.parent()?;
-        Ast::cast(parent_node)
-    }
-
     fn descendants_of_type<Ast: AstNode>(&self) -> impl Iterator<Item = Ast> {
-        self.descendants().filter_map(Ast::cast)
+        self.syntax_node().descendants().filter_map(Ast::cast)
+    }
+
+    fn is_msl_only_scope(&self) -> bool {
+        matches!(
+            self.syntax_node().kind(),
+            SPEC_FUN | SPEC_INLINE_FUN | ITEM_SPEC | SPEC_BLOCK_EXPR | SCHEMA
+        )
+    }
+
+    fn cast<T: AstNode>(&self) -> Option<T> {
+        let node = self.syntax_node();
+        if T::can_cast(node.kind()) {
+            T::cast(node.clone())
+        } else {
+            None
+        }
+    }
+
+    fn inference_ctx_owner(&self) -> Option<ast::InferenceCtxOwner> {
+        self.ancestor_or_self::<ast::InferenceCtxOwner>()
+    }
+
+    fn next_siblings_with_tokens(&self) -> impl Iterator<Item = SyntaxElement> {
+        self.syntax_node().siblings_with_tokens(Direction::Next).skip(1)
+    }
+
+    fn prev_siblings_with_tokens(&self) -> impl Iterator<Item = SyntaxElement> {
+        self.syntax_node().siblings_with_tokens(Direction::Prev).skip(1)
     }
 }
 
-pub trait SyntaxTokenExt {
-    fn is(&self, kind: SyntaxKind) -> bool;
-}
-
-impl SyntaxTokenExt for SyntaxToken {
-    fn is(&self, kind: SyntaxKind) -> bool {
-        self.kind() == kind
+impl SyntaxNodeExt for SyntaxNode {
+    fn syntax_node(&self) -> &SyntaxNode {
+        self
     }
 }
+
+// pub trait SyntaxTokenExt {
+//     fn is_kind(&self, kind: SyntaxKind) -> bool;
+// }
+//
+// impl SyntaxTokenExt for SyntaxToken {
+//     fn is_kind(&self, kind: SyntaxKind) -> bool {
+//         self.kind() == kind
+//     }
+// }

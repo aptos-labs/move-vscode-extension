@@ -20,14 +20,13 @@ use lang::nameres::name_resolution::WalkScopesCtx;
 use lang::nameres::namespaces::NONE;
 use lang::nameres::path_kind::path_kind;
 use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variants};
-use lang::nameres::scope::{ScopeEntry, ScopeEntryListExt};
+use lang::nameres::scope::ScopeEntry;
 use lang::nameres::{labels, path_kind};
 use std::cell::RefCell;
 use std::collections::HashSet;
 use syntax::SyntaxKind::*;
 use syntax::ast::HasAttrs;
 use syntax::ast::idents::PRIMITIVE_TYPES;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
@@ -133,7 +132,10 @@ fn add_path_completions_from_the_resolution_entries(
     };
     let entries = get_path_resolve_variants(ctx.db, &resolution_ctx, path_kind.clone(), walk_ctx);
 
-    let mut visible_entries = entries.filter_by_visibility(ctx.db, &original_start_at);
+    let mut visible_entries = entries
+        .into_iter()
+        .filter(|it| is_visible_in_context(ctx.db, it, original_start_at.clone()))
+        .collect::<Vec<_>>();
     tracing::debug!(completion_item_entries = ?visible_entries);
 
     // remove already present items in use group
@@ -189,7 +191,7 @@ fn add_out_of_scope_completion_items(
     let import_candidates = hir_db::import_candidates(ctx.db, original_start_at.file_id)
         .iter()
         .filter(|it| unqualified_nsset.contains(it.ns))
-        .filter(|it| is_visible_in_context(ctx.db, it, &original_start_at));
+        .filter(|it| is_visible_in_context(ctx.db, it, original_start_at.clone()));
     let mut completion_items = vec![];
     for import_candidate in import_candidates {
         if !existing_entries.contains(import_candidate) {
@@ -235,7 +237,7 @@ fn render_scope_entry(
                 ctx,
                 path_ctx.is_use_stmt(),
                 path_ctx.has_any_parens(),
-                name,
+                &name,
                 fun,
                 FunctionKind::Fun,
                 None,

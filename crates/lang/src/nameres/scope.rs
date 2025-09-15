@@ -6,7 +6,6 @@
 
 use crate::item_scope::NamedItemScope;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
-use crate::nameres::is_visible::is_visible_in_context;
 use crate::nameres::namespaces::{Ns, NsSet, named_item_ns};
 use crate::types::ty::Ty;
 use base_db::SourceDatabase;
@@ -15,7 +14,7 @@ use std::fmt::Formatter;
 use stdx::itertools::Itertools;
 use syntax::SyntaxKind::{IDENT_PAT, NAMED_FIELD};
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, SyntaxKind, SyntaxNode, ast};
+use syntax::{AstNode, SyntaxKind, ast};
 use vfs::FileId;
 
 #[derive(Clone, Eq, Hash)]
@@ -133,11 +132,6 @@ impl<T> VecExt for Vec<T> {
 pub trait ScopeEntryListExt {
     fn filter_by_ns(self, ns: NsSet) -> Vec<ScopeEntry>;
     fn filter_by_name(self, name: String) -> Vec<ScopeEntry>;
-    fn filter_by_visibility(
-        self,
-        db: &dyn SourceDatabase,
-        context: &InFile<SyntaxNode>,
-    ) -> Vec<ScopeEntry>;
     fn filter_by_expected_type(
         self,
         db: &dyn SourceDatabase,
@@ -154,16 +148,6 @@ impl ScopeEntryListExt for Vec<ScopeEntry> {
 
     fn filter_by_name(self, name: String) -> Vec<ScopeEntry> {
         self.into_iter().filter(|entry| entry.name == name).collect()
-    }
-
-    fn filter_by_visibility(
-        self,
-        db: &dyn SourceDatabase,
-        context: &InFile<SyntaxNode>,
-    ) -> Vec<ScopeEntry> {
-        self.into_iter()
-            .filter(|entry| is_visible_in_context(db, entry, &context))
-            .collect()
     }
 
     fn filter_by_expected_type(

@@ -1,4 +1,4 @@
-use crate::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use crate::ast::node_ext::syntax_element::SyntaxElementExt;
 use crate::ast::syntax_factory::SyntaxFactory;
 use crate::syntax_editor::SyntaxEditor;
 use crate::{AstNode, ast};

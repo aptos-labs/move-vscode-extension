@@ -23,7 +23,6 @@ use base_db::SourceDatabase;
 use std::cell::Cell;
 use std::collections::HashMap;
 use std::hash::Hash;
-use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 use vfs::FileId;
@@ -34,6 +33,7 @@ use crate::types::ty_db;
 pub use combine_types::TypeError;
 use syntax::SyntaxKind::{STRUCT, VARIANT};
 use syntax::ast::node_ext::struct_pat_field::PatFieldKind;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 
 #[derive(Debug, Default)]
 pub struct TyVarIndex(Cell<usize>);

@@ -4,13 +4,14 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+use crate::ast::node_ext::syntax_element::SyntaxElementExt;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::{AstNode, ast};
 
 impl ast::StructPatField {
     pub fn struct_pat(&self) -> ast::StructPat {
         self.syntax()
-            .ancestor_of_type::<ast::StructPat>(true)
+            .ancestor_strict::<ast::StructPat>()
             .expect("required by parser")
     }
 

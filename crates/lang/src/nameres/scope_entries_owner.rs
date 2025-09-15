@@ -11,7 +11,7 @@ use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, Scop
 use crate::node_ext::item_spec::ItemSpecExt;
 use base_db::{SourceDatabase, source_db};
 use syntax::ast::HasItems;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, SyntaxNode, ast};
 

@@ -17,7 +17,7 @@ use lang::types::ty::Ty;
 use lang::{Semantics, hir_db};
 use std::collections::HashSet;
 use syntax::ast::idents::PRIMITIVE_TYPES;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
@@ -83,7 +83,7 @@ fn unresolved_path(
         }
     }
 
-    if path.syntax().ancestor_of_type::<ast::AttrItem>(true).is_some() {
+    if path.syntax().ancestor_strict::<ast::AttrItem>().is_some() {
         return None;
     }
 
@@ -144,7 +144,7 @@ fn is_special_msl_path(
         return Some(());
     }
 
-    let pragma_stmt = reference.value.syntax().ancestor_of_type::<ast::PragmaStmt>(true);
+    let pragma_stmt = reference.value.syntax().ancestor_strict::<ast::PragmaStmt>();
     if pragma_stmt.is_some() {
         return Some(());
     }

@@ -5,6 +5,7 @@
 // Modifications have been made to the original code.
 
 use crate::ast::StructLitFieldKind;
+use crate::ast::node_ext::syntax_element::SyntaxElementExt;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::{AstNode, ast};
 
@@ -21,7 +22,7 @@ pub enum SchemaLitFieldKind {
 
 impl ast::SchemaLitField {
     pub fn schema_lit(&self) -> Option<ast::SchemaLit> {
-        self.syntax().ancestor_of_type::<ast::SchemaLit>(true)
+        self.syntax().ancestor_strict::<ast::SchemaLit>()
     }
 
     pub fn field_kind(&self) -> Option<SchemaLitFieldKind> {

@@ -15,7 +15,7 @@ use ide_db::text_edit::TextEdit;
 use ide_db::{RootDatabase, imports};
 use lang::Semantics;
 use std::cell::RefCell;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::FilePosition;
 use syntax::{AstNode, ast};
 

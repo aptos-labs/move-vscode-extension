@@ -4,6 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+use crate::ast::node_ext::syntax_element::SyntaxElementExt;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::{AstNode, ast};
 
@@ -87,7 +88,7 @@ impl ast::StructLitField {
 
     pub fn struct_lit(&self) -> ast::StructLit {
         self.syntax()
-            .ancestor_of_type::<ast::StructLit>(true)
+            .ancestor_strict::<ast::StructLit>()
             .expect("required by parser")
     }
 }

@@ -8,8 +8,8 @@ mod edit_algo;
 pub mod mapping;
 mod node_ext;
 
-use crate::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
 use crate::ast::node_ext::syntax_element::SyntaxElementExt;
+use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::syntax_editor::mapping::SyntaxMapping;
 use crate::{SyntaxElement, SyntaxKind, SyntaxNode, SyntaxToken, TextRange};
 use rowan::Direction;

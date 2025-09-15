@@ -10,8 +10,7 @@ use lang::types::fold::TypeFoldable;
 use lang::types::has_type_params_ext::GenericItemExt;
 use lang::types::ty::ty_callable::TyCallableKind;
 use syntax::SyntaxKind::*;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
-use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, ast};
 

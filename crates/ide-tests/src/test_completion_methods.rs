@@ -4,7 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::ide_test_utils::completion_utils::do_single_completion;
+use crate::ide_test_utils::completion_utils::{check_completions, do_single_completion};
 use expect_test::expect;
 
 #[test]
@@ -62,6 +62,52 @@ fn test_method_completion_from_another_module() {
                 }
             }
         "#]],
+    )
+}
+
+#[test]
+fn test_no_test_only_methods_in_main_item_scope_completion() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    struct S { val: u8 }
+    fun method(self: S) {}
+    #[test_only]
+    fun method_test_only(self: S) {}
+    fun main(s: S) {
+        s.meth/*caret*/
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "method()",
+            ]"#]],
+    )
+}
+
+#[test]
+fn test_no_private_methods_in_completion() {
+    check_completions(
+        // language=Move
+        r#"
+module std::m {
+    struct S { val: u8 }
+    public fun method(self: S) {}
+    fun method_private(self: S) {}
+}
+module std::main {
+    use std::m::S;
+    fun main(s: S) {
+        s.meth/*caret*/
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "method()",
+            ]"#]],
     )
 }
 

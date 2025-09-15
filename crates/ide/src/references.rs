@@ -12,7 +12,7 @@ use itertools::Itertools;
 use lang::Semantics;
 use std::collections::HashMap;
 use syntax::SyntaxKind::*;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{FilePosition, InFile};
 use syntax::{AstNode, SyntaxNode, TextRange, TextSize, ast};
 use vfs::FileId;

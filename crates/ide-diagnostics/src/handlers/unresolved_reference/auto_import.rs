@@ -8,7 +8,7 @@ use lang::loc::SyntaxLocNodeExt;
 use lang::nameres::fq_named_element::ItemFQNameOwner;
 use lang::nameres::path_kind::path_kind;
 use lang::nameres::scope::ScopeEntry;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::{FileRange, InFile};
 use syntax::{AstNode, ast};
 

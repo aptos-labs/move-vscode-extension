@@ -44,7 +44,7 @@ fn organize_imports_in_stmts_owner(
         hir_db::use_stmts_owner_with_siblings(db, use_stmts_owner.clone().map_into());
 
     let unused_use_items = find_unused_use_items(db, &stmts_owner_with_siblings)?;
-    let use_stmts = use_stmts_owner.as_ref().flat_map(|it| it.use_stmts().collect());
+    let use_stmts = use_stmts_owner.as_ref().flat_map(|it| it.use_stmts());
     for use_stmt in use_stmts {
         let unused_stmt_use_items = unused_use_items
             .iter()

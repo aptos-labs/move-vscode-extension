@@ -11,7 +11,7 @@ use crate::types::ty_db;
 use base_db::SourceDatabase;
 use regex::Regex;
 use std::sync::LazyLock;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::InFile;
 use syntax::{AstNode, ast};
 

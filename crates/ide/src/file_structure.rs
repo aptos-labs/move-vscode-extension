@@ -5,7 +5,7 @@
 // Modifications have been made to the original code.
 
 use ide_db::{SymbolKind, ast_kind_to_symbol_kind};
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::{AstNode, NodeOrToken, SourceFile, SyntaxNode, TextRange, WalkEvent, ast};
 
 #[derive(Debug, Clone)]

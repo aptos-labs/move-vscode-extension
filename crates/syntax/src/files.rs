@@ -4,7 +4,8 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use crate::ast::node_ext::syntax_element::SyntaxElementExt;
+use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::parse::SyntaxKind;
 use crate::{AstNode, SyntaxNode, TextRange, TextSize};
 use std::borrow::Borrow;
@@ -69,7 +70,11 @@ impl<T> InFile<T> {
         InFile::new(self.file_id, f(self.value))
     }
 
-    pub fn flat_map<F: Fn(T) -> Vec<U>, U>(self, f: F) -> Vec<InFile<U>> {
+    pub fn flat_map<Iter, F, U>(self, f: F) -> Vec<InFile<U>>
+    where
+        F: Fn(T) -> Iter,
+        Iter: IntoIterator<Item = U>,
+    {
         self.map(f).flatten()
     }
 
@@ -133,7 +138,7 @@ impl InFile<SyntaxNode> {
     }
 }
 
-impl<T> InFile<Vec<T>> {
+impl<T, Iter: IntoIterator<Item = T>> InFile<Iter> {
     pub fn flatten(self) -> Vec<InFile<T>> {
         let (file_id, vec) = self.unpack();
         vec.into_iter().map(|it| it.in_file(file_id)).collect()

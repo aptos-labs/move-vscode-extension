@@ -12,7 +12,7 @@ use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::types::ty::Ty;
 use base_db::SourceDatabase;
 use syntax::SyntaxKind::*;
-use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 

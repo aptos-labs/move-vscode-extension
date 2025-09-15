@@ -10,7 +10,7 @@ use ide_db::Severity;
 use lang::types::fold::TypeFoldable;
 use lang::types::inference::TypeError;
 use lang::types::ty::Ty;
-use syntax::ast::node_ext::move_syntax_node::MoveSyntaxElementExt;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, ast};

@@ -13,6 +13,7 @@ use lang::loc::{SyntaxLoc, SyntaxLocFileExt};
 use lang::nameres::use_speck_entries::{UseItem, UseItemType, use_items_for_stmt};
 use std::collections::HashSet;
 use syntax::ast::UseStmtsOwner;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::InFile;
 use syntax::{AstNode, SyntaxNode, ast};
@@ -39,7 +40,7 @@ pub(crate) fn find_unused_imports(
     let unused_use_items_in_scope =
         find_unused_use_items(db, &stmts_owner_with_siblings).unwrap_or_default();
     for use_stmt_owner in stmts_owner_with_siblings.iter() {
-        let use_stmts = use_stmt_owner.as_ref().flat_map(|it| it.use_stmts().collect());
+        let use_stmts = use_stmt_owner.as_ref().flat_map(|it| it.use_stmts());
         for use_stmt in use_stmts {
             let stmt_use_items = unused_use_items_in_scope
                 .iter()
@@ -60,7 +61,7 @@ pub(crate) fn find_unused_use_items(
 
     let reachable_paths = stmts_owner_with_siblings.iter().flat_map(|it| {
         it.as_ref()
-            .flat_map(|stmts_owner| descendant_paths(stmts_owner.syntax()).collect())
+            .flat_map(|stmts_owner| descendant_paths(stmts_owner.syntax()))
     });
     let mut use_items_hit = HashSet::new();
     for path in reachable_paths {
@@ -71,7 +72,7 @@ pub(crate) fn find_unused_use_items(
 
     let mut all_unused_use_items = vec![];
     for use_stmt_owner in stmts_owner_with_siblings {
-        let use_stmts = use_stmt_owner.as_ref().flat_map(|it| it.use_stmts().collect());
+        let use_stmts = use_stmt_owner.as_ref().flat_map(|it| it.use_stmts());
         for use_stmt in use_stmts {
             for use_item in use_items_for_stmt(db, use_stmt)? {
                 if !use_items_hit.contains(&use_item) {
@@ -97,7 +98,7 @@ fn find_use_item_hit_for_path(db: &dyn SourceDatabase, path: InFile<ast::Path>) 
 
     let use_item_owner_ancestors = path
         .as_ref()
-        .flat_map(|it| it.syntax().ancestors_of_type::<ast::AnyUseStmtsOwner>(true));
+        .flat_map(|it| it.syntax().ancestors_of_type::<ast::AnyUseStmtsOwner>());
     for use_item_owner_ans in use_item_owner_ancestors {
         let owner_use_items = hir_db::use_items_from_self_and_siblings(db, use_item_owner_ans)
             .into_iter()
