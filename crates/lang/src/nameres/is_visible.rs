@@ -20,8 +20,8 @@ use syntax::{AstNode, SyntaxElement, ast};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ItemInvisibleReason {
-    Private,
-    WrongItemScope,
+    Private { vis: Vis },
+    WrongItemScope { item_scope: NamedItemScope },
     Unknown,
 }
 
@@ -135,13 +135,15 @@ pub fn is_visible_in_context(
     if item_scope != NamedItemScope::Main {
         // cannot be used everywhere, need to check for scope compatibility
         if item_scope != context_item_scope {
-            return Some(ItemInvisibleReason::WrongItemScope);
+            return Some(ItemInvisibleReason::WrongItemScope { item_scope });
         }
     }
 
     // we're in non-msl scope at this point, msl only items aren't accessible
     if item.syntax().is_msl_only_item() {
-        return Some(ItemInvisibleReason::WrongItemScope);
+        return Some(ItemInvisibleReason::WrongItemScope {
+            item_scope: NamedItemScope::Verify,
+        });
     }
 
     // local methods, Self::method - everything is visible
@@ -176,7 +178,7 @@ pub fn is_visible_in_context(
         .map(|visible_item| visible_item.vis())
         .unwrap_or(Vis::Public);
     match vis {
-        Vis::Private => Some(ItemInvisibleReason::Private),
+        Vis::Private => Some(ItemInvisibleReason::Private { vis }),
         Vis::Public => None,
         Vis::Restricted(vis_level) => match vis_level {
             VisLevel::Friend => {
@@ -194,14 +196,14 @@ pub fn is_visible_in_context(
                         }
                     }
                 }
-                Some(ItemInvisibleReason::Private)
+                Some(ItemInvisibleReason::Private { vis })
             }
             VisLevel::Package => {
                 // check for the same source root
                 if db.file_package_id(context_file_id) == db.file_package_id(item_file_id) {
                     None
                 } else {
-                    Some(ItemInvisibleReason::Private)
+                    Some(ItemInvisibleReason::Private { vis })
                 }
             }
         },

@@ -6,12 +6,21 @@
 
 use crate::ast::support;
 use crate::{AstNode, ast};
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum VisLevel {
     Friend,
     Package,
-    // Script,
+}
+
+impl Display for VisLevel {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            VisLevel::Friend => write!(f, "friend"),
+            VisLevel::Package => write!(f, "package"),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

@@ -236,6 +236,12 @@ impl<'db> SemanticsImpl<'db> {
         self.fq_name_for_file_item(file_item)
     }
 
+    pub fn fq_name_for_scope_entry(&self, scope_entry: &ScopeEntry) -> Option<ItemFQName> {
+        scope_entry
+            .cast_into::<ast::NamedElement>(self.db)
+            .and_then(|it| it.fq_name(self.db))
+    }
+
     #[inline]
     pub fn fq_name_for_file_item(&self, item: InFile<impl AstNode>) -> Option<ItemFQName> {
         item.fq_name(self.db)

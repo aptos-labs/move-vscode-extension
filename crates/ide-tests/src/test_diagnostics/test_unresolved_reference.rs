@@ -36,6 +36,58 @@ fn test_unresolved_function_call() {
 }
 
 #[test]
+fn test_unresolved_private_function() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun call() {}
+        }
+        module 0x1::main {
+            use 0x1::m::call;
+                      //^^^^ err: Unresolved reference `call`: cannot resolve (note: item is private)
+            fun main() {
+                call();
+              //^^^^ err: Unresolved reference `call`: cannot resolve
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_unresolved_private_function_with_module() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun call() {}
+        }
+        module 0x1::main {
+            use 0x1::m;
+            fun main() {
+                m::call();
+                 //^^^^ err: Unresolved reference `call`: cannot resolve (note: item is private)
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_unresolved_friend_function_with_module() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            friend fun call() {}
+        }
+        module 0x1::main {
+            use 0x1::m;
+            fun main() {
+                m::call();
+                 //^^^^ err: Unresolved reference `call`: cannot resolve (note: item is defined with `friend` visibility)
+            }
+        }
+    "#]]);
+}
+
+#[test]
 fn test_unresolved_module_member_with_unresolved_module() {
     // language=Move
     check_diagnostics(expect![[r#"

@@ -124,7 +124,7 @@ fn test_duplicate_self_import() {
 
             fun main(_a: S) {
                 M::call();
-              //^ err: Unresolved reference `M`: resolved to multiple elements
+              //^ err: Unresolved reference `M`: resolved to multiple elements(note: resolves to `0x1::M`, `0x1::M`)
             }
         }
     "#]]);
@@ -179,7 +179,7 @@ fn test_duplicate_import() {
 
             fun main() {
                 call();
-              //^^^^ err: Unresolved reference `call`: resolved to multiple elements
+              //^^^^ err: Unresolved reference `call`: resolved to multiple elements(note: resolves to `0x1::M::call`, `0x1::M::call`)
             }
         }
     "#]]);
@@ -200,7 +200,7 @@ fn test_duplicate_import_with_item_group() {
 
             fun main(_s: S) {
                 call();
-              //^^^^ err: Unresolved reference `call`: resolved to multiple elements
+              //^^^^ err: Unresolved reference `call`: resolved to multiple elements(note: resolves to `0x1::M::call`, `0x1::M::call`)
             }
         }
     "#]]);
@@ -220,9 +220,9 @@ fn test_unused_self_import() {
           //^^^^^^^^^^^^^^^^^^^^ warn: Unused use item
 
             fun call(): Coin::Coin {
-                      //^^^^ err: Unresolved reference `Coin`: resolved to multiple elements
+                      //^^^^ err: Unresolved reference `Coin`: resolved to multiple elements(note: resolves to `0x1::Coin`, `0x1::Coin`)
                 Coin::get_coin()
-              //^^^^ err: Unresolved reference `Coin`: resolved to multiple elements
+              //^^^^ err: Unresolved reference `Coin`: resolved to multiple elements(note: resolves to `0x1::Coin`, `0x1::Coin`)
             }
         }
     "#]]);
@@ -243,7 +243,7 @@ fn test_unused_self_in_group() {
 
             fun call(): Coin {
                 Coin::get_coin()
-              //^^^^ err: Unresolved reference `Coin`: resolved to multiple elements
+              //^^^^ err: Unresolved reference `Coin`: resolved to multiple elements(note: resolves to `0x1::Coin`, `0x1::Coin`)
             }
         }
     "#]]);
@@ -263,7 +263,7 @@ fn test_incomplete_alias_considered_absent_for_module() {
 
             fun call(): Coin {
                 coin::get_coin()
-              //^^^^ err: Unresolved reference `coin`: resolved to multiple elements
+              //^^^^ err: Unresolved reference `coin`: resolved to multiple elements(note: resolves to `0x1::coin`, `0x1::coin`)
             }
         }
     "#]]);
@@ -282,7 +282,7 @@ fn test_incomplete_alias_considered_absent_for_item() {
                                    //^^^^ warn: Unused use item
 
             fun call(): Coin {
-                      //^^^^ err: Unresolved reference `Coin`: resolved to multiple elements
+                      //^^^^ err: Unresolved reference `Coin`: resolved to multiple elements(note: resolves to `0x1::coin::Coin`, `0x1::coin::Coin`)
             }
         }
     "#]]);
@@ -319,7 +319,7 @@ fn test_unused_alias_if_another_exists() {
                                           //^^^^^^^^^^^^^^ warn: Unused use item
 
             fun call(_c: MyCoin) {}
-                       //^^^^^^ err: Unresolved reference `MyCoin`: resolved to multiple elements
+                       //^^^^^^ err: Unresolved reference `MyCoin`: resolved to multiple elements(note: resolves to `0x1::Coin::Coin`, `0x1::Coin::Coin`)
         }
     "#]]);
 }
@@ -472,7 +472,7 @@ fn test_unused_main_import_in_presence_of_test_only_usage() {
             #[test_only]
             fun main() {
                 call();
-              //^^^^ err: Unresolved reference `call`: resolved to multiple elements
+              //^^^^ err: Unresolved reference `call`: resolved to multiple elements(note: resolves to `0x1::string::call`, `0x1::string::call`)
             }
         }
     "#]]);
@@ -494,7 +494,7 @@ fn test_unused_main_import_in_presence_of_test_usage() {
             #[test]
             fun main() {
                 call();
-              //^^^^ err: Unresolved reference `call`: resolved to multiple elements
+              //^^^^ err: Unresolved reference `call`: resolved to multiple elements(note: resolves to `0x1::string::call`, `0x1::string::call`)
             }
         }
     "#]]);
@@ -787,7 +787,7 @@ fn test_unused_test_only_import() {
             #[test]
             fun test_main() {
                 call();
-              //^^^^ err: Unresolved reference `call`: resolved to multiple elements
+              //^^^^ err: Unresolved reference `call`: resolved to multiple elements(note: resolves to `0x1::string::call`, `0x1::string::call`)
             }
         }
     "#]]);

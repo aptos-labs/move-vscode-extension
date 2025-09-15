@@ -10,6 +10,7 @@ use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use base_db::SourceDatabase;
 use ide_db::{RootDatabase, Severity};
+use lang::nameres::is_visible::ItemInvisibleReason;
 use lang::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use lang::nameres::scope::{ScopeEntry, VecExt, into_field_shorthand_items};
 use lang::node_ext::item_spec;
@@ -19,8 +20,10 @@ use std::collections::HashSet;
 use syntax::ast::idents::PRIMITIVE_TYPES;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
+use syntax::ast::visibility::Vis;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
+use vfs::FileId;
 
 #[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn find_unresolved_references(
@@ -193,7 +196,7 @@ fn try_check_resolve(
         .path()
         .and_then(|it| auto_import::auto_import_fix(ctx, it.in_file(file_id), reference_range));
 
-    let resolved_entries = ctx.sema.resolve_in_file_with_reason(reference.in_file(file_id));
+    let mut resolved_entries = ctx.sema.resolve_in_file_with_reason(reference.in_file(file_id));
     let visible_entries = resolved_entries
         .clone()
         .into_iter()
@@ -202,21 +205,50 @@ fn try_check_resolve(
 
     match visible_entries.len() {
         0 => {
-            let db = ctx.sema.db;
-            let package_id = db.file_package_id(file_id);
-            let package_missing_deps = hir_db::missing_dependencies(db, package_id);
-            let mut error_message = format!("Unresolved reference `{}`: cannot resolve", reference_name);
-            if !package_missing_deps.is_empty() {
-                stdx::format_to!(
-                    &mut error_message,
-                    " (note: `{}` declared dependency packages are not found on the filesystem, `aptos move compile` might help)",
-                    package_missing_deps.join(", "),
-                );
+            let mut error = format!("Unresolved reference `{}`: cannot resolve", reference_name);
+            if resolved_entries.len() == 1 {
+                // there is an entry, but it's invisible for some reason
+                if let Some(reason) = resolved_entries.pop().unwrap().invis_reason {
+                    match reason {
+                        ItemInvisibleReason::Private { vis } => match vis {
+                            Vis::Restricted(vis_level) => {
+                                stdx::format_to!(
+                                    &mut error,
+                                    " (note: item is defined with `{}` visibility)",
+                                    vis_level
+                                )
+                            }
+                            _ => {
+                                stdx::format_to!(&mut error, " (note: item is private)",)
+                            }
+                        },
+                        ItemInvisibleReason::WrongItemScope { item_scope } => {
+                            stdx::format_to!(
+                                &mut error,
+                                " (note: item defined as `#[{}]` and cannot be used here)",
+                                item_scope
+                            );
+                        }
+                        _ => (),
+                    }
+                }
+            } else {
+                let db = ctx.sema.db;
+                let package_id = db.file_package_id(file_id);
+                let package_missing_deps = hir_db::missing_dependencies(db, package_id);
+                if !package_missing_deps.is_empty() {
+                    stdx::format_to!(
+                        &mut error,
+                        " (note: `{}` declared dependency packages are not found on the filesystem, `aptos move compile` might help)",
+                        package_missing_deps.join(", "),
+                    );
+                }
             }
+
             acc.push(
                 Diagnostic::new(
                     DiagnosticCode::Lsp("unresolved-reference", Severity::Error),
-                    error_message,
+                    error,
                     reference_range,
                 )
                 .with_local_fixes(fixes),
@@ -228,17 +260,26 @@ fn try_check_resolve(
             if into_field_shorthand_items(ctx.sema.db, visible_entries.clone()).is_some() {
                 return None;
             }
-            let error_message = if is_entries_from_duplicate_dependencies(&ctx.sema, visible_entries) {
+            let error_message = if is_entries_from_duplicate_dependencies(&ctx.sema, &visible_entries) {
                 format!(
                     "Unresolved reference `{}`: resolved to multiple elements from different packages. \
                         You have duplicate dependencies in your package manifest.",
                     reference_name
                 )
             } else {
-                format!(
+                let mut error = format!(
                     "Unresolved reference `{}`: resolved to multiple elements",
                     reference_name
-                )
+                );
+                let fq_names = visible_entries
+                    .iter()
+                    .filter_map(|it| ctx.sema.fq_name_for_scope_entry(&it))
+                    .map(|it| format!("`{}`", it.fq_identifier_text()))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                stdx::format_to!(&mut error, "(note: resolves to {})", fq_names);
+
+                error
             };
             acc.push(
                 Diagnostic::new(
@@ -256,7 +297,7 @@ fn try_check_resolve(
 
 fn is_entries_from_duplicate_dependencies(
     sema: &Semantics<'_, RootDatabase>,
-    entries: Vec<ScopeEntry>,
+    entries: &Vec<ScopeEntry>,
 ) -> bool {
     let package_ids = entries
         .iter()
