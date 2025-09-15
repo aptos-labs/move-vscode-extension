@@ -1819,3 +1819,24 @@ module 0x1::m {
             ]"#]],
     )
 }
+
+#[test]
+fn test_package_inside_public_modifier() {
+    do_single_completion(
+        // language=Move
+        r#"
+module 0x1::m {
+    public(pack/*caret*/) fun main() {
+
+    }
+}
+"#,
+        expect![[r#"
+            module 0x1::m {
+                public(package/*caret*/) fun main() {
+
+                }
+            }
+        "#]],
+    )
+}

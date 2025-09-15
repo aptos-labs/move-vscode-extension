@@ -10,9 +10,8 @@ use ide::Analysis;
 use ide_completion::config::CompletionConfig;
 use ide_completion::item::CompletionItem;
 use ide_db::AllowSnippets;
-use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::FilePosition;
-use syntax::{AstNode, AstToken, T, TextSize, ast};
+use syntax::{AstNode, T, TextSize};
 use test_utils::{fixtures, get_and_replace_caret};
 use vfs::FileId;
 

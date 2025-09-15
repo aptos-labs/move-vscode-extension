@@ -17,6 +17,7 @@ pub(crate) enum ItemListKind {
     Module,
     Function { existing_modifiers: HashSet<String> },
     Ability { existing_abilities: HashSet<String> },
+    PublicModifier,
 }
 
 pub(crate) fn complete_item_list(
@@ -88,6 +89,10 @@ fn add_keywords(acc: &RefCell<Completions>, ctx: &CompletionContext, kind: &Item
             for ability in all_abilities {
                 add_keyword_no_space(&ability);
             }
+        }
+        ItemListKind::PublicModifier => {
+            add_keyword_no_space("friend");
+            add_keyword_no_space("package");
         }
     }
 

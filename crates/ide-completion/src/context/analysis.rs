@@ -53,6 +53,7 @@ pub(crate) fn completion_analysis(
             });
         }
     }
+
     if let Some(ability) = fake_ident.parent().and_then(|it| it.cast::<ast::Ability>()) {
         if let Some(container) = ability.syntax().parent_of_type::<ast::AbilityContainer>() {
             let existing_abilities = container
@@ -65,6 +66,16 @@ pub(crate) fn completion_analysis(
                 expected,
             });
         }
+    }
+
+    if original_file
+        .find_node_at_offset::<ast::VisibilityModifier>(original_offset)
+        .is_some()
+    {
+        return Some(AnalysisResult {
+            analysis: CompletionAnalysis::Item(ItemListKind::PublicModifier),
+            expected,
+        });
     }
 
     let ident = original_token.clone();
