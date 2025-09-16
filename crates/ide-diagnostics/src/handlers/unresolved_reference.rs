@@ -10,7 +10,7 @@ use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use base_db::SourceDatabase;
 use ide_db::{RootDatabase, Severity};
-use lang::nameres::is_visible::ItemInvisibleReason;
+use lang::nameres::is_visible::{ItemInvisibleReason, ScopeEntryWithVisExt};
 use lang::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use lang::nameres::scope::{ScopeEntry, VecExt, into_field_shorthand_items};
 use lang::node_ext::item_spec;
@@ -196,11 +196,7 @@ fn try_check_resolve(
         .and_then(|it| auto_import::auto_import_fix(ctx, it.in_file(file_id), reference_range));
 
     let mut resolved_entries = ctx.sema.resolve_in_file_with_reason(reference.in_file(file_id));
-    let visible_entries = resolved_entries
-        .clone()
-        .into_iter()
-        .filter_map(|it| it.into_entry_if_visible())
-        .collect::<Vec<_>>();
+    let visible_entries = resolved_entries.clone().into_visible_entries();
 
     match visible_entries.len() {
         0 => {

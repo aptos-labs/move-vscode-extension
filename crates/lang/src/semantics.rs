@@ -8,7 +8,7 @@ mod source_to_def;
 
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::nameres::fq_named_element::{ItemFQName, ItemFQNameOwner};
-use crate::nameres::is_visible::ResolvedScopeEntry;
+use crate::nameres::is_visible::{ScopeEntryWithVis, ScopeEntryWithVisExt};
 use crate::nameres::scope::{ScopeEntry, VecExt};
 use crate::node_ext::callable::Callable;
 use crate::node_ext::item::ModuleItemExt;
@@ -145,15 +145,13 @@ impl<'db> SemanticsImpl<'db> {
         let inference = self.inference(&reference, msl);
         nameres::resolve_multi(self.db, reference, inference)
             .unwrap_or_default()
-            .into_iter()
-            .filter_map(|it| it.into_entry_if_visible())
-            .collect()
+            .into_visible_entries()
     }
 
     pub fn resolve_in_file_with_reason(
         &self,
         reference: InFile<impl Into<ast::ReferenceElement>>,
-    ) -> Vec<ResolvedScopeEntry> {
+    ) -> Vec<ScopeEntryWithVis> {
         let reference = reference.map(|it| it.into());
         let msl = reference.syntax().value.is_msl_context();
         let inference = self.inference(&reference, msl);

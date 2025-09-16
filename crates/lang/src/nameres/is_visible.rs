@@ -11,6 +11,7 @@ use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::ModuleLangExt;
 use crate::{hir_db, nameres};
 use base_db::SourceDatabase;
+use std::vec::IntoIter;
 use syntax::ast::HasVisibility;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
@@ -26,27 +27,41 @@ pub enum ItemInvisibleReason {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ResolvedScopeEntry {
+pub struct ScopeEntryWithVis {
     pub scope_entry: ScopeEntry,
     pub invis_reason: Option<ItemInvisibleReason>,
 }
 
-impl ResolvedScopeEntry {
-    pub fn is_visible(&self) -> bool {
-        self.invis_reason.is_none()
-    }
-
-    pub fn into_entry_if_visible(self) -> Option<ScopeEntry> {
-        self.is_visible().then_some(self.scope_entry)
-    }
-}
-
 impl ScopeEntry {
-    pub fn into_resolved(self) -> ResolvedScopeEntry {
-        ResolvedScopeEntry {
+    pub fn into_always_visible(self) -> ScopeEntryWithVis {
+        ScopeEntryWithVis {
             scope_entry: self,
             invis_reason: None,
         }
+    }
+}
+
+pub trait ScopeEntryWithVisExt {
+    fn entries(self) -> IntoIter<ScopeEntryWithVis>;
+
+    fn into_visible_entries(self) -> Vec<ScopeEntry>
+    where
+        Self: Sized,
+    {
+        self.entries()
+            .filter_map(|it| it.invis_reason.is_none().then_some(it.scope_entry))
+            .collect()
+    }
+}
+
+impl ScopeEntryWithVisExt for Vec<ScopeEntryWithVis> {
+    fn entries(self) -> IntoIter<ScopeEntryWithVis> {
+        self.into_iter()
+    }
+}
+impl ScopeEntryWithVisExt for IntoIter<ScopeEntryWithVis> {
+    fn entries(self) -> IntoIter<ScopeEntryWithVis> {
+        self
     }
 }
 
@@ -54,9 +69,9 @@ pub fn check_if_visible(
     db: &dyn SourceDatabase,
     scope_entry: ScopeEntry,
     context: InFile<impl Into<SyntaxElement>>,
-) -> ResolvedScopeEntry {
+) -> ScopeEntryWithVis {
     let invis_reason = is_visible_in_context(db, &scope_entry, context);
-    ResolvedScopeEntry { scope_entry, invis_reason }
+    ScopeEntryWithVis { scope_entry, invis_reason }
 }
 
 pub fn is_visible_in_context(

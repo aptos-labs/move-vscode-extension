@@ -20,7 +20,6 @@ use crate::types::ty::ty_callable::{TyCallable, TyCallableKind};
 use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
 use crate::types::unification::UnificationTable;
 use base_db::SourceDatabase;
-use itertools::Itertools;
 use std::cell::Cell;
 use std::collections::HashMap;
 use std::hash::Hash;
@@ -29,7 +28,7 @@ use syntax::{AstNode, ast};
 use vfs::FileId;
 
 use crate::loc::SyntaxLocFileExt;
-use crate::nameres::is_visible::ResolvedScopeEntry;
+use crate::nameres::is_visible::{ScopeEntryWithVis, ScopeEntryWithVisExt};
 use crate::nameres::path_resolution::remove_variant_ident_pats;
 use crate::types::ty_db;
 pub use combine_types::TypeError;
@@ -66,7 +65,7 @@ pub struct InferenceCtx<'db> {
 
     pub call_expr_types: HashMap<ast::AnyCallExpr, TyCallable>,
 
-    pub resolved_paths: HashMap<ast::Path, Vec<ResolvedScopeEntry>>,
+    pub resolved_paths: HashMap<ast::Path, Vec<ScopeEntryWithVis>>,
     pub resolved_method_calls: HashMap<ast::MethodCallExpr, Option<ScopeEntry>>,
     pub resolved_fields: HashMap<ast::NameRef, Option<ScopeEntry>>,
     pub resolved_ident_pats: HashMap<ast::IdentPat, Option<ScopeEntry>>,
@@ -132,10 +131,7 @@ impl<'db> InferenceCtx<'db> {
         });
         self.resolved_paths.insert(path, entries.clone());
 
-        entries
-            .into_iter()
-            .filter_map(|it| it.into_entry_if_visible())
-            .collect()
+        entries.into_visible_entries()
     }
 
     pub fn resolve_ident_pat_cached(
@@ -166,10 +162,8 @@ impl<'db> InferenceCtx<'db> {
             .resolved_paths
             .get(&path)?
             .clone()
-            .into_iter()
-            .filter_map(|it| it.into_entry_if_visible())
-            .exactly_one()
-            .ok()?;
+            .into_visible_entries()
+            .single_or_none()?;
 
         // if it's resolved to anything other than struct or enum variant, then it could only be a wrapped lambda
         if !matches!(resolved_to.kind(), STRUCT | VARIANT) {

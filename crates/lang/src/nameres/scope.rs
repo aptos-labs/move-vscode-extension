@@ -6,7 +6,7 @@
 
 use crate::item_scope::NamedItemScope;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
-use crate::nameres::is_visible::ResolvedScopeEntry;
+use crate::nameres::is_visible::ScopeEntryWithVis;
 use crate::nameres::namespaces::{Ns, NsSet, named_item_ns};
 use crate::types::ty::Ty;
 use base_db::SourceDatabase;
@@ -135,44 +135,34 @@ pub trait ScopeEntryListExt {
     fn into_iterator(self) -> IntoIter<ScopeEntry>
     where
         Self: Sized;
-    fn filter_by_ns(self, ns: NsSet) -> Vec<ScopeEntry>;
-    fn filter_by_name(self, name: String) -> Vec<ScopeEntry>;
-    fn filter_by_expected_type(
-        self,
-        db: &dyn SourceDatabase,
-        expected_type: Option<Ty>,
-    ) -> Vec<ScopeEntry>;
-    fn into_resolved_list(self) -> Vec<ResolvedScopeEntry>
+
+    fn filter_by_ns(self, ns: NsSet) -> Vec<ScopeEntry>
     where
         Self: Sized,
     {
-        self.into_iterator().map(|it| it.into_resolved()).collect()
-    }
-}
-
-impl ScopeEntryListExt for Vec<ScopeEntry> {
-    fn into_iterator(self) -> IntoIter<ScopeEntry> {
-        self.into_iter()
-    }
-
-    fn filter_by_ns(self, ns: NsSet) -> Vec<ScopeEntry> {
-        self.into_iter()
-            .filter(move |entry| ns.contains(entry.ns))
+        self.into_iterator()
+            .filter(|entry| ns.contains(entry.ns))
             .collect()
     }
 
-    fn filter_by_name(self, name: String) -> Vec<ScopeEntry> {
-        self.into_iter().filter(|entry| entry.name == name).collect()
+    fn filter_by_name(self, name: String) -> Vec<ScopeEntry>
+    where
+        Self: Sized,
+    {
+        self.into_iterator().filter(|entry| entry.name == name).collect()
     }
 
     fn filter_by_expected_type(
         self,
         db: &dyn SourceDatabase,
         expected_type: Option<Ty>,
-    ) -> Vec<ScopeEntry> {
-        self.into_iter()
+    ) -> Vec<ScopeEntry>
+    where
+        Self: Sized,
+    {
+        self.into_iterator()
             .filter_map(|entry| {
-                let item = entry.clone().cast_into::<ast::NamedElement>(db)?;
+                let item = entry.cast_into::<ast::NamedElement>(db)?;
                 let Some(variant_item) = item.cast_into::<ast::Variant>() else {
                     return Some(entry);
                 };
@@ -184,6 +174,19 @@ impl ScopeEntryListExt for Vec<ScopeEntry> {
                 is_valid_item.then_some(entry)
             })
             .collect()
+    }
+
+    fn into_always_visible_entries(self) -> Vec<ScopeEntryWithVis>
+    where
+        Self: Sized,
+    {
+        self.into_iterator().map(|it| it.into_always_visible()).collect()
+    }
+}
+
+impl ScopeEntryListExt for Vec<ScopeEntry> {
+    fn into_iterator(self) -> IntoIter<ScopeEntry> {
+        self.into_iter()
     }
 }
 
