@@ -6,7 +6,7 @@
 
 use crate::loc::SyntaxLocFileExt;
 use crate::nameres;
-use crate::nameres::is_visible::{ResolvedScopeEntry, check_if_visible};
+use crate::nameres::is_visible::{ScopeEntryWithVis, ScopeEntryWithVisExt, check_if_visible};
 use crate::nameres::name_resolution::{
     WalkScopesCtx, get_entries_from_walking_scopes, get_modules_as_entries, get_qualified_path_entries,
 };
@@ -75,8 +75,7 @@ pub fn get_path_resolve_variants(
             let lit_field = ctx.wrap_in_file(struct_field);
             let lit_field_entries = nameres::resolve_multi_no_inf(db, lit_field)
                 .unwrap_or_default()
-                .into_iter()
-                .filter_map(|it| it.into_entry_if_visible());
+                .into_visible_entries();
             entries.extend(lit_field_entries);
             entries
         }
@@ -157,7 +156,7 @@ pub fn resolve_path(
     db: &dyn SourceDatabase,
     path: InFile<ast::Path>,
     expected_type: Option<Ty>,
-) -> Vec<ResolvedScopeEntry> {
+) -> Vec<ScopeEntryWithVis> {
     let Some(path_name) = path.value.reference_name() else {
         return vec![];
     };
@@ -197,9 +196,9 @@ pub fn resolve_path(
 }
 
 fn filter_by_function_namespace_special_case(
-    entries: Vec<ResolvedScopeEntry>,
+    entries: Vec<ScopeEntryWithVis>,
     ctx: &ResolutionContext,
-) -> Vec<ResolvedScopeEntry> {
+) -> Vec<ScopeEntryWithVis> {
     if ctx.is_call_expr() {
         let function_entries = entries
             .clone()
@@ -228,9 +227,9 @@ fn filter_by_function_namespace_special_case(
 
 pub(crate) fn remove_variant_ident_pats(
     db: &dyn SourceDatabase,
-    entries: Vec<ResolvedScopeEntry>,
+    entries: Vec<ScopeEntryWithVis>,
     resolve_ident_pat: impl Fn(InFile<ast::IdentPat>) -> Option<ScopeEntry>,
-) -> Vec<ResolvedScopeEntry> {
+) -> Vec<ScopeEntryWithVis> {
     entries
         .into_iter()
         .filter(|entry| {
