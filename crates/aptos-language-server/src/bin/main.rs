@@ -266,7 +266,6 @@ fn initialization_handshake() -> anyhow::Result<(Connection, lsp_server::IoThrea
             name: String::from("aptos-language-server"),
             version: Some(aptos_language_server::version().to_string()),
         }),
-        offset_encoding: None,
     };
 
     let initialize_result = serde_json::to_value(initialize_result).unwrap();
