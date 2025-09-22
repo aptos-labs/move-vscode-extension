@@ -29,7 +29,7 @@ pub(crate) fn render_function(
 
     let call_ty = {
         let _p = tracing::debug_span!("render_function::call_ty").entered();
-        let mut call_ty = ty_db::lower_function(ctx.db, fun.clone().map_into(), ctx.msl);
+        let mut call_ty = ty_db::lower_function(ctx.db, fun.clone(), ctx.msl);
         if let Some(apply_subst) = apply_subst {
             call_ty = call_ty.substitute(&apply_subst);
         }

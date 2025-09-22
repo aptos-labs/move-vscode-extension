@@ -22,6 +22,7 @@ use lang::nameres::path_kind::path_kind;
 use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variants};
 use lang::nameres::scope::ScopeEntry;
 use lang::nameres::{labels, path_kind};
+use lang::node_ext::item_spec::ItemSpecExt;
 use std::cell::RefCell;
 use std::collections::HashSet;
 use syntax::SyntaxKind::*;
@@ -30,7 +31,7 @@ use syntax::ast::idents::PRIMITIVE_TYPES;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
-use syntax::{AstNode, SyntaxNode, T, algo, ast};
+use syntax::{AstNode, SyntaxKind, SyntaxNode, T, algo, ast};
 
 #[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn add_path_completions(
@@ -290,7 +291,7 @@ pub(crate) fn add_expr_keywords(
                 acc.add(ctx.new_snippet_keyword("assert $0"));
                 acc.add(ctx.new_snippet_keyword("invariant $0"));
             }
-            MslContext::ItemSpec => {
+            MslContext::ItemSpec { kind } => {
                 acc.add(ctx.new_snippet_keyword("pragma $0"));
                 acc.add(ctx.new_snippet_keyword("requires $0"));
                 acc.add(ctx.new_snippet_keyword("decreases $0"));
@@ -298,8 +299,10 @@ pub(crate) fn add_expr_keywords(
                 acc.add(ctx.new_snippet_keyword("modifies $0"));
                 acc.add(ctx.new_snippet_keyword("include $0"));
                 acc.add(ctx.new_snippet_keyword("apply $0"));
-                acc.add(ctx.new_snippet_keyword("aborts_if $0"));
-                acc.add(ctx.new_snippet_keyword("aborts_with $0"));
+                if kind.is_some_and(|it| it == FUN) {
+                    acc.add(ctx.new_snippet_keyword("aborts_if $0"));
+                    acc.add(ctx.new_snippet_keyword("aborts_with $0"));
+                }
                 acc.add(ctx.new_snippet_keyword("emits $0"));
                 acc.add(ctx.new_snippet_keyword("invariant $0"));
             }
@@ -382,7 +385,7 @@ impl PathCompletionCtx {
 pub(crate) enum MslContext {
     None,
     CodeSpec,
-    ItemSpec,
+    ItemSpec { kind: Option<SyntaxKind> },
     ModuleItemSpec,
     SpecFun,
 }
@@ -396,7 +399,7 @@ pub(crate) enum PathKind {
 }
 
 fn path_completion_ctx(
-    _ctx: &CompletionContext<'_>,
+    ctx: &CompletionContext<'_>,
     original_path: &Option<InFile<ast::Path>>,
     fake_path: ast::Path,
 ) -> Option<PathCompletionCtx> {
@@ -439,7 +442,11 @@ fn path_completion_ctx(
     if fake_path.syntax().is_msl_context() {
         if let Some(item_spec) = fake_path.syntax().ancestor_strict::<ast::ItemSpec>() {
             if item_spec.item_spec_ref().is_some() {
-                msl_context = MslContext::ItemSpec;
+                let item_kind = item_spec
+                    .in_file(ctx.position.file_id)
+                    .item(ctx.db)
+                    .map(|it| it.kind());
+                msl_context = MslContext::ItemSpec { kind: item_kind };
             } else {
                 msl_context = MslContext::ModuleItemSpec;
             }

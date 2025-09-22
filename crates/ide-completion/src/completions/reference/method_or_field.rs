@@ -96,8 +96,7 @@ fn add_method_completion_items(
         let method = method_entry.cast_into::<ast::Fun>(db)?;
 
         let subst = method.ty_vars_subst(&TyVarIndex::default());
-        let callable_ty =
-            ty_db::lower_function(db, method.clone().map_into(), ctx.msl).substitute(&subst);
+        let callable_ty = ty_db::lower_function(db, method.clone(), ctx.msl).substitute(&subst);
         let self_ty = callable_ty
             .param_types
             .first()

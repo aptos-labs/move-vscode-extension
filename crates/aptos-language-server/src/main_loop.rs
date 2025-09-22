@@ -300,17 +300,17 @@ impl GlobalState {
     }
 
     /// Refresh inlay hints if the client supports it.
-    pub(crate) fn ask_for_inlay_hints_refresh(&mut self, reason: impl Into<String>) {
+    pub(crate) fn ask_for_inlay_hints_refresh(&mut self, _reason: impl Into<String>) {
         if self.config.inlay_hints_refresh() {
-            tracing::info!("ask client to refresh inlay hints (reason = {:?})", reason.into());
+            // tracing::info!("ask client to refresh inlay hints (reason = {:?})", reason.into());
             self.send_request::<lsp_types::request::InlayHintRefreshRequest>((), |_, _| ());
         }
     }
 
-    pub(crate) fn ask_client_for_diagnostics_refresh(&mut self, reason: impl Into<String>) {
+    pub(crate) fn ask_client_for_diagnostics_refresh(&mut self, _reason: impl Into<String>) {
         // todo: lsp-types does not support this
         // if self.config.diagnostics_refresh() {
-        tracing::info!("ask client to refresh diagnostics (reason = {:?})", reason.into());
+        // tracing::info!("ask client to refresh diagnostics (reason = {:?})", reason.into());
         self.send_request::<lsp_types::request::WorkspaceDiagnosticRefresh>((), |_, _| ());
         // }
     }

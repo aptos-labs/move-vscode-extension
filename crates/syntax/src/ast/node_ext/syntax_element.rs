@@ -112,6 +112,7 @@ pub trait SyntaxElementExt {
         Ast::cast(parent_node)
     }
 
+    /// strict
     fn ancestor_strict<Ast: AstNode>(&self) -> Option<Ast> {
         self.to_syntax_element().ancestors().skip(1).find_map(Ast::cast)
     }

@@ -53,6 +53,7 @@ pub(crate) fn item_to_kind(kind: SyntaxKind) -> CompletionItemKind {
         NAMED_FIELD => CompletionItemKind::SymbolKind(SymbolKind::Field),
         VARIANT => CompletionItemKind::SymbolKind(SymbolKind::EnumVariant),
         SCHEMA => CompletionItemKind::SymbolKind(SymbolKind::Schema),
+        GLOBAL_VARIABLE_DECL => CompletionItemKind::SymbolKind(SymbolKind::GlobalVariableDecl),
         _ => {
             tracing::info!("Unhandled completion item {:?}", kind);
             CompletionItemKind::UnresolvedReference
