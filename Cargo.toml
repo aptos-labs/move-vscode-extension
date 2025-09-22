@@ -18,13 +18,16 @@ dissimilar.opt-level = 3
 # This speeds up `cargo xtask dist`.
 miniz_oxide.opt-level = 3
 
+[profile.dev]
+debug = "line-tables-only"
+
 [profile.dist]
 inherits = "release"
 lto = "fat"
 
 [workspace.dependencies]
 rowan = "=0.15.15"
-lsp-types = { version = "=0.95.1", features = ["proposed"] }
+lsp-types = { version = "=0.95.1" }
 itertools = "0.14.0"
 line-index = "^0.1.2"
 crossbeam-channel = "^0.5.15"
