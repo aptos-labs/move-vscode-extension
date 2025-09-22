@@ -4,7 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::item_scope::NamedItemScope;
+use crate::item_scope::ItemScope;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt, SyntaxLocNodeExt};
 use crate::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use crate::nameres::scope::ScopeEntry;
@@ -59,7 +59,7 @@ pub struct UseItem {
     pub use_speck_loc: SyntaxLoc,
     pub alias_or_name: String,
     pub type_: UseItemType,
-    pub scope: NamedItemScope,
+    pub scope: ItemScope,
 }
 
 impl UseItem {
@@ -151,7 +151,7 @@ fn collect_child_use_speck(
     root_use_speck: ast::UseSpeck,
     child_use_speck: ast::UseSpeck,
     file_id: FileId,
-    use_stmt_scope: NamedItemScope,
+    use_stmt_scope: ItemScope,
 ) -> Option<UseItem> {
     let qualifier_path = root_use_speck.path()?;
     let module_name = qualifier_path.reference_name()?;

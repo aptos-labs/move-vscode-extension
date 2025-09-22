@@ -1,4 +1,4 @@
-use lang::item_scope::NamedItemScope;
+use lang::item_scope::ItemScope;
 use syntax::ast::edit::{AstNodeEdit, IndentLevel};
 use syntax::ast::syntax_factory::SyntaxFactory;
 use syntax::ast::{HasAttrs, UseStmtsOwner};
@@ -8,7 +8,7 @@ use syntax::{AstNode, ast};
 pub fn add_import_for_import_path(
     items_owner: &ast::AnyHasItems,
     import_path: String,
-    add_scope: Option<NamedItemScope>,
+    add_scope: Option<ItemScope>,
 ) -> impl FnOnce(&mut SyntaxEditor) -> Option<()> {
     let add_test_only = add_scope.is_some_and(|it| it.is_test());
     move |editor| {

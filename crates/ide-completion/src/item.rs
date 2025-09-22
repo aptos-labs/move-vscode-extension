@@ -6,6 +6,7 @@
 
 use ide_db::text_edit::TextEdit;
 use ide_db::{RootDatabase, SymbolKind};
+use lang::item_scope::ItemScope;
 use std::{fmt, mem};
 use stdx::{impl_from, never};
 use syntax::TextRange;
@@ -60,7 +61,7 @@ pub struct CompletionItem {
     pub relevance: CompletionRelevance,
 
     /// The import data to add to completion's edits.
-    pub import_to_add: Option<String>,
+    pub import_to_add: Option<(String, ItemScope)>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -284,7 +285,7 @@ pub(crate) struct CompletionItemBuilder {
     kind: CompletionItemKind,
     text_edit: Option<TextEdit>,
     relevance: CompletionRelevance,
-    import_to_add: Option<String>,
+    import_to_add: Option<(String, ItemScope)>,
 }
 
 impl CompletionItemBuilder {
@@ -336,8 +337,12 @@ impl CompletionItemBuilder {
         self.text_edit = Some(edit);
         self
     }
-    pub(crate) fn add_import(&mut self, import_to_add: String) -> &mut CompletionItemBuilder {
-        self.import_to_add = Some(import_to_add);
+    pub(crate) fn add_import(
+        &mut self,
+        import_to_add: String,
+        item_scope: ItemScope,
+    ) -> &mut CompletionItemBuilder {
+        self.import_to_add = Some((import_to_add, item_scope));
         self
     }
     pub(crate) fn detail(&mut self, detail: impl Into<String>) -> &mut CompletionItemBuilder {

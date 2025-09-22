@@ -5,6 +5,7 @@
 // Modifications have been made to the original code.
 
 use camino::Utf8PathBuf;
+use lang::item_scope::ItemScope;
 use lsp_types::notification::Notification;
 use lsp_types::request::Request;
 use lsp_types::{CodeActionKind, Position, Range, TextDocumentIdentifier, TextEdit};
@@ -189,8 +190,5 @@ pub struct CompletionResolveData {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CompletionImport {
     pub full_import_path: String,
-    // pub file_id: u32,
-    // pub kind: u16,
-    // pub range_start: u32,
-    // pub range_end: u32,
+    pub item_scope: ItemScope,
 }

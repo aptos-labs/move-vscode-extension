@@ -4,7 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::item_scope::NamedItemScope;
+use crate::item_scope::ItemScope;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt, SyntaxLocInput};
 use crate::nameres::address::{Address, AddressInput};
 use crate::nameres::is_visible::ScopeEntryWithVis;
@@ -291,12 +291,12 @@ pub(crate) fn module_importable_entries_from_related(
     module_importable_entries_from_related_tracked(db, SyntaxLocInput::new(db, module_loc))
 }
 
-pub fn item_scope(db: &dyn SourceDatabase, syntax_loc: SyntaxLoc) -> NamedItemScope {
+pub fn item_scope(db: &dyn SourceDatabase, syntax_loc: SyntaxLoc) -> ItemScope {
     let file_item_scopes = item_scope::item_scopes(db, syntax_loc.file_id().intern(db));
     file_item_scopes
         .get(&syntax_loc.syntax_ptr())
         .cloned()
-        .unwrap_or(NamedItemScope::Main)
+        .unwrap_or(ItemScope::Main)
 }
 
 pub fn use_items_from_self_and_siblings(

@@ -56,6 +56,7 @@ use ide_db::text_edit::TextEdit;
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 use ide_diagnostics::handlers;
+use lang::item_scope::ItemScope;
 use lang::{Semantics, hir_db};
 pub use salsa::Cancelled;
 use syntax::files::{FilePosition, FileRange};
@@ -467,9 +468,12 @@ impl Analysis {
         _config: &CompletionConfig,
         position: FilePosition,
         import_to_add: String,
+        item_scope: ItemScope,
     ) -> Cancellable<Vec<TextEdit>> {
         Ok(self
-            .with_db(|db| ide_completion::resolve_completion_edits(db, position, import_to_add))?
+            .with_db(|db| {
+                ide_completion::resolve_completion_edits(db, position, import_to_add, item_scope)
+            })?
             .unwrap_or_default())
     }
 

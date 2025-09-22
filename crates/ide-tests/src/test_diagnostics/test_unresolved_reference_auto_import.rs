@@ -803,3 +803,36 @@ fn test_auto_import_in_spec() {
         "#]],
     );
 }
+
+#[test]
+fn test_auto_import_test_scope() {
+    // language=Move
+    check_diagnostics_apply_import_fix(
+        expect![[r#"
+            module 0x1::bcs {
+                native public fun to_bytes<MoveValue>(v: &MoveValue): vector<u8>;
+            }
+            module 0x1::m {
+                #[test]
+                fun test_main() {
+                    to_bytes();
+                  //^^^^^^^^ err: Unresolved reference `to_bytes`: cannot resolve
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::bcs {
+                native public fun to_bytes<MoveValue>(v: &MoveValue): vector<u8>;
+            }
+            module 0x1::m {
+                #[test_only]
+                use 0x1::bcs::to_bytes;
+
+                #[test]
+                fun test_main() {
+                    to_bytes();
+                }
+            }
+        "#]],
+    );
+}

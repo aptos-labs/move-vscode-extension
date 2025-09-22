@@ -8,7 +8,7 @@ use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use base_db::SourceDatabase;
 use ide_db::Severity;
 use lang::hir_db;
-use lang::item_scope::NamedItemScope;
+use lang::item_scope::ItemScope;
 use lang::loc::{SyntaxLoc, SyntaxLocFileExt};
 use lang::nameres::use_speck_entries::{UseItem, UseItemType, use_items_for_stmt};
 use std::collections::HashSet;
@@ -65,7 +65,7 @@ pub(crate) fn find_unused_use_items(
     });
     let mut use_items_hit = HashSet::new();
     for path in reachable_paths {
-        if let Some(use_item) = find_use_item_hit_for_path(db, path) {
+        if let Some(use_item) = find_use_item_hit_for_path(db, path.clone()) {
             use_items_hit.insert(use_item);
         }
     }
@@ -89,7 +89,7 @@ fn find_use_item_hit_for_path(db: &dyn SourceDatabase, path: InFile<ast::Path>) 
     let _p = tracing::debug_span!("find_use_item_hit_for_path").entered();
 
     let path_scope = hir_db::item_scope(db, path.loc());
-    let specific_item_scope = if path_scope != NamedItemScope::Main {
+    let specific_item_scope = if path_scope != ItemScope::Main {
         Some(path_scope)
     } else {
         None
@@ -103,7 +103,7 @@ fn find_use_item_hit_for_path(db: &dyn SourceDatabase, path: InFile<ast::Path>) 
         let owner_use_items = hir_db::use_items_from_self_and_siblings(db, use_item_owner_ans)
             .into_iter()
             .filter(|use_item| {
-                use_item.scope == NamedItemScope::Main
+                use_item.scope == ItemScope::Main
                     || specific_item_scope.is_some_and(|it| use_item.scope == it)
             });
         let use_items_hit_in_owner = match &base_path_type {
@@ -122,7 +122,7 @@ fn find_use_item_hit_for_path(db: &dyn SourceDatabase, path: InFile<ast::Path>) 
         // first try to find a candidate in main scope
         let mut use_item_hit = use_items_hit_in_owner
             .iter()
-            .find(|item| item.scope == NamedItemScope::Main)
+            .find(|item| item.scope == ItemScope::Main)
             .cloned();
         // then if we can't find it there, check specialized scope
         if use_item_hit.is_none()

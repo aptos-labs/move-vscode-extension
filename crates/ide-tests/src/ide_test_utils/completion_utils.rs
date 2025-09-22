@@ -54,12 +54,13 @@ pub fn do_single_completion_with_config(
     let mut res = source.to_string();
     completion_item.text_edit.apply(&mut res);
 
-    if let Some(import_to_add) = completion_item.import_to_add {
+    if let Some((import_to_add, item_scope)) = completion_item.import_to_add {
         let text_edits = analysis
             .resolve_completion_edits(
                 &completion_config,
                 FilePosition { file_id, offset },
                 import_to_add,
+                item_scope,
             )
             .unwrap();
         for text_edit in text_edits {

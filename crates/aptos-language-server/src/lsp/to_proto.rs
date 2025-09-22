@@ -498,17 +498,13 @@ fn completion_item(
     set_score(&mut lsp_item, max_relevance, item.relevance);
 
     let resolve_data = if config.completion().enable_imports_on_the_fly
-        && let Some(import_path) = item.import_to_add
+        && let Some((full_import_path, item_scope)) = item.import_to_add
     {
         let resolve_data = lsp_ext::CompletionResolveData {
             position: tdpp.clone(),
             version: None,
-            import: lsp_ext::CompletionImport {
-                full_import_path: import_path,
-            },
+            import: lsp_ext::CompletionImport { full_import_path, item_scope },
             trigger_character: completion_trigger_character,
-            // for_ref: false,
-            // hash: BASE64_STANDARD.encode(completion_item_hash(&item, false)),
         };
         Some(serde_json::to_value(resolve_data).unwrap())
     } else {

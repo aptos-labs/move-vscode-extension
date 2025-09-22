@@ -127,3 +127,64 @@ module 0x1::m {
         "#]],
     );
 }
+
+#[test]
+fn test_do_function_completion() {
+    // language=Move
+    do_out_of_scope_completion(
+        r#"
+module 0x1::string {
+    public fun call() {}
+}
+module 0x1::m {
+    fun main() {
+        ca/*caret*/
+    }
+}
+    "#,
+        expect![[r#"
+            module 0x1::string {
+                public fun call() {}
+            }
+            module 0x1::m {
+                use 0x1::string::call;
+
+                fun main() {
+                    call()/*caret*/
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_do_function_completion_with_test_only_in_test_scope() {
+    // language=Move
+    do_out_of_scope_completion(
+        r#"
+module 0x1::string {
+    public fun call() {}
+}
+module 0x1::m {
+    #[test]
+    fun test_main() {
+        ca/*caret*/
+    }
+}
+    "#,
+        expect![[r#"
+            module 0x1::string {
+                public fun call() {}
+            }
+            module 0x1::m {
+                #[test_only]
+                use 0x1::string::call;
+
+                #[test]
+                fun test_main() {
+                    call()/*caret*/
+                }
+            }
+        "#]],
+    );
+}

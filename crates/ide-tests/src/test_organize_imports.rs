@@ -550,3 +550,36 @@ fn test_duplicate_self_import() {
         "#]],
     )
 }
+
+#[test]
+fn test_change_import_scope_from_main_to_test() {
+    // language=Move
+    check_organize_imports(
+        r#"
+        module 0x1::pool {
+            public fun create_pool() {}
+        }
+        module 0x1::main {
+            use 0x1::pool;
+
+            #[test]
+            fun main() {
+                pool::create_pool();
+            }
+        }
+    "#,
+        expect![[r#"
+            module 0x1::pool {
+                public fun create_pool() {}
+            }
+            module 0x1::main {
+                use 0x1::pool;
+
+                #[test]
+                fun main() {
+                    pool::create_pool();
+                }
+            }
+        "#]],
+    )
+}

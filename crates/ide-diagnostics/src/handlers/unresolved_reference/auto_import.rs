@@ -3,7 +3,7 @@ use base_db::SourceDatabase;
 use ide_db::assist_context::LocalAssists;
 use ide_db::imports;
 use lang::hir_db;
-use lang::item_scope::NamedItemScope;
+use lang::item_scope::ItemScope;
 use lang::loc::SyntaxLocNodeExt;
 use lang::nameres::fq_named_element::ItemFQNameOwner;
 use lang::nameres::path_kind::path_kind;
@@ -41,12 +41,12 @@ pub(crate) fn auto_import_fix(
     let path_scope = hir_db::item_scope(db, path.loc(file_id));
     let items_owner_scope = hir_db::item_scope(db, current_items_owner.loc(file_id));
 
-    let mut add_scope: Option<NamedItemScope> = None;
-    if items_owner_scope == NamedItemScope::Main {
+    let mut add_scope: Option<ItemScope> = None;
+    if items_owner_scope == ItemScope::Main {
         // todo: #[verify_only] ?
         add_scope = match path_scope {
-            NamedItemScope::Test => Some(NamedItemScope::Test),
-            NamedItemScope::Main | NamedItemScope::Verify => None,
+            ItemScope::Test => Some(ItemScope::Test),
+            ItemScope::Main | ItemScope::Verify => None,
         }
     }
 
@@ -69,7 +69,7 @@ fn add_autoimport_fix_for_import_candidate(
     import_candidate: &ScopeEntry,
     current_use_items_owner: &ast::AnyHasItems,
     reference_range: FileRange,
-    add_scope: Option<NamedItemScope>,
+    add_scope: Option<ItemScope>,
 ) -> Option<()> {
     let candidate_named_element = import_candidate.cast_into::<ast::NamedElement>(db)?;
     let candidate_fq_name = candidate_named_element.fq_name(db)?;

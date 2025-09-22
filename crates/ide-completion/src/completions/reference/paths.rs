@@ -201,7 +201,8 @@ fn add_out_of_scope_completion_items(
                     .cast_into::<ast::NamedElement>(ctx.db)
                     .and_then(|it| it.fq_name(ctx.db))
                 {
-                    completion_item.add_import(fq_name.fq_identifier_text());
+                    completion_item
+                        .add_import(fq_name.fq_identifier_text(), ctx.original_token_item_scope());
                     completion_item
                         .with_relevance(|r| CompletionRelevance { is_out_of_scope: true, ..r });
                     completion_items.push(completion_item.build(ctx.db));
