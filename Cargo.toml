@@ -3,7 +3,7 @@ members = ["crates/*", "xtask"]
 resolver = "2"
 
 [workspace.package]
-rust-version = "1.89"
+rust-version = "1.90"
 edition = "2024"
 license = "MIT"
 
@@ -24,8 +24,8 @@ lto = "fat"
 
 [workspace.dependencies]
 rowan = "=0.15.15"
-itertools = "0.14.0"
 lsp-types = { version = "=0.95.1", features = ["proposed"] }
+itertools = "0.14.0"
 line-index = "^0.1.2"
 crossbeam-channel = "^0.5.15"
 serde = "^1.0.217"
@@ -34,10 +34,10 @@ serde_json = "^1.0.108"
 anyhow = "^1.0.95"
 clap = { version = "^4.5.28", features = ["derive"] }
 indexmap = "^2.7.1"
-toml = "^0.8.20"
+toml = "0.9.7"
 walkdir = "^2.5.0"
 regex = "1.11.1"
-camino = { version = "1.1.9", features = ["serde1"] }
+camino = { version = "1.2.0", features = ["serde1"] }
 memchr = "2.7.4"
 
 tracing = "^0.1.41"
@@ -55,8 +55,8 @@ dashmap = "6.1.0"
 salsa = "0.23.0"
 salsa-macros = "0.23.0"
 
-stdx = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-07-07", package = "stdx" }
-paths = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-07-07", package = "paths", features = ["serde1"] }
-vfs = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-07-07", package = "vfs" }
-vfs-notify = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-07-07", package = "vfs-notify" }
+stdx = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-07-07" }
+paths = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-07-07", features = ["serde1"] }
+vfs = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-07-07" }
+vfs-notify = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-07-07" }
 
