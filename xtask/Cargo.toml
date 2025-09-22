@@ -14,11 +14,11 @@ check_keyword = "0.4"
 flate2 = "1.1.0"
 time = { version = "0.3", default-features = false }
 zip = { version = "3", default-features = false, features = ["deflate-flate2", "time"] }
-walkdir = "2.5.0"
 
-clap.workspace = true
 anyhow.workspace = true
+clap.workspace = true
 itertools.workspace = true
+walkdir.workspace = true
 
 stdx.workspace = true
 
