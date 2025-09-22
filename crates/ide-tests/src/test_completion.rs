@@ -1840,3 +1840,18 @@ module 0x1::m {
         "#]],
     )
 }
+
+#[test]
+fn test_no_aborts_if_under_struct_item_spec() {
+    check_no_completions(
+        // language=Move
+        r#"
+module 0x1::m {
+    struct S {}
+    spec S {
+        abor/*caret*/
+    }
+}
+"#,
+    )
+}

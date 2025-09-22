@@ -7,8 +7,12 @@ use base_db::SourceDatabase;
 use syntax::ast;
 use syntax::files::{InFile, InFileExt};
 
-pub fn lower_function(db: &dyn SourceDatabase, fun: InFile<ast::AnyFun>, msl: bool) -> TyCallable {
-    let fun_loc = SyntaxLocInput::new(db, fun.loc());
+pub fn lower_function(
+    db: &dyn SourceDatabase,
+    fun: InFile<impl Into<ast::AnyFun>>,
+    msl: bool,
+) -> TyCallable {
+    let fun_loc = SyntaxLocInput::new(db, fun.map(|it| it.into()).loc());
     lower_function_tracked(db, fun_loc, msl)
 }
 

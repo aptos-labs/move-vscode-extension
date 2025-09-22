@@ -15,6 +15,7 @@ pub mod make;
 pub mod node_ext;
 pub mod operators;
 pub mod syntax_factory;
+pub mod token_at_offset_ext;
 pub mod token_ext;
 pub mod visibility;
 

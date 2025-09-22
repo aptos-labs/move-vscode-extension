@@ -21,9 +21,10 @@ pub(crate) fn check_hover(source: &str, expect: expect_test::Expect) {
         .hover(position)
         .unwrap()
         .map(|range_info| range_info.info);
-    let hover_result = hover_result.expect("None is returned from the generator");
+    let hover_result = hover_result.expect("no docs is available");
 
-    let doc_string = hover_result.doc_string;
+    let mut doc_string = hover_result.doc_string.trim().to_string();
+    doc_string.push('\n');
     expect.assert_eq(&doc_string);
 }
 
@@ -254,7 +255,6 @@ module 0x1::m {
             variable my_var: u8
             ```
             ---
-
         "#]],
     )
 }
@@ -280,7 +280,6 @@ module 0x1::m {
             const MY_CONST: u8
             ```
             ---
-
         "#]],
     )
 }
@@ -304,7 +303,6 @@ module 0x1::m {
             parameter my_param: u8
             ```
             ---
-
         "#]],
     )
 }
@@ -383,7 +381,6 @@ spec 0x1::m {
             spec fun len(t: vector<T>): num
             ```
             ---
-
         "#]],
     )
 }
@@ -415,7 +412,53 @@ module 0x1::m {
             variant One
             ```
             ---
+        "#]],
+    )
+}
 
+#[test]
+fn test_docs_for_spec_keyword() {
+    check_hover(
+        // language=Move
+        r#"
+module 0x1::m {
+    fun main(s: Num) {
+        spec {
+            assert 1 == 1;
+           //^
+        }
+    }
+}
+    "#,
+        // language=Markdown
+        expect![[r#"
+            An `assert` statement inside a spec block indicates a condition that must hold when control reaches that block.
+            If the condition does not hold, an error is reported by the Move Prover.
+        "#]],
+    )
+}
+
+#[test]
+fn test_docs_for_fun_item_spec_result() {
+    check_hover(
+        // language=Move
+        r#"
+module 0x1::m {
+    fun main(): u8 {
+    }
+    spec main {
+        result;
+       //^
+    }
+}
+    "#,
+        // language=Markdown
+        expect![[r#"
+            ```
+            result: num
+            ```
+            ---
+            `result` is a special spec variable which holds the return value of a function.
         "#]],
     )
 }
