@@ -9,7 +9,7 @@ license.workspace = true
 xshell = "0.2.7"
 ungrammar = "1.16.1"
 proc-macro2 = "1.0.93"
-quote = "1.0.38"
+quote = "1.0.40"
 check_keyword = "0.4"
 flate2 = "1.1.0"
 time = { version = "0.3", default-features = false }
