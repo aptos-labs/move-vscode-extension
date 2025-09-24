@@ -4,25 +4,21 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-mod fixes;
-
-use crate::cli::diagnostics::fixes::FixCodes;
+use crate::cli::utils;
+use crate::cli::utils::{CmdPath, CmdPathKind};
 use base_db::SourceDatabase;
-use camino::Utf8PathBuf;
 use clap::Args;
 use codespan_reporting::diagnostic::{Label, LabelStyle};
 use codespan_reporting::term;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
 use ide::Analysis;
-use ide_db::assists::AssistResolveStrategy;
+use ide_db::assists::{Assist, AssistResolveStrategy};
 use ide_db::{RootDatabase, Severity};
 use ide_diagnostics::config::DiagnosticsConfig;
 use ide_diagnostics::diagnostic::Diagnostic;
 use paths::{AbsPath, AbsPathBuf, RelPathBuf};
 use project_model::DiscoveredManifest;
-use project_model::aptos_package::load_from_fs;
 use std::collections::HashSet;
-use std::fs;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use vfs::FileId;
@@ -54,6 +50,8 @@ pub struct Diagnostics {
     pub apply_fixes: Option<Vec<String>>,
 }
 
+const FORBIDDEN_PATH_SUFFIXES: &[&str] = &["move-examples/scripts/too_large"];
+
 impl Diagnostics {
     pub fn run(self) -> anyhow::Result<ExitCode> {
         const STACK_SIZE: usize = 1024 * 1024 * 8;
@@ -68,125 +66,58 @@ impl Diagnostics {
     }
 
     fn run_(self) -> anyhow::Result<ExitCode> {
-        let provided_path =
-            Utf8PathBuf::from_path_buf(std::env::current_dir()?.join(&self.path)).unwrap();
+        let cmd_path = CmdPath::new(&self.path)?;
+        match cmd_path.kind() {
+            CmdPathKind::Workspace(ws_root) => self.run_diagnostics_for_ws_root(ws_root),
+            CmdPathKind::MoveFile(file_path) => self.run_diagnostics_for_single_file(file_path),
+            _ => {
+                eprintln!("Provide either Move file or directory.");
+                Ok(ExitCode::FAILURE)
+            }
+        }
+    }
 
-        let mut specific_fpath = None;
-        let mut ws_root = None;
-        let manifests = if provided_path.is_file() && provided_path.extension() == Some("move") {
-            let abs_path = AbsPathBuf::assert(provided_path);
-            let manifest = DiscoveredManifest::discover_for_file(&abs_path);
-            specific_fpath = Some(abs_path);
-            manifest
-                .map(|it| {
-                    ws_root = Some(it.content_root());
-                    vec![it]
-                })
-                .unwrap_or_default()
-        } else {
-            let provided_ws_root = AbsPathBuf::assert(provided_path);
-            let manifests = DiscoveredManifest::discover_all(&[provided_ws_root.clone()]);
-            ws_root = Some(provided_ws_root);
-            manifests
-        };
-
-        if manifests.is_empty() {
+    fn run_diagnostics_for_ws_root(&self, ws_root: AbsPathBuf) -> anyhow::Result<ExitCode> {
+        let ws_manifests = DiscoveredManifest::discover_all(&[ws_root.clone()]);
+        if ws_manifests.is_empty() {
             eprintln!("Could not find any Aptos packages.");
             return Ok(ExitCode::FAILURE);
         }
-        let ws_root = ws_root.unwrap();
 
-        self.run_diagnostics(manifests, ws_root, specific_fpath)
-    }
+        let (mut db, mut vfs) = utils::init_db(ws_manifests);
 
-    fn run_diagnostics(
-        &self,
-        ws_manifests: Vec<DiscoveredManifest>,
-        ws_root: AbsPathBuf,
-        specific_fpath: Option<AbsPathBuf>,
-    ) -> anyhow::Result<ExitCode> {
-        let mut diagnostics_config = DiagnosticsConfig::test_sample();
-
-        let enable_only = self.enable_only.clone().unwrap_or_default();
-        if !enable_only.is_empty() {
-            println!("enabled diagnostics: {:?}", enable_only);
-            diagnostics_config.enable_only = enable_only.into_iter().collect();
-        } else {
-            let disabled_codes = self.disable.clone().unwrap_or_default();
-            println!("disabled diagnostics: {:?}", disabled_codes);
-            diagnostics_config.disabled = disabled_codes.into_iter().collect();
-        }
-
-        let allowed_fix_codes = FixCodes::from_cli(self.apply_fixes.as_ref());
-        if allowed_fix_codes != FixCodes::None {
-            diagnostics_config = diagnostics_config.for_assists();
-        }
-
-        let all_packages = load_from_fs::load_aptos_packages(ws_manifests).valid_packages();
-        let (mut db, mut vfs) = ide_db::load::load_db(&all_packages)?;
+        let cmd_config = self.prepare_cmd_config();
+        let local_package_roots = utils::ws_package_roots(&db, &vfs, ws_root);
 
         let mut found_error = false;
         let mut visited_files: HashSet<FileId> = HashSet::default();
 
-        let mut local_package_roots = vec![];
-        let canonical_ws_root = AbsPathBuf::assert_utf8(fs::canonicalize(ws_root)?);
-        for package_id in db.all_package_ids().data(&db) {
-            let package_root = db.package_root(package_id).data(&db);
-            if package_root.is_builtin() {
-                continue;
-            }
-            let root_dir = package_root.root_dir(&vfs).clone();
-            if root_dir.is_some_and(|it| it.starts_with(&canonical_ws_root))
-                && !package_root.is_library()
-            {
-                local_package_roots.push(package_root);
-            }
-        }
-
-        let diag_kinds = self.kinds.clone().map(|it| {
-            it.iter()
-                .map(|severity| match severity.as_str() {
-                    "error" => Severity::Error,
-                    "warn" => Severity::Warning,
-                    "note" => Severity::WeakWarning,
-                    _ => unreachable!(),
-                })
-                .collect::<Vec<_>>()
-        });
-
         for package_root in local_package_roots {
             let manifest_file_id = package_root.manifest_file_id.unwrap();
-            let metadata = db.package_metadata(manifest_file_id).metadata(&db);
-
-            let forbidden_suffixes = &["move-examples/scripts/too_large"];
+            let package_metadata = db.package_metadata(manifest_file_id).metadata(&db);
 
             let package_root_dir = package_root.root_dir(&vfs).unwrap();
-            if forbidden_suffixes.iter().any(|suffix| {
-                let suffix = RelPathBuf::try_from(*suffix).unwrap();
+            if FORBIDDEN_PATH_SUFFIXES.iter().any(|path_suffix| {
+                let suffix = RelPathBuf::try_from(*path_suffix).unwrap();
                 package_root_dir.ends_with(suffix.as_path())
             }) {
                 println!("skip {package_root_dir} [forbidden]");
                 continue;
             }
 
-            if specific_fpath.is_none() {
-                if !self.quiet {
-                    print!("processing {package_root_dir}");
-                    if !metadata.resolve_deps {
-                        print!(" [no_deps]");
-                    }
-                    println!()
+            if !self.quiet {
+                print!("processing {package_root_dir}");
+                if !package_metadata.resolve_deps {
+                    print!(" [no_deps]");
                 }
+                println!()
             }
 
-            let mut package_config = diagnostics_config.clone();
-            if !metadata.resolve_deps {
-                // disables most of the diagnostics
-                package_config = package_config.for_assists();
-            }
+            let package_cmd_config = cmd_config
+                .clone()
+                .with_resolve_deps(package_metadata.resolve_deps);
 
-            let file_ids = package_root.file_set.iter().collect::<Vec<_>>();
-            for file_id in file_ids {
+            for file_id in package_root.file_ids() {
                 let file_path = vfs.file_path(file_id).clone();
                 if !file_path
                     .name_and_extension()
@@ -199,15 +130,9 @@ impl Diagnostics {
                     continue;
                 }
 
-                // skipping all files except for `specific_fpath` if set
-                if let Some(specific_fpath) = specific_fpath.as_ref() {
-                    if file_path.as_path().unwrap().to_path_buf() != specific_fpath {
-                        continue;
-                    }
-                }
                 if !visited_files.contains(&file_id) {
                     let package_name = package_root.root_dir_name(&vfs).unwrap_or("<error>".to_string());
-                    if specific_fpath.is_some() || self.verbose {
+                    if self.verbose {
                         println!(
                             "processing package '{package_name}', file: {}",
                             vfs.file_path(file_id)
@@ -218,51 +143,25 @@ impl Diagnostics {
                         println!("{}", abs_file_path);
                     }
 
-                    let apply_assists = allowed_fix_codes.has_codes_to_apply();
-                    let mut diagnostics = find_diagnostics_for_a_file(
-                        &db,
-                        file_id,
-                        &diag_kinds,
-                        &package_config,
-                        apply_assists,
-                    );
-
-                    let file_text = db.file_text(file_id).text(&db);
+                    let apply_assists = package_cmd_config.allowed_fix_codes.has_codes_to_apply();
                     if !apply_assists {
-                        for diagnostic in diagnostics.clone() {
-                            if diagnostic.severity == Severity::Error {
-                                found_error = true;
-                            }
-                            print_diagnostic(&file_text, &abs_file_path, diagnostic, false);
-                        }
+                        found_error = found_error
+                            || self.print_diagnostics_for_a_file(
+                                &db,
+                                &package_cmd_config,
+                                file_id,
+                                &abs_file_path,
+                            );
                         continue;
                     }
 
-                    let mut current_file_text = file_text.to_string();
-                    // apply fixes one-by-one
-                    loop {
-                        match fixes::find_diagnostic_with_fix(diagnostics, &allowed_fix_codes) {
-                            Some((diagnostic, fix)) => {
-                                print_diagnostic(
-                                    &current_file_text,
-                                    abs_file_path.as_path(),
-                                    diagnostic,
-                                    true,
-                                );
-                                (current_file_text, _) =
-                                    fixes::apply_fix(&fix, current_file_text.as_ref());
-                                fixes::write_file_text(&mut vfs, &mut db, file_id, &current_file_text);
-                            }
-                            None => break,
-                        }
-                        diagnostics = find_diagnostics_for_a_file(
-                            &db,
-                            file_id,
-                            &diag_kinds,
-                            &package_config,
-                            true,
-                        );
-                    }
+                    self.apply_all_diagnostic_fixes(
+                        &mut db,
+                        &mut vfs,
+                        &cmd_config,
+                        file_id,
+                        &abs_file_path,
+                    );
                 }
 
                 visited_files.insert(file_id);
@@ -283,13 +182,148 @@ impl Diagnostics {
 
         Ok(exit_code)
     }
+
+    fn run_diagnostics_for_single_file(&self, target_fpath: AbsPathBuf) -> anyhow::Result<ExitCode> {
+        let manifest = DiscoveredManifest::discover_for_file(&target_fpath)
+            .expect("file does not belong to a package");
+
+        let (mut db, mut vfs) = utils::init_db(vec![manifest]);
+
+        let cmd_config = self.prepare_cmd_config();
+        let target_file_id = utils::find_target_file_id(&db, &vfs, target_fpath.clone()).unwrap();
+
+        let mut found_error = false;
+        let apply_assists = cmd_config.allowed_fix_codes.has_codes_to_apply();
+        if !apply_assists {
+            found_error = found_error
+                || self.print_diagnostics_for_a_file(&db, &cmd_config, target_file_id, &target_fpath);
+        } else {
+            self.apply_all_diagnostic_fixes(
+                &mut db,
+                &mut vfs,
+                &cmd_config,
+                target_file_id,
+                &target_fpath,
+            );
+        }
+
+        if self.verbose {
+            println!();
+            println!("diagnostic scan complete");
+        }
+
+        let mut exit_code = ExitCode::SUCCESS;
+        if found_error {
+            println!();
+            println!("Error: diagnostic error detected");
+            exit_code = ExitCode::FAILURE;
+        }
+
+        Ok(exit_code)
+    }
+
+    fn print_diagnostics_for_a_file(
+        &self,
+        db: &RootDatabase,
+        cmd_config: &CmdConfig,
+        file_id: FileId,
+        file_path: &AbsPath,
+    ) -> bool {
+        let file_text = db.file_text(file_id).text(db).to_string();
+        let diagnostics = find_diagnostics_for_a_file(db, file_id, &cmd_config, false);
+        let mut found_error = false;
+        for diagnostic in diagnostics.clone() {
+            if diagnostic.severity == Severity::Error {
+                found_error = true;
+            }
+            print_diagnostic(&file_text, &file_path, diagnostic, false);
+        }
+        found_error
+    }
+
+    fn apply_all_diagnostic_fixes(
+        &self,
+        db: &mut RootDatabase,
+        vfs: &mut vfs::Vfs,
+        cmd_config: &CmdConfig,
+        file_id: FileId,
+        file_path: &AbsPath,
+    ) {
+        let apply_assists = cmd_config.allowed_fix_codes.has_codes_to_apply();
+        let mut diagnostics = find_diagnostics_for_a_file(db, file_id, &cmd_config, apply_assists);
+
+        let mut current_file_text = db.file_text(file_id).text(db).to_string();
+        loop {
+            match find_diagnostic_with_fixes(diagnostics, &cmd_config) {
+                Some((diagnostic, fix)) => {
+                    print_diagnostic(&current_file_text, file_path, diagnostic, true);
+                    (current_file_text, _) = utils::apply_assist(&fix, current_file_text.as_ref());
+                    utils::write_file_text(db, vfs, file_id, &current_file_text);
+                }
+                None => break,
+            }
+            diagnostics = find_diagnostics_for_a_file(&db, file_id, &cmd_config, true);
+        }
+    }
+
+    fn prepare_cmd_config(&self) -> CmdConfig {
+        let mut diagnostics_config = DiagnosticsConfig::test_sample();
+
+        let enable_only = self.enable_only.clone().unwrap_or_default();
+        if !enable_only.is_empty() {
+            println!("enabled diagnostics: {:?}", enable_only);
+            diagnostics_config.enable_only = enable_only.into_iter().collect();
+        } else {
+            let disabled_codes = self.disable.clone().unwrap_or_default();
+            println!("disabled diagnostics: {:?}", disabled_codes);
+            diagnostics_config.disabled = disabled_codes.into_iter().collect();
+        }
+
+        let fix_codes = FixCodes::from_cli(self.apply_fixes.as_ref());
+        if fix_codes != FixCodes::None {
+            diagnostics_config = diagnostics_config.for_assists();
+        }
+
+        let diag_kinds = self.kinds.clone().map(|it| {
+            it.iter()
+                .map(|severity| match severity.as_str() {
+                    "error" => Severity::Error,
+                    "warn" => Severity::Warning,
+                    "note" => Severity::WeakWarning,
+                    _ => unreachable!(),
+                })
+                .collect::<Vec<_>>()
+        });
+
+        CmdConfig {
+            diagnoctics_config: diagnostics_config,
+            allowed_fix_codes: fix_codes,
+            kinds: diag_kinds,
+        }
+    }
 }
 
-pub(crate) fn find_diagnostics_for_a_file(
+#[derive(Debug, Clone)]
+struct CmdConfig {
+    diagnoctics_config: DiagnosticsConfig,
+    kinds: Option<Vec<Severity>>,
+    allowed_fix_codes: FixCodes,
+}
+
+impl CmdConfig {
+    pub fn with_resolve_deps(mut self, resolve_deps: bool) -> Self {
+        if !resolve_deps {
+            // disables most of the diagnostics
+            self.diagnoctics_config = self.diagnoctics_config.for_assists();
+        }
+        self
+    }
+}
+
+fn find_diagnostics_for_a_file(
     db: &RootDatabase,
     file_id: FileId,
-    diag_kinds: &Option<Vec<Severity>>,
-    config: &DiagnosticsConfig,
+    cmd_config: &CmdConfig,
     with_assists: bool,
 ) -> Vec<Diagnostic> {
     let analysis = Analysis::new(db.snapshot());
@@ -299,9 +333,9 @@ pub(crate) fn find_diagnostics_for_a_file(
         AssistResolveStrategy::None
     };
     let mut diagnostics = analysis
-        .full_diagnostics(config, resolve_assists, file_id)
+        .full_diagnostics(&cmd_config.diagnoctics_config, resolve_assists, file_id)
         .unwrap();
-    if let Some(sevs) = diag_kinds {
+    if let Some(sevs) = &cmd_config.kinds {
         diagnostics = diagnostics
             .into_iter()
             .filter(|it| sevs.contains(&it.severity))
@@ -340,7 +374,7 @@ fn print_diagnostic(file_text: &str, file_path: &AbsPath, diagnostic: Diagnostic
     if show_fix {
         let fixes = fixes.unwrap_or_default();
         if let Some(fix) = fixes.first() {
-            let (new_file_text, new_file_ranges) = fixes::apply_fix(fix, &file_text);
+            let (new_file_text, new_file_ranges) = utils::apply_assist(fix, &file_text);
             let file_id = files.add(file_path.to_string(), new_file_text);
             for new_file_range in new_file_ranges {
                 codespan_diagnostic = codespan_diagnostic.with_label(
@@ -353,4 +387,46 @@ fn print_diagnostic(file_text: &str, file_path: &AbsPath, diagnostic: Diagnostic
     let term_config = term::Config::default();
     let mut stderr = StandardStream::stderr(ColorChoice::Auto);
     term::emit(&mut stderr, &term_config, &files, &codespan_diagnostic).unwrap();
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub(super) enum FixCodes {
+    None,
+    Codes(Vec<String>),
+    All,
+}
+
+impl FixCodes {
+    pub(super) fn from_cli(apply_fixes: Option<&Vec<String>>) -> Self {
+        match apply_fixes {
+            None => FixCodes::None,
+            Some(codes) if codes.contains(&"all".to_string()) => FixCodes::All,
+            Some(codes) => FixCodes::Codes(codes.clone()),
+        }
+    }
+
+    pub(super) fn has_codes_to_apply(&self) -> bool {
+        matches!(self, FixCodes::Codes(_) | FixCodes::All)
+    }
+}
+
+fn find_diagnostic_with_fixes(
+    diagnostics: Vec<Diagnostic>,
+    cmd_config: &CmdConfig,
+) -> Option<(Diagnostic, Assist)> {
+    for diagnostic in diagnostics {
+        let fixes = diagnostic.fixes.clone().unwrap_or_default();
+        for fix in fixes {
+            match &cmd_config.allowed_fix_codes {
+                FixCodes::All => return Some((diagnostic, fix)),
+                FixCodes::Codes(allowed_codes) => {
+                    if allowed_codes.contains(&fix.id.0.to_string()) {
+                        return Some((diagnostic, fix));
+                    }
+                }
+                FixCodes::None => unreachable!(),
+            }
+        }
+    }
+    None
 }
