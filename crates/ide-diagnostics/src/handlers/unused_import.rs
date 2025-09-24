@@ -16,7 +16,7 @@ use std::collections::HashSet;
 use syntax::ast::UseStmtsOwner;
 use syntax::ast::edit::AstNodeEdit;
 use syntax::ast::syntax_factory::SyntaxFactory;
-use syntax::files::{FileRange, InFile};
+use syntax::files::InFile;
 use syntax::syntax_editor::Element;
 use syntax::{AstNode, ast};
 
