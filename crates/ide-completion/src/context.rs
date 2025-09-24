@@ -13,13 +13,15 @@ use crate::item::{CompletionItem, CompletionItemBuilder, CompletionItemKind};
 use base_db::inputs::InternFileId;
 use base_db::source_db;
 use ide_db::RootDatabase;
-use lang::Semantics;
+use lang::item_scope::ItemScope;
+use lang::loc::SyntaxLoc;
 use lang::types::ty::Ty;
+use lang::{Semantics, hir_db};
 use syntax::SyntaxKind::*;
 use syntax::ast::NameLike;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
-use syntax::files::FilePosition;
+use syntax::files::{FilePosition, InFileExt};
 use syntax::{AstNode, SourceFile, SyntaxElement, SyntaxToken, T, TextRange, TextSize, algo, ast};
 
 const COMPLETION_MARKER: &str = "raCompletionMarker";
@@ -116,6 +118,21 @@ impl CompletionContext<'_> {
 
     pub(crate) fn containing_module(&self) -> Option<ast::Module> {
         self.original_token.parent()?.containing_module()
+    }
+
+    pub(crate) fn original_token_syntax_loc(&self) -> Option<SyntaxLoc> {
+        let original_node = self
+            .original_token
+            .parent()
+            .map(|it| it.in_file(self.position.file_id));
+        original_node.map(|it| SyntaxLoc::from_file_syntax_node(&it))
+    }
+
+    pub(crate) fn original_token_item_scope(&self) -> ItemScope {
+        let original_loc = self.original_token_syntax_loc();
+        original_loc
+            .map(|it| hir_db::item_scope(self.db, it))
+            .unwrap_or(ItemScope::Main)
     }
 
     pub(crate) fn new_item(

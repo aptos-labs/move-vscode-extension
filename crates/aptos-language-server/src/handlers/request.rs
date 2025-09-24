@@ -342,6 +342,7 @@ pub(crate) fn handle_completion_resolve(
             &forced_resolve_completions_config,
             position,
             resolve_data.import.full_import_path,
+            resolve_data.import.item_scope,
         )?
         .into_iter()
         .flat_map(|edit| {

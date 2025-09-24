@@ -24,3 +24,4 @@ vfs = { workspace = true }
 
 syntax = { path = "../syntax" }
 base-db = { path = "../base-db" }
+serde = { version = "1.0.226", features = ["derive"] }

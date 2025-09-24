@@ -4,7 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::item_scope::NamedItemScope;
+use crate::item_scope::ItemScope;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::nameres::is_visible::ScopeEntryWithVis;
 use crate::nameres::namespaces::{Ns, NsSet, named_item_ns};
@@ -24,7 +24,7 @@ pub struct ScopeEntry {
     pub name: String,
     pub node_loc: SyntaxLoc,
     pub ns: Ns,
-    pub scope_adjustment: Option<NamedItemScope>,
+    pub scope_adjustment: Option<ItemScope>,
 }
 
 impl PartialEq for ScopeEntry {

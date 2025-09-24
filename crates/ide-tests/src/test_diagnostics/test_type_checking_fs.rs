@@ -82,12 +82,12 @@ module std::main {
         test_state,
         // language=Move
         expect![[r#"
-        module std::main {
-            use std::messenger;
-            public fun main(fa: std::fungible_asset::FungibleAsset) {
-                messenger::get_fa(fa/*caret*/);
+            module std::main {
+                use std::messenger;
+                public fun main(fa: std::fungible_asset::FungibleAsset) {
+                    messenger::get_fa(fa/*caret*/);
+                }
             }
-        }
-    "#]],
+        "#]],
     );
 }

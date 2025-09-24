@@ -14,6 +14,7 @@ use ide_db::source_change::SourceChangeBuilder;
 use ide_db::text_edit::TextEdit;
 use ide_db::{RootDatabase, imports};
 use lang::Semantics;
+use lang::item_scope::ItemScope;
 use std::cell::RefCell;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::FilePosition;
@@ -70,6 +71,7 @@ pub fn resolve_completion_edits(
     db: &RootDatabase,
     FilePosition { file_id, offset }: FilePosition,
     import_to_add: String,
+    item_scope: ItemScope,
 ) -> Option<Vec<TextEdit>> {
     let _p = tracing::info_span!("resolve_completion_edits").entered();
     let sema = Semantics::new(db, file_id);
@@ -85,7 +87,7 @@ pub fn resolve_completion_edits(
     let mut builder = SourceChangeBuilder::new(file_id);
 
     let mut editor = builder.make_editor(items_owner.syntax());
-    let add_imports = imports::add_import_for_import_path(&items_owner, import_to_add, None);
+    let add_imports = imports::add_import_for_import_path(&items_owner, import_to_add, Some(item_scope));
     add_imports(&mut editor);
     builder.add_file_edits(file_id, editor);
 

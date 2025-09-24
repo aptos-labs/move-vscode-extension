@@ -550,3 +550,106 @@ fn test_duplicate_self_import() {
         "#]],
     )
 }
+
+#[test]
+fn test_change_import_scope_from_main_to_test() {
+    // language=Move
+    check_organize_imports(
+        r#"
+        module 0x1::pool {
+            public fun create_pool() {}
+        }
+        module 0x1::main {
+            use 0x1::pool;
+
+            #[test]
+            fun main() {
+                pool::create_pool();
+            }
+        }
+    "#,
+        expect![[r#"
+            module 0x1::pool {
+                public fun create_pool() {}
+            }
+            module 0x1::main {
+                #[test_only]
+                use 0x1::pool;
+
+                #[test]
+                fun main() {
+                    pool::create_pool();
+                }
+            }
+        "#]],
+    )
+}
+
+#[test]
+fn test_change_import_scope_from_main_to_test_and_remove_unused() {
+    // language=Move
+    check_organize_imports(
+        r#"
+        module 0x1::pool {
+            public fun create_pool() {}
+        }
+        module 0x1::main {
+            use 0x1::pool;
+            use 0x1::pool::create_pool;
+
+            #[test]
+            fun main() {
+                pool::create_pool();
+            }
+        }
+    "#,
+        expect![[r#"
+            module 0x1::pool {
+                public fun create_pool() {}
+            }
+            module 0x1::main {
+                #[test_only]
+                use 0x1::pool;
+                #[test]
+                fun main() {
+                    pool::create_pool();
+                }
+            }
+        "#]],
+    )
+}
+
+#[test]
+fn test_change_import_scope_from_main_to_test_and_remove_unused_reverse_order() {
+    // language=Move
+    check_organize_imports(
+        r#"
+        module 0x1::pool {
+            public fun create_pool() {}
+        }
+        module 0x1::main {
+            use 0x1::pool::create_pool;
+            use 0x1::pool;
+
+            #[test]
+            fun main() {
+                pool::create_pool();
+            }
+        }
+    "#,
+        expect![[r#"
+            module 0x1::pool {
+                public fun create_pool() {}
+            }
+            module 0x1::main {
+                #[test_only]
+                use 0x1::pool;
+
+                #[test]
+                fun main() {
+                    pool::create_pool();
+                }
+            }
+        "#]],
+    )
+}

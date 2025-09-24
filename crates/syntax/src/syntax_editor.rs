@@ -7,6 +7,7 @@
 mod edit_algo;
 pub mod mapping;
 mod node_ext;
+mod syntax_editor_ext;
 
 use crate::ast::node_ext::syntax_element::SyntaxElementExt;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;

@@ -25,6 +25,10 @@ impl ast::UseStmt {
         self.use_speck().and_then(|it| it.path())
     }
 
+    pub fn use_group(&self) -> Option<ast::UseGroup> {
+        self.use_speck().and_then(|it| it.use_group())
+    }
+
     pub fn group_use_specks(&self) -> Vec<ast::UseSpeck> {
         self.use_speck()
             .and_then(|it| it.use_group())

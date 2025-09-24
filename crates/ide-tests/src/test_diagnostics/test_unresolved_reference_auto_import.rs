@@ -424,19 +424,19 @@ fn test_struct_with_the_same_name_as_module() {
 fn test_unresolved_function_on_module_should_not_have_a_fix() {
     // language=Move
     check_diagnostics_no_import_fix(expect![[r#"
-            module 0x1::Coin {
-                public fun initialize() {}
-            }
-            module 0x1::AnotherCoin {}
-            module 0x1::Main {
-                use 0x1::AnotherCoin;
+        module 0x1::Coin {
+            public fun initialize() {}
+        }
+        module 0x1::AnotherCoin {}
+        module 0x1::Main {
+            use 0x1::AnotherCoin;
 
-                fun call() {
-                    AnotherCoin::initialize();
-                               //^^^^^^^^^^ err: Unresolved reference `initialize`: cannot resolve
-                }
+            fun call() {
+                AnotherCoin::initialize();
+                           //^^^^^^^^^^ err: Unresolved reference `initialize`: cannot resolve
             }
-        "#]]);
+        }
+    "#]]);
 }
 
 #[test]
@@ -797,6 +797,39 @@ fn test_auto_import_in_spec() {
                 use 0x1::bcs::to_bytes;
 
                 spec module {
+                    to_bytes();
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_auto_import_test_scope() {
+    // language=Move
+    check_diagnostics_apply_import_fix(
+        expect![[r#"
+            module 0x1::bcs {
+                native public fun to_bytes<MoveValue>(v: &MoveValue): vector<u8>;
+            }
+            module 0x1::m {
+                #[test]
+                fun test_main() {
+                    to_bytes();
+                  //^^^^^^^^ err: Unresolved reference `to_bytes`: cannot resolve
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::bcs {
+                native public fun to_bytes<MoveValue>(v: &MoveValue): vector<u8>;
+            }
+            module 0x1::m {
+                #[test_only]
+                use 0x1::bcs::to_bytes;
+
+                #[test]
+                fun test_main() {
                     to_bytes();
                 }
             }

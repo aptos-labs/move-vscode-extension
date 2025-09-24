@@ -4,7 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::item_scope::NamedItemScope;
+use crate::item_scope::ItemScope;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::nameres::namespaces::{Ns, TYPES_N_ENUMS};
 use crate::nameres::scope::ScopeEntry;
@@ -22,7 +22,7 @@ use syntax::{AstNode, SyntaxElement, ast};
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ItemInvisibleReason {
     Private { vis: Vis },
-    WrongItemScope { item_scope: NamedItemScope },
+    WrongItemScope { item_scope: ItemScope },
     Unknown,
 }
 
@@ -147,7 +147,7 @@ pub fn is_visible_in_context(
         item_scope = item_scope.shrink_scope(adjustment);
     }
     // i.e. #[test_only] items in non-test-only scope
-    if item_scope != NamedItemScope::Main {
+    if item_scope != ItemScope::Main {
         // cannot be used everywhere, need to check for scope compatibility
         if item_scope != context_item_scope {
             return Some(ItemInvisibleReason::WrongItemScope { item_scope });
@@ -157,7 +157,7 @@ pub fn is_visible_in_context(
     // we're in non-msl scope at this point, msl only items aren't accessible
     if item.syntax().is_msl_only_item() {
         return Some(ItemInvisibleReason::WrongItemScope {
-            item_scope: NamedItemScope::Verify,
+            item_scope: ItemScope::Verify,
         });
     }
 
