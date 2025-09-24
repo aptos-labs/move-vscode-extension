@@ -10,6 +10,12 @@ impl ast::UseSpeck {
         self.path()?.reference_name()
     }
 
+    pub fn path_name_ref(&self) -> Option<ast::NameRef> {
+        self.path()
+            .and_then(|it| it.segment())
+            .and_then(|it| it.name_ref())
+    }
+
     pub fn parent_use_group(&self) -> Option<ast::UseGroup> {
         self.syntax.parent_of_type()
     }

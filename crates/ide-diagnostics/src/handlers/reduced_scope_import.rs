@@ -8,7 +8,7 @@ use stdx::itertools::Itertools;
 use syntax::ast;
 use syntax::files::InFile;
 
-pub(crate) fn find_unused_scoped_use_items(
+pub(crate) fn find_use_items_with_redundant_main_scope(
     db: &dyn SourceDatabase,
     use_stmts_owner: &InFile<ast::AnyUseStmtsOwner>,
 ) -> Option<Vec<UseItem>> {

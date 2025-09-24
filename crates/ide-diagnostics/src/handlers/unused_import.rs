@@ -6,7 +6,7 @@ pub(crate) mod use_items;
 
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
-use crate::handlers::reduced_scope_import::find_unused_scoped_use_items;
+use crate::handlers::reduced_scope_import::find_use_items_with_redundant_main_scope;
 use base_db::SourceDatabase;
 use ide_db::Severity;
 use lang::hir_db;
@@ -47,7 +47,8 @@ pub(crate) fn find_unused_imports(
         highlight_unused_use_items(ctx, &use_stmts_owner, use_stmt.value, acc, unused_import_kind);
     }
 
-    let unused_scoped_use_items = find_unused_scoped_use_items(db, &use_stmts_owner).unwrap_or_default();
+    let unused_scoped_use_items =
+        find_use_items_with_redundant_main_scope(db, &use_stmts_owner).unwrap_or_default();
     for use_stmt in hir_db::combined_use_stmts(db, &use_stmts_owner) {
         let unused_use_items_for_current_stmt = unused_scoped_use_items
             .iter()
@@ -245,23 +246,17 @@ fn highlight_unused_scoped_use_items(
             let module_path = root_use_speck.path()?;
             for use_speck_loc in use_speck_locs {
                 let diag_range = use_speck_loc.file_range();
-                if let Some((file_id, use_speck)) = use_speck_loc
+                if let Some(use_speck) = use_speck_loc
                     .to_ast::<ast::UseSpeck>(ctx.sema.db)
-                    .map(|it| it.unpack())
-                    && let Some(use_speck_name_ref) = use_speck
-                        .path()
-                        .and_then(|it| it.segment())
-                        .and_then(|it| it.name_ref())
+                    .map(|it| it.value)
+                    && let Some(use_speck_name_ref) = use_speck.path_name_ref()
                 {
                     let use_speck_alias = use_speck.use_alias().clone();
                     acc.push(
                         Diagnostic::new(
                             DiagnosticCode::Lsp("too-broad-scoped-import", Severity::Warning),
                             "Use item is used only in test scope and should be declared as #[test_only]",
-                            FileRange {
-                                file_id,
-                                range: use_speck.syntax().text_range(),
-                            },
+                            diag_range,
                         )
                         .with_local_fix(ctx.local_fix(
                             use_stmts_owner.as_ref(),
