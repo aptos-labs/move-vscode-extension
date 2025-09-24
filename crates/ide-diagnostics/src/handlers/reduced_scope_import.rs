@@ -15,6 +15,14 @@ pub(crate) fn find_use_items_with_redundant_main_scope(
     let _p = tracing::debug_span!("find_use_items_to_reduce").entered();
 
     let use_items_hit_with_usage_scopes = use_items::find_use_items_hit_with_scopes(db, use_stmts_owner);
+    // #[verify_only] usages for this diagnostics have same meaning as #[main]
+    let use_items_hit_with_usage_scopes = use_items_hit_with_usage_scopes
+        .into_iter()
+        .map(|(use_item, scope)| match scope {
+            ItemScope::Verify => (use_item, ItemScope::Main),
+            _ => (use_item, scope),
+        })
+        .collect::<HashSet<_>>();
 
     let mut use_items_with_unused_declared_scopes = vec![];
     for use_stmt in hir_db::combined_use_stmts(db, use_stmts_owner) {

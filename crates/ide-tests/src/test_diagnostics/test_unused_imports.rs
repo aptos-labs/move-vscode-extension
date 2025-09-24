@@ -942,3 +942,25 @@ fn test_highlight_use_speck_with_too_broad_scope() {
         }
     "#]]);
 }
+
+#[test]
+fn test_no_broad_scope_highlighting_if_used_in_test_and_verify() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::pool {
+            public fun create_pool() {}
+        }
+        module 0x1::main {
+            use 0x1::pool::create_pool;
+
+            spec fun main(): u8 {
+                create_pool();
+                1
+            }
+            #[test]
+            fun test_main() {
+                create_pool();
+            }
+        }
+    "#]]);
+}
