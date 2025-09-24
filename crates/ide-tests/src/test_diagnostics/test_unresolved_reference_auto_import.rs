@@ -424,19 +424,19 @@ fn test_struct_with_the_same_name_as_module() {
 fn test_unresolved_function_on_module_should_not_have_a_fix() {
     // language=Move
     check_diagnostics_no_import_fix(expect![[r#"
-            module 0x1::Coin {
-                public fun initialize() {}
-            }
-            module 0x1::AnotherCoin {}
-            module 0x1::Main {
-                use 0x1::AnotherCoin;
+        module 0x1::Coin {
+            public fun initialize() {}
+        }
+        module 0x1::AnotherCoin {}
+        module 0x1::Main {
+            use 0x1::AnotherCoin;
 
-                fun call() {
-                    AnotherCoin::initialize();
-                               //^^^^^^^^^^ err: Unresolved reference `initialize`: cannot resolve
-                }
+            fun call() {
+                AnotherCoin::initialize();
+                           //^^^^^^^^^^ err: Unresolved reference `initialize`: cannot resolve
             }
-        "#]]);
+        }
+    "#]]);
 }
 
 #[test]

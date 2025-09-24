@@ -1,6 +1,7 @@
 // Copyright © Aptos Foundation
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::ast::edit::AstNodeEdit;
 use crate::ast::node_ext::syntax_element::SyntaxElementExt;
 use crate::ast::node_ext::syntax_node::SyntaxNodeExt;
 use crate::ast::node_ext::use_speck::UseSpeckKind;
@@ -18,6 +19,20 @@ impl ast::UseStmt {
         editor.delete(self.syntax());
     }
 
+    pub fn add_attribute(&self, editor: &mut SyntaxEditor, attr_name: &str) {
+        let make = SyntaxFactory::new();
+        let attr = make.attr(attr_name);
+        let indent_level = self.indent_level();
+        if let Some(use_speck) = self.use_speck() {
+            editor.replace(
+                self.syntax(),
+                make.use_stmt(vec![attr], use_speck.clone_for_update())
+                    .indent_inner(indent_level)
+                    .syntax(),
+            );
+        }
+    }
+
     pub fn simplify_root_self(&self, editor: &mut SyntaxEditor) -> Option<()> {
         let root_use_speck = self.use_speck()?;
         // cannot be used with groups
@@ -30,7 +45,8 @@ impl ast::UseStmt {
             let alias = root_use_speck.use_alias().map(|it| it.clone_for_update());
             editor.replace(
                 root_use_speck.syntax(),
-                make.use_speck(module_path.clone_for_update(), alias).syntax(),
+                make.root_use_speck(module_path.clone_for_update(), None, alias)
+                    .syntax(),
             );
         }
         Some(())
@@ -74,8 +90,8 @@ impl ast::UseStmt {
 
     pub fn delete_group_use_specks(
         &self,
-        unused_use_specks: Vec<ast::UseSpeck>,
         editor: &mut SyntaxEditor,
+        unused_use_specks: Vec<ast::UseSpeck>,
     ) {
         let single_use_speck_left = self
             .group_use_specks()

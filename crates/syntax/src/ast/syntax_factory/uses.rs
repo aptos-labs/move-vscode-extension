@@ -14,6 +14,19 @@ impl SyntaxFactory {
         module_item_from_text::<ast::UseStmt>(&format!("{attrs}use {use_speck};")).clone_for_update()
     }
 
+    pub fn root_use_speck(
+        &self,
+        module_path: ast::Path,
+        name_ref: Option<ast::NameRef>,
+        alias: Option<ast::UseAlias>,
+    ) -> ast::UseSpeck {
+        let use_speck_path = match name_ref {
+            Some(item_name_ref) => self.path_from_qualifier_and_name_ref(module_path, item_name_ref),
+            None => module_path,
+        };
+        self.use_speck(use_speck_path, alias)
+    }
+
     pub fn use_speck(&self, path: ast::Path, alias: Option<ast::UseAlias>) -> ast::UseSpeck {
         let mut buf = "use ".to_string();
         buf += &path.syntax().to_string();

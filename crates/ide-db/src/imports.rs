@@ -30,16 +30,11 @@ pub fn add_import_for_import_path(
                 use_stmt.add_group_item(editor, (new_group_name_ref, None));
             }
             None => {
-                let use_speck_path = match item_name_ref {
-                    Some(item_name_ref) => {
-                        make.path_from_qualifier_and_name_ref(module_path, item_name_ref)
-                    }
-                    None => module_path,
-                };
+                let new_root_use_speck = make.root_use_speck(module_path, item_name_ref, None);
+
                 let indent = IndentLevel::from_node(items_owner.syntax()) + 1;
-                let attrs = add_test_only.then_some(make.attr("test_only"));
-                let use_speck = make.use_speck(use_speck_path, None);
-                let new_use_stmt = make.use_stmt(attrs, use_speck).indent_inner(indent);
+                let attr = add_test_only.then_some(make.attr("test_only"));
+                let new_use_stmt = make.use_stmt(attr, new_root_use_speck).indent_inner(indent);
 
                 items_owner.add_use_stmt(editor, &new_use_stmt);
             }

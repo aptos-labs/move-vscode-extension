@@ -2,21 +2,23 @@
 // SPDX-License-Identifier: Apache-2.0
 
 pub mod organize_imports;
+pub(crate) mod use_items;
 
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
+use crate::handlers::reduced_scope_import::find_unused_scoped_use_items;
 use base_db::SourceDatabase;
 use ide_db::Severity;
 use lang::hir_db;
-use lang::item_scope::ItemScope;
 use lang::loc::{SyntaxLoc, SyntaxLocFileExt};
 use lang::nameres::use_speck_entries::{UseItem, UseItemType, use_items_for_stmt};
 use std::collections::HashSet;
 use syntax::ast::UseStmtsOwner;
-use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
-use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
-use syntax::files::InFile;
-use syntax::{AstNode, SyntaxNode, ast};
+use syntax::ast::edit::AstNodeEdit;
+use syntax::ast::syntax_factory::SyntaxFactory;
+use syntax::files::{FileRange, InFile};
+use syntax::syntax_editor::Element;
+use syntax::{AstNode, ast};
 
 pub(crate) fn find_unused_imports(
     acc: &mut Vec<Diagnostic>,
@@ -34,50 +36,46 @@ pub(crate) fn find_unused_imports(
     }
 
     let db = ctx.sema.db;
-    let stmts_owner_with_siblings =
-        hir_db::use_stmts_owner_with_siblings(db, use_stmts_owner.clone().map_into());
 
-    let unused_use_items_in_scope =
-        find_unused_use_items(db, &stmts_owner_with_siblings).unwrap_or_default();
-    for use_stmt_owner in stmts_owner_with_siblings.iter() {
-        let use_stmts = use_stmt_owner.as_ref().flat_map(|it| it.use_stmts());
-        for use_stmt in use_stmts {
-            let stmt_use_items = unused_use_items_in_scope
-                .iter()
-                .filter(|it| use_stmt.loc().contains(&it.use_speck_loc))
-                .collect::<Vec<_>>();
-            let unused_import_kind = unused_import_kind(db, use_stmt.clone(), stmt_use_items)?;
-            highlight_unused_use_items(ctx, &use_stmts_owner, use_stmt.value, acc, unused_import_kind);
-        }
+    let unused_use_items_in_scope = find_unused_use_items(db, &use_stmts_owner).unwrap_or_default();
+    for use_stmt in hir_db::combined_use_stmts(db, &use_stmts_owner) {
+        let stmt_use_items = unused_use_items_in_scope
+            .iter()
+            .filter(|it| use_stmt.loc().contains(&it.use_speck_loc))
+            .collect::<Vec<_>>();
+        let unused_import_kind = unused_use_kind(db, use_stmt.clone(), stmt_use_items)?;
+        highlight_unused_use_items(ctx, &use_stmts_owner, use_stmt.value, acc, unused_import_kind);
     }
+
+    let unused_scoped_use_items = find_unused_scoped_use_items(db, &use_stmts_owner).unwrap_or_default();
+    for use_stmt in hir_db::combined_use_stmts(db, &use_stmts_owner) {
+        let unused_use_items_for_current_stmt = unused_scoped_use_items
+            .iter()
+            .filter(|it| use_stmt.loc().contains(&it.use_speck_loc))
+            .collect::<Vec<_>>();
+        let unused_use_kind = unused_use_kind(db, use_stmt.clone(), unused_use_items_for_current_stmt)?;
+        highlight_unused_scoped_use_items(ctx, &use_stmts_owner, use_stmt.value, acc, unused_use_kind);
+    }
+
     Some(())
 }
 
 pub(crate) fn find_unused_use_items(
     db: &dyn SourceDatabase,
-    stmts_owner_with_siblings: &Vec<InFile<ast::AnyUseStmtsOwner>>,
+    use_stmts_owner: &InFile<ast::AnyUseStmtsOwner>,
 ) -> Option<Vec<UseItem>> {
     let _p = tracing::debug_span!("find_unused_use_items").entered();
 
-    let reachable_paths = stmts_owner_with_siblings.iter().flat_map(|it| {
-        it.as_ref()
-            .flat_map(|stmts_owner| descendant_paths(stmts_owner.syntax()))
-    });
-    let mut use_items_hit = HashSet::new();
-    for path in reachable_paths {
-        if let Some(use_item) = find_use_item_hit_for_path(db, path.clone()) {
-            use_items_hit.insert(use_item);
-        }
-    }
+    let use_items_hit = use_items::find_use_items_hit_with_scopes(db, &use_stmts_owner)
+        .into_iter()
+        .map(|it| it.0)
+        .collect::<HashSet<_>>();
 
     let mut all_unused_use_items = vec![];
-    for use_stmt_owner in stmts_owner_with_siblings {
-        let use_stmts = use_stmt_owner.as_ref().flat_map(|it| it.use_stmts());
-        for use_stmt in use_stmts {
-            for use_item in use_items_for_stmt(db, use_stmt)? {
-                if !use_items_hit.contains(&use_item) {
-                    all_unused_use_items.push(use_item);
-                }
+    for use_stmt in hir_db::combined_use_stmts(db, &use_stmts_owner) {
+        for use_item in use_items_for_stmt(db, use_stmt)? {
+            if !use_items_hit.contains(&use_item) {
+                all_unused_use_items.push(use_item);
             }
         }
     }
@@ -85,78 +83,29 @@ pub(crate) fn find_unused_use_items(
     Some(all_unused_use_items)
 }
 
-fn find_use_item_hit_for_path(db: &dyn SourceDatabase, path: InFile<ast::Path>) -> Option<UseItem> {
-    let _p = tracing::debug_span!("find_use_item_hit_for_path").entered();
-
-    let path_scope = hir_db::item_scope(db, path.loc());
-    let specific_item_scope = if path_scope != ItemScope::Main {
-        Some(path_scope)
-    } else {
-        None
-    };
-    let base_path_type = BasePathType::for_path(&path.value)?;
-
-    let use_item_owner_ancestors = path
-        .as_ref()
-        .flat_map(|it| it.syntax().ancestors_of_type::<ast::AnyUseStmtsOwner>());
-    for use_item_owner_ans in use_item_owner_ancestors {
-        let owner_use_items = hir_db::use_items_from_self_and_siblings(db, use_item_owner_ans)
-            .into_iter()
-            .filter(|use_item| {
-                use_item.scope == ItemScope::Main
-                    || specific_item_scope.is_some_and(|it| use_item.scope == it)
-            });
-        let use_items_hit_in_owner = match &base_path_type {
-            BasePathType::Item { item_name } => owner_use_items
-                .filter(|it| it.type_ == UseItemType::Item && it.alias_or_name.eq(item_name))
-                .collect(),
-            BasePathType::Module { module_name } => owner_use_items
-                .filter(|it| {
-                    matches!(it.type_, UseItemType::Module | UseItemType::SelfModule)
-                        && it.alias_or_name.eq(module_name)
-                })
-                .collect(),
-            _ => vec![],
-        };
-
-        // first try to find a candidate in main scope
-        let mut use_item_hit = use_items_hit_in_owner
-            .iter()
-            .find(|item| item.scope == ItemScope::Main)
-            .cloned();
-        // then if we can't find it there, check specialized scope
-        if use_item_hit.is_none()
-            && let Some(specific_item_scope) = specific_item_scope
-        {
-            use_item_hit = use_items_hit_in_owner
-                .into_iter()
-                .find(|item| item.scope == specific_item_scope);
-        }
-
-        if use_item_hit.is_some() {
-            return use_item_hit;
-        }
-    }
-    None
-}
-
-fn descendant_paths(node: &SyntaxNode) -> impl Iterator<Item = ast::Path> {
-    node.descendants_of_type::<ast::Path>()
-        .filter(|path| &path.base_path() == path)
-        .filter(|path| !path.syntax().has_ancestor_strict::<ast::UseSpeck>())
+#[derive(Debug, Eq, PartialEq)]
+pub(crate) enum UnusedUseStmtKind {
+    Module,
+    EmptyGroup,
+    AllSpecksInGroup,
 }
 
 #[derive(Debug)]
-pub(crate) enum UnusedImportKind {
-    UseStmt { use_stmt: InFile<ast::UseStmt> },
-    UseSpeck { use_speck_locs: Vec<SyntaxLoc> },
+pub(crate) enum UnusedUseKind {
+    UseStmt {
+        use_stmt: InFile<ast::UseStmt>,
+        kind: UnusedUseStmtKind,
+    },
+    UseSpeck {
+        use_speck_locs: Vec<SyntaxLoc>,
+    },
 }
 
-impl UnusedImportKind {
+impl UnusedUseKind {
     pub fn use_stmt(&self, db: &dyn SourceDatabase) -> Option<InFile<ast::UseStmt>> {
         match self {
-            UnusedImportKind::UseStmt { use_stmt } => Some(use_stmt.clone()),
-            UnusedImportKind::UseSpeck { use_speck_locs } => use_speck_locs
+            UnusedUseKind::UseStmt { use_stmt, .. } => Some(use_stmt.clone()),
+            UnusedUseKind::UseSpeck { use_speck_locs } => use_speck_locs
                 .first()
                 .and_then(|it| it.to_ast::<ast::UseSpeck>(db))?
                 .and_then(|it| it.parent_use_group())?
@@ -165,32 +114,42 @@ impl UnusedImportKind {
     }
 }
 
-pub(crate) fn unused_import_kind(
+pub(crate) fn unused_use_kind(
     db: &dyn SourceDatabase,
     use_stmt: InFile<ast::UseStmt>,
     unused_stmt_use_items: Vec<&UseItem>,
-) -> Option<UnusedImportKind> {
+) -> Option<UnusedUseKind> {
     let module_use_items = unused_stmt_use_items
         .iter()
         .find(|it| it.type_ == UseItemType::Module);
+
     // use 0x1::unused_m;
     if module_use_items.is_some() {
-        return Some(UnusedImportKind::UseStmt { use_stmt });
+        return Some(UnusedUseKind::UseStmt {
+            use_stmt,
+            kind: UnusedUseStmtKind::Module,
+        });
     }
 
     let actual_stmt_use_items = use_items_for_stmt(db, use_stmt.clone())?;
     // use 0x1::m::{};
     if actual_stmt_use_items.is_empty() {
-        return Some(UnusedImportKind::UseStmt { use_stmt });
+        return Some(UnusedUseKind::UseStmt {
+            use_stmt,
+            kind: UnusedUseStmtKind::EmptyGroup,
+        });
     }
 
     // use 0x1::m::{unused_a, unused_b};
     if actual_stmt_use_items.len() == unused_stmt_use_items.len() {
         // all inner speck types are covered, highlight complete useStmt
-        return Some(UnusedImportKind::UseStmt { use_stmt });
+        return Some(UnusedUseKind::UseStmt {
+            use_stmt,
+            kind: UnusedUseStmtKind::AllSpecksInGroup,
+        });
     }
 
-    Some(UnusedImportKind::UseSpeck {
+    Some(UnusedUseKind::UseSpeck {
         use_speck_locs: unused_stmt_use_items
             .iter()
             .map(|it| it.use_speck_loc.clone())
@@ -203,10 +162,10 @@ fn highlight_unused_use_items(
     use_stmts_owner: &InFile<ast::AnyUseStmtsOwner>,
     use_stmt: ast::UseStmt,
     acc: &mut Vec<Diagnostic>,
-    unused_import_kind: UnusedImportKind,
+    unused_import_kind: UnusedUseKind,
 ) -> Option<()> {
     match unused_import_kind {
-        UnusedImportKind::UseStmt { use_stmt } => {
+        UnusedUseKind::UseStmt { use_stmt, .. } => {
             acc.push(
                 Diagnostic::new(
                     DiagnosticCode::Lsp("unused-import", Severity::Warning),
@@ -224,7 +183,7 @@ fn highlight_unused_use_items(
                 )),
             );
         }
-        UnusedImportKind::UseSpeck { ref use_speck_locs } => {
+        UnusedUseKind::UseSpeck { ref use_speck_locs } => {
             for use_speck_loc in use_speck_locs {
                 let diag_range = use_speck_loc.file_range();
                 if let Some(use_speck) = use_speck_loc.to_ast::<ast::UseSpeck>(ctx.sema.db) {
@@ -240,7 +199,7 @@ fn highlight_unused_use_items(
                             "Remove unused use item",
                             diag_range.range,
                             |editor| {
-                                use_stmt.delete_group_use_specks(vec![use_speck.value], editor);
+                                use_stmt.delete_group_use_specks(editor, vec![use_speck.value]);
                             },
                         )),
                     );
@@ -251,27 +210,87 @@ fn highlight_unused_use_items(
     Some(())
 }
 
-enum BasePathType {
-    Address,
-    Module { module_name: String },
-    Item { item_name: String },
-}
-
-impl BasePathType {
-    fn for_path(path: &ast::Path) -> Option<BasePathType> {
-        let root_path = path.root_path();
-        let qualifier = root_path.qualifier();
-        match qualifier {
-            // foo
-            None => Some(BasePathType::Item {
-                item_name: root_path.reference_name()?,
-            }),
-            // 0x1::foo
-            Some(qualifier) if qualifier.path_address().is_some() => Some(BasePathType::Address),
-            // m::foo
-            Some(qualifier) => Some(BasePathType::Module {
-                module_name: qualifier.reference_name()?,
-            }),
+fn highlight_unused_scoped_use_items(
+    ctx: &DiagnosticsContext<'_>,
+    use_stmts_owner: &InFile<ast::AnyUseStmtsOwner>,
+    use_stmt: ast::UseStmt,
+    acc: &mut Vec<Diagnostic>,
+    unused_use_kind: UnusedUseKind,
+) -> Option<()> {
+    match unused_use_kind {
+        UnusedUseKind::UseStmt { use_stmt, kind } => {
+            // skip use stmts with empty groups
+            if kind == UnusedUseStmtKind::EmptyGroup {
+                return None;
+            }
+            acc.push(
+                Diagnostic::new(
+                    DiagnosticCode::Lsp("too-broad-scoped-import", Severity::Warning),
+                    "Use item is used only in test scope and should be declared as #[test_only]",
+                    use_stmt.file_range(),
+                )
+                .with_local_fix(ctx.local_fix(
+                    use_stmts_owner.as_ref(),
+                    "add-scope-attribute",
+                    "Add #[test_only] attribute",
+                    use_stmt.file_range().range,
+                    |editor| {
+                        use_stmt.value.add_attribute(editor, "test_only");
+                    },
+                )),
+            );
+        }
+        UnusedUseKind::UseSpeck { ref use_speck_locs } => {
+            let root_use_speck = use_stmt.use_speck()?;
+            let module_path = root_use_speck.path()?;
+            for use_speck_loc in use_speck_locs {
+                let diag_range = use_speck_loc.file_range();
+                if let Some((file_id, use_speck)) = use_speck_loc
+                    .to_ast::<ast::UseSpeck>(ctx.sema.db)
+                    .map(|it| it.unpack())
+                    && let Some(use_speck_name_ref) = use_speck
+                        .path()
+                        .and_then(|it| it.segment())
+                        .and_then(|it| it.name_ref())
+                {
+                    let use_speck_alias = use_speck.use_alias().clone();
+                    acc.push(
+                        Diagnostic::new(
+                            DiagnosticCode::Lsp("too-broad-scoped-import", Severity::Warning),
+                            "Use item is used only in test scope and should be declared as #[test_only]",
+                            FileRange {
+                                file_id,
+                                range: use_speck.syntax().text_range(),
+                            },
+                        )
+                        .with_local_fix(ctx.local_fix(
+                            use_stmts_owner.as_ref(),
+                            "add-scope-attribute",
+                            "Add #[test_only] attribute",
+                            diag_range.range,
+                            |editor| {
+                                use_stmt.delete_group_use_specks(editor, vec![use_speck.clone()]);
+                                let make = SyntaxFactory::new();
+                                let indent_level = use_stmt.indent_level();
+                                let new_root_use_speck = make.root_use_speck(
+                                    module_path.clone(),
+                                    Some(use_speck_name_ref.clone()),
+                                    use_speck_alias,
+                                );
+                                editor.insert_at_next_line_after(
+                                    &use_stmt,
+                                    make.use_stmt(vec![make.attr("test_only")], new_root_use_speck)
+                                        .indent_inner(indent_level)
+                                        .syntax()
+                                        .syntax_element(),
+                                );
+                                editor.add_mappings(make.finish_with_mappings());
+                            },
+                        )),
+                    );
+                }
+            }
         }
     }
+    Some(())
 }

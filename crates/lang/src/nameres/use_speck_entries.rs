@@ -43,7 +43,7 @@ fn resolve_use_item(db: &dyn SourceDatabase, use_item: UseItem) -> Option<ScopeE
         name: use_item.alias_or_name,
         node_loc,
         ns: scope_entry.ns,
-        scope_adjustment: Some(use_item.scope),
+        scope_adjustment: Some(use_item.declared_scope),
     })
 }
 
@@ -59,7 +59,7 @@ pub struct UseItem {
     pub use_speck_loc: SyntaxLoc,
     pub alias_or_name: String,
     pub type_: UseItemType,
-    pub scope: ItemScope,
+    pub declared_scope: ItemScope,
 }
 
 impl UseItem {
@@ -114,7 +114,7 @@ pub fn use_items_for_stmt(
                 use_speck_loc: root_use_speck.loc(file_id),
                 alias_or_name: root_alias_name.unwrap_or(root_name),
                 type_: UseItemType::Module,
-                scope: use_stmt_scope,
+                declared_scope: use_stmt_scope,
             }),
             // use 0x1::m::call;
             // use aptos_std::m::call as mycall;
@@ -128,14 +128,14 @@ pub fn use_items_for_stmt(
                         use_speck_loc: root_use_speck.loc(file_id),
                         alias_or_name: root_alias_name.unwrap_or(module_name),
                         type_: UseItemType::SelfModule,
-                        scope: use_stmt_scope,
+                        declared_scope: use_stmt_scope,
                     });
                 } else {
                     use_items.push(UseItem {
                         use_speck_loc: root_use_speck.loc(file_id),
                         alias_or_name: root_alias_name.unwrap_or(root_name),
                         type_: UseItemType::Item,
-                        scope: use_stmt_scope,
+                        declared_scope: use_stmt_scope,
                     });
                 }
             }
@@ -168,7 +168,7 @@ fn collect_child_use_speck(
             use_speck_loc: child_use_speck.loc(file_id),
             alias_or_name: child_alias_name.unwrap_or(module_name),
             type_: UseItemType::SelfModule,
-            scope: use_stmt_scope,
+            declared_scope: use_stmt_scope,
         });
     }
 
@@ -188,7 +188,7 @@ fn collect_child_use_speck(
             use_speck_loc: child_use_speck.loc(file_id),
             alias_or_name: child_name_or_alias,
             type_: UseItemType::Item,
-            scope: use_stmt_scope,
+            declared_scope: use_stmt_scope,
         });
     }
 

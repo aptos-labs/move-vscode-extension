@@ -37,6 +37,16 @@ impl ItemScope {
         self == ItemScope::Test
     }
 
+    pub fn is_covered_by_the_use_stmt_scope(&self, use_stmt_scope: ItemScope) -> bool {
+        match self {
+            ItemScope::Test => use_stmt_scope == ItemScope::Test,
+            ItemScope::Main => use_stmt_scope == ItemScope::Main,
+            ItemScope::Verify => {
+                use_stmt_scope == ItemScope::Main || use_stmt_scope == ItemScope::Verify
+            }
+        }
+    }
+
     pub fn shrink_scope(self, adjustment_scope: ItemScope) -> ItemScope {
         if self == ItemScope::Main {
             return adjustment_scope;

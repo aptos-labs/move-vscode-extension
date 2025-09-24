@@ -563,14 +563,6 @@ impl Analysis {
         self.with_db(|db| hir_db::named_addresses(db).clone())
     }
 
-    // pub fn will_rename_file(
-    //     &self,
-    //     file_id: FileId,
-    //     new_name_stem: &str,
-    // ) -> Cancellable<Option<SourceChange>> {
-    //     self.with_db(|db| rename::will_rename_file(db, file_id, new_name_stem))
-    // }
-
     pub fn annotations(
         &self,
         config: &AnnotationConfig,
