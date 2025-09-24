@@ -38,6 +38,10 @@ impl PackageRoot {
         }
     }
 
+    pub fn file_ids(&self) -> impl Iterator<Item = FileId> {
+        self.file_set.iter()
+    }
+
     pub fn is_library(&self) -> bool {
         self.kind == PackageKind::Library
     }

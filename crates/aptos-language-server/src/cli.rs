@@ -6,9 +6,12 @@
 
 mod bench;
 mod diagnostics;
+mod organize_imports;
+mod utils;
 
 use crate::cli::bench::Bench;
 use crate::cli::diagnostics::Diagnostics;
+use crate::cli::organize_imports::OrganizeImports;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -30,4 +33,5 @@ pub enum AptosAnalyzerCmd {
     LspServer,
     Diagnostics(Diagnostics),
     Bench(Bench),
+    OrganizeImports(OrganizeImports),
 }

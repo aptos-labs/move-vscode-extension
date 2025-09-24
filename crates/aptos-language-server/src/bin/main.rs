@@ -55,6 +55,10 @@ fn main() -> anyhow::Result<ExitCode> {
             let exit_code = cmd.run()?;
             return Ok(exit_code);
         }
+        Some(AptosAnalyzerCmd::OrganizeImports(cmd)) => {
+            let exit_code = cmd.run()?;
+            return Ok(exit_code);
+        }
     }
 
     Ok(ExitCode::SUCCESS)

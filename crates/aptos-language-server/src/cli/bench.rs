@@ -1,4 +1,4 @@
-use base_db::SourceDatabase;
+use crate::cli::utils;
 use camino::Utf8PathBuf;
 use clap::Args;
 use ide::Analysis;
@@ -6,7 +6,6 @@ use ide_db::assists::AssistResolveStrategy;
 use ide_diagnostics::config::DiagnosticsConfig;
 use paths::AbsPathBuf;
 use project_model::DiscoveredManifest;
-use project_model::aptos_package::load_from_fs;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use std::time;
@@ -72,42 +71,29 @@ impl Bench {
     }
 
     fn run_bench_once(&self, manifest: DiscoveredManifest, specific_fpath: AbsPathBuf) -> Duration {
-        let diagnostics_config = DiagnosticsConfig {
-            needs_type_annotation: false,
-            ..DiagnosticsConfig::test_sample()
-        };
-        let aptos_packages = load_from_fs::load_aptos_packages(vec![manifest]).valid_packages();
+        let (db, vfs) = utils::init_db(vec![manifest]);
 
-        let (db, vfs) = ide_db::load::load_db(&aptos_packages).unwrap();
-
-        let all_package_roots = db
-            .all_package_ids()
-            .data(&db)
-            .into_iter()
-            .map(|it| db.package_root(it).data(&db))
-            .filter(|it| !it.is_builtin())
-            .collect::<Vec<_>>();
+        let all_file_ids = utils::all_roots_file_ids(&db);
 
         let mut target_file_id = None;
         let analysis = Analysis::new(db);
 
-        for package_root in all_package_roots {
-            let file_ids = package_root.file_set.iter();
-            for file_id in file_ids {
-                let file_path = vfs.file_path(file_id);
+        for file_id in all_file_ids {
+            // // fill parsing cache, we don't want to benchmark those
+            let _ = analysis.parse(file_id).unwrap();
 
-                // // fill parsing cache, we don't want to benchmark those
-                let _ = analysis.parse(file_id).unwrap();
-
-                if file_path.as_path().unwrap().to_path_buf() == specific_fpath {
-                    target_file_id = Some(file_id);
-                }
+            if vfs.file_path(file_id).as_path().unwrap().to_path_buf() == specific_fpath {
+                target_file_id = Some(file_id);
             }
         }
-
         let target_file_id = target_file_id.unwrap();
+
         let frange = analysis.full_file_range(target_file_id).unwrap();
 
+        let diagnostics_config = DiagnosticsConfig {
+            needs_type_annotation: false,
+            ..DiagnosticsConfig::test_sample()
+        };
         let before = time::Instant::now();
         analysis
             .semantic_diagnostics(&diagnostics_config, AssistResolveStrategy::None, frange)

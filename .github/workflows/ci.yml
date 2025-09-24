@@ -41,7 +41,7 @@ jobs:
 
       - run: cargo nextest run --hide-progress-bar --no-fail-fast --failure-output=immediate-final
 
-  check_diagnostics:
+  check_diagnostics_and_organize_imports:
     strategy:
       matrix:
         platform: [ ubuntu-latest, macos-latest, windows-latest ]
@@ -59,20 +59,26 @@ jobs:
       - name: Build aptos-language-server binary with xtask
         run: cargo xtask install --server
 
+      - name: Install aptos-cli
+        uses: WGB5445/aptos-cli-setup@v1
+        with:
+          version: "7.8.1"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Fetch aptos-core repository
         uses: actions/checkout@v4
         with:
           repository: aptos-labs/aptos-core
           path: aptos-core
 
-      - name: Check diagnostics on aptos-core:framework
+      - name: Check diagnostics for aptos-core:framework
         run: aptos-language-server diagnostics --kinds error -- ./aptos-core/aptos-move/framework
 
-      - name: Install aptos-cli
-        uses: WGB5445/aptos-cli-setup@v1
-        with:
-          version: "7.7.0"
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Organize imports for aptos-core:framework
+        run: aptos-language-server organize-imports -- ./aptos-core/aptos-move/framework
+
+      - name: Check that aptos-core:framework still compiles
+        run: aptos move compile --language-version 2.2 --package-dir ./aptos-core/aptos-move/framework/aptos-experimental
 
       - name: Cache ~/.move directory
         uses: actions/cache@v4

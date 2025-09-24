@@ -66,7 +66,7 @@ impl FileChanges {
             for (idx, root) in package_roots.into_iter().enumerate() {
                 let package_id = PackageId::new(db, idx as u32);
                 let durability = package_root_durability(&root);
-                for file_id in root.file_set.iter() {
+                for file_id in root.file_ids() {
                     db.set_file_package_id(file_id, package_id);
                     db.set_spec_related_files(
                         file_id,
