@@ -87,16 +87,16 @@ impl Diagnostics {
         let (mut db, mut vfs) = utils::init_db(ws_manifests);
 
         let cmd_config = self.prepare_cmd_config();
-        let local_package_roots = utils::ws_package_roots(&db, &vfs, ws_root);
+        let ws_package_roots = utils::ws_package_roots(&db, &vfs, ws_root);
 
         let mut found_error = false;
         let mut visited_files: HashSet<FileId> = HashSet::default();
 
-        for package_root in local_package_roots {
-            let manifest_file_id = package_root.manifest_file_id.unwrap();
+        for ws_package_root in ws_package_roots {
+            let manifest_file_id = ws_package_root.manifest_file_id.unwrap();
             let package_metadata = db.package_metadata(manifest_file_id).metadata(&db);
 
-            let package_root_dir = package_root.root_dir(&vfs).unwrap();
+            let package_root_dir = ws_package_root.root_dir(&vfs).unwrap();
             if FORBIDDEN_PATH_SUFFIXES.iter().any(|path_suffix| {
                 let suffix = RelPathBuf::try_from(*path_suffix).unwrap();
                 package_root_dir.ends_with(suffix.as_path())
@@ -117,7 +117,7 @@ impl Diagnostics {
                 .clone()
                 .with_resolve_deps(package_metadata.resolve_deps);
 
-            for file_id in package_root.file_ids() {
+            for file_id in ws_package_root.file_ids() {
                 let file_path = vfs.file_path(file_id).clone();
                 if !file_path
                     .name_and_extension()
@@ -131,7 +131,9 @@ impl Diagnostics {
                 }
 
                 if !visited_files.contains(&file_id) {
-                    let package_name = package_root.root_dir_name(&vfs).unwrap_or("<error>".to_string());
+                    let package_name = ws_package_root
+                        .root_dir_name(&vfs)
+                        .unwrap_or("<error>".to_string());
                     if self.verbose {
                         println!(
                             "processing package '{package_name}', file: {}",
