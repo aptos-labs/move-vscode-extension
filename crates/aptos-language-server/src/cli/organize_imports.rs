@@ -1,10 +1,9 @@
 use crate::cli::utils;
+use crate::cli::utils::{CmdPath, CmdPathKind};
 use base_db::SourceDatabase;
-use camino::Utf8PathBuf;
 use clap::Args;
 use ide::Analysis;
 use ide_db::RootDatabase;
-use paths::AbsPathBuf;
 use project_model::DiscoveredManifest;
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -30,20 +29,33 @@ impl OrganizeImports {
     }
 
     fn run_(self) -> anyhow::Result<ExitCode> {
-        let provided_path =
-            Utf8PathBuf::from_path_buf(std::env::current_dir()?.join(&self.path)).unwrap();
-        let provided_file_path = AbsPathBuf::assert(provided_path);
-        let manifest = DiscoveredManifest::discover_for_file(&provided_file_path)
-            .expect("cannot find manifest for provided path");
+        let cmd_path = CmdPath::new(&self.path)?;
+        match cmd_path.kind() {
+            CmdPathKind::MoveFile(target_fpath) => {
+                let manifest = DiscoveredManifest::discover_for_file(&target_fpath)
+                    .expect("cannot find manifest for provided path");
+                let (mut db, mut vfs) = utils::init_db(vec![manifest]);
 
-        let (mut db, mut vfs) = utils::init_db(vec![manifest]);
+                let target_file_id = utils::find_target_file_id(&db, &vfs, target_fpath).unwrap();
 
-        let all_file_ids = utils::all_roots_file_ids(&db);
-        for file_id in all_file_ids {
-            self.organize_imports_in_file(&mut db, &mut vfs, file_id);
+                self.organize_imports_in_file(&mut db, &mut vfs, target_file_id);
+            }
+            CmdPathKind::Workspace(ws_root) => {
+                let ws_manifests = DiscoveredManifest::discover_all(&[ws_root.clone()]);
+                if ws_manifests.is_empty() {
+                    eprintln!("Could not find any Aptos packages.");
+                    return Ok(ExitCode::FAILURE);
+                }
+                let (mut db, mut vfs) = utils::init_db(ws_manifests);
+                let ws_package_roots = utils::ws_package_roots(&db, &vfs, ws_root);
+                for ws_package_root in ws_package_roots {
+                    for file_id in ws_package_root.file_ids() {
+                        self.organize_imports_in_file(&mut db, &mut vfs, file_id);
+                    }
+                }
+            }
+            _ => (),
         }
-        // let target_file_id = utils::find_target_file_id(&db, &vfs, provided_file_path).unwrap();
-        // self.organize_imports_in_file(&mut db, &mut vfs, file_id);
 
         Ok(ExitCode::SUCCESS)
     }
