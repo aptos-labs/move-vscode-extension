@@ -20,6 +20,12 @@ pub enum IntegerKind {
     U64,
     U128,
     U256,
+    I8,
+    I16,
+    I32,
+    I64,
+    I128,
+    I256,
 }
 
 impl IntegerKind {
@@ -32,11 +38,29 @@ impl IntegerKind {
             _ if lit.ends_with("u64") => IntegerKind::U64,
             _ if lit.ends_with("u128") => IntegerKind::U128,
             _ if lit.ends_with("u256") => IntegerKind::U256,
+            _ if lit.ends_with("i8") => IntegerKind::I8,
+            _ if lit.ends_with("i16") => IntegerKind::I16,
+            _ if lit.ends_with("i32") => IntegerKind::I32,
+            _ if lit.ends_with("i64") => IntegerKind::I64,
+            _ if lit.ends_with("i128") => IntegerKind::I128,
+            _ if lit.ends_with("i256") => IntegerKind::I256,
             _ => {
                 return None;
             }
         };
         Some(kind)
+    }
+
+    pub fn is_signed(&self) -> bool {
+        matches!(
+            self,
+            IntegerKind::I8
+                | IntegerKind::I16
+                | IntegerKind::I32
+                | IntegerKind::I64
+                | IntegerKind::I128
+                | IntegerKind::I256
+        )
     }
 
     pub fn is_default(&self) -> bool {

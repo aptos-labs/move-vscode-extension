@@ -10,7 +10,6 @@ use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::types::inference::InferenceCtx;
 use crate::types::inference::combine_types::TypeError;
 use crate::types::ty::Ty;
-use crate::types::ty::integer::IntegerKind;
 use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty::ty_var::TyInfer;
 use std::cell::RefCell;
@@ -99,7 +98,7 @@ impl InferenceResult {
             }
         }
         for int_var in int_vars.into_inner() {
-            let _ = ctx.unify_int_var(int_var, Ty::Integer(IntegerKind::Integer));
+            let _ = ctx.unify_int_var(int_var, Ty::integer());
         }
     }
 

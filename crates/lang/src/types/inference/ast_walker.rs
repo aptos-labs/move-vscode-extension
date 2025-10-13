@@ -432,6 +432,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 })
                 .unwrap_or(Ty::Unknown),
 
+            ast::Expr::MinusExpr(minus_expr) => self.infer_minus_expr(minus_expr).unwrap_or(Ty::Unknown),
+
             ast::Expr::Literal(lit) => self.infer_literal(lit),
             ast::Expr::UnitExpr(_) => Ty::Unit,
             ast::Expr::AnnotatedExpr(annotated_expr) => {
@@ -768,11 +770,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     self.ctx.coerce_types(
                         arg_expr.node_or_token(),
                         item_ty.clone(),
-                        if self.ctx.msl {
-                            Ty::Num
-                        } else {
-                            Ty::Integer(IntegerKind::Integer)
-                        },
+                        if self.ctx.msl { Ty::Num } else { Ty::integer() },
                     );
                     item_ty
                 }
@@ -1172,7 +1170,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         rhs: Option<ast::Expr>,
         is_compound: bool,
     ) -> Ty {
-        let lhs_ty = self.infer_expr_coerceable_to(&lhs, Ty::Integer(IntegerKind::Integer));
+        let lhs_ty = self.infer_expr_coerceable_to(&lhs, Ty::integer());
         if let Some(rhs) = rhs {
             self.infer_expr_coerceable_to(&rhs, lhs_ty.clone());
         }
@@ -1185,7 +1183,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         rhs: Option<ast::Expr>,
         is_compound: bool,
     ) -> Ty {
-        let lhs_ty = self.infer_expr_coerceable_to(&lhs, Ty::Integer(IntegerKind::Integer));
+        let lhs_ty = self.infer_expr_coerceable_to(&lhs, Ty::integer());
         if let Some(rhs) = rhs {
             self.infer_expr_coerceable_to(&rhs, Ty::Integer(IntegerKind::U8));
         }
@@ -1282,6 +1280,12 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
         let expr_ty = self.infer_expr_coerceable_to(&expr, ty);
         Some(expr_ty)
+    }
+
+    fn infer_minus_expr(&mut self, minus_expr: &ast::MinusExpr) -> Option<Ty> {
+        minus_expr
+            .expr()
+            .map(|it| self.infer_expr_coerceable_to(&it, Ty::integer()))
     }
 
     fn infer_literal(&mut self, literal: &ast::Literal) -> Ty {

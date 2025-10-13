@@ -266,7 +266,7 @@ Expr =
     | UnitExpr
     | AnnotatedExpr
     | PathExpr
-    | BorrowExpr | DerefExpr | BangExpr
+    | BorrowExpr | DerefExpr | BangExpr | MinusExpr
     | ResourceExpr
     | CallExpr | MethodCallExpr | AssertMacroExpr
     | LambdaExpr

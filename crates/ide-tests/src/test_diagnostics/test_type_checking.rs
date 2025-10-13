@@ -2584,3 +2584,43 @@ fn test_object_wrapped_item_with_match_arms_with_enum_tuple_struct() {
         }
     "#]])
 }
+
+#[test]
+fn test_signed_integer() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::mod {
+            fun call(_a: i8, _b: i8, _c: i8) {}
+            fun main() {
+                let _a: i8 = 1;
+                let _a: i8 = 1i8;
+                let _a: i8 = -1i8;
+                let _a: i8 = 1i64;
+                           //^^^^ err: Incompatible type 'i64', expected 'i8'
+                let _a: i8 = -1i64;
+                           //^^^^^ err: Incompatible type 'i64', expected 'i8'
+                1i8 + 1i8;
+                1i8 + 1i64;
+              //^^^^^^^^^^ err: Incompatible arguments to '+': 'i8' and 'i64'
+                call(-1, 1i8, 1i64);
+                            //^^^^ err: Incompatible type 'i64', expected 'i8'
+            }
+        }
+    "#]])
+}
+
+#[test]
+fn test_minus_expr() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::mod {
+            fun call(_a: i8, _b: i8, _c: i8) {}
+            fun main() {
+                let _a = -1;
+                let _a: i8 = -1;
+                -true;
+               //^^^^ err: Incompatible type 'bool', expected 'integer'
+            }
+        }
+    "#]])
+}
