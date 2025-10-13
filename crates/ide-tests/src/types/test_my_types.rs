@@ -256,3 +256,66 @@ fn test_self_variable_in_spec_enum() {
     "#,
     )
 }
+
+#[test]
+fn test_signed_integer_type_i8() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::main {
+            fun main(a: i8) {
+                a;
+              //^ i8
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_signed_integer_type_i8_from_expr() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::main {
+            fun main() {
+                let a = 1i8;
+                a;
+              //^ i8
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_signed_integer_type_i8_from_plus_expr() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::main {
+            fun main() {
+                let a = 1i8 + 1i8;
+                a;
+              //^ i8
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_signed_integer_type_i8_from_unary_minus_expr() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::main {
+            fun main() {
+                let a = -1i8;
+                a;
+              //^ i8
+            }
+        }
+    "#,
+    )
+}

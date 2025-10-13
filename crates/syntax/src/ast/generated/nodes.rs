@@ -2229,6 +2229,7 @@ pub enum Expr {
     LoopExpr(LoopExpr),
     MatchExpr(MatchExpr),
     MethodCallExpr(MethodCallExpr),
+    MinusExpr(MinusExpr),
     ParenExpr(ParenExpr),
     PathExpr(PathExpr),
     RangeExpr(RangeExpr),
@@ -6204,6 +6205,10 @@ impl From<MethodCallExpr> for Expr {
     #[inline]
     fn from(node: MethodCallExpr) -> Expr { Expr::MethodCallExpr(node) }
 }
+impl From<MinusExpr> for Expr {
+    #[inline]
+    fn from(node: MinusExpr) -> Expr { Expr::MinusExpr(node) }
+}
 impl From<ParenExpr> for Expr {
     #[inline]
     fn from(node: ParenExpr) -> Expr { Expr::ParenExpr(node) }
@@ -6399,6 +6404,12 @@ impl Expr {
             _ => None,
         }
     }
+    pub fn minus_expr(self) -> Option<MinusExpr> {
+        match (self) {
+            Expr::MinusExpr(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn paren_expr(self) -> Option<ParenExpr> {
         match (self) {
             Expr::ParenExpr(item) => Some(item),
@@ -6496,6 +6507,7 @@ impl AstNode for Expr {
                 | LOOP_EXPR
                 | MATCH_EXPR
                 | METHOD_CALL_EXPR
+                | MINUS_EXPR
                 | PAREN_EXPR
                 | PATH_EXPR
                 | RANGE_EXPR
@@ -6537,6 +6549,7 @@ impl AstNode for Expr {
             LOOP_EXPR => Expr::LoopExpr(LoopExpr { syntax }),
             MATCH_EXPR => Expr::MatchExpr(MatchExpr { syntax }),
             METHOD_CALL_EXPR => Expr::MethodCallExpr(MethodCallExpr { syntax }),
+            MINUS_EXPR => Expr::MinusExpr(MinusExpr { syntax }),
             PAREN_EXPR => Expr::ParenExpr(ParenExpr { syntax }),
             PATH_EXPR => Expr::PathExpr(PathExpr { syntax }),
             RANGE_EXPR => Expr::RangeExpr(RangeExpr { syntax }),
@@ -6580,6 +6593,7 @@ impl AstNode for Expr {
             Expr::LoopExpr(it) => &it.syntax(),
             Expr::MatchExpr(it) => &it.syntax(),
             Expr::MethodCallExpr(it) => &it.syntax(),
+            Expr::MinusExpr(it) => &it.syntax(),
             Expr::ParenExpr(it) => &it.syntax(),
             Expr::PathExpr(it) => &it.syntax(),
             Expr::RangeExpr(it) => &it.syntax(),

@@ -90,6 +90,10 @@ impl Ty {
         Ty::Reference(TyReference::new(inner_ty, mutability))
     }
 
+    pub fn integer() -> Ty {
+        Ty::Integer(IntegerKind::Integer)
+    }
+
     pub fn adt_item_module(
         &self,
         db: &dyn SourceDatabase,
