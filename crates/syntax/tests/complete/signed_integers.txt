@@ -1,0 +1,61 @@
+SOURCE_FILE@0..125
+  MODULE@0..124
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..27
+      IDENT@12..27 "signed_integers"
+    WHITESPACE@27..28 " "
+    L_CURLY@28..29 "{"
+    WHITESPACE@29..34 "\n    "
+    FUN@34..122
+      FUN_KW@34..37 "fun"
+      WHITESPACE@37..38 " "
+      NAME@38..42
+        IDENT@38..42 "main"
+      PARAM_LIST@42..44
+        L_PAREN@42..43 "("
+        R_PAREN@43..44 ")"
+      WHITESPACE@44..45 " "
+      BLOCK_EXPR@45..122
+        L_CURLY@45..46 "{"
+        WHITESPACE@46..55 "\n        "
+        EXPR_STMT@55..59
+          LITERAL@55..58
+            INT_NUMBER@55..58 "1i8"
+          SEMICOLON@58..59 ";"
+        WHITESPACE@59..68 "\n        "
+        EXPR_STMT@68..73
+          MINUS_EXPR@68..72
+            MINUS@68..69 "-"
+            LITERAL@69..72
+              INT_NUMBER@69..72 "1i8"
+          SEMICOLON@72..73 ";"
+        WHITESPACE@73..82 "\n        "
+        EXPR_STMT@82..85
+          MINUS_EXPR@82..84
+            MINUS@82..83 "-"
+            LITERAL@83..84
+              INT_NUMBER@83..84 "1"
+          SEMICOLON@84..85 ";"
+        WHITESPACE@85..94 "\n        "
+        EXPR_STMT@94..101
+          MINUS_EXPR@94..100
+            MINUS@94..95 "-"
+            LITERAL@95..100
+              INT_NUMBER@95..100 "1i128"
+          SEMICOLON@100..101 ";"
+        WHITESPACE@101..110 "\n        "
+        EXPR_STMT@110..116
+          MINUS_EXPR@110..115
+            MINUS@110..111 "-"
+            LITERAL@111..115
+              INT_NUMBER@111..115 "0xff"
+          SEMICOLON@115..116 ";"
+        WHITESPACE@116..121 "\n    "
+        R_CURLY@121..122 "}"
+    WHITESPACE@122..123 "\n"
+    R_CURLY@123..124 "}"
+  WHITESPACE@124..125 "\n"

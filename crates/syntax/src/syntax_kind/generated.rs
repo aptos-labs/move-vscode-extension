@@ -224,6 +224,7 @@ pub enum SyntaxKind {
     BORROW_EXPR,
     DEREF_EXPR,
     BANG_EXPR,
+    MINUS_EXPR,
     RESOURCE_EXPR,
     RANGE_EXPR,
     UNIT_EXPR,
