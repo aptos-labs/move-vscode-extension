@@ -184,6 +184,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "BORROW_EXPR",
         "DEREF_EXPR",
         "BANG_EXPR",
+        "MINUS_EXPR",
 
         "RESOURCE_EXPR",
 

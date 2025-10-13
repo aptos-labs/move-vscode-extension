@@ -1043,6 +1043,7 @@ impl Field {
                     ">" => "r_angle",
                     "=" => "eq",
                     "!" => "excl",
+                    "-" => "minus",
                     "*" => "star",
                     "&" => "amp",
                     "." => "dot",

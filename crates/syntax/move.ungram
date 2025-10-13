@@ -291,6 +291,9 @@ DerefExpr =
 BangExpr =
     '!' Expr
 
+MinusExpr =
+    '-' Expr
+
 ResourceExpr =
     ('move' | 'copy') Expr
 

@@ -195,6 +195,11 @@ pub(crate) fn lhs(p: &mut Parser, r: Restrictions) -> Option<(CompletedMarker, B
             p.bump(T![!]);
             BANG_EXPR
         }
+        T![-] => {
+            m = p.start();
+            p.bump(T![-]);
+            MINUS_EXPR
+        }
         T![..] => {
             m = p.start();
             p.bump(T![..]);
