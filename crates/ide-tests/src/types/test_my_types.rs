@@ -366,3 +366,20 @@ fn test_integer_constants_i() {
     "#,
     )
 }
+
+#[test]
+fn test_user_defined_consts_shadow_builtins() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::main {
+            const MAX_U64: u128 = 18446744073709551615;
+
+            fun main() {
+                MAX_U64;
+                //^ u128
+            }
+        }
+    "#,
+    )
+}
