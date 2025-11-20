@@ -55,11 +55,11 @@ tracing-subscriber = { version = "0.3.20", default-features = false, features = 
     "env-filter"
 ] }
 dashmap = "6.1.0"
-salsa = "0.23.0"
-salsa-macros = "0.23.0"
+salsa = "0.24.0"
+salsa-macros = "0.24.0"
 
-stdx = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-07-07" }
-paths = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-07-07", features = ["serde1"] }
-vfs = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-07-07" }
-vfs-notify = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-07-07" }
+stdx = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-11-17" }
+paths = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-11-17", features = ["serde1"] }
+vfs = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-11-17" }
+vfs-notify = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2025-11-17" }
 
