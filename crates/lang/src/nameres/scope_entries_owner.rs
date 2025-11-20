@@ -7,9 +7,11 @@
 use crate::hir_db;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt, SyntaxLocInput};
 use crate::nameres::get_schema_field_entries;
+use crate::nameres::namespaces::Ns;
 use crate::nameres::scope::{NamedItemsExt, NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::node_ext::item_spec::ItemSpecExt;
 use base_db::{SourceDatabase, source_db};
+use std::collections::HashSet;
 use syntax::ast::HasItems;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
@@ -50,8 +52,6 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: &InFile<SyntaxNode
     if let Some(generic_element) = ast::GenericElement::cast(scope.value.clone()) {
         entries.extend(generic_element.type_params().to_entries(file_id));
     }
-
-    entries.extend(builtin_consts(db).to_entries());
 
     if scope.value.is_msl_only_scope() {
         entries.extend(builtin_spec_functions(db).to_entries());
@@ -142,6 +142,25 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: &InFile<SyntaxNode
         }
         _ => (),
     }
+
+    if matches!(scope.value.kind(), MODULE | SCRIPT) {
+        let const_entries = entries
+            .iter()
+            .filter(|it| it.ns == Ns::NAME)
+            .map(|it| it.name.clone())
+            .collect::<HashSet<_>>();
+        for builtin_const in builtin_consts(db) {
+            if builtin_const
+                .value
+                .name()
+                .is_some_and(|it| const_entries.contains(&it.as_string()))
+            {
+                continue;
+            }
+            entries.extend(builtin_const.to_entry());
+        }
+    }
+    // entries.extend(builtin_consts(db).to_entries());
 
     entries
 }
