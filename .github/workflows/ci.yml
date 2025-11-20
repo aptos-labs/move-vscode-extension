@@ -62,7 +62,7 @@ jobs:
       - name: Install aptos-cli
         uses: WGB5445/aptos-cli-setup@v1
         with:
-          version: "7.8.1"
+          version: "7.11.0"
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Fetch aptos-core repository
@@ -78,7 +78,7 @@ jobs:
         run: aptos-language-server organize-imports -- ./aptos-core/aptos-move/framework
 
       - name: Check that aptos-core:framework still compiles
-        run: aptos move compile --language-version 2.2 --package-dir ./aptos-core/aptos-move/framework/aptos-experimental
+        run: aptos move compile --language-version 2.3 --dev --package-dir ./aptos-core/aptos-move/framework/aptos-experimental
 
       - name: Cache ~/.move directory
         uses: actions/cache@v4
