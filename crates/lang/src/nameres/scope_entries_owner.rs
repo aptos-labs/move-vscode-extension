@@ -51,9 +51,10 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: &InFile<SyntaxNode
         entries.extend(generic_element.type_params().to_entries(file_id));
     }
 
+    entries.extend(builtin_consts(db).to_entries());
+
     if scope.value.is_msl_only_scope() {
         entries.extend(builtin_spec_functions(db).to_entries());
-        entries.extend(builtin_spec_consts(db).to_entries());
     }
 
     match scope.value.kind() {
@@ -151,7 +152,7 @@ fn builtin_functions(db: &dyn SourceDatabase) -> Vec<InFile<ast::Fun>> {
         .unwrap_or_default()
 }
 
-fn builtin_spec_consts(db: &dyn SourceDatabase) -> Vec<InFile<ast::Const>> {
+fn builtin_consts(db: &dyn SourceDatabase) -> Vec<InFile<ast::Const>> {
     builtin_module(db)
         .map(|module| module.map(|it| it.consts()).flatten())
         .unwrap_or_default()

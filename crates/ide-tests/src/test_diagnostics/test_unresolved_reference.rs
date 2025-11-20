@@ -559,13 +559,12 @@ module 0x1::m {
 }
 
 #[test]
-fn test_spec_builtin_not_available_outside_specs() {
+fn test_no_unresolved_reference_for_max_const_in_main_code() {
     // language=Move
     check_diagnostics(expect![[r#"
         module 0x1::m {
             fun main() {
                 MAX_U128;
-              //^^^^^^^^ err: Unresolved reference `MAX_U128`: cannot resolve
             }
         }
     "#]]);

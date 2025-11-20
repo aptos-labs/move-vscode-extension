@@ -319,3 +319,50 @@ fn test_signed_integer_type_i8_from_unary_minus_expr() {
     "#,
     )
 }
+
+#[test]
+fn test_compile_for_testing() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::main {
+            fun main() {
+                if (__COMPILE_FOR_TESTING__) {
+                      //^ bool
+                    1;
+                }
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_integer_constants_u() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::main {
+            fun main() {
+                MAX_U8;
+                //^ u8
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_integer_constants_i() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::main {
+            fun main() {
+                MAX_I8;
+                //^ i8
+            }
+        }
+    "#,
+    )
+}
