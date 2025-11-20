@@ -82,11 +82,6 @@ jobs:
         run: npx vsce package -o "../../dist/move-on-aptos-${{ matrix.code-target }}.vsix" --target ${{ matrix.code-target }}
         working-directory: editors/code
 
-      - name: Package Extension (nightly)
-        if: github.ref != 'refs/heads/release' && matrix.code-target
-        run: npx vsce package -o "../../dist/move-on-aptos-${{ matrix.code-target }}.vsix" --target ${{ matrix.code-target }} --pre-release
-        working-directory: editors/code
-
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -108,8 +103,7 @@ jobs:
 
       - run: echo "TAG=$(date --iso -u)" >> $GITHUB_ENV
         if: github.ref == 'refs/heads/release'
-      - run: echo "TAG=nightly" >> $GITHUB_ENV
-        if: github.ref != 'refs/heads/release'
+
       - run: 'echo "TAG: $TAG"'
 
       - name: Checkout repository
@@ -155,16 +149,6 @@ jobs:
 
       - name: Publish Extension (OpenVSX, release)
         if: github.ref == 'refs/heads/release' && github.repository == 'aptos-labs/move-vscode-extension'
-        working-directory: ./editors/code
-        run: npx ovsx publish --pat ${{ secrets.OPENVSX_TOKEN }} --packagePath ../../dist/move-on-aptos-*.vsix
-
-      - name: Publish Extension (Code Marketplace, nightly)
-        if: github.ref != 'refs/heads/release' && github.repository == 'aptos-labs/move-vscode-extension'
-        working-directory: ./editors/code
-        run: npx vsce publish --pat ${{ secrets.MARKETPLACE_PAT_TOKEN }} --packagePath ../../dist/move-on-aptos-*.vsix --pre-release
-
-      - name: Publish Extension (OpenVSX, nightly)
-        if: github.ref != 'refs/heads/release' && github.repository == 'aptos-labs/move-vscode-extension'
         working-directory: ./editors/code
         run: npx ovsx publish --pat ${{ secrets.OPENVSX_TOKEN }} --packagePath ../../dist/move-on-aptos-*.vsix
 
