@@ -1123,48 +1123,6 @@ fn test_integer_arguments_of_the_same_type_support_ordering() {
 }
 
 #[test]
-fn test_cannot_order_references() {
-    // language=Move
-    check_diagnostics(expect![[r#"
-        module 0x1::main {
-            fun main(a: &u64, b: &u64) {
-                a < b;
-              //^ err: Invalid argument to '<': expected integer type, but found '&u64'
-                  //^ err: Invalid argument to '<': expected integer type, but found '&u64'
-            }
-        }
-    "#]]);
-}
-
-#[test]
-fn test_cannot_order_bools() {
-    // language=Move
-    check_diagnostics(expect![[r#"
-        module 0x1::main {
-            fun main(a: bool, b: bool) {
-                a < b;
-              //^ err: Invalid argument to '<': expected integer type, but found 'bool'
-                  //^ err: Invalid argument to '<': expected integer type, but found 'bool'
-            }
-        }
-    "#]]);
-}
-
-#[test]
-fn test_cannot_order_type_parameters() {
-    // language=Move
-    check_diagnostics(expect![[r#"
-        module 0x1::main {
-            fun main<T>(a: T, b: T) {
-                a < b;
-              //^ err: Invalid argument to '<': expected integer type, but found 'T'
-                  //^ err: Invalid argument to '<': expected integer type, but found 'T'
-            }
-        }
-    "#]]);
-}
-
-#[test]
 fn test_eq_is_supported_for_same_type_arguments() {
     // language=Move
     check_diagnostics(expect![[r#"
@@ -2620,6 +2578,21 @@ fn test_minus_expr() {
                 let _a: i8 = -1;
                 -true;
                //^^^^ err: Incompatible type 'bool', expected 'integer'
+            }
+        }
+    "#]])
+}
+
+#[test]
+fn test_allow_comparing_struct_types() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::mod {
+            struct S { val: u8 }
+            fun main() {
+                let s1 = S { val: 1 };
+                let s2 = S { val: 2 };
+                s1 < s2;
             }
         }
     "#]])
