@@ -4,6 +4,8 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+#![allow(unused)]
+
 mod fold;
 pub mod ide_test_utils;
 mod resolve;
