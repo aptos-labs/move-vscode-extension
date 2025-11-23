@@ -98,12 +98,14 @@ FieldsOwner =
 
 Struct =
     Attr*
+    VisibilityModifier?
     'struct' Name TypeParamList?
     AbilityList?
     FieldList
 
 Enum =
     Attr*
+    VisibilityModifier?
     'enum' Name TypeParamList?
     AbilityList?
     VariantList

@@ -478,6 +478,8 @@ impl Enum {
     #[inline]
     pub fn variant_list(&self) -> Option<VariantList> { support::child(&self.syntax) }
     #[inline]
+    pub fn visibility_modifier(&self) -> Option<VisibilityModifier> { support::child(&self.syntax) }
+    #[inline]
     pub fn enum_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![enum]) }
 }
 
@@ -1700,6 +1702,8 @@ impl Struct {
     pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
     #[inline]
     pub fn type_param_list(&self) -> Option<TypeParamList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn visibility_modifier(&self) -> Option<VisibilityModifier> { support::child(&self.syntax) }
     #[inline]
     pub fn struct_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![struct]) }
 }
@@ -8597,6 +8601,13 @@ impl StructOrEnum {
         match (self) {
             StructOrEnum::Struct(item) => Some(item),
             _ => None,
+        }
+    }
+    #[inline]
+    pub fn visibility_modifier(&self) -> Option<VisibilityModifier> {
+        match self {
+            StructOrEnum::Enum(it) => it.visibility_modifier(),
+            StructOrEnum::Struct(it) => it.visibility_modifier(),
         }
     }
     #[inline]

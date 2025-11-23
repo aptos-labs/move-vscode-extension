@@ -11,7 +11,7 @@ use crate::nameres::is_visible::is_visible_in_context;
 use crate::nameres::name_resolution::{WalkScopesCtx, get_entries_from_walking_scopes};
 use crate::nameres::namespaces::NAMES;
 use crate::nameres::path_resolution::get_method_resolve_variants;
-use crate::nameres::scope::{ScopeEntryListExt, VecExt, into_field_shorthand_items};
+use crate::nameres::scope::{ScopeEntryExt, ScopeEntryListExt, VecExt, into_field_shorthand_items};
 use crate::node_ext::item_spec::ItemSpecExt;
 use crate::node_ext::{any_field_ext, item_spec};
 use crate::types::expectation::Expected;
@@ -538,14 +538,24 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         let ty_adt = self_ty.unwrap_all_refs().into_ty_adt()?;
 
         let field_name_ref = dot_expr.name_ref()?;
-        if !self.ctx.msl
-            && field_name_ref.syntax().containing_module() != ty_adt.adt_item_module(self.ctx.db)
-        {
-            return None;
-        }
-
         let adt_item = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(self.ctx.db)?;
         let field_reference_name = field_name_ref.as_string();
+
+        if !self.ctx.msl {
+            let context = dot_expr.receiver_expr().in_file(self.ctx.file_id);
+            // check for struct/enum visibility
+            if let Some(adt_item_entry) = adt_item.clone().to_entry()
+                && is_visible_in_context(self.ctx.db, &adt_item_entry, context.syntax()).is_some()
+            {
+                return None;
+            }
+        }
+        //
+        // if !self.ctx.msl
+        //     && field_name_ref.syntax().containing_module() != ty_adt.adt_item_module(self.ctx.db)
+        // {
+        //     return None;
+        // }
 
         // todo: tuple index fields
 

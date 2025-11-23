@@ -1,9 +1,6 @@
 // Copyright © Aptos Foundation
 // SPDX-License-Identifier: Apache-2.0
 
-// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
-// Modifications have been made to the original code.
-
 use crate::item_scope::ItemScope;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::nameres::namespaces::{Ns, TYPES_N_ENUMS};
@@ -108,29 +105,29 @@ pub fn is_visible_in_context(
     let context_item_scope = hir_db::item_scope(db, context_loc);
 
     let context_opt_path = context.as_node().and_then(|it| it.cast::<ast::Path>());
-    if let Some(path) = &context_opt_path {
-        if path.root_parent_of_type::<ast::UseSpeck>().is_some() {
-            // those are always public in use specks
-            if matches!(item_kind, MODULE | STRUCT | ENUM) {
+    if let Some(path) = &context_opt_path
+        && path.root_parent_of_type::<ast::UseSpeck>().is_some()
+    {
+        // those are always public in use specks
+        if matches!(item_kind, MODULE | STRUCT | ENUM) {
+            return None;
+        }
+
+        // items needs to be non-private to be visible, no other rules apply in use specks
+        if let Some(visible_item) = opt_visible_item.clone() {
+            if visible_item.vis() != Vis::Private {
                 return None;
             }
+        }
 
-            // items needs to be non-public to be visible, no other rules apply in use specks
-            if let Some(visible_item) = opt_visible_item.clone() {
-                if visible_item.vis() != Vis::Private {
-                    return None;
-                }
-            }
+        // msl-only items are available from imports
+        if item.syntax().is_msl_only_item() {
+            return None;
+        }
 
-            // msl-only items are available from imports
-            if item.syntax().is_msl_only_item() {
-                return None;
-            }
-
-            // consts are importable in tests
-            if context_item_scope.is_test() && item_ns == Ns::NAME {
-                return None;
-            }
+        // consts are importable in tests
+        if context_item_scope.is_test() && item_ns == Ns::NAME {
+            return None;
         }
     }
 
@@ -142,12 +139,15 @@ pub fn is_visible_in_context(
         return None;
     }
 
-    let item_loc = item.clone().in_file(item_file_id).loc();
+    let item_scope = {
+        let item_loc = item.clone().in_file(item_file_id).loc();
+        let mut item_scope = hir_db::item_scope(db, item_loc);
+        if let Some(adjustment) = scope_entry.scope_adjustment {
+            item_scope = item_scope.shrink_scope(adjustment);
+        }
+        item_scope
+    };
 
-    let mut item_scope = hir_db::item_scope(db, item_loc);
-    if let Some(adjustment) = scope_entry.scope_adjustment {
-        item_scope = item_scope.shrink_scope(adjustment);
-    }
     // i.e. #[test_only] items in non-test-only scope
     if item_scope != ItemScope::Main {
         // cannot be used everywhere, need to check for scope compatibility

@@ -188,7 +188,6 @@ pub fn resolve_path(
     let resolved_entries = entries_by_expected_type
         .into_iter()
         .map(|e| check_if_visible(db, e, context_element.syntax()))
-        // .filter(|e| is_visible_in_context(db, e, context_element.syntax()).is_none())
         .collect::<Vec<_>>();
     tracing::debug!(?resolved_entries);
 
