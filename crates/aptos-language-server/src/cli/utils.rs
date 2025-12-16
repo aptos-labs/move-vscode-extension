@@ -63,7 +63,10 @@ pub(crate) fn find_target_file_id(
 }
 
 pub(crate) fn apply_assist(assist: &Assist, before: &str) -> (String, Vec<TextRange>) {
-    let source_change = assist.source_change.as_ref().unwrap();
+    let source_change = assist
+        .source_change
+        .as_ref()
+        .expect("assist.source_change is None");
     let mut after = before.to_string();
     let mut new_text_ranges = vec![];
     for text_edit in source_change.source_file_edits.values() {
