@@ -12,6 +12,7 @@ use codespan_reporting::diagnostic::{Label, LabelStyle};
 use codespan_reporting::term;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
 use ide::Analysis;
+use ide_db::assist_config::AssistConfig;
 use ide_db::assists::{Assist, AssistResolveStrategy};
 use ide_db::{RootDatabase, Severity};
 use ide_diagnostics::config::DiagnosticsConfig;
@@ -232,7 +233,7 @@ impl Diagnostics {
         file_path: &AbsPath,
     ) -> bool {
         let file_text = db.file_text(file_id).text(db).to_string();
-        let diagnostics = find_diagnostics_for_a_file(db, file_id, &cmd_config, false);
+        let diagnostics = find_diagnostics_for_a_file(db, file_id, &cmd_config);
         let mut found_error = false;
         for diagnostic in diagnostics.clone() {
             if diagnostic.severity == Severity::Error {
@@ -251,12 +252,12 @@ impl Diagnostics {
         file_id: FileId,
         file_path: &AbsPath,
     ) {
-        let apply_assists = cmd_config.allowed_fix_codes.has_codes_to_apply();
-        let mut diagnostics = find_diagnostics_for_a_file(db, file_id, &cmd_config, apply_assists);
+        // let apply_assists = cmd_config.allowed_fix_codes.has_codes_to_apply();
+        let mut diagnostics = find_diagnostics_for_a_file(db, file_id, &cmd_config);
 
         let mut current_file_text = db.file_text(file_id).text(db).to_string();
         loop {
-            match find_diagnostic_with_fixes(diagnostics, &cmd_config) {
+            match find_diagnostic_with_fixes(db, diagnostics, &cmd_config) {
                 Some((diagnostic, fix)) => {
                     print_diagnostic(&current_file_text, file_path, diagnostic, true);
                     (current_file_text, _) = utils::apply_assist(&fix, current_file_text.as_ref());
@@ -264,7 +265,7 @@ impl Diagnostics {
                 }
                 None => break,
             }
-            diagnostics = find_diagnostics_for_a_file(&db, file_id, &cmd_config, true);
+            diagnostics = find_diagnostics_for_a_file(&db, file_id, &cmd_config);
         }
     }
 
@@ -298,7 +299,7 @@ impl Diagnostics {
         });
 
         CmdConfig {
-            diagnoctics_config: diagnostics_config,
+            diagnostics_config,
             allowed_fix_codes: fix_codes,
             kinds: diag_kinds,
         }
@@ -307,7 +308,7 @@ impl Diagnostics {
 
 #[derive(Debug, Clone)]
 struct CmdConfig {
-    diagnoctics_config: DiagnosticsConfig,
+    diagnostics_config: DiagnosticsConfig,
     kinds: Option<Vec<Severity>>,
     allowed_fix_codes: FixCodes,
 }
@@ -316,7 +317,7 @@ impl CmdConfig {
     pub fn with_resolve_deps(mut self, resolve_deps: bool) -> Self {
         if !resolve_deps {
             // disables most of the diagnostics
-            self.diagnoctics_config = self.diagnoctics_config.for_assists();
+            self.diagnostics_config = self.diagnostics_config.for_assists();
         }
         self
     }
@@ -326,16 +327,14 @@ fn find_diagnostics_for_a_file(
     db: &RootDatabase,
     file_id: FileId,
     cmd_config: &CmdConfig,
-    with_assists: bool,
 ) -> Vec<Diagnostic> {
     let analysis = Analysis::new(db.snapshot());
-    let resolve_assists = if with_assists {
-        AssistResolveStrategy::All
-    } else {
-        AssistResolveStrategy::None
-    };
     let mut diagnostics = analysis
-        .full_diagnostics(&cmd_config.diagnoctics_config, resolve_assists, file_id)
+        .full_diagnostics(
+            &cmd_config.diagnostics_config,
+            AssistResolveStrategy::None,
+            file_id,
+        )
         .unwrap();
     if let Some(sevs) = &cmd_config.kinds {
         diagnostics = diagnostics
@@ -413,12 +412,25 @@ impl FixCodes {
 }
 
 fn find_diagnostic_with_fixes(
+    db: &RootDatabase,
     diagnostics: Vec<Diagnostic>,
     cmd_config: &CmdConfig,
 ) -> Option<(Diagnostic, Assist)> {
-    for diagnostic in diagnostics {
-        let fixes = diagnostic.fixes.clone().unwrap_or_default();
-        for fix in fixes {
+    let analysis = Analysis::new(db.snapshot());
+    for mut diagnostic in diagnostics {
+        if diagnostic.fixes.unwrap_or_default().is_empty() {
+            continue;
+        }
+        let resolved_fixes = analysis
+            .assists_with_fixes(
+                &AssistConfig { allowed: None },
+                &cmd_config.diagnostics_config.clone().for_assists(),
+                AssistResolveStrategy::All,
+                diagnostic.range,
+            )
+            .unwrap();
+        diagnostic.fixes = Some(resolved_fixes.clone());
+        for fix in resolved_fixes {
             match &cmd_config.allowed_fix_codes {
                 FixCodes::All => return Some((diagnostic, fix)),
                 FixCodes::Codes(allowed_codes) => {
