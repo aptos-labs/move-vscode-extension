@@ -8,6 +8,7 @@ use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use ide_db::assist_context::LocalAssists;
 use ide_db::{Severity, search};
+use syntax::ast::AnyFun;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::syntax_factory::SyntaxFactory;
 use syntax::files::{FileRange, InFile};
@@ -42,8 +43,16 @@ pub(crate) fn check_unused_ident_pat<'db>(
         if fun_param.is_self() {
             return None;
         }
+
         let any_fun = fun_param.any_fun()?;
         if any_fun.is_native() || any_fun.is_uninterpreted() {
+            return None;
+        }
+
+        // skip #[test] function parameters
+        if let AnyFun::Fun(fun) = any_fun
+            && fun.is_test()
+        {
             return None;
         }
     }

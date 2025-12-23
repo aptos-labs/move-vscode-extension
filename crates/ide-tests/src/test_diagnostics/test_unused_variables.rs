@@ -231,6 +231,17 @@ fn test_no_unused_variable_for_self() {
 }
 
 #[test]
+fn test_no_unused_variable_for_test_parameter() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            #[test]
+            fun test_main(fx: signer) {}
+        }
+    "#]]);
+}
+
+#[test]
 fn test_unused_variable_rename() {
     // language=Move
     check_diagnostics_and_fix(
