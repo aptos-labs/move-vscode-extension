@@ -2597,3 +2597,17 @@ fn test_allow_comparing_struct_types() {
         }
     "#]])
 }
+
+#[test]
+fn test_ref_signer_cannot_be_used_as_type_argument() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::mod {
+            struct S<T> { val: T }
+            fun main(acc: &signer) {
+                S { val: acc };
+                       //^^^ err: Type `&signer` is not allowed as a type argument
+            }
+        }
+    "#]])
+}
