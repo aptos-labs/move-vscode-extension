@@ -35,6 +35,10 @@ impl TyVar {
         }
     }
 
+    pub fn has_origin(&self) -> bool {
+        matches!(self.kind, TyVarKind::WithOrigin { .. })
+    }
+
     pub fn origin_type_param(&self, db: &dyn SourceDatabase) -> Option<InFile<ast::TypeParam>> {
         match &self.kind {
             TyVarKind::WithOrigin { origin_loc, index: _ } => origin_loc.to_ast::<ast::TypeParam>(db),

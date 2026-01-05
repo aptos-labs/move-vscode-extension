@@ -13,7 +13,7 @@ use crate::types::ty::adt::TyAdt;
 use crate::types::ty::reference::TyReference;
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::TyCallable;
-use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
+use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar, TyVarKind};
 use crate::types::ty_db;
 use std::cell::RefCell;
 use std::iter::zip;
@@ -154,6 +154,12 @@ impl InferenceCtx<'_> {
         }
         match ty {
             Ty::Infer(TyInfer::Var(ty_var)) => self.var_table.unify_var_var(var, &ty_var),
+            Ty::Reference(ty_ref) if var.has_origin() => {
+                // cannot unify named TyVar with reference
+                res = Err(CombineError::InvalidTypeArgument {
+                    invalid_ty: Ty::Reference(ty_ref),
+                })
+            }
             _ => {
                 let root_ty_var = self.var_table.resolve_to_root_var(var);
                 if self.ty_contains_ty_var(&ty, &root_ty_var) {
@@ -320,6 +326,9 @@ impl InferenceCtx<'_> {
             CombineError::AbilityMismatch { missing_abilities } => {
                 TypeError::missing_abilities(node_or_token, actual, missing_abilities)
             }
+            CombineError::InvalidTypeArgument { invalid_ty: invalid_var_ty } => {
+                TypeError::invalid_type_argument(node_or_token, invalid_var_ty)
+            }
         };
         self.push_type_error(type_error);
     }
@@ -329,6 +338,7 @@ pub type CombineResult = Result<(), CombineError>;
 pub enum CombineError {
     TypeMismatch { _ty1: Ty, _ty2: Ty },
     AbilityMismatch { missing_abilities: Vec<Ability> },
+    InvalidTypeArgument { invalid_ty: Ty },
 }
 
 impl CombineError {
@@ -338,6 +348,10 @@ impl CombineError {
 
     pub fn ability_mismatch(missing_abilities: Vec<Ability>) -> Self {
         CombineError::AbilityMismatch { missing_abilities }
+    }
+
+    pub fn not_allowed_as_type_argument(invalid_ty: Ty) -> Self {
+        CombineError::InvalidTypeArgument { invalid_ty }
     }
 }
 
@@ -381,6 +395,10 @@ pub enum TypeError {
         actual_ty: Ty,
         abilities: Vec<Ability>,
     },
+    InvalidTypeArgument {
+        text_range: TextRange,
+        actual_ty: Ty,
+    },
 }
 
 impl TypeError {
@@ -394,6 +412,7 @@ impl TypeError {
             TypeError::WrongArgumentToBorrowExpr { text_range, .. } => text_range.clone(),
             TypeError::InvalidDereference { text_range, .. } => text_range.clone(),
             TypeError::MissingAbilities { text_range, .. } => text_range.clone(),
+            TypeError::InvalidTypeArgument { text_range, .. } => text_range.clone(),
         }
     }
 
@@ -467,6 +486,13 @@ impl TypeError {
             abilities: missing_abilities,
         }
     }
+
+    pub fn invalid_type_argument(node_or_token: SyntaxNodeOrToken, actual_ty: Ty) -> Self {
+        TypeError::InvalidTypeArgument {
+            text_range: node_or_token.text_range(),
+            actual_ty,
+        }
+    }
 }
 
 impl TypeFoldable<TypeError> for TypeError {
@@ -526,6 +552,10 @@ impl TypeFoldable<TypeError> for TypeError {
                 actual_ty: actual_ty.fold_with(folder),
                 abilities,
             },
+            TypeError::InvalidTypeArgument { text_range, actual_ty } => TypeError::InvalidTypeArgument {
+                text_range,
+                actual_ty: actual_ty.fold_with(folder),
+            },
         }
     }
 
@@ -543,6 +573,7 @@ impl TypeFoldable<TypeError> for TypeError {
             TypeError::WrongArgumentToBorrowExpr { actual_ty, .. } => visitor.visit_ty(actual_ty),
             TypeError::InvalidDereference { actual_ty, .. } => visitor.visit_ty(actual_ty),
             TypeError::MissingAbilities { .. } => false,
+            TypeError::InvalidTypeArgument { actual_ty, .. } => visitor.visit_ty(actual_ty),
         }
     }
 }

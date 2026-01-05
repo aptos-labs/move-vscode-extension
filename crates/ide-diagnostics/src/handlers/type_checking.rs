@@ -214,5 +214,13 @@ fn register_type_error(
                 FileRange { file_id, range: *text_range },
             ))
         }
+        TypeError::InvalidTypeArgument { text_range, actual_ty } => {
+            let ty = ctx.sema.render_ty(actual_ty);
+            acc.push(Diagnostic::new(
+                DiagnosticCode::Lsp("type-error", Severity::Error),
+                format!("Type `{ty}` is not allowed as a type argument"),
+                FileRange { file_id, range: *text_range },
+            ))
+        }
     }
 }
