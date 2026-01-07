@@ -16,6 +16,7 @@ pub(crate) mod missing_fields;
 pub(crate) mod missing_type_arguments;
 mod reduced_scope_import;
 mod redundant_cast;
+mod simplify_turbofish;
 mod type_checking;
 mod unresolved_reference;
 pub(crate) mod unused_acquires;
