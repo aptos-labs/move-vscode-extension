@@ -38,16 +38,27 @@ fn test_warning_if_turbofish_with_fix() {
     // language=Move
     check_diagnostics_and_fix(
         expect![[r#"
-        module 0x1::mod {
-            struct S<T> { val: T }
-            fun receiver<T>(self: &S<T>): T {
-                self.val
+            module 0x1::mod {
+                struct S<T> { val: T }
+                fun receiver<T>(self: &S<T>): T {
+                    self.val
+                }
+                fun main(s: &S<u8>) {
+                    s.receiver::<u8>();
+                            //^^ hint: `::` in method type arguments is deprecated
+                }
             }
-            fun main(s: &S<u8>) {
-                s.receiver::<u8>();
+        "#]],
+        expect![[r#"
+            module 0x1::mod {
+                struct S<T> { val: T }
+                fun receiver<T>(self: &S<T>): T {
+                    self.val
+                }
+                fun main(s: &S<u8>) {
+                    s.receiver<u8>();
+                }
             }
-        }
-    "#]],
-        expect![[""]],
+        "#]],
     )
 }

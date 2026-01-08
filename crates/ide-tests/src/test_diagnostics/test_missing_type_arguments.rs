@@ -263,8 +263,8 @@ fn test_method_missing_type_arguments() {
                 param
             }
             fun main(s: S<u8>) {
-                let _b = s.receiver::<u8>(1);
-                                 //^^^^^^ err: Invalid instantiation of '0x1::main::receiver'. Expected 2 type argument(s), but got 1
+                let _b = s.receiver<u8>(1);
+                                 //^^^^ err: Invalid instantiation of '0x1::main::receiver'. Expected 2 type argument(s), but got 1
             }
         }
     "#]]);

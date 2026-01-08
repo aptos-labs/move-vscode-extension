@@ -3,17 +3,16 @@ use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use ide_db::Severity;
 use ide_db::assist_context::LocalAssists;
 use syntax::ast;
-use syntax::files::{FileRange, InFile};
+use syntax::files::{FileRange, InFile, InFileExt};
 
 pub(crate) fn simplify_turbofish(
     acc: &mut Vec<Diagnostic>,
     ctx: &DiagnosticsContext<'_>,
     method_call_expr: InFile<ast::MethodCallExpr>,
 ) -> Option<()> {
-    dbg!(&method_call_expr);
-    let (file_id, method) = method_call_expr.unpack_ref();
-    let _ = method.type_arg_list()?;
-    let coloncolon_token = method.coloncolon_token()?;
+    let (file_id, method_call_expr) = method_call_expr.unpack_ref();
+    let type_arg_list = method_call_expr.type_arg_list()?;
+    let coloncolon_token = type_arg_list.coloncolon_token()?;
     let range = FileRange {
         file_id,
         range: coloncolon_token.text_range(),
@@ -21,11 +20,11 @@ pub(crate) fn simplify_turbofish(
     acc.push(
         Diagnostic::new(
             DiagnosticCode::Lsp("redundant-coloncolon", Severity::Hint),
-            ":: in method type arguments is deprecated",
+            "`::` in method type arguments is deprecated",
             range,
         )
         .with_unused(true)
-        .with_local_fixes(fixes(ctx, method_call_expr, range)),
+        .with_local_fixes(fixes(ctx, type_arg_list.in_file(file_id), range)),
     );
 
     Some(())
@@ -33,16 +32,16 @@ pub(crate) fn simplify_turbofish(
 
 fn fixes(
     ctx: &DiagnosticsContext<'_>,
-    method_call_expr: InFile<ast::MethodCallExpr>,
+    type_arg_list: InFile<ast::TypeArgList>,
     diagnostic_range: FileRange,
 ) -> Option<LocalAssists> {
-    let mut assists = ctx.local_assists_for_node(method_call_expr.as_ref())?;
+    let mut assists = ctx.local_assists_for_node(type_arg_list.as_ref())?;
     assists.add_fix(
         "remove-redundant-coloncolon",
         "Remove redundant ::",
         diagnostic_range.range,
         |editor| {
-            if let Some(coloncolon) = method_call_expr.value.coloncolon_token() {
+            if let Some(coloncolon) = type_arg_list.value.coloncolon_token() {
                 editor.delete(coloncolon);
             }
         },

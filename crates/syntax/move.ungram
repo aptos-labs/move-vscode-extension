@@ -407,7 +407,7 @@ CallExpr =
     Expr ValueArgList
 
 MethodCallExpr =
-    receiver_expr:Expr '.' NameRef ('::' TypeArgList)? ValueArgList
+    receiver_expr:Expr '.' NameRef TypeArgList? ValueArgList
 
 AssertMacroExpr =
     'ident' '!' ValueArgList
@@ -461,7 +461,7 @@ AbilityBoundList =
     ':' abilities:(Ability ('+' Ability)*)?
 
 TypeArgList =
-    '<' type_arguments:(TypeArg (',' TypeArg)* ','?)? '>'
+    '::'? '<' type_arguments:(TypeArg (',' TypeArg)* ','?)? '>'
 
 TypeArg =
     Type
