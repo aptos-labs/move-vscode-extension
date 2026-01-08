@@ -1072,8 +1072,6 @@ impl MethodCallExpr {
     pub fn value_arg_list(&self) -> Option<ValueArgList> { support::child(&self.syntax) }
     #[inline]
     pub fn dot_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![.]) }
-    #[inline]
-    pub fn coloncolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![::]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1887,6 +1885,8 @@ pub struct TypeArgList {
 impl TypeArgList {
     #[inline]
     pub fn type_arguments(&self) -> AstChildren<TypeArg> { support::children(&self.syntax) }
+    #[inline]
+    pub fn coloncolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![::]) }
     #[inline]
     pub fn l_angle_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![<]) }
     #[inline]

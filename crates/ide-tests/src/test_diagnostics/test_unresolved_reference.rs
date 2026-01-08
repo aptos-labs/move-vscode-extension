@@ -1149,7 +1149,7 @@ fn test_unresolved_method_with_generics_only_highlights_name() {
         module 0x1::main {
             struct S { }
             fun main(s: S) {
-                s.call::<u8, u8>();
+                s.call<u8, u8>();
                 //^^^^ err: Unresolved reference `call`: cannot resolve
             }
         }
