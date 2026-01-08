@@ -7,10 +7,10 @@ fn test_no_warning_if_no_generic_parameters() {
     check_diagnostics(expect![[r#"
         module 0x1::mod {
             struct S<T> { val: T }
-            fun receiver<T>(self: &S): T {
+            fun receiver<T>(self: &S<T>): T {
                 self.val
             }
-            fun main(s: &S) {
+            fun main(s: &S<u8>) {
                 s.receiver();
             }
         }
@@ -23,10 +23,10 @@ fn test_no_warning_if_generic_parameter_without_turbofish() {
     check_diagnostics(expect![[r#"
         module 0x1::mod {
             struct S<T> { val: T }
-            fun receiver<T>(self: &S): T {
+            fun receiver<T>(self: &S<T>): T {
                 self.val
             }
-            fun main(s: &S) {
+            fun main(s: &S<u8>) {
                 s.receiver<u8>();
             }
         }
@@ -40,10 +40,10 @@ fn test_warning_if_turbofish_with_fix() {
         expect![[r#"
         module 0x1::mod {
             struct S<T> { val: T }
-            fun receiver<T>(self: &S): T {
+            fun receiver<T>(self: &S<T>): T {
                 self.val
             }
-            fun main(s: &S) {
+            fun main(s: &S<u8>) {
                 s.receiver::<u8>();
             }
         }

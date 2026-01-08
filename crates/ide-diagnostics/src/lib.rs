@@ -137,6 +137,9 @@ pub fn semantic_diagnostics(
                 ast::CallExpr(it) => {
                     handlers::can_be_replaced_with_method_call(&mut acc, &ctx, it.in_file(file_id));
                 },
+                ast::MethodCallExpr(it) => {
+                    handlers::simplify_turbofish::simplify_turbofish(&mut acc, &ctx, it.in_file(file_id));
+                },
                 ast::AssertMacroExpr(it) => {
                     handlers::error_const_docs::error_const_in_assert(&mut acc, &ctx, it.in_file(file_id));
                 },
