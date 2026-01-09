@@ -228,20 +228,18 @@ pub fn reverse_transitive_dep_package_ids(db: &dyn SourceDatabase, of: PackageId
 pub const APTOS_FRAMEWORK_ADDRESSES: [&str; 4] = ["std", "aptos_std", "aptos_framework", "aptos_token"];
 
 pub fn named_addresses(db: &dyn SourceDatabase) -> HashMap<String, String> {
-    // let mut all_addresses = HashSet::new();
+    let mut all_addresses = HashMap::new();
 
     // add default addresses
-    named_addresses_tracked(db)
-    // all_addresses.extend(named_addresses_tracked(db));
+    all_addresses.extend(named_addresses_tracked(db));
 
-    // for std_address in APTOS_FRAMEWORK_ADDRESSES.map(|it| it.to_string()) {
-    //     if !all_addresses.contains(std_address) {
-    //
-    //     }
-    //     all_addresses.insert((std_address, "0x1".to_string()));
-    // }
+    for std_address in APTOS_FRAMEWORK_ADDRESSES.map(|it| it.to_string()) {
+        if !all_addresses.contains_key(&std_address) {
+            all_addresses.insert(std_address, "0x1".to_string());
+        }
+    }
 
-    // all_addresses
+    all_addresses
 }
 
 #[salsa_macros::tracked]

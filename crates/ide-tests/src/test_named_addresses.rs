@@ -92,6 +92,10 @@ fn test_collect_named_addresses_from_packages() {
                 "0x1",
             ),
             (
+                "aptos_token",
+                "0x1",
+            ),
+            (
                 "aptos_token_objects",
                 "0x4",
             ),

@@ -39,7 +39,7 @@ fn find_use_item_hit_for_path(
         .as_ref()
         .flat_map(|it| it.syntax().ancestors_of_type::<ast::AnyUseStmtsOwner>());
 
-    let base_path_type = BasePathType::for_path(&path.value)?;
+    let base_path_type = BasePathType::for_path(db, &path.value)?;
     for use_item_owner_ans in use_item_owner_ancestors {
         let owner_use_items = hir_db::combined_use_items(db, use_item_owner_ans)
             .into_iter()
@@ -88,6 +88,7 @@ fn find_use_items_hit(
     }
 }
 
+#[derive(Debug)]
 enum BasePathType {
     Address,
     Module { module_name: String },
@@ -95,7 +96,7 @@ enum BasePathType {
 }
 
 impl BasePathType {
-    fn for_path(path: &ast::Path) -> Option<BasePathType> {
+    fn for_path(db: &dyn SourceDatabase, path: &ast::Path) -> Option<BasePathType> {
         let root_path = path.root_path();
         let qualifier = root_path.qualifier();
         match qualifier {
@@ -105,10 +106,21 @@ impl BasePathType {
             }),
             // 0x1::foo
             Some(qualifier) if qualifier.path_address().is_some() => Some(BasePathType::Address),
-            // m::foo
-            Some(qualifier) => Some(BasePathType::Module {
-                module_name: qualifier.reference_name()?,
-            }),
+            Some(qualifier) => {
+                let parent_qualifier = qualifier.qualifier();
+                // addr::m::foo
+                if let Some(parent_qualifier) = parent_qualifier
+                    && let Some(parent_name) = parent_qualifier.reference_name()
+                    && hir_db::named_addresses(db).contains_key(&parent_name)
+                {
+                    Some(BasePathType::Address)
+                } else {
+                    // mod::foo
+                    Some(BasePathType::Module {
+                        module_name: qualifier.reference_name()?,
+                    })
+                }
+            }
         }
     }
 }
