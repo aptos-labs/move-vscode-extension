@@ -83,15 +83,34 @@ fn test_collect_named_addresses_from_packages() {
         .collect::<Vec<_>>();
     let expected = expect![[r#"
         [
-            "aptos_experimental",
-            "aptos_framework",
-            "aptos_std",
-            "aptos_token",
-            "aptos_token_objects",
-            "my_app_address",
-            "my_dep_address",
-            "my_source_dep_address",
-            "std",
+            (
+                "aptos_framework",
+                "0x1",
+            ),
+            (
+                "aptos_std",
+                "0x1",
+            ),
+            (
+                "aptos_token_objects",
+                "0x4",
+            ),
+            (
+                "my_app_address",
+                "_",
+            ),
+            (
+                "my_dep_address",
+                "_",
+            ),
+            (
+                "my_source_dep_address",
+                "_",
+            ),
+            (
+                "std",
+                "0x1",
+            ),
         ]"#]];
     expected.assert_eq(&format!("{:#?}", named_addresses))
 }

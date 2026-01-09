@@ -11,7 +11,7 @@ use base_db::{SourceDatabase, source_db};
 use ide_completion::item::CompletionItem;
 use ide_db::{RootDatabase, root_db, symbol_index};
 use line_index::{LineCol, LineIndex};
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::panic::UnwindSafe;
 use std::sync::Arc;
 use syntax::{SourceFile, TextRange, TextSize};
@@ -559,7 +559,7 @@ impl Analysis {
         self.with_db(|db| handlers::organize_imports::organize_imports_in_file(db, file_id))
     }
 
-    pub fn named_addresses(&self) -> Cancellable<HashSet<String>> {
+    pub fn named_addresses(&self) -> Cancellable<HashMap<String, String>> {
         self.with_db(|db| hir_db::named_addresses(db).clone())
     }
 
@@ -594,7 +594,7 @@ impl Analysis {
     /// catching it on the API boundary.
     fn with_db<F, T>(&self, f: F) -> Cancellable<T>
     where
-        F: FnOnce(&RootDatabase) -> T + std::panic::UnwindSafe,
+        F: FnOnce(&RootDatabase) -> T + UnwindSafe,
     {
         Cancelled::catch(|| f(&self.db))
     }

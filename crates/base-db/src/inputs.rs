@@ -13,6 +13,8 @@ use salsa::Setter;
 use std::sync::Arc;
 use vfs::FileId;
 
+pub type AddressPair = (String, String);
+
 #[salsa_macros::interned(no_lifetime)]
 #[derive(Debug)]
 pub struct FileIdInput {
@@ -55,7 +57,7 @@ pub struct PackageMetadata {
     pub package_name: Option<String>,
     pub dep_manifest_ids: Arc<Vec<ManifestFileId>>,
     pub resolve_deps: bool,
-    pub named_addresses: Vec<String>,
+    pub named_addresses: Vec<AddressPair>,
     pub missing_dependencies: Vec<String>,
 }
 

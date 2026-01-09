@@ -24,7 +24,7 @@ use base_db::inputs::{FileIdInput, InternFileId};
 use base_db::package_root::PackageId;
 use base_db::{SourceDatabase, source_db};
 use itertools::Itertools;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use syntax::ast;
 use syntax::ast::UseStmtsOwner;
 use syntax::files::{InFile, InFileExt};
@@ -225,34 +225,35 @@ pub fn reverse_transitive_dep_package_ids(db: &dyn SourceDatabase, of: PackageId
     rev_deps
 }
 
-pub const APTOS_FRAMEWORK_ADDRESSES: [&str; 5] = [
-    "std",
-    "aptos_std",
-    "aptos_framework",
-    "aptos_token",
-    "aptos_experimental",
-];
+pub const APTOS_FRAMEWORK_ADDRESSES: [&str; 4] = ["std", "aptos_std", "aptos_framework", "aptos_token"];
 
-pub fn named_addresses(db: &dyn SourceDatabase) -> HashSet<String> {
-    let mut all_addresses = HashSet::new();
+pub fn named_addresses(db: &dyn SourceDatabase) -> HashMap<String, String> {
+    // let mut all_addresses = HashSet::new();
 
     // add default addresses
-    for std_address in APTOS_FRAMEWORK_ADDRESSES.map(|it| it.to_string()) {
-        all_addresses.insert(std_address);
-    }
-    all_addresses.extend(named_addresses_tracked(db));
+    named_addresses_tracked(db)
+    // all_addresses.extend(named_addresses_tracked(db));
 
-    all_addresses
+    // for std_address in APTOS_FRAMEWORK_ADDRESSES.map(|it| it.to_string()) {
+    //     if !all_addresses.contains(std_address) {
+    //
+    //     }
+    //     all_addresses.insert((std_address, "0x1".to_string()));
+    // }
+
+    // all_addresses
 }
 
-#[salsa_macros::tracked()]
-pub fn named_addresses_tracked(db: &dyn SourceDatabase) -> HashSet<String> {
-    let mut all_addresses = HashSet::new();
+#[salsa_macros::tracked]
+pub fn named_addresses_tracked(db: &dyn SourceDatabase) -> HashMap<String, String> {
+    let mut all_addresses = HashMap::new();
 
     let all_package_ids = db.all_package_ids();
     for package_id in all_package_ids.data(db) {
         if let Some(package_metadata) = source_db::metadata_for_package_id(db, package_id) {
-            all_addresses.extend(package_metadata.named_addresses);
+            for (address_name, address_val) in package_metadata.named_addresses {
+                all_addresses.insert(address_name, address_val);
+            }
         }
     }
 

@@ -32,13 +32,34 @@ pub fn prepare_directories(ws_root: &Utf8Path, test_packages: Vec<TestPackageFil
         let SourceFiles { sources, tests } = parse_files_from_source(&test_package.source_files);
         for (fpath, file_text) in sources {
             let fpath = sources_dir.join(fpath);
-            fs::write(&fpath, file_text).unwrap();
+            // if let Some(parent) = fpath.parent()
+            //     && !parent.exists()
+            // {
+            //     fs::create_dir_all(parent).expect("cannot create parent directory");
+            // }
+            ensure_file_contents(fpath.into(), file_text.as_str());
+            // fs::write(&fpath, file_text).unwrap();
         }
         for (fpath, file_text) in tests {
             let fpath = tests_dir.join(fpath);
-            fs::write(&fpath, file_text).unwrap();
+            ensure_file_contents(fpath, file_text.as_str());
+            // if let Some(parent) = fpath.parent()
+            //     && !parent.exists()
+            // {
+            //     fs::create_dir_all(parent).expect("cannot create parent directory");
+            // }
+            // fs::write(&fpath, file_text).unwrap();
         }
     }
+}
+
+fn ensure_file_contents(fpath: Utf8PathBuf, text: &str) {
+    if let Some(parent) = fpath.parent()
+        && !parent.exists()
+    {
+        fs::create_dir_all(parent).expect("cannot create parent directory");
+    }
+    fs::write(&fpath, text).unwrap();
 }
 
 pub fn from_multiple_files_on_tmpfs(test_packages: Vec<TestPackageFiles>) -> TestState {
