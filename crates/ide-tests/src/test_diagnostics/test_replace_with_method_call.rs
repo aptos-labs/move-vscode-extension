@@ -361,3 +361,23 @@ fn test_method_with_fix_wrap_copy_expr_into_parens() {
         "#]],
     );
 }
+
+#[test]
+fn test_no_warning_for_vector_borrow_as_it_has_vector_index_expr_present_instead() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+            module 0x1::vector {
+                native public fun borrow<Element>(self: &vector<Element>, i: u64): &Element;
+            }
+            module 0x1::m {
+                use 0x1::vector;
+
+                fun main() {
+                    let v = vector[1, 2];
+                    let vv = &v;
+                    *vector::borrow(vv, 0);
+                  //^^^^^^^^^^^^^^^^^^^^^^ weak: Can be replaced with index expr
+                }
+            }
+        "#]]);
+}

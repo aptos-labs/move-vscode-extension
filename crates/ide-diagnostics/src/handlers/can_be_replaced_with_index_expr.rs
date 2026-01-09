@@ -141,7 +141,7 @@ fn fixes(
     Some(assists)
 }
 
-fn is_std_vector_borrow(
+pub(crate) fn is_std_vector_borrow(
     sema: &Semantics<'_, RootDatabase>,
     reference: InFile<impl Into<ast::ReferenceElement>>,
 ) -> Option<bool> {
