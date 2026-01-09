@@ -13,7 +13,7 @@ use crate::types::ty::adt::TyAdt;
 use crate::types::ty::reference::TyReference;
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty::ty_callable::TyCallable;
-use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar, TyVarKind};
+use crate::types::ty::ty_var::{TyInfer, TyIntVar, TyVar};
 use crate::types::ty_db;
 use std::cell::RefCell;
 use std::iter::zip;

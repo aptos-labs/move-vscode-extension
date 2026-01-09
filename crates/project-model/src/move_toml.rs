@@ -4,6 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+use base_db::inputs::AddressPair;
 use paths::{AbsPathBuf, Utf8PathBuf};
 use serde_derive::Deserialize;
 use std::collections::HashMap;
@@ -14,8 +15,8 @@ pub struct MoveToml {
     pub package: Option<Package>,
     pub dependencies: Vec<MoveTomlDependency>,
     pub dev_dependencies: Vec<MoveTomlDependency>,
-    pub addresses: Vec<String>,
-    pub dev_addresses: Vec<String>,
+    pub addresses: Vec<AddressPair>,
+    pub dev_addresses: Vec<AddressPair>,
 }
 
 impl MoveToml {
@@ -88,10 +89,13 @@ impl MoveToml {
         None
     }
 
-    fn parse_addresses_table(addresses_table: &toml::Table) -> Vec<String> {
+    fn parse_addresses_table(addresses_table: &toml::Table) -> Vec<AddressPair> {
         let mut addresses = vec![];
-        for (address_name, _) in addresses_table {
-            addresses.push(address_name.to_owned());
+        for (address_name, address_value) in addresses_table {
+            addresses.push((
+                address_name.to_owned(),
+                address_value.as_str().unwrap_or("_").to_string(),
+            ));
         }
         addresses
     }
@@ -100,7 +104,7 @@ impl MoveToml {
         self.dependencies.iter().chain(self.dev_dependencies.iter())
     }
 
-    pub(crate) fn declared_named_addresses(&self) -> Vec<String> {
+    pub(crate) fn declared_named_addresses(&self) -> Vec<AddressPair> {
         self.addresses
             .iter()
             .chain(self.dev_addresses.iter())

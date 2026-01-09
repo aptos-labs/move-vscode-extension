@@ -13,7 +13,7 @@ use std::sync::Arc;
 use syntax::TextRange;
 use vfs::{FileId, Vfs};
 
-pub(crate) fn init_db(manifests: Vec<DiscoveredManifest>) -> (RootDatabase, vfs::Vfs) {
+pub(crate) fn init_db(manifests: Vec<DiscoveredManifest>) -> (RootDatabase, Vfs) {
     let aptos_packages = load_from_fs::load_aptos_packages(manifests).valid_packages();
     ide_db::load::load_db(&aptos_packages).unwrap()
 }

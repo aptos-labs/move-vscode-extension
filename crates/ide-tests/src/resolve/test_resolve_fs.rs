@@ -498,3 +498,103 @@ module m2addr::m {
         ),
     ])
 }
+
+#[test]
+fn test_resolve_modules_with_different_name_for_the_same_value_address() {
+    check_resolve_tmpfs(vec![
+        named_with_deps(
+            "main",
+            // language=TOML
+            r#"
+        [addresses]
+        m1myaddress = "0x11"
+
+        [dev-dependencies]
+        m1 = { local = "../m1"}
+                "#,
+            // language=Move
+            r#"
+        //- /main.move
+        module std::main {
+            public fun main() {
+                m1myaddress::m::call();
+                               //^
+            }
+        }
+        "#,
+        ),
+        package(
+            "m1",
+            // language=TOML
+            r#"
+[package]
+name = "m1"
+version = "0.1.0"
+
+[addresses]
+m1addr = "0x11"
+            "#,
+            // language=Move
+            r#"
+//- /m1.move
+module m1addr::m {
+    public fun call() {}
+              //X
+}
+"#,
+        ),
+    ])
+}
+
+#[test]
+fn test_resolve_modules_with_different_name_for_the_same_value_address_same_package() {
+    check_resolve_tmpfs(vec![
+        named_with_deps(
+            "main",
+            // language=TOML
+            r#"
+        [addresses]
+        my_addr = "0x7"
+        renamed_addr = "0x7"
+
+        [dependencies]
+        m1 = { local = "../m1"}
+                "#,
+            // language=Move
+            r#"
+        //- /main.move
+        module 0x1::main {
+            public fun main() {
+                use renamed_addr::market_types::{
+                    call
+                };
+                fun main() {
+                    call();
+                     //^
+                }
+            }
+        }
+        "#,
+        ),
+        package(
+            "m1",
+            // language=TOML
+            r#"
+[package]
+name = "m1"
+version = "0.1.0"
+
+[addresses]
+my_addr = "0x7"
+            "#,
+            // language=Move
+            r#"
+//- /trading/market/market_types.move
+module my_addr::market_types {
+    public fun call() {}
+              //X
+}
+"#,
+        ),
+    ])
+}

@@ -112,11 +112,16 @@ pub fn resolve_named_address(db: &dyn SourceDatabase, name: &str) -> Option<Nume
         return Some(NumericAddress { value: "0x1".to_string() });
     }
     let named_addresses = hir_db::named_addresses(db);
-    if named_addresses.contains(name) {
-        Some(NumericAddress { value: "_".to_string() })
-    } else {
-        None
-    }
+    let address_value = named_addresses.get(name)?;
+    // let (_, address_value) = named_addresses.iter().find(|(it, _)| it == name)?;
+    Some(NumericAddress {
+        value: address_value.to_owned(),
+    })
+    // if named_addresses.iter().any(|it| it.0 == name) {
+    //     Some(NumericAddress { value: "_".to_string() })
+    // } else {
+    //     None
+    // }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

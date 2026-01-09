@@ -5,6 +5,7 @@
 // Modifications have been made to the original code.
 
 use crate::manifest_path::ManifestPath;
+use base_db::inputs::AddressPair;
 use paths::{AbsPath, AbsPathBuf};
 use std::fmt;
 use std::fmt::Formatter;
@@ -51,12 +52,11 @@ pub enum PackageKind {
 #[derive(Clone)]
 pub struct AptosPackage {
     pub package_name: Option<String>,
-    // content_root: AbsPathBuf,
     manifest_path: AbsPathBuf,
     kind: PackageKind,
     transitive_dep_roots: Vec<(AbsPathBuf, PackageKind)>,
     pub resolve_deps: bool,
-    pub named_addresses: Vec<String>,
+    pub named_addresses: Vec<AddressPair>,
     pub missing_dependencies: Vec<String>,
 }
 
@@ -64,9 +64,9 @@ impl fmt::Debug for AptosPackage {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("AptosPackage")
             .field("package_name", &self.package_name)
-            // .field("content_root", &self.content_root().to_string())
             .field("manifest_path", &self.manifest_path.to_string())
             .field("sourced_from", &self.kind)
+            .field("named_addresses", &self.named_addresses)
             .field("deps", &self.transitive_dep_roots)
             .field("resolve_deps", &self.resolve_deps)
             .field("missing_dependencies", &self.missing_dependencies)
@@ -81,7 +81,7 @@ impl AptosPackage {
         kind: PackageKind,
         dep_roots: Vec<(ManifestPath, PackageKind)>,
         resolve_deps: bool,
-        named_addresses: Vec<String>,
+        named_addresses: Vec<AddressPair>,
         missing_dependencies: Vec<String>,
     ) -> Self {
         AptosPackage {

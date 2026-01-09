@@ -187,13 +187,16 @@ impl Diagnostics {
     }
 
     fn run_diagnostics_for_single_file(&self, target_fpath: AbsPathBuf) -> anyhow::Result<ExitCode> {
+        println!("Searching for a closest Move.toml...");
         let manifest = DiscoveredManifest::discover_for_file(&target_fpath)
             .expect("file does not belong to a package");
+        println!("Found `{}`", manifest.move_toml_file);
 
         let (mut db, mut vfs) = utils::init_db(vec![manifest]);
 
         let cmd_config = self.prepare_cmd_config();
-        let target_file_id = utils::find_target_file_id(&db, &vfs, target_fpath.clone()).unwrap();
+        let target_file_id = utils::find_target_file_id(&db, &vfs, target_fpath.clone())
+            .expect(&format!("cannot find file `{}` in VFS", target_fpath.clone()));
 
         let mut found_error = false;
         let apply_assists = cmd_config.allowed_fix_codes.has_codes_to_apply();

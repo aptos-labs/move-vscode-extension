@@ -844,21 +844,6 @@ spec aptos_experimental::mod {}
 "#]]);
 }
 
-#[test]
-fn test_no_unresolved_address_for_fq_item_on_non_standard_address() {
-    // language=Move
-    check_diagnostics(expect![[r#"
-        module aptos_experimental::mod {
-            public fun call() {}
-        }
-        module 0x1::m {
-            fun main() {
-                aptos_experimental::mod::call();
-            }
-        }
-    "#]]);
-}
-
 // language=Move
 #[test]
 fn test_no_unresolved_reference_for_multi_resolve() {

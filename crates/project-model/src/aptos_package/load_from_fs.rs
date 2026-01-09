@@ -9,6 +9,7 @@ use crate::aptos_package::{AptosPackage, PackageKind};
 use crate::manifest_path::{ManifestPath, is_move_toml};
 use crate::move_toml::{MoveToml, MoveTomlDependency};
 use anyhow::Context;
+use base_db::inputs::AddressPair;
 use paths::{AbsPath, AbsPathBuf};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::fs;
@@ -20,14 +21,13 @@ pub struct ManifestEntry {
     declared_deps: Vec<(ManifestPath, PackageKind)>,
     resolve_deps: bool,
     missing_dependencies: Vec<String>,
-    named_addresses: Vec<String>,
+    named_addresses: Vec<AddressPair>,
 }
 
 #[derive(Debug)]
 pub enum LoadedPackage {
     /// package is still valid, but some of the dependencies is not
     Package(AptosPackage),
-    // PackageWithMissingDeps(AptosPackage, Vec<String>),
     ManifestParseError(anyhow::Error),
 }
 
@@ -42,7 +42,6 @@ impl LoadedPackages {
             .iter()
             .filter_map(|it| match it {
                 LoadedPackage::Package(package) => Some(package.clone()),
-                // LoadedPackage::PackageWithMissingDeps(package, _) => Some(package.clone()),
                 LoadedPackage::ManifestParseError(_) => None,
             })
             .collect()
@@ -140,10 +139,6 @@ fn collect_package_from_manifest_entry(
         missing_dependencies,
     );
     LoadedPackage::Package(aptos_package)
-    // if !missing_dependencies.is_empty() {
-    //     LoadedPackage::PackageWithMissingDeps(aptos_package, missing_dependencies)
-    // } else {
-    // }
 }
 
 fn collect_deps_transitively(
