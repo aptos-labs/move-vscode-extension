@@ -198,3 +198,37 @@ fn test_use_speck_in_group_scope_too_broad_extract_with_attribute() {
         "#]],
     );
 }
+
+#[test]
+fn test_unused_self_import_when_fully_qualified_path_is_present_in_attribute() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+            module aptos_framework::pool {
+                public fun create_pool() {}
+            }
+            module aptos_framework::main {
+                use aptos_framework::pool::{Self, create_pool};
+                                          //^^^^ warn: Unused use item
+
+                #[aptos_framework::pool::create_pool]
+                fun main() {
+                    create_pool();
+                }
+            }
+        "#]],
+        expect![[r#"
+            module aptos_framework::pool {
+                public fun create_pool() {}
+            }
+            module aptos_framework::main {
+                use aptos_framework::pool::create_pool;
+
+                #[aptos_framework::pool::create_pool]
+                fun main() {
+                    create_pool();
+                }
+            }
+        "#]],
+    );
+}
