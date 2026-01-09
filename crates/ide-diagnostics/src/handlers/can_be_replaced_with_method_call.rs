@@ -6,6 +6,7 @@
 
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
+use crate::handlers::can_be_replaced_with_index_expr::is_std_vector_borrow;
 use ide_db::Severity;
 use ide_db::assist_context::LocalAssists;
 use lang::types::fold::TypeFoldable;
@@ -30,6 +31,15 @@ pub(crate) fn can_be_replaced_with_method_call(
         .clone()
         .and_then(|it| it.path())?
         .map(|it| it.reference());
+
+    // skip *vector::borrow()
+    if let Some(parent_expr) = call_expr.value.syntax().parent()
+        && parent_expr.is::<ast::DerefExpr>()
+        && is_std_vector_borrow(&ctx.sema, reference.clone()).unwrap_or(false)
+    {
+        return None;
+    }
+
     let fun = ctx.sema.resolve_to_element::<ast::Fun>(reference)?;
 
     let self_param = fun.value.self_param()?;
