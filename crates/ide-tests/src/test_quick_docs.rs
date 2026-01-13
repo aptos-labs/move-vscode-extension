@@ -35,6 +35,7 @@ fn test_hover_for_struct() {
         r#"
 module 0x1::m {
     /// struct docs
+    #[object]
     struct S has key { val: u8 }
     fun main() {
         S { val: u8 };
@@ -47,6 +48,7 @@ module 0x1::m {
             ```move
             0x1::m
 
+            #[object]
             struct S has key { ... }
             ```
             ---
@@ -62,6 +64,7 @@ fn test_hover_for_enum() {
         r#"
 module 0x1::m {
     /// enum docs
+    #[object]
     enum S has key { One { val: u8 }, Two(u8, u8) }
     fun main() {
         S::One;
@@ -74,6 +77,7 @@ module 0x1::m {
             ```move
             0x1::m
 
+            #[object]
             enum S has key {
                 One { ... },
                 Two(...)
@@ -93,7 +97,8 @@ fn test_hover_for_function() {
 module 0x1::m {
     struct S<T> { val: T }
     /// function docs
-    fun main(a: u8, b: S<u8>): S<u8> acquires S {
+    #[view]
+    public fun main(a: u8, b: S<u8>): S<u8> acquires S {
         main(1, S { val: 1 });
         //^
     }
@@ -104,7 +109,8 @@ module 0x1::m {
             ```move
             0x1::m
 
-            fun main(a: u8, b: S<u8>): S<u8>
+            #[view]
+            public fun main(a: u8, b: S<u8>): S<u8>
             ```
             ---
             function docs
