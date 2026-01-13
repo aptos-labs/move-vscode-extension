@@ -111,6 +111,7 @@ module 0x1::m {
 
             #[view]
             public fun main(a: u8, b: S<u8>): S<u8>
+            acquires S
             ```
             ---
             function docs

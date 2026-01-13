@@ -104,6 +104,21 @@ fn generate_any_fun(buf: &mut String, any_fun: ast::AnyFun) -> Option<()> {
         )
     }
     generate_type_annotation(buf, any_fun.return_type());
+    if let Some(acquires) = any_fun.fun().and_then(|it| it.acquires()) {
+        format_to!(buf, "\n");
+        separated_list(
+            buf,
+            acquires.types().collect(),
+            "acquires ",
+            "",
+            ", ",
+            false,
+            |buf, ty| {
+                generate_type(buf, Some(ty.into()));
+                Some(())
+            },
+        );
+    }
     Some(())
 }
 
