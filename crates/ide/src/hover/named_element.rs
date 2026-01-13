@@ -9,6 +9,8 @@ use lang::Semantics;
 use lang::nameres::scope::ScopeEntryExt;
 use std::fmt::Write;
 use stdx::format_to;
+use syntax::ast::visibility::{Vis, VisLevel};
+use syntax::ast::{HasAttrs, HasVisibility};
 use syntax::{AstNode, ast, match_ast};
 
 pub trait DocSignatureOwner {
@@ -77,6 +79,8 @@ fn generate_module(buf: &mut String, module: ast::Module) -> Option<()> {
 }
 
 fn generate_any_fun(buf: &mut String, any_fun: ast::AnyFun) -> Option<()> {
+    generate_attrs(buf, &any_fun);
+    generate_vis(buf, &any_fun);
     let fun_kw = match any_fun {
         ast::AnyFun::Fun(_) => "fun",
         ast::AnyFun::SpecFun(_) | ast::AnyFun::SpecInlineFun(_) => "spec fun",
@@ -100,10 +104,43 @@ fn generate_any_fun(buf: &mut String, any_fun: ast::AnyFun) -> Option<()> {
         )
     }
     generate_type_annotation(buf, any_fun.return_type());
+    if let Some(acquires) = any_fun.fun().and_then(|it| it.acquires()) {
+        format_to!(buf, "\n");
+        separated_list(
+            buf,
+            acquires.types().collect(),
+            "acquires ",
+            "",
+            ", ",
+            false,
+            |buf, ty| {
+                generate_type(buf, Some(ty.into()));
+                Some(())
+            },
+        );
+    }
     Some(())
 }
 
+fn generate_attrs(buf: &mut String, attr_owner: &impl HasAttrs) {
+    for attr in attr_owner.attrs() {
+        let attr_s = attr.to_string();
+        format_to!(buf, "{attr_s}\n");
+    }
+}
+
+fn generate_vis(buf: &mut String, vis_owner: &impl HasVisibility) {
+    let vis = vis_owner.vis();
+    match vis {
+        Vis::Public => format_to!(buf, "public "),
+        Vis::Restricted(VisLevel::Friend) => format_to!(buf, "friend "),
+        Vis::Restricted(VisLevel::Package) => format_to!(buf, "package "),
+        Vis::Private => (),
+    }
+}
+
 fn generate_const(buf: &mut String, const_: ast::Const) -> Option<()> {
+    generate_attrs(buf, &const_);
     let const_name = const_.name()?.as_string();
     format_to!(buf, "const {const_name}");
     generate_type_annotation(buf, const_.type_())?;
@@ -111,6 +148,8 @@ fn generate_const(buf: &mut String, const_: ast::Const) -> Option<()> {
 }
 
 fn generate_enum(buf: &mut String, enum_: ast::Enum) -> Option<()> {
+    generate_attrs(buf, &enum_);
+
     format_to!(buf, "enum {}", enum_.name()?.as_string());
 
     if let Some(a_list) = enum_.ability_list() {
@@ -128,6 +167,7 @@ fn generate_enum(buf: &mut String, enum_: ast::Enum) -> Option<()> {
 }
 
 fn generate_struct(buf: &mut String, struct_: ast::Struct) -> Option<()> {
+    generate_attrs(buf, &struct_);
     let struct_name = struct_.name()?.as_string();
     format_to!(buf, "struct {struct_name}");
 
@@ -143,6 +183,7 @@ fn generate_struct(buf: &mut String, struct_: ast::Struct) -> Option<()> {
 }
 
 fn generate_field(buf: &mut String, field: ast::NamedField) -> Option<()> {
+    generate_attrs(buf, &field);
     format_to!(buf, "{}", field.field_name().as_string());
     generate_type_annotation(buf, field.type_())?;
     Some(())
