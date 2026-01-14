@@ -381,3 +381,20 @@ fn test_no_warning_for_vector_borrow_as_it_has_vector_index_expr_present_instead
             }
         "#]]);
 }
+
+#[test]
+fn test_no_suggestion_for_item_type_of_which_is_determined_inside_lambda() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+            module 0x1::m {
+                struct Container { val: u8 }
+                fun borrow(self: &Container): &Container { self }
+                inline fun apply<T>(t: T, f: |&T|) {
+                    f(&t);
+                }
+                fun main(c: Container) {
+                    apply(c, |item| { let _ = borrow(item); });
+                }
+            }
+        "#]]);
+}
