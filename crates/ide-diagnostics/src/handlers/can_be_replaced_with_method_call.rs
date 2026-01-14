@@ -27,6 +27,11 @@ pub(crate) fn can_be_replaced_with_method_call(
 ) -> Option<()> {
     let msl = call_expr.value.syntax().is_msl_context();
 
+    if let Some(_) = call_expr.value.syntax().ancestor_strict::<ast::LambdaExpr>() {
+        // We're under lambda body. Type inference is incomplete in the aptos-cli, so we need to skip suggestion.
+        return None;
+    }
+
     let reference = call_expr
         .clone()
         .and_then(|it| it.path())?
