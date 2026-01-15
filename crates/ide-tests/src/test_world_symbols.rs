@@ -10,7 +10,7 @@ use test_utils::{SourceMark, apply_source_marks, fixtures};
 
 fn check_symbols(source: &str, query: Query, with_symbols: Expect) {
     let (analysis, _) = fixtures::from_single_file(source.to_string());
-    let symbols = analysis.symbol_search(query, 10).unwrap();
+    let symbols = analysis.symbol_search(query).unwrap();
 
     let marks = symbols
         .iter()
@@ -32,7 +32,7 @@ module 0x1::main {
     "#;
     check_symbols(
         source,
-        Query::new("main".to_string()),
+        Query::new("main", Some(128)),
         // language=Move
         expect![[r#"
             module 0x1::main {
@@ -49,7 +49,7 @@ module 0x1::main {
     );
     check_symbols(
         source,
-        Query::new("one".to_string()),
+        Query::new("one", Some(128)),
         // language=Move
         expect![[r#"
             module 0x1::main {
@@ -63,7 +63,7 @@ module 0x1::main {
     );
     check_symbols(
         source,
-        Query::new("two".to_string()),
+        Query::new("two", Some(128)),
         // language=Move
         expect![[r#"
             module 0x1::main {
@@ -78,7 +78,7 @@ module 0x1::main {
 }
 
 #[test]
-fn test_world_symbols_case_sensitive() {
+fn test_world_symbols_with_limit() {
     // language=Move
     let source = r#"
 module 0x1::main {
@@ -90,13 +90,45 @@ module 0x1::main {
     "#;
     check_symbols(
         source,
-        Query::new("main".to_string()).case_sensitive(),
+        Query::new("main", Some(1)),
         // language=Move
         expect![[r#"
             module 0x1::main {
                       //^^^^
                 struct SMain { val: u8 }
                 enum Main { One, Two }
+                fun main() {
+                }
+            }
+        "#]],
+    );
+    check_symbols(
+        source,
+        Query::new("main", Some(3)),
+        // language=Move
+        expect![[r#"
+            module 0x1::main {
+                      //^^^^
+                struct SMain { val: u8 }
+                enum Main { One, Two }
+                   //^^^^
+                fun main() {
+                  //^^^^
+                }
+            }
+        "#]],
+    );
+    check_symbols(
+        source,
+        Query::new("main", None),
+        // language=Move
+        expect![[r#"
+            module 0x1::main {
+                      //^^^^
+                struct SMain { val: u8 }
+                     //^^^^^
+                enum Main { One, Two }
+                   //^^^^
                 fun main() {
                   //^^^^
                 }
