@@ -23,6 +23,7 @@ use lsp_types::{
     SemanticTokensParams, SemanticTokensRangeParams, SemanticTokensRangeResult, SemanticTokensResult,
     SymbolInformation, TextDocumentIdentifier, Url, WorkspaceEdit, WorkspaceSymbolParams,
 };
+use std::env;
 use std::hash::DefaultHasher;
 use stdx::format_to;
 use stdx::itertools::Itertools;
@@ -172,7 +173,7 @@ pub(crate) fn handle_document_symbol(
 }
 
 /// A value to use, when uncertain which limit to pick.
-pub const DEFAULT_QUERY_SEARCH_LIMIT: usize = 100;
+const DEFAULT_SYMBOLS_SEARCH_LIMIT: usize = 128;
 
 pub(crate) fn handle_workspace_symbol(
     snap: GlobalStateSnapshot,
@@ -180,37 +181,36 @@ pub(crate) fn handle_workspace_symbol(
 ) -> anyhow::Result<Option<lsp_types::WorkspaceSymbolResponse>> {
     let _p = tracing::info_span!("handle_workspace_symbol").entered();
 
-    let symbols = exec_query(&snap, Query::new(params.query), DEFAULT_QUERY_SEARCH_LIMIT)?;
+    let limit = env::var("APTLS_SYMBOL_SEARCH_LIMIT")
+        .ok()
+        .and_then(|it| it.parse::<usize>().ok())
+        .unwrap_or(DEFAULT_SYMBOLS_SEARCH_LIMIT);
+    let limit = if limit == 0 { None } else { Some(limit) };
 
-    return Ok(Some(lsp_types::WorkspaceSymbolResponse::Nested(symbols)));
+    let query = Query::new(&params.query, limit);
 
-    fn exec_query(
-        snap: &GlobalStateSnapshot,
-        query: Query,
-        limit: usize,
-    ) -> anyhow::Result<Vec<lsp_types::WorkspaceSymbol>> {
-        let mut res = Vec::new();
-        for nav in snap.analysis.symbol_search(query, limit)? {
-            let container_name = nav.container_name.as_ref().map(|v| v.to_string());
+    let mut symbols = Vec::new();
+    for nav in snap.analysis.symbol_search(query)? {
+        let container_name = nav.container_name.as_ref().map(|v| v.to_string());
 
-            let info = lsp_types::WorkspaceSymbol {
-                name: match &nav.alias {
-                    Some(alias) => format!("{} (alias for {})", alias, nav.name),
-                    None => format!("{}", nav.name),
-                },
-                kind: nav
-                    .kind
-                    .map(to_proto::symbol_kind)
-                    .unwrap_or(lsp_types::SymbolKind::VARIABLE),
-                tags: None,
-                container_name,
-                location: OneOf::Left(to_proto::location_from_nav(snap, nav)?),
-                data: None,
-            };
-            res.push(info);
-        }
-        Ok(res)
+        let info = lsp_types::WorkspaceSymbol {
+            name: match &nav.alias {
+                Some(alias) => format!("{} (alias for {})", alias, nav.name),
+                None => format!("{}", nav.name),
+            },
+            kind: nav
+                .kind
+                .map(to_proto::symbol_kind)
+                .unwrap_or(lsp_types::SymbolKind::VARIABLE),
+            tags: None,
+            container_name,
+            location: OneOf::Left(to_proto::location_from_nav(&snap, nav)?),
+            data: None,
+        };
+        symbols.push(info);
     }
+
+    Ok(Some(lsp_types::WorkspaceSymbolResponse::Nested(symbols)))
 }
 
 pub(crate) fn handle_goto_definition(
