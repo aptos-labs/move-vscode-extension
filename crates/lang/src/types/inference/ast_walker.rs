@@ -125,6 +125,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 // todo: add coerce here
                 self.infer_expr(&body_expr, Expected::from_ty(lambda_ret_ty));
             }
+            if let Some(inline_spec_block) = lambda_expr.spec_block() {
+                self.process_spec_block(&inline_spec_block);
+            }
         }
     }
 
@@ -161,6 +164,12 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             self.ctx.pat_types.insert(binding.into(), binding_ty);
         }
         Some(())
+    }
+
+    pub fn process_spec_block(&mut self, spec_block_expr: &ast::SpecBlockExpr) {
+        if let Some(block_expr) = spec_block_expr.block_expr() {
+            self.process_msl_block_expr(&block_expr, Expected::NoValue, false);
+        }
     }
 
     pub fn process_msl_block_expr(
@@ -968,6 +977,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         if let Some(condition_expr) = condition_expr {
             self.infer_expr_coerceable_to(&condition_expr, Ty::Bool);
         }
+        if let Some(inline_spec_block) = while_expr.spec_block() {
+            self.process_spec_block(&inline_spec_block);
+        }
         self.infer_loop_like_body(while_expr.clone().into())
     }
 
@@ -982,6 +994,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     ident_pat.into(),
                     seq_ty.map(|it| it.item()).unwrap_or(Ty::Unknown),
                 );
+            }
+            if let Some(inline_spec_block) = for_condition.spec_block() {
+                self.process_spec_block(&inline_spec_block);
             }
         }
         self.infer_loop_like_body(for_expr.clone().into())
