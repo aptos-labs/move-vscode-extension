@@ -3,7 +3,7 @@ members = ["crates/*", "xtask"]
 resolver = "2"
 
 [workspace.package]
-rust-version = "1.90"
+rust-version = "1.92.0"
 edition = "2024"
 license = "MIT"
 
