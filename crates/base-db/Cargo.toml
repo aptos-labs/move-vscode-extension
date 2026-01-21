@@ -5,13 +5,29 @@ rust-version.workspace = true
 edition.workspace = true
 license.workspace = true
 
+# --- Metadata for Workspace Integrity ---
+[package.metadata.rust-analyzer]
+# This helps IDEs treat this as a core database layer
+rustc_private = false 
+
 [dependencies]
+# Observability: Structured logging for database queries and cache misses
 tracing = { workspace = true }
 
-dashmap.workspace = true
-salsa.workspace = true
-salsa-macros.workspace = true
+# Concurrency: High-performance concurrent hash map for shared database state
+dashmap = { workspace = true }
 
+# Incremental Computation Core:
+# Salsa manages the dependency graph between inputs (source code) and outputs (lowered IR)
+salsa = { workspace = true }
+salsa-macros = { workspace = true }
+
+# Virtual File System: Abstracting OS file calls for faster in-memory lookups
 vfs = { workspace = true }
 
+# Syntax Layer: Direct dependency on the AST/Token-stream layer
 syntax = { path = "../syntax" }
+
+# --- Recommended Performance Additions ---
+# rustc-hash = "1.1.0" # Fast non-cryptographic hashing for compiler workloads
+# triomphe = "0.1.0"   # Atomically reference-counted pointers without weak counts (performance)
