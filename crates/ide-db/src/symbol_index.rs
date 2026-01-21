@@ -32,8 +32,8 @@ pub mod sym_db;
 use crate::RootDatabase;
 use crate::symbol_index::sym_db::{FileSymbol, SymbolIndex};
 use base_db::SourceDatabase;
+use fst::Streamer;
 use fst::raw::IndexedValue;
-use fst::{Automaton, Streamer};
 use std::ops::ControlFlow;
 use std::sync::Arc;
 
@@ -62,50 +62,20 @@ pub fn world_symbols(db: &RootDatabase, query: Query) -> Vec<FileSymbol> {
 
 #[derive(Debug)]
 pub struct Query {
-    query: String,
-    lowercased: String,
-    mode: SearchMode,
-    case_sensitive: bool,
-    // only_types: bool,
-    // libs: bool,
+    pub query: String,
+    pub lowercased: String,
+    pub mode: SearchMode,
+    pub limit: Option<usize>,
 }
 
 impl Query {
-    pub fn new(query: String) -> Query {
-        let lowercased = query.to_lowercase();
+    pub fn new(query: &str, search_limit: Option<usize>) -> Query {
         Query {
-            query,
-            lowercased,
-            // only_types: false,
-            // libs: false,
+            query: query.to_string(),
+            lowercased: query.to_lowercase(),
             mode: SearchMode::Fuzzy,
-            case_sensitive: false,
+            limit: search_limit,
         }
-    }
-
-    // pub fn only_types(&mut self) {
-    //     self.only_types = true;
-    // }
-
-    // pub fn libs(&mut self) {
-    //     self.libs = true;
-    // }
-
-    pub fn fuzzy(&mut self) {
-        self.mode = SearchMode::Fuzzy;
-    }
-
-    pub fn exact(&mut self) {
-        self.mode = SearchMode::Exact;
-    }
-
-    pub fn prefix(&mut self) {
-        self.mode = SearchMode::Prefix;
-    }
-
-    pub fn case_sensitive(mut self) -> Self {
-        self.case_sensitive = true;
-        self
     }
 }
 
@@ -118,14 +88,14 @@ impl Query {
         let _p = tracing::info_span!("symbol_index::Query::search").entered();
         let mut op = fst::map::OpBuilder::new();
         match self.mode {
-            SearchMode::Exact => {
-                let automaton = fst::automaton::Str::new(&self.lowercased);
-
-                for index in indices.iter() {
-                    op = op.add(index.map.search(&automaton));
-                }
-                self.search_maps(indices, op.union(), cb)
-            }
+            // SearchMode::Exact => {
+            //     let automaton = fst::automaton::Str::new(&self.lowercased);
+            //
+            //     for index in indices.iter() {
+            //         op = op.add(index.map.search(&automaton));
+            //     }
+            //     self.search_maps(indices, op.union(), cb)
+            // }
             SearchMode::Fuzzy => {
                 let automaton = fst::automaton::Subsequence::new(&self.lowercased);
 
@@ -133,15 +103,14 @@ impl Query {
                     op = op.add(index.map.search(&automaton));
                 }
                 self.search_maps(indices, op.union(), cb)
-            }
-            SearchMode::Prefix => {
-                let automaton = fst::automaton::Str::new(&self.lowercased).starts_with();
-
-                for index in indices.iter() {
-                    op = op.add(index.map.search(&automaton));
-                }
-                self.search_maps(indices, op.union(), cb)
-            }
+            } // SearchMode::Prefix => {
+              //     let automaton = fst::automaton::Str::new(&self.lowercased).starts_with();
+              //
+              //     for index in indices.iter() {
+              //         op = op.add(index.map.search(&automaton));
+              //     }
+              //     self.search_maps(indices, op.union(), cb)
+              // }
         }
     }
 
@@ -163,7 +132,7 @@ impl Query {
                     if ignore_underscore_prefixed && symbol_name.starts_with("__") {
                         continue;
                     }
-                    if self.mode.check(&self.query, self.case_sensitive, symbol_name) {
+                    if self.mode.check(&self.query, false, symbol_name) {
                         if let Some(b) = cb(symbol).break_value() {
                             return Some(b);
                         }
@@ -178,30 +147,26 @@ impl Query {
 /// A way to match import map contents against the search query.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum SearchMode {
-    /// Import map entry should strictly match the query string.
-    Exact,
     /// Import map entry should contain all letters from the query string,
     /// in the same order, but not necessary adjacent.
     Fuzzy,
-    /// Import map entry should match the query string by prefix.
-    Prefix,
 }
 
 impl SearchMode {
     pub fn check(self, query: &str, case_sensitive: bool, candidate: &str) -> bool {
         match self {
-            SearchMode::Exact if case_sensitive => candidate == query,
-            SearchMode::Exact => candidate.eq_ignore_ascii_case(query),
-            SearchMode::Prefix => {
-                query.len() <= candidate.len() && {
-                    let prefix = &candidate[..query.len()];
-                    if case_sensitive {
-                        prefix == query
-                    } else {
-                        prefix.eq_ignore_ascii_case(query)
-                    }
-                }
-            }
+            // SearchMode::Exact if case_sensitive => candidate == query,
+            // SearchMode::Exact => candidate.eq_ignore_ascii_case(query),
+            // SearchMode::Prefix => {
+            //     query.len() <= candidate.len() && {
+            //         let prefix = &candidate[..query.len()];
+            //         if case_sensitive {
+            //             prefix == query
+            //         } else {
+            //             prefix.eq_ignore_ascii_case(query)
+            //         }
+            //     }
+            // }
             SearchMode::Fuzzy => {
                 let mut name = candidate;
                 query.chars().all(|query_char| {

@@ -272,13 +272,16 @@ impl Analysis {
     // }
 
     /// Fuzzy searches for a symbol.
-    pub fn symbol_search(&self, query: Query, limit: usize) -> Cancellable<Vec<NavigationTarget>> {
+    pub fn symbol_search(&self, query: Query) -> Cancellable<Vec<NavigationTarget>> {
+        let limit = query.limit;
         self.with_db(|db| {
-            symbol_index::world_symbols(db, query)
+            let symbols = symbol_index::world_symbols(db, query)
                 .into_iter()
-                .filter_map(|s| NavigationTarget::from_syntax_loc(db, s.name, s.syntax_loc))
-                .take(limit)
-                .collect::<Vec<_>>()
+                .filter_map(|s| NavigationTarget::from_syntax_loc(db, s.name, s.syntax_loc));
+            match limit {
+                Some(limit) => symbols.take(limit).collect(),
+                None => symbols.collect(),
+            }
         })
     }
 
