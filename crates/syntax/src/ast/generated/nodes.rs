@@ -521,6 +521,8 @@ impl ForCondition {
     #[inline]
     pub fn ident_pat(&self) -> Option<IdentPat> { support::child(&self.syntax) }
     #[inline]
+    pub fn spec_block(&self) -> Option<SpecBlockExpr> { support::child(&self.syntax) }
+    #[inline]
     pub fn wildcard_pat(&self) -> Option<WildcardPat> { support::child(&self.syntax) }
     #[inline]
     pub fn l_paren_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['(']) }
@@ -884,6 +886,8 @@ impl LambdaExpr {
     pub fn body_expr(&self) -> Option<Expr> { support::child(&self.syntax) }
     #[inline]
     pub fn lambda_param_list(&self) -> Option<LambdaParamList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn spec_block(&self) -> Option<SpecBlockExpr> { support::child(&self.syntax) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -2123,6 +2127,8 @@ impl WhileExpr {
     pub fn label_decl(&self) -> Option<LabelDecl> { support::child(&self.syntax) }
     #[inline]
     pub fn loop_body_expr(&self) -> Option<BlockOrInlineExpr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn spec_block(&self) -> Option<SpecBlockExpr> { support::child(&self.syntax) }
     #[inline]
     pub fn while_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![while]) }
 }

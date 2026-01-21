@@ -341,7 +341,7 @@ IfExpr =
     'if' Condition then_branch:BlockOrInlineExpr ('else' else_branch:BlockOrInlineExpr)?
 
 WhileExpr =
-    LabelDecl? 'while' Condition loop_body_expr:BlockOrInlineExpr
+    LabelDecl? 'while' Condition loop_body_expr:BlockOrInlineExpr (spec_block:SpecBlockExpr)?
 
 Condition =
     '(' Expr ')'
@@ -353,7 +353,7 @@ ForExpr =
     LabelDecl? 'for' ForCondition loop_body_expr:BlockOrInlineExpr
 
 ForCondition =
-    '(' (IdentPat | WildcardPat) 'in' Expr ')'
+    '(' (IdentPat | WildcardPat) 'in' Expr (spec_block:SpecBlockExpr)? ')'
 
 LoopLike =
     LoopExpr | WhileExpr | ForExpr
@@ -377,7 +377,7 @@ Label =
     'quote_ident'
 
 LambdaExpr =
-    LambdaParamList (body_expr:Expr)?
+    LambdaParamList (body_expr:Expr)? (spec_block:SpecBlockExpr)?
 
 LambdaParamList =
     '|' lambda_params:(LambdaParam (',' LambdaParam)* ','?)? '|'

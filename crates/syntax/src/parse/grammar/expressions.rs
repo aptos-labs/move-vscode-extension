@@ -9,6 +9,7 @@ use crate::parse::grammar::expressions::atom::call_expr;
 use crate::parse::grammar::items::{at_item_start, fun, use_item};
 use crate::parse::grammar::lambdas::lambda_param_list;
 use crate::parse::grammar::patterns::STMT_KEYWORDS_LIST;
+use crate::parse::grammar::specs::opt_spec_block_expr;
 use crate::parse::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt};
 use crate::parse::grammar::specs::quants::{choose_expr, exists_expr, forall_expr, is_at_quant_kw};
 use crate::parse::grammar::specs::schemas::{
@@ -154,6 +155,7 @@ pub(crate) fn lhs(p: &mut Parser, r: Restrictions) -> Option<(CompletedMarker, B
                 return None;
             }
             expr_bp(p, None, r, 1);
+            opt_spec_block_expr(p);
             let cm = m.complete(p, LAMBDA_EXPR);
             return Some((cm, BlockLike::NotBlock));
         }
