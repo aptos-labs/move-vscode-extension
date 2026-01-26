@@ -406,3 +406,31 @@ module 0x1::spec_block_with_lambdas {
 }    "#,
     )
 }
+
+#[test]
+fn test_implies_expr_rhs_type() {
+    // language=Move
+    check_expr_type(
+        r#"
+module 0x1::implies {
+    spec module {
+        ensures true ==> true;
+                        //^ bool
+    }
+}    "#,
+    )
+}
+
+#[test]
+fn test_if_and_only_if() {
+    // language=Move
+    check_expr_type(
+        r#"
+module 0x1::implies {
+    spec module {
+        ensures true <==> true;
+                        //^ bool
+    }
+}    "#,
+    )
+}

@@ -398,3 +398,33 @@ fn test_no_suggestion_for_item_type_of_which_is_determined_inside_lambda() {
             }
         "#]]);
 }
+
+#[test]
+fn test_replace_with_method_in_item_spec_with_implies_operator() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            enum Option<Element> has copy, drop, store {
+                None,
+                Some {
+                    e: Element,
+                }
+            }
+            public fun borrow<Element>(self: &Option<Element>): &Element {
+                if (self is Option::None<Element>) {
+                    abort 1
+                } else {
+                    &self.e
+                }
+            }
+            fun read<Element>(_o: &Option<Element>) {
+
+            }
+            spec read {
+                ensures true ==> borrow(_o) == borrow(_o);
+                               //^^^^^^^^^^ weak: Can be replaced with method call
+                                             //^^^^^^^^^^ weak: Can be replaced with method call
+            }
+        }
+    "#]]);
+}
