@@ -4,7 +4,6 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::nameres::namespaces::Ns;
 use crate::nameres::scope::{NamedItemsInFileExt, ScopeEntry, ScopeEntryExt};
 use crate::node_ext::item::ModuleItemExt;
 use base_db::inputs::InternFileId;
@@ -23,14 +22,6 @@ pub trait ModuleResolutionExt {
 
         let mut entries = Vec::with_capacity(module_named_items.len());
         for member in module_named_items {
-            if let Some(struct_) = member.clone().struct_() {
-                if struct_.is_tuple_struct() {
-                    if let Some(s_entry) = struct_.in_file(file_id).to_entry() {
-                        entries.extend(vec![s_entry.clone(), s_entry.copy_with_ns(Ns::NAME)]);
-                    }
-                    continue;
-                }
-            }
             if let Some(entry) = member.in_file(file_id).to_entry() {
                 entries.push(entry);
             }

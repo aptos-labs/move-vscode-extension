@@ -3,7 +3,7 @@
 
 use crate::item_scope::ItemScope;
 use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
-use crate::nameres::namespaces::{Ns, TYPES_N_ENUMS};
+use crate::nameres::namespaces::{ITEM_TYPE_NS, Ns};
 use crate::nameres::scope::ScopeEntry;
 use crate::node_ext::ModuleLangExt;
 use crate::{hir_db, nameres};
@@ -181,7 +181,7 @@ pub fn is_visible_in_context(
     }
 
     // item is type, check whether it's allowed in the context
-    if TYPES_N_ENUMS.contains(item_ns) {
+    if ITEM_TYPE_NS.contains(item_ns) {
         let opt_path_parent = context_opt_path
             .map(|path| path.root_path())
             .and_then(|it| it.syntax().parent());

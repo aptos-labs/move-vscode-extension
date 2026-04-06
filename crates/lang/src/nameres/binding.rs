@@ -7,7 +7,7 @@
 use crate::nameres;
 use crate::nameres::get_named_field_entries;
 use crate::nameres::name_resolution::{WalkScopesCtx, get_entries_from_walking_scopes};
-use crate::nameres::namespaces::{ENUM_VARIANTS, TYPES_N_ENUMS_N_ENUM_VARIANTS_N_MODULES};
+use crate::nameres::namespaces::{CONTAINER_TYPE_NS, ENUM_VARIANTS, Ns};
 use crate::nameres::scope::{ScopeEntry, ScopeEntryListExt, VecExt};
 use crate::types::ty::Ty;
 use base_db::SourceDatabase;
@@ -49,7 +49,7 @@ pub fn get_ident_pat_resolve_variants(
     }
 
     let ns = if is_completion {
-        TYPES_N_ENUMS_N_ENUM_VARIANTS_N_MODULES
+        CONTAINER_TYPE_NS | Ns::MODULE
     } else {
         ENUM_VARIANTS
     };

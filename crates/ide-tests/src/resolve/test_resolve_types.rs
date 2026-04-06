@@ -1372,6 +1372,22 @@ module 0x1::m {
 
 // language=Move
 #[test]
+fn test_resolve_tuple_struct_as_a_type() {
+    check_resolve(
+        r#"
+module 0x1::m {
+    struct S(u8);
+         //X
+    fun main(s: S) {
+              //^
+    }
+}
+"#,
+    )
+}
+
+// language=Move
+#[test]
 fn test_cannot_resolve_struct_for_struct_literal_from_another_module() {
     check_resolve(
         r#"

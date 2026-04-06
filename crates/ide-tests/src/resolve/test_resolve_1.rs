@@ -718,3 +718,58 @@ fn test_public_enum_match_field() {
     "#,
     )
 }
+
+#[test]
+fn test_resolve_tuple_struct() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::s {
+            struct TransformationFunction(u8);
+                     //X
+        }
+        module 0x1::main {
+            use 0x1::s::TransformationFunction;
+            fun main(f: TransformationFunction) {
+                          //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_tuple_struct_from_use_item() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::s {
+            struct TransformationFunction(u8);
+                     //X
+        }
+        module 0x1::main {
+            use 0x1::s::TransformationFunction;
+                        //^
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_struct_with_wrapped_lambda() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::s {
+            struct TransformationFunction<phantom P>(|&P| P);
+                     //X
+        }
+        module 0x1::main {
+            use 0x1::s::TransformationFunction;
+            fun main(f: TransformationFunction<u8>) {
+                          //^
+            }
+        }
+    "#,
+    )
+}
