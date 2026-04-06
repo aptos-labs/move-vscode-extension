@@ -894,6 +894,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "inventory"
+version = "0.3.24"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4f0c30c76f2f4ccee3fe55a2435f691ca00c0e4bd87abe4f4a851b1d4dac39b"
+dependencies = [
+ "rustversion",
+]
+
+[[package]]
 name = "is_terminal_polyfill"
 version = "1.70.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1202,16 +1211,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
 
 [[package]]
-name = "papaya"
-version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "997ee03cd38c01469a7046643714f0ad28880bcb9e6679ff0666e24817ca19b7"
-dependencies = [
- "equivalent",
- "seize",
-]
-
-[[package]]
 name = "parking_lot"
 version = "0.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1237,7 +1236,7 @@ dependencies = [
 [[package]]
 name = "paths"
 version = "0.0.0"
-source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2025-07-07#0ac65592a833bf40238831dd10e15283d63c46d5"
+source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2026-03-30#f1297b21119565c626320c1ffc248965fffb2527"
 dependencies = [
  "camino",
 ]
@@ -1538,10 +1537,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94300abf3f1ae2e2b8ffb7b58043de3d399c73fa6f4b73826402a5c457614dbe"
 
 [[package]]
-name = "salsa"
-version = "0.23.0"
+name = "rustversion"
+version = "1.0.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e235afdb8e510f38a07138fbe5a0b64691894358a9c0cbd813b1aade110efc9"
+checksum = "b39cdef0fa800fc44525c84ccb54a029961a8215f9619753635a9c0d2538d46d"
+
+[[package]]
+name = "salsa"
+version = "0.26.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f77debccd43ba198e9cee23efd7f10330ff445e46a98a2b107fed9094a1ee676"
 dependencies = [
  "boxcar",
  "crossbeam-queue",
@@ -1550,7 +1555,7 @@ dependencies = [
  "hashlink",
  "indexmap",
  "intrusive-collections",
- "papaya",
+ "inventory",
  "parking_lot",
  "portable-atomic",
  "rayon",
@@ -1564,15 +1569,15 @@ dependencies = [
 
 [[package]]
 name = "salsa-macro-rules"
-version = "0.23.0"
+version = "0.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2edb86a7e9c91f6d30c9ce054312721dbe773a162db27bbfae834d16177b30ce"
+checksum = "ea07adbf42d91cc076b7daf3b38bc8168c19eb362c665964118a89bc55ef19a5"
 
 [[package]]
 name = "salsa-macros"
-version = "0.23.0"
+version = "0.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0778d6e209051bc4e75acfe83bcd7848601ec3dbe9c3dbb982829020e9128af"
+checksum = "d16d4d8b66451b9c75ddf740b7fc8399bc7b8ba33e854a5d7526d18708f67b05"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1594,16 +1599,6 @@ name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
-
-[[package]]
-name = "seize"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b55fb86dfd3a2f5f76ea78310a88f96c4ea21a3031f8d212443d56123fd0521"
-dependencies = [
- "libc",
- "windows-sys 0.61.2",
-]
 
 [[package]]
 name = "semver"
@@ -1727,7 +1722,7 @@ dependencies = [
 [[package]]
 name = "stdx"
 version = "0.0.0"
-source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2025-07-07#0ac65592a833bf40238831dd10e15283d63c46d5"
+source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2026-03-30#f1297b21119565c626320c1ffc248965fffb2527"
 dependencies = [
  "crossbeam-channel",
  "crossbeam-utils",
@@ -2078,7 +2073,7 @@ checksum = "ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65"
 [[package]]
 name = "vfs"
 version = "0.0.0"
-source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2025-07-07#0ac65592a833bf40238831dd10e15283d63c46d5"
+source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2026-03-30#f1297b21119565c626320c1ffc248965fffb2527"
 dependencies = [
  "crossbeam-channel",
  "fst",
@@ -2093,7 +2088,7 @@ dependencies = [
 [[package]]
 name = "vfs-notify"
 version = "0.0.0"
-source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2025-07-07#0ac65592a833bf40238831dd10e15283d63c46d5"
+source = "git+https://github.com/rust-lang/rust-analyzer.git?rev=2026-03-30#f1297b21119565c626320c1ffc248965fffb2527"
 dependencies = [
  "crossbeam-channel",
  "notify",
