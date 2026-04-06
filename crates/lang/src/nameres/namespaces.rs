@@ -7,6 +7,7 @@
 use enumset::{EnumSet, EnumSetType, enum_set};
 use std::fmt;
 use std::fmt::Formatter;
+use syntax::{AstNode, ast};
 
 #[allow(non_camel_case_types)]
 #[derive(EnumSetType, Debug, Hash)]
@@ -14,6 +15,7 @@ pub enum Ns {
     NAME,
     FUNCTION,
     TYPE,
+    TUPLE_STRUCT,
     ENUM,
     ENUM_VARIANT,
     SCHEMA,
@@ -30,28 +32,35 @@ pub type NsSet = EnumSet<Ns>;
 
 pub const NAMES: NsSet = enum_set!(Ns::NAME);
 pub const FUNCTIONS: NsSet = enum_set!(Ns::FUNCTION);
-pub const NAMES_N_VARIANTS: NsSet = enum_set!(Ns::NAME | Ns::ENUM_VARIANT);
-pub const NAMES_N_FUNCTIONS_N_VARIANTS: NsSet = enum_set!(Ns::NAME | Ns::FUNCTION | Ns::ENUM_VARIANT);
-pub const TYPES: NsSet = enum_set!(Ns::TYPE);
-pub const ENUMS: NsSet = enum_set!(Ns::ENUM);
 pub const ENUM_VARIANTS: NsSet = enum_set!(Ns::ENUM_VARIANT);
 pub const SCHEMAS: NsSet = enum_set!(Ns::SCHEMA);
 pub const MODULES: NsSet = enum_set!(Ns::MODULE);
 
 pub const ENUMS_N_MODULES: NsSet = enum_set!(Ns::ENUM | Ns::MODULE);
-pub const TYPES_N_MODULES: NsSet = enum_set!(Ns::TYPE | Ns::MODULE);
-pub const TYPES_N_ENUMS_N_MODULES: NsSet = enum_set!(Ns::TYPE | Ns::ENUM | Ns::MODULE);
-pub const TYPES_N_ENUMS_N_ENUM_VARIANTS: NsSet = enum_set!(Ns::TYPE | Ns::ENUM | Ns::ENUM_VARIANT);
-pub const TYPES_N_ENUMS_N_ENUM_VARIANTS_N_MODULES: NsSet =
-    enum_set!(Ns::TYPE | Ns::ENUM | Ns::ENUM_VARIANT | Ns::MODULE);
-pub const TYPES_N_ENUMS: NsSet = enum_set!(Ns::TYPE | Ns::ENUM);
-pub const TYPES_N_NAMES: NsSet = enum_set!(Ns::TYPE | Ns::NAME);
-pub const TYPES_N_ENUMS_N_NAMES: NsSet = enum_set!(Ns::TYPE | Ns::ENUM | Ns::NAME);
+
+// variables | enum variants
+pub const VALUE_NS: NsSet = enum_set!(Ns::NAME | Ns::FUNCTION | Ns::ENUM_VARIANT);
+pub const CONTAINER_TYPE_NS: NsSet =
+    enum_set!(Ns::TYPE | Ns::TUPLE_STRUCT | Ns::ENUM | Ns::ENUM_VARIANT);
+pub const CALLABLE_NS: NsSet = enum_set!(Ns::NAME | Ns::FUNCTION | Ns::TUPLE_STRUCT | Ns::ENUM_VARIANT);
+// vector | resource types
+pub const INDEXABLE_NS: NsSet = enum_set!(Ns::TYPE | Ns::ENUM | Ns::TUPLE_STRUCT | Ns::NAME);
+
+pub const IMPORTABLE_NS: NsSet =
+    enum_set!(Ns::NAME | Ns::FUNCTION | Ns::TYPE | Ns::TUPLE_STRUCT | Ns::SCHEMA | Ns::ENUM);
+pub const ITEM_TYPE_NS: NsSet = enum_set!(Ns::TYPE | Ns::TUPLE_STRUCT | Ns::ENUM);
+// pub const ITEM_TYPE_NS_N_MODULES: NsSet = ITEM_TYPE_NS | enum_set!();
 
 pub const NONE: NsSet = enum_set!();
-pub const IMPORTABLE_NS: NsSet = enum_set!(Ns::NAME | Ns::FUNCTION | Ns::TYPE | Ns::SCHEMA | Ns::ENUM);
 pub const ALL_NS: NsSet = enum_set!(
-    Ns::NAME | Ns::FUNCTION | Ns::TYPE | Ns::ENUM | Ns::ENUM_VARIANT | Ns::SCHEMA | Ns::MODULE
+    Ns::NAME
+        | Ns::FUNCTION
+        | Ns::TYPE
+        | Ns::TUPLE_STRUCT
+        | Ns::ENUM
+        | Ns::ENUM_VARIANT
+        | Ns::SCHEMA
+        | Ns::MODULE
 );
 
 pub trait NsSetExt {
@@ -64,12 +73,22 @@ impl NsSetExt for NsSet {
     }
 }
 
-pub(crate) fn named_item_ns(named_item_kind: syntax::SyntaxKind) -> Ns {
+pub(crate) fn named_item_ns(named_element: &ast::NamedElement) -> Ns {
     use syntax::SyntaxKind::*;
+    let named_item_kind = named_element.syntax().kind();
     match named_item_kind {
         MODULE => Ns::MODULE,
         SPEC_FUN | FUN | SPEC_INLINE_FUN => Ns::FUNCTION,
-        TYPE_PARAM | STRUCT => Ns::TYPE,
+        TYPE_PARAM => Ns::TYPE,
+        STRUCT => {
+            let struct_ = named_element.clone().struct_().expect("is STRUCT");
+            if struct_.is_tuple_struct() {
+                Ns::TUPLE_STRUCT
+            } else {
+                Ns::TYPE
+            }
+        }
+        // TYPE_PARAM | STRUCT => Ns::TYPE,
         ENUM => Ns::ENUM,
         VARIANT => Ns::ENUM_VARIANT,
         IDENT_PAT | TUPLE_FIELD | NAMED_FIELD | CONST | GLOBAL_VARIABLE_DECL => Ns::NAME,

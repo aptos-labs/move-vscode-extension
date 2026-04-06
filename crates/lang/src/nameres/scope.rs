@@ -69,7 +69,7 @@ pub trait ScopeEntryExt {
         let named_element = self.named_element();
         let name = named_element.value.name()?.as_string();
         let item_loc = named_element.loc();
-        let item_ns = named_item_ns(item_loc.kind());
+        let item_ns = named_item_ns(&named_element.value);
         let entry = ScopeEntry {
             name,
             node_loc: item_loc,

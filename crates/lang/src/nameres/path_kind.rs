@@ -6,12 +6,10 @@
 
 use crate::nameres::address::{Address, NamedAddr, ValueAddr, resolve_named_address};
 use crate::nameres::namespaces::{
-    ALL_NS, ENUMS_N_MODULES, IMPORTABLE_NS, MODULES, NAMES, NAMES_N_FUNCTIONS_N_VARIANTS, Ns, NsSet,
-    SCHEMAS, TYPES_N_ENUMS, TYPES_N_ENUMS_N_ENUM_VARIANTS, TYPES_N_ENUMS_N_MODULES,
-    TYPES_N_ENUMS_N_NAMES,
+    ALL_NS, CALLABLE_NS, CONTAINER_TYPE_NS, ENUMS_N_MODULES, IMPORTABLE_NS, INDEXABLE_NS, ITEM_TYPE_NS,
+    MODULES, NAMES, Ns, NsSet, SCHEMAS, VALUE_NS,
 };
 use base_db::SourceDatabase;
-use enumset::enum_set;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::SyntaxKind::*;
@@ -278,7 +276,7 @@ fn path_namespaces(
                 // if completion, then we need to ignore the trailing ::
                 IMPORTABLE_NS | Ns::MODULE
             } else {
-                enum_set!(Ns::MODULE | Ns::ENUM)
+                ENUMS_N_MODULES
             }
         }
         // foo::bar
@@ -296,47 +294,40 @@ fn path_namespaces(
         //               ^                     ^
         USE_SPECK => IMPORTABLE_NS,
 
-        PATH_TYPE if path_parent.parent_is::<ast::IsExpr>() => TYPES_N_ENUMS_N_ENUM_VARIANTS,
+        PATH_TYPE if path_parent.parent_is::<ast::IsExpr>() => CONTAINER_TYPE_NS,
 
         // a: bar
         //     ^
-        PATH_TYPE if qualifier.is_none() => {
-            if is_completion {
-                TYPES_N_ENUMS_N_MODULES
-            } else {
-                TYPES_N_ENUMS
-            }
-        }
         // a: foo::bar
         //         ^
-        PATH_TYPE if qualifier.is_some() => {
+        PATH_TYPE => {
             if is_completion {
-                TYPES_N_ENUMS_N_MODULES
+                ITEM_TYPE_NS | Ns::MODULE
             } else {
-                TYPES_N_ENUMS
+                ITEM_TYPE_NS
             }
         }
 
-        CALL_EXPR => NAMES_N_FUNCTIONS_N_VARIANTS,
+        CALL_EXPR => CALLABLE_NS,
+        PATH_EXPR if path_parent.parent_is::<ast::CallExpr>() => CALLABLE_NS,
 
         PATH_EXPR if path_parent.has_ancestor_or_self::<ast::AttrItem>() => ALL_NS,
 
         // TYPE | ENUM for resource indexing, NAME for vector indexing
-        PATH_EXPR if path_parent.parent_is::<ast::IndexExpr>() => TYPES_N_ENUMS_N_NAMES,
+        PATH_EXPR if path_parent.parent_is::<ast::IndexExpr>() => INDEXABLE_NS,
 
         // can be anything in completion
         PATH_EXPR => {
             if is_completion {
                 ALL_NS
             } else {
-                NAMES_N_FUNCTIONS_N_VARIANTS
-                // NAMES_N_VARIANTS
+                VALUE_NS
             }
         }
 
         SCHEMA_LIT => SCHEMAS,
 
-        STRUCT_LIT | STRUCT_PAT | TUPLE_STRUCT_PAT | PATH_PAT => TYPES_N_ENUMS_N_ENUM_VARIANTS,
+        STRUCT_LIT | STRUCT_PAT | TUPLE_STRUCT_PAT | PATH_PAT => CONTAINER_TYPE_NS,
 
         // todo:
 
