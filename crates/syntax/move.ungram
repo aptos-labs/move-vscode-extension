@@ -146,7 +146,7 @@ TupleField =
     Attr* Type
 
 Const =
-    Attr* 'const' Name ':' Type Initializer ';'
+    Attr* VisibilityModifier? 'const' Name ':' Type Initializer ';'
 
 Fun =
     Attr* VisibilityModifier?

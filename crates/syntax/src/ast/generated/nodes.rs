@@ -417,6 +417,8 @@ impl Const {
     #[inline]
     pub fn type_(&self) -> Option<Type> { support::child(&self.syntax) }
     #[inline]
+    pub fn visibility_modifier(&self) -> Option<VisibilityModifier> { support::child(&self.syntax) }
+    #[inline]
     pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
     #[inline]
     pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
