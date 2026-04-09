@@ -773,3 +773,62 @@ fn test_resolve_struct_with_wrapped_lambda() {
     "#,
     )
 }
+
+#[test]
+fn test_cannot_resolve_private_const() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::s {
+            const MY_CONST: u8 = 1;
+        }
+        module 0x1::main {
+            use 0x1::s;
+            fun main() {
+                let a = s::MY_CONST;
+                            //^ unresolved
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_public_const() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::s {
+            public const MY_CONST: u8 = 1;
+                        //X
+        }
+        module 0x1::main {
+            use 0x1::s;
+            fun main() {
+                let a = s::MY_CONST;
+                            //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_package_const() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::s {
+            package const MY_CONST: u8 = 1;
+                        //X
+        }
+        module 0x1::main {
+            use 0x1::s;
+            fun main() {
+                let a = s::MY_CONST;
+                            //^
+            }
+        }
+    "#,
+    )
+}
