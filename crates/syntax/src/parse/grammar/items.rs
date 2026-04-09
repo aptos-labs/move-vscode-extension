@@ -73,7 +73,7 @@ pub(super) fn item(p: &mut Parser) {
 
 fn after_vis_modifier_item_set() -> RecoverySet {
     RecoverySet::new()
-        .with_token_set(T![fun] | T![struct])
+        .with_token_set(T![fun] | T![struct] | T![const])
         .with_kw("enum")
 }
 
@@ -104,6 +104,7 @@ pub(super) fn opt_item(p: &mut Parser, m: Marker) -> Result<(), Marker> {
             });
             match p.current() {
                 T![struct] => adt::struct_(p, m),
+                T![const] => const_(p, m),
                 IDENT if p.at_contextual_kw("enum") => adt::enum_(p, m),
                 _ => fun::function(p, m),
             }

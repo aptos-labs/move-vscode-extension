@@ -1,5 +1,5 @@
-SOURCE_FILE@0..155
-  MODULE@0..154
+SOURCE_FILE@0..310
+  MODULE@0..309
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
     VALUE_ADDRESS@7..10
@@ -124,6 +124,101 @@ SOURCE_FILE@0..155
         LITERAL@144..151
           HEX_STRING@144..151 "x\"ff11\""
       SEMICOLON@151..152 ";"
-    WHITESPACE@152..153 "\n"
-    R_CURLY@153..154 "}"
-  WHITESPACE@154..155 "\n"
+    WHITESPACE@152..158 "\n\n    "
+    CONST@158..189
+      VISIBILITY_MODIFIER@158..164
+        PUBLIC_KW@158..164 "public"
+      WHITESPACE@164..165 " "
+      CONST_KW@165..170 "const"
+      WHITESPACE@170..171 " "
+      NAME@171..180
+        IDENT@171..180 "PUBLIC_C1"
+      COLON@180..181 ":"
+      WHITESPACE@181..182 " "
+      PATH_TYPE@182..184
+        PATH@182..184
+          PATH_SEGMENT@182..184
+            NAME_REF@182..184
+              IDENT@182..184 "u8"
+      WHITESPACE@184..185 " "
+      INITIALIZER@185..188
+        EQ@185..186 "="
+        WHITESPACE@186..187 " "
+        LITERAL@187..188
+          INT_NUMBER@187..188 "2"
+      SEMICOLON@188..189 ";"
+    WHITESPACE@189..194 "\n    "
+    CONST@194..226
+      VISIBILITY_MODIFIER@194..201
+        PACKAGE_KW@194..201 "package"
+      WHITESPACE@201..202 " "
+      CONST_KW@202..207 "const"
+      WHITESPACE@207..208 " "
+      NAME@208..217
+        IDENT@208..217 "PUBLIC_C2"
+      COLON@217..218 ":"
+      WHITESPACE@218..219 " "
+      PATH_TYPE@219..221
+        PATH@219..221
+          PATH_SEGMENT@219..221
+            NAME_REF@219..221
+              IDENT@219..221 "u8"
+      WHITESPACE@221..222 " "
+      INITIALIZER@222..225
+        EQ@222..223 "="
+        WHITESPACE@223..224 " "
+        LITERAL@224..225
+          INT_NUMBER@224..225 "2"
+      SEMICOLON@225..226 ";"
+    WHITESPACE@226..231 "\n    "
+    CONST@231..262
+      VISIBILITY_MODIFIER@231..237
+        FRIEND_KW@231..237 "friend"
+      WHITESPACE@237..238 " "
+      CONST_KW@238..243 "const"
+      WHITESPACE@243..244 " "
+      NAME@244..253
+        IDENT@244..253 "PUBLIC_C3"
+      COLON@253..254 ":"
+      WHITESPACE@254..255 " "
+      PATH_TYPE@255..257
+        PATH@255..257
+          PATH_SEGMENT@255..257
+            NAME_REF@255..257
+              IDENT@255..257 "u8"
+      WHITESPACE@257..258 " "
+      INITIALIZER@258..261
+        EQ@258..259 "="
+        WHITESPACE@259..260 " "
+        LITERAL@260..261
+          INT_NUMBER@260..261 "2"
+      SEMICOLON@261..262 ";"
+    WHITESPACE@262..267 "\n    "
+    CONST@267..307
+      VISIBILITY_MODIFIER@267..282
+        PUBLIC_KW@267..273 "public"
+        L_PAREN@273..274 "("
+        PACKAGE_KW@274..281 "package"
+        R_PAREN@281..282 ")"
+      WHITESPACE@282..283 " "
+      CONST_KW@283..288 "const"
+      WHITESPACE@288..289 " "
+      NAME@289..298
+        IDENT@289..298 "PUBLIC_C4"
+      COLON@298..299 ":"
+      WHITESPACE@299..300 " "
+      PATH_TYPE@300..302
+        PATH@300..302
+          PATH_SEGMENT@300..302
+            NAME_REF@300..302
+              IDENT@300..302 "u8"
+      WHITESPACE@302..303 " "
+      INITIALIZER@303..306
+        EQ@303..304 "="
+        WHITESPACE@304..305 " "
+        LITERAL@305..306
+          INT_NUMBER@305..306 "2"
+      SEMICOLON@306..307 ";"
+    WHITESPACE@307..308 "\n"
+    R_CURLY@308..309 "}"
+  WHITESPACE@309..310 "\n"
