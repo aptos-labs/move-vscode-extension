@@ -2480,7 +2480,7 @@ fn test_type_error_assert_u64() {
         module 0x1::main {
             fun main() {
                 assert!(true, 1u8);
-                            //^^^ err: Incompatible type 'u8', expected 'u64'
+                            //^^^ err: Incompatible type 'u8', expected any of ['u64', 'vector<u8>']
             }
         }
     "#]])
