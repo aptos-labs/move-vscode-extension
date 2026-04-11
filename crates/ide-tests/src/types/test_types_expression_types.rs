@@ -2284,6 +2284,25 @@ module 0x1::m {
 
 // language=Move
 #[test]
+fn test_no_result_variable_if_return_type_is_tuple() {
+    check_expr_type(
+        r#"
+module 0x1::m {
+    public fun get_fees_distribution(): (u128, u128) {
+        (1, 1)
+    }
+    spec get_fees_distribution {
+        aborts_if false;
+        ensures result == 1;
+                 //^ <unknown>
+    }
+}
+"#,
+    )
+}
+
+// language=Move
+#[test]
 fn test_binding_inside_else_block() {
     check_expr_type(
         r#"
