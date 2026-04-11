@@ -238,7 +238,9 @@
                 "properties": {
                     "move-on-aptos.diagnostics.disabled": {
                         "markdownDescription": "List of aptos-language-server diagnostics to disable.",
-                        "default": [],
+                        "default": [
+                            "missing-const-doc-comment"
+                        ],
                         "type": "array",
                         "items": {
                             "type": "string"

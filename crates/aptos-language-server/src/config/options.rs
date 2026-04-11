@@ -37,7 +37,7 @@ config_data! {
         completion_autoimport_enable: bool = false,
 
         /// List of aptos-language-server diagnostics to disable.
-        diagnostics_disabled: HashSet<String> = HashSet::default(),
+        diagnostics_disabled: HashSet<String> = @verbatim: r#"["missing-const-doc-comment"]"#,
         /// Whether to show native aptos-language-server diagnostics.
         diagnostics_enable: bool                = true,
         /// Disable all diagnostic codes except for the ones specified. Ignored if empty.
