@@ -85,7 +85,11 @@ pub(crate) fn atom_expr(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> 
             return Some((cm, BlockLike::Block));
         }
     }
-    if p.at_contextual_kw_ident("assert") && p.nth_at(1, T![!]) {
+    if (p.at_contextual_kw_ident("assert")
+        || p.at_contextual_kw_ident("assert_eq")
+        || p.at_contextual_kw_ident("assert_ne"))
+        && p.nth_at(1, T![!])
+    {
         let cm = assert_macro_expr(p);
         return Some((cm, BlockLike::NotBlock));
     }
@@ -185,7 +189,7 @@ fn match_expr(p: &mut Parser) -> Option<CompletedMarker> {
 }
 
 fn assert_macro_expr(p: &mut Parser) -> CompletedMarker {
-    assert!(p.at_contextual_kw_ident("assert"));
+    assert!(p.at(T![ident]));
     let m = p.start();
     p.bump(IDENT);
     p.bump(T![!]);

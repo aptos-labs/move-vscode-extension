@@ -1,5 +1,5 @@
-SOURCE_FILE@0..217
-  MODULE@0..216
+SOURCE_FILE@0..559
+  MODULE@0..558
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
     VALUE_ADDRESS@7..10
@@ -10,7 +10,7 @@ SOURCE_FILE@0..217
     WHITESPACE@24..25 " "
     L_CURLY@25..26 "{"
     WHITESPACE@26..31 "\n    "
-    FUN@31..214
+    FUN@31..556
       FUN_KW@31..34 "fun"
       WHITESPACE@34..35 " "
       NAME@35..39
@@ -19,7 +19,7 @@ SOURCE_FILE@0..217
         L_PAREN@39..40 "("
         R_PAREN@40..41 ")"
       WHITESPACE@41..42 " "
-      BLOCK_EXPR@42..214
+      BLOCK_EXPR@42..556
         L_CURLY@42..43 "{"
         WHITESPACE@43..52 "\n        "
         EXPR_STMT@52..69
@@ -149,8 +149,241 @@ SOURCE_FILE@0..217
                   INT_NUMBER@205..206 "1"
               R_PAREN@206..207 ")"
           SEMICOLON@207..208 ";"
-        WHITESPACE@208..213 "\n    "
-        R_CURLY@213..214 "}"
-    WHITESPACE@214..215 "\n"
-    R_CURLY@215..216 "}"
-  WHITESPACE@216..217 "\n"
+        WHITESPACE@208..218 "\n\n        "
+        EXPR_STMT@218..244
+          ASSERT_MACRO_EXPR@218..243
+            IDENT@218..224 "assert"
+            BANG@224..225 "!"
+            VALUE_ARG_LIST@225..243
+              L_PAREN@225..226 "("
+              VALUE_ARG@226..230
+                LITERAL@226..230
+                  TRUE_KW@226..230 "true"
+              COMMA@230..231 ","
+              WHITESPACE@231..232 " "
+              VALUE_ARG@232..242
+                LITERAL@232..242
+                  BYTE_STRING@232..242 "b\"1234 {}\""
+              R_PAREN@242..243 ")"
+          SEMICOLON@243..244 ";"
+        WHITESPACE@244..253 "\n        "
+        EXPR_STMT@253..282
+          ASSERT_MACRO_EXPR@253..281
+            IDENT@253..259 "assert"
+            BANG@259..260 "!"
+            VALUE_ARG_LIST@260..281
+              L_PAREN@260..261 "("
+              VALUE_ARG@261..265
+                LITERAL@261..265
+                  TRUE_KW@261..265 "true"
+              COMMA@265..266 ","
+              WHITESPACE@266..267 " "
+              VALUE_ARG@267..277
+                LITERAL@267..277
+                  BYTE_STRING@267..277 "b\"1234 {}\""
+              COMMA@277..278 ","
+              WHITESPACE@278..279 " "
+              VALUE_ARG@279..280
+                LITERAL@279..280
+                  INT_NUMBER@279..280 "1"
+              R_PAREN@280..281 ")"
+          SEMICOLON@281..282 ";"
+        WHITESPACE@282..291 "\n        "
+        EXPR_STMT@291..323
+          ASSERT_MACRO_EXPR@291..322
+            IDENT@291..297 "assert"
+            BANG@297..298 "!"
+            VALUE_ARG_LIST@298..322
+              L_PAREN@298..299 "("
+              VALUE_ARG@299..303
+                LITERAL@299..303
+                  TRUE_KW@299..303 "true"
+              COMMA@303..304 ","
+              WHITESPACE@304..305 " "
+              VALUE_ARG@305..315
+                LITERAL@305..315
+                  BYTE_STRING@305..315 "b\"1234 {}\""
+              COMMA@315..316 ","
+              WHITESPACE@316..317 " "
+              VALUE_ARG@317..318
+                LITERAL@317..318
+                  INT_NUMBER@317..318 "1"
+              COMMA@318..319 ","
+              WHITESPACE@319..320 " "
+              VALUE_ARG@320..321
+                LITERAL@320..321
+                  INT_NUMBER@320..321 "2"
+              R_PAREN@321..322 ")"
+          SEMICOLON@322..323 ";"
+        WHITESPACE@323..332 "\n        "
+        EXPR_STMT@332..367
+          ASSERT_MACRO_EXPR@332..366
+            IDENT@332..338 "assert"
+            BANG@338..339 "!"
+            VALUE_ARG_LIST@339..366
+              L_PAREN@339..340 "("
+              VALUE_ARG@340..344
+                LITERAL@340..344
+                  TRUE_KW@340..344 "true"
+              COMMA@344..345 ","
+              WHITESPACE@345..346 " "
+              VALUE_ARG@346..356
+                LITERAL@346..356
+                  BYTE_STRING@346..356 "b\"1234 {}\""
+              COMMA@356..357 ","
+              WHITESPACE@357..358 " "
+              VALUE_ARG@358..359
+                LITERAL@358..359
+                  INT_NUMBER@358..359 "1"
+              COMMA@359..360 ","
+              WHITESPACE@360..361 " "
+              VALUE_ARG@361..362
+                LITERAL@361..362
+                  INT_NUMBER@361..362 "2"
+              COMMA@362..363 ","
+              WHITESPACE@363..364 " "
+              VALUE_ARG@364..365
+                LITERAL@364..365
+                  INT_NUMBER@364..365 "3"
+              R_PAREN@365..366 ")"
+          SEMICOLON@366..367 ";"
+        WHITESPACE@367..376 "\n        "
+        EXPR_STMT@376..414
+          ASSERT_MACRO_EXPR@376..413
+            IDENT@376..382 "assert"
+            BANG@382..383 "!"
+            VALUE_ARG_LIST@383..413
+              L_PAREN@383..384 "("
+              VALUE_ARG@384..388
+                LITERAL@384..388
+                  TRUE_KW@384..388 "true"
+              COMMA@388..389 ","
+              WHITESPACE@389..390 " "
+              VALUE_ARG@390..400
+                LITERAL@390..400
+                  BYTE_STRING@390..400 "b\"1234 {}\""
+              COMMA@400..401 ","
+              WHITESPACE@401..402 " "
+              VALUE_ARG@402..403
+                LITERAL@402..403
+                  INT_NUMBER@402..403 "1"
+              COMMA@403..404 ","
+              WHITESPACE@404..405 " "
+              VALUE_ARG@405..406
+                LITERAL@405..406
+                  INT_NUMBER@405..406 "2"
+              COMMA@406..407 ","
+              WHITESPACE@407..408 " "
+              VALUE_ARG@408..409
+                LITERAL@408..409
+                  INT_NUMBER@408..409 "3"
+              COMMA@409..410 ","
+              WHITESPACE@410..411 " "
+              VALUE_ARG@411..412
+                LITERAL@411..412
+                  INT_NUMBER@411..412 "4"
+              R_PAREN@412..413 ")"
+          SEMICOLON@413..414 ";"
+        WHITESPACE@414..424 "\n\n        "
+        EXPR_STMT@424..441
+          ASSERT_MACRO_EXPR@424..440
+            IDENT@424..433 "assert_eq"
+            BANG@433..434 "!"
+            VALUE_ARG_LIST@434..440
+              L_PAREN@434..435 "("
+              VALUE_ARG@435..436
+                LITERAL@435..436
+                  INT_NUMBER@435..436 "1"
+              COMMA@436..437 ","
+              WHITESPACE@437..438 " "
+              VALUE_ARG@438..439
+                LITERAL@438..439
+                  INT_NUMBER@438..439 "1"
+              R_PAREN@439..440 ")"
+          SEMICOLON@440..441 ";"
+        WHITESPACE@441..450 "\n        "
+        EXPR_STMT@450..467
+          ASSERT_MACRO_EXPR@450..466
+            IDENT@450..459 "assert_ne"
+            BANG@459..460 "!"
+            VALUE_ARG_LIST@460..466
+              L_PAREN@460..461 "("
+              VALUE_ARG@461..462
+                LITERAL@461..462
+                  INT_NUMBER@461..462 "1"
+              COMMA@462..463 ","
+              WHITESPACE@463..464 " "
+              VALUE_ARG@464..465
+                LITERAL@464..465
+                  INT_NUMBER@464..465 "1"
+              R_PAREN@465..466 ")"
+          SEMICOLON@466..467 ";"
+        WHITESPACE@467..477 "\n\n        "
+        EXPR_STMT@477..503
+          ASSERT_MACRO_EXPR@477..502
+            IDENT@477..486 "assert_eq"
+            BANG@486..487 "!"
+            VALUE_ARG_LIST@487..502
+              L_PAREN@487..488 "("
+              VALUE_ARG@488..489
+                LITERAL@488..489
+                  INT_NUMBER@488..489 "1"
+              COMMA@489..490 ","
+              WHITESPACE@490..491 " "
+              VALUE_ARG@491..492
+                LITERAL@491..492
+                  INT_NUMBER@491..492 "1"
+              COMMA@492..493 ","
+              WHITESPACE@493..494 " "
+              VALUE_ARG@494..501
+                LITERAL@494..501
+                  BYTE_STRING@494..501 "b\"1234\""
+              R_PAREN@501..502 ")"
+          SEMICOLON@502..503 ";"
+        WHITESPACE@503..512 "\n        "
+        EXPR_STMT@512..550
+          ASSERT_MACRO_EXPR@512..549
+            IDENT@512..521 "assert_eq"
+            BANG@521..522 "!"
+            VALUE_ARG_LIST@522..549
+              L_PAREN@522..523 "("
+              VALUE_ARG@523..524
+                LITERAL@523..524
+                  INT_NUMBER@523..524 "1"
+              COMMA@524..525 ","
+              WHITESPACE@525..526 " "
+              VALUE_ARG@526..527
+                LITERAL@526..527
+                  INT_NUMBER@526..527 "1"
+              COMMA@527..528 ","
+              WHITESPACE@528..529 " "
+              VALUE_ARG@529..536
+                LITERAL@529..536
+                  BYTE_STRING@529..536 "b\"1234\""
+              COMMA@536..537 ","
+              WHITESPACE@537..538 " "
+              VALUE_ARG@538..539
+                LITERAL@538..539
+                  INT_NUMBER@538..539 "1"
+              COMMA@539..540 ","
+              WHITESPACE@540..541 " "
+              VALUE_ARG@541..542
+                LITERAL@541..542
+                  INT_NUMBER@541..542 "2"
+              COMMA@542..543 ","
+              WHITESPACE@543..544 " "
+              VALUE_ARG@544..545
+                LITERAL@544..545
+                  INT_NUMBER@544..545 "3"
+              COMMA@545..546 ","
+              WHITESPACE@546..547 " "
+              VALUE_ARG@547..548
+                LITERAL@547..548
+                  INT_NUMBER@547..548 "4"
+              R_PAREN@548..549 ")"
+          SEMICOLON@549..550 ";"
+        WHITESPACE@550..555 "\n    "
+        R_CURLY@555..556 "}"
+    WHITESPACE@556..557 "\n"
+    R_CURLY@557..558 "}"
+  WHITESPACE@558..559 "\n"
