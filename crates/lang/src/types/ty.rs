@@ -78,6 +78,14 @@ impl Ty {
         Ty::Seq(TySequence::Vector(Box::new(item_ty)))
     }
 
+    pub fn new_byte_string() -> Ty {
+        Ty::new_vector(Ty::Integer(IntegerKind::U8))
+    }
+
+    pub fn new_u64() -> Ty {
+        Ty::Integer(IntegerKind::U64)
+    }
+
     pub fn new_tuple(tys: Vec<Ty>) -> Ty {
         Ty::Tuple(TyTuple::new(tys))
     }

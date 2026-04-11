@@ -13,7 +13,7 @@ mod any_call_expr;
 mod any_fun;
 mod any_reference_element;
 mod apply_schema;
-mod assert_macro_expr;
+pub mod assert_macro_expr;
 mod attr_item;
 mod axiom_stmt;
 pub mod bin_expr;

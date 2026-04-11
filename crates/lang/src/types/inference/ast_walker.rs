@@ -29,6 +29,7 @@ use itertools::Itertools;
 use std::iter;
 use std::ops::Deref;
 use syntax::ast::HasStmts;
+use syntax::ast::node_ext::assert_macro_expr::AssertKind;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{InFile, InFileExt};
@@ -668,15 +669,50 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     }
 
     fn infer_assert_macro_expr(&mut self, assert_macro_expr: &ast::AssertMacroExpr) -> Ty {
-        let declared_input_tys = vec![Ty::Bool, Ty::Integer(IntegerKind::U64)];
-        let args = assert_macro_expr
-            .arg_exprs()
-            .into_iter()
-            .map(|expr| CallArg::Arg { expr })
-            .collect();
-        self.coerce_call_arg_types(args, declared_input_tys, vec![]);
+        match assert_macro_expr.assert_kind() {
+            AssertKind::Plain => {
+                self.infer_plain_assert_expr(assert_macro_expr);
+            }
+            AssertKind::Eq | AssertKind::NotEq => {
+                let arg_ty_var = Ty::new_ty_var(&self.ctx.ty_var_index);
+                let declared_input_tys = vec![arg_ty_var.clone(), arg_ty_var, Ty::new_byte_string()];
+                let args = assert_macro_expr
+                    .arg_exprs()
+                    .into_iter()
+                    .map(|expr| CallArg::Arg { expr: expr })
+                    .collect();
+                self.coerce_call_arg_types(args, declared_input_tys, vec![]);
+            }
+        }
 
         Ty::Unit
+    }
+
+    fn infer_plain_assert_expr(&mut self, assert_macro_expr: &ast::AssertMacroExpr) {
+        let arg_exprs = assert_macro_expr.arg_exprs();
+        // coerce first arg into bool
+        let arg_expr = arg_exprs.get(0).cloned().flatten();
+        if let Some(arg_expr) = arg_expr {
+            let arg_expr_ty = self.infer_expr(&arg_expr, Expected::ExpectType(Ty::Bool));
+            self.ctx
+                .coerce_types(arg_expr.node_or_token(), arg_expr_ty, Ty::Bool);
+        }
+        // coerce second arg into [u64 | vector<u8>]
+        let arg_expr = arg_exprs.get(1).cloned().flatten();
+        if let Some(arg_expr) = arg_expr {
+            let arg_expr_ty = self.infer_expr(&arg_expr, Expected::NoValue);
+            self.ctx.coerce_to_any_type(
+                arg_expr.node_or_token(),
+                arg_expr_ty,
+                vec![Ty::new_u64(), Ty::new_byte_string()],
+            );
+        }
+        // third argument etc.
+        for arg_expr in arg_exprs.into_iter().skip(2) {
+            if let Some(expr) = arg_expr {
+                self.infer_expr(&expr, Expected::NoValue);
+            }
+        }
     }
 
     fn infer_struct_lit(&mut self, struct_lit: &ast::StructLit, expected: Expected) -> Option<Ty> {
@@ -1094,10 +1130,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             self.ctx.coerce_to_any_type(
                 inner_expr.node_or_token(),
                 actual_ty.clone(),
-                vec![
-                    Ty::Integer(IntegerKind::U64),
-                    Ty::new_vector(Ty::Integer(IntegerKind::U8)),
-                ],
+                vec![Ty::new_u64(), Ty::new_byte_string()],
             );
         }
         Ty::Never
@@ -1334,9 +1367,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 }
             }
             ast::LiteralKind::Address(_) => Ty::Address,
-            ast::LiteralKind::ByteString(_) | ast::LiteralKind::HexString(_) => {
-                Ty::new_vector(Ty::Integer(IntegerKind::U8))
-            }
+            ast::LiteralKind::ByteString(_) | ast::LiteralKind::HexString(_) => Ty::new_byte_string(),
             ast::LiteralKind::Invalid => Ty::Unknown,
         }
     }

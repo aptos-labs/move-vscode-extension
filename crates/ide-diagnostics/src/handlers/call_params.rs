@@ -7,6 +7,7 @@
 use crate::DiagnosticsContext;
 use crate::diagnostic::{Diagnostic, DiagnosticCode};
 use ide_db::Severity;
+use syntax::ast::node_ext::assert_macro_expr::AssertKind;
 use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, ast};
 
@@ -43,7 +44,11 @@ pub(crate) fn check_value_arguments<'db>(
             let expected_count = ty_callable.param_types.len() - 1;
             (expected_count, expected_count)
         }
-        ast::AnyCallExpr::AssertMacroExpr(_) => (1, 2),
+        ast::AnyCallExpr::AssertMacroExpr(assert_macro_expr) => match assert_macro_expr.assert_kind() {
+            AssertKind::Plain => (1, 6),
+            AssertKind::Eq => (2, 7),
+            AssertKind::NotEq => (2, 7),
+        },
     };
     let actual_count = arg_exprs.len();
 
