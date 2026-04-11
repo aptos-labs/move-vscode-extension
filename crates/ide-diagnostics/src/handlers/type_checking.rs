@@ -10,6 +10,7 @@ use ide_db::Severity;
 use lang::types::fold::TypeFoldable;
 use lang::types::inference::TypeError;
 use lang::types::ty::Ty;
+use stdx::itertools::Itertools;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::files::{FileRange, InFile, InFileExt};
@@ -107,6 +108,22 @@ fn register_type_error(
             acc.push(Diagnostic::new(
                 DiagnosticCode::Lsp("type-error", Severity::Error),
                 format!("Incompatible type '{actual}', expected '{expected}'"),
+                FileRange { file_id, range: *text_range },
+            ))
+        }
+        TypeError::TypeMismatchAny {
+            text_range,
+            expected_tys,
+            actual_ty,
+        } => {
+            let actual = ctx.sema.render_ty(actual_ty);
+            let expected_tys = expected_tys
+                .iter()
+                .map(|it| format!("'{}'", ctx.sema.render_ty(it)))
+                .join(", ");
+            acc.push(Diagnostic::new(
+                DiagnosticCode::Lsp("type-error", Severity::Error),
+                format!("Incompatible type '{actual}', expected any of [{expected_tys}]"),
                 FileRange { file_id, range: *text_range },
             ))
         }

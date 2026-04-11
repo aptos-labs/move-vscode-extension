@@ -423,12 +423,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 self.infer_resource_expr(res_expr).unwrap_or(Ty::Unknown)
             }
             ast::Expr::IsExpr(is_expr) => self.infer_is_expr(is_expr),
-            ast::Expr::AbortExpr(abort_expr) => {
-                if let Some(inner_expr) = abort_expr.expr() {
-                    self.infer_expr_coerceable_to(&inner_expr, Ty::Integer(IntegerKind::U64));
-                }
-                Ty::Never
-            }
+            ast::Expr::AbortExpr(abort_expr) => self.infer_abort_expr(abort_expr),
 
             ast::Expr::BlockExpr(block_expr) => self.infer_block_expr(block_expr, expected, true),
             ast::Expr::BinExpr(bin_expr) => self.infer_bin_expr(bin_expr).unwrap_or(Ty::Unknown),
@@ -1091,6 +1086,21 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 .resolve_path_cached(path_type.path(), Some(expr_ty.clone()));
         }
         Ty::Bool
+    }
+
+    fn infer_abort_expr(&mut self, abort_expr: &ast::AbortExpr) -> Ty {
+        if let Some(inner_expr) = abort_expr.expr() {
+            let actual_ty = self.infer_expr(&inner_expr, Expected::NoValue);
+            self.ctx.coerce_to_any_type(
+                inner_expr.node_or_token(),
+                actual_ty.clone(),
+                vec![
+                    Ty::Integer(IntegerKind::U64),
+                    Ty::new_vector(Ty::Integer(IntegerKind::U8)),
+                ],
+            );
+        }
+        Ty::Never
     }
 
     fn infer_bin_expr(&mut self, bin_expr: &ast::BinExpr) -> Option<Ty> {

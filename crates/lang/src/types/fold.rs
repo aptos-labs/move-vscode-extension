@@ -48,6 +48,7 @@ pub trait TypeFolder: Clone {
 }
 
 pub trait TypeVisitor: Clone {
+    /// returns `true` if visitor hits the mark
     fn visit_ty(&self, ty: &Ty) -> bool;
 
     fn visit_tys(&self, tys: &Vec<Ty>) -> bool {

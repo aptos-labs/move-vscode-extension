@@ -45,6 +45,29 @@ impl InferenceCtx<'_> {
         }
     }
 
+    pub fn coerce_to_any_type(
+        &mut self,
+        node_or_token: SyntaxNodeOrToken,
+        actual: Ty,
+        expected_tys: Vec<Ty>,
+    ) -> bool {
+        let actual = self.resolve_ty_vars_if_possible(actual);
+        let mut resolved_expected_tys = vec![];
+        for expected_ty in expected_tys.clone() {
+            let expected = self.resolve_ty_vars_if_possible(expected_ty);
+            if actual == expected {
+                return true;
+            }
+            if self.is_tys_compatible(actual.clone(), expected.clone()) {
+                return true;
+            }
+            resolved_expected_tys.push(expected);
+        }
+        let type_error = TypeError::type_mismatch_any(node_or_token, resolved_expected_tys, actual);
+        self.push_type_error(type_error);
+        false
+    }
+
     pub fn combine_types(&mut self, expected_ty: Ty, actual_ty: Ty) -> CombineResult {
         let expected_ty = expected_ty.refine_for_specs(self.msl);
 
@@ -362,6 +385,11 @@ pub enum TypeError {
         expected_ty: Ty,
         actual_ty: Ty,
     },
+    TypeMismatchAny {
+        text_range: TextRange,
+        expected_tys: Vec<Ty>,
+        actual_ty: Ty,
+    },
     UnsupportedOp {
         text_range: TextRange,
         ty: Ty,
@@ -405,6 +433,7 @@ impl TypeError {
     pub fn text_range(&self) -> TextRange {
         match self {
             TypeError::TypeMismatch { text_range, .. } => text_range.clone(),
+            TypeError::TypeMismatchAny { text_range, .. } => text_range.clone(),
             TypeError::UnsupportedOp { text_range, .. } => text_range.clone(),
             TypeError::WrongArgumentsToBinExpr { text_range, .. } => text_range.clone(),
             TypeError::InvalidUnpacking { text_range, .. } => text_range.clone(),
@@ -420,6 +449,18 @@ impl TypeError {
         TypeError::TypeMismatch {
             text_range: node_or_token.text_range(),
             expected_ty,
+            actual_ty,
+        }
+    }
+
+    pub fn type_mismatch_any(
+        node_or_token: SyntaxNodeOrToken,
+        expected_tys: Vec<Ty>,
+        actual_ty: Ty,
+    ) -> Self {
+        TypeError::TypeMismatchAny {
+            text_range: node_or_token.text_range(),
+            expected_tys,
             actual_ty,
         }
     }
@@ -507,6 +548,15 @@ impl TypeFoldable<TypeError> for TypeError {
                 expected_ty: expected_ty.fold_with(folder),
                 actual_ty: actual_ty.fold_with(folder),
             },
+            TypeError::TypeMismatchAny {
+                text_range,
+                expected_tys,
+                actual_ty,
+            } => TypeError::TypeMismatchAny {
+                text_range,
+                expected_tys: expected_tys.into_iter().map(|it| it.fold_with(folder)).collect(),
+                actual_ty: actual_ty.fold_with(folder),
+            },
             TypeError::UnsupportedOp { text_range, ty, op } => TypeError::UnsupportedOp {
                 text_range,
                 ty: ty.fold_with(folder),
@@ -563,6 +613,9 @@ impl TypeFoldable<TypeError> for TypeError {
         match self {
             TypeError::TypeMismatch { expected_ty, actual_ty, .. } => {
                 visitor.visit_ty(expected_ty) || visitor.visit_ty(actual_ty)
+            }
+            TypeError::TypeMismatchAny { expected_tys, actual_ty, .. } => {
+                visitor.visit_ty(actual_ty) || expected_tys.iter().any(|it| visitor.visit_ty(it))
             }
             TypeError::UnsupportedOp { ty, .. } => visitor.visit_ty(ty),
             TypeError::WrongArgumentsToBinExpr { left_ty, right_ty, .. } => {
