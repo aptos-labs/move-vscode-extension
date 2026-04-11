@@ -1,0 +1,79 @@
+SOURCE_FILE@0..154
+  MODULE@0..153
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..30
+      IDENT@12..30 "if_else_block_expr"
+    WHITESPACE@30..31 " "
+    L_CURLY@31..32 "{"
+    WHITESPACE@32..37 "\n    "
+    FUN@37..151
+      FUN_KW@37..40 "fun"
+      WHITESPACE@40..41 " "
+      NAME@41..45
+        IDENT@41..45 "main"
+      PARAM_LIST@45..47
+        L_PAREN@45..46 "("
+        R_PAREN@46..47 ")"
+      WHITESPACE@47..48 " "
+      BLOCK_EXPR@48..151
+        L_CURLY@48..49 "{"
+        WHITESPACE@49..58 "\n        "
+        BIN_EXPR@58..145
+          BIN_EXPR@58..124
+            BIN_EXPR@58..104
+              IF_EXPR@58..84
+                IF_KW@58..60 "if"
+                WHITESPACE@60..61 " "
+                CONDITION@61..67
+                  L_PAREN@61..62 "("
+                  LITERAL@62..66
+                    TRUE_KW@62..66 "true"
+                  R_PAREN@66..67 ")"
+                WHITESPACE@67..68 " "
+                BLOCK_EXPR@68..73
+                  L_CURLY@68..69 "{"
+                  WHITESPACE@69..70 " "
+                  LITERAL@70..71
+                    INT_NUMBER@70..71 "1"
+                  WHITESPACE@71..72 " "
+                  R_CURLY@72..73 "}"
+                WHITESPACE@73..74 " "
+                ELSE_KW@74..78 "else"
+                WHITESPACE@78..79 " "
+                BLOCK_EXPR@79..84
+                  L_CURLY@79..80 "{"
+                  WHITESPACE@80..81 " "
+                  LITERAL@81..82
+                    INT_NUMBER@81..82 "2"
+                  WHITESPACE@82..83 " "
+                  R_CURLY@83..84 "}"
+              WHITESPACE@84..97 "\n            "
+              PIPE_PIPE@97..99 "||"
+              WHITESPACE@99..100 " "
+              LITERAL@100..104
+                TRUE_KW@100..104 "true"
+            WHITESPACE@104..117 "\n            "
+            PIPE_PIPE@117..119 "||"
+            WHITESPACE@119..120 " "
+            LITERAL@120..124
+              TRUE_KW@120..124 "true"
+          WHITESPACE@124..137 "\n            "
+          PIPE_PIPE@137..139 "||"
+          WHITESPACE@139..140 " "
+          BIN_EXPR@140..145
+            LITERAL@140..141
+              INT_NUMBER@140..141 "1"
+            WHITESPACE@141..142 " "
+            PLUS@142..143 "+"
+            WHITESPACE@143..144 " "
+            LITERAL@144..145
+              INT_NUMBER@144..145 "1"
+        WHITESPACE@145..150 "\n    "
+        R_CURLY@150..151 "}"
+    WHITESPACE@151..152 "\n"
+    R_CURLY@152..153 "}"
+  WHITESPACE@153..154 "\n"

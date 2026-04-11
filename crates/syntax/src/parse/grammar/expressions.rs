@@ -47,7 +47,11 @@ pub(crate) fn expr_bp(
         Some((lhs, blocklike)) => {
             let lhs = lhs.extend_to(p, stmt_m);
             if r.prefer_stmt && blocklike.is_block() {
-                return Some((lhs, BlockLike::Block));
+                // check if the next token is a valid binary operator
+                let (op_bp, _) = current_op(p);
+                if op_bp < bp {
+                    return Some((lhs, BlockLike::Block));
+                }
             }
             lhs
         }
