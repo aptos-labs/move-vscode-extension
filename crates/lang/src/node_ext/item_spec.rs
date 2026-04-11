@@ -36,18 +36,31 @@ pub fn infer_special_path_expr_for_item_spec(
     if !path_name.starts_with("result") && path_name != "self" {
         return None;
     }
+
     let item_spec_item = path_expr
         .and_then(|it| it.syntax().containing_item_spec())?
         .item(db)?;
+    // handle `self` for structs / enums
+    if path_name == "self"
+        && let Some(struct_or_enum) = item_spec_item.clone().cast_into::<ast::StructOrEnum>()
+    {
+        return Some(TyAdt::new(struct_or_enum).into());
+    }
+    // handle `result`, `result_1`, `result_2` ...
     if path_name.starts_with("result")
-        && let Some(fun) = item_spec_item.clone().cast_into::<ast::Fun>()
+        && let Some(fun) = item_spec_item.cast_into::<ast::Fun>()
     {
         let fun_return_type = fun
             .and_then_ref(|it| it.return_type())
             .map(|it| ty_db::lower_type(db, it, true))
             .unwrap_or(Ty::Unit);
+        // no `result` if return type of the function is a tuple
         if path_name == "result" {
-            return Some(fun_return_type);
+            return if matches!(fun_return_type, Ty::Tuple(_)) {
+                None
+            } else {
+                Some(fun_return_type)
+            };
         }
         let (_, [index]) = TUPLE_RESULT_REGEX.captures(&path_name)?.extract();
         let tuple_index = index.parse::<usize>().unwrap();
@@ -57,11 +70,7 @@ pub fn infer_special_path_expr_for_item_spec(
 
         return Some(member_ty.unwrap_or(Ty::Unknown));
     }
-    if path_name == "self"
-        && let Some(struct_or_enum) = item_spec_item.cast_into::<ast::StructOrEnum>()
-    {
-        return Some(TyAdt::new(struct_or_enum).into());
-    }
+
     None
 }
 
