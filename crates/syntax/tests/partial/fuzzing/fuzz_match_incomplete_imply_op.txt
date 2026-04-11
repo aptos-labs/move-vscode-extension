@@ -82,65 +82,65 @@ SOURCE_FILE@0..283
       BLOCK_EXPR@171..282
         L_CURLY@171..172 "{"
         WHITESPACE@172..181 "\n        "
-        EXPR_STMT@181..280
-          MATCH_EXPR@181..280
-            MATCH_KW@181..186 "match"
-            WHITESPACE@186..187 " "
-            L_PAREN@187..188 "("
-            PATH_EXPR@188..192
-              PATH@188..192
-                PATH_SEGMENT@188..192
-                  NAME_REF@188..192
-                    IDENT@188..192 "self"
-            R_PAREN@192..193 ")"
-            WHITESPACE@193..194 " "
-            MATCH_ARM_LIST@194..280
-              L_CURLY@194..195 "{"
-              WHITESPACE@195..208 "\n            "
-              STRUCT_PAT@208..236
-                PATH@208..212
-                  PATH_SEGMENT@208..212
-                    NAME_REF@208..212
-                      IDENT@208..212 "Some"
-                WHITESPACE@212..213 " "
-                STRUCT_PAT_FIELD_LIST@213..236
-                  L_CURLY@213..214 "{"
-                  WHITESPACE@214..215 " "
-                  STRUCT_PAT_FIELD@215..234
-                    NAME_REF@215..220
-                      IDENT@215..220 "value"
-                    COLON@220..221 ":"
-                    WHITESPACE@221..222 " "
-                    PATH_PAT@222..234
-                      PATH@222..234
-                        PATH@222..228
-                          PATH_SEGMENT@222..228
-                            NAME_REF@222..228
-                              IDENT@222..228 "Option"
-                        COLON_COLON@228..230 "::"
-                        PATH_SEGMENT@230..234
-                          NAME_REF@230..234
-                            IDENT@230..234 "None"
-                  WHITESPACE@234..235 " "
-                  R_CURLY@235..236 "}"
-              WHITESPACE@236..237 " "
-              ERROR@237..238
-                EQ@237..238 "="
-              COMMA@238..239 ","
-              WHITESPACE@239..252 "\n            "
-              IDENT@252..256 "Some"
-              WHITESPACE@256..257 " "
-              L_CURLY@257..258 "{"
-              WHITESPACE@258..259 " "
-              IDENT@259..264 "value"
-              COLON@264..265 ":"
-              WHITESPACE@265..266 " "
-              IDENT@266..272 "Option"
-              COLON_COLON@272..274 "::"
-              IDENT@274..278 "None"
-              WHITESPACE@278..279 " "
-              R_CURLY@279..280 "}"
-        WHITESPACE@280..281 " "
-        ERROR@281..282
-          EQ@281..282 "="
+        EXPR_STMT@181..282
+          BIN_EXPR@181..282
+            MATCH_EXPR@181..280
+              MATCH_KW@181..186 "match"
+              WHITESPACE@186..187 " "
+              L_PAREN@187..188 "("
+              PATH_EXPR@188..192
+                PATH@188..192
+                  PATH_SEGMENT@188..192
+                    NAME_REF@188..192
+                      IDENT@188..192 "self"
+              R_PAREN@192..193 ")"
+              WHITESPACE@193..194 " "
+              MATCH_ARM_LIST@194..280
+                L_CURLY@194..195 "{"
+                WHITESPACE@195..208 "\n            "
+                STRUCT_PAT@208..236
+                  PATH@208..212
+                    PATH_SEGMENT@208..212
+                      NAME_REF@208..212
+                        IDENT@208..212 "Some"
+                  WHITESPACE@212..213 " "
+                  STRUCT_PAT_FIELD_LIST@213..236
+                    L_CURLY@213..214 "{"
+                    WHITESPACE@214..215 " "
+                    STRUCT_PAT_FIELD@215..234
+                      NAME_REF@215..220
+                        IDENT@215..220 "value"
+                      COLON@220..221 ":"
+                      WHITESPACE@221..222 " "
+                      PATH_PAT@222..234
+                        PATH@222..234
+                          PATH@222..228
+                            PATH_SEGMENT@222..228
+                              NAME_REF@222..228
+                                IDENT@222..228 "Option"
+                          COLON_COLON@228..230 "::"
+                          PATH_SEGMENT@230..234
+                            NAME_REF@230..234
+                              IDENT@230..234 "None"
+                    WHITESPACE@234..235 " "
+                    R_CURLY@235..236 "}"
+                WHITESPACE@236..237 " "
+                ERROR@237..238
+                  EQ@237..238 "="
+                COMMA@238..239 ","
+                WHITESPACE@239..252 "\n            "
+                IDENT@252..256 "Some"
+                WHITESPACE@256..257 " "
+                L_CURLY@257..258 "{"
+                WHITESPACE@258..259 " "
+                IDENT@259..264 "value"
+                COLON@264..265 ":"
+                WHITESPACE@265..266 " "
+                IDENT@266..272 "Option"
+                COLON_COLON@272..274 "::"
+                IDENT@274..278 "None"
+                WHITESPACE@278..279 " "
+                R_CURLY@279..280 "}"
+            WHITESPACE@280..281 " "
+            EQ@281..282 "="
   WHITESPACE@282..283 "\n"
