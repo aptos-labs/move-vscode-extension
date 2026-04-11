@@ -1560,10 +1560,10 @@ fn test_abort_expr_requires_integer() {
             fun main() {
                 abort 1;
                 abort 1u8;
-                    //^^^ err: Incompatible type 'u8', expected 'u64'
+                    //^^^ err: Incompatible type 'u8', expected any of ['u64', 'vector<u8>']
                 abort 1u64;
                 abort false;
-                    //^^^^^ err: Incompatible type 'bool', expected 'u64'
+                    //^^^^^ err: Incompatible type 'bool', expected any of ['u64', 'vector<u8>']
             }
         }
     "#]]);
@@ -2493,7 +2493,7 @@ fn test_type_error_abort_u64() {
         module 0x1::main {
             fun main() {
                 abort 1u8;
-                    //^^^ err: Incompatible type 'u8', expected 'u64'
+                    //^^^ err: Incompatible type 'u8', expected any of ['u64', 'vector<u8>']
             }
         }
     "#]])
@@ -2607,6 +2607,58 @@ fn test_ref_signer_cannot_be_used_as_type_argument() {
             fun main(acc: &signer) {
                 S { val: acc };
                        //^^^ err: Type `&signer` is not allowed as a type argument
+            }
+        }
+    "#]])
+}
+
+// language=Move
+#[test]
+fn test_abort_with_integer_type() {
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                abort 1u64;
+                abort 1u8;
+                    //^^^ err: Incompatible type 'u8', expected any of ['u64', 'vector<u8>']
+                abort 1u16;
+                    //^^^^ err: Incompatible type 'u16', expected any of ['u64', 'vector<u8>']
+            }
+        }
+    "#]])
+}
+
+// language=Move
+#[test]
+fn test_abort_with_vector_u8() {
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                abort b"1234";
+                abort vector[1, 2, 3, 4];
+                abort vector[1u8, 2u8];
+                abort vector[1u128, 2u128];
+                    //^^^^^^^^^^^^^^^^^^^^ err: Incompatible type 'vector<u128>', expected any of ['u64', 'vector<u8>']
+            }
+        }
+    "#]])
+}
+
+// language=Move
+#[test]
+fn test_abort_with_block_returning_u64() {
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {
+                abort { 1u64 };
+                abort { b"1234" };
+                abort { vector[1u8] };
+                abort { vector[1u64] };
+                    //^^^^^^^^^^^^^^^^ err: Incompatible type 'vector<u64>', expected any of ['u64', 'vector<u8>']
+                abort { 1u8 };
+                    //^^^^^^^ err: Incompatible type 'u8', expected any of ['u64', 'vector<u8>']
+                abort { vector[true, false] };
+                    //^^^^^^^^^^^^^^^^^^^^^^^ err: Incompatible type 'vector<bool>', expected any of ['u64', 'vector<u8>']
             }
         }
     "#]])
