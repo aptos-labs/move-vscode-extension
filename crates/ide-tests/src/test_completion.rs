@@ -653,7 +653,7 @@ module std::option {
 
 #[test]
 fn test_complete_assert_macro() {
-    do_single_completion(
+    check_completions(
         // language=Move
         r#"
 module std::option {
@@ -662,14 +662,12 @@ module std::option {
     }
 }
     "#,
-        // language=Move
         expect![[r#"
-            module std::option {
-                fun main() {
-                    assert!(/*caret*/)
-                }
-            }
-        "#]],
+            [
+                "assert!(_: bool, err: u64)",
+                "assert_eq!(_: T, _: T)",
+                "assert_ne!(_: T, _: T)",
+            ]"#]],
     );
 }
 
@@ -1082,6 +1080,8 @@ module std::option {
                 "MIN_I256",
                 "vector[]",
                 "assert!(_: bool, err: u64)",
+                "assert_eq!(_: T, _: T)",
+                "assert_ne!(_: T, _: T)",
             ]"#]],
     );
 }
@@ -1412,6 +1412,44 @@ module std::main {
         expect![[r#"
             [
                 "assert!(_: bool, err: u64)",
+                "assert_eq!(_: T, _: T)",
+                "assert_ne!(_: T, _: T)",
+            ]"#]],
+    );
+}
+
+#[test]
+fn test_complete_assert_eq_macro() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    fun main() {
+        assert_e/*caret*/
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "assert_eq!(_: T, _: T)",
+            ]"#]],
+    );
+}
+
+#[test]
+fn test_complete_assert_ne_macro() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    fun main() {
+        assert_n/*caret*/
+    }
+}
+    "#,
+        expect![[r#"
+            [
+                "assert_ne!(_: T, _: T)",
             ]"#]],
     );
 }

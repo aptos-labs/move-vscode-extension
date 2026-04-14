@@ -85,6 +85,24 @@ pub(crate) fn add_path_completions(
                     assert_item.insert_snippet("assert!($0)");
                     assert_item.lookup_by("assert");
                     acc.add(assert_item.build(ctx.db));
+
+                    // assert_eq!
+                    let mut assert_eq_item = ctx.new_item(
+                        CompletionItemKind::SymbolKind(SymbolKind::Assert),
+                        "assert_eq!(_: T, _: T)",
+                    );
+                    assert_eq_item.insert_snippet("assert_eq!($0)");
+                    assert_eq_item.lookup_by("assert_eq");
+                    acc.add(assert_eq_item.build(ctx.db));
+
+                    // assert_ne!
+                    let mut assert_ne_item = ctx.new_item(
+                        CompletionItemKind::SymbolKind(SymbolKind::Assert),
+                        "assert_ne!(_: T, _: T)",
+                    );
+                    assert_ne_item.insert_snippet("assert_ne!($0)");
+                    assert_ne_item.lookup_by("assert_ne");
+                    acc.add(assert_ne_item.build(ctx.db));
                 }
             }
             _ => (),
