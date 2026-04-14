@@ -330,6 +330,17 @@ pub(crate) fn add_expr_keywords(
                 acc.add(ctx.new_snippet_keyword("axiom $0"));
                 acc.add(ctx.new_snippet_keyword("invariant $0"));
             }
+            MslContext::Schema => {
+                acc.add(ctx.new_snippet_keyword("pragma $0"));
+                acc.add(ctx.new_snippet_keyword("requires $0"));
+                acc.add(ctx.new_snippet_keyword("ensures $0"));
+                acc.add(ctx.new_snippet_keyword("aborts_if $0"));
+                acc.add(ctx.new_snippet_keyword("aborts_with $0"));
+                acc.add(ctx.new_snippet_keyword("modifies $0"));
+                acc.add(ctx.new_snippet_keyword("include $0"));
+                acc.add(ctx.new_snippet_keyword("emits $0"));
+                acc.add(ctx.new_snippet_keyword("invariant $0"));
+            }
             _ => (),
         }
     }
@@ -406,6 +417,7 @@ pub(crate) enum MslContext {
     CodeSpec,
     ItemSpec { kind: Option<SyntaxKind> },
     ModuleItemSpec,
+    Schema,
     SpecFun,
 }
 
@@ -469,6 +481,8 @@ fn path_completion_ctx(
             } else {
                 msl_context = MslContext::ModuleItemSpec;
             }
+        } else if fake_path.syntax().has_ancestor_strict::<ast::Schema>() {
+            msl_context = MslContext::Schema;
         } else {
             if fake_path.syntax().has_ancestor_strict::<ast::SpecBlockExpr>() {
                 msl_context = MslContext::CodeSpec;
