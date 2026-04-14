@@ -1564,6 +1564,79 @@ module std::main {
 }
 
 #[test]
+fn test_spec_keywords_in_schema_block() {
+    check_completions(
+        // language=Move
+        r#"
+module std::main {
+    spec schema MySchema {
+        /*caret*/
+    }
+}"#,
+        expect![[r#"
+            [
+                "if",
+                "match",
+                "loop",
+                "while",
+                "for",
+                "let",
+                "true",
+                "false",
+                "pragma",
+                "requires",
+                "ensures",
+                "aborts_if",
+                "aborts_with",
+                "modifies",
+                "include",
+                "emits",
+                "invariant",
+                "Self",
+                "max_u8() -> num",
+                "max_u64() -> num",
+                "max_u128() -> num",
+                "global(addr: address) -> T",
+                "old(t: T) -> T",
+                "update_field(s: S, fname: F, val: V) -> S",
+                "TRACE(t: T) -> T",
+                "concat(v1: vector<T>, v2: vector<T>) -> vector<T>",
+                "vec(t: T) -> vector<T>",
+                "len(t: vector<T>) -> num",
+                "contains(v: vector<T>, e: T) -> bool",
+                "index_of(v: vector<T>, e: T) -> num",
+                "range(v: vector<T>) -> range<num>",
+                "update(v: vector<T>, i: num, t: T) -> vector<T>",
+                "in_range(v: vector<T>, i: num) -> bool",
+                "int2bv(i: num) -> bv",
+                "bv2int(b: bv) -> num",
+                "MySchema",
+                "exists(addr: address) -> bool",
+                "__COMPILE_FOR_TESTING__",
+                "MAX_U8",
+                "MAX_U16",
+                "MAX_U32",
+                "MAX_U64",
+                "MAX_U128",
+                "MAX_U256",
+                "MAX_I8",
+                "MAX_I16",
+                "MAX_I32",
+                "MAX_I64",
+                "MAX_I128",
+                "MAX_I256",
+                "MIN_I8",
+                "MIN_I16",
+                "MIN_I32",
+                "MIN_I64",
+                "MIN_I128",
+                "MIN_I256",
+                "vector[]",
+            ]"#]],
+    )
+}
+
+#[test]
 fn test_add_schemas_for_include_completion() {
     check_completions(
         // language=Move
