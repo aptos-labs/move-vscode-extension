@@ -1,0 +1,13 @@
+{
+  "move": {
+    "command": "aptos-language-server",
+    "args": ["lsp-server"],
+    "extensionToLanguage": {
+      ".move": "move"
+    },
+    "transport": "stdio",
+    "initializationOptions": {},
+    "settings": {},
+    "maxRestarts": 3
+  }
+}
