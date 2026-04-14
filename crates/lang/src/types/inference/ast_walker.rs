@@ -679,7 +679,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 let args = assert_macro_expr
                     .arg_exprs()
                     .into_iter()
-                    .map(|expr| CallArg::Arg { expr: expr })
+                    .map(|expr| CallArg::Arg { expr })
                     .collect();
                 self.coerce_call_arg_types(args, declared_input_tys, vec![]);
             }

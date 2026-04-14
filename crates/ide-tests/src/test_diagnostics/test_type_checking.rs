@@ -2663,3 +2663,41 @@ fn test_abort_with_block_returning_u64() {
         }
     "#]])
 }
+
+#[test]
+fn test_assert_with_invalid_error_code_param() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            public fun main() {
+                assert!(1u8, b"1234 {}");
+                      //^^^ err: Incompatible type 'u8', expected 'bool'
+                assert!(true, 11);
+                assert!(true, 11u64);
+                assert!(true, 11u8);
+                            //^^^^ err: Incompatible type 'u8', expected any of ['u64', 'vector<u8>']
+                assert!(true, true);
+                            //^^^^ err: Incompatible type 'bool', expected any of ['u64', 'vector<u8>']
+                assert!(true, vector[true]);
+                            //^^^^^^^^^^^^ err: Incompatible type 'vector<bool>', expected any of ['u64', 'vector<u8>']
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_assert_eq_ne_with_different_parameter_types() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            public fun main() {
+                assert_eq!(1, true);
+                            //^^^^ err: Incompatible type 'bool', expected 'integer'
+                assert_eq!(1u8, 1u64);
+                              //^^^^ err: Incompatible type 'u64', expected 'u8'
+                assert_eq!(1, 1, true);
+                               //^^^^ err: Incompatible type 'bool', expected 'vector<u8>'
+            }
+        }
+    "#]]);
+}
