@@ -78,11 +78,20 @@ for more information.
 ## Claude integration
 
 Make sure `aptos-language-server` is available in your `PATH`. 
-For that, install `aptos-language-server` with 
+For that, install `aptos-language-server` with
+```
+cargo xtask install --server
+```
+(if repo is cloned),
+
+or
+
 ```
 cargo install --git https://github.com/aptos-labs/move-vscode-extension.git aptos-language-server
 ```
-(or download the latest one from releases).
+(if not)
+
+or just download latest pre-built binary from the releases.
 
 Then, in `claude`:
 ```
