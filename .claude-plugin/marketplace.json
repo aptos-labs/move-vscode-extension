@@ -1,0 +1,13 @@
+{
+    "name": "aptos-labs",
+    "owner": {
+        "name": "Aptos Labs"
+    },
+    "plugins": [
+        {
+            "name": "move-lsp",
+            "source": "./claude-code-lsp-plugin",
+            "description": "Aptos Labs' Move language server integration"
+        }
+    ]
+}
