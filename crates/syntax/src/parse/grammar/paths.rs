@@ -6,9 +6,13 @@
 
 use crate::SyntaxKind::*;
 use crate::parse::grammar::items::item_start_rec_set;
+use crate::parse::grammar::patterns::{
+    EXPR_STMT_FIRST, EXPR_STMT_KEYWORDS_LIST, STMT_FIRST, STMT_KEYWORDS_LIST,
+};
 use crate::parse::grammar::type_args::opt_path_type_arg_list;
 use crate::parse::grammar::{any_address, items, name_ref, value_address};
 use crate::parse::parser::{CompletedMarker, Parser};
+use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
 use crate::{T, ts};
 
@@ -83,7 +87,10 @@ pub(crate) fn path_segment(
             m.complete(p, PATH_ADDRESS);
         }
         _ => {
-            p.error_and_recover("expected identifier", item_start_rec_set());
+            p.error_and_recover(
+                "expected identifier",
+                item_start_rec_set().with_merged(RecoverySet::from_ts(STMT_FIRST)),
+            );
             m.abandon(p);
             return None;
         }
