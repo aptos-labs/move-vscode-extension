@@ -75,21 +75,23 @@ All configurations are under `move-on-aptos.*`.
 See the [configuration docs](https://github.com/aptos-labs/move-vscode-extension/blob/main/docs/configuration.md)
 for more information.
 
-## Roadmap
+## Claude integration
 
-* More error highlighting:
-  - Implement more errors from the Aptos Move compiler (like ability checking)
-  - Implement lints from the `aptos move lint` with extension-provided quickfixes.
+Make sure `aptos-language-server` is available in your `PATH`. 
+For that, install `aptos-language-server` with 
+```
+cargo install --git https://github.com/aptos-labs/move-vscode-extension.git aptos-language-server
+```
+(or download the latest one from releases).
 
-* Working with imports:
-  - Detect unused imports and remove them with "Organize Imports" VSCode feature. 
-  - Show completion items not imported in the current module, create `use` statements for those automatically.
+Then, in `claude`:
+```
+/plugin marketplace add aptos-labs/move-vscode-extension
+/plugin install aptos-move-lsp@aptos-labs
+```
 
-* Integration with the `aptos-cli` commands: compile packages, publishing modules and executing transactions. 
-
-* `Move.toml` support.
-
-* AI integration (via MCP server). 
+For `aptos-language-server` to be able to recognize your package correctly, 
+`claude` command needs to run from the package root.   
 
 ## Contributing
 

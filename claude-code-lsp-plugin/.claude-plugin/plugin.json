@@ -1,9 +1,23 @@
-  {
-    "name": "aptos-move-lsp",
+{
+    "name": "move-lsp",
     "description": "Aptos Labs' Move language server integration",
     "version": "1.0.0",
     "author": {
-      "name": "Maksim Kurnikov"
+        "name": "Maksim Kurnikov"
     },
-    "lspServers": "./.lsp.json"
-  }
+    "lspServers": {
+        "move": {
+            "command": "aptos-language-server",
+            "args": [
+                "lsp-server"
+            ],
+            "extensionToLanguage": {
+                ".move": "move"
+            },
+            "transport": "stdio",
+            "initializationOptions": {},
+            "settings": {},
+            "maxRestarts": 3
+        }
+    }
+}
