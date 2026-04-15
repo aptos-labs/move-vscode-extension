@@ -87,7 +87,7 @@ cargo install --git https://github.com/aptos-labs/move-vscode-extension.git apto
 Then, in `claude`:
 ```
 /plugin marketplace add aptos-labs/move-vscode-extension
-/plugin install aptos-move-lsp@aptos-labs
+/plugin install move-lsp@aptos-labs
 ```
 
 For `aptos-language-server` to be able to recognize your package correctly, 
