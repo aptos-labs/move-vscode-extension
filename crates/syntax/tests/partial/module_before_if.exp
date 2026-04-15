@@ -1,0 +1,11 @@
+module 0x1::module_before_if {
+    fun main() {
+        let a = curves::
+                      //^ expected identifier
+                      //^ expected SEMICOLON
+        let b = curves::
+                      //^ expected identifier
+                      //^ expected SEMICOLON
+        if (true) { 1 } else { 2 }
+    }
+}
