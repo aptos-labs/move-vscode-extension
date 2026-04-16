@@ -20,6 +20,7 @@ mod test_missing_type_arguments;
 mod test_needs_type_annotation;
 mod test_redundant_cast;
 mod test_replace_with_friend;
+mod test_replace_with_package;
 mod test_simplify_turbofish;
 mod test_type_checking;
 mod test_type_checking_fs;

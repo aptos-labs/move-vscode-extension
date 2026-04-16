@@ -17,6 +17,7 @@ pub(crate) mod missing_type_arguments;
 mod reduced_scope_import;
 mod redundant_cast;
 pub(crate) mod replace_with_friend;
+pub(crate) mod replace_with_package;
 pub(crate) mod simplify_turbofish;
 mod type_checking;
 mod unresolved_reference;
