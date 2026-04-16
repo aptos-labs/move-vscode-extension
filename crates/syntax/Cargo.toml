@@ -24,7 +24,7 @@ vfs = { workspace = true }
 datatest-stable = "0.3.2"
 pretty_assertions = "1.4.1"
 
-rand = "0.9.3"
+rand = "0.10.1"
 
 stdext = { path = "../stdext" }
 test-utils = { path = "../test-utils" }
