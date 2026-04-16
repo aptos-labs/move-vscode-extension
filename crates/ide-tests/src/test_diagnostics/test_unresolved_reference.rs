@@ -429,7 +429,7 @@ fn test_unresolved_field_for_dot_expr() {
     check_diagnostics(expect![[r#"
         module 0x1::M {
             struct S has key {}
-            fun call() acquires S {
+            fun call() {
                 let a = borrow_global_mut<S>(@0x1);
                 a.val;
                 //^^^ err: Unresolved reference `val`: cannot resolve

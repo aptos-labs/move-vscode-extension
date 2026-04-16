@@ -9,15 +9,12 @@ use syntax::SyntaxKind::WHITESPACE;
 use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, ast};
 
-pub(crate) fn unused_acquires_on_inline_function(
+pub(crate) fn unused_acquires(
     acc: &mut Vec<Diagnostic>,
     ctx: &DiagnosticsContext<'_>,
     fun: InFile<ast::Fun>,
 ) -> Option<()> {
     let (file_id, fun) = fun.unpack();
-    if !fun.is_inline() {
-        return None;
-    }
     let acquires = fun.acquires()?;
     let diag_range = FileRange {
         file_id,
@@ -26,7 +23,7 @@ pub(crate) fn unused_acquires_on_inline_function(
     acc.push(
         Diagnostic::new(
             DiagnosticCode::Lsp("unused-acquires", Severity::WeakWarning),
-            "Acquires declarations are not applicable to inline functions and should be removed",
+            "Acquires declarations are no longer needed and should be removed",
             diag_range,
         )
         // .with_unused(true)

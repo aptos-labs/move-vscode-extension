@@ -424,7 +424,7 @@ fn test_emit_event_requires_mutable_reference() {
             }
             struct Event has store, drop {}
             fun emit_event<T: drop + store>(_handler_ref: &mut EventHandle<T>, _msg: T) {}
-            fun m<Type: store + drop>() acquires Account {
+            fun m<Type: store + drop>() {
                 emit_event(borrow_global_mut<Account>(@0x1).handle, Event {});
                          //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ err: Incompatible type '0x1::M::EventHandle<0x1::M::Event>', expected '&mut 0x1::M::EventHandle<0x1::M::Event>'
             }

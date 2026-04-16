@@ -153,12 +153,13 @@ fn test_too_many_type_arguments_for_type() {
 fn test_no_need_for_type_arguments_inside_acquires() {
     // language=Move
     check_diagnostics(expect![[r#"
-    module 0x1::M {
-        struct S<phantom R> has key {}
-        fun m() acquires S {
-            borrow_global_mut<S<u8>>(@0x1);
+        module 0x1::M {
+            struct S<phantom R> has key {}
+            fun m() acquires S {
+                  //^^^^^^^^^^ weak: Acquires declarations are no longer needed and should be removed
+                borrow_global_mut<S<u8>>(@0x1);
+            }
         }
-    }
     "#]]);
 }
 
