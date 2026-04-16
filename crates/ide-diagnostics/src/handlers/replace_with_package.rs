@@ -12,10 +12,9 @@ use syntax::files::{FileRange, InFile, InFileExt};
 pub(crate) fn public_package_can_be_replaced_with_package(
     acc: &mut Vec<Diagnostic>,
     ctx: &DiagnosticsContext<'_>,
-    fun: InFile<ast::Fun>,
+    vis_modifier: InFile<ast::VisibilityModifier>,
 ) -> Option<()> {
-    let (file_id, fun) = fun.unpack();
-    let vis_modifier = fun.visibility_modifier()?;
+    let (file_id, vis_modifier) = vis_modifier.unpack();
     if !vis_modifier.is_public_package() {
         return None;
     }
@@ -24,8 +23,8 @@ pub(crate) fn public_package_can_be_replaced_with_package(
         range: vis_modifier.syntax().text_range(),
     };
     acc.push(
-        Diagnostic::new(
-            DiagnosticCode::Lsp("replace-with-package", Severity::WeakWarning),
+        Diagnostic::weak_warning(
+            "replace-with-package",
             "`public(package)` can be replaced with `package`",
             range,
         )

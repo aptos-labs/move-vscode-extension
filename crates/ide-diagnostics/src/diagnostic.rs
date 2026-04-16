@@ -21,11 +21,7 @@ pub struct Diagnostic {
 }
 
 impl Diagnostic {
-    pub fn new(
-        code: DiagnosticCode,
-        message: impl Into<String>,
-        range: impl Into<FileRange>,
-    ) -> Diagnostic {
+    pub fn new(code: DiagnosticCode, message: impl Into<String>, range: impl Into<FileRange>) -> Self {
         let message = message.into();
         Diagnostic {
             code,
@@ -40,7 +36,7 @@ impl Diagnostic {
         }
     }
 
-    pub fn new_syntax_error(file_id: FileId, err: &syntax::SyntaxError) -> Diagnostic {
+    pub(crate) fn new_syntax_error(file_id: FileId, err: &syntax::SyntaxError) -> Self {
         Diagnostic::new(
             DiagnosticCode::SyntaxError,
             format!("Syntax Error: {err}"),
@@ -49,6 +45,22 @@ impl Diagnostic {
                 range: err.range(),
             },
         )
+    }
+
+    pub(crate) fn error(id: &'static str, message: &'static str, range: FileRange) -> Self {
+        Diagnostic::new(DiagnosticCode::Lsp(id, Severity::Error), message, range)
+    }
+
+    pub(crate) fn warning(id: &'static str, message: &'static str, range: FileRange) -> Self {
+        Diagnostic::new(DiagnosticCode::Lsp(id, Severity::Warning), message, range)
+    }
+
+    pub(crate) fn weak_warning(id: &'static str, message: &'static str, range: FileRange) -> Self {
+        Diagnostic::new(DiagnosticCode::Lsp(id, Severity::WeakWarning), message, range)
+    }
+
+    pub(crate) fn hint(id: &'static str, message: &'static str, range: FileRange) -> Self {
+        Diagnostic::new(DiagnosticCode::Lsp(id, Severity::Hint), message, range)
     }
 
     pub(crate) fn with_local_fixes(mut self, fixes: Option<LocalAssists>) -> Diagnostic {
