@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -26,7 +26,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -37,7 +37,7 @@ jobs:
       - name: Install nextest
         uses: taiki-e/install-action@v2
         with:
-          tool: nextest@0.9.98
+          tool: nextest@0.9.133
 
       - run: cargo nextest run --hide-progress-bar --no-fail-fast --failure-output=immediate-final
 
@@ -48,7 +48,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -66,7 +66,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Fetch aptos-core repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: aptos-labs/aptos-core
           path: aptos-core
@@ -81,13 +81,13 @@ jobs:
         run: aptos move compile --language-version 2.3 --dev --package-dir ./aptos-core/aptos-move/framework/aptos-experimental
 
       - name: Cache ~/.move directory
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.move
           key: ${{ runner.os }}-dot-move
 
       - name: Fetch liquidswap repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: pontem-network/liquidswap
           path: liquidswap
@@ -100,7 +100,7 @@ jobs:
         run: aptos-language-server diagnostics --kinds error -- ./liquidswap
 
       - name: Fetch daily-move repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: aptos-labs/daily-move
           path: daily-move
@@ -124,10 +124,10 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Nodejs
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
 
