@@ -38,14 +38,27 @@ impl SyntaxFactory {
         index_expr
     }
 
-    pub fn paren_expr(&self, expr: ast::Expr) -> ast::ParenExpr {
-        let paren_expr = expr_from_text::<ast::ParenExpr>(&format!("({expr})")).clone_for_update();
+    pub fn paren_expr(&self, inner_expr: ast::Expr) -> ast::ParenExpr {
+        let paren_expr = expr_from_text::<ast::ParenExpr>(&format!("({inner_expr})")).clone_for_update();
         if let Some(mut mapping) = self.mappings() {
             let mut builder = SyntaxMappingBuilder::new(paren_expr.syntax().clone());
-            builder.map_node(expr.syntax().clone(), paren_expr.expr().unwrap().syntax().clone());
+            builder.map_node(
+                inner_expr.syntax().clone(),
+                paren_expr.expr().unwrap().syntax().clone(),
+            );
             builder.finish(&mut mapping);
         }
         paren_expr
+    }
+
+    pub fn path_expr(&self, path: ast::Path) -> ast::PathExpr {
+        let path_expr = expr_from_text::<ast::PathExpr>(&format!("{path}")).clone_for_update();
+        if let Some(mut mapping) = self.mappings() {
+            let mut builder = SyntaxMappingBuilder::new(path_expr.syntax().clone());
+            builder.map_node(path.syntax().clone(), path_expr.path().syntax().clone());
+            builder.finish(&mut mapping);
+        }
+        path_expr
     }
 
     pub fn method_call_expr(

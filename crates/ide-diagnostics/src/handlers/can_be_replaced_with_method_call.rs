@@ -56,7 +56,7 @@ pub(crate) fn can_be_replaced_with_method_call(
 
     // if function module is different to the first argument expr module,
     // then it's not a method even if `self` argument is present
-    let fun_module = ctx.sema.fun_module(fun.clone().map_into())?.value;
+    let fun_module = ctx.sema.fun_module(fun.clone())?.value;
     let arg_ty_module = ctx.sema.ty_module(&first_arg_ty)?;
     if fun_module != arg_ty_module {
         return None;

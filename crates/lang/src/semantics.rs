@@ -158,8 +158,8 @@ impl<'db> SemanticsImpl<'db> {
         nameres::resolve_multi(self.db, reference, inference).unwrap_or_default()
     }
 
-    pub fn fun_module(&self, fun: InFile<ast::AnyFun>) -> Option<InFile<ast::Module>> {
-        fun.module(self.db)
+    pub fn fun_module(&self, fun: InFile<impl Into<ast::AnyFun>>) -> Option<InFile<ast::Module>> {
+        fun.map(|it| it.into()).module(self.db)
     }
 
     pub fn get_expr_type(&self, expr: &InFile<ast::Expr>) -> Option<Ty> {
