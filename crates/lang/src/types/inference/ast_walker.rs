@@ -1152,7 +1152,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
 
             ast::BinaryOp::CmpOp(op) => match op {
                 ast::CmpOp::Eq { .. } => self.infer_eq_binary_expr(bin_expr, lhs, rhs, op),
-                ast::CmpOp::Ord { .. } => self.infer_ordering_binary_expr(lhs, rhs, op),
+                ast::CmpOp::Ord { .. } => self.infer_ordering_binary_expr(lhs, rhs),
             },
         };
         Some(ty)
@@ -1299,43 +1299,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         Ty::Bool
     }
 
-    fn infer_ordering_binary_expr(
-        &mut self,
-        lhs: ast::Expr,
-        rhs: Option<ast::Expr>,
-        cmp_op: ast::CmpOp,
-    ) -> Ty {
-        let mut is_error = false;
+    fn infer_ordering_binary_expr(&mut self, lhs: ast::Expr, rhs: Option<ast::Expr>) -> Ty {
         let left_ty = self.infer_expr(&lhs, Expected::NoValue);
-        if !self
-            .ctx
-            .resolve_ty_vars_if_possible(left_ty.clone())
-            .supports_ordering()
-        {
-            self.ctx.push_type_error(TypeError::unsupported_op(
-                &lhs,
-                left_ty.clone(),
-                ast::BinaryOp::CmpOp(cmp_op),
-            ));
-            is_error = true;
-        }
         if let Some(rhs) = rhs {
             let right_ty = self.infer_expr(&rhs, Expected::NoValue);
-            if !self
-                .ctx
-                .resolve_ty_vars_if_possible(right_ty.clone())
-                .supports_ordering()
-            {
-                self.ctx.push_type_error(TypeError::unsupported_op(
-                    &rhs,
-                    right_ty.clone(),
-                    ast::BinaryOp::CmpOp(cmp_op),
-                ));
-                is_error = true;
-            }
-            if !is_error {
-                self.ctx.coerce_types(rhs.node_or_token(), right_ty, left_ty);
-            }
+            self.ctx.coerce_types(rhs.node_or_token(), right_ty, left_ty);
         }
         Ty::Bool
     }

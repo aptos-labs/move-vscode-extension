@@ -1201,6 +1201,31 @@ fn test_cannot_not_eq_different_integers() {
 }
 
 #[test]
+fn test_cannot_ord_different_integers() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main() {
+                1u8 < 1u64;
+                    //^^^^ err: Incompatible type 'u64', expected 'u8'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_can_ord_booleans() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main() {
+                true < false;
+            }
+        }
+    "#]]);
+}
+
+#[test]
 fn test_logic_ops_allow_bools() {
     // language=Move
     check_diagnostics(expect![[r#"
