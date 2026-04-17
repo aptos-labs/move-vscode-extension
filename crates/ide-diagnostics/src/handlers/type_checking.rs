@@ -5,8 +5,7 @@
 // Modifications have been made to the original code.
 
 use crate::DiagnosticsContext;
-use crate::diagnostic::{Diagnostic, DiagnosticCode};
-use ide_db::Severity;
+use crate::diagnostic::Diagnostic;
 use lang::types::fold::TypeFoldable;
 use lang::types::inference::TypeError;
 use lang::types::ty::Ty;
@@ -105,8 +104,8 @@ fn register_type_error(
             if actual == expected {
                 return;
             }
-            acc.push(Diagnostic::new(
-                DiagnosticCode::Lsp("type-error", Severity::Error),
+            acc.push(Diagnostic::error(
+                "type-error",
                 format!("Incompatible type '{actual}', expected '{expected}'"),
                 FileRange { file_id, range: *text_range },
             ))
@@ -121,16 +120,16 @@ fn register_type_error(
                 .iter()
                 .map(|it| format!("'{}'", ctx.sema.render_ty(it)))
                 .join(", ");
-            acc.push(Diagnostic::new(
-                DiagnosticCode::Lsp("type-error", Severity::Error),
+            acc.push(Diagnostic::error(
+                "type-error",
                 format!("Incompatible type '{actual}', expected any of [{expected_tys}]"),
                 FileRange { file_id, range: *text_range },
             ))
         }
         TypeError::UnsupportedOp { text_range, ty, op } => {
             let ty = ctx.sema.render_ty(ty);
-            acc.push(Diagnostic::new(
-                DiagnosticCode::Lsp("type-error", Severity::Error),
+            acc.push(Diagnostic::error(
+                "type-error",
                 format!("Invalid argument to '{op}': expected integer type, but found '{ty}'"),
                 FileRange { file_id, range: *text_range },
             ))
@@ -143,8 +142,8 @@ fn register_type_error(
         } => {
             let left_ty = ctx.sema.render_ty(left_ty);
             let right_ty = ctx.sema.render_ty(right_ty);
-            acc.push(Diagnostic::new(
-                DiagnosticCode::Lsp("type-error", Severity::Error),
+            acc.push(Diagnostic::error(
+                "type-error",
                 format!("Incompatible arguments to '{op}': '{left_ty}' and '{right_ty}'"),
                 FileRange { file_id, range: *text_range },
             ))
@@ -176,29 +175,29 @@ fn register_type_error(
                     )
                 }
             };
-            acc.push(Diagnostic::new(
-                DiagnosticCode::Lsp("type-error", Severity::Error),
+            acc.push(Diagnostic::error(
+                "type-error",
                 message,
                 FileRange { file_id, range: *text_range },
             ))
         }
-        TypeError::CircularType { text_range, type_name } => acc.push(Diagnostic::new(
-            DiagnosticCode::Lsp("type-error", Severity::Error),
+        TypeError::CircularType { text_range, type_name } => acc.push(Diagnostic::error(
+            "type-error",
             format!("Circular reference of type '{type_name}'"),
             FileRange { file_id, range: *text_range },
         )),
         TypeError::WrongArgumentToBorrowExpr { text_range, actual_ty } => {
             let ty = ctx.sema.render_ty(actual_ty);
-            acc.push(Diagnostic::new(
-                DiagnosticCode::Lsp("type-error", Severity::Error),
+            acc.push(Diagnostic::error(
+                "type-error",
                 format!("Expected a single non-reference type, but found '{ty}'"),
                 FileRange { file_id, range: *text_range },
             ))
         }
         TypeError::InvalidDereference { text_range, actual_ty } => {
             let ty = ctx.sema.render_ty(actual_ty);
-            acc.push(Diagnostic::new(
-                DiagnosticCode::Lsp("type-error", Severity::Error),
+            acc.push(Diagnostic::error(
+                "type-error",
                 format!("Invalid dereference. Expected '&_' but found '{ty}'"),
                 FileRange { file_id, range: *text_range },
             ))
@@ -225,16 +224,16 @@ fn register_type_error(
                     )
                 }
             };
-            acc.push(Diagnostic::new(
-                DiagnosticCode::Lsp("missing-ability-on-type-arg", Severity::Error),
+            acc.push(Diagnostic::error(
+                "missing-ability-on-type-arg",
                 message,
                 FileRange { file_id, range: *text_range },
             ))
         }
         TypeError::InvalidTypeArgument { text_range, actual_ty } => {
             let ty = ctx.sema.render_ty(actual_ty);
-            acc.push(Diagnostic::new(
-                DiagnosticCode::Lsp("type-error", Severity::Error),
+            acc.push(Diagnostic::error(
+                "type-error",
                 format!("Type `{ty}` is not allowed as a type argument"),
                 FileRange { file_id, range: *text_range },
             ))

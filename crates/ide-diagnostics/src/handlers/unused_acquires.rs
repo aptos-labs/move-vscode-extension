@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::DiagnosticsContext;
-use crate::diagnostic::{Diagnostic, DiagnosticCode};
-use ide_db::Severity;
+use crate::diagnostic::Diagnostic;
 use ide_db::assist_context::LocalAssists;
 use syntax::SyntaxKind::WHITESPACE;
 use syntax::files::{FileRange, InFile, InFileExt};
@@ -21,8 +20,8 @@ pub(crate) fn unused_acquires(
         range: acquires.syntax().text_range(),
     };
     acc.push(
-        Diagnostic::new(
-            DiagnosticCode::Lsp("unused-acquires", Severity::WeakWarning),
+        Diagnostic::weak_warning(
+            "unused-acquires",
             "Acquires declarations are no longer needed and should be removed",
             diag_range,
         )

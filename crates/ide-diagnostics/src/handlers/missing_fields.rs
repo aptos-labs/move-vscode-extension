@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::DiagnosticsContext;
-use crate::diagnostic::{Diagnostic, DiagnosticCode};
-use ide_db::Severity;
+use crate::diagnostic::Diagnostic;
 use std::collections::HashSet;
 use syntax::ast;
 use syntax::files::InFile;
@@ -58,8 +57,8 @@ pub(crate) fn missing_fields_in_struct_lit(
         }
     };
 
-    acc.push(Diagnostic::new(
-        DiagnosticCode::Lsp("missing-lit-fields", Severity::Error),
+    acc.push(Diagnostic::error(
+        "missing-lit-fields",
         error_message,
         lit_path.file_range(),
     ));
@@ -117,8 +116,8 @@ pub(crate) fn missing_fields_in_struct_pat(
         }
     };
 
-    acc.push(Diagnostic::new(
-        DiagnosticCode::Lsp("missing-pat-fields", Severity::Error),
+    acc.push(Diagnostic::error(
+        "missing-pat-fields",
         error_message,
         struct_pat.file_range(),
     ));
@@ -151,8 +150,8 @@ pub(crate) fn missing_fields_in_tuple_struct_pat(
         let error_message = format!(
             "{owner_type} pattern does not match its declaration: expected {n_declared} fields, found {n_provided}"
         );
-        acc.push(Diagnostic::new(
-            DiagnosticCode::Lsp("missing-tuple-pat-fields", Severity::Error),
+        acc.push(Diagnostic::error(
+            "missing-tuple-pat-fields",
             error_message,
             tuple_struct_pat.file_range(),
         ));

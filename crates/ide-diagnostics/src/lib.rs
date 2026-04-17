@@ -69,16 +69,7 @@ pub fn syntax_diagnostics(
         .into_iter()
         .flatten()
         .take(128)
-        .map(|err| {
-            Diagnostic::new(
-                DiagnosticCode::SyntaxError,
-                format!("Syntax Error: {err}"),
-                FileRange {
-                    file_id: file_id.into(),
-                    range: err.range(),
-                },
-            )
-        })
+        .map(|err| Diagnostic::syntax_error(file_id, err))
         .collect()
 }
 
@@ -187,8 +178,11 @@ pub fn semantic_diagnostics(
                     let fun = it.in_file(file_id);
                     handlers::check_syntax::entry_fun_cannot_have_return_type(&mut acc, &ctx, fun.clone());
                     handlers::unused_acquires::unused_acquires(&mut acc, &ctx, fun.clone());
-                    handlers::replace_with_friend::public_friend_can_be_replaced_with_friend(&mut acc, &ctx, fun.clone());
-                    handlers::replace_with_package::public_package_can_be_replaced_with_package(&mut acc, &ctx, fun.clone());
+                },
+                ast::VisibilityModifier(it) => {
+                    let modifier = it.in_file(file_id);
+                    handlers::replace_with_friend::public_friend_can_be_replaced_with_friend(&mut acc, &ctx, modifier.clone());
+                    handlers::replace_with_package::public_package_can_be_replaced_with_package(&mut acc, &ctx, modifier.clone());
                 },
                 _ => (),
             }

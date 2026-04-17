@@ -5,9 +5,8 @@
 // Modifications have been made to the original code.
 
 use crate::DiagnosticsContext;
-use crate::diagnostic::{Diagnostic, DiagnosticCode};
+use crate::diagnostic::Diagnostic;
 use crate::handlers::can_be_replaced_with_index_expr::is_std_vector_borrow;
-use ide_db::Severity;
 use ide_db::assist_context::LocalAssists;
 use lang::types::fold::TypeFoldable;
 use lang::types::has_type_params_ext::GenericItemExt;
@@ -75,8 +74,8 @@ pub(crate) fn can_be_replaced_with_method_call(
 
     if ctx.sema.is_tys_compatible(first_arg_ty, self_ty, true) {
         acc.push(
-            Diagnostic::new(
-                DiagnosticCode::Lsp("replace-with-method-call", Severity::WeakWarning),
+            Diagnostic::weak_warning(
+                "replace-with-method-call",
                 "Can be replaced with method call",
                 call_expr.file_range(),
             )

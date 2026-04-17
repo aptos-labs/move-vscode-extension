@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::DiagnosticsContext;
-use crate::diagnostic::{Diagnostic, DiagnosticCode};
-use ide_db::Severity;
+use crate::diagnostic::Diagnostic;
 use std::ops::Add;
 use syntax::ast::HasAttrs;
 use syntax::files::{FileRange, InFile};
@@ -29,8 +28,8 @@ pub(crate) fn spec_fun_requires_return_type(
         .spec_block()
         .map(|it| it.syntax().text_range().start().add(TextSize::new(1)))
         .unwrap_or(spec_fun.syntax().text_range().end());
-    acc.push(Diagnostic::new(
-        DiagnosticCode::Lsp("spec-fun-required-return-type", Severity::Error),
+    acc.push(Diagnostic::error(
+        "spec-fun-required-return-type",
         "Spec function requires return type",
         FileRange {
             file_id,
@@ -56,8 +55,8 @@ pub(crate) fn entry_fun_cannot_have_return_type(
         None => {
             return None;
         }
-        Some(return_type) => acc.push(Diagnostic::new(
-            DiagnosticCode::Lsp("entry-fun-cannot-return-values", Severity::Error),
+        Some(return_type) => acc.push(Diagnostic::error(
+            "entry-fun-cannot-return-values",
             "Entry functions cannot return values",
             FileRange {
                 file_id,

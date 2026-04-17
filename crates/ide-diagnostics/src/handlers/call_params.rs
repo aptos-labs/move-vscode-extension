@@ -5,8 +5,7 @@
 // Modifications have been made to the original code.
 
 use crate::DiagnosticsContext;
-use crate::diagnostic::{Diagnostic, DiagnosticCode};
-use ide_db::Severity;
+use crate::diagnostic::Diagnostic;
 use syntax::ast::node_ext::assert_macro_expr::AssertKind;
 use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, ast};
@@ -62,9 +61,9 @@ pub(crate) fn check_value_arguments<'db>(
             .r_paren_token()
             .map(|it| it.text_range())
             .unwrap_or(value_arg_list.syntax().text_range());
-        acc.push(Diagnostic::new(
-            DiagnosticCode::Lsp("arguments-number-mismatch", Severity::Error),
-            format!("This function takes {expected_count_message} parameters, but {actual_count} parameters were supplied"),
+        acc.push(Diagnostic::error(
+            "arguments-number-mismatch",
+        format!("This function takes {expected_count_message} parameters, but {actual_count} parameters were supplied"),
             FileRange { file_id, range },
         ));
         return Some(());
@@ -73,8 +72,8 @@ pub(crate) fn check_value_arguments<'db>(
     if actual_count > max {
         for error_expr in arg_exprs.iter().skip(max) {
             let range = error_expr.syntax().text_range();
-            acc.push(Diagnostic::new(
-                DiagnosticCode::Lsp("arguments-number-mismatch", Severity::Error),
+            acc.push(Diagnostic::error(
+                "arguments-number-mismatch",
                 format!("This function takes {expected_count_message} parameters, but {actual_count} parameters were supplied"),
                 FileRange { file_id, range },
             ));

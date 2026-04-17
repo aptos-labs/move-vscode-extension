@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::DiagnosticsContext;
-use crate::diagnostic::{Diagnostic, DiagnosticCode};
-use ide_db::Severity;
+use crate::diagnostic::Diagnostic;
 use syntax::ast;
 use syntax::ast::HoverDocsOwner;
 use syntax::files::{InFile, InFileExt};
@@ -55,8 +54,8 @@ fn check_if_resolved_to_documented_error_const(
         .outer_doc_comments(const_ident.value.ident_token())
         .is_empty()
     {
-        acc.push(Diagnostic::new(
-            DiagnosticCode::Lsp("missing-const-doc-comment", Severity::Warning),
+        acc.push(Diagnostic::warning(
+            "missing-const-doc-comment",
             "Missing documentation comment (provides a human-readable error message on-chain)",
             const_ident.file_range(),
         ))
