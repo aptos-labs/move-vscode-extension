@@ -1,6 +1,5 @@
 use crate::DiagnosticsContext;
-use crate::diagnostic::{Diagnostic, DiagnosticCode};
-use ide_db::Severity;
+use crate::diagnostic::Diagnostic;
 use lang::types::abilities::Ability;
 use lang::types::fold::TypeFoldable;
 use syntax::ast;
@@ -39,8 +38,8 @@ pub(crate) fn struct_field_type_ability_check(
     for (struct_ability, req_field_ability) in missing_ability_pairs.iter() {
         if struct_abilities.contains(&struct_ability) && !field_ty_abilities.contains(&req_field_ability)
         {
-            acc.push(Diagnostic::new(
-                DiagnosticCode::Lsp("missing-ability", Severity::Error),
+            acc.push(Diagnostic::error(
+                "missing-ability",
                 format!("Missing required ability `{}`", req_field_ability),
                 named_field.file_range(),
             ));

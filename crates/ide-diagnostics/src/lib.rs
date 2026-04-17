@@ -69,16 +69,7 @@ pub fn syntax_diagnostics(
         .into_iter()
         .flatten()
         .take(128)
-        .map(|err| {
-            Diagnostic::new(
-                DiagnosticCode::SyntaxError,
-                format!("Syntax Error: {err}"),
-                FileRange {
-                    file_id: file_id.into(),
-                    range: err.range(),
-                },
-            )
-        })
+        .map(|err| Diagnostic::syntax_error(file_id, err))
         .collect()
 }
 

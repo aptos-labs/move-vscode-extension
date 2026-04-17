@@ -21,7 +21,11 @@ pub struct Diagnostic {
 }
 
 impl Diagnostic {
-    pub fn new(code: DiagnosticCode, message: impl Into<String>, range: impl Into<FileRange>) -> Self {
+    pub(crate) fn new(
+        code: DiagnosticCode,
+        message: impl Into<String>,
+        range: impl Into<FileRange>,
+    ) -> Self {
         let message = message.into();
         Diagnostic {
             code,
@@ -36,7 +40,7 @@ impl Diagnostic {
         }
     }
 
-    pub(crate) fn new_syntax_error(file_id: FileId, err: &syntax::SyntaxError) -> Self {
+    pub(crate) fn syntax_error(file_id: FileId, err: &syntax::SyntaxError) -> Self {
         Diagnostic::new(
             DiagnosticCode::SyntaxError,
             format!("Syntax Error: {err}"),

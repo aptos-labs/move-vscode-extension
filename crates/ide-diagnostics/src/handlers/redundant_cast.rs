@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::DiagnosticsContext;
-use crate::diagnostic::{Diagnostic, DiagnosticCode};
-use ide_db::Severity;
+use crate::diagnostic::Diagnostic;
 use ide_db::assist_context::LocalAssists;
 use lang::types::ty::integer::IntegerKind;
 use syntax::files::{FileRange, InFile};
@@ -38,13 +37,9 @@ pub(crate) fn redundant_integer_cast(
             ),
         };
         acc.push(
-            Diagnostic::new(
-                DiagnosticCode::Lsp("redundant-cast", Severity::Hint),
-                "No cast needed",
-                diagnostic_range,
-            )
-            .with_unused(true)
-            .with_local_fixes(fixes(ctx, cast_expr, diagnostic_range)),
+            Diagnostic::hint("redundant-cast", "No cast needed", diagnostic_range)
+                .with_unused(true)
+                .with_local_fixes(fixes(ctx, cast_expr, diagnostic_range)),
         );
     }
     Some(())

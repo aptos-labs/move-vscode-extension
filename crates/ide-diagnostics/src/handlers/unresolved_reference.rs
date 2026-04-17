@@ -7,9 +7,9 @@
 mod auto_import;
 
 use crate::DiagnosticsContext;
-use crate::diagnostic::{Diagnostic, DiagnosticCode};
+use crate::diagnostic::Diagnostic;
 use base_db::SourceDatabase;
-use ide_db::{RootDatabase, Severity};
+use ide_db::RootDatabase;
 use lang::nameres::is_visible::{ItemInvisibleReason, ScopeEntryWithVisExt};
 use lang::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use lang::nameres::scope::{ScopeEntry, VecExt, into_field_shorthand_items};
@@ -241,12 +241,8 @@ fn try_check_resolve(
             }
 
             acc.push(
-                Diagnostic::new(
-                    DiagnosticCode::Lsp("unresolved-reference", Severity::Error),
-                    error,
-                    reference_range,
-                )
-                .with_local_fixes(fixes),
+                Diagnostic::error("unresolved-reference", error, reference_range)
+                    .with_local_fixes(fixes),
             );
             return Some(());
         }
@@ -277,12 +273,8 @@ fn try_check_resolve(
                 error
             };
             acc.push(
-                Diagnostic::new(
-                    DiagnosticCode::Lsp("unresolved-reference", Severity::Error),
-                    error_message,
-                    reference_range,
-                )
-                .with_local_fixes(fixes),
+                Diagnostic::error("unresolved-reference", error_message, reference_range)
+                    .with_local_fixes(fixes),
             );
             return Some(());
         }

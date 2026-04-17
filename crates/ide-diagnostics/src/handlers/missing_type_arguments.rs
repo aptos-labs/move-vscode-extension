@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::DiagnosticsContext;
-use crate::diagnostic::{Diagnostic, DiagnosticCode};
-use ide_db::Severity;
+use crate::diagnostic::Diagnostic;
 use lang::loc::SyntaxLocFileExt;
 use lang::nameres::fq_named_element::ItemFQNameOwner;
 use lang::types::fold::TypeFoldable;
@@ -174,8 +173,8 @@ fn new_type_arguments_mismatch(
     file_range: FileRange,
 ) -> Diagnostic {
     let item_label = item_label.into();
-    Diagnostic::new(
-        DiagnosticCode::Lsp("type-arguments-number-mismatch", Severity::Error),
+    Diagnostic::error(
+        "type-arguments-number-mismatch",
         format!(
             "Invalid instantiation of '{item_label}'. Expected {expected_count} type argument(s), but got {actual_count}"
         ),
@@ -185,16 +184,16 @@ fn new_type_arguments_mismatch(
 
 fn no_type_arguments_expected(item_label: impl Into<String>, file_range: FileRange) -> Diagnostic {
     let item_label = item_label.into();
-    Diagnostic::new(
-        DiagnosticCode::Lsp("type-arguments-number-mismatch", Severity::Error),
+    Diagnostic::error(
+        "type-arguments-number-mismatch",
         format!("No type arguments expected for '{item_label}'"),
         file_range,
     )
 }
 
 fn needs_type_annotation(file_range: FileRange) -> Diagnostic {
-    Diagnostic::new(
-        DiagnosticCode::Lsp("needs-type-annotation", Severity::Error),
+    Diagnostic::error(
+        "needs-type-annotation",
         "Could not infer this type. Try adding a type annotation",
         file_range,
     )

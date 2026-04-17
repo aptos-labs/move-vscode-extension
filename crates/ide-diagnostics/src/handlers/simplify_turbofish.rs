@@ -1,6 +1,5 @@
 use crate::DiagnosticsContext;
-use crate::diagnostic::{Diagnostic, DiagnosticCode};
-use ide_db::Severity;
+use crate::diagnostic::Diagnostic;
 use ide_db::assist_context::LocalAssists;
 use syntax::ast;
 use syntax::files::{FileRange, InFile, InFileExt};
@@ -18,8 +17,8 @@ pub(crate) fn simplify_turbofish(
         range: coloncolon_token.text_range(),
     };
     acc.push(
-        Diagnostic::new(
-            DiagnosticCode::Lsp("redundant-coloncolon", Severity::Hint),
+        Diagnostic::hint(
+            "redundant-coloncolon",
             "`::` in method type arguments is deprecated",
             range,
         )
