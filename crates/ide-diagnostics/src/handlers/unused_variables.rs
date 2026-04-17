@@ -5,9 +5,9 @@
 // Modifications have been made to the original code.
 
 use crate::DiagnosticsContext;
-use crate::diagnostic::{Diagnostic, DiagnosticCode};
+use crate::diagnostic::Diagnostic;
 use ide_db::assist_context::LocalAssists;
-use ide_db::{Severity, search};
+use ide_db::search;
 use syntax::ast::AnyFun;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::syntax_factory::SyntaxFactory;
@@ -61,8 +61,8 @@ pub(crate) fn check_unused_ident_pat<'db>(
         let ident_range = ident_pat.file_range();
         let ident_kind = ident_owner.kind();
         acc.push(
-            Diagnostic::new(
-                DiagnosticCode::Lsp("unused-variable", Severity::Warning),
+            Diagnostic::warning(
+                "unused-variable",
                 format!("Unused {ident_kind} '{ident_name}'"),
                 ident_range,
             )

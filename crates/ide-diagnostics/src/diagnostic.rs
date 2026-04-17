@@ -47,19 +47,19 @@ impl Diagnostic {
         )
     }
 
-    pub(crate) fn error(id: &'static str, message: &'static str, range: FileRange) -> Self {
+    pub(crate) fn error(id: &'static str, message: impl Into<String>, range: FileRange) -> Self {
         Diagnostic::new(DiagnosticCode::Lsp(id, Severity::Error), message, range)
     }
 
-    pub(crate) fn warning(id: &'static str, message: &'static str, range: FileRange) -> Self {
+    pub(crate) fn warning(id: &'static str, message: impl Into<String>, range: FileRange) -> Self {
         Diagnostic::new(DiagnosticCode::Lsp(id, Severity::Warning), message, range)
     }
 
-    pub(crate) fn weak_warning(id: &'static str, message: &'static str, range: FileRange) -> Self {
+    pub(crate) fn weak_warning(id: &'static str, message: impl Into<String>, range: FileRange) -> Self {
         Diagnostic::new(DiagnosticCode::Lsp(id, Severity::WeakWarning), message, range)
     }
 
-    pub(crate) fn hint(id: &'static str, message: &'static str, range: FileRange) -> Self {
+    pub(crate) fn hint(id: &'static str, message: impl Into<String>, range: FileRange) -> Self {
         Diagnostic::new(DiagnosticCode::Lsp(id, Severity::Hint), message, range)
     }
 

@@ -5,10 +5,9 @@ pub mod organize_imports;
 pub(crate) mod use_items;
 
 use crate::DiagnosticsContext;
-use crate::diagnostic::{Diagnostic, DiagnosticCode};
+use crate::diagnostic::Diagnostic;
 use crate::handlers::reduced_scope_import::find_use_items_with_redundant_main_scope;
 use base_db::SourceDatabase;
-use ide_db::Severity;
 use lang::hir_db;
 use lang::loc::{SyntaxLoc, SyntaxLocFileExt};
 use lang::nameres::use_speck_entries::{UseItem, UseItemType, use_items_for_stmt};
@@ -168,20 +167,16 @@ fn highlight_unused_use_items(
     match unused_import_kind {
         UnusedUseKind::UseStmt { use_stmt, .. } => {
             acc.push(
-                Diagnostic::new(
-                    DiagnosticCode::Lsp("unused-import", Severity::Warning),
-                    "Unused use item",
-                    use_stmt.file_range(),
-                )
-                .with_local_fix(ctx.local_fix(
-                    use_stmts_owner.as_ref(),
-                    "remove-unused-import",
-                    "Remove unused use stmt",
-                    use_stmt.file_range().range,
-                    |editor| {
-                        use_stmt.value.delete(editor);
-                    },
-                )),
+                Diagnostic::warning("unused-import", "Unused use item", use_stmt.file_range())
+                    .with_local_fix(ctx.local_fix(
+                        use_stmts_owner.as_ref(),
+                        "remove-unused-import",
+                        "Remove unused use stmt",
+                        use_stmt.file_range().range,
+                        |editor| {
+                            use_stmt.value.delete(editor);
+                        },
+                    )),
             );
         }
         UnusedUseKind::UseSpeck { ref use_speck_locs } => {
@@ -189,20 +184,16 @@ fn highlight_unused_use_items(
                 let diag_range = use_speck_loc.file_range();
                 if let Some(use_speck) = use_speck_loc.to_ast::<ast::UseSpeck>(ctx.sema.db) {
                     acc.push(
-                        Diagnostic::new(
-                            DiagnosticCode::Lsp("unused-import", Severity::Warning),
-                            "Unused use item",
-                            use_speck.file_range(),
-                        )
-                        .with_local_fix(ctx.local_fix(
-                            use_stmts_owner.as_ref(),
-                            "remove-unused-import",
-                            "Remove unused use item",
-                            diag_range.range,
-                            |editor| {
-                                use_stmt.delete_group_use_specks(editor, vec![use_speck.value]);
-                            },
-                        )),
+                        Diagnostic::warning("unused-import", "Unused use item", use_speck.file_range())
+                            .with_local_fix(ctx.local_fix(
+                                use_stmts_owner.as_ref(),
+                                "remove-unused-import",
+                                "Remove unused use item",
+                                diag_range.range,
+                                |editor| {
+                                    use_stmt.delete_group_use_specks(editor, vec![use_speck.value]);
+                                },
+                            )),
                     );
                 }
             }
@@ -225,8 +216,8 @@ fn highlight_unused_scoped_use_items(
                 return None;
             }
             acc.push(
-                Diagnostic::new(
-                    DiagnosticCode::Lsp("too-broad-scoped-import", Severity::Warning),
+                Diagnostic::warning(
+                    "too-broad-scoped-import",
                     "Use item is used only in test scope and should be declared as #[test_only]",
                     use_stmt.file_range(),
                 )
@@ -253,8 +244,8 @@ fn highlight_unused_scoped_use_items(
                 {
                     let use_speck_alias = use_speck.use_alias().clone();
                     acc.push(
-                        Diagnostic::new(
-                            DiagnosticCode::Lsp("too-broad-scoped-import", Severity::Warning),
+                        Diagnostic::warning(
+                            "too-broad-scoped-import",
                             "Use item is used only in test scope and should be declared as #[test_only]",
                             diag_range,
                         )
