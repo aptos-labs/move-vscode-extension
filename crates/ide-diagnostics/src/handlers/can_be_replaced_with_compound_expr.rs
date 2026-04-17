@@ -5,8 +5,7 @@
 // Modifications have been made to the original code.
 
 use crate::DiagnosticsContext;
-use crate::diagnostic::{Diagnostic, DiagnosticCode};
-use ide_db::Severity;
+use crate::diagnostic::Diagnostic;
 use ide_db::assist_context::LocalAssists;
 use syntax::ast::syntax_factory::SyntaxFactory;
 use syntax::files::{FileRange, InFile};
@@ -25,8 +24,8 @@ pub(crate) fn can_be_replaced_with_compound_expr(
         let (argument_expr, _, _) = rhs_bin_expr.clone().unpack()?;
         if lhs_expr.syntax().green() == argument_expr.syntax().green() {
             acc.push(
-                Diagnostic::new(
-                    DiagnosticCode::Lsp("replace-with-compound-expr", Severity::WeakWarning),
+                Diagnostic::weak_warning(
+                    "replace-with-compound-expr",
                     "Can be replaced with compound assignment",
                     bin_expr.file_range(),
                 )

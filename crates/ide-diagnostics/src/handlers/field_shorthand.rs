@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::DiagnosticsContext;
-use crate::diagnostic::{Diagnostic, DiagnosticCode};
-use ide_db::Severity;
+use crate::diagnostic::Diagnostic;
 use ide_db::assist_context::LocalAssists;
 use syntax::ast::syntax_factory::SyntaxFactory;
 use syntax::files::{FileRange, InFile};
@@ -23,8 +22,8 @@ pub(crate) fn struct_lit_field_can_be_simplified(
         {
             let fix_file_range = struct_lit_field.file_range();
             acc.push(
-                Diagnostic::new(
-                    DiagnosticCode::Lsp("lit-field-init-shorthand", Severity::WeakWarning),
+                Diagnostic::weak_warning(
+                    "lit-field-init-shorthand",
                     "Expression can be simplified",
                     fix_file_range,
                 )
@@ -55,8 +54,8 @@ pub(crate) fn struct_pat_field_can_be_simplified(
     {
         let fix_file_range = struct_pat_field.file_range();
         acc.push(
-            Diagnostic::new(
-                DiagnosticCode::Lsp("pat-field-init-shorthand", Severity::WeakWarning),
+            Diagnostic::weak_warning(
+                "pat-field-init-shorthand",
                 "Expression can be simplified",
                 fix_file_range,
             )
@@ -80,8 +79,8 @@ pub(crate) fn schema_lit_field_can_be_simplified(
         {
             let fix_file_range = schema_lit_field.file_range();
             acc.push(
-                Diagnostic::new(
-                    DiagnosticCode::Lsp("schema-lit-field-init-shorthand", Severity::WeakWarning),
+                Diagnostic::weak_warning(
+                    "schema-lit-field-init-shorthand",
                     "Expression can be simplified",
                     fix_file_range,
                 )

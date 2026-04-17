@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::DiagnosticsContext;
-use crate::diagnostic::{Diagnostic, DiagnosticCode};
+use crate::diagnostic::Diagnostic;
+use ide_db::RootDatabase;
 use ide_db::assist_context::LocalAssists;
-use ide_db::{RootDatabase, Severity};
 use lang::Semantics;
 use lang::loc::SyntaxLocNodeExt;
 use lang::nameres::address;
@@ -73,8 +73,8 @@ pub(crate) fn can_be_replaced_with_index_expr(
 
     let file_range = outer_deref_expr.file_range();
     acc.push(
-        Diagnostic::new(
-            DiagnosticCode::Lsp("replace-with-index-expr", Severity::WeakWarning),
+        Diagnostic::weak_warning(
+            "replace-with-index-expr",
             "Can be replaced with index expr",
             file_range,
         )
