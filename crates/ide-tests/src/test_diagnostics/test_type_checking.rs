@@ -2150,6 +2150,7 @@ fn test_modifies_expects_struct() {
             struct Features has key { val: u8 }
             spec module {
                 modifies global<Features>(@0x1);
+                       //^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
             }
         }
     "#]]);

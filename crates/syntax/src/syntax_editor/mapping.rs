@@ -259,9 +259,10 @@ impl SyntaxMappingBuilder {
         }
     }
 
-    pub fn map_node(&mut self, input: SyntaxNode, output: SyntaxNode) {
-        debug_assert_eq!(output.parent().as_ref(), Some(&self.parent_node));
-        self.node_mappings.push((input, output.index() as u32));
+    pub fn map_node(&mut self, input: SyntaxNode, position_in_parent: SyntaxNode) {
+        debug_assert_eq!(position_in_parent.parent().as_ref(), Some(&self.parent_node));
+        self.node_mappings
+            .push((input, position_in_parent.index() as u32));
     }
 
     pub fn map_children(

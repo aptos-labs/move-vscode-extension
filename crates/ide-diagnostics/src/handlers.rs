@@ -19,6 +19,7 @@ mod redundant_cast;
 pub(crate) mod replace_with_friend;
 pub(crate) mod replace_with_package;
 pub(crate) mod simplify_turbofish;
+pub(crate) mod spec_global_replace_with_index_expr;
 mod type_checking;
 mod unresolved_reference;
 pub(crate) mod unused_acquires;
