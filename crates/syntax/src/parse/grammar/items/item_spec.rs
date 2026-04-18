@@ -9,6 +9,7 @@ use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::parse::grammar::expressions::atom::block_expr;
 use crate::parse::grammar::items::{at_item_start, fun, item_start_rec_set};
 use crate::parse::grammar::patterns::ident_pat_or_recover;
+use crate::parse::grammar::specs::proofs_and_lemmas::proof;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{name_ref, name_ref_or_recover, patterns, type_params, types};
 use crate::parse::parser::{Marker, Parser};
@@ -26,6 +27,11 @@ pub(crate) fn item_spec(p: &mut Parser, m: Marker) {
     } else {
         p.error("expected a block");
     }
+
+    if p.at_contextual_kw_ident("proof") {
+        proof(p);
+    }
+
     m.complete(p, ITEM_SPEC);
 }
 

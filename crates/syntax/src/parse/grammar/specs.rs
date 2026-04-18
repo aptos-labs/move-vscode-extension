@@ -5,6 +5,7 @@
 // Modifications have been made to the original code.
 
 pub(crate) mod predicates;
+pub(crate) mod proofs_and_lemmas;
 pub(crate) mod quants;
 pub(crate) mod schemas;
 

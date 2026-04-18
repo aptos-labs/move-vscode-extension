@@ -4,17 +4,21 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::SyntaxKind::{EOF, EXPR_STMT, LET_STMT, USE_STMT};
+use crate::SyntaxKind::{EOF, EXPR_STMT, LEMMA, LET_STMT, USE_STMT};
 use crate::T;
+use crate::parse::grammar::expressions::atom::block_expr;
 use crate::parse::grammar::expressions::{opt_initializer_expr, stmt_expr};
-use crate::parse::grammar::items::{fun, item_start_kws_only, stmt_start_kws, use_item};
+use crate::parse::grammar::items::{fun, stmt_start_kws, use_item};
 use crate::parse::grammar::patterns::pat;
 use crate::parse::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt};
+use crate::parse::grammar::specs::proofs_and_lemmas::lemma;
 use crate::parse::grammar::specs::schemas::{
     apply_schema, global_variable, include_schema, schema_field,
 };
-use crate::parse::grammar::{attributes, types};
+use crate::parse::grammar::type_params::opt_type_param_list;
+use crate::parse::grammar::{attributes, params, types};
 use crate::parse::parser::{Marker, Parser};
+use crate::parse::token_set::TokenSet;
 
 pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
     let use_stmt_m = p.start();
@@ -40,6 +44,11 @@ pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
     if is_spec {
         if p.at(T![native]) && p.nth_at(1, T![fun]) || p.at(T![fun]) {
             fun::spec_inline_function(p);
+            return;
+        }
+
+        if p.at_contextual_kw_ident("lemma") {
+            lemma(p);
             return;
         }
 
