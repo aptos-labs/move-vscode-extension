@@ -431,6 +431,7 @@ fn test_unresolved_field_for_dot_expr() {
             struct S has key {}
             fun call() {
                 let a = borrow_global_mut<S>(@0x1);
+                      //^^^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
                 a.val;
                 //^^^ err: Unresolved reference `val`: cannot resolve
             }

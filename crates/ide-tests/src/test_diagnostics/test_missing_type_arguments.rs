@@ -158,6 +158,7 @@ fn test_no_need_for_type_arguments_inside_acquires() {
             fun m() acquires S {
                   //^^^^^^^^^^ weak: Acquires declarations are no longer needed and should be removed
                 borrow_global_mut<S<u8>>(@0x1);
+              //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
             }
         }
     "#]]);

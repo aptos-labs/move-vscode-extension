@@ -128,8 +128,6 @@ pub fn semantic_diagnostics(
                 ast::CallExpr(it) => {
                     handlers::can_be_replaced_with_method_call(&mut acc, &ctx, it.clone().in_file(file_id));
                     handlers::spec_global_replace_with_index_expr::spec_global_replace_with_index_expr(&mut acc, &ctx, it.clone().in_file(file_id));
-                },
-                ast::DotExpr(it) => {
                     handlers::replace_with_resource_index_expr::replace_with_resource_index_expr(&mut acc, &ctx, it.in_file(file_id));
                 },
                 ast::MethodCallExpr(it) => {

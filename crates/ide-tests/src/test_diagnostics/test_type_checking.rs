@@ -427,7 +427,7 @@ fn test_emit_event_requires_mutable_reference() {
             fun m<Type: store + drop>() {
                 emit_event(borrow_global_mut<Account>(@0x1).handle, Event {});
                          //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ err: Incompatible type '0x1::M::EventHandle<0x1::M::Event>', expected '&mut 0x1::M::EventHandle<0x1::M::Event>'
-                         //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+                         //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
             }
         }
     "#]]);

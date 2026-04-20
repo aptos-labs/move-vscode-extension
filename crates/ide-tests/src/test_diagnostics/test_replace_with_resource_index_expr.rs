@@ -39,15 +39,15 @@ fn test_replace_borrow_global_field_with_resource_index_expr() {
     // language=Move
     check_diagnostics_and_fix(
         expect![[r#"
-        module 0x1::main {
-            struct Field has copy, store { val: u8 }
-            struct Res has key { field: Field }
-            fun main(): Field {
-                borrow_global<Res>(@0x1).field
-              //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+            module 0x1::main {
+                struct Field has copy, store { val: u8 }
+                struct Res has key { field: Field }
+                fun main(): Field {
+                    borrow_global<Res>(@0x1).field
+                  //^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+                }
             }
-        }
-    "#]],
+        "#]],
         expect![[r#"
         module 0x1::main {
             struct Field has copy, store { val: u8 }
@@ -65,15 +65,15 @@ fn test_replace_borrow_global_field_with_resource_index_expr_and_borrow() {
     // language=Move
     check_diagnostics_and_fix(
         expect![[r#"
-        module 0x1::main {
-            struct Field has store { val: u8 }
-            struct Res has key { field: Field }
-            fun main(): &Field {
-                &borrow_global<Res>(@0x1).field
-               //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+            module 0x1::main {
+                struct Field has store { val: u8 }
+                struct Res has key { field: Field }
+                fun main(): &Field {
+                    &borrow_global<Res>(@0x1).field
+                   //^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+                }
             }
-        }
-    "#]],
+        "#]],
         expect![[r#"
         module 0x1::main {
             struct Field has store { val: u8 }
@@ -91,15 +91,15 @@ fn test_replace_borrow_global_field_with_resource_index_expr_and_borrow_mut() {
     // language=Move
     check_diagnostics_and_fix(
         expect![[r#"
-        module 0x1::main {
-            struct Field has store { val: u8 }
-            struct Res has key { field: Field }
-            fun main(): &mut Field {
-                &mut borrow_global_mut<Res>(@0x1).field
-                   //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+            module 0x1::main {
+                struct Field has store { val: u8 }
+                struct Res has key { field: Field }
+                fun main(): &mut Field {
+                    &mut borrow_global_mut<Res>(@0x1).field
+                       //^^^^^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+                }
             }
-        }
-    "#]],
+        "#]],
         expect![[r#"
         module 0x1::main {
             struct Field has store { val: u8 }
@@ -117,20 +117,43 @@ fn test_replace_borrow_global_field_with_resource_index_expr_and_borrow_mut_muta
     // language=Move
     check_diagnostics_and_fix(
         expect![[r#"
+            module 0x1::main {
+                struct Res has key { field: u8 }
+                fun main() {
+                    borrow_global_mut<Res>(@0x1).field = 1;
+                  //^^^^^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::main {
+                struct Res has key { field: u8 }
+                fun main() {
+                    Res[@0x1].field = 1;
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_replace_if_field_in_mutation_context() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
         module 0x1::main {
             struct Res has key { field: u8 }
             fun main() {
                 borrow_global_mut<Res>(@0x1).field = 1;
-                   //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+              //^^^^^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
             }
         }
     "#]],
         expect![[r#"
         module 0x1::main {
-            struct Field has store { val: u8 }
-            struct Res has key { field: Field }
-            fun main(): &mut Field {
-                &mut Res[@0x1].field
+            struct Res has key { field: u8 }
+            fun main() {
+                Res[@0x1].field = 1;
             }
         }
     "#]],
@@ -142,23 +165,48 @@ fn test_replace_borrow_global_with_resource_index_expr_and_borrow_if_top_level_i
     // language=Move
     check_diagnostics_and_fix(
         expect![[r#"
-        module 0x1::main {
-            struct Res has key { }
-            fun main(): &Res {
-                borrow_global<Res>(@0x1)
-               //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+            module 0x1::main {
+                struct Res has key { }
+                fun main(): &Res {
+                    let res = borrow_global<Res>(@0x1);
+                            //^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+                    res
+                }
             }
-        }
-    "#]],
+        "#]],
         expect![[r#"
-        module 0x1::main {
-            struct Field has store { val: u8 }
-            struct Res has key { field: Field }
-            fun main(): &Field {
-                &Res[@0x1].field
+            module 0x1::main {
+                struct Res has key { }
+                fun main(): &Res {
+                    let res = &Res[@0x1];
+                    res
+                }
             }
-        }
-    "#]],
+        "#]],
+    );
+}
+
+#[test]
+fn test_replace_borrow_global_with_resource_index_expr_and_borrow_if_tail_expr() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+            module 0x1::main {
+                struct Res has key { }
+                fun main(): &Res {
+                    borrow_global<Res>(@0x1)
+                  //^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::main {
+                struct Res has key { }
+                fun main(): &Res {
+                    &Res[@0x1]
+                }
+            }
+        "#]],
     );
 }
 
@@ -167,20 +215,125 @@ fn test_replace_borrow_global_mut_with_resource_index_expr_and_borrow_mut_if_top
     // language=Move
     check_diagnostics_and_fix(
         expect![[r#"
+            module 0x1::main {
+                struct Res has key { }
+                fun main(): &mut Res {
+                    let res = borrow_global_mut<Res>(@0x1);
+                            //^^^^^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+                    res
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::main {
+                struct Res has key { }
+                fun main(): &mut Res {
+                    let res = &mut Res[@0x1];
+                    res
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_replace_borrow_global_mut_with_resource_index_expr_and_borrow_mut_if_tail_expr() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+            module 0x1::main {
+                struct Res has key { }
+                fun main(): &mut Res {
+                    borrow_global_mut<Res>(@0x1)
+                  //^^^^^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::main {
+                struct Res has key { }
+                fun main(): &mut Res {
+                    &mut Res[@0x1]
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_replace_borrow_global_mut_in_mutation_context() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
         module 0x1::main {
-            struct Res has key { }
-            fun main(): &mut Res {
-                borrow_global_mut<Res>(@0x1)
-               //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+            struct Res has key { field: u8 }
+            fun main() {
+                *borrow_global_mut<Res>(@0x1) = Res { field: 1 };
+               //^^^^^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
             }
         }
     "#]],
         expect![[r#"
         module 0x1::main {
-            struct Field has store { val: u8 }
-            struct Res has key { field: Field }
-            fun main(): &Field {
-                &Res[@0x1].field
+            struct Res has key { field: u8 }
+            fun main() {
+                *&mut Res[@0x1] = Res { field: 1 };
+            }
+        }
+    "#]],
+    );
+}
+
+#[test]
+fn test_borrow_global_in_spec() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+        module 0x1::main {
+            struct Res has key { field: u8 }
+            fun main() {
+            }
+            spec main {
+                let _res = borrow_global<Res>(@0x1);
+                         //^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+            }
+        }
+    "#]],
+        expect![[r#"
+        module 0x1::main {
+            struct Res has key { field: u8 }
+            fun main() {
+            }
+            spec main {
+                let _res = Res[@0x1];
+            }
+        }
+    "#]],
+    );
+}
+
+#[test]
+fn test_borrow_global_mut_in_spec() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+        module 0x1::main {
+            struct Res has key { field: u8 }
+            fun main() {
+            }
+            spec main {
+                let _res = borrow_global_mut<Res>(@0x1);
+                         //^^^^^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+            }
+        }
+    "#]],
+        expect![[r#"
+        module 0x1::main {
+            struct Res has key { field: u8 }
+            fun main() {
+            }
+            spec main {
+                let _res = Res[@0x1];
             }
         }
     "#]],
