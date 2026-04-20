@@ -320,40 +320,11 @@ pub(crate) fn value_arg_list(p: &mut Parser) {
                 }
                 false
             }
-            // if !is_expr && p.at(T![,]) {
-            //     // ,,,,
-            //     m.complete(p, VALUE_ARG);
-            // }
-            // if !is_expr && p.current() == T![,] {
-            //     m.complete(p, VALUE_ARG);
-            //     return true;
-            // } else {
-            //     m.abandon(p);
-            // }
-            // false
-            // m.complete(p, VALUE_ARG);
-            // true
-            // if is_expr {
-            //     m.complete(p, VALUE_ARG);
-            // } else {
-            //     m.abandon(p);
-            // }
-            // is_expr
         },
         T![,],
         "expected argument",
         Some(T![')']),
     );
-    // delimited_items_with_recover(p, T![')'], T![,], ts!(T![;], T![let], T!['}']), VALUE_ARG, |p| {
-    //     let m = p.start();
-    //     let is_expr = expr(p);
-    //     if is_expr {
-    //         m.complete(p, VALUE_ARG);
-    //     } else {
-    //         m.abandon(p);
-    //     }
-    //     is_expr
-    // });
     p.expect(T![')']);
     m.complete(p, VALUE_ARG_LIST);
 }
@@ -457,9 +428,6 @@ fn current_op(p: &Parser) -> (u8, SyntaxKind) {
         T![%]                  => (12, T![%]),
         T![/]                  => (12, T![/]),
         T![*]                  => (12, T![*]),
-
-        // T![as]                 => (13, T![as]),
-        // T![ident] if p.at_contextual_kw("is") => (13, T![is]),
 
         T![=] if p.at(T![=>])  => NOT_AN_OP,
         _                      => NOT_AN_OP

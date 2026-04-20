@@ -42,7 +42,6 @@ pub(crate) fn ident_pat_or_recover(p: &mut Parser) -> bool {
         T!['_'] => wildcard_pat(p),
         _ => {
             p.error_and_recover("expected ident", TokenSet::EMPTY);
-            // p.error_and_recover_until_ts("expected ident or '_'", recovery_set);
             return false;
         }
     };
@@ -79,17 +78,6 @@ fn tuple_pat_fields(p: &mut Parser) {
 
     delimited_with_recovery(p, let_pat, T![,], "expected pattern", Some(T![')']));
 
-    // while !p.at(EOF) && !p.at(T![')']) {
-    //     if !p.at_ts(PAT_FIRST) {
-    //         p.error("expected a pattern");
-    //         break;
-    //     }
-    //     pat_or_recover(p, TokenSet::EMPTY);
-    //     if !p.at(T![')']) {
-    //         p.expect(T![,]);
-    //     }
-    // }
-
     p.expect(T![')']);
 }
 
@@ -113,7 +101,6 @@ fn struct_pat_field(p: &mut Parser) -> bool {
         }
         _ => {
             p.error_and_recover("expected identifier", TokenSet::EMPTY);
-            // p.error_and_recover_until_ts("expected identifier", PAT_RECOVERY_SET);
             return false;
         }
     }

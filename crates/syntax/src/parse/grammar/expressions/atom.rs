@@ -128,9 +128,6 @@ pub(crate) fn atom_expr(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> 
         T![continue] => continue_expr(p),
         T![break] => break_expr(p),
         _ => {
-            // p.error("expected expression");
-            // p.error_and_bump_any("expected expression");
-            // p.err_and_bump("expected expression", EXPR_RECOVERY_SET);
             return None;
         }
     };
@@ -307,7 +304,6 @@ fn for_condition(p: &mut Parser) {
         expr(p);
     } else {
         p.error_and_recover("expected 'in'", EXPR_FIRST | T![')']);
-        // p.error_and_recover_until_ts("expected 'in'", EXPR_FIRST.union(ts!(T![')'])));
     }
     opt_spec_block_expr(p);
     p.expect(T![')']);
@@ -355,10 +351,6 @@ pub(crate) fn match_arm_list(p: &mut Parser) {
 fn match_arm(p: &mut Parser, recovery_set: TokenSet) -> bool {
     let m = p.start();
     p.with_recovery_token_set(T![=>] | T!['}'], let_pat);
-    // if !is_pat {
-    //     m.abandon(p);
-    //     return false;
-    // }
     if p.at(T![if]) {
         let m = p.start();
         p.bump(T![if]);
@@ -366,10 +358,6 @@ fn match_arm(p: &mut Parser, recovery_set: TokenSet) -> bool {
         m.complete(p, MATCH_GUARD);
     }
 
-    // if !p.expect(T![=>]) {
-    //     m.abandon(p);
-    //     return false;
-    // }
     if !p.at(T![=>]) {
         p.error_and_recover("expected '=>'", recovery_set);
         m.abandon(p);
@@ -442,9 +430,7 @@ fn break_expr(p: &mut Parser) -> CompletedMarker {
     //     for i in break {}
     //     match break {}
     // }
-    if p.at_ts(EXPR_FIRST)
-    /*&& !(false && p.at(T!['{']))*/
-    {
+    if p.at_ts(EXPR_FIRST) {
         expr(p);
     }
     m.complete(p, BREAK_EXPR)
@@ -457,7 +443,5 @@ fn opt_label(p: &mut Parser) {
         m.complete(p, LABEL);
     }
 }
-
-// pub(crate) const EXPR_FIRST: TokenSet = EXPR_LHS_FIRST;
 
 pub(crate) const IDENT_FIRST: TokenSet = TokenSet::new(&[IDENT]);
