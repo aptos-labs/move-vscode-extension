@@ -6,22 +6,15 @@
 
 use crate::SyntaxKind::*;
 use crate::parse::grammar::expressions::atom::call_expr;
-use crate::parse::grammar::items::{at_item_start, fun, use_item};
 use crate::parse::grammar::lambdas::lambda_param_list;
-use crate::parse::grammar::patterns::STMT_KEYWORDS_LIST;
 use crate::parse::grammar::specs::opt_spec_block_expr;
-use crate::parse::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt};
 use crate::parse::grammar::specs::quants::{choose_expr, exists_expr, forall_expr, is_at_quant_kw};
-use crate::parse::grammar::specs::schemas::{
-    apply_schema, global_variable, include_schema, schema_field,
-};
 use crate::parse::grammar::utils::delimited_with_recovery;
-use crate::parse::grammar::{attributes, name_ref, patterns, type_args, types};
+use crate::parse::grammar::{name_ref, patterns, type_args, types};
 use crate::parse::parser::{CompletedMarker, Marker, Parser};
 use crate::parse::token_set::TokenSet;
 use crate::{SyntaxKind, T, ts};
 use std::io::Read;
-use std::iter;
 use std::ops::ControlFlow::Continue;
 
 pub(crate) mod atom;
@@ -32,20 +25,19 @@ pub(crate) fn expr(p: &mut Parser) -> bool {
         forbid_structs: false,
         prefer_stmt: false,
     };
-    expr_bp(p, None, r, 1).is_some()
+    expr_bp(p, r, 1).is_some()
 }
 
 // Parses expression with binding power of at least bp.
 pub(crate) fn expr_bp(
     p: &mut Parser,
-    stmt_m: Option<Marker>,
     mut r: Restrictions,
     bp: u8,
 ) -> Option<(CompletedMarker, BlockLike)> {
-    let stmt_m = stmt_m.unwrap_or_else(|| p.start());
+    let m = p.start();
     let mut lhs = match lhs(p, r) {
         Some((lhs, blocklike)) => {
-            let lhs = lhs.extend_to(p, stmt_m);
+            let lhs = lhs.extend_to(p, m);
             if r.prefer_stmt && blocklike.is_block() {
                 // check if the next token is a valid binary operator
                 let (op_bp, _) = current_op(p);
@@ -56,7 +48,7 @@ pub(crate) fn expr_bp(
             lhs
         }
         None => {
-            stmt_m.abandon(p);
+            m.abandon(p);
             return None;
         }
     };
@@ -89,7 +81,7 @@ pub(crate) fn expr_bp(
             }
         }
 
-        let cm = expr_bp(p, None, Restrictions { prefer_stmt: false, ..r }, op_bp + 1);
+        let cm = expr_bp(p, Restrictions { prefer_stmt: false, ..r }, op_bp + 1);
         if cm.is_none() {
             p.error("expected expression");
         }
@@ -158,7 +150,7 @@ pub(crate) fn lhs(p: &mut Parser, r: Restrictions) -> Option<(CompletedMarker, B
                 m.abandon(p);
                 return None;
             }
-            expr_bp(p, None, r, 1);
+            expr_bp(p, r, 1);
             opt_spec_block_expr(p);
             let cm = m.complete(p, LAMBDA_EXPR);
             return Some((cm, BlockLike::NotBlock));
@@ -210,7 +202,7 @@ pub(crate) fn lhs(p: &mut Parser, r: Restrictions) -> Option<(CompletedMarker, B
             m = p.start();
             p.bump(T![..]);
             if p.at_ts(EXPR_FIRST) && !(r.forbid_structs && p.at(T!['{'])) {
-                expr_bp(p, None, r, 2);
+                expr_bp(p, r, 2);
             }
             let cm = m.complete(p, RANGE_EXPR);
             return Some((cm, BlockLike::NotBlock));
@@ -225,7 +217,7 @@ pub(crate) fn lhs(p: &mut Parser, r: Restrictions) -> Option<(CompletedMarker, B
         }
     };
     // parse the interior of the unary expression
-    expr_bp(p, None, r, 255);
+    expr_bp(p, r, 255);
     let cm = m.complete(p, kind);
     Some((cm, BlockLike::NotBlock))
 }
@@ -361,7 +353,7 @@ pub(crate) fn top_level_expr_in_stmt(p: &mut Parser) -> Option<(CompletedMarker,
         forbid_structs: false,
         prefer_stmt: true,
     };
-    expr_bp(p, None, r, 1)
+    expr_bp(p, r, 1)
 }
 
 #[derive(Clone, Copy, Default)]

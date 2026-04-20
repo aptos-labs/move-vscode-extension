@@ -136,7 +136,7 @@ fn include_schema_expr(p: &mut Parser) -> Option<()> {
 }
 
 fn inner_expr(p: &mut Parser, bp: u8) -> Option<CompletedMarker> {
-    let cm = expr_bp(p, None, Restrictions::default(), bp).map(|it| it.0);
+    let cm = expr_bp(p, Restrictions::default(), bp).map(|it| it.0);
     if cm.is_none() {
         p.error_and_recover("expected expression", INCLUDE_SCHEMA_RECOVERY_SET);
     }

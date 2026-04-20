@@ -327,7 +327,7 @@ pub(crate) fn condition(p: &mut Parser) {
         forbid_structs: true,
         prefer_stmt: false,
     };
-    expr_bp(p, None, r, 1);
+    expr_bp(p, r, 1);
     p.expect(T![')']);
 
     m.complete(p, CONDITION);
