@@ -66,7 +66,7 @@ impl RecoverySet {
         self
     }
 
-    pub(crate) fn with_token_set(mut self, token_set: impl Into<TokenSet>) -> Self {
+    pub(crate) fn with_ts(mut self, token_set: impl Into<TokenSet>) -> Self {
         self.token_set = self.token_set + token_set.into();
         self
     }

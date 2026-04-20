@@ -82,7 +82,7 @@ pub(crate) fn enum_variant_list(p: &mut Parser) {
 fn enum_variant(p: &mut Parser) -> bool {
     let mut curly_braces = false;
     let m = p.start();
-    attributes::outer_attrs(p);
+    attributes::attrs(p);
     if p.at(IDENT) {
         // name(p);
         name_or_recover(p, TokenSet::EMPTY.into());
@@ -161,7 +161,7 @@ fn named_field(p: &mut Parser) -> bool {
 
 fn adt_name_recovery() -> RecoverySet {
     item_start_rec_set()
-        .with_token_set(T![<] | T!['{'])
+        .with_ts(T![<] | T!['{'])
         .with_recovery_token("has".into())
     // item_start_rec_set().with_merged(struct_or_enum_name_rec_set())
 }

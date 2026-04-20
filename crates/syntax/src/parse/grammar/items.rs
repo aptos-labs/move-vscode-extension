@@ -39,7 +39,7 @@ pub(crate) fn item_list(p: &mut Parser) {
 
 pub(super) fn item(p: &mut Parser) {
     let m = p.start();
-    attributes::outer_attrs(p);
+    attributes::attrs(p);
     let m = match opt_item(p, m) {
         // let m = match opt_item(p, m) {
         Ok(()) => {
@@ -72,7 +72,7 @@ pub(super) fn item(p: &mut Parser) {
 
 fn after_vis_modifier_item_set() -> RecoverySet {
     RecoverySet::new()
-        .with_token_set(T![fun] | T![struct] | T![const])
+        .with_ts(T![fun] | T![struct] | T![const])
         .with_kw("enum")
 }
 
@@ -129,12 +129,12 @@ pub(super) fn opt_item(p: &mut Parser, m: Marker) -> Result<(), Marker> {
 fn const_(p: &mut Parser, m: Marker) {
     p.bump(T![const]);
 
-    if !name_or_recover(p, item_start_rec_set().with_token_set(T![;])) {
+    if !name_or_recover(p, item_start_rec_set().with_ts(T![;])) {
         m.complete(p, CONST);
         return;
     }
 
-    p.with_recovery_set(item_start_rec_set().with_token_set(T![;]), |p| {
+    p.with_recovery_set(item_start_rec_set().with_ts(T![;]), |p| {
         p.with_recovery_token(T![=], |p| {
             if p.at(T![:]) {
                 types::type_annotation(p);
@@ -196,12 +196,12 @@ pub(crate) fn item_start_kws_only() -> RecoverySet {
 
 pub(crate) fn item_start_rec_set() -> RecoverySet {
     RecoverySet::new()
-        .with_token_set(ITEM_KEYWORDS)
+        .with_ts(ITEM_KEYWORDS)
         .with_kw("enum")
         .with_merged(function_modifier_recovery_set())
 }
 
-pub(crate) fn stmt_start_kws() -> RecoverySet {
+pub(crate) fn at_stmt_kw_start() -> RecoverySet {
     RecoverySet::from_ts(STMT_FIRST)
 }
 

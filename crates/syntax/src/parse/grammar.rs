@@ -47,7 +47,7 @@ mod type_params;
 mod types;
 pub(crate) mod utils;
 
-use crate::parse::grammar::attributes::outer_attrs;
+use crate::parse::grammar::attributes::attrs;
 use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::parser::Marker;
@@ -64,7 +64,7 @@ pub mod entry_points {
         let m = p.start();
         p.iterate_to_EOF(TokenSet::EMPTY, |p| {
             let m = p.start();
-            outer_attrs(p);
+            attrs(p);
             match p.current() {
                 T![module] => module(p, m),
                 T![spec] => module_spec(p, m),
@@ -105,7 +105,7 @@ pub(crate) fn address_def(p: &mut Parser, m: Marker) {
         p.bump(T!['{']);
         p.iterate_to_EOF(T!['}'], |p| {
             let m = p.start();
-            outer_attrs(p);
+            attrs(p);
             if p.at(T![module]) {
                 module(p, m);
             } else {
@@ -123,7 +123,7 @@ pub(crate) fn address_def(p: &mut Parser, m: Marker) {
 
 pub(crate) fn module_spec(p: &mut Parser, m: Marker) {
     p.bump(T![spec]);
-    p.with_recovery_set(top_level_set().with_token_set(T!['{']), |p| paths::path(p, None));
+    p.with_recovery_set(top_level_set().with_ts(T!['{']), |p| paths::path(p, None));
 
     if p.at(T!['{']) {
         items::item_list(p);

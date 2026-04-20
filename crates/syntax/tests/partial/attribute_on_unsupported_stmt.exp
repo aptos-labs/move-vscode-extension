@@ -1,7 +1,7 @@
 module 0x1::free_attribute {
     fun main() {
         #[test_only]
-      //^^^^^^^^^^^^ unexpected attribute
+      //^^^^^^^^^^^^ attributes on statements are not allowed
         let a = 1;
     }
 }

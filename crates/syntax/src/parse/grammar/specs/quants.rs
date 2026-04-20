@@ -77,12 +77,12 @@ pub(crate) fn quant_binding_list(p: &mut Parser) {
     let m = p.start();
     let stop_at = RecoverySet::new()
         // end of statement
-        .with_token_set(T![;])
+        .with_ts(T![;])
         // quantifier hint
-        .with_token_set(T!['{'])
+        .with_ts(T!['{'])
         // end of quant bindings
         .with_kw("where")
-        .with_token_set(T![:]);
+        .with_ts(T![:]);
     p.with_recovery_set(stop_at, |p| {
         delimited_with_recovery(p, quant_binding, T![,], "expected quant binding", None)
     });

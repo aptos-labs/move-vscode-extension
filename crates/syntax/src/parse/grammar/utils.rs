@@ -24,7 +24,7 @@ pub(crate) fn delimited_with_recovery(
     // cannot recover if delimiter divides outer elements
     let modified_recovery_set = outer_recovery_set
         .clone()
-        .with_token_set(list_end_ts)
+        .with_ts(list_end_ts)
         .without_recovery_token(delimiter.into());
     let at_list_end = |p: &Parser| p.at_ts(list_end_ts);
 

@@ -1,0 +1,6 @@
+module 0x1::attributes_on_inline_import_not_allowed {
+    fun test_add(acc: signer) {
+        #[test]
+      //^^^^^^^ attributes on statements are not allowed
+        use 0x1::M;
+    }}

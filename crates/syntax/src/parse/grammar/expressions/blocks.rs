@@ -2,7 +2,7 @@ use crate::SyntaxKind::{BLOCK_EXPR, EOF, ERROR, EXPR_STMT, LET_STMT, USE_STMT};
 use crate::T;
 use crate::parse::grammar::expressions::atom::inline_expr;
 use crate::parse::grammar::expressions::{opt_initializer_expr, stmt_expr};
-use crate::parse::grammar::items::{fun, stmt_start_kws, use_item};
+use crate::parse::grammar::items::{at_stmt_kw_start, fun, use_item};
 use crate::parse::grammar::patterns::pat;
 use crate::parse::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt};
 use crate::parse::grammar::specs::proofs_and_lemmas::lemma;
@@ -73,20 +73,21 @@ pub(super) fn expr_block_contents(p: &mut Parser, kind: StmtKind) {
 }
 
 pub(crate) fn stmt(p: &mut Parser, prefer_expr: bool, stmt_kind: StmtKind) {
-    let use_stmt_m = p.start();
-    let mut attrs = attributes::outer_attrs(p);
-    if p.at(T![use]) {
-        p.with_recovery_set(stmt_start_kws(), |p| use_stmt(p, use_stmt_m));
-        return;
-    }
+    // handle attributes
+    let mut attrs = attributes::attrs(p);
     if let Some(last_attr) = attrs.pop() {
-        p.wrap_with_error(last_attr, "unexpected attribute");
+        p.wrap_with_error(last_attr, "attributes on statements are not allowed");
         if p.at(T!['}']) {
-            use_stmt_m.abandon(p);
             return;
         }
     }
-    use_stmt_m.abandon(p);
+
+    // inline use stmt
+    if p.at(T![use]) {
+        let m = p.start();
+        p.with_recovery_set(at_stmt_kw_start(), |p| use_stmt(p, m));
+        return;
+    }
 
     if p.at(T![let]) {
         let_stmt(p, stmt_kind.is_spec());
@@ -137,13 +138,13 @@ pub(crate) fn stmt(p: &mut Parser, prefer_expr: bool, stmt_kind: StmtKind) {
     p.error_and_bump(&format!("unexpected token {:?}", p.current()));
 }
 
-fn let_stmt(p: &mut Parser, is_spec: bool) {
+fn let_stmt(p: &mut Parser, allow_post: bool) {
     let m = p.start();
     p.bump(T![let]);
-    if is_spec && p.at_contextual_kw_ident("post") {
+    if allow_post && p.at_contextual_kw_ident("post") {
         p.bump_remap(T![post]);
     }
-    let recovery_set = stmt_start_kws().with_token_set(T![=] | T![;]);
+    let recovery_set = at_stmt_kw_start().with_ts(T![=] | T![;]);
     // let rec_set = item_start_rec_set().with_token_set(T![=] | T![;]);
     p.with_recovery_set(recovery_set.clone(), pat);
     // pat_or_recover(p, recovery_set.clone());
@@ -158,6 +159,7 @@ fn let_stmt(p: &mut Parser, is_spec: bool) {
 }
 
 pub(crate) fn use_stmt(p: &mut Parser, stmt: Marker) {
+    assert!(p.at(T![use]));
     p.bump(T![use]);
     p.with_recovery_set(T![;].into(), |p| use_item::use_speck(p, true));
     p.expect(T![;]);

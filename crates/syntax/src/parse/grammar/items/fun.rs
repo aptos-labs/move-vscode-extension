@@ -26,8 +26,10 @@ pub(crate) fn spec_function(p: &mut Parser, m: Marker) {
         m.abandon(p);
         return;
     }
-    fun_signature(p, false);
-    fun_block(p, StmtKind::Spec);
+    let has_name = fun_signature(p, false);
+    if has_name {
+        fun_body(p, StmtKind::Spec);
+    }
     m.complete(p, SPEC_FUN);
 }
 
@@ -38,16 +40,20 @@ pub(crate) fn spec_inline_function(p: &mut Parser) {
         m.abandon(p);
         return;
     }
-    fun_signature(p, false);
-    fun_block(p, StmtKind::Spec);
+    let has_name = fun_signature(p, false);
+    if has_name {
+        fun_body(p, StmtKind::Spec);
+    }
     m.complete(p, SPEC_INLINE_FUN);
 }
 
 pub(crate) fn function(p: &mut Parser, m: Marker) {
     opt_fun_modifiers(p);
     if p.at(T![fun]) {
-        fun_signature(p, true);
-        fun_block(p, StmtKind::Move);
+        let has_name = fun_signature(p, true);
+        if has_name {
+            fun_body(p, StmtKind::Move);
+        }
     } else {
         // p.error("expected 'fun'");
         p.error_and_recover("expected 'fun'", item_start_rec_set());
@@ -147,7 +153,7 @@ fn acquires(p: &mut Parser) {
     m.complete(p, ACQUIRES);
 }
 
-fn fun_signature(p: &mut Parser, allow_acquires: bool) {
+fn fun_signature(p: &mut Parser, allow_acquires: bool) -> bool {
     p.bump(T![fun]);
 
     let has_name = p.with_recovery_set(item_start_rec_set(), |p| {
@@ -158,10 +164,10 @@ fn fun_signature(p: &mut Parser, allow_acquires: bool) {
         true
     });
     if !has_name {
-        return;
+        return false;
     }
 
-    let signature_recovery_set = item_start_rec_set().with_token_set(T![;] | T!['{']);
+    let signature_recovery_set = item_start_rec_set().with_ts(T![;] | T!['{']);
     p.with_recovery_set(signature_recovery_set, |p| {
         if p.at(T!['(']) {
             params::fun_param_list(p);
@@ -170,7 +176,7 @@ fn fun_signature(p: &mut Parser, allow_acquires: bool) {
         }
     });
 
-    let item_rec_set = item_start_rec_set().with_token_set(T!['{'] | T![;]);
+    let item_rec_set = item_start_rec_set().with_ts(T!['{'] | T![;]);
     p.with_recovery_set(item_rec_set, |p| {
         p.with_recovery_token(T![acquires], opt_ret_type);
         if p.at(T![acquires]) {
@@ -181,9 +187,11 @@ fn fun_signature(p: &mut Parser, allow_acquires: bool) {
             }
         }
     });
+
+    true
 }
 
-pub(crate) fn fun_block(p: &mut Parser, stmt_kind: StmtKind) {
+pub(crate) fn fun_body(p: &mut Parser, stmt_kind: StmtKind) {
     if p.at(T!['{']) {
         blocks::block_expr(p, stmt_kind);
         return;
@@ -250,14 +258,14 @@ pub(crate) fn function_modifier_tokens() -> Vec<RecoveryToken> {
 
 pub(crate) fn function_modifier_kws() -> RecoverySet {
     let mut rec_set = RecoverySet::new();
-    rec_set.with_token_set(T![public] | T![native] | T![friend] | T![inline])
+    rec_set.with_ts(T![public] | T![native] | T![friend] | T![inline])
     // .with_kw_ident("entry")
     // .with_kw_ident("package")
 }
 
 pub(crate) fn function_modifier_recovery_set() -> RecoverySet {
     let mut rec_set = RecoverySet::new();
-    rec_set.with_token_set(T![public] | T![native] | T![friend] | T![inline])
+    rec_set.with_ts(T![public] | T![native] | T![friend] | T![inline])
     // .with_kw_ident("entry")
     // .with_kw_ident("package")
 }

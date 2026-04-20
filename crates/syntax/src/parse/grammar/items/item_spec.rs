@@ -20,7 +20,7 @@ pub(crate) fn item_spec(p: &mut Parser, m: Marker) {
     if p.at(T![module]) {
         p.bump(T![module]);
     } else {
-        p.with_recovery_set(item_start_rec_set().with_token_set(T!['{']), item_spec_signature);
+        p.with_recovery_set(item_start_rec_set().with_ts(T!['{']), item_spec_signature);
     }
     if p.at(T!['{']) {
         blocks::block_expr(p, StmtKind::Spec);

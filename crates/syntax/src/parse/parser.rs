@@ -563,7 +563,7 @@ impl Parser {
         f: impl FnOnce(&mut Parser) -> T,
     ) -> T {
         self.recovery_set_stack
-            .push(self.outer_recovery_set().with_token_set(token_set));
+            .push(self.outer_recovery_set().with_ts(token_set));
         let res = f(self);
         self.recovery_set_stack.pop();
         res
