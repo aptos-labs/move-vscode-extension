@@ -67,12 +67,12 @@ pub(super) fn expr_block_contents(p: &mut Parser, kind: StmtKind) {
             p.bump(T![;]);
             return Continue(());
         }
-        p.with_recovery_token_set(T!['}'], |p| stmt(p, false, kind));
+        p.with_recovery_token_set(T!['}'], |p| stmt(p, kind));
         Continue(())
     });
 }
 
-pub(crate) fn stmt(p: &mut Parser, prefer_expr: bool, stmt_kind: StmtKind) {
+pub(crate) fn stmt(p: &mut Parser, stmt_kind: StmtKind) {
     // handle attributes
     let mut attrs = attributes::attrs(p);
     if let Some(last_attr) = attrs.pop() {
@@ -144,8 +144,8 @@ pub(crate) fn stmt(p: &mut Parser, prefer_expr: bool, stmt_kind: StmtKind) {
     }
 
     // parse expression stmts
-    if let Some((cm, _)) = p.with_recovery_token(T![;], |p| stmt_expr(p)) {
-        if !(p.at(T!['}']) || (prefer_expr && p.at(EOF))) {
+    if let Some((cm, _)) = p.with_recovery_token(T![;], stmt_expr) {
+        if !p.at(T!['}']) {
             let m = cm.precede(p);
             p.expect(T![;]);
             m.complete(p, EXPR_STMT);
