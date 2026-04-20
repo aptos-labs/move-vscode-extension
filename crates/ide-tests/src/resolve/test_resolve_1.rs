@@ -832,3 +832,22 @@ fn test_resolve_package_const() {
     "#,
     )
 }
+
+#[test]
+fn signer_address_of_is_available_as_a_receiver_style_method() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::signer {
+            public native fun address_of(self: &signer): address;
+                              //X
+        }
+        module 0x1::main {
+            fun main(acc: &signer) {
+                acc.address_of();
+                       //^
+            }
+        }
+    "#,
+    )
+}

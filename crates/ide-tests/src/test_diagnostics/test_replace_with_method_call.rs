@@ -428,3 +428,33 @@ fn test_replace_with_method_in_item_spec_with_implies_operator() {
         }
     "#]]);
 }
+
+#[test]
+fn test_replace_with_method_signer_address_of() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+            module 0x1::signer {
+                public native fun address_of(self: &signer): address;
+            }
+            module 0x1::main {
+                use 0x1::signer;
+                fun main(acc: &signer) {
+                    signer::address_of(acc);
+                  //^^^^^^^^^^^^^^^^^^^^^^^ weak: Can be replaced with method call
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::signer {
+                public native fun address_of(self: &signer): address;
+            }
+            module 0x1::main {
+                use 0x1::signer;
+                fun main(acc: &signer) {
+                    acc.address_of();
+                }
+            }
+        "#]],
+    );
+}
