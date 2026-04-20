@@ -1,0 +1,90 @@
+SOURCE_FILE@0..145
+  MODULE@0..144
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..18
+      IDENT@12..18 "proofs"
+    WHITESPACE@18..19 " "
+    L_CURLY@19..20 "{"
+    WHITESPACE@20..25 "\n    "
+    ITEM_SPEC@25..142
+      SPEC_KW@25..29 "spec"
+      WHITESPACE@29..30 " "
+      ITEM_SPEC_REF@30..34
+        NAME_REF@30..34
+          IDENT@30..34 "main"
+      WHITESPACE@34..35 " "
+      BLOCK_EXPR@35..37
+        L_CURLY@35..36 "{"
+        R_CURLY@36..37 "}"
+      WHITESPACE@37..38 " "
+      PROOF@38..142
+        PROOF_KW@38..43 "proof"
+        WHITESPACE@43..44 " "
+        BLOCK_EXPR@44..142
+          L_CURLY@44..45 "{"
+          WHITESPACE@45..54 "\n        "
+          APPLY_LEMMA@54..78
+            APPLY_KW@54..59 "apply"
+            WHITESPACE@59..60 " "
+            PATH@60..68
+              PATH_SEGMENT@60..68
+                NAME_REF@60..68
+                  IDENT@60..68 "my_lemma"
+            VALUE_ARG_LIST@68..77
+              L_PAREN@68..69 "("
+              VALUE_ARG@69..70
+                LITERAL@69..70
+                  INT_NUMBER@69..70 "1"
+              COMMA@70..71 ","
+              WHITESPACE@71..72 " "
+              VALUE_ARG@72..73
+                LITERAL@72..73
+                  INT_NUMBER@72..73 "2"
+              COMMA@73..74 ","
+              WHITESPACE@74..75 " "
+              VALUE_ARG@75..76
+                LITERAL@75..76
+                  INT_NUMBER@75..76 "3"
+              R_PAREN@76..77 ")"
+            SEMICOLON@77..78 ";"
+          WHITESPACE@78..87 "\n        "
+          SPEC_PREDICATE_STMT@87..99
+            ASSERT_KW@87..93 "assert"
+            WHITESPACE@93..94 " "
+            LITERAL@94..98
+              TRUE_KW@94..98 "true"
+            SEMICOLON@98..99 ";"
+          WHITESPACE@99..108 "\n        "
+          SPEC_PREDICATE_STMT@108..136
+            ASSUME_KW@108..114 "assume"
+            WHITESPACE@114..115 " "
+            SPEC_PREDICATE_PROPERTY_LIST@115..124
+              L_BRACK@115..116 "["
+              SPEC_PREDICATE_PROPERTY@116..123
+                IDENT@116..123 "trusted"
+              R_BRACK@123..124 "]"
+            WHITESPACE@124..125 " "
+            BIN_EXPR@125..135
+              BIN_EXPR@125..130
+                LITERAL@125..126
+                  INT_NUMBER@125..126 "1"
+                WHITESPACE@126..127 " "
+                PLUS@127..128 "+"
+                WHITESPACE@128..129 " "
+                LITERAL@129..130
+                  INT_NUMBER@129..130 "1"
+              WHITESPACE@130..131 " "
+              EQ_EQ@131..133 "=="
+              WHITESPACE@133..134 " "
+              LITERAL@134..135
+                INT_NUMBER@134..135 "2"
+            SEMICOLON@135..136 ";"
+          WHITESPACE@136..141 "\n    "
+          R_CURLY@141..142 "}"
+    WHITESPACE@142..143 "\n"
+    R_CURLY@143..144 "}"
+  WHITESPACE@144..145 "\n"

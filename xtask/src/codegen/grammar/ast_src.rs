@@ -83,6 +83,8 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "axiom", "include", "pragma", "global", "local", "update", "copy", "schema",
         "emits", "apply", "to", "except", "internal",
         "forall", "exists", "choose", "where", "min",
+        // spec-lang 2.0
+        "proof", "lemma",
     ],
     literals: &["INT_NUMBER", "BYTE_STRING", "HEX_STRING"],
     tokens: &["BAD_CHARACTER", "ERROR", "IDENT", "WHITESPACE", "QUOTE_IDENT", "COMMENT", "WILDCARD_IDENT"],
@@ -282,6 +284,12 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         // "ASSOC_TYPE_ARG",
         // "CONST_ARG",
         // "SELF_PARAM",
+
+        "PROOF",
+        "PROOF_BLOCK",
+        "LEMMA",
+        "LEMMA_BLOCK",
+        "APPLY_LEMMA",
     ],
 };
 

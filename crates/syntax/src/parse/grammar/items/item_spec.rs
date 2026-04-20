@@ -5,27 +5,33 @@
 // Modifications have been made to the original code.
 
 use crate::SyntaxKind::*;
-use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
-use crate::parse::grammar::expressions::atom::block_expr;
-use crate::parse::grammar::items::{at_item_start, fun, item_start_rec_set};
+use crate::T;
+use crate::parse::grammar::expressions::blocks;
+use crate::parse::grammar::expressions::blocks::StmtKind;
+use crate::parse::grammar::items::{fun, item_start_rec_set};
 use crate::parse::grammar::patterns::ident_pat_or_recover;
+use crate::parse::grammar::specs::proofs_and_lemmas::proof;
 use crate::parse::grammar::utils::delimited_with_recovery;
-use crate::parse::grammar::{name_ref, name_ref_or_recover, patterns, type_params, types};
+use crate::parse::grammar::{name_ref, name_ref_or_recover, type_params, types};
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::token_set::TokenSet;
-use crate::{T, ts};
 
 pub(crate) fn item_spec(p: &mut Parser, m: Marker) {
     if p.at(T![module]) {
         p.bump(T![module]);
     } else {
-        p.with_recovery_set(item_start_rec_set().with_token_set(T!['{']), item_spec_signature);
+        p.with_recovery(item_start_rec_set().with_ts(T!['{']), item_spec_signature);
     }
     if p.at(T!['{']) {
-        block_expr(p, true);
+        blocks::block_expr(p, StmtKind::Spec);
     } else {
         p.error("expected a block");
     }
+
+    if p.at_contextual_kw_ident("proof") {
+        proof(p);
+    }
+
     m.complete(p, ITEM_SPEC);
 }
 

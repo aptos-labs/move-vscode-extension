@@ -16,7 +16,7 @@ use crate::parse::grammar::specs::schemas::{
     apply_schema, global_variable, include_schema, schema_field,
 };
 use crate::parse::grammar::utils::delimited_with_recovery;
-use crate::parse::grammar::{attributes, error_block, name_ref, patterns, type_args, types};
+use crate::parse::grammar::{attributes, name_ref, patterns, type_args, types};
 use crate::parse::parser::{CompletedMarker, Marker, Parser};
 use crate::parse::token_set::TokenSet;
 use crate::{SyntaxKind, T, ts};
@@ -25,7 +25,7 @@ use std::iter;
 use std::ops::ControlFlow::Continue;
 
 pub(crate) mod atom;
-pub(crate) mod stmts;
+pub(crate) mod blocks;
 
 pub(crate) fn expr(p: &mut Parser) -> bool {
     let r = Restrictions {
@@ -299,7 +299,7 @@ fn index_expr(p: &mut Parser, lhs: CompletedMarker) -> CompletedMarker {
     m.complete(p, INDEX_EXPR)
 }
 
-fn value_arg_list(p: &mut Parser) {
+pub(crate) fn value_arg_list(p: &mut Parser) {
     assert!(p.at(T!['(']));
     let m = p.start();
     p.bump(T!['(']);
@@ -320,40 +320,11 @@ fn value_arg_list(p: &mut Parser) {
                 }
                 false
             }
-            // if !is_expr && p.at(T![,]) {
-            //     // ,,,,
-            //     m.complete(p, VALUE_ARG);
-            // }
-            // if !is_expr && p.current() == T![,] {
-            //     m.complete(p, VALUE_ARG);
-            //     return true;
-            // } else {
-            //     m.abandon(p);
-            // }
-            // false
-            // m.complete(p, VALUE_ARG);
-            // true
-            // if is_expr {
-            //     m.complete(p, VALUE_ARG);
-            // } else {
-            //     m.abandon(p);
-            // }
-            // is_expr
         },
         T![,],
         "expected argument",
         Some(T![')']),
     );
-    // delimited_items_with_recover(p, T![')'], T![,], ts!(T![;], T![let], T!['}']), VALUE_ARG, |p| {
-    //     let m = p.start();
-    //     let is_expr = expr(p);
-    //     if is_expr {
-    //         m.complete(p, VALUE_ARG);
-    //     } else {
-    //         m.abandon(p);
-    //     }
-    //     is_expr
-    // });
     p.expect(T![')']);
     m.complete(p, VALUE_ARG_LIST);
 }
@@ -391,17 +362,6 @@ pub(crate) fn stmt_expr(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> 
         prefer_stmt: true,
     };
     expr_bp(p, None, r, 1)
-}
-
-pub(super) fn expr_block_contents(p: &mut Parser, is_spec: bool) {
-    p.iterate_to_EOF(T!['}'], |p| {
-        if p.at(T![;]) {
-            p.bump(T![;]);
-            return Continue(());
-        }
-        p.with_recovery_token_set(T!['}'], |p| stmts::stmt(p, false, is_spec));
-        Continue(())
-    });
 }
 
 #[derive(Clone, Copy, Default)]
@@ -468,9 +428,6 @@ fn current_op(p: &Parser) -> (u8, SyntaxKind) {
         T![%]                  => (12, T![%]),
         T![/]                  => (12, T![/]),
         T![*]                  => (12, T![*]),
-
-        // T![as]                 => (13, T![as]),
-        // T![ident] if p.at_contextual_kw("is") => (13, T![is]),
 
         T![=] if p.at(T![=>])  => NOT_AN_OP,
         _                      => NOT_AN_OP

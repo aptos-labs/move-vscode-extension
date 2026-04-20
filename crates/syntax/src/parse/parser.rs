@@ -81,7 +81,7 @@ impl Parser {
 
             // add loop end to recovery set
             self.recovery_set_stack
-                .push(self.outer_recovery_set().with_merged(stop_at.clone()));
+                .push(self.outer_recovery_set().with_another_rs(stop_at.clone()));
             let cf = f(self);
             self.recovery_set_stack.pop();
 
@@ -411,7 +411,7 @@ impl Parser {
     pub(crate) fn error_and_recover(&mut self, message: &str, extra_rs: impl Into<RecoverySet>) {
         // if the next token is stop token, just push error,
         // otherwise wrap the next token with the error node and start `recover_until()`
-        let rec_set = self.outer_recovery_set().with_merged(extra_rs.into());
+        let rec_set = self.outer_recovery_set().with_another_rs(extra_rs.into());
         if rec_set.contains_current(self) {
             self.push_error(message);
             return;
@@ -536,19 +536,19 @@ impl Parser {
             .unwrap_or(RecoverySet::new())
     }
 
-    pub(crate) fn with_recovery_set<T>(
+    pub(crate) fn with_recovery<T>(
         &mut self,
         recovery_set: RecoverySet,
         f: impl FnOnce(&mut Parser) -> T,
     ) -> T {
         self.recovery_set_stack
-            .push(self.outer_recovery_set().with_merged(recovery_set));
+            .push(self.outer_recovery_set().with_another_rs(recovery_set));
         let res = f(self);
         self.recovery_set_stack.pop();
         res
     }
 
-    pub(crate) fn reset_recovery_set<T>(&mut self, f: impl FnOnce(&mut Parser) -> T) -> T {
+    pub(crate) fn reset_recovery<T>(&mut self, f: impl FnOnce(&mut Parser) -> T) -> T {
         self.recovery_set_stack.push(RecoverySet::new());
         // self.recovery_set_stack
         //     .push(self.outer_recovery_set().with_merged(recovery_set));
@@ -563,7 +563,7 @@ impl Parser {
         f: impl FnOnce(&mut Parser) -> T,
     ) -> T {
         self.recovery_set_stack
-            .push(self.outer_recovery_set().with_token_set(token_set));
+            .push(self.outer_recovery_set().with_ts(token_set));
         let res = f(self);
         self.recovery_set_stack.pop();
         res

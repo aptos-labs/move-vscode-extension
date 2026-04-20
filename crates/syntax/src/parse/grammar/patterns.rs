@@ -14,11 +14,11 @@ use crate::parse::token_set::TokenSet;
 use crate::{SyntaxKind, T};
 use std::ops::ControlFlow::{Break, Continue};
 
-pub(crate) fn pat(p: &mut Parser) -> bool {
-    pat_or_recover(p, TokenSet::EMPTY)
+pub(crate) fn let_pat(p: &mut Parser) -> bool {
+    let_pat_or_recover(p, TokenSet::EMPTY)
 }
 
-pub(crate) fn pat_or_recover(p: &mut Parser, extra_set: impl Into<RecoverySet>) -> bool {
+pub(crate) fn let_pat_or_recover(p: &mut Parser, extra_set: impl Into<RecoverySet>) -> bool {
     match p.current() {
         // 0x1 '::'
         INT_NUMBER if p.nth_at(1, T![::]) => path_pat(p),
@@ -42,7 +42,6 @@ pub(crate) fn ident_pat_or_recover(p: &mut Parser) -> bool {
         T!['_'] => wildcard_pat(p),
         _ => {
             p.error_and_recover("expected ident", TokenSet::EMPTY);
-            // p.error_and_recover_until_ts("expected ident or '_'", recovery_set);
             return false;
         }
     };
@@ -77,18 +76,7 @@ fn tuple_pat_fields(p: &mut Parser) {
     assert!(p.at(T!['(']));
     p.bump(T!['(']);
 
-    delimited_with_recovery(p, pat, T![,], "expected pattern", Some(T![')']));
-
-    // while !p.at(EOF) && !p.at(T![')']) {
-    //     if !p.at_ts(PAT_FIRST) {
-    //         p.error("expected a pattern");
-    //         break;
-    //     }
-    //     pat_or_recover(p, TokenSet::EMPTY);
-    //     if !p.at(T![')']) {
-    //         p.expect(T![,]);
-    //     }
-    // }
+    delimited_with_recovery(p, let_pat, T![,], "expected pattern", Some(T![')']));
 
     p.expect(T![')']);
 }
@@ -98,7 +86,7 @@ fn struct_pat_field(p: &mut Parser) -> bool {
         IDENT if p.nth(1) == T![:] => {
             name_ref(p);
             p.bump(T![:]);
-            pat(p);
+            let_pat(p);
         }
         IDENT => {
             ident_pat(p);
@@ -113,7 +101,6 @@ fn struct_pat_field(p: &mut Parser) -> bool {
         }
         _ => {
             p.error_and_recover("expected identifier", TokenSet::EMPTY);
-            // p.error_and_recover_until_ts("expected identifier", PAT_RECOVERY_SET);
             return false;
         }
     }
@@ -182,7 +169,7 @@ fn tuple_or_unit_or_paren_pat(p: &mut Parser) -> CompletedMarker {
 
     let outer_recovery_set = p.outer_recovery_set();
     p.iterate_to_EOF(T![')'], |p| {
-        let found_pat = pat_or_recover(p, T![,] | T![')']);
+        let found_pat = let_pat_or_recover(p, T![,] | T![')']);
         if found_pat {
             has_pat = true;
         }

@@ -5,22 +5,20 @@
 // Modifications have been made to the original code.
 
 use crate::SyntaxKind::{
-    ACQUIRES, EOF, FUN, IDENT, RET_TYPE, SPEC_FUN, SPEC_INLINE_FUN, VISIBILITY_MODIFIER,
+    ACQUIRES, FUN, IDENT, RET_TYPE, SPEC_FUN, SPEC_INLINE_FUN, VISIBILITY_MODIFIER,
 };
-use crate::parse::grammar::expressions::atom::block_expr;
-use crate::parse::grammar::items::{at_item_start, item_start_rec_set};
-use crate::parse::grammar::paths::PATH_FIRST;
-use crate::parse::grammar::types::{path_type, type_, type_or_recover};
+use crate::parse::grammar::expressions::blocks;
+use crate::parse::grammar::expressions::blocks::StmtKind;
+use crate::parse::grammar::items::item_start_rec_set;
+use crate::parse::grammar::types::{path_type, type_};
 use crate::parse::grammar::utils::delimited_with_recovery;
-use crate::parse::grammar::{name_or_recover, params, paths, type_params, types};
+use crate::parse::grammar::{name_or_recover, params, type_params};
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::recovery_set::{RecoverySet, RecoveryToken};
 use crate::parse::token_set::TokenSet;
-use crate::{SyntaxKind, T, ts};
-use std::cell::RefCell;
+use crate::{SyntaxKind, T};
 use std::collections::HashSet;
 use std::ops::ControlFlow::{Break, Continue};
-use std::ops::{ControlFlow, DerefMut};
 
 pub(crate) fn spec_function(p: &mut Parser, m: Marker) {
     opt_fun_modifiers(p);
@@ -28,7 +26,10 @@ pub(crate) fn spec_function(p: &mut Parser, m: Marker) {
         m.abandon(p);
         return;
     }
-    fun_signature(p, true, false);
+    let has_name = fun_signature(p, false);
+    if has_name {
+        fun_body(p, StmtKind::Spec);
+    }
     m.complete(p, SPEC_FUN);
 }
 
@@ -39,14 +40,20 @@ pub(crate) fn spec_inline_function(p: &mut Parser) {
         m.abandon(p);
         return;
     }
-    fun_signature(p, true, false);
+    let has_name = fun_signature(p, false);
+    if has_name {
+        fun_body(p, StmtKind::Spec);
+    }
     m.complete(p, SPEC_INLINE_FUN);
 }
 
 pub(crate) fn function(p: &mut Parser, m: Marker) {
     opt_fun_modifiers(p);
     if p.at(T![fun]) {
-        fun_signature(p, false, true);
+        let has_name = fun_signature(p, true);
+        if has_name {
+            fun_body(p, StmtKind::Move);
+        }
     } else {
         // p.error("expected 'fun'");
         p.error_and_recover("expected 'fun'", item_start_rec_set());
@@ -146,10 +153,10 @@ fn acquires(p: &mut Parser) {
     m.complete(p, ACQUIRES);
 }
 
-fn fun_signature(p: &mut Parser, is_spec: bool, allow_acquires: bool) {
+fn fun_signature(p: &mut Parser, allow_acquires: bool) -> bool {
     p.bump(T![fun]);
 
-    let has_name = p.with_recovery_set(item_start_rec_set(), |p| {
+    let has_name = p.with_recovery(item_start_rec_set(), |p| {
         if !name_or_recover(p, (T![<] | T!['(']).into()) {
             return false;
         }
@@ -157,11 +164,11 @@ fn fun_signature(p: &mut Parser, is_spec: bool, allow_acquires: bool) {
         true
     });
     if !has_name {
-        return;
+        return false;
     }
 
-    let signature_recovery_set = item_start_rec_set().with_token_set(T![;] | T!['{']);
-    p.with_recovery_set(signature_recovery_set, |p| {
+    let signature_recovery_set = item_start_rec_set().with_ts(T![;] | T!['{']);
+    p.with_recovery(signature_recovery_set, |p| {
         if p.at(T!['(']) {
             params::fun_param_list(p);
         } else {
@@ -169,8 +176,8 @@ fn fun_signature(p: &mut Parser, is_spec: bool, allow_acquires: bool) {
         }
     });
 
-    let item_rec_set = item_start_rec_set().with_token_set(T!['{'] | T![;]);
-    p.with_recovery_set(item_rec_set, |p| {
+    let item_rec_set = item_start_rec_set().with_ts(T!['{'] | T![;]);
+    p.with_recovery(item_rec_set, |p| {
         p.with_recovery_token(T![acquires], opt_ret_type);
         if p.at(T![acquires]) {
             if allow_acquires {
@@ -181,15 +188,19 @@ fn fun_signature(p: &mut Parser, is_spec: bool, allow_acquires: bool) {
         }
     });
 
+    true
+}
+
+pub(crate) fn fun_body(p: &mut Parser, stmt_kind: StmtKind) {
+    if p.at(T!['{']) {
+        blocks::block_expr(p, stmt_kind);
+        return;
+    }
+    // native | uninterpreted function
     if p.at(T![;]) {
         p.bump(T![;]);
         return;
     }
-    if p.at(T!['{']) {
-        block_expr(p, is_spec);
-        return;
-    }
-
     p.error("expected a block");
 }
 
@@ -247,14 +258,14 @@ pub(crate) fn function_modifier_tokens() -> Vec<RecoveryToken> {
 
 pub(crate) fn function_modifier_kws() -> RecoverySet {
     let mut rec_set = RecoverySet::new();
-    rec_set.with_token_set(T![public] | T![native] | T![friend] | T![inline])
+    rec_set.with_ts(T![public] | T![native] | T![friend] | T![inline])
     // .with_kw_ident("entry")
     // .with_kw_ident("package")
 }
 
 pub(crate) fn function_modifier_recovery_set() -> RecoverySet {
     let mut rec_set = RecoverySet::new();
-    rec_set.with_token_set(T![public] | T![native] | T![friend] | T![inline])
+    rec_set.with_ts(T![public] | T![native] | T![friend] | T![inline])
     // .with_kw_ident("entry")
     // .with_kw_ident("package")
 }

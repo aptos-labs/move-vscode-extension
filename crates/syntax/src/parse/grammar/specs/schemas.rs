@@ -6,8 +6,9 @@
 
 use crate::SyntaxKind::*;
 use crate::T;
-use crate::parse::grammar::expressions::atom::{block_expr, condition};
-use crate::parse::grammar::expressions::{Restrictions, expr, expr_bp, opt_initializer_expr};
+use crate::parse::grammar::expressions::atom::condition;
+use crate::parse::grammar::expressions::blocks::StmtKind;
+use crate::parse::grammar::expressions::{Restrictions, blocks, expr, expr_bp, opt_initializer_expr};
 use crate::parse::grammar::items::item_start_rec_set;
 use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::patterns::ident_pat_or_recover;
@@ -22,7 +23,7 @@ use std::ops::ControlFlow::{Break, Continue};
 pub(crate) fn schema(p: &mut Parser, m: Marker) {
     assert!(p.at_contextual_kw_ident("schema"));
     p.bump_remap(T![schema]);
-    p.with_recovery_set(item_start_rec_set(), |p| {
+    p.with_recovery(item_start_rec_set(), |p| {
         name_or_recover(p, item_start_rec_set());
         type_params::opt_type_param_list(p);
     });
@@ -30,7 +31,7 @@ pub(crate) fn schema(p: &mut Parser, m: Marker) {
     // type_params::opt_type_param_list(p);
     // block_expr(p, true);
     if p.at(T!['{']) {
-        block_expr(p, true);
+        blocks::block_expr(p, StmtKind::Spec);
     } else {
         p.error("expected a block");
     }

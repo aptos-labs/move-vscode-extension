@@ -9,9 +9,7 @@ use crate::T;
 use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::parse::grammar::items::item_start_rec_set;
 use crate::parse::grammar::utils::delimited_with_recovery;
-use crate::parse::grammar::{
-    abilities_list, attributes, error_block, name_or_recover, type_params, types,
-};
+use crate::parse::grammar::{abilities_list, attributes, name_or_recover, type_params, types};
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
@@ -84,7 +82,7 @@ pub(crate) fn enum_variant_list(p: &mut Parser) {
 fn enum_variant(p: &mut Parser) -> bool {
     let mut curly_braces = false;
     let m = p.start();
-    attributes::outer_attrs(p);
+    attributes::attrs(p);
     if p.at(IDENT) {
         // name(p);
         name_or_recover(p, TokenSet::EMPTY.into());
@@ -113,7 +111,7 @@ fn opt_abilities_list_with_semicolon(p: &mut Parser) {
 
 fn opt_abilities_list(p: &mut Parser) -> bool {
     if p.at_contextual_kw_ident("has") {
-        p.with_recovery_set(item_start_rec_set(), abilities_list);
+        p.with_recovery(item_start_rec_set(), abilities_list);
         return true;
     }
     false
@@ -163,7 +161,7 @@ fn named_field(p: &mut Parser) -> bool {
 
 fn adt_name_recovery() -> RecoverySet {
     item_start_rec_set()
-        .with_token_set(T![<] | T!['{'])
+        .with_ts(T![<] | T!['{'])
         .with_recovery_token("has".into())
     // item_start_rec_set().with_merged(struct_or_enum_name_rec_set())
 }

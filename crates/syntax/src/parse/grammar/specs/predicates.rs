@@ -210,24 +210,6 @@ pub(crate) fn opt_predicate_property_list(p: &mut Parser) -> bool {
         "expected identifier",
         Some(T![']']),
     );
-    // list(
-    //     p,
-    //     T!['['],
-    //     T![']'],
-    //     T![,],
-    //     || "expected identifier".into(),
-    //     TokenSet::new(&[IDENT]),
-    //     |p| {
-    //         let m = p.start();
-    //         let found = p.eat(IDENT);
-    //         if p.at(T![=]) {
-    //             p.bump(T![=]);
-    //             expressions::atom::literal(p);
-    //         }
-    //         m.complete(p, SPEC_PREDICATE_PROPERTY);
-    //         found
-    //     },
-    // );
     p.expect(T![']']);
     m.complete(p, SPEC_PREDICATE_PROPERTY_LIST);
     true

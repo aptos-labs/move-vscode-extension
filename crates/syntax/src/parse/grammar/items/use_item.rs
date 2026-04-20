@@ -47,7 +47,7 @@ pub(crate) fn use_group(p: &mut Parser) {
     assert!(p.at(T!['{']));
     let m = p.start();
     p.bump(T!['{']);
-    p.reset_recovery_set(|p| {
+    p.reset_recovery(|p| {
         delimited_with_recovery(
             p,
             |p| use_speck(p, false),

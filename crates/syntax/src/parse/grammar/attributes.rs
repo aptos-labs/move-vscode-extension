@@ -13,7 +13,7 @@ use crate::parse::parser::{CompletedMarker, Parser};
 use crate::parse::token_set::TokenSet;
 use crate::{SyntaxKind, T};
 
-pub(super) fn outer_attrs(p: &mut Parser) -> Vec<CompletedMarker> {
+pub(super) fn attrs(p: &mut Parser) -> Vec<CompletedMarker> {
     let mut attrs = vec![];
     while p.at(T![#]) {
         attrs.push(attr(p));

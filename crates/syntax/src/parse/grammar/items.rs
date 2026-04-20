@@ -10,20 +10,19 @@ pub(crate) mod item_spec;
 pub(crate) mod use_item;
 
 use crate::SyntaxKind::*;
-use crate::parse::grammar::expressions::{EXPR_FIRST, expr, stmts};
+use crate::parse::grammar::expressions::blocks::use_stmt;
+use crate::parse::grammar::expressions::{blocks, expr};
 use crate::parse::grammar::items::fun::{
-    function_modifier_kws, function_modifier_recovery_set, function_modifier_tokens,
-    on_function_modifiers_start, on_visibility_modifier_start, visibility_modifier,
+    function_modifier_kws, function_modifier_recovery_set, on_function_modifiers_start,
+    on_visibility_modifier_start, visibility_modifier,
 };
-use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::patterns::STMT_FIRST;
 use crate::parse::grammar::specs::schemas::schema;
-use crate::parse::grammar::{attributes, error_block, name_or_recover, paths, types};
+use crate::parse::grammar::{attributes, name_or_recover, paths, types};
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
 use crate::{SyntaxKind, T};
-use std::ops::ControlFlow;
 use std::ops::ControlFlow::{Break, Continue};
 
 pub(crate) fn item_list(p: &mut Parser) {
@@ -40,7 +39,7 @@ pub(crate) fn item_list(p: &mut Parser) {
 
 pub(super) fn item(p: &mut Parser) {
     let m = p.start();
-    attributes::outer_attrs(p);
+    attributes::attrs(p);
     let m = match opt_item(p, m) {
         // let m = match opt_item(p, m) {
         Ok(()) => {
@@ -58,7 +57,7 @@ pub(super) fn item(p: &mut Parser) {
 
     // couldn't find an item
     match p.current() {
-        T!['{'] => error_block(p, "expected an item, got a block"),
+        T!['{'] => blocks::error_block(p, "expected an item, got a block"),
         // T!['}'] if !stop_on_r_curly => {
         //     let e = p.start();
         //     p.error("unmatched `}`");
@@ -73,14 +72,14 @@ pub(super) fn item(p: &mut Parser) {
 
 fn after_vis_modifier_item_set() -> RecoverySet {
     RecoverySet::new()
-        .with_token_set(T![fun] | T![struct] | T![const])
+        .with_ts(T![fun] | T![struct] | T![const])
         .with_kw("enum")
 }
 
 /// Try to parse an item, completing `m` in case of success.
 pub(super) fn opt_item(p: &mut Parser, m: Marker) -> Result<(), Marker> {
     match p.current() {
-        T![use] => p.with_recovery_set(item_start_kws_only(), |p| stmts::use_stmt(p, m)),
+        T![use] => p.with_recovery(item_start_kws_only(), |p| use_stmt(p, m)),
         T![const] => const_(p, m),
 
         // todo: does not handle `friend native myfun()` cases
@@ -130,12 +129,12 @@ pub(super) fn opt_item(p: &mut Parser, m: Marker) -> Result<(), Marker> {
 fn const_(p: &mut Parser, m: Marker) {
     p.bump(T![const]);
 
-    if !name_or_recover(p, item_start_rec_set().with_token_set(T![;])) {
+    if !name_or_recover(p, item_start_rec_set().with_ts(T![;])) {
         m.complete(p, CONST);
         return;
     }
 
-    p.with_recovery_set(item_start_rec_set().with_token_set(T![;]), |p| {
+    p.with_recovery(item_start_rec_set().with_ts(T![;]), |p| {
         p.with_recovery_token(T![=], |p| {
             if p.at(T![:]) {
                 types::type_annotation(p);
@@ -192,17 +191,17 @@ pub(crate) fn at_item_start(p: &Parser) -> bool {
 
 // safe recovery set for `item_start()`
 pub(crate) fn item_start_kws_only() -> RecoverySet {
-    RecoverySet::from_ts(ITEM_KEYWORDS).with_merged(function_modifier_kws())
+    RecoverySet::from_ts(ITEM_KEYWORDS).with_another_rs(function_modifier_kws())
 }
 
 pub(crate) fn item_start_rec_set() -> RecoverySet {
     RecoverySet::new()
-        .with_token_set(ITEM_KEYWORDS)
+        .with_ts(ITEM_KEYWORDS)
         .with_kw("enum")
-        .with_merged(function_modifier_recovery_set())
+        .with_another_rs(function_modifier_recovery_set())
 }
 
-pub(crate) fn stmt_start_kws() -> RecoverySet {
+pub(crate) fn at_stmt_kw_start() -> RecoverySet {
     RecoverySet::from_ts(STMT_FIRST)
 }
 
