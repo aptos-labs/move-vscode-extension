@@ -1,0 +1,78 @@
+SOURCE_FILE@0..147
+  MODULE@0..146
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..22
+      IDENT@12..22 "friend_fun"
+    WHITESPACE@22..23 " "
+    L_CURLY@23..24 "{"
+    WHITESPACE@24..29 "\n    "
+    FUN@29..50
+      VISIBILITY_MODIFIER@29..35
+        FRIEND_KW@29..35 "friend"
+      WHITESPACE@35..36 " "
+      FUN_KW@36..39 "fun"
+      WHITESPACE@39..40 " "
+      NAME@40..45
+        IDENT@40..45 "main1"
+      PARAM_LIST@45..47
+        L_PAREN@45..46 "("
+        R_PAREN@46..47 ")"
+      WHITESPACE@47..48 " "
+      BLOCK_EXPR@48..50
+        L_CURLY@48..49 "{"
+        R_CURLY@49..50 "}"
+    WHITESPACE@50..55 "\n    "
+    FUN@55..83
+      VISIBILITY_MODIFIER@55..61
+        FRIEND_KW@55..61 "friend"
+      WHITESPACE@61..62 " "
+      INLINE_KW@62..68 "inline"
+      WHITESPACE@68..69 " "
+      FUN_KW@69..72 "fun"
+      WHITESPACE@72..73 " "
+      NAME@73..78
+        IDENT@73..78 "main2"
+      PARAM_LIST@78..80
+        L_PAREN@78..79 "("
+        R_PAREN@79..80 ")"
+      WHITESPACE@80..81 " "
+      BLOCK_EXPR@81..83
+        L_CURLY@81..82 "{"
+        R_CURLY@82..83 "}"
+    WHITESPACE@83..88 "\n    "
+    FUN@88..114
+      VISIBILITY_MODIFIER@88..94
+        FRIEND_KW@88..94 "friend"
+      WHITESPACE@94..95 " "
+      NATIVE_KW@95..101 "native"
+      WHITESPACE@101..102 " "
+      FUN_KW@102..105 "fun"
+      WHITESPACE@105..106 " "
+      NAME@106..111
+        IDENT@106..111 "main3"
+      PARAM_LIST@111..113
+        L_PAREN@111..112 "("
+        R_PAREN@112..113 ")"
+      SEMICOLON@113..114 ";"
+    WHITESPACE@114..119 "\n    "
+    FUN@119..144
+      VISIBILITY_MODIFIER@119..125
+        FRIEND_KW@119..125 "friend"
+      WHITESPACE@125..126 " "
+      ENTRY_KW@126..131 "entry"
+      WHITESPACE@131..132 " "
+      FUN_KW@132..135 "fun"
+      WHITESPACE@135..136 " "
+      NAME@136..141
+        IDENT@136..141 "main4"
+      PARAM_LIST@141..143
+        L_PAREN@141..142 "("
+        R_PAREN@142..143 ")"
+      SEMICOLON@143..144 ";"
+    WHITESPACE@144..145 "\n"
+    R_CURLY@145..146 "}"
+  WHITESPACE@146..147 "\n"
