@@ -1,6 +1,7 @@
 use crate::SyntaxKind::{LEMMA, PROOF, PROOF_BLOCK};
 use crate::T;
-use crate::parse::grammar::expressions::atom::block_expr;
+use crate::parse::grammar::expressions::blocks;
+use crate::parse::grammar::expressions::blocks::StmtKind;
 use crate::parse::grammar::type_params::opt_type_param_list;
 use crate::parse::grammar::{name, name_or_recover, params};
 use crate::parse::parser::Parser;
@@ -12,7 +13,7 @@ pub(crate) fn proof(p: &mut Parser) {
     let m = p.start();
     p.bump_remap(T![proof]);
     if p.at(T!['{']) {
-        block_expr(p, true);
+        blocks::block_expr(p, StmtKind::Spec);
     } else {
         p.error("expected a block");
     }
@@ -31,7 +32,7 @@ pub(crate) fn lemma(p: &mut Parser) {
         p.error_and_recover("expected parameters", TokenSet::EMPTY);
     }
     if p.at(T!['{']) {
-        block_expr(p, true);
+        blocks::block_expr(p, StmtKind::Spec);
     } else {
         p.error("expected block");
     }

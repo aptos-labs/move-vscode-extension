@@ -16,7 +16,7 @@ use crate::parse::grammar::specs::schemas::{
     apply_schema, global_variable, include_schema, schema_field,
 };
 use crate::parse::grammar::utils::delimited_with_recovery;
-use crate::parse::grammar::{attributes, error_block, name_ref, patterns, type_args, types};
+use crate::parse::grammar::{attributes, name_ref, patterns, type_args, types};
 use crate::parse::parser::{CompletedMarker, Marker, Parser};
 use crate::parse::token_set::TokenSet;
 use crate::{SyntaxKind, T, ts};
@@ -25,7 +25,7 @@ use std::iter;
 use std::ops::ControlFlow::Continue;
 
 pub(crate) mod atom;
-pub(crate) mod stmts;
+pub(crate) mod blocks;
 
 pub(crate) fn expr(p: &mut Parser) -> bool {
     let r = Restrictions {
@@ -391,17 +391,6 @@ pub(crate) fn stmt_expr(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> 
         prefer_stmt: true,
     };
     expr_bp(p, None, r, 1)
-}
-
-pub(super) fn expr_block_contents(p: &mut Parser, is_spec: bool) {
-    p.iterate_to_EOF(T!['}'], |p| {
-        if p.at(T![;]) {
-            p.bump(T![;]);
-            return Continue(());
-        }
-        p.with_recovery_token_set(T!['}'], |p| stmts::stmt(p, false, is_spec));
-        Continue(())
-    });
 }
 
 #[derive(Clone, Copy, Default)]

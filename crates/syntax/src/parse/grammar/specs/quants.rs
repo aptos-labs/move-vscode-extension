@@ -6,8 +6,7 @@
 
 use crate::SyntaxKind::*;
 use crate::T;
-use crate::parse::grammar::expressions::atom::block_expr;
-use crate::parse::grammar::expressions::{expr, expr_block_contents, stmt_expr, stmts};
+use crate::parse::grammar::expressions::{expr, stmt_expr};
 use crate::parse::grammar::specs::predicates::expect_expr;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{patterns, types};

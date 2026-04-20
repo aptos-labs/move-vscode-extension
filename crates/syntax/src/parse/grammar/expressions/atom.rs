@@ -5,11 +5,11 @@
 // Modifications have been made to the original code.
 
 use super::*;
+use crate::parse::grammar::expressions::blocks::{StmtKind, block_expr, block_or_inline_expr};
 use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::patterns::pat;
 use crate::parse::grammar::specs::{opt_spec_block_expr, spec_block_expr};
 use crate::parse::grammar::{any_address, paths};
-use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
 use crate::ts;
 use std::ops::ControlFlow::Break;
@@ -122,7 +122,7 @@ pub(crate) fn atom_expr(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> 
                 }
             }
         }
-        T!['{'] => block_expr(p, false),
+        T!['{'] => block_expr(p, StmtKind::Move),
         T![return] => return_expr(p),
         T![abort] => abort_expr(p),
         T![continue] => continue_expr(p),
@@ -263,11 +263,11 @@ fn if_expr(p: &mut Parser) -> CompletedMarker {
     let m = p.start();
     p.bump(T![if]);
     condition(p);
-    block_or_inline_expr(p, false);
+    block_or_inline_expr(p, StmtKind::Move);
     if p.at(T![else]) {
         p.bump(T![else]);
         // `else if /*expr*/` parsed as inline expr - `else (if /*expr*/)`
-        block_or_inline_expr(p, false);
+        block_or_inline_expr(p, StmtKind::Move);
     }
     m.complete(p, IF_EXPR)
 }
@@ -284,7 +284,7 @@ fn loop_expr(p: &mut Parser, m: Option<Marker>) -> CompletedMarker {
     assert!(p.at(T![loop]));
     let m = m.unwrap_or_else(|| p.start());
     p.bump(T![loop]);
-    block_or_inline_expr(p, false);
+    block_or_inline_expr(p, StmtKind::Move);
     m.complete(p, LOOP_EXPR)
 }
 
@@ -293,7 +293,7 @@ fn for_expr(p: &mut Parser, m: Option<Marker>) -> CompletedMarker {
     let m = m.unwrap_or_else(|| p.start());
     p.bump_remap(T![for]);
     for_condition(p);
-    block_or_inline_expr(p, false);
+    block_or_inline_expr(p, StmtKind::Move);
     m.complete(p, FOR_EXPR)
 }
 
@@ -319,7 +319,7 @@ fn while_expr(p: &mut Parser, m: Option<Marker>) -> CompletedMarker {
     let m = m.unwrap_or_else(|| p.start());
     p.bump(T![while]);
     condition(p);
-    block_or_inline_expr(p, false);
+    block_or_inline_expr(p, StmtKind::Move);
     opt_spec_block_expr(p);
     m.complete(p, WHILE_EXPR)
 }
@@ -397,36 +397,11 @@ fn match_guard(p: &mut Parser) -> CompletedMarker {
     m.complete(p, MATCH_GUARD)
 }
 
-pub(crate) fn block_or_inline_expr(p: &mut Parser, is_spec: bool) {
-    if p.at(T!['{']) {
-        block_expr(p, is_spec);
-    } else {
-        inline_expr(p);
-    }
-}
-
-pub(crate) fn block_expr(p: &mut Parser, is_spec: bool) -> CompletedMarker {
-    assert!(p.at(T!['{']));
-    // we're in new block, we can't use recovery set rules from before
-    p.reset_recovery_set(|p| {
-        let m = p.start();
-        stmt_list(p, is_spec);
-        m.complete(p, BLOCK_EXPR)
-    })
-}
-
 pub(crate) fn inline_expr(p: &mut Parser) {
     assert!(!p.at(T!['{']));
     let m = p.start();
     expr(p);
     m.complete(p, INLINE_EXPR);
-}
-
-fn stmt_list(p: &mut Parser, is_spec: bool) {
-    assert!(p.at(T!['{']));
-    p.bump(T!['{']);
-    expr_block_contents(p, is_spec);
-    p.expect(T!['}']);
 }
 
 fn return_expr(p: &mut Parser) -> CompletedMarker {

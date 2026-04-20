@@ -6,8 +6,9 @@
 
 use crate::SyntaxKind::*;
 use crate::T;
-use crate::parse::grammar::expressions::atom::{block_expr, condition};
-use crate::parse::grammar::expressions::{Restrictions, expr, expr_bp, opt_initializer_expr};
+use crate::parse::grammar::expressions::atom::condition;
+use crate::parse::grammar::expressions::blocks::StmtKind;
+use crate::parse::grammar::expressions::{Restrictions, blocks, expr, expr_bp, opt_initializer_expr};
 use crate::parse::grammar::items::item_start_rec_set;
 use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::patterns::ident_pat_or_recover;
@@ -30,7 +31,7 @@ pub(crate) fn schema(p: &mut Parser, m: Marker) {
     // type_params::opt_type_param_list(p);
     // block_expr(p, true);
     if p.at(T!['{']) {
-        block_expr(p, true);
+        blocks::block_expr(p, StmtKind::Spec);
     } else {
         p.error("expected a block");
     }

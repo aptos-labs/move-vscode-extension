@@ -1,0 +1,69 @@
+SOURCE_FILE@0..125
+  MODULE@0..124
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..44
+      IDENT@12..44 "forall_quant_allowed_ ..."
+    WHITESPACE@44..45 " "
+    L_CURLY@45..46 "{"
+    WHITESPACE@46..51 "\n    "
+    SPEC_FUN@51..122
+      SPEC_KW@51..55 "spec"
+      WHITESPACE@55..56 " "
+      FUN_KW@56..59 "fun"
+      WHITESPACE@59..60 " "
+      NAME@60..72
+        IDENT@60..72 "all_positive"
+      PARAM_LIST@72..74
+        L_PAREN@72..73 "("
+        R_PAREN@73..74 ")"
+      RET_TYPE@74..80
+        COLON@74..75 ":"
+        WHITESPACE@75..76 " "
+        PATH_TYPE@76..80
+          PATH@76..80
+            PATH_SEGMENT@76..80
+              NAME_REF@76..80
+                IDENT@76..80 "bool"
+      WHITESPACE@80..81 " "
+      BLOCK_EXPR@81..122
+        L_CURLY@81..82 "{"
+        WHITESPACE@82..91 "\n        "
+        FORALL_EXPR@91..116
+          FORALL_KW@91..97 "forall"
+          WHITESPACE@97..98 " "
+          QUANT_BINDING_LIST@98..108
+            QUANT_BINDING@98..108
+              IDENT_PAT@98..99
+                NAME@98..99
+                  IDENT@98..99 "i"
+              WHITESPACE@99..100 " "
+              IN_KW@100..102 "in"
+              WHITESPACE@102..103 " "
+              RANGE_EXPR@103..108
+                LITERAL@103..104
+                  INT_NUMBER@103..104 "0"
+                DOT_DOT@104..106 ".."
+                LITERAL@106..108
+                  INT_NUMBER@106..108 "10"
+          COLON@108..109 ":"
+          WHITESPACE@109..110 " "
+          BIN_EXPR@110..116
+            PATH_EXPR@110..111
+              PATH@110..111
+                PATH_SEGMENT@110..111
+                  NAME_REF@110..111
+                    IDENT@110..111 "i"
+            WHITESPACE@111..112 " "
+            GT_EQ@112..114 ">="
+            WHITESPACE@114..115 " "
+            LITERAL@115..116
+              INT_NUMBER@115..116 "0"
+        WHITESPACE@116..121 "\n    "
+        R_CURLY@121..122 "}"
+    WHITESPACE@122..123 "\n"
+    R_CURLY@123..124 "}"
+  WHITESPACE@124..125 "\n"

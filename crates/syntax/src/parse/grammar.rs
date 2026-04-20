@@ -246,16 +246,6 @@ fn name_or_recover(p: &mut Parser, extra: RecoverySet) -> bool {
     true
 }
 
-fn error_block(p: &mut Parser, message: &str) {
-    assert!(p.at(T!['{']));
-    let m = p.start();
-    p.error(message);
-    p.bump(T!['{']);
-    expressions::expr_block_contents(p, false);
-    p.eat(T!['}']);
-    m.complete(p, ERROR);
-}
-
 pub(crate) fn abilities_list(p: &mut Parser) {
     assert!(p.at_contextual_kw_ident("has"));
     let m = p.start();

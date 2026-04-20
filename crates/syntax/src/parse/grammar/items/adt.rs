@@ -9,9 +9,7 @@ use crate::T;
 use crate::parse::grammar::attributes::ATTRIBUTE_FIRST;
 use crate::parse::grammar::items::item_start_rec_set;
 use crate::parse::grammar::utils::delimited_with_recovery;
-use crate::parse::grammar::{
-    abilities_list, attributes, error_block, name_or_recover, type_params, types,
-};
+use crate::parse::grammar::{abilities_list, attributes, name_or_recover, type_params, types};
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;

@@ -10,20 +10,19 @@ pub(crate) mod item_spec;
 pub(crate) mod use_item;
 
 use crate::SyntaxKind::*;
-use crate::parse::grammar::expressions::{EXPR_FIRST, expr, stmts};
+use crate::parse::grammar::expressions::blocks::use_stmt;
+use crate::parse::grammar::expressions::{blocks, expr};
 use crate::parse::grammar::items::fun::{
-    function_modifier_kws, function_modifier_recovery_set, function_modifier_tokens,
-    on_function_modifiers_start, on_visibility_modifier_start, visibility_modifier,
+    function_modifier_kws, function_modifier_recovery_set, on_function_modifiers_start,
+    on_visibility_modifier_start, visibility_modifier,
 };
-use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::patterns::STMT_FIRST;
 use crate::parse::grammar::specs::schemas::schema;
-use crate::parse::grammar::{attributes, error_block, name_or_recover, paths, types};
+use crate::parse::grammar::{attributes, name_or_recover, paths, types};
 use crate::parse::parser::{Marker, Parser};
 use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
 use crate::{SyntaxKind, T};
-use std::ops::ControlFlow;
 use std::ops::ControlFlow::{Break, Continue};
 
 pub(crate) fn item_list(p: &mut Parser) {
@@ -58,7 +57,7 @@ pub(super) fn item(p: &mut Parser) {
 
     // couldn't find an item
     match p.current() {
-        T!['{'] => error_block(p, "expected an item, got a block"),
+        T!['{'] => blocks::error_block(p, "expected an item, got a block"),
         // T!['}'] if !stop_on_r_curly => {
         //     let e = p.start();
         //     p.error("unmatched `}`");
@@ -80,7 +79,7 @@ fn after_vis_modifier_item_set() -> RecoverySet {
 /// Try to parse an item, completing `m` in case of success.
 pub(super) fn opt_item(p: &mut Parser, m: Marker) -> Result<(), Marker> {
     match p.current() {
-        T![use] => p.with_recovery_set(item_start_kws_only(), |p| stmts::use_stmt(p, m)),
+        T![use] => p.with_recovery_set(item_start_kws_only(), |p| use_stmt(p, m)),
         T![const] => const_(p, m),
 
         // todo: does not handle `friend native myfun()` cases

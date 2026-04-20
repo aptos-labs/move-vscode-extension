@@ -1,12 +1,6 @@
-// Copyright © Aptos Foundation
-// SPDX-License-Identifier: Apache-2.0
-
-// This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
-// Modifications have been made to the original code.
-
-use crate::SyntaxKind::{EOF, EXPR_STMT, LEMMA, LET_STMT, USE_STMT};
+use crate::SyntaxKind::{BLOCK_EXPR, EOF, ERROR, EXPR_STMT, LET_STMT, USE_STMT};
 use crate::T;
-use crate::parse::grammar::expressions::atom::block_expr;
+use crate::parse::grammar::expressions::atom::inline_expr;
 use crate::parse::grammar::expressions::{opt_initializer_expr, stmt_expr};
 use crate::parse::grammar::items::{fun, stmt_start_kws, use_item};
 use crate::parse::grammar::patterns::pat;
@@ -15,12 +9,70 @@ use crate::parse::grammar::specs::proofs_and_lemmas::lemma;
 use crate::parse::grammar::specs::schemas::{
     apply_schema, global_variable, include_schema, schema_field,
 };
-use crate::parse::grammar::type_params::opt_type_param_list;
-use crate::parse::grammar::{attributes, params, types};
-use crate::parse::parser::{Marker, Parser};
-use crate::parse::token_set::TokenSet;
+use crate::parse::grammar::{attributes, types};
+use crate::parse::parser::{CompletedMarker, Marker, Parser};
+use std::ops::ControlFlow::Continue;
 
-pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
+#[derive(Debug, Copy, Clone)]
+pub(crate) enum StmtKind {
+    Move,
+    Spec,
+    Proof,
+}
+
+impl StmtKind {
+    pub(crate) fn is_spec(&self) -> bool {
+        !matches!(self, StmtKind::Move)
+    }
+}
+
+pub(crate) fn block_or_inline_expr(p: &mut Parser, kind: StmtKind) {
+    if p.at(T!['{']) {
+        block_expr(p, kind);
+    } else {
+        inline_expr(p);
+    }
+}
+
+pub(crate) fn block_expr(p: &mut Parser, kind: StmtKind) -> CompletedMarker {
+    assert!(p.at(T!['{']));
+    // we're in new block, we can't use recovery set rules from before
+    p.reset_recovery_set(|p| {
+        let m = p.start();
+        stmt_list(p, kind);
+        m.complete(p, BLOCK_EXPR)
+    })
+}
+
+pub(crate) fn error_block(p: &mut Parser, message: &str) {
+    assert!(p.at(T!['{']));
+    let m = p.start();
+    p.error(message);
+    p.bump(T!['{']);
+    expr_block_contents(p, StmtKind::Move);
+    p.eat(T!['}']);
+    m.complete(p, ERROR);
+}
+
+pub(crate) fn stmt_list(p: &mut Parser, kind: StmtKind) {
+    assert!(p.at(T!['{']));
+    p.bump(T!['{']);
+    expr_block_contents(p, kind);
+    p.expect(T!['}']);
+}
+
+pub(super) fn expr_block_contents(p: &mut Parser, kind: StmtKind) {
+    p.iterate_to_EOF(T!['}'], |p| {
+        if p.at(T![;]) {
+            p.bump(T![;]);
+            return Continue(());
+        }
+        p.with_recovery_token_set(T!['}'], |p| stmt(p, false, kind));
+        Continue(())
+    });
+}
+
+pub(crate) fn stmt(p: &mut Parser, prefer_expr: bool, stmt_kind: StmtKind) {
     let use_stmt_m = p.start();
     let mut attrs = attributes::outer_attrs(p);
     if p.at(T![use]) {
@@ -37,11 +89,11 @@ pub(super) fn stmt(p: &mut Parser, prefer_expr: bool, is_spec: bool) {
     use_stmt_m.abandon(p);
 
     if p.at(T![let]) {
-        let_stmt(p, is_spec);
+        let_stmt(p, stmt_kind.is_spec());
         return;
     }
 
-    if is_spec {
+    if stmt_kind.is_spec() {
         if p.at(T![native]) && p.nth_at(1, T![fun]) || p.at(T![fun]) {
             fun::spec_inline_function(p);
             return;
