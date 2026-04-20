@@ -14,11 +14,7 @@ use crate::parse::token_set::TokenSet;
 use crate::{SyntaxKind, T};
 use std::ops::ControlFlow::{Break, Continue};
 
-pub(crate) fn let_pat(p: &mut Parser) -> bool {
-    let_pat_or_recover(p, TokenSet::EMPTY)
-}
-
-pub(crate) fn let_pat_or_recover(p: &mut Parser, extra_set: impl Into<RecoverySet>) -> bool {
+pub(crate) fn pattern(p: &mut Parser) -> bool {
     match p.current() {
         // 0x1 '::'
         INT_NUMBER if p.nth_at(1, T![::]) => path_pat(p),
@@ -29,7 +25,7 @@ pub(crate) fn let_pat_or_recover(p: &mut Parser, extra_set: impl Into<RecoverySe
         T!['('] => tuple_or_unit_or_paren_pat(p),
 
         _ => {
-            p.error_and_recover("expected pattern", extra_set.into());
+            p.error_and_recover("expected pattern", TokenSet::EMPTY);
             return false;
         }
     };
@@ -76,17 +72,18 @@ fn tuple_pat_fields(p: &mut Parser) {
     assert!(p.at(T!['(']));
     p.bump(T!['(']);
 
-    delimited_with_recovery(p, let_pat, T![,], "expected pattern", Some(T![')']));
+    delimited_with_recovery(p, pattern, T![,], "expected pattern", Some(T![')']));
 
     p.expect(T![')']);
 }
 
 fn struct_pat_field(p: &mut Parser) -> bool {
     match p.current() {
+        // pat unpack
         IDENT if p.nth(1) == T![:] => {
             name_ref(p);
             p.bump(T![:]);
-            let_pat(p);
+            pattern(p);
         }
         IDENT => {
             ident_pat(p);
@@ -169,7 +166,7 @@ fn tuple_or_unit_or_paren_pat(p: &mut Parser) -> CompletedMarker {
 
     let outer_recovery_set = p.outer_recovery_set();
     p.iterate_to_EOF(T![')'], |p| {
-        let found_pat = let_pat_or_recover(p, T![,] | T![')']);
+        let found_pat = p.with_recovery_token_set(T![,] | T![')'], pattern);
         if found_pat {
             has_pat = true;
         }
@@ -220,7 +217,7 @@ pub(crate) const EXPR_STMT_FIRST: TokenSet = TokenSet::new(&[
     T![if],
     T![while],
     T![loop],
-    T![match]
+    // T![match]
 ]);
 
 #[rustfmt::skip]

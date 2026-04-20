@@ -356,7 +356,7 @@ pub(crate) fn opt_initializer_expr(p: &mut Parser) {
     }
 }
 
-pub(crate) fn stmt_expr(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> {
+pub(crate) fn top_level_expr_in_stmt(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> {
     let r = Restrictions {
         forbid_structs: false,
         prefer_stmt: true,
