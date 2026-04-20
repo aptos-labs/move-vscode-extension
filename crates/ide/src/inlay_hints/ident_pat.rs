@@ -8,7 +8,7 @@ use crate::inlay_hints::{InlayHint, InlayHintPosition, InlayHintsConfig, InlayKi
 use ide_db::RootDatabase;
 use lang::Semantics;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
-use syntax::files::InFile;
+use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
 
 pub(super) fn hints(
@@ -47,6 +47,18 @@ pub(super) fn hints(
             }
             if !config.tuple_type_hints && ident_pat.syntax().parent_is::<ast::TuplePat>() {
                 return None;
+            }
+            // let a = &Res[addr];
+            // let a = &mut Res[addr];
+            if ident_pat.syntax().parent_is::<ast::LetStmt>()
+                && let Some(initializer) = let_stmt.initializer()
+                && let Some((base_path_expr, _)) = initializer.borrow_global_index_expr()
+            {
+                if let Some(_) = sema.resolve_to_element::<ast::StructOrEnum>(
+                    base_path_expr.path().reference().in_file(file_id),
+                ) {
+                    return None;
+                }
             }
             let_stmt.colon_token()
         }

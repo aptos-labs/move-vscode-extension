@@ -236,3 +236,17 @@ fn test_inlay_hints_for_tuple_disabled() {
         "#]],
     );
 }
+
+#[test]
+fn test_no_inlay_hint_for_index_expr_borrow_global() {
+    // language=Move
+    check_inlay_hints(expect![[r#"
+            module 0x1::m {
+                struct Res has key {}
+                fun main() {
+                    let a = &Res[@0x1];
+                    let b = &mut Res[@0x1];
+                }
+            }
+        "#]]);
+}
