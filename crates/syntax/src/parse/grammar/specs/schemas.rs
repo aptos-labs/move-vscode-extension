@@ -23,7 +23,7 @@ use std::ops::ControlFlow::{Break, Continue};
 pub(crate) fn schema(p: &mut Parser, m: Marker) {
     assert!(p.at_contextual_kw_ident("schema"));
     p.bump_remap(T![schema]);
-    p.with_recovery_set(item_start_rec_set(), |p| {
+    p.with_recovery(item_start_rec_set(), |p| {
         name_or_recover(p, item_start_rec_set());
         type_params::opt_type_param_list(p);
     });

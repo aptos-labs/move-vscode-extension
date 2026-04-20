@@ -83,7 +83,7 @@ pub(crate) fn quant_binding_list(p: &mut Parser) {
         // end of quant bindings
         .with_kw("where")
         .with_ts(T![:]);
-    p.with_recovery_set(stop_at, |p| {
+    p.with_recovery(stop_at, |p| {
         delimited_with_recovery(p, quant_binding, T![,], "expected quant binding", None)
     });
     m.complete(p, QUANT_BINDING_LIST);
@@ -117,7 +117,7 @@ fn quant_trigger_list(p: &mut Parser) {
     // we're in new block, we can't use recovery set rules from before
     let m = p.start();
     p.bump(T!['{']);
-    p.reset_recovery_set(|p| {
+    p.reset_recovery(|p| {
         delimited_with_recovery(p, expr, T![,], "expected expr", Some(T!['}']));
     });
     p.expect(T!['}']);

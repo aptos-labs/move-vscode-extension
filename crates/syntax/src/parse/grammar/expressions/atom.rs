@@ -7,7 +7,7 @@
 use super::*;
 use crate::parse::grammar::expressions::blocks::{StmtKind, block_expr, block_or_inline_expr};
 use crate::parse::grammar::paths::PathMode;
-use crate::parse::grammar::patterns::pat;
+use crate::parse::grammar::patterns::let_pat;
 use crate::parse::grammar::specs::{opt_spec_block_expr, spec_block_expr};
 use crate::parse::grammar::{any_address, paths};
 use crate::parse::token_set::TokenSet;
@@ -342,7 +342,7 @@ pub(crate) fn match_arm_list(p: &mut Parser) {
     let m = p.start();
     p.eat(T!['{']);
     // it's an expr block too
-    p.reset_recovery_set(|p| {
+    p.reset_recovery(|p| {
         p.iterate_to_EOF(T!['}'], |p| {
             match_arm(p, TokenSet::EMPTY);
             Continue(())
@@ -354,7 +354,7 @@ pub(crate) fn match_arm_list(p: &mut Parser) {
 
 fn match_arm(p: &mut Parser, recovery_set: TokenSet) -> bool {
     let m = p.start();
-    p.with_recovery_token_set(T![=>] | T!['}'], pat);
+    p.with_recovery_token_set(T![=>] | T!['}'], let_pat);
     // if !is_pat {
     //     m.abandon(p);
     //     return false;

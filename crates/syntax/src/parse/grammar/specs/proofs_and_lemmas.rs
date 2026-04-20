@@ -1,9 +1,11 @@
-use crate::SyntaxKind::{LEMMA, PROOF, PROOF_BLOCK};
+use crate::SyntaxKind::{APPLY_LEMMA, LEMMA, PROOF};
 use crate::T;
 use crate::parse::grammar::expressions::blocks;
 use crate::parse::grammar::expressions::blocks::StmtKind;
+use crate::parse::grammar::params::fun_param_list;
+use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::type_params::opt_type_param_list;
-use crate::parse::grammar::{name, name_or_recover, params};
+use crate::parse::grammar::{expressions, name, params, paths};
 use crate::parse::parser::Parser;
 use crate::parse::token_set::TokenSet;
 
@@ -13,7 +15,7 @@ pub(crate) fn proof(p: &mut Parser) {
     let m = p.start();
     p.bump_remap(T![proof]);
     if p.at(T!['{']) {
-        blocks::block_expr(p, StmtKind::Spec);
+        blocks::block_expr(p, StmtKind::Proof);
     } else {
         p.error("expected a block");
     }
@@ -37,4 +39,19 @@ pub(crate) fn lemma(p: &mut Parser) {
         p.error("expected block");
     }
     m.complete(p, LEMMA);
+}
+
+pub(crate) fn apply_lemma(p: &mut Parser) -> bool {
+    if !p.at_contextual_kw_ident("apply") {
+        return false;
+    }
+    let m = p.start();
+    p.bump_remap(T![apply]);
+    // lemma name
+    paths::path(p, Some(PathMode::Type));
+    // lemma args
+    expressions::value_arg_list(p);
+    p.expect(T![;]);
+    m.complete(p, APPLY_LEMMA);
+    true
 }

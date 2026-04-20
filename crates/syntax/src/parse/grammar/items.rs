@@ -79,7 +79,7 @@ fn after_vis_modifier_item_set() -> RecoverySet {
 /// Try to parse an item, completing `m` in case of success.
 pub(super) fn opt_item(p: &mut Parser, m: Marker) -> Result<(), Marker> {
     match p.current() {
-        T![use] => p.with_recovery_set(item_start_kws_only(), |p| use_stmt(p, m)),
+        T![use] => p.with_recovery(item_start_kws_only(), |p| use_stmt(p, m)),
         T![const] => const_(p, m),
 
         // todo: does not handle `friend native myfun()` cases
@@ -134,7 +134,7 @@ fn const_(p: &mut Parser, m: Marker) {
         return;
     }
 
-    p.with_recovery_set(item_start_rec_set().with_ts(T![;]), |p| {
+    p.with_recovery(item_start_rec_set().with_ts(T![;]), |p| {
         p.with_recovery_token(T![=], |p| {
             if p.at(T![:]) {
                 types::type_annotation(p);
@@ -191,14 +191,14 @@ pub(crate) fn at_item_start(p: &Parser) -> bool {
 
 // safe recovery set for `item_start()`
 pub(crate) fn item_start_kws_only() -> RecoverySet {
-    RecoverySet::from_ts(ITEM_KEYWORDS).with_merged(function_modifier_kws())
+    RecoverySet::from_ts(ITEM_KEYWORDS).with_another_rs(function_modifier_kws())
 }
 
 pub(crate) fn item_start_rec_set() -> RecoverySet {
     RecoverySet::new()
         .with_ts(ITEM_KEYWORDS)
         .with_kw("enum")
-        .with_merged(function_modifier_recovery_set())
+        .with_another_rs(function_modifier_recovery_set())
 }
 
 pub(crate) fn at_stmt_kw_start() -> RecoverySet {

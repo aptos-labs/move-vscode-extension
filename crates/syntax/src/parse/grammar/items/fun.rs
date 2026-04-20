@@ -156,7 +156,7 @@ fn acquires(p: &mut Parser) {
 fn fun_signature(p: &mut Parser, allow_acquires: bool) -> bool {
     p.bump(T![fun]);
 
-    let has_name = p.with_recovery_set(item_start_rec_set(), |p| {
+    let has_name = p.with_recovery(item_start_rec_set(), |p| {
         if !name_or_recover(p, (T![<] | T!['(']).into()) {
             return false;
         }
@@ -168,7 +168,7 @@ fn fun_signature(p: &mut Parser, allow_acquires: bool) -> bool {
     }
 
     let signature_recovery_set = item_start_rec_set().with_ts(T![;] | T!['{']);
-    p.with_recovery_set(signature_recovery_set, |p| {
+    p.with_recovery(signature_recovery_set, |p| {
         if p.at(T!['(']) {
             params::fun_param_list(p);
         } else {
@@ -177,7 +177,7 @@ fn fun_signature(p: &mut Parser, allow_acquires: bool) -> bool {
     });
 
     let item_rec_set = item_start_rec_set().with_ts(T!['{'] | T![;]);
-    p.with_recovery_set(item_rec_set, |p| {
+    p.with_recovery(item_rec_set, |p| {
         p.with_recovery_token(T![acquires], opt_ret_type);
         if p.at(T![acquires]) {
             if allow_acquires {

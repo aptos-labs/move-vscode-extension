@@ -111,7 +111,7 @@ fn opt_abilities_list_with_semicolon(p: &mut Parser) {
 
 fn opt_abilities_list(p: &mut Parser) -> bool {
     if p.at_contextual_kw_ident("has") {
-        p.with_recovery_set(item_start_rec_set(), abilities_list);
+        p.with_recovery(item_start_rec_set(), abilities_list);
         return true;
     }
     false

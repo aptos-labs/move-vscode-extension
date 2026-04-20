@@ -123,7 +123,7 @@ pub(crate) fn address_def(p: &mut Parser, m: Marker) {
 
 pub(crate) fn module_spec(p: &mut Parser, m: Marker) {
     p.bump(T![spec]);
-    p.with_recovery_set(top_level_set().with_ts(T!['{']), |p| paths::path(p, None));
+    p.with_recovery(top_level_set().with_ts(T!['{']), |p| paths::path(p, None));
 
     if p.at(T!['{']) {
         items::item_list(p);
@@ -234,7 +234,7 @@ fn name_or_recover(p: &mut Parser, extra: RecoverySet) -> bool {
         return false;
     }
 
-    let rec_set = p.outer_recovery_set().with_merged(extra);
+    let rec_set = p.outer_recovery_set().with_another_rs(extra);
     if rec_set.contains_current(p) {
         p.error(&format!("expected identifier, got '{}'", p.current_text()));
         return false;

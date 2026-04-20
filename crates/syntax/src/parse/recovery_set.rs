@@ -60,7 +60,7 @@ impl RecoverySet {
         rset
     }
 
-    pub(crate) fn with_merged(mut self, other: RecoverySet) -> Self {
+    pub(crate) fn with_another_rs(mut self, other: RecoverySet) -> Self {
         self.token_set = self.token_set.union(other.token_set);
         self.keywords.extend(other.keywords);
         self

@@ -89,7 +89,7 @@ pub(crate) fn path_segment(
         _ => {
             p.error_and_recover(
                 "expected identifier",
-                item_start_rec_set().with_merged(RecoverySet::from_ts(STMT_FIRST)),
+                item_start_rec_set().with_another_rs(RecoverySet::from_ts(STMT_FIRST)),
             );
             m.abandon(p);
             return None;
