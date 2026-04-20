@@ -1,4 +1,4 @@
-use crate::SyntaxKind::{BLOCK_EXPR, EOF, ERROR, EXPR_STMT, LET_STMT, USE_STMT};
+use crate::SyntaxKind::{BLOCK_EXPR, ERROR, EXPR_STMT, LET_STMT, USE_STMT};
 use crate::T;
 use crate::parse::grammar::expressions::atom::inline_expr;
 use crate::parse::grammar::expressions::{opt_initializer_expr, stmt_expr};
@@ -144,12 +144,20 @@ pub(crate) fn stmt(p: &mut Parser, stmt_kind: StmtKind) {
     }
 
     // parse expression stmts
-    if let Some((cm, _)) = p.with_recovery_token(T![;], stmt_expr) {
-        if !p.at(T!['}']) {
-            let m = cm.precede(p);
-            p.expect(T![;]);
-            m.complete(p, EXPR_STMT);
+    if let Some((cm, blocklike)) = p.with_recovery_token(T![;], stmt_expr) {
+        // checks whether it's trailing expr in block
+        if p.at(T!['}']) {
+            return;
         }
+        // wrap `cm` in EXPR_STMT
+        let m = cm.precede(p);
+        if blocklike.is_block() {
+            // after blocks, trailing semicolon is optional
+            p.eat(T![;]);
+        } else {
+            p.expect(T![;]);
+        }
+        m.complete(p, EXPR_STMT);
         return;
     }
 

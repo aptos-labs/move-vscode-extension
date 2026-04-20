@@ -1,0 +1,143 @@
+SOURCE_FILE@0..273
+  MODULE@0..273
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..38
+      IDENT@12..38 "prefer_stmt_block_no_ ..."
+    WHITESPACE@38..39 " "
+    L_CURLY@39..40 "{"
+    WHITESPACE@40..45 "\n    "
+    FUN@45..122
+      FUN_KW@45..48 "fun"
+      WHITESPACE@48..49 " "
+      NAME@49..62
+        IDENT@49..62 "if_then_binop"
+      PARAM_LIST@62..64
+        L_PAREN@62..63 "("
+        R_PAREN@63..64 ")"
+      WHITESPACE@64..65 " "
+      BLOCK_EXPR@65..122
+        L_CURLY@65..66 "{"
+        WHITESPACE@66..75 "\n        "
+        EXPR_STMT@75..101
+          IF_EXPR@75..101
+            IF_KW@75..77 "if"
+            WHITESPACE@77..78 " "
+            CONDITION@78..84
+              L_PAREN@78..79 "("
+              LITERAL@79..83
+                TRUE_KW@79..83 "true"
+              R_PAREN@83..84 ")"
+            WHITESPACE@84..85 " "
+            BLOCK_EXPR@85..90
+              L_CURLY@85..86 "{"
+              WHITESPACE@86..87 " "
+              LITERAL@87..88
+                INT_NUMBER@87..88 "1"
+              WHITESPACE@88..89 " "
+              R_CURLY@89..90 "}"
+            WHITESPACE@90..91 " "
+            ELSE_KW@91..95 "else"
+            WHITESPACE@95..96 " "
+            BLOCK_EXPR@96..101
+              L_CURLY@96..97 "{"
+              WHITESPACE@97..98 " "
+              LITERAL@98..99
+                INT_NUMBER@98..99 "2"
+              WHITESPACE@99..100 " "
+              R_CURLY@100..101 "}"
+        WHITESPACE@101..110 "\n        "
+        EXPR_STMT@110..116
+          BIN_EXPR@110..115
+            LITERAL@110..111
+              INT_NUMBER@110..111 "1"
+            WHITESPACE@111..112 " "
+            PLUS@112..113 "+"
+            WHITESPACE@113..114 " "
+            LITERAL@114..115
+              INT_NUMBER@114..115 "2"
+          SEMICOLON@115..116 ";"
+        WHITESPACE@116..121 "\n    "
+        R_CURLY@121..122 "}"
+    WHITESPACE@122..128 "\n\n    "
+    FUN@128..198
+      FUN_KW@128..131 "fun"
+      WHITESPACE@131..132 " "
+      NAME@132..148
+        IDENT@132..148 "while_then_binop"
+      PARAM_LIST@148..150
+        L_PAREN@148..149 "("
+        R_PAREN@149..150 ")"
+      WHITESPACE@150..151 " "
+      BLOCK_EXPR@151..198
+        L_CURLY@151..152 "{"
+        WHITESPACE@152..161 "\n        "
+        EXPR_STMT@161..177
+          WHILE_EXPR@161..177
+            WHILE_KW@161..166 "while"
+            WHITESPACE@166..167 " "
+            CONDITION@167..173
+              L_PAREN@167..168 "("
+              LITERAL@168..172
+                TRUE_KW@168..172 "true"
+              R_PAREN@172..173 ")"
+            WHITESPACE@173..174 " "
+            BLOCK_EXPR@174..177
+              L_CURLY@174..175 "{"
+              WHITESPACE@175..176 " "
+              R_CURLY@176..177 "}"
+        WHITESPACE@177..186 "\n        "
+        EXPR_STMT@186..192
+          BIN_EXPR@186..191
+            LITERAL@186..187
+              INT_NUMBER@186..187 "1"
+            WHITESPACE@187..188 " "
+            PLUS@188..189 "+"
+            WHITESPACE@189..190 " "
+            LITERAL@190..191
+              INT_NUMBER@190..191 "2"
+          SEMICOLON@191..192 ";"
+        WHITESPACE@192..197 "\n    "
+        R_CURLY@197..198 "}"
+    WHITESPACE@198..204 "\n\n    "
+    FUN@204..271
+      FUN_KW@204..207 "fun"
+      WHITESPACE@207..208 " "
+      NAME@208..223
+        IDENT@208..223 "loop_then_binop"
+      PARAM_LIST@223..225
+        L_PAREN@223..224 "("
+        R_PAREN@224..225 ")"
+      WHITESPACE@225..226 " "
+      BLOCK_EXPR@226..271
+        L_CURLY@226..227 "{"
+        WHITESPACE@227..236 "\n        "
+        EXPR_STMT@236..250
+          LOOP_EXPR@236..250
+            LOOP_KW@236..240 "loop"
+            WHITESPACE@240..241 " "
+            BLOCK_EXPR@241..250
+              L_CURLY@241..242 "{"
+              WHITESPACE@242..243 " "
+              BREAK_EXPR@243..248
+                BREAK_KW@243..248 "break"
+              WHITESPACE@248..249 " "
+              R_CURLY@249..250 "}"
+        WHITESPACE@250..259 "\n        "
+        EXPR_STMT@259..265
+          BIN_EXPR@259..264
+            LITERAL@259..260
+              INT_NUMBER@259..260 "1"
+            WHITESPACE@260..261 " "
+            PLUS@261..262 "+"
+            WHITESPACE@262..263 " "
+            LITERAL@263..264
+              INT_NUMBER@263..264 "2"
+          SEMICOLON@264..265 ";"
+        WHITESPACE@265..270 "\n    "
+        R_CURLY@270..271 "}"
+    WHITESPACE@271..272 "\n"
+    R_CURLY@272..273 "}"

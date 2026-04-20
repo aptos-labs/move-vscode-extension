@@ -1,0 +1,103 @@
+SOURCE_FILE@0..198
+  MODULE@0..198
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..37
+      IDENT@12..37 "prefer_stmt_block_no_ ..."
+    WHITESPACE@37..38 " "
+    L_CURLY@38..39 "{"
+    WHITESPACE@39..44 "\n    "
+    FUN@44..124
+      FUN_KW@44..47 "fun"
+      WHITESPACE@47..48 " "
+      NAME@48..62
+        IDENT@48..62 "if_then_parens"
+      PARAM_LIST@62..64
+        L_PAREN@62..63 "("
+        R_PAREN@63..64 ")"
+      WHITESPACE@64..65 " "
+      BLOCK_EXPR@65..124
+        L_CURLY@65..66 "{"
+        WHITESPACE@66..75 "\n        "
+        EXPR_STMT@75..101
+          IF_EXPR@75..101
+            IF_KW@75..77 "if"
+            WHITESPACE@77..78 " "
+            CONDITION@78..84
+              L_PAREN@78..79 "("
+              LITERAL@79..83
+                TRUE_KW@79..83 "true"
+              R_PAREN@83..84 ")"
+            WHITESPACE@84..85 " "
+            BLOCK_EXPR@85..90
+              L_CURLY@85..86 "{"
+              WHITESPACE@86..87 " "
+              LITERAL@87..88
+                INT_NUMBER@87..88 "1"
+              WHITESPACE@88..89 " "
+              R_CURLY@89..90 "}"
+            WHITESPACE@90..91 " "
+            ELSE_KW@91..95 "else"
+            WHITESPACE@95..96 " "
+            BLOCK_EXPR@96..101
+              L_CURLY@96..97 "{"
+              WHITESPACE@97..98 " "
+              LITERAL@98..99
+                INT_NUMBER@98..99 "2"
+              WHITESPACE@99..100 " "
+              R_CURLY@100..101 "}"
+        WHITESPACE@101..110 "\n        "
+        EXPR_STMT@110..118
+          PAREN_EXPR@110..117
+            L_PAREN@110..111 "("
+            BIN_EXPR@111..116
+              LITERAL@111..112
+                INT_NUMBER@111..112 "1"
+              WHITESPACE@112..113 " "
+              PLUS@113..114 "+"
+              WHITESPACE@114..115 " "
+              LITERAL@115..116
+                INT_NUMBER@115..116 "2"
+            R_PAREN@116..117 ")"
+          SEMICOLON@117..118 ";"
+        WHITESPACE@118..123 "\n    "
+        R_CURLY@123..124 "}"
+    WHITESPACE@124..130 "\n\n    "
+    FUN@130..196
+      FUN_KW@130..133 "fun"
+      WHITESPACE@133..134 " "
+      NAME@134..150
+        IDENT@134..150 "loop_then_parens"
+      PARAM_LIST@150..152
+        L_PAREN@150..151 "("
+        R_PAREN@151..152 ")"
+      WHITESPACE@152..153 " "
+      BLOCK_EXPR@153..196
+        L_CURLY@153..154 "{"
+        WHITESPACE@154..163 "\n        "
+        EXPR_STMT@163..177
+          LOOP_EXPR@163..177
+            LOOP_KW@163..167 "loop"
+            WHITESPACE@167..168 " "
+            BLOCK_EXPR@168..177
+              L_CURLY@168..169 "{"
+              WHITESPACE@169..170 " "
+              BREAK_EXPR@170..175
+                BREAK_KW@170..175 "break"
+              WHITESPACE@175..176 " "
+              R_CURLY@176..177 "}"
+        WHITESPACE@177..186 "\n        "
+        EXPR_STMT@186..190
+          PAREN_EXPR@186..189
+            L_PAREN@186..187 "("
+            LITERAL@187..188
+              INT_NUMBER@187..188 "1"
+            R_PAREN@188..189 ")"
+          SEMICOLON@189..190 ";"
+        WHITESPACE@190..195 "\n    "
+        R_CURLY@195..196 "}"
+    WHITESPACE@196..197 "\n"
+    R_CURLY@197..198 "}"

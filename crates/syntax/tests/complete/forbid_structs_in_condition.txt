@@ -1,0 +1,186 @@
+SOURCE_FILE@0..286
+  MODULE@0..286
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..39
+      IDENT@12..39 "forbid_structs_in_con ..."
+    WHITESPACE@39..40 " "
+    L_CURLY@40..41 "{"
+    WHITESPACE@41..46 "\n    "
+    STRUCT@46..79
+      STRUCT_KW@46..52 "struct"
+      WHITESPACE@52..53 " "
+      NAME@53..54
+        IDENT@53..54 "S"
+      WHITESPACE@54..55 " "
+      ABILITY_LIST@55..63
+        HAS_KW@55..58 "has"
+        WHITESPACE@58..59 " "
+        ABILITY@59..63
+          IDENT@59..63 "drop"
+      WHITESPACE@63..64 " "
+      NAMED_FIELD_LIST@64..79
+        L_CURLY@64..65 "{"
+        WHITESPACE@65..66 " "
+        NAMED_FIELD@66..77
+          NAME@66..71
+            IDENT@66..71 "value"
+          COLON@71..72 ":"
+          WHITESPACE@72..73 " "
+          PATH_TYPE@73..77
+            PATH@73..77
+              PATH_SEGMENT@73..77
+                NAME_REF@73..77
+                  IDENT@73..77 "bool"
+        WHITESPACE@77..78 " "
+        R_CURLY@78..79 "}"
+    WHITESPACE@79..85 "\n\n    "
+    FUN@85..185
+      FUN_KW@85..88 "fun"
+      WHITESPACE@88..89 " "
+      NAME@89..101
+        IDENT@89..101 "if_condition"
+      PARAM_LIST@101..103
+        L_PAREN@101..102 "("
+        R_PAREN@102..103 ")"
+      WHITESPACE@103..104 " "
+      BLOCK_EXPR@104..185
+        L_CURLY@104..105 "{"
+        WHITESPACE@105..114 "\n        "
+        LET_STMT@114..140
+          LET_KW@114..117 "let"
+          WHITESPACE@117..118 " "
+          IDENT_PAT@118..119
+            NAME@118..119
+              IDENT@118..119 "s"
+          WHITESPACE@119..120 " "
+          EQ@120..121 "="
+          WHITESPACE@121..122 " "
+          STRUCT_LIT@122..139
+            PATH@122..123
+              PATH_SEGMENT@122..123
+                NAME_REF@122..123
+                  IDENT@122..123 "S"
+            WHITESPACE@123..124 " "
+            STRUCT_LIT_FIELD_LIST@124..139
+              L_CURLY@124..125 "{"
+              WHITESPACE@125..126 " "
+              STRUCT_LIT_FIELD@126..137
+                NAME_REF@126..131
+                  IDENT@126..131 "value"
+                COLON@131..132 ":"
+                WHITESPACE@132..133 " "
+                LITERAL@133..137
+                  TRUE_KW@133..137 "true"
+              WHITESPACE@137..138 " "
+              R_CURLY@138..139 "}"
+          SEMICOLON@139..140 ";"
+        WHITESPACE@140..149 "\n        "
+        EXPR_STMT@149..179
+          IF_EXPR@149..178
+            IF_KW@149..151 "if"
+            WHITESPACE@151..152 " "
+            CONDITION@152..161
+              L_PAREN@152..153 "("
+              DOT_EXPR@153..160
+                PATH_EXPR@153..154
+                  PATH@153..154
+                    PATH_SEGMENT@153..154
+                      NAME_REF@153..154
+                        IDENT@153..154 "s"
+                DOT@154..155 "."
+                NAME_REF@155..160
+                  IDENT@155..160 "value"
+              R_PAREN@160..161 ")"
+            WHITESPACE@161..162 " "
+            BLOCK_EXPR@162..167
+              L_CURLY@162..163 "{"
+              WHITESPACE@163..164 " "
+              LITERAL@164..165
+                INT_NUMBER@164..165 "1"
+              WHITESPACE@165..166 " "
+              R_CURLY@166..167 "}"
+            WHITESPACE@167..168 " "
+            ELSE_KW@168..172 "else"
+            WHITESPACE@172..173 " "
+            BLOCK_EXPR@173..178
+              L_CURLY@173..174 "{"
+              WHITESPACE@174..175 " "
+              LITERAL@175..176
+                INT_NUMBER@175..176 "2"
+              WHITESPACE@176..177 " "
+              R_CURLY@177..178 "}"
+          SEMICOLON@178..179 ";"
+        WHITESPACE@179..184 "\n    "
+        R_CURLY@184..185 "}"
+    WHITESPACE@185..191 "\n\n    "
+    FUN@191..284
+      FUN_KW@191..194 "fun"
+      WHITESPACE@194..195 " "
+      NAME@195..210
+        IDENT@195..210 "while_condition"
+      PARAM_LIST@210..212
+        L_PAREN@210..211 "("
+        R_PAREN@211..212 ")"
+      WHITESPACE@212..213 " "
+      BLOCK_EXPR@213..284
+        L_CURLY@213..214 "{"
+        WHITESPACE@214..223 "\n        "
+        LET_STMT@223..249
+          LET_KW@223..226 "let"
+          WHITESPACE@226..227 " "
+          IDENT_PAT@227..228
+            NAME@227..228
+              IDENT@227..228 "s"
+          WHITESPACE@228..229 " "
+          EQ@229..230 "="
+          WHITESPACE@230..231 " "
+          STRUCT_LIT@231..248
+            PATH@231..232
+              PATH_SEGMENT@231..232
+                NAME_REF@231..232
+                  IDENT@231..232 "S"
+            WHITESPACE@232..233 " "
+            STRUCT_LIT_FIELD_LIST@233..248
+              L_CURLY@233..234 "{"
+              WHITESPACE@234..235 " "
+              STRUCT_LIT_FIELD@235..246
+                NAME_REF@235..240
+                  IDENT@235..240 "value"
+                COLON@240..241 ":"
+                WHITESPACE@241..242 " "
+                LITERAL@242..246
+                  TRUE_KW@242..246 "true"
+              WHITESPACE@246..247 " "
+              R_CURLY@247..248 "}"
+          SEMICOLON@248..249 ";"
+        WHITESPACE@249..258 "\n        "
+        EXPR_STMT@258..278
+          WHILE_EXPR@258..277
+            WHILE_KW@258..263 "while"
+            WHITESPACE@263..264 " "
+            CONDITION@264..273
+              L_PAREN@264..265 "("
+              DOT_EXPR@265..272
+                PATH_EXPR@265..266
+                  PATH@265..266
+                    PATH_SEGMENT@265..266
+                      NAME_REF@265..266
+                        IDENT@265..266 "s"
+                DOT@266..267 "."
+                NAME_REF@267..272
+                  IDENT@267..272 "value"
+              R_PAREN@272..273 ")"
+            WHITESPACE@273..274 " "
+            BLOCK_EXPR@274..277
+              L_CURLY@274..275 "{"
+              WHITESPACE@275..276 " "
+              R_CURLY@276..277 "}"
+          SEMICOLON@277..278 ";"
+        WHITESPACE@278..283 "\n    "
+        R_CURLY@283..284 "}"
+    WHITESPACE@284..285 "\n"
+    R_CURLY@285..286 "}"
