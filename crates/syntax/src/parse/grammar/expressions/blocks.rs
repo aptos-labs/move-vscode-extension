@@ -12,6 +12,7 @@ use crate::parse::grammar::specs::schemas::{
 use crate::parse::grammar::{attributes, types};
 use crate::parse::parser::{CompletedMarker, Marker, Parser};
 use std::ops::ControlFlow::Continue;
+use std::time::Instant;
 
 #[derive(Debug, Copy, Clone)]
 pub(crate) enum StmtKind {
@@ -143,25 +144,26 @@ pub(crate) fn stmt(p: &mut Parser, stmt_kind: StmtKind) {
         }
     }
 
-    // parse expression stmts
-    if let Some((cm, blocklike)) = p.with_recovery_token(T![;], stmt_expr) {
-        // checks whether it's trailing expr in block
-        if p.at(T!['}']) {
-            return;
+    match p.with_recovery_token(T![;], stmt_expr) {
+        Some((cm, blocklike)) => {
+            // checks whether it's trailing expr in block
+            if p.at(T!['}']) {
+                return;
+            }
+            // wrap `cm` in EXPR_STMT
+            let m = cm.precede(p);
+            if blocklike.is_block() {
+                // after blocks, trailing semicolon is optional
+                p.eat(T![;]);
+            } else {
+                p.expect(T![;]);
+            }
+            m.complete(p, EXPR_STMT);
         }
-        // wrap `cm` in EXPR_STMT
-        let m = cm.precede(p);
-        if blocklike.is_block() {
-            // after blocks, trailing semicolon is optional
-            p.eat(T![;]);
-        } else {
-            p.expect(T![;]);
+        None => {
+            p.error_and_bump(&format!("unexpected token {:?}", p.current()));
         }
-        m.complete(p, EXPR_STMT);
-        return;
     }
-
-    p.error_and_bump(&format!("unexpected token {:?}", p.current()));
 }
 
 fn let_stmt(p: &mut Parser, allow_post: bool) {

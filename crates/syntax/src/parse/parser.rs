@@ -578,6 +578,10 @@ impl Parser {
         for token in tokens.clone() {
             new_rec_set = new_rec_set.with_recovery_token(token);
         }
+        // don't create redundant stack items
+        if new_rec_set.is_empty() {
+            return f(self);
+        }
         self.recovery_set_stack.push(new_rec_set);
         let res = f(self);
         self.recovery_set_stack.pop();
@@ -590,6 +594,14 @@ impl Parser {
         f: impl FnOnce(&mut Parser) -> T,
     ) -> T {
         self.with_recovery_tokens(vec![token.into()], f)
+    }
+
+    pub(crate) fn merged_recovery_set(&self) -> RecoverySet {
+        let mut new_rs = RecoverySet::new();
+        for rs in self.recovery_set_stack.clone() {
+            new_rs = new_rs.with_another_rs(rs);
+        }
+        new_rs
     }
 }
 

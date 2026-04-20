@@ -5,11 +5,18 @@
 // Modifications have been made to the original code.
 
 use crate::{SyntaxKind, T};
+use std::fmt;
 use std::ops::{Add, BitOr};
 
 /// A bit-set of `SyntaxKind`s
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 pub struct TokenSet(pub u128);
+
+impl fmt::Debug for TokenSet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_set().entries(self.kinds().iter()).finish()
+    }
+}
 
 impl From<SyntaxKind> for TokenSet {
     fn from(value: SyntaxKind) -> Self {
@@ -76,8 +83,19 @@ impl TokenSet {
         TokenSet(self.0 & !other.0)
     }
 
+    pub(crate) const fn is_empty(&self) -> bool {
+        self.0 == 0
+    }
+
     pub(crate) const fn contains(&self, kind: SyntaxKind) -> bool {
         self.0 & mask(kind) != 0
+    }
+
+    pub(crate) fn kinds(&self) -> Vec<SyntaxKind> {
+        (0..128u16)
+            .map(|i| unsafe { std::mem::transmute(i) })
+            .filter(|k| self.contains(*k))
+            .collect()
     }
 }
 
