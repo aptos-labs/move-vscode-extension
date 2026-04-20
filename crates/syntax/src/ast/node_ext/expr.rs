@@ -19,4 +19,11 @@ impl ast::Expr {
                 | ast::Expr::MatchExpr(_)
         )
     }
+
+    pub fn borrow_global_index_expr(self) -> Option<(ast::PathExpr, Option<ast::Expr>)> {
+        let borrow_expr = self.borrow_expr()?;
+        let index_expr = borrow_expr.expr()?.index_expr()?;
+        let base_path_expr = index_expr.base_expr().path_expr()?;
+        Some((base_path_expr, index_expr.arg_expr()))
+    }
 }
