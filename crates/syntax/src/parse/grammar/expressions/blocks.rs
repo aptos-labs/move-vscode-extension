@@ -1,9 +1,9 @@
-use crate::SyntaxKind::{BLOCK_EXPR, EOF, ERROR, EXPR_STMT, LET_STMT, USE_STMT};
+use crate::SyntaxKind::{BLOCK_EXPR, ERROR, EXPR_STMT, LET_STMT, USE_STMT};
 use crate::T;
 use crate::parse::grammar::expressions::atom::inline_expr;
-use crate::parse::grammar::expressions::{opt_initializer_expr, stmt_expr};
-use crate::parse::grammar::items::{at_stmt_kw_start, fun, use_item};
-use crate::parse::grammar::patterns::let_pat;
+use crate::parse::grammar::expressions::{opt_initializer_expr, top_level_expr_in_stmt};
+use crate::parse::grammar::items::{at_stmt_start, fun, use_item};
+use crate::parse::grammar::patterns::pattern;
 use crate::parse::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt};
 use crate::parse::grammar::specs::proofs_and_lemmas::{apply_lemma, lemma};
 use crate::parse::grammar::specs::schemas::{
@@ -12,6 +12,7 @@ use crate::parse::grammar::specs::schemas::{
 use crate::parse::grammar::{attributes, types};
 use crate::parse::parser::{CompletedMarker, Marker, Parser};
 use std::ops::ControlFlow::Continue;
+use std::time::Instant;
 
 #[derive(Debug, Copy, Clone)]
 pub(crate) enum StmtKind {
@@ -93,7 +94,7 @@ pub(crate) fn stmt(p: &mut Parser, stmt_kind: StmtKind) {
             // inline use stmt
             if p.at(T![use]) {
                 let m = p.start();
-                p.with_recovery(at_stmt_kw_start(), |p| use_stmt(p, m));
+                p.with_recovery(at_stmt_start(), |p| use_stmt(p, m));
                 return;
             }
         }
@@ -101,7 +102,7 @@ pub(crate) fn stmt(p: &mut Parser, stmt_kind: StmtKind) {
             // inline use stmt
             if p.at(T![use]) {
                 let m = p.start();
-                p.with_recovery(at_stmt_kw_start(), |p| use_stmt(p, m));
+                p.with_recovery(at_stmt_start(), |p| use_stmt(p, m));
                 return;
             }
 
@@ -143,17 +144,27 @@ pub(crate) fn stmt(p: &mut Parser, stmt_kind: StmtKind) {
         }
     }
 
-    // parse expression stmts
-    if let Some((cm, _)) = p.with_recovery_token(T![;], stmt_expr) {
-        if !p.at(T!['}']) {
+    // parse EXPR_STMT
+    match p.with_recovery_token(T![;], top_level_expr_in_stmt) {
+        Some((cm, blocklike)) => {
+            // checks whether it's trailing expr in block
+            if p.at(T!['}']) {
+                return;
+            }
+            // wrap `cm` in EXPR_STMT
             let m = cm.precede(p);
-            p.expect(T![;]);
+            if blocklike.is_block() {
+                // after blocks, trailing semicolon is optional
+                p.eat(T![;]);
+            } else {
+                p.expect(T![;]);
+            }
             m.complete(p, EXPR_STMT);
         }
-        return;
+        None => {
+            p.error_and_bump(&format!("unexpected token {:?}", p.current()));
+        }
     }
-
-    p.error_and_bump(&format!("unexpected token {:?}", p.current()));
 }
 
 fn let_stmt(p: &mut Parser, allow_post: bool) {
@@ -162,9 +173,9 @@ fn let_stmt(p: &mut Parser, allow_post: bool) {
     if allow_post && p.at_contextual_kw_ident("post") {
         p.bump_remap(T![post]);
     }
-    let rs = at_stmt_kw_start().with_ts(T![=] | T![;]);
+    let rs = at_stmt_start().with_ts(T![=] | T![;]);
     // pattern
-    p.with_recovery(rs.clone(), let_pat);
+    p.with_recovery(rs.clone(), pattern);
     // : TYPE
     if p.at(T![:]) {
         p.with_recovery(rs, types::type_annotation);

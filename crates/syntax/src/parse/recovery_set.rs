@@ -100,6 +100,10 @@ impl RecoverySet {
         self
     }
 
+    pub(crate) fn is_empty(&self) -> bool {
+        self.token_set.is_empty() && self.keywords.is_empty()
+    }
+
     pub(crate) fn token_set_contains(&self, t: SyntaxKind) -> bool {
         self.token_set.contains(t)
     }

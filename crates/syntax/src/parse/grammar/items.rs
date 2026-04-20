@@ -201,7 +201,7 @@ pub(crate) fn item_start_rec_set() -> RecoverySet {
         .with_another_rs(function_modifier_recovery_set())
 }
 
-pub(crate) fn at_stmt_kw_start() -> RecoverySet {
+pub(crate) fn at_stmt_start() -> RecoverySet {
     RecoverySet::from_ts(STMT_FIRST)
 }
 
