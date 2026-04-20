@@ -119,6 +119,12 @@ impl Ty {
                     .single_or_none()?;
                 module.cast_into::<ast::Module>(db)
             }
+            Ty::Signer => {
+                let module = get_modules_as_entries(db, current_package_id, Address::named("std"))
+                    .filter_by_name("signer".to_string())
+                    .single_or_none()?;
+                module.cast_into::<ast::Module>(db)
+            }
             _ => None,
         }
     }
