@@ -24,6 +24,7 @@ mod borrow_expr;
 mod call_expr;
 mod choose_expr;
 mod const_;
+mod dot_expr;
 mod enum_;
 mod expr;
 mod field_list;

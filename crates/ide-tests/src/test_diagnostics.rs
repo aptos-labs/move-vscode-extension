@@ -21,6 +21,7 @@ mod test_needs_type_annotation;
 mod test_redundant_cast;
 mod test_replace_with_friend;
 mod test_replace_with_package;
+mod test_replace_with_resource_index_expr;
 mod test_simplify_turbofish;
 mod test_spec_global_replace_with_index_expr;
 mod test_type_checking;

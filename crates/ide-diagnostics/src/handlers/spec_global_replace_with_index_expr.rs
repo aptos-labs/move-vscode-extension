@@ -89,8 +89,7 @@ fn fixes(
 
             let resource_path_expr = make.path_expr(resource_path);
             let addr_expr = call_expr.arg_exprs().single_or_none()??;
-            let resource_index_expr =
-                make.index_expr(ast::Expr::PathExpr(resource_path_expr), addr_expr);
+            let resource_index_expr = make.index_expr(resource_path_expr.into(), addr_expr);
             editor.replace(call_expr.syntax(), resource_index_expr.syntax());
 
             Some(())
