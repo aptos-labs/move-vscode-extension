@@ -851,3 +851,39 @@ fn signer_address_of_is_available_as_a_receiver_style_method() {
     "#,
     )
 }
+
+#[test]
+fn test_resource_index_expr_autoborrows() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            struct Res has key { val: u8 }
+            fun read_val(self: &Res): u8 { self.val }
+                 //X
+            fun main() {
+                Res[@0x1].read_val();
+                         //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resource_index_expr_autoborrows_mut() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            struct Res has key { val: u8 }
+            fun write_val(self: &mut Res, f: u8) { self.val = f; }
+                 //X
+            fun main() {
+                Res[@0x1].write_val();
+                         //^
+            }
+        }
+    "#,
+    )
+}

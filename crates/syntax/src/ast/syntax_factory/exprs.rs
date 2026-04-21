@@ -38,6 +38,24 @@ impl SyntaxFactory {
         index_expr
     }
 
+    pub fn borrow_expr(&self, inner_expr: ast::Expr, is_mut: bool) -> ast::BorrowExpr {
+        let text = if is_mut {
+            format!("&mut {inner_expr}")
+        } else {
+            format!("&{inner_expr}")
+        };
+        let borrow_expr = expr_from_text::<ast::BorrowExpr>(&text).clone_for_update();
+        if let Some(mut mapping) = self.mappings() {
+            let mut builder = SyntaxMappingBuilder::new(borrow_expr.syntax().clone());
+            builder.map_node(
+                inner_expr.syntax().clone(),
+                borrow_expr.expr().unwrap().syntax().clone(),
+            );
+            builder.finish(&mut mapping);
+        }
+        borrow_expr
+    }
+
     pub fn paren_expr(&self, inner_expr: ast::Expr) -> ast::ParenExpr {
         let paren_expr = expr_from_text::<ast::ParenExpr>(&format!("({inner_expr})")).clone_for_update();
         if let Some(mut mapping) = self.mappings() {
