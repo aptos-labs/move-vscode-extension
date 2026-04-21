@@ -67,6 +67,43 @@ impl ast::BinExpr {
         self.op_details().map(|t| t.0)
     }
 
+    pub fn op_bp(&self) -> Option<u8> {
+        let op = self.op_kind()?;
+        let bp = match op {
+            // =, +=, -=, *=, /=, %=, <<=, >>=, ^=, |=, &=
+            BinaryOp::Assignment { .. } => 1,
+            // ==>, <==>
+            BinaryOp::LogicOp(LogicOp::Implies) | BinaryOp::LogicOp(LogicOp::IfAndOnlyIf) => 1,
+
+            // ||
+            BinaryOp::LogicOp(LogicOp::Or) => 4,
+            // &&
+            BinaryOp::LogicOp(LogicOp::And) => 5,
+
+            // ==, !=, <, >, <=, >=
+            BinaryOp::CmpOp(_) => 6,
+
+            // |
+            BinaryOp::ArithOp(ArithOp::BitOr) => 7,
+            // ^
+            BinaryOp::ArithOp(ArithOp::BitXor) => 8,
+            // &
+            BinaryOp::ArithOp(ArithOp::BitAnd) => 9,
+
+            // <<, >>
+            BinaryOp::ArithOp(ArithOp::Shl) | BinaryOp::ArithOp(ArithOp::Shr) => 10,
+
+            // +, -
+            BinaryOp::ArithOp(ArithOp::Add) | BinaryOp::ArithOp(ArithOp::Sub) => 11,
+
+            // %, /, *
+            BinaryOp::ArithOp(ArithOp::Rem)
+            | BinaryOp::ArithOp(ArithOp::Div)
+            | BinaryOp::ArithOp(ArithOp::Mul) => 12,
+        };
+        Some(bp)
+    }
+
     pub fn lhs(&self) -> Option<ast::Expr> {
         support::children(self.syntax()).next()
     }
