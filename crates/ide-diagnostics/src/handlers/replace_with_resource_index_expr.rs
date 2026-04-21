@@ -10,7 +10,6 @@ use lang::types::ty::Ty;
 use syntax::AstNode;
 use syntax::ast;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
-use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::syntax_factory::SyntaxFactory;
 use syntax::files::{FileRange, InFile, InFileExt};
 
