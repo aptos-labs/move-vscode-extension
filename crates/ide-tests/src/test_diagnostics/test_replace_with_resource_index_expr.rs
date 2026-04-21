@@ -339,3 +339,81 @@ fn test_borrow_global_mut_in_spec() {
     "#]],
     );
 }
+
+#[test]
+fn test_borrow_global_with_read_method_call() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+            module 0x1::main {
+                struct Res has key { field: u8 }
+                fun read_method(self: &Res): u8 { self.field }
+                fun main(): u8 {
+                    borrow_global<Res>(@0x1).read_method()
+                  //^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::main {
+                struct Res has key { field: u8 }
+                fun read_method(self: &Res): u8 { self.field }
+                fun main(): u8 {
+                    Res[@0x1].read_method()
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_borrow_global_mut_with_read_method_call() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+            module 0x1::main {
+                struct Res has key { field: u8 }
+                fun read_method(self: &Res): u8 { self.field }
+                fun main(): u8 {
+                    borrow_global_mut<Res>(@0x1).read_method()
+                  //^^^^^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::main {
+                struct Res has key { field: u8 }
+                fun read_method(self: &Res): u8 { self.field }
+                fun main(): u8 {
+                    Res[@0x1].read_method()
+                }
+            }
+        "#]],
+    );
+}
+
+#[test]
+fn test_borrow_global_mut_with_write_method_call() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+            module 0x1::main {
+                struct Res has key { field: u8 }
+                fun write_method(self: &mut Res, f: u8) { self.field = f; }
+                fun main() {
+                    borrow_global_mut<Res>(@0x1).write_method(1)
+                  //^^^^^^^^^^^^^^^^^^^^^^^^^^^^ weak: Replace with resource index expr
+                }
+            }
+        "#]],
+        expect![[r#"
+            module 0x1::main {
+                struct Res has key { field: u8 }
+                fun write_method(self: &mut Res, f: u8) { self.field = f; }
+                fun main() {
+                    Res[@0x1].write_method(1)
+                }
+            }
+        "#]],
+    );
+}

@@ -10,6 +10,7 @@ use lang::types::ty::Ty;
 use syntax::AstNode;
 use syntax::ast;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::syntax_factory::SyntaxFactory;
 use syntax::files::{FileRange, InFile, InFileExt};
 
@@ -44,9 +45,17 @@ pub(crate) fn replace_with_resource_index_expr(
         return None;
     }
 
+    // check that first param is address
+    let resource_path = resource_type.path_type()?.path();
+    let addr_expr = call_expr.arg_exprs().single_or_none()??;
+    let addr_expr_ty = ctx.sema.get_expr_type(&addr_expr.clone().in_file(file_id))?;
+    if !matches!(addr_expr_ty, Ty::Address) {
+        return None;
+    }
+
     let call_expr_parent = call_expr.syntax().parent()?;
     // borrow_global<T>().field
-    let borrow_ctx = if call_expr_parent.is::<ast::DotExpr>() {
+    let borrow_ctx = if call_expr_parent.is::<ast::MethodOrDotExpr>() {
         BorrowCtx::Dotted
     } else if call_expr_parent.is_msl_context() {
         BorrowCtx::Spec
@@ -60,12 +69,6 @@ pub(crate) fn replace_with_resource_index_expr(
         }
     };
 
-    let resource_path = resource_type.path_type()?.path();
-    let addr_expr = call_expr.arg_exprs().single_or_none()??;
-    let addr_expr_ty = ctx.sema.get_expr_type(&addr_expr.clone().in_file(file_id))?;
-    if !matches!(addr_expr_ty, Ty::Address) {
-        return None;
-    }
     let node_range = FileRange {
         file_id,
         range: call_expr.syntax().text_range(),
