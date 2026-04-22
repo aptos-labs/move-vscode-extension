@@ -6,6 +6,7 @@
 
 use crate::SyntaxKind::*;
 use crate::parse::grammar::expressions::atom::call_expr;
+use crate::parse::grammar::expressions::blocks::StmtKind;
 use crate::parse::grammar::lambdas::lambda_param_list;
 use crate::parse::grammar::specs::opt_spec_block_expr;
 use crate::parse::grammar::specs::quants::{choose_expr, exists_expr, forall_expr, is_at_quant_kw};
@@ -24,6 +25,7 @@ pub(crate) fn expr(p: &mut Parser) -> bool {
     let r = Restrictions {
         forbid_structs: false,
         prefer_stmt: false,
+        ..Restrictions::default()
     };
     expr_bp(p, r, 1).is_some()
 }
@@ -208,7 +210,7 @@ pub(crate) fn lhs(p: &mut Parser, r: Restrictions) -> Option<(CompletedMarker, B
             return Some((cm, BlockLike::NotBlock));
         }
         _ => {
-            let (lhs, blocklike) = atom::atom_expr(p)?;
+            let (lhs, blocklike) = atom::atom_expr(p, r.stmt_kind)?;
 
             let allow_calls = !(r.prefer_stmt && blocklike.is_block());
             let cm = postfix_expr(p, lhs, blocklike, allow_calls);
@@ -348,10 +350,14 @@ pub(crate) fn opt_initializer_expr(p: &mut Parser) {
     }
 }
 
-pub(crate) fn top_level_expr_in_stmt(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> {
+pub(crate) fn top_level_expr_in_stmt(
+    p: &mut Parser,
+    stmt_kind: StmtKind,
+) -> Option<(CompletedMarker, BlockLike)> {
     let r = Restrictions {
         forbid_structs: false,
         prefer_stmt: true,
+        stmt_kind,
     };
     expr_bp(p, r, 1)
 }
@@ -360,6 +366,7 @@ pub(crate) fn top_level_expr_in_stmt(p: &mut Parser) -> Option<(CompletedMarker,
 pub(crate) struct Restrictions {
     pub forbid_structs: bool,
     pub prefer_stmt: bool,
+    pub stmt_kind: StmtKind,
 }
 
 pub(crate) const EXPR_FIRST: TokenSet =

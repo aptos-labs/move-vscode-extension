@@ -21,6 +21,12 @@ pub(crate) enum StmtKind {
     Proof,
 }
 
+impl Default for StmtKind {
+    fn default() -> Self {
+        Self::Move
+    }
+}
+
 impl StmtKind {
     pub(crate) fn is_spec(&self) -> bool {
         matches!(self, StmtKind::Spec)
@@ -145,7 +151,7 @@ pub(crate) fn stmt(p: &mut Parser, stmt_kind: StmtKind) {
     }
 
     // parse EXPR_STMT
-    match p.with_recovery_token(T![;], top_level_expr_in_stmt) {
+    match p.with_recovery_token(T![;], |p| top_level_expr_in_stmt(p, stmt_kind)) {
         Some((cm, blocklike)) => {
             // checks whether it's trailing expr in block
             if p.at(T!['}']) {

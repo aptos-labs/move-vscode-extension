@@ -2,7 +2,6 @@ use crate::SyntaxKind::{APPLY_LEMMA, LEMMA, PROOF};
 use crate::T;
 use crate::parse::grammar::expressions::blocks;
 use crate::parse::grammar::expressions::blocks::StmtKind;
-use crate::parse::grammar::params::fun_param_list;
 use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::type_params::opt_type_param_list;
 use crate::parse::grammar::{expressions, name, params, paths};
