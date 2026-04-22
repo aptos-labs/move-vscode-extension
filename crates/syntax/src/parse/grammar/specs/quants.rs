@@ -12,6 +12,7 @@ use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{patterns, types};
 use crate::parse::parser::{CompletedMarker, Parser};
 use crate::parse::recovery_set::RecoverySet;
+use crate::parse::token_set::TokenSet;
 use std::ops::ControlFlow;
 use std::ops::ControlFlow::{Break, Continue};
 
@@ -30,7 +31,7 @@ pub(crate) fn forall_expr(p: &mut Parser) -> Option<CompletedMarker> {
     }
     let m = p.start();
     p.bump_remap(T![forall]);
-    quant_binding_list(p);
+    quant_binding_list(p, TokenSet::EMPTY);
     if p.at(T!['{']) {
         quant_trigger_list(p);
     }
@@ -47,7 +48,7 @@ pub(crate) fn exists_expr(p: &mut Parser) -> Option<CompletedMarker> {
     };
     let m = p.start();
     p.bump_remap(T![exists]);
-    quant_binding_list(p);
+    quant_binding_list(p, TokenSet::EMPTY);
     if p.at(T!['{']) {
         quant_trigger_list(p);
     }
@@ -73,16 +74,14 @@ pub(crate) fn choose_expr(p: &mut Parser) -> Option<CompletedMarker> {
     Some(m.complete(p, CHOOSE_EXPR))
 }
 
-pub(crate) fn quant_binding_list(p: &mut Parser) {
+pub(crate) fn quant_binding_list(p: &mut Parser, extra_stop_at: impl Into<RecoverySet>) {
     let m = p.start();
     let stop_at = RecoverySet::new()
-        // end of statement
-        .with_ts(T![;])
-        // quantifier hint
-        .with_ts(T!['{'])
+        // end of statement (;), quantifier hint ({), end of quant list (:)
+        .with_ts(T![;] | T!['{'] | T![:])
         // end of quant bindings
         .with_kw("where")
-        .with_ts(T![:]);
+        .with_another_rs(extra_stop_at.into());
     p.with_recovery(stop_at, |p| {
         delimited_with_recovery(p, quant_binding, T![,], "expected quant binding", None)
     });
@@ -112,7 +111,7 @@ pub(crate) fn quant_binding(p: &mut Parser) -> bool {
     true
 }
 
-fn quant_trigger_list(p: &mut Parser) {
+pub(crate) fn quant_trigger_list(p: &mut Parser) {
     assert!(p.at(T!['{']));
     // we're in new block, we can't use recovery set rules from before
     let m = p.start();

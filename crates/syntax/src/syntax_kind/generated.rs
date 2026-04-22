@@ -309,6 +309,7 @@ pub enum SyntaxKind {
     LEMMA,
     LEMMA_BLOCK,
     APPLY_LEMMA,
+    FORALL_APPLY_LEMMA,
     #[doc(hidden)]
     __LAST,
 }
