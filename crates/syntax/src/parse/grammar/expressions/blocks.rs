@@ -5,7 +5,7 @@ use crate::parse::grammar::expressions::{opt_initializer_expr, top_level_expr_in
 use crate::parse::grammar::items::{at_stmt_start, fun, use_item};
 use crate::parse::grammar::patterns::pattern;
 use crate::parse::grammar::specs::predicates::{pragma_stmt, spec_predicate, update_stmt};
-use crate::parse::grammar::specs::proofs_and_lemmas::{apply_lemma, lemma};
+use crate::parse::grammar::specs::proofs_and_lemmas::{apply_lemma, forall_apply_lemma, lemma};
 use crate::parse::grammar::specs::schemas::{
     apply_schema, global_variable, include_schema, schema_field,
 };
@@ -143,7 +143,7 @@ pub(crate) fn stmt(p: &mut Parser, stmt_kind: StmtKind) {
             }
         }
         StmtKind::Proof => {
-            let allowed_spec_stmts = vec![apply_lemma, spec_predicate];
+            let allowed_spec_stmts = vec![apply_lemma, forall_apply_lemma, spec_predicate];
             if allowed_spec_stmts.iter().any(|spec_stmt| spec_stmt(p)) {
                 return;
             }

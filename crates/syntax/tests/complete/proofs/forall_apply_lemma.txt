@@ -1,0 +1,139 @@
+SOURCE_FILE@0..180
+  MODULE@0..179
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..30
+      IDENT@12..30 "forall_apply_lemma"
+    WHITESPACE@30..31 " "
+    L_CURLY@31..32 "{"
+    WHITESPACE@32..37 "\n    "
+    ITEM_SPEC@37..177
+      SPEC_KW@37..41 "spec"
+      WHITESPACE@41..42 " "
+      ITEM_SPEC_REF@42..46
+        NAME_REF@42..46
+          IDENT@42..46 "main"
+      WHITESPACE@46..47 " "
+      BLOCK_EXPR@47..49
+        L_CURLY@47..48 "{"
+        R_CURLY@48..49 "}"
+      WHITESPACE@49..50 " "
+      PROOF@50..177
+        PROOF_KW@50..55 "proof"
+        WHITESPACE@55..56 " "
+        BLOCK_EXPR@56..177
+          L_CURLY@56..57 "{"
+          WHITESPACE@57..66 "\n        "
+          FORALL_APPLY_LEMMA@66..104
+            FORALL_KW@66..72 "forall"
+            WHITESPACE@72..73 " "
+            QUANT_BINDING_LIST@73..104
+              QUANT_BINDING@73..79
+                IDENT_PAT@73..74
+                  NAME@73..74
+                    IDENT@73..74 "x"
+                COLON@74..75 ":"
+                WHITESPACE@75..76 " "
+                PATH_TYPE@76..79
+                  PATH@76..79
+                    PATH_SEGMENT@76..79
+                      NAME_REF@76..79
+                        IDENT@76..79 "u64"
+              COMMA@79..80 ","
+              WHITESPACE@80..81 " "
+              QUANT_BINDING@81..87
+                IDENT_PAT@81..82
+                  NAME@81..82
+                    IDENT@81..82 "y"
+                COLON@82..83 ":"
+                WHITESPACE@83..84 " "
+                PATH_TYPE@84..87
+                  PATH@84..87
+                    PATH_SEGMENT@84..87
+                      NAME_REF@84..87
+                        IDENT@84..87 "u64"
+              WHITESPACE@87..88 " "
+              ERROR@88..93
+                IDENT@88..93 "apply"
+              WHITESPACE@93..94 " "
+              IDENT@94..101 "mylemma"
+              L_PAREN@101..102 "("
+              IDENT@102..103 "x"
+              R_PAREN@103..104 ")"
+          SEMICOLON@104..105 ";"
+          WHITESPACE@105..114 "\n        "
+          FORALL_APPLY_LEMMA@114..171
+            FORALL_KW@114..120 "forall"
+            WHITESPACE@120..121 " "
+            QUANT_BINDING_LIST@121..135
+              QUANT_BINDING@121..127
+                IDENT_PAT@121..122
+                  NAME@121..122
+                    IDENT@121..122 "x"
+                COLON@122..123 ":"
+                WHITESPACE@123..124 " "
+                PATH_TYPE@124..127
+                  PATH@124..127
+                    PATH_SEGMENT@124..127
+                      NAME_REF@124..127
+                        IDENT@124..127 "u64"
+              COMMA@127..128 ","
+              WHITESPACE@128..129 " "
+              QUANT_BINDING@129..135
+                IDENT_PAT@129..130
+                  NAME@129..130
+                    IDENT@129..130 "y"
+                COLON@130..131 ":"
+                WHITESPACE@131..132 " "
+                PATH_TYPE@132..135
+                  PATH@132..135
+                    PATH_SEGMENT@132..135
+                      NAME_REF@132..135
+                        IDENT@132..135 "u64"
+            WHITESPACE@135..136 " "
+            QUANT_TRIGGER_LIST@136..153
+              L_CURLY@136..137 "{"
+              WHITESPACE@137..138 " "
+              CALL_EXPR@138..151
+                PATH_EXPR@138..148
+                  PATH@138..148
+                    PATH_SEGMENT@138..148
+                      NAME_REF@138..148
+                        IDENT@138..148 "my_trigger"
+                VALUE_ARG_LIST@148..151
+                  L_PAREN@148..149 "("
+                  VALUE_ARG@149..150
+                    PATH_EXPR@149..150
+                      PATH@149..150
+                        PATH_SEGMENT@149..150
+                          NAME_REF@149..150
+                            IDENT@149..150 "x"
+                  R_PAREN@150..151 ")"
+              WHITESPACE@151..152 " "
+              R_CURLY@152..153 "}"
+            WHITESPACE@153..154 " "
+            APPLY_LEMMA@154..171
+              APPLY_KW@154..159 "apply"
+              WHITESPACE@159..160 " "
+              PATH@160..167
+                PATH_SEGMENT@160..167
+                  NAME_REF@160..167
+                    IDENT@160..167 "mylemma"
+              VALUE_ARG_LIST@167..170
+                L_PAREN@167..168 "("
+                VALUE_ARG@168..169
+                  PATH_EXPR@168..169
+                    PATH@168..169
+                      PATH_SEGMENT@168..169
+                        NAME_REF@168..169
+                          IDENT@168..169 "x"
+                R_PAREN@169..170 ")"
+              SEMICOLON@170..171 ";"
+          WHITESPACE@171..176 "\n    "
+          R_CURLY@176..177 "}"
+    WHITESPACE@177..178 "\n"
+    R_CURLY@178..179 "}"
+  WHITESPACE@179..180 "\n"

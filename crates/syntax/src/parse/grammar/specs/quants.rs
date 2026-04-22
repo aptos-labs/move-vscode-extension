@@ -112,7 +112,7 @@ pub(crate) fn quant_binding(p: &mut Parser) -> bool {
     true
 }
 
-fn quant_trigger_list(p: &mut Parser) {
+pub(crate) fn quant_trigger_list(p: &mut Parser) {
     assert!(p.at(T!['{']));
     // we're in new block, we can't use recovery set rules from before
     let m = p.start();
