@@ -8,6 +8,7 @@ use crate::parse::grammar::specs::quants::quant_binding_list;
 use crate::parse::grammar::type_params::opt_type_param_list;
 use crate::parse::grammar::{expressions, name, params, paths};
 use crate::parse::parser::{CompletedMarker, Parser};
+use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
 
 pub(crate) fn proof(p: &mut Parser) {
@@ -63,7 +64,7 @@ pub(crate) fn forall_apply_lemma(p: &mut Parser) -> bool {
     }
     let m = p.start();
     p.bump_remap(T![forall]);
-    quant_binding_list(p);
+    quant_binding_list(p, RecoverySet::new().with_kw("apply"));
     if p.at(T!['{']) {
         quants::quant_trigger_list(p);
     }

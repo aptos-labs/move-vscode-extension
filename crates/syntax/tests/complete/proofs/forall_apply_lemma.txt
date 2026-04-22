@@ -27,10 +27,10 @@ SOURCE_FILE@0..180
         BLOCK_EXPR@56..177
           L_CURLY@56..57 "{"
           WHITESPACE@57..66 "\n        "
-          FORALL_APPLY_LEMMA@66..104
+          FORALL_APPLY_LEMMA@66..105
             FORALL_KW@66..72 "forall"
             WHITESPACE@72..73 " "
-            QUANT_BINDING_LIST@73..104
+            QUANT_BINDING_LIST@73..87
               QUANT_BINDING@73..79
                 IDENT_PAT@73..74
                   NAME@73..74
@@ -55,15 +55,24 @@ SOURCE_FILE@0..180
                     PATH_SEGMENT@84..87
                       NAME_REF@84..87
                         IDENT@84..87 "u64"
-              WHITESPACE@87..88 " "
-              ERROR@88..93
-                IDENT@88..93 "apply"
+            WHITESPACE@87..88 " "
+            APPLY_LEMMA@88..105
+              APPLY_KW@88..93 "apply"
               WHITESPACE@93..94 " "
-              IDENT@94..101 "mylemma"
-              L_PAREN@101..102 "("
-              IDENT@102..103 "x"
-              R_PAREN@103..104 ")"
-          SEMICOLON@104..105 ";"
+              PATH@94..101
+                PATH_SEGMENT@94..101
+                  NAME_REF@94..101
+                    IDENT@94..101 "mylemma"
+              VALUE_ARG_LIST@101..104
+                L_PAREN@101..102 "("
+                VALUE_ARG@102..103
+                  PATH_EXPR@102..103
+                    PATH@102..103
+                      PATH_SEGMENT@102..103
+                        NAME_REF@102..103
+                          IDENT@102..103 "x"
+                R_PAREN@103..104 ")"
+              SEMICOLON@104..105 ";"
           WHITESPACE@105..114 "\n        "
           FORALL_APPLY_LEMMA@114..171
             FORALL_KW@114..120 "forall"
