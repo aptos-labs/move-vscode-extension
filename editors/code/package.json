@@ -38,6 +38,9 @@
     ],
     "main": "./out/extension.js",
     "contributes": {
+        "breakpoints": [
+            { "language": "move" }
+        ],
         "commands": [
             {
                 "command": "move-on-aptos.analyzerStatus",
@@ -230,6 +233,34 @@
                         "markdownDescription": "Show completions that automatically add imports when completed.\n\nNote that your client must specify the `additionalTextEdits` LSP client capability to\ntruly have this feature enabled.",
                         "default": false,
                         "type": "boolean"
+                    }
+                }
+            },
+            {
+                "title": "dap",
+                "properties": {
+                    "move-on-aptos.dap.extraArgs": {
+                        "markdownDescription": "Extra command-line arguments passed to the `aptos-dap` binary.",
+                        "default": [
+                            "--skip-fetch-latest-git-deps"
+                        ],
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "title": "dap",
+                "properties": {
+                    "move-on-aptos.dap.path": {
+                        "markdownDescription": "Path to aptos-dap executable for transaction debugging.",
+                        "default": null,
+                        "type": [
+                            "null",
+                            "string"
+                        ]
                     }
                 }
             },
@@ -447,6 +478,117 @@
                 "title": "$generated-end"
             }
         ],
+        "debuggers": [
+            {
+                "type": "aptos-move-test",
+                "label": "Aptos Move: Debug Test",
+                "languages": ["move"],
+                "configurationAttributes": {
+                    "launch": {
+                        "required": ["packagePath"],
+                        "properties": {
+                            "testFilter": {
+                                "type": "string",
+                                "description": "Name of the Move test function to debug",
+                                "default": ""
+                            },
+                            "packagePath": {
+                                "type": "string",
+                                "description": "Path to the Move package"
+                            }
+                        }
+                    }
+                },
+                "initialConfigurations": [
+                    {
+                        "type": "aptos-move-test",
+                        "request": "launch",
+                        "name": "Debug Move Test",
+                        "testFilter": "",
+                        "packagePath": "${workspaceFolder}"
+                    }
+                ],
+                "configurationSnippets": [
+                    {
+                        "label": "Aptos Move: Debug Test",
+                        "description": "Debug a Move unit test",
+                        "body": {
+                            "type": "aptos-move-test",
+                            "request": "launch",
+                            "name": "Debug Move Test",
+                            "testFilter": "${1:test_name}",
+                            "packagePath": "^\"\\${workspaceFolder}\""
+                        }
+                    }
+                ]
+            },
+            {
+                "type": "aptos-move-replay",
+                "label": "Aptos Move: Replay Transaction",
+                "languages": ["move"],
+                "configurationAttributes": {
+                    "launch": {
+                        "required": ["network", "txnId"],
+                        "properties": {
+                            "network": {
+                                "type": "string",
+                                "description": "Network to replay on (mainnet, testnet, or a REST endpoint URL)",
+                                "default": "testnet"
+                            },
+                            "txnId": {
+                                "type": "number",
+                                "description": "Transaction version to replay"
+                            },
+                            "useLocalPackages": {
+                                "type": "array",
+                                "items": { "type": "string" },
+                                "description": "Paths to local Move packages for source-level debugging during replay"
+                            },
+                            "namedAddresses": {
+                                "type": "object",
+                                "additionalProperties": { "type": "string" },
+                                "description": "Named address mappings as {\"name\": \"0xADDRESS\"}"
+                            }
+                        }
+                    }
+                },
+                "initialConfigurations": [
+                    {
+                        "type": "aptos-move-replay",
+                        "request": "launch",
+                        "name": "Replay Transaction",
+                        "network": "testnet",
+                        "txnId": 0
+                    }
+                ],
+                "configurationSnippets": [
+                    {
+                        "label": "Aptos Move: Replay Transaction",
+                        "description": "Replay a committed transaction using the Move VM",
+                        "body": {
+                            "type": "aptos-move-replay",
+                            "request": "launch",
+                            "name": "Replay Transaction",
+                            "network": "${1:testnet}",
+                            "txnId": "${2:0}"
+                        }
+                    },
+                    {
+                        "label": "Aptos Move: Replay with Local Source",
+                        "description": "Replay a transaction with local package source for debugging",
+                        "body": {
+                            "type": "aptos-move-replay",
+                            "request": "launch",
+                            "name": "Replay Transaction (local source)",
+                            "network": "${1:testnet}",
+                            "txnId": "${2:0}",
+                            "useLocalPackages": ["^\"\\${workspaceFolder}\""],
+                            "namedAddresses": {}
+                        }
+                    }
+                ]
+            }
+        ],
         "languages": [
             {
                 "id": "move",
@@ -635,7 +777,7 @@
         "@types/command-exists": "^1.2.3",
         "@types/node": "20.x",
         "@types/vscode": "^1.93.0",
-        "@vscode/vsce": "=3.7.1",
+        "@vscode/vsce": "=3.9.1",
         "ovsx": "0.10.10",
         "esbuild": "^0.25.0",
         "typescript": "^6.0.2"

@@ -33,12 +33,10 @@ use stdx::itertools::Itertools;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ClientCommandsConfig {
-    pub run_single: bool,
-    // pub debug_single: bool,
+    pub run_test: bool,
+    pub debug_test: bool,
     pub show_references: bool,
     pub goto_location: bool,
-    // pub trigger_parameter_hints: bool,
-    // pub rename: bool,
 }
 
 /// Configuration for runnable items, such as `main` function or tests.
@@ -53,12 +51,6 @@ pub struct RunnablesConfig {
 pub struct LensConfig {
     pub runnables: bool,
     pub specifications: bool,
-
-    // // references
-    // pub method_refs: bool,
-    // pub refs_adt: bool,   // for Struct, Enum, Union and Trait
-    // pub refs_trait: bool, // for Struct, Enum, Union and Trait
-    // pub enum_variant_refs: bool,
 
     // annotations
     pub location: AnnotationLocation,
@@ -76,6 +68,12 @@ impl LensConfig {
     pub fn runnable(&self) -> bool {
         self.runnables
     }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DapConfig {
+    pub path: Option<Utf8PathBuf>,
+    pub extra_args: Vec<String>,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -319,6 +317,13 @@ impl Config {
         }
     }
 
+    pub fn dap(&self) -> DapConfig {
+        DapConfig {
+            path: self.dap_path().to_owned(),
+            extra_args: self.dap_extraArgs().to_owned(),
+        }
+    }
+
     pub fn commands(&self) -> Option<lsp_ext::ClientCommandOptions> {
         self.experimental("commands")
     }
@@ -329,7 +334,8 @@ impl Config {
         let get = |name: &str| commands.iter().any(|it| it == name);
 
         ClientCommandsConfig {
-            run_single: get("move-on-aptos.runSingle"),
+            run_test: get("move-on-aptos.runTest"),
+            debug_test: get("move-on-aptos.debugTest"),
             show_references: get("move-on-aptos.showReferences"),
             goto_location: get("move-on-aptos.gotoLocation"),
         }

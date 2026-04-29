@@ -30,6 +30,11 @@ config_data! {
         /// Path to the `aptos-cli` executable.
         aptosPath: Option<Utf8PathBuf>                         = None,
 
+        /// Extra command-line arguments passed to the `aptos-dap` binary.
+        dap_extraArgs: Vec<String> = @verbatim: r#"["--skip-fetch-latest-git-deps"]"#,
+        /// Path to aptos-dap executable for transaction debugging.
+        dap_path: Option<Utf8PathBuf> = None,
+
         /// Show completions that automatically add imports when completed.
         ///
         /// Note that your client must specify the `additionalTextEdits` LSP client capability to
