@@ -963,13 +963,28 @@ pub(crate) fn code_lens(
             if let Some(r) = r {
                 let lens_config = snap.config.lens();
 
-                if lens_config.runnables && client_commands_config.run_single {
-                    let command = command::run_single(&r, &title);
+                if lens_config.runnables && client_commands_config.run_test {
+                    let command = command::run_test(&r, &title);
                     acc.push(lsp_types::CodeLens {
                         range: annotation_range,
                         command: Some(command),
                         data: None,
                     })
+                }
+                if lens_config.runnables
+                    && client_commands_config.debug_test
+                    && snap.config.dap().path.is_some()
+                {
+                    if r.args.args.first().map(|s| s.as_str()) == Some("move")
+                        && r.args.args.get(1).map(|s| s.as_str()) == Some("test")
+                    {
+                        let command = command::debug_test(&r);
+                        acc.push(lsp_types::CodeLens {
+                            range: annotation_range,
+                            command: Some(command),
+                            data: None,
+                        })
+                    }
                 }
             }
         }
@@ -1049,10 +1064,18 @@ pub(crate) mod command {
     use ide::NavigationTarget;
     use syntax::files::FileRange;
 
-    pub(crate) fn run_single(runnable: &lsp_ext::Runnable, title: &str) -> lsp_types::Command {
+    pub(crate) fn run_test(runnable: &lsp_ext::Runnable, title: &str) -> lsp_types::Command {
         lsp_types::Command {
             title: title.to_owned(),
-            command: "move-on-aptos.runSingle".into(),
+            command: "move-on-aptos.runTest".into(),
+            arguments: Some(vec![serde_json::to_value(runnable).unwrap()]),
+        }
+    }
+
+    pub(crate) fn debug_test(runnable: &lsp_ext::Runnable) -> lsp_types::Command {
+        lsp_types::Command {
+            title: "Debug".to_owned(),
+            command: "move-on-aptos.debugTest".into(),
             arguments: Some(vec![serde_json::to_value(runnable).unwrap()]),
         }
     }

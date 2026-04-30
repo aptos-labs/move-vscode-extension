@@ -4,6 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+import * as net from "net";
 import * as vscode from "vscode";
 import * as lsp_ext from "./lsp_ext";
 import { Cmd, Ctx, CtxInit } from "./ctx";
@@ -11,6 +12,33 @@ import { LanguageClient } from "vscode-languageclient/node";
 import * as lc from "vscode-languageclient";
 import { createTaskFromRunnable } from "./run";
 import { applyTextEdits } from "./snippets";
+
+function delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export function waitForPort(port: number, timeoutMs: number = 10000, intervalMs: number = 200): Promise<void> {
+    return new Promise((resolve, reject) => {
+        const deadline = Date.now() + timeoutMs;
+        function tryConnect() {
+            const sock = new net.Socket();
+            sock.once("connect", () => {
+                sock.destroy();
+                resolve();
+            });
+            sock.once("error", () => {
+                sock.destroy();
+                if (Date.now() >= deadline) {
+                    reject(new Error(`aptos-dap did not start within ${timeoutMs}ms on port ${port}`));
+                } else {
+                    setTimeout(tryConnect, intervalMs);
+                }
+            });
+            sock.connect(port, "127.0.0.1");
+        }
+        tryConnect();
+    });
+}
 
 export function analyzerStatus(ctx: CtxInit): Cmd {
     const tdcp = new (class implements vscode.TextDocumentContentProvider {
@@ -132,7 +160,7 @@ export function gotoLocation(ctx: CtxInit): Cmd {
     };
 }
 
-export function runSingle(ctx: CtxInit): Cmd {
+export function runTest(ctx: CtxInit): Cmd {
     return async (runnable: lsp_ext.Runnable) => {
         const editor = ctx.activeAptosEditor;
         if (!editor) return;
@@ -146,6 +174,26 @@ export function runSingle(ctx: CtxInit): Cmd {
         };
 
         return vscode.tasks.executeTask(task);
+    };
+}
+
+export function debugTest(_ctx: CtxInit): Cmd {
+    return async (runnable: lsp_ext.Runnable) => {
+        const args = runnable.args;
+        const filterIdx = args.args.indexOf("--filter");
+        const testFilter = filterIdx >= 0 ? args.args[filterIdx + 1] : undefined;
+        if (!testFilter) {
+            vscode.window.showErrorMessage("Could not determine test filter from runnable.");
+            return;
+        }
+
+        await vscode.debug.startDebugging(undefined, {
+            type: "aptos-move-test",
+            request: "launch",
+            name: `Debug ${testFilter}`,
+            testFilter,
+            packagePath: args.workspaceRoot,
+        });
     };
 }
 
