@@ -495,6 +495,11 @@
                             "packagePath": {
                                 "type": "string",
                                 "description": "Path to the Move package"
+                            },
+                            "env": {
+                                "type": "object",
+                                "additionalProperties": { "type": "string" },
+                                "description": "Environment variables to set for the aptos-dap process"
                             }
                         }
                     }
@@ -548,6 +553,11 @@
                                 "type": "object",
                                 "additionalProperties": { "type": "string" },
                                 "description": "Named address mappings as {\"name\": \"0xADDRESS\"}"
+                            },
+                            "env": {
+                                "type": "object",
+                                "additionalProperties": { "type": "string" },
+                                "description": "Environment variables to set for the aptos-dap process"
                             }
                         }
                     }

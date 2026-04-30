@@ -123,8 +123,10 @@ class AptosDapAdapterFactory implements vscode.DebugAdapterDescriptorFactory {
         const port = await findFreePort();
         const extraArgs = config.get<string[]>("dap.extraArgs", []);
         const cmd = buildDapCommand(dapPath, port, session, extraArgs);
+        const env: Record<string, string> = session.configuration.env ?? {};
         const terminal = vscode.window.createTerminal({
             name: `aptos-dap [${session.name}]`,
+            env,
         });
         terminal.show();
         terminal.sendText(cmd);
