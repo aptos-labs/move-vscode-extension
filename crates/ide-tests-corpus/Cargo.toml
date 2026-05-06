@@ -14,7 +14,7 @@ datatest-stable = "0.3.2"
 expect-test = "1.5.1"
 
 paths.workspace = true
-codespan-reporting = "0.12.0"
+codespan-reporting = { workspace = true }
 
 ide-tests = { path = "../ide-tests" }
 ide-diagnostics = { path = "../ide-diagnostics" }
