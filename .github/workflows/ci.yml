@@ -78,7 +78,7 @@ jobs:
         run: aptos-language-server organize-imports -- ./aptos-core/aptos-move/framework
 
       - name: Check that aptos-core:framework still compiles
-        run: aptos move compile --language-version 2.3 --dev --package-dir ./aptos-core/aptos-move/framework/aptos-experimental
+        run: aptos move compile --language-version 2.4 --dev --package-dir ./aptos-core/aptos-move/framework/aptos-experimental
 
       - name: Cache ~/.move directory
         uses: actions/cache@v5
