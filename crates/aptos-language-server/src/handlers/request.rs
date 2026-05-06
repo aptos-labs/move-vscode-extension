@@ -4,7 +4,6 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::diagnostics::to_proto_diagnostic;
 use crate::global_state::GlobalStateSnapshot;
 use crate::lsp::utils::{all_edits_are_disjoint, invalid_params_error};
 use crate::lsp::{LspError, from_proto, to_proto};
@@ -29,13 +28,6 @@ use stdx::format_to;
 use stdx::itertools::Itertools;
 use syntax::files::{FilePosition, FileRange};
 use vfs::FileId;
-// pub(crate) fn handle_workspace_reload(state: &mut GlobalState, _: ()) -> anyhow::Result<()> {
-//     let req = FetchPackagesRequest { force_reload_deps: false };
-//     state
-//         .fetch_packages_queue
-//         .request_op("reload workspace request".to_owned(), req);
-//     Ok(())
-// }
 
 pub(crate) fn handle_semantic_tokens_range(
     snap: GlobalStateSnapshot,
@@ -401,7 +393,7 @@ pub(crate) fn handle_document_diagnostics(
         .filter_map(|d| {
             let file = d.range.file_id;
             if file == file_id {
-                let diagnostic = to_proto_diagnostic(&line_index, d);
+                let diagnostic = lsp_diagnostic(&line_index, d);
                 return Some(diagnostic);
             }
             None
@@ -417,7 +409,24 @@ pub(crate) fn handle_document_diagnostics(
     ))
 }
 
-pub(crate) fn empty_diagnostic_report() -> lsp_types::DocumentDiagnosticReportResult {
+fn lsp_diagnostic(
+    line_index: &crate::line_index::LineIndex,
+    d: ide_diagnostics::diagnostic::Diagnostic,
+) -> lsp_types::Diagnostic {
+    lsp_types::Diagnostic {
+        range: to_proto::lsp_range(line_index, d.range.range),
+        severity: Some(to_proto::diagnostic_severity(d.severity)),
+        code: Some(lsp_types::NumberOrString::String(d.code.as_str().to_owned())),
+        code_description: None,
+        source: Some("aptos-language-server".to_owned()),
+        message: d.message,
+        related_information: None,
+        tags: d.unused.then(|| vec![lsp_types::DiagnosticTag::UNNECESSARY]),
+        data: None,
+    }
+}
+
+fn empty_diagnostic_report() -> lsp_types::DocumentDiagnosticReportResult {
     lsp_types::DocumentDiagnosticReportResult::Report(lsp_types::DocumentDiagnosticReport::Full(
         lsp_types::RelatedFullDocumentDiagnosticReport {
             related_documents: None,

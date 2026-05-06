@@ -18,9 +18,6 @@ mod task_pool;
 mod version;
 
 pub mod cli;
-mod command;
-pub mod compiler_diagnostic;
-pub mod diagnostics;
 mod file_changes;
 pub mod lsp;
 mod movefmt;
