@@ -25,7 +25,7 @@ pub(crate) fn dist(client_patch_version: Option<String>) -> anyhow::Result<()> {
     let sh = Shell::new()?;
 
     let project_root = project_root();
-    let target = Target::get(&project_root);
+    let target = Target::get(&project_root, &sh);
 
     let dist = project_root.join("dist");
     sh.remove_path(&dist)?;
@@ -84,7 +84,7 @@ fn dist_server(sh: &Shell, release: &str, target: &Target) -> anyhow::Result<()>
 
     build_command(sh, &target_name)
         .run()
-        .context("cannot build Aptos Analyzer")?;
+        .context("cannot build aptos-language-server")?;
 
     let dst = Path::new("dist").join(&target.artifact_name);
     if target_name.contains("-windows-") {
@@ -160,21 +160,8 @@ struct Target {
 }
 
 impl Target {
-    fn get(project_root: &Path) -> Self {
-        let name = match env::var("RA_TARGET") {
-            Ok(target) => target,
-            _ => {
-                if cfg!(target_os = "linux") {
-                    "x86_64-unknown-linux-gnu".to_owned()
-                } else if cfg!(target_os = "windows") {
-                    "x86_64-pc-windows-msvc".to_owned()
-                } else if cfg!(target_os = "macos") {
-                    "x86_64-apple-darwin".to_owned()
-                } else {
-                    panic!("Unsupported OS, maybe try setting RA_TARGET")
-                }
-            }
-        };
+    fn get(project_root: &Path, sh: &Shell) -> Self {
+        let name = detect_target(sh);
         let (name, libc_suffix) = match name.split_once('.') {
             Some((l, r)) => (l.to_owned(), Some(r.to_owned())),
             None => (name, None),
@@ -235,5 +222,15 @@ impl Drop for Patch {
         // FIXME: find a way to bring this back
         let _ = &self.original_contents;
         // write_file(&self.path, &self.original_contents).unwrap();
+    }
+}
+
+pub(crate) fn detect_target(sh: &Shell) -> String {
+    match env::var("RA_TARGET") {
+        Ok(target) => target,
+        _ => match cmd!(sh, "rustc --print=host-tuple").read() {
+            Ok(target) => target,
+            Err(e) => panic!("Failed to detect target: {e}\nPlease set RA_TARGET explicitly"),
+        },
     }
 }
