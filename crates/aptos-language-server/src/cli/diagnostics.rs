@@ -11,6 +11,7 @@ use clap::Args;
 use codespan_reporting::diagnostic::{Label, LabelStyle};
 use codespan_reporting::term;
 use codespan_reporting::term::termcolor::{ColorChoice, StandardStream};
+use codespan_reporting::term::{Styles, StylesWriter};
 use ide::Analysis;
 use ide_db::assist_config::AssistConfig;
 use ide_db::assists::{Assist, AssistResolveStrategy};
@@ -355,7 +356,7 @@ fn print_diagnostic(file_text: &str, file_path: &AbsPath, diagnostic: Diagnostic
         range,
         severity,
         fixes,
-        ..
+        unused: _,
     } = diagnostic;
 
     let severity = match severity {
@@ -389,8 +390,10 @@ fn print_diagnostic(file_text: &str, file_path: &AbsPath, diagnostic: Diagnostic
     }
 
     let term_config = term::Config::default();
-    let mut stderr = StandardStream::stderr(ColorChoice::Auto);
-    term::emit(&mut stderr, &term_config, &files, &codespan_diagnostic).unwrap();
+    let colors = Styles::default();
+    let mut stderr = StylesWriter::new(StandardStream::stderr(ColorChoice::Auto), &colors);
+    term::emit_to_write_style(&mut stderr, &term_config, &files, &codespan_diagnostic)
+        .expect("stderr should be available");
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
