@@ -157,7 +157,7 @@ SOURCE_FILE@0..910
             L_CURLY@262..263 "{"
             R_CURLY@263..264 "}"
         WHITESPACE@264..273 "\n        "
-        EMITS_STMT@273..309
+        EMITS_STMT@273..310
           EMITS_KW@273..278 "emits"
           WHITESPACE@278..279 " "
           PATH_EXPR@279..282
@@ -184,7 +184,7 @@ SOURCE_FILE@0..910
                   PATH_SEGMENT@297..309
                     NAME_REF@297..309
                       IDENT@297..309 "is_synthetic"
-        SEMICOLON@309..310 ";"
+          SEMICOLON@309..310 ";"
         WHITESPACE@310..319 "\n        "
         SPEC_PREDICATE_STMT@319..350
           ENSURES_KW@319..326 "ensures"
@@ -334,7 +334,7 @@ SOURCE_FILE@0..910
               R_PAREN@563..564 ")"
           SEMICOLON@564..565 ";"
         WHITESPACE@565..575 "\n\n        "
-        ABORTS_WITH_STMT@575..596
+        ABORTS_WITH_STMT@575..597
           ABORTS_WITH_KW@575..586 "aborts_with"
           WHITESPACE@586..587 " "
           SPEC_PREDICATE_PROPERTY_LIST@587..594
@@ -345,9 +345,9 @@ SOURCE_FILE@0..910
           WHITESPACE@594..595 " "
           LITERAL@595..596
             INT_NUMBER@595..596 "1"
-        SEMICOLON@596..597 ";"
+          SEMICOLON@596..597 ";"
         WHITESPACE@597..606 "\n        "
-        ABORTS_WITH_STMT@606..649
+        ABORTS_WITH_STMT@606..650
           ABORTS_WITH_KW@606..617 "aborts_with"
           WHITESPACE@617..618 " "
           LITERAL@618..619
@@ -371,7 +371,7 @@ SOURCE_FILE@0..910
               PATH_SEGMENT@636..649
                 NAME_REF@636..649
                   IDENT@636..649 "NOT_PUBLISHED"
-        SEMICOLON@649..650 ";"
+          SEMICOLON@649..650 ";"
         WHITESPACE@650..660 "\n\n        "
         SPEC_PREDICATE_STMT@660..691
           ENSURES_KW@660..667 "ensures"
@@ -518,7 +518,7 @@ SOURCE_FILE@0..910
                     R_ANGLE@829..830 ">"
           SEMICOLON@830..831 ";"
         WHITESPACE@831..841 "\n\n        "
-        UPDATE_STMT@841..858
+        UPDATE_STMT@841..859
           UPDATE_KW@841..847 "update"
           WHITESPACE@847..848 " "
           PATH_EXPR@848..854
@@ -531,7 +531,7 @@ SOURCE_FILE@0..910
           WHITESPACE@856..857 " "
           LITERAL@857..858
             INT_NUMBER@857..858 "1"
-        SEMICOLON@858..859 ";"
+          SEMICOLON@858..859 ";"
         WHITESPACE@859..864 "\n    "
         R_CURLY@864..865 "}"
     WHITESPACE@865..871 "\n\n    "

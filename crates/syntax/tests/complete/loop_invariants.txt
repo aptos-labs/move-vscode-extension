@@ -328,7 +328,7 @@ SOURCE_FILE@0..558
                 WHITESPACE@493..494 " "
                 BLOCK_EXPR@494..512
                   L_CURLY@494..495 "{"
-                  INVARIANT_STMT@495..510
+                  INVARIANT_STMT@495..511
                     INVARIANT_KW@495..504 "invariant"
                     WHITESPACE@504..505 " "
                     BIN_EXPR@505..510
@@ -342,7 +342,7 @@ SOURCE_FILE@0..558
                       WHITESPACE@508..509 " "
                       LITERAL@509..510
                         INT_NUMBER@509..510 "0"
-                  SEMICOLON@510..511 ";"
+                    SEMICOLON@510..511 ";"
                   R_CURLY@511..512 "}"
               R_PAREN@512..513 ")"
             WHITESPACE@513..514 " "

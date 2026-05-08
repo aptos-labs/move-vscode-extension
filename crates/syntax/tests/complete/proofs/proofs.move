@@ -4,4 +4,9 @@ module 0x1::proofs {
         assert true;
         assume [trusted] 1 + 1 == 2;
     }
+    spec module {
+        lemma my_lemma<T, U>(a: u8) {
+            pragma opaque;
+        }
+    }
 }

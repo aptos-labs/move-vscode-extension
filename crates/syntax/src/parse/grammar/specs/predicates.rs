@@ -13,7 +13,7 @@ use crate::parse::parser::Parser;
 use crate::parse::token_set::TokenSet;
 
 pub(crate) fn spec_predicate(p: &mut Parser) -> bool {
-    condition_predicates(p)
+    condition_predicate(p)
         || aborts_if_predicate(p)
         || aborts_with_predicate(p)
         || invariant_predicate(p)
@@ -21,7 +21,7 @@ pub(crate) fn spec_predicate(p: &mut Parser) -> bool {
         || emits_predicate(p)
 }
 
-pub(crate) fn condition_predicates(p: &mut Parser) -> bool {
+pub(crate) fn condition_predicate(p: &mut Parser) -> bool {
     let kw = match p.current() {
         IDENT if p.at_contextual_kw("assume") => T![assume],
         IDENT if p.at_contextual_kw("assert") => T![assert],
@@ -78,6 +78,7 @@ pub(crate) fn emits_predicate(p: &mut Parser) -> bool {
     }
     expr(p);
     opt_emits_condition(p);
+    p.eat(T![;]);
     m.complete(p, EMITS_STMT);
     true
 }
@@ -104,6 +105,7 @@ pub(crate) fn invariant_predicate(p: &mut Parser) -> bool {
     }
     opt_predicate_property_list(p);
     expect_expr(p);
+    p.eat(T![;]);
     m.complete(p, INVARIANT_STMT);
     true
 }
@@ -116,6 +118,7 @@ pub(crate) fn aborts_with_predicate(p: &mut Parser) -> bool {
     p.bump_remap(T![aborts_with]);
     opt_predicate_property_list(p);
     delimited_with_recovery(p, expr, T![,], "expected expression", None);
+    p.eat(T![;]);
     m.complete(p, ABORTS_WITH_STMT);
     true
 }
@@ -129,6 +132,7 @@ pub(crate) fn axiom_predicate(p: &mut Parser) -> bool {
     type_params::opt_type_param_list(p);
     opt_predicate_property_list(p);
     expect_expr(p);
+    p.eat(T![;]);
     m.complete(p, AXIOM_STMT);
     true
 }
@@ -147,6 +151,7 @@ pub(crate) fn update_stmt(p: &mut Parser) -> bool {
         } else {
             p.error("expected '='");
         }
+        p.eat(T![;]);
         m.complete(p, UPDATE_STMT);
     } else {
         m.abandon(p);

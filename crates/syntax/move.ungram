@@ -248,7 +248,7 @@ Stmt =
     | ExprStmt
     | LetStmt
     | SchemaField | IncludeSchema | ApplySchema
-    | SpecPredicateStmt | AbortsIfStmt | AbortsWithStmt | PragmaStmt
+    | SpecPredicateStmt | AbortsIfStmt | AbortsWithStmt | PragmaStmt | UpdateStmt
     | GenericSpecStmt
     | SpecInlineFun | GlobalVariableDecl
 
@@ -632,6 +632,8 @@ WhereExpr =
 
 AxiomStmt =
     'axiom' spec_type_param_list:TypeParamList? SpecPredicatePropertyList? Expr ';'
+
+UpdateStmt = Expr '=' Expr ';'
 
 ApplySchema =
     'apply' SchemaLit ApplyTo ApplyExcept? ';'

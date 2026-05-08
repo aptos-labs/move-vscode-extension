@@ -18,7 +18,7 @@ SOURCE_FILE@0..210
       BLOCK_EXPR@46..207
         L_CURLY@46..47 "{"
         WHITESPACE@47..56 "\n        "
-        INVARIANT_STMT@56..73
+        INVARIANT_STMT@56..74
           INVARIANT_KW@56..65 "invariant"
           WHITESPACE@65..66 " "
           SPEC_PREDICATE_PROPERTY_LIST@66..68
@@ -27,9 +27,9 @@ SOURCE_FILE@0..210
           WHITESPACE@68..69 " "
           LITERAL@69..73
             TRUE_KW@69..73 "true"
-        SEMICOLON@73..74 ";"
+          SEMICOLON@73..74 ";"
         WHITESPACE@74..83 "\n        "
-        INVARIANT_STMT@83..108
+        INVARIANT_STMT@83..109
           INVARIANT_KW@83..92 "invariant"
           WHITESPACE@92..93 " "
           SPEC_PREDICATE_PROPERTY_LIST@93..103
@@ -45,9 +45,9 @@ SOURCE_FILE@0..210
           WHITESPACE@103..104 " "
           LITERAL@104..108
             TRUE_KW@104..108 "true"
-        SEMICOLON@108..109 ";"
+          SEMICOLON@108..109 ";"
         WHITESPACE@109..118 "\n        "
-        INVARIANT_STMT@118..170
+        INVARIANT_STMT@118..171
           INVARIANT_KW@118..127 "invariant"
           WHITESPACE@127..128 " "
           SPEC_PREDICATE_PROPERTY_LIST@128..163
@@ -77,7 +77,7 @@ SOURCE_FILE@0..210
             WHITESPACE@168..169 " "
             LITERAL@169..170
               INT_NUMBER@169..170 "1"
-        SEMICOLON@170..171 ";"
+          SEMICOLON@170..171 ";"
         WHITESPACE@171..180 "\n        "
         INVARIANT_STMT@180..201
           INVARIANT_KW@180..189 "invariant"

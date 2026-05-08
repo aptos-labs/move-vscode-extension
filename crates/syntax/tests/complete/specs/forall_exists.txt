@@ -73,7 +73,7 @@ SOURCE_FILE@0..1087
       BLOCK_EXPR@106..960
         L_CURLY@106..107 "{"
         WHITESPACE@107..116 "\n        "
-        INVARIANT_STMT@116..194
+        INVARIANT_STMT@116..195
           INVARIANT_KW@116..125 "invariant"
           WHITESPACE@125..138 "\n            "
           FORALL_EXPR@138..194
@@ -133,9 +133,9 @@ SOURCE_FILE@0..1087
             WHITESPACE@189..190 " "
             LITERAL@190..194
               TRUE_KW@190..194 "true"
-        SEMICOLON@194..195 ";"
+          SEMICOLON@194..195 ";"
         WHITESPACE@195..205 "\n\n        "
-        INVARIANT_STMT@205..302
+        INVARIANT_STMT@205..303
           INVARIANT_KW@205..214 "invariant"
           WHITESPACE@214..227 "\n            "
           FORALL_EXPR@227..302
@@ -232,9 +232,9 @@ SOURCE_FILE@0..1087
                     PATH_SEGMENT@301..302
                       NAME_REF@301..302
                         IDENT@301..302 "z"
-        SEMICOLON@302..303 ";"
+          SEMICOLON@302..303 ";"
         WHITESPACE@303..312 "\n        "
-        INVARIANT_STMT@312..400
+        INVARIANT_STMT@312..401
           INVARIANT_KW@312..321 "invariant"
           WHITESPACE@321..334 "\n            "
           FORALL_EXPR@334..400
@@ -287,9 +287,9 @@ SOURCE_FILE@0..1087
                     PATH_SEGMENT@399..400
                       NAME_REF@399..400
                         IDENT@399..400 "x"
-        SEMICOLON@400..401 ";"
+          SEMICOLON@400..401 ";"
         WHITESPACE@401..411 "\n\n        "
-        INVARIANT_STMT@411..528
+        INVARIANT_STMT@411..529
           INVARIANT_KW@411..420 "invariant"
           WHITESPACE@420..433 "\n            "
           FORALL_EXPR@433..528
@@ -352,9 +352,9 @@ SOURCE_FILE@0..1087
                     PATH_SEGMENT@527..528
                       NAME_REF@527..528
                         IDENT@527..528 "y"
-        SEMICOLON@528..529 ";"
+          SEMICOLON@528..529 ";"
         WHITESPACE@529..539 "\n\n        "
-        INVARIANT_STMT@539..587
+        INVARIANT_STMT@539..588
           INVARIANT_KW@539..548 "invariant"
           WHITESPACE@548..549 " "
           EXISTS_EXPR@549..587
@@ -406,9 +406,9 @@ SOURCE_FILE@0..1087
                   PATH_SEGMENT@586..587
                     NAME_REF@586..587
                       IDENT@586..587 "y"
-        SEMICOLON@587..588 ";"
+          SEMICOLON@587..588 ";"
         WHITESPACE@588..597 "\n        "
-        INVARIANT_STMT@597..645
+        INVARIANT_STMT@597..646
           INVARIANT_KW@597..606 "invariant"
           WHITESPACE@606..607 " "
           EXISTS_EXPR@607..645
@@ -460,7 +460,7 @@ SOURCE_FILE@0..1087
                   PATH_SEGMENT@644..645
                     NAME_REF@644..645
                       IDENT@644..645 "y"
-        SEMICOLON@645..646 ";"
+          SEMICOLON@645..646 ";"
         WHITESPACE@646..656 "\n\n        "
         SPEC_PREDICATE_STMT@656..702
           ENSURES_KW@656..663 "ensures"

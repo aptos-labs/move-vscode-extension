@@ -2728,3 +2728,32 @@ fn test_assert_eq_ne_with_different_parameter_types() {
         }
     "#]]);
 }
+
+#[test]
+fn test_check_param_for_global_variable_explicit_type() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            spec module {
+                global addr: address = @0x1;
+                global addr: address = 1;
+                                     //^ err: Incompatible type 'num', expected 'address'
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_check_update_variable() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            spec schema MySchema {
+                local ensures: address;
+                update ensures = @0x1;
+                update ensures = 1;
+                               //^ err: Incompatible type 'num', expected 'address'
+            }
+        }
+    "#]]);
+}
