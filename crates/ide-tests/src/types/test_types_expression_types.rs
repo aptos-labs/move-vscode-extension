@@ -3233,3 +3233,66 @@ module 0x1::m {
 "#,
     )
 }
+
+#[test]
+fn test_resolve_update_schema_local_field() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::M {
+            spec schema MySchema {
+                local ensures: address;
+                update ensures = @0x1;
+                      //^ address
+            }
+        }
+        "#,
+    )
+}
+
+#[test]
+fn test_resolve_update_schema_local_field_initializer() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::M {
+            spec schema MySchema {
+                local ensures: address;
+                update ensures = @0x1;
+                               //^ address
+            }
+        }
+        "#,
+    )
+}
+
+#[test]
+fn test_resolve_type_of_literal_in_global_variable_initializer() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::M {
+            spec module {
+                global addr: address = @0x1;
+                                       //^ address
+            }
+        }
+        "#,
+    )
+}
+
+#[test]
+fn test_type_of_literal_in_aborts_with() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::m {
+            fun call() {}
+            spec call {
+                aborts_with 12121;
+                            //^ num
+            }
+        }
+    "#,
+    );
+}

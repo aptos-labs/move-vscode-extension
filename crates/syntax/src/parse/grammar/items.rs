@@ -57,7 +57,7 @@ pub(super) fn item(p: &mut Parser) {
 
     // couldn't find an item
     match p.current() {
-        T!['{'] => blocks::error_block(p, "expected an item, got a block"),
+        T!['{'] => blocks::unexpected_block(p, "expected an item, got a block"),
         // T!['}'] if !stop_on_r_curly => {
         //     let e = p.start();
         //     p.error("unmatched `}`");

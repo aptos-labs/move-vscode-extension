@@ -85,6 +85,7 @@ pub mod type_;
 mod type_arg_list;
 mod type_param;
 mod type_param_list;
+mod update_stmt;
 mod use_group;
 pub mod use_speck;
 mod use_stmt;

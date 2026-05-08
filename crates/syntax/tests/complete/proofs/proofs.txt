@@ -1,5 +1,5 @@
-SOURCE_FILE@0..145
-  MODULE@0..144
+SOURCE_FILE@0..244
+  MODULE@0..243
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
     VALUE_ADDRESS@7..10
@@ -85,6 +85,59 @@ SOURCE_FILE@0..145
             SEMICOLON@135..136 ";"
           WHITESPACE@136..141 "\n    "
           R_CURLY@141..142 "}"
-    WHITESPACE@142..143 "\n"
-    R_CURLY@143..144 "}"
-  WHITESPACE@144..145 "\n"
+    WHITESPACE@142..147 "\n    "
+    ITEM_SPEC@147..241
+      SPEC_KW@147..151 "spec"
+      WHITESPACE@151..152 " "
+      MODULE_KW@152..158 "module"
+      WHITESPACE@158..159 " "
+      BLOCK_EXPR@159..241
+        L_CURLY@159..160 "{"
+        WHITESPACE@160..169 "\n        "
+        LEMMA@169..235
+          LEMMA_KW@169..174 "lemma"
+          WHITESPACE@174..175 " "
+          NAME@175..183
+            IDENT@175..183 "my_lemma"
+          TYPE_PARAM_LIST@183..189
+            L_ANGLE@183..184 "<"
+            TYPE_PARAM@184..185
+              NAME@184..185
+                IDENT@184..185 "T"
+            COMMA@185..186 ","
+            WHITESPACE@186..187 " "
+            TYPE_PARAM@187..188
+              NAME@187..188
+                IDENT@187..188 "U"
+            R_ANGLE@188..189 ">"
+          PARAM_LIST@189..196
+            L_PAREN@189..190 "("
+            PARAM@190..195
+              IDENT_PAT@190..191
+                NAME@190..191
+                  IDENT@190..191 "a"
+              COLON@191..192 ":"
+              WHITESPACE@192..193 " "
+              PATH_TYPE@193..195
+                PATH@193..195
+                  PATH_SEGMENT@193..195
+                    NAME_REF@193..195
+                      IDENT@193..195 "u8"
+            R_PAREN@195..196 ")"
+          WHITESPACE@196..197 " "
+          BLOCK_EXPR@197..235
+            L_CURLY@197..198 "{"
+            WHITESPACE@198..211 "\n            "
+            PRAGMA_STMT@211..225
+              PRAGMA_KW@211..217 "pragma"
+              WHITESPACE@217..218 " "
+              PRAGMA_ATTR_ITEM@218..224
+                IDENT@218..224 "opaque"
+              SEMICOLON@224..225 ";"
+            WHITESPACE@225..234 "\n        "
+            R_CURLY@234..235 "}"
+        WHITESPACE@235..240 "\n    "
+        R_CURLY@240..241 "}"
+    WHITESPACE@241..242 "\n"
+    R_CURLY@242..243 "}"
+  WHITESPACE@243..244 "\n"

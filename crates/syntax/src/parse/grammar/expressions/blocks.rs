@@ -46,29 +46,35 @@ pub(crate) fn block_expr(p: &mut Parser, kind: StmtKind) -> CompletedMarker {
     // we're in new block, we can't use recovery set rules from before
     p.reset_recovery(|p| {
         let m = p.start();
+
+        // assert!(p.at(T!['{']));
+        p.bump(T!['{']);
         stmt_list(p, kind);
+        p.expect(T!['}']);
+
+        // stmt_list(p, kind);
         m.complete(p, BLOCK_EXPR)
     })
 }
 
-pub(crate) fn error_block(p: &mut Parser, message: &str) {
+pub(crate) fn unexpected_block(p: &mut Parser, message: &str) {
     assert!(p.at(T!['{']));
     let m = p.start();
     p.error(message);
     p.bump(T!['{']);
-    expr_block_contents(p, StmtKind::Move);
+    stmt_list(p, StmtKind::Move);
     p.eat(T!['}']);
     m.complete(p, ERROR);
 }
 
-pub(crate) fn stmt_list(p: &mut Parser, kind: StmtKind) {
-    assert!(p.at(T!['{']));
-    p.bump(T!['{']);
-    expr_block_contents(p, kind);
-    p.expect(T!['}']);
-}
+// pub(crate) fn stmt_list(p: &mut Parser, kind: StmtKind) {
+//     assert!(p.at(T!['{']));
+//     p.bump(T!['{']);
+//     expr_block_contents(p, kind);
+//     p.expect(T!['}']);
+// }
 
-pub(super) fn expr_block_contents(p: &mut Parser, kind: StmtKind) {
+pub(super) fn stmt_list(p: &mut Parser, kind: StmtKind) {
     p.iterate_to_EOF(T!['}'], |p| {
         if p.at(T![;]) {
             p.bump(T![;]);

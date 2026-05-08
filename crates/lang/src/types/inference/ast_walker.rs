@@ -304,7 +304,22 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     self.collect_pat_bindings(ident_pat.into(), ty, BindingMode::BindByValue);
                 }
             }
-            _ => (),
+            ast::Stmt::UpdateStmt(update_stmt) => {
+                if let Some(lhs_expr) = update_stmt.lhs_expr() {
+                    self.infer_assignment(lhs_expr, update_stmt.initializer_expr());
+                }
+            }
+            ast::Stmt::GlobalVariableDecl(global_variable_decl) => {
+                let explicit_ty = global_variable_decl
+                    .type_()
+                    .map(|it| ty_db::lower_type_for_ctx(self.ctx, it.in_file(file_id)));
+                if let Some(initializer_expr) = global_variable_decl.expr() {
+                    self.infer_expr_coerce_to(&initializer_expr, Expected::from_ty(explicit_ty.clone()));
+                }
+            }
+            ast::Stmt::SpecInlineFun(_) => (),
+            // todo:
+            ast::Stmt::ApplySchema(_) => (),
         }
 
         Some(())

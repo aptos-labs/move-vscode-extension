@@ -1959,6 +1959,19 @@ impl UnitType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct UpdateStmt {
+    pub(crate) syntax: SyntaxNode,
+}
+impl UpdateStmt {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
+    #[inline]
+    pub fn eq_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![=]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct UseAlias {
     pub(crate) syntax: SyntaxNode,
 }
@@ -2435,6 +2448,7 @@ pub enum Stmt {
     SchemaField(SchemaField),
     SpecInlineFun(SpecInlineFun),
     SpecPredicateStmt(SpecPredicateStmt),
+    UpdateStmt(UpdateStmt),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -5357,6 +5371,27 @@ impl AstNode for UnitType {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == UNIT_TYPE }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for UpdateStmt {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        UPDATE_STMT
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == UPDATE_STMT }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -8394,6 +8429,10 @@ impl From<SpecPredicateStmt> for Stmt {
     #[inline]
     fn from(node: SpecPredicateStmt) -> Stmt { Stmt::SpecPredicateStmt(node) }
 }
+impl From<UpdateStmt> for Stmt {
+    #[inline]
+    fn from(node: UpdateStmt) -> Stmt { Stmt::UpdateStmt(node) }
+}
 impl From<InvariantStmt> for Stmt {
     #[inline]
     fn from(node: InvariantStmt) -> Stmt { Stmt::GenericSpecStmt(GenericSpecStmt::InvariantStmt(node)) }
@@ -8475,6 +8514,12 @@ impl Stmt {
             _ => None,
         }
     }
+    pub fn update_stmt(self) -> Option<UpdateStmt> {
+        match (self) {
+            Stmt::UpdateStmt(item) => Some(item),
+            _ => None,
+        }
+    }
 }
 impl AstNode for Stmt {
     #[inline]
@@ -8494,6 +8539,7 @@ impl AstNode for Stmt {
                 | SCHEMA_FIELD
                 | SPEC_INLINE_FUN
                 | SPEC_PREDICATE_STMT
+                | UPDATE_STMT
         )
     }
     #[inline]
@@ -8514,6 +8560,7 @@ impl AstNode for Stmt {
             SCHEMA_FIELD => Stmt::SchemaField(SchemaField { syntax }),
             SPEC_INLINE_FUN => Stmt::SpecInlineFun(SpecInlineFun { syntax }),
             SPEC_PREDICATE_STMT => Stmt::SpecPredicateStmt(SpecPredicateStmt { syntax }),
+            UPDATE_STMT => Stmt::UpdateStmt(UpdateStmt { syntax }),
             _ => return None,
         };
         Some(res)
@@ -8533,6 +8580,7 @@ impl AstNode for Stmt {
             Stmt::SchemaField(it) => &it.syntax(),
             Stmt::SpecInlineFun(it) => &it.syntax(),
             Stmt::SpecPredicateStmt(it) => &it.syntax(),
+            Stmt::UpdateStmt(it) => &it.syntax(),
         }
     }
 }
@@ -10119,6 +10167,11 @@ impl std::fmt::Display for UnitPat {
     }
 }
 impl std::fmt::Display for UnitType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for UpdateStmt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

@@ -59,6 +59,9 @@ pub(crate) fn global_variable(p: &mut Parser) -> bool {
     let m = p.start();
     if p.at_contextual_kw_ident("global") {
         p.bump_remap(T![global]);
+    } else {
+        m.abandon(p);
+        return false;
     }
     name(p);
     // patterns::ident_pat(p);

@@ -121,7 +121,7 @@ SOURCE_FILE@0..1295
                   IDENT@269..272 "u64"
           SEMICOLON@272..273 ";"
         WHITESPACE@273..283 "\n\n        "
-        INVARIANT_STMT@283..298
+        INVARIANT_STMT@283..299
           INVARIANT_KW@283..292 "invariant"
           WHITESPACE@292..293 " "
           BIN_EXPR@293..298
@@ -135,9 +135,9 @@ SOURCE_FILE@0..1295
             WHITESPACE@296..297 " "
             LITERAL@297..298
               INT_NUMBER@297..298 "0"
-        SEMICOLON@298..299 ";"
+          SEMICOLON@298..299 ";"
         WHITESPACE@299..308 "\n        "
-        INVARIANT_STMT@308..326
+        INVARIANT_STMT@308..327
           INVARIANT_KW@308..317 "invariant"
           TYPE_PARAM_LIST@317..320
             L_ANGLE@317..318 "<"
@@ -157,9 +157,9 @@ SOURCE_FILE@0..1295
             WHITESPACE@324..325 " "
             LITERAL@325..326
               INT_NUMBER@325..326 "0"
-        SEMICOLON@326..327 ";"
+          SEMICOLON@326..327 ";"
         WHITESPACE@327..336 "\n        "
-        AXIOM_STMT@336..347
+        AXIOM_STMT@336..348
           AXIOM_KW@336..341 "axiom"
           WHITESPACE@341..342 " "
           BIN_EXPR@342..347
@@ -173,9 +173,9 @@ SOURCE_FILE@0..1295
             WHITESPACE@345..346 " "
             LITERAL@346..347
               INT_NUMBER@346..347 "0"
-        SEMICOLON@347..348 ";"
+          SEMICOLON@347..348 ";"
         WHITESPACE@348..357 "\n        "
-        AXIOM_STMT@357..371
+        AXIOM_STMT@357..372
           AXIOM_KW@357..362 "axiom"
           TYPE_PARAM_LIST@362..365
             L_ANGLE@362..363 "<"
@@ -195,9 +195,9 @@ SOURCE_FILE@0..1295
             WHITESPACE@369..370 " "
             LITERAL@370..371
               INT_NUMBER@370..371 "0"
-        SEMICOLON@371..372 ";"
+          SEMICOLON@371..372 ";"
         WHITESPACE@372..381 "\n        "
-        INVARIANT_STMT@381..397
+        INVARIANT_STMT@381..398
           INVARIANT_KW@381..390 "invariant"
           WHITESPACE@390..391 " "
           BIN_EXPR@391..397
@@ -214,9 +214,9 @@ SOURCE_FILE@0..1295
                 PATH_SEGMENT@396..397
                   NAME_REF@396..397
                     IDENT@396..397 "y"
-        SEMICOLON@397..398 ";"
+          SEMICOLON@397..398 ";"
         WHITESPACE@398..408 "\n\n        "
-        INVARIANT_STMT@408..448
+        INVARIANT_STMT@408..449
           INVARIANT_KW@408..417 "invariant"
           WHITESPACE@417..418 " "
           BIN_EXPR@418..448
@@ -253,9 +253,9 @@ SOURCE_FILE@0..1295
             WHITESPACE@444..445 " "
             LITERAL@445..448
               INT_NUMBER@445..448 "128"
-        SEMICOLON@448..449 ";"
+          SEMICOLON@448..449 ";"
         WHITESPACE@449..458 "\n        "
-        INVARIANT_STMT@458..485
+        INVARIANT_STMT@458..486
           INVARIANT_KW@458..467 "invariant"
           WHITESPACE@467..468 " "
           UPDATE_KW@468..474 "update"
@@ -284,9 +284,9 @@ SOURCE_FILE@0..1295
                 PATH_SEGMENT@484..485
                   NAME_REF@484..485
                     IDENT@484..485 "x"
-        SEMICOLON@485..486 ";"
+          SEMICOLON@485..486 ";"
         WHITESPACE@486..495 "\n        "
-        INVARIANT_STMT@495..562
+        INVARIANT_STMT@495..563
           INVARIANT_KW@495..504 "invariant"
           WHITESPACE@504..505 " "
           UPDATE_KW@505..511 "update"
@@ -333,9 +333,9 @@ SOURCE_FILE@0..1295
                   PATH_SEGMENT@561..562
                     NAME_REF@561..562
                       IDENT@561..562 "x"
-        SEMICOLON@562..563 ";"
+          SEMICOLON@562..563 ";"
         WHITESPACE@563..573 "\n\n        "
-        INVARIANT_STMT@573..597
+        INVARIANT_STMT@573..598
           INVARIANT_KW@573..582 "invariant"
           WHITESPACE@582..583 " "
           SPEC_PREDICATE_PROPERTY_LIST@583..591
@@ -355,9 +355,9 @@ SOURCE_FILE@0..1295
             WHITESPACE@595..596 " "
             LITERAL@596..597
               INT_NUMBER@596..597 "0"
-        SEMICOLON@597..598 ";"
+          SEMICOLON@597..598 ";"
         WHITESPACE@598..607 "\n        "
-        INVARIANT_STMT@607..641
+        INVARIANT_STMT@607..642
           INVARIANT_KW@607..616 "invariant"
           WHITESPACE@616..617 " "
           SPEC_PREDICATE_PROPERTY_LIST@617..635
@@ -381,9 +381,9 @@ SOURCE_FILE@0..1295
             WHITESPACE@639..640 " "
             LITERAL@640..641
               INT_NUMBER@640..641 "0"
-        SEMICOLON@641..642 ";"
+          SEMICOLON@641..642 ";"
         WHITESPACE@642..651 "\n        "
-        INVARIANT_STMT@651..698
+        INVARIANT_STMT@651..699
           INVARIANT_KW@651..660 "invariant"
           WHITESPACE@660..661 " "
           SPEC_PREDICATE_PROPERTY_LIST@661..692
@@ -411,9 +411,9 @@ SOURCE_FILE@0..1295
             WHITESPACE@696..697 " "
             LITERAL@697..698
               INT_NUMBER@697..698 "0"
-        SEMICOLON@698..699 ";"
+          SEMICOLON@698..699 ";"
         WHITESPACE@699..708 "\n        "
-        INVARIANT_STMT@708..739
+        INVARIANT_STMT@708..740
           INVARIANT_KW@708..717 "invariant"
           WHITESPACE@717..718 " "
           UPDATE_KW@718..724 "update"
@@ -435,7 +435,7 @@ SOURCE_FILE@0..1295
             WHITESPACE@737..738 " "
             LITERAL@738..739
               INT_NUMBER@738..739 "0"
-        SEMICOLON@739..740 ";"
+          SEMICOLON@739..740 ";"
         WHITESPACE@740..750 "\n\n        "
         ABORTS_IF_STMT@750..767
           ABORTS_IF_KW@750..759 "aborts_if"
