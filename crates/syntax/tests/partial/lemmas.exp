@@ -17,10 +17,5 @@ module 0x1::lemmas {
         }
 
         lemma lemma_with_proof() {} proof { assume [trusted] true; }
-                                                          //^ expected COMMA
-                                                           //^^^^ expected identifier
-                                                           //^^^^ expected COMMA
-                                                           //^^^^ expected R_CURLY
     }
 }
-//< unexpected ident '}'

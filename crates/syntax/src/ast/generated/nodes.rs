@@ -787,6 +787,8 @@ impl ItemSpec {
         support::child(&self.syntax)
     }
     #[inline]
+    pub fn proof(&self) -> Option<Proof> { support::child(&self.syntax) }
+    #[inline]
     pub fn spec_block(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
     #[inline]
     pub fn module_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![module]) }
@@ -940,6 +942,23 @@ impl LambdaTypeParam {
     pub fn type_(&self) -> Type {
         support::child(&self.syntax).expect("LambdaTypeParam.type_ required by the parser")
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Lemma {
+    pub(crate) syntax: SyntaxNode,
+}
+impl Lemma {
+    #[inline]
+    pub fn block_expr(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
+    #[inline]
+    pub fn param_list(&self) -> Option<ParamList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn type_param_list(&self) -> Option<TypeParamList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn lemma_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![lemma]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -1357,6 +1376,17 @@ impl PragmaStmt {
     pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
     #[inline]
     pub fn pragma_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![pragma]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Proof {
+    pub(crate) syntax: SyntaxNode,
+}
+impl Proof {
+    #[inline]
+    pub fn block_expr(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn proof_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![proof]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -2325,6 +2355,8 @@ pub enum InferenceCtxOwner {
     Fun(Fun),
     Initializer(Initializer),
     ItemSpec(ItemSpec),
+    Lemma(Lemma),
+    Proof(Proof),
     Schema(Schema),
     SpecFun(SpecFun),
     SpecInlineFun(SpecInlineFun),
@@ -2443,6 +2475,7 @@ pub enum Stmt {
     GenericSpecStmt(GenericSpecStmt),
     GlobalVariableDecl(GlobalVariableDecl),
     IncludeSchema(IncludeSchema),
+    Lemma(Lemma),
     LetStmt(LetStmt),
     PragmaStmt(PragmaStmt),
     SchemaField(SchemaField),
@@ -3891,6 +3924,27 @@ impl AstNode for LambdaTypeParam {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for Lemma {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        LEMMA
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == LEMMA }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for LetStmt {
     #[inline]
     fn kind() -> SyntaxKind
@@ -4489,6 +4543,27 @@ impl AstNode for PragmaStmt {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == PRAGMA_STMT }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for Proof {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        PROOF
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == PROOF }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -7211,6 +7286,14 @@ impl From<ItemSpec> for InferenceCtxOwner {
     #[inline]
     fn from(node: ItemSpec) -> InferenceCtxOwner { InferenceCtxOwner::ItemSpec(node) }
 }
+impl From<Lemma> for InferenceCtxOwner {
+    #[inline]
+    fn from(node: Lemma) -> InferenceCtxOwner { InferenceCtxOwner::Lemma(node) }
+}
+impl From<Proof> for InferenceCtxOwner {
+    #[inline]
+    fn from(node: Proof) -> InferenceCtxOwner { InferenceCtxOwner::Proof(node) }
+}
 impl From<Schema> for InferenceCtxOwner {
     #[inline]
     fn from(node: Schema) -> InferenceCtxOwner { InferenceCtxOwner::Schema(node) }
@@ -7242,6 +7325,18 @@ impl InferenceCtxOwner {
             _ => None,
         }
     }
+    pub fn lemma(self) -> Option<Lemma> {
+        match (self) {
+            InferenceCtxOwner::Lemma(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn proof(self) -> Option<Proof> {
+        match (self) {
+            InferenceCtxOwner::Proof(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn schema(self) -> Option<Schema> {
         match (self) {
             InferenceCtxOwner::Schema(item) => Some(item),
@@ -7266,7 +7361,7 @@ impl AstNode for InferenceCtxOwner {
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            FUN | INITIALIZER | ITEM_SPEC | SCHEMA | SPEC_FUN | SPEC_INLINE_FUN
+            FUN | INITIALIZER | ITEM_SPEC | LEMMA | PROOF | SCHEMA | SPEC_FUN | SPEC_INLINE_FUN
         )
     }
     #[inline]
@@ -7275,6 +7370,8 @@ impl AstNode for InferenceCtxOwner {
             FUN => InferenceCtxOwner::Fun(Fun { syntax }),
             INITIALIZER => InferenceCtxOwner::Initializer(Initializer { syntax }),
             ITEM_SPEC => InferenceCtxOwner::ItemSpec(ItemSpec { syntax }),
+            LEMMA => InferenceCtxOwner::Lemma(Lemma { syntax }),
+            PROOF => InferenceCtxOwner::Proof(Proof { syntax }),
             SCHEMA => InferenceCtxOwner::Schema(Schema { syntax }),
             SPEC_FUN => InferenceCtxOwner::SpecFun(SpecFun { syntax }),
             SPEC_INLINE_FUN => InferenceCtxOwner::SpecInlineFun(SpecInlineFun { syntax }),
@@ -7288,6 +7385,8 @@ impl AstNode for InferenceCtxOwner {
             InferenceCtxOwner::Fun(it) => &it.syntax(),
             InferenceCtxOwner::Initializer(it) => &it.syntax(),
             InferenceCtxOwner::ItemSpec(it) => &it.syntax(),
+            InferenceCtxOwner::Lemma(it) => &it.syntax(),
+            InferenceCtxOwner::Proof(it) => &it.syntax(),
             InferenceCtxOwner::Schema(it) => &it.syntax(),
             InferenceCtxOwner::SpecFun(it) => &it.syntax(),
             InferenceCtxOwner::SpecInlineFun(it) => &it.syntax(),
@@ -8409,6 +8508,10 @@ impl From<IncludeSchema> for Stmt {
     #[inline]
     fn from(node: IncludeSchema) -> Stmt { Stmt::IncludeSchema(node) }
 }
+impl From<Lemma> for Stmt {
+    #[inline]
+    fn from(node: Lemma) -> Stmt { Stmt::Lemma(node) }
+}
 impl From<LetStmt> for Stmt {
     #[inline]
     fn from(node: LetStmt) -> Stmt { Stmt::LetStmt(node) }
@@ -8484,6 +8587,12 @@ impl Stmt {
             _ => None,
         }
     }
+    pub fn lemma(self) -> Option<Lemma> {
+        match (self) {
+            Stmt::Lemma(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn let_stmt(self) -> Option<LetStmt> {
         match (self) {
             Stmt::LetStmt(item) => Some(item),
@@ -8534,6 +8643,7 @@ impl AstNode for Stmt {
                 | INVARIANT_STMT
                 | GLOBAL_VARIABLE_DECL
                 | INCLUDE_SCHEMA
+                | LEMMA
                 | LET_STMT
                 | PRAGMA_STMT
                 | SCHEMA_FIELD
@@ -8555,6 +8665,7 @@ impl AstNode for Stmt {
             }
             GLOBAL_VARIABLE_DECL => Stmt::GlobalVariableDecl(GlobalVariableDecl { syntax }),
             INCLUDE_SCHEMA => Stmt::IncludeSchema(IncludeSchema { syntax }),
+            LEMMA => Stmt::Lemma(Lemma { syntax }),
             LET_STMT => Stmt::LetStmt(LetStmt { syntax }),
             PRAGMA_STMT => Stmt::PragmaStmt(PragmaStmt { syntax }),
             SCHEMA_FIELD => Stmt::SchemaField(SchemaField { syntax }),
@@ -8575,6 +8686,7 @@ impl AstNode for Stmt {
             Stmt::GenericSpecStmt(it) => &it.syntax(),
             Stmt::GlobalVariableDecl(it) => &it.syntax(),
             Stmt::IncludeSchema(it) => &it.syntax(),
+            Stmt::Lemma(it) => &it.syntax(),
             Stmt::LetStmt(it) => &it.syntax(),
             Stmt::PragmaStmt(it) => &it.syntax(),
             Stmt::SchemaField(it) => &it.syntax(),
@@ -9816,6 +9928,11 @@ impl std::fmt::Display for LambdaTypeParam {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for Lemma {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for LetStmt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -9957,6 +10074,11 @@ impl std::fmt::Display for PragmaAttrItem {
     }
 }
 impl std::fmt::Display for PragmaStmt {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for Proof {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

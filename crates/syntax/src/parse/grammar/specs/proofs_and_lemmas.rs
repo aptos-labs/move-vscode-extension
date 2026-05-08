@@ -1,19 +1,18 @@
 use crate::SyntaxKind::*;
 use crate::T;
-use crate::parse::grammar::expressions::blocks;
-use crate::parse::grammar::expressions::blocks::StmtKind;
+use crate::parse::grammar::expressions::blocks::{StmtKind, stmt};
+use crate::parse::grammar::expressions::{blocks, expr};
 use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::specs::quants;
 use crate::parse::grammar::specs::quants::quant_binding_list;
 use crate::parse::grammar::type_params::opt_type_param_list;
 use crate::parse::grammar::{expressions, name, params, paths};
-use crate::parse::parser::{CompletedMarker, Parser};
+use crate::parse::parser::{CompletedMarker, Marker, Parser};
 use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
 
 pub(crate) fn proof(p: &mut Parser) {
     assert!(p.at_contextual_kw_ident("proof"));
-
     let m = p.start();
     p.bump_remap(T![proof]);
     if p.at(T!['{']) {
@@ -40,6 +39,11 @@ pub(crate) fn lemma(p: &mut Parser) {
     } else {
         p.error("expected block");
     }
+
+    if p.at_contextual_kw_ident("proof") {
+        proof(p);
+    }
+
     m.complete(p, LEMMA);
 }
 
@@ -73,5 +77,28 @@ pub(crate) fn forall_apply_lemma(p: &mut Parser) -> bool {
         p.error("expected apply");
     }
     m.complete(p, FORALL_APPLY_LEMMA);
+    true
+}
+
+pub(crate) fn post_stmt(p: &mut Parser) -> bool {
+    if !p.at_contextual_kw_ident("post") {
+        return false;
+    }
+    let m = p.start();
+    p.bump_remap(T![post]);
+    stmt(p, StmtKind::Proof);
+    m.complete(p, POST_STMT);
+    true
+}
+
+pub(crate) fn split_stmt(p: &mut Parser) -> bool {
+    if !p.at_contextual_kw_ident("split") {
+        return false;
+    }
+    let m = p.start();
+    p.bump_remap(T![split]);
+    expr(p);
+    p.eat(T![;]);
+    m.complete(p, SPLIT_STMT);
     true
 }

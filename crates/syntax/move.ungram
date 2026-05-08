@@ -69,7 +69,7 @@ ReferenceElement =
     | Label
 
 InferenceCtxOwner =
-    Fun | SpecFun | SpecInlineFun | ItemSpec | Schema | Initializer
+    Fun | SpecFun | SpecInlineFun | ItemSpec | Schema | Initializer | Proof | Lemma
 
 IdentPatOwner =
     LetStmt | Param | LambdaParam | SchemaField | QuantBinding | ItemSpecParam | ForCondition | MatchArm
@@ -251,6 +251,7 @@ Stmt =
     | SpecPredicateStmt | AbortsIfStmt | AbortsWithStmt | PragmaStmt | UpdateStmt
     | GenericSpecStmt
     | SpecInlineFun | GlobalVariableDecl
+    | Lemma
 
 GenericSpecStmt = InvariantStmt | AxiomStmt
 
@@ -510,7 +511,8 @@ ModuleSpec =
     Attr* 'spec' Path '{' UseStmt* Item* '}'
 
 ItemSpec =
-    Attr* 'spec' ('module' | (ItemSpecRef ItemSpecTypeParamList? ItemSpecParamList?)) spec_block:BlockExpr
+    Attr* 'spec' ('module' | (ItemSpecRef ItemSpecTypeParamList? ItemSpecParamList?))
+        spec_block:BlockExpr Proof?
 
 ItemSpecItem =
     Fun | StructOrEnum
@@ -649,3 +651,7 @@ WildcardPattern =
 
 WildcardPatternModifier =
     'public' | 'internal'
+
+Proof = 'proof' BlockExpr
+
+Lemma = 'lemma' Name TypeParamList? ParamList BlockExpr

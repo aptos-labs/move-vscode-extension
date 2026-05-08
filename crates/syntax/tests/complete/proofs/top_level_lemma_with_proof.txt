@@ -1,0 +1,113 @@
+SOURCE_FILE@0..168
+  MODULE@0..167
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..38
+      IDENT@12..38 "top_level_lemma_with_ ..."
+    WHITESPACE@38..39 " "
+    L_CURLY@39..40 "{"
+    WHITESPACE@40..45 "\n    "
+    SPEC_LEMMA@45..165
+      SPEC_KW@45..49 "spec"
+      WHITESPACE@49..50 " "
+      LEMMA@50..165
+        LEMMA_KW@50..55 "lemma"
+        WHITESPACE@55..56 " "
+        NAME@56..64
+          IDENT@56..64 "mul_comm"
+        PARAM_LIST@64..80
+          L_PAREN@64..65 "("
+          PARAM@65..71
+            IDENT_PAT@65..66
+              NAME@65..66
+                IDENT@65..66 "a"
+            COLON@66..67 ":"
+            WHITESPACE@67..68 " "
+            PATH_TYPE@68..71
+              PATH@68..71
+                PATH_SEGMENT@68..71
+                  NAME_REF@68..71
+                    IDENT@68..71 "u64"
+          COMMA@71..72 ","
+          WHITESPACE@72..73 " "
+          PARAM@73..79
+            IDENT_PAT@73..74
+              NAME@73..74
+                IDENT@73..74 "b"
+            COLON@74..75 ":"
+            WHITESPACE@75..76 " "
+            PATH_TYPE@76..79
+              PATH@76..79
+                PATH_SEGMENT@76..79
+                  NAME_REF@76..79
+                    IDENT@76..79 "u64"
+          R_PAREN@79..80 ")"
+        WHITESPACE@80..81 " "
+        BLOCK_EXPR@81..120
+          L_CURLY@81..82 "{"
+          WHITESPACE@82..91 "\n        "
+          SPEC_PREDICATE_STMT@91..114
+            ENSURES_KW@91..98 "ensures"
+            WHITESPACE@98..99 " "
+            BIN_EXPR@99..113
+              BIN_EXPR@99..104
+                PATH_EXPR@99..100
+                  PATH@99..100
+                    PATH_SEGMENT@99..100
+                      NAME_REF@99..100
+                        IDENT@99..100 "a"
+                WHITESPACE@100..101 " "
+                STAR@101..102 "*"
+                WHITESPACE@102..103 " "
+                PATH_EXPR@103..104
+                  PATH@103..104
+                    PATH_SEGMENT@103..104
+                      NAME_REF@103..104
+                        IDENT@103..104 "b"
+              WHITESPACE@104..105 " "
+              EQ_EQ@105..107 "=="
+              WHITESPACE@107..108 " "
+              BIN_EXPR@108..113
+                PATH_EXPR@108..109
+                  PATH@108..109
+                    PATH_SEGMENT@108..109
+                      NAME_REF@108..109
+                        IDENT@108..109 "b"
+                WHITESPACE@109..110 " "
+                STAR@110..111 "*"
+                WHITESPACE@111..112 " "
+                PATH_EXPR@112..113
+                  PATH@112..113
+                    PATH_SEGMENT@112..113
+                      NAME_REF@112..113
+                        IDENT@112..113 "a"
+            SEMICOLON@113..114 ";"
+          WHITESPACE@114..119 "\n    "
+          R_CURLY@119..120 "}"
+        WHITESPACE@120..121 " "
+        PROOF@121..165
+          PROOF_KW@121..126 "proof"
+          WHITESPACE@126..127 " "
+          BLOCK_EXPR@127..165
+            L_CURLY@127..128 "{"
+            WHITESPACE@128..137 "\n        "
+            SPEC_PREDICATE_STMT@137..159
+              ASSUME_KW@137..143 "assume"
+              WHITESPACE@143..144 " "
+              SPEC_PREDICATE_PROPERTY_LIST@144..153
+                L_BRACK@144..145 "["
+                SPEC_PREDICATE_PROPERTY@145..152
+                  IDENT@145..152 "trusted"
+                R_BRACK@152..153 "]"
+              WHITESPACE@153..154 " "
+              LITERAL@154..158
+                TRUE_KW@154..158 "true"
+              SEMICOLON@158..159 ";"
+            WHITESPACE@159..164 "\n    "
+            R_CURLY@164..165 "}"
+    WHITESPACE@165..166 "\n"
+    R_CURLY@166..167 "}"
+  WHITESPACE@167..168 "\n"
