@@ -103,6 +103,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     self.infer_expr_coerceable_to(&expr, expected_ty.unwrap_or(Ty::Unknown));
                 }
             }
+            // todo
+            ast::InferenceCtxOwner::Proof(_) => (),
+            ast::InferenceCtxOwner::Lemma(_) => (),
         }
 
         self.walk_lambda_expr_bodies();
@@ -317,9 +320,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     self.infer_expr_coerce_to(&initializer_expr, Expected::from_ty(explicit_ty.clone()));
                 }
             }
-            ast::Stmt::SpecInlineFun(_) => (),
             // todo:
             ast::Stmt::ApplySchema(_) => (),
+            ast::Stmt::SpecInlineFun(_) => (),
+            ast::Stmt::Lemma(_) => (),
         }
 
         Some(())

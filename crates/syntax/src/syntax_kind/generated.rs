@@ -307,9 +307,11 @@ pub enum SyntaxKind {
     PROOF,
     PROOF_BLOCK,
     LEMMA,
+    SPEC_LEMMA,
     LEMMA_BLOCK,
     APPLY_LEMMA,
     FORALL_APPLY_LEMMA,
+    POST_STMT,
     #[doc(hidden)]
     __LAST,
 }

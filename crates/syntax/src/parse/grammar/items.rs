@@ -17,6 +17,7 @@ use crate::parse::grammar::items::fun::{
     on_visibility_modifier_start, visibility_modifier,
 };
 use crate::parse::grammar::patterns::STMT_FIRST;
+use crate::parse::grammar::specs::proofs_and_lemmas::lemma;
 use crate::parse::grammar::specs::schemas::schema;
 use crate::parse::grammar::{attributes, name_or_recover, paths, types};
 use crate::parse::parser::{Marker, Parser};
@@ -122,6 +123,11 @@ pub(super) fn opt_item(p: &mut Parser, m: Marker) -> Result<(), Marker> {
             p.bump(T![spec]);
             if p.at_contextual_kw_ident("schema") {
                 schema(p, m);
+                return Ok(());
+            }
+            if p.at_contextual_kw_ident("lemma") {
+                lemma(p);
+                m.complete(p, SPEC_LEMMA);
                 return Ok(());
             }
             match p.current() {
