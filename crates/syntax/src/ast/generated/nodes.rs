@@ -950,11 +950,11 @@ pub struct Lemma {
 }
 impl Lemma {
     #[inline]
-    pub fn block_expr(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
-    #[inline]
     pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
     #[inline]
     pub fn param_list(&self) -> Option<ParamList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn spec_block(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
     #[inline]
     pub fn type_param_list(&self) -> Option<TypeParamList> { support::child(&self.syntax) }
     #[inline]
@@ -1384,7 +1384,7 @@ pub struct Proof {
 }
 impl Proof {
     #[inline]
-    pub fn block_expr(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
+    pub fn spec_block(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
     #[inline]
     pub fn proof_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![proof]) }
 }
@@ -1665,6 +1665,17 @@ impl SpecInlineFun {
     pub fn fun_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![fun]) }
     #[inline]
     pub fn native_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![native]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct SpecLemma {
+    pub(crate) syntax: SyntaxNode,
+}
+impl SpecLemma {
+    #[inline]
+    pub fn lemma(&self) -> Option<Lemma> { support::child(&self.syntax) }
+    #[inline]
+    pub fn spec_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![spec]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -2317,12 +2328,12 @@ pub enum GenericElement {
     Enum(Enum),
     Fun(Fun),
     GlobalVariableDecl(GlobalVariableDecl),
+    Lemma(Lemma),
     Schema(Schema),
     SpecFun(SpecFun),
     SpecInlineFun(SpecInlineFun),
     Struct(Struct),
 }
-impl ast::HasAttrs for GenericElement {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum GenericSpecStmt {
@@ -2377,9 +2388,9 @@ pub enum Item {
     ItemSpec(ItemSpec),
     Schema(Schema),
     SpecFun(SpecFun),
+    SpecLemma(SpecLemma),
     Struct(Struct),
 }
-impl ast::HasAttrs for Item {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ItemSpecItem {
@@ -2422,6 +2433,7 @@ pub enum NamedElement {
     Fun(Fun),
     GlobalVariableDecl(GlobalVariableDecl),
     IdentPat(IdentPat),
+    Lemma(Lemma),
     Module(Module),
     NamedField(NamedField),
     Schema(Schema),
@@ -4974,6 +4986,27 @@ impl AstNode for SpecInlineFun {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for SpecLemma {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        SPEC_LEMMA
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == SPEC_LEMMA }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for SpecPredicateProperty {
     #[inline]
     fn kind() -> SyntaxKind
@@ -6867,6 +6900,10 @@ impl From<GlobalVariableDecl> for GenericElement {
     #[inline]
     fn from(node: GlobalVariableDecl) -> GenericElement { GenericElement::GlobalVariableDecl(node) }
 }
+impl From<Lemma> for GenericElement {
+    #[inline]
+    fn from(node: Lemma) -> GenericElement { GenericElement::Lemma(node) }
+}
 impl From<Schema> for GenericElement {
     #[inline]
     fn from(node: Schema) -> GenericElement { GenericElement::Schema(node) }
@@ -6883,20 +6920,6 @@ impl From<Struct> for GenericElement {
     #[inline]
     fn from(node: Struct) -> GenericElement { GenericElement::Struct(node) }
 }
-impl From<GenericElement> for AnyHasAttrs {
-    #[inline]
-    fn from(node: GenericElement) -> AnyHasAttrs {
-        match node {
-            GenericElement::Enum(it) => it.into(),
-            GenericElement::Fun(it) => it.into(),
-            GenericElement::GlobalVariableDecl(it) => it.into(),
-            GenericElement::Schema(it) => it.into(),
-            GenericElement::SpecFun(it) => it.into(),
-            GenericElement::SpecInlineFun(it) => it.into(),
-            GenericElement::Struct(it) => it.into(),
-        }
-    }
-}
 impl From<GenericElement> for NamedElement {
     #[inline]
     fn from(node: GenericElement) -> NamedElement {
@@ -6904,6 +6927,7 @@ impl From<GenericElement> for NamedElement {
             GenericElement::Enum(it) => it.into(),
             GenericElement::Fun(it) => it.into(),
             GenericElement::GlobalVariableDecl(it) => it.into(),
+            GenericElement::Lemma(it) => it.into(),
             GenericElement::Schema(it) => it.into(),
             GenericElement::SpecFun(it) => it.into(),
             GenericElement::SpecInlineFun(it) => it.into(),
@@ -6927,6 +6951,12 @@ impl GenericElement {
     pub fn global_variable_decl(self) -> Option<GlobalVariableDecl> {
         match (self) {
             GenericElement::GlobalVariableDecl(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn lemma(self) -> Option<Lemma> {
+        match (self) {
+            GenericElement::Lemma(item) => Some(item),
             _ => None,
         }
     }
@@ -6960,6 +6990,7 @@ impl GenericElement {
             GenericElement::Enum(it) => it.name(),
             GenericElement::Fun(it) => it.name(),
             GenericElement::GlobalVariableDecl(it) => it.name(),
+            GenericElement::Lemma(it) => it.name(),
             GenericElement::Schema(it) => it.name(),
             GenericElement::SpecFun(it) => it.name(),
             GenericElement::SpecInlineFun(it) => it.name(),
@@ -6972,6 +7003,7 @@ impl GenericElement {
             GenericElement::Enum(it) => it.type_param_list(),
             GenericElement::Fun(it) => it.type_param_list(),
             GenericElement::GlobalVariableDecl(it) => it.type_param_list(),
+            GenericElement::Lemma(it) => it.type_param_list(),
             GenericElement::Schema(it) => it.type_param_list(),
             GenericElement::SpecFun(it) => it.type_param_list(),
             GenericElement::SpecInlineFun(it) => it.type_param_list(),
@@ -6984,7 +7016,7 @@ impl AstNode for GenericElement {
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            ENUM | FUN | GLOBAL_VARIABLE_DECL | SCHEMA | SPEC_FUN | SPEC_INLINE_FUN | STRUCT
+            ENUM | FUN | GLOBAL_VARIABLE_DECL | LEMMA | SCHEMA | SPEC_FUN | SPEC_INLINE_FUN | STRUCT
         )
     }
     #[inline]
@@ -6993,6 +7025,7 @@ impl AstNode for GenericElement {
             ENUM => GenericElement::Enum(Enum { syntax }),
             FUN => GenericElement::Fun(Fun { syntax }),
             GLOBAL_VARIABLE_DECL => GenericElement::GlobalVariableDecl(GlobalVariableDecl { syntax }),
+            LEMMA => GenericElement::Lemma(Lemma { syntax }),
             SCHEMA => GenericElement::Schema(Schema { syntax }),
             SPEC_FUN => GenericElement::SpecFun(SpecFun { syntax }),
             SPEC_INLINE_FUN => GenericElement::SpecInlineFun(SpecInlineFun { syntax }),
@@ -7007,6 +7040,7 @@ impl AstNode for GenericElement {
             GenericElement::Enum(it) => &it.syntax(),
             GenericElement::Fun(it) => &it.syntax(),
             GenericElement::GlobalVariableDecl(it) => &it.syntax(),
+            GenericElement::Lemma(it) => &it.syntax(),
             GenericElement::Schema(it) => &it.syntax(),
             GenericElement::SpecFun(it) => &it.syntax(),
             GenericElement::SpecInlineFun(it) => &it.syntax(),
@@ -7463,24 +7497,13 @@ impl From<SpecFun> for Item {
     #[inline]
     fn from(node: SpecFun) -> Item { Item::SpecFun(node) }
 }
+impl From<SpecLemma> for Item {
+    #[inline]
+    fn from(node: SpecLemma) -> Item { Item::SpecLemma(node) }
+}
 impl From<Struct> for Item {
     #[inline]
     fn from(node: Struct) -> Item { Item::Struct(node) }
-}
-impl From<Item> for AnyHasAttrs {
-    #[inline]
-    fn from(node: Item) -> AnyHasAttrs {
-        match node {
-            Item::Const(it) => it.into(),
-            Item::Enum(it) => it.into(),
-            Item::Friend(it) => it.into(),
-            Item::Fun(it) => it.into(),
-            Item::ItemSpec(it) => it.into(),
-            Item::Schema(it) => it.into(),
-            Item::SpecFun(it) => it.into(),
-            Item::Struct(it) => it.into(),
-        }
-    }
 }
 impl Item {
     pub fn const_(self) -> Option<Const> {
@@ -7525,6 +7548,12 @@ impl Item {
             _ => None,
         }
     }
+    pub fn spec_lemma(self) -> Option<SpecLemma> {
+        match (self) {
+            Item::SpecLemma(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn struct_(self) -> Option<Struct> {
         match (self) {
             Item::Struct(item) => Some(item),
@@ -7537,7 +7566,7 @@ impl AstNode for Item {
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            CONST | ENUM | FRIEND | FUN | ITEM_SPEC | SCHEMA | SPEC_FUN | STRUCT
+            CONST | ENUM | FRIEND | FUN | ITEM_SPEC | SCHEMA | SPEC_FUN | SPEC_LEMMA | STRUCT
         )
     }
     #[inline]
@@ -7550,6 +7579,7 @@ impl AstNode for Item {
             ITEM_SPEC => Item::ItemSpec(ItemSpec { syntax }),
             SCHEMA => Item::Schema(Schema { syntax }),
             SPEC_FUN => Item::SpecFun(SpecFun { syntax }),
+            SPEC_LEMMA => Item::SpecLemma(SpecLemma { syntax }),
             STRUCT => Item::Struct(Struct { syntax }),
             _ => return None,
         };
@@ -7565,6 +7595,7 @@ impl AstNode for Item {
             Item::ItemSpec(it) => &it.syntax(),
             Item::Schema(it) => &it.syntax(),
             Item::SpecFun(it) => &it.syntax(),
+            Item::SpecLemma(it) => &it.syntax(),
             Item::Struct(it) => &it.syntax(),
         }
     }
@@ -7914,6 +7945,10 @@ impl From<IdentPat> for NamedElement {
     #[inline]
     fn from(node: IdentPat) -> NamedElement { NamedElement::IdentPat(node) }
 }
+impl From<Lemma> for NamedElement {
+    #[inline]
+    fn from(node: Lemma) -> NamedElement { NamedElement::Lemma(node) }
+}
 impl From<Module> for NamedElement {
     #[inline]
     fn from(node: Module) -> NamedElement { NamedElement::Module(node) }
@@ -7981,6 +8016,12 @@ impl NamedElement {
             _ => None,
         }
     }
+    pub fn lemma(self) -> Option<Lemma> {
+        match (self) {
+            NamedElement::Lemma(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn module(self) -> Option<Module> {
         match (self) {
             NamedElement::Module(item) => Some(item),
@@ -8043,6 +8084,7 @@ impl NamedElement {
             NamedElement::Fun(it) => it.name(),
             NamedElement::GlobalVariableDecl(it) => it.name(),
             NamedElement::IdentPat(it) => it.name(),
+            NamedElement::Lemma(it) => it.name(),
             NamedElement::Module(it) => it.name(),
             NamedElement::NamedField(it) => it.name(),
             NamedElement::Schema(it) => it.name(),
@@ -8065,6 +8107,7 @@ impl AstNode for NamedElement {
                 | FUN
                 | GLOBAL_VARIABLE_DECL
                 | IDENT_PAT
+                | LEMMA
                 | MODULE
                 | NAMED_FIELD
                 | SCHEMA
@@ -8084,6 +8127,7 @@ impl AstNode for NamedElement {
             FUN => NamedElement::Fun(Fun { syntax }),
             GLOBAL_VARIABLE_DECL => NamedElement::GlobalVariableDecl(GlobalVariableDecl { syntax }),
             IDENT_PAT => NamedElement::IdentPat(IdentPat { syntax }),
+            LEMMA => NamedElement::Lemma(Lemma { syntax }),
             MODULE => NamedElement::Module(Module { syntax }),
             NAMED_FIELD => NamedElement::NamedField(NamedField { syntax }),
             SCHEMA => NamedElement::Schema(Schema { syntax }),
@@ -8105,6 +8149,7 @@ impl AstNode for NamedElement {
             NamedElement::Fun(it) => &it.syntax(),
             NamedElement::GlobalVariableDecl(it) => &it.syntax(),
             NamedElement::IdentPat(it) => &it.syntax(),
+            NamedElement::Lemma(it) => &it.syntax(),
             NamedElement::Module(it) => &it.syntax(),
             NamedElement::NamedField(it) => &it.syntax(),
             NamedElement::Schema(it) => &it.syntax(),
@@ -10174,6 +10219,11 @@ impl std::fmt::Display for SpecFun {
     }
 }
 impl std::fmt::Display for SpecInlineFun {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for SpecLemma {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

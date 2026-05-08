@@ -71,6 +71,7 @@ pub(crate) fn symbol_kind(symbol_kind: SymbolKind) -> lsp_types::SymbolKind {
         SymbolKind::Vector => lsp_types::SymbolKind::FUNCTION,
         SymbolKind::Assert => lsp_types::SymbolKind::FUNCTION,
         SymbolKind::Schema => lsp_types::SymbolKind::STRUCT,
+        SymbolKind::Lemma => lsp_types::SymbolKind::FUNCTION,
     }
 }
 
@@ -111,6 +112,7 @@ pub(crate) fn completion_item_kind(
             SymbolKind::Vector => lsp_types::CompletionItemKind::FUNCTION,
             SymbolKind::Assert => lsp_types::CompletionItemKind::FUNCTION,
             SymbolKind::Schema => lsp_types::CompletionItemKind::STRUCT,
+            SymbolKind::Lemma => lsp_types::CompletionItemKind::FUNCTION,
         },
     }
 }
@@ -365,6 +367,7 @@ fn semantic_token_type(highlight: Highlight) -> lsp_types::SemanticTokenType {
             SymbolKind::Vector => types::MACRO,
             SymbolKind::Assert => types::MACRO,
             SymbolKind::Schema => types::STRUCT,
+            SymbolKind::Lemma => types::FUNCTION,
         },
         HlTag::AttributeBracket => types::ATTRIBUTE_BRACKET,
         HlTag::BoolLiteral => types::BOOLEAN,

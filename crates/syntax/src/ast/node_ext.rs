@@ -47,6 +47,7 @@ mod item_spec_type_param;
 mod lambda_expr;
 mod lambda_param;
 mod lambda_type;
+mod lemma;
 mod let_stmt;
 pub mod literal;
 mod loop_label;

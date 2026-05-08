@@ -93,6 +93,10 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: &InFile<SyntaxNode
             let fun = scope.syntax_cast::<ast::AnyFun>().unwrap();
             entries.extend(fun.value.params_as_bindings().to_entries(file_id));
         }
+        LEMMA => {
+            let lemma = scope.syntax_cast::<ast::Lemma>().unwrap();
+            entries.extend(lemma.value.params_as_bindings().to_entries(file_id));
+        }
         LAMBDA_EXPR => {
             let lambda_expr = scope.syntax_cast::<ast::LambdaExpr>().unwrap();
             entries.extend(lambda_expr.value.param_ident_pats().to_entries(file_id));

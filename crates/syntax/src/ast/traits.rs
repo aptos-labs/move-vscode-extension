@@ -46,6 +46,10 @@ pub trait HasStmts: AstNode {
     fn global_variables(&self) -> Vec<ast::GlobalVariableDecl> {
         self.stmts().filter_map(|it| it.global_variable_decl()).collect()
     }
+
+    fn lemmas(&self) -> Vec<ast::Lemma> {
+        self.stmts().filter_map(|it| it.lemma()).collect()
+    }
 }
 
 pub trait HasAttrs: AstNode {

@@ -39,6 +39,7 @@ Item =
     | SpecFun
     | Schema
     | ItemSpec
+    | SpecLemma
 
 NamedElement =
     Module
@@ -55,6 +56,7 @@ NamedElement =
     | UseAlias
     | Schema
     | GlobalVariableDecl
+    | Lemma
 
 ReferenceElement =
     Path
@@ -451,6 +453,7 @@ GenericElement =
     | Enum
     | Schema
     | GlobalVariableDecl
+    | Lemma
 
 TypeParamList =
     '<' type_parameters:(TypeParam (',' TypeParam)* ','?)? '>'
@@ -652,6 +655,7 @@ WildcardPattern =
 WildcardPatternModifier =
     'public' | 'internal'
 
-Proof = 'proof' BlockExpr
+Proof = 'proof' spec_block:BlockExpr
 
-Lemma = 'lemma' Name TypeParamList? ParamList BlockExpr
+Lemma = 'lemma' Name TypeParamList? ParamList spec_block:BlockExpr
+SpecLemma = 'spec' Lemma

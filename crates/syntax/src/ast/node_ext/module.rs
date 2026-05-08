@@ -43,6 +43,7 @@ impl ast::Module {
         // spec callables
         items.extend(into_named_elements(self.spec_functions()));
         items.extend(into_named_elements(self.spec_inline_functions()));
+        items.extend(into_named_elements(self.lemmas()));
         items
     }
 
