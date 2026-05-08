@@ -288,9 +288,11 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "PROOF",
         "PROOF_BLOCK",
         "LEMMA",
+        "SPEC_LEMMA",
         "LEMMA_BLOCK",
         "APPLY_LEMMA",
         "FORALL_APPLY_LEMMA",
+        "POST_STMT"
     ],
 };
 
