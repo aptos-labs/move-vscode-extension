@@ -202,3 +202,114 @@ fn test_spec_fun_accessible_forall_triggers() {
     "#,
     )
 }
+
+#[test]
+fn test_proof_resolve_let_variable() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            fun main() {}
+            spec main {} proof {
+                let acc = 1;
+                   //X
+                acc;
+               //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_proof_resolve_let_variable_with_post() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            fun main() {}
+            spec main {} proof {
+                post let acc1 = 1;
+                        //X
+                post acc1;
+                    //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_proof_resolve_post_has_access_to_pre_lets_inline() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            fun main() {}
+            spec main {} proof {
+                let acc1 = 1;
+                   //X
+                post acc1;
+                    //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_proof_resolve_post_has_access_to_pre_lets_block() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            fun main() {}
+            spec main {} proof {
+                let acc1 = 1;
+                   //X
+                post { acc1; }
+                      //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_proof_resolve_let_variable_in_post_block() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            fun main() {}
+            spec main {} proof {
+                post {
+                    let acc = 1;
+                        //X
+                    acc;
+                   //^
+                }
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_pre_expr_cant_access_post_let() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            fun main() {}
+            spec main {} proof {
+                post {
+                    let acc = 1;
+                }
+                acc1;
+              //^ unresolved
+            }
+        }
+    "#,
+    )
+}

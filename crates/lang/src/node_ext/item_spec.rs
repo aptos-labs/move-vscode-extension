@@ -27,7 +27,7 @@ impl ItemSpecExt for InFile<ast::ItemSpec> {
     }
 }
 
-pub fn infer_special_path_expr_for_item_spec(
+pub fn try_infer_spec_only_path_expr(
     db: &dyn SourceDatabase,
     path_expr: InFile<&ast::PathExpr>,
 ) -> Option<Ty> {

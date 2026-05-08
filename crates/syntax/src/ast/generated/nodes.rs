@@ -1353,6 +1353,17 @@ impl PathType {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct PostStmt {
+    pub(crate) syntax: SyntaxNode,
+}
+impl PostStmt {
+    #[inline]
+    pub fn stmt(&self) -> Option<Stmt> { support::child(&self.syntax) }
+    #[inline]
+    pub fn post_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![post]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PragmaAttrItem {
     pub(crate) syntax: SyntaxNode,
 }
@@ -2489,6 +2500,7 @@ pub enum Stmt {
     IncludeSchema(IncludeSchema),
     Lemma(Lemma),
     LetStmt(LetStmt),
+    PostStmt(PostStmt),
     PragmaStmt(PragmaStmt),
     SchemaField(SchemaField),
     SpecInlineFun(SpecInlineFun),
@@ -4513,6 +4525,27 @@ impl AstNode for PathType {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == PATH_TYPE }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for PostStmt {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        POST_STMT
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == POST_STMT }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -8561,6 +8594,10 @@ impl From<LetStmt> for Stmt {
     #[inline]
     fn from(node: LetStmt) -> Stmt { Stmt::LetStmt(node) }
 }
+impl From<PostStmt> for Stmt {
+    #[inline]
+    fn from(node: PostStmt) -> Stmt { Stmt::PostStmt(node) }
+}
 impl From<PragmaStmt> for Stmt {
     #[inline]
     fn from(node: PragmaStmt) -> Stmt { Stmt::PragmaStmt(node) }
@@ -8644,6 +8681,12 @@ impl Stmt {
             _ => None,
         }
     }
+    pub fn post_stmt(self) -> Option<PostStmt> {
+        match (self) {
+            Stmt::PostStmt(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn pragma_stmt(self) -> Option<PragmaStmt> {
         match (self) {
             Stmt::PragmaStmt(item) => Some(item),
@@ -8690,6 +8733,7 @@ impl AstNode for Stmt {
                 | INCLUDE_SCHEMA
                 | LEMMA
                 | LET_STMT
+                | POST_STMT
                 | PRAGMA_STMT
                 | SCHEMA_FIELD
                 | SPEC_INLINE_FUN
@@ -8712,6 +8756,7 @@ impl AstNode for Stmt {
             INCLUDE_SCHEMA => Stmt::IncludeSchema(IncludeSchema { syntax }),
             LEMMA => Stmt::Lemma(Lemma { syntax }),
             LET_STMT => Stmt::LetStmt(LetStmt { syntax }),
+            POST_STMT => Stmt::PostStmt(PostStmt { syntax }),
             PRAGMA_STMT => Stmt::PragmaStmt(PragmaStmt { syntax }),
             SCHEMA_FIELD => Stmt::SchemaField(SchemaField { syntax }),
             SPEC_INLINE_FUN => Stmt::SpecInlineFun(SpecInlineFun { syntax }),
@@ -8733,6 +8778,7 @@ impl AstNode for Stmt {
             Stmt::IncludeSchema(it) => &it.syntax(),
             Stmt::Lemma(it) => &it.syntax(),
             Stmt::LetStmt(it) => &it.syntax(),
+            Stmt::PostStmt(it) => &it.syntax(),
             Stmt::PragmaStmt(it) => &it.syntax(),
             Stmt::SchemaField(it) => &it.syntax(),
             Stmt::SpecInlineFun(it) => &it.syntax(),
@@ -10109,6 +10155,11 @@ impl std::fmt::Display for PathSegment {
     }
 }
 impl std::fmt::Display for PathType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for PostStmt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

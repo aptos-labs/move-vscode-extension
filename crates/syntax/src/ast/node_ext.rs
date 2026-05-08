@@ -73,6 +73,7 @@ mod schema_lit;
 pub mod schema_lit_field;
 mod source_file;
 pub mod spec_predicate_stmt;
+mod stmt;
 mod struct_;
 mod struct_lit;
 pub mod struct_lit_field;

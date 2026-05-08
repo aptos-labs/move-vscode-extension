@@ -254,6 +254,7 @@ Stmt =
     | GenericSpecStmt
     | SpecInlineFun | GlobalVariableDecl
     | Lemma
+    | PostStmt
 
 GenericSpecStmt = InvariantStmt | AxiomStmt
 
@@ -659,3 +660,5 @@ Proof = 'proof' spec_block:BlockExpr
 
 Lemma = 'lemma' Name TypeParamList? ParamList spec_block:BlockExpr
 SpecLemma = 'spec' Lemma
+
+PostStmt = 'post' Stmt
