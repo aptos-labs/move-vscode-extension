@@ -1,7 +1,7 @@
 use crate::SyntaxKind::*;
 use crate::T;
-use crate::parse::grammar::expressions::blocks;
 use crate::parse::grammar::expressions::blocks::{StmtKind, stmt};
+use crate::parse::grammar::expressions::{blocks, expr};
 use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::specs::quants;
 use crate::parse::grammar::specs::quants::quant_binding_list;
@@ -88,5 +88,17 @@ pub(crate) fn post_stmt(p: &mut Parser) -> bool {
     p.bump_remap(T![post]);
     stmt(p, StmtKind::Proof);
     m.complete(p, POST_STMT);
+    true
+}
+
+pub(crate) fn split_stmt(p: &mut Parser) -> bool {
+    if !p.at_contextual_kw_ident("split") {
+        return false;
+    }
+    let m = p.start();
+    p.bump_remap(T![split]);
+    expr(p);
+    p.eat(T![;]);
+    m.complete(p, SPLIT_STMT);
     true
 }

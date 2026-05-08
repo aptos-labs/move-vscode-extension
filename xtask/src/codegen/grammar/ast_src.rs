@@ -84,7 +84,7 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "emits", "apply", "to", "except", "internal",
         "forall", "exists", "choose", "where", "min",
         // spec-lang 2.0
-        "proof", "lemma",
+        "proof", "lemma", "split",
     ],
     literals: &["INT_NUMBER", "BYTE_STRING", "HEX_STRING"],
     tokens: &["BAD_CHARACTER", "ERROR", "IDENT", "WHITESPACE", "QUOTE_IDENT", "COMMENT", "WILDCARD_IDENT"],
@@ -292,7 +292,8 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "LEMMA_BLOCK",
         "APPLY_LEMMA",
         "FORALL_APPLY_LEMMA",
-        "POST_STMT"
+        "POST_STMT",
+        "SPLIT_STMT",
     ],
 };
 
