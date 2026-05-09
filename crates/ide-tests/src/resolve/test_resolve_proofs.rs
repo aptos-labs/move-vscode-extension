@@ -332,3 +332,22 @@ fn test_pre_expr_cant_access_post_let() {
     "#,
     )
 }
+
+#[test]
+fn test_resolve_forall_apply_variables() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            fun main() {}
+            spec lemma add_mono(a: u64) {}
+            spec main {} proof {
+                forall a: u64
+                     //X
+                    apply add_mono(a);
+                                 //^
+            }
+        }
+    "#,
+    )
+}

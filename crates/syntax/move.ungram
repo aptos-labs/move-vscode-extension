@@ -255,6 +255,8 @@ Stmt =
     | SpecInlineFun | GlobalVariableDecl
     | Lemma
     | PostStmt
+    | ForallApplyLemma
+    | ApplyLemma
 
 GenericSpecStmt = InvariantStmt | AxiomStmt
 
@@ -619,10 +621,12 @@ QuantExpr =
     ForallExpr | ExistsExpr
 
 ForallExpr =
-    'forall' QuantBindingList WhereExpr? ':' Expr
+    'forall' QuantBindingList QuantTriggerList? WhereExpr? ':' Expr
 
 ExistsExpr =
-    'exists' QuantBindingList WhereExpr? ':' Expr
+    'exists' QuantBindingList QuantTriggerList? WhereExpr? ':' Expr
+
+QuantTriggerList = '{' trigger_exprs:(Expr (',' Expr)* ','?)? '}'
 
 ChooseExpr =
     'choose' 'min'? QuantBinding WhereExpr?
@@ -662,3 +666,6 @@ Lemma = 'lemma' Name TypeParamList? ParamList spec_block:BlockExpr
 SpecLemma = 'spec' Lemma
 
 PostStmt = 'post' Stmt
+
+ForallApplyLemma = 'forall' QuantBindingList QuantTriggerList? ApplyLemma
+ApplyLemma = 'apply' Path ValueArgList ';'

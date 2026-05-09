@@ -30,6 +30,7 @@ mod expr;
 mod field_list;
 mod fields_owner;
 mod for_condition;
+mod forall_apply_lemma;
 pub mod fun;
 mod generic_element;
 mod generic_spec_stmt;

@@ -188,6 +188,21 @@ impl ApplyExcept {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ApplyLemma {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ApplyLemma {
+    #[inline]
+    pub fn path(&self) -> Option<Path> { support::child(&self.syntax) }
+    #[inline]
+    pub fn value_arg_list(&self) -> Option<ValueArgList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
+    #[inline]
+    pub fn apply_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![apply]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ApplySchema {
     pub(crate) syntax: SyntaxNode,
 }
@@ -495,6 +510,8 @@ impl ExistsExpr {
     #[inline]
     pub fn quant_binding_list(&self) -> Option<QuantBindingList> { support::child(&self.syntax) }
     #[inline]
+    pub fn quant_trigger_list(&self) -> Option<QuantTriggerList> { support::child(&self.syntax) }
+    #[inline]
     pub fn where_expr(&self) -> Option<WhereExpr> { support::child(&self.syntax) }
     #[inline]
     pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
@@ -550,6 +567,21 @@ impl ForExpr {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ForallApplyLemma {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ForallApplyLemma {
+    #[inline]
+    pub fn apply_lemma(&self) -> Option<ApplyLemma> { support::child(&self.syntax) }
+    #[inline]
+    pub fn quant_binding_list(&self) -> Option<QuantBindingList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn quant_trigger_list(&self) -> Option<QuantTriggerList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn forall_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![forall]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ForallExpr {
     pub(crate) syntax: SyntaxNode,
 }
@@ -558,6 +590,8 @@ impl ForallExpr {
     pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
     #[inline]
     pub fn quant_binding_list(&self) -> Option<QuantBindingList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn quant_trigger_list(&self) -> Option<QuantTriggerList> { support::child(&self.syntax) }
     #[inline]
     pub fn where_expr(&self) -> Option<WhereExpr> { support::child(&self.syntax) }
     #[inline]
@@ -1426,6 +1460,19 @@ pub struct QuantBindingList {
 impl QuantBindingList {
     #[inline]
     pub fn bindings(&self) -> AstChildren<QuantBinding> { support::children(&self.syntax) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct QuantTriggerList {
+    pub(crate) syntax: SyntaxNode,
+}
+impl QuantTriggerList {
+    #[inline]
+    pub fn trigger_exprs(&self) -> AstChildren<Expr> { support::children(&self.syntax) }
+    #[inline]
+    pub fn l_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['{']) }
+    #[inline]
+    pub fn r_curly_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['}']) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -2493,8 +2540,10 @@ pub enum ReferenceElement {
 pub enum Stmt {
     AbortsIfStmt(AbortsIfStmt),
     AbortsWithStmt(AbortsWithStmt),
+    ApplyLemma(ApplyLemma),
     ApplySchema(ApplySchema),
     ExprStmt(ExprStmt),
+    ForallApplyLemma(ForallApplyLemma),
     GenericSpecStmt(GenericSpecStmt),
     GlobalVariableDecl(GlobalVariableDecl),
     IncludeSchema(IncludeSchema),
@@ -2845,6 +2894,27 @@ impl AstNode for ApplyExcept {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == APPLY_EXCEPT }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for ApplyLemma {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        APPLY_LEMMA
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == APPLY_LEMMA }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -3370,6 +3440,27 @@ impl AstNode for ForExpr {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == FOR_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for ForallApplyLemma {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        FORALL_APPLY_LEMMA
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == FORALL_APPLY_LEMMA }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -4651,6 +4742,27 @@ impl AstNode for QuantBindingList {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == QUANT_BINDING_LIST }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for QuantTriggerList {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        QUANT_TRIGGER_LIST
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == QUANT_TRIGGER_LIST }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -8372,6 +8484,13 @@ impl QuantExpr {
         }
     }
     #[inline]
+    pub fn quant_trigger_list(&self) -> Option<QuantTriggerList> {
+        match self {
+            QuantExpr::ExistsExpr(it) => it.quant_trigger_list(),
+            QuantExpr::ForallExpr(it) => it.quant_trigger_list(),
+        }
+    }
+    #[inline]
     pub fn where_expr(&self) -> Option<WhereExpr> {
         match self {
             QuantExpr::ExistsExpr(it) => it.where_expr(),
@@ -8566,6 +8685,10 @@ impl From<AbortsWithStmt> for Stmt {
     #[inline]
     fn from(node: AbortsWithStmt) -> Stmt { Stmt::AbortsWithStmt(node) }
 }
+impl From<ApplyLemma> for Stmt {
+    #[inline]
+    fn from(node: ApplyLemma) -> Stmt { Stmt::ApplyLemma(node) }
+}
 impl From<ApplySchema> for Stmt {
     #[inline]
     fn from(node: ApplySchema) -> Stmt { Stmt::ApplySchema(node) }
@@ -8573,6 +8696,10 @@ impl From<ApplySchema> for Stmt {
 impl From<ExprStmt> for Stmt {
     #[inline]
     fn from(node: ExprStmt) -> Stmt { Stmt::ExprStmt(node) }
+}
+impl From<ForallApplyLemma> for Stmt {
+    #[inline]
+    fn from(node: ForallApplyLemma) -> Stmt { Stmt::ForallApplyLemma(node) }
 }
 impl From<GenericSpecStmt> for Stmt {
     #[inline]
@@ -8639,6 +8766,12 @@ impl Stmt {
             _ => None,
         }
     }
+    pub fn apply_lemma(self) -> Option<ApplyLemma> {
+        match (self) {
+            Stmt::ApplyLemma(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn apply_schema(self) -> Option<ApplySchema> {
         match (self) {
             Stmt::ApplySchema(item) => Some(item),
@@ -8648,6 +8781,12 @@ impl Stmt {
     pub fn expr_stmt(self) -> Option<ExprStmt> {
         match (self) {
             Stmt::ExprStmt(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn forall_apply_lemma(self) -> Option<ForallApplyLemma> {
+        match (self) {
+            Stmt::ForallApplyLemma(item) => Some(item),
             _ => None,
         }
     }
@@ -8725,8 +8864,10 @@ impl AstNode for Stmt {
             kind,
             ABORTS_IF_STMT
                 | ABORTS_WITH_STMT
+                | APPLY_LEMMA
                 | APPLY_SCHEMA
                 | EXPR_STMT
+                | FORALL_APPLY_LEMMA
                 | AXIOM_STMT
                 | INVARIANT_STMT
                 | GLOBAL_VARIABLE_DECL
@@ -8746,8 +8887,10 @@ impl AstNode for Stmt {
         let res = match syntax.kind() {
             ABORTS_IF_STMT => Stmt::AbortsIfStmt(AbortsIfStmt { syntax }),
             ABORTS_WITH_STMT => Stmt::AbortsWithStmt(AbortsWithStmt { syntax }),
+            APPLY_LEMMA => Stmt::ApplyLemma(ApplyLemma { syntax }),
             APPLY_SCHEMA => Stmt::ApplySchema(ApplySchema { syntax }),
             EXPR_STMT => Stmt::ExprStmt(ExprStmt { syntax }),
+            FORALL_APPLY_LEMMA => Stmt::ForallApplyLemma(ForallApplyLemma { syntax }),
             AXIOM_STMT => Stmt::GenericSpecStmt(GenericSpecStmt::AxiomStmt(AxiomStmt { syntax })),
             INVARIANT_STMT => {
                 Stmt::GenericSpecStmt(GenericSpecStmt::InvariantStmt(InvariantStmt { syntax }))
@@ -8771,8 +8914,10 @@ impl AstNode for Stmt {
         match self {
             Stmt::AbortsIfStmt(it) => &it.syntax(),
             Stmt::AbortsWithStmt(it) => &it.syntax(),
+            Stmt::ApplyLemma(it) => &it.syntax(),
             Stmt::ApplySchema(it) => &it.syntax(),
             Stmt::ExprStmt(it) => &it.syntax(),
+            Stmt::ForallApplyLemma(it) => &it.syntax(),
             Stmt::GenericSpecStmt(it) => &it.syntax(),
             Stmt::GlobalVariableDecl(it) => &it.syntax(),
             Stmt::IncludeSchema(it) => &it.syntax(),
@@ -9759,6 +9904,11 @@ impl std::fmt::Display for ApplyExcept {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for ApplyLemma {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for ApplySchema {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -9880,6 +10030,11 @@ impl std::fmt::Display for ForCondition {
     }
 }
 impl std::fmt::Display for ForExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for ForallApplyLemma {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -10185,6 +10340,11 @@ impl std::fmt::Display for QuantBinding {
     }
 }
 impl std::fmt::Display for QuantBindingList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for QuantTriggerList {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

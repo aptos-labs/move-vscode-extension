@@ -340,6 +340,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::Stmt::ApplySchema(_) => (),
             ast::Stmt::SpecInlineFun(_) => (),
             ast::Stmt::Lemma(_) => (),
+            // todo:
+            ast::Stmt::ApplyLemma(_) => (),
+            ast::Stmt::ForallApplyLemma(_) => (),
         }
 
         Some(())
