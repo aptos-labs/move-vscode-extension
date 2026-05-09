@@ -153,7 +153,7 @@ fn is_special_msl_path(
 
     let path_expr = reference.and_then(|it| it.clone().path().and_then(|it| it.path_expr()))?;
 
-    if item_spec::infer_special_path_expr_for_item_spec(db, path_expr.as_ref()).is_some() {
+    if item_spec::try_infer_spec_only_path_expr(db, path_expr.as_ref()).is_some() {
         return Some(());
     }
 

@@ -51,6 +51,7 @@ pub enum SymbolKind {
     // ModuleSpec,
     // ItemSpec,
     GlobalVariableDecl,
+    Lemma,
 }
 
 pub fn ast_kind_to_symbol_kind(named_item: &ast::NamedElement) -> SymbolKind {
@@ -74,6 +75,7 @@ pub fn ast_kind_to_symbol_kind(named_item: &ast::NamedElement) -> SymbolKind {
 
         ast::NamedElement::Schema(_) => SymbolKind::Struct,
         ast::NamedElement::GlobalVariableDecl(_) => SymbolKind::GlobalVariableDecl,
+        ast::NamedElement::Lemma(_) => SymbolKind::Lemma,
         ast::NamedElement::IdentPat(_) if matches!(item_parent, Some(SyntaxKind::SCHEMA_FIELD)) => {
             SymbolKind::Field
         }

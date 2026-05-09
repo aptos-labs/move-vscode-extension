@@ -20,6 +20,7 @@ pub enum Ns {
     ENUM_VARIANT,
     SCHEMA,
     MODULE,
+    LEMMA,
 }
 
 impl fmt::Display for Ns {
@@ -61,6 +62,7 @@ pub const ALL_NS: NsSet = enum_set!(
         | Ns::ENUM_VARIANT
         | Ns::SCHEMA
         | Ns::MODULE
+        | Ns::LEMMA
 );
 
 pub trait NsSetExt {
@@ -94,6 +96,7 @@ pub(crate) fn named_item_ns(named_element: &ast::NamedElement) -> Ns {
         IDENT_PAT | TUPLE_FIELD | NAMED_FIELD | CONST | GLOBAL_VARIABLE_DECL => Ns::NAME,
         SCHEMA => Ns::SCHEMA,
         SCHEMA_FIELD => Ns::NAME,
+        LEMMA => Ns::LEMMA,
         _ => unreachable!(
             "named nodes should be exhaustive, unhandled {:?}",
             named_item_kind

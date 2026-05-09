@@ -103,9 +103,17 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     self.infer_expr_coerceable_to(&expr, expected_ty.unwrap_or(Ty::Unknown));
                 }
             }
+            ast::InferenceCtxOwner::Lemma(lemma) => {
+                if let Some(block_expr) = lemma.spec_block() {
+                    self.process_msl_block_expr(&block_expr, Expected::NoValue, false);
+                }
+            }
             // todo
-            ast::InferenceCtxOwner::Proof(_) => (),
-            ast::InferenceCtxOwner::Lemma(_) => (),
+            ast::InferenceCtxOwner::Proof(proof) => {
+                if let Some(block_expr) = proof.spec_block() {
+                    self.process_msl_block_expr(&block_expr, Expected::NoValue, false);
+                }
+            }
         }
 
         self.walk_lambda_expr_bodies();
@@ -141,6 +149,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::InferenceCtxOwner::Fun(fun) => fun.to_any_fun().params_as_bindings(),
             ast::InferenceCtxOwner::SpecFun(fun) => fun.to_any_fun().params_as_bindings(),
             ast::InferenceCtxOwner::SpecInlineFun(fun) => fun.to_any_fun().params_as_bindings(),
+            ast::InferenceCtxOwner::Lemma(lemma) => lemma.params_as_bindings(),
             ast::InferenceCtxOwner::ItemSpec(item_spec) => {
                 let item = item_spec.clone().in_file(self.ctx.file_id).item(self.ctx.db)?;
                 self.collect_item_spec_signature_bindings(item_spec, item.clone());
@@ -150,7 +159,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     _ => vec![],
                 }
             }
-            _ => {
+            ast::InferenceCtxOwner::Initializer(_)
+            | ast::InferenceCtxOwner::Proof(_)
+            | ast::InferenceCtxOwner::Schema(_) => {
                 return None;
             }
         };
@@ -320,10 +331,18 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                     self.infer_expr_coerce_to(&initializer_expr, Expected::from_ty(explicit_ty.clone()));
                 }
             }
+            ast::Stmt::PostStmt(post_stmt) => {
+                if let Some(inner_stmt) = post_stmt.stmt() {
+                    self.process_stmt(inner_stmt);
+                }
+            }
             // todo:
             ast::Stmt::ApplySchema(_) => (),
             ast::Stmt::SpecInlineFun(_) => (),
             ast::Stmt::Lemma(_) => (),
+            // todo:
+            ast::Stmt::ApplyLemma(_) => (),
+            ast::Stmt::ForallApplyLemma(_) => (),
         }
 
         Some(())
@@ -485,16 +504,16 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     fn infer_path_expr(&mut self, path_expr: &ast::PathExpr, expected: Expected) -> Option<Ty> {
         use syntax::SyntaxKind::*;
 
-        if self.ctx.msl {
-            if let Some(path_expr_ty) = item_spec::infer_special_path_expr_for_item_spec(
+        if self.ctx.msl
+            && let Some(path_expr_ty) = item_spec::try_infer_spec_only_path_expr(
                 self.ctx.db,
                 path_expr.in_file(self.ctx.file_id),
-            ) {
-                self.ctx
-                    .expr_types
-                    .insert(path_expr.to_owned().into(), path_expr_ty.clone());
-                return Some(path_expr_ty);
-            }
+            )
+        {
+            self.ctx
+                .expr_types
+                .insert(path_expr.to_owned().into(), path_expr_ty.clone());
+            return Some(path_expr_ty);
         }
 
         let expected_ty = expected.ty(self.ctx);

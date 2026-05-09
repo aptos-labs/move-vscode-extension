@@ -40,11 +40,17 @@ pub trait HasStmts: AstNode {
     }
 
     fn let_stmts(&self) -> impl Iterator<Item = ast::LetStmt> {
-        self.stmts().filter_map(|it| it.let_stmt())
+        let let_stmts = self.stmts().filter_map(|it| it.let_stmt());
+        // add `post let` stmts
+        let_stmts.chain(self.stmts().filter_map(|it| it.post_let_stmt()))
     }
 
     fn global_variables(&self) -> Vec<ast::GlobalVariableDecl> {
         self.stmts().filter_map(|it| it.global_variable_decl()).collect()
+    }
+
+    fn lemmas(&self) -> Vec<ast::Lemma> {
+        self.stmts().filter_map(|it| it.lemma()).collect()
     }
 }
 

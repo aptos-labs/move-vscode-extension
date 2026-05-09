@@ -140,6 +140,19 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: &InFile<SyntaxNode
             let ident_pats = match_arm.pat().map(|it| it.bindings()).unwrap_or_default();
             entries.extend(ident_pats.to_entries(file_id));
         }
+        LEMMA => {
+            let lemma = scope.syntax_cast::<ast::Lemma>().unwrap();
+            entries.extend(lemma.value.params_as_bindings().to_entries(file_id));
+        }
+        FORALL_APPLY_LEMMA => {
+            let forall_apply_lemma = scope.syntax_cast::<ast::ForallApplyLemma>().unwrap();
+            entries.extend(
+                forall_apply_lemma
+                    .value
+                    .quant_bindings_as_ident_pats()
+                    .to_entries(forall_apply_lemma.file_id),
+            );
+        }
         _ => (),
     }
 

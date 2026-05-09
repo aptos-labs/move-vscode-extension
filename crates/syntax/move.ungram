@@ -39,6 +39,7 @@ Item =
     | SpecFun
     | Schema
     | ItemSpec
+    | SpecLemma
 
 NamedElement =
     Module
@@ -55,6 +56,7 @@ NamedElement =
     | UseAlias
     | Schema
     | GlobalVariableDecl
+    | Lemma
 
 ReferenceElement =
     Path
@@ -252,6 +254,9 @@ Stmt =
     | GenericSpecStmt
     | SpecInlineFun | GlobalVariableDecl
     | Lemma
+    | PostStmt
+    | ForallApplyLemma
+    | ApplyLemma
 
 GenericSpecStmt = InvariantStmt | AxiomStmt
 
@@ -451,6 +456,7 @@ GenericElement =
     | Enum
     | Schema
     | GlobalVariableDecl
+    | Lemma
 
 TypeParamList =
     '<' type_parameters:(TypeParam (',' TypeParam)* ','?)? '>'
@@ -615,10 +621,12 @@ QuantExpr =
     ForallExpr | ExistsExpr
 
 ForallExpr =
-    'forall' QuantBindingList WhereExpr? ':' Expr
+    'forall' QuantBindingList QuantTriggerList? WhereExpr? ':' Expr
 
 ExistsExpr =
-    'exists' QuantBindingList WhereExpr? ':' Expr
+    'exists' QuantBindingList QuantTriggerList? WhereExpr? ':' Expr
+
+QuantTriggerList = '{' trigger_exprs:(Expr (',' Expr)* ','?)? '}'
 
 ChooseExpr =
     'choose' 'min'? QuantBinding WhereExpr?
@@ -652,6 +660,12 @@ WildcardPattern =
 WildcardPatternModifier =
     'public' | 'internal'
 
-Proof = 'proof' BlockExpr
+Proof = 'proof' spec_block:BlockExpr
 
-Lemma = 'lemma' Name TypeParamList? ParamList BlockExpr
+Lemma = 'lemma' Name TypeParamList? ParamList spec_block:BlockExpr
+SpecLemma = 'spec' Lemma
+
+PostStmt = 'post' Stmt
+
+ForallApplyLemma = 'forall' QuantBindingList QuantTriggerList? ApplyLemma
+ApplyLemma = 'apply' Path ValueArgList ';'

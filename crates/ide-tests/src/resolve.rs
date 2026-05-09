@@ -21,6 +21,7 @@ mod test_resolve_fs;
 mod test_resolve_functions;
 mod test_resolve_loop_labels;
 mod test_resolve_modules;
+mod test_resolve_proofs;
 mod test_resolve_receiver_style_function;
 mod test_resolve_specs;
 mod test_resolve_struct_fields;

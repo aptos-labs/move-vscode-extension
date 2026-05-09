@@ -80,7 +80,7 @@ pub trait HasItems: AstNode {
 
     fn global_variables(&self) -> Vec<ast::GlobalVariableDecl> {
         self.module_item_specs()
-            .into_iter()
+            .iter()
             .flat_map(|it| {
                 it.spec_block()
                     .map(|it| it.global_variables())
@@ -98,5 +98,21 @@ pub trait HasItems: AstNode {
             .into_iter()
             .filter(|s| s.is_tuple_struct())
             .collect()
+    }
+
+    fn lemmas(&self) -> Vec<ast::Lemma> {
+        let mut lemmas = vec![];
+        // top-level lemmas
+        lemmas.extend(
+            self.items()
+                .into_iter()
+                .filter_map(|it| it.spec_lemma().and_then(|it| it.lemma())),
+        );
+        lemmas.extend(
+            self.module_item_specs()
+                .iter()
+                .flat_map(|it| it.spec_block().map(|it| it.lemmas()).unwrap_or_default()),
+        );
+        lemmas
     }
 }

@@ -32,6 +32,8 @@ static VALID_RESOLVE_SCOPES: LazyLock<HashSet<SyntaxKind>> = LazyLock::new(|| {
         ENUM,
         STRUCT,
         SPEC_BLOCK_EXPR,
+        LEMMA,
+        FORALL_APPLY_LEMMA,
     ]
     .into_iter()
     .collect()

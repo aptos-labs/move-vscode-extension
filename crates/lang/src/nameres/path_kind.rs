@@ -10,6 +10,7 @@ use crate::nameres::namespaces::{
     MODULES, NAMES, Ns, NsSet, SCHEMAS, VALUE_NS,
 };
 use base_db::SourceDatabase;
+use enumset::enum_set;
 use std::fmt;
 use std::fmt::Formatter;
 use syntax::SyntaxKind::*;
@@ -329,13 +330,10 @@ fn path_namespaces(
 
         STRUCT_LIT | STRUCT_PAT | TUPLE_STRUCT_PAT | PATH_PAT => CONTAINER_TYPE_NS,
 
-        // todo:
-
-        //     parent is MvAccessSpecifier -> TYPES_N_ENUMS
-        //     parent is MvAddressSpecifierArg -> NAMES
-        //     parent is MvAddressSpecifierCallParam -> NAMES
         FRIEND => MODULES,
         MODULE_SPEC => MODULES,
+
+        APPLY_LEMMA => enum_set!(Ns::LEMMA),
 
         //
         // // should not be used for attr items

@@ -235,6 +235,7 @@ impl CompletionItemKind {
                 SymbolKind::Vector => "vc",
                 SymbolKind::Assert => "as",
                 SymbolKind::Schema => "sc",
+                SymbolKind::Lemma => "le",
             },
             CompletionItemKind::Binding => "bn",
             CompletionItemKind::BuiltinType => "bt",
