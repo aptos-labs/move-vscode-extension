@@ -188,3 +188,23 @@ fn test_assert_eq_ne_with_message() {
         }
     "#]]);
 }
+
+#[test]
+fn test_check_apply_lemma_arguments() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main() {}
+            spec lemma add_mono(_a: u64) {}
+            spec main {} proof {
+                forall a: u64 apply add_mono();
+                                           //^ err: This function takes 1 parameters, but 0 parameters were supplied
+                forall a: u64 apply add_mono(1);
+                forall a: u64 apply add_mono(1, 1);
+                                              //^ err: This function takes 1 parameters, but 2 parameters were supplied
+                forall a: u64 apply add_mono(1, 1, 1);
+                                              //^ err: This function takes 1 parameters, but 3 parameters were supplied
+            }
+        }
+    "#]]);
+}

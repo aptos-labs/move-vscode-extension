@@ -4,6 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+mod infer_proofs;
 mod infer_specs;
 mod lambda_expr;
 
@@ -149,7 +150,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::InferenceCtxOwner::Fun(fun) => fun.to_any_fun().params_as_bindings(),
             ast::InferenceCtxOwner::SpecFun(fun) => fun.to_any_fun().params_as_bindings(),
             ast::InferenceCtxOwner::SpecInlineFun(fun) => fun.to_any_fun().params_as_bindings(),
-            ast::InferenceCtxOwner::Lemma(lemma) => lemma.params_as_bindings(),
+            ast::InferenceCtxOwner::Lemma(lemma) => lemma.to_any_fun().params_as_bindings(),
             ast::InferenceCtxOwner::ItemSpec(item_spec) => {
                 let item = item_spec.clone().in_file(self.ctx.file_id).item(self.ctx.db)?;
                 self.collect_item_spec_signature_bindings(item_spec, item.clone());
@@ -332,17 +333,19 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 }
             }
             ast::Stmt::PostStmt(post_stmt) => {
-                if let Some(inner_stmt) = post_stmt.stmt() {
-                    self.process_stmt(inner_stmt);
-                }
+                self.process_post_stmt(&post_stmt);
             }
             // todo:
             ast::Stmt::ApplySchema(_) => (),
             ast::Stmt::SpecInlineFun(_) => (),
             ast::Stmt::Lemma(_) => (),
-            // todo:
-            ast::Stmt::ApplyLemma(_) => (),
-            ast::Stmt::ForallApplyLemma(_) => (),
+            ast::Stmt::ApplyLemma(apply_lemma) => {
+                self.process_apply_lemma(&apply_lemma);
+            }
+            ast::Stmt::ForallApplyLemma(forall_apply_lemma) => {
+                let apply_lemma = forall_apply_lemma.apply_lemma()?;
+                self.process_apply_lemma(&apply_lemma);
+            }
         }
 
         Some(())
@@ -561,9 +564,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 Some(Ty::Adt(variant_ty_adt))
             }
             MODULE => None,
-            FUN | SPEC_FUN | SPEC_INLINE_FUN => {
+            FUN | SPEC_FUN | SPEC_INLINE_FUN | LEMMA => {
                 let any_fun = named_element.cast_into::<ast::AnyFun>().unwrap();
-                let method_or_path: ast::MethodOrPath = path_expr.path().into();
+                let method_or_path = path_expr.path().into();
                 Some(self.ctx.instantiate_path_for_fun(method_or_path, any_fun).into())
             }
             GLOBAL_VARIABLE_DECL => {

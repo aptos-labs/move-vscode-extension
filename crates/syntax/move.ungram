@@ -548,7 +548,7 @@ SpecInlineFun =
     (spec_block:BlockExpr | ';')
 
 AnyFun =
-    Fun | SpecFun | SpecInlineFun
+    Fun | SpecFun | SpecInlineFun | Lemma
 
 Schema =
     Attr*
@@ -662,10 +662,19 @@ WildcardPatternModifier =
 
 Proof = 'proof' spec_block:BlockExpr
 
-Lemma = 'lemma' Name TypeParamList? ParamList spec_block:BlockExpr
+Lemma =
+        // not allowed
+        Attr*
+        // always empty, here only for the AnyFun methods
+        VisibilityModifier?
+        'lemma' Name TypeParamList? ParamList
+        // not allowed, here only for the AnyFun methods
+        RetType?
+        spec_block:BlockExpr
+
 SpecLemma = 'spec' Lemma
 
 PostStmt = 'post' Stmt
 
 ForallApplyLemma = 'forall' QuantBindingList QuantTriggerList? ApplyLemma
-ApplyLemma = 'apply' Path ValueArgList ';'
+ApplyLemma = 'apply' PathExpr ValueArgList ';'

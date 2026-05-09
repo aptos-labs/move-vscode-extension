@@ -100,6 +100,7 @@ impl<T: AstNode> InFile<T> {
         self.value.syntax().kind()
     }
 
+    #[inline]
     pub fn cast_into<IntoT: AstNode>(self) -> Option<InFile<IntoT>> {
         let InFile { file_id, value } = self;
         let value = IntoT::cast(value.syntax().clone())?;

@@ -13,6 +13,7 @@ impl ast::AnyFun {
             ast::AnyFun::Fun(fun) => fun.native_token().is_some(),
             ast::AnyFun::SpecFun(fun) => fun.native_token().is_some(),
             ast::AnyFun::SpecInlineFun(fun) => fun.native_token().is_some(),
+            ast::AnyFun::Lemma(_) => false,
         }
     }
 
@@ -21,6 +22,7 @@ impl ast::AnyFun {
             ast::AnyFun::Fun(fun) => false,
             ast::AnyFun::SpecFun(fun) => fun.spec_block().is_some(),
             ast::AnyFun::SpecInlineFun(fun) => fun.spec_block().is_some(),
+            ast::AnyFun::Lemma(_) => false,
         }
     }
 
@@ -46,6 +48,7 @@ impl ast::AnyFun {
             ast::AnyFun::Fun(fun) => fun.body(),
             ast::AnyFun::SpecFun(fun) => fun.spec_block(),
             ast::AnyFun::SpecInlineFun(fun) => fun.spec_block(),
+            ast::AnyFun::Lemma(lemma) => lemma.spec_block(),
         }
     }
 
@@ -54,6 +57,7 @@ impl ast::AnyFun {
             ast::AnyFun::Fun(it) => it.into(),
             ast::AnyFun::SpecFun(it) => it.into(),
             ast::AnyFun::SpecInlineFun(it) => it.into(),
+            ast::AnyFun::Lemma(it) => it.into(),
         }
     }
 }
@@ -73,5 +77,11 @@ impl ast::SpecFun {
 impl ast::SpecInlineFun {
     pub fn to_any_fun(&self) -> ast::AnyFun {
         ast::AnyFun::SpecInlineFun(self.clone())
+    }
+}
+
+impl ast::Lemma {
+    pub fn to_any_fun(&self) -> ast::AnyFun {
+        ast::AnyFun::Lemma(self.clone())
     }
 }

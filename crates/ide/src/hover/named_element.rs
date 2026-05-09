@@ -84,6 +84,7 @@ fn generate_any_fun(buf: &mut String, any_fun: ast::AnyFun) -> Option<()> {
     let fun_kw = match any_fun {
         ast::AnyFun::Fun(_) => "fun",
         ast::AnyFun::SpecFun(_) | ast::AnyFun::SpecInlineFun(_) => "spec fun",
+        ast::AnyFun::Lemma(_) => "lemma",
     };
     let fun_name = any_fun.name()?;
     format_to!(buf, "{fun_kw} {fun_name}");

@@ -355,7 +355,15 @@ pub(crate) const NON_METHOD_TRAITS: &[(&str, &[&str])] = &[
     // ("LoopLike", &["LoopExpr", "WhileExpr", "ForExpr"]),
     (
         "HasVisibility",
-        &["Fun", "SpecFun", "SpecInlineFun", "Struct", "Enum", "Const"],
+        &[
+            "Fun",
+            "SpecFun",
+            "SpecInlineFun",
+            "Struct",
+            "Enum",
+            "Const",
+            "Lemma",
+        ],
     ),
     (
         "MslOnly",
@@ -367,6 +375,7 @@ pub(crate) const NON_METHOD_TRAITS: &[(&str, &[&str])] = &[
             "ModuleSpec",
             "ItemSpec",
             "SpecBlockExpr",
+            "Lemma",
         ],
     ),
     (
@@ -382,6 +391,7 @@ pub(crate) const NON_METHOD_TRAITS: &[(&str, &[&str])] = &[
             "Variant",
             "Const",
             "Schema",
+            "Lemma",
             "IdentPat",
         ],
     ),
