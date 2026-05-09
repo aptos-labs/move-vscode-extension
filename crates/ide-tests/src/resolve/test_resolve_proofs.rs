@@ -92,6 +92,25 @@ fn test_apply_lemma_from_proof() {
 }
 
 #[test]
+fn test_apply_top_level_lemma_from_proof() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            spec lemma add_zero_right() {
+                        //X
+            }
+            fun main() {}
+            spec main {} proof {
+                apply add_zero_right();
+                       //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
 fn test_apply_lemma_from_its_own_proof() {
     // language=Move
     check_resolve(
