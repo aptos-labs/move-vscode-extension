@@ -193,7 +193,7 @@ pub struct ApplyLemma {
 }
 impl ApplyLemma {
     #[inline]
-    pub fn path(&self) -> Option<Path> { support::child(&self.syntax) }
+    pub fn path_expr(&self) -> Option<PathExpr> { support::child(&self.syntax) }
     #[inline]
     pub fn value_arg_list(&self) -> Option<ValueArgList> { support::child(&self.syntax) }
     #[inline]
@@ -982,15 +982,23 @@ impl LambdaTypeParam {
 pub struct Lemma {
     pub(crate) syntax: SyntaxNode,
 }
+impl ast::HasAttrs for Lemma {}
+impl ast::HasVisibility for Lemma {}
+impl ast::HoverDocsOwner for Lemma {}
+impl ast::MslOnly for Lemma {}
 impl Lemma {
     #[inline]
     pub fn name(&self) -> Option<Name> { support::child(&self.syntax) }
     #[inline]
     pub fn param_list(&self) -> Option<ParamList> { support::child(&self.syntax) }
     #[inline]
+    pub fn ret_type(&self) -> Option<RetType> { support::child(&self.syntax) }
+    #[inline]
     pub fn spec_block(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
     #[inline]
     pub fn type_param_list(&self) -> Option<TypeParamList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn visibility_modifier(&self) -> Option<VisibilityModifier> { support::child(&self.syntax) }
     #[inline]
     pub fn lemma_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![lemma]) }
 }
@@ -2298,6 +2306,7 @@ pub enum AddressRef {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AnyCallExpr {
+    ApplyLemma(ApplyLemma),
     AssertMacroExpr(AssertMacroExpr),
     CallExpr(CallExpr),
     MethodCallExpr(MethodCallExpr),
@@ -2313,6 +2322,7 @@ impl ast::HasAttrs for AnyField {}
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AnyFun {
     Fun(Fun),
+    Lemma(Lemma),
     SpecFun(SpecFun),
     SpecInlineFun(SpecInlineFun),
 }
@@ -2392,6 +2402,7 @@ pub enum GenericElement {
     SpecInlineFun(SpecInlineFun),
     Struct(Struct),
 }
+impl ast::HasAttrs for GenericElement {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum GenericSpecStmt {
@@ -6076,6 +6087,10 @@ impl AstNode for AddressRef {
         }
     }
 }
+impl From<ApplyLemma> for AnyCallExpr {
+    #[inline]
+    fn from(node: ApplyLemma) -> AnyCallExpr { AnyCallExpr::ApplyLemma(node) }
+}
 impl From<AssertMacroExpr> for AnyCallExpr {
     #[inline]
     fn from(node: AssertMacroExpr) -> AnyCallExpr { AnyCallExpr::AssertMacroExpr(node) }
@@ -6088,17 +6103,13 @@ impl From<MethodCallExpr> for AnyCallExpr {
     #[inline]
     fn from(node: MethodCallExpr) -> AnyCallExpr { AnyCallExpr::MethodCallExpr(node) }
 }
-impl From<AnyCallExpr> for Expr {
-    #[inline]
-    fn from(node: AnyCallExpr) -> Expr {
-        match node {
-            AnyCallExpr::AssertMacroExpr(it) => it.into(),
-            AnyCallExpr::CallExpr(it) => it.into(),
-            AnyCallExpr::MethodCallExpr(it) => it.into(),
+impl AnyCallExpr {
+    pub fn apply_lemma(self) -> Option<ApplyLemma> {
+        match (self) {
+            AnyCallExpr::ApplyLemma(item) => Some(item),
+            _ => None,
         }
     }
-}
-impl AnyCallExpr {
     pub fn assert_macro_expr(self) -> Option<AssertMacroExpr> {
         match (self) {
             AnyCallExpr::AssertMacroExpr(item) => Some(item),
@@ -6120,6 +6131,7 @@ impl AnyCallExpr {
     #[inline]
     pub fn value_arg_list(&self) -> Option<ValueArgList> {
         match self {
+            AnyCallExpr::ApplyLemma(it) => it.value_arg_list(),
             AnyCallExpr::AssertMacroExpr(it) => it.value_arg_list(),
             AnyCallExpr::CallExpr(it) => it.value_arg_list(),
             AnyCallExpr::MethodCallExpr(it) => it.value_arg_list(),
@@ -6129,11 +6141,15 @@ impl AnyCallExpr {
 impl AstNode for AnyCallExpr {
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(kind, ASSERT_MACRO_EXPR | CALL_EXPR | METHOD_CALL_EXPR)
+        matches!(
+            kind,
+            APPLY_LEMMA | ASSERT_MACRO_EXPR | CALL_EXPR | METHOD_CALL_EXPR
+        )
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
+            APPLY_LEMMA => AnyCallExpr::ApplyLemma(ApplyLemma { syntax }),
             ASSERT_MACRO_EXPR => AnyCallExpr::AssertMacroExpr(AssertMacroExpr { syntax }),
             CALL_EXPR => AnyCallExpr::CallExpr(CallExpr { syntax }),
             METHOD_CALL_EXPR => AnyCallExpr::MethodCallExpr(MethodCallExpr { syntax }),
@@ -6144,6 +6160,7 @@ impl AstNode for AnyCallExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
+            AnyCallExpr::ApplyLemma(it) => &it.syntax(),
             AnyCallExpr::AssertMacroExpr(it) => &it.syntax(),
             AnyCallExpr::CallExpr(it) => &it.syntax(),
             AnyCallExpr::MethodCallExpr(it) => &it.syntax(),
@@ -6221,6 +6238,10 @@ impl From<Fun> for AnyFun {
     #[inline]
     fn from(node: Fun) -> AnyFun { AnyFun::Fun(node) }
 }
+impl From<Lemma> for AnyFun {
+    #[inline]
+    fn from(node: Lemma) -> AnyFun { AnyFun::Lemma(node) }
+}
 impl From<SpecFun> for AnyFun {
     #[inline]
     fn from(node: SpecFun) -> AnyFun { AnyFun::SpecFun(node) }
@@ -6234,6 +6255,7 @@ impl From<AnyFun> for AnyHasAttrs {
     fn from(node: AnyFun) -> AnyHasAttrs {
         match node {
             AnyFun::Fun(it) => it.into(),
+            AnyFun::Lemma(it) => it.into(),
             AnyFun::SpecFun(it) => it.into(),
             AnyFun::SpecInlineFun(it) => it.into(),
         }
@@ -6244,6 +6266,7 @@ impl From<AnyFun> for AnyHasVisibility {
     fn from(node: AnyFun) -> AnyHasVisibility {
         match node {
             AnyFun::Fun(it) => it.into(),
+            AnyFun::Lemma(it) => it.into(),
             AnyFun::SpecFun(it) => it.into(),
             AnyFun::SpecInlineFun(it) => it.into(),
         }
@@ -6254,6 +6277,7 @@ impl From<AnyFun> for AnyHoverDocsOwner {
     fn from(node: AnyFun) -> AnyHoverDocsOwner {
         match node {
             AnyFun::Fun(it) => it.into(),
+            AnyFun::Lemma(it) => it.into(),
             AnyFun::SpecFun(it) => it.into(),
             AnyFun::SpecInlineFun(it) => it.into(),
         }
@@ -6264,6 +6288,7 @@ impl From<AnyFun> for GenericElement {
     fn from(node: AnyFun) -> GenericElement {
         match node {
             AnyFun::Fun(it) => it.into(),
+            AnyFun::Lemma(it) => it.into(),
             AnyFun::SpecFun(it) => it.into(),
             AnyFun::SpecInlineFun(it) => it.into(),
         }
@@ -6274,6 +6299,7 @@ impl From<AnyFun> for InferenceCtxOwner {
     fn from(node: AnyFun) -> InferenceCtxOwner {
         match node {
             AnyFun::Fun(it) => it.into(),
+            AnyFun::Lemma(it) => it.into(),
             AnyFun::SpecFun(it) => it.into(),
             AnyFun::SpecInlineFun(it) => it.into(),
         }
@@ -6284,6 +6310,7 @@ impl From<AnyFun> for NamedElement {
     fn from(node: AnyFun) -> NamedElement {
         match node {
             AnyFun::Fun(it) => it.into(),
+            AnyFun::Lemma(it) => it.into(),
             AnyFun::SpecFun(it) => it.into(),
             AnyFun::SpecInlineFun(it) => it.into(),
         }
@@ -6293,6 +6320,12 @@ impl AnyFun {
     pub fn fun(self) -> Option<Fun> {
         match (self) {
             AnyFun::Fun(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn lemma(self) -> Option<Lemma> {
+        match (self) {
+            AnyFun::Lemma(item) => Some(item),
             _ => None,
         }
     }
@@ -6312,6 +6345,7 @@ impl AnyFun {
     pub fn name(&self) -> Option<Name> {
         match self {
             AnyFun::Fun(it) => it.name(),
+            AnyFun::Lemma(it) => it.name(),
             AnyFun::SpecFun(it) => it.name(),
             AnyFun::SpecInlineFun(it) => it.name(),
         }
@@ -6320,6 +6354,7 @@ impl AnyFun {
     pub fn type_param_list(&self) -> Option<TypeParamList> {
         match self {
             AnyFun::Fun(it) => it.type_param_list(),
+            AnyFun::Lemma(it) => it.type_param_list(),
             AnyFun::SpecFun(it) => it.type_param_list(),
             AnyFun::SpecInlineFun(it) => it.type_param_list(),
         }
@@ -6328,6 +6363,7 @@ impl AnyFun {
     pub fn param_list(&self) -> Option<ParamList> {
         match self {
             AnyFun::Fun(it) => it.param_list(),
+            AnyFun::Lemma(it) => it.param_list(),
             AnyFun::SpecFun(it) => it.param_list(),
             AnyFun::SpecInlineFun(it) => it.param_list(),
         }
@@ -6336,6 +6372,7 @@ impl AnyFun {
     pub fn ret_type(&self) -> Option<RetType> {
         match self {
             AnyFun::Fun(it) => it.ret_type(),
+            AnyFun::Lemma(it) => it.ret_type(),
             AnyFun::SpecFun(it) => it.ret_type(),
             AnyFun::SpecInlineFun(it) => it.ret_type(),
         }
@@ -6343,11 +6380,12 @@ impl AnyFun {
 }
 impl AstNode for AnyFun {
     #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, FUN | SPEC_FUN | SPEC_INLINE_FUN) }
+    fn can_cast(kind: SyntaxKind) -> bool { matches!(kind, FUN | LEMMA | SPEC_FUN | SPEC_INLINE_FUN) }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
             FUN => AnyFun::Fun(Fun { syntax }),
+            LEMMA => AnyFun::Lemma(Lemma { syntax }),
             SPEC_FUN => AnyFun::SpecFun(SpecFun { syntax }),
             SPEC_INLINE_FUN => AnyFun::SpecInlineFun(SpecInlineFun { syntax }),
             _ => return None,
@@ -6358,6 +6396,7 @@ impl AstNode for AnyFun {
     fn syntax(&self) -> &SyntaxNode {
         match self {
             AnyFun::Fun(it) => &it.syntax(),
+            AnyFun::Lemma(it) => &it.syntax(),
             AnyFun::SpecFun(it) => &it.syntax(),
             AnyFun::SpecInlineFun(it) => &it.syntax(),
         }
@@ -7064,6 +7103,21 @@ impl From<SpecInlineFun> for GenericElement {
 impl From<Struct> for GenericElement {
     #[inline]
     fn from(node: Struct) -> GenericElement { GenericElement::Struct(node) }
+}
+impl From<GenericElement> for AnyHasAttrs {
+    #[inline]
+    fn from(node: GenericElement) -> AnyHasAttrs {
+        match node {
+            GenericElement::Enum(it) => it.into(),
+            GenericElement::Fun(it) => it.into(),
+            GenericElement::GlobalVariableDecl(it) => it.into(),
+            GenericElement::Lemma(it) => it.into(),
+            GenericElement::Schema(it) => it.into(),
+            GenericElement::SpecFun(it) => it.into(),
+            GenericElement::SpecInlineFun(it) => it.into(),
+            GenericElement::Struct(it) => it.into(),
+        }
+    }
 }
 impl From<GenericElement> for NamedElement {
     #[inline]
@@ -9281,6 +9335,7 @@ impl AstNode for AnyHasAttrs {
                 | FUN
                 | GLOBAL_VARIABLE_DECL
                 | ITEM_SPEC
+                | LEMMA
                 | MODULE
                 | MODULE_SPEC
                 | NAMED_FIELD
@@ -9325,6 +9380,10 @@ impl From<GlobalVariableDecl> for AnyHasAttrs {
 impl From<ItemSpec> for AnyHasAttrs {
     #[inline]
     fn from(node: ItemSpec) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<Lemma> for AnyHasAttrs {
+    #[inline]
+    fn from(node: Lemma) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
 impl From<Module> for AnyHasAttrs {
     #[inline]
@@ -9463,7 +9522,10 @@ impl AnyHasVisibility {
 impl AstNode for AnyHasVisibility {
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(kind, CONST | ENUM | FUN | SPEC_FUN | SPEC_INLINE_FUN | STRUCT)
+        matches!(
+            kind,
+            CONST | ENUM | FUN | LEMMA | SPEC_FUN | SPEC_INLINE_FUN | STRUCT
+        )
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
@@ -9483,6 +9545,10 @@ impl From<Enum> for AnyHasVisibility {
 impl From<Fun> for AnyHasVisibility {
     #[inline]
     fn from(node: Fun) -> AnyHasVisibility { AnyHasVisibility { syntax: node.syntax } }
+}
+impl From<Lemma> for AnyHasVisibility {
+    #[inline]
+    fn from(node: Lemma) -> AnyHasVisibility { AnyHasVisibility { syntax: node.syntax } }
 }
 impl From<SpecFun> for AnyHasVisibility {
     #[inline]
@@ -9519,6 +9585,7 @@ impl AstNode for AnyHoverDocsOwner {
                 | ENUM
                 | FUN
                 | IDENT_PAT
+                | LEMMA
                 | MODULE
                 | NAMED_FIELD
                 | SCHEMA
@@ -9550,6 +9617,10 @@ impl From<Fun> for AnyHoverDocsOwner {
 impl From<IdentPat> for AnyHoverDocsOwner {
     #[inline]
     fn from(node: IdentPat) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
+}
+impl From<Lemma> for AnyHoverDocsOwner {
+    #[inline]
+    fn from(node: Lemma) -> AnyHoverDocsOwner { AnyHoverDocsOwner { syntax: node.syntax } }
 }
 impl From<Module> for AnyHoverDocsOwner {
     #[inline]
@@ -9603,6 +9674,7 @@ impl AstNode for AnyMslOnly {
         matches!(
             kind,
             ITEM_SPEC
+                | LEMMA
                 | MODULE_SPEC
                 | SCHEMA
                 | SCHEMA_FIELD
@@ -9621,6 +9693,10 @@ impl AstNode for AnyMslOnly {
 impl From<ItemSpec> for AnyMslOnly {
     #[inline]
     fn from(node: ItemSpec) -> AnyMslOnly { AnyMslOnly { syntax: node.syntax } }
+}
+impl From<Lemma> for AnyMslOnly {
+    #[inline]
+    fn from(node: Lemma) -> AnyMslOnly { AnyMslOnly { syntax: node.syntax } }
 }
 impl From<ModuleSpec> for AnyMslOnly {
     #[inline]

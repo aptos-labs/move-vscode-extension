@@ -100,7 +100,7 @@ fn node_item_scope(node: SyntaxNode) -> ItemScope {
     use syntax::SyntaxKind::*;
     if matches!(
         node.kind(),
-        SCHEMA | SPEC_FUN | SPEC_INLINE_FUN | ITEM_SPEC | MODULE_SPEC | SPEC_BLOCK_EXPR
+        SCHEMA | SPEC_FUN | SPEC_INLINE_FUN | ITEM_SPEC | MODULE_SPEC | SPEC_BLOCK_EXPR | LEMMA
     ) {
         return ItemScope::Verify;
     }

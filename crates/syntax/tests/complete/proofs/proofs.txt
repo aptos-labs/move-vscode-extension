@@ -30,10 +30,11 @@ SOURCE_FILE@0..244
           APPLY_LEMMA@54..78
             APPLY_KW@54..59 "apply"
             WHITESPACE@59..60 " "
-            PATH@60..68
-              PATH_SEGMENT@60..68
-                NAME_REF@60..68
-                  IDENT@60..68 "my_lemma"
+            PATH_EXPR@60..68
+              PATH@60..68
+                PATH_SEGMENT@60..68
+                  NAME_REF@60..68
+                    IDENT@60..68 "my_lemma"
             VALUE_ARG_LIST@68..77
               L_PAREN@68..69 "("
               VALUE_ARG@69..70

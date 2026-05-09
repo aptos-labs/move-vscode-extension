@@ -248,7 +248,7 @@ fn render_scope_entry(
     }
 
     let comp_item = match named_item_kind {
-        FUN | SPEC_FUN | SPEC_INLINE_FUN => {
+        FUN | SPEC_FUN | SPEC_INLINE_FUN | LEMMA => {
             let fun = named_item.cast_into::<ast::AnyFun>()?;
             if fun.value.has_attr_item("test") {
                 return None;

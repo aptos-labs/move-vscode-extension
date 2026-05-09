@@ -121,10 +121,12 @@ pub trait SyntaxElementExt {
         self.to_syntax_element().ancestor_strict::<Ast>().is_some()
     }
 
+    #[inline]
     fn is<T: AstNode>(&self) -> bool {
         T::can_cast(self.to_syntax_element().kind())
     }
 
+    #[inline]
     fn parent_is<T: AstNode>(&self) -> bool {
         self.to_syntax_element().parent().is_some_and(|it| it.is::<T>())
     }
@@ -189,18 +191,21 @@ pub trait SyntaxElementExt {
 }
 
 impl SyntaxElementExt for SyntaxElement {
+    #[inline]
     fn to_syntax_element(&self) -> SyntaxElement {
         self.clone()
     }
 }
 
 impl SyntaxElementExt for SyntaxNode {
+    #[inline]
     fn to_syntax_element(&self) -> SyntaxElement {
         self.syntax_element()
     }
 }
 
 impl SyntaxElementExt for SyntaxToken {
+    #[inline]
     fn to_syntax_element(&self) -> SyntaxElement {
         self.syntax_element()
     }

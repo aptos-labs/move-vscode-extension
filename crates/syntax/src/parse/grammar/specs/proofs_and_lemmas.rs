@@ -1,7 +1,7 @@
 use crate::SyntaxKind::*;
 use crate::T;
 use crate::parse::grammar::expressions::blocks::{StmtKind, stmt};
-use crate::parse::grammar::expressions::{blocks, expr};
+use crate::parse::grammar::expressions::{atom, blocks, expr};
 use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::specs::quants;
 use crate::parse::grammar::specs::quants::quant_binding_list;
@@ -53,8 +53,8 @@ pub(crate) fn apply_lemma(p: &mut Parser) -> bool {
     }
     let m = p.start();
     p.bump_remap(T![apply]);
-    // lemma name
-    paths::path(p, Some(PathMode::Type));
+    // lemma path
+    atom::path_expr(p);
     // lemma args
     expressions::value_arg_list(p);
     p.expect(T![;]);

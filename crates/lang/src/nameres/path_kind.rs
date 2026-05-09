@@ -317,6 +317,8 @@ fn path_namespaces(
         // TYPE | ENUM for resource indexing, NAME for vector indexing
         PATH_EXPR if path_parent.parent_is::<ast::IndexExpr>() => INDEXABLE_NS,
 
+        PATH_EXPR if path_parent.parent_is::<ast::ApplyLemma>() => enum_set!(Ns::LEMMA),
+
         // can be anything in completion
         PATH_EXPR => {
             if is_completion {
@@ -332,8 +334,6 @@ fn path_namespaces(
 
         FRIEND => MODULES,
         MODULE_SPEC => MODULES,
-
-        APPLY_LEMMA => enum_set!(Ns::LEMMA),
 
         //
         // // should not be used for attr items

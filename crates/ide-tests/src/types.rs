@@ -12,6 +12,7 @@ mod test_call_expr_types;
 mod test_function_values;
 mod test_lambda_param_types;
 mod test_my_types;
+mod test_proof_types;
 mod test_types_expression_types;
 
 pub fn check_expr_type(source: &str) {

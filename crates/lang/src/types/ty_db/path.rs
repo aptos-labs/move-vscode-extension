@@ -30,7 +30,7 @@ pub fn lower_path(
             let item = named_item.clone().cast_into::<ast::Schema>().unwrap();
             Ty::Schema(TySchema::new(item))
         }
-        FUN | SPEC_FUN | SPEC_INLINE_FUN => {
+        FUN | SPEC_FUN | SPEC_INLINE_FUN | LEMMA => {
             let fun = named_item.clone().cast_into::<ast::AnyFun>().unwrap();
             let ty_callable = ty_db::lower_function(db, fun, msl);
             Ty::Callable(ty_callable)

@@ -632,7 +632,6 @@ fn test_no_error_for_invariant_index_variable() {
 module 0x1::m {
     spec module {
         let vec = vector[1, 2, 3];
-        let ind = 1;
         invariant forall ind in 0..10: vec[ind] < 10;
     }
 }

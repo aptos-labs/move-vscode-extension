@@ -8,8 +8,8 @@ use crate::DiagnosticsContext;
 use crate::diagnostic::Diagnostic;
 use ide_db::assist_context::LocalAssists;
 use ide_db::search;
-use syntax::ast::AnyFun;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
+use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
 use syntax::ast::syntax_factory::SyntaxFactory;
 use syntax::files::{FileRange, InFile};
 use syntax::{AstNode, ast};
@@ -25,10 +25,6 @@ pub(crate) fn check_unused_ident_pat<'db>(
         return None;
     }
 
-    if ident_pat.value.syntax().is_msl_context() {
-        return None;
-    }
-
     // if it's resolved to enum variant, then it can't be unused
     if ctx
         .sema
@@ -39,20 +35,47 @@ pub(crate) fn check_unused_ident_pat<'db>(
     }
 
     let ident_owner = ident_pat.value.ident_owner()?;
+
+    // if variable is declared as part of schema field, it can't be unused
+    if matches!(ident_owner, ast::IdentPatOwner::SchemaField(_)) {
+        return None;
+    }
+    // item spec params usage is determined at declaration
+    if matches!(ident_owner, ast::IdentPatOwner::ItemSpecParam(_)) {
+        return None;
+    }
+
+    if matches!(ident_owner, ast::IdentPatOwner::LetStmt(_)) && ident_pat.is_msl() {
+        // if there's an `include` statement anywhere in this block, don't warn
+        // NOTE: it should be implement properly, but for now we just do it easy way
+        let outer_block = ident_pat
+            .value
+            .syntax()
+            .ancestor_strict::<ast::BlockExpr>()
+            .expect("LetStmt is always a child of a block");
+        if outer_block
+            .syntax()
+            .descendants_of_type::<ast::IncludeSchema>()
+            .next()
+            .is_some()
+        {
+            return None;
+        }
+    }
+
     if let ast::IdentPatOwner::Param(fun_param) = &ident_owner {
         if fun_param.is_self() {
             return None;
         }
 
         let any_fun = fun_param.any_fun()?;
-        if any_fun.is_native() || any_fun.is_uninterpreted() {
+        // native function, uninterpreted function, incomplete function
+        if any_fun.block_expr().is_none() {
             return None;
         }
 
         // skip #[test] function parameters
-        if let AnyFun::Fun(fun) = any_fun
-            && fun.is_test()
-        {
+        if any_fun.fun().is_some_and(|it| it.is_test()) {
             return None;
         }
     }

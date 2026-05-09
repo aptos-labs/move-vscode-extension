@@ -195,7 +195,7 @@ fn test_no_error_if_inferrable_from_params() {
             native public fun to_bytes<MoveValue>(v: &MoveValue): vector<u8>;
             fun main(account_address: address) {}
             spec main(account_address: address) {
-                let a = to_bytes(account_address);
+                let _a = to_bytes(account_address);
             }
         }
     "#]]);

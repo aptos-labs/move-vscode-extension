@@ -135,7 +135,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         quant_binding_ty
     }
 
-    fn infer_quant_binding_ty(&mut self, quant_binding: &ast::QuantBinding) -> Option<Ty> {
+    pub(crate) fn infer_quant_binding_ty(&mut self, quant_binding: &ast::QuantBinding) -> Option<Ty> {
         let ty = if quant_binding.in_token().is_some() {
             let range_expr = quant_binding.expr()?;
             let seq_ty = self.infer_expr(&range_expr, Expected::NoValue).into_ty_seq()?;

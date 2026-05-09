@@ -48,6 +48,13 @@ pub(crate) fn check_value_arguments<'db>(
             AssertKind::Eq => (2, 7),
             AssertKind::NotEq => (2, 7),
         },
+        ast::AnyCallExpr::ApplyLemma(apply_lemma) => {
+            let ty_callable = ctx
+                .sema
+                .get_call_expr_type(&apply_lemma.in_file(file_id).map_into())?;
+            let expected_count = ty_callable.param_types.len();
+            (expected_count, expected_count)
+        }
     };
     let actual_count = arg_exprs.len();
 

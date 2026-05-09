@@ -2757,3 +2757,19 @@ fn test_check_update_variable() {
         }
     "#]]);
 }
+
+#[test]
+fn test_check_apply_lemma_arguments() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            fun main() {}
+            spec lemma add_mono(_a: u64) {}
+            spec main {} proof {
+                forall _a: u64 apply add_mono(true);
+                                            //^^^^ err: Incompatible type 'bool', expected 'num'
+                forall _a: u64 apply add_mono(1);
+            }
+        }
+    "#]]);
+}

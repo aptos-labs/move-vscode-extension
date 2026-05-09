@@ -55,5 +55,8 @@ fn label_decl_to_entry(label_decl: InFile<ast::LabelDecl>) -> ScopeEntry {
 }
 
 fn is_label_barrier(kind: SyntaxKind) -> bool {
-    matches!(kind, LAMBDA_EXPR | FUN | SPEC_FUN | SPEC_INLINE_FUN | CONST)
+    matches!(
+        kind,
+        LAMBDA_EXPR | FUN | SPEC_FUN | SPEC_INLINE_FUN | LEMMA | CONST
+    )
 }
