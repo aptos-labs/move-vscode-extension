@@ -7,11 +7,26 @@ fn test_type_of_forall_apply_lemma_quant() {
         r#"
         module 0x1::main {
             fun main() {}
-            spec lemma add_mono(a: u64) {}
+            spec lemma add_mono(_a: u64) {}
             spec main {} proof {
-                forall a: u64
-                    apply add_mono(a);
-                                 //^ num
+                forall a: u64 apply add_mono(a);
+                                           //^ num
+            }
+        }
+"#,
+    )
+}
+
+// language=Move
+#[test]
+fn test_forall_expr_parameter_type() {
+    check_expr_type(
+        r#"
+        module 0x1::main {
+            fun main() {}
+            spec main {
+                forall a: u64: a == 1;
+                             //^ num
             }
         }
 "#,

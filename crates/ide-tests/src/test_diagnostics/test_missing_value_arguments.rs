@@ -197,13 +197,13 @@ fn test_check_apply_lemma_arguments() {
             fun main() {}
             spec lemma add_mono(_a: u64) {}
             spec main {} proof {
-                forall a: u64 apply add_mono();
-                                           //^ err: This function takes 1 parameters, but 0 parameters were supplied
-                forall a: u64 apply add_mono(1);
-                forall a: u64 apply add_mono(1, 1);
-                                              //^ err: This function takes 1 parameters, but 2 parameters were supplied
-                forall a: u64 apply add_mono(1, 1, 1);
-                                              //^ err: This function takes 1 parameters, but 3 parameters were supplied
+                forall _a: u64 apply add_mono();
+                                            //^ err: This function takes 1 parameters, but 0 parameters were supplied
+                forall _a: u64 apply add_mono(1);
+                forall _a: u64 apply add_mono(1, 1);
+                                               //^ err: This function takes 1 parameters, but 2 parameters were supplied
+                forall _a: u64 apply add_mono(1, 1, 1);
+                                               //^ err: This function takes 1 parameters, but 3 parameters were supplied
             }
         }
     "#]]);

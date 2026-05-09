@@ -335,17 +335,16 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::Stmt::PostStmt(post_stmt) => {
                 self.process_post_stmt(&post_stmt);
             }
-            // todo:
-            ast::Stmt::ApplySchema(_) => (),
             ast::Stmt::SpecInlineFun(_) => (),
             ast::Stmt::Lemma(_) => (),
             ast::Stmt::ApplyLemma(apply_lemma) => {
                 self.process_apply_lemma(&apply_lemma);
             }
             ast::Stmt::ForallApplyLemma(forall_apply_lemma) => {
-                let apply_lemma = forall_apply_lemma.apply_lemma()?;
-                self.process_apply_lemma(&apply_lemma);
+                self.process_forall_apply_lemma(&forall_apply_lemma);
             }
+            // todo:
+            ast::Stmt::ApplySchema(_) => (),
         }
 
         Some(())
@@ -1381,8 +1380,12 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         }
     }
 
-    fn infer_expected_call_arg_tys(&mut self, ty_callable: &TyCallable, expected: Expected) -> Vec<Ty> {
-        let Some(expected_ret_ty) = expected.ty(self.ctx) else {
+    fn infer_expected_call_arg_tys(
+        &mut self,
+        ty_callable: &TyCallable,
+        expected_return: Expected,
+    ) -> Vec<Ty> {
+        let Some(expected_ret_ty) = expected_return.ty(self.ctx) else {
             return vec![];
         };
         let declared_ret_ty = self.ctx.resolve_ty_vars_if_possible(ty_callable.ret_type_ty());
@@ -1442,7 +1445,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 enum CallArg {
     Self_ { self_ty: Ty },
     Arg { expr: Option<ast::Expr> },

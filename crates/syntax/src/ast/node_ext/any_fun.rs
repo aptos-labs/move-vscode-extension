@@ -20,8 +20,8 @@ impl ast::AnyFun {
     pub fn is_uninterpreted(&self) -> bool {
         match self {
             ast::AnyFun::Fun(fun) => false,
-            ast::AnyFun::SpecFun(fun) => fun.spec_block().is_some(),
-            ast::AnyFun::SpecInlineFun(fun) => fun.spec_block().is_some(),
+            ast::AnyFun::SpecFun(fun) => fun.spec_block().is_none(),
+            ast::AnyFun::SpecInlineFun(fun) => fun.spec_block().is_none(),
             ast::AnyFun::Lemma(_) => false,
         }
     }

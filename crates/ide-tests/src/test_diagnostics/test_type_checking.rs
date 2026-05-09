@@ -2764,12 +2764,11 @@ fn test_check_apply_lemma_arguments() {
     check_diagnostics(expect![[r#"
         module 0x1::main {
             fun main() {}
-            spec lemma add_mono(a: u64) {}
-                              //^ warn: Unused parameter 'a'
+            spec lemma add_mono(_a: u64) {}
             spec main {} proof {
-                forall a: u64 apply add_mono(true);
-                                           //^^^^ err: Incompatible type 'bool', expected 'num'
-                forall a: u64 apply add_mono(1);
+                forall _a: u64 apply add_mono(true);
+                                            //^^^^ err: Incompatible type 'bool', expected 'num'
+                forall _a: u64 apply add_mono(1);
             }
         }
     "#]]);

@@ -21,7 +21,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 TyCallableKind::fake(),
             ),
         };
-        let expected_arg_tys = self.infer_expected_call_arg_tys(&callable_ty, Expected::NoValue);
+        let expected_arg_tys =
+            self.infer_expected_call_arg_tys(&callable_ty, Expected::ExpectType(Ty::Unit));
         let args = apply_lemma
             .to_any_call_expr()
             .arg_exprs()
@@ -34,9 +35,21 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             .call_expr_types
             .insert(apply_lemma.clone().into(), callable_ty.clone().into());
 
-        // resolve after applying all parameters
-        // let ret_ty = self.ctx.resolve_ty_vars_if_possible(callable_ty.ret_type_ty());
-        // Some(ret_ty)
+        Some(())
+    }
+
+    pub(super) fn process_forall_apply_lemma(
+        &mut self,
+        forall_apply_lemma: &ast::ForallApplyLemma,
+    ) -> Option<()> {
+        for quant_binding in forall_apply_lemma.quant_bindings() {
+            if let Some(ident_pat) = quant_binding.ident_pat() {
+                let ty = self.infer_quant_binding_ty(&quant_binding).unwrap_or(Ty::Unknown);
+                self.ctx.pat_types.insert(ident_pat.into(), ty);
+            }
+        }
+        let apply_lemma = forall_apply_lemma.apply_lemma()?;
+        self.process_apply_lemma(&apply_lemma);
         Some(())
     }
 }

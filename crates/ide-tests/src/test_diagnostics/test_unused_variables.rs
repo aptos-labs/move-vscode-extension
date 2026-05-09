@@ -282,3 +282,43 @@ fn test_unused_function_parameter_rename() {
     "#]],
     );
 }
+
+#[test]
+fn test_check_unused_parameter_top_level_lemma() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+        module 0x1::main {
+            spec lemma add_mono(a: u64) {}
+                              //^ warn: Unused parameter 'a'
+        }
+    "#]],
+        expect![[r#"
+        module 0x1::main {
+            spec lemma add_mono(_a: u64) {}
+        }
+    "#]],
+    );
+}
+
+#[test]
+fn test_check_unused_parameter_inline_lemma() {
+    // language=Move
+    check_diagnostics_and_fix(
+        expect![[r#"
+        module 0x1::main {
+            spec module {
+                lemma add_mono(a: u64) {}
+                             //^ warn: Unused parameter 'a'
+            }
+        }
+    "#]],
+        expect![[r#"
+        module 0x1::main {
+            spec module {
+                lemma add_mono(_a: u64) {}
+            }
+        }
+    "#]],
+    );
+}
