@@ -2298,6 +2298,7 @@ pub enum AddressRef {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AnyCallExpr {
+    ApplyLemma(ApplyLemma),
     AssertMacroExpr(AssertMacroExpr),
     CallExpr(CallExpr),
     MethodCallExpr(MethodCallExpr),
@@ -6076,6 +6077,10 @@ impl AstNode for AddressRef {
         }
     }
 }
+impl From<ApplyLemma> for AnyCallExpr {
+    #[inline]
+    fn from(node: ApplyLemma) -> AnyCallExpr { AnyCallExpr::ApplyLemma(node) }
+}
 impl From<AssertMacroExpr> for AnyCallExpr {
     #[inline]
     fn from(node: AssertMacroExpr) -> AnyCallExpr { AnyCallExpr::AssertMacroExpr(node) }
@@ -6088,17 +6093,13 @@ impl From<MethodCallExpr> for AnyCallExpr {
     #[inline]
     fn from(node: MethodCallExpr) -> AnyCallExpr { AnyCallExpr::MethodCallExpr(node) }
 }
-impl From<AnyCallExpr> for Expr {
-    #[inline]
-    fn from(node: AnyCallExpr) -> Expr {
-        match node {
-            AnyCallExpr::AssertMacroExpr(it) => it.into(),
-            AnyCallExpr::CallExpr(it) => it.into(),
-            AnyCallExpr::MethodCallExpr(it) => it.into(),
+impl AnyCallExpr {
+    pub fn apply_lemma(self) -> Option<ApplyLemma> {
+        match (self) {
+            AnyCallExpr::ApplyLemma(item) => Some(item),
+            _ => None,
         }
     }
-}
-impl AnyCallExpr {
     pub fn assert_macro_expr(self) -> Option<AssertMacroExpr> {
         match (self) {
             AnyCallExpr::AssertMacroExpr(item) => Some(item),
@@ -6120,6 +6121,7 @@ impl AnyCallExpr {
     #[inline]
     pub fn value_arg_list(&self) -> Option<ValueArgList> {
         match self {
+            AnyCallExpr::ApplyLemma(it) => it.value_arg_list(),
             AnyCallExpr::AssertMacroExpr(it) => it.value_arg_list(),
             AnyCallExpr::CallExpr(it) => it.value_arg_list(),
             AnyCallExpr::MethodCallExpr(it) => it.value_arg_list(),
@@ -6129,11 +6131,15 @@ impl AnyCallExpr {
 impl AstNode for AnyCallExpr {
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(kind, ASSERT_MACRO_EXPR | CALL_EXPR | METHOD_CALL_EXPR)
+        matches!(
+            kind,
+            APPLY_LEMMA | ASSERT_MACRO_EXPR | CALL_EXPR | METHOD_CALL_EXPR
+        )
     }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
+            APPLY_LEMMA => AnyCallExpr::ApplyLemma(ApplyLemma { syntax }),
             ASSERT_MACRO_EXPR => AnyCallExpr::AssertMacroExpr(AssertMacroExpr { syntax }),
             CALL_EXPR => AnyCallExpr::CallExpr(CallExpr { syntax }),
             METHOD_CALL_EXPR => AnyCallExpr::MethodCallExpr(MethodCallExpr { syntax }),
@@ -6144,6 +6150,7 @@ impl AstNode for AnyCallExpr {
     #[inline]
     fn syntax(&self) -> &SyntaxNode {
         match self {
+            AnyCallExpr::ApplyLemma(it) => &it.syntax(),
             AnyCallExpr::AssertMacroExpr(it) => &it.syntax(),
             AnyCallExpr::CallExpr(it) => &it.syntax(),
             AnyCallExpr::MethodCallExpr(it) => &it.syntax(),

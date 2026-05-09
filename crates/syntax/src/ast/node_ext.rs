@@ -13,6 +13,7 @@ mod and_include_expr;
 mod any_call_expr;
 mod any_fun;
 mod any_reference_element;
+mod apply_lemma;
 mod apply_schema;
 pub mod assert_macro_expr;
 mod attr_item;

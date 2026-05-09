@@ -138,7 +138,7 @@ pub(crate) fn atom_expr(p: &mut Parser, stmt_kind: StmtKind) -> Option<(Complete
     Some((done, blocklike))
 }
 
-fn path_expr(p: &mut Parser) -> CompletedMarker {
+pub(crate) fn path_expr(p: &mut Parser) -> CompletedMarker {
     let m = p.start();
     paths::path(p, Some(PathMode::Expr));
     let cm = match p.current() {

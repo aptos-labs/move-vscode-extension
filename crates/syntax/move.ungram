@@ -407,7 +407,7 @@ MatchGuard =
     'if' Expr
 
 AnyCallExpr =
-    CallExpr | MethodCallExpr | AssertMacroExpr
+    CallExpr | MethodCallExpr | AssertMacroExpr | ApplyLemma
 
 CallExpr =
     Expr ValueArgList

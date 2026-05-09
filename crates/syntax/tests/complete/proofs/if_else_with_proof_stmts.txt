@@ -46,10 +46,11 @@ SOURCE_FILE@0..171
                 APPLY_LEMMA@86..103
                   APPLY_KW@86..91 "apply"
                   WHITESPACE@91..92 " "
-                  PATH@92..100
-                    PATH_SEGMENT@92..100
-                      NAME_REF@92..100
-                        IDENT@92..100 "my_lemma"
+                  PATH_EXPR@92..100
+                    PATH@92..100
+                      PATH_SEGMENT@92..100
+                        NAME_REF@92..100
+                          IDENT@92..100 "my_lemma"
                   VALUE_ARG_LIST@100..102
                     L_PAREN@100..101 "("
                     R_PAREN@101..102 ")"
@@ -65,10 +66,11 @@ SOURCE_FILE@0..171
                 APPLY_LEMMA@113..130
                   APPLY_KW@113..118 "apply"
                   WHITESPACE@118..119 " "
-                  PATH@119..127
-                    PATH_SEGMENT@119..127
-                      NAME_REF@119..127
-                        IDENT@119..127 "my_lemma"
+                  PATH_EXPR@119..127
+                    PATH@119..127
+                      PATH_SEGMENT@119..127
+                        NAME_REF@119..127
+                          IDENT@119..127 "my_lemma"
                   VALUE_ARG_LIST@127..129
                     L_PAREN@127..128 "("
                     R_PAREN@128..129 ")"
@@ -82,10 +84,11 @@ SOURCE_FILE@0..171
             APPLY_LEMMA@143..160
               APPLY_KW@143..148 "apply"
               WHITESPACE@148..149 " "
-              PATH@149..157
-                PATH_SEGMENT@149..157
-                  NAME_REF@149..157
-                    IDENT@149..157 "my_lemma"
+              PATH_EXPR@149..157
+                PATH@149..157
+                  PATH_SEGMENT@149..157
+                    NAME_REF@149..157
+                      IDENT@149..157 "my_lemma"
               VALUE_ARG_LIST@157..159
                 L_PAREN@157..158 "("
                 R_PAREN@158..159 ")"
