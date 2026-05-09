@@ -322,3 +322,20 @@ fn test_check_unused_parameter_inline_lemma() {
     "#]],
     );
 }
+
+#[test]
+fn test_no_unused_variable_for_implicit_schema_parameter() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            spec schema MySchema {
+                addr: address;
+            }
+            fun main() {}
+            spec main {
+                let addr = @0x1;
+                include MySchema;
+            }
+        }
+    "#]]);
+}
