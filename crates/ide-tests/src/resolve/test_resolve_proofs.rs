@@ -351,3 +351,59 @@ fn test_resolve_forall_apply_variables() {
     "#,
     )
 }
+
+#[test]
+fn test_import_lemma_from_another_module() {
+    // language=Move
+    check_resolve(
+        r#"
+  module 0x42::LemmaProvider {
+      spec lemma add_comm(a: u64, b: u64) {
+                //X
+          ensures a + b == b + a;
+      } proof {
+          assume [trusted] true;
+      }
+  }
+
+  module 0x42::LemmaConsumer {
+      use 0x42::LemmaProvider;
+
+      fun commutative_add(x: u64, y: u64): u64 { x + y }
+
+      spec commutative_add {
+          ensures result == y + x;
+      } proof {
+          apply LemmaProvider::add_comm(x, y);
+                                //^
+      }
+  }    "#,
+    )
+}
+
+#[test]
+fn test_import_lemma_from_another_module_fq_path() {
+    // language=Move
+    check_resolve(
+        r#"
+  module 0x42::LemmaProvider {
+      spec lemma add_comm(a: u64, b: u64) {
+                //X
+          ensures a + b == b + a;
+      } proof {
+          assume [trusted] true;
+      }
+  }
+
+  module 0x42::LemmaConsumer {
+      fun commutative_add(x: u64, y: u64): u64 { x + y }
+
+      spec commutative_add {
+          ensures result == y + x;
+      } proof {
+          apply 0x42::LemmaProvider::add_comm(x, y);
+                                    //^
+      }
+  }    "#,
+    )
+}
