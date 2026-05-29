@@ -39,7 +39,9 @@
     "main": "./out/extension.js",
     "contributes": {
         "breakpoints": [
-            { "language": "move" }
+            {
+                "language": "move"
+            }
         ],
         "commands": [
             {
@@ -482,10 +484,14 @@
             {
                 "type": "aptos-move-test",
                 "label": "Aptos Move: Debug Test",
-                "languages": ["move"],
+                "languages": [
+                    "move"
+                ],
                 "configurationAttributes": {
                     "launch": {
-                        "required": ["packagePath"],
+                        "required": [
+                            "packagePath"
+                        ],
                         "properties": {
                             "testFilter": {
                                 "type": "string",
@@ -498,7 +504,9 @@
                             },
                             "env": {
                                 "type": "object",
-                                "additionalProperties": { "type": "string" },
+                                "additionalProperties": {
+                                    "type": "string"
+                                },
                                 "description": "Environment variables to set for the aptos-dap process"
                             }
                         }
@@ -530,10 +538,15 @@
             {
                 "type": "aptos-move-replay",
                 "label": "Aptos Move: Replay Transaction",
-                "languages": ["move"],
+                "languages": [
+                    "move"
+                ],
                 "configurationAttributes": {
                     "launch": {
-                        "required": ["network", "txnId"],
+                        "required": [
+                            "network",
+                            "txnId"
+                        ],
                         "properties": {
                             "network": {
                                 "type": "string",
@@ -546,17 +559,23 @@
                             },
                             "useLocalPackages": {
                                 "type": "array",
-                                "items": { "type": "string" },
+                                "items": {
+                                    "type": "string"
+                                },
                                 "description": "Paths to local Move packages for source-level debugging during replay"
                             },
                             "namedAddresses": {
                                 "type": "object",
-                                "additionalProperties": { "type": "string" },
+                                "additionalProperties": {
+                                    "type": "string"
+                                },
                                 "description": "Named address mappings as {\"name\": \"0xADDRESS\"}"
                             },
                             "env": {
                                 "type": "object",
-                                "additionalProperties": { "type": "string" },
+                                "additionalProperties": {
+                                    "type": "string"
+                                },
                                 "description": "Environment variables to set for the aptos-dap process"
                             }
                         }
@@ -592,7 +611,9 @@
                             "name": "Replay Transaction (local source)",
                             "network": "${1:testnet}",
                             "txnId": "${2:0}",
-                            "useLocalPackages": ["^\"\\${workspaceFolder}\""],
+                            "useLocalPackages": [
+                                "^\"\\${workspaceFolder}\""
+                            ],
                             "namedAddresses": {}
                         }
                     }
@@ -777,6 +798,7 @@
         "typecheck": "tsc"
     },
     "dependencies": {
+        "@octokit/rest": "^22.0.1",
         "command-exists": "^1.2.9",
         "vscode-languageclient": "^9.0.1"
     },
@@ -788,8 +810,8 @@
         "@types/node": "20.x",
         "@types/vscode": "^1.93.0",
         "@vscode/vsce": "=3.9.1",
-        "ovsx": "0.10.10",
         "esbuild": "^0.25.0",
+        "ovsx": "0.10.10",
         "typescript": "^6.0.2"
     }
 }
