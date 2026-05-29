@@ -60,7 +60,7 @@ jobs:
         run: cargo xtask install --server
 
       - name: Install aptos-cli
-        uses: aptos-labs/install-aptos-cli@v1
+        uses: aptos-labs/actions/install-aptos-cli@main
 
       - name: Fetch aptos-core repository
         uses: actions/checkout@v6
