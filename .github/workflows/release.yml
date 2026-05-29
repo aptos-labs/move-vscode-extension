@@ -99,16 +99,12 @@ jobs:
 
       - run: echo "TAG=$(date --iso -u)" >> $GITHUB_ENV
         if: github.ref == 'refs/heads/release'
-
       - run: 'echo "TAG: $TAG"'
 
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           fetch-depth: ${{ env.FETCH_DEPTH }}
-
-      - run: echo "HEAD_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
-      - run: 'echo "HEAD_SHA: $HEAD_SHA"'
 
       - uses: actions/download-artifact@v8
         with:
@@ -129,11 +125,11 @@ jobs:
       - run: ls -al ./dist
 
       - name: Publish Release
-        uses: ./.github/actions/github-release
+        uses: softprops/action-gh-release@v2
         with:
-          files: "dist/*"
-          name: ${{ env.TAG }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ env.TAG }}
+          target_commitish: ${{ github.sha }}
+          files: dist/*
 
       - run: npm ci
         working-directory: ./editors/code
