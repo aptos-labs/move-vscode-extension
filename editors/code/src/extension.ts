@@ -13,7 +13,7 @@ import * as lc from "vscode-languageclient/node";
 import { CommandFactory, Ctx, fetchWorkspace } from './ctx';
 import * as commands from "./commands";
 import { setContextValue } from "./util";
-import { ensureDapBinary } from "./dap_downloader";
+import { ensureAptosDapUpToDate } from "./dap_downloader";
 
 const APTOS_PROJECT_CONTEXT_NAME = "inAptosProject";
 
@@ -118,7 +118,7 @@ class AptosDapAdapterFactory implements vscode.DebugAdapterDescriptorFactory {
         const config = vscode.workspace.getConfiguration("move-on-aptos");
         let dapPath = config.get<string | null>("dap.path");
         if (!dapPath) {
-            const downloaded = await ensureDapBinary(this.context);
+            const downloaded = await ensureAptosDapUpToDate(this.context);
             if (!downloaded) {
                 throw new Error(
                     "move-on-aptos.dap.path is not set. " +
