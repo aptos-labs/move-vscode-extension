@@ -60,7 +60,9 @@ jobs:
         run: cargo xtask install --server
 
       - name: Install aptos-cli
-        uses: aptos-labs/actions/install-aptos-cli@main
+        uses: WGB5445/aptos-cli-setup@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Fetch aptos-core repository
         uses: actions/checkout@v6
