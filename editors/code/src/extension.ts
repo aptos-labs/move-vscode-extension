@@ -13,6 +13,7 @@ import * as lc from "vscode-languageclient/node";
 import { CommandFactory, Ctx, fetchWorkspace } from './ctx';
 import * as commands from "./commands";
 import { setContextValue } from "./util";
+import { ensureAptosDapUpToDate } from "./dap_downloader";
 
 const APTOS_PROJECT_CONTEXT_NAME = "inAptosProject";
 
@@ -38,7 +39,7 @@ export async function activate(
         throw err;
     });
 
-    const dapFactory = new AptosDapAdapterFactory();
+    const dapFactory = new AptosDapAdapterFactory(context);
     context.subscriptions.push(
         vscode.debug.registerDebugAdapterDescriptorFactory(
             "aptos-move-test",
@@ -108,17 +109,23 @@ function buildDapCommand(
 }
 
 class AptosDapAdapterFactory implements vscode.DebugAdapterDescriptorFactory {
+    constructor(private readonly context: vscode.ExtensionContext) {}
+
     async createDebugAdapterDescriptor(
         session: vscode.DebugSession,
         _executable: vscode.DebugAdapterExecutable | undefined,
     ): Promise<vscode.DebugAdapterDescriptor> {
         const config = vscode.workspace.getConfiguration("move-on-aptos");
-        const dapPath = config.get<string | null>("dap.path");
+        let dapPath = config.get<string | null>("dap.path");
         if (!dapPath) {
-            throw new Error(
-                "move-on-aptos.dap.path is not set. " +
-                "Point it to your aptos-dap binary.",
-            );
+            const downloaded = await ensureAptosDapUpToDate(this.context);
+            if (!downloaded) {
+                throw new Error(
+                    "move-on-aptos.dap.path is not set. " +
+                    "Point it to your aptos-dap binary.",
+                );
+            }
+            dapPath = downloaded;
         }
         const port = await findFreePort();
         const extraArgs = config.get<string[]>("dap.extraArgs", []);
