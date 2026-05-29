@@ -976,7 +976,7 @@ pub(crate) fn code_lens(
                 }
                 if lens_config.runnables
                     && client_commands_config.debug_test
-                    && snap.config.dap().path.is_some()
+                    && snap.config.dap().is_available()
                 {
                     if r.args.args.first().map(|s| s.as_str()) == Some("move")
                         && r.args.args.get(1).map(|s| s.as_str()) == Some("test")
@@ -1077,7 +1077,7 @@ pub(crate) mod command {
 
     pub(crate) fn debug_test(runnable: &lsp_ext::Runnable) -> lsp_types::Command {
         lsp_types::Command {
-            title: "Debug".to_owned(),
+            title: "Debug Test".to_owned(),
             command: "move-on-aptos.debugTest".into(),
             arguments: Some(vec![serde_json::to_value(runnable).unwrap()]),
         }

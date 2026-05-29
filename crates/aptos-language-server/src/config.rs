@@ -76,6 +76,12 @@ pub struct DapConfig {
     pub extra_args: Vec<String>,
 }
 
+impl DapConfig {
+    pub fn is_available(&self) -> bool {
+        self.path.is_some() || !cfg!(windows)
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AnnotationLocation {
