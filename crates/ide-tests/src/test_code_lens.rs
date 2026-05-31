@@ -148,3 +148,18 @@ fn test_annotate_item_spec_for_function_in_module_spec() {
         "#]],
     );
 }
+
+#[test]
+fn test_debug_transaction_for_entry_function() {
+    check_code_lens(
+        // language=Move
+        expect![[r#"
+            //- /main.move
+            module std::m {
+                entry fun main() {
+                        //^^^^ txn std::m::main
+                }
+            }
+        "#]],
+    );
+}

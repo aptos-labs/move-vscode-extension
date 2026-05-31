@@ -35,6 +35,7 @@ use stdx::itertools::Itertools;
 pub struct ClientCommandsConfig {
     pub run_test: bool,
     pub debug_test: bool,
+    pub debug_transaction: bool,
     pub show_references: bool,
     pub goto_location: bool,
 }
@@ -342,6 +343,7 @@ impl Config {
         ClientCommandsConfig {
             run_test: get("move-on-aptos.runTest"),
             debug_test: get("move-on-aptos.debugTest"),
+            debug_transaction: get("move-on-aptos.debugTransaction"),
             show_references: get("move-on-aptos.showReferences"),
             goto_location: get("move-on-aptos.gotoLocation"),
         }

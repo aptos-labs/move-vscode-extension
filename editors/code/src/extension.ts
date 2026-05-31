@@ -244,6 +244,7 @@ function createCommands(): Record<string, CommandFactory> {
         // hoverRefCommandProxy: { enabled: commands.hoverRefCommandProxy },
         runTest: { enabled: commands.runTest },
         debugTest: { enabled: commands.debugTest },
+        debugTransaction: { enabled: commands.debugTransaction },
         showReferences: { enabled: commands.showReferences },
         // triggerParameterHints: { enabled: commands.triggerParameterHints },
         // rename: { enabled: commands.rename },

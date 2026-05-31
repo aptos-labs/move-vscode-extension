@@ -197,6 +197,23 @@ export function debugTest(_ctx: CtxInit): Cmd {
     };
 }
 
+export function debugTransaction(_ctx: CtxInit): Cmd {
+    return async (runnable: lsp_ext.Runnable) => {
+        const fqName = runnable.label.replace(/^txn /, "");
+        const parts = fqName.split("::");
+        const moduleFn = parts.slice(1).join("::");
+
+        await vscode.debug.startDebugging(undefined, {
+            type: "aptos-move-replay",
+            request: "launch",
+            name: `Debug transaction ${moduleFn}`,
+            network: "testnet",
+            txnId: 0,
+            useLocalPackages: [runnable.args.workspaceRoot],
+        });
+    };
+}
+
 export function organizeImports(ctx: CtxInit): Cmd {
     return async () => {
         const editor = ctx.activeAptosEditor;

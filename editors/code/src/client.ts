@@ -79,6 +79,7 @@ class ExperimentalFeatures implements lc.StaticFeature {
                 commands: [
                     "move-on-aptos.runTest",
                     "move-on-aptos.debugTest",
+                    "move-on-aptos.debugTransaction",
                     "move-on-aptos.showReferences",
                     "move-on-aptos.gotoLocation",
                 ],

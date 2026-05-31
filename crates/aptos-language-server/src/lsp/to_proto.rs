@@ -933,6 +933,8 @@ pub(crate) fn runnable(
             }
             args
         }
+        // empty args, we're not going to generate aptos command from it
+        RunnableKind::Transaction { fq_entry_fn_name: _ } => vec![],
     };
 
     let label = runnable.label();
@@ -954,40 +956,51 @@ pub(crate) fn code_lens(
     snap: &GlobalStateSnapshot,
     annotation: Annotation,
 ) -> Cancellable<()> {
+    let lens_config = snap.config.lens();
     let client_commands_config = snap.config.client_commands();
     match annotation.kind {
         AnnotationKind::Runnable(run) => {
+            if !lens_config.runnables {
+                return Ok(());
+            }
             let line_index = snap.file_line_index(run.nav_item.file_id)?;
             let annotation_range = lsp_range(&line_index, annotation.range);
 
             let title = run.title();
+            let run_kind = run.kind.clone();
             let r = runnable(snap, run)?;
 
             if let Some(r) = r {
-                let lens_config = snap.config.lens();
-
-                if lens_config.runnables && client_commands_config.run_test {
-                    let command = command::run_test(&r, &title);
-                    acc.push(lsp_types::CodeLens {
-                        range: annotation_range,
-                        command: Some(command),
-                        data: None,
-                    })
-                }
-                if lens_config.runnables
-                    && client_commands_config.debug_test
-                    && snap.config.dap().is_available()
-                {
-                    if r.args.args.first().map(|s| s.as_str()) == Some("move")
-                        && r.args.args.get(1).map(|s| s.as_str()) == Some("test")
-                    {
-                        let command = command::debug_test(&r);
-                        acc.push(lsp_types::CodeLens {
-                            range: annotation_range,
-                            command: Some(command),
-                            data: None,
-                        })
+                match run_kind {
+                    RunnableKind::Test { .. } => {
+                        if client_commands_config.run_test {
+                            let command = command::run_test(&r, &title);
+                            acc.push(lsp_types::CodeLens {
+                                range: annotation_range,
+                                command: Some(command),
+                                data: None,
+                            });
+                        }
+                        if client_commands_config.debug_test && snap.config.dap().is_available() {
+                            let command = command::debug_test(&r);
+                            acc.push(lsp_types::CodeLens {
+                                range: annotation_range,
+                                command: Some(command),
+                                data: None,
+                            });
+                        }
                     }
+                    RunnableKind::Transaction { .. } => {
+                        if client_commands_config.debug_transaction && snap.config.dap().is_available() {
+                            let command = command::debug_transaction(&r);
+                            acc.push(lsp_types::CodeLens {
+                                range: annotation_range,
+                                command: Some(command),
+                                data: None,
+                            });
+                        }
+                    }
+                    _ => (),
                 }
             }
         }
@@ -1079,6 +1092,14 @@ pub(crate) mod command {
         lsp_types::Command {
             title: "Debug Test".to_owned(),
             command: "move-on-aptos.debugTest".into(),
+            arguments: Some(vec![serde_json::to_value(runnable).unwrap()]),
+        }
+    }
+
+    pub(crate) fn debug_transaction(runnable: &lsp_ext::Runnable) -> lsp_types::Command {
+        lsp_types::Command {
+            title: "Debug Transaction".to_owned(),
+            command: "move-on-aptos.debugTransaction".into(),
             arguments: Some(vec![serde_json::to_value(runnable).unwrap()]),
         }
     }

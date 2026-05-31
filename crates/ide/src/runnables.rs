@@ -26,6 +26,7 @@ pub enum RunnableKind {
     Test { test_path: String },
     ProveFun { only: String },
     ProveModule { filter: String },
+    Transaction { fq_entry_fn_name: String },
 }
 
 impl Runnable {
@@ -34,6 +35,9 @@ impl Runnable {
             RunnableKind::Test { test_path } => format!("test {test_path}"),
             RunnableKind::ProveFun { only } => format!("prove fun {only}"),
             RunnableKind::ProveModule { filter } => format!("prove mod {filter}"),
+            RunnableKind::Transaction {
+                fq_entry_fn_name: fq_entry_fn,
+            } => format!("txn {fq_entry_fn}"),
         }
     }
 
@@ -51,6 +55,7 @@ impl Runnable {
             RunnableKind::ProveFun { .. } | RunnableKind::ProveModule { .. } => {
                 String::from("▶\u{fe0e} Check with Prover")
             }
+            RunnableKind::Transaction { .. } => String::from("▶\u{fe0e} Debug Transaction"),
         }
     }
 }
@@ -61,7 +66,7 @@ pub(crate) fn runnables(db: &RootDatabase, file_id: FileId) -> Vec<Runnable> {
     let mut res = Vec::new();
     visit_file_defs(&sema, file_id, &mut |named_item| {
         let runnable = match named_item {
-            ast::NamedElement::Fun(fun) => runnable_for_test_fun(&sema, fun.in_file(file_id)),
+            ast::NamedElement::Fun(fun) => runnable_for_fun(&sema, fun.in_file(file_id)),
             ast::NamedElement::Module(module) => {
                 runnable_for_module_with_test_funs(&sema, module.in_file(file_id))
             }
@@ -91,20 +96,31 @@ pub(crate) fn runnables(db: &RootDatabase, file_id: FileId) -> Vec<Runnable> {
     res
 }
 
-pub(crate) fn runnable_for_test_fun(
+pub(crate) fn runnable_for_fun(
     sema: &Semantics<'_, RootDatabase>,
     fun: InFile<ast::Fun>,
 ) -> Option<Runnable> {
-    if !fun.value.is_test() {
-        return None;
+    if fun.value.is_test() {
+        let fq_name = fun.fq_name(sema.db)?;
+        let nav_item = NavigationTarget::from_named_item(fun)?;
+        let test_path = fq_name.module_and_item_text();
+        return Some(Runnable {
+            nav_item,
+            kind: RunnableKind::Test { test_path },
+        });
     }
-    let fq_name = fun.fq_name(sema.db)?;
-    let nav_item = NavigationTarget::from_named_item(fun)?;
-    let test_path = fq_name.module_and_item_text();
-    Some(Runnable {
-        nav_item,
-        kind: RunnableKind::Test { test_path },
-    })
+    if fun.value.is_entry() {
+        let fq_name = fun.fq_name(sema.db)?;
+        let nav_item = NavigationTarget::from_named_item(fun)?;
+        let entry_fn_name = fq_name.fq_identifier_text();
+        return Some(Runnable {
+            nav_item,
+            kind: RunnableKind::Transaction {
+                fq_entry_fn_name: entry_fn_name,
+            },
+        });
+    }
+    None
 }
 
 pub(crate) fn runnable_for_module_with_test_funs(
