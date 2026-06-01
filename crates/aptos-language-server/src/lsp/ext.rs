@@ -154,10 +154,12 @@ pub struct Runnable {
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AptosRunnableArgs {
-    pub workspace_root: Utf8PathBuf,
+    pub package_root: Utf8PathBuf,
     pub args: Vec<String>,
     #[serde(skip_serializing_if = "HashMap::is_empty")]
     pub environment: HashMap<String, String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub dep_roots: Vec<Utf8PathBuf>,
 }
 
 pub enum OrganizeImports {}

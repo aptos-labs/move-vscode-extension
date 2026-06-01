@@ -192,8 +192,132 @@ export function debugTest(_ctx: CtxInit): Cmd {
             request: "launch",
             name: `Debug ${testFilter}`,
             testFilter,
-            packagePath: args.workspaceRoot,
+            packagePath: args.packageRoot,
         });
+    };
+}
+
+export function debugTransaction(_ctx: CtxInit): Cmd {
+    return async (runnable: lsp_ext.Runnable) => {
+        const wsFolder = vscode.workspace.workspaceFolders?.[0];
+        if (!wsFolder) {
+            vscode.window.showErrorMessage("No workspace folder open.");
+            return;
+        }
+
+        const networkStr = await vscode.window.showQuickPick(
+            ["mainnet", "testnet", "devnet"],
+            { placeHolder: "Select network" },
+        );
+        if (!networkStr) return;
+
+        const fqName = runnable.label.replace(/^txn /, "");
+        const parts = fqName.split("::");
+        const moduleFn = parts.slice(1).join("::");
+
+        const sdk = await import("@aptos-labs/ts-sdk");
+        const networkMap: Record<string, typeof sdk.Network[keyof typeof sdk.Network]> = {
+            mainnet: sdk.Network.MAINNET,
+            testnet: sdk.Network.TESTNET,
+            devnet: sdk.Network.DEVNET,
+        };
+        const aptos = new sdk.Aptos(new sdk.AptosConfig({ network: networkMap[networkStr] }));
+        const namedAddress = parts[0];
+        let resolvedHexAddress: string | undefined;
+
+        const txnIdStr = await vscode.window.showInputBox({
+            title: "Transaction version to replay",
+            prompt: `Must be a ${fqName}`,
+            placeHolder: "e.g. 123456789",
+            validateInput: async (v) => {
+                if (!/^\d+$/.test(v)) return "Must be a number";
+                try {
+                    const txn = await aptos.getTransactionByVersion({
+                        ledgerVersion: Number(v),
+                    });
+                    if (!sdk.isUserTransactionResponse(txn)) {
+                        return `Transaction ${v} is not a user transaction`;
+                    }
+                    const payload = txn.payload;
+                    if (payload.type !== "entry_function_payload") {
+                        return `Transaction ${v} is not an entry function call`;
+                    }
+                    const onChainFn = (payload as { function: string }).function;
+                    const onChainParts = onChainFn.split("::");
+                    const onChainModuleFn = onChainParts.slice(1).join("::");
+                    if (onChainModuleFn !== moduleFn) {
+                        return `Transaction calls ${onChainFn}, expected *::${moduleFn}`;
+                    }
+                    resolvedHexAddress = onChainParts[0];
+                    return null;
+                } catch {
+                    return `Could not fetch transaction ${v}`;
+                }
+            },
+        });
+        if (!txnIdStr) return;
+
+        const namedAddresses: Record<string, string> = {};
+        if (resolvedHexAddress) {
+            namedAddresses[namedAddress] = resolvedHexAddress;
+        }
+
+        const wsRoot = wsFolder.uri.fsPath;
+        const allRoots = runnable.args.depRoots ?? [runnable.args.packageRoot];
+        const useLocalPackages = allRoots
+            .map((root) =>
+                root.startsWith(wsRoot)
+                    ? "${workspaceFolder}" + root.slice(wsRoot.length)
+                    : root,
+            )
+            .sort((a, b) => {
+                const aLocal = a.startsWith("${workspaceFolder}");
+                const bLocal = b.startsWith("${workspaceFolder}");
+                if (aLocal === bLocal) return 0;
+                return aLocal ? 1 : -1;
+            });
+
+        const newConfig = {
+            name: `Debug transaction ${moduleFn}`,
+            type: "aptos-move-replay",
+            request: "launch",
+            network: networkStr,
+            txnId: Number(txnIdStr),
+            useLocalPackages,
+            _note: `'${namedAddress}' address is inferred from the transaction. Add other named addresses if their on-chain values are different from ones in the source code.`,
+            namedAddresses,
+        };
+
+        const launchConfig = vscode.workspace.getConfiguration("launch", wsFolder.uri);
+        const configurations: vscode.DebugConfiguration[] =
+            launchConfig.get("configurations") ?? [];
+
+        const existingNames = new Set(configurations.map((c) => c.name));
+        let name = newConfig.name;
+        let counter = 1;
+        while (existingNames.has(name)) {
+            name = `${newConfig.name} (${counter})`;
+            counter++;
+        }
+        newConfig.name = name;
+
+        configurations.push(newConfig);
+
+        await launchConfig.update("configurations", configurations);
+
+        const launchJsonUri = vscode.Uri.joinPath(wsFolder.uri, ".vscode", "launch.json");
+        const doc = await vscode.workspace.openTextDocument(launchJsonUri);
+        const editor = await vscode.window.showTextDocument(doc);
+
+        const text = doc.getText();
+        const nameOffset = text.indexOf(`"name": "${newConfig.name}"`);
+        if (nameOffset >= 0) {
+            const pos = doc.positionAt(nameOffset);
+            editor.selection = new vscode.Selection(pos, pos);
+            editor.revealRange(new vscode.Range(pos, pos), vscode.TextEditorRevealType.InCenter);
+        }
+
+        await vscode.debug.startDebugging(wsFolder, newConfig.name);
     };
 }
 

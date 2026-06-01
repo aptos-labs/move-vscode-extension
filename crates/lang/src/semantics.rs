@@ -21,11 +21,12 @@ use crate::types::ty::ty_callable::TyCallable;
 use crate::types::ty_db;
 use crate::{hir_db, nameres};
 use base_db::inputs::InternFileId;
-use base_db::package_root::PackageId;
+use base_db::package_root::{PackageId, PackageRoot};
 use base_db::{SourceDatabase, source_db};
 use itertools::{Itertools, repeat_n};
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::sync::Arc;
 use std::{fmt, ops};
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::ast::node_ext::syntax_node::SyntaxNodeExt;
@@ -100,6 +101,16 @@ impl<'db> SemanticsImpl<'db> {
     pub fn is_library(&self, package_id: PackageId) -> bool {
         let package_root = self.db.package_root(package_id);
         package_root.data(self.db).is_library()
+    }
+
+    pub fn package_root(&self, package_id: PackageId) -> Arc<PackageRoot> {
+        self.db.package_root(package_id).data(self.db)
+    }
+
+    /// returns packages dependencies, including package itself
+    pub fn dependencies(&self, package_id: PackageId) -> Vec<PackageId> {
+        let dep_package_ids = hir_db::transitive_dep_package_ids(self.db, package_id);
+        dep_package_ids
     }
 
     pub fn is_builtins_file(&self, file_id: FileId) -> bool {

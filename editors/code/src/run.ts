@@ -24,7 +24,7 @@ export async function createTaskFromRunnable(runnable: lsp_ext.Runnable, extConf
         args: args.slice(1),
     };
     const options = {
-        cwd: runnableArgs.workspaceRoot,
+        cwd: runnableArgs.packageRoot,
         env: prepareEnv(),
     };
 
