@@ -5,6 +5,8 @@
 // Modifications have been made to the original code.
 
 use crate::NavigationTarget;
+use base_db::SourceDatabase;
+use base_db::package_root::PackageId;
 use ide_db::helpers::{visit_file_defs, visit_item_specs};
 use ide_db::{RootDatabase, SymbolKind};
 use lang::Semantics;
@@ -23,10 +25,19 @@ pub struct Runnable {
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub enum RunnableKind {
-    Test { test_path: String },
-    ProveFun { only: String },
-    ProveModule { filter: String },
-    Transaction { fq_entry_fn_name: String },
+    Test {
+        test_path: String,
+    },
+    ProveFun {
+        only: String,
+    },
+    ProveModule {
+        filter: String,
+    },
+    Transaction {
+        fq_entry_fn_name: String,
+        deps: Vec<PackageId>,
+    },
 }
 
 impl Runnable {
@@ -37,6 +48,7 @@ impl Runnable {
             RunnableKind::ProveModule { filter } => format!("prove mod {filter}"),
             RunnableKind::Transaction {
                 fq_entry_fn_name: fq_entry_fn,
+                ..
             } => format!("txn {fq_entry_fn}"),
         }
     }
@@ -111,12 +123,17 @@ pub(crate) fn runnable_for_fun(
     }
     if fun.value.is_entry() {
         let fq_name = fun.fq_name(sema.db)?;
-        let nav_item = NavigationTarget::from_named_item(fun)?;
         let entry_fn_name = fq_name.fq_identifier_text();
+
+        let package_id = sema.db.file_package_id(fun.file_id);
+        let deps = sema.dependencies(package_id);
+
+        let nav_item = NavigationTarget::from_named_item(fun)?;
         return Some(Runnable {
             nav_item,
             kind: RunnableKind::Transaction {
                 fq_entry_fn_name: entry_fn_name,
+                deps,
             },
         });
     }

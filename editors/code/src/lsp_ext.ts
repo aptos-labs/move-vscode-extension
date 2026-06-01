@@ -46,9 +46,9 @@ export type Runnable = {
 
 export type AptosRunnableArgs = {
     /**
-     * The workspace root directory of the cargo project.
+     * Root directory of the Move package (where Move.toml lives).
      */
-    workspaceRoot: string;
+    packageRoot: string;
     /**
      * Arguments to pass to the executable, these will be passed to the command after a `--` argument.
      */
@@ -57,6 +57,10 @@ export type AptosRunnableArgs = {
      * Environment variables to set before running the command.
      */
     environment?: Record<string, string>;
+    /**
+     * Root directories of transitive package dependencies.
+     */
+    depRoots?: string[];
 };
 
 export const organizeImports = new lc.RequestType<OrganizeImportsParams, lc.TextEdit[], void>(

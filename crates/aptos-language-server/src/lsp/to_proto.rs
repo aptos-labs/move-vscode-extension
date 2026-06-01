@@ -9,7 +9,7 @@ use crate::line_index::{LineIndex, PositionEncoding};
 use crate::lsp::utils::invalid_params_error;
 use crate::lsp::{LspError, semantic_tokens};
 use crate::{Config, lsp_ext};
-use camino::{Utf8Component, Utf8Prefix};
+use camino::{Utf8Component, Utf8PathBuf, Utf8Prefix};
 use ide::annotations::{Annotation, AnnotationKind};
 use ide::inlay_hints::{
     InlayFieldsToResolve, InlayHint, InlayHintLabel, InlayHintLabelPart, InlayHintPosition, InlayKind,
@@ -880,7 +880,7 @@ pub(crate) fn runnable(
             return Ok(None);
         }
     };
-    let workspace_root = match snap
+    let package_root = match snap
         .file_id_to_file_path(package_manifest_file_id)
         .parent()
         .and_then(|it| it.into_abs_path())
@@ -934,19 +934,35 @@ pub(crate) fn runnable(
             args
         }
         // empty args, we're not going to generate aptos command from it
-        RunnableKind::Transaction { fq_entry_fn_name: _ } => vec![],
+        RunnableKind::Transaction { .. } => vec![],
     };
 
     let label = runnable.label();
+    let dep_roots = match &runnable.kind {
+        RunnableKind::Transaction { deps, .. } => {
+            let vfs = snap.vfs_read();
+            let mut dep_roots = vec![];
+            for dep_package_id in deps {
+                let package_root = snap.analysis.package_root_path(&vfs, *dep_package_id)?;
+                if let Some(package_root) = package_root {
+                    dep_roots.push(package_root.into())
+                }
+            }
+            dep_roots
+        }
+        _ => vec![],
+    };
+
     let location = location_link(snap, None, runnable.nav_item)?;
 
     Ok(Some(lsp_ext::Runnable {
         label,
         location: Some(location),
         args: lsp_ext::AptosRunnableArgs {
-            workspace_root: workspace_root.into(),
+            package_root: package_root.into(),
             args: aptos_args.iter().map(|it| it.to_string()).collect(),
             environment: Default::default(),
+            dep_roots,
         },
     }))
 }

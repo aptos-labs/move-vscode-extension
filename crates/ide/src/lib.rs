@@ -15,7 +15,7 @@ use std::collections::HashMap;
 use std::panic::UnwindSafe;
 use std::sync::Arc;
 use syntax::{SourceFile, TextRange, TextSize};
-use vfs::FileId;
+use vfs::{AbsPathBuf, FileId, Vfs};
 
 pub mod annotations;
 pub mod extend_selection;
@@ -146,6 +146,14 @@ impl Analysis {
 
     pub fn manifest_file_id(&self, package_id: PackageId) -> Cancellable<Option<FileId>> {
         self.with_db(|db| db.package_root(package_id).data(db).manifest_file_id)
+    }
+
+    pub fn package_root_path(
+        &self,
+        vfs: &Vfs,
+        package_id: PackageId,
+    ) -> Cancellable<Option<AbsPathBuf>> {
+        self.with_db(|db| db.package_root(package_id).data(db).root_dir(vfs))
     }
 
     pub fn package_metadata(&self, file_id: FileId) -> Cancellable<Option<PackageMetadata>> {

@@ -259,7 +259,7 @@ impl Drop for GlobalState {
 }
 
 impl GlobalStateSnapshot {
-    fn vfs_read(&self) -> MappedRwLockReadGuard<'_, vfs::Vfs> {
+    pub(crate) fn vfs_read(&self) -> MappedRwLockReadGuard<'_, vfs::Vfs> {
         RwLockReadGuard::map(self.vfs.read(), |(it, _)| it)
     }
 
