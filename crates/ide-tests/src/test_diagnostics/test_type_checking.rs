@@ -2773,3 +2773,20 @@ fn test_check_apply_lemma_arguments() {
         }
     "#]]);
 }
+
+#[test]
+fn test_check_weight_expr_type() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            fun main() {}
+            spec main {
+                forall y: u64 [weight = 10]: y == y;
+                forall y: u64 [weight = 10u128]: y == y;
+                forall y: u64 [weight = -10]: y == y;
+                forall y: u64 [weight = false]: y == y;
+                                      //^^^^^ err: Incompatible type 'bool', expected 'integer'
+            }
+        }
+    "#]]);
+}

@@ -112,11 +112,20 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 self.ctx.pat_types.insert(ident_pat.into(), ty);
             }
         }
+        if let Some(weight) = quant_expr.weight() {
+            self.infer_weight_expr(&weight);
+        }
         if let Some(where_expr) = quant_expr.where_expr().and_then(|it| it.expr()) {
             self.infer_expr_coerceable_to(&where_expr, Ty::Bool);
         }
         self.infer_quant_expr_inner_ty(quant_expr);
         Some(Ty::Bool)
+    }
+
+    pub(super) fn infer_weight_expr(&mut self, weight: &ast::Weight) -> Option<()> {
+        let weight_expr = weight.expr()?;
+        self.infer_expr_coerceable_to(&weight_expr, Ty::integer());
+        Some(())
     }
 
     pub(super) fn infer_choose_expr(&mut self, choose_expr: &ast::ChooseExpr) -> Ty {

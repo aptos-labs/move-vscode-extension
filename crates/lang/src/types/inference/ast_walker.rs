@@ -67,6 +67,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                         true,
                     );
                 }
+                if let Some(weight) = spec_fun.weight() {
+                    self.infer_weight_expr(&weight);
+                }
             }
             ast::InferenceCtxOwner::SpecInlineFun(spec_fun) => {
                 if let Some(spec_block_expr) = spec_fun.spec_block() {
@@ -75,6 +78,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                         Expected::ExpectType(self.expected_return_ty.clone()),
                         true,
                     );
+                }
+                if let Some(weight) = spec_fun.weight() {
+                    self.infer_weight_expr(&weight);
                 }
             }
             ast::InferenceCtxOwner::ItemSpec(item_spec) => {
