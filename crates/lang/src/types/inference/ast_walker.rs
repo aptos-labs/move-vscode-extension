@@ -1370,7 +1370,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             .map(|it| self.infer_expr_coerceable_to(&it, Ty::integer()))
     }
 
-    fn infer_literal(&mut self, literal: &ast::Literal) -> Ty {
+    pub(crate) fn infer_literal(&mut self, literal: &ast::Literal) -> Ty {
         match literal.kind() {
             ast::LiteralKind::Bool(_) => Ty::Bool,
             ast::LiteralKind::IntNumber(num) => {

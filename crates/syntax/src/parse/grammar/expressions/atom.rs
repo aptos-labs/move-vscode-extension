@@ -44,6 +44,10 @@ pub(crate) fn literal(p: &mut Parser) -> Option<CompletedMarker> {
     Some(m.complete(p, LITERAL))
 }
 
+pub(crate) fn is_literal_pat_start(p: &Parser) -> bool {
+    (p.at(T![-]) && (p.nth(1) == INT_NUMBER)) || p.at_ts(LITERAL_FIRST)
+}
+
 pub(crate) const LITERAL_FIRST: TokenSet =
     TokenSet::new(&[T![true], T![false], INT_NUMBER, T![@], BYTE_STRING, HEX_STRING]);
 

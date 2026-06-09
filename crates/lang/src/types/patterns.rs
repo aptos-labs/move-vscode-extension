@@ -14,11 +14,11 @@ use crate::types::ty::reference::Mutability;
 use crate::types::ty::tuple::TyTuple;
 use crate::types::ty_db;
 use std::{cmp, iter};
-use syntax::SyntaxKind;
 use syntax::ast::StructOrEnum;
 use syntax::ast::node_ext::struct_pat_field::PatFieldKind;
 use syntax::files::{InFile, InFileExt};
 use syntax::{AstNode, ast};
+use syntax::{IntoNodeOrToken, SyntaxKind};
 
 impl TypeAstWalker<'_, '_> {
     pub fn collect_pat_bindings(&mut self, pat: ast::Pat, ty: Ty, def_bm: BindingMode) -> Option<()> {
@@ -31,7 +31,20 @@ impl TypeAstWalker<'_, '_> {
                     Some(SyntaxKind::CONST) => ty,
                     _ => strip_references(ty, def_bm).0,
                 };
-                self.ctx.pat_types.insert(path_pat.into(), pat_ty);
+                self.ctx.pat_types.insert(path_pat.clone().into(), pat_ty);
+            }
+            ast::Pat::LiteralPat(literal_pat) => {
+                let literal = literal_pat.literal();
+                let actual_ty = self.infer_literal(&literal);
+                self.ctx.coerce_types(literal_pat.node_or_token(), actual_ty, ty);
+            }
+            ast::Pat::RangePat(range_pat) => {
+                if let Some(left_lit) = range_pat.lhs() {
+                    self.collect_pat_bindings(left_lit.into(), ty.clone(), def_bm);
+                }
+                if let Some(right_lit) = range_pat.rhs() {
+                    self.collect_pat_bindings(right_lit.into(), ty, def_bm);
+                }
             }
             ast::Pat::IdentPat(ident_pat) => {
                 let named_item = self
@@ -282,7 +295,7 @@ pub fn anonymous_pat_ty_var(ty_var_index: &TyVarIndex, pat: &ast::Pat) -> Ty {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum BindingMode {
     BindByValue,
     BindByReference { mutability: Mutability },

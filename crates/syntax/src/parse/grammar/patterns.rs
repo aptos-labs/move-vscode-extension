@@ -5,11 +5,11 @@
 // Modifications have been made to the original code.
 
 use crate::SyntaxKind::*;
+use crate::parse::grammar::expressions::atom::{is_literal_pat_start, literal};
 use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{expressions, name, name_ref, paths};
 use crate::parse::parser::{CompletedMarker, Parser};
-use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
 use crate::{SyntaxKind, T};
 use std::ops::ControlFlow::{Break, Continue};
@@ -17,10 +17,34 @@ use std::ops::ControlFlow::{Break, Continue};
 pub(crate) fn pattern(p: &mut Parser) -> bool {
     match p.current() {
         // 0x1 '::'
-        INT_NUMBER if p.nth_at(1, T![::]) => path_pat(p),
-        IDENT => path_pat(p),
-
-        T![..] => rest_pat(p),
+        T![int_number] if p.nth_at(1, T![::]) => path_pat(p),
+        T![ident] => match p.nth(1) {
+            T![::] | T!['('] | T!['{'] | T![<] => path_pat(p),
+            _ => ident_pat(p),
+        },
+        _ if is_literal_pat_start(p) => {
+            let start_lit_pat = literal_pat(p);
+            if p.at(T![..]) {
+                let m = start_lit_pat.precede(p);
+                p.bump(T![..]);
+                if is_literal_pat_start(p) {
+                    literal_pat(p);
+                }
+                m.complete(p, RANGE_PAT)
+            } else {
+                start_lit_pat
+            }
+        }
+        T![..] => {
+            let m = p.start();
+            p.bump(T![..]);
+            if is_literal_pat_start(p) {
+                literal_pat(p);
+                m.complete(p, RANGE_PAT)
+            } else {
+                m.complete(p, REST_PAT)
+            }
+        }
         T!['_'] => wildcard_pat(p),
         T!['('] => tuple_or_unit_or_paren_pat(p),
 
@@ -30,6 +54,29 @@ pub(crate) fn pattern(p: &mut Parser) -> bool {
         }
     };
     true
+}
+
+pub(crate) fn literal_pat(p: &mut Parser) -> CompletedMarker {
+    let m = p.start();
+    p.eat(T![-]);
+    literal(p);
+    m.complete(p, LITERAL_PAT)
+}
+
+pub(crate) fn path_pat(p: &mut Parser) -> CompletedMarker {
+    let m = p.start();
+    paths::path(p, Some(PathMode::Type));
+    match p.current() {
+        T!['('] => {
+            tuple_pat_fields(p);
+            m.complete(p, TUPLE_STRUCT_PAT)
+        }
+        T!['{'] => {
+            struct_pat_field_list(p);
+            m.complete(p, STRUCT_PAT)
+        }
+        _ => m.complete(p, PATH_PAT),
+    }
 }
 
 pub(crate) fn ident_pat_or_recover(p: &mut Parser) -> bool {
@@ -44,14 +91,14 @@ pub(crate) fn ident_pat_or_recover(p: &mut Parser) -> bool {
     true
 }
 
-fn path_pat(p: &mut Parser) -> CompletedMarker {
+fn const_pat(p: &mut Parser) -> CompletedMarker {
     match p.nth(1) {
         // Checks the token after an IDENT to see if a pattern is a path (Struct { .. }).
-        T!['('] | T!['{'] | T![::] | T![<] => {
+        T![::] | T!['('] | T!['{'] | T![<] => {
             assert!(paths::is_path_start(p));
             let m = p.start();
             paths::path(p, Some(PathMode::Type));
-            let kind = match p.current() {
+            let pat_kind = match p.current() {
                 T!['('] => {
                     tuple_pat_fields(p);
                     TUPLE_STRUCT_PAT
@@ -62,7 +109,7 @@ fn path_pat(p: &mut Parser) -> CompletedMarker {
                 }
                 _ => PATH_PAT,
             };
-            m.complete(p, kind)
+            m.complete(p, pat_kind)
         }
         _ => ident_pat(p),
     }
@@ -155,6 +202,13 @@ fn rest_pat(p: &mut Parser) -> CompletedMarker {
     let m = p.start();
     p.bump(T![..]);
     m.complete(p, REST_PAT)
+}
+
+fn range_pat(p: &mut Parser) -> CompletedMarker {
+    assert!(p.at(T![..]));
+    let m = p.start();
+    p.bump(T![..]);
+    m.complete(p, RANGE_PAT)
 }
 
 fn tuple_or_unit_or_paren_pat(p: &mut Parser) -> CompletedMarker {
