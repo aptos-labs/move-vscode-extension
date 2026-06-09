@@ -810,8 +810,8 @@
         "@types/command-exists": "^1.2.3",
         "@types/node": "20.x",
         "@types/vscode": "^1.93.0",
-        "@vscode/vsce": "=3.9.1",
-        "esbuild": "^0.25.0",
+        "@vscode/vsce": "=3.9.2",
+        "esbuild": "^0.28.0",
         "ovsx": "0.10.10",
         "typescript": "^6.0.2"
     }
