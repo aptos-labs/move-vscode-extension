@@ -512,6 +512,8 @@ impl ExistsExpr {
     #[inline]
     pub fn quant_trigger_list(&self) -> Option<QuantTriggerList> { support::child(&self.syntax) }
     #[inline]
+    pub fn weight(&self) -> Option<Weight> { support::child(&self.syntax) }
+    #[inline]
     pub fn where_expr(&self) -> Option<WhereExpr> { support::child(&self.syntax) }
     #[inline]
     pub fn colon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![:]) }
@@ -578,6 +580,8 @@ impl ForallApplyLemma {
     #[inline]
     pub fn quant_trigger_list(&self) -> Option<QuantTriggerList> { support::child(&self.syntax) }
     #[inline]
+    pub fn weight(&self) -> Option<Weight> { support::child(&self.syntax) }
+    #[inline]
     pub fn forall_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![forall]) }
 }
 
@@ -592,6 +596,8 @@ impl ForallExpr {
     pub fn quant_binding_list(&self) -> Option<QuantBindingList> { support::child(&self.syntax) }
     #[inline]
     pub fn quant_trigger_list(&self) -> Option<QuantTriggerList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn weight(&self) -> Option<Weight> { support::child(&self.syntax) }
     #[inline]
     pub fn where_expr(&self) -> Option<WhereExpr> { support::child(&self.syntax) }
     #[inline]
@@ -1697,6 +1703,8 @@ impl SpecFun {
     #[inline]
     pub fn type_param_list(&self) -> Option<TypeParamList> { support::child(&self.syntax) }
     #[inline]
+    pub fn weight(&self) -> Option<Weight> { support::child(&self.syntax) }
+    #[inline]
     pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
     #[inline]
     pub fn fun_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![fun]) }
@@ -1725,6 +1733,8 @@ impl SpecInlineFun {
     pub fn spec_block(&self) -> Option<BlockExpr> { support::child(&self.syntax) }
     #[inline]
     pub fn type_param_list(&self) -> Option<TypeParamList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn weight(&self) -> Option<Weight> { support::child(&self.syntax) }
     #[inline]
     pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
     #[inline]
@@ -2225,6 +2235,23 @@ impl VisibilityModifier {
     pub fn public_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![public]) }
     #[inline]
     pub fn script_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![script]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Weight {
+    pub(crate) syntax: SyntaxNode,
+}
+impl Weight {
+    #[inline]
+    pub fn expr(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn l_brack_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T!['[']) }
+    #[inline]
+    pub fn r_brack_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![']']) }
+    #[inline]
+    pub fn eq_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![=]) }
+    #[inline]
+    pub fn weight_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![weight]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -5898,6 +5925,27 @@ impl AstNode for VisibilityModifier {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for Weight {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        WEIGHT
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == WEIGHT }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for WhereExpr {
     #[inline]
     fn kind() -> SyntaxKind
@@ -8545,6 +8593,13 @@ impl QuantExpr {
         }
     }
     #[inline]
+    pub fn weight(&self) -> Option<Weight> {
+        match self {
+            QuantExpr::ExistsExpr(it) => it.weight(),
+            QuantExpr::ForallExpr(it) => it.weight(),
+        }
+    }
+    #[inline]
     pub fn where_expr(&self) -> Option<WhereExpr> {
         match self {
             QuantExpr::ExistsExpr(it) => it.where_expr(),
@@ -10686,6 +10741,11 @@ impl std::fmt::Display for VectorLitExpr {
     }
 }
 impl std::fmt::Display for VisibilityModifier {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for Weight {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

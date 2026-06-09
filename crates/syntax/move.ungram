@@ -539,12 +539,12 @@ ItemSpecParam =
 
 SpecFun =
     Attr*
-    'spec' 'native'? 'fun' Name TypeParamList? ParamList RetType?
+    'spec' 'native'? 'fun' Name TypeParamList? ParamList RetType? Weight?
     (spec_block:BlockExpr | ';')
 
 SpecInlineFun =
     Attr*
-    'native'? 'fun' Name TypeParamList? ParamList RetType?
+    'native'? 'fun' Name TypeParamList? ParamList RetType? Weight?
     (spec_block:BlockExpr | ';')
 
 AnyFun =
@@ -621,12 +621,14 @@ QuantExpr =
     ForallExpr | ExistsExpr
 
 ForallExpr =
-    'forall' QuantBindingList QuantTriggerList? WhereExpr? ':' Expr
+    'forall' QuantBindingList QuantTriggerList? Weight? WhereExpr? ':' Expr
 
 ExistsExpr =
-    'exists' QuantBindingList QuantTriggerList? WhereExpr? ':' Expr
+    'exists' QuantBindingList QuantTriggerList? Weight? WhereExpr? ':' Expr
 
 QuantTriggerList = '{' trigger_exprs:(Expr (',' Expr)* ','?)? '}'
+
+Weight = '[' 'weight' '=' Expr ']'
 
 ChooseExpr =
     'choose' 'min'? QuantBinding WhereExpr?
@@ -676,5 +678,5 @@ SpecLemma = 'spec' Lemma
 
 PostStmt = 'post' Stmt
 
-ForallApplyLemma = 'forall' QuantBindingList QuantTriggerList? ApplyLemma
+ForallApplyLemma = 'forall' QuantBindingList QuantTriggerList? Weight? ApplyLemma
 ApplyLemma = 'apply' PathExpr ValueArgList ';'
