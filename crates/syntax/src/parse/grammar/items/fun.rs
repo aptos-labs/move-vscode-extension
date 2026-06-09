@@ -10,6 +10,7 @@ use crate::SyntaxKind::{
 use crate::parse::grammar::expressions::blocks;
 use crate::parse::grammar::expressions::blocks::StmtKind;
 use crate::parse::grammar::items::item_start_rec_set;
+use crate::parse::grammar::specs::quants::weight;
 use crate::parse::grammar::types::{path_type, type_};
 use crate::parse::grammar::utils::delimited_with_recovery;
 use crate::parse::grammar::{name_or_recover, params, type_params};
@@ -26,7 +27,7 @@ pub(crate) fn spec_function(p: &mut Parser, m: Marker) {
         m.abandon(p);
         return;
     }
-    let has_name = fun_signature(p, false);
+    let has_name = fun_signature(p, true);
     if has_name {
         fun_body(p, StmtKind::Spec);
     }
@@ -40,7 +41,7 @@ pub(crate) fn spec_inline_function(p: &mut Parser) {
         m.abandon(p);
         return;
     }
-    let has_name = fun_signature(p, false);
+    let has_name = fun_signature(p, true);
     if has_name {
         fun_body(p, StmtKind::Spec);
     }
@@ -50,7 +51,7 @@ pub(crate) fn spec_inline_function(p: &mut Parser) {
 pub(crate) fn function(p: &mut Parser, m: Marker) {
     opt_fun_modifiers(p);
     if p.at(T![fun]) {
-        let has_name = fun_signature(p, true);
+        let has_name = fun_signature(p, false);
         if has_name {
             fun_body(p, StmtKind::Move);
         }
@@ -153,7 +154,10 @@ fn acquires(p: &mut Parser) {
     m.complete(p, ACQUIRES);
 }
 
-fn fun_signature(p: &mut Parser, allow_acquires: bool) -> bool {
+fn fun_signature(p: &mut Parser, spec_fun: bool) -> bool {
+    let allow_acquires = !spec_fun;
+    let allow_weight = spec_fun;
+
     p.bump(T![fun]);
 
     let has_name = p.with_recovery(item_start_rec_set(), |p| {
@@ -178,7 +182,16 @@ fn fun_signature(p: &mut Parser, allow_acquires: bool) -> bool {
 
     let item_rec_set = item_start_rec_set().with_ts(T!['{'] | T![;]);
     p.with_recovery(item_rec_set, |p| {
-        p.with_recovery_token(T![acquires], opt_ret_type);
+        p.with_recovery_token(T![acquires], |p| {
+            opt_ret_type(p);
+            if p.at(T!['[']) {
+                if allow_weight {
+                    weight(p);
+                } else {
+                    p.error("unexpected '['");
+                }
+            }
+        });
         if p.at(T![acquires]) {
             if allow_acquires {
                 acquires(p);

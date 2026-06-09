@@ -4,7 +4,7 @@ use crate::parse::grammar::expressions::blocks::{StmtKind, stmt};
 use crate::parse::grammar::expressions::{atom, blocks, expr};
 use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::specs::quants;
-use crate::parse::grammar::specs::quants::quant_binding_list;
+use crate::parse::grammar::specs::quants::{quant_binding_list, weight};
 use crate::parse::grammar::type_params::opt_type_param_list;
 use crate::parse::grammar::{expressions, name, params, paths};
 use crate::parse::parser::{CompletedMarker, Marker, Parser};
@@ -68,9 +68,17 @@ pub(crate) fn forall_apply_lemma(p: &mut Parser) -> bool {
     }
     let m = p.start();
     p.bump_remap(T![forall]);
-    quant_binding_list(p, RecoverySet::new().with_kw("apply"));
+    quant_binding_list(
+        p,
+        RecoverySet::new()
+            .with_kw("apply")
+            .with_recovery_token(T!['['].into()),
+    );
     if p.at(T!['{']) {
         quants::quant_trigger_list(p);
+    }
+    if p.at(T!['[']) {
+        weight(p);
     }
     let has_lemma = apply_lemma(p);
     if !has_lemma {

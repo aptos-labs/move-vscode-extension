@@ -1,0 +1,266 @@
+SOURCE_FILE@0..305
+  MODULE@0..304
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..29
+      IDENT@12..29 "spec_weights_funs"
+    WHITESPACE@29..30 " "
+    L_CURLY@30..31 "{"
+    WHITESPACE@31..36 "\n    "
+    SPEC_FUN@36..151
+      SPEC_KW@36..40 "spec"
+      WHITESPACE@40..41 " "
+      FUN_KW@41..44 "fun"
+      WHITESPACE@44..45 " "
+      NAME@45..48
+        IDENT@45..48 "pow"
+      PARAM_LIST@48..69
+        L_PAREN@48..49 "("
+        PARAM@49..58
+          IDENT_PAT@49..53
+            NAME@49..53
+              IDENT@49..53 "base"
+          COLON@53..54 ":"
+          WHITESPACE@54..55 " "
+          PATH_TYPE@55..58
+            PATH@55..58
+              PATH_SEGMENT@55..58
+                NAME_REF@55..58
+                  IDENT@55..58 "num"
+        COMMA@58..59 ","
+        WHITESPACE@59..60 " "
+        PARAM@60..68
+          IDENT_PAT@60..63
+            NAME@60..63
+              IDENT@60..63 "exp"
+          COLON@63..64 ":"
+          WHITESPACE@64..65 " "
+          PATH_TYPE@65..68
+            PATH@65..68
+              PATH_SEGMENT@65..68
+                NAME_REF@65..68
+                  IDENT@65..68 "num"
+        R_PAREN@68..69 ")"
+      RET_TYPE@69..74
+        COLON@69..70 ":"
+        WHITESPACE@70..71 " "
+        PATH_TYPE@71..74
+          PATH@71..74
+            PATH_SEGMENT@71..74
+              NAME_REF@71..74
+                IDENT@71..74 "num"
+      WHITESPACE@74..75 " "
+      WEIGHT@75..88
+        L_BRACK@75..76 "["
+        WEIGHT_KW@76..82 "weight"
+        WHITESPACE@82..83 " "
+        EQ@83..84 "="
+        WHITESPACE@84..85 " "
+        LITERAL@85..87
+          INT_NUMBER@85..87 "20"
+        R_BRACK@87..88 "]"
+      WHITESPACE@88..89 " "
+      BLOCK_EXPR@89..151
+        L_CURLY@89..90 "{"
+        WHITESPACE@90..99 "\n        "
+        IF_EXPR@99..145
+          IF_KW@99..101 "if"
+          WHITESPACE@101..102 " "
+          CONDITION@102..112
+            L_PAREN@102..103 "("
+            BIN_EXPR@103..111
+              PATH_EXPR@103..106
+                PATH@103..106
+                  PATH_SEGMENT@103..106
+                    NAME_REF@103..106
+                      IDENT@103..106 "exp"
+              WHITESPACE@106..107 " "
+              EQ_EQ@107..109 "=="
+              WHITESPACE@109..110 " "
+              LITERAL@110..111
+                INT_NUMBER@110..111 "0"
+            R_PAREN@111..112 ")"
+          WHITESPACE@112..113 " "
+          INLINE_EXPR@113..114
+            LITERAL@113..114
+              INT_NUMBER@113..114 "1"
+          WHITESPACE@114..115 " "
+          ELSE_KW@115..119 "else"
+          WHITESPACE@119..120 " "
+          INLINE_EXPR@120..145
+            BIN_EXPR@120..145
+              PATH_EXPR@120..124
+                PATH@120..124
+                  PATH_SEGMENT@120..124
+                    NAME_REF@120..124
+                      IDENT@120..124 "base"
+              WHITESPACE@124..125 " "
+              STAR@125..126 "*"
+              WHITESPACE@126..127 " "
+              CALL_EXPR@127..145
+                PATH_EXPR@127..130
+                  PATH@127..130
+                    PATH_SEGMENT@127..130
+                      NAME_REF@127..130
+                        IDENT@127..130 "pow"
+                VALUE_ARG_LIST@130..145
+                  L_PAREN@130..131 "("
+                  VALUE_ARG@131..135
+                    PATH_EXPR@131..135
+                      PATH@131..135
+                        PATH_SEGMENT@131..135
+                          NAME_REF@131..135
+                            IDENT@131..135 "base"
+                  COMMA@135..136 ","
+                  WHITESPACE@136..137 " "
+                  VALUE_ARG@137..144
+                    BIN_EXPR@137..144
+                      PATH_EXPR@137..140
+                        PATH@137..140
+                          PATH_SEGMENT@137..140
+                            NAME_REF@137..140
+                              IDENT@137..140 "exp"
+                      WHITESPACE@140..141 " "
+                      MINUS@141..142 "-"
+                      WHITESPACE@142..143 " "
+                      LITERAL@143..144
+                        INT_NUMBER@143..144 "1"
+                  R_PAREN@144..145 ")"
+        WHITESPACE@145..150 "\n    "
+        R_CURLY@150..151 "}"
+    WHITESPACE@151..156 "\n    "
+    ITEM_SPEC@156..302
+      SPEC_KW@156..160 "spec"
+      WHITESPACE@160..161 " "
+      MODULE_KW@161..167 "module"
+      WHITESPACE@167..168 " "
+      BLOCK_EXPR@168..302
+        L_CURLY@168..169 "{"
+        WHITESPACE@169..178 "\n        "
+        SPEC_INLINE_FUN@178..296
+          FUN_KW@178..181 "fun"
+          WHITESPACE@181..182 " "
+          NAME@182..185
+            IDENT@182..185 "pow"
+          PARAM_LIST@185..206
+            L_PAREN@185..186 "("
+            PARAM@186..195
+              IDENT_PAT@186..190
+                NAME@186..190
+                  IDENT@186..190 "base"
+              COLON@190..191 ":"
+              WHITESPACE@191..192 " "
+              PATH_TYPE@192..195
+                PATH@192..195
+                  PATH_SEGMENT@192..195
+                    NAME_REF@192..195
+                      IDENT@192..195 "num"
+            COMMA@195..196 ","
+            WHITESPACE@196..197 " "
+            PARAM@197..205
+              IDENT_PAT@197..200
+                NAME@197..200
+                  IDENT@197..200 "exp"
+              COLON@200..201 ":"
+              WHITESPACE@201..202 " "
+              PATH_TYPE@202..205
+                PATH@202..205
+                  PATH_SEGMENT@202..205
+                    NAME_REF@202..205
+                      IDENT@202..205 "num"
+            R_PAREN@205..206 ")"
+          RET_TYPE@206..211
+            COLON@206..207 ":"
+            WHITESPACE@207..208 " "
+            PATH_TYPE@208..211
+              PATH@208..211
+                PATH_SEGMENT@208..211
+                  NAME_REF@208..211
+                    IDENT@208..211 "num"
+          WHITESPACE@211..212 " "
+          WEIGHT@212..225
+            L_BRACK@212..213 "["
+            WEIGHT_KW@213..219 "weight"
+            WHITESPACE@219..220 " "
+            EQ@220..221 "="
+            WHITESPACE@221..222 " "
+            LITERAL@222..224
+              INT_NUMBER@222..224 "20"
+            R_BRACK@224..225 "]"
+          WHITESPACE@225..226 " "
+          BLOCK_EXPR@226..296
+            L_CURLY@226..227 "{"
+            WHITESPACE@227..240 "\n            "
+            IF_EXPR@240..286
+              IF_KW@240..242 "if"
+              WHITESPACE@242..243 " "
+              CONDITION@243..253
+                L_PAREN@243..244 "("
+                BIN_EXPR@244..252
+                  PATH_EXPR@244..247
+                    PATH@244..247
+                      PATH_SEGMENT@244..247
+                        NAME_REF@244..247
+                          IDENT@244..247 "exp"
+                  WHITESPACE@247..248 " "
+                  EQ_EQ@248..250 "=="
+                  WHITESPACE@250..251 " "
+                  LITERAL@251..252
+                    INT_NUMBER@251..252 "0"
+                R_PAREN@252..253 ")"
+              WHITESPACE@253..254 " "
+              INLINE_EXPR@254..255
+                LITERAL@254..255
+                  INT_NUMBER@254..255 "1"
+              WHITESPACE@255..256 " "
+              ELSE_KW@256..260 "else"
+              WHITESPACE@260..261 " "
+              INLINE_EXPR@261..286
+                BIN_EXPR@261..286
+                  PATH_EXPR@261..265
+                    PATH@261..265
+                      PATH_SEGMENT@261..265
+                        NAME_REF@261..265
+                          IDENT@261..265 "base"
+                  WHITESPACE@265..266 " "
+                  STAR@266..267 "*"
+                  WHITESPACE@267..268 " "
+                  CALL_EXPR@268..286
+                    PATH_EXPR@268..271
+                      PATH@268..271
+                        PATH_SEGMENT@268..271
+                          NAME_REF@268..271
+                            IDENT@268..271 "pow"
+                    VALUE_ARG_LIST@271..286
+                      L_PAREN@271..272 "("
+                      VALUE_ARG@272..276
+                        PATH_EXPR@272..276
+                          PATH@272..276
+                            PATH_SEGMENT@272..276
+                              NAME_REF@272..276
+                                IDENT@272..276 "base"
+                      COMMA@276..277 ","
+                      WHITESPACE@277..278 " "
+                      VALUE_ARG@278..285
+                        BIN_EXPR@278..285
+                          PATH_EXPR@278..281
+                            PATH@278..281
+                              PATH_SEGMENT@278..281
+                                NAME_REF@278..281
+                                  IDENT@278..281 "exp"
+                          WHITESPACE@281..282 " "
+                          MINUS@282..283 "-"
+                          WHITESPACE@283..284 " "
+                          LITERAL@284..285
+                            INT_NUMBER@284..285 "1"
+                      R_PAREN@285..286 ")"
+            WHITESPACE@286..295 "\n        "
+            R_CURLY@295..296 "}"
+        WHITESPACE@296..301 "\n    "
+        R_CURLY@301..302 "}"
+    WHITESPACE@302..303 "\n"
+    R_CURLY@303..304 "}"
+  WHITESPACE@304..305 "\n"

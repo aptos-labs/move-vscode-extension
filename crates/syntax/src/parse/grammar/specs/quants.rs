@@ -5,7 +5,6 @@
 // Modifications have been made to the original code.
 
 use crate::SyntaxKind::*;
-use crate::T;
 use crate::parse::grammar::expressions::{expr, top_level_expr_in_stmt};
 use crate::parse::grammar::specs::predicates::expect_expr;
 use crate::parse::grammar::utils::delimited_with_recovery;
@@ -13,6 +12,7 @@ use crate::parse::grammar::{patterns, types};
 use crate::parse::parser::{CompletedMarker, Parser};
 use crate::parse::recovery_set::RecoverySet;
 use crate::parse::token_set::TokenSet;
+use crate::{T, ts};
 use std::ops::ControlFlow;
 use std::ops::ControlFlow::{Break, Continue};
 
@@ -31,9 +31,12 @@ pub(crate) fn forall_expr(p: &mut Parser) -> Option<CompletedMarker> {
     }
     let m = p.start();
     p.bump_remap(T![forall]);
-    quant_binding_list(p, TokenSet::EMPTY);
+    quant_binding_list(p, T!['[']);
     if p.at(T!['{']) {
         quant_trigger_list(p);
+    }
+    if p.at(T!['[']) {
+        weight(p);
     }
     opt_where_expr(p);
     if p.expect(T![:]) {
@@ -48,9 +51,12 @@ pub(crate) fn exists_expr(p: &mut Parser) -> Option<CompletedMarker> {
     };
     let m = p.start();
     p.bump_remap(T![exists]);
-    quant_binding_list(p, TokenSet::EMPTY);
+    quant_binding_list(p, T!['[']);
     if p.at(T!['{']) {
         quant_trigger_list(p);
+    }
+    if p.at(T!['[']) {
+        weight(p);
     }
     opt_where_expr(p);
     if p.expect(T![:]) {
@@ -131,4 +137,28 @@ fn opt_where_expr(p: &mut Parser) {
     p.bump_remap(T![where]);
     expect_expr(p);
     m.complete(p, WHERE_EXPR);
+}
+
+pub(crate) fn weight(p: &mut Parser) -> bool {
+    assert!(p.at(T!['[']));
+    let m = p.start();
+    p.bump(T!['[']);
+    p.with_recovery_token(T![']'], |p| {
+        if !p.at_contextual_kw_ident("weight") {
+            p.error("expected 'weight'");
+            m.abandon(p);
+            return false;
+        }
+        p.bump_remap(T![weight]);
+        p.expect(T![=]);
+        let is_expr = expr(p);
+        if !is_expr {
+            p.error("expected expression");
+            m.abandon(p);
+            return false;
+        }
+        p.expect(T![']']);
+        m.complete(p, WEIGHT);
+        true
+    })
 }
