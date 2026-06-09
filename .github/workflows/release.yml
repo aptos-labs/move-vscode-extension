@@ -67,6 +67,9 @@ jobs:
           rustup component add rust-src
           rustup target add ${{ matrix.target }}
 
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
       - name: Dist (plain)
         run: cargo xtask dist --client-patch-version ${{ github.run_number }}
 
