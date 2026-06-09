@@ -37,8 +37,9 @@ SOURCE_FILE@0..84
             L_CURLY@65..66 "{"
             WHITESPACE@66..67 " "
             MATCH_ARM@67..73
-              ERROR@67..68
-                INT_NUMBER@67..68 "1"
+              LITERAL_PAT@67..68
+                LITERAL@67..68
+                  INT_NUMBER@67..68 "1"
               WHITESPACE@68..69 " "
               FAT_ARROW@69..71 "=>"
               WHITESPACE@71..72 " "

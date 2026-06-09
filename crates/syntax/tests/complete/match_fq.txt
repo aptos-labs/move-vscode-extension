@@ -1,0 +1,177 @@
+SOURCE_FILE@0..269
+  MODULE@0..268
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..20
+      IDENT@12..20 "match_fq"
+    WHITESPACE@20..21 " "
+    L_CURLY@21..22 "{"
+    WHITESPACE@22..27 "\n    "
+    FUN@27..266
+      FUN_KW@27..30 "fun"
+      WHITESPACE@30..31 " "
+      NAME@31..33
+        IDENT@31..33 "t1"
+      PARAM_LIST@33..46
+        L_PAREN@33..34 "("
+        PARAM@34..45
+          IDENT_PAT@34..38
+            NAME@34..38
+              IDENT@34..38 "self"
+          COLON@38..39 ":"
+          WHITESPACE@39..40 " "
+          PATH_TYPE@40..45
+            PATH@40..45
+              PATH_SEGMENT@40..45
+                NAME_REF@40..45
+                  IDENT@40..45 "Color"
+        R_PAREN@45..46 ")"
+      RET_TYPE@46..52
+        COLON@46..47 ":"
+        WHITESPACE@47..48 " "
+        PATH_TYPE@48..52
+          PATH@48..52
+            PATH_SEGMENT@48..52
+              NAME_REF@48..52
+                IDENT@48..52 "bool"
+      WHITESPACE@52..53 " "
+      BLOCK_EXPR@53..266
+        L_CURLY@53..54 "{"
+        WHITESPACE@54..63 "\n        "
+        MATCH_EXPR@63..260
+          MATCH_KW@63..68 "match"
+          WHITESPACE@68..69 " "
+          L_PAREN@69..70 "("
+          PATH_EXPR@70..74
+            PATH@70..74
+              PATH_SEGMENT@70..74
+                NAME_REF@70..74
+                  IDENT@70..74 "self"
+          R_PAREN@74..75 ")"
+          WHITESPACE@75..76 " "
+          MATCH_ARM_LIST@76..260
+            L_CURLY@76..77 "{"
+            WHITESPACE@77..90 "\n            "
+            MATCH_ARM@90..114
+              PATH_PAT@90..105
+                PATH@90..105
+                  PATH@90..100
+                    PATH@90..93
+                      PATH_SEGMENT@90..93
+                        PATH_ADDRESS@90..93
+                          VALUE_ADDRESS@90..93
+                            INT_NUMBER@90..93 "0x1"
+                    COLON_COLON@93..95 "::"
+                    PATH_SEGMENT@95..100
+                      NAME_REF@95..100
+                        IDENT@95..100 "Color"
+                  COLON_COLON@100..102 "::"
+                  PATH_SEGMENT@102..105
+                    NAME_REF@102..105
+                      IDENT@102..105 "Red"
+              WHITESPACE@105..106 " "
+              FAT_ARROW@106..108 "=>"
+              WHITESPACE@108..109 " "
+              LITERAL@109..113
+                TRUE_KW@109..113 "true"
+              COMMA@113..114 ","
+            WHITESPACE@114..127 "\n            "
+            MATCH_ARM@127..163
+              STRUCT_PAT@127..152
+                PATH@127..143
+                  PATH@127..137
+                    PATH@127..130
+                      PATH_SEGMENT@127..130
+                        PATH_ADDRESS@127..130
+                          VALUE_ADDRESS@127..130
+                            INT_NUMBER@127..130 "0x1"
+                    COLON_COLON@130..132 "::"
+                    PATH_SEGMENT@132..137
+                      NAME_REF@132..137
+                        IDENT@132..137 "Color"
+                  COLON_COLON@137..139 "::"
+                  PATH_SEGMENT@139..143
+                    NAME_REF@139..143
+                      IDENT@139..143 "Blue"
+                WHITESPACE@143..144 " "
+                STRUCT_PAT_FIELD_LIST@144..152
+                  L_CURLY@144..145 "{"
+                  WHITESPACE@145..146 " "
+                  STRUCT_PAT_FIELD@146..150
+                    IDENT_PAT@146..150
+                      NAME@146..150
+                        IDENT@146..150 "blue"
+                  WHITESPACE@150..151 " "
+                  R_CURLY@151..152 "}"
+              WHITESPACE@152..154 "  "
+              FAT_ARROW@154..156 "=>"
+              WHITESPACE@156..157 " "
+              LITERAL@157..162
+                FALSE_KW@157..162 "false"
+              COMMA@162..163 ","
+            WHITESPACE@163..177 "\n\n            "
+            MATCH_ARM@177..201
+              PATH_PAT@177..192
+                PATH@177..192
+                  PATH@177..187
+                    PATH@177..180
+                      PATH_SEGMENT@177..180
+                        NAME_REF@177..180
+                          IDENT@177..180 "std"
+                    COLON_COLON@180..182 "::"
+                    PATH_SEGMENT@182..187
+                      NAME_REF@182..187
+                        IDENT@182..187 "Color"
+                  COLON_COLON@187..189 "::"
+                  PATH_SEGMENT@189..192
+                    NAME_REF@189..192
+                      IDENT@189..192 "Red"
+              WHITESPACE@192..193 " "
+              FAT_ARROW@193..195 "=>"
+              WHITESPACE@195..196 " "
+              LITERAL@196..200
+                TRUE_KW@196..200 "true"
+              COMMA@200..201 ","
+            WHITESPACE@201..214 "\n            "
+            MATCH_ARM@214..250
+              STRUCT_PAT@214..239
+                PATH@214..230
+                  PATH@214..224
+                    PATH@214..217
+                      PATH_SEGMENT@214..217
+                        NAME_REF@214..217
+                          IDENT@214..217 "std"
+                    COLON_COLON@217..219 "::"
+                    PATH_SEGMENT@219..224
+                      NAME_REF@219..224
+                        IDENT@219..224 "Color"
+                  COLON_COLON@224..226 "::"
+                  PATH_SEGMENT@226..230
+                    NAME_REF@226..230
+                      IDENT@226..230 "Blue"
+                WHITESPACE@230..231 " "
+                STRUCT_PAT_FIELD_LIST@231..239
+                  L_CURLY@231..232 "{"
+                  WHITESPACE@232..233 " "
+                  STRUCT_PAT_FIELD@233..237
+                    IDENT_PAT@233..237
+                      NAME@233..237
+                        IDENT@233..237 "blue"
+                  WHITESPACE@237..238 " "
+                  R_CURLY@238..239 "}"
+              WHITESPACE@239..241 "  "
+              FAT_ARROW@241..243 "=>"
+              WHITESPACE@243..244 " "
+              LITERAL@244..249
+                FALSE_KW@244..249 "false"
+              COMMA@249..250 ","
+            WHITESPACE@250..259 "\n        "
+            R_CURLY@259..260 "}"
+        WHITESPACE@260..265 "\n    "
+        R_CURLY@265..266 "}"
+    WHITESPACE@266..267 "\n"
+    R_CURLY@267..268 "}"
+  WHITESPACE@268..269 "\n"

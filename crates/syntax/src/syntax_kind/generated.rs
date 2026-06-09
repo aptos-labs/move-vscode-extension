@@ -188,6 +188,8 @@ pub enum SyntaxKind {
     STRUCT_PAT_FIELD,
     TUPLE_STRUCT_PAT,
     TUPLE_PAT,
+    RANGE_PAT,
+    LITERAL_PAT,
     TUPLE_EXPR,
     ANNOTATED_EXPR,
     PAREN_EXPR,

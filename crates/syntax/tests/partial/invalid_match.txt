@@ -47,10 +47,11 @@ SOURCE_FILE@0..186
           MATCH_ARM_LIST@71..98
             L_CURLY@71..72 "{"
             WHITESPACE@72..85 "\n            "
-            UNIT_PAT@85..88
+            PAREN_PAT@85..88
               L_PAREN@85..86 "("
-              ERROR@86..87
-                INT_NUMBER@86..87 "1"
+              LITERAL_PAT@86..87
+                LITERAL@86..87
+                  INT_NUMBER@86..87 "1"
               R_PAREN@87..88 ")"
             WHITESPACE@88..97 "\n        "
             R_CURLY@97..98 "}"
@@ -94,10 +95,11 @@ SOURCE_FILE@0..186
           MATCH_ARM_LIST@149..177
             L_CURLY@149..150 "{"
             WHITESPACE@150..163 "\n            "
-            UNIT_PAT@163..166
+            PAREN_PAT@163..166
               L_PAREN@163..164 "("
-              ERROR@164..165
-                INT_NUMBER@164..165 "1"
+              LITERAL_PAT@164..165
+                LITERAL@164..165
+                  INT_NUMBER@164..165 "1"
               R_PAREN@165..166 ")"
             ERROR@166..167
               SEMICOLON@166..167 ";"

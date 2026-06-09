@@ -31,8 +31,10 @@ impl TypeAstWalker<'_, '_> {
                     Some(SyntaxKind::CONST) => ty,
                     _ => strip_references(ty, def_bm).0,
                 };
-                self.ctx.pat_types.insert(path_pat.into(), pat_ty);
+                self.ctx.pat_types.insert(path_pat.clone().into(), pat_ty);
             }
+            ast::Pat::LiteralPat(_) => (),
+            ast::Pat::RangePat(_) => (),
             ast::Pat::IdentPat(ident_pat) => {
                 let named_item = self
                     .ctx

@@ -1058,6 +1058,19 @@ impl Literal {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct LiteralPat {
+    pub(crate) syntax: SyntaxNode,
+}
+impl LiteralPat {
+    #[inline]
+    pub fn literal(&self) -> Literal {
+        support::child(&self.syntax).expect("LiteralPat.literal required by the parser")
+    }
+    #[inline]
+    pub fn minus_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![-]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct LoopExpr {
     pub(crate) syntax: SyntaxNode,
 }
@@ -1496,6 +1509,17 @@ pub struct RangeExpr {
 impl RangeExpr {
     #[inline]
     pub fn dotdot_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![..]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct RangePat {
+    pub(crate) syntax: SyntaxNode,
+}
+impl RangePat {
+    #[inline]
+    pub fn end(&self) -> Option<LiteralPat> { support::child(&self.syntax) }
+    #[inline]
+    pub fn start(&self) -> Option<LiteralPat> { support::child(&self.syntax) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -2544,8 +2568,10 @@ pub enum NamedElement {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Pat {
     IdentPat(IdentPat),
+    LiteralPat(LiteralPat),
     ParenPat(ParenPat),
     PathPat(PathPat),
+    RangePat(RangePat),
     RestPat(RestPat),
     StructPat(StructPat),
     TuplePat(TuplePat),
@@ -4140,6 +4166,27 @@ impl AstNode for Literal {
     #[inline]
     fn syntax(&self) -> &SyntaxNode { &self.syntax }
 }
+impl AstNode for LiteralPat {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        LITERAL_PAT
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == LITERAL_PAT }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
 impl AstNode for LoopExpr {
     #[inline]
     fn kind() -> SyntaxKind
@@ -4822,6 +4869,27 @@ impl AstNode for RangeExpr {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == RANGE_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for RangePat {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        RANGE_PAT
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == RANGE_PAT }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -8413,6 +8481,10 @@ impl From<IdentPat> for Pat {
     #[inline]
     fn from(node: IdentPat) -> Pat { Pat::IdentPat(node) }
 }
+impl From<LiteralPat> for Pat {
+    #[inline]
+    fn from(node: LiteralPat) -> Pat { Pat::LiteralPat(node) }
+}
 impl From<ParenPat> for Pat {
     #[inline]
     fn from(node: ParenPat) -> Pat { Pat::ParenPat(node) }
@@ -8420,6 +8492,10 @@ impl From<ParenPat> for Pat {
 impl From<PathPat> for Pat {
     #[inline]
     fn from(node: PathPat) -> Pat { Pat::PathPat(node) }
+}
+impl From<RangePat> for Pat {
+    #[inline]
+    fn from(node: RangePat) -> Pat { Pat::RangePat(node) }
 }
 impl From<RestPat> for Pat {
     #[inline]
@@ -8452,6 +8528,12 @@ impl Pat {
             _ => None,
         }
     }
+    pub fn literal_pat(self) -> Option<LiteralPat> {
+        match (self) {
+            Pat::LiteralPat(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn paren_pat(self) -> Option<ParenPat> {
         match (self) {
             Pat::ParenPat(item) => Some(item),
@@ -8461,6 +8543,12 @@ impl Pat {
     pub fn path_pat(self) -> Option<PathPat> {
         match (self) {
             Pat::PathPat(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn range_pat(self) -> Option<RangePat> {
+        match (self) {
+            Pat::RangePat(item) => Some(item),
             _ => None,
         }
     }
@@ -8507,8 +8595,10 @@ impl AstNode for Pat {
         matches!(
             kind,
             IDENT_PAT
+                | LITERAL_PAT
                 | PAREN_PAT
                 | PATH_PAT
+                | RANGE_PAT
                 | REST_PAT
                 | STRUCT_PAT
                 | TUPLE_PAT
@@ -8521,8 +8611,10 @@ impl AstNode for Pat {
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         let res = match syntax.kind() {
             IDENT_PAT => Pat::IdentPat(IdentPat { syntax }),
+            LITERAL_PAT => Pat::LiteralPat(LiteralPat { syntax }),
             PAREN_PAT => Pat::ParenPat(ParenPat { syntax }),
             PATH_PAT => Pat::PathPat(PathPat { syntax }),
+            RANGE_PAT => Pat::RangePat(RangePat { syntax }),
             REST_PAT => Pat::RestPat(RestPat { syntax }),
             STRUCT_PAT => Pat::StructPat(StructPat { syntax }),
             TUPLE_PAT => Pat::TuplePat(TuplePat { syntax }),
@@ -8537,8 +8629,10 @@ impl AstNode for Pat {
     fn syntax(&self) -> &SyntaxNode {
         match self {
             Pat::IdentPat(it) => &it.syntax(),
+            Pat::LiteralPat(it) => &it.syntax(),
             Pat::ParenPat(it) => &it.syntax(),
             Pat::PathPat(it) => &it.syntax(),
+            Pat::RangePat(it) => &it.syntax(),
             Pat::RestPat(it) => &it.syntax(),
             Pat::StructPat(it) => &it.syntax(),
             Pat::TuplePat(it) => &it.syntax(),
@@ -10320,6 +10414,11 @@ impl std::fmt::Display for Literal {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
+impl std::fmt::Display for LiteralPat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
 impl std::fmt::Display for LoopExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -10481,6 +10580,11 @@ impl std::fmt::Display for QuantTriggerList {
     }
 }
 impl std::fmt::Display for RangeExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for RangePat {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

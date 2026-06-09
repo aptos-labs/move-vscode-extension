@@ -3,6 +3,5 @@ module 0x1::recover_tuple_pat {
         let (a,,a,,1,) = 1;
              //^ expected pattern
                 //^ expected pattern
-                 //^ expected pattern
     }
 }
