@@ -67,6 +67,7 @@ pub mod path;
 mod path_expr;
 mod quant_expr;
 mod range_expr;
+mod range_pat;
 mod ref_type;
 mod schema;
 mod schema_field;

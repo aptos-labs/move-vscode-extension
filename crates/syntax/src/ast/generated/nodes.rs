@@ -1515,12 +1515,7 @@ impl RangeExpr {
 pub struct RangePat {
     pub(crate) syntax: SyntaxNode,
 }
-impl RangePat {
-    #[inline]
-    pub fn end(&self) -> Option<LiteralPat> { support::child(&self.syntax) }
-    #[inline]
-    pub fn start(&self) -> Option<LiteralPat> { support::child(&self.syntax) }
-}
+impl RangePat {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RefType {

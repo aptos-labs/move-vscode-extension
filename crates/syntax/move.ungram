@@ -209,7 +209,7 @@ IdentPat = Name
 
 PathPat = Path
 LiteralPat = '-'? Literal
-RangePat = start:LiteralPat op:('..' | '..=') end:LiteralPat
+RangePat = lhs:LiteralPat op:('..' | '..=') rhs:LiteralPat
 
 Type =
     PathType
