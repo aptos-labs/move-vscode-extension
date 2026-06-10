@@ -1082,6 +1082,9 @@ module std::option {
                 "assert!(_: bool, err: u64)",
                 "assert_eq!(_: T, _: T)",
                 "assert_ne!(_: T, _: T)",
+                "debug_assert!(_: bool, err: u64)",
+                "debug_assert_eq!(_: T, _: T)",
+                "debug_assert_ne!(_: T, _: T)",
             ]"#]],
     );
 }
