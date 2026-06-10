@@ -17,9 +17,9 @@ impl ast::AssertMacroExpr {
     pub fn assert_kind(&self) -> AssertKind {
         let ident = self.ident_token().expect("enforsed by parser");
         match ident.text() {
-            "assert" => AssertKind::Plain,
-            "assert_eq" => AssertKind::Eq,
-            "assert_ne" => AssertKind::NotEq,
+            "assert" | "debug_assert" => AssertKind::Plain,
+            "assert_eq" | "debug_assert_eq" => AssertKind::Eq,
+            "assert_ne" | "debug_assert_ne" => AssertKind::NotEq,
             _ => panic!("exhaustive, enforced by parser"),
         }
     }

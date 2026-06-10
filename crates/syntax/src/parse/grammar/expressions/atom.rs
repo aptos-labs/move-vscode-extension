@@ -89,11 +89,7 @@ pub(crate) fn atom_expr(p: &mut Parser, stmt_kind: StmtKind) -> Option<(Complete
             return Some((cm, BlockLike::Block));
         }
     }
-    if (p.at_contextual_kw_ident("assert")
-        || p.at_contextual_kw_ident("assert_eq")
-        || p.at_contextual_kw_ident("assert_ne"))
-        && p.nth_at(1, T![!])
-    {
+    if is_assert_ident(p) && p.nth_at(1, T![!]) {
         let cm = assert_macro_expr(p);
         return Some((cm, BlockLike::NotBlock));
     }
@@ -140,6 +136,15 @@ pub(crate) fn atom_expr(p: &mut Parser, stmt_kind: StmtKind) -> Option<(Complete
         BlockLike::NotBlock
     };
     Some((done, blocklike))
+}
+
+fn is_assert_ident(p: &Parser) -> bool {
+    p.at_contextual_kw_ident("assert")
+        || p.at_contextual_kw_ident("assert_eq")
+        || p.at_contextual_kw_ident("assert_ne")
+        || p.at_contextual_kw_ident("debug_assert")
+        || p.at_contextual_kw_ident("debug_assert_eq")
+        || p.at_contextual_kw_ident("debug_assert_ne")
 }
 
 pub(crate) fn path_expr(p: &mut Parser) -> CompletedMarker {
