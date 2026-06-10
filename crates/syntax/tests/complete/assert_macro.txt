@@ -1,5 +1,5 @@
-SOURCE_FILE@0..559
-  MODULE@0..558
+SOURCE_FILE@0..1145
+  MODULE@0..1144
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
     VALUE_ADDRESS@7..10
@@ -10,7 +10,7 @@ SOURCE_FILE@0..559
     WHITESPACE@24..25 " "
     L_CURLY@25..26 "{"
     WHITESPACE@26..31 "\n    "
-    FUN@31..556
+    FUN@31..1142
       FUN_KW@31..34 "fun"
       WHITESPACE@34..35 " "
       NAME@35..39
@@ -19,7 +19,7 @@ SOURCE_FILE@0..559
         L_PAREN@39..40 "("
         R_PAREN@40..41 ")"
       WHITESPACE@41..42 " "
-      BLOCK_EXPR@42..556
+      BLOCK_EXPR@42..1142
         L_CURLY@42..43 "{"
         WHITESPACE@43..52 "\n        "
         EXPR_STMT@52..69
@@ -382,8 +382,369 @@ SOURCE_FILE@0..559
                   INT_NUMBER@547..548 "4"
               R_PAREN@548..549 ")"
           SEMICOLON@549..550 ";"
-        WHITESPACE@550..555 "\n    "
-        R_CURLY@555..556 "}"
-    WHITESPACE@556..557 "\n"
-    R_CURLY@557..558 "}"
-  WHITESPACE@558..559 "\n"
+        WHITESPACE@550..560 "\n\n        "
+        EXPR_STMT@560..583
+          ASSERT_MACRO_EXPR@560..582
+            IDENT@560..572 "debug_assert"
+            BANG@572..573 "!"
+            VALUE_ARG_LIST@573..582
+              L_PAREN@573..574 "("
+              VALUE_ARG@574..578
+                LITERAL@574..578
+                  TRUE_KW@574..578 "true"
+              COMMA@578..579 ","
+              WHITESPACE@579..580 " "
+              VALUE_ARG@580..581
+                LITERAL@580..581
+                  INT_NUMBER@580..581 "1"
+              R_PAREN@581..582 ")"
+          SEMICOLON@582..583 ";"
+        WHITESPACE@583..592 "\n        "
+        EXPR_STMT@592..612
+          ASSERT_MACRO_EXPR@592..611
+            IDENT@592..604 "debug_assert"
+            BANG@604..605 "!"
+            VALUE_ARG_LIST@605..611
+              L_PAREN@605..606 "("
+              VALUE_ARG@606..610
+                LITERAL@606..610
+                  TRUE_KW@606..610 "true"
+              R_PAREN@610..611 ")"
+          SEMICOLON@611..612 ";"
+        WHITESPACE@612..622 "\n\n        "
+        EXPR_STMT@622..681
+          ASSERT_MACRO_EXPR@622..680
+            IDENT@622..634 "debug_assert"
+            BANG@634..635 "!"
+            VALUE_ARG_LIST@635..680
+              L_PAREN@635..636 "("
+              VALUE_ARG@636..676
+                BIN_EXPR@636..676
+                  DOT_EXPR@636..667
+                    DOT_EXPR@636..661
+                      PAREN_EXPR@636..655
+                        L_PAREN@636..637 "("
+                        BORROW_EXPR@637..654
+                          AMP@637..638 "&"
+                          INDEX_EXPR@638..654
+                            PATH_EXPR@638..648
+                              PATH@638..648
+                                PATH_SEGMENT@638..648
+                                  NAME_REF@638..639
+                                    IDENT@638..639 "Y"
+                                  TYPE_ARG_LIST@639..648
+                                    L_ANGLE@639..640 "<"
+                                    TYPE_ARG@640..647
+                                      PATH_TYPE@640..647
+                                        PATH@640..647
+                                          PATH_SEGMENT@640..647
+                                            NAME_REF@640..641
+                                              IDENT@640..641 "X"
+                                            TYPE_ARG_LIST@641..647
+                                              L_ANGLE@641..642 "<"
+                                              TYPE_ARG@642..646
+                                                PATH_TYPE@642..646
+                                                  PATH@642..646
+                                                    PATH_SEGMENT@642..646
+                                                      NAME_REF@642..646
+                                                        IDENT@642..646 "bool"
+                                              R_ANGLE@646..647 ">"
+                                    R_ANGLE@647..648 ">"
+                            L_BRACK@648..649 "["
+                            PATH_EXPR@649..653
+                              PATH@649..653
+                                PATH_SEGMENT@649..653
+                                  NAME_REF@649..653
+                                    IDENT@649..653 "addr"
+                            R_BRACK@653..654 "]"
+                        R_PAREN@654..655 ")"
+                      DOT@655..656 "."
+                      NAME_REF@656..661
+                        IDENT@656..661 "field"
+                    DOT@661..662 "."
+                    NAME_REF@662..667
+                      IDENT@662..667 "value"
+                  WHITESPACE@667..668 " "
+                  EQ_EQ@668..670 "=="
+                  WHITESPACE@670..671 " "
+                  LITERAL@671..676
+                    FALSE_KW@671..676 "false"
+              COMMA@676..677 ","
+              WHITESPACE@677..678 " "
+              VALUE_ARG@678..679
+                LITERAL@678..679
+                  INT_NUMBER@678..679 "1"
+              R_PAREN@679..680 ")"
+          SEMICOLON@680..681 ";"
+        WHITESPACE@681..690 "\n        "
+        EXPR_STMT@690..740
+          ASSERT_MACRO_EXPR@690..739
+            IDENT@690..702 "debug_assert"
+            BANG@702..703 "!"
+            VALUE_ARG_LIST@703..739
+              L_PAREN@703..704 "("
+              VALUE_ARG@704..735
+                BIN_EXPR@704..735
+                  DOT_EXPR@704..726
+                    DOT_EXPR@704..720
+                      PATH_EXPR@704..714
+                        PATH@704..714
+                          PATH_SEGMENT@704..714
+                            NAME_REF@704..714
+                              IDENT@704..714 "y_resource"
+                      DOT@714..715 "."
+                      NAME_REF@715..720
+                        IDENT@715..720 "field"
+                    DOT@720..721 "."
+                    NAME_REF@721..726
+                      IDENT@721..726 "value"
+                  WHITESPACE@726..727 " "
+                  EQ_EQ@727..729 "=="
+                  WHITESPACE@729..730 " "
+                  LITERAL@730..735
+                    FALSE_KW@730..735 "false"
+              COMMA@735..736 ","
+              WHITESPACE@736..737 " "
+              VALUE_ARG@737..738
+                LITERAL@737..738
+                  INT_NUMBER@737..738 "1"
+              R_PAREN@738..739 ")"
+          SEMICOLON@739..740 ";"
+        WHITESPACE@740..750 "\n\n        "
+        EXPR_STMT@750..782
+          ASSERT_MACRO_EXPR@750..781
+            IDENT@750..762 "debug_assert"
+            BANG@762..763 "!"
+            VALUE_ARG_LIST@763..781
+              L_PAREN@763..764 "("
+              VALUE_ARG@764..768
+                LITERAL@764..768
+                  TRUE_KW@764..768 "true"
+              COMMA@768..769 ","
+              WHITESPACE@769..770 " "
+              VALUE_ARG@770..780
+                LITERAL@770..780
+                  BYTE_STRING@770..780 "b\"1234 {}\""
+              R_PAREN@780..781 ")"
+          SEMICOLON@781..782 ";"
+        WHITESPACE@782..791 "\n        "
+        EXPR_STMT@791..826
+          ASSERT_MACRO_EXPR@791..825
+            IDENT@791..803 "debug_assert"
+            BANG@803..804 "!"
+            VALUE_ARG_LIST@804..825
+              L_PAREN@804..805 "("
+              VALUE_ARG@805..809
+                LITERAL@805..809
+                  TRUE_KW@805..809 "true"
+              COMMA@809..810 ","
+              WHITESPACE@810..811 " "
+              VALUE_ARG@811..821
+                LITERAL@811..821
+                  BYTE_STRING@811..821 "b\"1234 {}\""
+              COMMA@821..822 ","
+              WHITESPACE@822..823 " "
+              VALUE_ARG@823..824
+                LITERAL@823..824
+                  INT_NUMBER@823..824 "1"
+              R_PAREN@824..825 ")"
+          SEMICOLON@825..826 ";"
+        WHITESPACE@826..835 "\n        "
+        EXPR_STMT@835..873
+          ASSERT_MACRO_EXPR@835..872
+            IDENT@835..847 "debug_assert"
+            BANG@847..848 "!"
+            VALUE_ARG_LIST@848..872
+              L_PAREN@848..849 "("
+              VALUE_ARG@849..853
+                LITERAL@849..853
+                  TRUE_KW@849..853 "true"
+              COMMA@853..854 ","
+              WHITESPACE@854..855 " "
+              VALUE_ARG@855..865
+                LITERAL@855..865
+                  BYTE_STRING@855..865 "b\"1234 {}\""
+              COMMA@865..866 ","
+              WHITESPACE@866..867 " "
+              VALUE_ARG@867..868
+                LITERAL@867..868
+                  INT_NUMBER@867..868 "1"
+              COMMA@868..869 ","
+              WHITESPACE@869..870 " "
+              VALUE_ARG@870..871
+                LITERAL@870..871
+                  INT_NUMBER@870..871 "2"
+              R_PAREN@871..872 ")"
+          SEMICOLON@872..873 ";"
+        WHITESPACE@873..882 "\n        "
+        EXPR_STMT@882..923
+          ASSERT_MACRO_EXPR@882..922
+            IDENT@882..894 "debug_assert"
+            BANG@894..895 "!"
+            VALUE_ARG_LIST@895..922
+              L_PAREN@895..896 "("
+              VALUE_ARG@896..900
+                LITERAL@896..900
+                  TRUE_KW@896..900 "true"
+              COMMA@900..901 ","
+              WHITESPACE@901..902 " "
+              VALUE_ARG@902..912
+                LITERAL@902..912
+                  BYTE_STRING@902..912 "b\"1234 {}\""
+              COMMA@912..913 ","
+              WHITESPACE@913..914 " "
+              VALUE_ARG@914..915
+                LITERAL@914..915
+                  INT_NUMBER@914..915 "1"
+              COMMA@915..916 ","
+              WHITESPACE@916..917 " "
+              VALUE_ARG@917..918
+                LITERAL@917..918
+                  INT_NUMBER@917..918 "2"
+              COMMA@918..919 ","
+              WHITESPACE@919..920 " "
+              VALUE_ARG@920..921
+                LITERAL@920..921
+                  INT_NUMBER@920..921 "3"
+              R_PAREN@921..922 ")"
+          SEMICOLON@922..923 ";"
+        WHITESPACE@923..932 "\n        "
+        EXPR_STMT@932..976
+          ASSERT_MACRO_EXPR@932..975
+            IDENT@932..944 "debug_assert"
+            BANG@944..945 "!"
+            VALUE_ARG_LIST@945..975
+              L_PAREN@945..946 "("
+              VALUE_ARG@946..950
+                LITERAL@946..950
+                  TRUE_KW@946..950 "true"
+              COMMA@950..951 ","
+              WHITESPACE@951..952 " "
+              VALUE_ARG@952..962
+                LITERAL@952..962
+                  BYTE_STRING@952..962 "b\"1234 {}\""
+              COMMA@962..963 ","
+              WHITESPACE@963..964 " "
+              VALUE_ARG@964..965
+                LITERAL@964..965
+                  INT_NUMBER@964..965 "1"
+              COMMA@965..966 ","
+              WHITESPACE@966..967 " "
+              VALUE_ARG@967..968
+                LITERAL@967..968
+                  INT_NUMBER@967..968 "2"
+              COMMA@968..969 ","
+              WHITESPACE@969..970 " "
+              VALUE_ARG@970..971
+                LITERAL@970..971
+                  INT_NUMBER@970..971 "3"
+              COMMA@971..972 ","
+              WHITESPACE@972..973 " "
+              VALUE_ARG@973..974
+                LITERAL@973..974
+                  INT_NUMBER@973..974 "4"
+              R_PAREN@974..975 ")"
+          SEMICOLON@975..976 ";"
+        WHITESPACE@976..986 "\n\n        "
+        EXPR_STMT@986..1009
+          ASSERT_MACRO_EXPR@986..1008
+            IDENT@986..1001 "debug_assert_eq"
+            BANG@1001..1002 "!"
+            VALUE_ARG_LIST@1002..1008
+              L_PAREN@1002..1003 "("
+              VALUE_ARG@1003..1004
+                LITERAL@1003..1004
+                  INT_NUMBER@1003..1004 "1"
+              COMMA@1004..1005 ","
+              WHITESPACE@1005..1006 " "
+              VALUE_ARG@1006..1007
+                LITERAL@1006..1007
+                  INT_NUMBER@1006..1007 "1"
+              R_PAREN@1007..1008 ")"
+          SEMICOLON@1008..1009 ";"
+        WHITESPACE@1009..1018 "\n        "
+        EXPR_STMT@1018..1041
+          ASSERT_MACRO_EXPR@1018..1040
+            IDENT@1018..1033 "debug_assert_ne"
+            BANG@1033..1034 "!"
+            VALUE_ARG_LIST@1034..1040
+              L_PAREN@1034..1035 "("
+              VALUE_ARG@1035..1036
+                LITERAL@1035..1036
+                  INT_NUMBER@1035..1036 "1"
+              COMMA@1036..1037 ","
+              WHITESPACE@1037..1038 " "
+              VALUE_ARG@1038..1039
+                LITERAL@1038..1039
+                  INT_NUMBER@1038..1039 "1"
+              R_PAREN@1039..1040 ")"
+          SEMICOLON@1040..1041 ";"
+        WHITESPACE@1041..1051 "\n\n        "
+        EXPR_STMT@1051..1083
+          ASSERT_MACRO_EXPR@1051..1082
+            IDENT@1051..1066 "debug_assert_eq"
+            BANG@1066..1067 "!"
+            VALUE_ARG_LIST@1067..1082
+              L_PAREN@1067..1068 "("
+              VALUE_ARG@1068..1069
+                LITERAL@1068..1069
+                  INT_NUMBER@1068..1069 "1"
+              COMMA@1069..1070 ","
+              WHITESPACE@1070..1071 " "
+              VALUE_ARG@1071..1072
+                LITERAL@1071..1072
+                  INT_NUMBER@1071..1072 "1"
+              COMMA@1072..1073 ","
+              WHITESPACE@1073..1074 " "
+              VALUE_ARG@1074..1081
+                LITERAL@1074..1081
+                  BYTE_STRING@1074..1081 "b\"1234\""
+              R_PAREN@1081..1082 ")"
+          SEMICOLON@1082..1083 ";"
+        WHITESPACE@1083..1092 "\n        "
+        EXPR_STMT@1092..1136
+          ASSERT_MACRO_EXPR@1092..1135
+            IDENT@1092..1107 "debug_assert_eq"
+            BANG@1107..1108 "!"
+            VALUE_ARG_LIST@1108..1135
+              L_PAREN@1108..1109 "("
+              VALUE_ARG@1109..1110
+                LITERAL@1109..1110
+                  INT_NUMBER@1109..1110 "1"
+              COMMA@1110..1111 ","
+              WHITESPACE@1111..1112 " "
+              VALUE_ARG@1112..1113
+                LITERAL@1112..1113
+                  INT_NUMBER@1112..1113 "1"
+              COMMA@1113..1114 ","
+              WHITESPACE@1114..1115 " "
+              VALUE_ARG@1115..1122
+                LITERAL@1115..1122
+                  BYTE_STRING@1115..1122 "b\"1234\""
+              COMMA@1122..1123 ","
+              WHITESPACE@1123..1124 " "
+              VALUE_ARG@1124..1125
+                LITERAL@1124..1125
+                  INT_NUMBER@1124..1125 "1"
+              COMMA@1125..1126 ","
+              WHITESPACE@1126..1127 " "
+              VALUE_ARG@1127..1128
+                LITERAL@1127..1128
+                  INT_NUMBER@1127..1128 "2"
+              COMMA@1128..1129 ","
+              WHITESPACE@1129..1130 " "
+              VALUE_ARG@1130..1131
+                LITERAL@1130..1131
+                  INT_NUMBER@1130..1131 "3"
+              COMMA@1131..1132 ","
+              WHITESPACE@1132..1133 " "
+              VALUE_ARG@1133..1134
+                LITERAL@1133..1134
+                  INT_NUMBER@1133..1134 "4"
+              R_PAREN@1134..1135 ")"
+          SEMICOLON@1135..1136 ";"
+        WHITESPACE@1136..1141 "\n    "
+        R_CURLY@1141..1142 "}"
+    WHITESPACE@1142..1143 "\n"
+    R_CURLY@1143..1144 "}"
+  WHITESPACE@1144..1145 "\n"

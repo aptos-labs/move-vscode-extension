@@ -190,6 +190,25 @@ fn test_assert_eq_ne_with_message() {
 }
 
 #[test]
+fn test_debug_assert() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::main {
+            public fun main() {
+                debug_assert!(true, b"1234 {}", 1, 2, 3, 4, 5);
+                                                          //^ err: This function takes 1 to 6 parameters, but 7 parameters were supplied
+
+                debug_assert_eq!(1, 1);
+                debug_assert_ne!(1, 1);
+
+                debug_assert_eq!(1, 1, b"1234", 1, 2, 3, 4, 5);
+                                                          //^ err: This function takes 2 to 7 parameters, but 8 parameters were supplied
+            }
+        }
+    "#]]);
+}
+
+#[test]
 fn test_check_apply_lemma_arguments() {
     // language=Move
     check_diagnostics(expect![[r#"

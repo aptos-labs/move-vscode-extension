@@ -77,32 +77,57 @@ pub(crate) fn add_path_completions(
                 // vector literal
                 acc.add(ctx.new_snippet_item(CompletionItemKind::Keyword, "vector[$0]"));
                 if !path_ctx.is_msl() {
-                    // assert!
-                    let mut assert_item = ctx.new_item(
-                        CompletionItemKind::SymbolKind(SymbolKind::Assert),
+                    fn assert_item(
+                        ctx: &CompletionContext,
+                        label: &str,
+                        snippet: &str,
+                        lookup: &str,
+                    ) -> CompletionItem {
+                        let item = ctx
+                            .new_item(CompletionItemKind::SymbolKind(SymbolKind::Assert), label)
+                            .insert_snippet(snippet)
+                            .lookup_by(lookup)
+                            .clone();
+                        item.build(ctx.db)
+                    }
+
+                    acc.add(assert_item(
+                        ctx,
                         "assert!(_: bool, err: u64)",
-                    );
-                    assert_item.insert_snippet("assert!($0)");
-                    assert_item.lookup_by("assert");
-                    acc.add(assert_item.build(ctx.db));
-
-                    // assert_eq!
-                    let mut assert_eq_item = ctx.new_item(
-                        CompletionItemKind::SymbolKind(SymbolKind::Assert),
+                        "assert!($0)",
+                        "assert",
+                    ));
+                    acc.add(assert_item(
+                        ctx,
                         "assert_eq!(_: T, _: T)",
-                    );
-                    assert_eq_item.insert_snippet("assert_eq!($0)");
-                    assert_eq_item.lookup_by("assert_eq");
-                    acc.add(assert_eq_item.build(ctx.db));
-
-                    // assert_ne!
-                    let mut assert_ne_item = ctx.new_item(
-                        CompletionItemKind::SymbolKind(SymbolKind::Assert),
+                        "assert_eq!($0)",
+                        "assert_eq",
+                    ));
+                    acc.add(assert_item(
+                        ctx,
                         "assert_ne!(_: T, _: T)",
-                    );
-                    assert_ne_item.insert_snippet("assert_ne!($0)");
-                    assert_ne_item.lookup_by("assert_ne");
-                    acc.add(assert_ne_item.build(ctx.db));
+                        "assert_ne!($0)",
+                        "assert_ne",
+                    ));
+
+                    acc.add(assert_item(
+                        ctx,
+                        "debug_assert!(_: bool, err: u64)",
+                        "debug_assert!($0)",
+                        "debug_assert",
+                    ));
+                    acc.add(assert_item(
+                        ctx,
+                        "debug_assert_eq!(_: T, _: T)",
+                        "debug_assert_eq!($0)",
+                        "debug_assert_eq",
+                    ));
+                    acc.add(assert_item(
+                        ctx,
+                        "debug_assert_ne!(_: T, _: T)",
+                        "debug_assert_ne!($0)",
+                        "debug_assert_ne",
+                    ));
                 }
             }
             _ => (),
