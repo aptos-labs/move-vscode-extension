@@ -5,8 +5,6 @@
 // Modifications have been made to the original code.
 
 use crate::SyntaxKind::*;
-use crate::ast::node_ext::syntax_element::SyntaxElementExt;
-use crate::syntax_editor::Element;
 use crate::{AstNode, AstToken, SyntaxElement, SyntaxNode, SyntaxToken, TextSize, ast};
 use rowan::{Direction, TokenAtOffset};
 

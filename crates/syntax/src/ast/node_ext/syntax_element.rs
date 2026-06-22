@@ -14,13 +14,23 @@ pub trait SyntaxElementExt {
     fn to_syntax_element(&self) -> SyntaxElement;
 
     fn prev_sibling_or_token_no_trivia(&self) -> Option<SyntaxElement> {
-        let prev = self.to_syntax_element().prev_sibling_or_token();
-        if let Some(prev) = &prev
-            && prev.kind().is_trivia()
+        let prev_sibling = self.to_syntax_element().prev_sibling_or_token();
+        if let Some(prev_sibling) = &prev_sibling
+            && prev_sibling.kind().is_trivia()
         {
-            return prev.prev_sibling_or_token_no_trivia();
+            return prev_sibling.prev_sibling_or_token_no_trivia();
         }
-        prev
+        prev_sibling
+    }
+
+    fn prev_sibling_or_token_no_ws(&self) -> Option<SyntaxElement> {
+        let prev_sibling = self.to_syntax_element().prev_sibling_or_token();
+        if let Some(prev_sibling) = &prev_sibling
+            && prev_sibling.kind().is_whitespace()
+        {
+            return prev_sibling.prev_sibling_or_token_no_ws();
+        }
+        prev_sibling
     }
 
     fn next_sibling_or_token_no_trivia(&self) -> Option<SyntaxElement> {
@@ -29,6 +39,16 @@ pub trait SyntaxElementExt {
             && next.kind().is_trivia()
         {
             return next.next_sibling_or_token_no_trivia();
+        }
+        next
+    }
+
+    fn next_sibling_or_token_no_ws(&self) -> Option<SyntaxElement> {
+        let next = self.to_syntax_element().next_sibling_or_token();
+        if let Some(next) = &next
+            && next.kind().is_whitespace()
+        {
+            return next.next_sibling_or_token_no_ws();
         }
         next
     }

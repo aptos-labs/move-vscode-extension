@@ -548,6 +548,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "fmt"
+version = "0.1.0"
+dependencies = [
+ "expect-test",
+ "itertools",
+ "pretty_assertions",
+ "stdx",
+ "syntax",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
