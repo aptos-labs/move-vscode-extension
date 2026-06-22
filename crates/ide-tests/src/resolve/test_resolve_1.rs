@@ -955,3 +955,24 @@ fn test_resolve_function_values_under_result_of() {
     "#,
     )
 }
+
+#[test]
+fn test_resolve_function_values_under_ensures_of_in_other_module() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::config {
+            public fun call() {}
+                        //X
+        }
+        module 0x1::main {
+            use 0x1::config;
+            fun main() {}
+            spec main {
+                ensures result_of<config::call>();
+                                         //^
+            }
+        }
+    "#,
+    )
+}

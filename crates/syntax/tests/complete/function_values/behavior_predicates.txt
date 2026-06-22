@@ -1,5 +1,5 @@
-SOURCE_FILE@0..161
-  MODULE@0..160
+SOURCE_FILE@0..204
+  MODULE@0..203
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
     VALUE_ADDRESS@7..10
@@ -10,14 +10,14 @@ SOURCE_FILE@0..161
     WHITESPACE@31..32 " "
     L_CURLY@32..33 "{"
     WHITESPACE@33..38 "\n    "
-    ITEM_SPEC@38..158
+    ITEM_SPEC@38..201
       SPEC_KW@38..42 "spec"
       WHITESPACE@42..43 " "
       ITEM_SPEC_REF@43..47
         NAME_REF@43..47
           IDENT@43..47 "main"
       WHITESPACE@47..48 " "
-      BLOCK_EXPR@48..158
+      BLOCK_EXPR@48..201
         L_CURLY@48..49 "{"
         WHITESPACE@49..58 "\n        "
         EXPR_STMT@58..74
@@ -99,8 +99,32 @@ SOURCE_FILE@0..161
                   INT_NUMBER@149..150 "1"
               R_PAREN@150..151 ")"
           SEMICOLON@151..152 ";"
-        WHITESPACE@152..157 "\n    "
-        R_CURLY@157..158 "}"
-    WHITESPACE@158..159 "\n"
-    R_CURLY@159..160 "}"
-  WHITESPACE@160..161 "\n"
+        WHITESPACE@152..161 "\n        "
+        SPEC_PREDICATE_STMT@161..195
+          ENSURES_KW@161..168 "ensures"
+          WHITESPACE@168..169 " "
+          BEHAVIOR_PREDICATE_EXPR@169..194
+            IDENT@169..178 "result_of"
+            TYPE_ARG_LIST@178..192
+              L_ANGLE@178..179 "<"
+              TYPE_ARG@179..191
+                PATH_TYPE@179..191
+                  PATH@179..191
+                    PATH@179..185
+                      PATH_SEGMENT@179..185
+                        NAME_REF@179..185
+                          IDENT@179..185 "config"
+                    COLON_COLON@185..187 "::"
+                    PATH_SEGMENT@187..191
+                      NAME_REF@187..191
+                        IDENT@187..191 "call"
+              R_ANGLE@191..192 ">"
+            VALUE_ARG_LIST@192..194
+              L_PAREN@192..193 "("
+              R_PAREN@193..194 ")"
+          SEMICOLON@194..195 ";"
+        WHITESPACE@195..200 "\n    "
+        R_CURLY@200..201 "}"
+    WHITESPACE@201..202 "\n"
+    R_CURLY@202..203 "}"
+  WHITESPACE@203..204 "\n"

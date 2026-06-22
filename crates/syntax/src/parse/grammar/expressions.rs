@@ -212,12 +212,12 @@ pub(crate) fn lhs(p: &mut Parser, r: Restrictions) -> Option<(CompletedMarker, B
         }
         _ => {
             // check for behaviour predicates
-            if matches!(r.stmt_kind, StmtKind::Spec)
+            if matches!(p.stmt_kind(), StmtKind::Spec)
                 && let Some(predicate) = specs::behavior::behavior_predicate(p)
             {
                 return Some((predicate, BlockLike::NotBlock));
             }
-            let (lhs, blocklike) = atom::atom_expr(p, r.stmt_kind)?;
+            let (lhs, blocklike) = atom::atom_expr(p)?;
 
             let allow_calls = !(r.prefer_stmt && blocklike.is_block());
             let cm = postfix_expr(p, lhs, blocklike, allow_calls);
@@ -357,14 +357,10 @@ pub(crate) fn opt_initializer_expr(p: &mut Parser) {
     }
 }
 
-pub(crate) fn top_level_expr_in_stmt(
-    p: &mut Parser,
-    stmt_kind: StmtKind,
-) -> Option<(CompletedMarker, BlockLike)> {
+pub(crate) fn top_level_expr_in_stmt(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> {
     let r = Restrictions {
         forbid_structs: false,
         prefer_stmt: true,
-        stmt_kind,
     };
     expr_bp(p, r, 1)
 }
@@ -373,7 +369,6 @@ pub(crate) fn top_level_expr_in_stmt(
 pub(crate) struct Restrictions {
     pub forbid_structs: bool,
     pub prefer_stmt: bool,
-    pub stmt_kind: StmtKind,
 }
 
 pub(crate) const EXPR_FIRST: TokenSet =

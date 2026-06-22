@@ -35,7 +35,7 @@
 //! caller is responsible for branching on the first token.
 
 mod attributes;
-mod expressions;
+pub(crate) mod expressions;
 mod items;
 mod lambdas;
 mod params;

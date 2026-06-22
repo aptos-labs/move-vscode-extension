@@ -23,38 +23,30 @@ pub(crate) enum StmtKind {
     Proof,
 }
 
-impl Default for StmtKind {
-    fn default() -> Self {
-        Self::Move
-    }
-}
-
 impl StmtKind {
     pub(crate) fn is_spec(&self) -> bool {
         matches!(self, StmtKind::Spec)
     }
 }
 
-pub(crate) fn block_or_inline_expr(p: &mut Parser, kind: StmtKind) {
+pub(crate) fn block_or_inline_expr(p: &mut Parser) {
     if p.at(T!['{']) {
-        block_expr(p, kind);
+        block_expr(p);
     } else {
         inline_expr(p);
     }
 }
 
-pub(crate) fn block_expr(p: &mut Parser, kind: StmtKind) -> CompletedMarker {
+pub(crate) fn block_expr(p: &mut Parser) -> CompletedMarker {
     assert!(p.at(T!['{']));
     // we're in new block, we can't use recovery set rules from before
     p.reset_recovery(|p| {
         let m = p.start();
 
-        // assert!(p.at(T!['{']));
         p.bump(T!['{']);
-        stmt_list(p, kind);
+        stmt_list(p);
         p.expect(T!['}']);
 
-        // stmt_list(p, kind);
         m.complete(p, BLOCK_EXPR)
     })
 }
@@ -64,30 +56,23 @@ pub(crate) fn unexpected_block(p: &mut Parser, message: &str) {
     let m = p.start();
     p.error(message);
     p.bump(T!['{']);
-    stmt_list(p, StmtKind::Move);
+    stmt_list(p);
     p.eat(T!['}']);
     m.complete(p, ERROR);
 }
 
-// pub(crate) fn stmt_list(p: &mut Parser, kind: StmtKind) {
-//     assert!(p.at(T!['{']));
-//     p.bump(T!['{']);
-//     expr_block_contents(p, kind);
-//     p.expect(T!['}']);
-// }
-
-pub(super) fn stmt_list(p: &mut Parser, kind: StmtKind) {
+pub(super) fn stmt_list(p: &mut Parser) {
     p.iterate_to_EOF(T!['}'], |p| {
         if p.at(T![;]) {
             p.bump(T![;]);
             return Continue(());
         }
-        p.with_recovery_token_set(T!['}'], |p| stmt(p, kind));
+        p.with_recovery_token_set(T!['}'], |p| stmt(p));
         Continue(())
     });
 }
 
-pub(crate) fn stmt(p: &mut Parser, stmt_kind: StmtKind) {
+pub(crate) fn stmt(p: &mut Parser) {
     // handle attributes
     let mut attrs = attributes::attrs(p);
     if let Some(last_attr) = attrs.pop() {
@@ -99,11 +84,11 @@ pub(crate) fn stmt(p: &mut Parser, stmt_kind: StmtKind) {
 
     // allowed in all stmt contexts
     if p.at(T![let]) {
-        let_stmt(p, stmt_kind.is_spec());
+        let_stmt(p, p.stmt_kind().is_spec());
         return;
     }
 
-    match stmt_kind {
+    match p.stmt_kind() {
         StmtKind::Move => {
             // inline use stmt
             if p.at(T![use]) {
@@ -165,7 +150,7 @@ pub(crate) fn stmt(p: &mut Parser, stmt_kind: StmtKind) {
     }
 
     // parse EXPR_STMT
-    match p.with_recovery_token(T![;], |p| top_level_expr_in_stmt(p, stmt_kind)) {
+    match p.with_recovery_token(T![;], top_level_expr_in_stmt) {
         Some((cm, blocklike)) => {
             // checks whether it's trailing expr in block
             if p.at(T!['}']) {
