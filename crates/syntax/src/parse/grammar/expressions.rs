@@ -8,10 +8,11 @@ use crate::SyntaxKind::*;
 use crate::parse::grammar::expressions::atom::call_expr;
 use crate::parse::grammar::expressions::blocks::StmtKind;
 use crate::parse::grammar::lambdas::lambda_param_list;
+use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::specs::opt_spec_block_expr;
 use crate::parse::grammar::specs::quants::{choose_expr, exists_expr, forall_expr, is_at_quant_kw};
 use crate::parse::grammar::utils::delimited_with_recovery;
-use crate::parse::grammar::{name_ref, patterns, type_args, types};
+use crate::parse::grammar::{name_ref, paths, patterns, specs, type_args, types};
 use crate::parse::parser::{CompletedMarker, Marker, Parser};
 use crate::parse::token_set::TokenSet;
 use crate::{SyntaxKind, T, ts};
@@ -210,7 +211,13 @@ pub(crate) fn lhs(p: &mut Parser, r: Restrictions) -> Option<(CompletedMarker, B
             return Some((cm, BlockLike::NotBlock));
         }
         _ => {
-            let (lhs, blocklike) = atom::atom_expr(p, r.stmt_kind)?;
+            // check for behaviour predicates
+            if matches!(p.stmt_kind(), StmtKind::Spec)
+                && let Some(predicate) = specs::behavior::behavior_predicate(p)
+            {
+                return Some((predicate, BlockLike::NotBlock));
+            }
+            let (lhs, blocklike) = atom::atom_expr(p)?;
 
             let allow_calls = !(r.prefer_stmt && blocklike.is_block());
             let cm = postfix_expr(p, lhs, blocklike, allow_calls);
@@ -350,14 +357,10 @@ pub(crate) fn opt_initializer_expr(p: &mut Parser) {
     }
 }
 
-pub(crate) fn top_level_expr_in_stmt(
-    p: &mut Parser,
-    stmt_kind: StmtKind,
-) -> Option<(CompletedMarker, BlockLike)> {
+pub(crate) fn top_level_expr_in_stmt(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> {
     let r = Restrictions {
         forbid_structs: false,
         prefer_stmt: true,
-        stmt_kind,
     };
     expr_bp(p, r, 1)
 }
@@ -366,7 +369,6 @@ pub(crate) fn top_level_expr_in_stmt(
 pub(crate) struct Restrictions {
     pub forbid_structs: bool,
     pub prefer_stmt: bool,
-    pub stmt_kind: StmtKind,
 }
 
 pub(crate) const EXPR_FIRST: TokenSet =

@@ -8,6 +8,7 @@
 
 use crate::parse::ParseError;
 use crate::parse::event::Event;
+use crate::parse::grammar::expressions::blocks::StmtKind;
 use crate::parse::recovery_set::{RecoverySet, RecoveryToken};
 use crate::parse::text_token_source::TextTokenSource;
 use crate::parse::token_set::TokenSet;
@@ -31,6 +32,7 @@ pub struct Parser {
     pub(crate) token_source: TextTokenSource,
     events: Vec<Event>,
     recovery_set_stack: Vec<RecoverySet>,
+    stmt_kind: Option<StmtKind>,
 }
 
 impl Parser {
@@ -40,7 +42,23 @@ impl Parser {
             events: vec![],
             // recovery_tokens: vec![],
             recovery_set_stack: vec![],
+            stmt_kind: None,
         }
+    }
+
+    pub(crate) fn stmt_kind(&self) -> StmtKind {
+        self.stmt_kind.unwrap_or(StmtKind::Move)
+    }
+
+    pub(crate) fn with_stmt_kind<T>(
+        &mut self,
+        stmt_kind: StmtKind,
+        f: impl FnOnce(&mut Parser) -> T,
+    ) -> T {
+        let previous = self.stmt_kind.replace(stmt_kind);
+        let result = f(self);
+        self.stmt_kind = previous;
+        result
     }
 
     pub(crate) fn finish(self) -> Vec<Event> {

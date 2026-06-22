@@ -887,3 +887,114 @@ fn test_resource_index_expr_autoborrows_mut() {
     "#,
     )
 }
+
+#[test]
+fn test_resolve_function_values_under_aborts_of() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            fun main() {}
+                //X
+            spec main {
+                aborts_of<main>();
+                           //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_function_values_under_requires_of() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            fun main() {}
+                //X
+            spec main {
+                requires_of<main>();
+                           //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_function_values_under_ensures_of() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            fun main() {}
+                //X
+            spec main {
+                ensures_of<main>();
+                           //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_function_values_under_result_of() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            fun main() {}
+                //X
+            spec main {
+                result_of<main>();
+                           //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_function_values_under_ensures_of_in_other_module() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::config {
+            public fun call() {}
+                        //X
+        }
+        module 0x1::main {
+            use 0x1::config;
+            fun main() {}
+            spec main {
+                ensures result_of<config::call>();
+                                         //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_type_parameter_for_the_function_value_of_result_of() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::config {
+            struct Version {}
+                    //X
+            public fun call<T>(t: T) {}
+        }
+        module 0x1::main {
+            use 0x1::config::{Self, Version};
+            fun main() {}
+            spec main {
+                ensures result_of<config::call<Version>>();
+                                              //^
+            }
+        }
+    "#,
+    )
+}

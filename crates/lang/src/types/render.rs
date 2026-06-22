@@ -158,6 +158,14 @@ impl<'db> TypeRenderer<'db> {
                 self.write_str(" -> ")?;
                 self.render(&ret_type)?;
             }
+            TyCallableKind::Predicate(_) => {
+                self.render_type_list("fn_predicate(", &ty_callable.param_types, ")")?;
+                let ret_type = ty_callable.ret_type_ty();
+                if !matches!(ret_type, Ty::Unit) {
+                    self.write_str(" -> ")?;
+                    self.render(&ret_type)?;
+                }
+            }
         }
         Ok(())
     }

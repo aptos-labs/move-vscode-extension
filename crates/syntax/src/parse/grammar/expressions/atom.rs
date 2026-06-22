@@ -74,7 +74,7 @@ pub(crate) const ATOM_EXPR_FIRST: TokenSet = LITERAL_FIRST
     .union(KW_EXPR_FIRST)
     .union(TokenSet::new(&[T!['('], T!['{'], T!['['], T![|], QUOTE_IDENT]));
 
-pub(crate) fn atom_expr(p: &mut Parser, stmt_kind: StmtKind) -> Option<(CompletedMarker, BlockLike)> {
+pub(crate) fn atom_expr(p: &mut Parser) -> Option<(CompletedMarker, BlockLike)> {
     if let Some(m) = literal(p) {
         return Some((m, BlockLike::NotBlock));
     }
@@ -104,7 +104,7 @@ pub(crate) fn atom_expr(p: &mut Parser, stmt_kind: StmtKind) -> Option<(Complete
     let done = match p.current() {
         T!['('] => paren_or_tuple_or_annotated_expr(p),
         T![spec] => spec_block_expr(p),
-        T![if] => if_expr(p, stmt_kind),
+        T![if] => if_expr(p),
         T![loop] => loop_expr(p, None),
         T![while] => while_expr(p, None),
         QUOTE_IDENT if p.nth(1) == T![:] => {
@@ -121,7 +121,7 @@ pub(crate) fn atom_expr(p: &mut Parser, stmt_kind: StmtKind) -> Option<(Complete
                 }
             }
         }
-        T!['{'] => block_expr(p, stmt_kind),
+        T!['{'] => block_expr(p),
         T![return] => return_expr(p),
         T![abort] => abort_expr(p),
         T![continue] => continue_expr(p),
@@ -263,16 +263,16 @@ fn paren_or_tuple_or_annotated_expr(p: &mut Parser) -> CompletedMarker {
     )
 }
 
-fn if_expr(p: &mut Parser, stmt_kind: StmtKind) -> CompletedMarker {
+fn if_expr(p: &mut Parser) -> CompletedMarker {
     assert!(p.at(T![if]));
     let m = p.start();
     p.bump(T![if]);
     condition(p);
-    block_or_inline_expr(p, stmt_kind);
+    block_or_inline_expr(p);
     if p.at(T![else]) {
         p.bump(T![else]);
         // `else if /*expr*/` parsed as inline expr - `else (if /*expr*/)`
-        block_or_inline_expr(p, stmt_kind);
+        block_or_inline_expr(p);
     }
     m.complete(p, IF_EXPR)
 }
@@ -289,7 +289,7 @@ fn loop_expr(p: &mut Parser, m: Option<Marker>) -> CompletedMarker {
     assert!(p.at(T![loop]));
     let m = m.unwrap_or_else(|| p.start());
     p.bump(T![loop]);
-    block_or_inline_expr(p, StmtKind::Move);
+    block_or_inline_expr(p);
     m.complete(p, LOOP_EXPR)
 }
 
@@ -298,7 +298,7 @@ fn for_expr(p: &mut Parser, m: Option<Marker>) -> CompletedMarker {
     let m = m.unwrap_or_else(|| p.start());
     p.bump_remap(T![for]);
     for_condition(p);
-    block_or_inline_expr(p, StmtKind::Move);
+    block_or_inline_expr(p);
     m.complete(p, FOR_EXPR)
 }
 
@@ -323,7 +323,7 @@ fn while_expr(p: &mut Parser, m: Option<Marker>) -> CompletedMarker {
     let m = m.unwrap_or_else(|| p.start());
     p.bump(T![while]);
     condition(p);
-    block_or_inline_expr(p, StmtKind::Move);
+    block_or_inline_expr(p);
     opt_spec_block_expr(p);
     m.complete(p, WHILE_EXPR)
 }
@@ -374,7 +374,7 @@ fn match_arm(p: &mut Parser, recovery_set: TokenSet) -> bool {
     }
     p.bump(T![=>]);
 
-    let blocklike = match top_level_expr_in_stmt(p, StmtKind::Move) {
+    let blocklike = match top_level_expr_in_stmt(p) {
         Some((_, blocklike)) => blocklike,
         None => BlockLike::NotBlock,
     };

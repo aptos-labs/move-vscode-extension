@@ -4,6 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+pub(crate) mod behavior;
 pub(crate) mod predicates;
 pub(crate) mod proofs_and_lemmas;
 pub(crate) mod quants;
@@ -26,7 +27,7 @@ pub(crate) fn spec_block_expr(p: &mut Parser) -> CompletedMarker {
     let m = p.start();
     p.bump(T![spec]);
     if p.at(T!['{']) {
-        blocks::block_expr(p, StmtKind::Spec);
+        p.with_stmt_kind(StmtKind::Spec, blocks::block_expr);
     } else {
         p.error("expected a block");
     }

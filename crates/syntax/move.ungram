@@ -281,7 +281,7 @@ Expr =
     | PathExpr
     | BorrowExpr | DerefExpr | BangExpr | MinusExpr
     | ResourceExpr
-    | CallExpr | MethodCallExpr | AssertMacroExpr
+    | CallExpr | MethodCallExpr | AssertMacroExpr | BehaviorPredicateExpr
     | LambdaExpr
     | RangeExpr | VectorLitExpr | StructLit | TupleExpr
     | IndexExpr
@@ -412,7 +412,7 @@ MatchGuard =
     'if' Expr
 
 AnyCallExpr =
-    CallExpr | MethodCallExpr | AssertMacroExpr | ApplyLemma
+    CallExpr | MethodCallExpr | AssertMacroExpr | ApplyLemma | BehaviorPredicateExpr
 
 CallExpr =
     Expr ValueArgList
@@ -685,3 +685,5 @@ PostStmt = 'post' Stmt
 
 ForallApplyLemma = 'forall' QuantBindingList QuantTriggerList? Weight? ApplyLemma
 ApplyLemma = 'apply' PathExpr ValueArgList ';'
+
+BehaviorPredicateExpr = 'ident' TypeArgList ValueArgList

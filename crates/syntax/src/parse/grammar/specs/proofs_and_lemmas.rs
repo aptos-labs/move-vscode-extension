@@ -16,7 +16,7 @@ pub(crate) fn proof(p: &mut Parser) {
     let m = p.start();
     p.bump_remap(T![proof]);
     if p.at(T!['{']) {
-        blocks::block_expr(p, StmtKind::Proof);
+        p.with_stmt_kind(StmtKind::Proof, blocks::block_expr);
     } else {
         p.error("expected a block");
     }
@@ -35,7 +35,7 @@ pub(crate) fn lemma(p: &mut Parser) {
         p.error_and_recover("expected parameters", TokenSet::EMPTY);
     }
     if p.at(T!['{']) {
-        blocks::block_expr(p, StmtKind::Spec);
+        p.with_stmt_kind(StmtKind::Spec, blocks::block_expr);
     } else {
         p.error("expected block");
     }
@@ -94,7 +94,7 @@ pub(crate) fn post_stmt(p: &mut Parser) -> bool {
     }
     let m = p.start();
     p.bump_remap(T![post]);
-    stmt(p, StmtKind::Proof);
+    stmt(p);
     m.complete(p, POST_STMT);
     true
 }

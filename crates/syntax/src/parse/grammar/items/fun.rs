@@ -29,7 +29,7 @@ pub(crate) fn spec_function(p: &mut Parser, m: Marker) {
     }
     let has_name = fun_signature(p, true);
     if has_name {
-        fun_body(p, StmtKind::Spec);
+        p.with_stmt_kind(StmtKind::Spec, |p| fun_body(p));
     }
     m.complete(p, SPEC_FUN);
 }
@@ -43,7 +43,7 @@ pub(crate) fn spec_inline_function(p: &mut Parser) {
     }
     let has_name = fun_signature(p, true);
     if has_name {
-        fun_body(p, StmtKind::Spec);
+        p.with_stmt_kind(StmtKind::Spec, |p| fun_body(p));
     }
     m.complete(p, SPEC_INLINE_FUN);
 }
@@ -53,7 +53,7 @@ pub(crate) fn function(p: &mut Parser, m: Marker) {
     if p.at(T![fun]) {
         let has_name = fun_signature(p, false);
         if has_name {
-            fun_body(p, StmtKind::Move);
+            fun_body(p);
         }
     } else {
         // p.error("expected 'fun'");
@@ -204,9 +204,9 @@ fn fun_signature(p: &mut Parser, spec_fun: bool) -> bool {
     true
 }
 
-pub(crate) fn fun_body(p: &mut Parser, stmt_kind: StmtKind) {
+pub(crate) fn fun_body(p: &mut Parser) {
     if p.at(T!['{']) {
-        blocks::block_expr(p, stmt_kind);
+        blocks::block_expr(p);
         return;
     }
     // native | uninterpreted function

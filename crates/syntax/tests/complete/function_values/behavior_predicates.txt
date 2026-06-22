@@ -1,0 +1,130 @@
+SOURCE_FILE@0..204
+  MODULE@0..203
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..31
+      IDENT@12..31 "behavior_predicates"
+    WHITESPACE@31..32 " "
+    L_CURLY@32..33 "{"
+    WHITESPACE@33..38 "\n    "
+    ITEM_SPEC@38..201
+      SPEC_KW@38..42 "spec"
+      WHITESPACE@42..43 " "
+      ITEM_SPEC_REF@43..47
+        NAME_REF@43..47
+          IDENT@43..47 "main"
+      WHITESPACE@47..48 " "
+      BLOCK_EXPR@48..201
+        L_CURLY@48..49 "{"
+        WHITESPACE@49..58 "\n        "
+        EXPR_STMT@58..74
+          BEHAVIOR_PREDICATE_EXPR@58..73
+            IDENT@58..67 "aborts_of"
+            TYPE_ARG_LIST@67..70
+              L_ANGLE@67..68 "<"
+              TYPE_ARG@68..69
+                PATH_TYPE@68..69
+                  PATH@68..69
+                    PATH_SEGMENT@68..69
+                      NAME_REF@68..69
+                        IDENT@68..69 "f"
+              R_ANGLE@69..70 ">"
+            VALUE_ARG_LIST@70..73
+              L_PAREN@70..71 "("
+              VALUE_ARG@71..72
+                LITERAL@71..72
+                  INT_NUMBER@71..72 "1"
+              R_PAREN@72..73 ")"
+          SEMICOLON@73..74 ";"
+        WHITESPACE@74..83 "\n        "
+        EXPR_STMT@83..101
+          BEHAVIOR_PREDICATE_EXPR@83..100
+            IDENT@83..94 "requires_of"
+            TYPE_ARG_LIST@94..97
+              L_ANGLE@94..95 "<"
+              TYPE_ARG@95..96
+                PATH_TYPE@95..96
+                  PATH@95..96
+                    PATH_SEGMENT@95..96
+                      NAME_REF@95..96
+                        IDENT@95..96 "f"
+              R_ANGLE@96..97 ">"
+            VALUE_ARG_LIST@97..100
+              L_PAREN@97..98 "("
+              VALUE_ARG@98..99
+                LITERAL@98..99
+                  INT_NUMBER@98..99 "1"
+              R_PAREN@99..100 ")"
+          SEMICOLON@100..101 ";"
+        WHITESPACE@101..110 "\n        "
+        EXPR_STMT@110..127
+          BEHAVIOR_PREDICATE_EXPR@110..126
+            IDENT@110..120 "ensures_of"
+            TYPE_ARG_LIST@120..123
+              L_ANGLE@120..121 "<"
+              TYPE_ARG@121..122
+                PATH_TYPE@121..122
+                  PATH@121..122
+                    PATH_SEGMENT@121..122
+                      NAME_REF@121..122
+                        IDENT@121..122 "f"
+              R_ANGLE@122..123 ">"
+            VALUE_ARG_LIST@123..126
+              L_PAREN@123..124 "("
+              VALUE_ARG@124..125
+                LITERAL@124..125
+                  INT_NUMBER@124..125 "1"
+              R_PAREN@125..126 ")"
+          SEMICOLON@126..127 ";"
+        WHITESPACE@127..136 "\n        "
+        EXPR_STMT@136..152
+          BEHAVIOR_PREDICATE_EXPR@136..151
+            IDENT@136..145 "result_of"
+            TYPE_ARG_LIST@145..148
+              L_ANGLE@145..146 "<"
+              TYPE_ARG@146..147
+                PATH_TYPE@146..147
+                  PATH@146..147
+                    PATH_SEGMENT@146..147
+                      NAME_REF@146..147
+                        IDENT@146..147 "f"
+              R_ANGLE@147..148 ">"
+            VALUE_ARG_LIST@148..151
+              L_PAREN@148..149 "("
+              VALUE_ARG@149..150
+                LITERAL@149..150
+                  INT_NUMBER@149..150 "1"
+              R_PAREN@150..151 ")"
+          SEMICOLON@151..152 ";"
+        WHITESPACE@152..161 "\n        "
+        SPEC_PREDICATE_STMT@161..195
+          ENSURES_KW@161..168 "ensures"
+          WHITESPACE@168..169 " "
+          BEHAVIOR_PREDICATE_EXPR@169..194
+            IDENT@169..178 "result_of"
+            TYPE_ARG_LIST@178..192
+              L_ANGLE@178..179 "<"
+              TYPE_ARG@179..191
+                PATH_TYPE@179..191
+                  PATH@179..191
+                    PATH@179..185
+                      PATH_SEGMENT@179..185
+                        NAME_REF@179..185
+                          IDENT@179..185 "config"
+                    COLON_COLON@185..187 "::"
+                    PATH_SEGMENT@187..191
+                      NAME_REF@187..191
+                        IDENT@187..191 "call"
+              R_ANGLE@191..192 ">"
+            VALUE_ARG_LIST@192..194
+              L_PAREN@192..193 "("
+              R_PAREN@193..194 ")"
+          SEMICOLON@194..195 ";"
+        WHITESPACE@195..200 "\n    "
+        R_CURLY@200..201 "}"
+    WHITESPACE@201..202 "\n"
+    R_CURLY@202..203 "}"
+  WHITESPACE@203..204 "\n"

@@ -23,7 +23,7 @@ pub(crate) fn item_spec(p: &mut Parser, m: Marker) {
         p.with_recovery(item_start_rec_set().with_ts(T!['{']), item_spec_signature);
     }
     if p.at(T!['{']) {
-        blocks::block_expr(p, StmtKind::Spec);
+        p.with_stmt_kind(StmtKind::Spec, |p| blocks::block_expr(p));
     } else {
         p.error("expected a block");
     }

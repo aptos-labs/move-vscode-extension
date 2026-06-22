@@ -2814,3 +2814,25 @@ fn test_match_with_integers_and_ranges() {
         }
     "#]]);
 }
+
+#[test]
+fn test_check_arguments_for_behavior_predicate() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            native fun params_2(val: u8, val2: u64);
+
+            fun main() {
+            }
+            spec main {
+                aborts_of<params_2>(1, 2);
+                aborts_of<params_2>(true, true);
+                                  //^^^^ err: Incompatible type 'bool', expected 'num'
+                                        //^^^^ err: Incompatible type 'bool', expected 'num'
+                aborts_of<params_2>(1u16, @0x1);
+                                        //^^^^ err: Incompatible type 'address', expected 'num'
+
+            }
+        }
+    "#]]);
+}

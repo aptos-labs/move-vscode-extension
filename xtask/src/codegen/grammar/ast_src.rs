@@ -206,6 +206,8 @@ pub(crate) const KINDS_SRC: KindsSrc = KindsSrc {
         "SPEC_PREDICATE_PROPERTY",
         "GLOBAL_VARIABLE_DECL",
 
+        "BEHAVIOR_PREDICATE_EXPR",
+
         "SCHEMA",
         "SCHEMA_FIELD",
 

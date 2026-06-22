@@ -31,7 +31,7 @@ pub(crate) fn schema(p: &mut Parser, m: Marker) {
     // type_params::opt_type_param_list(p);
     // block_expr(p, true);
     if p.at(T!['{']) {
-        blocks::block_expr(p, StmtKind::Spec);
+        p.with_stmt_kind(StmtKind::Spec, blocks::block_expr);
     } else {
         p.error("expected a block");
     }

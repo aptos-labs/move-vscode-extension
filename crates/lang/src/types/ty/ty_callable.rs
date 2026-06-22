@@ -22,6 +22,7 @@ pub struct TyCallable {
 pub enum TyCallableKind {
     Named(Substitution, Option<SyntaxLoc>),
     Lambda(Option<SyntaxLoc>),
+    Predicate(Option<SyntaxLoc>),
 }
 
 impl TyCallableKind {
@@ -31,6 +32,14 @@ impl TyCallableKind {
 
     pub fn fake() -> Self {
         TyCallableKind::Named(Substitution::default(), None)
+    }
+
+    pub fn loc(&self) -> Option<&SyntaxLoc> {
+        match self {
+            TyCallableKind::Named(_, loc)
+            | TyCallableKind::Lambda(loc)
+            | TyCallableKind::Predicate(loc) => loc.as_ref(),
+        }
     }
 }
 
@@ -69,6 +78,7 @@ impl TypeFoldable<TyCallableKind> for TyCallableKind {
         match self {
             TyCallableKind::Named(subst, loc) => TyCallableKind::Named(subst.fold_with(folder), loc),
             TyCallableKind::Lambda(loc) => TyCallableKind::Lambda(loc),
+            TyCallableKind::Predicate(loc) => TyCallableKind::Predicate(loc),
         }
     }
 
@@ -76,6 +86,7 @@ impl TypeFoldable<TyCallableKind> for TyCallableKind {
         match self {
             TyCallableKind::Named(subst, _) => subst.visit_with(visitor),
             TyCallableKind::Lambda(_) => false,
+            TyCallableKind::Predicate(_) => false,
         }
     }
 }
