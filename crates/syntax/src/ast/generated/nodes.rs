@@ -319,6 +319,19 @@ impl BangExpr {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct BehaviorPredicateExpr {
+    pub(crate) syntax: SyntaxNode,
+}
+impl BehaviorPredicateExpr {
+    #[inline]
+    pub fn type_arg_list(&self) -> Option<TypeArgList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn value_arg_list(&self) -> Option<ValueArgList> { support::child(&self.syntax) }
+    #[inline]
+    pub fn ident_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![ident]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct BinExpr {
     pub(crate) syntax: SyntaxNode,
 }
@@ -2354,6 +2367,7 @@ pub enum AddressRef {
 pub enum AnyCallExpr {
     ApplyLemma(ApplyLemma),
     AssertMacroExpr(AssertMacroExpr),
+    BehaviorPredicateExpr(BehaviorPredicateExpr),
     CallExpr(CallExpr),
     MethodCallExpr(MethodCallExpr),
 }
@@ -2388,6 +2402,7 @@ pub enum Expr {
     AnnotatedExpr(AnnotatedExpr),
     AssertMacroExpr(AssertMacroExpr),
     BangExpr(BangExpr),
+    BehaviorPredicateExpr(BehaviorPredicateExpr),
     BinExpr(BinExpr),
     BlockExpr(BlockExpr),
     BorrowExpr(BorrowExpr),
@@ -3142,6 +3157,27 @@ impl AstNode for BangExpr {
     }
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == BANG_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for BehaviorPredicateExpr {
+    #[inline]
+    fn kind() -> SyntaxKind
+    where
+        Self: Sized,
+    {
+        BEHAVIOR_PREDICATE_EXPR
+    }
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == BEHAVIOR_PREDICATE_EXPR }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -6206,6 +6242,10 @@ impl From<AssertMacroExpr> for AnyCallExpr {
     #[inline]
     fn from(node: AssertMacroExpr) -> AnyCallExpr { AnyCallExpr::AssertMacroExpr(node) }
 }
+impl From<BehaviorPredicateExpr> for AnyCallExpr {
+    #[inline]
+    fn from(node: BehaviorPredicateExpr) -> AnyCallExpr { AnyCallExpr::BehaviorPredicateExpr(node) }
+}
 impl From<CallExpr> for AnyCallExpr {
     #[inline]
     fn from(node: CallExpr) -> AnyCallExpr { AnyCallExpr::CallExpr(node) }
@@ -6227,6 +6267,12 @@ impl AnyCallExpr {
             _ => None,
         }
     }
+    pub fn behavior_predicate_expr(self) -> Option<BehaviorPredicateExpr> {
+        match (self) {
+            AnyCallExpr::BehaviorPredicateExpr(item) => Some(item),
+            _ => None,
+        }
+    }
     pub fn call_expr(self) -> Option<CallExpr> {
         match (self) {
             AnyCallExpr::CallExpr(item) => Some(item),
@@ -6244,6 +6290,7 @@ impl AnyCallExpr {
         match self {
             AnyCallExpr::ApplyLemma(it) => it.value_arg_list(),
             AnyCallExpr::AssertMacroExpr(it) => it.value_arg_list(),
+            AnyCallExpr::BehaviorPredicateExpr(it) => it.value_arg_list(),
             AnyCallExpr::CallExpr(it) => it.value_arg_list(),
             AnyCallExpr::MethodCallExpr(it) => it.value_arg_list(),
         }
@@ -6254,7 +6301,7 @@ impl AstNode for AnyCallExpr {
     fn can_cast(kind: SyntaxKind) -> bool {
         matches!(
             kind,
-            APPLY_LEMMA | ASSERT_MACRO_EXPR | CALL_EXPR | METHOD_CALL_EXPR
+            APPLY_LEMMA | ASSERT_MACRO_EXPR | BEHAVIOR_PREDICATE_EXPR | CALL_EXPR | METHOD_CALL_EXPR
         )
     }
     #[inline]
@@ -6262,6 +6309,9 @@ impl AstNode for AnyCallExpr {
         let res = match syntax.kind() {
             APPLY_LEMMA => AnyCallExpr::ApplyLemma(ApplyLemma { syntax }),
             ASSERT_MACRO_EXPR => AnyCallExpr::AssertMacroExpr(AssertMacroExpr { syntax }),
+            BEHAVIOR_PREDICATE_EXPR => {
+                AnyCallExpr::BehaviorPredicateExpr(BehaviorPredicateExpr { syntax })
+            }
             CALL_EXPR => AnyCallExpr::CallExpr(CallExpr { syntax }),
             METHOD_CALL_EXPR => AnyCallExpr::MethodCallExpr(MethodCallExpr { syntax }),
             _ => return None,
@@ -6273,6 +6323,7 @@ impl AstNode for AnyCallExpr {
         match self {
             AnyCallExpr::ApplyLemma(it) => &it.syntax(),
             AnyCallExpr::AssertMacroExpr(it) => &it.syntax(),
+            AnyCallExpr::BehaviorPredicateExpr(it) => &it.syntax(),
             AnyCallExpr::CallExpr(it) => &it.syntax(),
             AnyCallExpr::MethodCallExpr(it) => &it.syntax(),
         }
@@ -6571,6 +6622,10 @@ impl From<BangExpr> for Expr {
     #[inline]
     fn from(node: BangExpr) -> Expr { Expr::BangExpr(node) }
 }
+impl From<BehaviorPredicateExpr> for Expr {
+    #[inline]
+    fn from(node: BehaviorPredicateExpr) -> Expr { Expr::BehaviorPredicateExpr(node) }
+}
 impl From<BinExpr> for Expr {
     #[inline]
     fn from(node: BinExpr) -> Expr { Expr::BinExpr(node) }
@@ -6725,6 +6780,12 @@ impl Expr {
     pub fn bang_expr(self) -> Option<BangExpr> {
         match (self) {
             Expr::BangExpr(item) => Some(item),
+            _ => None,
+        }
+    }
+    pub fn behavior_predicate_expr(self) -> Option<BehaviorPredicateExpr> {
+        match (self) {
+            Expr::BehaviorPredicateExpr(item) => Some(item),
             _ => None,
         }
     }
@@ -6936,6 +6997,7 @@ impl AstNode for Expr {
                 | ANNOTATED_EXPR
                 | ASSERT_MACRO_EXPR
                 | BANG_EXPR
+                | BEHAVIOR_PREDICATE_EXPR
                 | BIN_EXPR
                 | BLOCK_EXPR
                 | BORROW_EXPR
@@ -6978,6 +7040,7 @@ impl AstNode for Expr {
             ANNOTATED_EXPR => Expr::AnnotatedExpr(AnnotatedExpr { syntax }),
             ASSERT_MACRO_EXPR => Expr::AssertMacroExpr(AssertMacroExpr { syntax }),
             BANG_EXPR => Expr::BangExpr(BangExpr { syntax }),
+            BEHAVIOR_PREDICATE_EXPR => Expr::BehaviorPredicateExpr(BehaviorPredicateExpr { syntax }),
             BIN_EXPR => Expr::BinExpr(BinExpr { syntax }),
             BLOCK_EXPR => Expr::BlockExpr(BlockExpr { syntax }),
             BORROW_EXPR => Expr::BorrowExpr(BorrowExpr { syntax }),
@@ -7022,6 +7085,7 @@ impl AstNode for Expr {
             Expr::AnnotatedExpr(it) => &it.syntax(),
             Expr::AssertMacroExpr(it) => &it.syntax(),
             Expr::BangExpr(it) => &it.syntax(),
+            Expr::BehaviorPredicateExpr(it) => &it.syntax(),
             Expr::BinExpr(it) => &it.syntax(),
             Expr::BlockExpr(it) => &it.syntax(),
             Expr::BorrowExpr(it) => &it.syntax(),
@@ -10165,6 +10229,11 @@ impl std::fmt::Display for AxiomStmt {
     }
 }
 impl std::fmt::Display for BangExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for BehaviorPredicateExpr {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

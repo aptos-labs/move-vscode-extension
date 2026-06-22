@@ -887,3 +887,71 @@ fn test_resource_index_expr_autoborrows_mut() {
     "#,
     )
 }
+
+#[test]
+fn test_resolve_function_values_under_aborts_of() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            fun main() {}
+                //X
+            spec main {
+                aborts_of<main>();
+                           //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_function_values_under_requires_of() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            fun main() {}
+                //X
+            spec main {
+                requires_of<main>();
+                           //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_function_values_under_ensures_of() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            fun main() {}
+                //X
+            spec main {
+                ensures_of<main>();
+                           //^
+            }
+        }
+    "#,
+    )
+}
+
+#[test]
+fn test_resolve_function_values_under_result_of() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            fun main() {}
+                //X
+            spec main {
+                result_of<main>();
+                           //^
+            }
+        }
+    "#,
+    )
+}

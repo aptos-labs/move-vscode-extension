@@ -18,6 +18,7 @@ mod apply_schema;
 pub mod assert_macro_expr;
 mod attr_item;
 mod axiom_stmt;
+mod behavior_predicate_expr;
 pub mod bin_expr;
 mod block_expr;
 mod block_or_inline_expr;

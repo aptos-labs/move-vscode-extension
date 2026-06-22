@@ -55,6 +55,14 @@ pub(crate) fn check_value_arguments<'db>(
             let expected_count = ty_callable.param_types.len();
             (expected_count, expected_count)
         }
+        ast::AnyCallExpr::BehaviorPredicateExpr(b_predicate) => {
+            let fun_path = b_predicate.fun_path()?;
+            let fun = ctx
+                .sema
+                .resolve_to_element::<ast::AnyFun>(fun_path.in_file(file_id))?;
+            let expected_count = fun.value.params().len();
+            (expected_count, expected_count)
+        }
     };
     let actual_count = arg_exprs.len();
 

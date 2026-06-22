@@ -4,6 +4,7 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
+pub(crate) mod behavior;
 pub(crate) mod predicates;
 pub(crate) mod proofs_and_lemmas;
 pub(crate) mod quants;

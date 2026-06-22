@@ -296,6 +296,7 @@ fn path_namespaces(
         USE_SPECK => IMPORTABLE_NS,
 
         PATH_TYPE if path_parent.parent_is::<ast::IsExpr>() => CONTAINER_TYPE_NS,
+        PATH_TYPE if path_parent.has_ancestor_strict::<ast::BehaviorPredicateExpr>() => CALLABLE_NS,
 
         // a: bar
         //     ^

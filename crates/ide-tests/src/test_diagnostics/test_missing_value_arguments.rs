@@ -227,3 +227,28 @@ fn test_check_apply_lemma_arguments() {
         }
     "#]]);
 }
+
+#[test]
+fn test_invalid_number_of_arguments_behaviour_predicates() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            native fun params_2(val: u8, val2: u64);
+
+            fun main() {
+            }
+            spec main {
+                aborts_of<params_2>();
+                                  //^ err: This function takes 2 parameters, but 0 parameters were supplied
+                aborts_of<params_2>(1);
+                                   //^ err: This function takes 2 parameters, but 1 parameters were supplied
+                aborts_of<params_2>(1, 2);
+                aborts_of<params_2>(1, 2, 3);
+                                        //^ err: This function takes 2 parameters, but 3 parameters were supplied
+                aborts_of<params_2>(1, 2, 3, 4);
+                                        //^ err: This function takes 2 parameters, but 4 parameters were supplied
+
+            }
+        }
+    "#]]);
+}
