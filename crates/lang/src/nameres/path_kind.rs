@@ -296,13 +296,24 @@ fn path_namespaces(
         USE_SPECK => IMPORTABLE_NS,
 
         PATH_TYPE if path_parent.parent_is::<ast::IsExpr>() => CONTAINER_TYPE_NS,
-        PATH_TYPE if path_parent.has_ancestor_strict::<ast::BehaviorPredicateExpr>() => CALLABLE_NS,
 
         // a: bar
         //     ^
         // a: foo::bar
         //         ^
         PATH_TYPE => {
+            // BEHAVIOR_PREDICATE_EXPR -> TYPE_ARG_LIST -> TYPE_ARG -> PATH_TYPE
+            let b_predicate = path_parent
+                // TYPE_ARG
+                .parent()
+                // TYPE_ARG_LIST
+                .and_then(|it| it.parent())
+                // BEHAVIOR_PREDICATE_EXPR
+                .and_then(|it| it.parent());
+            if b_predicate.map(|it| it.kind()) == Some(BEHAVIOR_PREDICATE_EXPR) {
+                return CALLABLE_NS;
+            }
+
             if is_completion {
                 ITEM_TYPE_NS | Ns::MODULE
             } else {
