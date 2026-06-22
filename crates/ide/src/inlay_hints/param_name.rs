@@ -23,8 +23,8 @@ pub(super) fn hints(
         return None;
     }
 
-    let callable = sema.callable(&call_expr)?;
-    if callable
+    let callable_info = sema.callable_info(&call_expr)?;
+    if callable_info
         .callable_item
         .name()
         .is_some_and(|name| KNOWN_CALLABLES.contains(name.as_str()))
@@ -32,7 +32,7 @@ pub(super) fn hints(
         return None;
     }
 
-    let params = callable.params()?;
+    let params = callable_info.params()?;
     // skip if only a single parameter
     if params.len() == 1 {
         return None;

@@ -187,7 +187,7 @@ fn signature_help_for_call(
     let (any_call_expr, active_parameter) =
         call_expr_for_arg_list(arg_list, token.text_range().start())?;
 
-    let callable = sema.callable(&any_call_expr)?;
+    let callable_info = sema.callable_info(&any_call_expr)?;
 
     let mut res = SignatureHelp {
         signature: String::new(),
@@ -195,7 +195,7 @@ fn signature_help_for_call(
         active_parameter,
     };
 
-    let callable_params = callable.params()?;
+    let callable_params = callable_info.params()?;
     if callable_params.is_empty() {
         res.signature = "<no arguments>".to_string();
         return Some(res);
@@ -211,7 +211,7 @@ fn signature_help_for_call(
             "{}",
             callable_param
                 .ty
-                .map(|it| sema.render_ty_for_ui(&it, callable.file_id()))
+                .map(|it| sema.render_ty_for_ui(&it, callable_info.file_id()))
                 .unwrap_or_default()
         );
         res.push_param(&p);

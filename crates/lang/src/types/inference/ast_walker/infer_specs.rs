@@ -6,10 +6,11 @@
 
 use crate::nameres::scope::ScopeEntryExt;
 use crate::types::expectation::Expected;
-use crate::types::inference::ast_walker::TypeAstWalker;
+use crate::types::inference::ast_walker::{CallArg, TypeAstWalker};
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
 use crate::types::ty::schema::TySchema;
+use crate::types::ty::ty_callable::TyCallableKind;
 use crate::types::ty_db;
 use std::iter::zip;
 use syntax::ast;
@@ -142,6 +143,34 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             self.infer_expr_coerceable_to(&where_expr, Ty::Bool);
         }
         quant_binding_ty
+    }
+
+    pub(crate) fn infer_behavior_predicate_expr(
+        &mut self,
+        b_predicate: &ast::BehaviorPredicateExpr,
+    ) -> Option<Ty> {
+        let fun_path_type = b_predicate.fun_path_type()?;
+        let mut callable_ty = ty_db::lower_type(
+            self.ctx.db,
+            fun_path_type.in_file(self.ctx.file_id).map_into(),
+            true,
+        )
+        .into_ty_callable()?;
+
+        let expected_arg_tys = self.infer_expected_call_arg_tys(&callable_ty, Expected::NoValue);
+        let args = b_predicate
+            .arg_exprs()
+            .into_iter()
+            .map(|expr| CallArg::Arg { expr })
+            .collect();
+        self.coerce_call_arg_types(args, callable_ty.param_types.clone(), expected_arg_tys);
+
+        callable_ty.kind = TyCallableKind::Predicate(callable_ty.kind.loc().cloned());
+        self.ctx
+            .call_expr_types
+            .insert(b_predicate.clone().into(), callable_ty.clone().into());
+
+        Some(Ty::Bool)
     }
 
     pub(crate) fn infer_quant_binding_ty(&mut self, quant_binding: &ast::QuantBinding) -> Option<Ty> {

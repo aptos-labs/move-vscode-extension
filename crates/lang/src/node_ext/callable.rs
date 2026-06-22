@@ -13,29 +13,35 @@ use syntax::files::{InFile, InFileExt};
 use vfs::FileId;
 
 #[derive(Debug)]
-pub struct Callable {
+pub struct CallableInfo {
     file_id: FileId,
     call_expr: InFile<ast::AnyCallExpr>,
     ty: Option<TyCallable>,
     pub callable_item: CallableItem,
 }
 
-impl Callable {
+impl CallableInfo {
+    pub fn new_assert_macro(
+        db: &dyn SourceDatabase,
+        any_call_expr: InFile<ast::AnyCallExpr>,
+    ) -> Option<Self> {
+        assert!(matches!(
+            any_call_expr.value,
+            ast::AnyCallExpr::AssertMacroExpr(_)
+        ));
+        Some(CallableInfo {
+            file_id: db.builtins_file_id()?.data(db),
+            call_expr: any_call_expr,
+            ty: None,
+            callable_item: CallableItem::AssertMacro,
+        })
+    }
+
     pub fn new(
         db: &dyn SourceDatabase,
         any_call_expr: InFile<ast::AnyCallExpr>,
-        callable_ty: Option<TyCallable>,
+        callable_ty: TyCallable,
     ) -> Option<Self> {
-        if matches!(any_call_expr.value, ast::AnyCallExpr::AssertMacroExpr(_)) {
-            return Some(Callable {
-                file_id: db.builtins_file_id()?.data(db),
-                call_expr: any_call_expr,
-                ty: None,
-                callable_item: CallableItem::AssertMacro,
-            });
-        }
-
-        let callable_ty = callable_ty?;
         let (file_id, callable_item) = match &callable_ty.kind {
             TyCallableKind::Named(_, Some(callable_loc)) => {
                 let (file_id, named_element) = callable_loc.to_ast::<ast::NamedElement>(db)?.unpack();
@@ -58,11 +64,16 @@ impl Callable {
                     None
                 }
             }
+            TyCallableKind::Predicate(Some(fun_loc)) => Some(
+                fun_loc
+                    .to_ast::<ast::AnyFun>(db)?
+                    .map(|fun| CallableItem::BehaviorPredicate(fun)),
+            ),
             _ => None,
         }?
         .unpack();
 
-        Some(Callable {
+        Some(CallableInfo {
             file_id,
             call_expr: any_call_expr,
             ty: Some(callable_ty),
@@ -96,7 +107,7 @@ impl Callable {
         let callable_ty = self.ty.as_ref()?;
         let mut params = vec![];
         match &self.callable_item {
-            CallableItem::Function(fun) => {
+            CallableItem::Function(fun) | CallableItem::BehaviorPredicate(fun) => {
                 for (i, param) in fun.params().into_iter().enumerate() {
                     if i == 0 && matches!(self.call_expr.value, ast::AnyCallExpr::MethodCallExpr(_)) {
                         continue;
@@ -145,7 +156,9 @@ impl Callable {
                     });
                 }
             }
-            CallableItem::AssertMacro => unreachable!(),
+            CallableItem::AssertMacro => {
+                unreachable!("handled earlier")
+            }
         }
         Some(params)
     }
@@ -159,6 +172,7 @@ pub enum CallableItem {
     AssertMacro,
     LambdaExpr(ast::LambdaExpr),
     LambdaType(ast::LambdaType),
+    BehaviorPredicate(ast::AnyFun),
 }
 
 impl CallableItem {

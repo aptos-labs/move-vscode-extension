@@ -493,3 +493,26 @@ fn test_lambda_type() {
     "#]],
     );
 }
+
+#[test]
+fn test_behavior_predicates() {
+    check_signature_info(
+        // language=Move
+        r#"
+        module 0x1::M {
+            native fun params_2(val: u8, val2: u64);
+
+            fun main() {
+            }
+            spec main {
+                aborts_of<params_2>(/*caret*/);
+
+            }
+        }
+    "#,
+        expect![[r#"
+        >>val: num, val2: num
+        //^^^^^^^^
+    "#]],
+    );
+}

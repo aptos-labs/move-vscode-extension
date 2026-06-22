@@ -36,8 +36,9 @@ use syntax::ast;
 use syntax::files::InFile;
 use vfs::FileId;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Default)]
 pub enum Ty {
+    #[default]
     Unknown,
     Never,
 

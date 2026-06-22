@@ -10,7 +10,7 @@ use crate::loc::{SyntaxLoc, SyntaxLocFileExt};
 use crate::nameres::fq_named_element::{ItemFQName, ItemFQNameOwner};
 use crate::nameres::is_visible::{ScopeEntryWithVis, ScopeEntryWithVisExt};
 use crate::nameres::scope::{ScopeEntry, VecExt};
-use crate::node_ext::callable::Callable;
+use crate::node_ext::callable::CallableInfo;
 use crate::node_ext::item::ModuleItemExt;
 use crate::semantics::source_to_def::SourceToDefCache;
 use crate::types::inference::InferenceCtx;
@@ -190,9 +190,16 @@ impl<'db> SemanticsImpl<'db> {
         inference.get_pat_type(&ident_pat.loc())
     }
 
-    pub fn callable(&self, call_expr: &InFile<ast::AnyCallExpr>) -> Option<Callable> {
-        let callable_ty = self.get_call_expr_type(call_expr);
-        Callable::new(self.db, call_expr.clone(), callable_ty)
+    pub fn callable_info(&self, call_expr: &InFile<ast::AnyCallExpr>) -> Option<CallableInfo> {
+        match call_expr.value {
+            ast::AnyCallExpr::AssertMacroExpr(_) => {
+                CallableInfo::new_assert_macro(self.db, call_expr.clone())
+            }
+            _ => {
+                let callable_ty = self.get_call_expr_type(call_expr)?;
+                CallableInfo::new(self.db, call_expr.clone(), callable_ty)
+            }
+        }
     }
 
     pub fn render_ty(&self, ty: &Ty) -> String {

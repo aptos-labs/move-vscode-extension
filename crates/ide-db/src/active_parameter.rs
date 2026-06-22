@@ -33,10 +33,10 @@ impl ActiveParameterInfo {
         )?;
         let any_call_expr = sema.wrap_node_infile(any_call_expr);
 
-        let callable = sema.callable(&any_call_expr)?;
+        let callable_info = sema.callable_info(&any_call_expr)?;
         let active_idx = active_parameter?;
 
-        let mut params = callable.params()?;
+        let mut params = callable_info.params()?;
         if active_idx >= params.len() {
             return None;
         }
@@ -46,7 +46,7 @@ impl ActiveParameterInfo {
         let fun_param = param.kind.into_fun_param()?;
         Some(ActiveParameterInfo {
             ty: param_ty,
-            src: Some(fun_param.in_file(callable.file_id())),
+            src: Some(fun_param.in_file(callable_info.file_id())),
         })
     }
 

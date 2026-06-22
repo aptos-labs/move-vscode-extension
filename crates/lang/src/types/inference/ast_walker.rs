@@ -502,7 +502,9 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 Ty::Unit
             }
 
-            ast::Expr::BehaviorPredicateExpr(_) => Ty::Unknown,
+            ast::Expr::BehaviorPredicateExpr(b_predicate) => self
+                .infer_behavior_predicate_expr(b_predicate)
+                .unwrap_or(Ty::Bool),
         };
 
         let expr_ty = expr_ty.refine_for_specs(self.ctx.msl);
