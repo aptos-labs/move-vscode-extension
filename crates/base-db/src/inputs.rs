@@ -5,11 +5,12 @@
 // Modifications have been made to the original code.
 
 use crate::change::ManifestFileId;
-use crate::package_root::{PackageId, PackageRoot};
+use crate::package_root::{PackageId, PackageKind, PackageRoot};
 use crate::source_db::SourceDatabase;
 use dashmap::{DashMap, Entry};
 use salsa::Durability;
 use salsa::Setter;
+use std::collections::HashSet;
 use std::sync::Arc;
 use vfs::FileId;
 
@@ -75,6 +76,8 @@ pub struct Files {
     package_metadata: Arc<DashMap<ManifestFileId, PackageMetadataInput>>,
 
     spec_file_sets: Arc<DashMap<FileId, FileIdSet>>,
+
+    pub all_package_ids: Option<PackageIdSet>,
 }
 
 impl Files {
@@ -119,28 +122,41 @@ impl Files {
         *package_root
     }
 
-    pub fn set_package_root_with_durability(
-        &self,
-        db: &mut dyn SourceDatabase,
-        package_id: PackageId,
-        package_root: Arc<PackageRoot>,
-        durability: Durability,
-    ) {
-        match self.package_roots.entry(package_id) {
-            Entry::Occupied(mut occupied) => {
-                occupied
-                    .get_mut()
-                    .set_data(db)
-                    .with_durability(durability)
-                    .to(package_root);
+    pub fn replace_package_roots(&self, db: &mut dyn SourceDatabase, package_roots: Vec<PackageRoot>) {
+        self.file_package_ids.clear();
+        self.package_roots.clear();
+
+        self.spec_file_sets.clear();
+        if let Some(builtins_file_id) = db.builtins_file_id() {
+            db.set_spec_related_files(builtins_file_id.data(db), vec![])
+        }
+
+        let mut all_package_ids = vec![];
+        for (idx, package_root) in package_roots.into_iter().enumerate() {
+            let package_id = PackageId::new(db, idx as u32);
+            for file_id in package_root.file_ids() {
+                self.file_package_ids.insert(file_id, package_id);
+                self.set_spec_related_files(
+                    db,
+                    file_id,
+                    find_spec_file_set(file_id, package_root.clone()).unwrap_or(vec![]),
+                );
             }
-            Entry::Vacant(vacant) => {
-                let package_root = PackageRootInput::builder(package_root)
-                    .durability(durability)
-                    .new(db);
-                vacant.insert(package_root);
-            }
-        };
+            let package_durability = package_root_durability(&package_root);
+            self.package_roots.insert(
+                package_id,
+                PackageRootInput::builder(Arc::from(package_root))
+                    .durability(package_durability)
+                    .new(db),
+            );
+            all_package_ids.push(package_id);
+        }
+
+        self.all_package_ids
+            .unwrap()
+            .set_data(db)
+            .with_durability(Durability::MEDIUM)
+            .to(all_package_ids);
     }
 
     pub fn file_package_id(&self, file_id: FileId) -> PackageId {
@@ -213,12 +229,44 @@ impl Files {
         };
     }
 
-    pub fn package_ids(&self, db: &dyn SourceDatabase) -> PackageIdSet {
-        let package_ids = self
-            .package_roots
-            .iter()
-            .map(|it| it.key().clone())
-            .collect::<Vec<_>>();
-        PackageIdSet::new(db, package_ids)
+    pub fn package_ids(&self) -> PackageIdSet {
+        self.all_package_ids
+            .expect("initialized during RootDatabase::new()")
+    }
+}
+
+fn find_spec_file_set(file_id: FileId, root: PackageRoot) -> Option<Vec<FileId>> {
+    // simplification for now: only use MODULE_NAME.spec.move files
+    // todo: fix later, requires refactoring into one pass on the upper level
+    let file_path = root.file_set.path_for_file(&file_id)?;
+    let (file_name, ext) = file_path.name_and_extension()?;
+    if ext != Some("move") {
+        // shouldn't really happen
+        return None;
+    }
+
+    let prefix_name = file_name.strip_suffix(".spec").unwrap_or(file_name);
+    let expected_file_names =
+        HashSet::from([format!("{prefix_name}.move"), format!("{prefix_name}.spec.move")]);
+
+    let mut spec_file_ids = vec![];
+    // search through the package files for the files with
+    for file_id in root.file_set.iter() {
+        if let Some(file_path) = root.path_for_file(&file_id)
+            && let Some(candidate_file_name) = file_path.as_path().and_then(|it| it.file_name())
+        {
+            if expected_file_names.contains(candidate_file_name) {
+                spec_file_ids.push(file_id);
+            }
+        }
+    }
+
+    Some(spec_file_ids)
+}
+
+fn package_root_durability(package_root: &PackageRoot) -> Durability {
+    match package_root.kind {
+        PackageKind::Local => Durability::LOW,
+        PackageKind::Library => Durability::MEDIUM,
     }
 }
