@@ -14,7 +14,7 @@ use salsa::Durability;
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::panic;
-use std::sync::{Arc, Once};
+use std::sync::Once;
 use syntax::{Parse, SyntaxError, ast};
 use vfs::FileId;
 
@@ -30,17 +30,9 @@ pub trait SourceDatabase: salsa::Database {
     /// Contents of the source root.
     fn package_root(&self, package_id: PackageId) -> PackageRootInput;
 
-    /// Source root of the file.
-    fn set_package_root_with_durability(
-        &mut self,
-        package_id: PackageId,
-        package_root: Arc<PackageRoot>,
-        durability: Durability,
-    );
+    fn replace_package_roots(&mut self, package_roots: Vec<PackageRoot>);
 
     fn file_package_id(&self, id: FileId) -> PackageId;
-
-    fn set_file_package_id(&mut self, file_id: FileId, package_id: PackageId);
 
     fn builtins_file_id(&self) -> Option<FileIdInput>;
 

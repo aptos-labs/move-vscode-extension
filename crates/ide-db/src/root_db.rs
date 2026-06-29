@@ -77,23 +77,13 @@ impl SourceDatabase for RootDatabase {
         self.files.package_root(package_id)
     }
 
-    fn set_package_root_with_durability(
-        &mut self,
-        package_id: PackageId,
-        package_root: Arc<PackageRoot>,
-        durability: Durability,
-    ) {
+    fn replace_package_roots(&mut self, package_roots: Vec<PackageRoot>) {
         let files = Arc::clone(&self.files);
-        files.set_package_root_with_durability(self, package_id, package_root, durability);
+        files.replace_package_roots(self, package_roots);
     }
 
     fn file_package_id(&self, id: FileId) -> PackageId {
         self.files.file_package_id(id)
-    }
-
-    fn set_file_package_id(&mut self, file_id: FileId, package_id: PackageId) {
-        let files = Arc::clone(&self.files);
-        files.set_file_package_id(file_id, package_id);
     }
 
     fn builtins_file_id(&self) -> Option<FileIdInput> {
@@ -127,7 +117,7 @@ impl SourceDatabase for RootDatabase {
     }
 
     fn all_package_ids(&self) -> PackageIdSet {
-        self.files.package_ids(self)
+        self.files.package_ids()
     }
 }
 
@@ -139,17 +129,18 @@ impl Default for RootDatabase {
 
 impl RootDatabase {
     pub fn new() -> RootDatabase {
-        let db = RootDatabase {
+        let mut db = RootDatabase {
             storage: ManuallyDrop::new(salsa::Storage::default()),
             files: Default::default(),
             builtins_file_id: None,
         };
 
-        // This needs to be here otherwise `CrateGraphBuilder` will panic.
-        // db.set_all_crates(Arc::new(Box::new([])));
-        // CrateGraphBuilder::default().set_in_db(&mut db);
-        // db.set_local_roots_with_durability(Default::default(), Durability::MEDIUM);
-        // db.set_library_roots_with_durability(Default::default(), Durability::MEDIUM);
+        let package_ids = PackageIdSet::builder(vec![])
+            .durability(Durability::MEDIUM)
+            .new(&mut db);
+        Arc::get_mut(&mut db.files)
+            .expect("files should not be shared yet")
+            .all_package_ids = Some(package_ids);
 
         db
     }

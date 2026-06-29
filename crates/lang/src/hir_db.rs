@@ -144,6 +144,8 @@ fn get_all_modules_for_package_id_tracked(
     db: &dyn SourceDatabase,
     package_id: PackageId,
 ) -> Vec<SyntaxLoc> {
+    let _p = tracing::info_span!("get_all_modules_for_package_id_tracked").entered();
+
     let source_file_ids = source_file_ids_in_package(db, package_id);
     // average is one module per file
     let mut all_module_locs = Vec::with_capacity(source_file_ids.len());

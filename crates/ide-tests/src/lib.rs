@@ -20,6 +20,7 @@ mod test_completion_loops;
 mod test_completion_methods;
 mod test_completion_out_of_scope;
 mod test_completion_relevance;
+mod test_db;
 mod test_diagnostics;
 mod test_error_const_docs;
 mod test_find_usages;

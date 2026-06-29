@@ -14,8 +14,9 @@ use std::fmt;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 
+#[salsa_macros::tracked]
 pub fn world_symbols_in_package(db: &dyn SourceDatabase, package_id: PackageId) -> Arc<SymbolIndex> {
-    let _p = tracing::info_span!("library_symbols").entered();
+    let _p = tracing::info_span!("world_symbols_in_package").entered();
 
     let mut symbol_collector = SymbolCollector::new(db);
 
