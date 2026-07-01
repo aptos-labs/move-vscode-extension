@@ -49,13 +49,14 @@ fn find_use_item_hit_for_path(
             });
         let use_items_hit_in_owner = find_use_items_hit(owner_use_items, &base_path_type);
 
-        // first try to find a candidate in the specific scope, then in main scope
+        // first try to find a candidate in the specific scope
         let use_item_hit = specific_path_item_scope
             .and_then(|path_scope| {
                 use_items_hit_in_owner
                     .iter()
                     .find(|item| item.declared_scope == path_scope)
             })
+            // then in main scope, if nothing was found
             .or_else(|| {
                 use_items_hit_in_owner
                     .iter()
@@ -63,17 +64,17 @@ fn find_use_item_hit_for_path(
             })
             .cloned();
 
-        if use_item_hit.is_some() {
-            return use_item_hit.map(|it| (it, path_scope));
+        if let Some(use_item_hit) = use_item_hit {
+            return Some((use_item_hit.to_owned(), path_scope));
         }
     }
     None
 }
 
-fn find_use_items_hit(
-    use_items: impl Iterator<Item = UseItem>,
-    path_type: &BasePathType,
-) -> Vec<UseItem> {
+fn find_use_items_hit<'a>(
+    use_items: impl Iterator<Item = &'a UseItem>,
+    path_type: &'a BasePathType,
+) -> Vec<&'a UseItem> {
     match path_type {
         BasePathType::Item { item_name } => use_items
             .filter(|it| it.type_ == UseItemType::Item && it.alias_or_name.eq(item_name))

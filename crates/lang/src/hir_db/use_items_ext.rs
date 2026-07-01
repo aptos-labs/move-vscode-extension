@@ -12,8 +12,9 @@ use syntax::{AstNode, SyntaxNode, ast};
 pub fn combined_use_items(
     db: &dyn SourceDatabase,
     use_stmts_owner: InFile<ast::AnyUseStmtsOwner>,
-) -> Vec<UseItem> {
+) -> &[UseItem] {
     use_items_from_self_and_siblings_tracked(db, SyntaxLocInput::new(db, use_stmts_owner.loc()))
+        .as_slice()
 }
 
 pub fn use_items(
@@ -93,7 +94,7 @@ fn use_stmts_owner_with_siblings(
     with_siblings
 }
 
-#[salsa_macros::tracked]
+#[salsa_macros::tracked(returns(ref))]
 fn use_items_from_self_and_siblings_tracked<'db>(
     db: &'db dyn SourceDatabase,
     use_stmts_owner_loc: SyntaxLocInput<'db>,
