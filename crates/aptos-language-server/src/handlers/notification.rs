@@ -22,32 +22,35 @@ use std::sync::Arc;
 use stdx::itertools::Itertools;
 use vfs::loader::Handle;
 
-#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_cancel(state: &mut GlobalState, params: CancelParams) -> anyhow::Result<()> {
+    let _p = tracing::info_span!("handle_cancel").entered();
+
     let id: lsp_server::RequestId = match params.id {
-        lsp_types::NumberOrString::Number(id) => id.into(),
-        lsp_types::NumberOrString::String(id) => id.into(),
+        lsp_types::Id::Int(id) => id.into(),
+        lsp_types::Id::String(id) => id.into(),
     };
     state.cancel(id);
     Ok(())
 }
 
-#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_work_done_progress_cancel(
     _state: &mut GlobalState,
     _params: WorkDoneProgressCancelParams,
 ) -> anyhow::Result<()> {
+    let _p = tracing::info_span!("handle_work_done_progress_cancel").entered();
+
     // Just ignore this. It is OK to continue sending progress
     // notifications for this token, as the client can't know when
     // we accepted notification.
     Ok(())
 }
 
-#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_did_open_text_document(
     state: &mut GlobalState,
     params: DidOpenTextDocumentParams,
 ) -> anyhow::Result<()> {
+    let _p = tracing::info_span!("handle_did_open_text_document").entered();
+
     if let Ok(path) = from_proto::vfs_path(&params.text_document.uri) {
         let already_exists = state
             .opened_files
@@ -72,12 +75,13 @@ pub(crate) fn handle_did_open_text_document(
     Ok(())
 }
 
-#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_did_change_text_document(
     state: &mut GlobalState,
     params: DidChangeTextDocumentParams,
 ) -> anyhow::Result<()> {
-    if let Ok(path) = from_proto::vfs_path(&params.text_document.uri) {
+    let _p = tracing::info_span!("handle_did_change_text_document").entered();
+
+    if let Ok(path) = from_proto::vfs_path(&params.text_document.text_document_identifier.uri) {
         let Some(DocumentData { version, data }) = state.opened_files.get_mut(&path) else {
             tracing::error!(?path, "unexpected DidChangeTextDocument");
             return Ok(());
@@ -100,11 +104,12 @@ pub(crate) fn handle_did_change_text_document(
     Ok(())
 }
 
-#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_did_close_text_document(
     state: &mut GlobalState,
     params: DidCloseTextDocumentParams,
 ) -> anyhow::Result<()> {
+    let _p = tracing::info_span!("handle_did_close_text_document").entered();
+
     if let Ok(path) = from_proto::vfs_path(&params.text_document.uri) {
         if state.opened_files.remove(&path).is_err() {
             tracing::error!("orphan DidCloseTextDocument: {}", path);
@@ -119,11 +124,12 @@ pub(crate) fn handle_did_close_text_document(
     Ok(())
 }
 
-#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_did_save_text_document(
     state: &mut GlobalState,
     params: DidSaveTextDocumentParams,
 ) -> anyhow::Result<()> {
+    let _p = tracing::info_span!("handle_did_save_text_document").entered();
+
     if let Ok(vfs_path) = from_proto::vfs_path(&params.text_document.uri) {
         // Re-fetch workspaces if a workspace related file has changed
         if let Some(saved_path) = vfs_path.as_path() {
@@ -140,14 +146,15 @@ pub(crate) fn handle_did_save_text_document(
     Ok(())
 }
 
-#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_did_change_configuration(
     state: &mut GlobalState,
     _params: DidChangeConfigurationParams,
 ) -> anyhow::Result<()> {
+    let _p = tracing::info_span!("handle_did_change_configuration").entered();
+
     // As stated in https://github.com/microsoft/language-server-protocol/issues/676,
     // this notification's parameters should be ignored and the actual config queried separately.
-    state.send_request::<lsp_types::request::WorkspaceConfiguration>(
+    state.send_request::<lsp_types::ConfigurationRequest>(
         lsp_types::ConfigurationParams {
             items: vec![lsp_types::ConfigurationItem {
                 scope_uri: None,
@@ -184,11 +191,12 @@ pub(crate) fn handle_did_change_configuration(
     Ok(())
 }
 
-#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_did_change_workspace_folders(
     state: &mut GlobalState,
     params: DidChangeWorkspaceFoldersParams,
 ) -> anyhow::Result<()> {
+    let _p = tracing::info_span!("handle_did_change_workspace_folders").entered();
+
     let config = Arc::make_mut(&mut state.config);
 
     for workspace_folder in params.event.removed {
@@ -225,11 +233,12 @@ pub(crate) fn handle_did_change_workspace_folders(
     Ok(())
 }
 
-#[tracing::instrument(level = "info", skip_all)]
 pub(crate) fn handle_did_change_watched_files(
     state: &mut GlobalState,
     params: DidChangeWatchedFilesParams,
 ) -> anyhow::Result<()> {
+    let _p = tracing::info_span!("handle_did_change_watched_files").entered();
+
     for change in params.changes.iter().unique_by(|&it| &it.uri) {
         if let Ok(path) = from_proto::abs_path(&change.uri) {
             state.vfs_loader.handle.invalidate(path);

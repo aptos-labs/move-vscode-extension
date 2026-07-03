@@ -17,7 +17,7 @@ use crate::{
     version::version,
 };
 use base_db::source_db::DbPanicContext;
-use lsp_server::{ExtractError, ResponseError};
+use lsp_server::{ExtractError, Response, ResponseError};
 use salsa::Cancelled;
 use serde::{Serialize, de::DeserializeOwned};
 use stdx::thread::ThreadIntent;
@@ -50,8 +50,8 @@ impl RequestDispatcher<'_> {
         f: fn(&mut GlobalState, R::Params) -> anyhow::Result<R::Result>,
     ) -> &mut Self
     where
-        R: lsp_types::request::Request,
-        R::Params: DeserializeOwned + panic::UnwindSafe + Debug,
+        R: lsp_types::Request,
+        R::Params: DeserializeOwned + panic::UnwindSafe + fmt::Debug,
         R::Result: Serialize,
     {
         let (req, params, panic_context) = match self.parse::<R>() {
@@ -78,8 +78,8 @@ impl RequestDispatcher<'_> {
         f: fn(GlobalStateSnapshot, R::Params) -> anyhow::Result<R::Result>,
     ) -> &mut Self
     where
-        R: lsp_types::request::Request,
-        R::Params: DeserializeOwned + panic::UnwindSafe + Debug,
+        R: lsp_types::Request,
+        R::Params: DeserializeOwned + panic::UnwindSafe + fmt::Debug,
         R::Result: Serialize,
     {
         let (req, params, panic_context) = match self.parse::<R>() {
@@ -104,19 +104,21 @@ impl RequestDispatcher<'_> {
     }
 
     /// Dispatches a non-latency-sensitive request onto the thread pool. When the VFS is marked not
-    /// ready this will return a default constructed [`R::Result`].
+    /// ready this will return a default constructed `R::Result`.
     pub(crate) fn on<const ALLOW_RETRYING: bool, R>(
         &mut self,
         f: fn(GlobalStateSnapshot, R::Params) -> anyhow::Result<R::Result>,
     ) -> &mut Self
     where
-        R: lsp_types::request::Request<
-                Params: DeserializeOwned + panic::UnwindSafe + Send + Debug,
+        R: lsp_types::Request<
+                Params: DeserializeOwned + panic::UnwindSafe + Send + fmt::Debug,
                 Result: Serialize + Default,
             > + 'static,
     {
         if !self.global_state.vfs_initialized_and_loaded() {
-            if let Some(lsp_server::Request { id, .. }) = self.req.take_if(|it| it.method == R::METHOD) {
+            if let Some(lsp_server::Request { id, .. }) =
+                self.req.take_if(|it| it.method.as_str() == R::METHOD.as_str())
+            {
                 self.global_state
                     .respond(lsp_server::Response::new_ok(id, R::Result::default()));
             }
@@ -130,7 +132,7 @@ impl RequestDispatcher<'_> {
     }
 
     /// Dispatches a non-latency-sensitive request onto the thread pool. When the VFS is marked not
-    /// ready this will return a `default` constructed [`R::Result`].
+    /// ready this will return a `default` constructed `R::Result`.
     pub(crate) fn on_with_vfs_default<R>(
         &mut self,
         f: fn(GlobalStateSnapshot, R::Params) -> anyhow::Result<R::Result>,
@@ -138,13 +140,15 @@ impl RequestDispatcher<'_> {
         on_cancelled: fn() -> ResponseError,
     ) -> &mut Self
     where
-        R: lsp_types::request::Request<
-                Params: DeserializeOwned + panic::UnwindSafe + Send + Debug,
+        R: lsp_types::Request<
+                Params: DeserializeOwned + panic::UnwindSafe + Send + fmt::Debug,
                 Result: Serialize,
             > + 'static,
     {
         if !self.global_state.vfs_initialized_and_loaded() {
-            if let Some(lsp_server::Request { id, .. }) = self.req.take_if(|it| it.method == R::METHOD) {
+            if let Some(lsp_server::Request { id, .. }) =
+                self.req.take_if(|it| it.method.as_str() == R::METHOD.as_str())
+            {
                 self.global_state
                     .respond(lsp_server::Response::new_ok(id, default()));
             }
@@ -160,8 +164,8 @@ impl RequestDispatcher<'_> {
         f: fn(GlobalStateSnapshot, Params) -> anyhow::Result<R::Result>,
     ) -> &mut Self
     where
-        R: lsp_types::request::Request<Params = Params, Result = Params> + 'static,
-        Params: Serialize + DeserializeOwned + panic::UnwindSafe + Send + Debug,
+        R: lsp_types::Request<Params = Params, Result = Params> + 'static,
+        Params: Serialize + DeserializeOwned + panic::UnwindSafe + Send + fmt::Debug,
     {
         if !self.global_state.vfs_initialized_and_loaded() {
             if let Some((request, params, _)) = self.parse::<R>() {
@@ -178,19 +182,21 @@ impl RequestDispatcher<'_> {
     }
 
     /// Dispatches a latency-sensitive request onto the thread pool. When the VFS is marked not
-    /// ready this will return a default constructed [`R::Result`].
+    /// ready this will return a default constructed `R::Result`.
     pub(crate) fn on_latency_sensitive<const ALLOW_RETRYING: bool, R>(
         &mut self,
         f: fn(GlobalStateSnapshot, R::Params) -> anyhow::Result<R::Result>,
     ) -> &mut Self
     where
-        R: lsp_types::request::Request<
-                Params: DeserializeOwned + panic::UnwindSafe + Send + Debug,
+        R: lsp_types::Request<
+                Params: DeserializeOwned + panic::UnwindSafe + Send + fmt::Debug,
                 Result: Serialize + Default,
             > + 'static,
     {
         if !self.global_state.vfs_initialized_and_loaded() {
-            if let Some(lsp_server::Request { id, .. }) = self.req.take_if(|it| it.method == R::METHOD) {
+            if let Some(lsp_server::Request { id, .. }) =
+                self.req.take_if(|it| it.method.as_str() == R::METHOD.as_str())
+            {
                 self.global_state
                     .respond(lsp_server::Response::new_ok(id, R::Result::default()));
             }
@@ -211,8 +217,8 @@ impl RequestDispatcher<'_> {
         f: fn(GlobalStateSnapshot, R::Params) -> anyhow::Result<R::Result>,
     ) -> &mut Self
     where
-        R: lsp_types::request::Request + 'static,
-        R::Params: DeserializeOwned + panic::UnwindSafe + Send + Debug,
+        R: lsp_types::Request + 'static,
+        R::Params: DeserializeOwned + panic::UnwindSafe + Send + fmt::Debug,
         R::Result: Serialize,
     {
         self.on_with_thread_intent::<true, false, R>(
@@ -241,8 +247,8 @@ impl RequestDispatcher<'_> {
         on_cancelled: fn() -> ResponseError,
     ) -> &mut Self
     where
-        R: lsp_types::request::Request + 'static,
-        R::Params: DeserializeOwned + panic::UnwindSafe + Send + Debug,
+        R: lsp_types::Request + 'static,
+        R::Params: DeserializeOwned + panic::UnwindSafe + Send + fmt::Debug,
         R::Result: Serialize,
     {
         let (req, params, panic_context) = match self.parse::<R>() {
@@ -269,7 +275,7 @@ impl RequestDispatcher<'_> {
                 Err(_cancelled) if ALLOW_RETRYING => Task::Retry(req),
                 Err(_cancelled) => {
                     let error = on_cancelled();
-                    Task::Response(lsp_server::Response {
+                    Task::Response(Response {
                         id: req.id,
                         result: None,
                         error: Some(error),
@@ -283,11 +289,11 @@ impl RequestDispatcher<'_> {
 
     fn parse<R>(&mut self) -> Option<(lsp_server::Request, R::Params, String)>
     where
-        R: lsp_types::request::Request,
-        R::Params: DeserializeOwned + Debug,
+        R: lsp_types::Request,
+        R::Params: DeserializeOwned + fmt::Debug,
     {
-        let req = self.req.take_if(|it| it.method == R::METHOD)?;
-        let res = crate::from_json(R::METHOD, &req.params);
+        let req = self.req.take_if(|it| it.method.as_str() == R::METHOD.as_str())?;
+        let res = crate::from_json(R::METHOD.as_str(), &req.params);
         match res {
             Ok(params) => {
                 let panic_context =
@@ -339,7 +345,7 @@ fn thread_result_to_response<R>(
     result: thread::Result<anyhow::Result<R::Result>>,
 ) -> Result<lsp_server::Response, HandlerCancelledError>
 where
-    R: lsp_types::request::Request,
+    R: lsp_types::Request,
     R::Params: DeserializeOwned,
     R::Result: Serialize,
 {
@@ -374,7 +380,7 @@ fn result_to_response<R>(
     result: anyhow::Result<R::Result>,
 ) -> Result<lsp_server::Response, HandlerCancelledError>
 where
-    R: lsp_types::request::Request,
+    R: lsp_types::Request,
     R::Params: DeserializeOwned,
     R::Result: Serialize,
 {
@@ -406,7 +412,7 @@ impl NotificationDispatcher<'_> {
         f: fn(&mut GlobalState, N::Params) -> anyhow::Result<()>,
     ) -> &mut Self
     where
-        N: lsp_types::notification::Notification,
+        N: lsp_types::Notification,
         N::Params: DeserializeOwned + Send + Debug,
     {
         let not = match self.not.take() {
@@ -416,10 +422,11 @@ impl NotificationDispatcher<'_> {
 
         let _guard = tracing::info_span!("notification", method = ?not.method).entered();
 
-        let params = match not.extract::<N::Params>(N::METHOD) {
+        let params = match not.extract::<N::Params>(N::METHOD.as_str()) {
             Ok(it) => it,
             Err(ExtractError::JsonError { method, error }) => {
-                panic!("Invalid request\nMethod: {method}\n error: {error}",)
+                tracing::error!(method = %method, error = %error, "invalid notification");
+                return self;
             }
             Err(ExtractError::MethodMismatch(not)) => {
                 self.not = Some(not);
@@ -438,10 +445,10 @@ impl NotificationDispatcher<'_> {
     }
 
     pub(crate) fn finish(&mut self) {
-        if let Some(not) = &self.not {
-            if !not.method.starts_with("$/") {
-                tracing::error!("unhandled notification: {:?}", not);
-            }
+        if let Some(not) = &self.not
+            && !not.method.starts_with("$/")
+        {
+            tracing::error!("unhandled notification: {:?}", not);
         }
     }
 }

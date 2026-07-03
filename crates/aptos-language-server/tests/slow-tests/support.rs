@@ -16,7 +16,9 @@ use std::{
 use aptos_language_server::{Config, lsp, main_loop};
 use crossbeam_channel::{Receiver, after, select};
 use lsp_server::{Connection, Message, Notification, Request};
-use lsp_types::{TextDocumentIdentifier, Url, notification::Exit, request::Shutdown};
+use lsp_types::{
+    ExitNotification, PublishDiagnosticsParams, ShutdownRequest, TextDocumentIdentifier, Uri,
+};
 use parking_lot::{Mutex, MutexGuard};
 use paths::{Utf8Path, Utf8PathBuf};
 use serde::Serialize;
@@ -134,12 +136,14 @@ impl Project {
                     ..Default::default()
                 }),
                 text_document: Some(lsp_types::TextDocumentClientCapabilities {
-                    definition: Some(lsp_types::GotoCapability {
+                    definition: Some(lsp_types::DefinitionClientCapabilities {
                         link_support: Some(true),
                         ..Default::default()
                     }),
                     code_action: Some(lsp_types::CodeActionClientCapabilities {
-                        code_action_literal_support: Some(lsp_types::CodeActionLiteralSupport::default()),
+                        code_action_literal_support: Some(
+                            lsp_types::ClientCodeActionLiteralOptions::default(),
+                        ),
                         ..Default::default()
                     }),
                     hover: Some(lsp_types::HoverClientCapabilities {
@@ -147,7 +151,7 @@ impl Project {
                         ..Default::default()
                     }),
                     inlay_hint: Some(lsp_types::InlayHintClientCapabilities {
-                        resolve_support: Some(lsp_types::InlayHintResolveClientCapabilities {
+                        resolve_support: Some(lsp_types::ClientInlayHintResolveOptions {
                             properties: vec![
                                 "textEdits".to_owned(),
                                 "tooltip".to_owned(),
@@ -222,23 +226,23 @@ impl Server {
     pub(crate) fn doc_id(&self, rel_path: &str) -> TextDocumentIdentifier {
         let path = self.dir.path().join(rel_path);
         TextDocumentIdentifier {
-            uri: Url::from_file_path(path).unwrap(),
+            uri: Uri::from_file_path(path).unwrap(),
         }
     }
 
     pub(crate) fn notification<N>(&self, params: N::Params)
     where
-        N: lsp_types::notification::Notification,
+        N: lsp_types::Notification,
         N::Params: Serialize,
     {
-        let r = Notification::new(N::METHOD.to_owned(), params);
+        let r = Notification::new(N::METHOD.into(), params);
         self.send_notification(r)
     }
 
     #[track_caller]
     pub(crate) fn request<R>(&self, params: R::Params, expected_resp: Value)
     where
-        R: lsp_types::request::Request,
+        R: lsp_types::Request,
         R::Params: Serialize,
     {
         let actual = self.send_request::<R>(params);
@@ -256,20 +260,20 @@ impl Server {
     #[track_caller]
     pub(crate) fn send_request<R>(&self, params: R::Params) -> Value
     where
-        R: lsp_types::request::Request,
+        R: lsp_types::Request,
         R::Params: Serialize,
     {
         let id = self.req_id.get();
         self.req_id.set(id.wrapping_add(1));
 
-        let r = Request::new(id.into(), R::METHOD.to_owned(), params);
+        let r = Request::new(id.into(), R::METHOD.into(), params);
         self.send_request_(r)
     }
     #[track_caller]
     fn send_request_(&self, r: Request) -> Value {
         let id = r.id.clone();
         self.client.sender.send(r.clone().into()).unwrap();
-        while let Some(msg) = self.recv().unwrap_or_else(|_timeout| panic!("timeout: {r:?}")) {
+        while let Some(msg) = self.recv().unwrap_or_else(|_| panic!("timeout: {r:?}")) {
             match msg {
                 Message::Request(req) => {
                     if req.method == "client/registerCapability" {
@@ -280,8 +284,9 @@ impl Server {
                         {
                             continue;
                         }
+                    } else if req.method != "workspace/diagnostic/refresh" {
+                        panic!("unexpected request: {req:?}")
                     }
-                    panic!("unexpected request: {req:?}")
                 }
                 Message::Notification(_) => (),
                 Message::Response(res) => {
@@ -312,14 +317,54 @@ impl Server {
             }
             _ => false,
         })
-        .unwrap_or_else(|_timeout| panic!("timeout while waiting for ws to load"));
+        .unwrap_or_else(|_| panic!("timeout while waiting for ws to load"));
         self
     }
-    pub(crate) fn wait_for_message_cond(
-        &self,
-        n: usize,
-        cond: &dyn Fn(&Message) -> bool,
-    ) -> Result<(), Timeout> {
+    pub(crate) fn wait_for_diagnostics(&self) -> PublishDiagnosticsParams {
+        for msg in self.messages.borrow().iter() {
+            if let Message::Notification(n) = msg
+                && n.method == "textDocument/publishDiagnostics"
+            {
+                let params: PublishDiagnosticsParams = serde_json::from_value(n.params.clone()).unwrap();
+                if !params.diagnostics.is_empty() {
+                    return params;
+                }
+            }
+        }
+        loop {
+            let msg = self
+                .recv()
+                .unwrap_or_else(|_| panic!("timeout while waiting for diagnostics"))
+                .expect("connection closed while waiting for diagnostics");
+            if let Message::Notification(n) = &msg
+                && n.method == "textDocument/publishDiagnostics"
+            {
+                let params: PublishDiagnosticsParams = serde_json::from_value(n.params.clone()).unwrap();
+                if !params.diagnostics.is_empty() {
+                    return params;
+                }
+            }
+        }
+    }
+
+    pub(crate) fn wait_for_diagnostics_cleared(&self) {
+        loop {
+            let msg = self
+                .recv()
+                .unwrap_or_else(|_| panic!("timeout while waiting for diagnostics to clear"))
+                .expect("connection closed while waiting for diagnostics to clear");
+            if let Message::Notification(n) = &msg
+                && n.method == "textDocument/publishDiagnostics"
+            {
+                let params: PublishDiagnosticsParams = serde_json::from_value(n.params.clone()).unwrap();
+                if params.diagnostics.is_empty() {
+                    return;
+                }
+            }
+        }
+    }
+
+    fn wait_for_message_cond(&self, n: usize, cond: &dyn Fn(&Message) -> bool) -> Result<(), Timeout> {
         let mut total = 0;
         for msg in self.messages.borrow().iter() {
             if cond(msg) {
@@ -351,7 +396,7 @@ impl Server {
 
     pub(crate) fn write_file_and_save(&self, path: &str, text: String) {
         fs::write(self.dir.path().join(path), &text).unwrap();
-        self.notification::<lsp_types::notification::DidSaveTextDocument>(
+        self.notification::<lsp_types::DidSaveTextDocumentNotification>(
             lsp_types::DidSaveTextDocumentParams {
                 text_document: self.doc_id(path),
                 text: Some(text),
@@ -362,12 +407,12 @@ impl Server {
 
 impl Drop for Server {
     fn drop(&mut self) {
-        self.request::<Shutdown>((), Value::Null);
-        self.notification::<Exit>(());
+        self.request::<ShutdownRequest>((), Value::Null);
+        self.notification::<ExitNotification>(());
     }
 }
 
-pub(crate) struct Timeout;
+struct Timeout;
 
 fn recv_timeout(receiver: &Receiver<Message>) -> Result<Option<Message>, Timeout> {
     let timeout = if cfg!(target_os = "macos") {

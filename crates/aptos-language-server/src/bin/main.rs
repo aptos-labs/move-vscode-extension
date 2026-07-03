@@ -13,6 +13,7 @@ use aptos_language_server::cli::{AptosAnalyzerCmd, CliArgs};
 use aptos_language_server::{Config, ConfigChange, ConfigErrors, from_json};
 use clap::Parser;
 use lsp_server::Connection;
+use lsp_types::{Notification, WorkspaceFolders};
 use paths::Utf8PathBuf;
 use tracing::Level;
 use tracing_subscriber::fmt::writer::BoxMakeWriter;
@@ -120,7 +121,7 @@ fn setup_logging(log_file_option: Option<PathBuf>) -> anyhow::Result<()> {
 
 const STACK_SIZE: usize = 1024 * 1024 * 8;
 
-/// Parts of rust-analyzer can use a lot of stack space, and some operating systems only give us
+/// Parts of aptos-language-server can use a lot of stack space, and some operating systems only give us
 /// 1 MB by default (eg. Windows), so this spawns a new thread with hopefully sufficient stack
 /// space.
 fn with_extra_thread(
@@ -194,7 +195,7 @@ fn initialization_handshake() -> anyhow::Result<(Connection, lsp_server::IoThrea
     let lsp_types::InitializeParams {
         root_uri,
         capabilities,
-        workspace_folders,
+        workspace_folders_initialize_params,
         initialization_options,
         client_info,
         ..
@@ -221,18 +222,19 @@ fn initialization_handshake() -> anyhow::Result<(Connection, lsp_server::IoThrea
         }
     };
 
-    let workspace_roots = workspace_folders
-        .map(|workspace_folders| {
-            workspace_folders
-                .into_iter()
-                .filter_map(|it| it.uri.to_file_path().ok())
-                .map(patch_path_prefix)
-                .filter_map(|it| Utf8PathBuf::from_path_buf(it).ok())
-                .filter_map(|it| AbsPathBuf::try_from(it).ok())
-                .collect::<Vec<_>>()
-        })
-        .filter(|roots| !roots.is_empty())
-        .unwrap_or_else(|| vec![root_path.clone()]);
+    let mut workspace_roots = match workspace_folders_initialize_params.workspace_folders {
+        Some(WorkspaceFolders::WorkspaceFolderList(folders)) => folders
+            .into_iter()
+            .filter_map(|it| it.uri.to_file_path().ok())
+            .map(patch_path_prefix)
+            .filter_map(|it| Utf8PathBuf::from_path_buf(it).ok())
+            .filter_map(|it| AbsPathBuf::try_from(it).ok())
+            .collect::<Vec<_>>(),
+        _ => vec![],
+    };
+    if workspace_roots.is_empty() {
+        workspace_roots = vec![root_path.clone()];
+    }
     tracing::info!(?workspace_roots);
 
     let mut config = Config::new(root_path, capabilities, workspace_roots, client_info);
@@ -244,14 +246,10 @@ fn initialization_handshake() -> anyhow::Result<(Connection, lsp_server::IoThrea
         (config, error_sink) = config.apply_change(change);
 
         if !error_sink.is_empty() {
-            use lsp_types::{
-                MessageType, ShowMessageParams,
-                notification::{Notification, ShowMessage},
-            };
             let not = lsp_server::Notification::new(
-                ShowMessage::METHOD.to_owned(),
-                ShowMessageParams {
-                    typ: MessageType::WARNING,
+                lsp_types::ShowMessageNotification::METHOD.to_string(),
+                lsp_types::ShowMessageParams {
+                    kind: lsp_types::MessageType::Warning,
                     message: error_sink.to_string(),
                 },
             );

@@ -94,7 +94,7 @@ pub(crate) fn run_movefmt(
         return match output.status.code() {
             Some(1) if stdout.contains("a valid move code") => {
                 snap.show_message(
-                    lsp_types::MessageType::ERROR,
+                    lsp_types::MessageType::Error,
                     "movefmt error: invalid syntax".to_string(),
                 );
                 Ok(None)

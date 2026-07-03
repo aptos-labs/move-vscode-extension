@@ -4,9 +4,10 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use lsp_types::notification::DidOpenTextDocument;
-use lsp_types::request::DocumentDiagnosticRequest;
-use lsp_types::{DidOpenTextDocumentParams, DocumentDiagnosticParams, TextDocumentItem};
+use lsp_types::{
+    DidOpenTextDocumentNotification, DidOpenTextDocumentParams, DocumentDiagnosticParams,
+    DocumentDiagnosticRequest, LanguageKind, TextDocumentItem,
+};
 use std::fs;
 use test_utils::fixtures::test_state::{named, named_with_deps};
 
@@ -58,10 +59,10 @@ module std::table {
 
     let main_document_contents = fs::read_to_string(&main_document_path)
         .expect(&format!("Cannot read {:?}", &main_document_path));
-    server.notification::<DidOpenTextDocument>(DidOpenTextDocumentParams {
+    server.notification::<DidOpenTextDocumentNotification>(DidOpenTextDocumentParams {
         text_document: TextDocumentItem::new(
             main_document.uri.clone(),
-            "move".to_string(),
+            LanguageKind::new("move"),
             0,
             main_document_contents,
         ),
@@ -79,7 +80,6 @@ module std::table {
     let s = serde_json::to_string_pretty(&resp).unwrap();
     let expected_resp = expect_test::expect![[r#"
         {
-          "kind": "full",
           "resultId": "aptos-language-server",
           "items": [
             {
@@ -114,7 +114,8 @@ module std::table {
               "source": "aptos-language-server",
               "message": "Unresolved reference `Unknown`: cannot resolve"
             }
-          ]
+          ],
+          "kind": "full"
         }"#]];
     expected_resp.assert_eq(&s);
 }

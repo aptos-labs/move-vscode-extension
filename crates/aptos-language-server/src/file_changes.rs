@@ -21,17 +21,6 @@ impl GlobalState {
 
         if needs_to_refresh_packages {
             tracing::info!(?needs_to_refresh_packages);
-            // let n_to_show = 10;
-            // if structure_changes.len() < n_to_show {
-            //     tracing::info!(n_files = structure_changes.len(), changed_paths = ?structure_changes, "refreshing package roots");
-            // } else {
-            //     let changed_paths = structure_changes[0..n_to_show].to_vec();
-            //     tracing::info!(
-            //         "refreshing package roots: changed_paths = {:?} ...",
-            //         changed_paths
-            //     );
-            // };
-
             let vfs = &self.vfs.read().0;
             let new_package_roots = self.package_root_config.partition_into_package_roots(vfs);
             changes.set_package_roots(new_package_roots);
@@ -42,12 +31,6 @@ impl GlobalState {
 
         if needs_to_refresh_packages {
             let _p = tracing::info_span!("GlobalState::process_changes/ws_structure_change").entered();
-            // let cause = if structure_changes.len() > 5 {
-            //     format!("vfs structure changes, n_files = {:?}", structure_changes.len())
-            // } else {
-            //     format!("vfs structure changes {:?}", structure_changes)
-            // };
-            // let cause = format!("vfs structure changes {}", structure_changes);
             self.load_aptos_packages_queue.request_op(
                 "vfs structure changes".to_string(),
                 LoadPackagesRequest {

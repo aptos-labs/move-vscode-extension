@@ -27,7 +27,8 @@ lto = "fat"
 
 [workspace.dependencies]
 rowan = "=0.15.15"
-lsp-types = { version = "=0.95.1" }
+lsp-types = { version = "0.4.0", package = "gen-lsp-types", features = ["url"] }
+lsp-server = "0.8.0"
 itertools = "0.14.0"
 line-index = "^0.1.2"
 crossbeam-channel = "^0.5.15"
@@ -42,7 +43,7 @@ walkdir = "^2.5.0"
 regex = "1.11.1"
 camino = { version = "1.2.0", features = ["serde1"] }
 memchr = "2.7.4"
-codespan-reporting = { version = "0.13.1", features = ["termcolor"]}
+codespan-reporting = { version = "0.13.1", features = ["termcolor"] }
 
 tracing = "0.1.41"
 tracing-tree = "0.4.0"

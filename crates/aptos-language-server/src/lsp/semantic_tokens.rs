@@ -6,7 +6,34 @@
 
 //! Semantic Tokens helpers
 
-use lsp_types::{Range, SemanticToken, SemanticTokenType, SemanticTokens, SemanticTokensEdit};
+use lsp_types::{Range, SemanticToken, SemanticTokenTypes, SemanticTokens, SemanticTokensEdit};
+use std::fmt;
+use std::slice::Iter;
+
+macro_rules! declare_enum {
+    (
+        $(#[$attrs:meta])*
+        $visibility:vis enum $name:ident {
+            $($variant:ident),* $(,)?
+        }
+    ) => {
+        $(#[$attrs])*
+        $visibility enum $name {
+            $($variant,)*
+        }
+
+        impl $name {
+            pub(crate) fn iter() -> Iter<'static, Self> {
+                static ITEMS: &[$name] = &[
+                    $(
+                        $name::$variant,
+                    )*
+                ];
+                ITEMS.iter()
+            }
+        }
+    };
+}
 
 macro_rules! define_semantic_token_types {
     (
@@ -19,21 +46,21 @@ macro_rules! define_semantic_token_types {
 
     ) => {
         pub(crate) mod types {
-            use super::SemanticTokenType;
-            $(pub(crate) const $standard: SemanticTokenType = SemanticTokenType::$standard;)*
-            $(pub(crate) const $custom: SemanticTokenType = SemanticTokenType::new($string);)*
+            use super::SemanticTokenTypes;
+            $(pub(crate) const $standard: SemanticTokenTypes = SemanticTokenTypes::$standard;)*
+            $(pub(crate) const $custom: SemanticTokenTypes = SemanticTokenTypes::new($string);)*
         }
 
-        pub(crate) const SUPPORTED_TYPES: &[SemanticTokenType] = &[
-            $(SemanticTokenType::$standard,)*
+        pub(crate) const SUPPORTED_TYPES: &[SemanticTokenTypes] = &[
+            $(SemanticTokenTypes::$standard,)*
             $(self::types::$custom),*
         ];
 
-        pub(crate) fn standard_fallback_type(token: SemanticTokenType) -> Option<SemanticTokenType> {
+        pub(crate) fn standard_fallback_type(token: SemanticTokenTypes) -> Option<SemanticTokenTypes> {
             use self::types::*;
             $(
                 if token == $custom {
-                    None $(.or(Some(SemanticTokenType::$fallback)))?
+                    None $(.or(Some(SemanticTokenTypes::$fallback)))?
                 } else
             )*
             { Some(token )}
@@ -41,52 +68,209 @@ macro_rules! define_semantic_token_types {
     };
 }
 
-define_semantic_token_types![
-    standard {
-        COMMENT,
-        DECORATOR,
-        ENUM_MEMBER,
-        ENUM,
-        FUNCTION,
-        KEYWORD,
-        METHOD,
-        NAMESPACE,
-        NUMBER,
-        OPERATOR,
-        PARAMETER,
-        PROPERTY,
-        STRING,
-        STRUCT,
-        TYPE_PARAMETER,
-        VARIABLE,
-        MACRO,
+declare_enum! {
+    #[repr(u32)]
+    #[derive(Debug, PartialEq, Clone, Copy)]
+    pub(crate) enum SupportedType {
+        Comment,
+        Decorator,
+        EnumMember,
+        Enum,
+        Function,
+        Interface,
+        Keyword,
+        Macro,
+        Method,
+        Namespace,
+        Number,
+        Operator,
+        Parameter,
+        Property,
+        String,
+        Struct,
+        TypeParameter,
+        Variable,
+        Type,
+        Label,
+        Angle,
+        Arithmetic,
+        AttributeBracket,
+        Attribute,
+        Bitwise,
+        Boolean,
+        Brace,
+        Bracket,
+        BuiltinAttribute,
+        BuiltinType,
+        Char,
+        Colon,
+        Comma,
+        Comparison,
+        ConstParameter,
+        Const,
+        DeriveHelper,
+        Derive,
+        Dot,
+        EscapeSequence,
+        FormatSpecifier,
+        Generic,
+        InvalidEscapeSequence,
+        Lifetime,
+        Logical,
+        MacroBang,
+        Negation,
+        Parenthesis,
+        ProcMacro,
+        Punctuation,
+        SelfKeyword,
+        SelfTypeKeyword,
+        Semicolon,
+        Static,
+        ToolModule,
+        TypeAlias,
+        Union,
+        UnresolvedReference,
     }
+}
 
-    custom {
-        (ANGLE, "angle"),
-        (ARITHMETIC, "arithmetic") => OPERATOR,
-        (ATTRIBUTE, "attribute") => DECORATOR,
-        (ATTRIBUTE_BRACKET, "attributeBracket") => DECORATOR,
-        (BITWISE, "bitwise") => OPERATOR,
-        (BOOLEAN, "boolean"),
-        (BRACE, "brace"),
-        (BRACKET, "bracket"),
-        (BUILTIN_TYPE, "builtinType") => TYPE,
-        (COLON, "colon"),
-        (COMMA, "comma"),
-        (COMPARISON, "comparison") => OPERATOR,
-        (CONST, "const") => VARIABLE,
-        (DOT, "dot"),
-        (GENERIC, "generic") => TYPE_PARAMETER,
-        (LABEL, "label"),
-        (LOGICAL, "logical") => OPERATOR,
-        (MACRO_BANG, "macroBang") => MACRO,
-        (PARENTHESIS, "parenthesis"),
-        (PUNCTUATION, "punctuation"),
-        (SEMICOLON, "semicolon"),
-        (UNRESOLVED_REFERENCE, "unresolvedReference"),
+impl fmt::Display for SupportedType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let string = match self {
+            SupportedType::Comment => SemanticTokenTypes::Comment.as_str(),
+            SupportedType::Decorator => SemanticTokenTypes::Decorator.as_str(),
+            SupportedType::EnumMember => SemanticTokenTypes::EnumMember.as_str(),
+            SupportedType::Enum => SemanticTokenTypes::Enum.as_str(),
+            SupportedType::Function => SemanticTokenTypes::Function.as_str(),
+            SupportedType::Interface => SemanticTokenTypes::Interface.as_str(),
+            SupportedType::Keyword => SemanticTokenTypes::Keyword.as_str(),
+            SupportedType::Macro => SemanticTokenTypes::Macro.as_str(),
+            SupportedType::Method => SemanticTokenTypes::Method.as_str(),
+            SupportedType::Namespace => SemanticTokenTypes::Namespace.as_str(),
+            SupportedType::Number => SemanticTokenTypes::Number.as_str(),
+            SupportedType::Operator => SemanticTokenTypes::Operator.as_str(),
+            SupportedType::Parameter => SemanticTokenTypes::Parameter.as_str(),
+            SupportedType::Property => SemanticTokenTypes::Property.as_str(),
+            SupportedType::String => SemanticTokenTypes::String.as_str(),
+            SupportedType::Struct => SemanticTokenTypes::Struct.as_str(),
+            SupportedType::TypeParameter => SemanticTokenTypes::TypeParameter.as_str(),
+            SupportedType::Variable => SemanticTokenTypes::Variable.as_str(),
+            SupportedType::Type => SemanticTokenTypes::Type.as_str(),
+            SupportedType::Label => SemanticTokenTypes::Label.as_str(),
+            SupportedType::Angle => "angle",
+            SupportedType::Arithmetic => "arithmetic",
+            SupportedType::AttributeBracket => "attributeBracket",
+            SupportedType::Attribute => "attribute",
+            SupportedType::Bitwise => "bitwise",
+            SupportedType::Boolean => "boolean",
+            SupportedType::Brace => "brace",
+            SupportedType::Bracket => "bracket",
+            SupportedType::BuiltinAttribute => "builtinAttribute",
+            SupportedType::BuiltinType => "builtinType",
+            SupportedType::Char => "character",
+            SupportedType::Colon => "colon",
+            SupportedType::Comma => "comma",
+            SupportedType::Comparison => "comparison",
+            SupportedType::ConstParameter => "constParameter",
+            SupportedType::Const => "const",
+            SupportedType::DeriveHelper => "deriveHelper",
+            SupportedType::Derive => "derive",
+            SupportedType::Dot => "dot",
+            SupportedType::EscapeSequence => "escapeSequence",
+            SupportedType::FormatSpecifier => "formatSpecifier",
+            SupportedType::Generic => "generic",
+            SupportedType::InvalidEscapeSequence => "invalidEscapeSequence",
+            SupportedType::Lifetime => "lifetime",
+            SupportedType::Logical => "logical",
+            SupportedType::MacroBang => "macroBang",
+            SupportedType::Negation => "negation",
+            SupportedType::Parenthesis => "parenthesis",
+            SupportedType::ProcMacro => "procMacro",
+            SupportedType::Punctuation => "punctuation",
+            SupportedType::SelfKeyword => "selfKeyword",
+            SupportedType::SelfTypeKeyword => "selfTypeKeyword",
+            SupportedType::Semicolon => "semicolon",
+            SupportedType::Static => "static",
+            SupportedType::ToolModule => "toolModule",
+            SupportedType::TypeAlias => "typeAlias",
+            SupportedType::Union => "union",
+            SupportedType::UnresolvedReference => "unresolvedReference",
+        };
+        f.write_str(string)
     }
-];
+}
+
+pub(crate) fn standard_fallback_type(token: SupportedType) -> Option<SupportedType> {
+    Some(match token {
+        SupportedType::Comment => SupportedType::Comment,
+        SupportedType::Decorator => SupportedType::Decorator,
+        SupportedType::EnumMember => SupportedType::EnumMember,
+        SupportedType::Enum => SupportedType::Enum,
+        SupportedType::Function => SupportedType::Function,
+        SupportedType::Interface => SupportedType::Interface,
+        SupportedType::Keyword => SupportedType::Keyword,
+        SupportedType::Macro => SupportedType::Macro,
+        SupportedType::Method => SupportedType::Method,
+        SupportedType::Namespace => SupportedType::Namespace,
+        SupportedType::Number => SupportedType::Number,
+        SupportedType::Operator => SupportedType::Operator,
+        SupportedType::Parameter => SupportedType::Parameter,
+        SupportedType::Property => SupportedType::Property,
+        SupportedType::String => SupportedType::String,
+        SupportedType::Struct => SupportedType::Struct,
+        SupportedType::TypeParameter => SupportedType::TypeParameter,
+        SupportedType::Variable => SupportedType::Variable,
+        SupportedType::Type => SupportedType::Type,
+        SupportedType::Label => SupportedType::Label,
+        _ => return None,
+    })
+}
+
+// define_semantic_token_types![
+//     standard {
+//         COMMENT,
+//         DECORATOR,
+//         ENUM_MEMBER,
+//         ENUM,
+//         FUNCTION,
+//         KEYWORD,
+//         METHOD,
+//         NAMESPACE,
+//         NUMBER,
+//         OPERATOR,
+//         PARAMETER,
+//         PROPERTY,
+//         STRING,
+//         STRUCT,
+//         TYPE_PARAMETER,
+//         VARIABLE,
+//         MACRO,
+//     }
+//
+//     custom {
+//         (ANGLE, "angle"),
+//         (ARITHMETIC, "arithmetic") => OPERATOR,
+//         (ATTRIBUTE, "attribute") => DECORATOR,
+//         (ATTRIBUTE_BRACKET, "attributeBracket") => DECORATOR,
+//         (BITWISE, "bitwise") => OPERATOR,
+//         (BOOLEAN, "boolean"),
+//         (BRACE, "brace"),
+//         (BRACKET, "bracket"),
+//         (BUILTIN_TYPE, "builtinType") => TYPE,
+//         (COLON, "colon"),
+//         (COMMA, "comma"),
+//         (COMPARISON, "comparison") => OPERATOR,
+//         (CONST, "const") => VARIABLE,
+//         (DOT, "dot"),
+//         (GENERIC, "generic") => TYPE_PARAMETER,
+//         (LABEL, "label"),
+//         (LOGICAL, "logical") => OPERATOR,
+//         (MACRO_BANG, "macroBang") => MACRO,
+//         (PARENTHESIS, "parenthesis"),
+//         (PUNCTUATION, "punctuation"),
+//         (SEMICOLON, "semicolon"),
+//         (UNRESOLVED_REFERENCE, "unresolvedReference"),
+//     }
+// ];
 
 // macro_rules! count_tts {
 //     () => {0usize};
@@ -155,7 +339,7 @@ impl SemanticTokensBuilder {
             id,
             prev_line: 0,
             prev_char: 0,
-            data: Default::default(),
+            data: Vec::new(),
         }
     }
 
@@ -179,7 +363,7 @@ impl SemanticTokensBuilder {
             delta_start: push_char,
             length: token_len,
             token_type: token_index,
-            token_modifiers_bitset: ModifierSet::default().0,
+            token_modifiers_bitset: 0,
         };
 
         self.data.push(token);
@@ -226,9 +410,13 @@ pub(crate) fn diff_tokens(old: &[SemanticToken], new: &[SemanticToken]) -> Vec<S
     }
 }
 
-pub(crate) fn type_index(ty: SemanticTokenType) -> u32 {
-    SUPPORTED_TYPES.iter().position(|it| *it == ty).unwrap() as u32
+pub(crate) fn type_index(kind: SupportedType) -> u32 {
+    kind as u32
 }
+//
+// pub(crate) fn type_index(ty: SemanticTokenTypes) -> u32 {
+//     SUPPORTED_TYPES.iter().position(|it| *it == ty).unwrap() as u32
+// }
 
 #[cfg(test)]
 mod tests {

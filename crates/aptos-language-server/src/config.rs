@@ -286,22 +286,6 @@ impl Config {
     }
 
     pub fn discovered_manifests(&self) -> Vec<DiscoveredManifest> {
-        // let exclude_dirs = self
-        //     .files_excludeDirs()
-        //     .iter()
-        //     .map(|p| self.root_path.join(p))
-        //     .collect::<Vec<_>>();
-        // let mut manifests = vec![];
-        // for discovered_manifest in &self.discovered_manifests_from_filesystem {
-        //     if exclude_dirs
-        //         .iter()
-        //         .any(|p| discovered_manifest.move_toml_file.starts_with(p))
-        //     {
-        //         continue;
-        //     }
-        //     manifests.push(discovered_manifest.clone());
-        // }
-        // manifests
         self.discovered_manifests_from_filesystem.clone()
     }
 
@@ -529,13 +513,6 @@ mod tests {
             ensure_file_contents(package_json_path.as_std_path(), &package_json)
         }
     }
-
-    // #[test]
-    // fn generate_config_documentation() {
-    //     let docs_path = project_root().join("docs/user/generated_config.adoc");
-    //     let expected = FullConfigInput::manual();
-    //     ensure_file_contents(docs_path.as_std_path(), &expected);
-    // }
 
     fn remove_ws(text: &str) -> String {
         text.replace(char::is_whitespace, "")

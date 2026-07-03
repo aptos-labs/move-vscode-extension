@@ -11,7 +11,7 @@ use crate::line_index::{LineIndex, PositionEncoding};
 use crate::lsp::{LspError, from_proto};
 use crate::lsp_ext;
 use lsp_server::Notification;
-use lsp_types::request::Request;
+use lsp_types::Request;
 use std::mem;
 use std::ops::Range;
 use std::sync::Arc;
@@ -24,10 +24,8 @@ pub(crate) fn invalid_params_error(message: String) -> LspError {
     }
 }
 
-pub(crate) fn notification_is<N: lsp_types::notification::Notification>(
-    notification: &Notification,
-) -> bool {
-    notification.method == N::METHOD
+pub(crate) fn notification_is<N: lsp_types::Notification>(notification: &Notification) -> bool {
+    notification.method.as_str() == N::METHOD.as_str()
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -47,18 +45,17 @@ impl Progress {
 impl GlobalState {
     pub(crate) fn show_message(
         &mut self,
-        typ: lsp_types::MessageType,
+        kind: lsp_types::MessageType,
         message: String,
         show_open_log_button: bool,
     ) {
         match self.config.open_server_logs() && show_open_log_button {
-            true => self.send_request::<lsp_types::request::ShowMessageRequest>(
+            true => self.send_request::<lsp_types::ShowMessageRequest>(
                 lsp_types::ShowMessageRequestParams {
-                    typ,
+                    kind,
                     message,
                     actions: Some(vec![lsp_types::MessageActionItem {
                         title: "Open server logs".to_owned(),
-                        properties: Default::default(),
                     }]),
                 },
                 |this, resp| {
@@ -71,16 +68,16 @@ impl GlobalState {
                         return;
                     };
                     if let Ok(Some(_item)) = crate::from_json::<
-                        <lsp_types::request::ShowMessageRequest as Request>::Result,
+                        <lsp_types::ShowMessageRequest as Request>::Result,
                     >(
-                        lsp_types::request::ShowMessageRequest::METHOD, &result
+                        lsp_types::ShowMessageRequest::METHOD.as_str(), &result
                     ) {
                         this.send_notification::<lsp_ext::OpenServerLogs>(());
                     }
                 },
             ),
-            false => self.send_notification::<lsp_types::notification::ShowMessage>(
-                lsp_types::ShowMessageParams { typ, message },
+            false => self.send_notification::<lsp_types::ShowMessageNotification>(
+                lsp_types::ShowMessageParams { kind, message },
             ),
         }
     }
@@ -92,16 +89,16 @@ impl GlobalState {
             Some(additional_info) => {
                 tracing::error!("{message}:\n{additional_info}");
                 self.show_message(
-                    lsp_types::MessageType::ERROR,
+                    lsp_types::MessageType::Error,
                     message,
                     tracing::enabled!(tracing::Level::ERROR),
                 );
             }
             None => {
                 tracing::error!("{message}");
-                self.send_notification::<lsp_types::notification::ShowMessage>(
+                self.send_notification::<lsp_types::ShowMessageNotification>(
                     lsp_types::ShowMessageParams {
-                        typ: lsp_types::MessageType::ERROR,
+                        kind: lsp_types::MessageType::Error,
                         message,
                     },
                 );
@@ -150,31 +147,39 @@ impl GlobalState {
         tracing::debug!(?token, ?state, "report_progress {message:?}");
         let work_done_progress = match state {
             Progress::Begin => {
-                self.send_request::<lsp_types::request::WorkDoneProgressCreate>(
+                self.send_request::<lsp_types::WorkDoneProgressCreateRequest>(
                     lsp_types::WorkDoneProgressCreateParams { token: token.clone() },
                     |_, _| (),
                 );
-
-                lsp_types::WorkDoneProgress::Begin(lsp_types::WorkDoneProgressBegin {
-                    title: title.into(),
-                    cancellable,
-                    message,
-                    percentage,
-                })
+                self.send_notification::<lsp_types::ProgressNotification>(lsp_types::ProgressParams {
+                    token,
+                    value: serde_json::to_value(lsp_types::WorkDoneProgressBegin {
+                        title: title.into(),
+                        cancellable,
+                        message,
+                        percentage,
+                    })
+                    .unwrap(),
+                });
             }
-            Progress::Report => lsp_types::WorkDoneProgress::Report(lsp_types::WorkDoneProgressReport {
-                cancellable,
-                message,
-                percentage,
-            }),
+            Progress::Report => {
+                self.send_notification::<lsp_types::ProgressNotification>(lsp_types::ProgressParams {
+                    token,
+                    value: serde_json::to_value(lsp_types::WorkDoneProgressReport {
+                        cancellable,
+                        message,
+                        percentage,
+                    })
+                    .unwrap(),
+                });
+            }
             Progress::End => {
-                lsp_types::WorkDoneProgress::End(lsp_types::WorkDoneProgressEnd { message })
+                self.send_notification::<lsp_types::ProgressNotification>(lsp_types::ProgressParams {
+                    token,
+                    value: serde_json::to_value(lsp_types::WorkDoneProgressEnd { message }).unwrap(),
+                });
             }
         };
-        self.send_notification::<lsp_types::notification::Progress>(lsp_types::ProgressParams {
-            token,
-            value: lsp_types::ProgressParamsValue::WorkDone(work_done_progress),
-        });
     }
 }
 
@@ -185,15 +190,29 @@ pub(crate) fn apply_document_changes(
 ) -> String {
     // If at least one of the changes is a full document change, use the last
     // of them as the starting point and ignore all previous changes.
-    let (mut text, content_changes) =
-        match content_changes.iter().rposition(|change| change.range.is_none()) {
-            Some(idx) => {
-                let text = mem::take(&mut content_changes[idx].text);
-                (text, &content_changes[idx + 1..])
+    let (mut text, r_partial_changes);
+    match content_changes
+        .iter_mut()
+        .rev()
+        .try_fold(Vec::new(), |mut acc, change| match change {
+            lsp_types::TextDocumentContentChangeEvent::TextDocumentContentChangePartial(partial) => {
+                acc.push(partial);
+                Ok(acc)
             }
-            None => (file_contents.to_owned(), &content_changes[..]),
-        };
-    if content_changes.is_empty() {
+            lsp_types::TextDocumentContentChangeEvent::TextDocumentContentChangeWholeDocument(whole) => {
+                Err((whole, acc))
+            }
+        }) {
+        Err((whole_document, reversed_partial_changes)) => {
+            text = mem::take(&mut whole_document.text);
+            r_partial_changes = reversed_partial_changes;
+        }
+        Ok(partials) => {
+            text = file_contents.to_owned();
+            r_partial_changes = partials;
+        }
+    }
+    if r_partial_changes.is_empty() {
         return text;
     }
 
@@ -211,16 +230,13 @@ pub(crate) fn apply_document_changes(
     // remember the last valid line in the index and only rebuild it if needed.
     // The VFS will normalize the end of lines to `\n`.
     let mut index_valid = !0u32;
-    for change in content_changes {
-        // The None case can't happen as we have handled it above already
-        if let Some(range) = change.range {
-            if index_valid <= range.end.line {
-                *Arc::make_mut(&mut line_index.index) = line_index::LineIndex::new(&text);
-            }
-            index_valid = range.start.line;
-            if let Ok(range) = from_proto::text_range(&line_index, range) {
-                text.replace_range(Range::<usize>::from(range), &change.text);
-            }
+    for change in r_partial_changes.iter().rev() {
+        if index_valid <= change.range.end.line {
+            *Arc::make_mut(&mut line_index.index) = line_index::LineIndex::new(&text);
+        }
+        index_valid = change.range.start.line;
+        if let Ok(range) = from_proto::text_range(&line_index, change.range) {
+            text.replace_range(Range::<usize>::from(range), &change.text);
         }
     }
     text
@@ -234,10 +250,10 @@ pub(crate) fn all_edits_are_disjoint(
 ) -> bool {
     let mut edit_ranges = Vec::new();
     match completion.text_edit.as_ref() {
-        Some(lsp_types::CompletionTextEdit::Edit(edit)) => {
+        Some(lsp_types::CompletionItemTextEdit::TextEdit(edit)) => {
             edit_ranges.push(edit.range);
         }
-        Some(lsp_types::CompletionTextEdit::InsertAndReplace(edit)) => {
+        Some(lsp_types::CompletionItemTextEdit::InsertReplaceEdit(edit)) => {
             let replace = edit.replace;
             let insert = edit.insert;
             if replace.start != insert.start || insert.start > insert.end || insert.end > replace.end {
@@ -262,10 +278,7 @@ pub(crate) fn all_edits_are_disjoint(
 #[cfg(test)]
 mod tests {
     use line_index::WideEncoding;
-    use lsp_types::{
-        CompletionItem, CompletionTextEdit, InsertReplaceEdit, Position, Range,
-        TextDocumentContentChangeEvent,
-    };
+    use lsp_types::{CompletionItem, InsertReplaceEdit, Position, Range};
 
     use super::*;
 
@@ -273,14 +286,14 @@ mod tests {
     fn test_apply_document_changes() {
         macro_rules! c {
             [$($sl:expr, $sc:expr; $el:expr, $ec:expr => $text:expr),+] => {
-                vec![$(TextDocumentContentChangeEvent {
-                    range: Some(Range {
+                vec![$(::lsp_types::TextDocumentContentChangeEvent::TextDocumentContentChangePartial(lsp_types::TextDocumentContentChangePartial {
+                    range: Range {
                         start: Position { line: $sl, character: $sc },
                         end: Position { line: $el, character: $ec },
-                    }),
-                    range_length: None,
+                    },
                     text: String::from($text),
-                }),+]
+                    ..Default::default()
+                })),+]
             };
         }
 
@@ -290,11 +303,11 @@ mod tests {
         let text = apply_document_changes(
             encoding,
             &text,
-            vec![TextDocumentContentChangeEvent {
-                range: None,
-                range_length: None,
-                text: String::from("the"),
-            }],
+            vec![
+                lsp_types::TextDocumentContentChangeEvent::TextDocumentContentChangeWholeDocument(
+                    lsp_types::TextDocumentContentChangeWholeDocument { text: String::from("the") },
+                ),
+            ],
         );
         assert_eq!(text, "the");
         let text = apply_document_changes(encoding, &text, c![0, 3; 0, 3 => " quick"]);
@@ -341,7 +354,11 @@ mod tests {
 
     #[test]
     fn empty_completion_disjoint_tests() {
-        let empty_completion = CompletionItem::new_simple("label".to_owned(), "detail".to_owned());
+        let empty_completion = CompletionItem {
+            label: "label".to_owned(),
+            detail: Some("detail".to_owned()),
+            ..Default::default()
+        };
 
         let disjoint_edit_1 = lsp_types::TextEdit::new(
             Range::new(Position::new(2, 2), Position::new(3, 3)),
@@ -390,28 +407,32 @@ mod tests {
             "new_text".to_owned(),
         );
 
-        let mut completion_with_joint_edits =
-            CompletionItem::new_simple("label".to_owned(), "detail".to_owned());
-        completion_with_joint_edits.additional_text_edits =
-            Some(vec![disjoint_edit.clone(), joint_edit.clone()]);
-        assert!(
-            !all_edits_are_disjoint(&completion_with_joint_edits, &[]),
-            "Completion with disjoint edits fails the validation even with empty extra edits"
-        );
-
-        completion_with_joint_edits.text_edit = Some(CompletionTextEdit::Edit(disjoint_edit.clone()));
-        completion_with_joint_edits.additional_text_edits = Some(vec![joint_edit.clone()]);
+        let mut completion_with_joint_edits = CompletionItem {
+            label: "label".to_owned(),
+            detail: Some("detail".to_owned()),
+            additional_text_edits: Some(vec![disjoint_edit.clone(), joint_edit.clone()]),
+            ..Default::default()
+        };
         assert!(
             !all_edits_are_disjoint(&completion_with_joint_edits, &[]),
             "Completion with disjoint edits fails the validation even with empty extra edits"
         );
 
         completion_with_joint_edits.text_edit =
-            Some(CompletionTextEdit::InsertAndReplace(InsertReplaceEdit {
+            Some(lsp_types::CompletionItemTextEdit::TextEdit(disjoint_edit.clone()));
+        completion_with_joint_edits.additional_text_edits = Some(vec![joint_edit.clone()]);
+        assert!(
+            !all_edits_are_disjoint(&completion_with_joint_edits, &[]),
+            "Completion with disjoint edits fails the validation even with empty extra edits"
+        );
+
+        completion_with_joint_edits.text_edit = Some(
+            lsp_types::CompletionItemTextEdit::InsertReplaceEdit(InsertReplaceEdit {
                 new_text: "new_text".to_owned(),
                 insert: disjoint_edit.range,
                 replace: disjoint_edit_2.range,
-            }));
+            }),
+        );
         completion_with_joint_edits.additional_text_edits = Some(vec![joint_edit]);
         assert!(
             !all_edits_are_disjoint(&completion_with_joint_edits, &[]),
@@ -434,10 +455,12 @@ mod tests {
             "new_text".to_owned(),
         );
 
-        let mut completion_with_disjoint_edits =
-            CompletionItem::new_simple("label".to_owned(), "detail".to_owned());
-        completion_with_disjoint_edits.text_edit = Some(CompletionTextEdit::Edit(disjoint_edit));
-        let completion_with_disjoint_edits = completion_with_disjoint_edits;
+        let completion_with_disjoint_edits = CompletionItem {
+            label: "label".to_owned(),
+            detail: Some("detail".to_owned()),
+            text_edit: Some(lsp_types::CompletionItemTextEdit::TextEdit(disjoint_edit)),
+            ..Default::default()
+        };
 
         assert!(
             all_edits_are_disjoint(&completion_with_disjoint_edits, &[]),
