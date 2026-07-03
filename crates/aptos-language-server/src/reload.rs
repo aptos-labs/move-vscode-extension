@@ -252,8 +252,8 @@ impl GlobalState {
                         .collect::<Vec<_>>()
                 })
                 .map(|(base, pat)| FileSystemWatcher {
-                    glob_pattern: lsp_types::GlobPattern::Relative(lsp_types::RelativePattern {
-                        base_uri: lsp_types::OneOf::Right(lsp_types::Url::from_file_path(base).unwrap()),
+                    glob_pattern: lsp_types::GlobPattern::RelativePattern(lsp_types::RelativePattern {
+                        base_uri: lsp_types::BaseUri::Uri(lsp_types::Uri::from_file_path(base).unwrap()),
                         pattern: pat.to_owned(),
                     }),
                     kind: None,
@@ -270,7 +270,7 @@ impl GlobalState {
                         .collect::<Vec<_>>()
                 })
                 .map(|glob_pattern| FileSystemWatcher {
-                    glob_pattern: lsp_types::GlobPattern::String(glob_pattern),
+                    glob_pattern: lsp_types::GlobPattern::Pattern(glob_pattern),
                     kind: None,
                 })
                 .collect()
@@ -281,7 +281,7 @@ impl GlobalState {
                 .iter()
                 .map(|pkg| pkg.manifest_path())
                 .map(|glob_pattern| FileSystemWatcher {
-                    glob_pattern: lsp_types::GlobPattern::String(glob_pattern.to_string()),
+                    glob_pattern: lsp_types::GlobPattern::Pattern(glob_pattern.to_string()),
                     kind: None,
                 }),
         );
@@ -292,7 +292,7 @@ impl GlobalState {
             method: "workspace/didChangeWatchedFiles".to_owned(),
             register_options: Some(serde_json::to_value(registration_options).unwrap()),
         };
-        self.send_request::<lsp_types::request::RegisterCapability>(
+        self.send_request::<lsp_types::RegistrationRequest>(
             lsp_types::RegistrationParams {
                 registrations: vec![registration],
             },

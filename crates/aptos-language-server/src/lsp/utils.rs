@@ -11,7 +11,7 @@ use crate::line_index::{LineIndex, PositionEncoding};
 use crate::lsp::{LspError, from_proto};
 use crate::lsp_ext;
 use lsp_server::Notification;
-use lsp_types::request::Request;
+use lsp_types::Request;
 use std::mem;
 use std::ops::Range;
 use std::sync::Arc;
@@ -24,10 +24,8 @@ pub(crate) fn invalid_params_error(message: String) -> LspError {
     }
 }
 
-pub(crate) fn notification_is<N: lsp_types::notification::Notification>(
-    notification: &Notification,
-) -> bool {
-    notification.method == N::METHOD
+pub(crate) fn notification_is<N: lsp_types::Notification>(notification: &Notification) -> bool {
+    notification.method == N::METHOD.into()
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -47,18 +45,17 @@ impl Progress {
 impl GlobalState {
     pub(crate) fn show_message(
         &mut self,
-        typ: lsp_types::MessageType,
+        kind: lsp_types::MessageType,
         message: String,
         show_open_log_button: bool,
     ) {
         match self.config.open_server_logs() && show_open_log_button {
-            true => self.send_request::<lsp_types::request::ShowMessageRequest>(
+            true => self.send_request::<lsp_types::ShowMessageRequest>(
                 lsp_types::ShowMessageRequestParams {
-                    typ,
+                    kind,
                     message,
                     actions: Some(vec![lsp_types::MessageActionItem {
                         title: "Open server logs".to_owned(),
-                        properties: Default::default(),
                     }]),
                 },
                 |this, resp| {
@@ -71,16 +68,16 @@ impl GlobalState {
                         return;
                     };
                     if let Ok(Some(_item)) = crate::from_json::<
-                        <lsp_types::request::ShowMessageRequest as Request>::Result,
+                        <lsp_types::ShowMessageRequest as Request>::Result,
                     >(
-                        lsp_types::request::ShowMessageRequest::METHOD, &result
+                        lsp_types::ShowMessageRequest::METHOD.into(), &result
                     ) {
                         this.send_notification::<lsp_ext::OpenServerLogs>(());
                     }
                 },
             ),
-            false => self.send_notification::<lsp_types::notification::ShowMessage>(
-                lsp_types::ShowMessageParams { typ, message },
+            false => self.send_notification::<lsp_types::ShowMessageNotification>(
+                lsp_types::ShowMessageParams { kind, message },
             ),
         }
     }
@@ -92,16 +89,16 @@ impl GlobalState {
             Some(additional_info) => {
                 tracing::error!("{message}:\n{additional_info}");
                 self.show_message(
-                    lsp_types::MessageType::ERROR,
+                    lsp_types::MessageType::Error,
                     message,
                     tracing::enabled!(tracing::Level::ERROR),
                 );
             }
             None => {
                 tracing::error!("{message}");
-                self.send_notification::<lsp_types::notification::ShowMessage>(
+                self.send_notification::<lsp_types::ShowMessageNotification>(
                     lsp_types::ShowMessageParams {
-                        typ: lsp_types::MessageType::ERROR,
+                        kind: lsp_types::MessageType::Error,
                         message,
                     },
                 );
@@ -150,31 +147,39 @@ impl GlobalState {
         tracing::debug!(?token, ?state, "report_progress {message:?}");
         let work_done_progress = match state {
             Progress::Begin => {
-                self.send_request::<lsp_types::request::WorkDoneProgressCreate>(
+                self.send_request::<lsp_types::WorkDoneProgressCreateRequest>(
                     lsp_types::WorkDoneProgressCreateParams { token: token.clone() },
                     |_, _| (),
                 );
-
-                lsp_types::WorkDoneProgress::Begin(lsp_types::WorkDoneProgressBegin {
-                    title: title.into(),
-                    cancellable,
-                    message,
-                    percentage,
-                })
+                self.send_notification::<lsp_types::ProgressNotification>(lsp_types::ProgressParams {
+                    token,
+                    value: serde_json::to_value(lsp_types::WorkDoneProgressBegin {
+                        title: title.into(),
+                        cancellable,
+                        message,
+                        percentage,
+                    })
+                    .unwrap(),
+                });
             }
-            Progress::Report => lsp_types::WorkDoneProgress::Report(lsp_types::WorkDoneProgressReport {
-                cancellable,
-                message,
-                percentage,
-            }),
+            Progress::Report => {
+                self.send_notification::<lsp_types::ProgressNotification>(lsp_types::ProgressParams {
+                    token,
+                    value: serde_json::to_value(lsp_types::WorkDoneProgressReport {
+                        cancellable,
+                        message,
+                        percentage,
+                    })
+                    .unwrap(),
+                });
+            }
             Progress::End => {
-                lsp_types::WorkDoneProgress::End(lsp_types::WorkDoneProgressEnd { message })
+                self.send_notification::<lsp_types::ProgressNotification>(lsp_types::ProgressParams {
+                    token,
+                    value: serde_json::to_value(lsp_types::WorkDoneProgressEnd { message }).unwrap(),
+                });
             }
         };
-        self.send_notification::<lsp_types::notification::Progress>(lsp_types::ProgressParams {
-            token,
-            value: lsp_types::ProgressParamsValue::WorkDone(work_done_progress),
-        });
     }
 }
 
@@ -234,10 +239,10 @@ pub(crate) fn all_edits_are_disjoint(
 ) -> bool {
     let mut edit_ranges = Vec::new();
     match completion.text_edit.as_ref() {
-        Some(lsp_types::CompletionTextEdit::Edit(edit)) => {
+        Some(lsp_types::CompletionItemTextEdit::TextEdit(edit)) => {
             edit_ranges.push(edit.range);
         }
-        Some(lsp_types::CompletionTextEdit::InsertAndReplace(edit)) => {
+        Some(lsp_types::CompletionItemTextEdit::InsertReplaceEdit(edit)) => {
             let replace = edit.replace;
             let insert = edit.insert;
             if replace.start != insert.start || insert.start > insert.end || insert.end > replace.end {

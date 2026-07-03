@@ -10,12 +10,12 @@ use crate::lsp::semantic_tokens;
 use ide::inlay_hints::InlayFieldsToResolve;
 use line_index::WideEncoding;
 use lsp_types::{
-    CodeActionKind, CodeActionOptions, CodeActionProviderCapability, CodeLensOptions, CompletionOptions,
-    CompletionOptionsCompletionItem, HoverProviderCapability, InlayHintOptions,
-    InlayHintServerCapabilities, OneOf, PositionEncodingKind, RenameOptions,
-    SelectionRangeProviderCapability, SemanticTokensFullOptions, SemanticTokensLegend,
-    SemanticTokensOptions, ServerCapabilities, SignatureHelpOptions, TextDocumentSyncCapability,
-    TextDocumentSyncKind, WorkDoneProgressOptions,
+    CodeActionKind, CodeActionOptions, CodeActionProvider, CodeLensOptions, CompletionOptions,
+    DefinitionProvider, DocumentFormattingProvider, DocumentHighlightProvider, DocumentSymbolProvider,
+    HoverProvider, InlayHintOptions, InlayHintProvider, PositionEncodingKind, ReferencesProvider,
+    RenameOptions, RenameProvider, SelectionRangeProvider, SemanticTokensLegend, SemanticTokensOptions,
+    ServerCapabilities, ServerCompletionItemOptions, SignatureHelpOptions, TextDocumentSync,
+    TextDocumentSyncKind, WorkDoneProgressOptions, WorkspaceSymbolProvider,
 };
 use std::collections::HashSet;
 
@@ -29,15 +29,8 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
                 _ => None,
             },
         },
-        text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),
-        // text_document_sync: Some(TextDocumentSyncCapability::Options(TextDocumentSyncOptions {
-        //     open_close: Some(true),
-        //     change: Some(TextDocumentSyncKind::INCREMENTAL),
-        //     will_save: None,
-        //     will_save_wait_until: None,
-        //     save: Some(SaveOptions::default().into()),
-        // })),
-        hover_provider: Some(HoverProviderCapability::Simple(true)),
+        text_document_sync: Some(TextDocumentSync::Kind(TextDocumentSyncKind::Full)),
+        hover_provider: Some(HoverProvider::Bool(true)),
         completion_provider: Some(CompletionOptions {
             // resolve_provider: None,
             resolve_provider: Some(config.caps().completions_resolve_provider()),
@@ -57,21 +50,17 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
             retrigger_characters: None,
             work_done_progress_options: WorkDoneProgressOptions { work_done_progress: None },
         }),
-        // declaration_provider: Some(DeclarationCapability::Simple(true)),
-        definition_provider: Some(OneOf::Left(true)),
-        // type_definition_provider: Some(TypeDefinitionProviderCapability::Simple(true)),
-        // implementation_provider: Some(ImplementationProviderCapability::Simple(true)),
-        references_provider: Some(OneOf::Left(true)),
-        document_highlight_provider: Some(OneOf::Left(true)),
-        document_symbol_provider: Some(OneOf::Left(true)),
-        workspace_symbol_provider: Some(OneOf::Left(true)),
+        definition_provider: Some(DefinitionProvider::Bool(true)),
+        references_provider: Some(ReferencesProvider::Bool(true)),
+        document_highlight_provider: Some(DocumentHighlightProvider::Bool(true)),
+        document_symbol_provider: Some(DocumentSymbolProvider::Bool(true)),
+        workspace_symbol_provider: Some(WorkspaceSymbolProvider::Bool(true)),
         code_action_provider: Some(config.caps().code_action_capabilities()),
-        code_lens_provider: Some(CodeLensOptions { resolve_provider: Some(true) }),
-        document_formatting_provider: Some(OneOf::Left(true)),
-        // document_range_formatting_provider: match config.rustfmt(None) {
-        //     RustfmtConfig::Rustfmt { enable_range_formatting: true, .. } => Some(OneOf::Left(true)),
-        //     _ => Some(OneOf::Left(false)),
-        // },
+        code_lens_provider: Some(CodeLensOptions {
+            resolve_provider: Some(true),
+            work_done_progress_options: WorkDoneProgressOptions { work_done_progress: None },
+        }),
+        document_formatting_provider: Some(DocumentFormattingProvider::Bool(true)),
         // document_on_type_formatting_provider: Some({
         //     let mut chars = ide::Analysis::SUPPORTED_TRIGGER_CHARS.chars();
         //     DocumentOnTypeFormattingOptions {
@@ -79,9 +68,8 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
         //         more_trigger_character: Some(chars.map(|c| c.to_string()).collect()),
         //     }
         // }),
-        selection_range_provider: Some(SelectionRangeProviderCapability::Simple(true)),
-        // folding_range_provider: Some(FoldingRangeProviderCapability::Simple(true)),
-        rename_provider: Some(OneOf::Right(RenameOptions {
+        selection_range_provider: Some(SelectionRangeProvider::Bool(true)),
+        rename_provider: Some(RenameProvider::RenameOptions(RenameOptions {
             prepare_provider: Some(true),
             work_done_progress_options: WorkDoneProgressOptions { work_done_progress: None },
         })),
@@ -126,29 +114,27 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
         semantic_tokens_provider: Some(
             SemanticTokensOptions {
                 legend: SemanticTokensLegend {
-                    token_types: semantic_tokens::SUPPORTED_TYPES.to_vec(),
+                    token_types: semantic_tokens::SUPPORTED_TYPES
+                        .into_iter()
+                        .map(|it| it.to_string())
+                        .collect(),
                     token_modifiers: vec![],
-                    // token_modifiers: semantic_tokens::SUPPORTED_MODIFIERS.to_vec(),
                 },
 
-                full: Some(SemanticTokensFullOptions::Bool(true)),
-                // full: Some(SemanticTokensFullOptions::Delta { delta: Some(true) }),
+                full: Some(lsp_types::Full::Bool(true)),
                 range: None,
-                // range: Some(true),
                 work_done_progress_options: Default::default(),
             }
             .into(),
         ),
         // moniker_provider: None,
-        inlay_hint_provider: Some(OneOf::Right(InlayHintServerCapabilities::Options(
-            InlayHintOptions {
-                work_done_progress_options: Default::default(),
-                resolve_provider: Some(config.caps().inlay_hints_resolve_provider()),
-            },
-        ))),
-        diagnostic_provider: Some(lsp_types::DiagnosticServerCapabilities::Options(
+        inlay_hint_provider: Some(InlayHintProvider::InlayHintOptions(InlayHintOptions {
+            resolve_provider: Some(config.caps().inlay_hints_resolve_provider()),
+            work_done_progress_options: Default::default(),
+        })),
+        diagnostic_provider: Some(lsp_types::DiagnosticProvider::DiagnosticOptions(
             lsp_types::DiagnosticOptions {
-                identifier: None,
+                identifier: Some("aptos-language-server".to_owned()),
                 inter_file_dependencies: true,
                 // FIXME
                 workspace_diagnostics: false,
@@ -235,7 +221,7 @@ impl ClientCapabilities {
     }
 
     pub fn diagnostics_refresh(&self) -> bool {
-        (|| -> _ { self.0.workspace.as_ref()?.diagnostic.as_ref()?.refresh_support })()
+        (|| -> _ { self.0.workspace.as_ref()?.diagnostics.as_ref()?.refresh_support })()
             .unwrap_or_default()
     }
 
@@ -252,26 +238,26 @@ impl ClientCapabilities {
         })() == Some(true)
     }
 
-    fn completion_item(&self) -> Option<CompletionOptionsCompletionItem> {
-        Some(CompletionOptionsCompletionItem {
+    fn completion_item(&self) -> Option<ServerCompletionItemOptions> {
+        Some(ServerCompletionItemOptions {
             label_details_support: Some(self.completion_label_details_support()),
         })
     }
 
-    fn code_action_capabilities(&self) -> CodeActionProviderCapability {
+    fn code_action_capabilities(&self) -> CodeActionProvider {
         self.0
             .text_document
             .as_ref()
             .and_then(|it| it.code_action.as_ref())
             .and_then(|it| it.code_action_literal_support.as_ref())
-            .map_or(CodeActionProviderCapability::Simple(true), |_| {
-                CodeActionProviderCapability::Options(CodeActionOptions {
+            .map_or(CodeActionProvider::Bool(true), |_| {
+                CodeActionProvider::CodeActionOptions(CodeActionOptions {
                     // Advertise support for all built-in CodeActionKinds.
                     // Ideally we would base this off of the client capabilities
                     // but the client is supposed to fall back gracefully for unknown values.
                     code_action_kinds: Some(vec![
                         // CodeActionKind::EMPTY,
-                        CodeActionKind::QUICKFIX,
+                        CodeActionKind::QuickFix,
                         // CodeActionKind::REFACTOR,
                         // CodeActionKind::REFACTOR_EXTRACT,
                         // CodeActionKind::REFACTOR_INLINE,
@@ -279,6 +265,7 @@ impl ClientCapabilities {
                     ]),
                     resolve_provider: Some(true),
                     work_done_progress_options: Default::default(),
+                    documentation: None,
                 })
             })
     }

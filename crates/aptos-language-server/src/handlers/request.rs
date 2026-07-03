@@ -17,10 +17,10 @@ use ide_db::symbol_index::Query;
 use line_index::TextRange;
 use lsp_server::ErrorCode;
 use lsp_types::{
-    CodeActionOrCommand, CodeLens, DocumentHighlightKind, HoverContents, InlayHint, InlayHintParams,
-    Location, OneOf, PrepareRenameResponse, RenameParams, ResourceOp, ResourceOperationKind,
-    SemanticTokensParams, SemanticTokensRangeParams, SemanticTokensRangeResult, SemanticTokensResult,
-    SymbolInformation, TextDocumentIdentifier, Url, WorkspaceEdit, WorkspaceSymbolParams,
+    CodeActionResponse, CodeLens, DocumentChange, DocumentHighlightKind, InlayHint, InlayHintParams,
+    Location, PrepareRenameResult, RenameParams, ResourceOperationKind, SemanticTokensParams,
+    SemanticTokensRangeParams, SymbolInformation, TextDocumentIdentifier, Uri, WorkspaceEdit,
+    WorkspaceSymbolParams,
 };
 use std::env;
 use std::hash::DefaultHasher;
@@ -32,7 +32,7 @@ use vfs::FileId;
 pub(crate) fn handle_semantic_tokens_range(
     snap: GlobalStateSnapshot,
     params: SemanticTokensRangeParams,
-) -> anyhow::Result<Option<SemanticTokensRangeResult>> {
+) -> anyhow::Result<Option<lsp_types::SemanticTokens>> {
     let _p = tracing::info_span!("handle_semantic_tokens_range").entered();
 
     let frange = try_default!(from_proto::file_range(
@@ -62,7 +62,7 @@ pub(crate) fn handle_semantic_tokens_range(
 pub(crate) fn handle_semantic_tokens_full(
     snap: GlobalStateSnapshot,
     params: SemanticTokensParams,
-) -> anyhow::Result<Option<SemanticTokensResult>> {
+) -> anyhow::Result<Option<lsp_types::SemanticTokens>> {
     let _p = tracing::info_span!("handle_semantic_tokens_full").entered();
 
     let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
@@ -145,17 +145,19 @@ pub(crate) fn handle_document_symbol(
     fn flatten_document_symbol(
         symbol: &lsp_types::DocumentSymbol,
         container_name: Option<String>,
-        url: &Url,
-        res: &mut Vec<SymbolInformation>,
+        url: &Uri,
+        res: &mut Vec<lsp_types::SymbolInformation>,
     ) {
-        #[allow(deprecated)]
-        res.push(SymbolInformation {
-            name: symbol.name.clone(),
-            kind: symbol.kind,
-            tags: symbol.tags.clone(),
+        res.push(lsp_types::SymbolInformation {
+            #[allow(deprecated)]
             deprecated: symbol.deprecated,
             location: Location::new(url.clone(), symbol.range),
-            container_name,
+            base_symbol_information: lsp_types::BaseSymbolInformation {
+                name: symbol.name.clone(),
+                kind: symbol.kind,
+                tags: symbol.tags.clone(),
+                container_name,
+            },
         });
 
         for child in symbol.children.iter().flatten() {
@@ -186,29 +188,36 @@ pub(crate) fn handle_workspace_symbol(
         let container_name = nav.container_name.as_ref().map(|v| v.to_string());
 
         let info = lsp_types::WorkspaceSymbol {
-            name: match &nav.alias {
-                Some(alias) => format!("{} (alias for {})", alias, nav.name),
-                None => format!("{}", nav.name),
-            },
-            kind: nav
-                .kind
-                .map(to_proto::symbol_kind)
-                .unwrap_or(lsp_types::SymbolKind::VARIABLE),
-            tags: None,
-            container_name,
-            location: OneOf::Left(to_proto::location_from_nav(&snap, nav)?),
+            location: lsp_types::WorkspaceSymbolLocation::Location(to_proto::location_from_nav(
+                &snap, &nav,
+            )?),
             data: None,
+            base_symbol_information: lsp_types::BaseSymbolInformation {
+                name: match &nav.alias {
+                    Some(alias) => format!("{} (alias for {})", alias, nav.name),
+                    None => nav.name.to_string(),
+                },
+                kind: nav
+                    .kind
+                    .map(to_proto::symbol_kind)
+                    .unwrap_or(lsp_types::SymbolKind::Variable),
+                // FIXME: Set deprecation
+                tags: None,
+                container_name,
+            },
         };
         symbols.push(info);
     }
 
-    Ok(Some(lsp_types::WorkspaceSymbolResponse::Nested(symbols)))
+    Ok(Some(lsp_types::WorkspaceSymbolResponse::WorkspaceSymbolList(
+        symbols,
+    )))
 }
 
 pub(crate) fn handle_goto_definition(
     snap: GlobalStateSnapshot,
-    params: lsp_types::GotoDefinitionParams,
-) -> anyhow::Result<Option<lsp_types::GotoDefinitionResponse>> {
+    params: lsp_types::DefinitionParams,
+) -> anyhow::Result<Option<lsp_types::DefinitionResponse>> {
     let _p = tracing::info_span!("handle_goto_definition").entered();
     let position = from_proto::file_position(&snap, params.text_document_position_params)?;
     let nav_info = match snap.analysis.goto_definition_multi(position)? {
@@ -226,13 +235,13 @@ pub(crate) fn handle_goto_definition(
 pub(crate) fn handle_completion(
     snap: GlobalStateSnapshot,
     lsp_types::CompletionParams {
-        text_document_position,
+        text_document_position_params,
         context,
         ..
     }: lsp_types::CompletionParams,
 ) -> anyhow::Result<Option<lsp_types::CompletionResponse>> {
     let _p = tracing::info_span!("handle_completion").entered();
-    let mut position = from_proto::file_position(&snap, text_document_position.clone())?;
+    let mut position = from_proto::file_position(&snap, text_document_position_params.clone())?;
     let line_index = snap.file_line_index(position.file_id)?;
     let completion_trigger_character = context
         .and_then(|ctx| ctx.trigger_character)
@@ -254,12 +263,17 @@ pub(crate) fn handle_completion(
         &snap.config,
         &line_index,
         snap.file_version(position.file_id),
-        text_document_position,
+        text_document_position_params,
         completion_trigger_character,
         items,
     );
 
-    let completion_list = lsp_types::CompletionList { is_incomplete: true, items };
+    let completion_list = lsp_types::CompletionList {
+        is_incomplete: true,
+        items,
+        item_defaults: None,
+        apply_kind: None,
+    };
     Ok(Some(completion_list.into()))
 }
 
@@ -363,10 +377,22 @@ pub(crate) fn handle_completion_resolve(
     Ok(resolved_completion)
 }
 
+pub(crate) fn empty_diagnostic_report() -> lsp_types::DocumentDiagnosticReport {
+    lsp_types::DocumentDiagnosticReport::RelatedFullDocumentDiagnosticReport(
+        lsp_types::RelatedFullDocumentDiagnosticReport {
+            related_documents: None,
+            full_document_diagnostic_report: lsp_types::FullDocumentDiagnosticReport {
+                result_id: Some("aptos-language-server".to_owned()),
+                items: vec![],
+            },
+        },
+    )
+}
+
 pub(crate) fn handle_document_diagnostics(
     snap: GlobalStateSnapshot,
     params: lsp_types::DocumentDiagnosticParams,
-) -> anyhow::Result<lsp_types::DocumentDiagnosticReportResult> {
+) -> anyhow::Result<lsp_types::DocumentDiagnosticReport> {
     let _p = tracing::info_span!("handle_document_diagnostics").entered();
 
     let file_id = from_proto::file_id(&snap, &params.text_document.uri)?;
@@ -398,15 +424,17 @@ pub(crate) fn handle_document_diagnostics(
             }
             None
         });
-    Ok(lsp_types::DocumentDiagnosticReportResult::Report(
-        lsp_types::DocumentDiagnosticReport::Full(lsp_types::RelatedFullDocumentDiagnosticReport {
-            full_document_diagnostic_report: lsp_types::FullDocumentDiagnosticReport {
-                result_id: Some("aptos-language-server".to_owned()),
-                items: diagnostics.collect(),
+    Ok(
+        lsp_types::DocumentDiagnosticReport::RelatedFullDocumentDiagnosticReport(
+            lsp_types::RelatedFullDocumentDiagnosticReport {
+                full_document_diagnostic_report: lsp_types::FullDocumentDiagnosticReport {
+                    result_id: Some("aptos-language-server".to_owned()),
+                    items: diagnostics.collect(),
+                },
+                related_documents: None,
             },
-            related_documents: None,
-        }),
-    ))
+        ),
+    )
 }
 
 fn lsp_diagnostic(
@@ -416,26 +444,14 @@ fn lsp_diagnostic(
     lsp_types::Diagnostic {
         range: to_proto::lsp_range(line_index, d.range.range),
         severity: Some(to_proto::diagnostic_severity(d.severity)),
-        code: Some(lsp_types::NumberOrString::String(d.code.as_str().to_owned())),
+        code: Some(lsp_types::Code::String(d.code.as_str().to_owned())),
         code_description: None,
         source: Some("aptos-language-server".to_owned()),
         message: d.message,
         related_information: None,
-        tags: d.unused.then(|| vec![lsp_types::DiagnosticTag::UNNECESSARY]),
+        tags: d.unused.then(|| vec![lsp_types::DiagnosticTag::Unnecessary]),
         data: None,
     }
-}
-
-fn empty_diagnostic_report() -> lsp_types::DocumentDiagnosticReportResult {
-    lsp_types::DocumentDiagnosticReportResult::Report(lsp_types::DocumentDiagnosticReport::Full(
-        lsp_types::RelatedFullDocumentDiagnosticReport {
-            related_documents: None,
-            full_document_diagnostic_report: lsp_types::FullDocumentDiagnosticReport {
-                result_id: Some("aptos-language-server".to_owned()),
-                items: vec![],
-            },
-        },
-    ))
 }
 
 pub(crate) fn handle_selection_range(
@@ -486,6 +502,7 @@ pub(crate) fn handle_signature_help(
     params: lsp_types::SignatureHelpParams,
 ) -> anyhow::Result<Option<lsp_types::SignatureHelp>> {
     let _p = tracing::info_span!("handle_signature_help").entered();
+
     let position = from_proto::file_position(&snap, params.text_document_position_params)?;
     let help = match snap.analysis.signature_help(position)? {
         Some(it) => it,
@@ -510,7 +527,7 @@ pub(crate) fn handle_hover(
     let line_index = snap.file_line_index(file_position.file_id)?;
     let range = to_proto::lsp_range(&line_index, info.range);
     let hover = lsp_types::Hover {
-        contents: HoverContents::Markup(to_proto::markup_content(info.info.doc_string)),
+        contents: lsp_types::Contents::MarkupContent(to_proto::markup_content(info.info.doc_string)),
         range: Some(range),
     };
 
@@ -519,11 +536,10 @@ pub(crate) fn handle_hover(
 
 pub(crate) fn handle_prepare_rename(
     snap: GlobalStateSnapshot,
-    params: lsp_types::TextDocumentPositionParams,
-) -> anyhow::Result<Option<PrepareRenameResponse>> {
+    params: lsp_types::PrepareRenameParams,
+) -> anyhow::Result<Option<PrepareRenameResult>> {
     let _p = tracing::info_span!("handle_prepare_rename").entered();
-
-    let position = from_proto::file_position(&snap, params)?;
+    let position = from_proto::file_position(&snap, params.text_document_position_params)?;
 
     let change = snap
         .analysis
@@ -532,7 +548,7 @@ pub(crate) fn handle_prepare_rename(
 
     let line_index = snap.file_line_index(position.file_id)?;
     let range = to_proto::lsp_range(&line_index, change.range);
-    Ok(Some(PrepareRenameResponse::Range(range)))
+    Ok(Some(PrepareRenameResult::Range(range)))
 }
 
 pub(crate) fn handle_rename(
@@ -540,7 +556,8 @@ pub(crate) fn handle_rename(
     params: RenameParams,
 ) -> anyhow::Result<Option<WorkspaceEdit>> {
     let _p = tracing::info_span!("handle_rename").entered();
-    let position = from_proto::file_position(&snap, params.text_document_position)?;
+
+    let position = from_proto::file_position(&snap, params.text_document_position_params)?;
 
     let mut change = snap
         .analysis
@@ -559,11 +576,9 @@ pub(crate) fn handle_rename(
 
     let workspace_edit = to_proto::workspace_edit(&snap, change)?;
 
-    if let Some(lsp_types::DocumentChanges::Operations(ops)) = workspace_edit.document_changes.as_ref() {
-        for op in ops {
-            if let lsp_types::DocumentChangeOperation::Op(doc_change_op) = op {
-                resource_ops_supported(&snap.config, resolve_resource_op(doc_change_op))?
-            }
+    if let Some(changes) = workspace_edit.document_changes.as_ref() {
+        for change in changes {
+            resource_ops_supported(&snap.config, change)?;
         }
     }
 
@@ -586,7 +601,8 @@ pub(crate) fn handle_references(
 ) -> anyhow::Result<Option<Vec<Location>>> {
     let _p = tracing::info_span!("handle_references").entered();
 
-    let position = try_default!(from_proto::file_position(&snap, params.text_document_position).ok());
+    let position =
+        try_default!(from_proto::file_position(&snap, params.text_document_position_params).ok());
     let Some(refs) = snap.analysis.find_all_refs(position, None)? else {
         return Ok(None);
     };
@@ -692,7 +708,7 @@ pub(crate) fn handle_document_highlight(
         .into_iter()
         .map(|range| lsp_types::DocumentHighlight {
             range: to_proto::lsp_range(&line_index, range),
-            kind: Some(DocumentHighlightKind::TEXT),
+            kind: Some(DocumentHighlightKind::Text),
         })
         .collect();
     Ok(Some(res))
@@ -807,7 +823,7 @@ pub(crate) fn handle_organize_imports(
                 .edits
                 .into_iter()
                 .filter_map(|it| match it {
-                    OneOf::Left(text_edit) => Some(text_edit),
+                    lsp_types::Edit::TextEdit(text_edit) => Some(text_edit),
                     _ => None,
                 })
                 .collect();
@@ -820,7 +836,7 @@ pub(crate) fn handle_organize_imports(
 pub(crate) fn handle_code_action(
     snap: GlobalStateSnapshot,
     params: lsp_types::CodeActionParams,
-) -> anyhow::Result<Option<lsp_types::CodeActionResponse>> {
+) -> anyhow::Result<Option<Vec<lsp_types::CodeActionResponse>>> {
     let _p = tracing::info_span!("handle_code_action").entered();
 
     if !snap.config.code_action_literals() {
@@ -872,14 +888,12 @@ pub(crate) fn handle_code_action(
             .edit
             .as_ref()
             .and_then(|it| it.document_changes.as_ref());
-        if let Some(lsp_types::DocumentChanges::Operations(ops)) = changes {
-            for change_op in ops {
-                if let lsp_types::DocumentChangeOperation::Op(res_op) = change_op {
-                    resource_ops_supported(&snap.config, resolve_resource_op(&res_op))?
-                }
+        if let Some(changes) = changes {
+            for change in changes {
+                resource_ops_supported(&snap.config, &change)?;
             }
         }
-        res.push(CodeActionOrCommand::CodeAction(code_action));
+        res.push(CodeActionResponse::CodeAction(code_action));
     }
 
     Ok(Some(res))
@@ -955,11 +969,9 @@ pub(crate) fn handle_code_action_resolve(
     code_action.command = ca.command;
 
     if let Some(edit) = code_action.edit.as_ref() {
-        if let Some(lsp_types::DocumentChanges::Operations(ops)) = edit.document_changes.as_ref() {
-            for change_op in ops {
-                if let lsp_types::DocumentChangeOperation::Op(res_op) = change_op {
-                    resource_ops_supported(&snap.config, resolve_resource_op(&res_op))?
-                }
+        if let Some(changes) = edit.document_changes.as_ref() {
+            for change in changes {
+                resource_ops_supported(&snap.config, &change)?;
             }
         }
     }
@@ -1048,13 +1060,19 @@ pub(crate) fn handle_code_lens_resolve(
     Ok(res)
 }
 
-fn resource_ops_supported(config: &Config, kind: ResourceOperationKind) -> anyhow::Result<()> {
-    if !matches!(config.workspace_edit_resource_operations(), Some(resops) if resops.contains(&kind)) {
+fn resource_ops_supported(config: &Config, kind: &DocumentChange) -> anyhow::Result<()> {
+    let op = match kind {
+        DocumentChange::CreateFile(_) => ResourceOperationKind::Create,
+        DocumentChange::RenameFile(_) => ResourceOperationKind::Rename,
+        DocumentChange::DeleteFile(_) => ResourceOperationKind::Delete,
+        DocumentChange::TextDocumentEdit(_) => return Ok(()),
+    };
+    if !matches!(config.workspace_edit_resource_operations(), Some(resops) if resops.contains(&op)) {
         return Err(LspError::new(
             ErrorCode::RequestFailed as i32,
             format!(
                 "Client does not support {} capability.",
-                match kind {
+                match op {
                     ResourceOperationKind::Create => "create",
                     ResourceOperationKind::Rename => "rename",
                     ResourceOperationKind::Delete => "delete",
@@ -1065,12 +1083,4 @@ fn resource_ops_supported(config: &Config, kind: ResourceOperationKind) -> anyho
     }
 
     Ok(())
-}
-
-fn resolve_resource_op(op: &ResourceOp) -> ResourceOperationKind {
-    match op {
-        ResourceOp::Create(_) => ResourceOperationKind::Create,
-        ResourceOp::Rename(_) => ResourceOperationKind::Rename,
-        ResourceOp::Delete(_) => ResourceOperationKind::Delete,
-    }
 }

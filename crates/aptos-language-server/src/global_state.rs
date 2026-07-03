@@ -19,8 +19,7 @@ use camino::Utf8PathBuf;
 use crossbeam_channel::{Receiver, Sender, unbounded};
 use ide::{Analysis, AnalysisHost, Cancellable};
 use lang::builtins_file;
-use lsp_types::Url;
-use lsp_types::notification::Notification;
+use lsp_types::{Notification, Uri};
 use parking_lot::{MappedRwLockReadGuard, RwLock, RwLockReadGuard};
 use project_model::aptos_package::AptosPackage;
 use project_model::aptos_package::load_from_fs::LoadedPackages;
@@ -190,7 +189,7 @@ impl GlobalState {
             .filter(|it| self.config.is_under_ws_roots(it.content_root()))
     }
 
-    pub(crate) fn send_request<R: lsp_types::request::Request>(
+    pub(crate) fn send_request<R: lsp_types::Request>(
         &mut self,
         params: R::Params,
         handler: ReqHandler,
@@ -198,7 +197,7 @@ impl GlobalState {
         let request = self
             .req_queue
             .outgoing
-            .register(R::METHOD.to_owned(), params, handler);
+            .register(R::METHOD.into(), params, handler);
         self.send(request.into());
     }
 
@@ -212,7 +211,7 @@ impl GlobalState {
     }
 
     pub(crate) fn send_notification<N: Notification>(&self, params: N::Params) {
-        let not = lsp_server::Notification::new(N::METHOD.to_owned(), params);
+        let not = lsp_server::Notification::new(N::METHOD.into(), params);
         self.send(not.into());
     }
 
@@ -263,11 +262,11 @@ impl GlobalStateSnapshot {
         RwLockReadGuard::map(self.vfs.read(), |(it, _)| it)
     }
 
-    pub(crate) fn url_to_file_id(&self, url: &Url) -> anyhow::Result<FileId> {
+    pub(crate) fn url_to_file_id(&self, url: &Uri) -> anyhow::Result<FileId> {
         url_to_file_id(&self.vfs_read(), url)
     }
 
-    pub(crate) fn file_id_to_url(&self, id: FileId) -> Url {
+    pub(crate) fn file_id_to_url(&self, id: FileId) -> Uri {
         file_id_to_url(&self.vfs_read(), id)
     }
 
@@ -299,12 +298,12 @@ impl GlobalStateSnapshot {
         Some(self.opened_files.get(self.vfs_read().file_path(file_id))?.version)
     }
 
-    pub(crate) fn url_file_version(&self, url: &Url) -> Option<i32> {
+    pub(crate) fn url_file_version(&self, url: &Uri) -> Option<i32> {
         let path = from_proto::vfs_path(url).ok()?;
         Some(self.opened_files.get(&path)?.version)
     }
 
-    pub(crate) fn anchored_path(&self, path: &AnchoredPathBuf) -> Url {
+    pub(crate) fn anchored_path(&self, path: &AnchoredPathBuf) -> Uri {
         let mut base = self.vfs_read().file_path(path.anchor).clone();
         base.pop();
         let path = base.join(&path.path).unwrap();
@@ -322,8 +321,8 @@ impl GlobalStateSnapshot {
 
     pub(crate) fn show_message(&self, message_type: lsp_types::MessageType, message: String) {
         let notif = lsp_server::Notification::new(
-            lsp_types::notification::ShowMessage::METHOD.to_owned(),
-            lsp_types::ShowMessageParams { typ: message_type, message },
+            lsp_types::ShowMessageNotification::METHOD.into(),
+            lsp_types::ShowMessageParams { kind: message_type, message },
         );
         self.send_notification(notif);
     }
@@ -337,7 +336,7 @@ impl GlobalStateSnapshot {
         };
         tracing::info!(cli = ?aptos_cli, "Ask to fetch movefmt");
         let notif = lsp_server::Notification::new(
-            MovefmtVersionError::METHOD.to_owned(),
+            MovefmtVersionError::METHOD.into(),
             MovefmtVersionErrorParams {
                 message,
                 aptos_path: aptos_cli.map(|it| it.to_string()),
@@ -356,17 +355,17 @@ impl GlobalStateSnapshot {
     }
 }
 
-pub(crate) fn file_id_to_url(vfs: &vfs::Vfs, id: FileId) -> Url {
+pub(crate) fn file_id_to_url(vfs: &vfs::Vfs, id: FileId) -> Uri {
     let path = vfs.file_path(id);
     match path.as_path() {
         Some(path) => url_from_abs_path(path),
         None => {
-            panic!("cannot convert builtins file {:?} into the Url", id)
+            panic!("cannot convert builtins file {:?} into the Uri", id)
         }
     }
 }
 
-pub(crate) fn url_to_file_id(vfs: &vfs::Vfs, url: &Url) -> anyhow::Result<FileId> {
+pub(crate) fn url_to_file_id(vfs: &vfs::Vfs, url: &Uri) -> anyhow::Result<FileId> {
     let path = from_proto::vfs_path(url)?;
     let (res, _) = vfs
         .file_id(&path)

@@ -6,7 +6,7 @@
 
 //! Semantic Tokens helpers
 
-use lsp_types::{Range, SemanticToken, SemanticTokenType, SemanticTokens, SemanticTokensEdit};
+use lsp_types::{Range, SemanticToken, SemanticTokenTypes, SemanticTokens, SemanticTokensEdit};
 
 macro_rules! define_semantic_token_types {
     (
@@ -19,21 +19,21 @@ macro_rules! define_semantic_token_types {
 
     ) => {
         pub(crate) mod types {
-            use super::SemanticTokenType;
-            $(pub(crate) const $standard: SemanticTokenType = SemanticTokenType::$standard;)*
-            $(pub(crate) const $custom: SemanticTokenType = SemanticTokenType::new($string);)*
+            use super::SemanticTokenTypes;
+            $(pub(crate) const $standard: SemanticTokenTypes = SemanticTokenTypes::$standard;)*
+            $(pub(crate) const $custom: SemanticTokenTypes = SemanticTokenTypes::new($string);)*
         }
 
-        pub(crate) const SUPPORTED_TYPES: &[SemanticTokenType] = &[
-            $(SemanticTokenType::$standard,)*
+        pub(crate) const SUPPORTED_TYPES: &[SemanticTokenTypes] = &[
+            $(SemanticTokenTypes::$standard,)*
             $(self::types::$custom),*
         ];
 
-        pub(crate) fn standard_fallback_type(token: SemanticTokenType) -> Option<SemanticTokenType> {
+        pub(crate) fn standard_fallback_type(token: SemanticTokenTypes) -> Option<SemanticTokenTypes> {
             use self::types::*;
             $(
                 if token == $custom {
-                    None $(.or(Some(SemanticTokenType::$fallback)))?
+                    None $(.or(Some(SemanticTokenTypes::$fallback)))?
                 } else
             )*
             { Some(token )}
@@ -226,7 +226,7 @@ pub(crate) fn diff_tokens(old: &[SemanticToken], new: &[SemanticToken]) -> Vec<S
     }
 }
 
-pub(crate) fn type_index(ty: SemanticTokenType) -> u32 {
+pub(crate) fn type_index(ty: SemanticTokenTypes) -> u32 {
     SUPPORTED_TYPES.iter().position(|it| *it == ty).unwrap() as u32
 }
 

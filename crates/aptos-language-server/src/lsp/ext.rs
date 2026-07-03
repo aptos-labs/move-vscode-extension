@@ -6,9 +6,8 @@
 
 use camino::Utf8PathBuf;
 use lang::item_scope::ItemScope;
-use lsp_types::notification::Notification;
-use lsp_types::request::Request;
-use lsp_types::{CodeActionKind, Position, Range, TextDocumentIdentifier, TextEdit};
+use lsp_types::{CodeActionKind, Notification, Position, Range, TextDocumentIdentifier, TextEdit};
+use lsp_types::{LspNotificationMethod, LspRequestMethod, MessageDirection, Request};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::ops;
@@ -19,7 +18,8 @@ pub enum AnalyzerStatus {}
 impl Request for AnalyzerStatus {
     type Params = AnalyzerStatusParams;
     type Result = String;
-    const METHOD: &'static str = "aptos-language-server/analyzerStatus";
+    const METHOD: LspRequestMethod = LspRequestMethod::new("aptos-language-server/analyzerStatus");
+    const MESSAGE_DIRECTION: MessageDirection = MessageDirection::ClientToServer;
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -33,21 +33,25 @@ pub enum ReloadWorkspace {}
 impl Request for ReloadWorkspace {
     type Params = ();
     type Result = ();
-    const METHOD: &'static str = "aptos-language-server/reloadWorkspace";
+    const METHOD: LspRequestMethod = LspRequestMethod::new("aptos-language-server/reloadWorkspace");
+    const MESSAGE_DIRECTION: MessageDirection = MessageDirection::ClientToServer;
 }
 
 pub enum OpenServerLogs {}
 
 impl Notification for OpenServerLogs {
     type Params = ();
-    const METHOD: &'static str = "aptos-language-server/openServerLogs";
+    const METHOD: LspNotificationMethod =
+        LspNotificationMethod::new("aptos-language-server/openServerLogs");
+    const MESSAGE_DIRECTION: MessageDirection = MessageDirection::ClientToServer;
 }
 
 pub enum ServerStatusNotification {}
 
 impl Notification for ServerStatusNotification {
     type Params = ServerStatusParams;
-    const METHOD: &'static str = "experimental/serverStatus";
+    const METHOD: LspNotificationMethod = LspNotificationMethod::new("experimental/serverStatus");
+    const MESSAGE_DIRECTION: MessageDirection = MessageDirection::ClientToServer;
 }
 
 #[derive(Deserialize, Serialize, PartialEq, Eq, Clone)]
@@ -81,7 +85,8 @@ pub enum ViewSyntaxTree {}
 impl Request for ViewSyntaxTree {
     type Params = ViewSyntaxTreeParams;
     type Result = String;
-    const METHOD: &'static str = "aptos-language-server/viewSyntaxTree";
+    const METHOD: LspRequestMethod = LspRequestMethod::new("aptos-language-server/viewSyntaxTree");
+    const MESSAGE_DIRECTION: MessageDirection = MessageDirection::ClientToServer;
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -102,7 +107,9 @@ pub enum MovefmtVersionError {}
 
 impl Notification for MovefmtVersionError {
     type Params = MovefmtVersionErrorParams;
-    const METHOD: &'static str = "aptos-language-server/movefmtVersionError";
+    const METHOD: LspNotificationMethod =
+        LspNotificationMethod::new("aptos-language-server/movefmtVersionError");
+    const MESSAGE_DIRECTION: MessageDirection = MessageDirection::ClientToServer;
 }
 
 #[derive(Deserialize, Serialize, PartialEq, Eq, Clone)]
@@ -133,7 +140,7 @@ pub struct CodeLensResolveData {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum CodeLensResolveDataKind {
-    Specs(lsp_types::request::GotoImplementationParams),
+    Specs(lsp_types::ImplementationParams),
     // References(lsp_types::TextDocumentPositionParams),
 }
 
@@ -167,7 +174,8 @@ pub enum OrganizeImports {}
 impl Request for OrganizeImports {
     type Params = OrganizeImportsParams;
     type Result = Vec<TextEdit>;
-    const METHOD: &'static str = "experimental/organizeImports";
+    const METHOD: LspRequestMethod = LspRequestMethod::new("experimental/organizeImports");
+    const MESSAGE_DIRECTION: MessageDirection = MessageDirection::ClientToServer;
 }
 
 #[derive(Serialize, Deserialize, Debug)]
