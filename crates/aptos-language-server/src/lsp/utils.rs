@@ -70,7 +70,7 @@ impl GlobalState {
                     if let Ok(Some(_item)) = crate::from_json::<
                         <lsp_types::ShowMessageRequest as Request>::Result,
                     >(
-                        lsp_types::ShowMessageRequest::METHOD.into(), &result
+                        lsp_types::ShowMessageRequest::METHOD.as_str(), &result
                     ) {
                         this.send_notification::<lsp_ext::OpenServerLogs>(());
                     }
@@ -278,10 +278,7 @@ pub(crate) fn all_edits_are_disjoint(
 #[cfg(test)]
 mod tests {
     use line_index::WideEncoding;
-    use lsp_types::{
-        CompletionItem, CompletionTextEdit, InsertReplaceEdit, Position, Range,
-        TextDocumentContentChangeEvent,
-    };
+    use lsp_types::{CompletionItem, InsertReplaceEdit, Position, Range};
 
     use super::*;
 
@@ -289,14 +286,14 @@ mod tests {
     fn test_apply_document_changes() {
         macro_rules! c {
             [$($sl:expr, $sc:expr; $el:expr, $ec:expr => $text:expr),+] => {
-                vec![$(TextDocumentContentChangeEvent {
-                    range: Some(Range {
+                vec![$(::lsp_types::TextDocumentContentChangeEvent::TextDocumentContentChangePartial(lsp_types::TextDocumentContentChangePartial {
+                    range: Range {
                         start: Position { line: $sl, character: $sc },
                         end: Position { line: $el, character: $ec },
-                    }),
-                    range_length: None,
+                    },
                     text: String::from($text),
-                }),+]
+                    ..Default::default()
+                })),+]
             };
         }
 
@@ -306,11 +303,11 @@ mod tests {
         let text = apply_document_changes(
             encoding,
             &text,
-            vec![TextDocumentContentChangeEvent {
-                range: None,
-                range_length: None,
-                text: String::from("the"),
-            }],
+            vec![
+                lsp_types::TextDocumentContentChangeEvent::TextDocumentContentChangeWholeDocument(
+                    lsp_types::TextDocumentContentChangeWholeDocument { text: String::from("the") },
+                ),
+            ],
         );
         assert_eq!(text, "the");
         let text = apply_document_changes(encoding, &text, c![0, 3; 0, 3 => " quick"]);
@@ -357,7 +354,11 @@ mod tests {
 
     #[test]
     fn empty_completion_disjoint_tests() {
-        let empty_completion = CompletionItem::new_simple("label".to_owned(), "detail".to_owned());
+        let empty_completion = CompletionItem {
+            label: "label".to_owned(),
+            detail: Some("detail".to_owned()),
+            ..Default::default()
+        };
 
         let disjoint_edit_1 = lsp_types::TextEdit::new(
             Range::new(Position::new(2, 2), Position::new(3, 3)),
@@ -406,28 +407,32 @@ mod tests {
             "new_text".to_owned(),
         );
 
-        let mut completion_with_joint_edits =
-            CompletionItem::new_simple("label".to_owned(), "detail".to_owned());
-        completion_with_joint_edits.additional_text_edits =
-            Some(vec![disjoint_edit.clone(), joint_edit.clone()]);
-        assert!(
-            !all_edits_are_disjoint(&completion_with_joint_edits, &[]),
-            "Completion with disjoint edits fails the validation even with empty extra edits"
-        );
-
-        completion_with_joint_edits.text_edit = Some(CompletionTextEdit::Edit(disjoint_edit.clone()));
-        completion_with_joint_edits.additional_text_edits = Some(vec![joint_edit.clone()]);
+        let mut completion_with_joint_edits = CompletionItem {
+            label: "label".to_owned(),
+            detail: Some("detail".to_owned()),
+            additional_text_edits: Some(vec![disjoint_edit.clone(), joint_edit.clone()]),
+            ..Default::default()
+        };
         assert!(
             !all_edits_are_disjoint(&completion_with_joint_edits, &[]),
             "Completion with disjoint edits fails the validation even with empty extra edits"
         );
 
         completion_with_joint_edits.text_edit =
-            Some(CompletionTextEdit::InsertAndReplace(InsertReplaceEdit {
+            Some(lsp_types::CompletionItemTextEdit::TextEdit(disjoint_edit.clone()));
+        completion_with_joint_edits.additional_text_edits = Some(vec![joint_edit.clone()]);
+        assert!(
+            !all_edits_are_disjoint(&completion_with_joint_edits, &[]),
+            "Completion with disjoint edits fails the validation even with empty extra edits"
+        );
+
+        completion_with_joint_edits.text_edit = Some(
+            lsp_types::CompletionItemTextEdit::InsertReplaceEdit(InsertReplaceEdit {
                 new_text: "new_text".to_owned(),
                 insert: disjoint_edit.range,
                 replace: disjoint_edit_2.range,
-            }));
+            }),
+        );
         completion_with_joint_edits.additional_text_edits = Some(vec![joint_edit]);
         assert!(
             !all_edits_are_disjoint(&completion_with_joint_edits, &[]),
@@ -450,10 +455,12 @@ mod tests {
             "new_text".to_owned(),
         );
 
-        let mut completion_with_disjoint_edits =
-            CompletionItem::new_simple("label".to_owned(), "detail".to_owned());
-        completion_with_disjoint_edits.text_edit = Some(CompletionTextEdit::Edit(disjoint_edit));
-        let completion_with_disjoint_edits = completion_with_disjoint_edits;
+        let completion_with_disjoint_edits = CompletionItem {
+            label: "label".to_owned(),
+            detail: Some("detail".to_owned()),
+            text_edit: Some(lsp_types::CompletionItemTextEdit::TextEdit(disjoint_edit)),
+            ..Default::default()
+        };
 
         assert!(
             all_edits_are_disjoint(&completion_with_disjoint_edits, &[]),

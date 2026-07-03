@@ -212,7 +212,9 @@ pub(crate) fn goto_definition_response(
             .unique()
             .map(|range| location(snap, range))
             .collect::<Cancellable<Vec<_>>>()?;
-        Ok(locations.into())
+        Ok(lsp_types::DefinitionResponse::Definition(
+            lsp_types::Definition::LocationList(locations),
+        ))
     }
 }
 
@@ -306,35 +308,7 @@ pub(crate) fn semantic_tokens(
             continue;
         }
 
-        // if semantics_tokens_augments_syntax_tokens {
-        //     match highlight_range.highlight.tag {
-        //         HlTag::BoolLiteral
-        //         | HlTag::ByteLiteral
-        //         | HlTag::CharLiteral
-        //         | HlTag::Comment
-        //         | HlTag::Keyword
-        //         | HlTag::NumericLiteral
-        //         | HlTag::Operator(_)
-        //         | HlTag::Punctuation(_)
-        //         | HlTag::StringLiteral
-        //         | HlTag::None
-        //         if highlight_range.highlight.mods.is_empty() =>
-        //             {
-        //                 continue
-        //             }
-        //         _ => (),
-        //     }
-        // }
-
         let ty = semantic_token_type(highlight_range.highlight);
-
-        // if !non_standard_tokens {
-        //     ty = match standard_fallback_type(ty) {
-        //         Some(ty) => ty,
-        //         None => continue,
-        //     };
-        //     mods.standard_fallback();
-        // }
         let token_index = semantic_tokens::type_index(ty);
 
         for mut text_range in line_index.index.lines(highlight_range.range) {
@@ -349,66 +323,55 @@ pub(crate) fn semantic_tokens(
     builder.build()
 }
 
-fn semantic_token_type(highlight: Highlight) -> lsp_types::SemanticTokenTypes {
-    use semantic_tokens::types;
-
+fn semantic_token_type(highlight: Highlight) -> SupportedType {
     match highlight.tag {
         HlTag::Symbol(symbol) => match symbol {
             SymbolKind::Attribute => SupportedType::Decorator,
             SymbolKind::Module => SupportedType::Namespace,
-            SymbolKind::Impl => SupportedType::TypeAlias,
             SymbolKind::Field => SupportedType::Property,
             SymbolKind::TypeParam => SupportedType::TypeParameter,
-            SymbolKind::ConstParam => SupportedType::ConstParameter,
-            SymbolKind::LifetimeParam => SupportedType::Lifetime,
             SymbolKind::Label => SupportedType::Label,
             SymbolKind::ValueParam => SupportedType::Parameter,
-            SymbolKind::SelfParam => SupportedType::SelfKeyword,
-            SymbolKind::SelfType => SupportedType::SelfTypeKeyword,
             SymbolKind::Local => SupportedType::Variable,
             SymbolKind::Method => SupportedType::Method,
             SymbolKind::Function => SupportedType::Function,
             SymbolKind::Const => SupportedType::Const,
-            SymbolKind::Static => SupportedType::Static,
             SymbolKind::Struct => SupportedType::Struct,
             SymbolKind::Enum => SupportedType::Enum,
-            SymbolKind::Variant => SupportedType::EnumMember,
-            SymbolKind::Union => SupportedType::Union,
-            SymbolKind::TypeAlias => SupportedType::TypeAlias,
-            SymbolKind::Trait => SupportedType::Interface,
-            SymbolKind::Macro => SupportedType::Macro,
-            SymbolKind::ProcMacro => SupportedType::ProcMacro,
-            SymbolKind::BuiltinAttr => SupportedType::BuiltinAttribute,
-            SymbolKind::ToolModule => SupportedType::ToolModule,
-            SymbolKind::InlineAsmRegOrRegClass => SupportedType::Keyword,
+            SymbolKind::EnumVariant => SupportedType::EnumMember,
+            SymbolKind::GlobalVariableDecl => SupportedType::Variable,
+            SymbolKind::Vector => SupportedType::Macro,
+            SymbolKind::Assert => SupportedType::Macro,
+            SymbolKind::Schema => SupportedType::Struct,
+            SymbolKind::Lemma => SupportedType::Function,
         },
-        HlTag::AttributeBracket => types::ATTRIBUTE_BRACKET,
-        HlTag::BoolLiteral => types::BOOLEAN,
-        HlTag::BuiltinType => types::BUILTIN_TYPE,
-        HlTag::NumericLiteral => types::NUMBER,
-        HlTag::Comment => types::COMMENT,
-        HlTag::Keyword => types::KEYWORD,
-        HlTag::None => types::GENERIC,
+        HlTag::AttributeBracket => SupportedType::AttributeBracket,
+        HlTag::BoolLiteral => SupportedType::Boolean,
+        HlTag::BuiltinType => SupportedType::BuiltinType,
+        HlTag::NumericLiteral => SupportedType::Number,
+        HlTag::Comment => SupportedType::Comment,
+        HlTag::Keyword => SupportedType::Keyword,
+        HlTag::None => SupportedType::Generic,
         HlTag::Operator(op) => match op {
-            HlOperator::Bitwise => types::BITWISE,
-            HlOperator::Arithmetic => types::ARITHMETIC,
-            HlOperator::Logical => types::LOGICAL,
-            HlOperator::Comparison => types::COMPARISON,
-            HlOperator::Other => types::OPERATOR,
+            HlOperator::Bitwise => SupportedType::Bitwise,
+            HlOperator::Arithmetic => SupportedType::Arithmetic,
+            HlOperator::Logical => SupportedType::Logical,
+            HlOperator::Comparison => SupportedType::Comparison,
+            HlOperator::Other => SupportedType::Operator,
         },
-        HlTag::StringLiteral => types::STRING,
-        HlTag::UnresolvedReference => types::UNRESOLVED_REFERENCE,
+        HlTag::StringLiteral => SupportedType::String,
+        HlTag::UnresolvedReference => SupportedType::UnresolvedReference,
         HlTag::Punctuation(punct) => match punct {
-            HlPunct::Bracket => types::BRACKET,
-            HlPunct::Brace => types::BRACE,
-            HlPunct::Parenthesis => types::PARENTHESIS,
-            HlPunct::Angle => types::ANGLE,
-            HlPunct::Comma => types::COMMA,
-            HlPunct::Dot => types::DOT,
-            HlPunct::Colon => types::COLON,
-            HlPunct::Semi => types::SEMICOLON,
-            HlPunct::Other => types::PUNCTUATION,
-            HlPunct::MacroBang => types::MACRO_BANG,
+            HlPunct::Bracket => SupportedType::Bracket,
+            HlPunct::Brace => SupportedType::Brace,
+            HlPunct::Parenthesis => SupportedType::Parenthesis,
+            HlPunct::Angle => SupportedType::Angle,
+            HlPunct::Comma => SupportedType::Comma,
+            HlPunct::Dot => SupportedType::Dot,
+            HlPunct::Colon => SupportedType::Colon,
+            HlPunct::Semi => SupportedType::Semicolon,
+            HlPunct::Other => SupportedType::Punctuation,
+            HlPunct::MacroBang => SupportedType::MacroBang,
         },
     }
 }

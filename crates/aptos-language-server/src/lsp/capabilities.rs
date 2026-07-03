@@ -114,9 +114,8 @@ pub fn server_capabilities(config: &Config) -> ServerCapabilities {
         semantic_tokens_provider: Some(
             SemanticTokensOptions {
                 legend: SemanticTokensLegend {
-                    token_types: semantic_tokens::SUPPORTED_TYPES
-                        .into_iter()
-                        .map(|it| it.to_string())
+                    token_types: semantic_tokens::SupportedType::iter()
+                        .map(|semantic_token_type| semantic_token_type.to_string())
                         .collect(),
                     token_modifiers: vec![],
                 },
