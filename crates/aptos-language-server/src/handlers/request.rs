@@ -447,7 +447,7 @@ fn lsp_diagnostic(
         code: Some(lsp_types::Code::String(d.code.as_str().to_owned())),
         code_description: None,
         source: Some("aptos-language-server".to_owned()),
-        message: d.message,
+        message: lsp_types::Message::String(d.message),
         related_information: None,
         tags: d.unused.then(|| vec![lsp_types::DiagnosticTag::Unnecessary]),
         data: None,

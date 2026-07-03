@@ -25,7 +25,7 @@ pub(crate) fn invalid_params_error(message: String) -> LspError {
 }
 
 pub(crate) fn notification_is<N: lsp_types::Notification>(notification: &Notification) -> bool {
-    notification.method == N::METHOD.into()
+    notification.method.as_str() == N::METHOD.as_str()
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -190,15 +190,29 @@ pub(crate) fn apply_document_changes(
 ) -> String {
     // If at least one of the changes is a full document change, use the last
     // of them as the starting point and ignore all previous changes.
-    let (mut text, content_changes) =
-        match content_changes.iter().rposition(|change| change.range.is_none()) {
-            Some(idx) => {
-                let text = mem::take(&mut content_changes[idx].text);
-                (text, &content_changes[idx + 1..])
+    let (mut text, r_partial_changes);
+    match content_changes
+        .iter_mut()
+        .rev()
+        .try_fold(Vec::new(), |mut acc, change| match change {
+            lsp_types::TextDocumentContentChangeEvent::TextDocumentContentChangePartial(partial) => {
+                acc.push(partial);
+                Ok(acc)
             }
-            None => (file_contents.to_owned(), &content_changes[..]),
-        };
-    if content_changes.is_empty() {
+            lsp_types::TextDocumentContentChangeEvent::TextDocumentContentChangeWholeDocument(whole) => {
+                Err((whole, acc))
+            }
+        }) {
+        Err((whole_document, reversed_partial_changes)) => {
+            text = mem::take(&mut whole_document.text);
+            r_partial_changes = reversed_partial_changes;
+        }
+        Ok(partials) => {
+            text = file_contents.to_owned();
+            r_partial_changes = partials;
+        }
+    }
+    if r_partial_changes.is_empty() {
         return text;
     }
 
@@ -216,16 +230,13 @@ pub(crate) fn apply_document_changes(
     // remember the last valid line in the index and only rebuild it if needed.
     // The VFS will normalize the end of lines to `\n`.
     let mut index_valid = !0u32;
-    for change in content_changes {
-        // The None case can't happen as we have handled it above already
-        if let Some(range) = change.range {
-            if index_valid <= range.end.line {
-                *Arc::make_mut(&mut line_index.index) = line_index::LineIndex::new(&text);
-            }
-            index_valid = range.start.line;
-            if let Ok(range) = from_proto::text_range(&line_index, range) {
-                text.replace_range(Range::<usize>::from(range), &change.text);
-            }
+    for change in r_partial_changes.iter().rev() {
+        if index_valid <= change.range.end.line {
+            *Arc::make_mut(&mut line_index.index) = line_index::LineIndex::new(&text);
+        }
+        index_valid = change.range.start.line;
+        if let Ok(range) = from_proto::text_range(&line_index, change.range) {
+            text.replace_range(Range::<usize>::from(range), &change.text);
         }
     }
     text

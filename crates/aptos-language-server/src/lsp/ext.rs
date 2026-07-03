@@ -18,7 +18,7 @@ pub enum AnalyzerStatus {}
 impl Request for AnalyzerStatus {
     type Params = AnalyzerStatusParams;
     type Result = String;
-    const METHOD: LspRequestMethod = LspRequestMethod::new("aptos-language-server/analyzerStatus");
+    const METHOD: LspRequestMethod<'_> = LspRequestMethod::new("aptos-language-server/analyzerStatus");
     const MESSAGE_DIRECTION: MessageDirection = MessageDirection::ClientToServer;
 }
 
@@ -33,7 +33,7 @@ pub enum ReloadWorkspace {}
 impl Request for ReloadWorkspace {
     type Params = ();
     type Result = ();
-    const METHOD: LspRequestMethod = LspRequestMethod::new("aptos-language-server/reloadWorkspace");
+    const METHOD: LspRequestMethod<'_> = LspRequestMethod::new("aptos-language-server/reloadWorkspace");
     const MESSAGE_DIRECTION: MessageDirection = MessageDirection::ClientToServer;
 }
 
@@ -41,7 +41,7 @@ pub enum OpenServerLogs {}
 
 impl Notification for OpenServerLogs {
     type Params = ();
-    const METHOD: LspNotificationMethod =
+    const METHOD: LspNotificationMethod<'_> =
         LspNotificationMethod::new("aptos-language-server/openServerLogs");
     const MESSAGE_DIRECTION: MessageDirection = MessageDirection::ClientToServer;
 }
@@ -50,7 +50,7 @@ pub enum ServerStatusNotification {}
 
 impl Notification for ServerStatusNotification {
     type Params = ServerStatusParams;
-    const METHOD: LspNotificationMethod = LspNotificationMethod::new("experimental/serverStatus");
+    const METHOD: LspNotificationMethod<'_> = LspNotificationMethod::new("experimental/serverStatus");
     const MESSAGE_DIRECTION: MessageDirection = MessageDirection::ClientToServer;
 }
 
@@ -85,7 +85,7 @@ pub enum ViewSyntaxTree {}
 impl Request for ViewSyntaxTree {
     type Params = ViewSyntaxTreeParams;
     type Result = String;
-    const METHOD: LspRequestMethod = LspRequestMethod::new("aptos-language-server/viewSyntaxTree");
+    const METHOD: LspRequestMethod<'_> = LspRequestMethod::new("aptos-language-server/viewSyntaxTree");
     const MESSAGE_DIRECTION: MessageDirection = MessageDirection::ClientToServer;
 }
 
@@ -107,7 +107,7 @@ pub enum MovefmtVersionError {}
 
 impl Notification for MovefmtVersionError {
     type Params = MovefmtVersionErrorParams;
-    const METHOD: LspNotificationMethod =
+    const METHOD: LspNotificationMethod<'_> =
         LspNotificationMethod::new("aptos-language-server/movefmtVersionError");
     const MESSAGE_DIRECTION: MessageDirection = MessageDirection::ClientToServer;
 }
@@ -174,7 +174,7 @@ pub enum OrganizeImports {}
 impl Request for OrganizeImports {
     type Params = OrganizeImportsParams;
     type Result = Vec<TextEdit>;
-    const METHOD: LspRequestMethod = LspRequestMethod::new("experimental/organizeImports");
+    const METHOD: LspRequestMethod<'_> = LspRequestMethod::new("experimental/organizeImports");
     const MESSAGE_DIRECTION: MessageDirection = MessageDirection::ClientToServer;
 }
 
