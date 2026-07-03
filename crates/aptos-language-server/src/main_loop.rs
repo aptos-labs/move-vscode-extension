@@ -308,12 +308,11 @@ impl GlobalState {
         }
     }
 
-    pub(crate) fn ask_client_for_diagnostics_refresh(&mut self, _reason: impl Into<String>) {
-        // todo: lsp-types does not support this
-        // if self.config.diagnostics_refresh() {
-        // tracing::info!("ask client to refresh diagnostics (reason = {:?})", reason.into());
-        self.send_request::<lsp_types::DiagnosticRefreshRequest>((), |_, _| ());
-        // }
+    pub(crate) fn ask_client_for_diagnostics_refresh(&mut self, reason: impl Into<String>) {
+        if self.config.diagnostics_refresh() {
+            tracing::info!("ask client to refresh diagnostics (reason = {:?})", reason.into());
+            self.send_request::<lsp_types::DiagnosticRefreshRequest>((), |_, _| ());
+        }
     }
 
     fn handle_task(&mut self, task: Task) {
@@ -473,7 +472,6 @@ impl GlobalState {
             // So we have an extra thread just for formatting requests to make sure it gets handled
             // as fast as possible.
             .on_fmt_thread::<lsp_types::DocumentFormattingRequest>(handlers::handle_formatting)
-            // .on_fmt_thread::<lsp_types::RangeFormatting>(handlers::handle_range_formatting)
             // We can’t run latency-sensitive request handlers which do semantic
             // analysis on the main thread because that would block other
             // requests. Instead, we run these request handlers on higher priority
@@ -495,10 +493,8 @@ impl GlobalState {
                     }).ok(),
                 })
             .on::<RETRY, lsp_types::DocumentSymbolRequest>(handlers::handle_document_symbol)
-            // .on::<RETRY, lsp_types::FoldingRangeRequest>(handlers::handle_folding_range)
             .on::<NO_RETRY, lsp_types::SignatureHelpRequest>(handlers::handle_signature_help)
             .on::<NO_RETRY, lsp_types::HoverRequest>(handlers::handle_hover)
-            // .on::<RETRY, lsp_types::WillRenameFiles>(handlers::handle_will_rename_files)
             .on::<NO_RETRY, lsp_types::DefinitionRequest>(handlers::handle_goto_definition)
             .on::<NO_RETRY, lsp_types::InlayHintRequest>(handlers::handle_inlay_hints)
             .on_identity::<NO_RETRY, lsp_types::InlayHintResolveRequest, _>(handlers::handle_inlay_hints_resolve)
@@ -523,35 +519,20 @@ impl GlobalState {
         let _p = span!(Level::INFO, "GlobalState::on_notification", not.method = ?not.method).entered();
         use crate::handlers::notification as handlers;
 
+        #[rustfmt::skip]
         NotificationDispatcher {
             not: Some(not),
             global_state: self,
         }
         .on_sync_mut::<lsp_types::CancelNotification>(handlers::handle_cancel)
-        .on_sync_mut::<lsp_types::WorkDoneProgressCancelNotification>(
-            handlers::handle_work_done_progress_cancel,
-        )
-        .on_sync_mut::<lsp_types::DidOpenTextDocumentNotification>(
-            handlers::handle_did_open_text_document,
-        )
-        .on_sync_mut::<lsp_types::DidChangeTextDocumentNotification>(
-            handlers::handle_did_change_text_document,
-        )
-        .on_sync_mut::<lsp_types::DidCloseTextDocumentNotification>(
-            handlers::handle_did_close_text_document,
-        )
-        .on_sync_mut::<lsp_types::DidSaveTextDocumentNotification>(
-            handlers::handle_did_save_text_document,
-        )
-        .on_sync_mut::<lsp_types::DidChangeConfigurationNotification>(
-            handlers::handle_did_change_configuration,
-        )
-        .on_sync_mut::<lsp_types::DidChangeWorkspaceFoldersNotification>(
-            handlers::handle_did_change_workspace_folders,
-        )
-        .on_sync_mut::<lsp_types::DidChangeWatchedFilesNotification>(
-            handlers::handle_did_change_watched_files,
-        )
+        .on_sync_mut::<lsp_types::WorkDoneProgressCancelNotification>(handlers::handle_work_done_progress_cancel)
+        .on_sync_mut::<lsp_types::DidOpenTextDocumentNotification>(handlers::handle_did_open_text_document)
+        .on_sync_mut::<lsp_types::DidChangeTextDocumentNotification>(handlers::handle_did_change_text_document)
+        .on_sync_mut::<lsp_types::DidCloseTextDocumentNotification>(handlers::handle_did_close_text_document)
+        .on_sync_mut::<lsp_types::DidSaveTextDocumentNotification>(handlers::handle_did_save_text_document)
+        .on_sync_mut::<lsp_types::DidChangeConfigurationNotification>(handlers::handle_did_change_configuration)
+        .on_sync_mut::<lsp_types::DidChangeWorkspaceFoldersNotification>(handlers::handle_did_change_workspace_folders)
+        .on_sync_mut::<lsp_types::DidChangeWatchedFilesNotification>(handlers::handle_did_change_watched_files)
         .finish();
     }
 }
