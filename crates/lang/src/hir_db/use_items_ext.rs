@@ -20,14 +20,14 @@ pub fn combined_use_items(
 pub fn use_items(
     db: &dyn SourceDatabase,
     use_stmts_owner: InFile<impl Into<ast::AnyUseStmtsOwner>>,
-) -> Vec<UseItem> {
+) -> &[UseItem] {
     use_items_tracked(
         db,
         SyntaxLocInput::new(db, use_stmts_owner.map(|it| it.into()).loc()),
     )
 }
 
-#[salsa_macros::tracked]
+#[salsa_macros::tracked(returns(ref))]
 fn use_items_tracked<'db>(
     db: &'db dyn SourceDatabase,
     use_stmts_owner: SyntaxLocInput<'db>,
@@ -105,6 +105,11 @@ fn use_items_from_self_and_siblings_tracked<'db>(
         .unwrap_or_default();
     owner_with_siblings
         .into_iter()
-        .flat_map(|it| use_items(db, it))
+        .flat_map(|it| {
+            use_items(db, it)
+                .iter()
+                .map(|it| it.to_owned())
+                .collect::<Vec<_>>()
+        })
         .collect()
 }
