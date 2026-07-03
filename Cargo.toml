@@ -64,3 +64,5 @@ paths = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2026-06
 vfs = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2026-06-08" }
 vfs-notify = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2026-06-08" }
 
+syntax = { path = "crates/syntax" }
+

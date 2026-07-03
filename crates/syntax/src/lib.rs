@@ -9,7 +9,7 @@
 pub mod algo;
 pub mod ast;
 pub mod files;
-mod parse;
+pub mod parse;
 pub mod pretty_print;
 mod ptr;
 pub mod syntax_editor;

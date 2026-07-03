@@ -14,6 +14,18 @@ impl ast::SourceFile {
             .chain(self.address_defs().flat_map(|ad| ad.modules()))
     }
 
+    pub fn all_has_items(&self) -> impl Iterator<Item = ast::AnyHasItems> {
+        self.modules()
+            .map(|it| ast::AnyHasItems::cast_from(it))
+            .chain(
+                self.address_defs()
+                    .flat_map(|ad| ad.modules())
+                    .map(|it| ast::AnyHasItems::cast_from(it)),
+            )
+            .chain(self.scripts().map(|it| ast::AnyHasItems::cast_from(it)))
+            .chain(self.module_specs().map(|it| ast::AnyHasItems::cast_from(it)))
+    }
+
     pub fn find_token_at_offset(&self, offset: TextSize) -> TokenAtOffset<SyntaxToken> {
         self.syntax.token_at_offset(offset)
     }
