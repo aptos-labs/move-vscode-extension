@@ -29,7 +29,7 @@ pub fn use_speck_entries(
     entries
 }
 
-fn resolve_use_item(db: &dyn SourceDatabase, use_item: UseItem) -> Option<ScopeEntry> {
+fn resolve_use_item(db: &dyn SourceDatabase, use_item: &UseItem) -> Option<ScopeEntry> {
     let path = use_item
         .use_speck_loc
         .to_ast::<ast::UseSpeck>(db)?
@@ -40,7 +40,7 @@ fn resolve_use_item(db: &dyn SourceDatabase, use_item: UseItem) -> Option<ScopeE
     };
     let node_loc = scope_entry.node_loc;
     Some(ScopeEntry {
-        name: use_item.alias_or_name,
+        name: use_item.alias_or_name.clone(),
         node_loc,
         ns: scope_entry.ns,
         scope_adjustment: Some(use_item.declared_scope),
