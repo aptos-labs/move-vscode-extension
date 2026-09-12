@@ -19,7 +19,7 @@ fn package_id_indexes(db: &RootDatabase) -> Vec<u32> {
     db.all_package_ids()
         .data(db)
         .iter()
-        .map(|package_id| package_id.idx(db))
+        .map(|package_id| package_id.idx(db).clone())
         .collect()
 }
 
@@ -97,14 +97,14 @@ fn replacing_package_roots_removes_stale_file_package_ids() {
     ]);
     db.apply_change(changes);
 
-    assert_eq!(db.file_package_id(FileId::from_raw(1)).idx(&db), 0);
-    assert_eq!(db.file_package_id(FileId::from_raw(2)).idx(&db), 1);
+    assert_eq!(db.file_package_id(FileId::from_raw(1)).idx(&db).clone(), 0);
+    assert_eq!(db.file_package_id(FileId::from_raw(2)).idx(&db).clone(), 1);
 
     let mut changes = FileChanges::new();
     changes.set_package_roots(vec![package_root(FileId::from_raw(1), "/p1/main.move")]);
     db.apply_change(changes);
 
-    assert_eq!(db.file_package_id(FileId::from_raw(1)).idx(&db), 0);
+    assert_eq!(db.file_package_id(FileId::from_raw(1)).idx(&db).clone(), 0);
     let stale_file_lookup = catch_unwind(AssertUnwindSafe(|| db.file_package_id(FileId::from_raw(2))));
     assert!(stale_file_lookup.is_err());
 }

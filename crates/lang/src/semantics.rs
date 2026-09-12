@@ -70,7 +70,7 @@ impl<DB: SourceDatabase> Semantics<'_, DB> {
         let impl_ = SemanticsImpl::new(db, ws_root);
         // add builtins file to cache
         if let Some(builtins_file_id) = db.builtins_file_id() {
-            impl_.parse(builtins_file_id.data(db));
+            impl_.parse(builtins_file_id.data(db).clone());
         }
         Semantics { db, imp: impl_ }
     }
@@ -104,7 +104,7 @@ impl<'db> SemanticsImpl<'db> {
     }
 
     pub fn package_root(&self, package_id: PackageId) -> Arc<PackageRoot> {
-        self.db.package_root(package_id).data(self.db)
+        self.db.package_root(package_id).data(self.db).clone()
     }
 
     /// returns packages dependencies, including package itself
@@ -116,7 +116,7 @@ impl<'db> SemanticsImpl<'db> {
     pub fn is_builtins_file(&self, file_id: FileId) -> bool {
         self.db
             .builtins_file_id()
-            .is_some_and(|it| it.data(self.db) == file_id)
+            .is_some_and(|it| it.data(self.db).clone() == file_id)
     }
 
     pub fn resolve_element_to_element<Named: AstNode>(

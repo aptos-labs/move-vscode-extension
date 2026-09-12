@@ -16,13 +16,13 @@ pub fn lower_function(
     lower_function_tracked(db, fun_loc, msl)
 }
 
-#[salsa_macros::tracked]
+#[salsa_macros::tracked(returns(clone))]
 fn lower_function_tracked<'db>(
     db: &'db dyn SourceDatabase,
     fun_loc: SyntaxLocInput<'db>,
     msl: bool,
 ) -> TyCallable {
-    let any_fun_loc = fun_loc.syntax_loc(db);
+    let any_fun_loc = fun_loc.syntax_loc(db).clone();
     let any_fun = any_fun_loc
         .to_ast::<ast::AnyFun>(db)
         .expect("might be a stale cache issue");

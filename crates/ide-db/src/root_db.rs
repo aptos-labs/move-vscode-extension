@@ -155,9 +155,9 @@ impl RootDatabase {
 }
 
 pub fn line_index(db: &dyn SourceDatabase, file_id: FileId) -> Arc<LineIndex> {
-    #[salsa_macros::tracked]
+    #[salsa_macros::tracked(returns(clone))]
     fn line_index(db: &dyn SourceDatabase, file_id: FileIdInput) -> Arc<LineIndex> {
-        let text = db.file_text(file_id.data(db)).text(db);
+        let text = db.file_text(file_id.data(db).clone()).text(db);
         Arc::new(LineIndex::new(&text))
     }
     line_index(db, FileIdInput::new(db, file_id))

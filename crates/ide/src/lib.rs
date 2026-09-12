@@ -162,7 +162,7 @@ impl Analysis {
             db.package_root(package_id)
                 .data(db)
                 .manifest_file_id
-                .map(|manifest_file_id| db.package_metadata(manifest_file_id).metadata(db))
+                .map(|manifest_file_id| db.package_metadata(manifest_file_id).metadata(db).clone())
         })
     }
 
@@ -176,7 +176,7 @@ impl Analysis {
 
     /// Gets the text of the source file.
     pub fn file_text(&self, file_id: FileId) -> Cancellable<Arc<str>> {
-        self.with_db(|db| SourceDatabase::file_text(db, file_id).text(db))
+        self.with_db(|db| SourceDatabase::file_text(db, file_id).text(db).clone())
     }
 
     /// Gets the text of the source file.

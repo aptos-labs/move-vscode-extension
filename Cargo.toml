@@ -3,7 +3,7 @@ members = ["crates/*", "xtask"]
 resolver = "3"
 
 [workspace.package]
-rust-version = "1.96.0"
+rust-version = "1.98.1"
 edition = "2024"
 license = "MIT"
 
@@ -57,11 +57,11 @@ tracing-subscriber = { version = "0.3.20", default-features = false, features = 
     "env-filter"
 ] }
 dashmap = "6.1.0"
-salsa = "0.27.2"
-salsa-macros = "0.27.2"
+salsa = "0.28.2"
+salsa-macros = "0.28.2"
 
-stdx = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2026-06-08" }
-paths = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2026-06-08", features = ["serde1"] }
-vfs = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2026-06-08" }
-vfs-notify = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2026-06-08" }
+stdx = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2026-09-07" }
+paths = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2026-09-07", features = ["serde1"] }
+vfs = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2026-09-07" }
+vfs-notify = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2026-09-07" }
 

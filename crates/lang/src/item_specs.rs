@@ -23,7 +23,7 @@ pub fn get_item_specs_for_items_in_file(
     file_id: FileIdInput,
 ) -> HashMap<SyntaxLoc, Vec<SyntaxLoc>> {
     let source_file = source_db::parse(db, file_id).tree();
-    let file_id = file_id.data(db);
+    let file_id = file_id.data(db).clone();
 
     let modules = source_file
         .all_modules()

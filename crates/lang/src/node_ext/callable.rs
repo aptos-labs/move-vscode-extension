@@ -30,7 +30,7 @@ impl CallableInfo {
             ast::AnyCallExpr::AssertMacroExpr(_)
         ));
         Some(CallableInfo {
-            file_id: db.builtins_file_id()?.data(db),
+            file_id: db.builtins_file_id()?.data(db).clone(),
             call_expr: any_call_expr,
             ty: None,
             callable_item: CallableItem::AssertMacro,
