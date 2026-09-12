@@ -1,0 +1,60 @@
+SOURCE_FILE@0..111
+  MODULE@0..110
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..35
+      IDENT@12..35 "apply_lemma_no_arg_list"
+    WHITESPACE@35..36 " "
+    L_CURLY@36..37 "{"
+    WHITESPACE@37..42 "\n    "
+    ITEM_SPEC@42..108
+      SPEC_KW@42..46 "spec"
+      WHITESPACE@46..47 " "
+      ITEM_SPEC_REF@47..51
+        NAME_REF@47..51
+          IDENT@47..51 "main"
+      ITEM_SPEC_PARAM_LIST@51..53
+        L_PAREN@51..52 "("
+        R_PAREN@52..53 ")"
+      WHITESPACE@53..54 " "
+      BLOCK_EXPR@54..56
+        L_CURLY@54..55 "{"
+        R_CURLY@55..56 "}"
+      WHITESPACE@56..57 " "
+      PROOF@57..108
+        PROOF_KW@57..62 "proof"
+        WHITESPACE@62..63 " "
+        BLOCK_EXPR@63..108
+          L_CURLY@63..64 "{"
+          WHITESPACE@64..73 "\n        "
+          IF_EXPR@73..102
+            IF_KW@73..75 "if"
+            WHITESPACE@75..76 " "
+            CONDITION@76..82
+              L_PAREN@76..77 "("
+              LITERAL@77..81
+                TRUE_KW@77..81 "true"
+              R_PAREN@81..82 ")"
+            WHITESPACE@82..83 " "
+            BLOCK_EXPR@83..102
+              L_CURLY@83..84 "{"
+              WHITESPACE@84..85 " "
+              APPLY_LEMMA@85..100
+                APPLY_KW@85..90 "apply"
+                WHITESPACE@90..91 " "
+                PATH_EXPR@91..99
+                  PATH@91..99
+                    PATH_SEGMENT@91..99
+                      NAME_REF@91..99
+                        IDENT@91..99 "my_lemma"
+                SEMICOLON@99..100 ";"
+              WHITESPACE@100..101 " "
+              R_CURLY@101..102 "}"
+          WHITESPACE@102..107 "\n    "
+          R_CURLY@107..108 "}"
+    WHITESPACE@108..109 "\n"
+    R_CURLY@109..110 "}"
+  WHITESPACE@110..111 "\n"

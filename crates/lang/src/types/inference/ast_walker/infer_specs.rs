@@ -17,6 +17,7 @@ use crate::types::ty_db;
 use regex::Regex;
 use std::iter::zip;
 use std::sync::LazyLock;
+use syntax::ast::node_ext::behavior_predicate_expr::BehaviorPredicateKind;
 use syntax::ast::node_ext::spec_predicate_stmt::SpecPredicateKind;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
@@ -162,6 +163,18 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         )
         .into_ty_callable()?;
 
+        // only this kinds of predicates have exactly the same params as passed function
+        // TODO: implement all predicates
+        if !matches!(
+            b_predicate.predicate_kind(),
+            BehaviorPredicateKind::AbortsOf
+                | BehaviorPredicateKind::RequiresOf
+                | BehaviorPredicateKind::ResultOf
+                | BehaviorPredicateKind::UnchangedOf
+        ) {
+            return Some(Ty::Unknown);
+        }
+
         let expected_arg_tys = self.infer_expected_call_arg_tys(&callable_ty, Expected::NoValue);
         let args = b_predicate
             .arg_exprs()
@@ -175,7 +188,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             .call_expr_types
             .insert(b_predicate.clone().into(), callable_ty.clone().into());
 
-        Some(Ty::Bool)
+        // those are too many cases to implement, so we're falling back to Ty::Unknown here for now
+        Some(Ty::Unknown)
     }
 
     pub(crate) fn infer_quant_binding_ty(&mut self, quant_binding: &ast::QuantBinding) -> Option<Ty> {

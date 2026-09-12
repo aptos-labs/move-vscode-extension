@@ -1,5 +1,5 @@
-SOURCE_FILE@0..204
-  MODULE@0..203
+SOURCE_FILE@0..256
+  MODULE@0..255
     MODULE_KW@0..6 "module"
     WHITESPACE@6..7 " "
     VALUE_ADDRESS@7..10
@@ -10,14 +10,14 @@ SOURCE_FILE@0..204
     WHITESPACE@31..32 " "
     L_CURLY@32..33 "{"
     WHITESPACE@33..38 "\n    "
-    ITEM_SPEC@38..201
+    ITEM_SPEC@38..253
       SPEC_KW@38..42 "spec"
       WHITESPACE@42..43 " "
       ITEM_SPEC_REF@43..47
         NAME_REF@43..47
           IDENT@43..47 "main"
       WHITESPACE@47..48 " "
-      BLOCK_EXPR@48..201
+      BLOCK_EXPR@48..253
         L_CURLY@48..49 "{"
         WHITESPACE@49..58 "\n        "
         EXPR_STMT@58..74
@@ -100,31 +100,71 @@ SOURCE_FILE@0..204
               R_PAREN@150..151 ")"
           SEMICOLON@151..152 ";"
         WHITESPACE@152..161 "\n        "
-        SPEC_PREDICATE_STMT@161..195
-          ENSURES_KW@161..168 "ensures"
-          WHITESPACE@168..169 " "
-          BEHAVIOR_PREDICATE_EXPR@169..194
-            IDENT@169..178 "result_of"
-            TYPE_ARG_LIST@178..192
-              L_ANGLE@178..179 "<"
-              TYPE_ARG@179..191
-                PATH_TYPE@179..191
-                  PATH@179..191
-                    PATH@179..185
-                      PATH_SEGMENT@179..185
-                        NAME_REF@179..185
-                          IDENT@179..185 "config"
-                    COLON_COLON@185..187 "::"
-                    PATH_SEGMENT@187..191
-                      NAME_REF@187..191
-                        IDENT@187..191 "call"
-              R_ANGLE@191..192 ">"
-            VALUE_ARG_LIST@192..194
-              L_PAREN@192..193 "("
-              R_PAREN@193..194 ")"
-          SEMICOLON@194..195 ";"
-        WHITESPACE@195..200 "\n    "
-        R_CURLY@200..201 "}"
-    WHITESPACE@201..202 "\n"
-    R_CURLY@202..203 "}"
-  WHITESPACE@203..204 "\n"
+        EXPR_STMT@161..176
+          BEHAVIOR_PREDICATE_EXPR@161..175
+            IDENT@161..169 "folds_of"
+            TYPE_ARG_LIST@169..172
+              L_ANGLE@169..170 "<"
+              TYPE_ARG@170..171
+                PATH_TYPE@170..171
+                  PATH@170..171
+                    PATH_SEGMENT@170..171
+                      NAME_REF@170..171
+                        IDENT@170..171 "f"
+              R_ANGLE@171..172 ">"
+            VALUE_ARG_LIST@172..175
+              L_PAREN@172..173 "("
+              VALUE_ARG@173..174
+                LITERAL@173..174
+                  INT_NUMBER@173..174 "1"
+              R_PAREN@174..175 ")"
+          SEMICOLON@175..176 ";"
+        WHITESPACE@176..185 "\n        "
+        EXPR_STMT@185..204
+          BEHAVIOR_PREDICATE_EXPR@185..203
+            IDENT@185..197 "unchanged_of"
+            TYPE_ARG_LIST@197..200
+              L_ANGLE@197..198 "<"
+              TYPE_ARG@198..199
+                PATH_TYPE@198..199
+                  PATH@198..199
+                    PATH_SEGMENT@198..199
+                      NAME_REF@198..199
+                        IDENT@198..199 "f"
+              R_ANGLE@199..200 ">"
+            VALUE_ARG_LIST@200..203
+              L_PAREN@200..201 "("
+              VALUE_ARG@201..202
+                LITERAL@201..202
+                  INT_NUMBER@201..202 "1"
+              R_PAREN@202..203 ")"
+          SEMICOLON@203..204 ";"
+        WHITESPACE@204..213 "\n        "
+        SPEC_PREDICATE_STMT@213..247
+          ENSURES_KW@213..220 "ensures"
+          WHITESPACE@220..221 " "
+          BEHAVIOR_PREDICATE_EXPR@221..246
+            IDENT@221..230 "result_of"
+            TYPE_ARG_LIST@230..244
+              L_ANGLE@230..231 "<"
+              TYPE_ARG@231..243
+                PATH_TYPE@231..243
+                  PATH@231..243
+                    PATH@231..237
+                      PATH_SEGMENT@231..237
+                        NAME_REF@231..237
+                          IDENT@231..237 "config"
+                    COLON_COLON@237..239 "::"
+                    PATH_SEGMENT@239..243
+                      NAME_REF@239..243
+                        IDENT@239..243 "call"
+              R_ANGLE@243..244 ">"
+            VALUE_ARG_LIST@244..246
+              L_PAREN@244..245 "("
+              R_PAREN@245..246 ")"
+          SEMICOLON@246..247 ";"
+        WHITESPACE@247..252 "\n    "
+        R_CURLY@252..253 "}"
+    WHITESPACE@253..254 "\n"
+    R_CURLY@254..255 "}"
+  WHITESPACE@255..256 "\n"

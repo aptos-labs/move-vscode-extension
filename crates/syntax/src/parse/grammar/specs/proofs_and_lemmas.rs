@@ -1,7 +1,7 @@
 use crate::SyntaxKind::*;
 use crate::T;
 use crate::parse::grammar::expressions::blocks::{StmtKind, stmt};
-use crate::parse::grammar::expressions::{atom, blocks, expr};
+use crate::parse::grammar::expressions::{atom, blocks, expr, value_arg_list};
 use crate::parse::grammar::paths::PathMode;
 use crate::parse::grammar::specs::quants;
 use crate::parse::grammar::specs::quants::{quant_binding_list, weight};
@@ -56,7 +56,12 @@ pub(crate) fn apply_lemma(p: &mut Parser) -> bool {
     // lemma path
     atom::path_expr(p);
     // lemma args
-    expressions::value_arg_list(p);
+    if p.at(T!['(']) {
+        value_arg_list(p);
+    } else {
+        // emit an error when argument list is missing
+        p.error("expected argument list");
+    }
     p.expect(T![;]);
     m.complete(p, APPLY_LEMMA);
     true
