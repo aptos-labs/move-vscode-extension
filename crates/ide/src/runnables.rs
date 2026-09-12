@@ -9,9 +9,9 @@ use base_db::SourceDatabase;
 use base_db::package_root::PackageId;
 use ide_db::helpers::{visit_file_defs, visit_item_specs};
 use ide_db::{RootDatabase, SymbolKind};
-use lang::Semantics;
 use lang::nameres::fq_named_element::ItemFQNameOwner;
 use lang::node_ext::item_spec::ItemSpecExt;
+use lang::{Semantics, nameres};
 use syntax::ast::HasItems;
 use syntax::files::{InFile, InFileExt};
 use syntax::{TextSize, ast};
@@ -97,7 +97,10 @@ pub(crate) fn runnables(db: &RootDatabase, file_id: FileId) -> Vec<Runnable> {
 
     visit_item_specs(&sema, file_id, &mut |item_spec| {
         let item_spec_ref = item_spec.as_ref().and_then(|it| it.item_spec_ref())?;
-        let fun = item_spec.item(sema.db)?.and_then(|it| it.fun())?;
+
+        let fun = nameres::resolve(db, item_spec_ref.clone())
+            .and_then(|it| it.cast_into::<ast::ItemSpecItem>(db))?
+            .and_then(|it| it.fun())?;
         if let Some(runnable) = runnable_for_fun_item_spec(&sema, item_spec_ref, fun) {
             res.push(runnable);
         }

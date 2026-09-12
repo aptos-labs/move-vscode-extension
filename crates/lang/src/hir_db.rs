@@ -85,7 +85,9 @@ fn inference_tracked<'db>(
     ctx_owner_loc: SyntaxLocInput<'db>,
     msl: bool,
 ) -> InferenceResult {
-    let ctx_owner = ctx_owner_loc.to_ast::<ast::InferenceCtxOwner>(db).unwrap();
+    let ctx_owner = ctx_owner_loc
+        .to_ast::<ast::InferenceCtxOwner>(db)
+        .expect("hir_db::inference_tracked() should only be called with ast::InferenceCtxOwner items");
 
     let return_ty = match ctx_owner.syntax().syntax_cast::<ast::AnyFun>() {
         Some(fun) => ty_db::lower_function(db, fun, msl).ret_type_ty(),

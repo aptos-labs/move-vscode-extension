@@ -22,7 +22,7 @@ use lang::nameres::path_kind::path_kind;
 use lang::nameres::path_resolution::{ResolutionContext, get_path_resolve_variants};
 use lang::nameres::scope::ScopeEntry;
 use lang::nameres::{labels, path_kind};
-use lang::node_ext::item_spec::ItemSpecExt;
+use lang::node_ext::item_spec::{AttachedSpecItem, attached_spec_item};
 use std::cell::RefCell;
 use std::collections::HashSet;
 use syntax::SyntaxKind::*;
@@ -444,6 +444,7 @@ pub(crate) enum MslContext {
     ModuleItemSpec,
     Schema,
     SpecFun,
+    Lambda,
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -496,15 +497,22 @@ fn path_completion_ctx(
 
     let mut msl_context = MslContext::None;
     if fake_path.syntax().is_msl_context() {
-        if let Some(item_spec) = fake_path.syntax().ancestor_strict::<ast::ItemSpec>() {
-            if item_spec.item_spec_ref().is_some() {
-                let item_kind = item_spec
-                    .in_file(ctx.position.file_id)
-                    .item(ctx.db)
-                    .map(|it| it.kind());
-                msl_context = MslContext::ItemSpec { kind: item_kind };
-            } else {
-                msl_context = MslContext::ModuleItemSpec;
+        let attached_spec_item = attached_spec_item(
+            ctx.db,
+            fake_path
+                .syntax()
+                .to_syntax_element()
+                .in_file(ctx.position.file_id),
+        );
+        if let Some(attached_spec_item) = attached_spec_item {
+            msl_context = match attached_spec_item {
+                AttachedSpecItem::Fun(_) => MslContext::ItemSpec { kind: Some(FUN) },
+                AttachedSpecItem::StructOrEnum(struct_or_enum) => MslContext::ItemSpec {
+                    kind: Some(struct_or_enum.kind()),
+                },
+                AttachedSpecItem::UnresolvedItem => MslContext::ItemSpec { kind: None },
+                AttachedSpecItem::Module => MslContext::ModuleItemSpec,
+                AttachedSpecItem::Lambda(_) => MslContext::Lambda,
             }
         } else if fake_path.syntax().has_ancestor_strict::<ast::Schema>() {
             msl_context = MslContext::Schema;

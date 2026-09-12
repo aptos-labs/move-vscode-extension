@@ -13,8 +13,8 @@ use crate::nameres::name_resolution::{WalkScopesCtx, get_entries_from_walking_sc
 use crate::nameres::namespaces::NAMES;
 use crate::nameres::path_resolution::get_method_resolve_variants;
 use crate::nameres::scope::{ScopeEntryExt, ScopeEntryListExt, VecExt, into_field_shorthand_items};
+use crate::node_ext::any_field_ext;
 use crate::node_ext::item_spec::ItemSpecExt;
-use crate::node_ext::{any_field_ext, item_spec};
 use crate::types::expectation::Expected;
 use crate::types::inference::{InferenceCtx, TypeError};
 use crate::types::patterns::{BindingMode, anonymous_pat_ty_var};
@@ -158,7 +158,10 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             ast::InferenceCtxOwner::SpecInlineFun(fun) => fun.to_any_fun().params_as_bindings(),
             ast::InferenceCtxOwner::Lemma(lemma) => lemma.to_any_fun().params_as_bindings(),
             ast::InferenceCtxOwner::ItemSpec(item_spec) => {
-                let item = item_spec.clone().in_file(self.ctx.file_id).item(self.ctx.db)?;
+                let item = item_spec
+                    .clone()
+                    .in_file(self.ctx.file_id)
+                    .related_item(self.ctx.db)?;
                 self.collect_item_spec_signature_bindings(item_spec, item.clone());
                 binding_file_id = item.file_id;
                 match item.value {
@@ -517,10 +520,7 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         use syntax::SyntaxKind::*;
 
         if self.ctx.msl
-            && let Some(path_expr_ty) = item_spec::try_infer_spec_only_path_expr(
-                self.ctx.db,
-                path_expr.in_file(self.ctx.file_id),
-            )
+            && let Some(path_expr_ty) = self.try_infer_spec_only_path_expr(path_expr)
         {
             self.ctx
                 .expr_types

@@ -41,7 +41,7 @@ pub fn get_item_specs_for_items_in_file(
         }
 
         for item_spec in module_item_specs {
-            if let Some(item) = item_spec.item(db) {
+            if let Some(item) = item_spec.related_item(db) {
                 let entries = items_with_item_specs.entry(item.loc()).or_insert(vec![]);
                 entries.push(item_spec.loc());
             }

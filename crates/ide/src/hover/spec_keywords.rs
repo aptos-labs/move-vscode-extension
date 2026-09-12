@@ -1,11 +1,11 @@
 use crate::RangeInfo;
 use crate::hover::HoverResult;
 use base_db::SourceDatabase;
-use lang::node_ext::item_spec::ItemSpecExt;
+use lang::node_ext::item_spec::{AttachedSpecItem, attached_spec_item};
 use syntax::SyntaxKind::*;
+use syntax::SyntaxToken;
 use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::InFileExt;
-use syntax::{SyntaxToken, ast};
 use vfs::FileId;
 
 pub(crate) fn spec_keyword_docs(
@@ -13,10 +13,6 @@ pub(crate) fn spec_keyword_docs(
     file_id: FileId,
     kw_token: SyntaxToken,
 ) -> Option<RangeInfo<HoverResult>> {
-    let item_spec = kw_token
-        .ancestor_strict::<ast::ItemSpec>()
-        .map(|it| it.in_file(file_id));
-    let item_kind = item_spec.and_then(|it| it.item(db)).map(|it| it.kind());
     let doc_string = match kw_token.kind() {
         ASSERT_KW => {
             // language=Markdown
@@ -132,24 +128,12 @@ aborts_with EXECUTION_FAILURE;
 ```
         "#
         }
-        // language=Markdown
-        INVARIANT_KW if item_kind.is_some_and(|it| it == FUN) => {
-            r#"
-The `invariant` condition on a function is simply a shortcut for a `requires` and `ensures` with the same predicate.
-Thus, the following:
-```
-invariant global<Counter>(a).value < 128;
-```
-is equivalent to:
-```
-requires global<Counter>(a).value < 128;
-ensures global<Counter>(a).value < 128;
-```
-        "#
-        }
-        // language=Markdown
-        INVARIANT_KW if item_kind.is_some_and(|it| it == STRUCT || it == ENUM) => {
-            r#"
+        INVARIANT_KW => {
+            let attached_item = attached_spec_item(db, kw_token.to_syntax_element().in_file(file_id))?;
+            // language=Markdown
+            match attached_item {
+                AttachedSpecItem::StructOrEnum(_) => {
+                    r#"
 When the `invariant` condition is applied to a struct, it expresses a well-formedness property of the struct data.
 Any instance of this struct that is currently not mutated will satisfy this property (with exceptions as outlined below).
 
@@ -163,6 +147,25 @@ A struct invariant is checked by the Move Prover whenever the struct value is co
 While the struct is mutated (e.g., via a `&mut Counter`) the invariant does not hold (but see exception below).
 In general, we consider mutation as an implicit unpack, and end of mutation as a pack.
         "#
+                }
+                AttachedSpecItem::Fun(_) => {
+                    r#"
+The `invariant` condition on a function is simply a shortcut for a `requires` and `ensures` with the same predicate.
+Thus, the following:
+```
+invariant global<Counter>(a).value < 128;
+```
+is equivalent to:
+```
+requires global<Counter>(a).value < 128;
+ensures global<Counter>(a).value < 128;
+```
+        "#
+                }
+                _ => {
+                    return None;
+                }
+            }
         }
         _ => {
             return None;
