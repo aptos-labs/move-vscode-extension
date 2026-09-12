@@ -456,3 +456,21 @@ module 0x1::implies {
 }    "#,
     )
 }
+
+#[test]
+fn test_loop_expr_spec_block_index() {
+    // language=Move
+    check_expr_type(
+        r#"
+        module 0x1::main {
+            fun main() {
+                for (i in 0..10) {
+                } spec {
+                    invariant i <= 11;
+                            //^ num
+                };
+            }
+        }
+    "#,
+    )
+}

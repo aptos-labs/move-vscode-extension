@@ -1050,7 +1050,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
     }
 
     fn infer_loop_expr(&mut self, loop_expr: &ast::LoopExpr) -> Ty {
-        self.infer_loop_like_body(loop_expr.clone().into())
+        self.infer_loop_like_body(loop_expr.clone().into());
+        Ty::Never
     }
 
     fn infer_while_expr(&mut self, while_expr: &ast::WhileExpr) -> Ty {
@@ -1061,7 +1062,8 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         if let Some(inline_spec_block) = while_expr.spec_block() {
             self.process_spec_block(&inline_spec_block);
         }
-        self.infer_loop_like_body(while_expr.clone().into())
+        self.infer_loop_like_body(while_expr.clone().into());
+        Ty::Never
     }
 
     fn infer_for_expr(&mut self, for_expr: &ast::ForExpr) -> Ty {
@@ -1080,14 +1082,17 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
                 self.process_spec_block(&inline_spec_block);
             }
         }
-        self.infer_loop_like_body(for_expr.clone().into())
+        if let Some(inline_spec_block) = for_expr.spec_block() {
+            self.process_spec_block(&inline_spec_block);
+        }
+        self.infer_loop_like_body(for_expr.clone().into());
+        Ty::Never
     }
 
-    fn infer_loop_like_body(&mut self, loop_like: ast::LoopLike) -> Ty {
+    fn infer_loop_like_body(&mut self, loop_like: ast::LoopLike) {
         if let Some(loop_body_expr) = loop_like.loop_body_expr() {
             self.infer_block_or_inline_expr(&loop_body_expr, Expected::ExpectType(Ty::Unit), false);
         }
-        Ty::Never
     }
 
     fn infer_cast_expr(&mut self, cast_expr: &ast::CastExpr, expected: Expected) -> Ty {
