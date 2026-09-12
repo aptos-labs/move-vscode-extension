@@ -25,7 +25,7 @@ pub struct InferenceResult {
     pat_types: HashMap<SyntaxLoc, Ty>,
     expr_types: HashMap<SyntaxLoc, Ty>,
     call_expr_types: HashMap<SyntaxLoc, TyCallable>,
-
+    // lambda_expr_types: HashMap<SyntaxLoc, TyCallable>,
     resolved_paths: HashMap<SyntaxLoc, Vec<ScopeEntryWithVis>>,
     resolved_method_calls: HashMap<SyntaxLoc, Option<ScopeEntry>>,
     resolved_fields: HashMap<SyntaxLoc, Option<ScopeEntry>>,
@@ -46,22 +46,15 @@ impl InferenceResult {
         let pat_types = fully_resolve_map_values(ctx.pat_types.clone(), &ctx);
         let expr_types = fully_resolve_map_values(ctx.expr_types.clone(), &ctx);
 
-        // for call expressions, we need to leave ty vars in substitution intact to determine
-        // whether an explicit type annotation required
         let call_expr_types = ctx
             .call_expr_types
             .clone()
             .into_iter()
             .map(|(any_call_expr, callable_ty)| {
-                let TyCallable { param_types, ret_type, kind } = callable_ty;
-                let param_tys = param_types
-                    .into_iter()
-                    .map(|it| ctx.fully_resolve_vars_fallback_to_origin(it))
-                    .collect();
-                let return_ty = ctx.fully_resolve_vars_fallback_to_origin(*ret_type);
-                let res_ty =
-                    TyCallable::new(param_tys, return_ty, ctx.resolve_ty_vars_if_possible(kind));
-                (any_call_expr.loc(ctx.file_id), res_ty)
+                (
+                    any_call_expr.loc(ctx.file_id),
+                    Self::unify_callable_ty(&ctx, callable_ty),
+                )
             })
             .collect();
 
@@ -77,11 +70,25 @@ impl InferenceResult {
             pat_types,
             expr_types,
             call_expr_types,
+            // lambda_expr_types,
             resolved_paths,
             resolved_method_calls,
             resolved_fields,
             resolved_ident_pats,
         }
+    }
+
+    // for call expressions, we need to leave ty vars in substitution intact to determine
+    // whether an explicit type annotation required
+    fn unify_callable_ty(ctx: &InferenceCtx, callable_ty: TyCallable) -> TyCallable {
+        let TyCallable { param_types, ret_type, kind } = callable_ty;
+        let param_tys = param_types
+            .into_iter()
+            .map(|it| ctx.fully_resolve_vars_fallback_to_origin(it))
+            .collect();
+        let return_ty = ctx.fully_resolve_vars_fallback_to_origin(*ret_type);
+        let res_ty = TyCallable::new(param_tys, return_ty, ctx.resolve_ty_vars_if_possible(kind));
+        res_ty
     }
 
     fn unify_remaining_int_vars_into_integer(ctx: &mut InferenceCtx) {

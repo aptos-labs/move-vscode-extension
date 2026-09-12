@@ -11,7 +11,7 @@ use crate::RangeInfo;
 use crate::hover::named_element::DocSignatureOwner;
 use ide_db::RootDatabase;
 use lang::Semantics;
-use lang::node_ext::item_spec::ItemSpecExt;
+use lang::node_ext::item_spec::{AttachedSpecItem, attached_spec_item};
 use lang::types::ty_db;
 use std::fmt::Write;
 use stdx::itertools::Itertools;
@@ -114,30 +114,25 @@ fn docs_for_item_spec_fun_result(
         return None;
     }
     let path = reference.path()?;
-    if let Some(item_spec) = path.syntax().ancestor_strict::<ast::ItemSpec>() {
-        if let Some(fun) = item_spec
-            .in_file(file_id)
-            .item(sema.db)
-            .and_then(|it| it.cast_into::<ast::Fun>())
-        {
-            // fetch the return type
-            let fun_ty = ty_db::lower_function(sema.db, fun, true);
-            let fun_ret_ty = sema.render_ty_for_ui(&fun_ty.ret_type_ty(), file_id);
-            return Some(RangeInfo::new(
-                path.syntax().text_range(),
-                HoverResult {
-                    doc_string: stdx::trim_indent(&format!(
-                        r#"
+    let attached_item = attached_spec_item(sema.db, path.syntax().to_syntax_element().in_file(file_id))?;
+    if let AttachedSpecItem::Fun(fun) = attached_item {
+        // fetch the return type
+        let fun_ty = ty_db::lower_function(sema.db, fun, true);
+        let fun_ret_ty = sema.render_ty_for_ui(&fun_ty.ret_type_ty(), file_id);
+        return Some(RangeInfo::new(
+            path.syntax().text_range(),
+            HoverResult {
+                doc_string: stdx::trim_indent(&format!(
+                    r#"
                         ```
                         result: {fun_ret_ty}
                         ```
                         ---
                         `result` is a special spec variable which holds the return value of a function.
                         "#,
-                    )),
-                },
-            ));
-        }
+                )),
+            },
+        ));
     }
     None
 }

@@ -5,17 +5,22 @@
 // Modifications have been made to the original code.
 
 use crate::nameres::scope::ScopeEntryExt;
+use crate::node_ext::item_spec::{AttachedSpecItem, attached_spec_item};
 use crate::types::expectation::Expected;
 use crate::types::inference::ast_walker::{CallArg, TypeAstWalker};
 use crate::types::substitution::ApplySubstitution;
 use crate::types::ty::Ty;
+use crate::types::ty::adt::TyAdt;
 use crate::types::ty::schema::TySchema;
 use crate::types::ty::ty_callable::TyCallableKind;
 use crate::types::ty_db;
+use regex::Regex;
 use std::iter::zip;
-use syntax::ast;
+use std::sync::LazyLock;
 use syntax::ast::node_ext::spec_predicate_stmt::SpecPredicateKind;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::{InFile, InFileExt};
+use syntax::{AstNode, ast};
 
 impl<'a, 'db> TypeAstWalker<'a, 'db> {
     pub(super) fn process_predicate_stmt(&mut self, predicate: &ast::SpecPredicateStmt) -> Option<()> {
@@ -227,4 +232,54 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             _ => (),
         }
     }
+
+    pub(super) fn try_infer_spec_only_path_expr(&mut self, path_expr: &ast::PathExpr) -> Option<Ty> {
+        let path_name = path_expr.path().reference_name()?;
+        // short-circuit
+        if !path_name.starts_with("result") && path_name != "self" {
+            return None;
+        }
+
+        let attached_spec_item = attached_spec_item(
+            self.ctx.db,
+            path_expr.syntax().to_syntax_element().in_file(self.ctx.file_id),
+        )?;
+        match attached_spec_item {
+            AttachedSpecItem::StructOrEnum(struct_or_enum) if path_name == "self" => {
+                Some(TyAdt::new(struct_or_enum).into())
+            }
+            AttachedSpecItem::Fun(fun) if path_name.starts_with("result") => {
+                let (file_id, fun) = fun.unpack();
+                let fun_return_type = fun
+                    .return_type()
+                    .map(|it| ty_db::lower_type(self.ctx.db, it.in_file(file_id), true))
+                    .unwrap_or(Ty::Unit);
+                Self::spec_result_ty(&path_name, fun_return_type)
+            }
+            AttachedSpecItem::Lambda(lambda_expr) if path_name.starts_with("result") => {
+                let lambda_ty = self.ctx.lambda_expr_types.get(&lambda_expr)?;
+                Self::spec_result_ty(&path_name, (*lambda_ty.ret_type).clone())
+            }
+            _ => None,
+        }
+    }
+
+    fn spec_result_ty(path_name: &str, return_ty: Ty) -> Option<Ty> {
+        // no `result` if return type of the function is a tuple
+        if path_name == "result" {
+            return if matches!(return_ty, Ty::Tuple(_)) {
+                None
+            } else {
+                Some(return_ty)
+            };
+        }
+        let (_, [index]) = TUPLE_RESULT_REGEX.captures(&path_name)?.extract();
+        let tuple_index = index.parse::<usize>().unwrap();
+        let member_ty = return_ty
+            .into_ty_tuple()
+            .and_then(|ty_tuple| ty_tuple.types.get(tuple_index - 1).cloned());
+        Some(member_ty.unwrap_or(Ty::Unknown))
+    }
 }
+
+static TUPLE_RESULT_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^result_([1-9])$").unwrap());

@@ -69,7 +69,7 @@ pub fn resolve_multi(
                 let item_spec_fun = item_spec_type_param
                     .item_spec()
                     .in_file(file_id)
-                    .item(db)?
+                    .related_item(db)?
                     .cast_into::<ast::Fun>()?;
                 let entries = item_spec_fun
                     .flat_map(|it| it.to_any_fun().to_generic_element().type_params())

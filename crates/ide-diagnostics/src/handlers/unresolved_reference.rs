@@ -13,7 +13,6 @@ use ide_db::RootDatabase;
 use lang::nameres::is_visible::{ItemInvisibleReason, ScopeEntryWithVisExt};
 use lang::nameres::path_kind::{PathKind, QualifiedKind, path_kind};
 use lang::nameres::scope::{ScopeEntry, VecExt, into_field_shorthand_items};
-use lang::node_ext::item_spec;
 use lang::types::ty::Ty;
 use lang::{Semantics, hir_db};
 use std::collections::HashSet;
@@ -31,7 +30,7 @@ pub(crate) fn find_unresolved_references(
     reference: InFile<ast::ReferenceElement>,
 ) -> Option<()> {
     let msl = reference.value.syntax().is_msl_context();
-    if msl && is_special_msl_path(ctx.sema.db, reference.as_ref()).is_some() {
+    if msl && is_special_msl_path(reference.as_ref()).is_some() {
         return None;
     }
 
@@ -126,10 +125,7 @@ fn unresolved_path(
     Some(())
 }
 
-fn is_special_msl_path(
-    db: &dyn SourceDatabase,
-    reference: InFile<&ast::ReferenceElement>,
-) -> Option<()> {
+fn is_special_msl_path(reference: InFile<&ast::ReferenceElement>) -> Option<()> {
     if reference
         .value
         .syntax()
@@ -152,8 +148,9 @@ fn is_special_msl_path(
     }
 
     let path_expr = reference.and_then(|it| it.clone().path().and_then(|it| it.path_expr()))?;
+    let path_name = path_expr.value.path().reference_name()?;
 
-    if item_spec::try_infer_spec_only_path_expr(db, path_expr.as_ref()).is_some() {
+    if path_name == "self" || path_name.starts_with("result") {
         return Some(());
     }
 

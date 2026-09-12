@@ -75,7 +75,7 @@ pub fn get_entries_from_owner(db: &dyn SourceDatabase, scope: &InFile<SyntaxNode
         }
         ITEM_SPEC => {
             let item_spec = scope.syntax_cast::<ast::ItemSpec>().unwrap();
-            if let Some(item) = item_spec.item(db) {
+            if let Some(item) = item_spec.related_item(db) {
                 let (fid, item) = item.unpack();
                 match item {
                     ast::ItemSpecItem::Fun(fun) => {

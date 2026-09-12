@@ -156,14 +156,7 @@ pub trait SyntaxElementExt {
     }
 
     fn containing_file(&self) -> Option<ast::SourceFile> {
-        // let mut syntax_element = self.to_syntax_element();
         self.to_syntax_element().ancestor_strict::<ast::SourceFile>()
-        // while syntax_element.kind() != SOURCE_FILE {
-        //     syntax_element = syntax_element.parent()?.syntax_element();
-        // }
-        // ast::SourceFile::cast(syntax_element)
-        //
-        // algo::containing_file_for_node(self.to_syntax_element())
     }
 
     fn containing_item_spec(&self) -> Option<ast::ItemSpec> {
