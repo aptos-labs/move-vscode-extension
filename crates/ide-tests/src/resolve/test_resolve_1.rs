@@ -998,3 +998,22 @@ fn test_resolve_type_parameter_for_the_function_value_of_result_of() {
     "#,
     )
 }
+
+#[test]
+fn test_resolve_loop_index_in_spec_block() {
+    // language=Move
+    check_resolve(
+        r#"
+        module 0x1::main {
+            fun main() {
+                for (i in 0..10) {
+                   //X
+                } spec {
+                    invariant i <= 11;
+                            //^
+                };
+            }
+        }
+    "#,
+    )
+}

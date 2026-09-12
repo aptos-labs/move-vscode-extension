@@ -361,7 +361,7 @@ LoopExpr =
     LabelDecl? 'loop' loop_body_expr:BlockOrInlineExpr
 
 ForExpr =
-    LabelDecl? 'for' ForCondition loop_body_expr:BlockOrInlineExpr
+    LabelDecl? 'for' ForCondition loop_body_expr:BlockOrInlineExpr (spec_block:SpecBlockExpr)?
 
 ForCondition =
     '(' (IdentPat | WildcardPat) 'in' Expr (spec_block:SpecBlockExpr)? ')'

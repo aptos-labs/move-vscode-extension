@@ -578,6 +578,8 @@ impl ForExpr {
     #[inline]
     pub fn loop_body_expr(&self) -> Option<BlockOrInlineExpr> { support::child(&self.syntax) }
     #[inline]
+    pub fn spec_block(&self) -> Option<SpecBlockExpr> { support::child(&self.syntax) }
+    #[inline]
     pub fn for_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![for]) }
 }
 

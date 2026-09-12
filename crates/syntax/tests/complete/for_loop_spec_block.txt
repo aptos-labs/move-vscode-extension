@@ -1,0 +1,78 @@
+SOURCE_FILE@0..145
+  MODULE@0..144
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..31
+      IDENT@12..31 "for_loop_spec_block"
+    WHITESPACE@31..32 " "
+    L_CURLY@32..33 "{"
+    WHITESPACE@33..38 "\n    "
+    FUN@38..142
+      FUN_KW@38..41 "fun"
+      WHITESPACE@41..42 " "
+      NAME@42..46
+        IDENT@42..46 "main"
+      PARAM_LIST@46..48
+        L_PAREN@46..47 "("
+        R_PAREN@47..48 ")"
+      WHITESPACE@48..49 " "
+      BLOCK_EXPR@49..142
+        L_CURLY@49..50 "{"
+        WHITESPACE@50..59 "\n        "
+        EXPR_STMT@59..136
+          FOR_EXPR@59..135
+            FOR_KW@59..62 "for"
+            WHITESPACE@62..63 " "
+            FOR_CONDITION@63..75
+              L_PAREN@63..64 "("
+              IDENT_PAT@64..65
+                NAME@64..65
+                  IDENT@64..65 "i"
+              WHITESPACE@65..66 " "
+              IN_KW@66..68 "in"
+              WHITESPACE@68..69 " "
+              RANGE_EXPR@69..74
+                LITERAL@69..70
+                  INT_NUMBER@69..70 "0"
+                DOT_DOT@70..72 ".."
+                LITERAL@72..74
+                  INT_NUMBER@72..74 "10"
+              R_PAREN@74..75 ")"
+            WHITESPACE@75..76 " "
+            BLOCK_EXPR@76..87
+              L_CURLY@76..77 "{"
+              WHITESPACE@77..86 "\n        "
+              R_CURLY@86..87 "}"
+            WHITESPACE@87..88 " "
+            SPEC_BLOCK_EXPR@88..135
+              SPEC_KW@88..92 "spec"
+              WHITESPACE@92..93 " "
+              BLOCK_EXPR@93..135
+                L_CURLY@93..94 "{"
+                WHITESPACE@94..107 "\n            "
+                INVARIANT_STMT@107..125
+                  INVARIANT_KW@107..116 "invariant"
+                  WHITESPACE@116..117 " "
+                  BIN_EXPR@117..124
+                    PATH_EXPR@117..118
+                      PATH@117..118
+                        PATH_SEGMENT@117..118
+                          NAME_REF@117..118
+                            IDENT@117..118 "i"
+                    WHITESPACE@118..119 " "
+                    LT_EQ@119..121 "<="
+                    WHITESPACE@121..122 " "
+                    LITERAL@122..124
+                      INT_NUMBER@122..124 "11"
+                  SEMICOLON@124..125 ";"
+                WHITESPACE@125..134 "\n        "
+                R_CURLY@134..135 "}"
+          SEMICOLON@135..136 ";"
+        WHITESPACE@136..141 "\n    "
+        R_CURLY@141..142 "}"
+    WHITESPACE@142..143 "\n"
+    R_CURLY@143..144 "}"
+  WHITESPACE@144..145 "\n"

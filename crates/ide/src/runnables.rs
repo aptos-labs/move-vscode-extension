@@ -10,7 +10,6 @@ use base_db::package_root::PackageId;
 use ide_db::helpers::{visit_file_defs, visit_item_specs};
 use ide_db::{RootDatabase, SymbolKind};
 use lang::nameres::fq_named_element::ItemFQNameOwner;
-use lang::node_ext::item_spec::ItemSpecExt;
 use lang::{Semantics, nameres};
 use syntax::ast::HasItems;
 use syntax::files::{InFile, InFileExt};

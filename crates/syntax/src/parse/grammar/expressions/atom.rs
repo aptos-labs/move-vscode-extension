@@ -299,6 +299,7 @@ fn for_expr(p: &mut Parser, m: Option<Marker>) -> CompletedMarker {
     p.bump_remap(T![for]);
     for_condition(p);
     block_or_inline_expr(p);
+    opt_spec_block_expr(p);
     m.complete(p, FOR_EXPR)
 }
 
