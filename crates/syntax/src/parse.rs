@@ -7,7 +7,7 @@
 mod event;
 mod grammar;
 pub(crate) mod parser;
-mod token_set;
+pub mod token_set;
 
 pub mod lexer;
 pub(crate) mod recovery_set;

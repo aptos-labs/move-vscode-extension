@@ -4,10 +4,10 @@
 // This file contains code originally from rust-analyzer, licensed under Apache License 2.0.
 // Modifications have been made to the original code.
 
-use crate::ast::{AstChildren, FieldsOwner, HasAttrs, HasStmts, support};
+use crate::ast::{AstChildren, FieldsOwner, HasAttrs, HasStmts, UseStmtsOwner, support};
 use crate::{AstNode, ast};
 
-pub trait HasItems: AstNode {
+pub trait HasItems: UseStmtsOwner {
     fn items(&self) -> AstChildren<ast::Item> {
         support::children(&self.syntax())
     }
