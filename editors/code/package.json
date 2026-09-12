@@ -801,7 +801,7 @@
         "@aptos-labs/ts-sdk": "^7.1.0",
         "@octokit/rest": "^22.0.1",
         "command-exists": "^1.2.9",
-        "vscode-languageclient": "^9.0.1"
+        "vscode-languageclient": "^10.1.0"
     },
     "overrides": {
         "css-select": "5.2.0"
