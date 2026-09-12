@@ -15,7 +15,11 @@ pub(crate) fn behavior_predicate(p: &mut Parser) -> Option<CompletedMarker> {
     {
         let m = p.start();
         p.bump(T![ident]);
-        opt_type_arg_list_for_expr(p, false);
+        // `value_arg_list` asserts on '(', and a failed type arg list rolls back to the '<'
+        if !opt_type_arg_list_for_expr(p, false) || !p.at(T!['(']) {
+            p.error("expected '('");
+            return Some(m.complete(p, BEHAVIOR_PREDICATE_EXPR));
+        }
         value_arg_list(p);
         let cm = m.complete(p, BEHAVIOR_PREDICATE_EXPR);
         return Some(cm);
