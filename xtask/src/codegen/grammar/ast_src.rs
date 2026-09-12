@@ -322,6 +322,7 @@ pub(crate) const REQUIRED_METHOD_FIELDS: &[(&str, &[&str])] = &[
     // ("NameRef", &["ident"]),
     ("NamedAddress", &["ident"]),
     ("ValueAddress", &["int_number"]),
+    ("BehaviorPredicateExpr", &["ident"]),
 ];
 
 pub(crate) const TRAITS: &[(&str, &[&str])] = &[

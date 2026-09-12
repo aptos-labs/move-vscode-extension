@@ -7,8 +7,11 @@
 use crate::DiagnosticsContext;
 use crate::diagnostic::Diagnostic;
 use syntax::ast::node_ext::assert_macro_expr::AssertKind;
+use syntax::ast::node_ext::behavior_predicate_expr::BehaviorPredicateKind;
+use syntax::ast::node_ext::syntax_element::SyntaxElementExt;
 use syntax::files::{FileRange, InFile, InFileExt};
 use syntax::{AstNode, ast};
+use vfs::FileId;
 
 #[tracing::instrument(level = "debug", skip_all)]
 pub(crate) fn check_value_arguments<'db>(
@@ -27,8 +30,56 @@ pub(crate) fn check_value_arguments<'db>(
     }
 
     // use range, because assert! can have either 1 or 2 arguments
+    let (min, max) = expected_min_max_count(ctx, file_id, any_call_expr)?;
+    let actual_count = arg_exprs.len();
+
+    let expected_count_message = if min == max {
+        format!("{min}")
+    } else {
+        format!("{min} to {max}")
+    };
+    if actual_count < min {
+        let range = value_arg_list
+            .r_paren_token()
+            .map(|it| it.text_range())
+            .unwrap_or(value_arg_list.syntax().text_range());
+        acc.push(Diagnostic::error(
+            "arguments-number-mismatch",
+            format!("This function takes {expected_count_message} parameters, but {actual_count} parameters were supplied"),
+            FileRange { file_id, range },
+        ));
+        return Some(());
+    }
+
+    if actual_count > max {
+        for error_expr in arg_exprs.iter().skip(max) {
+            let range = error_expr.syntax().text_range();
+            acc.push(Diagnostic::error(
+                "arguments-number-mismatch",
+                format!("This function takes {expected_count_message} parameters, but {actual_count} parameters were supplied"),
+                FileRange { file_id, range },
+            ));
+            return Some(());
+        }
+    }
+
+    Some(())
+}
+
+fn expected_min_max_count<'db>(
+    ctx: &'db DiagnosticsContext<'db>,
+    file_id: FileId,
+    any_call_expr: ast::AnyCallExpr,
+) -> Option<(usize, usize)> {
     let (min, max) = match any_call_expr {
         ast::AnyCallExpr::CallExpr(call_expr) => {
+            if call_expr.syntax().is_msl_context() {
+                let path_name = call_expr.path()?.reference_name()?;
+                if path_name == "vec" {
+                    // spec builtin `vec`, any number of args allowed
+                    return None;
+                }
+            }
             let ty_callable = ctx
                 .sema
                 .get_call_expr_type(&call_expr.in_file(file_id).map_into())?;
@@ -60,41 +111,21 @@ pub(crate) fn check_value_arguments<'db>(
             let fun = ctx
                 .sema
                 .resolve_to_element::<ast::AnyFun>(fun_path.in_file(file_id))?;
-            let expected_count = fun.value.params().len();
-            (expected_count, expected_count)
+            match b_predicate.predicate_kind() {
+                BehaviorPredicateKind::AbortsOf
+                | BehaviorPredicateKind::RequiresOf
+                | BehaviorPredicateKind::ResultOf
+                | BehaviorPredicateKind::UnchangedOf => {
+                    let expected_count = fun.value.params().len();
+                    (expected_count, expected_count)
+                }
+                BehaviorPredicateKind::EnsuresOf => {
+                    let expected_count = fun.value.params().len();
+                    (expected_count, usize::MAX)
+                }
+                BehaviorPredicateKind::FoldsOf => (2, 2),
+            }
         }
     };
-    let actual_count = arg_exprs.len();
-
-    let expected_count_message = if min == max {
-        format!("{min}")
-    } else {
-        format!("{min} to {max}")
-    };
-    if actual_count < min {
-        let range = value_arg_list
-            .r_paren_token()
-            .map(|it| it.text_range())
-            .unwrap_or(value_arg_list.syntax().text_range());
-        acc.push(Diagnostic::error(
-            "arguments-number-mismatch",
-        format!("This function takes {expected_count_message} parameters, but {actual_count} parameters were supplied"),
-            FileRange { file_id, range },
-        ));
-        return Some(());
-    }
-
-    if actual_count > max {
-        for error_expr in arg_exprs.iter().skip(max) {
-            let range = error_expr.syntax().text_range();
-            acc.push(Diagnostic::error(
-                "arguments-number-mismatch",
-                format!("This function takes {expected_count_message} parameters, but {actual_count} parameters were supplied"),
-                FileRange { file_id, range },
-            ));
-            return Some(());
-        }
-    }
-
-    Some(())
+    Some((min, max))
 }

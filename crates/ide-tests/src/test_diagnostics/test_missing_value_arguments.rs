@@ -252,3 +252,60 @@ fn test_invalid_number_of_arguments_behaviour_predicates() {
         }
     "#]]);
 }
+
+#[test]
+fn test_folds_of_params() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            native fun params_2(val: u8, val2: u64);
+
+            fun main() {
+            }
+            spec main {
+                folds_of<params_2>();
+                                 //^ err: This function takes 2 parameters, but 0 parameters were supplied
+                folds_of<params_2>(1, 2);
+                folds_of<params_2>(1, 2, 3);
+                                       //^ err: This function takes 2 parameters, but 3 parameters were supplied
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_unchanged_of_params() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            native fun params_2(val: u8, val2: u64);
+
+            fun main() {
+            }
+            spec main {
+                unchanged_of<params_2>();
+                                     //^ err: This function takes 2 parameters, but 0 parameters were supplied
+                unchanged_of<params_2>(1, 2);
+                unchanged_of<params_2>(1, 2, 3);
+                                           //^ err: This function takes 2 parameters, but 3 parameters were supplied
+            }
+        }
+    "#]]);
+}
+
+#[test]
+fn test_vec_spec_function_any_number_of_params() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::M {
+            fun main() {
+            }
+            spec main {
+                vec();
+                vec(1);
+                vec(1, 2);
+                vec(1, 2, 3, 4, 5);
+            }
+        }
+    "#]]);
+}

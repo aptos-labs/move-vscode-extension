@@ -328,7 +328,10 @@ impl BehaviorPredicateExpr {
     #[inline]
     pub fn value_arg_list(&self) -> Option<ValueArgList> { support::child(&self.syntax) }
     #[inline]
-    pub fn ident_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![ident]) }
+    pub fn ident_token(&self) -> SyntaxToken {
+        support::token(&self.syntax, T![ident])
+            .expect("BehaviorPredicateExpr.ident_token required by the parser")
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

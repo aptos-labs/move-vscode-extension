@@ -1,0 +1,137 @@
+SOURCE_FILE@0..197
+  MODULE@0..196
+    MODULE_KW@0..6 "module"
+    WHITESPACE@6..7 " "
+    VALUE_ADDRESS@7..10
+      INT_NUMBER@7..10 "0x1"
+    COLON_COLON@10..12 "::"
+    NAME@12..42
+      IDENT@12..42 "behavior_predicate_no ..."
+    WHITESPACE@42..43 " "
+    L_CURLY@43..44 "{"
+    WHITESPACE@44..49 "\n    "
+    FUN@49..87
+      FUN_KW@49..52 "fun"
+      WHITESPACE@52..53 " "
+      NAME@53..54
+        IDENT@53..54 "f"
+      PARAM_LIST@54..84
+        L_PAREN@54..55 "("
+        PARAM@55..67
+          IDENT_PAT@55..56
+            NAME@55..56
+              IDENT@55..56 "g"
+          COLON@56..57 ":"
+          WHITESPACE@57..58 " "
+          LAMBDA_TYPE@58..67
+            PIPE@58..59 "|"
+            LAMBDA_TYPE_PARAM@59..62
+              PATH_TYPE@59..62
+                PATH@59..62
+                  PATH_SEGMENT@59..62
+                    NAME_REF@59..62
+                      IDENT@59..62 "u64"
+            PIPE@62..63 "|"
+            WHITESPACE@63..64 " "
+            PATH_TYPE@64..67
+              PATH@64..67
+                PATH_SEGMENT@64..67
+                  NAME_REF@64..67
+                    IDENT@64..67 "u64"
+        COMMA@67..68 ","
+        WHITESPACE@68..69 " "
+        PARAM@69..75
+          IDENT_PAT@69..70
+            NAME@69..70
+              IDENT@69..70 "a"
+          COLON@70..71 ":"
+          WHITESPACE@71..72 " "
+          PATH_TYPE@72..75
+            PATH@72..75
+              PATH_SEGMENT@72..75
+                NAME_REF@72..75
+                  IDENT@72..75 "u64"
+        COMMA@75..76 ","
+        WHITESPACE@76..77 " "
+        PARAM@77..83
+          IDENT_PAT@77..78
+            NAME@77..78
+              IDENT@77..78 "b"
+          COLON@78..79 ":"
+          WHITESPACE@79..80 " "
+          PATH_TYPE@80..83
+            PATH@80..83
+              PATH_SEGMENT@80..83
+                NAME_REF@80..83
+                  IDENT@80..83 "u64"
+        R_PAREN@83..84 ")"
+      WHITESPACE@84..85 " "
+      BLOCK_EXPR@85..87
+        L_CURLY@85..86 "{"
+        R_CURLY@86..87 "}"
+    WHITESPACE@87..92 "\n    "
+    ITEM_SPEC@92..194
+      SPEC_KW@92..96 "spec"
+      WHITESPACE@96..97 " "
+      ITEM_SPEC_REF@97..98
+        NAME_REF@97..98
+          IDENT@97..98 "f"
+      WHITESPACE@98..99 " "
+      BLOCK_EXPR@99..194
+        L_CURLY@99..100 "{"
+        WHITESPACE@100..109 "\n        "
+        ABORTS_IF_STMT@109..156
+          ABORTS_IF_KW@109..118 "aborts_if"
+          WHITESPACE@118..119 " "
+          BIN_EXPR@119..155
+            BIN_EXPR@119..148
+              BEHAVIOR_PREDICATE_EXPR@119..128
+                IDENT@119..128 "aborts_of"
+              L_ANGLE@128..129 "<"
+              DOT_EXPR@129..148
+                PATH_EXPR@129..133
+                  PATH@129..133
+                    PATH_SEGMENT@129..133
+                      NAME_REF@129..133
+                        IDENT@129..133 "self"
+                DOT@133..134 "."
+                NAME_REF@134..148
+                  IDENT@134..148 "settle_trade_f"
+            R_ANGLE@148..149 ">"
+            TUPLE_EXPR@149..155
+              L_PAREN@149..150 "("
+              PATH_EXPR@150..151
+                PATH@150..151
+                  PATH_SEGMENT@150..151
+                    NAME_REF@150..151
+                      IDENT@150..151 "a"
+              COMMA@151..152 ","
+              WHITESPACE@152..153 " "
+              PATH_EXPR@153..154
+                PATH@153..154
+                  PATH_SEGMENT@153..154
+                    NAME_REF@153..154
+                      IDENT@153..154 "b"
+              R_PAREN@154..155 ")"
+          SEMICOLON@155..156 ";"
+        WHITESPACE@156..165 "\n        "
+        ABORTS_IF_STMT@165..188
+          ABORTS_IF_KW@165..174 "aborts_if"
+          WHITESPACE@174..175 " "
+          BEHAVIOR_PREDICATE_EXPR@175..187
+            IDENT@175..184 "aborts_of"
+            TYPE_ARG_LIST@184..187
+              L_ANGLE@184..185 "<"
+              TYPE_ARG@185..186
+                PATH_TYPE@185..186
+                  PATH@185..186
+                    PATH_SEGMENT@185..186
+                      NAME_REF@185..186
+                        IDENT@185..186 "g"
+              R_ANGLE@186..187 ">"
+          SEMICOLON@187..188 ";"
+        WHITESPACE@188..193 "\n    "
+        R_CURLY@193..194 "}"
+    WHITESPACE@194..195 "\n"
+    R_CURLY@195..196 "}"
+  WHITESPACE@196..197 "\n"
