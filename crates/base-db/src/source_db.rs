@@ -57,7 +57,7 @@ pub trait SourceDatabase: salsa::Database {
 #[salsa_macros::tracked(returns(ref))]
 pub fn parse(db: &dyn SourceDatabase, file_id: FileIdInput) -> Parse {
     let _p = tracing::info_span!("source_db::parse", ?file_id).entered();
-    let text = db.file_text(file_id.data(db)).text(db);
+    let text = db.file_text(file_id.data(db).clone()).text(db);
     ast::SourceFile::parse(&text)
 }
 
@@ -70,13 +70,13 @@ pub fn parse_errors(db: &dyn SourceDatabase, file_id: FileIdInput) -> Option<Box
     }
 }
 
-#[salsa_macros::tracked]
+#[salsa_macros::tracked(returns(clone))]
 pub fn metadata_for_package_id(
     db: &dyn SourceDatabase,
     package_id: PackageId,
 ) -> Option<PackageMetadata> {
     let manifest_file_id = db.package_root(package_id).data(db).manifest_file_id?;
-    let metadata = db.package_metadata(manifest_file_id).metadata(db);
+    let metadata = db.package_metadata(manifest_file_id).metadata(db).clone();
     Some(metadata)
 }
 

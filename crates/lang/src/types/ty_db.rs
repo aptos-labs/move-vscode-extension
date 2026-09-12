@@ -32,7 +32,7 @@ pub(crate) fn try_lower_type(
     try_lower_type_tracked(db, type_loc, msl)
 }
 
-#[salsa_macros::tracked]
+#[salsa_macros::tracked(returns(clone))]
 fn try_lower_type_tracked<'db>(
     db: &'db dyn SourceDatabase,
     type_loc: SyntaxLocInput<'db>,
@@ -124,7 +124,7 @@ pub fn lower_primitive_type(db: &dyn SourceDatabase, path: InFile<ast::Path>, ms
     lower_primitive_type_tracked(db, path_loc, msl)
 }
 
-#[salsa_macros::tracked]
+#[salsa_macros::tracked(returns(clone))]
 fn lower_primitive_type_tracked<'db>(
     db: &'db dyn SourceDatabase,
     path_loc: SyntaxLocInput<'db>,

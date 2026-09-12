@@ -250,7 +250,7 @@ impl SearchScope {
         db: &'db RootDatabase,
     ) -> impl Iterator<Item = (Arc<str>, FileId, Vec<TextRange>)> + 'db {
         self.entries.iter().map(|(file_id, search_ranges)| {
-            let text = db.file_text(*file_id).text(db);
+            let text = db.file_text(*file_id).text(db).clone();
             let search_ranges = search_ranges
                 .clone()
                 .unwrap_or_else(|| vec![TextRange::up_to(TextSize::of(&*text))]);

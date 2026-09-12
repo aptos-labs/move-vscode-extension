@@ -16,7 +16,7 @@ use vfs::FileId;
 
 pub type AddressPair = (String, String);
 
-#[salsa_macros::interned(no_lifetime)]
+#[salsa_macros::interned(unsafe(no_lifetime), revisions = usize::MAX)]
 #[derive(Debug)]
 pub struct FileIdInput {
     pub data: FileId,
@@ -128,7 +128,7 @@ impl Files {
 
         self.spec_file_sets.clear();
         if let Some(builtins_file_id) = db.builtins_file_id() {
-            db.set_spec_related_files(builtins_file_id.data(db), vec![])
+            db.set_spec_related_files(builtins_file_id.data(db).clone(), vec![])
         }
 
         let mut all_package_ids = vec![];

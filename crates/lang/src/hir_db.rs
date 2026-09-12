@@ -39,7 +39,7 @@ pub(crate) fn resolve_path_multi(
     resolve_path_multi_tracked(db, SyntaxLocInput::new(db, path.loc()))
 }
 
-#[salsa_macros::tracked]
+#[salsa_macros::tracked(returns(clone))]
 fn resolve_path_multi_tracked<'db>(
     db: &'db dyn SourceDatabase,
     path_loc: SyntaxLocInput<'db>,
@@ -64,7 +64,7 @@ pub(crate) fn use_speck_entries(
     use_speck_entries_tracked(db, SyntaxLocInput::new(db, stmts_owner.loc()))
 }
 
-#[salsa_macros::tracked]
+#[salsa_macros::tracked(returns(clone))]
 fn use_speck_entries_tracked<'db>(
     db: &'db dyn SourceDatabase,
     stmts_owner_loc: SyntaxLocInput<'db>,
@@ -110,7 +110,7 @@ pub(crate) fn file_ids_by_module_address(
     file_ids_by_module_address_tracked(db, package_id, AddressInput::new(db, address))
 }
 
-#[salsa_macros::tracked]
+#[salsa_macros::tracked(returns(clone))]
 fn file_ids_by_module_address_tracked<'db>(
     db: &'db dyn SourceDatabase,
     package_id: PackageId,
@@ -166,7 +166,7 @@ pub fn import_candidates(db: &dyn SourceDatabase, file_id: FileId) -> &Vec<Scope
 pub fn import_candidates_tracked(db: &dyn SourceDatabase, file_id: FileIdInput) -> Vec<ScopeEntry> {
     let _p = tracing::debug_span!("import_candidates_tracked").entered();
 
-    let current_package_id = db.file_package_id(file_id.data(db));
+    let current_package_id = db.file_package_id(file_id.data(db).clone());
     let all_package_ids = hir_db::transitive_dep_package_ids(db, current_package_id);
     let mut all_candidates = vec![];
     for package_id in all_package_ids {
@@ -185,7 +185,7 @@ pub fn source_file_ids_in_package(db: &dyn SourceDatabase, package_id: PackageId
 }
 
 /// returns packages dependencies, including package itself
-#[salsa_macros::tracked]
+#[salsa_macros::tracked(returns(clone))]
 pub fn transitive_dep_package_ids(db: &dyn SourceDatabase, package_id: PackageId) -> Vec<PackageId> {
     let metadata = source_db::metadata_for_package_id(db, package_id);
     match metadata {
@@ -215,12 +215,12 @@ pub fn missing_dependencies(db: &dyn SourceDatabase, package_id: PackageId) -> V
 }
 
 /// returns reverse package dependencies, including package itself
-#[salsa_macros::tracked]
+#[salsa_macros::tracked(returns(clone))]
 pub fn reverse_transitive_dep_package_ids(db: &dyn SourceDatabase, of: PackageId) -> Vec<PackageId> {
     // todo: can be sped up, for now just do dumb version
     let mut rev_deps = vec![];
     rev_deps.push(of);
-    for dep_id in db.all_package_ids().data(db) {
+    for dep_id in db.all_package_ids().data(db).clone() {
         let transitive_deps = transitive_dep_package_ids(db, dep_id);
         if transitive_deps.contains(&of) {
             rev_deps.push(dep_id);
@@ -246,12 +246,12 @@ pub fn named_addresses(db: &dyn SourceDatabase) -> HashMap<String, String> {
     all_addresses
 }
 
-#[salsa_macros::tracked]
+#[salsa_macros::tracked(returns(clone))]
 pub fn named_addresses_tracked(db: &dyn SourceDatabase) -> HashMap<String, String> {
     let mut all_addresses = HashMap::new();
 
     let all_package_ids = db.all_package_ids();
-    for package_id in all_package_ids.data(db) {
+    for package_id in all_package_ids.data(db).clone() {
         if let Some(package_metadata) = source_db::metadata_for_package_id(db, package_id) {
             for (address_name, address_val) in package_metadata.named_addresses {
                 all_addresses.insert(address_name, address_val);
@@ -266,7 +266,7 @@ pub(crate) fn module_importable_entries(
     db: &dyn SourceDatabase,
     module_loc: SyntaxLoc,
 ) -> Vec<ScopeEntry> {
-    #[salsa_macros::tracked]
+    #[salsa_macros::tracked(returns(clone))]
     fn module_importable_entries_tracked<'db>(
         db: &'db dyn SourceDatabase,
         module_loc: SyntaxLocInput<'db>,
@@ -283,7 +283,7 @@ pub(crate) fn module_importable_entries_from_related(
     db: &dyn SourceDatabase,
     module_loc: SyntaxLoc,
 ) -> Vec<ScopeEntry> {
-    #[salsa_macros::tracked]
+    #[salsa_macros::tracked(returns(clone))]
     fn module_importable_entries_from_related_tracked<'db>(
         db: &'db dyn SourceDatabase,
         module_loc: SyntaxLocInput<'db>,
@@ -323,7 +323,7 @@ pub(crate) fn get_modules_in_file(
 
 pub(crate) fn get_all_modules_in_file(db: &dyn SourceDatabase, file_id: FileIdInput) -> Vec<SyntaxLoc> {
     let source_file = source_db::parse(db, file_id).tree();
-    let file_id = file_id.data(db);
+    let file_id = file_id.data(db).clone();
     let module_locs = source_file
         .all_modules()
         .into_iter()

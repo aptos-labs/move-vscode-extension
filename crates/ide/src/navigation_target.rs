@@ -137,7 +137,10 @@ impl NavigationTarget {
         syntax_loc: SyntaxLoc,
     ) -> Option<NavigationTarget> {
         let file_id = syntax_loc.file_id();
-        if db.builtins_file_id().is_some_and(|fid| fid.data(db) == file_id) {
+        if db
+            .builtins_file_id()
+            .is_some_and(|fid| fid.data(db).clone() == file_id)
+        {
             return None;
         }
         if let Some(label_decl) = syntax_loc.to_ast::<ast::LabelDecl>(db) {

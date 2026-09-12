@@ -206,5 +206,5 @@ fn builtin_module(db: &dyn SourceDatabase) -> Option<InFile<ast::Module>> {
         .collect::<Vec<_>>()
         .pop()
         .expect("0x0::builtins");
-    Some(builtins_module.in_file(file_id.data(db)))
+    Some(builtins_module.in_file(file_id.data(db).clone()))
 }

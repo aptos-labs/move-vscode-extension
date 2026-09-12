@@ -21,8 +21,9 @@ pub(crate) fn init_db(manifests: Vec<DiscoveredManifest>) -> (RootDatabase, Vfs)
 pub(crate) fn all_package_roots(db: &RootDatabase) -> Vec<Arc<PackageRoot>> {
     db.all_package_ids()
         .data(db)
+        .clone()
         .into_iter()
-        .map(|it| db.package_root(it).data(db))
+        .map(|it| db.package_root(it).data(db).clone())
         .filter(|it| !it.is_builtin())
         .collect::<Vec<_>>()
 }
