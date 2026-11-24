@@ -12,7 +12,7 @@ use std::fs::File;
 use std::io::BufWriter;
 use std::path::{Path, PathBuf};
 use std::{env, io};
-use time::OffsetDateTime;
+use time::{OffsetDateTime, PrimitiveDateTime};
 use xshell::{Cmd, Shell, cmd};
 use zip::write::SimpleFileOptions;
 use zip::{DateTime, ZipWriter};
@@ -117,16 +117,18 @@ fn gzip(src_path: &Path, dest_path: &Path) -> anyhow::Result<()> {
     Ok(())
 }
 
+fn zip_datetime(path: &Path) -> anyhow::Result<DateTime> {
+    let odt = OffsetDateTime::from(std::fs::metadata(path)?.modified()?);
+    Ok(DateTime::try_from(PrimitiveDateTime::new(odt.date(), odt.time())).unwrap())
+}
+
 fn zip(src_path: &Path, symbols_path: Option<&PathBuf>, dest_path: &Path) -> anyhow::Result<()> {
     let file = File::create(dest_path)?;
     let mut writer = ZipWriter::new(BufWriter::new(file));
     writer.start_file(
         src_path.file_name().unwrap().to_str().unwrap(),
         SimpleFileOptions::default()
-            .last_modified_time(
-                DateTime::try_from(OffsetDateTime::from(std::fs::metadata(src_path)?.modified()?))
-                    .unwrap(),
-            )
+            .last_modified_time(zip_datetime(src_path)?)
             .unix_permissions(0o755)
             .compression_method(zip::CompressionMethod::Deflated)
             .compression_level(Some(9)),
@@ -137,10 +139,7 @@ fn zip(src_path: &Path, symbols_path: Option<&PathBuf>, dest_path: &Path) -> any
         writer.start_file(
             symbols_path.file_name().unwrap().to_str().unwrap(),
             SimpleFileOptions::default()
-                .last_modified_time(
-                    DateTime::try_from(OffsetDateTime::from(std::fs::metadata(src_path)?.modified()?))
-                        .unwrap(),
-                )
+                .last_modified_time(zip_datetime(src_path)?)
                 .compression_method(zip::CompressionMethod::Deflated)
                 .compression_level(Some(9)),
         )?;

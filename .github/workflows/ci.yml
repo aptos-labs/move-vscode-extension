@@ -68,6 +68,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: aptos-labs/aptos-core
+          ref: mainnet
           path: aptos-core
 
       - name: Check diagnostics for aptos-core:framework

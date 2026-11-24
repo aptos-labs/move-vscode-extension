@@ -13,7 +13,7 @@ quote = "1.0.40"
 check_keyword = "0.4"
 flate2 = "1.1.0"
 time = { version = "0.3", default-features = false }
-zip = { version = "3", default-features = false, features = ["deflate-flate2", "time"] }
+zip = { version = "9", default-features = false, features = ["deflate-flate2", "time"] }
 
 anyhow.workspace = true
 clap.workspace = true

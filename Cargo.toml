@@ -57,8 +57,8 @@ tracing-subscriber = { version = "0.3.20", default-features = false, features = 
     "env-filter"
 ] }
 dashmap = "6.1.0"
-salsa = "0.28.2"
-salsa-macros = "0.28.2"
+salsa = "0.28.6"
+salsa-macros = "0.28.6"
 
 stdx = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2026-09-07" }
 paths = { git = "https://github.com/rust-lang/rust-analyzer.git", rev = "2026-09-07", features = ["serde1"] }
