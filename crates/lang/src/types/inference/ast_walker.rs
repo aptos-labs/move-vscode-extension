@@ -702,6 +702,11 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
             }
             _ => TyCallable::fake(call_expr.arg_exprs().len(), TyCallableKind::fake()),
         };
+
+        if self.is_update_field_callable(&callable_ty) {
+            return Some(self.infer_update_field_call_expr(call_expr, callable_ty, expected));
+        }
+
         let expected_arg_tys = self.infer_expected_call_arg_tys(&callable_ty, expected);
         let args = call_expr
             .arg_exprs()
@@ -717,6 +722,122 @@ impl<'a, 'db> TypeAstWalker<'a, 'db> {
         // resolve after applying all parameters
         let ret_ty = self.ctx.resolve_ty_vars_if_possible(callable_ty.ret_type_ty());
         Some(ret_ty)
+    }
+
+    fn is_update_field_callable(&self, callable_ty: &TyCallable) -> bool {
+        if !self.ctx.msl {
+            return false;
+        }
+        let Some(loc) = callable_ty.kind.loc() else {
+            return false;
+        };
+        let Some(builtins_file_id) = self.ctx.db.builtins_file_id() else {
+            return false;
+        };
+        if builtins_file_id.data(self.ctx.db) != &loc.file_id() {
+            return false;
+        }
+        loc.to_ast::<ast::AnyFun>(self.ctx.db)
+            .and_then(|fun| fun.value.name())
+            .is_some_and(|name| name.as_string() == "update_field")
+    }
+
+    fn infer_update_field_call_expr(
+        &mut self,
+        call_expr: &ast::CallExpr,
+        callable_ty: TyCallable,
+        expected: Expected,
+    ) -> Ty {
+        let expected_arg_tys = self.infer_expected_call_arg_tys(&callable_ty, expected);
+        let args: Vec<_> = call_expr
+            .arg_exprs()
+            .into_iter()
+            .map(|expr| CallArg::Arg { expr })
+            .collect();
+
+        if let Some(arg0) = args.first().cloned() {
+            let expected_s = expected_arg_tys
+                .first()
+                .or_else(|| callable_ty.param_types.first())
+                .cloned()
+                .unwrap_or(Ty::Unknown);
+            let expected_s = self.ctx.resolve_ty_vars_if_possible(expected_s);
+            self.coerce_arg(arg0, expected_s);
+        }
+
+        let s_ty = callable_ty
+            .param_types
+            .first()
+            .map(|t| self.ctx.resolve_ty_vars_if_possible(t.clone()))
+            .unwrap_or(Ty::Unknown);
+
+        let mut field_ty = None;
+        if let Some(arg1) = args.get(1).cloned() {
+            let fname_expr = match &arg1 {
+                CallArg::Arg { expr } => expr.as_ref(),
+                CallArg::Self_ { .. } => None,
+            };
+            if let Some(ast::Expr::PathExpr(path_expr)) = fname_expr
+                && path_expr.path().is_local()
+                && let Some(field_name) = path_expr.path().reference_name()
+            {
+                field_ty = self.resolve_adt_field_ty(&s_ty, &field_name);
+                if let Some(declared_f) = callable_ty.param_types.get(1).cloned() {
+                    let _ = self.ctx.combine_types(Ty::Unknown, declared_f);
+                }
+            } else {
+                let expected_f = expected_arg_tys
+                    .get(1)
+                    .or_else(|| callable_ty.param_types.get(1))
+                    .cloned()
+                    .unwrap_or(Ty::Unknown);
+                let expected_f = self.ctx.resolve_ty_vars_if_possible(expected_f);
+                self.coerce_arg(arg1, expected_f);
+            }
+        }
+
+        if let Some(arg2) = args.get(2).cloned() {
+            let expected_v = field_ty.unwrap_or_else(|| {
+                self.ctx.resolve_ty_vars_if_possible(
+                    expected_arg_tys
+                        .get(2)
+                        .or_else(|| callable_ty.param_types.get(2))
+                        .cloned()
+                        .unwrap_or(Ty::Unknown),
+                )
+            });
+            if let Some(declared_v) = callable_ty.param_types.get(2).cloned() {
+                let _ = self.ctx.combine_types(declared_v, expected_v.clone());
+            }
+            self.coerce_arg(arg2, expected_v);
+        }
+
+        for arg in args.into_iter().skip(3) {
+            self.coerce_arg(arg, Ty::Unknown);
+        }
+
+        self.ctx
+            .call_expr_types
+            .insert(call_expr.clone().into(), callable_ty.clone().into());
+
+        self.ctx.resolve_ty_vars_if_possible(callable_ty.ret_type_ty())
+    }
+
+    fn resolve_adt_field_ty(&self, s_ty: &Ty, field_name: &str) -> Option<Ty> {
+        let ty_adt = s_ty.clone().unwrap_all_refs().into_ty_adt()?;
+        let InFile {
+            file_id: item_file_id,
+            value: adt_item,
+        } = ty_adt.adt_item_loc.to_ast::<ast::StructOrEnum>(self.ctx.db)?;
+        let matching_field = adt_item
+            .fields()
+            .into_iter()
+            .filter(|(name, _)| name == field_name)
+            .collect::<Vec<_>>()
+            .single_or_none()?;
+        let field_type = matching_field.1.type_()?.in_file(item_file_id);
+        let field_ty = ty_db::lower_type_for_ctx(self.ctx, field_type).substitute(&ty_adt.substitution);
+        Some(field_ty)
     }
 
     fn infer_assert_macro_expr(&mut self, assert_macro_expr: &ast::AssertMacroExpr) -> Ty {

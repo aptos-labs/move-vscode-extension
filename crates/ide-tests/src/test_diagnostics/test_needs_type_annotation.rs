@@ -200,3 +200,27 @@ fn test_no_error_if_inferrable_from_params() {
         }
     "#]]);
 }
+
+#[test]
+fn test_infer_update_field_value_type_from_struct_field() {
+    // language=Move
+    check_diagnostics(expect![[r#"
+        module 0x1::m {
+            struct Option<Element> has copy, drop, store {
+                vec: vector<Element>
+            }
+            spec fun spec_none<Element>(): Option<Element> {
+                Option { vec: vector[] }
+            }
+            struct MintRef {}
+            struct Refs {
+                mint_ref_opt: Option<MintRef>
+            }
+            fun main() {}
+            spec main {
+                let refs = Refs { mint_ref_opt: spec_none() };
+                ensures refs == update_field(refs, mint_ref_opt, spec_none());
+            }
+        }
+    "#]]);
+}
